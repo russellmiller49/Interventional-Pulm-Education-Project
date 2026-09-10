@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { buildTransportFrames, poseWithTransport } from './transport-frames'
 import { buildScopePoseSnapshot, createInitialScopeState, sampleEdgePose } from './scope-state'
-import { driveScope, enterFreeDrive } from './drive'
+import { driveScope, enterFreeDrive, MAX_SCOPE_PATH_POINTS } from './drive'
 import {
   projectOptical,
   sweepClearance,
@@ -49,6 +49,42 @@ describe('reviewed flexible views', () => {
   })
 })
 describe('navigation v2', () => {
+  const blockedCollider: LumenCollider = {
+    clearance: () => 1,
+    visible: () => true,
+    sweep: (from, to) => ({
+      point: from,
+      contact: {
+        touching: true,
+        clearanceMm: 1,
+        blockedMm: Math.hypot(...to.map((v, i) => v - from[i])),
+      },
+    }),
+  }
+  it('does not grow insertion history while the tip is blocked', () => {
+    const initial = createInitialScopeState(graph, 0, 30),
+      frame = frames.at(0, 30)
+    let state = enterFreeDrive(initial, frame, graph)
+    const length = state.freePath!.length
+    for (let i = 0; i < 50; i++)
+      state = driveScope(state, 10, graph, frames, frame, blockedCollider)
+    expect(state.freePath).toHaveLength(length)
+  })
+  it('keeps the recorded path when a withdrawal is rejected', () => {
+    const frame = frames.at(0, 30),
+      state = enterFreeDrive(createInitialScopeState(graph, 0, 30), frame, graph)
+    const next = driveScope(state, -1, graph, frames, frame, blockedCollider)
+    expect(next.freePath).toEqual(state.freePath)
+    expect(next.freeFrame!.position).toEqual(frame.position)
+  })
+  it('bounds insertion history without discarding the withdrawal route', () => {
+    const frame = frames.at(0, 30),
+      state = enterFreeDrive(createInitialScopeState(graph, 0, 30), frame, graph)
+    state.freePath = Array.from({ length: MAX_SCOPE_PATH_POINTS }, () => frame.position)
+    const next = driveScope(state, 5, graph, frames, frame, blockedCollider)
+    expect(next.freePath).toHaveLength(MAX_SCOPE_PATH_POINTS)
+    expect(next.movementMessage).toContain('history limit')
+  })
   it('pauses advancement when looking away from both main bronchi', () => {
     const edge = graph.edges.find((e) => e.id === 0)!,
       state = createInitialScopeState(graph, 0, edge.lengthMm - 0.05)

@@ -9,6 +9,8 @@ import {
 } from './ct'
 import type { Point3 } from './frame'
 import { decodeGzip } from './compression'
+import { residualHuAt, type CtResidualOverlay } from './ct-overlay'
+let overlay: CtResidualOverlay | undefined
 
 let nativeGeometry: CtGeometry | undefined
 let geometry: CtGeometry,
@@ -60,6 +62,12 @@ async function loadBrick(key: string) {
       const response = await fetch(`${native!.baseUrl}/${key}.i16.gz`)
       if (!response.ok || !response.body) throw new Error('Native CT region unavailable')
       const bytes = await decodeGzip(await response.arrayBuffer())
+      const start = key.split('-').map((v) => Number(v) * native!.brickSize)
+      const expected = start.reduce(
+        (n, v, i) => n * Math.min(native!.brickSize, native!.sizeXyz[i] - v),
+        2,
+      )
+      if (bytes.byteLength !== expected) throw new Error('Invalid native CT brick size')
       const brick = new Int16Array(bytes)
       while (cacheBytes + brick.byteLength > MAX_CACHE_BYTES && cache.size) {
         const oldest = cache.keys().next().value!
@@ -77,9 +85,24 @@ async function loadBrick(key: string) {
   pending.set(key, task)
   return task
 }
-function send(id: number, planes: SlicePlane[], low: number, high: number) {
+function send(
+  id: number,
+  planes: SlicePlane[],
+  low: number,
+  high: number,
+  windows?: Record<string, [number, number]>,
+  overlayOrigin?: Point3,
+) {
   if (id !== latest) return
-  const images = planes.map((plane) => ({ plane, rgba: reslice(plane, low, high, sample) }))
+  const images = planes.map((plane) => ({
+    plane,
+    rgba: reslice(
+      plane,
+      windows?.[plane.axis]?.[0] ?? low,
+      windows?.[plane.axis]?.[1] ?? high,
+      (p) => sample(p) + residualHuAt(overlay, p, overlayOrigin),
+    ),
+  }))
   self.postMessage(
     { id, images, nativeRegions: cache.size, cacheBytes },
     images.map((i) => i.rgba.buffer),
@@ -87,8 +110,22 @@ function send(id: number, planes: SlicePlane[], low: number, high: number) {
 }
 type CtWorkerRequest =
   | { type: 'init'; geometry: CtGeometry; volume: ArrayBuffer; native?: NativeBricks }
-  | { type: 'render'; id: number; planes: SlicePlane[]; low: number; high: number; tip: Point3 }
+  | { type: 'overlay'; overlay?: CtResidualOverlay }
+  | {
+      type: 'render'
+      id: number
+      planes: SlicePlane[]
+      low: number
+      high: number
+      tip: Point3
+      windows?: Record<string, [number, number]>
+      overlayOrigin?: Point3
+    }
 async function handleRequest(m: CtWorkerRequest) {
+  if (m.type === 'overlay') {
+    overlay = m.overlay
+    return
+  }
   if (m.type === 'init') {
     geometry = m.geometry
     volume = new Int16Array(m.volume)
@@ -107,7 +144,7 @@ async function handleRequest(m: CtWorkerRequest) {
     high: number
   }
   if (id !== latest) return
-  send(id, planes, low, high)
+  send(id, planes, low, high, m.windows, m.overlayOrigin)
   if (!native) return
   // Only promote the region around the probe, keeping the full-volume preview available.
   const wanted = new Set<string>(),
@@ -134,13 +171,13 @@ async function handleRequest(m: CtWorkerRequest) {
     if (id !== latest) return
     await Promise.all(keys.slice(i, i + 4).map(loadBrick))
   }
-  if (keys.length) send(id, planes, low, high)
+  if (keys.length) send(id, planes, low, high, m.windows, m.overlayOrigin)
 }
 
 let queued: Extract<CtWorkerRequest, { type: 'render' }> | null = null,
   scheduled = false
 self.onmessage = (event: MessageEvent<CtWorkerRequest>) => {
-  if (event.data.type === 'init') {
+  if (event.data.type !== 'render') {
     void handleRequest(event.data)
     return
   }

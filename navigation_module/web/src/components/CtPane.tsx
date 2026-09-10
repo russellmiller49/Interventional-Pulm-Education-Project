@@ -1,9 +1,12 @@
-import { useEffect, useRef, useState, type DragEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type DragEvent, type PointerEvent as ReactPointerEvent } from "react";
+import {makeSlicePlane,patientToSlicePixel,slicePixelToPatient,orientationLabel,type SlicePlane} from '@bronchoscopy-core/ct';
+import {makeFrame,transport,times,unit,vector} from '@bronchoscopy-core/frame';
+import {rasToPatient} from '@bronchoscopy-core/devices';
+import {useCtSlice} from '../ctWorker';
 import type { AirwayEdge, CtMetadata, LoadedNoduleAsset, Vec3 } from "../types";
 import {
   add,
   clamp,
-  cross,
   dot,
   type CtViewMode,
   normalize,
@@ -121,7 +124,15 @@ export function CtPane({
   const [dropActive, setDropActive] = useState(false);
   const [pan, setPan] = useState<PanOffset>(ZERO_PAN);
   const [panning, setPanning] = useState(false);
+  const [fittedSize,setFittedSize]=useState({width:1,height:1});
   const canPan = zoom > MIN_PAN_ZOOM;
+  const [windowHu,setWindowHu]=useState<[number,number]>(ct.windowHu);
+  const [follow,setFollow]=useState(true),[heldFocus,setHeldFocus]=useState<Vec3>(focusRas),[heldFrame,setHeldFrame]=useState(airwayFrame);
+  const activeFocus=follow?focusRas:heldFocus,activeFrame=follow?airwayFrame:heldFrame;
+  const prepared=useMemo(()=>prepareSlice(plane,viewMode,ct,activeFocus,activeFrame,sliceOffset,airwaySliceDistanceScale),[plane,viewMode,ct,activeFocus[0],activeFocus[1],activeFocus[2],activeFrame,sliceOffset,airwaySliceDistanceScale]);
+  const tip=useMemo(()=>rasToPatient(focusRas),[focusRas[0],focusRas[1],focusRas[2]]);
+  const rendered=useCtSlice(ct,volume,prepared.slicePlane!,tip,windowHu,noduleAsset,noduleRas);
+
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -145,15 +156,25 @@ export function CtPane({
     if (!canvas) {
       return;
     }
-    const drawInfo =
-      viewMode === "standard"
-        ? drawStandardCt(canvas, plane, ct, volume, focusRas, sliceOffset, noduleRas, noduleAsset)
-        : drawAirwayAlignedCt(canvas, plane, ct, volume, airwayFrame, sliceOffset, noduleRas, noduleAsset, airwaySliceDistanceScale);
+    if(!rendered)return;
+    const drawInfo={...prepared,slicePlane:rendered.plane,width:rendered.plane.width,height:rendered.plane.height};
+    canvas.width=drawInfo.width;canvas.height=drawInfo.height;
+    canvas.dataset.slicePlaneLps=JSON.stringify(rendered.plane);
+    const imageContext=canvas.getContext('2d');
+    imageContext?.putImageData(new ImageData(new Uint8ClampedArray(rendered.rgba),drawInfo.width,drawInfo.height),0,0);
     drawInfoRef.current = drawInfo;
     const ctx = canvas.getContext("2d");
     if (!ctx) {
       return;
     }
+    const marker=patientToSlicePixel(rendered.plane,rasToPatient(focusRas));
+    ctx.save();ctx.strokeStyle='#65e7f1';ctx.globalAlpha=Math.abs(marker.offPlaneMm)<2?0.8:0.3;ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(marker.x-8,marker.y);ctx.lineTo(marker.x+8,marker.y);ctx.moveTo(marker.x,marker.y-8);ctx.lineTo(marker.x,marker.y+8);ctx.stroke();ctx.restore();
+    ctx.fillStyle='#d4e4ed';ctx.font='12px system-ui';ctx.textAlign='center';
+    ctx.fillText(orientationLabel(times(rendered.plane.right,-1)),12,drawInfo.height/2);
+    ctx.fillText(orientationLabel(rendered.plane.right),drawInfo.width-12,drawInfo.height/2);
+    ctx.fillText(orientationLabel(times(rendered.plane.down,-1)),drawInfo.width/2,14);
+    ctx.fillText(orientationLabel(rendered.plane.down),drawInfo.width/2,drawInfo.height-8);ctx.textAlign='start';
     if (showRoute) {
       routePaths.forEach((routePoints) => {
         drawPolyline(ctx, drawInfo, routePoints, "#4bd7ff", 1.8, 0.72);
@@ -193,7 +214,7 @@ export function CtPane({
     highlightEdges,
     candidateOverlays,
     targetSurveyOverlays,
-    messages
+    messages,prepared,rendered
   ]);
 
   useEffect(() => {
@@ -209,17 +230,22 @@ export function CtPane({
     if (!wrap || typeof ResizeObserver === "undefined") {
       return;
     }
-    const observer = new ResizeObserver(() => {
+    const resize = () => {
       setPan((current) => clampPanOffset(current, wrap, zoom));
-    });
+      const width=rendered?.plane.width??384,height=rendered?.plane.height??384;
+      const factor=Math.min(wrap.clientWidth/width,wrap.clientHeight/height);
+      setFittedSize({width:width*factor,height:height*factor});
+    };
+    const observer = new ResizeObserver(resize);
     observer.observe(wrap);
+    resize();
     return () => observer.disconnect();
-  }, [zoom]);
+  }, [zoom,rendered?.plane.width,rendered?.plane.height]);
 
   const title = viewMode === "standard" ? messages.standardTitles[plane] : messages.airwayTitles[plane];
   const beginPan = (event: ReactPointerEvent<HTMLDivElement>) => {
     const target = event.target as Element | null;
-    if (!canPan || event.button !== 0 || target?.closest(".slice-scrubber")) {
+    if (!canPan || event.button !== 0 || target?.closest(".slice-scrubber,.ct-knob-controls")) {
       return;
     }
     event.preventDefault();
@@ -262,7 +288,7 @@ export function CtPane({
   };
   const resetPan = (event: ReactPointerEvent<HTMLDivElement>) => {
     const target = event.target as Element | null;
-    if (!canPan || target?.closest(".slice-scrubber")) {
+    if (!canPan || target?.closest(".slice-scrubber,.ct-knob-controls")) {
       return;
     }
     setPan(ZERO_PAN);
@@ -302,7 +328,8 @@ export function CtPane({
     >
       <div className="pane-chrome">
         <span>{title}</span>
-        <span>{viewMode === "standard" ? standardSliceLabel(plane, focusRas, ct, sliceOffset) : airwaySliceLabel(plane, sliceOffset, messages)}</span>
+        <span className="ct-source-level">{rendered?.nativeRegions?'Source CT':rendered?.signed?'HU CT':'Preview'}</span>
+        <span>{viewMode === "standard" ? standardSliceLabel(rendered?.plane??prepared.slicePlane!) : airwaySliceLabel(plane, sliceOffset*airwaySliceDistanceScale, messages)}</span>
       </div>
       <div
         ref={canvasWrapRef}
@@ -313,7 +340,12 @@ export function CtPane({
         onPointerCancel={endPan}
         onDoubleClick={resetPan}
       >
-        <canvas ref={canvasRef} className="ct-canvas" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }} />
+        <div className="ct-knob-controls">
+          <label><input type="checkbox" checked={follow} onChange={e=>{setFollow(e.target.checked);if(!e.target.checked){setHeldFocus(focusRas);setHeldFrame(airwayFrame);}}}/>Follow scope</label>
+          <label>WL<input aria-label={`${title} window level`} type="number" step="20" value={Math.round((windowHu[0]+windowHu[1])/2)} onChange={e=>{const center=Number(e.target.value),width=windowHu[1]-windowHu[0];setWindowHu([center-width/2,center+width/2]);}}/></label>
+          <label>WW<input aria-label={`${title} window width`} type="number" min="40" max="4000" step="50" value={Math.round(windowHu[1]-windowHu[0])} onChange={e=>{const center=(windowHu[0]+windowHu[1])/2,width=Math.max(40,Number(e.target.value));setWindowHu([center-width/2,center+width/2]);}}/></label>
+        </div>
+        <canvas ref={canvasRef} className="ct-canvas" style={{width:fittedSize.width,height:fittedSize.height,margin:'auto', transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }} />
         <label className="slice-scrubber">
           <input
             type="range"
@@ -342,7 +374,7 @@ function clampPanOffset(offset: PanOffset, wrap: HTMLElement | null, zoom: numbe
   };
 }
 
-type DrawInfo =
+type DrawInfo = {slicePlane?:SlicePlane} & (
   | {
       mode: "standard";
       plane: PlaneKind;
@@ -362,99 +394,20 @@ type DrawInfo =
       fovY: number;
       width: number;
       height: number;
-    };
+    });
 
-function drawStandardCt(
-  canvas: HTMLCanvasElement,
-  plane: PlaneKind,
-  ct: CtMetadata,
-  volume: Uint8Array,
-  focusRas: Vec3,
-  sliceOffset: number,
-  noduleRas: Vec3 | null,
-  noduleAsset: LoadedNoduleAsset | null
-): DrawInfo {
-  const [sx, sy, sz] = ct.sizeXyz;
-  const focus = rasToIndex(focusRas, ct);
-  const i = Math.round(clamp(focus.i, 0, sx - 1));
-  const j = Math.round(clamp(focus.j, 0, sy - 1));
-  const k = Math.round(clamp(focus.k, 0, sz - 1));
-  const sliceIndex =
-    plane === "axial"
-      ? Math.round(clamp(k + sliceOffset, 0, sz - 1))
-      : plane === "coronal"
-        ? Math.round(clamp(j + sliceOffset, 0, sy - 1))
-        : Math.round(clamp(i + sliceOffset, 0, sx - 1));
-  const width = plane === "sagittal" ? sy : sx;
-  const height = plane === "axial" ? sy : sz;
-
-  canvas.width = width;
-  canvas.height = height;
-
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return { mode: "standard", plane, ct, sliceIndex, width, height };
+function prepareSlice(plane:PlaneKind,mode:CtViewMode,ct:CtMetadata,focus:Vec3,frame:AirwayFrame,offset:number,distanceScale:number):DrawInfo {
+  if(mode==='standard'){
+    const selected=rasToIndex(focus,ct),sliceIndex=Math.round(plane==='axial'?selected.k:plane==='coronal'?selected.j:selected.i);
+    const spacing=plane==='axial'?ct.spacingXyzMm[2]:plane==='coronal'?ct.spacingXyzMm[1]:ct.spacingXyzMm[0];
+    const slicePlane=makeSlicePlane(ct,plane,makeFrame(rasToPatient(focus),[0,0,-1]),1,[0,0],offset*spacing*(plane==='sagittal'?-1:1),384);
+    return {mode:'standard',plane,ct,sliceIndex:sliceIndex+offset,width:slicePlane.width,height:slicePlane.height,slicePlane};
   }
-  const image = ctx.createImageData(width, height);
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      let vx = x;
-      let vy = y;
-      let vz = sliceIndex;
-      if (plane === "coronal") {
-        vy = sliceIndex;
-        vz = sz - 1 - y;
-      } else if (plane === "sagittal") {
-        vx = sliceIndex;
-        vy = x;
-        vz = sz - 1 - y;
-      }
-      const baseValue = volume[vz * sx * sy + vy * sx + vx] ?? 0;
-      const ras = noduleAsset && noduleRas ? indexToRas({ i: vx, j: vy, k: vz }, ct) : null;
-      writePixel(image, x, y, width, ras ? applyNoduleAsset(baseValue, ras, noduleRas, noduleAsset, ct.windowHu) : baseValue);
-    }
-  }
-  ctx.putImageData(image, 0, 0);
-  return { mode: "standard", plane, ct, sliceIndex, width, height };
-}
-
-function drawAirwayAlignedCt(
-  canvas: HTMLCanvasElement,
-  plane: PlaneKind,
-  ct: CtMetadata,
-  volume: Uint8Array,
-  frame: AirwayFrame,
-  sliceOffset: number,
-  noduleRas: Vec3 | null,
-  noduleAsset: LoadedNoduleAsset | null,
-  sliceDistanceScale: number
-): DrawInfo {
-  const width = 256;
-  const height = 256;
-  const axes = airwayPlaneAxes(plane, frame);
-  const scrollMm = sliceOffset * sliceDistanceScale;
-  const origin = add(frame.origin, scale(axes.normal, scrollMm));
-  const fovX = plane === "axial" ? 42 : 132;
-  const fovY = plane === "axial" ? 42 : 96;
-  canvas.width = width;
-  canvas.height = height;
-
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return { mode: "airway", plane, origin, ...axes, fovX, fovY, width, height };
-  }
-  const image = ctx.createImageData(width, height);
-  for (let y = 0; y < height; y += 1) {
-    const yy = (0.5 - y / Math.max(height - 1, 1)) * fovY;
-    for (let x = 0; x < width; x += 1) {
-      const xx = (x / Math.max(width - 1, 1) - 0.5) * fovX;
-      const ras = add(origin, add(scale(axes.xAxis, xx), scale(axes.yAxis, yy)));
-      const baseValue = sampleVolumeRas(volume, ct, ras);
-      writePixel(image, x, y, width, applyNoduleAsset(baseValue, ras, noduleRas, noduleAsset, ct.windowHu));
-    }
-  }
-  ctx.putImageData(image, 0, 0);
-  return { mode: "airway", plane, origin, ...axes, fovX, fovY, width, height };
+  const axes=airwayPlaneAxes(plane,frame),origin=add(frame.origin,scale(axes.normal,offset*distanceScale));
+  const fovX=plane==='axial'?42:132,fovY=plane==='axial'?42:96;
+  const right=rasToPatient(axes.xAxis),down=times(rasToPatient(axes.yAxis),-1);
+  const slicePlane:SlicePlane={axis:plane,center:rasToPatient(origin),right,down,normal:unit(vector(right,down)),widthMm:fovX,heightMm:fovY,width:384,height:Math.round(384*fovY/fovX)};
+  return {mode:'airway',plane,origin,...axes,fovX,fovY,width:slicePlane.width,height:slicePlane.height,slicePlane};
 }
 
 function airwayPlaneAxes(plane: PlaneKind, frame: AirwayFrame) {
@@ -477,116 +430,6 @@ function airwayPlaneAxes(plane: PlaneKind, frame: AirwayFrame) {
     yAxis: frame.binormal,
     normal: frame.normal
   };
-}
-
-function writePixel(image: ImageData, x: number, y: number, width: number, value: number) {
-  const offset = (y * width + x) * 4;
-  image.data[offset] = value;
-  image.data[offset + 1] = value;
-  image.data[offset + 2] = value;
-  image.data[offset + 3] = 255;
-}
-
-function sampleVolumeRas(volume: Uint8Array, ct: CtMetadata, ras: Vec3): number {
-  const [sx, sy, sz] = ct.sizeXyz;
-  const idx = rasToIndex(ras, ct);
-  if (idx.i < 0 || idx.j < 0 || idx.k < 0 || idx.i > sx - 1 || idx.j > sy - 1 || idx.k > sz - 1) {
-    return 0;
-  }
-  const i0 = Math.floor(idx.i);
-  const j0 = Math.floor(idx.j);
-  const k0 = Math.floor(idx.k);
-  const i1 = Math.min(i0 + 1, sx - 1);
-  const j1 = Math.min(j0 + 1, sy - 1);
-  const k1 = Math.min(k0 + 1, sz - 1);
-  const tx = idx.i - i0;
-  const ty = idx.j - j0;
-  const tz = idx.k - k0;
-  const v000 = voxel(volume, sx, sy, i0, j0, k0);
-  const v100 = voxel(volume, sx, sy, i1, j0, k0);
-  const v010 = voxel(volume, sx, sy, i0, j1, k0);
-  const v110 = voxel(volume, sx, sy, i1, j1, k0);
-  const v001 = voxel(volume, sx, sy, i0, j0, k1);
-  const v101 = voxel(volume, sx, sy, i1, j0, k1);
-  const v011 = voxel(volume, sx, sy, i0, j1, k1);
-  const v111 = voxel(volume, sx, sy, i1, j1, k1);
-  const c00 = v000 * (1 - tx) + v100 * tx;
-  const c10 = v010 * (1 - tx) + v110 * tx;
-  const c01 = v001 * (1 - tx) + v101 * tx;
-  const c11 = v011 * (1 - tx) + v111 * tx;
-  const c0 = c00 * (1 - ty) + c10 * ty;
-  const c1 = c01 * (1 - ty) + c11 * ty;
-  return Math.round(c0 * (1 - tz) + c1 * tz);
-}
-
-function voxel(volume: Uint8Array, sx: number, sy: number, i: number, j: number, k: number) {
-  return volume[k * sx * sy + j * sx + i] ?? 0;
-}
-
-function applyNoduleAsset(
-  baseValue: number,
-  ras: Vec3,
-  noduleRas: Vec3 | null,
-  noduleAsset: LoadedNoduleAsset | null,
-  windowHu: [number, number]
-) {
-  if (!noduleAsset || !noduleRas) {
-    return baseValue;
-  }
-  const sample = sampleNoduleAsset(noduleAsset, ras, noduleRas);
-  if (sample.alpha <= 0.004) {
-    return baseValue;
-  }
-  const baseHu = windowHu[0] + (baseValue / 255) * (windowHu[1] - windowHu[0]);
-  return huToUint8(baseHu + sample.residualHu * sample.alpha, windowHu);
-}
-
-function sampleNoduleAsset(asset: LoadedNoduleAsset, ras: Vec3, centerRas: Vec3) {
-  const deltaRas = subtract(ras, centerRas);
-  const spacing = asset.metadata.spacingXyzMm;
-  const center = asset.metadata.centroidIndexXyz;
-  const i = center[0] - deltaRas[0] / spacing[0];
-  const j = center[1] - deltaRas[1] / spacing[1];
-  const k = center[2] + deltaRas[2] / spacing[2];
-  const [sx, sy, sz] = asset.metadata.sizeXyz;
-  if (i < 0 || j < 0 || k < 0 || i > sx - 1 || j > sy - 1 || k > sz - 1) {
-    return { alpha: 0, residualHu: 0 };
-  }
-  return {
-    alpha: sampleScalar(asset.alpha, sx, sy, i, j, k) / 255,
-    residualHu: sampleScalar(asset.residual, sx, sy, i, j, k)
-  };
-}
-
-function sampleScalar(volume: Uint8Array | Int16Array, sx: number, sy: number, i: number, j: number, k: number) {
-  const i0 = Math.floor(i);
-  const j0 = Math.floor(j);
-  const k0 = Math.floor(k);
-  const i1 = Math.min(i0 + 1, sx - 1);
-  const j1 = Math.min(j0 + 1, sy - 1);
-  const k1 = Math.min(k0 + 1, volume.length / (sx * sy) - 1);
-  const tx = i - i0;
-  const ty = j - j0;
-  const tz = k - k0;
-  const v000 = volume[k0 * sx * sy + j0 * sx + i0] ?? 0;
-  const v100 = volume[k0 * sx * sy + j0 * sx + i1] ?? 0;
-  const v010 = volume[k0 * sx * sy + j1 * sx + i0] ?? 0;
-  const v110 = volume[k0 * sx * sy + j1 * sx + i1] ?? 0;
-  const v001 = volume[k1 * sx * sy + j0 * sx + i0] ?? 0;
-  const v101 = volume[k1 * sx * sy + j0 * sx + i1] ?? 0;
-  const v011 = volume[k1 * sx * sy + j1 * sx + i0] ?? 0;
-  const v111 = volume[k1 * sx * sy + j1 * sx + i1] ?? 0;
-  const c00 = v000 * (1 - tx) + v100 * tx;
-  const c10 = v010 * (1 - tx) + v110 * tx;
-  const c01 = v001 * (1 - tx) + v101 * tx;
-  const c11 = v011 * (1 - tx) + v111 * tx;
-  const c0 = c00 * (1 - ty) + c10 * ty;
-  const c1 = c01 * (1 - ty) + c11 * ty;
-  return c0 * (1 - tz) + c1 * tz;
-}
-
-function huToUint8(hu: number, windowHu: [number, number]) {
-  return Math.round(clamp((hu - windowHu[0]) / Math.max(windowHu[1] - windowHu[0], 1), 0, 1) * 255);
 }
 
 function drawPolyline(ctx: CanvasRenderingContext2D, info: DrawInfo, points: Vec3[], color: string, width: number, alpha: number) {
@@ -648,7 +491,7 @@ function drawTargetSurveyOverlays(ctx: CanvasRenderingContext2D, info: DrawInfo,
   ctx.font = "9px Inter, system-ui, sans-serif";
   ctx.textBaseline = "middle";
   overlays.forEach((overlay) => {
-    const projected = projectRasToPlane(overlay.ras, info.ct, info.plane);
+    const projected = projectPoint(overlay.ras, info);
     if (projected.x < -32 || projected.y < -32 || projected.x > info.width + 32 || projected.y > info.height + 32) {
       return;
     }
@@ -685,6 +528,7 @@ function targetSurveyRadiusPixels(info: Extract<DrawInfo, { mode: "standard" }>,
   if (!radiusMm || !Number.isFinite(radiusMm)) {
     return 5;
   }
+  if(info.slicePlane)return clamp(radiusMm*info.width/info.slicePlane.widthMm,5,26);
   const spacing =
     info.plane === "axial"
       ? (info.ct.spacingXyzMm[0] + info.ct.spacingXyzMm[1]) * 0.5
@@ -751,6 +595,7 @@ function roundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width:
 }
 
 function projectPoint(ras: Vec3, info: DrawInfo) {
+  if(info.slicePlane){const p=patientToSlicePixel(info.slicePlane,rasToPatient(ras));return {...p,visible:Math.abs(p.offPlaneMm)<(info.mode==='standard'?4:7),inFrame:p.x>=0&&p.y>=0&&p.x<info.width&&p.y<info.height};}
   if (info.mode === "standard") {
     const projected = projectRasToPlane(ras, info.ct, info.plane);
     const depthDistance = Math.abs(projected.depth - info.sliceIndex);
@@ -789,6 +634,7 @@ function droppedCanvasPointToRas(event: DragEvent<HTMLElement>, canvas: HTMLCanv
 }
 
 function canvasPointToRas(info: DrawInfo, x: number, y: number): Vec3 {
+  if(info.slicePlane)return rasToPatient(slicePixelToPatient(info.slicePlane,x,y));
   if (info.mode === "airway") {
     const xMm = (x / Math.max(info.width - 1, 1) - 0.5) * info.fovX;
     const yMm = (0.5 - y / Math.max(info.height - 1, 1)) * info.fovY;
@@ -807,20 +653,12 @@ function canvasPointToRas(info: DrawInfo, x: number, y: number): Vec3 {
   return indexToRas({ i: info.sliceIndex, j: clamp(ix, 0, sy - 1), k: clamp(sz - 1 - iy, 0, sz - 1) }, info.ct);
 }
 
-function standardSliceLabel(plane: PlaneKind, focusRas: Vec3, ct: CtMetadata, sliceOffset: number) {
-  const idx = rasToIndex(focusRas, ct);
-  const suffix = sliceOffset === 0 ? "" : ` ${sliceOffset > 0 ? "+" : ""}${sliceOffset}`;
-  if (plane === "axial") {
-    return `S ${Math.round(idx.k + sliceOffset)}${suffix}`;
-  }
-  if (plane === "coronal") {
-    return `A ${Math.round(idx.j + sliceOffset)}${suffix}`;
-  }
-  return `R ${Math.round(idx.i + sliceOffset)}${suffix}`;
+function standardSliceLabel(plane: SlicePlane) {
+  const index=plane.axis==='axial'?2:plane.axis==='coronal'?1:0;
+  return `${['L','P','S'][index]} ${plane.center[index].toFixed(1)} mm`;
 }
 
-function airwaySliceLabel(plane: PlaneKind, sliceOffset: number, messages: Messages["ctPane"]) {
-  const mm = sliceOffset * 2;
+function airwaySliceLabel(plane: PlaneKind, mm: number, messages: Messages["ctPane"]) {
   const suffix = mm === 0 ? "0 mm" : `${mm > 0 ? "+" : ""}${mm} mm`;
   if (plane === "axial") {
     return messages.airwayNormal(suffix);
@@ -841,16 +679,12 @@ export function buildAirwayFrame(routePoints: Vec3[], focusRas: Vec3): AirwayFra
       bestIndex = index;
     }
   });
-  const previous = routePoints[Math.max(0, bestIndex - 1)];
-  const next = routePoints[Math.min(routePoints.length - 1, bestIndex + 1)];
-  const tangent = normalize(subtract(next, previous), [0, 0, -1]);
-  const patientAnterior: Vec3 = [0, 1, 0];
-  let normal = normalize(subtract(patientAnterior, scale(tangent, dot(patientAnterior, tangent))), [1, 0, 0]);
-  if (Math.abs(dot(normal, tangent)) > 0.95) {
-    normal = normalize(cross([1, 0, 0], tangent), [1, 0, 0]);
+  let frame=makeFrame(rasToPatient(routePoints[0]),rasToPatient(normalize(subtract(routePoints[1],routePoints[0]))));
+  for(let i=1;i<=bestIndex;i++){
+    const direction=normalize(subtract(routePoints[Math.min(routePoints.length-1,i+1)],routePoints[i-1]));
+    frame=transport(frame,rasToPatient(routePoints[i]),rasToPatient(direction));
   }
-  const binormal = normalize(cross(tangent, normal), [0, 0, 1]);
-  normal = normalize(cross(binormal, tangent), normal);
+  const tangent=rasToPatient(frame.forward),normal=rasToPatient(frame.up),binormal=rasToPatient(frame.right);
   return { origin: focusRas, tangent, normal, binormal };
 }
 

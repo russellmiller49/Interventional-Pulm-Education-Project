@@ -12,6 +12,7 @@ import type { AirwayGraph, Vec3 } from './types'
 import type { TransportFrames } from './transport-frames'
 
 export const FLEXIBLE_TIP_RADIUS_MM = 1.9
+export const MAX_SCOPE_PATH_POINTS = 8192
 
 export function locateTip(graph: AirwayGraph, tip: Vec3, currentEdgeId: number) {
   const current = graph.edges.find((e) => e.id === currentEdgeId)!
@@ -65,6 +66,11 @@ export function driveScope(
     if (next.freeFrame && collider) {
       const f = next.freeFrame,
         path = [...(next.freePath ?? [f.position])]
+      if (step > 0 && path.length >= MAX_SCOPE_PATH_POINTS)
+        return {
+          ...next,
+          movementMessage: 'Insertion history limit reached. Withdraw to continue.',
+        }
       let target = plus(f.position, times(f.forward, step))
       if (step < 0 && path.length > 1) {
         let back = -step,
@@ -85,7 +91,10 @@ export function driveScope(
         target = tip
       }
       const swept = collider.sweep(f.position, target, FLEXIBLE_TIP_RADIUS_MM)
-      if (step > 0) path.push(swept.point)
+      // A rejected withdrawal must not consume the recorded shaft path.
+      if (step < 0 && swept.contact.blockedMm > 0.001)
+        return { ...next, movementMessage: 'Wall contact — redirect the tip before withdrawing.' }
+      if (step > 0 && magnitude(minus(swept.point, f.position)) > 0.001) path.push(swept.point)
       const located = locateTip(graph, swept.point, next.edgeId)
       next = {
         ...next,

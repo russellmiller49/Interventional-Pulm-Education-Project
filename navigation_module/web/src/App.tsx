@@ -31,6 +31,7 @@ import {
   type ScopeCameraPose
 } from "./components/BronchoscopeView";
 import { AirwayMap } from "./components/AirwayMap";
+import {readTrainerSession,sessionKey,sessionSource,type TrainerSession} from './session';
 import { ENABLE_SCOPE_DEBUG } from "./runtimeFlags";
 import { applyDocumentLocale, getMessages, localeFromWindow, type Messages } from "./i18n";
 import { useScopeTrackerDrive, type ScopeTrackerFrameHandlers } from "./useScopeTrackerDrive";
@@ -144,9 +145,11 @@ export function App() {
     () => window.localStorage.getItem(HARDWARE_SCOPE_STORAGE_KEY) !== "off"
   );
   const [liveSteer, setLiveSteer] = useState<LiveScopeSteer | null>(null);
+  const [renderedScopeFrame,setRenderedScopeFrame]=useState<import('@bronchoscopy-core/frame').OpticalFrame|null>(null);
   const [aimedEdgeId, setAimedEdgeId] = useState<number | null>(null);
   const sourceSaveTimerRef = useRef<number | null>(null);
   const pendingTargetLocationIndexRef = useRef<number | null>(null);
+  const resumedSession=useRef<TrainerSession|null>(null);
   const scopeHandlersRef = useRef<ScopeTrackerFrameHandlers | null>(null);
   const scopeRollZeroRef = useRef<number | null>(null);
   const scopePushAccumRef = useRef(0);
@@ -174,13 +177,17 @@ export function App() {
       .then((nextCase) => {
         const targets = noduleTargetsForCase(nextCase.metadata, messages);
         const initialTarget = targets[0];
+        let saved:TrainerSession|null=null;
+        try{saved=readTrainerSession(window.localStorage.getItem(sessionKey(nextCase.metadata)),nextCase.metadata);}catch{/* Embedded storage may be unavailable. */}
+        resumedSession.current=saved;
+        if(saved)pendingTargetLocationIndexRef.current=saved.targetLocationIndex;
         setLoadedCase(nextCase);
-        setActiveTargetId(initialTarget?.id ?? null);
+        setActiveTargetId(saved?.activeTargetId??initialTarget?.id ?? null);
         setSelectedEndpointId(initialTarget?.initialTerminalNodeId ?? nextCase.metadata.initial.snappedTerminalNodeId);
         const parsedCalibration = parseScopeCalibrationProfiles(nextCase.metadata.scopeCalibration);
         setScopeAdjustmentProfiles(parsedCalibration.profiles);
         if (!scopeProfileForcedByUrlRef.current) {
-          setScopeViewProfile(parsedCalibration.defaultProfile);
+          setScopeViewProfile(saved?.scopeViewProfile??parsedCalibration.defaultProfile);
         }
       })
       .catch((loadError: unknown) => setError(loadError instanceof Error ? loadError.message : String(loadError)));
@@ -273,7 +280,7 @@ export function App() {
   const airwaySurfaceMeshUrl = appAssetUrl("cases/default/airway_surface.stl");
   const visibleNoduleAsset = noduleRas ? activeNoduleAsset : null;
   const noduleMeshUrl = noduleRas ? noduleMeshUrlForAsset(activeNoduleAsset?.metadata.assetId ?? activeTarget?.noduleAsset.assetId ?? null) : null;
-  const focusRas = drivePose?.cameraRas ?? visibleDecision?.nodeRas ?? noduleRas ?? loadedCase?.metadata.initial.targetRas;
+  const focusRas:Vec3|undefined = renderedScopeFrame?[-renderedScopeFrame.position[0],-renderedScopeFrame.position[1],renderedScopeFrame.position[2]]:drivePose?.cameraRas ?? visibleDecision?.nodeRas ?? noduleRas ?? loadedCase?.metadata.initial.targetRas;
   const selectedOption = visibleDecision?.options.find((option) => option.edgeId === selectedEdgeId) ?? null;
   const correctOptions = visibleDecision?.options.filter((option) => option.isCorrect) ?? [];
   const airwayFrame = useMemo(() => (route && focusRas ? buildAirwayFrame(route.routePoints, focusRas) : null), [route, focusRas]);
@@ -418,6 +425,79 @@ export function App() {
     },
     []
   );
+
+  useEffect(() => {
+    const saved = resumedSession.current;
+    if (!saved || !activeTargetLocation) return;
+    if (saved.locationId !== activeTargetLocation.id) {
+      if (targetLocationIndex === saved.targetLocationIndex) resumedSession.current = null;
+      return;
+    }
+    resumedSession.current = null;
+    setTargetPlaced(true);
+    setMode(saved.mode);
+    setSelectedEndpointId(saved.selectedEndpointId);
+    setRemainingCorrectTerminalIds(saved.remainingCorrectTerminalIds);
+    setCommittedPathEdgeIds(saved.committedPathEdgeIds);
+    setCurrentDecisionIndex(saved.currentDecisionIndex);
+    setDriveDistanceMm(saved.driveDistanceMm);
+    setDriveRunning(false);
+    setSelectedEdgeId(saved.selectedEdgeId);
+    setTestAttemptResults(saved.testAttemptResults);
+    setScopeDebugMode(false);
+  }, [activeTargetLocation?.id, targetLocationIndex]);
+  useEffect(() => {
+    if (!loadedCase || resumedSession.current) return;
+    if (!targetPlaced) {
+      try {
+        window.localStorage.removeItem(sessionKey(loadedCase.metadata));
+      } catch {
+        /* Embedded storage may be unavailable. */
+      }
+      return;
+    }
+    if (!activeTargetId || !activeTargetLocation || selectedEndpointId === null) return;
+    const session: TrainerSession = {
+      schema: "trainer-session/v1",
+      caseId: loadedCase.metadata.caseId,
+      source: sessionSource(loadedCase.metadata),
+      activeTargetId,
+      locationId: activeTargetLocation.id,
+      targetLocationIndex,
+      mode,
+      selectedEndpointId,
+      selectedEdgeId,
+      currentDecisionIndex,
+      driveDistanceMm,
+      committedPathEdgeIds,
+      remainingCorrectTerminalIds,
+      testAttemptResults,
+      scopeViewProfile
+    };
+    const timer = window.setTimeout(() => {
+      try {
+        window.localStorage.setItem(sessionKey(loadedCase.metadata), JSON.stringify(session));
+      } catch {
+        /* Storage can be unavailable in an embedded browser. */
+      }
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [
+    loadedCase,
+    targetPlaced,
+    activeTargetId,
+    activeTargetLocation?.id,
+    targetLocationIndex,
+    mode,
+    selectedEndpointId,
+    selectedEdgeId,
+    currentDecisionIndex,
+    driveDistanceMm,
+    committedPathEdgeIds,
+    remainingCorrectTerminalIds,
+    testAttemptResults,
+    scopeViewProfile
+  ]);
 
   if (error) {
     return (
@@ -1446,6 +1526,7 @@ export function App() {
         </div>
         <div className={`right-stack ${testMode ? "right-stack-test" : ""}`}>
           <BronchoscopeView
+            onRenderedFrame={frame=>setRenderedScopeFrame(previous=>previous&&JSON.stringify(previous)===JSON.stringify(frame)?previous:frame)}
             decision={visibleDecision}
             indexes={indexes}
             selectedEdgeId={selectedEdgeId}
@@ -1482,7 +1563,9 @@ export function App() {
               noduleMeshUrl={noduleMeshUrl}
               selectedEdgeId={selectedEdgeId}
               committedEdgeIds={takenPathEdgeIds}
-              driveRas={mapDriveRas}
+              driveRas={focusRas??mapDriveRas}
+              opticalFrame={renderedScopeFrame}
+              opticalFovDeg={visibleScopeAdjustment.fovDeg}
               messages={messages.airwayMap}
             />
           )}

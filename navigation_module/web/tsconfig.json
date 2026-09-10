@@ -14,7 +14,9 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": { "@bronchoscopy-core/*": ["../../src/lib/bronchoscopy-core/*"] }
   },
   "include": ["src"],
   "references": []

@@ -1,0 +1,3209 @@
+{
+  "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+  "assetPath": "airway-anatomy/case-001/ct/native-v1",
+  "storagePath": "module-assets/v1/airway-anatomy/case-001/ct/native-v1",
+  "fileCount": 640,
+  "bytes": 225837459,
+  "files": [
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-0-0.i16.gz",
+      "bytes": 285239,
+      "sha256": "05b398d30f8dacd00a06dd2252cdd3664ae438790e1f288e73270ff40ed1ae82"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-0-1.i16.gz",
+      "bytes": 279378,
+      "sha256": "7df58e5b716fe09b8531b51b9af2db107453c89c1596411a78b877d4e4da6444"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-0-2.i16.gz",
+      "bytes": 272230,
+      "sha256": "e00ce496d482b433ab79e4d05a549f0512fc0f308f300cb3bb169f7488fa0205"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-0-3.i16.gz",
+      "bytes": 264438,
+      "sha256": "fcd6ed58f957d0ab8b51e21310f2278bdc66f59a31b9b462573bd31d90981410"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-0-4.i16.gz",
+      "bytes": 258071,
+      "sha256": "759e1ed6d27a6c2262e2c84eaffea62e7e85d23c6519b036eb52160c977c801b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-0-5.i16.gz",
+      "bytes": 257716,
+      "sha256": "ebb6d1e481f6c4fc86528b339702a4b34b58ed1e165982dfdb6c7c6e6a0cac98"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-0-6.i16.gz",
+      "bytes": 257978,
+      "sha256": "b667ea9bc619bd5e9855065e41940029fed47d13dc4577b84280640879376b59"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-0-7.i16.gz",
+      "bytes": 270343,
+      "sha256": "94397810df360c31dc79b857caa3b930609a9655892b6d8670f24620a91a966d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-0-8.i16.gz",
+      "bytes": 353183,
+      "sha256": "4fab19dbb07f99669d34a5d303fadbdb06c56c8fa019ab2e770fb5d94f464288"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-0-9.i16.gz",
+      "bytes": 347343,
+      "sha256": "9a829fac1487d82c3dc52b6d030e7cfdfac02c95e0011654d744a2a26f327838"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-1-0.i16.gz",
+      "bytes": 349640,
+      "sha256": "846d2cd0fa7579d18c9f17bba7773446b340c3c38c6ea64558558781132e7081"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-1-1.i16.gz",
+      "bytes": 340998,
+      "sha256": "629d7f51aa398c28582a4c46140fb1238236e6fe8f8f44cdb05b85d8ee2da934"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-1-2.i16.gz",
+      "bytes": 327285,
+      "sha256": "e917256f3da3e87f9fb10e9d72879dffc66ee4e2faa21da423844755ef890426"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-1-3.i16.gz",
+      "bytes": 305998,
+      "sha256": "f668a4435edee368aa5e1390147adf70878eb8702dbab3def875a82a9c62a06d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-1-4.i16.gz",
+      "bytes": 283624,
+      "sha256": "2f584bffbb86b02c30737e9f80dc6ebc4fb16267a53b772ce8053dbee8956538"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-1-5.i16.gz",
+      "bytes": 279657,
+      "sha256": "088fa40491f9b3cfc1d8f4ec19ab598caabe92382965c0fdefe832c906c45db4"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-1-6.i16.gz",
+      "bytes": 270027,
+      "sha256": "4276c3c7062e7f47e96e55979d90b05bc12d05e3b86b313607e211171c8c9dad"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-1-7.i16.gz",
+      "bytes": 299866,
+      "sha256": "d51b27b077db780f632445776bd53e63cf1502144a955be61c6b57ac4ea3ff7f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-1-8.i16.gz",
+      "bytes": 362068,
+      "sha256": "8e93fe9ded9962123246c8c75fa05e097b1b9170bf37b71c318a5c2ac2132ef4"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-1-9.i16.gz",
+      "bytes": 351513,
+      "sha256": "41fda684288ada8597453a8cc70c65bda05e82a336d45240b94aabae6adaf554"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-2-0.i16.gz",
+      "bytes": 376501,
+      "sha256": "91ed52257ef1d9cc13e16cbdda891ef5f824eaa7c385240ef6aa3db94bcf7c39"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-2-1.i16.gz",
+      "bytes": 376153,
+      "sha256": "df4c718178bf0c8fd77795115ce45a91f81215f34bbc1a35b0bc405806a46cdd"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-2-2.i16.gz",
+      "bytes": 369769,
+      "sha256": "0675a2292cd888d40f41390ec45a526a0428c48e3a504177d7ec2947ca2d735e"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-2-3.i16.gz",
+      "bytes": 364635,
+      "sha256": "37477da5921586347c5630a393df14fbd2d65d113131451ea844489b33a5d240"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-2-4.i16.gz",
+      "bytes": 348603,
+      "sha256": "7f44d120a69b025e919c5d00b3b363358a881f37016791a4b1fb16699e70a2f0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-2-5.i16.gz",
+      "bytes": 345464,
+      "sha256": "1d186af03224450e8bb76753046baf5091eb3db04de30c54ed5cd7684b9e2580"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-2-6.i16.gz",
+      "bytes": 347146,
+      "sha256": "4f41b3439aff5b0ea8f12ef83ecc100d352dd911fb9265d66f15899b858bdbd8"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-2-7.i16.gz",
+      "bytes": 354588,
+      "sha256": "d93ba652f9bcd40b6408b12ba3e17a194c0b1529ce657da98b3c3b38be28f2ed"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-2-8.i16.gz",
+      "bytes": 372461,
+      "sha256": "ff837ee4ea04b2c97ecd408c1b035b47b483d7356774e13431f02eaf7d7ecb43"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-2-9.i16.gz",
+      "bytes": 354095,
+      "sha256": "3ab607e69c86e69b5b4edefe9d48ab4c6dfb55de4af2bf2a2454655d101a67ef"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-3-0.i16.gz",
+      "bytes": 369720,
+      "sha256": "5c859d02092dcb921db9e62b1873aa655a106a1d02fbf05e24ab31636addde92"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-3-1.i16.gz",
+      "bytes": 368007,
+      "sha256": "63c32a50520a9abc6265e8849a33d126065398ea36123d92623bef8b06b3fe27"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-3-2.i16.gz",
+      "bytes": 366256,
+      "sha256": "c0811f8444c96260d268d2bcb32e601db31bc8f327a68b216add571b1809c60b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-3-3.i16.gz",
+      "bytes": 376948,
+      "sha256": "61d44db61b729de6942d3289a69ffaaddf8e8ef4b4c990efd26130c3dd3921d1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-3-4.i16.gz",
+      "bytes": 365409,
+      "sha256": "478727118460e1fc0cf2b7d559444480ec26149c29811bf4f986801945e5fc1b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-3-5.i16.gz",
+      "bytes": 347768,
+      "sha256": "f7e1bc33ef7ca241941a21a5e0d1fe05338d91acfbc4946270df191bd059d8ed"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-3-6.i16.gz",
+      "bytes": 340770,
+      "sha256": "e507b459a43eee465966212fd89b45182f622f6299021dadf119e52d3d084c39"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-3-7.i16.gz",
+      "bytes": 339080,
+      "sha256": "abf1e48265454f043465ba47cdcf50a8d682a4e1ff682829496339fd713da97b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-3-8.i16.gz",
+      "bytes": 370059,
+      "sha256": "21d30a3e41f42a26f66bd4c23c3d05ad0c09c406a8448fdfd584d1d85bbb2f5b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-3-9.i16.gz",
+      "bytes": 358354,
+      "sha256": "ec641dddd1d2ef7a8cee1a2654b02ba32e6e51016a3ccac549449c0184093a8f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-4-0.i16.gz",
+      "bytes": 370840,
+      "sha256": "28225f8c176e2f933568e7992cccc2780e2d76ccc42eb977980ba1a0d931bdb4"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-4-1.i16.gz",
+      "bytes": 378042,
+      "sha256": "12a4a0ac508f2a2f9d1c066de185b94acd203f9e05b7c6af695d3c9e7781bc14"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-4-2.i16.gz",
+      "bytes": 384927,
+      "sha256": "09e8fd2df319dde3f3d576435fc4556c42b1ea41b6a924bb0990ef4ba64c963b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-4-3.i16.gz",
+      "bytes": 380811,
+      "sha256": "c5f95f892020c375d5e47a39dbc61d37cfd72d8363f1bc626edb92caf6421c41"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-4-4.i16.gz",
+      "bytes": 370655,
+      "sha256": "24b4618eb25a0156a7a8508c06e5db2e6b7b178f19d8ac98a2fe02cf5a23d204"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-4-5.i16.gz",
+      "bytes": 351588,
+      "sha256": "d2b1cc03f81431f922d0f95699bc8128354afd461593551ca5dde61e6fc722e4"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-4-6.i16.gz",
+      "bytes": 353137,
+      "sha256": "03fb8e11bf7754b313e1779cd1dd445bdbf7927f8d3a28ff9450151a5f949ae1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-4-7.i16.gz",
+      "bytes": 356356,
+      "sha256": "8d546996a493cbb073b9be3fa2e892d07f24b266dbd143cb9f08b02966377758"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-4-8.i16.gz",
+      "bytes": 376002,
+      "sha256": "56caeb9b5751342800976785a383d3bcc818c84d7d6b7e4ae2dce1fa61bacb7b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-4-9.i16.gz",
+      "bytes": 363501,
+      "sha256": "c13b108ebd3e6d9e622a8eb86cfd671ad67adc4cc9243df50ee240b8ab683cda"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-5-0.i16.gz",
+      "bytes": 380137,
+      "sha256": "408c67bc62739f1a728a8372591835fb582fc61e0d38d254d04aa21d218d9aa8"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-5-1.i16.gz",
+      "bytes": 384408,
+      "sha256": "b54c368a57b56a98ac06df6afaa8059f63621da61eb8b29d6c3786f452363465"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-5-2.i16.gz",
+      "bytes": 380259,
+      "sha256": "788bef57f3d9272c5851748ad1008bc7ab73309b1db38573841da2b61d40651b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-5-3.i16.gz",
+      "bytes": 370481,
+      "sha256": "6c4428325f5e014b514cd35af9fa0a955e8bfd26538c6cbb1752cf5d818bf4f1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-5-4.i16.gz",
+      "bytes": 357982,
+      "sha256": "612c9007c7e1d5beecfe509eb557d08c663fce4c92858bf9f64d5cd8376b6506"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-5-5.i16.gz",
+      "bytes": 357506,
+      "sha256": "94543b5b590707057498193a3fff1f9603debdd340424111b43f451eddd4d428"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-5-6.i16.gz",
+      "bytes": 361236,
+      "sha256": "cf1ed2b29a1989b64dfba1f61b212408a2430e501ba788d5f060628fe5893bdf"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-5-7.i16.gz",
+      "bytes": 364574,
+      "sha256": "a245229809adf876487d712092f206fde78c67d6589742eae38a8dc1e3ce53b0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-5-8.i16.gz",
+      "bytes": 378390,
+      "sha256": "fa4a18d4b7f66eed8948bc7771781b6673f5f214bb6a18333a1241acef0655f8"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-5-9.i16.gz",
+      "bytes": 361742,
+      "sha256": "71e54386b9949536ab40d56d130fb11d116d26eed236fe712a941432ebc91880"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-6-0.i16.gz",
+      "bytes": 335985,
+      "sha256": "a19fe7588816ee5baf8bc4da4cda811d7718b966ce36fb30e1d502721cd3e537"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-6-1.i16.gz",
+      "bytes": 348982,
+      "sha256": "4d0c9103123de7ec0d24348a2796e4ef29f99f3c0d40d6a1949d0044a49ff519"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-6-2.i16.gz",
+      "bytes": 357421,
+      "sha256": "512ac27f603d590914851e9d757decd3d4dc3b68b068d66dd4fdc720ca0569b2"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-6-3.i16.gz",
+      "bytes": 358947,
+      "sha256": "8de954b296d14b77d93cbe4e6427c4218a18009468f24cc44e60d6c4fc531274"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-6-4.i16.gz",
+      "bytes": 358311,
+      "sha256": "e123eed6342ff63217efbc13b180e04a38e472feb6dd8595103e8135e6b142a4"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-6-5.i16.gz",
+      "bytes": 359125,
+      "sha256": "6e8f972129c33941d867c52b21d832bab4f8b94ed9b1ec495867c6b52fc51aa3"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-6-6.i16.gz",
+      "bytes": 367497,
+      "sha256": "760896b2fa90230dea5c6db487094faf025bfc88721c3882e8d719099bd491e0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-6-7.i16.gz",
+      "bytes": 364260,
+      "sha256": "df317bbe34dda109476dddec0b21644a6b84d20e14a34cacb64e49ded4e7ee9f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-6-8.i16.gz",
+      "bytes": 376277,
+      "sha256": "cfe9148ab45d99eb90d742ab258a702d6961679d5ded1aac2a17c9c7586fba68"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-6-9.i16.gz",
+      "bytes": 366505,
+      "sha256": "04a2fc437037d0af728756a2c62b7990729a3a7d40323b690b425ff22f2ea76f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-7-0.i16.gz",
+      "bytes": 332176,
+      "sha256": "6baed0a402ff71ca57b6e0d98cc8584a8dd3488cf2636aa19a7568a018eabec0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-7-1.i16.gz",
+      "bytes": 331611,
+      "sha256": "c9efbfbcb4cfe7cac2994d686ffb8884d4ac8acb365e556ebd7ece50d1445dd4"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-7-2.i16.gz",
+      "bytes": 332995,
+      "sha256": "bbed40673f10f73bca6df70f4a4043a7e12cbf1ffa348160305907343aa85ba6"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-7-3.i16.gz",
+      "bytes": 330891,
+      "sha256": "f322b31151599fceaf20c2d9a179d82b49b8aef5264e9e81c81bf8c1c6464936"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-7-4.i16.gz",
+      "bytes": 327100,
+      "sha256": "9c9f2d5424e0444afa54ff641e0d87aedaaaa4e8c50519614b8656b0080f73a5"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-7-5.i16.gz",
+      "bytes": 327023,
+      "sha256": "c1317470041b35e82fce10349460e8a469fc727973fc9b17f32dfd7c2b94820f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-7-6.i16.gz",
+      "bytes": 331154,
+      "sha256": "0ae6a7d356838e704871c4fb8e24a8b229d28fd43bad034a64ebddec64387cf8"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-7-7.i16.gz",
+      "bytes": 337117,
+      "sha256": "96fcb4fa814345f4dba5bdd7a3877d83323341eb9568577bf04c2177f798c6d0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-7-8.i16.gz",
+      "bytes": 346177,
+      "sha256": "578a05915b00f49c8117488237d6f90d5526f252ad74700941b26ef260dea22e"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/0-7-9.i16.gz",
+      "bytes": 323821,
+      "sha256": "39e227d4e51899047caaecc314e749c1d3018fb0415b293bc0a7ec7588e7d570"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-0-0.i16.gz",
+      "bytes": 358060,
+      "sha256": "ad8ba388ccb24f09969508be95b759fd7bb8d0dcc14315bd04d21b185aefa4c6"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-0-1.i16.gz",
+      "bytes": 348241,
+      "sha256": "f33704b79eba2b9f31cb6a24f79361bf40101aed35dbeac7a28117f24b3e5048"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-0-2.i16.gz",
+      "bytes": 325943,
+      "sha256": "709bbb783d0432bf677cb66c46dfc7577c745f78f56234c2320b8dc3a76149ea"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-0-3.i16.gz",
+      "bytes": 295327,
+      "sha256": "cd539b298587f9cdd4435b7035b3a2faa7176a5ea965bbcb01f989249c08bc4e"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-0-4.i16.gz",
+      "bytes": 269507,
+      "sha256": "aa71cfed925945af404430f709ba3f294d9ef79b94a293f874f6027fcb47b6b0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-0-5.i16.gz",
+      "bytes": 263334,
+      "sha256": "208df66b2deae66f4ce1955ea21ea73f797b98fdff5546b0016e0349d9eb3ad2"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-0-6.i16.gz",
+      "bytes": 261590,
+      "sha256": "682b07ba0f3abf0466b45e43a82b2c087b347325abd964984147766388220656"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-0-7.i16.gz",
+      "bytes": 265174,
+      "sha256": "8de01940b21ab748f2218e678339e1082c567060702ba481dd869ecf8024321f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-0-8.i16.gz",
+      "bytes": 325131,
+      "sha256": "0f1f390179fcbb6f40df0336cf611e42ec3cc6dca68575c4e8c36cdb663417d7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-0-9.i16.gz",
+      "bytes": 357312,
+      "sha256": "210ce8ecbdf4de2472b44546887017a2b9d438a429989a5aa5d97d4d936b2cec"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-1-0.i16.gz",
+      "bytes": 366243,
+      "sha256": "7fe43c1ff892e780250d80dc229e2a03b70af450cd74125960406d73c7046c1a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-1-1.i16.gz",
+      "bytes": 364151,
+      "sha256": "257c15b0df244f608a71b1a01aaa1d3a6799bcf2fe893b821d68e150159bec5c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-1-2.i16.gz",
+      "bytes": 364914,
+      "sha256": "8203ad8d98f73d724bb3bc9e027b4d4de37424f2d819497bc3734c3c6b69aa1a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-1-3.i16.gz",
+      "bytes": 361515,
+      "sha256": "76966877abf17945a2d3fc2e65f744ed71e63931ceb79eef68bc63e5201625a1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-1-4.i16.gz",
+      "bytes": 345369,
+      "sha256": "5f937564ac5e83f6bd747e738173fb56c2af79e58db3f50ec4e7dc1c80a605ab"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-1-5.i16.gz",
+      "bytes": 340642,
+      "sha256": "67109572db1dcd1cd9f9bfd3f4b88071530e6ce8edf08809198cf267840fa28a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-1-6.i16.gz",
+      "bytes": 341975,
+      "sha256": "44c2b0f4974d44acb046b59aa4779b4e896bdf6b3d82afe20ad396dc32a3632d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-1-7.i16.gz",
+      "bytes": 333365,
+      "sha256": "70fff1289e8b33eb0b58e030714084e4008649bbb6d7fdd488737ba3ad4938cb"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-1-8.i16.gz",
+      "bytes": 355412,
+      "sha256": "b383c29b4004757df29974131f2ffc05e168e9e6e8770eea6f9a562e710660e3"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-1-9.i16.gz",
+      "bytes": 356870,
+      "sha256": "67afb4df5677be06d515b191a9bb18f466e1c4f8f7a6548118b5aea536948f30"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-2-0.i16.gz",
+      "bytes": 381403,
+      "sha256": "3bc84626e5d71701e31dcd6c685401b0e533a7532ee5d8f39251beb086937185"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-2-1.i16.gz",
+      "bytes": 371945,
+      "sha256": "1c6e5be3f6a307acace3e5c463720a68ab75812d1aa72382b2135ea66d7ee5ec"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-2-2.i16.gz",
+      "bytes": 360960,
+      "sha256": "830efef2fa77ed4958997905e9eb3e24c1b4a9890829f037fcd40d34d21a35cb"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-2-3.i16.gz",
+      "bytes": 364341,
+      "sha256": "3ff7e5293e2d7444e56f6c6057a8babed17e4760035fcc93097d5ceed922c5a3"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-2-4.i16.gz",
+      "bytes": 371710,
+      "sha256": "002f8f362f7bcdeffce5f47d749aec39d113089bed53b6813ec71e296886a2e9"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-2-5.i16.gz",
+      "bytes": 365686,
+      "sha256": "595be380ae40b6e94c062ff900eee894ed6fdb704ba58e4cb2ed360065b49b7b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-2-6.i16.gz",
+      "bytes": 346337,
+      "sha256": "ebc4d63a461caaba68b8d4b84f0db15e52eca751ae24acd83a57b253c03c9b7f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-2-7.i16.gz",
+      "bytes": 349799,
+      "sha256": "4a274b48629af702c169487344786a33ee1c5ffeafed102e43a21ff1903c021b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-2-8.i16.gz",
+      "bytes": 378279,
+      "sha256": "4c4c32fba879314885e7b71ed956733c66b5c50b797149bb6c5ed0fba00d388f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-2-9.i16.gz",
+      "bytes": 362560,
+      "sha256": "0ed4426827cd5e108a763897530a0e38be64df93b9d6df36189544d3593d07c1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-3-0.i16.gz",
+      "bytes": 376536,
+      "sha256": "bdc977f396aa3744e2519fa1e4a6cd4537ca96c509add02a2b6e13827bef87f1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-3-1.i16.gz",
+      "bytes": 371611,
+      "sha256": "eb78810aab67494772196df5a9adc4f2434f1291acae785cb2d8ef7c7237d427"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-3-2.i16.gz",
+      "bytes": 362125,
+      "sha256": "4628524c2b8cf050c18f941153df8b8c1ff311bc3d0cf519e72b4c8e4d49b468"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-3-3.i16.gz",
+      "bytes": 355987,
+      "sha256": "fe5e5461a163a0650fddbdba3459974fad08c242413c585a153ef2e48b75bcdb"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-3-4.i16.gz",
+      "bytes": 334734,
+      "sha256": "e68ed038356ec824ad7b661fdcd853500322e1deaddc529060bf4551f27af4f9"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-3-5.i16.gz",
+      "bytes": 360900,
+      "sha256": "3878eaaccdf7da8c754f6f483039f2a6a7a0d5b3dba7ec17de992ab14975a711"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-3-6.i16.gz",
+      "bytes": 374148,
+      "sha256": "ae0caa11277eb7e049f331b92509f208bc46d2a3ec20e51523455a56f41b837c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-3-7.i16.gz",
+      "bytes": 368791,
+      "sha256": "64d83c9981f4d569a2b4a22dd23bce5f0fdd4c542307c0fd4d0d8713431f26dd"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-3-8.i16.gz",
+      "bytes": 366035,
+      "sha256": "eb1fe148eb2676fc70134b5223d9ca75627be8030b9a302c2487aa1afce34031"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-3-9.i16.gz",
+      "bytes": 346845,
+      "sha256": "de1adaa7cdd64430d71cd1b45821f058877e02d637c1dae29cdf3c3364cceee6"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-4-0.i16.gz",
+      "bytes": 376321,
+      "sha256": "243f029816e697a8921eb836f800e086a6afa9a2f593cce713f7f68853d4bf97"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-4-1.i16.gz",
+      "bytes": 370051,
+      "sha256": "7b10cac9db6abb548b17cb21df25b3992c14308fc275bd3895e7f5e3707fa7af"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-4-2.i16.gz",
+      "bytes": 368369,
+      "sha256": "61f008a8497a6bfc22932d271e646e04e7d25c1f6b016b574210544aeeac7f89"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-4-3.i16.gz",
+      "bytes": 364801,
+      "sha256": "aa1e3927607ed34a5bc5759702c796e69aec835961b98f441929df8d69ddb215"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-4-4.i16.gz",
+      "bytes": 326188,
+      "sha256": "db2db65668622a4fae16ea76355b17f7f67022efc5ddd92a04c9ae744be1eaa2"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-4-5.i16.gz",
+      "bytes": 348954,
+      "sha256": "7c09d1c17284e888acd3be38bba236a8dfa291cf7cee5526cf6e3a5222cb9376"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-4-6.i16.gz",
+      "bytes": 367098,
+      "sha256": "888d2147eaef24abf631a5f63a4eef78fab234e13dfa47dc445849460ef4fb6d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-4-7.i16.gz",
+      "bytes": 377799,
+      "sha256": "2adc64df26dfa953a8a2510f722ce4161c16dcd734912ddfda76c6740fa258dc"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-4-8.i16.gz",
+      "bytes": 374433,
+      "sha256": "766a1ab34d95c2f94891a7faee020f2e1759403918f3563c02ec9c28a4ec5169"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-4-9.i16.gz",
+      "bytes": 354054,
+      "sha256": "ab8360a56f159827d3d0afd4179f7e5b6109948c937a0da5ccb5d48ac46306cd"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-5-0.i16.gz",
+      "bytes": 383679,
+      "sha256": "920b6ad88c4da608e6c75f7b49b9a8d39798b4a36541d1cd0e92e2ed52c9dec7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-5-1.i16.gz",
+      "bytes": 386085,
+      "sha256": "980bb1121ca6b20b30cbf1558703d49efc400497824d54b234acc86f718250de"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-5-2.i16.gz",
+      "bytes": 351871,
+      "sha256": "1332d98e5901529f0cf229b48db1438f6b2fba52f024bfdc01d20aa38504e112"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-5-3.i16.gz",
+      "bytes": 341742,
+      "sha256": "890ae784db84db967976c7f79e1f7d6fa57032b35da297658444f17112f523c5"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-5-4.i16.gz",
+      "bytes": 347043,
+      "sha256": "d92bc0ba9f72e06098981afda8d6adab3cc29cd294801eb05764b35d4b4c9363"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-5-5.i16.gz",
+      "bytes": 368697,
+      "sha256": "e231359919a1a392d9f6f4191ab3760c240c6c9bc36414a73554b62a5b7ced8d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-5-6.i16.gz",
+      "bytes": 377079,
+      "sha256": "e2dc59bfdfbc48e27abad252219a0eb931473d9123207504b3ddae283368fa36"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-5-7.i16.gz",
+      "bytes": 380605,
+      "sha256": "b82a18629601aa02ecabf7b03799a4c1e6e02e376cc65713aa8c485e4cc0a0bd"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-5-8.i16.gz",
+      "bytes": 379520,
+      "sha256": "98ad4ece39bcd115a79a99b46ce2d7b04dcce380cf3393d953e8a19341351d1c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-5-9.i16.gz",
+      "bytes": 366080,
+      "sha256": "d989673180393e0ccdba48fbf5e1827cc88133827606990735b353722fadf70e"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-6-0.i16.gz",
+      "bytes": 386465,
+      "sha256": "0c62e380337a2806c3ebf150233128ebea952691e8976fe2c53f6839920b247c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-6-1.i16.gz",
+      "bytes": 388764,
+      "sha256": "d16af4026f1ec1fc472602dd51f3f6dbf64c2ca785b8adec102dfc5a83add5d9"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-6-2.i16.gz",
+      "bytes": 386623,
+      "sha256": "d0d6e128aaf10edcde7c7aa717b83928e4cb350ef49430e2d60bd77359ffe7df"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-6-3.i16.gz",
+      "bytes": 380194,
+      "sha256": "81a885a28853d85f4823a081f97f0c590f1c58556a7b7547e6523519be0ea335"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-6-4.i16.gz",
+      "bytes": 380139,
+      "sha256": "27365549a2ec6d3af63a2becdf2be97f4b9c4468ebd59c911a723edff5e6c2de"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-6-5.i16.gz",
+      "bytes": 383498,
+      "sha256": "bcd73a57ce45989b0b09a94bbc7b9ec4c749e56c5312c8bd2d23170974ad47cd"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-6-6.i16.gz",
+      "bytes": 382295,
+      "sha256": "cf96ddb36e387bbf88a30403f1c4fcd5e3125085e572921692e03c4c753a45ed"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-6-7.i16.gz",
+      "bytes": 373465,
+      "sha256": "eb69091e7d1c94104bc526ae328ce661d2bde9d61da4f437a5e78908b4ae1b34"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-6-8.i16.gz",
+      "bytes": 385224,
+      "sha256": "d04644121d0b0b366d4911bb822df09d0321755dffef0c0f8043ab9b21fa38d3"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-6-9.i16.gz",
+      "bytes": 362065,
+      "sha256": "d721136a9448b7c4423dc352169c5d0df3f3e03f7fadf8e210b7304d697dd1b5"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-7-0.i16.gz",
+      "bytes": 358284,
+      "sha256": "0c62d841a88ffeb9f015db682d837b0d0e41be78e4ab6659a01a76174830c939"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-7-1.i16.gz",
+      "bytes": 364830,
+      "sha256": "4bb379d3e93d931cf0d4784b9a2f3463a0f13fb726d4a7808e6e249cd603fbff"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-7-2.i16.gz",
+      "bytes": 364794,
+      "sha256": "33123f793d7391873a95cbc0c8f7e0644675588594674877a2ef7214032b8c07"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-7-3.i16.gz",
+      "bytes": 361247,
+      "sha256": "221403716699b11958030fe8bfe27e5cccc836df2affa025d5902b64f3ded9ca"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-7-4.i16.gz",
+      "bytes": 360422,
+      "sha256": "a1930bd09ce92a2b9dc352130319a318b0ff5482e1e4073d498056275f685693"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-7-5.i16.gz",
+      "bytes": 361152,
+      "sha256": "661411fecd3354b2f6cfa6554f3f9346a8dd112eeeb5bae65d3eae0b12b95408"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-7-6.i16.gz",
+      "bytes": 363986,
+      "sha256": "d309542d7cfc77e84c5256cbe45b046d56dfe94463601291037ba963ae4467e4"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-7-7.i16.gz",
+      "bytes": 367659,
+      "sha256": "bd261b26d676979dde60086e017aa5f408f91a197f95c2d1af53c6f6842ee7e4"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-7-8.i16.gz",
+      "bytes": 375396,
+      "sha256": "5baf2414e5df2e5fbb35176ffc935ff127a351ae07617d50d64959167299ff43"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/1-7-9.i16.gz",
+      "bytes": 351297,
+      "sha256": "fe5e7e19fa273a261c0126228fd8648b5b8f04d59d81524cbb7758f71ba5bb14"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-0-0.i16.gz",
+      "bytes": 367038,
+      "sha256": "f9670cba15882c7e1e88b83a8fa31f33e678011b8e2abefd4733439af2a1d367"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-0-1.i16.gz",
+      "bytes": 367195,
+      "sha256": "fac1a6d2ddd7e3250ea720a484f45572dfcbb98dc380714a68e797b824e79457"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-0-2.i16.gz",
+      "bytes": 359615,
+      "sha256": "c0ee061e5f44bf836edb7345a56c518038da01f7d1f28d1b1f581cf9ae0486e1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-0-3.i16.gz",
+      "bytes": 340216,
+      "sha256": "cb615ae2508cba808ebf51161abcd6c952b1c307a8d539baab3292d2330061f7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-0-4.i16.gz",
+      "bytes": 301458,
+      "sha256": "c00d0fd10d36b8f012ee7130d942c60fd715b7e8bf0dd28c996d7c9a41b86482"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-0-5.i16.gz",
+      "bytes": 272278,
+      "sha256": "adcc91e993227529664cf91cfc0ade580c5c17e63989934c1d792bdec1a45360"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-0-6.i16.gz",
+      "bytes": 265777,
+      "sha256": "2b16f05103c58ce41f682dfd6b346cf70611033be8317b4a4235365fe79b38b4"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-0-7.i16.gz",
+      "bytes": 266020,
+      "sha256": "77b532cff1171fcfd6ca9d63c931cdf64d8f7007fbc696f4c221bb0642e05528"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-0-8.i16.gz",
+      "bytes": 272709,
+      "sha256": "48802b77bf8113fb54865c9e312480f67a6613cbf55684761d14e7a4dab4b721"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-0-9.i16.gz",
+      "bytes": 278041,
+      "sha256": "d9d7d1e2b4307a7f5e5178606a8ddab1a452bdd1722684edbd13e59ac903b109"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-1-0.i16.gz",
+      "bytes": 379877,
+      "sha256": "7957b5dde0a54db15ef0afe3e329aba61cb5ce00fef01cfbb65ee1fa4b96afea"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-1-1.i16.gz",
+      "bytes": 372985,
+      "sha256": "8192be9f638e9aaac158ca4f3cac323aadf154790680cb63ee95b4b9769d1624"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-1-2.i16.gz",
+      "bytes": 363220,
+      "sha256": "fc8b4b6912d548e7155edd58c08f32be26289e1825f6025a5c04f61e1e168963"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-1-3.i16.gz",
+      "bytes": 360532,
+      "sha256": "dce96c2183ea71d25b5b4b0eceb8a9089ab847be16ec2747b3528a0d6524e0e0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-1-4.i16.gz",
+      "bytes": 350304,
+      "sha256": "ebdf5c4a64ca8842fc0557deb32bddbc8838702ad9d0c35e4edb6798344e9051"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-1-5.i16.gz",
+      "bytes": 347923,
+      "sha256": "c3f93324aa9c34cbc72aba5b2346354a3d3e006498e04ba3a0c7b6d8996ebb58"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-1-6.i16.gz",
+      "bytes": 341407,
+      "sha256": "8f39379fbbcdbd4516951321179ffcdceb6b5495827f2ee91f72d3db28b06dd7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-1-7.i16.gz",
+      "bytes": 339994,
+      "sha256": "de46c2f0c9841f7bd864511a86bb2028b632c2cb894127761f417f80cef1698f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-1-8.i16.gz",
+      "bytes": 327976,
+      "sha256": "fd3c20f882ac1bac7fce16474c162a5e5daa7703e105791ab9b402710a700589"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-1-9.i16.gz",
+      "bytes": 290355,
+      "sha256": "3abfbad00f25b3aa374dc29b6a65a3cce3a76aeb595c1cf26c07f96b9f56062f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-2-0.i16.gz",
+      "bytes": 379777,
+      "sha256": "c312d649846139bd4975431b0b8ef84b778ca212eedb2b3c1a3b40d48b341643"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-2-1.i16.gz",
+      "bytes": 380796,
+      "sha256": "e254e5cc567db97ab994c04f27873460723206121ad847f36deec886e8d9b70c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-2-2.i16.gz",
+      "bytes": 366793,
+      "sha256": "b4ae62fa32967d9b9633bec4ca17aecff99f918ee2cc81061a5623786c4db3ad"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-2-3.i16.gz",
+      "bytes": 359521,
+      "sha256": "1c7e921869dbae8399dcf2967063e5de4fd47c6bc7171693644fd8581d8698b9"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-2-4.i16.gz",
+      "bytes": 340673,
+      "sha256": "8fb35e0749c5095f6ada780572815a7ee1aec3fb3483f63bc8b1c496a685bc9e"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-2-5.i16.gz",
+      "bytes": 359841,
+      "sha256": "e56863d29d861419c359bc0e6bcfe1f0ac930eb43955e58ca60fcd7bb0c735ad"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-2-6.i16.gz",
+      "bytes": 366641,
+      "sha256": "69d4ad66cb4b3ce00e7899f9a54c5211f68d12ff52089b2d492da1f1dd8babbc"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-2-7.i16.gz",
+      "bytes": 350772,
+      "sha256": "85303bd0749b0fa757b40e6f10e8b7260189d4c40c43c201b82a5925b4f1e4ff"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-2-8.i16.gz",
+      "bytes": 353475,
+      "sha256": "f41efcbf56017c8b6584e5d50e73fabc1b6f5c73dd64abfa8c4ad3e08313114c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-2-9.i16.gz",
+      "bytes": 337571,
+      "sha256": "07558132c01c49fc9f023f326ef13b2ce7e9785c9269bf1de49863e9e3d6da9b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-3-0.i16.gz",
+      "bytes": 382958,
+      "sha256": "e172f884ef42dfb1514c680719f74bcbfcbea0efb510baf125f1db86dfea748f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-3-1.i16.gz",
+      "bytes": 379575,
+      "sha256": "2ceaeb19ac458f14346125c97beb5ad8221fd316595c228df97f4e11ebd70b15"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-3-2.i16.gz",
+      "bytes": 365634,
+      "sha256": "058ad8c0084dfed8a177859f66190dfecb1e8daac40badd02074a79f1218c151"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-3-3.i16.gz",
+      "bytes": 360546,
+      "sha256": "f499204a8f496b0985aa390a0847e4d5581bcd9f6d91944c6ef2ef2319ec176b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-3-4.i16.gz",
+      "bytes": 344317,
+      "sha256": "57e09c512f7bc6cf1c45c8dc3c9987c1762d29dda01833ce89cff27f97abe320"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-3-5.i16.gz",
+      "bytes": 329798,
+      "sha256": "7a79fe206b0465b78b1b0ab3e4080b0163c6b25f76fc318fcb526c31ce5e48e7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-3-6.i16.gz",
+      "bytes": 328838,
+      "sha256": "41eb0f8b84c0477c36b0787582c11f5285d0239045ff05f49f7631d9d681ac23"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-3-7.i16.gz",
+      "bytes": 353395,
+      "sha256": "74ed48a624bfe92c8bf5785fcd21465b742c714017f3fa0351dbbedd9dabb89b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-3-8.i16.gz",
+      "bytes": 370398,
+      "sha256": "046ee3f3f73759616dd14b2ac69541b07a7356fb86e7ad5243eceb740ce25678"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-3-9.i16.gz",
+      "bytes": 336605,
+      "sha256": "3dd2c512c984fac2bcfb90360c4d80822e43954973dac23792a02b93240c9c44"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-4-0.i16.gz",
+      "bytes": 382928,
+      "sha256": "6bc8e73f1eab753d5baa33b3fd666f9690a5d6144937674540c1185818eb9e88"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-4-1.i16.gz",
+      "bytes": 374466,
+      "sha256": "f7bc786e5663f40e76e457194795a83db7f76c403e8ed798bf820c4ebe4d409c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-4-2.i16.gz",
+      "bytes": 372123,
+      "sha256": "5ce9a6ad2c124ce17448f2f30d1d02ccdb6a934169417f9b82d72b65745b6bdd"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-4-3.i16.gz",
+      "bytes": 365775,
+      "sha256": "ca02cadc1957dde4bdd5b9b2f04b04fb50228cc3fac18f9f9bdf845cd41077ff"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-4-4.i16.gz",
+      "bytes": 345359,
+      "sha256": "4aad2b61e1e1979b9c2e297f0fac3e499d57648597554a41c5b00871ffe1fe40"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-4-5.i16.gz",
+      "bytes": 349997,
+      "sha256": "10fe49438c33a42177322bbb9b4111a574169c974f0ae1019263dbe673120c86"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-4-6.i16.gz",
+      "bytes": 343334,
+      "sha256": "649236aeb8cae8805b257b3deccecd274ea04fc68971ea03f33faf624061773c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-4-7.i16.gz",
+      "bytes": 334119,
+      "sha256": "c0cd7a2129e44f8163f03adce66335a5bdbd0dbaaf76d444001c80b52a7b0ff0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-4-8.i16.gz",
+      "bytes": 374659,
+      "sha256": "43c27958a6e13e191d255ca3a3242bd4259e69a2dc8488b412d9406cfdafa226"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-4-9.i16.gz",
+      "bytes": 350579,
+      "sha256": "08c48015cf5582c3eaa909dedf499e53331b69cd014ae33b8643989ceb2adc8c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-5-0.i16.gz",
+      "bytes": 384398,
+      "sha256": "d02be6fdf3b0a4c2a89b72522a5f983721579a435bad47c05040bec328b0c6d8"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-5-1.i16.gz",
+      "bytes": 387080,
+      "sha256": "d5e81a2b9f9a2500bd3b489891c859688c68c7cce8d5d8ceec3bcccbb911d9df"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-5-2.i16.gz",
+      "bytes": 359922,
+      "sha256": "5f337a4356c4f0c55e194532f7353ba513699708ac8802419d9f6d14fbe751d7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-5-3.i16.gz",
+      "bytes": 355912,
+      "sha256": "d30bc14e2641b302265d721bdc84e3d24f408f58c10640c55937acd5aa632343"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-5-4.i16.gz",
+      "bytes": 351710,
+      "sha256": "c24e3c11e1b0260f0aabe837388a60dfafbf54107307f853dd64cca003660587"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-5-5.i16.gz",
+      "bytes": 329442,
+      "sha256": "3152df07ea3e9e8da757cd17ef567a0c93e419de5c5c448c0596e78c51076eb3"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-5-6.i16.gz",
+      "bytes": 343926,
+      "sha256": "af5fcbd60df71ecb8e9859b47f7963c5b9aaec7be39e6fd47b78b76ada0a2112"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-5-7.i16.gz",
+      "bytes": 337027,
+      "sha256": "df75ee1578b3bf3eaedbcfe59848e0a82e5a82f12f6072f15b61d91a1ba87bc7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-5-8.i16.gz",
+      "bytes": 374586,
+      "sha256": "0161d2eecfd2d610b49245abc27bc6d44242ac3f806058fd056eb4dedd2ab480"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-5-9.i16.gz",
+      "bytes": 353986,
+      "sha256": "2545a18570566935d827fdcabe94b7f4b5e3f9d591195df354c4f4289f84a4c4"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-6-0.i16.gz",
+      "bytes": 394727,
+      "sha256": "82c34621266ff43c26c2c3cf35e9e66801481de7eea6fa332aa2fc58afc7a93a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-6-1.i16.gz",
+      "bytes": 386508,
+      "sha256": "571f76e424482628bea64cd0ca81b419ebccd7b899458cabc04fce74dad1063b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-6-2.i16.gz",
+      "bytes": 371989,
+      "sha256": "95d1fe8a6866ac9854cf4b6377c7156d8987d979806ca966730dfb5bd7b258c2"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-6-3.i16.gz",
+      "bytes": 348759,
+      "sha256": "52a2a2022c9af09463e2228ff07ab7d02c2cba4a7313fb75535c482f5f894bfc"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-6-4.i16.gz",
+      "bytes": 341933,
+      "sha256": "65b150835659a437c0da13ad71827f44b1e966d6940193999ec3147b86f6bf41"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-6-5.i16.gz",
+      "bytes": 351762,
+      "sha256": "ae9ffcba45b3799ce97509a34f4a8bc84b9358eb42699bc208b0e3176f6a595a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-6-6.i16.gz",
+      "bytes": 366647,
+      "sha256": "f6b0d559038624e27fdcd11b8c4c4dd60846467ae2cdd0f65e42941ae4904fb2"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-6-7.i16.gz",
+      "bytes": 381951,
+      "sha256": "a3c13cbe0dcd8b332844c5796759dc26f3fa7fb56e0b3fb6a2b027afa9c1ae02"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-6-8.i16.gz",
+      "bytes": 390355,
+      "sha256": "f00ef1580b3d05c32824bc83469b13a022c1f3fb2ac6c0f1af42013233ffd6c3"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-6-9.i16.gz",
+      "bytes": 356328,
+      "sha256": "2ee86ab26ced839bff75bf2b87e0f276c1b07bc94dd99609fdd0e6a2f60b19e7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-7-0.i16.gz",
+      "bytes": 381711,
+      "sha256": "f4a235908b019a2bab9b7fbc8d1b89bcf31a48a2fa0fe7fb2a70a1ba8f9703aa"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-7-1.i16.gz",
+      "bytes": 378940,
+      "sha256": "6888732cc9479096dad650d76b1f8a83d642fda8fcdaad3429893a34696173ec"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-7-2.i16.gz",
+      "bytes": 376899,
+      "sha256": "465692822bba52fdb62ee504cb4e5500e4d0e7065ebdd2e047fefa5185d399b3"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-7-3.i16.gz",
+      "bytes": 376010,
+      "sha256": "1092d0b2d4af4a0ba3ec428ddd835e6068a3182f4158008e7bdac799cf6ff52a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-7-4.i16.gz",
+      "bytes": 379434,
+      "sha256": "90a836c371294b9604903f16f70e4c7a3a5aaa2eef70801e44567d688cbe2230"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-7-5.i16.gz",
+      "bytes": 378382,
+      "sha256": "190ddcc45b0238b749b2ec772220e670e621330387653c8ee8910dead4b850c5"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-7-6.i16.gz",
+      "bytes": 373814,
+      "sha256": "b1bdbf439f369ebd0b20911ab805935297c0effe8dfed26f3def7d009c70453f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-7-7.i16.gz",
+      "bytes": 377076,
+      "sha256": "c4a3e0b5d3b51b66ce2e9ba46bbedfded505649886f2f4e18d7a3bcc7fa9fce6"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-7-8.i16.gz",
+      "bytes": 383248,
+      "sha256": "5f54d3be8e3c4f31b8a4f3755e1cf79034a4f7c4dff1588ff37dc6d40dda5722"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/2-7-9.i16.gz",
+      "bytes": 362499,
+      "sha256": "c36b4cc63196d7f13dc36a499f3f0aed41157837a07da189c25bf98dcaa01c6b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-0-0.i16.gz",
+      "bytes": 364868,
+      "sha256": "30ef7588c5067afff60241dd2b20cd783726a1c67426f1fded8b5c30ad4e88ec"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-0-1.i16.gz",
+      "bytes": 357373,
+      "sha256": "83294456d472cee7f865697776e2249cce61f3fd485d9f19fbff19b89241070f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-0-2.i16.gz",
+      "bytes": 359550,
+      "sha256": "09284742bf4795f34c03b49ada911b87dd9fddd07c3e01271ea1d5966a321845"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-0-3.i16.gz",
+      "bytes": 349450,
+      "sha256": "e119696555e1162e7b1b13c147e52525b8c7289aa8a2c46a8d71ea60e442ee4d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-0-4.i16.gz",
+      "bytes": 321733,
+      "sha256": "820d4e12c185b164c38bd08beab65eb1c5ec2dd98606054cb1719a0dcd7f6bdc"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-0-5.i16.gz",
+      "bytes": 271987,
+      "sha256": "52c3a95b3c1e21954e0e62ce0692ff13545e1cff8339d50bef7a1603b0558fe6"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-0-6.i16.gz",
+      "bytes": 263662,
+      "sha256": "e9e1b9906861676656655517b58df7ece73dced360d1a0533056fc36bfac6320"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-0-7.i16.gz",
+      "bytes": 261970,
+      "sha256": "4ba3e530081494d8039dc613283704d316cfa0dc9b0093aa241f3fb5c01ade6b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-0-8.i16.gz",
+      "bytes": 267472,
+      "sha256": "f4f4ad8dd0c9e9b50c4fa9b755249bc057203fa87176bf0ca16ce82822d8f012"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-0-9.i16.gz",
+      "bytes": 263284,
+      "sha256": "f7fd41ba5c333757786e83d456112df09cd0a2a2769bbe840a86fd6d5097e7bf"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-1-0.i16.gz",
+      "bytes": 381370,
+      "sha256": "920ff3e0b2ffef88a4b2a6e3d3aea4172eb2890c243c14238f6c54f02cbd4024"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-1-1.i16.gz",
+      "bytes": 368531,
+      "sha256": "9d6f063668f4b59fa0cf0793936fa9c35fe6f21ef3e9c623713b9ede2bfd3a01"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-1-2.i16.gz",
+      "bytes": 362365,
+      "sha256": "af4105a6a72041c26798c67c49d0d0eb25a03bb18f26d55dc3a2fe55f017b76a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-1-3.i16.gz",
+      "bytes": 357952,
+      "sha256": "75ec419dc89c4b940361aa82f13c4d361c59922f315cbd5a9068071ceade9e5c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-1-4.i16.gz",
+      "bytes": 347860,
+      "sha256": "60f30cb600f64d71541dd39610047d7f5788e8fac429b270a3b138f5f07ff8fc"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-1-5.i16.gz",
+      "bytes": 346469,
+      "sha256": "75b5e7666fa9524583d975f62ecf406e26dbed5571c1e9e03ba2c873d47831e5"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-1-6.i16.gz",
+      "bytes": 336088,
+      "sha256": "c9ce402d3a64c0857d97af9c9cc5d0ad046e2673e23da50b006c0c17d18fc43c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-1-7.i16.gz",
+      "bytes": 319685,
+      "sha256": "0695ac670133311b1b5d2c5c005b209bf99f10a83dfac6d931e7873c6d9b7136"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-1-8.i16.gz",
+      "bytes": 295145,
+      "sha256": "adcf0f80a51b41736f119926eb4b956b6c3b2ad6bf25863986c390d4020731f4"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-1-9.i16.gz",
+      "bytes": 270442,
+      "sha256": "4f3acd63b99878ca99a8a83567b96e7dfb060ec2881e0c6011ffc93e5f4f83f8"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-2-0.i16.gz",
+      "bytes": 379518,
+      "sha256": "692372fdac459b815d3a2dbc40a90a1bb7cb45fa05e220929036524f1a4688b0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-2-1.i16.gz",
+      "bytes": 377558,
+      "sha256": "4772beb3d56733c274904acc932e8289c6e27cbe00b5f4ce9313be5f89d62ccd"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-2-2.i16.gz",
+      "bytes": 370908,
+      "sha256": "c0e51e5d648c825ebcbb7b5564de2f3c83a889f2aeaa34b227ad298e32c0d077"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-2-3.i16.gz",
+      "bytes": 356001,
+      "sha256": "42964f2e6e4c2af14ab4a89f520b1d81a33eda0c49fc2db7d355dd5f5a578716"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-2-4.i16.gz",
+      "bytes": 366811,
+      "sha256": "c4e345fbbc93381dc6fb262754292369a4a15cc9b59e0f0e2d2102179a69ab03"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-2-5.i16.gz",
+      "bytes": 380317,
+      "sha256": "0b9907945b307fe49804f13b4b749896b0ad256628d51103561a28942ba0d483"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-2-6.i16.gz",
+      "bytes": 374455,
+      "sha256": "6a2e1d24c2eafa4b59276eace6d85bdc1cc5722bf639b8a757f535ef060ade7c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-2-7.i16.gz",
+      "bytes": 353886,
+      "sha256": "17a22d5c237b281b5a54c5c19030d316e42abde3b96b825ff5f8b21e6585b70d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-2-8.i16.gz",
+      "bytes": 362205,
+      "sha256": "e1afd269352ceb92f487e66aa0441e782bcdc340e6ee543b33642cfe00147e99"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-2-9.i16.gz",
+      "bytes": 339591,
+      "sha256": "a124b8c946e497a527b257775ddaf47579a575928bba6852fa5717bdce98a35d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-3-0.i16.gz",
+      "bytes": 385386,
+      "sha256": "d43c883a8fd0d8bc308031b9927894ffba018f304492b6be974e7184e884d6e1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-3-1.i16.gz",
+      "bytes": 381420,
+      "sha256": "867ba44e9d0a8d8f4f9c4fe55a7fabc33a5ec4e19be0674cc6303eb7752e7639"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-3-2.i16.gz",
+      "bytes": 367488,
+      "sha256": "74001dcba7261e12fef734de43e5ae191ff0d9a6073ad509675edadff5b80433"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-3-3.i16.gz",
+      "bytes": 359637,
+      "sha256": "f80435f8f22b2da7c7c9b452cb3d9d13f7d3f737fcd0d3e3f59696c198fa10e6"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-3-4.i16.gz",
+      "bytes": 366760,
+      "sha256": "ffc05aa9c0c02e11cfb45de969459897e4d29155b13ecb46b07345c17a7660f3"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-3-5.i16.gz",
+      "bytes": 369576,
+      "sha256": "7337d126af8e3bce7aeb1209c8f5614db172df2697351d45325e11e0a67d289a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-3-6.i16.gz",
+      "bytes": 369932,
+      "sha256": "998928409b9a1bea8d7707f1063742dfbed399aea3d2ea6238326979bbae6d28"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-3-7.i16.gz",
+      "bytes": 375696,
+      "sha256": "a1ebf16979bfa0ed53dfbb400553f3ca1ad2d5ea7bccada95e1754dd027ad733"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-3-8.i16.gz",
+      "bytes": 373338,
+      "sha256": "78fcdbd323a0e40a123c3a38fd304929205ec16b7c659f803c46ff86f17c951c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-3-9.i16.gz",
+      "bytes": 345256,
+      "sha256": "2ea2c3ede92d983713ca69b3a4c4a1f090fd4831f075d42c40707e91978fc907"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-4-0.i16.gz",
+      "bytes": 385815,
+      "sha256": "fc5642924656a68d38c2d9fdc8059e43b92f2f3f8f022b948e773c1e2b60ec69"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-4-1.i16.gz",
+      "bytes": 388321,
+      "sha256": "b8a43e9bd4abd0d207b14223b6aedf20a73886f2f8301b444d8242f8cf9db385"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-4-2.i16.gz",
+      "bytes": 385832,
+      "sha256": "2e2788b272c8f5010870ef8368046a1b787274181fcf7829b0df938e79611445"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-4-3.i16.gz",
+      "bytes": 373512,
+      "sha256": "13d0a9a30ad6e0f733bb97695bad602ab3daffcdde1730f762ec23ce20dbd846"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-4-4.i16.gz",
+      "bytes": 377823,
+      "sha256": "73e3a5f67249cdd510983886bcfc7e9f190553502a09449b4d66ebfc54208142"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-4-5.i16.gz",
+      "bytes": 364531,
+      "sha256": "46330482791d41fbbe3ff94094f84a117a03ea017fe58098c90906363830596a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-4-6.i16.gz",
+      "bytes": 371635,
+      "sha256": "9bf23c9054cfb6c759cf70e7e48c2503308ce64361e2cadf55e22701855cb472"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-4-7.i16.gz",
+      "bytes": 372868,
+      "sha256": "b5df115bb501e130fa7ced2f3a73158d2efee4e1c05e45882499dc8e11698a37"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-4-8.i16.gz",
+      "bytes": 383692,
+      "sha256": "bf45cab4328e3fd2dd1b92476478f31bdac9b6234f6d37d160a92c7f86e14ee3"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-4-9.i16.gz",
+      "bytes": 364219,
+      "sha256": "89eda6f552154ab0f6241cd6581be9d1df3f3f4fd99fb41f06817613fe9d9f93"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-5-0.i16.gz",
+      "bytes": 401107,
+      "sha256": "9cc9f9a130a43c6df17502cfa581a5ac1b93e193c6243135684829550f6e5701"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-5-1.i16.gz",
+      "bytes": 399313,
+      "sha256": "af3890f37f68f9f3e0cf758d2dcacd80b75924795c3269a63848221471c03128"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-5-2.i16.gz",
+      "bytes": 394495,
+      "sha256": "3cbd9253c670cc12225944730f4e94abe96e86e35276a4283577b1537955d4bf"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-5-3.i16.gz",
+      "bytes": 388052,
+      "sha256": "71a444c3910493f70ce351505a5dadcd46b5aba19e159c1a8386b8e8a852b588"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-5-4.i16.gz",
+      "bytes": 379302,
+      "sha256": "695f4db5be70d9cf34e746be823f0ed3b363b10adba6bc7e3222fc5763958552"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-5-5.i16.gz",
+      "bytes": 373328,
+      "sha256": "57bd953cbdebd1f022b50a5f9d46b31ac6af83ab93f6a749cbf7c3291e1d81ef"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-5-6.i16.gz",
+      "bytes": 372288,
+      "sha256": "a29ac6643287b23fc1d177e6bdd6ec6729d3b16fa05ba78cd4ec5751a2906119"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-5-7.i16.gz",
+      "bytes": 370873,
+      "sha256": "baade0ba40f4de96bf8a6f580eda0241a61fcdf37a3ac7c4e89a3baa2eb2c157"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-5-8.i16.gz",
+      "bytes": 392382,
+      "sha256": "8d1ab40e952814daee75a64d3ab6cc8cd6a2c778695f223c5914debc16798d73"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-5-9.i16.gz",
+      "bytes": 357042,
+      "sha256": "3fa6f0d277708bb0d3a7cd24734d2eeaf059c29434408ff2165abc6c77b7194a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-6-0.i16.gz",
+      "bytes": 390367,
+      "sha256": "bc321a440da39df8b22d29d2da29035514152b0d05900e30d2e8142630ba6f34"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-6-1.i16.gz",
+      "bytes": 393698,
+      "sha256": "da5cb864b97e90bfe06ab2dbe68eadcf08f5e3d71720b8e4af0f3d402db89db7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-6-2.i16.gz",
+      "bytes": 396556,
+      "sha256": "fd20d6fd069168046ff2841f9d7f898be61cdd268faa2d82cd8c8d7cf9559e4d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-6-3.i16.gz",
+      "bytes": 399562,
+      "sha256": "eb97f50f9a8b104dab50e2718851b219415d6bce2b74b945763c1b4d9ea98889"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-6-4.i16.gz",
+      "bytes": 398175,
+      "sha256": "de1010c8064855e4e9a3cd86effb1ce1b4d0bf273a5c713f0076248a056cbeb8"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-6-5.i16.gz",
+      "bytes": 398401,
+      "sha256": "e7fdda78386a1774d97a3b3173e01013785bb6254844c47a38d5561b6e267613"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-6-6.i16.gz",
+      "bytes": 394727,
+      "sha256": "7d07c30a29fdecd2604803184f8527e9e7284664c808239d0297b4a34b78a57e"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-6-7.i16.gz",
+      "bytes": 392550,
+      "sha256": "4607073bf30e79836e222ff24f094e0759e1c44d6a1b63a8ad83d3ec7c754ac2"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-6-8.i16.gz",
+      "bytes": 390923,
+      "sha256": "947a6c118a87dc3b6ab17437503fb3ff942ed039929b8d315dae4e9c014f2618"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-6-9.i16.gz",
+      "bytes": 358085,
+      "sha256": "4d52357dae13dfe1923f86781cdb0102f729248f97322cb1e033820ef1879b37"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-7-0.i16.gz",
+      "bytes": 382450,
+      "sha256": "27fd0176792dde612548e2a0fb430503bfcb04c99e8305dbd3040da34e7a3aba"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-7-1.i16.gz",
+      "bytes": 380307,
+      "sha256": "01dfca83b14ed58f86dea1bae61552365a9ef70984b694c9f5e95cfa08193c87"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-7-2.i16.gz",
+      "bytes": 376947,
+      "sha256": "00ff9377c3128c566da91d9413c2627b787f491b667fc30a6190d8d7766ab663"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-7-3.i16.gz",
+      "bytes": 372483,
+      "sha256": "2e0ea2d8139e88f251f44e9805332650fcde1a43a6f2024d40e7cf91d0982ff9"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-7-4.i16.gz",
+      "bytes": 373161,
+      "sha256": "6ad5c6838eadfa6cb13ebacfbd99ca4864da567326a0f67943276658f4f6418c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-7-5.i16.gz",
+      "bytes": 375954,
+      "sha256": "3e4cdbf0e5f1dd85bfa3a661bffe56945c1866693cb6504b685dc80757fe77c0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-7-6.i16.gz",
+      "bytes": 375941,
+      "sha256": "1e0f48407e38a346a3dba5795e7b1ae67672281ca411dc693ecd48a8e77132cf"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-7-7.i16.gz",
+      "bytes": 379525,
+      "sha256": "58e998ecc6790db2c42e7895bf5902dd683b7a1f955bbe3183b5ad8ddf4e27a3"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-7-8.i16.gz",
+      "bytes": 387690,
+      "sha256": "020526eeb0c8366caeb98a49165cb7dfa814e888b9d2e82e5f300d26118ceea0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/3-7-9.i16.gz",
+      "bytes": 364622,
+      "sha256": "addfb0bac25f1601b9c02f29a0f2c9cd0eee1a06967555b07a220af3edea72e0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-0-0.i16.gz",
+      "bytes": 362811,
+      "sha256": "45157f7ab949e17b14704991ed53bb8f487d543610fba413ab6ad26366441215"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-0-1.i16.gz",
+      "bytes": 357202,
+      "sha256": "75319e93c5be16ac97d120df9edc72eb3d2d29da2f1d32a7fb58f9cfe5f427b7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-0-2.i16.gz",
+      "bytes": 357662,
+      "sha256": "89986d7317e16b9dd38f0c82313e1f54c64141c30f395d48db299097448c666b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-0-3.i16.gz",
+      "bytes": 356934,
+      "sha256": "003a12f78ff4ea447622bd285d8569e4fee175abb2fca85986ff2260f4a6c2b8"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-0-4.i16.gz",
+      "bytes": 336108,
+      "sha256": "953557a7f5fb2c2a50489f7bb9adf864f736b7a050b1f8cb1a308a43329dc006"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-0-5.i16.gz",
+      "bytes": 285422,
+      "sha256": "3e08cc68f6dbc1d8f7c645c5bb52ff62215c462322654a6ff8042b32b46c7aa6"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-0-6.i16.gz",
+      "bytes": 259630,
+      "sha256": "64c871cfb124b76fe342acfeccd1eba8d2dca9aa2e99a0e7c3d20255b4bc4689"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-0-7.i16.gz",
+      "bytes": 268482,
+      "sha256": "a2a94a362e0a627afb63ee9d2ed2909096a47f23d95731b44dc81765895c5a7d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-0-8.i16.gz",
+      "bytes": 279556,
+      "sha256": "9157e2cfa1e55ceea303581cd6109ea1ff936f618a59c986365e571cac4a5a2d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-0-9.i16.gz",
+      "bytes": 259817,
+      "sha256": "61248452947439661698e15f0b4b77075c90467cc77db46397582d866792bfd6"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-1-0.i16.gz",
+      "bytes": 377404,
+      "sha256": "ec165e112d1d06b1c216666a227b004e4ae3b76c869c8ad9a105ed5266c3f81a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-1-1.i16.gz",
+      "bytes": 380987,
+      "sha256": "40261b070f804db46f556fcc17e57bcd8ab160d03ed5ebc0423064d32cb97a6c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-1-2.i16.gz",
+      "bytes": 368762,
+      "sha256": "c810a0e566b80c1f171de684638f008af2e7c669be4054d18373f4d6d4be4c7d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-1-3.i16.gz",
+      "bytes": 357235,
+      "sha256": "a885790512cedad8d9bd42d452fbfbd1cda7d73d20ea10605354ad8aa722aa40"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-1-4.i16.gz",
+      "bytes": 349422,
+      "sha256": "6234c51409e4f960cd4186e78f85b5bdb03f19b5bc65dbbd5709851d27bb46fe"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-1-5.i16.gz",
+      "bytes": 347153,
+      "sha256": "099ba7be1927d2536ffcaa0a9b7a528b5f8c58c3a6ab542e667beafa1ddf1b89"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-1-6.i16.gz",
+      "bytes": 343476,
+      "sha256": "b78d8fbe9d3997849a3fe9ed7dacf0ffedfba80219b56286060ce6a08aecb685"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-1-7.i16.gz",
+      "bytes": 311382,
+      "sha256": "c643972e82a78ab0d6932368af85b8824a78818a4e3a64444e4dd4b0fc5404ad"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-1-8.i16.gz",
+      "bytes": 281835,
+      "sha256": "101a224ed1ee6625a6c00d55e8e7af807da831edee5faf2775a0ea89f1f8565d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-1-9.i16.gz",
+      "bytes": 274534,
+      "sha256": "9dfa0be2986cc65842cbc796efa8335c65391358bb109d485459dd8d493ecbbb"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-2-0.i16.gz",
+      "bytes": 379563,
+      "sha256": "3446a5225fd716e186a6661a80a37e0f9935a0466b79e4248a9ce4ad70622f47"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-2-1.i16.gz",
+      "bytes": 374383,
+      "sha256": "53217c6b90b175ea72b9a04f256b13f25d919b23ee01169d1ec568ef65d65e52"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-2-2.i16.gz",
+      "bytes": 377451,
+      "sha256": "9c7f9e37bc70611b5deee260dd846f59843f7ec576e703879e6679e720759410"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-2-3.i16.gz",
+      "bytes": 360127,
+      "sha256": "3c3abaa6d726a6ea1fdbd94b3ff56f2c015703098160d92346dc9fd6527ba27d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-2-4.i16.gz",
+      "bytes": 351623,
+      "sha256": "400dc928e8a6716dc7e8082920b197eaf79cd22e6456aae089ade0f803fd0684"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-2-5.i16.gz",
+      "bytes": 366715,
+      "sha256": "4d183ecc249a3501eaaa0404685a26ae3773c0569c7beab41693f17ba7cb9b5d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-2-6.i16.gz",
+      "bytes": 375556,
+      "sha256": "5d7d64bdc3421ce64c9fde0b327fee68deb0661c543ab3c9d768e59365b62e5d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-2-7.i16.gz",
+      "bytes": 355199,
+      "sha256": "43473d8c3590f0d3efa201bbbbb25df11c82b1399f7ffb39086ea119a5da487a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-2-8.i16.gz",
+      "bytes": 361079,
+      "sha256": "49fb8ce5cbc5f203802cd5e3ba6b2637ced27af23f256be16e7cf65d8ec87a52"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-2-9.i16.gz",
+      "bytes": 309817,
+      "sha256": "33f214814ff1365f96bdf082b6e4e01e5cebfe4c009c350719c6773eefe39808"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-3-0.i16.gz",
+      "bytes": 383984,
+      "sha256": "94904484d0898910d13ce9232ada1a2a1a55ed233d9bb6adc0febaa6ab0d997b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-3-1.i16.gz",
+      "bytes": 379391,
+      "sha256": "e8362846ecd563c6d64ec91afc93f2321f29f7a2cb645fc0a58b526ddb106267"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-3-2.i16.gz",
+      "bytes": 370539,
+      "sha256": "b1e6d15eb1bb3c9a20ec877446ce106d4b460e3948a01e16bb91a798c899d2d5"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-3-3.i16.gz",
+      "bytes": 354302,
+      "sha256": "9e2996ab2e9a8fe59d09f2043787019b94e562c7d2c1eb16bd8927b8ab85bc18"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-3-4.i16.gz",
+      "bytes": 343029,
+      "sha256": "833b861ac40d4f8d7d2823acdb82c71b79cd7a02120e4640f679112575c00dc7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-3-5.i16.gz",
+      "bytes": 350284,
+      "sha256": "506de8d95673f416eeb97615e995ca3038bf8c576fb410e0f68f4787e8af6d10"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-3-6.i16.gz",
+      "bytes": 363133,
+      "sha256": "8572691cebde216e748a4993b23f4adbde1482bde8d92743a98cde8ea123d7e3"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-3-7.i16.gz",
+      "bytes": 370118,
+      "sha256": "961acf9bc3b2441aafc1f934282fabf44f4d6d61d238413a66ed4d84804a0ee3"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-3-8.i16.gz",
+      "bytes": 372287,
+      "sha256": "885e628535edffece560e7675d16554e90470b4bb8eae4a44d5c76783bbfabbf"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-3-9.i16.gz",
+      "bytes": 348999,
+      "sha256": "2f381bccf60ec19b67db9e0cf9d225d72952fe9ea248224de399384b7ed68fc7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-4-0.i16.gz",
+      "bytes": 386834,
+      "sha256": "9b22f4525674d839df92ecedfcee7f867ecc88a60b3791643dc634ede71552c0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-4-1.i16.gz",
+      "bytes": 385616,
+      "sha256": "83a3741f366ec48fdf17d82714f17e91347532d9e761e89729e50949dd6e6025"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-4-2.i16.gz",
+      "bytes": 386432,
+      "sha256": "0ed894354d0de6098f443d177d5b357f73f8690a1e5de3cc988543678b08df2e"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-4-3.i16.gz",
+      "bytes": 379090,
+      "sha256": "0340facfc7b9401170822aba54dd603ce169f17d99500fa084f39643c2b506ec"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-4-4.i16.gz",
+      "bytes": 358436,
+      "sha256": "b9d269289d321706443bfb16df76a5c7ebbe8254052efd9a084b4f75333b2352"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-4-5.i16.gz",
+      "bytes": 358318,
+      "sha256": "0ad73bc869e29b96cd6c1e3ed2ad7f48e3ce52e5f2924ec948b48a35bab5a231"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-4-6.i16.gz",
+      "bytes": 372477,
+      "sha256": "6de116b72c1b40962969073de5070ce6e8eace927fc1b915c744a991fa154de9"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-4-7.i16.gz",
+      "bytes": 374515,
+      "sha256": "b0747d8f90af136f29461f763898d3e444021d34aa679934e62a189445c65aff"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-4-8.i16.gz",
+      "bytes": 380935,
+      "sha256": "9709b0c2c501adc9a4705040f11214e22c5115cc58569338b8e468be01e166f0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-4-9.i16.gz",
+      "bytes": 355831,
+      "sha256": "5d692e98b972d5adcddb294bc236b986cb2489800781544f1727371ed4f803b4"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-5-0.i16.gz",
+      "bytes": 397762,
+      "sha256": "96dd39fb70ae8164c052389e304fcb9c37bd452041d004a790a87185eb641763"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-5-1.i16.gz",
+      "bytes": 400043,
+      "sha256": "d1190e36fdc567ec9f7247ef7f9743484ca62cc13b7f73fc454587d9c0bc4db3"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-5-2.i16.gz",
+      "bytes": 388990,
+      "sha256": "3b1db5692dfb447e145dbf8ad33d5ef12bceaf1f1eca3f671aabe42b9f89def6"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-5-3.i16.gz",
+      "bytes": 380922,
+      "sha256": "f51e25fad08b8806e86ef3c36a47fad24978f72d4f4e93f5fbfb24ced3fca92f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-5-4.i16.gz",
+      "bytes": 379568,
+      "sha256": "c99f45827c32121999f050ebec7ba4a35e0e1dd6d91342c73add4936f639871b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-5-5.i16.gz",
+      "bytes": 379807,
+      "sha256": "0c0717a19c6df6bdacb2afc9144cf485841fde5fc5377979991a665306a5aebc"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-5-6.i16.gz",
+      "bytes": 378458,
+      "sha256": "887c73e00952998b08e54715194ca99d49df3426579127468e32355e603cc923"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-5-7.i16.gz",
+      "bytes": 380412,
+      "sha256": "a03fa222f8bf53b13a68ec7843607c148698ea614d5a8577c42a9ae9bc1761d9"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-5-8.i16.gz",
+      "bytes": 387943,
+      "sha256": "2ca36e10d77353803c6d07d0a01d9d323b786e0ebe9b0d6003f0eac9b9659373"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-5-9.i16.gz",
+      "bytes": 353323,
+      "sha256": "c9e161b07b73c2d5fc5c15ab80be0eccfc600348bd3ed426ad39ecc7d7f13ce7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-6-0.i16.gz",
+      "bytes": 390218,
+      "sha256": "fd7d8a37f91c0325385cda985ac60778a77c54824428ae383c1529f000abbac0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-6-1.i16.gz",
+      "bytes": 394131,
+      "sha256": "2bb076954db368e952e9ecc4a5835ba01aa98fdb66a0a9809d2e07f101c2f1c0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-6-2.i16.gz",
+      "bytes": 396215,
+      "sha256": "48e54eb2c490791bf91c538986ae37a2374d99c8a14b2f67a6397483c45718ea"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-6-3.i16.gz",
+      "bytes": 397187,
+      "sha256": "5f182ed9db50af18d42bd35da80454fff5fd66fe1f5dd2a873fd8a7d2581366d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-6-4.i16.gz",
+      "bytes": 395704,
+      "sha256": "fa6f1886a8802b85e029e45dc30c63a5f9d64ef1d99c29e8ed2e67ea5d2f2bb4"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-6-5.i16.gz",
+      "bytes": 395214,
+      "sha256": "48c39d9ef2f41a77c6d9863bf72c0652c40092b470680c0df67955fa48b0269c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-6-6.i16.gz",
+      "bytes": 395124,
+      "sha256": "bbfbe10ba0625d6a1c9843b5372884a1f31c138afa816c915cdecf49871cc3e7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-6-7.i16.gz",
+      "bytes": 391426,
+      "sha256": "0a55cbf31fa4a7a94b3586d4d2e6911329a94a0853798c4367e4f52787eeee9e"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-6-8.i16.gz",
+      "bytes": 386850,
+      "sha256": "b34012116d075135af36b7d69851f8af40db757348101734164645e910e76a06"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-6-9.i16.gz",
+      "bytes": 356940,
+      "sha256": "e461ae959a284d8451d94f6ba8dc79aff2b16b9c87dab1babd13f14dcf8604dd"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-7-0.i16.gz",
+      "bytes": 380710,
+      "sha256": "009d17767b9ff49bf37c448eb48682df37b01f1b8e586453a2ca5993aef6f412"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-7-1.i16.gz",
+      "bytes": 382012,
+      "sha256": "e12aee86c8741a5cca21cda3f8da368b0a279f0312d4f3363845a13d1d0176ae"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-7-2.i16.gz",
+      "bytes": 378549,
+      "sha256": "b9d5386bcf77e4a3a1e41390e6d8289529dcb9e5f4ad3e71058c744819fca1bb"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-7-3.i16.gz",
+      "bytes": 375335,
+      "sha256": "b3d9bfbc3545f278d7b682697ff2cdcab6aafc88ed4b0866c76a62648e38e3d8"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-7-4.i16.gz",
+      "bytes": 373181,
+      "sha256": "77e7fb965cd5eb89ca38b7d45c3c67915271937fbcd3aeafed371f175b0117e1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-7-5.i16.gz",
+      "bytes": 374521,
+      "sha256": "32206fbd083ca334613cacca9409de31c9980d0458f637341af8db48db78fbff"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-7-6.i16.gz",
+      "bytes": 374016,
+      "sha256": "c6de1b50430aa9bc00502a8dc53c418ee54cc9cc2cfd88758b1f405b201c26e1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-7-7.i16.gz",
+      "bytes": 376587,
+      "sha256": "19a33e8abff07b8f5c93791994f79ee84c2d000910d2e820a6c3241b1bcab356"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-7-8.i16.gz",
+      "bytes": 385524,
+      "sha256": "0cd605cc8a65d4ac481676bb61f7ae78ea69701f3ff0e6e9438efbf9d9167911"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/4-7-9.i16.gz",
+      "bytes": 362096,
+      "sha256": "35e0320262de55a308261df0fd5aa0b10924803cfd5263cdb9d49c48944ccce1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-0-0.i16.gz",
+      "bytes": 365726,
+      "sha256": "95de8cc90742cf0495f0000f930d0cba81f0f1f817a3b4ffab7f3e22106e4f95"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-0-1.i16.gz",
+      "bytes": 365723,
+      "sha256": "61034709addf6eebbc3a04c3c0f79491fc459322d427afc3dc6d08ecb32c86f6"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-0-2.i16.gz",
+      "bytes": 359395,
+      "sha256": "c453465d468086c5f1e9799ab565fbef406f2fd3c739df460316034cb4707d2a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-0-3.i16.gz",
+      "bytes": 344432,
+      "sha256": "f2f0511f5ad0d3145ebe26b865161fbac8056e2e6bce9cae8ffd788d2bd31c87"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-0-4.i16.gz",
+      "bytes": 314635,
+      "sha256": "fb89f59c82ccc86eeabb44576dbba1c43cfcc74c40586bcb83063e28bb8bb99c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-0-5.i16.gz",
+      "bytes": 270825,
+      "sha256": "db92a357456781cd4c0cac1a8b659e1bbf70f5f63c85ba53417874a530a2e3ec"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-0-6.i16.gz",
+      "bytes": 259533,
+      "sha256": "977bf1e07fb47dc64330eefc1c274fe7ba8f80a08be01feedaf9e5809dd79ec1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-0-7.i16.gz",
+      "bytes": 261755,
+      "sha256": "b1d239ffadf4e200f0cd99743f57f4f5182f018c3a05e822acf98031d594858d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-0-8.i16.gz",
+      "bytes": 265440,
+      "sha256": "f5ba78cea2466ab80a08b5691bc18d04ee987492481d57eb3bad5f8b1bb40ac0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-0-9.i16.gz",
+      "bytes": 255226,
+      "sha256": "4b3ce09aa8194c5d8c33b530332dd23012001463c0a9d2215522ca898f4a0154"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-1-0.i16.gz",
+      "bytes": 372180,
+      "sha256": "76dff8f6c8a13c00b8e79f4faef4f4c034453eaebfd409b9b3d8af42d56bd39a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-1-1.i16.gz",
+      "bytes": 375807,
+      "sha256": "966f9cf68b8077b2a6c7d0e3abf60e91fe67298b47d3bf5604a4c539ea65b99e"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-1-2.i16.gz",
+      "bytes": 360401,
+      "sha256": "3801f1f893407a7444c311f0e02197cc9f995ad4145e888defa5a2d2063dc670"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-1-3.i16.gz",
+      "bytes": 356250,
+      "sha256": "bb09f3f191629061b5b4e226b87c088245516462505b37cc2e3a2aff314256d8"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-1-4.i16.gz",
+      "bytes": 347121,
+      "sha256": "ea193d8e067e0790180dab48e43cdaceb7c2d9bfa67e392b2be82c327698eed0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-1-5.i16.gz",
+      "bytes": 346799,
+      "sha256": "8b6ac5328911cc35c68b74bdf2d979fc6a30ff169b4209e9e8570bab3fc24227"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-1-6.i16.gz",
+      "bytes": 340411,
+      "sha256": "0335ef099cda246dd4e758ade9056df5fba1c0e3a39e07d7b6290363a71bc4c7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-1-7.i16.gz",
+      "bytes": 329097,
+      "sha256": "92faf6974bdabd244d8579b56978e4dce0c63b43b2183221863ba1359419a131"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-1-8.i16.gz",
+      "bytes": 293126,
+      "sha256": "8f7f11de46dac1e1b86f34226e9a1f5748e142caa3f417ac3e16cc67122a072a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-1-9.i16.gz",
+      "bytes": 268693,
+      "sha256": "d561f200db798339b078f9302b7f2a4b295df9ce0c85065a0181b1e8f976ccc5"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-2-0.i16.gz",
+      "bytes": 378075,
+      "sha256": "cfb074b2cae1b0f395eaa0017a6d063763cbbb5e42c236dd4aeb570373169d59"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-2-1.i16.gz",
+      "bytes": 372604,
+      "sha256": "75f6c29e63871ad4e43f3c9d1b9d49c6b9532206f222f71b19f75c1e7a8b516c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-2-2.i16.gz",
+      "bytes": 368885,
+      "sha256": "29204861c2fc3809a86fd9445795bbc53d21905e60cf5d70bbeafeb6baf0ba6f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-2-3.i16.gz",
+      "bytes": 352047,
+      "sha256": "454fc9f75d527a23e5479b91e897738319609df90bb61ec9e3b884dd3fddd6e3"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-2-4.i16.gz",
+      "bytes": 355134,
+      "sha256": "9ff3cf1e6326d7c82219af102ba37c7ea17641f3e543be7a8ed8cb18149e22e5"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-2-5.i16.gz",
+      "bytes": 361173,
+      "sha256": "dce7d379505439819cd2b1fa7b89995e33b63f253fdaa7e1abf4f7fbcb0bc95d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-2-6.i16.gz",
+      "bytes": 367302,
+      "sha256": "ecb845043f6db9c9e8333526aa66bcc282aaa4963112440f27aba405243684df"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-2-7.i16.gz",
+      "bytes": 355315,
+      "sha256": "18178afc020146f03739bfab6e8d06243c21efffcbae9489d65be4650def19dc"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-2-8.i16.gz",
+      "bytes": 354908,
+      "sha256": "829aff8ccddb5eee17a3b2a90b92c3708213adfae6488c01e7959a4e09620ddb"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-2-9.i16.gz",
+      "bytes": 332426,
+      "sha256": "3a996f5af8e79ce1e62a4cc219806f4f9bfb1a06d337ded2fc0a5f50a1dbc96a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-3-0.i16.gz",
+      "bytes": 381762,
+      "sha256": "7e8ae5d64f16e946b20d9706e84dd01a77945572043bdc0e9159fc473570fdfc"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-3-1.i16.gz",
+      "bytes": 374985,
+      "sha256": "0e4ef3f0a3dc01b814f2dfbe034483157e265ff36ae19433f7b55eaba5f211e8"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-3-2.i16.gz",
+      "bytes": 365844,
+      "sha256": "c4d13acb6f05da7d1acb1a56ae0000e0c85b38b371cac618d7a6d4570c3513bd"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-3-3.i16.gz",
+      "bytes": 374316,
+      "sha256": "76c8809fe256cae898d70ff597702ad9c17cbb09c53cac14700bfc9fba5b3319"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-3-4.i16.gz",
+      "bytes": 371829,
+      "sha256": "bebab6a57805a55a7d2583e911d8c8ea0f1c829e3fca233c43bd4899f64639b2"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-3-5.i16.gz",
+      "bytes": 350462,
+      "sha256": "3dbb53da9f36ee03c9d574a13f5fce75e02185daed5ef64ac27c746adbbed7d0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-3-6.i16.gz",
+      "bytes": 331448,
+      "sha256": "fb0e860c99dd7fd93eed149af54f9682fd4769752dd7bffe34d856738c0d699a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-3-7.i16.gz",
+      "bytes": 353245,
+      "sha256": "166bccead338610b20f32345c2071728d0a56e438cd79ab7948cf02f46e72bd2"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-3-8.i16.gz",
+      "bytes": 367067,
+      "sha256": "7eaa44c44132c5e908a9af30c17c19baf666a29cc22d111b92a4c568ec1f1a42"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-3-9.i16.gz",
+      "bytes": 340236,
+      "sha256": "d716cb3c58ef2bdb62df74833dce5233e2f36edfdd4c91ae3c489614ce45b3e0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-4-0.i16.gz",
+      "bytes": 382656,
+      "sha256": "31cd235dafb0278e7fcf805c2cb9aabe3c8538dc1a8e80c15633e2fa4308445f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-4-1.i16.gz",
+      "bytes": 375662,
+      "sha256": "1fbe3e1d7023b91c7c039522fc4d12a5cc96218a377a5c6997656e66ec28f18d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-4-2.i16.gz",
+      "bytes": 366004,
+      "sha256": "9b7fc0bbf23ca163cd3cbbd50dd109c9acc1691b224aac9eb683c3abbe1e6392"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-4-3.i16.gz",
+      "bytes": 344371,
+      "sha256": "37b79e0fa9efa707dfe1776e0b2d17c81281be1ccb69f6efc3cfe6e6e707c826"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-4-4.i16.gz",
+      "bytes": 364973,
+      "sha256": "5cc10b8b07f7d17feb34ecb87e2cb1ae801d80017c87407d95d3ee6a0c05e264"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-4-5.i16.gz",
+      "bytes": 365540,
+      "sha256": "778c7bc5db7a3b22f3e88f05fe6e90c6f7ff8c699e2e8a3988b12c5272005c39"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-4-6.i16.gz",
+      "bytes": 350521,
+      "sha256": "07e6921025cb74ce28ad02a49b9d2778235ba65010b3f7e5b047fce5f51f4051"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-4-7.i16.gz",
+      "bytes": 333866,
+      "sha256": "ecb8e14ccf201ffdf92292ea82b549aa1f77a2ebfb1bafe5a0daf134d48d773a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-4-8.i16.gz",
+      "bytes": 377333,
+      "sha256": "cfab06e84d0730738eec7a0b3f3344098fc4d17c2cba026343a0de0325033870"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-4-9.i16.gz",
+      "bytes": 349611,
+      "sha256": "9c2d488c3a1e02db1e65bc73ec137c4e1cb883e8f87c5c55ee65af5647f998d8"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-5-0.i16.gz",
+      "bytes": 382158,
+      "sha256": "cd72e08104503480652f400c24af8d49fa5671689949c33584ffa696a26d9940"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-5-1.i16.gz",
+      "bytes": 382658,
+      "sha256": "fb32b2d5c9ec344d67b65690dc7a5d6e25df5095d29a62cd841454a53d5b2aa5"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-5-2.i16.gz",
+      "bytes": 348138,
+      "sha256": "6d5077b93696fcc71056ab832a4ddcc8b964fb0a06c6728e9a1ecd22f2863d96"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-5-3.i16.gz",
+      "bytes": 354348,
+      "sha256": "c3628595e686a9af1cf4ca26d2792795fdb82067056dbb03dbb255d874c31e00"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-5-4.i16.gz",
+      "bytes": 355739,
+      "sha256": "a7640805b20026f507fa003a0c990d0b8ec3326932b4d1411a6a8f0fe25ef351"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-5-5.i16.gz",
+      "bytes": 349951,
+      "sha256": "0ec0a029d03475339d92e5d1db888b8efa3b2f3d6f46fb3b6c81ae67df2df096"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-5-6.i16.gz",
+      "bytes": 336113,
+      "sha256": "9811f65b784fbeeec5b5fbbf38ee1ccb514cc388d753d9f44e183c06762153f9"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-5-7.i16.gz",
+      "bytes": 341405,
+      "sha256": "4c7afc3a1515b05c0a1acd307d156a3cf0bddbf71cbafe4fbe64fb8c6bbf427c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-5-8.i16.gz",
+      "bytes": 386032,
+      "sha256": "08bf0fbda2fb29d08b330a38a45d4cd2e43beadad143dda7e3a3f9eb115e728a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-5-9.i16.gz",
+      "bytes": 352240,
+      "sha256": "25f67033f08b0d9bcb9781cfd8c6e94e0dec6537c9520a5109f73dab73099e5b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-6-0.i16.gz",
+      "bytes": 392776,
+      "sha256": "44299c3cac28ebbde81f4fa6a3c62c81cb2ab75492f78600da3d47405b203c00"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-6-1.i16.gz",
+      "bytes": 387407,
+      "sha256": "6d023454e598b6247a47eb1af7f9535039f215e35e6d23fdc75f2a52b4ab7765"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-6-2.i16.gz",
+      "bytes": 376567,
+      "sha256": "4aeb36f746c8b7a7a4a78fea9e979ce9d9e7cf2b3cbf6c10a28c959a4ec4a5ee"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-6-3.i16.gz",
+      "bytes": 362633,
+      "sha256": "7b7586adff1433f3e5a764b6d982bf4099e31f140d39426343f8314f299e3907"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-6-4.i16.gz",
+      "bytes": 357413,
+      "sha256": "6f9ee0128091c669c59191a8bf15f9a2be8ef01730702db7980d545321eba4ea"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-6-5.i16.gz",
+      "bytes": 361587,
+      "sha256": "1e71bc543939dc2247d6cf828e212181b1eb1f90c9ae711afc274c7779a83a7b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-6-6.i16.gz",
+      "bytes": 377051,
+      "sha256": "725945faa782bb3af032dff0577b121a4b462c6f4ec73cbcb19bfff8a1707269"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-6-7.i16.gz",
+      "bytes": 390173,
+      "sha256": "d1d4ac69928988aa074487fea5619c1016fd2ac8fd8c9b1183cda6e1266bffa1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-6-8.i16.gz",
+      "bytes": 376434,
+      "sha256": "f7b4fe774562582e64f4d01a3d5e0927f5d7375f5ed87b3e978a9731acf8b789"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-6-9.i16.gz",
+      "bytes": 349344,
+      "sha256": "7c80b5067bb88976bcfdf0746a90a001b124b9859cad9081e11f132aa024fb4f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-7-0.i16.gz",
+      "bytes": 378913,
+      "sha256": "2d9723bbcd0f8c2d4bcd0d609a36f6ccb26686182a6f825f327bf09df7cce03c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-7-1.i16.gz",
+      "bytes": 378169,
+      "sha256": "fa77ebee31d28c9b3f2d488362fd583ed99311be8a5f5ec86564ba75433003bb"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-7-2.i16.gz",
+      "bytes": 374497,
+      "sha256": "d576b0b0cf36c51c4bc148744e036b284186c63636fa2bb8daa342afa3e273f1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-7-3.i16.gz",
+      "bytes": 373394,
+      "sha256": "f543046b75db1485d99737070ae59edec84d93807715887e798257f84c5d5c03"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-7-4.i16.gz",
+      "bytes": 376974,
+      "sha256": "72274d2c1e0dc88fd370580438ffb79aaf503162de8305bbad32d8d2dbe03d33"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-7-5.i16.gz",
+      "bytes": 376465,
+      "sha256": "9e6c43f4958d0770da0ea9b9539f4f63fff2c3c9ee0429760c8326c6a0318e58"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-7-6.i16.gz",
+      "bytes": 373116,
+      "sha256": "c3f0c6ccbc196072619427ca2b8ac44aa500cf406148d961fb2bde5f82180d40"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-7-7.i16.gz",
+      "bytes": 375640,
+      "sha256": "bdb7b6a9548e3ab02bef7cd1a094db757bc616d4fcc5bce2cdb76b855b10ee83"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-7-8.i16.gz",
+      "bytes": 381993,
+      "sha256": "d12f055036e017e701d761dae214d1fc35192e71c34f50c2ea23ed7bc1def3d0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/5-7-9.i16.gz",
+      "bytes": 360286,
+      "sha256": "7003814e87d9aed7b71f1d87bb42f4e7e4ecf374ea6a0ab77601ab4934c0ad53"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-0-0.i16.gz",
+      "bytes": 361723,
+      "sha256": "7d6c3d313590a004d9dd2773e7d753a856dc4cde1eeb934f99d7bc142e4422da"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-0-1.i16.gz",
+      "bytes": 355565,
+      "sha256": "050d33c4437c7622201a512c79c44f05d6eec9a075db6ca4fae66517e77ce90c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-0-2.i16.gz",
+      "bytes": 340288,
+      "sha256": "dd93a0ce563d272513981311c3e5d85bfe4865b7a3bde43894e969184090633d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-0-3.i16.gz",
+      "bytes": 311036,
+      "sha256": "b32f43ac381367008a182fcf163e3f7315619145f88cbb9bbfd5958dde626ecc"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-0-4.i16.gz",
+      "bytes": 271565,
+      "sha256": "40a0f263c0c23ae3de1747f6501414a5840284b0c1134357b8986be64e6c6c70"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-0-5.i16.gz",
+      "bytes": 262569,
+      "sha256": "c1961540e6047b46531e8bbddf5dd68c2311c1a98b3e063985c7e3354f84b7ba"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-0-6.i16.gz",
+      "bytes": 260754,
+      "sha256": "dd32c55cc6f516d13c215c62322f0f1d95e090e9506c5241df613198f8e133a1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-0-7.i16.gz",
+      "bytes": 261567,
+      "sha256": "b3fd55cd644daea99169ca81a23ea5d357a2c4fb1089582d4bb52db1299f664a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-0-8.i16.gz",
+      "bytes": 265874,
+      "sha256": "ceea32d1acb74e3224fbd6ea2251b8753fc44b5c58ff005503f6ece1e6f8b487"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-0-9.i16.gz",
+      "bytes": 253869,
+      "sha256": "03937dd3547fee8424195c3c5d41b55936c4f31e60243664d57dde2aeda3cba3"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-1-0.i16.gz",
+      "bytes": 366647,
+      "sha256": "cd1149ebd093a63bd136d1e97e7b0260ea1fc1ac7b0cf3caaaec9b98307396b5"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-1-1.i16.gz",
+      "bytes": 365074,
+      "sha256": "d8db63c83db08b45ffcae8621e82881ba54c4711bc35ba7a94385a5ab1a40542"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-1-2.i16.gz",
+      "bytes": 361345,
+      "sha256": "4721ea15d8459a645d3d8e363579d1218ee32caa1816998639f6d5c0b255ff5c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-1-3.i16.gz",
+      "bytes": 352920,
+      "sha256": "5c76f54b6a7819a8e1a1457d1eca4fa36fc2da058bdfbc4e445bf1cb966f36e3"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-1-4.i16.gz",
+      "bytes": 351614,
+      "sha256": "62c8fe42781a4b40f21890e8330ea05a4853324e80f7387472a1fcc54faffb60"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-1-5.i16.gz",
+      "bytes": 335042,
+      "sha256": "27273851494585966f24707b879b5d9bf98e181ea36fed456057ec1bf7a0b6bc"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-1-6.i16.gz",
+      "bytes": 327331,
+      "sha256": "42873df65873e7eccd29e7881c2e36ccf682fcfa390a4f24149536168fc02e1e"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-1-7.i16.gz",
+      "bytes": 307969,
+      "sha256": "0273f0ac228095ce463c1248fa51ea8a04c7d92683b76532472f53d701f5f4ac"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-1-8.i16.gz",
+      "bytes": 283959,
+      "sha256": "29570fd9a47e195946141aa4b5497452481bab7343a8f6c48728bf887f378ffe"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-1-9.i16.gz",
+      "bytes": 264633,
+      "sha256": "7e0f13e5bd2eff4ec934d5ce4a169e3f8a06ab6ebd39ffa6359e76117a1ad9d6"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-2-0.i16.gz",
+      "bytes": 373762,
+      "sha256": "3f4aa7ccdb9e608659b81d0903da7a803ad3464ec856c84861d9cb61a8e6fee1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-2-1.i16.gz",
+      "bytes": 368758,
+      "sha256": "062ed048f4b76194a28d10f98909813f9f476015fca0da263d51fdf6f5a0eaec"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-2-2.i16.gz",
+      "bytes": 369396,
+      "sha256": "005fe8a85e57d776a24c28f0374c0e010c236c0e4d4a88d68b7e552b05f34940"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-2-3.i16.gz",
+      "bytes": 366945,
+      "sha256": "ad845b57c6b0a2db40f85ac9e6faf13f28471f35f1a65fd4aca09dc0c95f804c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-2-4.i16.gz",
+      "bytes": 377714,
+      "sha256": "059626148208e28067535134f2bced8f7dd30322b4558fe43f914979431a3cee"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-2-5.i16.gz",
+      "bytes": 368656,
+      "sha256": "47581dd556e3e2f354eca3c1ed79e674e2026ae376c9322069b1c79a65fb91d5"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-2-6.i16.gz",
+      "bytes": 352222,
+      "sha256": "f82f807bde07ae6ba44973c590b891609bad34829752c4b57351b3c5e89bcd63"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-2-7.i16.gz",
+      "bytes": 347891,
+      "sha256": "5373c2900aab311b408c56999ba6ebbc5b51a992928b283c2ab487c178c09d93"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-2-8.i16.gz",
+      "bytes": 352817,
+      "sha256": "9331a59eee433fa0416b95e70b4875470fb0a793cf6b35dfbcbf6a82b385b2cb"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-2-9.i16.gz",
+      "bytes": 320396,
+      "sha256": "abb72d8c83203ea02863da253bc2b9a8783790aaf10f11b6e287075e7e5082d5"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-3-0.i16.gz",
+      "bytes": 375185,
+      "sha256": "2a772f27816cf3167b098f62cb4cde9c1535af8f54ce24f5c82497d5691cdde1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-3-1.i16.gz",
+      "bytes": 370332,
+      "sha256": "cd070c8ffd6ea6b1ff0253c138c4dfdd3a084f485d50be94d97f72b512ae0177"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-3-2.i16.gz",
+      "bytes": 365803,
+      "sha256": "bc0e0f03d41e5a4a856beee7c44d0c062d230c9a6bf475e8cc31d1d480bfc56f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-3-3.i16.gz",
+      "bytes": 344807,
+      "sha256": "088c84175b5b3c4ead5fd9d80fa8cdb8919df5fd86755fc243d1d7c4ca28818b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-3-4.i16.gz",
+      "bytes": 349704,
+      "sha256": "30b6edddc4964cff44f9970853f5b3582081226426ce997e4a2129839d50fbd2"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-3-5.i16.gz",
+      "bytes": 365104,
+      "sha256": "be1b7963ba5225ef0ec8147c749896991d4e4afeea129822676a3b557a8bb53e"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-3-6.i16.gz",
+      "bytes": 373941,
+      "sha256": "271810799d675f245609e41445d31c2968529ed0776d57a3cbc81d48ed43b195"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-3-7.i16.gz",
+      "bytes": 363430,
+      "sha256": "d8ee98def624a1770bec28a454cef82e1cad4aee016a7bc425f0bc5ab1ba6b13"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-3-8.i16.gz",
+      "bytes": 357715,
+      "sha256": "a6e3e2dfce9de715bdc67f3e96032dd79a72769857bbc150fdea76fd1e40b08d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-3-9.i16.gz",
+      "bytes": 339821,
+      "sha256": "fb15b7972f50577399cacbc50e4a26493f4acdf006fc1a3166c4dc0c0774245d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-4-0.i16.gz",
+      "bytes": 378280,
+      "sha256": "f1b348371f3502eee08970cee0e84f3d65e1ef76175345b8931284a3a77a6151"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-4-1.i16.gz",
+      "bytes": 369709,
+      "sha256": "0c0af355e94759f3966f0b7e99a0dcb1d200abd23c6c16fa60da0ca1b5486694"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-4-2.i16.gz",
+      "bytes": 359808,
+      "sha256": "b8a18a1e7ba9c672d5c7bff636ca11a44d063359559ad61bc2384497fd67aaa8"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-4-3.i16.gz",
+      "bytes": 329694,
+      "sha256": "1f4f41b92f312cee1bfaf9fbbaa43bf49f440061f18f544759bec02ecec94b5c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-4-4.i16.gz",
+      "bytes": 337668,
+      "sha256": "30dae73461dac9ee358f356a9560f5cea3c18d9a1f067a3c54353dcb0f91cffe"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-4-5.i16.gz",
+      "bytes": 363038,
+      "sha256": "cab74ba7f46477ce8da7af906b333c645e9beaae08cd9ee09798da1eb99128ea"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-4-6.i16.gz",
+      "bytes": 370722,
+      "sha256": "baad236a6c4dc597ab49b1b368360ad84b968d76264c7ff4252382a909876b1f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-4-7.i16.gz",
+      "bytes": 375445,
+      "sha256": "bab1e4492a46bea72493286358980e5f1a00a5cec283ce0c6106712993efcb3f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-4-8.i16.gz",
+      "bytes": 361311,
+      "sha256": "67ac6a2769069ef5476d837efc3ed72cb809335ed3bfa41bc2564a233d7eebc8"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-4-9.i16.gz",
+      "bytes": 342131,
+      "sha256": "391c09eb1a0ce6503890e8369fecf8ecdaa5ca0421e8bf6bae2a70d8fb1d502d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-5-0.i16.gz",
+      "bytes": 374182,
+      "sha256": "615a6643f2227543e7aad87ab2018ffd331bcca87c737d2dfbeaebc1a668d984"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-5-1.i16.gz",
+      "bytes": 381392,
+      "sha256": "db4446586dfd4a6ddfb25b19606d5226e0f1b92c4ca1e1d4450eca3bef1b2c0b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-5-2.i16.gz",
+      "bytes": 353865,
+      "sha256": "3aab25d3c3c00fe8afe6a898cd8f50a74cc55983a4d2c7d31582f286a388dd57"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-5-3.i16.gz",
+      "bytes": 344564,
+      "sha256": "e7c7d59ad92f2362068636776dcac5de21674deebd9a8f65594ae64add78e734"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-5-4.i16.gz",
+      "bytes": 364776,
+      "sha256": "b254a05d054857c64a607828f0c30853727bf5cdce2dd2ce965079f6c5f23d47"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-5-5.i16.gz",
+      "bytes": 375794,
+      "sha256": "2e0cbfffb2b875de2c317e611622206817795940341c8685a4a9d76ec698aca2"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-5-6.i16.gz",
+      "bytes": 379408,
+      "sha256": "19ae948739f5cbf9f1f8594563e27e3df04c990e450c3080334e71db2cdbd171"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-5-7.i16.gz",
+      "bytes": 373835,
+      "sha256": "54f8b1f6b4e0741ea3510390405795f890b63375e76aa33990e7a7a0258881be"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-5-8.i16.gz",
+      "bytes": 378080,
+      "sha256": "83cd7b838013411b260de23914fb75a87a8a84a0ced7247a93f9ee3a7f1396b0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-5-9.i16.gz",
+      "bytes": 358025,
+      "sha256": "8b214c678ddefa2a9b879f8ade6bc089d32425be6d085139499ac4f7d8512883"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-6-0.i16.gz",
+      "bytes": 381181,
+      "sha256": "0ba3b14efabd36149ad4fe2f9b97a303c06c9e055bd812bbd6f4074b57217d6d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-6-1.i16.gz",
+      "bytes": 388169,
+      "sha256": "02cc2d7d639a0193b4ca0155f903ab373f5cecd3b387ce7500ad45429a9e02f6"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-6-2.i16.gz",
+      "bytes": 382084,
+      "sha256": "758d6370b237a55e029a4cd33db9600815cda7740a508b0d775a704bc6413cd8"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-6-3.i16.gz",
+      "bytes": 377208,
+      "sha256": "ff9a1028976cd3ee991c40b535db2b40d7864bd0c04965a86a277e813ea8f234"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-6-4.i16.gz",
+      "bytes": 376737,
+      "sha256": "31cefdd1cd97a6c6a70916f4cd867ba9d61e874151272ff397a1d35258c389ea"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-6-5.i16.gz",
+      "bytes": 381632,
+      "sha256": "32ab081ae45b790887cab3fa4206027dfe233c02df343af33fe828b45336c31b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-6-6.i16.gz",
+      "bytes": 377216,
+      "sha256": "a202fc432425939dddacba5415cd8c8da565a992983684b95e04dc7602dee77f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-6-7.i16.gz",
+      "bytes": 371778,
+      "sha256": "3757834ee0f2bba448b55425be78ab8735c24543f9dfbe5810f5945a4c84e750"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-6-8.i16.gz",
+      "bytes": 379184,
+      "sha256": "693aaf8668e4b8103c05a7548e607e23003d89b4a9cc9e0442bc1ee1f43c52ee"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-6-9.i16.gz",
+      "bytes": 350710,
+      "sha256": "e3f56b8c361d8b89599caab030f355444634adf866ae7bcde429642437011b27"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-7-0.i16.gz",
+      "bytes": 351891,
+      "sha256": "9234ba7302f4d61621caf86b41b755ff7b72a47fd787b95ea2b0a68f0913673e"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-7-1.i16.gz",
+      "bytes": 349966,
+      "sha256": "9783a6ac19bb5c760ab6833db2102dcb376023558f19c3a6bdebbb678a96e55c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-7-2.i16.gz",
+      "bytes": 358107,
+      "sha256": "2db86491cb6814699fd953a46ea07fde29f506ed0dece0e548ed647fb89959d5"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-7-3.i16.gz",
+      "bytes": 359783,
+      "sha256": "c07c1eb65f941eaa32fd95de688feb17037b4686d437aea58ad0a7691fe74a6b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-7-4.i16.gz",
+      "bytes": 360817,
+      "sha256": "ccc2c97c0a55bcd65adec7ca53f45026a545c43347c54c83504bb90974445055"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-7-5.i16.gz",
+      "bytes": 363084,
+      "sha256": "cdd568fa7f53353fa92eac2a7179c0912d3a1a81b162fd9e7877a3edce46ddca"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-7-6.i16.gz",
+      "bytes": 364171,
+      "sha256": "77511f544329f0211bcf4be74324a4305ea753366f1c71b6e741f77ed7614446"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-7-7.i16.gz",
+      "bytes": 366140,
+      "sha256": "17800a2fab3d5d4b14acb396b74d43c7d2c9dca2edb6299939567d4b7cee1369"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-7-8.i16.gz",
+      "bytes": 372600,
+      "sha256": "d1e69d7fe7ac53652c579ba5b06c554bb9ab2df619474bd340dba9593b18d36a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/6-7-9.i16.gz",
+      "bytes": 352832,
+      "sha256": "1d636d264eec418245225c5991d6ed255cd77691ca56944fdcdb75be3b399eed"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-0-0.i16.gz",
+      "bytes": 292241,
+      "sha256": "3a75cd47b77c90d46039ca2caa07f97dce5c75d80161f636560e152e1ae75792"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-0-1.i16.gz",
+      "bytes": 286371,
+      "sha256": "69316255c890584ee17b8378dcad21ef8bafe3719d67a8657d750f780dbe18bc"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-0-2.i16.gz",
+      "bytes": 273178,
+      "sha256": "d1f5acdcf926455419b77bec847e8a2ce6b42e325bb8989e0d4678ad6dd46bf4"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-0-3.i16.gz",
+      "bytes": 263837,
+      "sha256": "725e52fa2f20f841c42b8e9a747186e6e7fce68842a9024a641e0aaee00d0ab5"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-0-4.i16.gz",
+      "bytes": 258607,
+      "sha256": "bc75270fdb36971fcb10461cd9972c42a3a8ad45a88b1b021960bce5312b19f4"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-0-5.i16.gz",
+      "bytes": 256650,
+      "sha256": "df86374d4a34c5b16f86763104772fd5521c01cba1ee2bdf5158cd6d5e401285"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-0-6.i16.gz",
+      "bytes": 257266,
+      "sha256": "2de4e570fae08365dc6c976fb88bd5c3619d13668f777c6f0f8d90c499e3f8bd"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-0-7.i16.gz",
+      "bytes": 259365,
+      "sha256": "6c1d5fc96e262a7ece429286f515038e5536642d8048986360ac092fc7c0d328"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-0-8.i16.gz",
+      "bytes": 265330,
+      "sha256": "2212db72cc0d371c59de200ab183d22f9eedd6184f42af17ffb5552418704b29"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-0-9.i16.gz",
+      "bytes": 253844,
+      "sha256": "0f3829bec8c5abe4a1a8265f4e9eaf98c6c7c457bedc44b4340ddf441bb54752"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-1-0.i16.gz",
+      "bytes": 358692,
+      "sha256": "a4bde0b85da0e5e2068eef5d310698b13397e8cc1ea22f9768d0ac19281058b7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-1-1.i16.gz",
+      "bytes": 349099,
+      "sha256": "c518c520faf1012cd3ab92a3f255cc227470ba23f158bfbe4f0f6fd90551c740"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-1-2.i16.gz",
+      "bytes": 336639,
+      "sha256": "08b5a6b36c7003913870b87f418c1e2c6ad5683eed34dbc078020b1da97972bf"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-1-3.i16.gz",
+      "bytes": 312718,
+      "sha256": "2c2aef2320267efa5a0ef58eb1fbd779c3538d5b5369555ebb314c0256b7031e"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-1-4.i16.gz",
+      "bytes": 281843,
+      "sha256": "c985c5af6f3433c193472b19fe5d40ad607de445ece6bb83b1f600a367a7c63f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-1-5.i16.gz",
+      "bytes": 265921,
+      "sha256": "048b4a638f6a872ecd846c1b166e9b709c35dab564f08877cda1a639beab4bd9"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-1-6.i16.gz",
+      "bytes": 266571,
+      "sha256": "7a46b0abb5cbee0a088298643693d2048984a8488b13c27b7f4d0122e81505c6"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-1-7.i16.gz",
+      "bytes": 266894,
+      "sha256": "95a972a3e0b3ac28e78181c01cfa8fd56705ebf5fc99975ff4c8fe1b6f5b4b30"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-1-8.i16.gz",
+      "bytes": 273517,
+      "sha256": "2f784a9e00be5e12fb81ab69125b4ff9784518ce377b0c45c065f0b27b5e0799"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-1-9.i16.gz",
+      "bytes": 258137,
+      "sha256": "5a8d3efc602ba2276a72452ffd8748bf38992fd554d084d2b088efcfc653d059"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-2-0.i16.gz",
+      "bytes": 372045,
+      "sha256": "8734275f0f4fa5a636b6f66c2394a5a10699d4438b9d45e3a43767f5542c5286"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-2-1.i16.gz",
+      "bytes": 373277,
+      "sha256": "b5f6f94d033ed4d24f28f417320c550d7a5a0c3356f3f251ee65cd858ca1cd9a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-2-2.i16.gz",
+      "bytes": 369874,
+      "sha256": "bb7d7bd9c34d6e87c5d22845f28ac11f48d2cedcdeee10e24e4ba72f3793ada9"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-2-3.i16.gz",
+      "bytes": 365653,
+      "sha256": "0464bb6029e271a3f7cc981768f595d4a09a1a155ecb2ee562fa7200cc0df387"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-2-4.i16.gz",
+      "bytes": 343298,
+      "sha256": "af522c0d01245734a5c2b12af6ba2d62ee67d8ba39a099d84bd40e70fb587806"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-2-5.i16.gz",
+      "bytes": 326450,
+      "sha256": "742e3902ec8dbc38ab1bd83f3c70846231d633d184eb2bab890980bf23e6022b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-2-6.i16.gz",
+      "bytes": 323250,
+      "sha256": "5297d7893bda09d3312386df153213ee20f8f02e19b68ed471aea87cf18adfb1"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-2-7.i16.gz",
+      "bytes": 320986,
+      "sha256": "eb9677dbfd5ab056921e68daf64c54a49eb04292caa5a4a9119594b3f70e7e48"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-2-8.i16.gz",
+      "bytes": 313340,
+      "sha256": "f14279f1b556b7e1807d641be6b2d8a2dd757263764d5d76d3280f7bd850a06c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-2-9.i16.gz",
+      "bytes": 280084,
+      "sha256": "d33ad5bf764918477382b356f724c5aad6af6fd002c0bbbb972511f3e65b3fac"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-3-0.i16.gz",
+      "bytes": 372679,
+      "sha256": "f63986ee6eb9315b1825db7c2b932fb46da883f678b0b086e0f77803d7b2e37c"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-3-1.i16.gz",
+      "bytes": 367593,
+      "sha256": "03625c8a3850e151509ba0485dbf1d5d2ec3a530c80a7ff9846245e326c520eb"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-3-2.i16.gz",
+      "bytes": 372595,
+      "sha256": "08b5ff3bc37e7817656552ee8055c069ac56eb2325ca323a2adfa9f9c4bfce97"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-3-3.i16.gz",
+      "bytes": 375396,
+      "sha256": "a90bcc7ade5236b59fddc35e0d148d394a55dedd0f1d92439a86045dd75567e9"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-3-4.i16.gz",
+      "bytes": 360834,
+      "sha256": "a75b3cf700d5a7a266d3e468fbbd4ce876679a7a889cf1cd00ef49d3883fc2a5"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-3-5.i16.gz",
+      "bytes": 347427,
+      "sha256": "bfff3857b1db10aa05b0dbfb8511f7ed0c73a5c1ea89763728d0540b037d1789"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-3-6.i16.gz",
+      "bytes": 341164,
+      "sha256": "183aba0f1f5420f1f91a060108a0f9fad8dbf9e3d2578186411917b99aff5b81"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-3-7.i16.gz",
+      "bytes": 345766,
+      "sha256": "0e83b097ef3771bd1529f1d1efedd0c60d4ec10d0a608fea185d59e9de1aeedc"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-3-8.i16.gz",
+      "bytes": 358835,
+      "sha256": "26c8a792e58396629f0e8e70b18f7a368c9371634ad18cb5ae6bcbfbcb3efd75"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-3-9.i16.gz",
+      "bytes": 343431,
+      "sha256": "5beb59e70a674164630f695fcafcd36202cdd4085a409a155b8a63daae976cda"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-4-0.i16.gz",
+      "bytes": 373648,
+      "sha256": "c61ff21ffe37061a05a4dcfbb76440f8a9a1db2f9ef7094004488fcaaefaf337"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-4-1.i16.gz",
+      "bytes": 371107,
+      "sha256": "1235714434bc60b34d3bd317c691a12738521147c7a567a0ce66881cbeffd46f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-4-2.i16.gz",
+      "bytes": 380029,
+      "sha256": "fd416eba44f1fce751f886dbd1cdad7865b36a409d5c1c71044f07461073b0c0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-4-3.i16.gz",
+      "bytes": 375324,
+      "sha256": "a1a7a668d44476438b742532a311186b5187977c60ed89517776759f20c6a26b"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-4-4.i16.gz",
+      "bytes": 363192,
+      "sha256": "e5ff96393bfa5b53759d7a7e63ee607fcea8f899d32900df6a61c2c3f95a5898"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-4-5.i16.gz",
+      "bytes": 350185,
+      "sha256": "18ce9905dd1f9e3af997cb667521c24a6596775d6e1ff2d0eb2e637ef976fde8"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-4-6.i16.gz",
+      "bytes": 351815,
+      "sha256": "66f5c93946064da734d010ba9bac76986d4128951ce06f329765114b8d0624a6"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-4-7.i16.gz",
+      "bytes": 353802,
+      "sha256": "6987e5afef2ce7c4cc7388e2725f097804d826e301010f2eec0472c5c8900950"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-4-8.i16.gz",
+      "bytes": 358997,
+      "sha256": "287a7b859a6274fa6c147442f821c91e103111bfc459a84c1f2fdc091c4b4e60"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-4-9.i16.gz",
+      "bytes": 344294,
+      "sha256": "d2e8f5a1d726f23f179f0b667b6a20ee01e4438af97dfcc54b5592f446638735"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-5-0.i16.gz",
+      "bytes": 375558,
+      "sha256": "baaf44d3656f72ead9f5efc0e3f7c7d7c5ad034334313d2b520e60aaa9085db7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-5-1.i16.gz",
+      "bytes": 383672,
+      "sha256": "b425aa98daf99bd90df8c1c5e95e00f400eff51c99ae498797576604f2ffa49d"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-5-2.i16.gz",
+      "bytes": 379533,
+      "sha256": "8ef5918e7e08b6a130ec87e1a3a101bc1b0ad64fc4acee9d6502de255be3d6cb"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-5-3.i16.gz",
+      "bytes": 361373,
+      "sha256": "2e33e0c3feac8a9f50eda1e4598247d11a81b3d282621c3f00e7eaac91fb2583"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-5-4.i16.gz",
+      "bytes": 356555,
+      "sha256": "568462ef5903b0eb5a1af69dd73e7730d2cb2206072053d8589810fa63c170ff"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-5-5.i16.gz",
+      "bytes": 358796,
+      "sha256": "905f9609717cf98399ec7d3b5820115aa8497b6c27c64c8a5adb83cad70864c7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-5-6.i16.gz",
+      "bytes": 359832,
+      "sha256": "10041c88ac68410a5f189ae7223f417e1b4215ca67139bd07e4e1e52a56592d8"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-5-7.i16.gz",
+      "bytes": 360646,
+      "sha256": "357ddffc7a98f143f31fb9d5378f51268b00ed5273a8a0f1fe2d2483dbfe8135"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-5-8.i16.gz",
+      "bytes": 367305,
+      "sha256": "d89f03b98d273c5c3971a23a3f0f78e300f67ca646238ba846d90e3a2208d4d9"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-5-9.i16.gz",
+      "bytes": 345417,
+      "sha256": "515aac7640a14ada56dd6a135ac214e2be9ed2521ea82dd387b5c2b8752841b9"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-6-0.i16.gz",
+      "bytes": 362011,
+      "sha256": "25c5ff73485153145291414997874f1ff94a580302747e3dec37cec084a3cadc"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-6-1.i16.gz",
+      "bytes": 358435,
+      "sha256": "558b5ef28ccb4981017744b1e8d0dffab5249e52e6decafeeb12722f84b827f7"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-6-2.i16.gz",
+      "bytes": 354898,
+      "sha256": "3c312ad18139edc1b170bcebfb78ca0168b2bb9cd669f9c01d578ab0fedfb1ff"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-6-3.i16.gz",
+      "bytes": 356392,
+      "sha256": "919ebda107c9435f2a16203843a52d2d05f519c27590f412723beb720728538a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-6-4.i16.gz",
+      "bytes": 356859,
+      "sha256": "504103ecebbb0e68405d58c9c63a0224763f5121fac159679f6336cdc41d367f"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-6-5.i16.gz",
+      "bytes": 360427,
+      "sha256": "f1b583064a9133da792f08982cacc01cabd1861b26e59391c8b469db8bc9e588"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-6-6.i16.gz",
+      "bytes": 363665,
+      "sha256": "d302273d9c016e4bad8aadbdff836e4bd3326e70010496dc0fd73130408dd912"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-6-7.i16.gz",
+      "bytes": 360899,
+      "sha256": "70a2f1aadcea24c016a968630daa871fe924cd83fed32dfe4145af4ad9692a58"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-6-8.i16.gz",
+      "bytes": 368900,
+      "sha256": "282b6596e34b6e87be02e5b54bc9652901371c4161e71fefd6836cf0c5ce0430"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-6-9.i16.gz",
+      "bytes": 361478,
+      "sha256": "9990df76d3309a9f696bc3c74a5043646351c2d89e93ff45aa59fb0984a7fd87"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-7-0.i16.gz",
+      "bytes": 332377,
+      "sha256": "3886f679706c584c8d54701da0f3ffa4fc2815654f4882341cc22cbbf9fd8d1e"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-7-1.i16.gz",
+      "bytes": 327669,
+      "sha256": "d510c2943d3af27318ec3f8e76966c45876d3fc78a42349e874f49f254924cda"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-7-2.i16.gz",
+      "bytes": 324729,
+      "sha256": "ed5f996f4c9bfc4fa97aa859fbd10d6d868c19d258f51d54e2cf4fadb9ba24ad"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-7-3.i16.gz",
+      "bytes": 330655,
+      "sha256": "53c130c3d910a9d07294d482d15a51e3956554ed94dad7ff921eb2939c8c02f0"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-7-4.i16.gz",
+      "bytes": 335341,
+      "sha256": "1b4822fba41baaa339ddc7e8ae42b49d574bad9c3009abaf829c8cc28e7d7f47"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-7-5.i16.gz",
+      "bytes": 335818,
+      "sha256": "e86e0c2089298b519df4b21a5a33474b0db33837822387fc2b138d02ab76a0b5"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-7-6.i16.gz",
+      "bytes": 337474,
+      "sha256": "5f591881157e6b67c2b2f69b2f60246dd9292214277be889a91dcbd51ab593e6"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-7-7.i16.gz",
+      "bytes": 340620,
+      "sha256": "3bfe655de757107c28d5049c8d7a9b60488d3143a3176b87f4b189fb1188b48a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-7-8.i16.gz",
+      "bytes": 343374,
+      "sha256": "fd345e78320a4919a2defdbda671a005f1d3aa6510a1745ba1a431ee84e43015"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/native-v1/7-7-9.i16.gz",
+      "bytes": 320369,
+      "sha256": "53c92213aff232f527d46f55c88e2797db30dc70e16e19048d8fcf55a5ead134"
+    }
+  ]
+}

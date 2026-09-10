@@ -1,4 +1,6 @@
 import type { CtMetadata, Vec3 } from "./types";
+import {patientToVoxel,voxelToPatient} from '@bronchoscopy-core/ct';
+import {rasToPatient} from '@bronchoscopy-core/devices';
 
 export type PlaneKind = "axial" | "coronal" | "sagittal";
 export type CtViewMode = "standard" | "airway";
@@ -18,21 +20,11 @@ export function lerp(a: number, b: number, t: number): number {
 }
 
 export function rasToIndex(ras: Vec3, ct: CtMetadata): IndexPoint {
-  const lps: Vec3 = [-ras[0], -ras[1], ras[2]];
-  return {
-    i: (lps[0] - ct.originLps[0]) / ct.spacingXyzMm[0],
-    j: (lps[1] - ct.originLps[1]) / ct.spacingXyzMm[1],
-    k: (lps[2] - ct.originLps[2]) / ct.spacingXyzMm[2]
-  };
+  const [i,j,k]=patientToVoxel(ct,rasToPatient(ras));return {i,j,k};
 }
 
 export function indexToRas(index: IndexPoint, ct: CtMetadata): Vec3 {
-  const lps: Vec3 = [
-    ct.originLps[0] + index.i * ct.spacingXyzMm[0],
-    ct.originLps[1] + index.j * ct.spacingXyzMm[1],
-    ct.originLps[2] + index.k * ct.spacingXyzMm[2]
-  ];
-  return [-lps[0], -lps[1], lps[2]];
+  return rasToPatient(voxelToPatient(ct,[index.i,index.j,index.k]));
 }
 
 export function projectRasToPlane(ras: Vec3, ct: CtMetadata, plane: PlaneKind) {

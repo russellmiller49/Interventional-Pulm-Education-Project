@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
+import {mergeVertices} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import type {OpticalFrame} from '@bronchoscopy-core/frame';
+import {patientToTrainerWeb} from '@bronchoscopy-core/devices';
+import {opticalPixelRatio} from '@bronchoscopy-core/quality';
 import type { Decision, RouteState, Vec3, WebCase } from "../types";
 import { rasToScene } from "../geometry";
 import { childNodeForEdge, type CaseIndexes, optionPathPoints, orientedEdgePoints } from "../route";
@@ -31,6 +35,8 @@ interface AirwayMapProps {
   selectedEdgeId: number | null;
   committedEdgeIds?: number[];
   driveRas?: Vec3 | null;
+  opticalFrame?:OpticalFrame|null;
+  opticalFovDeg?:number;
   onEndpointChange?: (nodeId: number) => void;
   meshUrl?: string;
   noduleMeshUrl?: string | null;
@@ -57,6 +63,8 @@ export function AirwayMap({
   selectedEdgeId,
   committedEdgeIds = [],
   driveRas = null,
+  opticalFrame=null,
+  opticalFovDeg=84,
   onEndpointChange,
   meshUrl = appAssetUrl("cases/default/airway_surface.stl"),
   noduleMeshUrl = null,
@@ -66,6 +74,8 @@ export function AirwayMap({
   const onEndpointChangeRef = useRef(onEndpointChange);
   const [labels, setLabels] = useState<MapLabel[]>([]);
   const [showVisualOptions, setShowVisualOptions] = useState(false);
+  const poseRef=useRef({driveRas,opticalFrame,opticalFovDeg});poseRef.current={driveRas,opticalFrame,opticalFovDeg};
+  const updatePoseRef=useRef<(()=>void)|null>(null);
 
   useEffect(() => {
     onEndpointChangeRef.current = onEndpointChange;
@@ -81,7 +91,7 @@ export function AirwayMap({
 
     let cancelled = false;
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(opticalPixelRatio(mount.clientWidth,window.devicePixelRatio));
     renderer.setSize(mount.clientWidth, mount.clientHeight);
     mount.appendChild(renderer.domElement);
 
@@ -111,18 +121,32 @@ export function AirwayMap({
     if (decision && showVisualOptions) {
       addDecisionLines(scene, indexes, decision, selectedEdgeId);
     }
-    if (decision) {
-      addCurrentMarker(scene, decision.nodeRas);
-    } else if (driveRas) {
-      addCurrentMarker(scene, driveRas);
-    }
-    addEndpointDots(scene, webCase, 0.78);
+    const scope=new THREE.Group();scene.add(scope);
+    const tip=new THREE.Mesh(new THREE.SphereGeometry(3,16,10),new THREE.MeshStandardMaterial({color:0xffdc79,roughness:.3,emissive:0x332300}));scope.add(tip);
+    const cone=new THREE.Mesh(new THREE.ConeGeometry(11,18,24,1,true),new THREE.MeshBasicMaterial({color:0x91f4ff,transparent:true,opacity:.13,depthWrite:false,side:THREE.DoubleSide}));
+    cone.rotation.x=-Math.PI/2;cone.position.z=9;scope.add(cone);
+    // Context endpoints stay subdued; target and current-scope markers carry emphasis.
+    addEndpointDots(scene, webCase, 0.2);
     addTargetEndpointDots(scene, indexes, selectableEndpointIds.length ? selectableEndpointIds : [selectedEndpointId], selectedEndpointId, route.routePoints[route.routePoints.length - 1] ?? null);
 
     const renderScene = () => {
       updateLabels();
       renderer.render(scene, camera);
     };
+    const updatePose=()=>{
+      const {opticalFrame:frame,driveRas:ras}=poseRef.current;
+      const radialScale=18*Math.tan(THREE.MathUtils.degToRad(poseRef.current.opticalFovDeg/2))/11;
+      cone.scale.set(radialScale,1,radialScale);
+      scope.visible=Boolean(frame||ras);
+      if(frame){
+        scope.position.fromArray(patientToTrainerWeb(frame.position));
+        const right=new THREE.Vector3().fromArray(patientToTrainerWeb(frame.right)),up=new THREE.Vector3().fromArray(patientToTrainerWeb(frame.up)),forward=new THREE.Vector3().fromArray(patientToTrainerWeb(frame.forward));
+        scope.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(right.clone().negate(),up,forward));
+        mount.dataset.scopePoseLps=JSON.stringify(frame);
+      }else if(ras)scope.position.copy(toVector3(ras));
+      renderScene();
+    };
+    updatePoseRef.current=updatePose;updatePose();
     controls.addEventListener("change", renderScene);
 
     const addFallbackNodule = () => {
@@ -164,7 +188,7 @@ export function AirwayMap({
             roughness: 0.55,
             metalness: 0,
             transparent: true,
-            opacity: 0.2,
+            opacity: 0.28,
             depthWrite: false,
             side: THREE.DoubleSide
           })
@@ -300,6 +324,8 @@ export function AirwayMap({
       window.removeEventListener("resize", onResize);
       renderer.dispose();
       renderer.forceContextLoss();
+      updatePoseRef.current=null;
+      scene.traverse(object=>{const drawable=object as THREE.Mesh;if(drawable.geometry&&!drawable.geometry.userData.sharedAsset)drawable.geometry.dispose();if(drawable.material){for(const material of Array.isArray(drawable.material)?drawable.material:[drawable.material])material.dispose();}});
       mount.innerHTML = "";
     };
   }, [
@@ -314,12 +340,12 @@ export function AirwayMap({
     noduleRadiusMm,
     selectedEdgeId,
     committedEdgeIds,
-    driveRas,
     onEndpointChange,
     meshUrl,
     noduleMeshUrl,
     showVisualOptions
   ]);
+  useEffect(()=>{updatePoseRef.current?.();},[driveRas,opticalFrame,opticalFovDeg]);
 
   return (
     <section className="map-panel">
@@ -362,10 +388,7 @@ function loadAirwaySurface(url: string): Promise<THREE.BufferGeometry> {
     }
     positions.needsUpdate = true;
     geometry.deleteAttribute("normal");
-    geometry.computeVertexNormals();
-    geometry.computeBoundingBox();
-    geometry.computeBoundingSphere();
-    return geometry;
+    const welded=mergeVertices(geometry,1e-5);geometry.dispose();welded.computeVertexNormals();welded.computeBoundingBox();welded.computeBoundingSphere();welded.userData.sharedAsset=true;return welded;
   });
   surfaceGeometryCache.set(url, promise);
   return promise;
@@ -390,6 +413,7 @@ function loadNoduleGeometry(url: string): Promise<THREE.BufferGeometry> {
     geometry.computeBoundingBox();
     geometry.center();
     geometry.computeBoundingSphere();
+    geometry.userData.sharedAsset=true;
     return geometry;
   });
   noduleGeometryCache.set(url, promise);
@@ -467,8 +491,8 @@ function addRouteTube(scene: THREE.Scene, pointsRas: Vec3[], color: number, radi
     return;
   }
   const curve = new THREE.CatmullRomCurve3(pointsRas.map(toVector3));
-  const geometry = new THREE.TubeGeometry(curve, Math.max(24, pointsRas.length * 8), radius, 12, false);
-  const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity });
+  const geometry = new THREE.TubeGeometry(curve, Math.min(768,Math.max(24, pointsRas.length * 3)), radius, 12, false);
+  const material = new THREE.MeshStandardMaterial({ color, roughness:.5,transparent: true, opacity });
   scene.add(new THREE.Mesh(geometry, material));
 }
 

@@ -41,7 +41,30 @@
     "windowHu": [
       -1050.0,
       350.0
-    ]
+    ],
+    "signedPreview": {
+      "url": "ct_preview_i16.raw.gz",
+      "sha256": "63158303212564af12b5ecb538a3a00a7ab67cb53270edc5c19ca778b9f5ad83",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b"
+    },
+    "nativeBricks": {
+      "schema": "ct-bricks/v1",
+      "baseUrl": "/airway-anatomy/case-001/ct/native-v1",
+      "brickSize": 64,
+      "sizeXyz": [
+        512,
+        512,
+        636
+      ],
+      "spacingXyzMm": [
+        0.689453125,
+        0.689453125,
+        0.5
+      ],
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "compressedBytes": 225837459,
+      "format": "int16-le-gzip"
+    }
   },
   "airway": {
     "rootNodeId": 385,
