@@ -110,7 +110,11 @@ function view(sectionId: ImagingSectionId, input: ViewInput): SuiteViewSpec {
     camera: input.camera,
     layers: input.layers,
     variant: input.variant ?? 'generic',
-    monitor: input.monitor ?? (lesson.lab ? 'beside' : 'hidden'),
+    // The monitor shows whatever the mode draws — a projection, a teaching plane — whether or not
+    // the section has controls. It used to be hidden whenever a section had no lab, which left every
+    // sort section with a full-width scene, an empty dock and no image at all, `two-dimensional`
+    // included, although that section lights the display stop and is about reading the 2D image.
+    monitor: input.monitor ?? 'beside',
     animation: input.animation,
     bindings: lesson.lab ? bindingsFor[lesson.lab] : [],
     defaults: input.defaults ?? {},
