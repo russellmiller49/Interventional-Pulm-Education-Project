@@ -1,7 +1,9 @@
 import { Clock3, ListTree, ScanSearch, type LucideIcon } from 'lucide-react'
+import Image from 'next/image'
 
 import { Link } from '@/i18n/navigation'
 
+import { IMAGING_HUB_HERO } from '../content/hubHero'
 import { CHAIN_STOPS } from '../content/imagingChain'
 import {
   imagingCompositionLine,
@@ -19,7 +21,8 @@ import styles from './peripheral-imaging-hub.module.css'
 
 /**
  * The module front door: one primary call to action resolved through the pathway resolver, one
- * map browsed in place, every count derived from the registry at render. The draft's objectives,
+ * map browsed in place, every count derived from the registry at render. The suite is drawn once
+ * here, as a still of its own room mode, with each stop of the chain said where it sits. The draft's objectives,
  * imaging guide, glossary and references stay, as anchored sections under the map.
  */
 const facts = (): readonly { icon: LucideIcon; value: string; label: string }[] => {
@@ -77,6 +80,28 @@ export function PeripheralImagingHub() {
           ))}
         </dl>
       </section>
+
+      <figure className={styles.hero} data-hub-hero>
+        <Image
+          src={IMAGING_HUB_HERO.src}
+          alt={IMAGING_HUB_HERO.alt}
+          width={IMAGING_HUB_HERO.width}
+          height={IMAGING_HUB_HERO.height}
+          sizes="(min-width: 72rem) 68rem, 100vw"
+          className={styles.heroImage}
+        />
+        <figcaption className={styles.heroCaption}>
+          <p className={styles.heroLede}>{IMAGING_HUB_HERO.lede}</p>
+          <ol className={styles.heroStops}>
+            {CHAIN_STOPS.map((stop) => (
+              <li key={stop.id} data-hub-hero-stop={stop.id}>
+                <strong>{stop.title}:</strong> {IMAGING_HUB_HERO.where[stop.id]}
+              </li>
+            ))}
+          </ol>
+          <p className={styles.heroBoundary}>{IMAGING_HUB_HERO.boundary}</p>
+        </figcaption>
+      </figure>
 
       <section aria-labelledby="imaging-map-heading">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">The pathway</p>

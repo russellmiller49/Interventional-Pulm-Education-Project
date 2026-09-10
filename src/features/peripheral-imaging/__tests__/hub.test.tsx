@@ -4,6 +4,8 @@ import { axe } from 'jest-axe'
 
 import { PeripheralImagingHub } from '../components/PeripheralImagingHub'
 import { PeripheralImagingLearnLanding } from '../components/PeripheralImagingLearnLanding'
+import { IMAGING_HUB_HERO } from '../content/hubHero'
+import { CHAIN_STOPS } from '../content/imagingChain'
 import { peripheralImagingPathwaySections, peripheralImagingSectionIds } from '../content/pathway'
 import { imagingPathwayComposition } from '../content/pathwayResolver'
 import {
@@ -66,6 +68,35 @@ describe('the hub', () => {
       document.querySelectorAll('[data-pathway-accordion] a[data-kind="section"]'),
     ).toHaveLength(peripheralImagingPathwaySections.length)
     expect(await axe(container)).toHaveNoViolations()
+  })
+
+  it('draws the suite once, between the door and the map, and says where each stop is', () => {
+    render(<PeripheralImagingHub />)
+    const figures = document.querySelectorAll('[data-hub-hero]')
+    expect(figures).toHaveLength(1)
+    const figure = figures[0]
+
+    const picture = figure.querySelector('img')!
+    expect(decodeURIComponent(picture.getAttribute('src') ?? '')).toContain(IMAGING_HUB_HERO.src)
+    expect(picture).toHaveAttribute('alt', IMAGING_HUB_HERO.alt)
+
+    // The chain in the registry's order, under the registry's titles.
+    const stops = [...figure.querySelectorAll('[data-hub-hero-stop]')]
+    expect(stops.map((stop) => stop.getAttribute('data-hub-hero-stop'))).toEqual(
+      CHAIN_STOPS.map((stop) => stop.id),
+    )
+    stops.forEach((item, index) => {
+      expect(item.textContent).toContain(CHAIN_STOPS[index].title)
+      expect(item.textContent).toContain(IMAGING_HUB_HERO.where[CHAIN_STOPS[index].id])
+    })
+    // Stop numbers belong to the chain caption alone.
+    expect(figure.querySelector('figcaption')!.textContent).not.toMatch(/\d/)
+
+    // After the one door, before the map.
+    const door = ctas()[0]
+    const map = document.getElementById('imaging-map-heading')!
+    expect(door.compareDocumentPosition(figure) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(figure.compareDocumentPosition(map) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('continues a learner at the first section not yet worked through and marks worked chips', () => {
