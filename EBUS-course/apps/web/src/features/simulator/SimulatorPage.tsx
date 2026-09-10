@@ -97,8 +97,6 @@ const ADVANCE_TAP_STEP_MM = 0.8;
 const ADVANCE_START_SPEED_MM_PER_S = 10;
 const ADVANCE_MAX_SPEED_MM_PER_S = 30;
 const ADVANCE_RAMP_MM_PER_S2 = 24;
-// Keep a dragged drive pad at least this far inside the workspace edges.
-const DRIVE_PAD_EDGE_MARGIN_PX = 6;
 
 const DEFAULT_LAYERS: SimulatorLayerState = {
   airway: true,
@@ -154,7 +152,6 @@ interface PersistedSimulatorState {
   flexionDeg?: number;
   hiddenSceneStructureIds?: string[];
   layers?: Partial<SimulatorLayerState>;
-  drivePadPosition?: { x: number; y: number };
   lineIndex?: number;
   lockSceneView?: boolean;
   paneLayout?: string;
@@ -216,17 +213,6 @@ function normalizeSimulatorLayers(layers: Partial<SimulatorLayerState> | null | 
     nodes: false,
     centerline: false,
   };
-}
-
-function normalizeDrivePadPosition(value: unknown): { x: number; y: number } | null {
-  if (!value || typeof value !== 'object') {
-    return null;
-  }
-
-  const { x, y } = value as { x?: unknown; y?: unknown };
-  return typeof x === 'number' && Number.isFinite(x) && typeof y === 'number' && Number.isFinite(y)
-    ? { x: Math.max(0, x), y: Math.max(0, y) }
-    : null;
 }
 
 function normalizeHiddenSceneStructureIds(value: unknown): string[] {
@@ -1271,53 +1257,6 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
     [],
   );
 
-  // Draggable drive pad: the pad can be moved anywhere over the workspace (wide layouts only —
-  // the stacked layout keeps it sticky). Drags mutate the style directly and commit to state
-  // (and persistence) on release, so the page never re-renders per pointer move.
-  const workspaceRef = useRef<HTMLDivElement | null>(null);
-  const drivePadRef = useRef<HTMLDivElement | null>(null);
-  const drivePadDragRef = useRef<{ pointerId: number; offsetX: number; offsetY: number; lastX?: number; lastY?: number } | null>(null);
-  const [drivePadPosition, setDrivePadPosition] = useState<{ x: number; y: number } | null>(null);
-  // Layout switches can shrink the workspace; keep a custom pad position inside it.
-  useEffect(() => {
-    const workspace = workspaceRef.current;
-
-    if (!workspace || !drivePadPosition) {
-      return;
-    }
-
-    const clampPadIntoWorkspace = () => {
-      const pad = drivePadRef.current;
-
-      if (!pad) {
-        return;
-      }
-
-      const workspaceRect = workspace.getBoundingClientRect();
-      const padRect = pad.getBoundingClientRect();
-      setDrivePadPosition((current) => {
-        if (!current) {
-          return current;
-        }
-
-        const x = clamp(
-          current.x,
-          DRIVE_PAD_EDGE_MARGIN_PX,
-          Math.max(DRIVE_PAD_EDGE_MARGIN_PX, workspaceRect.width - padRect.width - DRIVE_PAD_EDGE_MARGIN_PX),
-        );
-        const y = clamp(
-          current.y,
-          DRIVE_PAD_EDGE_MARGIN_PX,
-          Math.max(DRIVE_PAD_EDGE_MARGIN_PX, workspaceRect.height - padRect.height - DRIVE_PAD_EDGE_MARGIN_PX),
-        );
-        return x === current.x && y === current.y ? current : { x, y };
-      });
-    };
-    const observer = new ResizeObserver(clampPadIntoWorkspace);
-    observer.observe(workspace);
-    return () => observer.disconnect();
-  }, [drivePadPosition]);
-
   // Physical scope tracker (USB HID). Handlers are assigned below, after the drive
   // helpers they reuse are defined; the hook reads them through the ref per frame.
   const [hardwareScopeEnabled, setHardwareScopeEnabled] = useState(
@@ -1365,6 +1304,7 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
       return;
     }
 
+    // Legacy drivePadPosition values are ignored; navigation now occupies its own layout row.
     const persisted = readPersistedState();
     // An empty persisted key means the session ended in free drive; restore it rather than
     // falling back to a station.
@@ -1396,7 +1336,6 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
       setPrimaryPane(persisted?.primaryPane as SimulatorPrimaryPane);
     }
     setPaneLayout(normalizeSimulatorPaneLayout(persisted?.paneLayout));
-    setDrivePadPosition(normalizeDrivePadPosition(persisted?.drivePadPosition));
     setSimulatorStateInitialized(true);
   }, [caseData, publicTrainingMode, simulatorStateInitialized]);
 
@@ -1408,7 +1347,6 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
     // An empty selectedKey persists free drive; lineIndex keeps the driven branch across reloads.
     const persistedLineIndex = lineIndex ?? selectedPreset?.line_index ?? fallbackPreset?.line_index;
     writePersistedState({
-      ...(drivePadPosition ? { drivePadPosition } : {}),
       flexionDeg,
       hiddenSceneStructureIds,
       layers,
@@ -1422,7 +1360,6 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
       teachingView,
     });
   }, [
-    drivePadPosition,
     fallbackPreset,
     flexionDeg,
     hiddenSceneStructureIds,
@@ -1981,80 +1918,6 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
     onBlur: stopAdvanceHold,
   });
 
-  // Drive-pad dragging: presses on the pad's own controls never start a drag; everywhere else
-  // grabs the pad. Position is workspace-relative and clamped inside it.
-  const onDrivePadPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    // The stacked (narrow) layout keeps the pad sticky in flow — no dragging there. Checked live
-    // rather than via state so a missed media-change event can never strand the feature.
-    if (
-      !window.matchMedia('(min-width: 1081px)').matches ||
-      (event.target as HTMLElement).closest('button, input, label, details, summary, select')
-    ) {
-      return;
-    }
-
-    const pad = drivePadRef.current;
-
-    if (!pad || !workspaceRef.current) {
-      return;
-    }
-
-    const padRect = pad.getBoundingClientRect();
-    drivePadDragRef.current = {
-      pointerId: event.pointerId,
-      offsetX: event.clientX - padRect.left,
-      offsetY: event.clientY - padRect.top,
-    };
-    try {
-      pad.setPointerCapture(event.pointerId);
-    } catch {
-      // Capture keeps fast drags attached to the pad but is not required for the drag to work.
-    }
-    pad.classList.add('simulator-drive-pad--dragging');
-  };
-  const onDrivePadPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const drag = drivePadDragRef.current;
-    const pad = drivePadRef.current;
-    const workspace = workspaceRef.current;
-
-    if (!drag || drag.pointerId !== event.pointerId || !pad || !workspace) {
-      return;
-    }
-
-    const workspaceRect = workspace.getBoundingClientRect();
-    const padRect = pad.getBoundingClientRect();
-    const x = clamp(
-      event.clientX - workspaceRect.left - drag.offsetX,
-      DRIVE_PAD_EDGE_MARGIN_PX,
-      Math.max(DRIVE_PAD_EDGE_MARGIN_PX, workspaceRect.width - padRect.width - DRIVE_PAD_EDGE_MARGIN_PX),
-    );
-    const y = clamp(
-      event.clientY - workspaceRect.top - drag.offsetY,
-      DRIVE_PAD_EDGE_MARGIN_PX,
-      Math.max(DRIVE_PAD_EDGE_MARGIN_PX, workspaceRect.height - padRect.height - DRIVE_PAD_EDGE_MARGIN_PX),
-    );
-    pad.style.left = `${x}px`;
-    pad.style.top = `${y}px`;
-    pad.style.bottom = 'auto';
-    pad.style.right = 'auto';
-    drag.lastX = x;
-    drag.lastY = y;
-  };
-  const onDrivePadPointerEnd = (event: React.PointerEvent<HTMLDivElement>) => {
-    const drag = drivePadDragRef.current;
-
-    if (!drag || drag.pointerId !== event.pointerId) {
-      return;
-    }
-
-    drivePadDragRef.current = null;
-    const pad = drivePadRef.current;
-    pad?.classList.remove('simulator-drive-pad--dragging');
-    if (typeof drag.lastX === 'number' && typeof drag.lastY === 'number') {
-      setDrivePadPosition({ x: drag.lastX, y: drag.lastY });
-    }
-  };
-
   // Latest-ref handlers for the physical scope tracker: reassigned every render so the
   // rAF poll loop (useScopeTrackerInput) always sees fresh state and helpers.
   scopeHandlersRef.current = {
@@ -2262,171 +2125,207 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
         </div>
       </section>
 
-      <div
-        className={`simulator-workspace${showVirtualBronchoscopyPane ? ' simulator-workspace--virtual' : ''}`}
-        data-layout={paneLayout}
-        data-primary={primaryPane}
-        ref={workspaceRef}
-      >
-        <section
-          className={`simulator-scene-pane${paneCompact('anatomy') ? ' simulator-pane--compact' : ''}`}
-          aria-label={t('External anatomy view')}
-        >
-          <div className="simulator-pane-header">
-            <div>
-              <span className="eyebrow">{t('External anatomy')}</span>
-              <h2>{t('Scope, airway, vessels, lymph nodes, and fan')}</h2>
-            </div>
-            <div className="simulator-scene-actions">
-              {anatomyEnlarge ? (
-                <button className="simulator-sector-style-toggle" onClick={anatomyEnlarge} type="button">
-                  {t('Enlarge')}
-                </button>
-              ) : null}
-              {anatomyShowAll ? (
-                <button className="simulator-sector-style-toggle" onClick={anatomyShowAll} type="button">
-                  {t('All views')}
-                </button>
-              ) : null}
-              <details className="simulator-structure-dropdown">
-                <summary>
-                  <span>{t('3D structures')}</span>
-                  <span>{sceneVisibleCount}/{sceneStructureVisibilityItems.length}</span>
-                </summary>
-                <div className="simulator-structure-dropdown__menu">
-                  <div className="simulator-structure-dropdown__actions">
-                    <span>{t('Visible in 3D')}</span>
-                    <button type="button" onClick={showAllSceneStructures}>
-                      {t('Show all')}
-                    </button>
-                  </div>
-                  {(['node', 'vessel'] as const).map((kind) => {
-                    const groupItems = sceneStructureVisibilityItems.filter((item) => item.kind === kind);
-
-                    if (!groupItems.length) {
-                      return null;
-                    }
-
-                    return (
-                      <div className="simulator-structure-dropdown__group" key={kind}>
-                        <div className="simulator-structure-dropdown__group-label">
-                          {kind === 'node' ? t('Lymph nodes') : t('Vessels')}
-                        </div>
-                        {groupItems.map((item) => (
-                          <label className="simulator-structure-dropdown__row" key={item.id}>
-                            <input
-                              checked={!hiddenSceneStructureSet.has(item.id)}
-                              onChange={(event) => updateSceneStructureVisibility(item.id, event.target.checked)}
-                              type="checkbox"
-                            />
-                            <span className="simulator-swatch" style={{ backgroundColor: item.color }} />
-                            <span>{localizeSimulatorStructureLabel(item.label, t)}</span>
-                          </label>
-                        ))}
-                      </div>
-                    );
-                  })}
-                </div>
-              </details>
-              <button
-                className="simulator-button"
-                disabled={!selectedPreset}
-                onClick={() => {
-                  if (selectedPreset) {
-                    snapToPreset(selectedPreset);
-                  }
-                }}
-                type="button"
-              >
-                {t('Snap')}
-              </button>
-            </div>
-          </div>
-          <AnatomyScene
-            activeStructure={null}
-            assets={assets}
-            cameraPose={cameraPose}
-            caseData={caseData}
-            celebration={questCelebration}
-            hiddenStructureIds={hiddenSceneStructureSet}
-            intersectedStructureIds={intersectedStructureIds}
-            layers={layers}
-            lockView={lockSceneView}
-            pose={pose}
-            questBeacon={questBeacon}
-            selectedPreset={selectedPreset}
-            teachingView={teachingView}
-          />
-        </section>
-
+      <div className="simulator-imaging-console">
         {showVirtualBronchoscopyPane ? (
+          <div className="simulator-view-tabs" role="group" aria-label={t('Simulator views')}>
+            {([
+              ['anatomy', 'External anatomy'],
+              ['bronch', 'Virtual bronchoscopy'],
+              ['sector', 'EBUS ultrasound'],
+            ] as const).map(([pane, label]) => (
+              <button
+                key={pane}
+                type="button"
+                aria-pressed={primaryPane === pane}
+                onClick={() => setPrimaryPane(pane)}
+              >
+                {t(label)}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        <div
+          className={`simulator-workspace${showVirtualBronchoscopyPane ? ' simulator-workspace--virtual' : ''}`}
+          data-layout={paneLayout}
+          data-primary={primaryPane}
+        >
           <section
-            className={`simulator-scene-pane simulator-bronch-pane${paneCompact('bronch') ? ' simulator-pane--compact' : ''}`}
-            aria-label={t('Virtual bronchoscopy view')}
+            className={`simulator-scene-pane${paneCompact('anatomy') ? ' simulator-pane--compact' : ''}`}
+            aria-label={t('External anatomy view')}
           >
             <div className="simulator-pane-header">
               <div>
-                <span className="eyebrow">{t('Virtual bronchoscopy')}</span>
-                <h2>{t('Endoluminal view from the scope tip')}</h2>
+                <span className="eyebrow">{t('External anatomy')}</span>
+                <h2>{t('Scope, airway, vessels, lymph nodes, and fan')}</h2>
               </div>
-              <div className="simulator-status-strip">
-                {bronchEnlarge ? (
-                  <button className="simulator-sector-style-toggle" onClick={bronchEnlarge} type="button">
+              <div className="simulator-scene-actions">
+                {anatomyEnlarge ? (
+                  <button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={anatomyEnlarge} type="button">
                     {t('Enlarge')}
                   </button>
                 ) : null}
-                {bronchShowAll ? (
-                  <button className="simulator-sector-style-toggle" onClick={bronchShowAll} type="button">
+                {anatomyShowAll ? (
+                  <button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={anatomyShowAll} type="button">
                     {t('All views')}
                   </button>
                 ) : null}
+                <details className="simulator-structure-dropdown">
+                  <summary>
+                    <span>{t('3D structures')}</span>
+                    <span>{sceneVisibleCount}/{sceneStructureVisibilityItems.length}</span>
+                  </summary>
+                  <div className="simulator-structure-dropdown__menu">
+                    <div className="simulator-structure-dropdown__actions">
+                      <span>{t('Visible in 3D')}</span>
+                      <button type="button" onClick={showAllSceneStructures}>
+                        {t('Show all')}
+                      </button>
+                    </div>
+                    {(['node', 'vessel'] as const).map((kind) => {
+                      const groupItems = sceneStructureVisibilityItems.filter((item) => item.kind === kind);
+
+                      if (!groupItems.length) {
+                        return null;
+                      }
+
+                      return (
+                        <div className="simulator-structure-dropdown__group" key={kind}>
+                          <div className="simulator-structure-dropdown__group-label">
+                            {kind === 'node' ? t('Lymph nodes') : t('Vessels')}
+                          </div>
+                          {groupItems.map((item) => (
+                            <label className="simulator-structure-dropdown__row" key={item.id}>
+                              <input
+                                checked={!hiddenSceneStructureSet.has(item.id)}
+                                onChange={(event) => updateSceneStructureVisibility(item.id, event.target.checked)}
+                                type="checkbox"
+                              />
+                              <span className="simulator-swatch" style={{ backgroundColor: item.color }} />
+                              <span>{localizeSimulatorStructureLabel(item.label, t)}</span>
+                            </label>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </details>
                 <button
-                  aria-pressed={bronchBalloonInflated}
-                  className="simulator-sector-style-toggle"
-                  onClick={() => setBronchBalloonInflated((value) => !value)}
+                  className="simulator-button"
+                  disabled={!selectedPreset}
+                  onClick={() => {
+                    if (selectedPreset) {
+                      snapToPreset(selectedPreset);
+                    }
+                  }}
                   type="button"
                 >
-                  {t('Balloon')}
+                  {t('Snap')}
                 </button>
-                <button
-                  aria-pressed={bronchSeeThrough}
-                  className="simulator-sector-style-toggle"
-                  onClick={() => setBronchSeeThrough((value) => !value)}
-                  type="button"
-                >
-                  {t('See-through')}
-                </button>
-                <span>{Math.round(sMm)} mm</span>
               </div>
             </div>
-            <BronchoscopyView
+            <AnatomyScene
+              activeStructure={null}
               assets={assets}
-              balloonInflated={bronchBalloonInflated}
-              camera={caseData.endoscope_camera}
+              cameraPose={cameraPose}
               caseData={caseData}
-              focusStationKey={selectedPreset?.station_key ?? null}
+              celebration={questCelebration}
+              hiddenStructureIds={hiddenSceneStructureSet}
+              intersectedStructureIds={intersectedStructureIds}
+              layers={layers}
+              lockView={lockSceneView}
               pose={pose}
-              seeThroughWall={bronchSeeThrough}
-              structures={bronchOverlayStructures}
+              questBeacon={questBeacon}
+              selectedPreset={selectedPreset}
+              teachingView={teachingView}
             />
           </section>
-        ) : null}
 
-        {caseData.assets.acoustic_volume ? <ContinuousSectorView caseData={caseData} volume={acoustic.volume} error={acoustic.error} pose={pose} contactQuality={sectorContactQuality} compact={paneCompact('sector')} assessment={questActive&&!questHintActive} onEnlarge={paneEnlargeHandler('sector')} onShowAll={paneShowAllHandler('sector')} selectedPreset={selectedPreset} activeStructure={activeStructure} setActiveStructure={setActiveStructure}/> : (
-        <SectorView
-          pose={pose}
-          activeStructure={activeStructure}
-          caseData={caseData}
-          compact={paneCompact('sector')}
-          contactQuality={sectorContactQuality}
-          items={sectorItems}
-          onEnlarge={paneEnlargeHandler('sector')}
-          onShowAll={paneShowAllHandler('sector')}
-          selectedPreset={selectedPreset}
-          setActiveStructure={setActiveStructure}
-          source={sectorSource}
-        />
-        )}
+          {showVirtualBronchoscopyPane ? (
+            <section
+              className={`simulator-scene-pane simulator-bronch-pane${paneCompact('bronch') ? ' simulator-pane--compact' : ''}`}
+              aria-label={t('Virtual bronchoscopy view')}
+            >
+              <div className="simulator-pane-header">
+                <div>
+                  <span className="eyebrow">{t('Virtual bronchoscopy')}</span>
+                  <h2>{t('Endoluminal view from the scope tip')}</h2>
+                </div>
+                <div className="simulator-status-strip">
+                  {bronchEnlarge ? (
+                    <button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={bronchEnlarge} type="button">
+                      {t('Enlarge')}
+                    </button>
+                  ) : null}
+                  {bronchShowAll ? (
+                    <button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={bronchShowAll} type="button">
+                      {t('All views')}
+                    </button>
+                  ) : null}
+                  <button
+                    aria-pressed={bronchBalloonInflated}
+                    className="simulator-sector-style-toggle"
+                    onClick={() => setBronchBalloonInflated((value) => !value)}
+                    type="button"
+                  >
+                    {t('Balloon')}
+                  </button>
+                  <button
+                    aria-pressed={bronchSeeThrough}
+                    className="simulator-sector-style-toggle"
+                    onClick={() => setBronchSeeThrough((value) => !value)}
+                    type="button"
+                  >
+                    {t('See-through')}
+                  </button>
+                  <span>{Math.round(sMm)} mm</span>
+                </div>
+              </div>
+              <BronchoscopyView
+                assets={assets}
+                balloonInflated={bronchBalloonInflated}
+                camera={caseData.endoscope_camera}
+                caseData={caseData}
+                focusStationKey={selectedPreset?.station_key ?? null}
+                pose={pose}
+                seeThroughWall={bronchSeeThrough}
+                structures={bronchOverlayStructures}
+              />
+            </section>
+          ) : null}
+
+          {caseData.assets.acoustic_volume ? <ContinuousSectorView caseData={caseData} volume={acoustic.volume} error={acoustic.error} pose={pose} contactQuality={sectorContactQuality} compact={paneCompact('sector')} assessment={questActive&&!questHintActive} onEnlarge={paneEnlargeHandler('sector')} onShowAll={paneShowAllHandler('sector')} selectedPreset={selectedPreset} activeStructure={activeStructure} setActiveStructure={setActiveStructure}/> : (
+          <SectorView
+            pose={pose}
+            activeStructure={activeStructure}
+            caseData={caseData}
+            compact={paneCompact('sector')}
+            contactQuality={sectorContactQuality}
+            items={sectorItems}
+            onEnlarge={paneEnlargeHandler('sector')}
+            onShowAll={paneShowAllHandler('sector')}
+            selectedPreset={selectedPreset}
+            setActiveStructure={setActiveStructure}
+            source={sectorSource}
+          />
+          )}
+          {quest ? (
+            <QuestHud
+              bestScore={questBestScore}
+              branchHint={activeQuestTarget ? branchLabels.get(activeQuestTarget.lineIndex) ?? null : null}
+              countdown={questCountdown}
+              detected={questDetected}
+              elapsedMs={questElapsedMs}
+              hintActive={questHintActive}
+              holdProgress={questHoldProgress}
+              onDone={endStationQuest}
+              onHint={useStationQuestHint}
+              onQuit={endStationQuest}
+              onRestart={startStationQuest}
+              onSkip={skipStationQuestTarget}
+              state={quest}
+            />
+          ) : null}
+        </div>
         <div
           className="simulator-drive-pad"
           data-airway-region={airwayRegion}
@@ -2437,22 +2336,8 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
           data-standard-roll-deg={standardRollDeg.toFixed(2)}
           role="group"
           aria-label={t('Airway navigation')}
-          onPointerCancel={onDrivePadPointerEnd}
-          onPointerDown={onDrivePadPointerDown}
-          onPointerMove={onDrivePadPointerMove}
-          onPointerUp={onDrivePadPointerEnd}
-          ref={drivePadRef}
-          style={
-            drivePadPosition
-              ? { left: drivePadPosition.x, top: drivePadPosition.y, bottom: 'auto', right: 'auto' }
-              : undefined
-          }
-          title={t('Drag to move the drive pad')}
         >
           <div className="simulator-drive-pad__readout">
-            <span aria-hidden="true" className="simulator-drive-pad__grip">
-              ⠿
-            </span>
             <span className="simulator-drive-pad__status">
               <strong>{t('Airway navigation')}</strong>
               <span>
@@ -2483,7 +2368,7 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
               {t('Right mainstem')}
             </button>
           </div>
-          <div className="simulator-drive-pad__motion">
+          <div className="simulator-drive-pad__motion" role="group" aria-label={t('Advance / retract')}>
             <button
               className="simulator-drive-pad__key"
               type="button"
@@ -2500,7 +2385,7 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
             </button>
           </div>
           <label className="simulator-drive-pad__flex">
-            <span>{t('Flex tip')}</span>
+            <span>{t('Flex tip')} <output>{Math.round(flexionDeg)}°</output></span>
             <input
               aria-label={t('Flex tip')}
               max={90}
@@ -2584,23 +2469,6 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
             </div>
           </div>
         </div>
-        {quest ? (
-          <QuestHud
-            bestScore={questBestScore}
-            branchHint={activeQuestTarget ? branchLabels.get(activeQuestTarget.lineIndex) ?? null : null}
-            countdown={questCountdown}
-            detected={questDetected}
-            elapsedMs={questElapsedMs}
-            hintActive={questHintActive}
-            holdProgress={questHoldProgress}
-            onDone={endStationQuest}
-            onHint={useStationQuestHint}
-            onQuit={endStationQuest}
-            onRestart={startStationQuest}
-            onSkip={skipStationQuestTarget}
-            state={quest}
-          />
-        ) : null}
       </div>
     </div>
   );

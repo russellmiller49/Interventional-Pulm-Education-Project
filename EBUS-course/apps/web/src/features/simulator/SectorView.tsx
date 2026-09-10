@@ -1561,12 +1561,12 @@ export function SectorView({
         </div>
         <div className="simulator-sector-header-actions">
           {onEnlarge ? (
-            <button className="simulator-sector-style-toggle" onClick={onEnlarge} type="button">
+            <button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={onEnlarge} type="button">
               {t('Enlarge')}
             </button>
           ) : null}
           {onShowAll ? (
-            <button className="simulator-sector-style-toggle" onClick={onShowAll} type="button">
+            <button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={onShowAll} type="button">
               {t('All views')}
             </button>
           ) : null}
