@@ -26,7 +26,9 @@
       "?? web/src/i18n.ts",
       "?? web/src/scope-input/",
       "?? web/src/useScopeTrackerDrive.ts"
-    ]
+    ],
+    "canonicalPath": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/navigation_module",
+    "backupPath": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/recovery/2026-09-10/training-project-repositories/navigation_module"
   },
   "EBUS-course": {
     "source": "/Users/russellmiller/Projects/EBUS-course",
@@ -36,6 +38,8 @@
     "workingTreeStatus": [
       "?? outputs/learning-outcomes-report-2026-07-14/",
       "?? outputs/learning-outcomes-report-2026-07-22/"
-    ]
+    ],
+    "canonicalPath": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/EBUS-course",
+    "backupPath": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/recovery/2026-09-10/training-project-repositories/EBUS-course"
   }
 }

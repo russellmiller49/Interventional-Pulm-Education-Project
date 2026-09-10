@@ -9,9 +9,11 @@ Both projects are maintained in this Git repository:
 
 The import uses the working files, including uncommitted navigation code and
 calibration. Source branches, commits, and the original working-tree status are
-recorded in `training-project-migration.json`. Original repositories retain their
-history as backups; do future edits in this repository. No submodules or nested
-Git repositories are used.
+recorded in `training-project-migration.json`. Original repositories, including their Git history and uncommitted files, are
+archived under
+`/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/recovery/2026-09-10/training-project-repositories/`.
+The old project paths are symlinks to the new source folders. Do future edits in
+this repository. No submodules or nested Git repositories are used.
 
 ## One-repository workflow
 
@@ -58,3 +60,22 @@ npm run type-check
 `test:training-apps` checks built embedded URLs, required navigation payloads,
 authoring-sidecar pruning, shared input adapters, and the existing course tests.
 Build the apps before running the artifact checks.
+
+## Migration verification (2026-09-10)
+
+- Root lint, full production build, and TypeScript check passed.
+- Both app builds and app TypeScript checks passed.
+- All 221 course tests, 37 shared-controller tests, 23 navigation Python tests,
+  and 4 embedded-artifact checks passed.
+- Both embedded entry points rendered in Chromium without runtime exceptions.
+  The localhost-only navigation authoring UI requests a pruned optional candidate
+  sidecar (404), matching the existing embedded-build behavior.
+- Source edits and shared-controller edits triggered automatic rebuilds.
+- SIGTERM during startup stopped the development launcher and its build group.
+- Standalone packaging contains all 13 navigation files (54.5 MiB) and all
+  214 EBUS files (279.9 MiB).
+- Source files were compared with the originals; differences are limited to
+  migration configuration, shared-source adapters, portable Slicer paths, and
+  trailing blank-line cleanup. Local scans and learning reports are preserved.
+
+Existing Vite chunk-size and Mermaid/Webpack dependency warnings remain.
