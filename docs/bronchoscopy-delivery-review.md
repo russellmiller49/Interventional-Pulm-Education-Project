@@ -2,11 +2,11 @@
 
 Review the changes in order: Synchronized Bronchoscopy, EBUS, then the Bronch Navigation Trainer. The implementation is delivered as dependent draft PRs so the anatomy and clinical views can be reviewed before merging.
 
-| Milestone                 | Implementation and evidence                                                                                                                                                                                                                                                  |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Synchronized Bronchoscopy | [PR 167](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/167); [implementation notes](bronchoscopy-realism-upgrade.md); [RUL](bronchoscopy-review/rul.png), [RML](bronchoscopy-review/rml.png), [LUL](bronchoscopy-review/lul.png) comparisons |
-| EBUS                      | [PR 168](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/168); [continuous imaging notes](ebus-continuous-imaging.md); [all-station measurements](ebus-acoustic-review/station-review.json)                                                    |
-| Navigation Trainer        | [implementation notes](navigation-shared-imaging.md); [route regression audit](navigation-imaging-review/route-review.json); [browser review](navigation-imaging-review/browser-review.json)                                                                                 |
+| Milestone                 | Implementation and evidence                                                                                                                                                                                                                                                               |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Synchronized Bronchoscopy | [PR 167](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/167); [implementation notes](bronchoscopy-realism-upgrade.md); [RUL](bronchoscopy-review/rul.png), [RML](bronchoscopy-review/rml.png), [LUL](bronchoscopy-review/lul.png) comparisons              |
+| EBUS                      | [PR 168](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/168); [continuous imaging notes](ebus-continuous-imaging.md); [all-station measurements](ebus-acoustic-review/station-review.json)                                                                 |
+| Navigation Trainer        | [PR 170](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/170); [implementation notes](navigation-shared-imaging.md); [route regression audit](navigation-imaging-review/route-review.json); [browser review](navigation-imaging-review/browser-review.json) |
 
 ## Automated checks
 
