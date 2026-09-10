@@ -3,13 +3,13 @@ import type { SourceId } from '../types'
 import { imagingLearnerCopyErrors } from './learnerCopy'
 
 /**
- * The small control panel: the five things you can change at the C-arm, said once in the
- * `good-image` section and shown as a strip on every Explain step.
+ * The fluoroscopy controls: the five things you control at the C-arm, taught in the `good-image`
+ * section and shown as a strip on every Explain step.
  *
- * Collapsing a console to five things turns every later problem into "which of the five, if
- * any" — and "if any" matters, because several problems have no knob: the state has changed, or
- * the question needs a different measurement. The exposure is deliberately not on the list. The
- * machine sets it and the dose readout reports it; that is monitoring, and saying so is the
+ * Naming the five turns every later problem into "which control, if any" — and "if any" matters,
+ * because several problems have no control: the anatomy has changed, or the question needs a
+ * different acquisition. Exposure factors are deliberately not on the list. Automatic exposure
+ * regulation sets them and the dose readout reports them; that is monitoring, and saying so is the
  * lesson.
  */
 export const imagingControlIds = ['angle', 'field', 'time', 'acquisition', 'display'] as const
@@ -43,62 +43,65 @@ export const IMAGING_CONTROL_PANEL: ImagingControlPanel = {
   controls: [
     {
       id: 'angle',
-      plainName: 'where the beam is aimed',
-      changes: 'Which ray crosses the target, and therefore what overlaps it on the image.',
-      doesNotChange: 'Where the tool is. A view change alters the evidence, not the needle.',
+      plainName: 'C-arm projection',
+      changes:
+        'which anatomy is superimposed on the lesion. Obliquity rotates the C-arm around the patient; cranial or caudal angulation tilts it along the body axis.',
+      doesNotChange:
+        'where the tool is. Changing the projection changes what the image shows, not the position of the needle.',
       controlKeys: ['orbit', 'tilt', 'acquisitionOrbit'],
     },
     {
       id: 'field',
-      plainName: 'how wide it is',
-      changes: 'How much tissue is irradiated and how much scatter is made; the collimator blades.',
+      plainName: 'collimation',
+      changes: 'the irradiated field, and with it the volume of tissue generating scatter.',
       doesNotChange:
-        'Which structures lie on a given ray. A narrow field cannot remove a rib from the ray it shares with the target.',
+        'what is superimposed on the lesion. Tighter collimation cannot remove a rib that shares the lesion’s projection.',
       controlKeys: ['field'],
     },
     {
       id: 'time',
-      plainName: 'how time is sampled',
+      plainName: 'pulse rate and pulse width',
       changes:
-        'How often a new measurement arrives and how long each one lasts: pulse rate and pulse width.',
+        'how often a new image is acquired (pulse rate) and how long each exposure lasts (pulse width), which governs motion blur within a frame.',
       doesNotChange:
-        'The display refresh, which can repeat or interpolate frames without measuring anything new.',
+        'the display refresh rate, which can repeat or interpolate frames without acquiring anything new.',
       controlKeys: ['rate', 'width'],
     },
     {
       id: 'acquisition',
-      plainName: 'what acquisition you ask for',
+      plainName: 'the acquisition mode',
       changes:
-        'Whether one projection, a limited sweep or a full orbit is measured, and so how much depth information exists.',
+        'whether you acquire a single fluoroscopic projection, a DTS acquisition or a CBCT spin, and therefore how much depth information exists.',
       doesNotChange:
-        'The anatomy being measured. A sweep of a collapsed lung is a sweep of a collapsed lung.',
+        'the anatomy being imaged. A CBCT spin of an atelectatic segment shows an atelectatic segment.',
       controlKeys: ['sweep', 'kind', 'captured'],
     },
     {
       id: 'display',
-      plainName: 'what the display shows',
+      plainName: 'display zoom and processing',
       changes:
-        'How measured pixels are presented: zoom, window and level, an overlay drawn on top.',
-      doesNotChange: 'What was measured. Zoom adds no photons and a window adds no information.',
+        'how acquired pixels are presented: display zoom, window/level, and overlays drawn on top.',
+      doesNotChange:
+        'what was acquired. Display zoom adds no X-ray information; acquisition magnification is a different control that can change the acquisition, the detector readout and the exposure.',
       controlKeys: ['zoom', 'crop', 'overlay', 'showCurrent', 'slab'],
     },
   ],
   monitoring: [
     {
       id: 'exposure',
-      plainName: 'the exposure',
+      plainName: 'exposure factors',
       sentence:
-        'Voltage, current and filtration are chosen by automatic exposure regulation to hold the detector signal. Not a setting you turn; the readout reports what the machine did.',
+        'kV, mA and pulse duration are selected by automatic exposure regulation to hold the detector signal. Not a setting you adjust directly; the dose readout reports what the system did.',
     },
     {
       id: 'dose-readout',
       plainName: 'the dose readout',
       sentence:
-        'The kerma–area product and the reference air kerma accumulate as the machine fires. Not a setting; the place where output is judged, because the monitor cannot show it.',
+        'The kerma–area product and the cumulative reference air kerma accumulate with each exposure. Not a setting; it is where radiation output is judged, because image brightness cannot show it.',
     },
   ],
   sentence:
-    'At the C-arm you change five things: where the beam is aimed, how wide it is, how time is sampled, what acquisition you ask for, and what the display shows. Everything else is monitoring: the machine sets the exposure, and the dose readout tells you what it did.',
+    'At the C-arm you control five things: the C-arm projection, collimation, pulse rate and pulse width, the acquisition mode, and display zoom and processing. Exposure factors are chosen by automatic exposure regulation; that is monitoring, so check the dose-rate and cumulative dose readouts.',
   sourceIds: ['tg272', 'tg125', 'wabip'],
 }
 

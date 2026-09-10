@@ -30,7 +30,7 @@ import { Link, useRouter } from '@/i18n/navigation'
 import { imagingCaseById } from '../../content/cases'
 import { microCasesForSection } from '../../content/microCases'
 import { isOffChainTarget } from '../../content/chainAnswerTargets'
-import { CHAIN_STOPS, chainCaption, chainStop, type ChainStopId } from '../../content/imagingChain'
+import { chainCaption, chainStop, type ChainStopId } from '../../content/imagingChain'
 import { peripheralImagingPathway } from '../../content/pathway'
 import { imagingSectionLinkTarget } from '../../content/pathwayResolver'
 import {
@@ -115,7 +115,7 @@ const PANE_ORDER = ['steps', 'teaching', 'simulator'] as const
 const PANE_CAPTIONS = {
   steps: 'what to do',
   teaching: 'what to read',
-  simulator: 'the imaging suite, its controls and the chain map',
+  simulator: 'the imaging suite, its controls and the image-formation map',
 } as const
 const PANE_WIDTH_FRACTIONS = { primary: 0.26, secondary: 0.29 } as const
 const PANE_MINIMUMS = { primary: 300, secondary: 280, tertiary: 340 } as const
@@ -135,15 +135,15 @@ const MODE_WORDS: Readonly<Record<SuiteMode, string>> = {
   signal: '2D fluoroscopy',
   field: '2D fluoroscopy',
   time: 'pulsed fluoroscopy',
-  dts: 'tomosynthesis',
-  'dts-prior': 'tomosynthesis',
+  dts: 'digital tomosynthesis',
+  'dts-prior': 'digital tomosynthesis',
   cbct: 'cone-beam CT',
   sampling: 'multiplanar review',
-  rebus: 'radial ultrasound',
-  navigation: 'navigation and the map',
+  rebus: 'radial EBUS',
+  navigation: 'navigation and registration',
   augmented: 'augmented fluoroscopy',
-  staff: 'the room',
-  dose: 'the dose report',
+  staff: 'staff protection',
+  dose: 'dose metrics',
   room: 'the suite at rest',
 }
 
@@ -394,7 +394,7 @@ function ImagingStageSession({
         disabled: chainCommittedId !== undefined || lookingBack,
         hint:
           chainCommittedId === undefined
-            ? 'Choose the stop where the problem lives, then commit on the card in the Steps panel.'
+            ? 'Choose the component where the problem arises, then commit on the card in the Steps panel.'
             : undefined,
       }
     : undefined
@@ -518,12 +518,12 @@ function ImagingStageSession({
           return workDone
             ? {
                 ...base,
-                status: 'Every stop visited, and the beam moved once.',
+                status: 'Every component visited, and the C-arm moved once.',
                 primary: continueAction,
               }
             : {
                 ...base,
-                status: 'Every stop visited. This step is done when every item below is met.',
+                status: 'Every component visited. This step is done when every item below is met.',
                 secondary: showWhereAction,
               }
         }
@@ -532,7 +532,7 @@ function ImagingStageSession({
           ...base,
           status: walkPositionWords(commitments.walkStop, interaction.stops.length),
           primary: {
-            label: last ? 'Finish the walk' : 'Next stop',
+            label: last ? 'Finish the walk' : 'Next component',
             onActivate: () => dispatch({ type: 'WALK_NEXT', stopCount: interaction.stops.length }),
             icon: <ArrowRight aria-hidden="true" />,
           },
@@ -552,7 +552,7 @@ function ImagingStageSession({
             onActivate: () => commitChoice(activeStep),
             disabled: !pendingChoice[activeStep.id],
             disabledReason: interaction.chainTargets
-              ? 'Choose a stop on the chain map to enable this.'
+              ? 'Choose a component on the image-formation map to enable this.'
               : 'Choose one option to enable this.',
           },
         }
@@ -645,7 +645,7 @@ function ImagingStageSession({
           )
           return (
             <p className={stageStyles.taskInstruction} data-chain-answer-note>
-              Answer on the chain map beneath the scene: choose the stop.
+              Answer on the image-formation map beneath the scene: choose the stop.
               {chosen ? ` Chosen: ${chosen.label}.` : ''}
             </p>
           )
@@ -754,10 +754,10 @@ function ImagingStageSession({
   const contextItems: readonly ContextStripItem[] = [
     { label: 'Suite', value: MODE_WORDS[suiteView.mode] },
     {
-      label: 'Chain',
-      value: litStop
-        ? `stop ${chainStop(litStop).number} of ${CHAIN_STOPS.length} · ${chainStop(litStop).title.toLowerCase()}`
-        : 'not named on this step',
+      // The component name only: the image-formation caption in the Simulator panel is the one
+      // place its number is printed, so this strip does not add another "N of M" to the screen.
+      label: 'Image formation',
+      value: litStop ? chainStop(litStop).title : 'not named on this step',
     },
     {
       label: 'Controls',
@@ -985,7 +985,7 @@ function recapLines(
       return [`Placed the set: ${held} of ${step.interaction.sort.rows.length} held.`]
     }
     case 'walk':
-      return commitments.walkDone ? ['Every stop visited.'] : []
+      return commitments.walkDone ? ['Every component visited.'] : []
     case 'lab-task':
     case 'observe': {
       const { goals: stepGoals, lab } = step.interaction

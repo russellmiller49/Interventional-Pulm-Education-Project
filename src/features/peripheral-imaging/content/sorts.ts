@@ -8,9 +8,9 @@ import type { ImagingSectionId } from './pathway'
  * Attribution sorts: the Act step of the sections that have no lab to act on.
  *
  * Each sort is a set of statements the learner places into a small set of origins — the four
- * imaging questions, the five things you can change, the three uses of a reconstruction, the
- * thing to change first, the stop of the chain a problem lives at — committed as a set and graded
- * row by row in words. Every origin must be the answer to something (a decoy origin is a trick),
+ * imaging questions, the fluoroscopy controls, the three uses of a reconstruction, the thing to
+ * change first, the component of image formation a problem arises at — committed as a set and
+ * graded row by row in words. Every origin must be the answer to something (a decoy origin is a trick),
  * and every string passes the copy gate at import.
  */
 export interface SortOrigin {
@@ -51,23 +51,19 @@ export const IMAGING_SORTS: readonly ImagingSort[] = Object.freeze([
     id: 'four-questions',
     sectionId: 'imaging-questions',
     prompt:
-      'Six things a display in the suite can show. For each one, say which of the four questions it answers: where the tracked catheter is on the map, where the lesion is now, where the actual sampling component is relative to it, or whether the specimen answered the clinical question.',
+      'Six findings a display can show. For each, say which question it answers: navigation (catheter position relative to the navigation target), localization (where the lesion is now), tool-in-lesion confirmation (where the actual biopsy tool is relative to the lesion), or diagnosis (whether the specimen answered the clinical question).',
     originsAreChainStops: false,
     origins: [
       {
         id: 'navigation',
         label: 'Navigation',
-        definition: 'Where the tracked catheter is relative to the map.',
+        definition: 'Catheter position relative to the navigation target.',
       },
-      {
-        id: 'localization',
-        label: 'Localization',
-        definition: 'Where the intended lesion is now.',
-      },
+      { id: 'localization', label: 'Localization', definition: 'Where the lesion is now.' },
       {
         id: 'confirmation',
-        label: 'Confirmation',
-        definition: 'Where the actual sampling component is relative to the lesion.',
+        label: 'Tool-in-lesion confirmation',
+        definition: 'Where the actual biopsy tool is relative to the lesion.',
       },
       {
         id: 'diagnosis',
@@ -81,43 +77,43 @@ export const IMAGING_SORTS: readonly ImagingSort[] = Object.freeze([
         statement: 'The navigation screen shows the catheter icon on the virtual target.',
         origin: 'navigation',
         rationale:
-          'The display places tracked hardware on a map. It says nothing about the lesion today.',
+          'Navigation shows catheter position relative to the navigation target. It says nothing about where the lesion is today.',
       },
       {
         id: 'tissue-all-round',
-        statement: 'A radial ultrasound image shows tissue all round the probe.',
+        statement: 'The radial EBUS view is concentric.',
         origin: 'localization',
         rationale:
-          'The probe measures the tissue around itself: a finding about what is there, not about the tool that comes next.',
+          'The rEBUS probe images the tissue around itself: a localization finding, not a statement about the biopsy tool that follows.',
       },
       {
         id: 'window-in-solid-part',
         statement:
-          'Thin reformats show the needle’s side window inside the solid part of the nodule.',
+          'Thin reformats show the needle’s side-cutting window within the solid component of the nodule.',
         origin: 'confirmation',
         rationale:
-          'The actual sampling component is placed relative to the target in three planes. That is what confirmation means.',
+          'The part of the biopsy tool that acquires tissue is shown within the lesion in more than one plane. That is tool-in-lesion confirmation.',
       },
       {
         id: 'adequate-cells',
         statement: 'The pathologist reports adequate malignant cells.',
         origin: 'diagnosis',
-        rationale: 'Only the specimen answers the clinical question. Geometry never did.',
+        rationale: 'Only the specimen answers the clinical question. Imaging never did.',
       },
       {
         id: 'contour-moved',
-        statement: 'A limited sweep moves the target contour on the map by several millimetres.',
+        statement: 'A DTS acquisition moves the navigation target by several millimetres.',
         origin: 'localization',
         rationale:
-          'A reconstruction that moves the target updates where the lesion is now. It does not show the sampling tool.',
+          'A reconstruction that moves the target updates where the lesion is now. It does not show the biopsy tool.',
       },
       {
         id: 'rose-nondiagnostic',
         statement:
-          'The specimen came from the tissue the ultrasound showed, and rapid on-site evaluation was nondiagnostic.',
+          'The specimen came from the tissue the radial EBUS view showed, and rapid on-site evaluation was nondiagnostic.',
         origin: 'diagnosis',
         rationale:
-          'A specimen that does not answer the question is a diagnosis finding, whatever the images said about position.',
+          'A specimen that does not answer the question is a diagnostic finding, whatever the imaging showed about position.',
       },
     ],
     sourceIds: ['setser', 'confirm', 'ilocate'],
@@ -126,87 +122,94 @@ export const IMAGING_SORTS: readonly ImagingSort[] = Object.freeze([
     id: 'five-things',
     sectionId: 'good-image',
     prompt:
-      'Nine controls and readouts from a C-arm console. For each one, say which of the five things it changes — the aim, the width, the time sampling, the acquisition or the display — or that it is monitoring, because it changes nothing about the beam.',
+      'Nine controls and readouts on a C-arm console. For each, say which fluoroscopy control it belongs to — C-arm projection, collimation, pulse rate and pulse width, acquisition mode, or display — or that it is monitoring, because you read it rather than set it.',
     originsAreChainStops: false,
     origins: [
       {
         id: 'angle',
-        label: 'The aim',
-        definition: 'Where the beam is aimed: obliquity and cranial or caudal tilt.',
+        label: 'C-arm projection',
+        definition: 'Obliquity and cranial or caudal angulation.',
       },
-      { id: 'field', label: 'The width', definition: 'How wide the beam is: the collimator.' },
+      {
+        id: 'field',
+        label: 'Collimation',
+        definition: 'The collimator blades: the irradiated field.',
+      },
       {
         id: 'time',
-        label: 'The time sampling',
-        definition: 'Pulses per second and how long each lasts.',
+        label: 'Pulse rate and pulse width',
+        definition: 'How often an image is acquired and how long each exposure lasts.',
       },
       {
         id: 'acquisition',
-        label: 'The acquisition',
-        definition: 'A single image, a limited sweep or a full orbit.',
+        label: 'Acquisition mode',
+        definition: 'A single fluoroscopic projection, a DTS acquisition or a CBCT spin.',
       },
-      { id: 'display', label: 'The display', definition: 'Zoom, window and level, an overlay.' },
+      { id: 'display', label: 'Display', definition: 'Display zoom, window/level and overlays.' },
       {
         id: 'monitoring',
         label: 'Monitoring',
-        definition: 'Set by the machine or accumulated by it; read, not turned.',
+        definition: 'Set or accumulated by the system; read, not adjusted.',
       },
     ],
     rows: [
       {
         id: 'obliquity',
-        statement: 'The obliquity control.',
+        statement: 'The C-arm obliquity control.',
         origin: 'angle',
-        rationale: 'It turns the C-arm about the patient and changes which ray crosses the target.',
+        rationale:
+          'It rotates the C-arm around the patient and changes which anatomy is superimposed on the lesion.',
       },
       {
         id: 'blades',
         statement: 'The collimator blades.',
         origin: 'field',
-        rationale: 'They close the beam; less tissue is irradiated and less scatter is made.',
+        rationale: 'They narrow the beam: less tissue is irradiated and less scatter is produced.',
       },
       {
         id: 'pulse-rate',
         statement: 'The pulse rate selector.',
         origin: 'time',
-        rationale: 'It sets how often a new measurement arrives.',
+        rationale: 'It sets how often a new image is acquired.',
       },
       {
         id: 'spin-button',
-        statement: 'The rotational acquisition button.',
+        statement: 'The CBCT acquisition button.',
         origin: 'acquisition',
-        rationale: 'It asks for an orbit of projections instead of a single image.',
+        rationale: 'It requests a rotational acquisition instead of a single projection.',
       },
       {
         id: 'window-level',
         statement: 'The window and level control.',
         origin: 'display',
-        rationale: 'It maps the same measured values to different greys.',
+        rationale: 'It maps the same acquired values to different grey levels.',
       },
       {
         id: 'kilovoltage',
-        statement: 'The kilovoltage shown on the console.',
+        statement: 'The kV shown on the console.',
         origin: 'monitoring',
-        rationale: 'Automatic exposure regulation chooses it. You read it; you do not set it.',
+        rationale:
+          'Automatic exposure regulation selects it. You read it; you do not set it directly.',
       },
       {
         id: 'stored-zoom',
-        statement: 'The zoom on a stored image.',
+        statement: 'Display zoom on a stored image.',
         origin: 'display',
-        rationale: 'It enlarges existing pixels and adds no exposure.',
+        rationale: 'It enlarges acquired pixels and adds no exposure.',
       },
       {
         id: 'tilt',
-        statement: 'The cranial and caudal tilt.',
+        statement: 'The cranial/caudal angulation.',
         origin: 'angle',
-        rationale: 'The second axis of aim; it changes overlap along the length of the chest.',
+        rationale:
+          'The second projection axis; it changes superimposition along the length of the chest.',
       },
       {
         id: 'kap-readout',
         statement: 'The kerma–area product readout.',
         origin: 'monitoring',
         rationale:
-          'It accumulates what the machine delivered. It is where output is judged, not a knob.',
+          'It accumulates what the system delivered. It is where output is judged, not a control.',
       },
     ],
     sourceIds: ['tg272', 'tg125', 'wabip'],
@@ -215,67 +218,68 @@ export const IMAGING_SORTS: readonly ImagingSort[] = Object.freeze([
     id: 'three-uses',
     sectionId: 'dts-interpretation',
     prompt:
-      'Six things that can happen after a limited sweep. For each, say which use of reconstruction it is: a correction of the navigation map, a local tomographic image, or an augmented overlay on live fluoroscopy.',
+      'Six things that can follow a DTS acquisition. For each, say which use of the reconstruction it is: a navigation target update, local tomographic imaging, or an augmented-fluoroscopy overlay.',
     originsAreChainStops: false,
     origins: [
       {
         id: 'correction',
-        label: 'Map correction',
-        definition: 'The navigation target moves to where the reconstruction found it.',
+        label: 'Navigation target update',
+        definition: 'The navigation target moves to where the reconstruction located the lesion.',
       },
       {
         id: 'tomography',
         label: 'Local tomography',
-        definition: 'Reconstructed planes through the target and tool are shown.',
+        definition: 'Reconstructed planes through the lesion and the tool are displayed.',
       },
       {
         id: 'overlay',
-        label: 'Augmented overlay',
+        label: 'Augmented fluoroscopy',
         definition: 'A segmentation is projected onto live fluoroscopy and follows the C-arm.',
       },
     ],
     rows: [
       {
         id: 'target-jumps',
-        statement: 'The virtual target jumps to a new position after the sweep.',
+        statement: 'The virtual target moves to a new position after the DTS acquisition.',
         origin: 'correction',
-        rationale: 'The map has been corrected; nothing has been shown about the tool.',
+        rationale: 'The navigation target has been updated; nothing has been shown about the tool.',
       },
       {
         id: 'three-planes',
         statement:
           'Axial, coronal and sagittal planes through the needle appear on a second monitor.',
         origin: 'tomography',
-        rationale: 'That is a reconstructed volume being read in planes.',
+        rationale: 'That is a reconstructed volume read in multiplanar views.',
       },
       {
         id: 'outline-follows',
         statement:
           'A coloured outline of the nodule follows the live fluoroscopy as the C-arm moves.',
         origin: 'overlay',
-        rationale: 'A segmentation projected onto a current image, registered to the gantry.',
+        rationale: 'A segmentation projected onto a current image, registered to the C-arm.',
       },
       {
         id: 'catheter-redirected',
-        statement: 'The catheter is redirected because the map now shows the lesion elsewhere.',
+        statement:
+          'The catheter is redirected because the navigation target now shows the lesion elsewhere.',
         origin: 'correction',
         rationale:
-          'Guidance changed because the map changed, not because the tool was seen in the lesion.',
+          'Guidance changed because the navigation target changed, not because the tool was seen in the lesion.',
       },
       {
         id: 'outline-stays',
-        statement: 'The outline stays where it was while the lung has collapsed underneath it.',
+        statement: 'The overlay contour stays where it was while the lung collapses beneath it.',
         origin: 'overlay',
         rationale:
-          'An overlay carries the age of its source. The live image changed; the drawing did not.',
+          'An overlay reflects the time of its source acquisition. The live image changed; the contour did not.',
       },
       {
         id: 'elongated-slab',
         statement:
-          'A slab through the reconstructed volume shows the needle and nodule elongated in depth.',
+          'A slab through the DTS reconstruction shows the needle and nodule elongated in depth.',
         origin: 'tomography',
         rationale:
-          'The limited arc measured depth unevenly; the reconstruction shows that anisotropy.',
+          'The limited-angle acquisition resolves depth unevenly, and the reconstruction shows that anisotropy.',
       },
     ],
     sourceIds: ['saad', 'frontier', 'pritchett'],
@@ -284,66 +288,80 @@ export const IMAGING_SORTS: readonly ImagingSort[] = Object.freeze([
     id: 'next-adjustment',
     sectionId: 'two-dimensional',
     prompt:
-      'Six findings on the monitor. For each, name the thing to change first — the aim, the width, the time sampling, the display — or that no knob answers it and the state or the question has to be reassessed.',
+      'Six findings on the monitor. For each, name what to change first — the C-arm projection, collimation, pulse rate or pulse width, or the display — or that no control addresses it and the lesion or the question has to be reassessed.',
     originsAreChainStops: false,
     origins: [
-      { id: 'angle', label: 'The aim', definition: 'Change which ray crosses the target.' },
-      { id: 'field', label: 'The width', definition: 'Close the collimator to the task.' },
+      {
+        id: 'angle',
+        label: 'C-arm projection',
+        definition: 'Change the projection to move the lesion away from overlapping anatomy.',
+      },
+      {
+        id: 'field',
+        label: 'Collimation',
+        definition: 'Collimate to the lesion, the tool and the landmarks you need.',
+      },
       {
         id: 'time',
-        label: 'The time sampling',
+        label: 'Pulse rate and pulse width',
         definition: 'Change pulse width or pulse rate, or pause the movement.',
       },
-      { id: 'display', label: 'The display', definition: 'Zoom or window the stored image.' },
+      {
+        id: 'display',
+        label: 'Display',
+        definition: 'Display zoom or window/level on the stored image.',
+      },
       {
         id: 'reassess',
-        label: 'No knob — reassess',
-        definition:
-          'The state or the question has changed; ask what has moved before touching anything.',
+        label: 'No control — reassess',
+        definition: 'The anatomy or the question has changed; reconfirm before adjusting anything.',
       },
     ],
     rows: [
       {
         id: 'rib-over-target',
-        statement: 'A rib lies over the target on the frontal view; the needle is crisp.',
+        statement:
+          'A rib is superimposed on the lesion on the frontal projection; the needle is sharp.',
         origin: 'angle',
         rationale:
-          'Superimposition lives on one ray. Another ray, planned on the CT, is the first move.',
+          'Superimposition is a projection problem. A different projection, planned from the CT, is the first step.',
       },
       {
         id: 'grainy-positioned',
-        statement: 'The image is grainy, and the target is well centred.',
+        statement: 'The image is noisy, and the lesion is well centred.',
         origin: 'field',
         rationale:
-          'Close the field first: less scatter reaches the panel and the machine may need fewer photons for the same picture.',
+          'Collimate first: less scatter reaches the detector, and automatic exposure regulation may need fewer photons for the same image.',
       },
       {
         id: 'tool-blurs',
         statement: 'The needle blurs each time it advances.',
         origin: 'time',
         rationale:
-          'Movement within one pulse is a pulse-width problem; movement between pulses is a rate problem.',
+          'Motion within one pulse is a pulse-width problem; motion between pulses is a pulse-rate problem.',
       },
       {
         id: 'small-clear',
         statement: 'The needle edge is resolved but too small to inspect from where you stand.',
         origin: 'display',
-        rationale: 'Enlarge the stored image. No new measurement is needed for a viewing problem.',
+        rationale:
+          'Use display zoom on the stored image. A viewing problem needs no new acquisition.',
       },
       {
         id: 'target-gone',
         statement:
-          'The target that was visible a minute ago cannot be found, and the overlay no longer matches.',
+          'The lesion visible a minute ago cannot be found, and the overlay no longer matches.',
         origin: 'reassess',
         rationale:
-          'Nothing on the console restores a collapsed lung or a moved target. Ask what has changed.',
+          'No control restores an atelectatic segment or a displaced lesion. Reconfirm what has changed.',
       },
       {
         id: 'overlap-depth',
-        statement: 'Needle and nodule overlap, and nobody can say whether they are in contact.',
+        statement:
+          'The needle and nodule overlap, and nobody can say whether the needle is in the lesion.',
         origin: 'angle',
         rationale:
-          'A separated second view exposes the depth the first compressed. If it cannot, a sweep or an orbit can.',
+          'A sufficiently separated second projection resolves the depth the first collapsed. If it cannot, use DTS or CBCT.',
       },
     ],
     sourceIds: ['setser', 'tg272', 'wabip'],
@@ -352,7 +370,7 @@ export const IMAGING_SORTS: readonly ImagingSort[] = Object.freeze([
     id: 'where-it-lives',
     sectionId: 'suite-cases',
     prompt:
-      'Eight findings from the imaging guide. For each, say which stop of the chain the problem lives at.',
+      'Eight findings from the troubleshooting table. For each, say at which component of image formation the problem arises.',
     originsAreChainStops: true,
     origins: chainOrigins(['source', 'beam', 'patient', 'detector', 'reconstruction', 'display']),
     rows: [
@@ -361,49 +379,52 @@ export const IMAGING_SORTS: readonly ImagingSort[] = Object.freeze([
         statement: 'The tool is visible; the lesion is uncertain.',
         origin: 'patient',
         rationale:
-          'Identity and current state are questions about the anatomy the beam crosses, not about the hardware.',
+          'Lesion identity and the current anatomy are questions about the patient, not about the tool.',
       },
       {
         id: 'structure-overlaps',
-        statement: 'A structure overlaps the target.',
+        statement: 'A structure is superimposed on the lesion.',
         origin: 'beam',
-        rationale: 'Two things on one ray share a pixel. The overlap is made at the beam.',
+        rationale:
+          'Two objects on one X-ray path project to the same location. Superimposition arises from beam geometry.',
       },
       {
         id: 'grainy-washed',
-        statement: 'The image is grainy or washed out.',
+        statement: 'The image is noisy or low in contrast.',
         origin: 'source',
-        rationale: 'Photon count and scatter decide grain and contrast; they begin at the source.',
+        rationale:
+          'Photon output and scatter determine noise and contrast; they begin at the X-ray tube.',
       },
       {
         id: 'edges-duplicate',
-        statement: 'Edges duplicate, or instruments lag.',
+        statement: 'Edges duplicate, or instruments lag behind their movement.',
         origin: 'detector',
         rationale:
-          'How often and how long the panel measures decides what motion does to the picture.',
+          'How often and for how long the detector acquires determines what motion does to the image.',
       },
       {
         id: 'depth-uncertain',
-        statement: 'A depth relationship remains uncertain after two views.',
+        statement: 'A depth relationship remains uncertain after two projections.',
         origin: 'reconstruction',
-        rationale: 'A new measurement — a sweep or an orbit — is a reconstruction question.',
+        rationale:
+          'A DTS acquisition or a CBCT spin resolves it, which is a reconstruction question.',
       },
       {
         id: 'reconstructed-overlap',
-        statement: 'A reconstructed tool overlaps the target on a slab.',
+        statement: 'A reconstructed tool overlaps the lesion on a thick slab.',
         origin: 'display',
         rationale:
-          'Which component, which planes and which thickness are shown is a display and decision question.',
+          'Which component, which planes and which slab thickness are displayed is a display and interpretation question.',
       },
       {
         id: 'setup-changed',
         statement: 'The anatomy or the setup has changed since the last image.',
         origin: 'patient',
-        rationale: 'The timestamp of the anatomy belongs to the patient stop.',
+        rationale: 'Changes in the anatomy since the last acquisition belong to the patient.',
       },
       {
         id: 'dose-alert',
-        statement: 'A dose number or an alert appears.',
+        statement: 'A dose index or a dose notification appears.',
         origin: 'detector',
         rationale:
           'The quantity, its units and the modes it covers are defined where the beam is measured.',

@@ -87,8 +87,8 @@ export const IN_STEPS = {
 } as const
 
 export const ON_SUITE = {
-  scene: 'the chain map and the lit stop',
-  pins: 'the numbered pins on the chain map',
+  scene: 'the image-formation map and its highlighted component',
+  pins: 'the numbered labels on the image-formation map',
   controls: 'The controls, the dock under the scene',
   readouts: 'The readouts, beside the controls',
 } as const
@@ -137,7 +137,7 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
   inputs.push({
     phase: 'recognize',
     title: spec.recognizeTitle,
-    instruction: `Read “${IN_TEACHING.purpose}” in the Teaching panel, then find the lit stop on the chain map in the Simulator panel. ${lesson.recall.prompt}`,
+    instruction: `Read “${IN_TEACHING.purpose}” in the Teaching panel, then find the highlighted component on the image-formation map in the Simulator panel. ${lesson.recall.prompt}`,
     lookIn: {
       pane: 'teaching',
       landmark: IN_TEACHING.purpose,
@@ -156,7 +156,7 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
     phase: 'predict',
     title: 'Decide before the suite shows it',
     instruction: chainAnswered
-      ? 'Choose the stop on the chain map beneath the scene in the Simulator panel, then commit on this card. The controls unlock once you have.'
+      ? 'Choose the component on the image-formation map beneath the scene in the Simulator panel, then commit on this card. The controls unlock once you have.'
       : 'Choose one answer below, then commit it. The controls unlock once you have.',
     lookIn: chainAnswered
       ? {
@@ -176,9 +176,9 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
       throw new Error(`Section ${sectionId} walks without a lab or a goal.`)
     inputs.push({
       phase: 'act',
-      title: 'Walk the six stops',
+      title: 'Walk through image formation',
       instruction:
-        'Walk the chain one stop at a time on this card. At the beam stop, move the obliquity once in the Simulator panel and watch the ray, the cone and the image move together.',
+        'Step through the components of image formation on this card. At beam geometry, change the C-arm obliquity once in the Simulator panel and watch the X-ray path, the beam and the image move together.',
       lookIn: {
         pane: 'steps',
         landmark: IN_STEPS.walkCard,
@@ -252,8 +252,8 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
     phase: 'transfer',
     title: 'Carry it forward',
     instruction: transferOnChain
-      ? 'The same idea from an earlier section, in a different situation. Choose the stop on the chain map beneath the scene, then commit on this card.'
-      : 'The same idea from an earlier section, in a different situation. Choose one answer below and commit it.',
+      ? 'The same principle from an earlier section, in a different situation. Choose the component on the image-formation map beneath the scene, then commit on this card.'
+      : 'The same principle from an earlier section, in a different situation. Choose one answer below and commit it.',
     lookIn: transferOnChain
       ? {
           pane: 'simulator',

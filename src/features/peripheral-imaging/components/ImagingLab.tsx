@@ -109,8 +109,8 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
               onChange={(depth) => set({ depth })}
             />
             <div className={styles.readoutGrid}>
-              <Readout label="Detector-plane center separation">{separation.toFixed(1)} mm</Readout>
-              <Readout label="Physical depth offset">{depth} mm</Readout>
+              <Readout label="Projected tool–lesion separation">{separation.toFixed(1)} mm</Readout>
+              <Readout label="True depth offset along the X-ray path">{depth} mm</Readout>
             </div>
             <p className={styles.result}>
               Changing the view{' '}
@@ -185,7 +185,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
             />
             <div className={styles.readoutGrid}>
               <Readout label="Irradiated area vs full field">{area.toFixed(0)}%</Readout>
-              <Readout label="Extra exposure from stored-image zoom">None</Readout>
+              <Readout label="Extra exposure from display zoom">None</Readout>
             </div>
             <p className={styles.result}>
               {crop
@@ -323,13 +323,13 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
               <Readout label="Tube load at fixed 20 mA">
                 {metrics.masPerSecond.toFixed(2)} mAs/s
               </Readout>
-              <Readout label="Movement during one pulse">
+              <Readout label="Motion blur during one pulse">
                 {metrics.inFrameBlur.toFixed(2)} mm
               </Readout>
               <Readout label="Travel between frames">
                 {metrics.interFrameTravel.toFixed(2)} mm
               </Readout>
-              <Readout label="Time between measurements">
+              <Readout label="Time between acquired frames">
                 {metrics.intervalMs.toFixed(0)} ms
               </Readout>
             </div>
@@ -358,7 +358,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
           <div className={styles.controls}>
             <Slider
               id={controlElementId('sweep')}
-              label="Authored angular sweep"
+              label="Authored DTS arc"
               value={sweep}
               min={20}
               max={60}
@@ -445,13 +445,13 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
         </div>
         <p className={styles.result}>
           {kind === 'fixed'
-            ? 'Fixed suite: plan around the installed gantry, table travel, ceiling shields and anesthesia access. Keep the robotic base, if used, outside the supported sweep.'
-            : 'Mobile suite: confirm floor space, power, table compatibility and wheel/base clearance. Park and secure the unit, route lines, then inspect its supported sweep.'}
+            ? 'Fixed suite: plan around the installed gantry, table travel, ceiling shields and anesthesia access. Keep the robotic base, if used, outside the supported CBCT spin path.'
+            : 'Mobile suite: confirm floor space, power, table compatibility and wheel/base clearance. Park and secure the unit, route lines, then inspect its supported CBCT spin path.'}
         </p>
         <Scene3D kind={kind} orbit={orbit} centerTarget offsetX={x} offsetDepth={depth} />
         <Slider
           id={controlElementId('acquisitionOrbit')}
-          label="Authored orbit inspection angle"
+          label="Authored rotation for the collision check"
           value={orbit}
           min={-100}
           max={100}
@@ -524,7 +524,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
             />
             <Toggle
               id={controlElementId('clearance')}
-              label="Complete supported orbit and line routing checked"
+              label="Full CBCT spin path and lines checked"
               checked={flag('clearance')}
               onChange={(clearance) => set({ clearance, captured: false })}
             />

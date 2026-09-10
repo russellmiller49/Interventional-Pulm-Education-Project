@@ -392,7 +392,7 @@ export function ConeBeamPanels({
           disabled={!enabled || a.sourceState !== 'ready'}
           onClick={() => (a.busy ? a.stop() : void a.run())}
         >
-          {a.busy ? 'Pause orbit' : 'Run the orbit'}
+          {a.busy ? 'Pause the spin' : 'Run the CBCT spin'}
         </button>
         <span>
           {a.frames.length} / {inputs.projectionCount} projections

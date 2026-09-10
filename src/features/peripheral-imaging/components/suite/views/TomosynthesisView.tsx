@@ -301,12 +301,12 @@ export function TomosynthesisPanels({
       )}
       <p>
         {prior
-          ? 'The console separates image ingredients by colour. Gray comes from the thirteen teaching projections; teal comes from the planning CT.'
+          ? 'The display colour-codes the image source: gray from the thirteen DTS projections, teal from the planning CT.'
           : '13 parallel teaching projections · cone arc for orientation. Dashed arc: unsampled directions. Bars on the focal plane: out-of-plane spreading.'}
       </p>
       {prior && (
         <fieldset disabled={!enabled} className={styles.controls}>
-          <legend>Image provenance</legend>
+          <legend>Image source</legend>
           {(['measured', 'prior', 'blend'] as const).map((layer) => (
             <button
               type="button"
@@ -316,7 +316,7 @@ export function TomosynthesisPanels({
               onClick={() => model.setLayer(layer)}
             >
               {layer === 'measured'
-                ? 'Measured projections'
+                ? 'Acquired projections'
                 : layer === 'prior'
                   ? 'Planning CT prior'
                   : 'Blend with prior'}

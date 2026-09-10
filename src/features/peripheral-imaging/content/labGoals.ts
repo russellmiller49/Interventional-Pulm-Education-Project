@@ -27,7 +27,7 @@ const acquisitionChecks: readonly LabGoal[] = [
     type: 'flag',
     key: ACQUISITION_CHECK_KEYS[1],
     value: true,
-    label: 'Confirm the whole orbit and the line paths are clear',
+    label: 'Confirm the full CBCT spin path and the lines are clear',
   },
   {
     type: 'flag',
@@ -48,24 +48,28 @@ const centeredGoal: LabGoal = {
   metric: 'centered',
   op: 'eq',
   value: true,
-  label: 'Center the target on both scouts',
+  label: 'Center the lesion on both scout images',
 }
 const capturedGoal: LabGoal = {
   type: 'flag',
   key: 'captured',
   value: true,
-  label: 'Capture the teaching state',
+  label: 'Capture the verified setup',
 }
 const movedAfterCapture: LabGoal = {
   type: 'event',
   id: 'moved-after-capture',
-  label: 'Move the setup after capturing, and watch the readiness fall',
+  label: 'Move the setup after capturing, and watch readiness lapse',
 }
 
 export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, SectionLabGoals>>> = {
   'chain-walk': {
     act: [
-      { type: 'event', id: 'touched-orbit', label: 'At the beam stop, move the obliquity once' },
+      {
+        type: 'event',
+        id: 'touched-orbit',
+        label: 'At beam geometry, change the C-arm obliquity once',
+      },
     ],
     observe: [],
     watch: ['separationMm'],
@@ -79,7 +83,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         value: 15,
         label: 'Displace the anatomy by fifteen millimetres or more',
       },
-      { type: 'flag', key: 'overlay', value: true, label: 'Keep the stored contour shown' },
+      { type: 'flag', key: 'overlay', value: true, label: 'Keep the stored overlay contour shown' },
     ],
     observe: [
       {
@@ -104,7 +108,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         key: 'depth',
         op: 'abs-gte',
         value: 15,
-        label: 'Keep the tool fifteen millimetres or more off the target along the ray',
+        label: 'Keep the tool fifteen millimetres or more from the lesion along the X-ray path',
       },
     ],
     // A state goal, not an event: the overlap event fires on the first tick of the orbit slider
@@ -117,14 +121,14 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         metric: 'separationMm',
         op: 'lte',
         value: 0.5,
-        label: 'Return to a view where the tool and target overlap again',
+        label: 'Return to a projection where the tool and lesion overlap again',
       },
     ],
     watch: ['separationMm', 'depthMm'],
   },
   signal: {
     act: [
-      { type: 'event', id: 'touched-orbit', label: 'Change the beam direction' },
+      { type: 'event', id: 'touched-orbit', label: 'Change the C-arm projection' },
       {
         type: 'value',
         key: 'orbit',
@@ -133,7 +137,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         label: 'Reach twenty degrees of obliquity or more',
       },
     ],
-    observe: [{ type: 'event', id: 'touched-tilt', label: 'Add a cranial or caudal tilt' }],
+    observe: [{ type: 'event', id: 'touched-tilt', label: 'Add cranial or caudal angulation' }],
     watch: ['separationMm'],
   },
   field: {
@@ -142,14 +146,14 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         type: 'flag',
         key: 'crop',
         value: false,
-        label: 'Use the physical shutters, not the display crop',
+        label: 'Use collimation, not electronic cropping',
       },
       {
         type: 'value',
         key: 'field',
         op: 'lte',
         value: 70,
-        label: 'Close the field to seven tenths of the full side or less',
+        label: 'Collimate to seven tenths of the full field width or less',
       },
     ],
     observe: [
@@ -157,14 +161,14 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         type: 'flag',
         key: 'crop',
         value: true,
-        label: 'Switch to the display crop and compare the irradiated area',
+        label: 'Switch to electronic cropping and compare the irradiated area',
       },
       {
         type: 'value',
         key: 'zoom',
         op: 'gte',
         value: 1.5,
-        label: 'Enlarge the stored image by half or more',
+        label: 'Apply display zoom of one and a half times or more to the stored image',
       },
     ],
     watch: ['irradiatedAreaPct', 'zoomAddsExposure'],
@@ -193,8 +197,16 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
   },
   'dts-acquisition': {
     act: [
-      { type: 'event', id: 'plane-tool-visited', label: 'Bring the tool plane into focus' },
-      { type: 'event', id: 'plane-lesion-visited', label: 'Bring the lesion plane into focus' },
+      {
+        type: 'event',
+        id: 'plane-tool-visited',
+        label: 'Scroll to the plane where the tool is in focus',
+      },
+      {
+        type: 'event',
+        id: 'plane-lesion-visited',
+        label: 'Scroll to the plane where the lesion is in focus',
+      },
     ],
     observe: [
       {
@@ -202,7 +214,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         key: 'sweep',
         op: 'gte',
         value: 50,
-        label: 'Widen the sweep to fifty degrees or more',
+        label: 'Widen the DTS arc to fifty degrees or more',
       },
     ],
     watch: ['sweepDeg', 'planeMm'],
@@ -219,7 +231,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         key: 'kind',
         op: 'eq',
         value: 'fixed',
-        label: 'Choose the fixed-suite workflow',
+        label: 'Choose the fixed C-arm workflow',
       },
       centeredGoal,
       capturedGoal,
@@ -234,7 +246,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         key: 'kind',
         op: 'eq',
         value: 'mobile',
-        label: 'Choose the mobile-suite workflow',
+        label: 'Choose the mobile CBCT workflow',
       },
       centeredGoal,
       capturedGoal,
@@ -245,7 +257,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         key: 'acquisitionOrbit',
         op: 'abs-gte',
         value: 90,
-        label: 'Inspect the orbit at ninety degrees or more',
+        label: 'Rotate the C-arm ninety degrees or more to inspect the spin path',
       },
     ],
     watch: ['centered', 'ready', 'captured'],
@@ -257,13 +269,13 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         metric: 'windowIntersects',
         op: 'eq',
         value: true,
-        label: 'Bring the sampling window into the target',
+        label: 'Bring the side-cutting window into the lesion',
       },
-      { type: 'flag', key: 'slab', value: false, label: 'Read thin slices, not the slab' },
+      { type: 'flag', key: 'slab', value: false, label: 'Review thin slices, not the thick slab' },
       {
         type: 'event',
         id: 'window-slices-visited',
-        label: 'Look at the slices through the sampling window',
+        label: 'Review the slices through the side-cutting window',
       },
     ],
     observe: [
@@ -274,13 +286,13 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
   },
   'changing-anatomy': {
     act: [
-      { type: 'event', id: 'contour-captured', label: 'Capture a contour' },
+      { type: 'event', id: 'contour-captured', label: 'Capture a target contour' },
       {
         type: 'metric',
         metric: 'contourStale',
         op: 'eq',
         value: true,
-        label: 'Change the anatomical state after capturing',
+        label: 'Change the anatomy after capturing',
       },
     ],
     observe: [
@@ -288,7 +300,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         type: 'flag',
         key: 'overlay',
         value: false,
-        label: 'Turn the stored contour off and look at what is underneath',
+        label: 'Turn the overlay off and review the underlying image',
       },
     ],
     watch: ['storedShiftMm', 'currentShiftMm', 'contourStale'],
@@ -304,13 +316,13 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
       },
     ],
     observe: [
-      { type: 'flag', key: 'shield', value: true, label: 'Place the barrier' },
+      { type: 'flag', key: 'shield', value: true, label: 'Position the shielding barrier' },
       {
         type: 'value',
         key: 'orbit',
         op: 'abs-gte',
         value: 60,
-        label: 'Turn the C-arm sixty degrees or more',
+        label: 'Rotate the C-arm sixty degrees or more',
       },
     ],
     watch: ['inverseSquareRatio'],
@@ -322,7 +334,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         key: 'area',
         op: 'lte',
         value: 100,
-        label: 'Close the beam area to one hundred square centimetres or less',
+        label: 'Collimate the beam area to one hundred square centimetres or less',
       },
       {
         type: 'value',
@@ -338,7 +350,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         metric: 'kapGyCm2',
         op: 'lte',
         value: 1.5,
-        label: 'Bring the area product to one and a half gray-square-centimetres or less',
+        label: 'Bring the kerma–area product to one and a half gray-square-centimetres or less',
       },
     ],
     watch: ['kapGyCm2', 'kapMicroGyM2'],

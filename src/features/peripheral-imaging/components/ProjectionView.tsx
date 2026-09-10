@@ -144,7 +144,7 @@ export function Projection({
     <div
       className={styles.radiograph}
       role="img"
-      aria-label={`CT-derived teaching projection at ${orbit} degrees obliquity and ${tilt} degrees tilt. Authored target and tool are overlaid in the same cone geometry.`}
+      aria-label={`CT-derived teaching projection at ${orbit} degrees obliquity and ${tilt} degrees cranial/caudal angulation. Authored target and tool are overlaid in the same cone geometry.`}
       data-projection-state={status}
     >
       <div className={styles.radiographImage} style={{ transform: `scale(${zoom})` }}>

@@ -44,17 +44,17 @@ export function PeripheralImagingHub() {
       <section className="grid gap-7 rounded-3xl border bg-card p-6 shadow-sm lg:grid-cols-[1.35fr_0.65fr] lg:p-10">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
-            A practical course for the bronch suite
+            A practical course for the bronchoscopy suite
           </p>
           <h1 className="mt-3 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">
             See the target. Understand the image.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">
-            Every section runs on one imaging suite. Ask what an image can establish, walk the six
-            stops from the X-ray tube to the decision, meet the five things you can change, then
-            take each technology as a different way of using the same chain: a single view, a
-            limited sweep, a full orbit, an overlay, and the people and numbers around the beam.
-            Sections are ordered as a recommendation, not a gate.
+            Every section runs on one imaging suite, in the order a case runs: plan what the imaging
+            must confirm, localize the lesion and optimize the fluoroscopic image, confirm with
+            digital tomosynthesis or CBCT, confirm the biopsy tool within the lesion, and reconfirm
+            after anything changes — with radiation safety throughout. Sections are ordered as a
+            recommendation, not a gate.
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <ImagingContinueCta />
@@ -129,22 +129,23 @@ export function PeripheralImagingHub() {
           <div>
             <dt className="font-semibold">Who this is for</dt>
             <dd className="text-muted-foreground">
-              Pulmonary and interventional pulmonology fellows, bronchoscopists and imaging team
-              members. Basic chest CT anatomy and familiarity with bronchoscopy are assumed.
+              Pulmonary and interventional pulmonology fellows, bronchoscopists, and the radiologic
+              technologists and imaging team who support them. Chest CT anatomy and bronchoscopy
+              experience are assumed.
             </dd>
           </div>
           <div>
             <dt className="font-semibold">Where to begin</dt>
             <dd className="text-muted-foreground">
-              At the first section — {peripheralImagingPathway.sections[0]?.title}. Everything later
-              assumes you can say which question an image is being asked to answer.
+              At the first section — {peripheralImagingPathway.sections[0]?.title} Everything later
+              assumes you can say what an image is being asked to confirm.
             </dd>
           </div>
           <div>
-            <dt className="font-semibold">The chain every section stands on</dt>
+            <dt className="font-semibold">How the image is formed</dt>
             <dd className="text-muted-foreground">
-              {CHAIN_STOPS.map((stop) => stop.title.toLowerCase()).join(' → ')}. One stop is lit in
-              every section; the technologies differ in how they use it.
+              {CHAIN_STOPS.map((stop) => stop.title).join(' → ')}. Each section highlights the
+              component behind it, as the physics beneath the clinical steps.
             </dd>
           </div>
           <div>
@@ -173,7 +174,7 @@ export function PeripheralImagingHub() {
           What you will be able to decide
         </p>
         <h2 id="imaging-outcomes-heading" className="mt-2 text-2xl font-bold">
-          One procedure. Different information.
+          One procedure, several imaging decisions.
         </h2>
         <ol className="mt-5 grid gap-4 md:grid-cols-3">
           {OBJECTIVES.map((objective, index) => (
@@ -190,10 +191,10 @@ export function PeripheralImagingHub() {
 
       <section aria-labelledby="imaging-landscape-heading">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
-          The information landscape
+          Imaging modalities
         </p>
         <h2 id="imaging-landscape-heading" className="mt-2 text-2xl font-bold">
-          Choose the question before the technology.
+          Choose the question before the modality.
         </h2>
         <ul className="mt-5 grid gap-4 md:grid-cols-3">
           {MODALITIES.map((modality) => (
@@ -220,10 +221,10 @@ export function PeripheralImagingHub() {
         className="rounded-3xl border bg-card p-6 shadow-sm lg:p-8"
       >
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
-          The imaging guide
+          Troubleshooting table
         </p>
         <h2 id="imaging-guide-heading" className="mt-2 text-2xl font-bold">
-          What you see, the question to ask, the first move
+          What you see, the question to ask, the first step
         </h2>
         <div className="mt-5 overflow-x-auto">
           <table className="w-full text-sm">
@@ -231,7 +232,7 @@ export function PeripheralImagingHub() {
               <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <th className="py-2 pr-4">Finding</th>
                 <th className="py-2 pr-4">Question</th>
-                <th className="py-2 pr-4">First move</th>
+                <th className="py-2 pr-4">First step</th>
                 <th className="py-2">Section</th>
               </tr>
             </thead>
@@ -265,7 +266,7 @@ export function PeripheralImagingHub() {
           How a reconstruction is made
         </p>
         <h2 id="imaging-reconstruction-heading" className="mt-2 text-2xl font-bold">
-          A sweep and an orbit do not return the same thing
+          DTS and CBCT do not return the same thing
         </h2>
         <div className="mt-5">
           <ReconstructionComparison />
@@ -334,7 +335,7 @@ export function PeripheralImagingHub() {
           <a href="/peripheral-imaging/anatomy/thorax.glb" className="font-semibold text-primary">
             the CT-derived thorax
           </a>
-          . Provenance and limits are recorded with the assets.
+          . Sources and limits are recorded with the assets.
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
           Practice cases arrive in a later round; the eight-case capstone waits on the{' '}

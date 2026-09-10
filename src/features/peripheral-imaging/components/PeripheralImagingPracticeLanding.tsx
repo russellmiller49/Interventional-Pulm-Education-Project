@@ -65,9 +65,9 @@ export function PeripheralImagingPracticeLanding() {
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Practice</p>
         <h1 className="text-3xl font-bold tracking-tight">Short cases, one decision each</h1>
         <p className="max-w-2xl text-base leading-7 text-muted-foreground">
-          A situation from the room, one decision, and the reasoning behind it. Each case is paired
-          to the section whose mechanism it uses. Answer a case as often as you like — only the
-          first decision goes on your record, and it is kept as you made it.
+          A procedural situation, one decision, and the reasoning behind it. Each case is paired to
+          the section whose principle it uses. Answer a case as often as you like — only the first
+          decision goes on your record, and it is kept as you made it.
         </p>
         <div className="flex flex-wrap items-center gap-3">
           {next ? (

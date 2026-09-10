@@ -10,7 +10,9 @@ export function PeripheralImagingAssessLanding() {
       data-assess-landing
     >
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Assess</p>
-      <h1 className="text-3xl font-bold tracking-tight">Decisions in the bronch suite</h1>
+      <h1 className="text-3xl font-bold tracking-tight">
+        Integrated peripheral bronchoscopy cases
+      </h1>
       <ImagingCapstone />
     </div>
   )

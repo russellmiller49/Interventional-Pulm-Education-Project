@@ -305,7 +305,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
           <div className={styles.scenePanel}>
             <div className={styles.sceneHeader}>
               <span>
-                {isRoom ? 'The imaging suite at rest' : 'CT-derived anatomy · imaging chain'}
+                {isRoom ? 'The imaging suite at rest' : 'CT-derived anatomy · image formation'}
               </span>
               <span>Authored teaching model</span>
             </div>
@@ -489,7 +489,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 className={styles.overlay}
                 data-chain-map
                 role={showChain ? 'group' : undefined}
-                aria-label={showChain ? 'The imaging chain' : undefined}
+                aria-label={showChain ? 'Image formation' : undefined}
               />
             </div>
             {!isRoom && (
@@ -635,10 +635,10 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
               <p className={styles.monitorCaption}>
                 {dts.count} / 13 projections ·{' '}
                 {dts.selectedLayer === 'measured'
-                  ? 'Measured projections'
+                  ? 'Acquired projections'
                   : dts.selectedLayer === 'prior'
                     ? 'Planning CT prior'
-                    : 'Measured projections with planning CT prior'}
+                    : 'Acquired projections with planning CT prior'}
               </p>
             </section>
           )}

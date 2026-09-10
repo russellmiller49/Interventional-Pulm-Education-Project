@@ -137,7 +137,7 @@ export function ImagingTeachingColumn({
         ))}
 
       {showStopCards ? (
-        <StageBlock kind="pattern" heading="Where you are on the chain">
+        <StageBlock kind="pattern" heading="How the image is formed">
           {stopsToShow.map((stopId) => {
             const stop = chainStop(stopId)
             return (
@@ -148,11 +148,9 @@ export function ImagingTeachingColumn({
                 data-stop={stopId}
                 aria-label={stop.title}
               >
-                <p className={styles.kicker}>
-                  Stop {stop.number} · {stop.title}
-                </p>
-                <p className={styles.analogy}>{stop.analogy}</p>
+                <p className={styles.kicker}>{stop.title}</p>
                 <p>{stop.precise}</p>
+                <p className={styles.analogy}>{stop.analogy}</p>
                 <p className={styles.kicker} id={`${idBase}-${stopId}`}>
                   {stop.checklistLabel}
                 </p>
@@ -170,15 +168,15 @@ export function ImagingTeachingColumn({
       {committed ? (
         <>
           {introducesPanel ? (
-            <StageBlock kind="after-commitment" heading="Five things you can change">
+            <StageBlock kind="after-commitment" heading="Fluoroscopy controls">
               <section className={styles.teachingCard} data-teaching-block="control-panel">
-                <p className={styles.kicker}>Five things you can change</p>
+                <p className={styles.kicker}>Fluoroscopy controls</p>
                 <p>{IMAGING_CONTROL_PANEL.sentence}</p>
                 <ul className={styles.checklist}>
                   {IMAGING_CONTROL_PANEL.controls.map((control) => (
                     <li key={control.id}>
-                      <strong>{control.plainName}</strong> — changes {control.changes} Does not
-                      change: {control.doesNotChange}
+                      <strong>{control.plainName}.</strong> Changes {control.changes} Does not
+                      change {control.doesNotChange}
                     </li>
                   ))}
                 </ul>
@@ -248,13 +246,13 @@ export function ImagingTeachingColumn({
           {rows.length > 0 ? (
             <StageBlock kind="after-commitment" heading="The one table">
               <section className={styles.teachingCard} data-teaching-block="grammar">
-                <p className={styles.kicker}>The one table · rows this section fills in</p>
+                <p className={styles.kicker}>Troubleshooting table · rows for this section</p>
                 <table className={styles.grammarTable}>
                   <thead>
                     <tr>
                       <th scope="col">What you see</th>
-                      <th scope="col">Where it lives</th>
-                      <th scope="col">The shortlist</th>
+                      <th scope="col">Likely cause</th>
+                      <th scope="col">What to consider</th>
                     </tr>
                   </thead>
                   <tbody>

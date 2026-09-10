@@ -57,7 +57,7 @@ describe('how a reconstruction is made', () => {
     // other's output shape.
     for (const account of RECONSTRUCTION_ACCOUNTS) {
       expect(account.provenance.trim()).not.toHaveLength(0)
-      expect(account.provenance).toMatch(/measured/i)
+      expect(account.provenance).toMatch(/acquired/i)
     }
 
     const sweep = reconstructionAccount('tomosynthesis')
@@ -70,7 +70,7 @@ describe('how a reconstruction is made', () => {
     // And the limit survives the rendering: the learner is told the visible cue is what goes away.
     expect(sweep.cannotAsk.join(' ')).toMatch(/16\.2 mm/)
     expect([sweep.provenance, ...sweep.cannotAsk].join(' ')).toMatch(
-      /nothing in the picture marks|does not label|were filled in/i,
+      /nothing in the image marks|does not label|were filled in/i,
     )
   })
 

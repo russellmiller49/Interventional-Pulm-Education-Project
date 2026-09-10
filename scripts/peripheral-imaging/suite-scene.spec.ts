@@ -57,7 +57,7 @@ test('scene, detector and lab oracle agree; native chain answers lock after comm
   const before = await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
   const monitorBefore = await monitor.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
   await setRange(page, 'C-arm obliquity', 30)
-  await setRange(page, 'Cranial / caudal tilt', 15)
+  await setRange(page, 'Cranial / caudal angulation', 15)
   const a = projectToDetector(LESION_CENTER, 30, 15),
     b = projectToDetector(toolTipForDepth(22), 30, 15)
   await expect(page.locator('[data-readout=separationMm] dd')).toHaveText(
@@ -241,7 +241,7 @@ test('field shutters, display crop and monitor zoom have distinct physical effec
   await ready(page)
   const scene = page.locator('canvas[data-three-state=ready]')
   const original = await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
-  await setRange(page, 'Field side length', 45)
+  await setRange(page, 'Collimated field width', 45)
   await expect(page.locator('[data-readout=irradiatedAreaPct] dd')).toHaveText('20%')
   await expect
     .poll(() => scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
@@ -249,7 +249,7 @@ test('field shutters, display crop and monitor zoom have distinct physical effec
   const narrowed = await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
   const mask = await page.locator('[data-field-mask] path').getAttribute('d')
   await page
-    .getByRole('checkbox', { name: 'Use display crop instead of physical shutters' })
+    .getByRole('checkbox', { name: 'Use electronic cropping instead of collimation' })
     .check()
   await expect(page.locator('[data-field-mask]')).toHaveAttribute('data-physical-field', '100')
   await expect(page.locator('[data-field-mask] path')).toHaveAttribute('d', mask!)
@@ -267,11 +267,11 @@ test('field shutters, display crop and monitor zoom have distinct physical effec
     })
     .toBe(true)
   const cropped = await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
-  await page.getByRole('slider', { name: 'Stored-image display zoom' }).fill('2')
+  await page.getByRole('slider', { name: 'Display zoom on the stored image' }).fill('2')
   await expect(page.locator('[data-monitor-zoom]')).toHaveAttribute('data-monitor-zoom', '2')
   await expect.poll(() => scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())).toBe(cropped)
   await page.getByRole('button', { name: 'Toggle control lock' }).click()
-  await expect(page.getByRole('slider', { name: 'Field side length' })).toBeDisabled()
+  await expect(page.getByRole('slider', { name: 'Collimated field width' })).toBeDisabled()
   await expect(page.getByRole('button', { name: 'Step', exact: true })).toBeDisabled()
   await expect(page.locator('[data-model-boundary]')).toHaveText(SUITE_VIEWS.field.boundary)
 })
@@ -316,12 +316,12 @@ test('CBCT shares one DRR across scouts and orbit, gates capture, and invalidate
   await expect(page.locator('[data-scout-state=ready]')).toHaveCount(2)
   await expect(page.locator('[data-cbct-frame]')).toHaveCount(24, { timeout: 20000 })
   await expect(
-    page.getByRole('button', { name: 'Capture teaching state', exact: true }),
+    page.getByRole('button', { name: 'Capture the verified setup', exact: true }),
   ).toBeDisabled()
   await page.getByRole('button', { name: 'Step', exact: true }).click()
   await expect(page.locator('[data-cbct-frame]')).toHaveCount(1)
   await expect(page.locator('[data-cbct-frame]')).toHaveAttribute('data-cbct-frame', '-100')
-  await page.getByRole('button', { name: 'Center the teaching target', exact: true }).click()
+  await page.getByRole('button', { name: 'Center the lesion', exact: true }).click()
   await expect(page.locator('[data-cbct-frame]')).toHaveCount(24, { timeout: 20000 })
   await expect(page.locator('[data-readout=centered] dd')).toHaveText('yes')
   await expect(page.locator('[data-scout-state=ready]')).toHaveCount(2)
@@ -329,7 +329,7 @@ test('CBCT shares one DRR across scouts and orbit, gates capture, and invalidate
     await expect(scout).toHaveAttribute('cx', '256')
   for (const key of ['target', 'clearance', 'state', 'protection'])
     await page.locator(`#peripheral-imaging-control-${key}`).check()
-  await page.getByRole('button', { name: 'Capture teaching state', exact: true }).click()
+  await page.getByRole('button', { name: 'Capture the verified setup', exact: true }).click()
   await expect(page.locator('[data-cbct-frame]')).toHaveCount(24, { timeout: 20000 })
   const capturedReadout = await page.locator('[data-readout=captured] dd').textContent()
   await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-anim', 'idle')
@@ -344,13 +344,13 @@ test('CBCT shares one DRR across scouts and orbit, gates capture, and invalidate
         canvases.filter((c) => Boolean((c as HTMLCanvasElement).getContext('webgl2'))).length,
     )
   expect(contexts).toBe(2)
-  await setRange(page, 'Authored orbit inspection angle', 30)
+  await setRange(page, 'Authored rotation for the collision check', 30)
   await expect(page.locator('[data-readout=captured] dd')).toHaveText('no')
   await expect(page.locator('[data-cbct-frame]')).toHaveCount(24, { timeout: 20000 })
   await expect(page.locator('[data-readout=ready] dd')).toHaveText('no')
   const scene = page.locator('canvas[data-three-state=ready]')
   const mobile = await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
-  await page.getByRole('combobox', { name: 'Suite workflow' }).selectOption('fixed')
+  await page.getByRole('combobox', { name: 'CBCT workflow' }).selectOption('fixed')
   await expect(page.locator('[data-gantry-variant]')).toHaveAttribute(
     'data-gantry-variant',
     'fixed',
@@ -367,8 +367,8 @@ test('CBCT pauses, steps one remaining projection, and clears the sequence on re
   await page.goto(`${preview}?section=mobile-suite`)
   await page.bringToFront()
   await expect(page.locator('[data-scout-state=ready]')).toHaveCount(2)
-  await page.getByRole('button', { name: 'Run the orbit', exact: true }).click()
-  await page.getByRole('button', { name: 'Pause orbit', exact: true }).click()
+  await page.getByRole('button', { name: 'Run the CBCT spin', exact: true }).click()
+  await page.getByRole('button', { name: 'Pause the spin', exact: true }).click()
   await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-anim', 'idle')
   const paused = await page.locator('[data-cbct-frame]').count()
   expect(paused).toBeLessThan(24)
@@ -378,7 +378,7 @@ test('CBCT pauses, steps one remaining projection, and clears the sequence on re
   await expect(page.locator('[data-cbct-frame]')).toHaveCount(paused + 1)
   await page.getByRole('button', { name: 'Reset this model', exact: true }).click()
   await expect(page.locator('[data-cbct-frame]')).toHaveCount(0)
-  await page.getByRole('button', { name: 'Run the orbit', exact: true }).click()
+  await page.getByRole('button', { name: 'Run the CBCT spin', exact: true }).click()
   await page.getByRole('button', { name: 'Toggle control lock', exact: true }).click()
   await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-anim', 'idle')
   const locked = await page.locator('[data-cbct-frame]').count()
@@ -393,7 +393,7 @@ for (const section of ['cbct-acquisition', 'fixed-suite', 'mobile-suite'] as con
     await expect(page.locator('[data-suite-state=ready]')).toBeVisible({ timeout: 15000 })
     await expect(page.locator('[data-scout-state=ready]')).toHaveCount(2)
     await expect(page.locator('[data-chain-map] [data-chain-pin]')).toHaveCount(6)
-    await page.getByRole('button', { name: 'Run the orbit', exact: true }).click()
+    await page.getByRole('button', { name: 'Run the CBCT spin', exact: true }).click()
     await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-anim', 'running')
     await expect(page.locator('[data-cbct-frame]')).toHaveCount(24, { timeout: 20000 })
     await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-anim', 'idle')
@@ -442,7 +442,7 @@ test('DTS uses its atlas without a DRR, refocuses the plane, and steps a settled
   await expect(page.locator('[data-dts-frame]')).toHaveCount(1)
   await page.getByRole('button', { name: 'Step', exact: true }).click()
   await expect(page.locator('[data-dts-frame]')).toHaveCount(2)
-  await setRange(page, 'Authored angular sweep', 60)
+  await setRange(page, 'Authored DTS arc', 60)
   await expect(page.locator('[data-dts-frame]')).toHaveCount(13)
   await expect(page.locator('[data-readout=sweepDeg] dd')).toHaveText('60°')
   await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-anim', 'idle')
@@ -517,7 +517,7 @@ test('DTS prior colours provenance separately and keeps the measured image recov
   await expect
     .poll(() => image.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
     .not.toBe(prior)
-  await page.getByRole('button', { name: 'Measured projections', exact: true }).click()
+  await page.getByRole('button', { name: 'Acquired projections', exact: true }).click()
   await expect
     .poll(() => image.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
     .toBe(measured)
@@ -611,7 +611,10 @@ test('navigation keeps the map sensor fixed while current anatomy moves and a lo
   await page.getByRole('checkbox', { name: 'Show stored augmented contour', exact: true }).uncheck()
   await expect(stored).toHaveCount(0)
   await page
-    .getByRole('checkbox', { name: 'Show current target ground truth', exact: true })
+    .getByRole('checkbox', {
+      name: 'Show the current lesion position (teaching ground truth)',
+      exact: true,
+    })
     .uncheck()
   await expect(target).toHaveCount(0)
 })
@@ -638,7 +641,10 @@ test('augmented imaging projects the old contour over the moving CT while the ph
   await expect(stored).toHaveAttribute('cy', (await target.getAttribute('cy'))!)
   await expect(page.locator('[data-readout=contourStale] dd')).toHaveText('no')
   await page
-    .getByRole('checkbox', { name: 'Show current target ground truth', exact: true })
+    .getByRole('checkbox', {
+      name: 'Show the current lesion position (teaching ground truth)',
+      exact: true,
+    })
     .uncheck()
   await expect(target).toHaveCount(0)
   await expect(stored).toHaveCount(1)
@@ -661,7 +667,7 @@ test('staff orientation moves the gantry, distance follows the lab ratio, and th
   await expect(page.locator('canvas')).toHaveCount(1)
   const scene = page.locator('canvas[data-three-state=ready]')
   const frontal = await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
-  await setRange(page, 'C-arm orientation', 70)
+  await setRange(page, 'C-arm rotation', 70)
   await expect(page.locator('[data-staff-orbit]')).toHaveAttribute('data-staff-orbit', '70')
   await expect
     .poll(() => scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
@@ -670,7 +676,7 @@ test('staff orientation moves the gantry, distance follows the lab ratio, and th
   await expect(page.locator('[data-readout=inverseSquareRatio] dd')).toHaveText('0.25×')
   await page
     .getByRole('checkbox', {
-      name: 'Place the schematic barrier between patient and staff',
+      name: 'Place the schematic shielding barrier between patient and staff',
       exact: true,
     })
     .check()
@@ -787,7 +793,7 @@ test('room is a resting single canvas with no DRR, pins, control dock or readout
   await expect(pane.getByRole('button')).toHaveCount(0)
   await expect(pane.locator('[data-model-boundary]')).toHaveText(ROOM_FIXTURE.boundary)
   await expect(pane.locator('[data-chain-caption]')).toHaveText(
-    'The chain map is not pointing anywhere on this step.',
+    'Image formation: no component is highlighted on this step.',
   )
   await expect(pane.locator('[data-suite-goals]')).toContainText('Inspect another projection')
   await expect(page.locator('[data-harness-child]')).toBeVisible()

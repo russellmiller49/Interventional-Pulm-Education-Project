@@ -48,7 +48,7 @@ export function DTSImage({ sweep, plane }: { sweep: number; plane: number }) {
     <div data-dts-state={status}>
       <div
         className={styles.dtsViews}
-        aria-label="First, central and final background-suppressed projections from the selected sweep"
+        aria-label="First, central and final background-suppressed projections from the selected DTS arc"
       >
         {[-sweep / 2, 0, sweep / 2].map((angle, i) => (
           <figure key={i}>

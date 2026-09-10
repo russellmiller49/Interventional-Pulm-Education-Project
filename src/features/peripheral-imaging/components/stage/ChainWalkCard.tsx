@@ -7,15 +7,15 @@ import styles from './imaging-stage.module.css'
 const POSITION_WORDS = ['First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth'] as const
 const COUNT_WORDS = ['one', 'two', 'three', 'four', 'five', 'six'] as const
 
-/** Where a walk stands, in words; the only number on the card is the one the chain map prints. */
+/** Where a walk stands, in words; the only number is the one the image-formation caption prints. */
 export function walkPositionWords(index: number, total: number): string {
-  if (total <= 1) return 'The only stop in this walk.'
+  if (total <= 1) return 'The only component in this walk.'
   const position = index >= total - 1 ? 'Last' : (POSITION_WORDS[index] ?? 'Next')
   const count = COUNT_WORDS[total - 1] ?? String(total)
-  return `${position} of ${count} stops in this walk.`
+  return `${position} of ${count} components of image formation.`
 }
 
-/** The control that lives at a stop, if one of the five things does. */
+/** The fluoroscopy control that acts at a component, if one of the five does. */
 function controlAt(stopId: ChainStopId): string | null {
   switch (stopId) {
     case 'beam':
@@ -27,15 +27,15 @@ function controlAt(stopId: ChainStopId): string | null {
     case 'display':
       return imagingControl('display').plainName
     case 'source':
-      return `nothing you turn — ${IMAGING_CONTROL_PANEL.monitoring[0].plainName} is set by the machine`
+      return `nothing you adjust directly — ${IMAGING_CONTROL_PANEL.monitoring[0].plainName} are set by automatic exposure regulation`
     default:
       return null
   }
 }
 
 /**
- * One stop of the walk: its plain name, its analogy, the precise statement, the control that
- * lives there, and its short list under the label that says what kind of list it is.
+ * One component of image formation: the precise statement first, the clinical name, the control
+ * that acts there, its short list, and the analogy last as a secondary aid.
  */
 export function ChainWalkCard({
   stopId,
@@ -48,19 +48,16 @@ export function ChainWalkCard({
   const control = controlAt(stopId)
   return (
     <section className={styles.walk} data-walk-stop={stop.id} aria-label={stop.title}>
-      <p className={styles.kicker}>
-        Stop {stop.number} · {stop.title}
-      </p>
-      <p className={styles.analogy}>{stop.analogy}</p>
+      <p className={styles.kicker}>{stop.title}</p>
       <p>{stop.precise}</p>
       <dl className={styles.stopFacts}>
         <div>
-          <dt>Say it plainly</dt>
+          <dt>In the suite</dt>
           <dd>{stop.plainName}.</dd>
         </div>
         {control ? (
           <div>
-            <dt>What you can change here</dt>
+            <dt>What you control here</dt>
             <dd>{control}.</dd>
           </div>
         ) : null}
@@ -77,6 +74,7 @@ export function ChainWalkCard({
           <li key={line}>{line}</li>
         ))}
       </ul>
+      <p className={styles.analogy}>{stop.analogy}</p>
     </section>
   )
 }
