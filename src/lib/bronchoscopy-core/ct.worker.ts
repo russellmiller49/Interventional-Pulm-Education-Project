@@ -8,6 +8,7 @@ import {
   type SlicePlane,
 } from './ct'
 import type { Point3 } from './frame'
+import { decodeGzip } from './compression'
 
 let nativeGeometry: CtGeometry | undefined
 let geometry: CtGeometry,
@@ -58,9 +59,7 @@ async function loadBrick(key: string) {
     try {
       const response = await fetch(`${native!.baseUrl}/${key}.i16.gz`)
       if (!response.ok || !response.body) throw new Error('Native CT region unavailable')
-      const bytes = await new Response(
-        response.body.pipeThrough(new DecompressionStream('gzip')),
-      ).arrayBuffer()
+      const bytes = await decodeGzip(await response.arrayBuffer())
       const brick = new Int16Array(bytes)
       while (cacheBytes + brick.byteLength > MAX_CACHE_BYTES && cache.size) {
         const oldest = cache.keys().next().value!

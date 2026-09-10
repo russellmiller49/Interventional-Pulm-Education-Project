@@ -115,6 +115,8 @@ export type SimulatorObliquityAxis =
  * without it fall back to the built-in default profile, so existing cases keep loading.
  */
 export interface SimulatorEndoscopeCamera {
+  nominal_profile?: {id:string;source:string;optical_axis_offset_deg:number;fov_deg:number};
+  case_calibration?: {version:string;eye_offset_mm:{shaft:number;depth:number;lateral:number};obliquity_axis:string;migration?:Record<string,unknown>};
   model: string;
   optical_axis_offset_deg: number;
   obliquity_axis: SimulatorObliquityAxis;
@@ -144,6 +146,7 @@ export interface SimulatorUltrasoundProbe {
 
 export interface SimulatorCaseManifest {
   case_id: string;
+  asset_version?: string;
   render_defaults: {
     sector_angle_deg: number;
     max_depth_mm: number;
@@ -158,6 +161,7 @@ export interface SimulatorCaseManifest {
   };
   assets: {
     airway_mesh: string;
+    acoustic_volume?: {metadata:string;data:string;source_geometry_sha256:string;asset_version:string};
     centerlines: string;
     vessels: SimulatorListedAsset[];
     stations: SimulatorListedAsset[];
@@ -241,6 +245,8 @@ export interface SimulatorVolumeSectorResponse {
  */
 export interface SimulatorPhysicsSnapshotMetadata {
   engine: 'physics';
+  asset_version?: string;
+  source_geometry_sha256?: string;
   engine_version: string;
   model: string;
   video_axis_offset_deg: number;

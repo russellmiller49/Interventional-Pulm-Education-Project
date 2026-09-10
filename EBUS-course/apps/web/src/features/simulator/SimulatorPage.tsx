@@ -19,6 +19,7 @@ import {
   buildChannelRaycastMesh,
   clampPosePositionInsideChannel,
   contactQualityForPose,
+  constrainedPathAdvance,
   maxDrivableSMm,
 } from './channelExtent';
 import { clamp, computeSimulatorPose, projectToSector, type SimulatorProbePose } from './pose';
@@ -35,6 +36,8 @@ import {
   writeQuestBestScore,
   type QuestState,
 } from './questMode';
+import { ContinuousSectorView } from './ContinuousSectorView';
+import { acousticSectorItems, useAcousticVolume } from './acousticAdapter';
 import { SectorView } from './SectorView';
 import { resolveSimulatorSectorSource, shouldUseSnapshotSectorItems, simulatorSectorSourceLabel } from './sectorSource';
 import { formatSimulatorStation } from './stationIds';
@@ -1235,6 +1238,7 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
   const t = useCourseShellText();
   const { setModuleProgress } = useLearnerProgress();
   const { assets, caseData, error } = useSimulatorCase();
+  const acoustic=useAcousticVolume(caseData);
   const publicTrainingMode = useMemo(() => isPublicTrainingSimulatorMode(), []);
   const showVirtualBronchoscopyPane = shouldShowVirtualBronchoscopyPane({
     showVirtualBronchoscopy,
@@ -1582,7 +1586,7 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
 
     // The flexion tip shift is unconstrained in the pose model; the channel wall stops it here.
     // Un-flexed poses (calibrated station contacts) pass through untouched.
-    return flexionDeg && channelRaycastMesh ? clampPosePositionInsideChannel(raw, channelRaycastMesh) : raw;
+    return channelRaycastMesh ? clampPosePositionInsideChannel(raw, channelRaycastMesh,.2) : raw;
   }, [activePolyline, channelRaycastMesh, flexionDeg, navigationPreset, rollDeg, sMm]);
 
   // Acoustic coupling of the transducer face: pressed against the wall (station poses, flexed
@@ -1647,6 +1651,8 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
       });
     }
 
+    if(caseData.assets.acoustic_volume) return acoustic.volume ? [...baseItems,...acousticSectorItems(acoustic.volume,pose,caseData)] : baseItems;
+
     return buildPointCloudSectorItems({
       assets,
       caseData,
@@ -1655,7 +1661,7 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
       selectedPreset,
       sMm,
     });
-  }, [activePolyline, assets, caseData, navigationPreset, pose, sectorSource, selectedPreset, sMm, snapshot]);
+  }, [activePolyline, assets, caseData, navigationPreset, pose, sectorSource, selectedPreset, sMm, snapshot,acoustic.volume]);
 
   const intersectedStructureIds = useMemo(() => {
     return new Set(
@@ -1934,9 +1940,14 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
       advanceHoldRef.current = null;
     }
   };
+  const constrainAdvance=(current:number,requested:number)=>{
+    const target=clamp(requested,0,maxAdvanceMm);
+    if(!channelRaycastMesh||!activePolyline||!navigationPreset)return current;
+    return constrainedPathAdvance(current,target,s=>clampPosePositionInsideChannel(computeSimulatorPose(activePolyline,s,rollDeg,navigationPreset,flexionDeg),channelRaycastMesh,.2),channelRaycastMesh);
+  };
   const startAdvanceHold = (direction: 1 | -1) => {
     stopAdvanceHold();
-    setSMm((current) => clamp(current + direction * ADVANCE_TAP_STEP_MM, 0, maxAdvanceMm));
+    setSMm((current) => constrainAdvance(current,current + direction * ADVANCE_TAP_STEP_MM));
     setModuleProgress('simulator', 45);
     let lastMs = performance.now();
     let speedMmPerS = ADVANCE_START_SPEED_MM_PER_S;
@@ -1945,7 +1956,7 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
       const dt = Math.min(Math.max(nowMs - lastMs, 0) / 1000, 0.05);
       lastMs = nowMs;
       speedMmPerS = Math.min(speedMmPerS + ADVANCE_RAMP_MM_PER_S2 * dt, ADVANCE_MAX_SPEED_MM_PER_S);
-      setSMm((current) => clamp(current + direction * speedMmPerS * dt, 0, maxAdvanceMm));
+      setSMm((current) => constrainAdvance(current,current + direction * speedMmPerS * dt));
       advanceHoldRef.current = window.requestAnimationFrame(glide);
     };
     advanceHoldRef.current = window.requestAnimationFrame(glide);
@@ -2057,7 +2068,7 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
 
       if (Math.abs(deltas.dDepthMm) > 0.01) {
         setSMm((current) => {
-          const next = clamp(current + deltas.dDepthMm, 0, maxAdvanceMm);
+          const next = constrainAdvance(current,current + deltas.dDepthMm);
           return Math.abs(next - current) < 0.02 ? current : next;
         });
         markProgress();
@@ -2139,11 +2150,11 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
     <div className="simulator-page">
       <section className="simulator-intro">
         <div>
-          <div className="eyebrow">{t('Static training simulator')}</div>
+          <div className="eyebrow">{t('Interactive EBUS simulator')}</div>
           <h1>{t('EBUS Anatomy Correlation Simulator')}</h1>
           <p>
             {t(
-              'Move along a guided airway centerline, snap to curated nodal targets, and correlate the external anatomy view with a labeled EBUS-style sector.',
+              'Navigate the airway, rotate and flex the scope to scan, and correlate live ultrasound with the surrounding anatomy. Use station views to learn the landmarks and station quests to practice.',
             )}
           </p>
         </div>
@@ -2401,7 +2412,9 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
           </section>
         ) : null}
 
+        {caseData.assets.acoustic_volume ? <ContinuousSectorView caseData={caseData} volume={acoustic.volume} error={acoustic.error} pose={pose} contactQuality={sectorContactQuality} compact={paneCompact('sector')} assessment={questActive&&!questHintActive} onEnlarge={paneEnlargeHandler('sector')} onShowAll={paneShowAllHandler('sector')} selectedPreset={selectedPreset} activeStructure={activeStructure} setActiveStructure={setActiveStructure}/> : (
         <SectorView
+          pose={pose}
           activeStructure={activeStructure}
           caseData={caseData}
           compact={paneCompact('sector')}
@@ -2413,6 +2426,7 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
           setActiveStructure={setActiveStructure}
           source={sectorSource}
         />
+        )}
         <div
           className="simulator-drive-pad"
           data-airway-region={airwayRegion}

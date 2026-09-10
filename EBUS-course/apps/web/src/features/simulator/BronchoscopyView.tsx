@@ -1,5 +1,9 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { mucosaVertexShader,mucosaFragmentShader } from '@bronchoscopy-core/mucosa';
+import { verticalFov } from '@bronchoscopy-core/frame';
+import { opticalPixelRatio,AdaptiveQuality } from '@bronchoscopy-core/quality';
+import { scopeOrigins,ebusWebToPatient,patientToEbusWeb } from '@bronchoscopy-core/devices';
 
 import {
   APERTURE_FEATHER,
@@ -9,9 +13,6 @@ import {
   EDGE_BLUR_END_RADIUS,
   EDGE_BLUR_MAX_OFFSET_UV,
   EDGE_BLUR_START_RADIUS,
-  HEADLIGHT_FLOOR,
-  HEADLIGHT_INNER_CONE_DEG,
-  HEADLIGHT_OUTER_CONE_DEG,
   WALL_SEE_THROUGH_ALPHA,
   approachInflation,
   distalTipScreenDirection,
@@ -80,81 +81,9 @@ function createBronchoscopyMaterial(): THREE.ShaderMaterial {
       uHeadlightFalloff: { value: 0 },
       uWallAlpha: { value: 1 },
     },
-    vertexShader: `
-      varying vec3 vWorldPosition;
-      varying vec3 vNormalWorld;
-
-      void main() {
-        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-        vWorldPosition = worldPosition.xyz;
-        vNormalWorld = normalize(mat3(modelMatrix) * normal);
-        gl_Position = projectionMatrix * viewMatrix * worldPosition;
-      }
-    `,
-    fragmentShader: `
-      varying vec3 vWorldPosition;
-      varying vec3 vNormalWorld;
-
-      uniform vec3 uHeadlightAxis;
-      uniform float uHeadlightFalloff;
-      uniform float uWallAlpha;
-
-      float hash(vec3 p) {
-        return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453123);
-      }
-
-      void main() {
-        vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-        vec3 n = normalize(vNormalWorld);
-        if (dot(n, viewDir) < 0.0) {
-          n = -n;
-        }
-
-        float dist = length(cameraPosition - vWorldPosition);
-        float headlight = max(dot(n, viewDir), 0.0);
-        float falloff = mix(0.95, 0.4, smoothstep(8.0, 70.0, dist));
-
-        vec3 p = vWorldPosition * 0.13;
-        float broadFold = 0.5 + 0.5 * sin(p.z * 5.5 + p.y * 2.2 + sin(p.x * 2.6) * 1.4);
-        float fineFold = 0.5 + 0.5 * sin(p.x * 12.0 + p.y * 7.0 + p.z * 4.0);
-        float speckle = hash(floor(vWorldPosition * 2.2));
-        float mucosa = 0.76 + broadFold * 0.17 + fineFold * 0.05 + (speckle - 0.5) * 0.04;
-
-        vec3 shadowTone = vec3(0.32, 0.10, 0.09);
-        vec3 midTone = vec3(0.85, 0.45, 0.40);
-        vec3 highTone = vec3(1.0, 0.80, 0.74);
-        vec3 base = mix(shadowTone, midTone, clamp(mucosa, 0.0, 1.0));
-        base = mix(base, highTone, pow(headlight, 2.4) * 0.30);
-
-        float vesselA = sin(p.x * 9.0 + sin(p.z * 3.4) * 2.2 + p.y * 1.5);
-        float vesselB = sin(p.y * 11.0 + sin(p.x * 4.1) * 1.9 - p.z * 2.0);
-        float vessel = smoothstep(0.93, 0.99, max(vesselA, vesselB));
-        base = mix(base, vec3(0.58, 0.13, 0.12), vessel * 0.28);
-
-        float rimWet = pow(max(dot(reflect(-viewDir, n), viewDir), 0.0), 26.0);
-        float sparkleGate = smoothstep(0.982, 1.0, hash(floor(vWorldPosition * 5.0)));
-        float sparkle = sparkleGate * pow(headlight, 10.0) * 0.25;
-
-        float exposure = 0.68 + headlight * 0.7;
-        vec3 color = base * exposure * falloff;
-        color += vec3(1.0, 0.93, 0.88) * (rimWet * 0.26 + sparkle);
-
-        // Headlight cone around the optical axis (mirrors headlightConeGain in optics.ts).
-        float coneGain = smoothstep(
-          ${glslFloat(Math.cos(THREE.MathUtils.degToRad(HEADLIGHT_OUTER_CONE_DEG)))},
-          ${glslFloat(Math.cos(THREE.MathUtils.degToRad(HEADLIGHT_INNER_CONE_DEG)))},
-          dot(-viewDir, uHeadlightAxis)
-        );
-        color *= mix(1.0, mix(${glslFloat(HEADLIGHT_FLOOR)}, 1.0, coneGain), uHeadlightFalloff);
-
-        float depthDarken = smoothstep(45.0, 100.0, dist);
-        color = mix(color, vec3(0.06, 0.015, 0.012), depthDarken * 0.55);
-        color = pow(max(color, vec3(0.0)), vec3(0.92));
-
-        // See-through mode fades the wall so structures behind it stay readable; 1.0 otherwise.
-        gl_FragColor = vec4(color, uWallAlpha);
-      }
-    `,
+    toneMapped:false,
+    vertexShader:mucosaVertexShader,
+    fragmentShader:mucosaFragmentShader,
   });
 }
 
@@ -636,10 +565,10 @@ function createLensPostPipeline(
 
       // Mirrors barrelDistortUv in optics.ts.
       vec2 distortUv(vec2 uv) {
-        vec2 p = uv * 2.0 - 1.0;
+        vec2 p = (uv * 2.0 - 1.0) * vec2(uAspect,1.0) / min(1.0,uAspect);
         float r2 = dot(p, p);
         p *= 1.0 + ${glslFloat(BARREL_K1)} * r2 + ${glslFloat(BARREL_K2)} * r2 * r2;
-        return p * 0.5 + 0.5;
+        return (p * min(1.0,uAspect) / vec2(uAspect,1.0)) * 0.5 + 0.5;
       }
 
       void main() {
@@ -647,7 +576,7 @@ function createLensPostPipeline(
         vec3 color = texture2D(tDiffuse, clamp(sourceUv, 0.0, 1.0)).rgb;
 
         // Radius in image-height units, as in apertureMaskAlpha.
-        float radius = length((vUv * 2.0 - 1.0) * vec2(uAspect, 1.0));
+        float radius = length((vUv * 2.0 - 1.0) * vec2(uAspect, 1.0)) / min(1.0,uAspect);
 
         float blurOffset = smoothstep(
           ${glslFloat(EDGE_BLUR_START_RADIUS)},
@@ -754,7 +683,8 @@ export function BronchoscopyView({
     const width = container.clientWidth || 480;
     const height = container.clientHeight || 360;
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const quality=new AdaptiveQuality();
+    renderer.setPixelRatio(opticalPixelRatio(container.clientWidth,window.devicePixelRatio));
     renderer.setSize(width, height);
     renderer.setClearColor('#070303', 1);
     container.replaceChildren(renderer.domElement);
@@ -789,7 +719,7 @@ export function BronchoscopyView({
     }
 
     const camera = new THREE.PerspectiveCamera(
-      calibration.fov_deg,
+      calibration.circular_aperture ? calibration.fov_deg : verticalFov(calibration.fov_deg,width/height),
       width / height,
       calibration.near_mm,
       calibration.far_mm,
@@ -914,6 +844,7 @@ export function BronchoscopyView({
       viewHeight = nextHeight;
       renderer.setSize(nextWidth, nextHeight);
       camera.aspect = nextWidth / nextHeight;
+      camera.fov=calibration.circular_aperture?2*Math.atan(Math.tan(calibration.fov_deg*Math.PI/360)/Math.min(1,camera.aspect))*180/Math.PI:verticalFov(calibration.fov_deg,camera.aspect);
       camera.updateProjectionMatrix();
       tipOverlay?.layout(camera.aspect);
       lensPipeline?.setSize(nextWidth, nextHeight);
@@ -962,11 +893,8 @@ export function BronchoscopyView({
       const frame = resolveScopeFrame(probe);
       const forward = resolveCalibratedOpticalAxis(frame, calibration);
 
-      camera.position
-        .copy(frame.position)
-        .add(frame.shaftAxis.clone().multiplyScalar(calibration.eye_offset_mm.shaft))
-        .add(frame.depthAxis.clone().multiplyScalar(calibration.eye_offset_mm.depth))
-        .add(frame.lateralAxis.clone().multiplyScalar(calibration.eye_offset_mm.lateral));
+      const origins=scopeOrigins(ebusWebToPatient(frame.position.toArray()),ebusWebToPatient(frame.shaftAxis.toArray()),ebusWebToPatient(frame.depthAxis.toArray()),ebusWebToPatient(frame.lateralAxis.toArray()),calibration.eye_offset_mm);
+      camera.position.set(...patientToEbusWeb(origins.optical));
       clampEyeInsideChannel(probe.centerlinePosition);
       clampCameraToChannel(forward);
       // Image-up faces the calibrated scan side, so the distal hardware (and anything touched by
@@ -983,6 +911,8 @@ export function BronchoscopyView({
       } else {
         renderer.render(scene, camera);
       }
+      const changed=quality.frame(performance.now());
+      if(changed)renderer.setPixelRatio(opticalPixelRatio(container.clientWidth,window.devicePixelRatio,changed));
       frameId = window.requestAnimationFrame(render);
     };
     render();

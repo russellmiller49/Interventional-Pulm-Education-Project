@@ -33,6 +33,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': resolve(__dirname, './src'),
+        '@bronchoscopy-core': resolve(__dirname, '../../../src/lib/bronchoscopy-core'),
       },
     },
     server: {
