@@ -1,4 +1,6 @@
 import * as THREE from 'three'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { mucosaVertexShader, mucosaFragmentShader } from '../bronchoscopy-core/mucosa'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
@@ -18,14 +20,31 @@ export function loadAirwayStlGeometry(stlUrl: string): Promise<THREE.BufferGeome
   const cached = airwayGeometryCache.get(stlUrl)
   if (cached) return cached
 
-  const promise = new STLLoader().loadAsync(stlUrl).then((geometry) => {
-    geometry.deleteAttribute('normal')
-    const smoothedGeometry = mergeVertices(geometry, 0.001)
-    geometry.dispose()
-    smoothedGeometry.computeVertexNormals()
-    smoothedGeometry.computeBoundingBox()
-    smoothedGeometry.computeBoundingSphere()
-    return smoothedGeometry
+  const promise = (async () => {
+    let geometry: THREE.BufferGeometry
+    if (/\.glb(?:$|\?)/i.test(stlUrl)) {
+      const gltf = await new GLTFLoader().loadAsync(stlUrl)
+      gltf.scene.updateMatrixWorld(true)
+      const meshes: THREE.Mesh[] = []
+      gltf.scene.traverse((object) => {
+        if (object instanceof THREE.Mesh) meshes.push(object)
+      })
+      if (meshes.length !== 1) throw new Error('Reviewed lumen must contain one surface')
+      geometry = meshes[0].geometry.clone().applyMatrix4(meshes[0].matrixWorld)
+      meshes[0].geometry.dispose()
+    } else {
+      const source = await new STLLoader().loadAsync(stlUrl)
+      source.deleteAttribute('normal')
+      geometry = mergeVertices(source, 0.001)
+      source.dispose()
+    }
+    geometry.computeVertexNormals()
+    geometry.computeBoundingBox()
+    geometry.computeBoundingSphere()
+    return geometry
+  })().catch((error) => {
+    airwayGeometryCache.delete(stlUrl)
+    throw error
   })
   airwayGeometryCache.set(stlUrl, promise)
   return promise
@@ -40,71 +59,13 @@ export function createBronchoscopyMaterial(): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     side: THREE.BackSide,
     toneMapped: false,
-    vertexShader: `
-      varying vec3 vWorldPosition;
-      varying vec3 vNormalWorld;
-
-      void main() {
-        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-        vWorldPosition = worldPosition.xyz;
-        vNormalWorld = normalize(mat3(modelMatrix) * normal);
-        gl_Position = projectionMatrix * viewMatrix * worldPosition;
-      }
-    `,
-    fragmentShader: `
-      varying vec3 vWorldPosition;
-      varying vec3 vNormalWorld;
-
-      float hash(vec3 p) {
-        return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453123);
-      }
-
-      void main() {
-        vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-        vec3 n = normalize(vNormalWorld);
-        if (dot(n, viewDir) < 0.0) {
-          n = -n;
-        }
-
-        float dist = length(cameraPosition - vWorldPosition);
-        float headlight = max(dot(n, viewDir), 0.0);
-        float falloff = mix(0.95, 0.4, smoothstep(30.0, 165.0, dist));
-
-        vec3 p = vWorldPosition * 0.055;
-        float broadFold = 0.5 + 0.5 * sin(p.z * 5.5 + p.y * 2.2 + sin(p.x * 2.6) * 1.4);
-        float fineFold = 0.5 + 0.5 * sin(p.x * 12.0 + p.y * 7.0 + p.z * 4.0);
-        float speckle = hash(floor(vWorldPosition * 0.95));
-        float mucosa = 0.76 + broadFold * 0.17 + fineFold * 0.05 + (speckle - 0.5) * 0.04;
-
-        // Pale pink mucosa with deeper shadow tones.
-        vec3 shadowTone = vec3(0.32, 0.10, 0.09);
-        vec3 midTone = vec3(0.85, 0.45, 0.40);
-        vec3 highTone = vec3(1.0, 0.80, 0.74);
-        vec3 base = mix(shadowTone, midTone, clamp(mucosa, 0.0, 1.0));
-        base = mix(base, highTone, pow(headlight, 2.4) * 0.30);
-
-        // Fine submucosal vessels.
-        float vesselA = sin(p.x * 9.0 + sin(p.z * 3.4) * 2.2 + p.y * 1.5);
-        float vesselB = sin(p.y * 11.0 + sin(p.x * 4.1) * 1.9 - p.z * 2.0);
-        float vessel = smoothstep(0.93, 0.99, max(vesselA, vesselB));
-        base = mix(base, vec3(0.58, 0.13, 0.12), vessel * 0.28);
-
-        // Wet specular sheen from the scope light.
-        float rimWet = pow(max(dot(reflect(-viewDir, n), viewDir), 0.0), 26.0);
-        float sparkleGate = smoothstep(0.982, 1.0, hash(floor(vWorldPosition * 2.15)));
-        float sparkle = sparkleGate * pow(headlight, 10.0) * 0.25;
-
-        float exposure = 0.68 + headlight * 0.7;
-        vec3 color = base * exposure * falloff;
-        color += vec3(1.0, 0.93, 0.88) * (rimWet * 0.26 + sparkle);
-
-        float depthDarken = smoothstep(105.0, 235.0, dist);
-        color = mix(color, vec3(0.06, 0.015, 0.012), depthDarken * 0.55);
-        color = pow(max(color, vec3(0.0)), vec3(0.92));
-
-        gl_FragColor = vec4(color, 1.0);
-      }
-    `,
+    uniforms: {
+      uWallAlpha: { value: 1 },
+      uHeadlightAxis: { value: new THREE.Vector3(0, 0, -1) },
+      uHeadlightFalloff: { value: 0 },
+    },
+    vertexShader: mucosaVertexShader,
+    fragmentShader: mucosaFragmentShader,
   })
 }
 

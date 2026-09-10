@@ -21,22 +21,10 @@ import * as THREE from 'three'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { resolveAdminAirwayAssetPath } from '@/lib/airway-anatomy/admin-assets'
-import {
-  add,
-  clamp,
-  ctAxisLength,
-  ctIndexToLps,
-  dot,
-  lpsToCtIndex,
-  normalize,
-  projectLpsToCanvas,
-  scale,
-  subtract,
-} from '@/lib/airway-anatomy/geometry'
+import { add, clamp, scale, subtract } from '@/lib/airway-anatomy/geometry'
 import {
   createBronchoscopyMaterial,
   loadAirwayStlGeometry,
-  paintCtSliceGrayscale,
 } from '@/lib/airway-anatomy/airway-render'
 import { AirwayXRSceneDynamic } from '@/components/airway-anatomy/AirwayXRSceneDynamic'
 import {
@@ -49,13 +37,10 @@ import {
 } from '@/components/airway-anatomy/AirwayGameLayer'
 import { LOBE_COLORS, type GameTarget } from '@/lib/airway-anatomy/airway-game'
 import {
-  alignViewToBranch,
   buildScopePathLps,
   buildScopePoseSnapshot,
-  computeViewBasis,
   createGraphIndex,
   createInitialScopeState,
-  moveScope,
   sampleEdgePose,
   updateLookOffset,
   type AirwayGraphIndex,
@@ -84,6 +69,36 @@ import type {
   Vec3,
 } from '@/lib/airway-anatomy/types'
 import { HandoffContent } from '@/i18n/handoff'
+import {
+  buildTransportFrames,
+  poseWithTransport,
+  scopeOpticalFrame,
+} from '@/lib/airway-anatomy/transport-frames'
+import { createLumenCollider } from '@/lib/airway-anatomy/lumen-collider'
+import { driveScope, enterFreeDrive, FLEXIBLE_TIP_RADIUS_MM } from '@/lib/airway-anatomy/drive'
+import {
+  rollFrame,
+  steerFrame,
+  scalar,
+  minus,
+  unit,
+  makeFrame,
+  verticalFov,
+  projectOptical,
+  type LumenCollider,
+} from '@/lib/bronchoscopy-core/frame'
+import {
+  LinkedCtWorkspace,
+  CorrelatedCtPlane,
+  useLinkedCt,
+  type CtSliceImage,
+} from './LinkedCtWorkspace'
+import {
+  GamepadScopeSource,
+  ScopeDeltaTracker,
+  loadActiveScopeTrackerProfile,
+  subscribeToScopeTrackerProfileChanges,
+} from '@/lib/scope-input/core'
 
 const MANIFEST_URL = resolveAdminAirwayAssetPath('/airway-anatomy/case-001/case_manifest.json')
 const ORIENTATION_CALIBRATION_URL = resolveAdminAirwayAssetPath(
@@ -145,6 +160,51 @@ export function AirwayAnatomyModule() {
   const [showXr, setShowXr] = useState(false)
   const [mode, setMode] = useState<'explore' | 'challenge'>('explore')
   const [calibrationMode, setCalibrationMode] = useState(false)
+  const [collider, setCollider] = useState<LumenCollider | null>(null)
+  const [geometryError, setGeometryError] = useState<string | null>(null)
+  const [enlarged, setEnlarged] = useState(false)
+  const [trackerEnabled, setTrackerEnabled] = useState(false)
+  const [trackerConnected, setTrackerConnected] = useState(false)
+  const driveQueue = useRef(0)
+  const renderedState = useRef(scopeState)
+  renderedState.current = scopeState
+  const frames = useMemo(
+    () =>
+      loadedCase
+        ? buildTransportFrames(
+            loadedCase.graph,
+            scopeOrientationProfile === 'flexible' ? loadedCase.manifest.orientationLandmarks : [],
+          )
+        : null,
+    [loadedCase, scopeOrientationProfile],
+  )
+  useEffect(() => {
+    if (!loadedCase) return
+    const { manifest } = loadedCase
+    const url =
+      manifest.assets.reviewedLumenGlb ??
+      manifest.assets.reviewedLumenGlb ??
+      manifest.assets.airwayStl
+    if (!url) return
+    let cancelled = false
+    loadAirwayStlGeometry(resolveAdminAirwayAssetPath(url))
+      .then((geometry) => {
+        if (cancelled) return
+        if (
+          manifest.geometryValidation?.closed &&
+          manifest.geometryValidation.coordinateSystem === 'LPS'
+        ) {
+          setCollider(createLumenCollider(geometry))
+        }
+      })
+      .catch(() => {
+        if (!cancelled)
+          setGeometryError('The reviewed airway surface could not load. Reload to retry.')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [loadedCase])
 
   useEffect(() => {
     setCalibrationMode(isAirwayOrientationCalibrationMode())
@@ -232,12 +292,15 @@ export function AirwayAnatomyModule() {
 
   const snapshot = useMemo(() => {
     if (!rawSnapshot) return null
+    if (!frames) return rawSnapshot
+    const transported = poseWithTransport(rawSnapshot, frames)
+    if (rawSnapshot.opticalFrame) return transported
     return applyScopeOrientationToPose(
-      rawSnapshot,
+      transported,
       scopeOrientationCalibration,
       scopeOrientationProfile,
     )
-  }, [rawSnapshot, scopeOrientationCalibration, scopeOrientationProfile])
+  }, [rawSnapshot, frames, scopeOrientationCalibration, scopeOrientationProfile])
 
   const currentWindow = useMemo(() => {
     const presets = loadedCase?.manifest.ct.windowPresets ?? []
@@ -261,40 +324,88 @@ export function AirwayAnatomyModule() {
 
   const upcomingOstia = useMemo<OstiumLabel[]>(() => {
     if (!loadedCase || !graphIndex || !snapshot) return []
-    return buildUpcomingOstia(graphIndex, loadedCase.labels, snapshot)
+    return buildUpcomingOstia(
+      graphIndex,
+      loadedCase.labels,
+      snapshot,
+      loadedCase.manifest.ostialLandmarks,
+    )
   }, [graphIndex, loadedCase, snapshot])
 
   const stepMm = loadedCase?.manifest.interaction.stepMm ?? 3
   const lookAheadMm = loadedCase?.manifest.interaction.lookAheadMm ?? 12
 
-  const handleMove = useCallback(
-    (delta: number) => {
-      if (!loadedCase) return
-      setScopeState((state) =>
-        state
-          ? moveScope(state, loadedCase.graph, delta, {
-              trailMaxPoints: loadedCase.manifest.interaction.trailMaxPoints,
-              lookAheadMm: loadedCase.manifest.interaction.lookAheadMm,
-            })
-          : state,
+  const frameForState = useCallback(
+    (state: ScopeState) => {
+      if (!loadedCase || !frames) return null
+      const pose = poseWithTransport(
+        buildScopePoseSnapshot({
+          state,
+          graph: loadedCase.graph,
+          labels: loadedCase.labels,
+          lookAheadMm,
+        }),
+        frames,
+      )
+      return scopeOpticalFrame(
+        state.freeFrame
+          ? pose
+          : applyScopeOrientationToPose(pose, scopeOrientationCalibration, scopeOrientationProfile),
       )
     },
-    [loadedCase],
+    [loadedCase, frames, lookAheadMm, scopeOrientationCalibration, scopeOrientationProfile],
   )
-
-  // Screen-space steering: +x steers toward screen-right, +y toward screen-top.
-  // Positive yaw rotates the view toward screen-left, so screen-right maps to a
-  // negative yaw delta; positive pitch tilts the view up toward screen-top.
-  const applySteer = useCallback((screenXDeg: number, screenYUpDeg: number) => {
-    setScopeState((state) =>
-      state
-        ? updateLookOffset(state, {
-            yawDeg: state.yawDeg - screenXDeg,
-            pitchDeg: state.pitchDeg + screenYUpDeg,
-          })
-        : state,
-    )
+  const advance = useCallback(
+    (delta: number) => {
+      if (!loadedCase || !frames) return
+      setScopeState((state) => {
+        if (!state) return state
+        const frame = frameForState(state)
+        return frame ? driveScope(state, delta, loadedCase.graph, frames, frame, collider) : state
+      })
+    },
+    [loadedCase, frames, frameForState, collider],
+  )
+  // Movement is integrated before publishing the pose. No viewport has its own chase camera.
+  useEffect(() => {
+    let handle = 0,
+      previous = 0
+    const tick = (now: number) => {
+      const dt = Math.min((now - previous) / 1000 || 0, 0.05)
+      previous = now
+      const amount = Math.sign(driveQueue.current) * Math.min(Math.abs(driveQueue.current), dt * 24)
+      if (amount) {
+        driveQueue.current -= amount
+        advance(amount)
+      }
+      handle = requestAnimationFrame(tick)
+    }
+    handle = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(handle)
+  }, [advance])
+  const handleMove = useCallback((delta: number) => {
+    driveQueue.current = clamp(driveQueue.current + delta, -15, 15)
   }, [])
+  const applySteer = useCallback(
+    (screenXDeg: number, screenYUpDeg: number) => {
+      setScopeState((state) => {
+        if (!state || !frames) return state
+        const frame = frameForState(state)
+        if (!frame) return state
+        const next = steerFrame(frame, screenXDeg, screenYUpDeg)
+        if (state.freeFrame) return { ...state, freeFrame: next, movementMessage: undefined }
+        const base = frames.at(state.edgeId, state.distanceMm)
+        return updateLookOffset(state, {
+          yawDeg:
+            (Math.atan2(-scalar(next.forward, base.right), scalar(next.forward, base.forward)) *
+              180) /
+            Math.PI,
+          pitchDeg: (Math.asin(clamp(scalar(next.forward, base.up), -1, 1)) * 180) / Math.PI,
+        })
+      })
+    },
+    [frames, frameForState],
+  )
 
   const handleSteer = useCallback(
     (dxUnit: number, dyUpUnit: number) => {
@@ -311,22 +422,52 @@ export function AirwayAnatomyModule() {
   )
 
   const handleRecenter = useCallback(() => {
-    setScopeState((state) =>
-      state ? updateLookOffset(state, { yawDeg: 0, pitchDeg: 0, rollDeg: 0 }) : state,
-    )
-  }, [])
-
+    driveQueue.current = 0
+    setScopeState((state) => {
+      if (!state || !frames) return state
+      const reset = updateLookOffset(state, { yawDeg: 0, pitchDeg: 0, rollDeg: 0 })
+      if (state.freeFrame) {
+        const base = frames.at(state.edgeId, state.distanceMm)
+        return {
+          ...reset,
+          freeFrame: { ...base, position: state.freeFrame.position },
+          movementMessage: undefined,
+        }
+      }
+      return reset
+    })
+  }, [frames])
   const handleAlignBranch = useCallback(
     (edgeId: number) => {
-      if (!loadedCase) return
-      setScopeState((state) =>
-        state ? alignViewToBranch(state, loadedCase.graph, edgeId, lookAheadMm) : state,
-      )
+      if (!loadedCase || !frames) return
+      setScopeState((state) => {
+        if (!state) return state
+        const edge = loadedCase.graph.edges.find((e) => e.id === edgeId),
+          frame = frameForState(state)
+        if (!edge || !frame) return state
+        const target = sampleEdgePose(edge, Math.min(edge.lengthMm * 0.6, 7)).point
+        if (collider && !collider.visible(frame.position, target))
+          return {
+            ...state,
+            movementMessage: 'That opening is occluded. Reposition the scope to see it.',
+          }
+        const direction = unit(minus(target, frame.position)),
+          base = frames.at(state.edgeId, state.distanceMm)
+        if (state.freeFrame)
+          return { ...state, freeFrame: makeFrame(frame.position, direction, frame.up) }
+        return updateLookOffset(state, {
+          yawDeg:
+            (Math.atan2(-scalar(direction, base.right), scalar(direction, base.forward)) * 180) /
+            Math.PI,
+          pitchDeg: (Math.asin(clamp(scalar(direction, base.up), -1, 1)) * 180) / Math.PI,
+        })
+      })
     },
-    [loadedCase, lookAheadMm],
+    [loadedCase, frames, frameForState, collider],
   )
 
   const handleReset = useCallback(() => {
+    driveQueue.current = 0
     if (!loadedCase) return
     setScopeState(
       createInitialScopeState(
@@ -350,7 +491,16 @@ export function AirwayAnatomyModule() {
   const effectiveShowBranchLabels = mode === 'challenge' ? game.view.hintsOn : showBranchLabels
 
   const handleRollChange = (rollDeg: number) => {
-    setScopeState((state) => (state ? updateLookOffset(state, { rollDeg }) : state))
+    setScopeState((state) =>
+      state
+        ? {
+            ...updateLookOffset(state, { rollDeg }),
+            freeFrame: state.freeFrame
+              ? rollFrame(state.freeFrame, rollDeg - state.rollDeg)
+              : undefined,
+          }
+        : state,
+    )
   }
 
   const handleScopeOrientationProfileChange = useCallback(
@@ -408,6 +558,7 @@ export function AirwayAnatomyModule() {
   }, [scopeOrientationCalibration, snapshot])
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    if ((event.target as HTMLElement).closest('input, select, textarea')) return
     if (!loadedCase) return
     const moveStep = (event.shiftKey ? 5 : 1) * stepMm
     switch (event.key) {
@@ -431,6 +582,14 @@ export function AirwayAnatomyModule() {
       case 'S':
         handleMove(-moveStep)
         break
+      case 'q':
+      case 'Q':
+        handleRollChange((scopeState?.rollDeg ?? 0) - 5)
+        break
+      case 'e':
+      case 'E':
+        handleRollChange((scopeState?.rollDeg ?? 0) + 5)
+        break
       case 'r':
       case 'R':
         handleRecenter()
@@ -440,6 +599,63 @@ export function AirwayAnatomyModule() {
     }
     event.preventDefault()
   }
+
+  const opticalFrame = useMemo(() => (snapshot ? scopeOpticalFrame(snapshot) : null), [snapshot])
+  const linkedCt = useLinkedCt(
+    loadedCase?.manifest.ct,
+    loadedCase?.ctVolume,
+    opticalFrame,
+    currentWindow?.low ?? -1000,
+    currentWindow?.high ?? -300,
+  )
+  const setLinkedCtAxis = linkedCt.setAxis
+  useEffect(() => {
+    setLinkedCtAxis(ctAxis)
+  }, [ctAxis, setLinkedCtAxis])
+  const hardwareHandlers = useRef({ advance, applySteer, handleRollChange, handleRecenter })
+  hardwareHandlers.current = { advance, applySteer, handleRollChange, handleRecenter }
+  useEffect(() => {
+    if (!trackerEnabled) return
+    let profile = loadActiveScopeTrackerProfile(),
+      lastFlex: number | null = null,
+      handle = 0
+    const source = new GamepadScopeSource({ profile }),
+      deltas = new ScopeDeltaTracker()
+    const unsubscribe = subscribeToScopeTrackerProfileChanges(() => {
+      profile = loadActiveScopeTrackerProfile()
+      source.setProfile(profile)
+      lastFlex = null
+    })
+    let connected = false
+    const tick = () => {
+      const input = source.sample()
+      if (input && !input.status.fault) {
+        const d = deltas.update(input, profile),
+          h = hardwareHandlers.current
+        if (d.resynced) lastFlex = input.flexion
+        if (lastFlex != null) h.applySteer(0, (input.flexion - lastFlex) * 100)
+        lastFlex = input.flexion
+        if (input.rollValid && d.dRollRad)
+          h.handleRollChange((renderedState.current?.rollDeg ?? 0) + (d.dRollRad * 180) / Math.PI)
+        if (d.dDepthMm) h.advance(d.dDepthMm)
+        if (input.pressed.calibrate) h.handleRecenter()
+      } else {
+        lastFlex = null
+        deltas.reset()
+      }
+      if (source.connected !== connected) {
+        connected = source.connected
+        setTrackerConnected(connected)
+      }
+      handle = requestAnimationFrame(tick)
+    }
+    handle = requestAnimationFrame(tick)
+    return () => {
+      cancelAnimationFrame(handle)
+      unsubscribe()
+      setTrackerConnected(false)
+    }
+  }, [trackerEnabled])
 
   if (loadError) {
     return (
@@ -588,7 +804,98 @@ export function AirwayAnatomyModule() {
             </p>
           </div>
 
-          <div className="grid gap-3 p-3 xl:grid-cols-[minmax(0,1.12fr)_minmax(320px,0.88fr)]">
+          <div className="flex flex-wrap items-center gap-3 border-b border-slate-800 px-4 py-3 text-xs">
+            <div className="flex rounded-md bg-slate-800 p-1" aria-label="Navigation mode">
+              <button
+                className={`rounded px-3 py-2 ${!scopeState?.freeFrame ? 'bg-cyan-300 text-slate-950' : 'text-slate-300'}`}
+                onClick={() => {
+                  driveQueue.current = 0
+                  setScopeState((s) =>
+                    s
+                      ? {
+                          ...s,
+                          freeFrame: undefined,
+                          freePath: undefined,
+                          yawDeg: 0,
+                          pitchDeg: 0,
+                          rollDeg: 0,
+                        }
+                      : s,
+                  )
+                }}
+              >
+                Guided anatomy
+              </button>
+              <button
+                disabled={!collider}
+                title={!collider ? 'Preparing validated collision geometry' : undefined}
+                className={`rounded px-3 py-2 disabled:opacity-40 ${scopeState?.freeFrame ? 'bg-cyan-300 text-slate-950' : 'text-slate-300'}`}
+                onClick={() => {
+                  driveQueue.current = 0
+                  setScopeState((s) =>
+                    s && opticalFrame
+                      ? collider!.clearance(opticalFrame.position) < FLEXIBLE_TIP_RADIUS_MM
+                        ? {
+                            ...s,
+                            movementMessage:
+                              'This airway is too narrow for the 3.8 mm scope. Withdraw before entering realistic mode.',
+                          }
+                        : enterFreeDrive(s, opticalFrame, loadedCase.graph)
+                      : s,
+                  )
+                }}
+              >
+                Realistic navigation
+              </button>
+            </div>
+            <button className="text-cyan-200" onClick={() => setEnlarged(!enlarged)}>
+              {enlarged ? 'Balanced layout' : 'Enlarge bronchoscopy'}
+            </button>
+            <label className="flex items-center gap-2 text-slate-300">
+              <input
+                type="checkbox"
+                checked={trackerEnabled}
+                onChange={(e) => setTrackerEnabled(e.target.checked)}
+              />
+              Scope Tracker {trackerEnabled ? (trackerConnected ? 'connected' : 'waiting') : ''}
+            </label>
+            {!scopeState?.freeFrame &&
+              mode === 'explore' &&
+              loadedCase.manifest.orientationLandmarks?.map((reference) => (
+                <button
+                  key={reference.id}
+                  type="button"
+                  className="rounded border border-slate-700 px-2 py-1 text-cyan-200"
+                  title={reference.expectation}
+                  onClick={() => {
+                    driveQueue.current = 0
+                    setScopeOrientationProfile('flexible')
+                    setScopeState(
+                      createInitialScopeState(
+                        loadedCase.graph,
+                        reference.edgeId,
+                        reference.distanceMm,
+                      ),
+                    )
+                  }}
+                >
+                  {reference.id.toUpperCase()} reference
+                </button>
+              ))}
+            <span className="text-slate-400">
+              {scopeState?.freeFrame
+                ? 'Steer · W/S insert and withdraw · Q/E rotate'
+                : 'Aim into an opening, then advance · R recenters'}
+            </span>
+            {(scopeState?.movementMessage || geometryError) && (
+              <p role="status" className="w-full text-amber-200">
+                {geometryError ?? scopeState?.movementMessage}
+              </p>
+            )}
+          </div>
+          <div
+            className={`grid gap-3 p-3 ${enlarged ? 'xl:grid-cols-[minmax(0,1.65fr)_minmax(340px,.65fr)]' : 'xl:grid-cols-[minmax(0,1.12fr)_minmax(340px,.88fr)]'}`}
+          >
             <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-1">
               <VirtualBronchoscopyViewport
                 manifest={loadedCase.manifest}
@@ -600,6 +907,7 @@ export function AirwayAnatomyModule() {
                 onAlignBranch={handleAlignBranch}
                 game={mode === 'challenge' ? game : null}
                 fovDeg={BRONCH_FOV_DEG}
+                collider={collider}
               />
               <AirwayTreeViewport
                 manifest={loadedCase.manifest}
@@ -607,6 +915,7 @@ export function AirwayAnatomyModule() {
                 targets={airwayTargets}
                 pose={snapshot}
                 showAnatomyPins={showAnatomyPins}
+                ctImage={linkedCt.result?.images.find((i) => i.plane.axis === linkedCt.axis)}
                 ctVolume={loadedCase.ctVolume}
                 windowLow={currentWindow.low}
                 windowHigh={currentWindow.high}
@@ -645,14 +954,11 @@ export function AirwayAnatomyModule() {
                 onSaveFlexibleOrientation={saveCurrentFlexibleOrientation}
                 onResetFlexibleOrientation={resetCurrentFlexibleOrientation}
               />
-              <CtSliceViewport
-                ct={loadedCase.manifest.ct}
-                volume={loadedCase.ctVolume}
-                axis={ctAxis}
-                pose={snapshot}
-                trail={snapshot.trailLps}
-                windowLow={currentWindow.low}
-                windowHigh={currentWindow.high}
+              <LinkedCtWorkspace
+                controller={linkedCt}
+                frame={opticalFrame!}
+                low={currentWindow.low}
+                high={currentWindow.high}
               />
             </div>
           </div>
@@ -1136,7 +1442,9 @@ function VirtualBronchoscopyViewport({
   onAlignBranch,
   game,
   fovDeg,
+  collider,
 }: {
+  collider: LumenCollider | null
   manifest: AirwayAnatomyCaseManifest
   pose: ScopePoseSnapshot
   ostia: OstiumLabel[]
@@ -1156,7 +1464,7 @@ function VirtualBronchoscopyViewport({
       {
         <div
           ref={containerRef}
-          className={`${VIEWPORT_CLASS} touch-none select-none`}
+          className="relative aspect-[4/3] touch-none select-none overflow-hidden rounded-lg border border-slate-700 bg-black"
           onPointerDown={(event) => {
             pointerRef.current = { x: event.clientX, y: event.clientY }
             event.currentTarget.setPointerCapture(event.pointerId)
@@ -1178,6 +1486,7 @@ function VirtualBronchoscopyViewport({
         >
           <div className="absolute inset-0">
             <Canvas
+              frameloop={game ? 'always' : 'demand'}
               dpr={[1, 2]}
               camera={{
                 fov: BRONCH_FOV_DEG,
@@ -1192,8 +1501,10 @@ function VirtualBronchoscopyViewport({
               <Suspense fallback={null}>
                 <AirwaySurface
                   stlUrl={
-                    manifest.assets.airwayStl
-                      ? resolveAdminAirwayAssetPath(manifest.assets.airwayStl)
+                    (manifest.assets.reviewedLumenGlb ?? manifest.assets.airwayStl)
+                      ? resolveAdminAirwayAssetPath(
+                          (manifest.assets.reviewedLumenGlb ?? manifest.assets.airwayStl)!,
+                        )
                       : null
                   }
                   transform={manifest.airwaySurfaceTransform ?? manifest.airwayTransform}
@@ -1216,6 +1527,7 @@ function VirtualBronchoscopyViewport({
               pose={pose}
               aspect={aspect}
               onAlignBranch={onAlignBranch}
+              collider={collider}
             />
           )}
           {!game && (
@@ -1251,7 +1563,9 @@ function BronchLabelOverlay({
   pose,
   aspect,
   onAlignBranch,
+  collider,
 }: {
+  collider: LumenCollider | null
   ostia: OstiumLabel[]
   pose: ScopePoseSnapshot
   aspect: number
@@ -1259,6 +1573,7 @@ function BronchLabelOverlay({
 }) {
   const placed = ostia
     .map((ostium) => {
+      if (collider && !collider.visible(pose.tipLps, ostium.pointLps)) return null
       const projected = projectToViewport(ostium.pointLps, pose, aspect)
       if (!projected || projected.depthMm < 1.5 || projected.depthMm > 130) return null
       if (
@@ -1330,14 +1645,13 @@ function AirwayTreeViewport({
   targets,
   pose,
   showAnatomyPins,
-  ctVolume,
-  windowLow,
-  windowHigh,
   ctPlaneOpacity,
   gameTarget,
   hitPulse,
   hitAnchor,
+  ctImage,
 }: {
+  ctImage?: CtSliceImage
   manifest: AirwayAnatomyCaseManifest
   graph: AirwayGraph
   targets: AirwayTarget[]
@@ -1365,12 +1679,14 @@ function AirwayTreeViewport({
       {
         <div className={VIEWPORT_CLASS}>
           <Canvas
+            frameloop={gameTarget ? 'always' : 'demand'}
             dpr={[1, 2]}
             camera={{
               fov: 34,
               near: 0.5,
               far: bounds.radius * 12,
               position: cameraPosition,
+              up: [0, 0, 1],
             }}
             gl={{ antialias: true, alpha: false }}
           >
@@ -1381,21 +1697,16 @@ function AirwayTreeViewport({
             <Suspense fallback={null}>
               <AirwaySurface
                 stlUrl={
-                  manifest.assets.airwayStl
-                    ? resolveAdminAirwayAssetPath(manifest.assets.airwayStl)
+                  (manifest.assets.reviewedLumenGlb ?? manifest.assets.airwayStl)
+                    ? resolveAdminAirwayAssetPath(
+                        (manifest.assets.reviewedLumenGlb ?? manifest.assets.airwayStl)!,
+                      )
                     : null
                 }
                 transform={manifest.airwaySurfaceTransform ?? manifest.airwayTransform}
                 mode="tree"
               />
-              <CtAxialPlane
-                ct={manifest.ct}
-                volume={ctVolume}
-                pose={pose}
-                windowLow={windowLow}
-                windowHigh={windowHigh}
-                opacity={ctPlaneOpacity}
-              />
+              <CorrelatedCtPlane image={ctImage} opacity={ctPlaneOpacity} />
               <group>
                 {graph.edges.map((edge) => {
                   const isCurrent = edge.id === pose.edgeId
@@ -1407,7 +1718,16 @@ function AirwayTreeViewport({
                       color={
                         isCurrent ? '#fbbf24' : isTarget && targetColor ? targetColor : '#38bdf8'
                       }
-                      opacity={isCurrent ? 0.9 : isTarget ? 0.85 : 0.2}
+                      opacity={
+                        isCurrent
+                          ? 1
+                          : isTarget
+                            ? 0.85
+                            : edge.startNodeId ===
+                                graph.edges.find((e) => e.id === pose.edgeId)?.endNodeId
+                              ? 0.55
+                              : 0.08
+                      }
                     />
                   )
                 })}
@@ -1428,70 +1748,8 @@ function AirwayTreeViewport({
           <div className="pointer-events-none absolute left-3 top-3 rounded bg-slate-950/80 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-200">
             3D airway correlation
           </div>
-        </div>
-      }
-    </HandoffContent>
-  )
-}
-
-function CtSliceViewport({
-  ct,
-  volume,
-  axis,
-  pose,
-  trail,
-  windowLow,
-  windowHigh,
-}: {
-  ct: AirwayAnatomyCaseManifest['ct']
-  volume: Int16Array
-  axis: CtAxis
-  pose: ScopePoseSnapshot
-  trail: Vec3[]
-  windowLow: number
-  windowHigh: number
-}) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const tipIndex = useMemo(() => lpsToCtIndex(pose.tipLps, ct), [ct, pose.tipLps])
-  const sliceIndex = Math.round(
-    axis === 'axial' ? tipIndex[2] : axis === 'coronal' ? tipIndex[1] : tipIndex[0],
-  )
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    drawCtSlice({
-      canvas,
-      ct,
-      volume,
-      axis,
-      sliceIndex,
-      windowLow,
-      windowHigh,
-      pose,
-      trail,
-    })
-  }, [axis, ct, pose, sliceIndex, trail, volume, windowHigh, windowLow])
-
-  return (
-    <HandoffContent>
-      {
-        <div className="rounded-lg border border-slate-700 bg-slate-900/80 p-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                CT slice
-              </div>
-              <div className="text-sm text-slate-200">
-                IJK {tipIndex.map((value) => Math.round(value)).join(', ')}
-              </div>
-            </div>
-            <div className="rounded bg-slate-950 px-2 py-1 text-xs text-slate-300">
-              {axis} {clamp(sliceIndex, 0, ctAxisLength(ct, axis) - 1)}
-            </div>
-          </div>
-          <div className="relative aspect-square overflow-hidden rounded-md border border-slate-800 bg-black">
-            <canvas ref={canvasRef} className="h-full w-full object-contain" />
+          <div className="pointer-events-none absolute bottom-3 left-3 rounded bg-slate-950/80 px-2 py-1 text-[11px] text-slate-300">
+            LPS · superior ↑ · gold: current branch
           </div>
         </div>
       }
@@ -1569,53 +1827,34 @@ function AirwaySurface({
 }
 
 function ScopeCamera({ pose }: { pose: ScopePoseSnapshot }) {
-  const { camera } = useThree()
-  const lightRef = useRef<THREE.PointLight>(null)
-  // The orientation target must be a Camera, not a plain Object3D: their
-  // lookAt() conventions are opposite (a camera points its -Z at the target,
-  // an Object3D points +Z), so a plain dummy would aim the view backward.
-  const dummyRef = useRef<THREE.Camera | null>(null)
-  const initializedRef = useRef(false)
-
-  useFrame((_, delta) => {
-    if (!dummyRef.current) dummyRef.current = new THREE.PerspectiveCamera()
-    const dummy = dummyRef.current
-
-    const tip = new THREE.Vector3(...pose.tipLps)
-    const base = normalize(subtract(pose.lookAtLps, pose.tipLps), pose.tangentLps)
-    const { forward, up } = computeViewBasis(base, pose.yawDeg, pose.pitchDeg, 0)
-
-    dummy.position.copy(tip)
-    dummy.up.set(...up)
-    dummy.lookAt(tip.x + forward[0], tip.y + forward[1], tip.z + forward[2])
-    dummy.rotateZ(THREE.MathUtils.degToRad(pose.rollDeg))
-
-    // Critically damped chase keeps motion smooth without feeling laggy.
-    const k = 1 - Math.exp(-Math.min(delta || 0.016, 0.1) * 11)
-    if (!initializedRef.current || camera.position.distanceTo(tip) > 28) {
-      camera.position.copy(tip)
-      camera.quaternion.copy(dummy.quaternion)
-      initializedRef.current = true
-    } else {
-      camera.position.lerp(tip, k)
-      camera.quaternion.slerp(dummy.quaternion, k)
-    }
-    camera.up.copy(dummy.up)
-    lightRef.current?.position.copy(camera.position)
+  const { camera, size } = useThree()
+  useFrame(() => {
+    updateScopeCamera(camera, pose, size.width / Math.max(1, size.height))
   })
 
-  return (
-    <HandoffContent>
-      {<pointLight ref={lightRef} intensity={20} distance={190} decay={1.05} color={0xfff0e0} />}
-    </HandoffContent>
-  )
+  return null
+}
+
+function updateScopeCamera(camera: THREE.Camera, pose: ScopePoseSnapshot, aspect: number) {
+  const frame = scopeOpticalFrame(pose)
+  camera.position.set(...frame.position)
+  camera.up.set(...frame.up)
+  camera.lookAt(...add(frame.position, frame.forward))
+  if (camera instanceof THREE.PerspectiveCamera) {
+    const fov = verticalFov(BRONCH_FOV_DEG, aspect)
+    if (camera.fov !== fov) {
+      camera.fov = fov
+      camera.updateProjectionMatrix()
+    }
+  }
+  camera.updateMatrixWorld()
 }
 
 /** Bronchoscope rendered as an insertion tube from the tracheal inlet to the tip. */
 function ScopeBody({ graph, pose }: { graph: AirwayGraph; pose: ScopePoseSnapshot }) {
   const pathLps = useMemo(
-    () => buildScopePathLps(graph, pose.edgeId, pose.distanceMm),
-    [graph, pose.edgeId, pose.distanceMm],
+    () => pose.shaftPathLps ?? buildScopePathLps(graph, pose.edgeId, pose.distanceMm),
+    [graph, pose.edgeId, pose.distanceMm, pose.shaftPathLps],
   )
 
   const tubeGeometry = useMemo(() => {
@@ -1650,10 +1889,7 @@ function ScopeBody({ graph, pose }: { graph: AirwayGraph; pose: ScopePoseSnapsho
     () => new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), tangent),
     [tangent],
   )
-  const viewForward = useMemo(() => {
-    const base = normalize(subtract(pose.lookAtLps, pose.tipLps), pose.tangentLps)
-    return computeViewBasis(base, pose.yawDeg, pose.pitchDeg, 0).forward
-  }, [pose.lookAtLps, pose.pitchDeg, pose.tangentLps, pose.tipLps, pose.yawDeg])
+  const viewForward = useMemo(() => scopeOpticalFrame(pose).forward, [pose])
   const beamQuaternion = useMemo(
     () =>
       new THREE.Quaternion().setFromUnitVectors(
@@ -1771,259 +2007,17 @@ function SceneLabels({ targets }: { targets: AirwayTarget[] }) {
   )
 }
 
-function CtAxialPlane({
-  ct,
-  volume,
-  pose,
-  windowLow,
-  windowHigh,
-  opacity,
-}: {
-  ct: AirwayAnatomyCaseManifest['ct']
-  volume: Int16Array
-  pose: ScopePoseSnapshot
-  windowLow: number
-  windowHigh: number
-  opacity: number
-}) {
-  const texture = useMemo(() => {
-    if (opacity <= 0.01) return null
-    const canvas = document.createElement('canvas')
-    const sliceIndex = Math.round(lpsToCtIndex(pose.tipLps, ct)[2])
-    drawCtSlice({
-      canvas,
-      ct,
-      volume,
-      axis: 'axial',
-      sliceIndex,
-      windowLow,
-      windowHigh,
-      pose,
-      trail: [],
-    })
-    const nextTexture = new THREE.CanvasTexture(canvas)
-    nextTexture.colorSpace = THREE.SRGBColorSpace
-    return nextTexture
-  }, [ct, opacity, pose, volume, windowHigh, windowLow])
-
-  useEffect(() => () => texture?.dispose(), [texture])
-
-  if (!texture || opacity <= 0.01) return <HandoffContent>{null}</HandoffContent>
-
-  const [i, j, k] = lpsToCtIndex(pose.tipLps, ct)
-  const center = ctIndexToLps([(ct.sizeXyz[0] - 1) / 2, (ct.sizeXyz[1] - 1) / 2, Math.round(k)], ct)
-  const width = (ct.sizeXyz[0] - 1) * ct.spacingXyzMm[0]
-  const height = (ct.sizeXyz[1] - 1) * ct.spacingXyzMm[1]
-  void i
-  void j
-
-  return (
-    <HandoffContent>
-      {
-        <mesh position={center} scale={[1, -1, 1]}>
-          <planeGeometry args={[width, height]} />
-          <meshBasicMaterial
-            map={texture}
-            transparent
-            opacity={opacity}
-            side={THREE.DoubleSide}
-            depthWrite={false}
-          />
-        </mesh>
-      }
-    </HandoffContent>
-  )
-}
-
-function drawCtSlice({
-  canvas,
-  ct,
-  volume,
-  axis,
-  sliceIndex,
-  windowLow,
-  windowHigh,
-  pose,
-  trail,
-}: {
-  canvas: HTMLCanvasElement
-  ct: AirwayAnatomyCaseManifest['ct']
-  volume: Int16Array
-  axis: CtAxis
-  sliceIndex: number
-  windowLow: number
-  windowHigh: number
-  pose: ScopePoseSnapshot
-  trail: Vec3[]
-}) {
-  const painted = paintCtSliceGrayscale({
-    canvas,
-    ct,
-    volume,
-    axis,
-    sliceIndex,
-    windowLow,
-    windowHigh,
-  })
-  if (!painted) return
-  const context = canvas.getContext('2d')
-  if (!context) return
-  drawTrailOnCt(context, ct, axis, painted.clampedSlice, trail)
-  drawScopeTipMarker(context, ct, axis, painted.clampedSlice, pose)
-}
-
-function drawScopeTipMarker(
-  context: CanvasRenderingContext2D,
-  ct: AirwayAnatomyCaseManifest['ct'],
-  axis: CtAxis,
-  sliceIndex: number,
-  pose: ScopePoseSnapshot,
-) {
-  const projected = projectLpsToCanvas(
-    pose.tipLps,
-    axis,
-    sliceIndex,
-    ct,
-    context.canvas.width,
-    context.canvas.height,
-  )
-  if (!projected.inFrame) return
-
-  const aheadLps = add(pose.tipLps, scale(normalize(pose.tangentLps), 9))
-  const ahead = projectLpsToCanvas(
-    aheadLps,
-    axis,
-    sliceIndex,
-    ct,
-    context.canvas.width,
-    context.canvas.height,
-  )
-  let headingX = ahead.x - projected.x
-  let headingY = ahead.y - projected.y
-  const headingLength = Math.hypot(headingX, headingY)
-
-  context.save()
-
-  const glow = context.createRadialGradient(
-    projected.x,
-    projected.y,
-    0,
-    projected.x,
-    projected.y,
-    13,
-  )
-  glow.addColorStop(0, 'rgba(34, 211, 238, 0.45)')
-  glow.addColorStop(1, 'rgba(34, 211, 238, 0)')
-  context.fillStyle = glow
-  context.beginPath()
-  context.arc(projected.x, projected.y, 13, 0, Math.PI * 2)
-  context.fill()
-
-  if (headingLength > 1.5) {
-    headingX /= headingLength
-    headingY /= headingLength
-    context.strokeStyle = 'rgba(125, 211, 252, 0.95)'
-    context.lineWidth = 2
-    context.lineCap = 'round'
-    context.beginPath()
-    context.moveTo(projected.x + headingX * 6.5, projected.y + headingY * 6.5)
-    context.lineTo(projected.x + headingX * 15, projected.y + headingY * 15)
-    context.stroke()
-    // Arrowhead
-    const perpX = -headingY
-    const perpY = headingX
-    context.beginPath()
-    context.moveTo(projected.x + headingX * 18, projected.y + headingY * 18)
-    context.lineTo(projected.x + headingX * 13 + perpX * 3, projected.y + headingY * 13 + perpY * 3)
-    context.lineTo(projected.x + headingX * 13 - perpX * 3, projected.y + headingY * 13 - perpY * 3)
-    context.closePath()
-    context.fillStyle = 'rgba(125, 211, 252, 0.95)'
-    context.fill()
-  }
-
-  context.strokeStyle = 'rgba(2, 6, 23, 0.85)'
-  context.lineWidth = 3.5
-  context.beginPath()
-  context.arc(projected.x, projected.y, 5.5, 0, Math.PI * 2)
-  context.stroke()
-  context.strokeStyle = '#f8fafc'
-  context.lineWidth = 1.8
-  context.beginPath()
-  context.arc(projected.x, projected.y, 5.5, 0, Math.PI * 2)
-  context.stroke()
-
-  context.fillStyle = '#22d3ee'
-  context.beginPath()
-  context.arc(projected.x, projected.y, 2.2, 0, Math.PI * 2)
-  context.fill()
-
-  context.restore()
-}
-
-function drawTrailOnCt(
-  context: CanvasRenderingContext2D,
-  ct: AirwayAnatomyCaseManifest['ct'],
-  axis: CtAxis,
-  sliceIndex: number,
-  trail: Vec3[],
-) {
-  if (trail.length < 2) return
-  context.save()
-  context.lineWidth = 2
-  context.lineCap = 'round'
-  context.lineJoin = 'round'
-  for (let index = 1; index < trail.length; index += 1) {
-    const fromProjected = projectLpsToCanvas(
-      trail[index - 1],
-      axis,
-      sliceIndex,
-      ct,
-      context.canvas.width,
-      context.canvas.height,
-    )
-    const toProjected = projectLpsToCanvas(
-      trail[index],
-      axis,
-      sliceIndex,
-      ct,
-      context.canvas.width,
-      context.canvas.height,
-    )
-    if (!fromProjected.inFrame || !toProjected.inFrame) continue
-    const sliceDistance = Math.max(fromProjected.distanceFromSlice, toProjected.distanceFromSlice)
-    if (sliceDistance > 3) continue
-    const alpha = (1 - sliceDistance / 3) * 0.85
-    context.strokeStyle = `rgba(45, 212, 191, ${alpha.toFixed(3)})`
-    context.beginPath()
-    context.moveTo(fromProjected.x, fromProjected.y)
-    context.lineTo(toProjected.x, toProjected.y)
-    context.stroke()
-  }
-  context.restore()
-}
-
-/**
- * Project an LPS point into the bronchoscopy viewport. Mirrors the camera
- * basis in ScopeCamera, so HTML overlays land on top of the rendered anatomy.
- * Screen +up (anterior) maps to a smaller top%, matching the un-flipped canvas.
- */
 function projectToViewport(
   pointLps: Vec3,
   pose: ScopePoseSnapshot,
   aspect: number,
 ): { leftPct: number; topPct: number; depthMm: number } | null {
-  const base = normalize(subtract(pose.lookAtLps, pose.tipLps), pose.tangentLps)
-  const { forward, right, up } = computeViewBasis(base, pose.yawDeg, pose.pitchDeg, pose.rollDeg)
-  const offset = subtract(pointLps, pose.tipLps)
-  const depthMm = dot(offset, forward)
-  if (depthMm < 1.5) return null
-  const tanHalfFov = Math.tan((BRONCH_FOV_DEG * Math.PI) / 360)
-  const ndcX = dot(offset, right) / (depthMm * tanHalfFov * Math.max(aspect, 0.1))
-  const ndcY = dot(offset, up) / (depthMm * tanHalfFov)
+  const projected = projectOptical(pointLps, scopeOpticalFrame(pose), aspect, BRONCH_FOV_DEG)
+  if (!projected) return null
   return {
-    leftPct: (0.5 + ndcX / 2) * 100,
-    topPct: (0.5 - ndcY / 2) * 100,
-    depthMm,
+    leftPct: (0.5 + projected.x / 2) * 100,
+    topPct: (0.5 - projected.y / 2) * 100,
+    depthMm: projected.depth,
   }
 }
 
@@ -2031,6 +2025,7 @@ function buildUpcomingOstia(
   index: AirwayGraphIndex,
   labels: CenterlineLabels,
   pose: ScopePoseSnapshot,
+  landmarks: AirwayAnatomyCaseManifest['ostialLandmarks'] = [],
 ): OstiumLabel[] {
   const edge = index.edgesById.get(pose.edgeId)
   if (!edge) return []
@@ -2044,7 +2039,10 @@ function buildUpcomingOstia(
   const seenAbbr = new Set<string>()
   for (const childEdgeId of node.childEdgeIds) {
     for (const resolved of resolveOstiaForChild(index, labels, childEdgeId)) {
-      const info = resolved.info
+      const reviewed = landmarks.find((l) => l.edgeId === resolved.steerEdgeId)
+      const info = reviewed
+        ? { abbreviatedLabel: reviewed.label, fullLabel: reviewed.description }
+        : resolved.info
       const abbr = info?.abbreviatedLabel ?? `Branch ${resolved.steerEdgeId}`
       if (info && info.abbreviatedLabel === currentInfo?.abbreviatedLabel) continue
       if (seenAbbr.has(abbr)) continue
@@ -2052,7 +2050,7 @@ function buildUpcomingOstia(
       const descriptor = info ? shortAnatomicalLabel(info.fullLabel, info.abbreviatedLabel) : ''
       ostia.push({
         edgeId: resolved.steerEdgeId,
-        pointLps: resolved.pointLps,
+        pointLps: reviewed?.pointLps ?? resolved.pointLps,
         abbr,
         descriptor: descriptor === abbr ? '' : descriptor,
       })

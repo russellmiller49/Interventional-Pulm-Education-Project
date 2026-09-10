@@ -4,12 +4,14 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { Canvas, createPortal, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { OrbitControls, useFBO } from '@react-three/drei'
 import * as THREE from 'three'
+import { scopeOpticalFrame } from '@/lib/airway-anatomy/transport-frames'
+import { verticalFov } from '@/lib/bronchoscopy-core/frame'
 import { XR } from '@react-three/xr'
 
 import { createAnatomyXRStore } from '@/components/3d/xr/xrStore'
 import { resolveAdminAirwayAssetPath } from '@/lib/airway-anatomy/admin-assets'
-import { ctIndexToLps, lpsToCtIndex, normalize, subtract } from '@/lib/airway-anatomy/geometry'
-import { buildScopePathLps, computeViewBasis } from '@/lib/airway-anatomy/scope-state'
+import { ctIndexToLps, lpsToCtIndex } from '@/lib/airway-anatomy/geometry'
+import { buildScopePathLps } from '@/lib/airway-anatomy/scope-state'
 import {
   createBronchoscopyMaterial,
   loadAirwayStlGeometry,
@@ -214,9 +216,12 @@ function AirwayXRWorld({
   const worldRef = useRef<THREE.Group>(null)
   const bounds = useMemo(() => boundsForGraph(graph), [graph])
   const worldScale = TARGET_RADIUS_M / bounds.radius
-  const stlUrl = manifest.assets.airwayStl
-    ? resolveAdminAirwayAssetPath(manifest.assets.airwayStl)
-    : null
+  const stlUrl =
+    (manifest.assets.reviewedLumenGlb ?? manifest.assets.airwayStl)
+      ? resolveAdminAirwayAssetPath(
+          (manifest.assets.reviewedLumenGlb ?? manifest.assets.airwayStl)!,
+        )
+      : null
 
   const gameTarget = game?.view.currentTarget ?? null
   const gameActive = game?.view.status === 'playing' || game?.view.status === 'countdown'
@@ -432,7 +437,12 @@ function EndoluminalPanel({
 
   const scopeScene = useMemo(() => new THREE.Scene(), [])
   const scopeCamera = useMemo(() => {
-    const cam = new THREE.PerspectiveCamera(BRONCH_FOV_DEG, FBO_WIDTH / FBO_HEIGHT, 0.06, 900)
+    const cam = new THREE.PerspectiveCamera(
+      verticalFov(BRONCH_FOV_DEG, FBO_WIDTH / FBO_HEIGHT),
+      FBO_WIDTH / FBO_HEIGHT,
+      0.06,
+      900,
+    )
     return cam
   }, [])
   const bronchMaterial = useMemo(() => createBronchoscopyMaterial(), [])
@@ -456,12 +466,11 @@ function EndoluminalPanel({
   // Pose-driven scope camera + off-screen render. Runs before R3F's main render each frame.
   useFrame(({ gl: renderer }) => {
     const tip = pose.tipLps
-    const base = normalize(subtract(pose.lookAtLps, pose.tipLps), pose.tangentLps)
-    const { forward, up } = computeViewBasis(base, pose.yawDeg, pose.pitchDeg, 0)
+    const { forward, up } = scopeOpticalFrame(pose)
     scopeCamera.position.set(tip[0], tip[1], tip[2])
     scopeCamera.up.set(up[0], up[1], up[2])
     scopeCamera.lookAt(tip[0] + forward[0], tip[1] + forward[1], tip[2] + forward[2])
-    scopeCamera.rotateZ((pose.rollDeg * Math.PI) / 180)
+    scopeCamera.updateMatrixWorld()
 
     if (!scopeGeometry) return
     // Render the endoluminal view as a normal mono frame: disable XR for this off-screen pass so

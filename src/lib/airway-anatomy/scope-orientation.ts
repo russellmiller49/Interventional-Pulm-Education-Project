@@ -1,4 +1,5 @@
 import type { ScopePoseSnapshot } from './types'
+import { rollFrame } from '../bronchoscopy-core/frame'
 
 export const SCOPE_ORIENTATION_CALIBRATION_SCHEMA = 'airway_anatomy_scope_orientation/v1'
 export const SCOPE_ORIENTATION_PROFILE_IDS = ['flexible', 'robotic'] as const
@@ -117,6 +118,7 @@ export function applyScopeOrientationToPose(
   }
   return {
     ...pose,
+    opticalFrame: pose.opticalFrame ? rollFrame(pose.opticalFrame, rollDeg) : undefined,
     rollDeg: normalizeRollDeg(pose.rollDeg + rollDeg),
   }
 }

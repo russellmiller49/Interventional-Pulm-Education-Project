@@ -19,6 +19,7 @@ import type {
   ScopePoseSnapshot,
   Vec3,
 } from './types'
+import type { OpticalFrame } from '../bronchoscopy-core/frame'
 
 const CHOICE_LABELS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -35,6 +36,10 @@ export interface AirwayGraphIndex {
 }
 
 export interface ScopeState {
+  freeFrame?: OpticalFrame
+  freePath?: Vec3[]
+  branchIntentEdgeId?: number
+  movementMessage?: string
   edgeId: number
   distanceMm: number
   trailLps: Vec3[]
@@ -119,7 +124,12 @@ export function moveScope(
   state: ScopeState,
   graph: AirwayGraph,
   deltaMm: number,
-  options: { trailMaxPoints?: number; lookAheadMm?: number } = {},
+  options: {
+    trailMaxPoints?: number
+    lookAheadMm?: number
+    viewForward?: Vec3
+    requireAim?: boolean
+  } = {},
 ): ScopeState {
   const index = createGraphIndex(graph)
   let next: ScopeState = {
@@ -150,7 +160,12 @@ export function moveScope(
       const chosenEdgeId =
         childEdgeIds.length === 1
           ? childEdgeIds[0]
-          : steeredChildEdgeId(index, edge, endNode, next, options.lookAheadMm ?? 12)
+          : steeredChildEdgeId(index, edge, endNode, next, options.lookAheadMm ?? 12, options)
+      if (chosenEdgeId == null) {
+        next = { ...next, movementMessage: 'Aim into a visible opening before advancing.' }
+        remaining = 0
+        break
+      }
       next = { ...next, edgeId: chosenEdgeId, distanceMm: 0 }
     } else {
       const backward = -remaining
@@ -180,22 +195,31 @@ function steeredChildEdgeId(
   node: AirwayGraphNode,
   state: ScopeState,
   lookAheadMm: number,
-): number {
+  options: { viewForward?: Vec3; requireAim?: boolean } = {},
+): number | null {
   const base = baseForwardAt(index, edge, edge.lengthMm, lookAheadMm)
-  const { forward } = computeViewBasis(base, state.yawDeg, state.pitchDeg, 0)
+  const forward =
+    options.viewForward ?? computeViewBasis(base, state.yawDeg, state.pitchDeg, 0).forward
 
   let bestEdgeId = node.childEdgeIds[0]
   let bestDot = Number.NEGATIVE_INFINITY
+  let secondDot = Number.NEGATIVE_INFINITY
   for (const childEdgeId of node.childEdgeIds) {
     const child = requireEdge(index, childEdgeId)
     const probe = sampleEdgePose(child, Math.min(BRANCH_PROBE_MM, child.lengthMm)).point
     const direction = normalize(subtract(probe, node.lps))
     const alignment = dot(forward, direction)
     if (alignment > bestDot) {
+      secondDot = bestDot
       bestDot = alignment
       bestEdgeId = childEdgeId
-    }
+    } else secondDot = Math.max(secondDot, alignment)
   }
+  if (
+    options.requireAim &&
+    (bestDot < Math.cos((40 * Math.PI) / 180) || bestDot - secondDot < 0.035)
+  )
+    return null
   return bestEdgeId
 }
 
@@ -257,7 +281,7 @@ export function updateLookOffset(
     ...state,
     yawDeg: clamp(nextOffset.yawDeg ?? state.yawDeg, -YAW_LIMIT_DEG, YAW_LIMIT_DEG),
     pitchDeg: clamp(nextOffset.pitchDeg ?? state.pitchDeg, -PITCH_LIMIT_DEG, PITCH_LIMIT_DEG),
-    rollDeg: clamp(nextOffset.rollDeg ?? state.rollDeg, -ROLL_LIMIT_DEG, ROLL_LIMIT_DEG),
+    rollDeg: nextOffset.rollDeg ?? state.rollDeg,
   }
 }
 
@@ -281,12 +305,16 @@ export function buildScopePoseSnapshot({
     endNode && endNode.childEdgeIds.length > 1 ? buildBranchOptions(index, endNode, labels) : []
 
   return {
+    opticalFrame: state.freeFrame,
+    shaftPathLps: state.freePath,
     edgeId: edge.id,
     distanceMm: state.distanceMm,
     edgeLengthMm: edge.lengthMm,
-    tipLps: edgeSample.point,
+    tipLps: state.freeFrame?.position ?? edgeSample.point,
     tangentLps: edgeSample.tangent,
-    lookAtLps: lookSample,
+    lookAtLps: state.freeFrame
+      ? add(state.freeFrame.position, scale(state.freeFrame.forward, 12))
+      : lookSample,
     branchNodeId: branchOptions.length ? (endNode?.id ?? null) : null,
     branchOptions,
     trailLps: state.trailLps,
