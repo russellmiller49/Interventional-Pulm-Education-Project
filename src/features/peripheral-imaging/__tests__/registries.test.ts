@@ -16,9 +16,9 @@ describe('the imaging chain', () => {
     expect(validateImagingChain()).toEqual([])
   })
 
-  it('prints the stop number only in the caption', () => {
-    expect(chainCaption('detector')).toBe('You are at: the detector. Stop 4 of 6.')
-    expect(chainCaption(null)).toMatch(/not pointing anywhere/)
+  it('prints the component number only in the caption', () => {
+    expect(chainCaption('detector')).toBe('Image formation · Flat-panel detector (4 of 6).')
+    expect(chainCaption(null)).toMatch(/no component is highlighted/)
     for (const stop of CHAIN_STOPS) expect(stop.title).not.toMatch(/\d/)
   })
 })
@@ -113,9 +113,9 @@ describe('section specs, suite views and sources validate clean at import', () =
     }
     const pinned = suiteViewForStep('chain-walk', { chainAnswer: true })
     expect(pinned.litStop).toBeNull()
-    expect(pinned.stopSentence).toMatch(/not pointing anywhere/)
+    expect(pinned.stopSentence).toMatch(/no component is highlighted/)
     expect(suiteViewForStep('projection', { litStop: 'detector' }).stopSentence).toBe(
-      'You are at: the detector. Stop 4 of 6.',
+      'Image formation · Flat-panel detector (4 of 6).',
     )
   })
 })

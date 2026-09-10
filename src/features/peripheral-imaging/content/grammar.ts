@@ -5,12 +5,13 @@ import { imagingLearnerCopyErrors } from './learnerCopy'
 import { isImagingSectionId, type ImagingSectionId } from './pathway'
 
 /**
- * The one diagnostic grammar: what you see → where in the chain it lives → the shortlist.
+ * The one troubleshooting table: what you see → the likely cause → what to consider.
  *
  * Built once, from the draft's decision guide and the synthesis document's escalation ladder,
- * taught in the section that assembles it, and lit by reference in every section a row belongs
- * to. No section restates a row in different words; paraphrase drift is how grammars die. The
- * trend rule is its footnote.
+ * taught in the section that assembles it, and highlighted by reference in every section a row
+ * belongs to. No section restates a row in different words. Each row also records the component of
+ * image formation the problem arises at (`lives`), which the capstone sort uses; the table prints
+ * the clinical cause. The trend rule is its footnote.
  */
 export interface GrammarRow {
   readonly id: string
@@ -18,7 +19,7 @@ export interface GrammarRow {
   readonly see: string
   /** The chain stop the problem lives at. */
   readonly lives: ChainStopId
-  /** The stop in the words the table prints: "the beam — one ray". */
+  /** The likely cause, in the words the table prints: "a single projection collapses depth". */
   readonly livesPlain: string
   readonly shortlist: readonly string[]
   readonly taughtIn: readonly ImagingSectionId[]
@@ -32,13 +33,13 @@ export const GRAMMAR_TREND_RULE =
 export const IMAGING_GRAMMAR: readonly GrammarRow[] = Object.freeze([
   {
     id: 'hidden-by-anatomy',
-    see: 'The target is hidden by a rib, the heart or the diaphragm while the tool is crisp.',
+    see: 'The lesion is obscured by a rib, the cardiac silhouette or the diaphragm while the tool is sharp.',
     lives: 'patient',
-    livesPlain: 'the patient — superimposition on one ray',
+    livesPlain: 'anatomical superimposition in this projection',
     shortlist: [
-      'change the angle, planned on the CT',
-      'recenter and collimate',
-      'not more photons',
+      'change the projection, planned from the CT',
+      'recenter and recollimate',
+      'do not increase dose first',
     ],
     taughtIn: ['signal'],
     litIn: ['good-image', 'projection', 'signal'],
@@ -46,14 +47,14 @@ export const IMAGING_GRAMMAR: readonly GrammarRow[] = Object.freeze([
   },
   {
     id: 'grainy',
-    see: 'The image is grainy or washed out although the target is well positioned.',
+    see: 'The image is noisy or low in contrast although the lesion is well positioned.',
     lives: 'source',
-    livesPlain: 'the source and the detector — photons and scatter',
+    livesPlain: 'photon statistics and scatter radiation',
     shortlist: [
-      'close the field',
-      'thickness and angle',
-      'the preset and the window',
-      'more output only then',
+      'collimate',
+      'patient thickness and the projection',
+      'the fluoroscopy preset and window/level',
+      'increase output only then',
     ],
     taughtIn: ['signal'],
     litIn: ['signal', 'field'],
@@ -61,73 +62,94 @@ export const IMAGING_GRAMMAR: readonly GrammarRow[] = Object.freeze([
   },
   {
     id: 'blur-or-lag',
-    see: 'The tool blurs while it moves, or the picture is smooth but late.',
+    see: 'The tool blurs while it moves, or the image looks smooth but lags behind the movement.',
     lives: 'detector',
-    livesPlain: 'the detector — time sampling',
-    shortlist: ['pulse width', 'pulse rate', 'processing lag', 'a coordinated pause'],
+    livesPlain: 'temporal resolution — pulse width, pulse rate and processing',
+    shortlist: [
+      'pulse width',
+      'pulse rate',
+      'frame averaging and image lag',
+      'a coordinated ventilation pause',
+    ],
     taughtIn: ['time'],
     litIn: ['time'],
     sourceIds: ['tg272', 'tg125'],
   },
   {
     id: 'overlap-depth',
-    see: 'Tool and target overlap in one view, and the depth between them is unknown.',
+    see: 'The tool and lesion overlap in one projection, and their depth relationship is unknown.',
     lives: 'beam',
-    livesPlain: 'the beam — one ray',
-    shortlist: ['a separated second view', 'a sweep or an orbit'],
+    livesPlain: 'a single projection collapses depth',
+    shortlist: ['a sufficiently separated second projection', 'DTS or CBCT'],
     taughtIn: ['projection'],
     litIn: ['chain-walk', 'projection', 'dts-acquisition'],
     sourceIds: ['setser', 'pritchett'],
   },
   {
     id: 'elongated-depth',
-    see: 'Sharp in the plane, elongated in depth, and the tool is missing from the prior.',
+    see: 'Structures are sharp in-plane but elongated in depth, and the tool is absent from prior-derived content.',
     lives: 'reconstruction',
-    livesPlain: 'the reconstruction — the sweep and the prior',
-    shortlist: ['angular coverage', 'which pixels are current', 'what the prior contributed'],
+    livesPlain: 'the DTS reconstruction — angular coverage and prior contribution',
+    shortlist: [
+      'angular coverage',
+      'which content was acquired now',
+      'what the prior CT contributed',
+    ],
     taughtIn: ['dts-acquisition'],
     litIn: ['dts-acquisition', 'dts-interpretation'],
     sourceIds: ['saad'],
   },
   {
     id: 'target-vanished',
-    see: 'The target has vanished, or the overlay no longer matches what lies underneath it.',
+    see: 'The lesion is no longer visualized, or the overlay no longer matches the underlying anatomy.',
     lives: 'patient',
-    livesPlain: 'the patient — the state has changed',
-    shortlist: ['collapse, deformation, bleeding', 'registration', 'do not chase the overlay'],
+    livesPlain: 'CT-to-body divergence — the anatomy has changed',
+    shortlist: [
+      'atelectasis, deformation, bleeding',
+      'registration error',
+      'reconfirm the lesion; do not redirect to a stale overlay',
+    ],
     taughtIn: ['current-anatomy'],
     litIn: ['current-anatomy', 'fixed-suite', 'changing-anatomy'],
     sourceIds: ['setser', 'ilocate', 'pritchett'],
   },
   {
     id: 'small-on-screen',
-    see: 'The image is fine but small on the screen.',
+    see: 'Image quality is adequate, but the anatomy is small on the monitor.',
     lives: 'display',
     livesPlain: 'the display',
-    shortlist: ['zoom the stored image', 'move the monitor', 'not acquisition magnification'],
+    shortlist: [
+      'display zoom on the stored image',
+      'bring the monitor closer',
+      'not acquisition magnification',
+    ],
     taughtIn: ['field'],
     litIn: ['good-image', 'field'],
     sourceIds: ['tg272', 'tg125'],
   },
   {
     id: 'dose-number',
-    see: 'A dose number or an alert appears.',
+    see: 'A dose index or a dose notification appears.',
     lives: 'detector',
-    livesPlain: 'the beam and the detector — which quantity',
-    shortlist: ['reference air kerma or area product', 'the units', 'the modes included'],
+    livesPlain: 'the dose metric — which quantity it is',
+    shortlist: [
+      'reference air kerma or kerma–area product',
+      'the units',
+      'the acquisition modes included',
+    ],
     taughtIn: ['dose-reporting'],
     litIn: ['staff-protection', 'dose-reporting'],
     sourceIds: ['wabip', 'aapm12', 'skin'],
   },
   {
     id: 'probe-pattern',
-    see: 'The radial probe shows tissue all round, tissue on one side, or nothing at all.',
+    see: 'The radial EBUS view is concentric, eccentric, or shows no lesional pattern.',
     lives: 'patient',
-    livesPlain: 'the acoustic chain — the probe’s place in tissue',
+    livesPlain: 'radial EBUS — probe position relative to the lesion',
     shortlist: [
-      'within, adjacent or not in contact',
-      'collapsed lung mimics tissue',
-      'the probe is not the tool',
+      'concentric, eccentric or no lesional view',
+      'atelectasis can mimic a lesion',
+      'the rEBUS probe is not the biopsy tool',
     ],
     taughtIn: ['two-dimensional'],
     litIn: ['two-dimensional', 'tool-confirmation'],

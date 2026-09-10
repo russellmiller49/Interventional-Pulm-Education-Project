@@ -31,7 +31,7 @@ export const IMAGING_HUB_HERO: ImagingHubHero = {
   width: 2400,
   height: 1000,
   alt: 'A peripheral bronchoscopy suite: a patient on the procedure table under a C-arm, the beam drawn as a cone from the X-ray source beneath the table to the detector above, and a workstation with a monitor on a boom to the right.',
-  lede: 'The suite every section is worked on, and where the chain runs through it.',
+  lede: 'The suite every section is worked on, and where each component of image formation sits in it.',
   where: {
     source: 'the housing beneath the table',
     beam: 'the cone rising from it',

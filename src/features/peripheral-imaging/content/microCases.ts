@@ -51,114 +51,114 @@ const MICRO_CASE_DEFINITIONS: readonly MicroCaseDefinition[] = [
   {
     id: 'signal-practice-1',
     sectionId: 'signal',
-    presentationTitle: 'A large patient, a grey picture',
+    presentationTitle: 'Poor lesion conspicuity in a large patient',
     situation:
-      'A large patient is on the table and a catheter sits in the right lower lobe. The shutters are open to the edges of the panel, so most of the chest is on the monitor. The catheter edge is crisp and the background is smooth rather than speckled, but the whole picture reads flat, and the diaphragm, the vessels and the lesion all sit at nearly the same grey.',
+      'A large patient is on the table with a catheter in the right lower lobe. The collimator blades are open to the edges of the detector, so most of the chest is in the field. The catheter edge is sharp and the background is smooth rather than mottled, but the whole image is low in contrast: the diaphragm, the vessels and the lesion are nearly the same grey.',
   },
   {
     id: 'signal-practice-2',
     sectionId: 'signal',
-    presentationTitle: 'Worse picture after the angle change',
+    presentationTitle: 'Washed-out image after an oblique projection',
     situation:
-      "After a planned angle change the lesion sits clear of the mediastinum, and the needle is in view. The image now looks washed out rather than grainy, with edges low in contrast across the whole picture. The shutters are still where they were for the frontal view and take in most of the hemithorax, and the patient's arm lies across the beam well away from the lesion. The display window and the monitor brightness are set where they were before the rotation.",
+      'After a planned change of C-arm projection, the lesion is clear of the mediastinum and the needle is in view. The image now looks washed out rather than noisy, with low contrast across the whole field. Collimation is unchanged from the frontal projection and still includes most of the hemithorax, and the patient’s arm lies across the beam, well away from the lesion. Window/level and monitor brightness are as they were before the rotation.',
   },
   {
     id: 'field-practice-1',
     sectionId: 'field',
-    presentationTitle: 'A hazy picture, a still tool',
+    presentationTitle: 'Low-contrast image, stationary tool',
     situation:
-      "A peripheral airway is being worked under live fluoroscopy with the C-arm frontal. The picture is even and low in contrast — the sheath markings blend into the lung behind them — and it is not grainy. The frame includes the shoulder and the upper abdomen alongside the working segment, the unit is on the room's default low-dose fluoroscopy setting, and the room's standard preset and display window are in use and unchanged. The tool is stationary and the target sits mid-screen.",
+      'A peripheral airway is being worked under live fluoroscopy in the frontal projection. The image is uniformly low in contrast, with the sheath markings blending into the lung behind them, and it is not noisy. The field includes the shoulder and the upper abdomen as well as the working segment, the unit is on the room’s default low-dose fluoroscopy setting, and the standard preset and window/level are unchanged. The tool is stationary and the lesion is mid-screen.',
   },
   {
     id: 'field-practice-2',
     sectionId: 'field',
-    presentationTitle: 'A tight view and a lost landmark',
+    presentationTitle: 'Narrow field, lost landmark',
     situation:
-      'The team stops to re-orient the sheath in the thorax before going further. The screen holds the last frame: the sheath tip and a short length of airway, sharp, with little grain, and nothing beyond a plain narrow border that carries no blade edge or collimator graphic to read. The pedal is off. Nobody at the table remembers whether the shutters were brought in earlier or the picture was cropped at the workstation.',
+      'The team pauses to re-orient the sheath before going further. The last-image-hold frame shows the sheath tip and a short length of airway, sharp and with little noise, inside a plain narrow border with no collimator blade edge or graphic. Fluoroscopy is off. Nobody at the table remembers whether the field was collimated earlier or the image was electronically cropped at the workstation.',
   },
   {
     id: 'time-practice-1',
     sectionId: 'time',
-    presentationTitle: 'The tool jumps as it advances',
+    presentationTitle: 'Stepwise tool motion during advancement',
     situation:
-      'A sheath is being advanced toward a peripheral target under live fluoroscopy. As it moves, the tool shows up at a series of separated positions rather than gliding forward. Images held still from that run show a clean tool edge and a well-defined tip. When the hand stops on the advance, the picture settles at the same moment.',
+      'A sheath is being advanced toward a peripheral lesion under live fluoroscopy. As it moves, it appears at a series of separated positions rather than moving smoothly. Last-image-hold frames from that run show a sharp tool edge and a well-defined tip. When the hand stops advancing, the image settles at the same moment.',
   },
   {
     id: 'two-dimensional-practice-1',
     sectionId: 'two-dimensional',
-    presentationTitle: 'Tissue on one side, snow on the other',
+    presentationTitle: 'Eccentric radial EBUS view',
     situation:
-      'A solid peripheral target in the right lower lobe was planned on the CT, and the sheath has been advanced along the planned airway. The radial probe at the far end of the sheath shows tissue filling one side of its picture and a uniform snowstorm on the other. Fluoroscopy from a frontal and an oblique direction shows the sheath tip in the branch marked on the plan, with no separately visible lesion. Nothing has been sampled.',
+      'A solid peripheral lesion in the right lower lobe was planned on the CT, and the sheath has been advanced along the planned airway. The radial EBUS view shows lesional-appearing tissue on one side of the probe and aerated-lung snowstorm on the other. Frontal and oblique fluoroscopic projections show the sheath tip in the planned branch, with no separately visible lesion. Nothing has been sampled.',
   },
   {
     id: 'dts-acquisition-practice-1',
     sectionId: 'dts-acquisition',
-    presentationTitle: 'The tip sits over the nodule',
+    presentationTitle: 'Apparent tool–target overlap',
     situation:
-      'A faint nodule in the right lower lobe sits under the catheter tip on the frontal image, and the two stay together while the tool is held still. A rib edge crosses the target on that same image. With the robot docked and the drapes up, the arm still angles a short way either side of frontal, and within that arc the console will take single images at chosen angles, a short series taken across it, or the frontal image again in a finer detector mode. Grain and brightness are acceptable, the field is closed around the target, and the anesthesia team can hold ventilation briefly for whichever of the three is taken.',
+      'A faint nodule in the right lower lobe lies under the catheter tip on the frontal projection, and the two stay together while the tool is held still. A rib edge crosses the lesion on the same image. With the robot docked and the drapes up, the C-arm can rotate only a limited arc either side of frontal, and within that arc the system can acquire single images at chosen angles, a DTS acquisition across the arc, or the frontal projection again in a finer detector mode. Noise and brightness are acceptable, the field is collimated around the lesion, and anesthesia can provide a brief ventilation pause for whichever is chosen.',
   },
   {
     id: 'dts-acquisition-practice-2',
     sectionId: 'dts-acquisition',
-    presentationTitle: 'Bright on the same plane',
+    presentationTitle: 'DTS depth mismatch',
     situation:
-      "A needle has been advanced toward a peripheral nodule in the right lower lobe, and one sweep has been taken across the arc the arm travels, with the tool still and the breath held throughout. Stepping the planes it built: the nodule comes up brightest on one of them, the needle tip is bright on that same plane, and so is a vessel crossing the region. The vessel holds its brightness through the neighbouring planes and never narrows onto one. The tip's own brightness peaks on a plane slightly shallower than the nodule's.",
+      'A needle has been advanced toward a peripheral nodule in the right lower lobe, and one DTS acquisition has been obtained across the available arc, with the tool still and the breath held throughout. Scrolling the reconstructed planes, the nodule is brightest on one plane, the needle tip is bright on that same plane, and so is a vessel crossing the region. The vessel stays bright through the neighbouring planes and never narrows onto one. The tip’s own brightness peaks on a plane slightly shallower than the nodule’s.',
   },
   {
     id: 'dts-interpretation-practice-1',
     sectionId: 'dts-interpretation',
-    presentationTitle: 'Reading the second monitor',
+    presentationTitle: 'Catheter absent from the DTS planes',
     situation:
-      'A robotic catheter was parked in a subsegmental airway of the right lower lobe before the sweep was run and has not been moved since; live fluoroscopy resolves its distal end cleanly. The second monitor carries a reconstructed view of that region, where the lesion holds fine lobulated margins much as it did on the planning scan open on the adjacent display. The operator scrolls the reconstructed planes through the airway and through the lesion, and the catheter is on none of them. The gantry and the table have not moved since the sweep.',
+      'A robotic catheter was parked in a subsegmental airway of the right lower lobe before the DTS acquisition and has not moved since; live fluoroscopy shows its distal end clearly. The second monitor shows a reconstructed view of that region, where the lesion has fine lobulated margins much as on the planning CT open on the adjacent display. Scrolling the reconstructed planes through the airway and the lesion, the catheter appears on none of them. The C-arm and the table have not moved since the acquisition.',
   },
   {
     id: 'cbct-acquisition-practice-1',
     sectionId: 'cbct-acquisition',
-    presentationTitle: 'The volume in hand before sampling',
+    presentationTitle: 'CBCT truncation',
     situation:
-      'The table was moved to give the robot arm room, and the spin was run from that position. On the reconstructed slices the catheter and the needle are sharp, edges are single throughout, and the needle sits against the near part of the nodule. The far side of the nodule runs up to the upper edge of the reconstruction and carries on beyond it.',
+      'The table was moved to give the robotic arm room, and the CBCT spin was acquired from that position. On the reconstructed images the catheter and needle are sharp, edges are single throughout, and the needle lies against the near part of the nodule. The far side of the nodule runs to the upper edge of the reconstruction volume and continues beyond it.',
   },
   {
     id: 'fixed-suite-practice-1',
     sectionId: 'fixed-suite',
-    presentationTitle: 'After the needle was repositioned',
+    presentationTitle: 'Needle repositioned under an overlay',
     situation:
-      'You are in an installed cone-beam suite. A spin earlier in the case defined the nodule, and the room carries that contour onto the images it displays, live fluoroscopy included; the live image is up in the projection the case has been working in. The needle has since been repositioned, and the team wants to know where its sampling end sits against the nodule. The console holds the presets it always holds: the fluoroscopic modes the case has been using, and chest studies that turn a full orbit around the patient.',
+      'In a fixed C-arm CBCT suite, a spin earlier in the case defined the nodule, and the system projects that contour onto the images it displays, live fluoroscopy included; the live image is in the projection the case has been using. The needle has since been repositioned, and the team wants to know where its sampling end lies relative to the nodule. The console offers the fluoroscopy modes in use and the CBCT protocols for a full spin.',
   },
   {
     id: 'mobile-suite-practice-1',
     sectionId: 'mobile-suite',
-    presentationTitle: 'The first spin in this room',
+    presentationTitle: 'Banding artifact on the first spin',
     situation:
-      "The mobile scanner has been wheeled into the bronchoscopy room and its first rotational acquisition is up on the workstation. Dark and bright bands fan across the reconstructed slices, and the nodule margin breaks apart where they cross it. The patient is on the room's own procedure table, its side rail raised and an armboard bracket fitted to that rail, with the monitoring lines running off the chest and hooked over the same rail. The arc completed its full sweep without striking any of it.",
+      'The mobile CBCT scanner has been brought into the bronchoscopy room, and its first spin is on the workstation. Alternating dark and bright bands fan across the reconstructed images, and the nodule margin breaks up where they cross it. The patient is on the room’s own procedure table with its side rail raised and an armboard bracket fitted to the rail, and the monitoring lines run off the chest and hook over the same rail. The C-arm completed its full spin without striking any of it.',
   },
   {
     id: 'tool-confirmation-practice-1',
     sectionId: 'tool-confirmation',
-    presentationTitle: 'Metal that comes and goes',
+    presentationTitle: 'Needle fragments on axial images',
     situation:
-      'A rotational acquisition has finished and the volume is open on the review monitor. A side-window needle has been advanced out of the catheter, and nothing has been moved since the acquisition. The target outline is visible on the images in front of the team. As they scroll the axial images, a short bright piece of metal appears on a few consecutive images and is gone above and below them, and on each of those it stops short of the target outline. The question in the room is whether the needle has reached far enough.',
+      'A CBCT spin has finished and the volume is open on the review monitor. A needle with a side-cutting window has been advanced out of the catheter, and nothing has moved since the acquisition. The lesion outline is visible on the images. Scrolling the axial images, a short bright segment of metal appears on a few consecutive images and disappears above and below them, and on each of those images it stops short of the lesion outline. The question is whether the needle has advanced far enough.',
   },
   {
     id: 'changing-anatomy-practice-1',
     sectionId: 'changing-anatomy',
-    presentationTitle: 'The second volume looks different',
+    presentationTitle: 'New opacity on the repeat CBCT',
     situation:
-      'A peripheral nodule has been sampled once and the needle is now withdrawn into the sheath. A small amount of blood is suctioned and then clears. A repeat rotational acquisition shows a soft, ill-defined region around the nodule that was absent on the first volume, and the stored contour from that volume still sits on the earlier border. Ventilation settings have not been changed and oxygenation and hemodynamics are stable; no adjustment was made between the two acquisitions.',
+      'A peripheral nodule has been sampled once and the needle is withdrawn into the sheath. A small amount of blood is suctioned and clears. A repeat CBCT spin shows a soft, ill-defined opacity around the nodule that was absent on the first volume, and the stored contour from that volume still sits on the earlier border. Ventilator settings have not changed, oxygenation and hemodynamics are stable, and nothing was adjusted between the two acquisitions.',
   },
   {
     id: 'staff-protection-practice-1',
     sectionId: 'staff-protection',
-    presentationTitle: 'A steep lateral at the bedside',
+    presentationTitle: 'Where to stand for a lateral projection',
     situation:
-      "A steep lateral projection is set up for a peripheral airway task. The X-ray tube sits on the near side of the table and the flat detector on the far side. A fellow steadying the bronchoscope stands beside the tube housing in an apron and thyroid shield, hands well clear of the irradiated field. The room's shielding plan lists three standing positions for this setup — beside the housing, farther back on the same side, and across on the detector side — and the bronchoscope can be steadied from any of them.",
+      'A steep lateral projection is set up for a peripheral airway task. The X-ray tube is on the near side of the table and the flat-panel detector on the far side. A fellow steadying the bronchoscope stands beside the tube housing in an apron and thyroid shield, hands well outside the irradiated field. The room’s shielding plan lists three standing positions for this setup, beside the tube housing, farther back on the same side, and across on the detector side, and the bronchoscope can be steadied from any of them.',
   },
   {
     id: 'dose-reporting-practice-1',
     sectionId: 'dose-reporting',
-    presentationTitle: 'A notification partway through the case',
+    presentationTitle: 'Dose notification during the case',
     situation:
-      'Partway through a peripheral nodule procedure, the console posts a notification tied to the cumulative reference air kerma line, which it reports in mGy. The summary panel prints that line beside a kerma–area product in Gy·cm² and a separate line for the rotational acquisitions. The beam has worked from several angles, including steep obliques. Sampling has not begun, and more imaging is planned.',
+      'Partway through a peripheral nodule procedure, the console posts a notification tied to the cumulative reference air kerma, reported in mGy. The dose summary lists it beside the kerma–area product in Gy·cm² and a separate line for the CBCT spins. Fluoroscopy has been used from several angles, including steep obliques. Sampling has not begun, and more imaging is planned.',
   },
 ]
 

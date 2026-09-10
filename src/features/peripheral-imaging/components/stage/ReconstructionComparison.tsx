@@ -68,7 +68,7 @@ function AccountCard({
         </dd>
         <dt>What comes out</dt>
         <dd>{account.comesOut}</dd>
-        <dt>How much of it was measured</dt>
+        <dt>How much of it was acquired</dt>
         <dd>{account.provenance}</dd>
       </dl>
       {dense ? null : (
@@ -111,6 +111,9 @@ function AccountCard({
  * orbit's is measured throughout and stops at its edge, the sweep's is measured across and supplied
  * along the beam.
  */
+/** Server and client must print identical coordinates, or hydration reports a mismatch. */
+const round2 = (value: number) => Math.round(value * 100) / 100
+
 export function ReconstructionDiagram({
   account,
 }: {
@@ -120,18 +123,18 @@ export function ReconstructionDiagram({
   const titleId = `${base}-title`
   const limited = account === 'tomosynthesis'
   const label = limited
-    ? 'A short arc of source positions on one side of the patient, and the block it returns: measured across the image, and supplied along the beam by an older scan or a model.'
-    : 'Source positions all the way around the patient, and the block the orbit returns: measured in every direction, and stopping at the edge of the volume it covered.'
+    ? 'A limited arc of source positions on one side of the patient, and the volume it returns: acquired across the image, and inferred along the beam from an older scan or a model.'
+    : 'Source positions all the way around the patient, and the volume the CBCT spin returns: acquired in every direction, and truncated at the edge of the reconstruction volume.'
 
   // Source positions: a narrow fan above, or a full ring.
   const marks = limited
     ? Array.from({ length: 7 }, (_, i) => {
         const angle = (-30 + (i * 60) / 6) * (Math.PI / 180)
-        return [72 + Math.sin(angle) * 52, 74 - Math.cos(angle) * 52] as const
+        return [round2(72 + Math.sin(angle) * 52), round2(74 - Math.cos(angle) * 52)] as const
       })
     : Array.from({ length: 16 }, (_, i) => {
         const angle = (i * 2 * Math.PI) / 16
-        return [72 + Math.sin(angle) * 52, 74 - Math.cos(angle) * 52] as const
+        return [round2(72 + Math.sin(angle) * 52), round2(74 - Math.cos(angle) * 52)] as const
       })
 
   // The returned block, shared by both so the drawing never implies different output shapes.
@@ -247,7 +250,7 @@ export function ReconstructionDiagram({
           fillOpacity={limited ? 0.3 : 0.18}
         />
         <text x={legendX + 15} y={122.4}>
-          {limited ? 'measured, across the image' : 'measured, every direction'}
+          {limited ? 'acquired, across the image' : 'acquired, every direction'}
         </text>
         <rect
           x={legendX}
@@ -262,7 +265,7 @@ export function ReconstructionDiagram({
           strokeDasharray={limited ? '3 2.5' : undefined}
         />
         <text x={legendX + 15} y={135.4}>
-          {limited ? 'supplied, along the beam' : 'nothing outside this edge'}
+          {limited ? 'inferred, along the beam' : 'truncated at this edge'}
         </text>
       </g>
     </svg>

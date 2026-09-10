@@ -76,9 +76,9 @@ export function imagingStageOf(lesson: Lesson): CriticalCareCurriculumStage {
   return stage
 }
 
-/** The Learn landing's verbs, in order. */
+/** The clinical sequence the pathway is grouped by, in order. */
 export const PERIPHERAL_IMAGING_ARC_SENTENCE =
-  'Ask the question, follow the beam, add a dimension, verify the tool, protect the room.'
+  'Plan, localize, optimize, confirm, sample, reconfirm.'
 
 export const peripheralImagingPathway: LearningPathway = {
   moduleId: PERIPHERAL_IMAGING_MODULE_ID,

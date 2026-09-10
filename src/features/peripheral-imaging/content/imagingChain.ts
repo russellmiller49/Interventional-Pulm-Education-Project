@@ -2,12 +2,15 @@ import type { SourceId } from '../types'
 import { imagingLearnerCopyErrors } from './learnerCopy'
 
 /**
- * The spine: the imaging chain, six stops, drawn once in the suite scene and lit one per section.
+ * The physics layer: how a fluoroscopic image is formed, in six components drawn once in the suite
+ * scene and highlighted per section.
  *
- * Every term the course uses is introduced at its stop, never as a list. The stop's plain name
- * is what a learner says; the analogy is retrieval glue; the checklist is what the later sections
- * reference; the "you are here" caption is the only place a stop number is printed. Radial EBUS
- * is a second, acoustic chain with the same roles, worded on the stops that change.
+ * This is the explanatory layer beneath the clinical sequence (plan, localize, optimize, confirm,
+ * sample, reconfirm), not the vocabulary a learner is asked to use at the table. Each component is
+ * named in the terms clinicians and technologists use; the precise statement comes first, and the
+ * analogy is a secondary aid, never the name of the concept. The caption is the only place a
+ * component number is printed. Radial EBUS forms its image acoustically, with the same roles
+ * worded on the components that change.
  */
 export const chainStopIds = [
   'source',
@@ -45,87 +48,87 @@ export const CHAIN_STOPS: readonly ChainStop[] = Object.freeze([
   {
     id: 'source',
     number: 1,
-    title: 'The source',
-    plainName: 'the X-ray tube',
+    title: 'X-ray tube',
+    plainName: 'the X-ray tube and generator',
     analogy:
-      'A torch you cannot turn up by hand. The machine chooses how brightly it burns, and tells you afterwards.',
+      'Think of a light on automatic brightness: the picture stays even while the output behind it changes.',
     precise:
-      'The tube sets photon energy and photon quantity over each pulse. Automatic exposure regulation changes them to hold the detector signal, so the dose readout, not the picture, is where you learn what it did.',
-    checklistLabel: 'What the source decides',
+      'The tube and generator set beam energy (kV) and photon output (mA and pulse duration) for each pulse. Automatic exposure regulation adjusts them to hold the detector signal, so image brightness does not report radiation output; the dose-rate and cumulative dose readouts do.',
+    checklistLabel: 'What the tube and generator set',
     checklist: [
-      'energy — how penetrating the beam is',
-      'quantity — how many photons each pulse carries',
-      'pulses — how often it fires',
-      'the machine chooses; the readout reports',
+      'kV — beam energy and penetration',
+      'mA and pulse width — photon output per pulse',
+      'pulse rate — how often a new image is acquired',
+      'automatic exposure regulation chooses; the dose readout reports',
     ],
     acoustic: {
-      plainName: 'the transducer at the probe tip',
+      plainName: 'the radial EBUS transducer at the probe tip',
       precise:
-        'A rotating crystal sends sound outward and listens for what comes back. No X-rays are involved; the source is inside the airway.',
+        'A rotating ultrasound transducer emits sound and receives the returning echoes. No ionizing radiation is involved, and the source sits inside the airway.',
     },
     sourceIds: ['tg125', 'tg272'],
   },
   {
     id: 'beam',
     number: 2,
-    title: 'The beam',
-    plainName: 'the cone between the tube and the detector',
+    title: 'Beam geometry',
+    plainName: 'the collimated X-ray beam between the tube and the detector',
     analogy:
-      'A lamp casting a shadow. Where it is aimed, how wide it opens and how far away it stands all change the shadow before anything else does.',
+      'Think of a lamp casting a shadow: the angle, the opening and the distances change the shadow before anything else does.',
     precise:
-      'Angle, collimation, filtration and the source–object–detector distances shape the cone. Each detector pixel collects one ray, and everything along that ray lands on the same pixel.',
-    checklistLabel: 'What the beam sets',
+      'The C-arm projection (obliquity and cranial or caudal angulation), collimation, filtration and the source–object–detector distances shape the beam. A single projection collapses everything along each X-ray path onto one detector location, so structures at different depths superimpose.',
+    checklistLabel: 'What beam geometry sets',
     checklist: [
-      'aim — obliquity and cranial or caudal tilt',
-      'width — the collimator blades',
-      'distance — source to patient to detector',
-      'one ray, one pixel',
+      'projection — C-arm obliquity and cranial or caudal angulation',
+      'collimation — the irradiated field',
+      'geometry — source-to-patient and patient-to-detector distance',
+      'a single projection collapses depth',
     ],
     acoustic: {
-      plainName: 'the sound beam',
+      plainName: 'the ultrasound beam',
       precise:
-        'A narrow beam swept through a full circle, a few millimetres deep. It shows what is around the probe, not what is ahead of a tool.',
+        'A narrow ultrasound beam rotated through a full circle around the probe. It shows what surrounds the probe tip, not the path a later biopsy tool will take.',
     },
     sourceIds: ['tg272', 'setser'],
   },
   {
     id: 'patient',
     number: 3,
-    title: 'The patient',
-    plainName: 'the anatomy the beam crosses',
+    title: 'Patient anatomy',
+    plainName: 'the anatomy in the X-ray path',
     analogy:
-      'A stack of glass slides held up to the light. What overlaps, what moves and when the picture was taken decide what you can make out.',
+      'Think of glass slides stacked against a light: what overlaps, what moves and when the picture was taken decide what you can make out.',
     precise:
-      'Attenuation, superimposition and motion happen here, and the anatomy has a timestamp: inflation, position and collapse can differ from the planning CT. The patient is also where scatter is born.',
+      'Attenuation, superimposition and motion happen here. The intraprocedural lung may differ from the planning CT in lung volume, position, atelectasis and deformation — CT-to-body divergence. The patient is also the principal source of scatter radiation.',
     checklistLabel: 'What to ask about the patient',
     checklist: [
-      'what overlaps the target on this ray',
-      'what is moving, and how fast',
-      'when this anatomy was last measured',
-      'what glows back — scatter',
+      'what is superimposed on the lesion in this projection',
+      'respiratory and cardiac motion',
+      'CT-to-body divergence since the planning CT',
+      'scatter radiation — it originates in the patient',
     ],
     acoustic: {
       plainName: 'the tissue around the probe',
       precise:
-        'Aerated lung scatters sound into snow; solid tissue lets it through and reflects at its edges. Collapsed lung can look like solid tissue.',
+        'Aerated lung scatters ultrasound into a bright, snowstorm-like pattern; solid tissue transmits it and reflects at its margins. Atelectatic lung can mimic a solid lesion.',
     },
     sourceIds: ['setser', 'vespa', 'ilocate'],
   },
   {
     id: 'detector',
     number: 4,
-    title: 'The detector',
-    plainName: 'the flat panel that measures the image',
+    title: 'Flat-panel detector',
+    plainName: 'the flat-panel detector',
     analogy:
-      'A camera sensor. It measures a field, at a sampling pitch, so many times per second, and nothing outside the field or between the frames is measured.',
+      'Think of a camera sensor: it records one field, at one sampling pitch, a set number of times per second, and nothing outside the field or between frames.',
     precise:
-      'The panel’s field, pixel sampling and frame rate decide what is measured. The kerma–area product is defined in the beam on its way here; the panel reports what it received.',
-    checklistLabel: 'What the detector measured',
+      'The detector field of view, pixel sampling (including binning) and acquisition rate decide what is recorded. The kerma–area product is defined in the beam on its way here; the panel records what it receives.',
+    checklistLabel: 'What the detector records',
     checklist: [
-      'field — what the panel saw',
-      'sampling — pixels and binning',
-      'frame rate — how often',
-      'what was measured, not what is displayed',
+      'field of view — what the panel sees',
+      'sampling — pixel size and binning',
+      'acquisition rate — how often a new frame is recorded',
+      'what was acquired, not what is displayed',
     ],
     sourceIds: ['tg272', 'aapm12'],
   },
@@ -133,16 +136,16 @@ export const CHAIN_STOPS: readonly ChainStop[] = Object.freeze([
     id: 'reconstruction',
     number: 5,
     title: 'Reconstruction and registration',
-    plainName: 'what the computer adds after the measurement',
+    plainName: 'DTS or CBCT reconstruction, and registration of prior imaging',
     analogy:
-      'A sculptor working from a few photographs. The fewer the angles and the older the photographs, the more of the sculpture is guesswork.',
+      'Think of a sculptor working from a few photographs: the fewer the angles and the older the photographs, the more of the result is inferred.',
     precise:
-      'Tomosynthesis sweeps a limited arc and cone-beam CT a wide orbit; both estimate a volume from projections. Registration maps a prior CT or a segmentation onto the current image. Each adds information the measurement did not contain.',
+      'Digital tomosynthesis reconstructs planes from a limited-angle acquisition; CBCT reconstructs a volume from a rotational acquisition. Registration aligns a planning CT or a segmentation with the current image. Each can add content the current projections did not directly acquire.',
     checklistLabel: 'What to ask about a reconstruction',
     checklist: [
-      'how many angles, over how wide an arc',
-      'what was assumed, or borrowed from a prior',
-      'how old the prior is',
+      'the acquisition arc and the number of projections',
+      'what a prior CT or a model contributed',
+      'when the prior was acquired',
       'what the current projections actually show',
     ],
     sourceIds: ['saad', 'setser', 'pritchett'],
@@ -150,23 +153,23 @@ export const CHAIN_STOPS: readonly ChainStop[] = Object.freeze([
   {
     id: 'display',
     number: 6,
-    title: 'Display and decision',
-    plainName: 'the monitor and the note you write',
+    title: 'Display and interpretation',
+    plainName: 'the monitor and the procedure record',
     analogy:
-      'The monitor and the note. Zoom, window and overlay change what you see without changing what was measured, and the note is where the evidence is named.',
+      'Think of enlarging a photograph: zoom, window and overlay change what you see, not what was acquired.',
     precise:
-      'Zoom, windowing and overlays are display operations. The decision names what was measured, what was inferred, and what remains uncertain.',
+      'Display zoom, window/level and overlays are display operations. Interpretation, and the procedure note, should state what was directly visualized, what was inferred, and what remains uncertain.',
     checklistLabel: 'What the display can and cannot do',
     checklist: [
-      'zoom shows existing pixels larger',
-      'window changes contrast, not information',
-      'an overlay is a projection of a model',
-      'the note names measured, inferred and uncertain',
+      'display zoom enlarges acquired pixels',
+      'window/level changes contrast, not acquired information',
+      'an overlay is a registered projection of an earlier acquisition',
+      'document what was visualized and what was inferred',
     ],
     acoustic: {
-      plainName: 'the radial image',
+      plainName: 'the radial EBUS image',
       precise:
-        'A circle around the probe. Tissue all the way round, tissue on one side, or no tissue at all are three different answers, and none of them says where a later tool will go.',
+        'A 360-degree image around the probe: a concentric view, with lesion surrounding the probe; an eccentric view, with lesion to one side; or no lesional pattern. None of them establishes where a later biopsy tool will go.',
     },
     sourceIds: ['tg272', 'wabip'],
   },
@@ -184,11 +187,11 @@ export function chainStopNumber(id: ChainStopId): number {
   return chainStop(id).number
 }
 
-/** "You are at: the detector. Stop 4 of 6." — the one place a stop number is printed. */
+/** "Image formation · Flat-panel detector (4 of 6)." — the one place a component number is printed. */
 export function chainCaption(lit: ChainStopId | null): string {
-  if (!lit) return 'The chain map is not pointing anywhere on this step.'
+  if (!lit) return 'Image formation: no component is highlighted on this step.'
   const stop = chainStop(lit)
-  return `You are at: ${stop.title.toLowerCase()}. Stop ${stop.number} of ${CHAIN_STOPS.length}.`
+  return `Image formation · ${stop.title} (${stop.number} of ${CHAIN_STOPS.length}).`
 }
 
 export function validateImagingChain(): readonly string[] {

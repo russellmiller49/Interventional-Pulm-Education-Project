@@ -59,7 +59,7 @@
   background: var(--lm-v2-panel, #fff);
 }
 
-.groupCard[data-stage='integration'] {
+.groupCard[data-pathway-phase='cases'] {
   border-style: dashed;
 }
 

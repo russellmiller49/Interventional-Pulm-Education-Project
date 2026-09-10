@@ -71,7 +71,7 @@ export function ImagingCaseActivity({ caseId }: { readonly caseId: string }) {
       </div>
 
       <section className={styles.teachingCard} data-case-situation>
-        <p className={styles.kicker}>What you have</p>
+        <p className={styles.kicker}>The situation</p>
         <p>{microCase.situation}</p>
       </section>
 

@@ -133,7 +133,7 @@ function Harness() {
           answer
             ? {
                 name: 'preview',
-                legend: 'Choose a stop on the imaging chain',
+                legend: 'Choose a component on the image-formation map',
                 choices: [
                   { id: 'beam', stop: 'beam', label: 'The beam' },
                   { id: 'detector', stop: 'detector', label: 'The detector' },

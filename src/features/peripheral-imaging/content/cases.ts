@@ -34,38 +34,38 @@ const CASE_DEFINITIONS: readonly {
 }[] = [
   {
     id: 'case-1',
-    presentationTitle: 'Near the pleura, nothing convincing',
+    presentationTitle: 'Lesion not visualized near the pleura',
     pairedSectionId: 'two-dimensional',
   },
-  { id: 'case-2', presentationTitle: 'Small on the monitor', pairedSectionId: 'field' },
+  { id: 'case-2', presentationTitle: 'Needle too small on the monitor', pairedSectionId: 'field' },
   {
     id: 'case-3',
-    presentationTitle: 'A reconstruction that resembles the reference',
+    presentationTitle: 'Evidence for prior-aided DTS',
     pairedSectionId: 'dts-interpretation',
   },
   {
     id: 'case-4',
-    presentationTitle: 'After the robot docked',
+    presentationTitle: 'Collision check after robot docking',
     pairedSectionId: 'cbct-acquisition',
   },
   {
     id: 'case-5',
-    presentationTitle: 'Tip beyond, window within',
+    presentationTitle: 'Needle tip beyond the lesion',
     pairedSectionId: 'tool-confirmation',
   },
   {
     id: 'case-6',
-    presentationTitle: 'The hold is not tolerated',
+    presentationTitle: 'Breath hold not tolerated',
     pairedSectionId: 'changing-anatomy',
   },
   {
     id: 'case-7',
-    presentationTitle: 'Where to stand for the spin',
+    presentationTitle: 'Staff position during a CBCT spin',
     pairedSectionId: 'staff-protection',
   },
   {
     id: 'case-8',
-    presentationTitle: 'Two numbers on the dose report',
+    presentationTitle: 'KAP components on the dose report',
     pairedSectionId: 'dose-reporting',
   },
 ]

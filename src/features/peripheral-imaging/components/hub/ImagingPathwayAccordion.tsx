@@ -20,7 +20,7 @@ import { usePeripheralImagingRecord } from '../usePeripheralImagingRecord'
 /**
  * One map of the pathway, shared by the hub and the Learn landing.
  *
- * The stages as native `<details>`, one per contiguous run of the canonical order; only the group
+ * The clinical phases as native `<details>`, one per contiguous run of the canonical order; only the group
  * holding the learner's next section opens on load. Every count in a summary is derived from the
  * registry. Section chips carry the worked state in words as well as in state. Flattening the
  * groups reproduces the canonical order, and the "Up next" chip is the same section the Continue
@@ -45,11 +45,11 @@ export function ImagingPathwayAccordion({
   return (
     <ol className={styles.groupList} id={id} data-pathway-accordion>
       {groups.map((group, index) => (
-        <li key={`${group.stage}-${index}`}>
+        <li key={group.phase}>
           <details
             className={styles.groupCard}
             open={index === openIndex}
-            data-pathway-stage={group.stage}
+            data-pathway-phase={group.phase}
             data-group-index={index}
           >
             <summary className={styles.groupSummary}>

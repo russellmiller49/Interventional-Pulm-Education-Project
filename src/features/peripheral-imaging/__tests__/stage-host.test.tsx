@@ -320,7 +320,7 @@ describe('a section answered on the chain, then walked', () => {
       'data-walk-stop',
       walk.interaction.stops[0],
     )
-    expect(nowPrimary()?.textContent).toMatch(/Next stop/)
+    expect(nowPrimary()?.textContent).toMatch(/Next component/)
     for (let stop = 0; stop < walk.interaction.stops.length - 1; stop += 1) {
       clickPrimary()
       expect(document.querySelector('[data-walk-stop]')).toHaveAttribute(
@@ -331,12 +331,12 @@ describe('a section answered on the chain, then walked', () => {
     expect(nowPrimary()?.textContent).toMatch(/Finish the walk/)
     clickPrimary()
     // Every stop visited, but the beam never moved: the walk waits.
-    expect(nowStatus()).toMatch(/Every stop visited/)
+    expect(nowStatus()).toMatch(/Every component visited/)
     expect(goalStates()).toEqual(['false'])
     expect(nowPrimary()).toBeNull()
     setRange('orbit', 20)
     expect(goalStates()).toEqual(['true'])
-    expect(nowStatus()).toMatch(/the beam moved once/)
+    expect(nowStatus()).toMatch(/the C-arm moved once/)
     clickPrimary()
     settle()
     expect(lesson.steps[lesson.predictionStepIndex + 2].interaction.kind).toBe('explain')

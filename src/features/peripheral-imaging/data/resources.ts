@@ -1,52 +1,56 @@
 export const DECISION_GUIDE = [
   {
     finding: 'The tool is visible; the lesion is uncertain.',
-    question: 'Is current target identity established?',
+    question: 'Has the current lesion location been established?',
     action:
-      'Review current localization, coverage and aeration; choose complementary imaging if needed.',
+      'Reconfirm the lesion on intraprocedural imaging, checking coverage and atelectasis; add radial EBUS, DTS or CBCT as needed.',
     lesson: 'two-dimensional',
   },
   {
-    finding: 'A structure overlaps the target.',
+    finding: 'A structure is superimposed on the lesion.',
     question: 'Is this a projection problem?',
-    action: 'Use planning anatomy to choose another useful angle; recenter and assess output.',
+    action:
+      'Use the planning CT to choose another C-arm projection; recenter, recollimate and recheck the dose rate.',
     lesson: 'projection',
   },
   {
-    finding: 'The image is grainy or washed out.',
-    question: 'Is the limitation photon noise, scatter, or display?',
-    action: 'Assess beam field, task preset, geometry and display before escalating exposure.',
+    finding: 'The image is noisy or low in contrast.',
+    question: 'Is the limitation quantum noise, scatter or the display?',
+    action:
+      'Collimate, then review the fluoroscopy preset, patient thickness, projection and window/level before increasing dose.',
     lesson: 'signal',
   },
   {
     finding: 'Edges duplicate or instruments lag.',
-    question: 'Is measurement inconsistent over time?',
-    action: 'Check motion, pulse duration/rate, processing and the agreed respiratory state.',
+    question: 'Is this motion, pulse timing or image lag?',
+    action: 'Check motion, pulse width and pulse rate, frame averaging and the agreed breath hold.',
     lesson: 'time',
   },
   {
     finding: 'A depth relationship remains uncertain.',
-    question: 'Which new measurement can resolve it?',
-    action: 'Use suitable current DTS or CBCT and interpret its validated limits.',
+    question: 'Which acquisition can resolve it?',
+    action:
+      'Obtain a sufficiently separated projection, a DTS acquisition or a CBCT spin, and interpret it within its validated limits.',
     lesson: 'dts-acquisition',
   },
   {
-    finding: 'A reconstructed tool overlaps the target.',
-    question: 'Which component, planes and acquisition state?',
-    action: 'Trace the actual sampling region in thin multiplanar views.',
+    finding: 'A reconstructed tool overlaps the lesion.',
+    question: 'Which part of the tool, which planes and which acquisition?',
+    action:
+      'Confirm the sampling window, jaws or active segment within the lesion on thin multiplanar reformats.',
     lesson: 'tool-confirmation',
   },
   {
-    finding: 'The anatomy or setup has changed.',
-    question: 'Does the previous evidence still apply?',
+    finding: 'The anatomy or the setup has changed.',
+    question: 'Does the earlier imaging still apply?',
     action:
-      'Reassess registration, target identity, tool position, coverage and clearance as relevant.',
+      'Repeat localization as needed: registration, lesion identity, tool position, coverage and clearance.',
     lesson: 'changing-anatomy',
   },
   {
-    finding: 'A dose number or alert appears.',
-    question: 'Which quantity, units and modes are included?',
-    action: 'Review whole-procedure indices and follow the local dose-management policy.',
+    finding: 'A dose index or dose notification appears.',
+    question: 'Which quantity, units and acquisition modes are included?',
+    action: 'Review whole-procedure dose indices and follow the local dose-management policy.',
     lesson: 'dose-reporting',
   },
 ]
@@ -54,123 +58,152 @@ export const DECISION_GUIDE = [
 export const GLOSSARY = [
   [
     '2D fluoroscopy',
-    'Successive X-ray projections. Each image combines information along the beam; temporal sampling depends on acquisition settings.',
+    'Pulsed X-ray projections acquired in real time. A single projection collapses depth; temporal resolution depends on pulse rate and pulse width.',
+  ],
+  [
+    'Acquisition magnification',
+    'A smaller detector field or magnification mode. On flat-panel systems it may change detector sampling, binning, processing and exposure; it is distinct from display zoom.',
   ],
   [
     'Augmented fluoroscopy',
-    'A projected segmentation or route from a prior volume displayed with a current fluoroscopic image.',
+    'Live fluoroscopy with a registered target contour or segmentation, derived from an earlier CT or CBCT, projected onto it. The contour is not live lesion imaging.',
   ],
   [
-    'Automatic exposure control',
-    'System-specific regulation of voltage, current, pulse width or other acquisition parameters to meet a detector/image target.',
+    'Automatic exposure regulation',
+    'System-specific adjustment of kV, mA, pulse width and filtration to hold the detector signal. Image brightness therefore does not report radiation output.',
   ],
   [
     'CBCT',
-    'Cone-beam computed tomography: multiple projections acquired over a rotational orbit and reconstructed into a volume.',
+    'Cone-beam CT: projections acquired during a rotational C-arm spin and reconstructed into a volume for multiplanar review.',
   ],
   [
     'Collimation',
-    'Physical restriction of the X-ray beam. It is different from cropping an already acquired image.',
+    'Physical restriction of the X-ray beam, which limits the irradiated field and scatter. Electronic cropping changes only the displayed image.',
+  ],
+  [
+    'Concentric / eccentric view',
+    'Radial EBUS patterns in which the lesion surrounds the probe (concentric) or lies predominantly to one side of it (eccentric).',
   ],
   [
     'CT-to-body divergence',
-    'Mismatch between prior CT anatomy and the patient during the procedure, including changes in inflation, position and local deformation.',
+    'Mismatch between planning CT anatomy and the intraprocedural lung, from differences in lung volume, position, atelectasis, deformation and bleeding.',
+  ],
+  [
+    'Display zoom',
+    'Enlargement of acquired pixels on the monitor. Applied to a stored image, it adds no X-ray information and no exposure.',
   ],
   [
     'DTS',
-    'Digital tomosynthesis: depth reconstruction from limited-angle projections, with direction-dependent resolution.',
+    'Digital tomosynthesis: planes reconstructed from a limited-angle acquisition. Depth resolution depends on angular coverage; some platforms add prior-CT or model-based reconstruction.',
   ],
   [
     'Effective dose',
     'A tissue-weighted population-protection quantity in sieverts. It is not an individual skin-dose measurement.',
   ],
   [
+    'Image lag',
+    'Persistence of earlier frames from recursive filtering or frame averaging, so moving structures trail or ghost.',
+  ],
+  [
     'Isocenter',
-    'The reference center of an imaging system’s rotation. Target positioning must match the supported acquisition volume.',
+    'The reference center of the C-arm’s rotation. The lesion must be positioned within the supported reconstruction volume.',
   ],
   [
     'KAP / DAP',
-    'Kerma–area product, commonly called dose–area product. Air kerma integrated over beam area, often in Gy·cm².',
+    'Kerma–area product, commonly called dose–area product: air kerma integrated over the beam area, often in Gy·cm².',
   ],
   [
     'Kₐ,r',
     'Cumulative reference air kerma, usually in mGy or Gy. An equipment-reference index, not the actual highest skin dose.',
   ],
   [
+    'Last-image hold',
+    'The final fluoroscopic frame retained on the monitor after the pedal is released, for review without further exposure.',
+  ],
+  [
+    'Lesion conspicuity',
+    'How distinctly a lesion stands out from surrounding anatomy; limited by superimposition, scatter and noise.',
+  ],
+  [
     'MIP',
-    'Maximum-intensity projection. A slab display selecting the highest values along viewing rays; can superimpose different depths.',
+    'Maximum-intensity projection: a slab display of the highest values along each viewing path. It can superimpose structures at different depths.',
   ],
   [
     'MPR',
-    'Multiplanar reformation: viewing a reconstructed volume in axial, coronal, sagittal or oblique planes.',
+    'Multiplanar reformation: review of a reconstructed volume in axial, coronal, sagittal or oblique planes.',
   ],
   [
     'Parallax',
-    'A change in relative projected positions when the viewpoint changes, providing information about depth.',
+    'A change in relative projected positions when the projection changes. If a stationary tool and a lesion separate after C-arm rotation, their earlier overlap was superimposition.',
   ],
   [
     'Peak skin dose',
-    'The highest absorbed dose to a skin region. Estimation needs spatial dose and geometry information.',
+    'The highest absorbed dose to any area of skin. Estimating it needs spatial dose and geometry information.',
   ],
   [
     'Pulse rate / pulse width',
-    'How frequently new exposures are acquired / how long each individual exposure lasts. Neither equals display refresh.',
+    'How often new images are acquired / how long each exposure lasts. Neither is the display refresh rate.',
   ],
   [
     'Radial EBUS',
-    'Local ultrasound imaging around a radial probe. The probe’s tissue relationship can differ from that of a subsequently exchanged sampling tool.',
+    'Ultrasound imaging around a radial probe: a concentric, eccentric or no lesional view. The probe is not the biopsy tool; after exchange, the tool may take a different path.',
   ],
   [
     'Registration',
-    'The spatial mapping between datasets or coordinate systems. Mechanical registration need not compensate for anatomical deformation.',
+    'The spatial mapping between datasets or coordinate systems. Equipment registration need not compensate for anatomical deformation.',
+  ],
+  [
+    'Superimposition',
+    'Overlap, in a single projection, of structures that lie at different depths.',
   ],
   [
     'Tool-in-lesion',
-    'An image-based localization claim that must specify the actual tool component, supporting planes and acquisition state. It is not a tissue diagnosis.',
+    'Imaging confirmation that the part of the biopsy tool that acquires tissue lies within the lesion. State the component, the planes and the acquisition; it is not a tissue diagnosis.',
   ],
 ] as const
 
 export const MODALITIES = [
   {
     name: '2D fluoroscopy',
-    information: 'Projection and observed movement',
-    use: 'Orientation, tool movement, angle-dependent relationships',
-    limit: 'Overlapping anatomy and unresolved depth',
+    information: 'Real-time projection',
+    use: 'Orientation, tool advancement and projection-dependent relationships',
+    limit: 'Superimposition and unresolved depth',
     lesson: 'two-dimensional',
   },
   {
     name: 'Radial EBUS',
-    information: 'Local acoustic tissue pattern',
-    use: 'Airway-relative tissue localization',
-    limit: 'Atelectasis mimics tissue; tool exchange changes the measurement',
+    information: 'Local ultrasound view: concentric, eccentric or none',
+    use: 'Lesion localization relative to the airway',
+    limit:
+      'Atelectasis can mimic a lesion; the biopsy tool may take a different path after probe exchange',
     lesson: 'two-dimensional',
   },
   {
     name: 'Digital tomosynthesis',
-    information: 'Limited-angle reconstructed depth',
-    use: 'Local reconstruction or navigation correction, depending on integration',
-    limit: 'Directional uncertainty and possible prior-CT influence',
+    information: 'Limited-angle reconstruction',
+    use: 'Local tomographic imaging or a navigation target update, depending on the platform',
+    limit: 'Depth resolution limited by angular coverage; possible prior-CT or model contribution',
     lesson: 'dts-acquisition',
   },
   {
     name: 'Fixed CBCT',
-    information: 'Current reconstructed volume',
-    use: 'Anatomy and multiplanar tool assessment in an installed suite',
-    limit: 'Motion, artifacts, room access and installation-specific integration',
+    information: 'Intraprocedural CBCT volume',
+    use: 'Lesion localization and multiplanar tool-in-lesion confirmation in an installed suite',
+    limit: 'Motion, metal artifact, room access and installation-specific integration',
     lesson: 'fixed-suite',
   },
   {
     name: 'Mobile CBCT',
-    information: 'Current reconstructed volume',
-    use: 'Volumetric assessment with a mobile acquisition workflow',
-    limit: 'Table/room compatibility and model-specific field and integration',
+    information: 'Intraprocedural CBCT volume',
+    use: 'Volumetric confirmation with a mobile acquisition workflow',
+    limit: 'Table and room compatibility; model-specific field of view and integration',
     lesson: 'mobile-suite',
   },
   {
     name: 'Augmented fluoroscopy',
-    information: 'Projected prior segmentation plus live image',
-    use: 'Guidance while registration and anatomical state remain valid',
-    limit: 'A contour is not independent live lesion sensing',
+    information: 'Registered prior segmentation on live fluoroscopy',
+    use: 'Guidance while registration and the anatomy remain valid',
+    limit: 'The contour is derived from an earlier acquisition, not live lesion imaging',
     lesson: 'changing-anatomy',
   },
 ]

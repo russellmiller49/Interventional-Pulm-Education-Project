@@ -34,7 +34,7 @@ export interface ImagingSectionSpec {
   /** "This section adds one idea to the last: …" — counted out loud. */
   readonly incrementSentence: string
   readonly prerequisiteSectionIds: readonly ImagingSectionId[]
-  /** The stops the chain map lights while this section runs. */
+  /** The components of image formation the map highlights while this section runs. */
   readonly chainStops: readonly ChainStopId[]
   readonly grammarRowIds: readonly string[]
   readonly act: ImagingSectionAct
@@ -90,13 +90,13 @@ const SHARED_BOUNDARY =
 export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze([
   {
     id: 'imaging-questions',
-    recognizeTitle: 'Four displays, one procedure',
+    recognizeTitle: 'Four displays in the bronchoscopy suite',
     newConcept:
-      'A navigation screen, an image, an ultrasound signal and a specimen answer four different questions.',
+      'Navigation, fluoroscopy, radial EBUS and the specimen each answer a different question.',
     objective:
-      'Distinguish the question each display in the suite answers from the questions it only appears to answer.',
+      'Distinguish the question each display answers from the questions it only appears to answer.',
     incrementSentence:
-      'This course asks one question first: what does this image establish? Everything after it is a different way of answering.',
+      'This course asks one question first: what are you trying to confirm? Everything after it is a different way of answering it.',
     prerequisiteSectionIds: [],
     chainStops: ['display'],
     grammarRowIds: [],
@@ -105,24 +105,27 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'no-control-change-the-question',
       states: allMonitoring,
       sentence:
-        'No control here. This section is about what each display can say before anything is changed.',
+        'No control here. This section is about what each display can confirm before anything is changed.',
     },
-    precommitDenyPatterns: [/map-relative/i, /hardware location/i],
+    precommitDenyPatterns: [
+      /needle[–-]lesion relationship (is|are) (not yet confirmed|unconfirmed)/i,
+      /reached the navigation target;/i,
+    ],
     modelBoundary:
-      'The displays in this section are authored descriptions of what each technology reports, not device output. ' +
+      'The displays in this section are authored descriptions of what each modality reports, not device output. ' +
       SHARED_BOUNDARY,
     capstoneCaseId: null,
     sourceIds: ['setser', 'confirm'],
   },
   {
     id: 'chain-walk',
-    recognizeTitle: 'The suite, running',
+    recognizeTitle: 'A working fluoroscopy suite',
     newConcept:
-      'An X-ray image is made along a chain of six stops, and each stop answers for one part of it.',
+      'A fluoroscopic image is formed across six components, each responsible for part of the image.',
     objective:
-      'Name the six stops between the tube and the decision, and say which stop each imaging term belongs to.',
+      'Name the six components of image formation, from the X-ray tube to interpretation, and place each imaging term at its component.',
     incrementSentence:
-      'This section adds one idea to the last: the image is made along a chain of six stops, and each stop answers for one part of it.',
+      'This section adds one idea to the last: the image is formed across six components, each responsible for part of it.',
     prerequisiteSectionIds: ['imaging-questions'],
     chainStops: ['source', 'beam', 'patient', 'detector', 'reconstruction', 'display'],
     grammarRowIds: ['overlap-depth'],
@@ -131,25 +134,30 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'this-control',
       states: oneOf('angle'),
       sentence:
-        'This control: the aim, moved once at the beam stop. The others wait for their sections.',
+        'This control: the C-arm projection, changed once at beam geometry. The others wait for their sections.',
     },
-    precommitDenyPatterns: [/one ray,? one pixel/i, /along (that|the) ray/i],
+    precommitDenyPatterns: [
+      /one ray,? one pixel/i,
+      /along (that|the) ray/i,
+      /superimposition arises/i,
+      /decided by beam geometry/i,
+    ],
     stopCardsBeforeCommit: false,
     modelBoundary:
-      'The suite is a teaching scene: a generic gantry over a CT-derived thorax, with cone geometry shared with the projection you see. ' +
+      'The suite is a teaching scene: a generic C-arm over a CT-derived thorax, with beam geometry shared with the projection you see. ' +
       SHARED_BOUNDARY,
     capstoneCaseId: null,
     sourceIds: ['tg272', 'setser'],
   },
   {
     id: 'good-image',
-    recognizeTitle: 'The console, before the first fault',
+    recognizeTitle: 'The C-arm console before troubleshooting',
     newConcept:
-      'Five things change the acquisition; the machine sets the exposure and the rest is monitoring.',
+      'Five controls change the acquisition or the display; automatic exposure regulation sets the exposure, and the rest is monitoring.',
     objective:
-      'Distinguish the five things you can change at the C-arm from the things the machine changes for you and the things that only change the display.',
+      'Distinguish the five fluoroscopy controls from the settings the system chooses and from operations that change only the display.',
     incrementSentence:
-      'This section adds one idea: of everything on the console, five things change the acquisition, and the rest is monitoring.',
+      'This section adds one idea: of everything on the console, five controls change the image, and the rest is monitoring.',
     prerequisiteSectionIds: ['chain-walk'],
     chainStops: ['source', 'beam', 'detector', 'display'],
     grammarRowIds: ['hidden-by-anatomy', 'small-on-screen'],
@@ -174,13 +182,13 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
   },
   {
     id: 'current-anatomy',
-    recognizeTitle: 'The map and the lung today',
+    recognizeTitle: 'The planning CT and the lung today',
     newConcept:
-      'The map was drawn at one moment; the lung has a timestamp of its own, and tracking can be exact while the map is stale.',
+      'The planning CT records one moment; the intraprocedural lung can differ from it even while navigation tracking is accurate.',
     objective:
-      'Distinguish a planning-map mismatch from loss of tracking or inadequate target coverage.',
+      'Distinguish CT-to-body divergence from navigation registration error and from inadequate imaging coverage.',
     incrementSentence:
-      'This section adds one idea: the map was drawn at one moment, and the lung has a timestamp of its own.',
+      'This section adds one idea: the planning CT records one moment, and the lung during the procedure can differ from it.',
     prerequisiteSectionIds: ['imaging-questions', 'chain-walk'],
     chainStops: ['patient', 'reconstruction'],
     grammarRowIds: ['target-vanished'],
@@ -189,9 +197,9 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'no-control-change-the-measurement',
       states: noneOf(),
       sentence:
-        'No control on the C-arm moves a lung back. A new measurement of the current anatomy does.',
+        'No C-arm control restores an atelectatic segment. Intraprocedural imaging of the current anatomy does.',
     },
-    precommitDenyPatterns: [/aeration, coverage and target identity/i, /assess current aeration/i],
+    precommitDenyPatterns: [/assess for atelectasis/i, /re-?locali[sz]e the lesion/i],
     modelBoundary:
       'The CT is translated rigidly by the learner, not deformed by a model of ventilation, recruitment or a clinical intervention. The field generator and the sensor are schematic; no tracking error or vendor registration is modelled. ' +
       SHARED_BOUNDARY,
@@ -200,13 +208,13 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
   },
   {
     id: 'projection',
-    recognizeTitle: 'A needle that looks on target',
+    recognizeTitle: 'A needle that appears to be on the lesion',
     newConcept:
-      'Each pixel is one ray, so a single image cannot say how far apart two things on that ray are.',
+      'A single projection collapses depth, so it cannot show how far apart two superimposed structures are.',
     objective:
-      'Distinguish projected overlap from a resolved three-dimensional tool–target relationship.',
+      'Distinguish projected overlap from a resolved three-dimensional tool–lesion relationship.',
     incrementSentence:
-      'This section adds one idea to the walk: each pixel is one ray, so a single image cannot say how far apart two things on that ray are.',
+      'This section adds one idea to image formation: a single projection collapses depth, so it cannot show how far apart two superimposed structures are.',
     prerequisiteSectionIds: ['imaging-questions', 'current-anatomy', 'good-image'],
     chainStops: ['beam', 'detector'],
     grammarRowIds: ['hidden-by-anatomy', 'overlap-depth'],
@@ -215,27 +223,27 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'this-control',
       states: oneOf('angle', { display: 'harmful-reflex' }),
       sentence:
-        'This control: the aim. The harmful reflex: enlarging the display, which shows the same ray larger.',
+        'This control: the C-arm projection. The harmful reflex: display zoom, which shows the same superimposition larger.',
     },
     precommitDenyPatterns: [
       /parallax/i,
-      /exposes a component/i,
-      /view change (did|does) not move/i,
+      /only superimposed/i,
+      /projection change (did|does) not move/i,
     ],
     modelBoundary:
-      'The volume renderer sums through a quantised CT to make a projection; this is not acquired fluoroscopy. The tool moves along the initial source–target ray so that frontal overlap can hide depth. Model axes are patient left, anterior and superior; verify real console orientation conventions. ' +
+      'The volume renderer sums through a quantised CT to produce a projection; this is not acquired fluoroscopy. The tool moves along the initial source–lesion X-ray path so that frontal overlap can hide depth. Model axes are patient left, anterior and superior; verify real console orientation conventions. ' +
       SHARED_BOUNDARY,
     capstoneCaseId: null,
     sourceIds: ['setser', 'tg272', 'pritchett'],
   },
   {
     id: 'signal',
-    recognizeTitle: 'A crisp needle, a faint nodule',
+    recognizeTitle: 'A sharp needle and a faint nodule',
     newConcept:
-      'A target can be hard to see for three different reasons, and only one of them is fixed by more photons.',
-    objective: 'Distinguish quantum noise from scatter and overlapping anatomy.',
+      'Lesion conspicuity can be limited by quantum noise, scatter or superimposition, and only one of them improves with more photons.',
+    objective: 'Distinguish quantum noise from scatter and from anatomical superimposition.',
     incrementSentence:
-      'This section adds one idea: a target can be hard to see for three different reasons, and only one of them is fixed by more photons.',
+      'This section adds one idea: conspicuity can be limited in three different ways, and only one of them improves with more photons.',
     prerequisiteSectionIds: ['projection', 'good-image'],
     chainStops: ['source', 'patient'],
     grammarRowIds: ['hidden-by-anatomy', 'grainy'],
@@ -244,24 +252,28 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'this-control',
       states: oneOf('angle', { display: 'not-this-one' }),
       sentence:
-        'This control: the aim, when anatomy is the limit. Not this one: the display. More photons are not a control you hold.',
+        'This control: the C-arm projection, when anatomy is the limit. Not this one: the display. Radiation output is not a control you set directly.',
     },
-    precommitDenyPatterns: [/useful projection/i, /different beam path/i, /superimposed heart/i],
+    precommitDenyPatterns: [
+      /change the c-arm projection/i,
+      /clear the heart/i,
+      /planned from the CT/i,
+    ],
     modelBoundary:
-      'The tissue along the ray is read from the quantised CT as a relative attenuation proxy, not exposure or dose. Scatter and automatic exposure regulation are described, not simulated. ' +
+      'The tissue along the X-ray path is read from the quantised CT as a relative attenuation proxy, not exposure or dose. Scatter and automatic exposure regulation are described, not simulated. ' +
       SHARED_BOUNDARY,
     capstoneCaseId: null,
     sourceIds: ['tg125', 'tg272', 'wabip', 'setser'],
   },
   {
     id: 'field',
-    recognizeTitle: 'A smaller picture',
+    recognizeTitle: 'A smaller image on the monitor',
     newConcept:
-      'What was acquired and what is displayed are different things, and only one of them costs radiation.',
+      'What was acquired and what is displayed are different, and only the acquisition delivers radiation.',
     objective:
-      'Distinguish physical beam restriction and acquisition changes from display-only operations.',
+      'Distinguish collimation and acquisition changes from operations that change only the display.',
     incrementSentence:
-      'This section adds one idea: what was acquired and what is displayed are different things, and only one of them costs radiation.',
+      'This section adds one idea: what was acquired and what is displayed are different, and only the acquisition delivers radiation.',
     prerequisiteSectionIds: ['signal', 'projection'],
     chainStops: ['beam', 'display'],
     grammarRowIds: ['grainy', 'small-on-screen'],
@@ -270,9 +282,9 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'this-control',
       states: oneOf('field', { display: 'harmful-reflex' }),
       sentence:
-        'This control: the width. The harmful reflex: cropping the display and believing the beam followed.',
+        'This control: collimation. The harmful reflex: electronically cropping the display and assuming the beam followed.',
     },
-    precommitDenyPatterns: [/does not change/i, /visible image only/i],
+    precommitDenyPatterns: [/cropping acts only/i, /acts only on the displayed/i],
     modelBoundary:
       'The area ratio assumes a square field with both sides scaled equally. Scatter, automatic exposure response, detector readout and clinical image quality are not calculated. ' +
       SHARED_BOUNDARY,
@@ -281,11 +293,12 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
   },
   {
     id: 'time',
-    recognizeTitle: 'A moving needle',
-    newConcept: 'A moving image has three clocks, and only two of them measure anything.',
-    objective: 'Distinguish within-frame blur, between-frame movement, and display lag.',
+    recognizeTitle: 'A needle in motion',
+    newConcept:
+      'A moving image depends on pulse width, pulse rate and display processing, and only the first two are set at acquisition.',
+    objective: 'Distinguish within-frame motion blur, movement between frames, and image lag.',
     incrementSentence:
-      'This section adds one idea: a moving image has three clocks, and only two of them measure anything.',
+      'This section adds one idea: a moving image depends on pulse width, pulse rate and display processing, and only the first two are set at acquisition.',
     prerequisiteSectionIds: ['signal', 'field'],
     chainStops: ['detector'],
     grammarRowIds: ['blur-or-lag'],
@@ -294,7 +307,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'this-control',
       states: oneOf('time'),
       sentence:
-        'This control: the time sampling. Not this one: the display refresh, which measures nothing.',
+        'This control: pulse rate and pulse width. Not this one: the display refresh rate, which acquires nothing.',
     },
     precommitDenyPatterns: [/remains constant/i, /same mAs/i, /unchanged in this simplified/i],
     modelBoundary:
@@ -305,13 +318,13 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
   },
   {
     id: 'two-dimensional',
-    recognizeTitle: 'Still no target',
+    recognizeTitle: 'The lesion is still not seen',
     newConcept:
-      'The order of adjustments follows the chain, and when the chain is right the question changes.',
+      'The adjustments follow a fixed order — projection, collimation, then timing — and some questions no adjustment can answer.',
     objective:
       'Select the next useful adjustment when fluoroscopy does not answer the procedural question.',
     incrementSentence:
-      'This section adds nothing new. It puts the last five ideas in the order you use them in.',
+      'This section adds nothing new. It puts the last five ideas in the order you use them.',
     prerequisiteSectionIds: ['current-anatomy', 'projection', 'signal', 'field', 'time'],
     chainStops: ['beam', 'patient', 'detector', 'display'],
     grammarRowIds: ['probe-pattern'],
@@ -320,13 +333,9 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'no-control-change-the-measurement',
       states: noneOf(),
       sentence:
-        'When the aim, the width and the timing are right and the question is still open, no knob answers it. Ask for a different measurement.',
+        'When projection, collimation and timing are optimized and the question is still open, no control answers it. Change the modality.',
     },
-    precommitDenyPatterns: [
-      /current localization/i,
-      /additional (current )?imaging/i,
-      /additional modality/i,
-    ],
+    precommitDenyPatterns: [/depth-resolving/i, /DTS\/CBCT before advancing/i],
     modelBoundary:
       'The findings in this section are authored situations. The sequence is a proposed workflow informed by published practice, not a validated bundle. ' +
       SHARED_BOUNDARY,
@@ -335,12 +344,12 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
   },
   {
     id: 'dts-acquisition',
-    recognizeTitle: 'Depth from a sweep',
-    newConcept: 'Sample one ray from a fan of angles and depth comes back, unevenly.',
+    recognizeTitle: 'Depth from a limited arc',
+    newConcept: 'Projections across a limited arc recover depth, but unevenly.',
     objective:
-      'Explain what a limited angular acquisition adds to one projection and what remains incompletely sampled.',
+      'Explain what a limited-angle acquisition adds to a single projection and what it leaves incompletely resolved.',
     incrementSentence:
-      'This section adds one idea to the ray: sample it from a fan of angles and depth comes back, unevenly.',
+      'This section adds one idea to projection: acquire across a limited arc and depth comes back, but unevenly.',
     prerequisiteSectionIds: ['projection', 'two-dimensional'],
     chainStops: ['beam', 'reconstruction'],
     grammarRowIds: ['overlap-depth', 'elongated-depth'],
@@ -349,7 +358,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'this-control',
       states: oneOf('acquisition', { display: 'not-this-one' }),
       sentence:
-        'This control: the acquisition, a sweep instead of one image. Not this one: the display; finer pixels do not measure the missing directions.',
+        'This control: the acquisition mode, a DTS acquisition instead of a single projection. Not this one: the display; smaller voxels do not add the missing directions.',
     },
     precommitDenyPatterns: [
       /angular coverage/i,
@@ -358,19 +367,20 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       /missing directions/i,
     ],
     modelBoundary:
-      'These are parallel projections of the teaching CT with an added target and instrument. A horizontal filter suppresses slowly varying background, then the browser combines thirteen views by shift-and-add at the selected depth under one fixed display window. Limited-angle blur remains; this is not a clinical tomosynthesis reconstruction, a vendor algorithm or a dose comparison. ' +
+      'These are parallel projections of the teaching CT with an added lesion and tool. A horizontal filter suppresses slowly varying background, then the browser combines thirteen projections by shift-and-add at the selected depth under one fixed display window. Limited-angle blur remains; this is not a clinical DTS reconstruction, a vendor algorithm or a dose comparison. ' +
       SHARED_BOUNDARY,
     capstoneCaseId: null,
     sourceIds: ['saad', 'sumner', 'podder', 'frontier'],
   },
   {
     id: 'dts-interpretation',
-    recognizeTitle: 'Where did this image come from',
-    newConcept: 'A reconstruction has ingredients, and one of them may be an older scan.',
+    recognizeTitle: 'What is this reconstruction built from?',
+    newConcept:
+      'A DTS reconstruction can combine current projections with an older scan or a model.',
     objective:
-      'Distinguish current projection evidence, prior-informed anatomy and navigation updates.',
+      'Distinguish image content acquired now, prior-derived anatomy and navigation target updates.',
     incrementSentence:
-      'This section adds one idea: a reconstruction has ingredients, and one of them may be an older scan.',
+      'This section adds one idea: a DTS reconstruction can combine current projections with an older scan or a model.',
     prerequisiteSectionIds: ['dts-acquisition', 'current-anatomy'],
     chainStops: ['reconstruction', 'display'],
     grammarRowIds: ['elongated-depth'],
@@ -378,7 +388,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     controlStrip: {
       verdict: 'no-control-change-the-question',
       states: allMonitoring,
-      sentence: 'No control here. The question is what went into the picture, not what to turn.',
+      sentence: 'No control here. The question is what went into the image, not what to adjust.',
     },
     precommitDenyPatterns: [/technical evidence/i, /closer agreement/i],
     modelBoundary:
@@ -389,12 +399,13 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
   },
   {
     id: 'cbct-acquisition',
-    recognizeTitle: 'Before the spin',
-    newConcept: 'A full orbit measures every direction, and every direction has to be clear.',
+    recognizeTitle: 'Before the CBCT spin',
+    newConcept:
+      'A CBCT spin acquires projections from a wide rotation, and the whole rotation has to be clear.',
     objective:
-      'Distinguish an acquisition-ready setup from one with unresolved coverage, motion or clearance problems.',
+      'Distinguish a CBCT setup that is ready from one with unresolved coverage, motion or collision problems.',
     incrementSentence:
-      'This section adds one idea to the sweep: a full orbit measures every direction, and every direction has to be clear.',
+      'This section adds one idea to DTS: a CBCT spin acquires a wide rotation, and the whole rotation has to be clear.',
     prerequisiteSectionIds: ['current-anatomy', 'dts-acquisition', 'time'],
     chainStops: ['source', 'beam', 'patient', 'detector', 'reconstruction'],
     grammarRowIds: [],
@@ -403,7 +414,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'this-control',
       states: oneOf('acquisition'),
       sentence:
-        'This control: the acquisition, once the target is centred and the orbit is clear. Not this one: any of the others, until it is.',
+        'This control: the acquisition mode, once the lesion is centred and the spin path is clear. Not the others, until it is.',
     },
     precommitDenyPatterns: [
       /centering method/i,
@@ -411,18 +422,18 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       /anterior\/posterior offset/i,
     ],
     modelBoundary:
-      'Scouts are CT-derived projections in the same geometry as the centering controls. The gantry is a generic motion reference; choosing a workflow does not make it an equipment-specific clearance model, and the centering tolerance is authored for this exercise. No collision detection, clinical reconstruction or breath-hold tolerance is calculated. ' +
+      'Scouts are CT-derived projections in the same geometry as the centering controls. The C-arm is a generic motion reference; choosing a workflow does not make it an equipment-specific clearance model, and the centering tolerance is authored for this exercise. No collision detection, clinical reconstruction or breath-hold tolerance is calculated. ' +
       SHARED_BOUNDARY,
     capstoneCaseId: 'case-4',
     sourceIds: ['setser', 'mobile', 'wabip'],
   },
   {
     id: 'fixed-suite',
-    recognizeTitle: 'The installed room',
-    newConcept: 'An installed room can track its own equipment, and the patient is not equipment.',
-    objective: 'Adapt shared acquisition requirements to an integrated fixed-room workflow.',
+    recognizeTitle: 'An installed fixed C-arm suite',
+    newConcept: 'An installed suite can track its own equipment, and the patient is not equipment.',
+    objective: 'Adapt shared CBCT acquisition requirements to an integrated fixed C-arm workflow.',
     incrementSentence:
-      'This section adds one idea: an installed room can track its own equipment, and the patient is not equipment.',
+      'This section adds one idea: an installed suite can track its own equipment, and the patient is not equipment.',
     prerequisiteSectionIds: ['cbct-acquisition', 'field'],
     chainStops: ['patient', 'reconstruction'],
     grammarRowIds: ['target-vanished'],
@@ -430,28 +441,28 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     controlStrip: {
       verdict: 'no-control-change-the-question',
       states: allMonitoring,
-      sentence:
-        'No control tracks a lung. The overlay followed the table; the anatomy did not promise to follow the overlay.',
+      sentence: 'No control tracks the lung. The overlay followed the table; the anatomy did not.',
     },
     precommitDenyPatterns: [
       /prior segmentation/i,
-      /requir(es|ing) reassessment/i,
+      /must be reconfirmed after/i,
       /anatomical tracking/i,
     ],
     modelBoundary:
-      'The fixed workflow changes guidance and readiness; it does not represent a manufacturer model, a mounted gantry’s envelope or a room’s shielding. ' +
+      'The fixed workflow changes guidance and readiness; it does not represent a manufacturer model, a mounted C-arm’s motion envelope or a room’s shielding. ' +
       SHARED_BOUNDARY,
     capstoneCaseId: null,
     sourceIds: ['setser', 'wabip', 'pritchett', 'verhoeven', 'tg272'],
   },
   {
     id: 'mobile-suite',
-    recognizeTitle: 'A scanner in the bronch suite',
-    newConcept: 'A volume that can be exported is not a map that has been updated.',
+    recognizeTitle: 'A mobile CBCT scanner in the bronchoscopy suite',
+    newConcept:
+      'A CBCT volume that can be exported is not a navigation target that has been updated.',
     objective:
-      'Adapt shared acquisition requirements to a mobile scanner and an existing procedure room.',
+      'Adapt shared CBCT acquisition requirements to a mobile scanner in an existing procedure room.',
     incrementSentence:
-      'This section adds one idea: a volume that can be exported is not a map that has been updated.',
+      'This section adds one idea: a CBCT volume that can be exported is not a navigation target that has been updated.',
     prerequisiteSectionIds: ['cbct-acquisition', 'fixed-suite'],
     chainStops: ['patient', 'reconstruction'],
     grammarRowIds: [],
@@ -460,13 +471,9 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'no-control-change-the-question',
       states: allMonitoring,
       sentence:
-        'No control here. Export, review, map update and overlay are separate capabilities to check, not settings to turn.',
+        'No control here. Export, image review, navigation target update and overlay are capabilities to verify, not settings to turn.',
     },
-    precommitDenyPatterns: [
-      /receiving display/i,
-      /separate capabilities/i,
-      /separately supported workflows/i,
-    ],
+    precommitDenyPatterns: [/receiving workstation/i, /separate capabilities/i],
     modelBoundary:
       'The mobile workflow changes guidance, readiness and the drawn field; it does not represent a manufacturer model, an export pathway or a validated integration. ' +
       SHARED_BOUNDARY,
@@ -475,13 +482,13 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
   },
   {
     id: 'tool-confirmation',
-    recognizeTitle: 'Where the tissue comes from',
+    recognizeTitle: 'Where the tissue is actually acquired',
     newConcept:
-      'The thing that samples is a shape in three dimensions, and its tip is only one point of it.',
+      'The sampling part of the biopsy tool is a three-dimensional object, and the tip is only one point of it.',
     objective:
-      'Distinguish projected hardware overlap, tip position and sampling-region intersection on multiplanar views.',
+      'Distinguish projected overlap, tip position and sampling-window position on multiplanar CBCT review.',
     incrementSentence:
-      'This section adds one idea: the thing that samples is a shape in three dimensions, and its tip is only one point of it.',
+      'This section adds one idea: the sampling part of the biopsy tool is a three-dimensional object, and the tip is only one point of it.',
     prerequisiteSectionIds: ['cbct-acquisition', 'projection', 'two-dimensional'],
     chainStops: ['reconstruction', 'display'],
     grammarRowIds: ['probe-pattern'],
@@ -490,9 +497,9 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'this-control',
       states: oneOf('display', { acquisition: 'not-this-one' }),
       sentence:
-        'This control: the display, thin planes over a slab. Not this one: the acquisition; another spin does not move the window.',
+        'This control: the display, thin multiplanar planes over a thick slab. Not this one: the acquisition; another spin does not move the sampling window.',
     },
-    precommitDenyPatterns: [/different depths/i, /combined structures/i],
+    precommitDenyPatterns: [/different depths/i, /slab superimposed/i],
     modelBoundary:
       'CT-derived lung context is combined with analytic sections of an authored sphere and a fictional side window behind the tip; the slab is a maximum-intensity projection over an authored depth. This is not a clinical reconstruction or a specification for a real needle, and it omits vessels, pleura, tool deformation, metal artifact and tissue acquisition. Geometric intersection does not establish safe or diagnostic sampling. ' +
       SHARED_BOUNDARY,
@@ -501,12 +508,13 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
   },
   {
     id: 'changing-anatomy',
-    recognizeTitle: 'The image and the procedure part ways',
-    newConcept: 'Every image is a snapshot of a state, and validity ends when the state changes.',
+    recognizeTitle: 'The image no longer matches the procedure',
+    newConcept:
+      'Every image records one anatomical state, and its validity ends when that state changes.',
     objective:
-      'Distinguish a correctable acquisition artifact from an anatomical or physiological change requiring reassessment.',
+      'Distinguish a correctable acquisition artifact from an anatomical or physiological change that requires repeat localization.',
     incrementSentence:
-      'This section adds one idea: every image is a snapshot of a state, and validity ends when the state changes.',
+      'This section adds one idea: every image records one anatomical state, and its validity ends when that state changes.',
     prerequisiteSectionIds: ['current-anatomy', 'tool-confirmation', 'time', 'dts-interpretation'],
     chainStops: ['patient', 'reconstruction'],
     grammarRowIds: ['target-vanished'],
@@ -515,13 +523,9 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'no-control-change-the-measurement',
       states: noneOf({ acquisition: 'harmful-reflex' }),
       sentence:
-        'No control repairs a moved lung. The harmful reflex: repeating the same acquisition and hoping.',
+        'No control repairs a changed lung. The harmful reflex: repeating the same acquisition and hoping.',
     },
-    precommitDenyPatterns: [
-      /stability and (respiratory )?coordination/i,
-      /coordinated acquisition state/i,
-      /tolerable coordinated/i,
-    ],
+    precommitDenyPatterns: [/tolerable breath hold/i],
     modelBoundary:
       'The stored contour and the current anatomy differ by a rigid translation the learner sets; no ventilation, recruitment, motion artifact or vendor registration is simulated, and ground truth is visible only for teaching. ' +
       SHARED_BOUNDARY,
@@ -530,12 +534,12 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
   },
   {
     id: 'staff-protection',
-    recognizeTitle: 'The people around the beam',
-    newConcept: 'The patient is the source of what reaches the staff.',
+    recognizeTitle: 'Staff around the C-arm',
+    newConcept: 'Scatter from the irradiated patient is what reaches the staff.',
     objective:
-      'Select staff protection based on the irradiated patient, equipment geometry and effective barriers.',
+      'Select staff protection based on the irradiated patient, the C-arm geometry and effective barriers.',
     incrementSentence:
-      'This section adds one idea: the patient is the source of what reaches the staff.',
+      'This section adds one idea: scatter from the irradiated patient is what reaches the staff.',
     prerequisiteSectionIds: ['field', 'cbct-acquisition'],
     chainStops: ['patient'],
     grammarRowIds: ['dose-number'],
@@ -544,7 +548,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'no-control-change-the-question',
       states: allMonitoring,
       sentence:
-        'None of the five protects a colleague. Distance, the barrier and which side the tube sits on do.',
+        'No fluoroscopy control substitutes for distance, the barrier and which side of the tube staff stand on.',
     },
     precommitDenyPatterns: [
       /hands? out(side)? (of )?the (primary )?beam/i,
@@ -559,7 +563,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
   },
   {
     id: 'dose-reporting',
-    recognizeTitle: 'Two numbers on the report',
+    recognizeTitle: 'Two numbers on the dose report',
     newConcept: 'A dose report holds several quantities, and each answers a different question.',
     objective:
       'Distinguish dose indices, their units, and the information needed for whole-procedure review.',
@@ -573,7 +577,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'no-control-change-the-question',
       states: allMonitoring,
       sentence:
-        'No control here. Read the quantity, its units and the modes before comparing any number.',
+        'No control here. Read the quantity, its units and the included modes before comparing any number.',
     },
     precommitDenyPatterns: [/smaller (exposed )?area/i, /outweigh/i, /can coexist/i],
     modelBoundary:
@@ -584,12 +588,12 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
   },
   {
     id: 'suite-cases',
-    recognizeTitle: 'One suite, every row',
+    recognizeTitle: 'One suite, every troubleshooting row',
     newConcept:
-      'Every finding in the suite lives at one stop of the chain, and naming the stop decides the next move.',
-    objective: 'Apply the imaging and protection principles to new suite decisions.',
+      'Every finding in the suite arises at one component of image formation, and naming it guides the next step.',
+    objective: 'Apply the imaging and radiation-safety principles to new procedural decisions.',
     incrementSentence:
-      'This section adds nothing new. Every row of the table, in the order the suite hands them to you.',
+      'This section adds nothing new. Every row of the troubleshooting table, in the order the suite presents them.',
     prerequisiteSectionIds: [
       'two-dimensional',
       'dts-interpretation',
@@ -606,15 +610,16 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     controlStrip: {
       verdict: 'no-control-change-the-question',
       states: allMonitoring,
-      sentence: 'Every row of the table. Name the stop before naming a knob.',
+      sentence:
+        'Every row of the table. Name where the problem arises before reaching for a control.',
     },
     precommitDenyPatterns: [
-      /lives in the patient/i,
-      /what the ray crosses/i,
-      /anatomy on the ray/i,
+      /superimposition or lesion identity/i,
+      /anatomy or the question/i,
+      /anatomy in the X-ray path or/i,
     ],
     modelBoundary:
-      'The findings in this section are the imaging guide’s rows, authored for teaching; the eight case decisions that follow on the Assess page are authored scenarios, not patient records. ' +
+      'The findings in this section are the troubleshooting table’s rows, authored for teaching; the eight case decisions that follow on the Assess page are authored scenarios, not patient records. ' +
       SHARED_BOUNDARY,
     capstoneCaseId: null,
     sourceIds: ['setser', 'wabip', 'aapm12'],

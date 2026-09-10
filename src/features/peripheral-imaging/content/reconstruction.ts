@@ -43,63 +43,63 @@ export interface ReconstructionAccount {
 export const RECONSTRUCTION_ACCOUNTS: readonly ReconstructionAccount[] = [
   {
     id: 'tomosynthesis',
-    name: 'A limited sweep',
+    name: 'Digital tomosynthesis (DTS)',
     inShort:
-      'A narrow span of directions, and something else standing in for the ones the arc never travelled.',
+      'A limited arc of projections, with an older scan or a model standing in for the directions the arc never covered.',
     measured:
-      'A short arc of images — thirteen in this section — taken as the source travels a narrow span of directions, all of them from roughly the same side of the patient. On the bronchoscopy systems in use that span is usually fifty to seventy degrees. A scanner collects over a hundred and eighty degrees or more.',
+      'A short arc of images — thirteen in this section — acquired as the C-arm moves through a limited arc, all from roughly the same side of the patient. On the bronchoscopy systems in use that arc is usually fifty to seventy degrees; CT acquires over a hundred and eighty degrees or more.',
     built: [
       'Choose a depth. Every structure sitting at that depth lands on the same spot in each image once the images are shifted by the amount that depth would move between views.',
       'Shift each image by that amount and average them. What sits at the chosen depth reinforces; everything nearer or further spreads out and fades into a smear. Repeat for another depth and another picture appears.',
-      'Now the part the arc cannot settle. Because it travelled only a narrow span, a great many different volumes would have produced exactly the images that were collected, and the collected images do not single one of them out.',
-      'So the system chooses, and what it starts from decides which one it lands on: the planning scan, registered onto the sweep, or a model built from scans. Many platforms finish here and render something shaped like a scan, cut across, front to back and side to side. Others stop at the stack of planes and use the sweep to update a navigation map instead.',
+      'Now the part the arc cannot settle. Because it covered only a limited range of angles, a great many different volumes would have produced exactly the projections that were acquired, and those projections do not single one of them out.',
+      'So the system chooses, and what it starts from decides which one it lands on: the planning CT, registered to the acquisition, or a model built from scans. Many platforms finish here and render CT-like multiplanar images, axial, coronal and sagittal. Others stop at the stack of planes and use the acquisition to update the navigation target instead.',
     ],
     comesOut:
-      'It depends on the platform, and the word tomosynthesis does not tell you which. Some render a set that resembles a scan and is cut in more than one plane. Others return the stack of planes only, or use the sweep to move a virtual target and show no reconstruction at all. Ask what the system does with the sweep.',
+      'It depends on the platform, and the word tomosynthesis does not tell you which. Some render a set that resembles a scan and is cut in more than one plane. Others return the stack of planes only, or use the acquisition to move the virtual target and show no reconstruction at all. Ask what the system does with the DTS acquisition.',
     provenance:
-      'The direction across the image was measured. The direction along the beam was measured poorly, and where a scan-like set is rendered, that direction is largely supplied — by an older scan, or by a model. Nothing in the picture marks where the measurement ends and the inference begins.',
+      'The direction across the image was acquired. The direction along the beam was acquired poorly, and where a CT-like image is rendered, that direction is largely supplied — by an older scan, or by a model. Nothing in the image marks where the acquired content ends and the inference begins.',
     canAsk: [
-      'Which of two structures on the same ray is nearer the detector.',
+      'Which of two superimposed structures is nearer the detector.',
       'Whether the instrument lies at the depth the lesion occupies. The arc answers that better than one image does, and it is what these platforms are built for.',
       'Whether a border that looked crisp on one plane survives at a neighbouring depth.',
     ],
     cannotAsk: [
-      'Which parts of the picture the arc measured and which were filled in. The smear that gives the limit away on a plain stack of planes is the very thing a scan-like rendering removes.',
-      'A separation taken as exact. Against a full orbit of the same target, the centre of a lesion drawn from a sweep has been reported to sit as much as 16.2 mm from where the orbit puts it.',
-      'Anything about a structure the sweep never looked at from a useful angle, however clean the picture of it looks.',
+      'Which parts of the image the arc acquired and which were filled in. The out-of-plane blur that gives the limit away on a plain stack of planes is the very thing a CT-like rendering removes.',
+      'A separation taken as exact. Compared with CBCT of the same target, the centre of a lesion localized by DTS has been reported to sit as much as 16.2 mm from where CBCT places it.',
+      'Anything about a structure the arc never covered from a useful angle, however clean the image of it looks.',
     ],
     boundary:
-      'This section shows the plain version and only that: thirteen parallel-beam projections of a teaching volume, shifted and averaged, with no registered prior scan and no learned model behind them. The smear is visible here on purpose — it is the cue a scan-like rendering does not leave you. No vendor algorithm, no scatter model and no measured detector response is involved.',
+      'This section shows the plain version and only that: thirteen parallel-beam projections of a teaching volume, shifted and averaged, with no registered prior scan and no learned model behind them. The out-of-plane blur is visible here on purpose — it is the cue a CT-like rendering does not leave you. No vendor algorithm, no scatter model and no measured detector response is involved.',
     sourceIds: ['saad', 'sumner', 'podder', 'frontier'],
     shownIn: 'dts-acquisition',
   },
   {
     id: 'cone-beam',
-    name: 'A full orbit',
-    inShort: 'Directions from all around, and a block of tissue comes back.',
+    name: 'Cone-beam CT (CBCT)',
+    inShort: 'Projections from a wide rotation, and a volume comes back.',
     measured:
-      'Hundreds of images taken as the source travels a wide arc around the patient, so the same tissue is seen from directions that differ by a large angle.',
+      'Hundreds of projections acquired as the C-arm rotates around the patient during the CBCT spin, so the same tissue is seen from directions that differ by a large angle.',
     built: [
-      'Take each image and spread its darkness back along the ray it came from, into an empty block of space.',
-      'Do that for every direction. Where many rays agree, a structure builds up; where only a few agree, the contribution washes out.',
-      'Filter as you go, so the structures come back sharp rather than blurred, and the block fills in.',
+      'Take each projection and back-project its attenuation along the X-ray paths it came from, into an empty volume.',
+      'Do that for every direction. Where many paths agree, a structure builds up; where only a few agree, the contribution washes out.',
+      'Filter as you go, so structures come back sharp rather than blurred, and the volume fills in.',
     ],
     comesOut:
-      'A block of tissue, sampled about equally in every direction, that can be cut in any plane after the fact — across, front to back, or side to side.',
+      'A volume, sampled about equally in every direction, that can be reviewed in any plane after the fact — axial, coronal, sagittal or oblique.',
     provenance:
-      'Every direction in it was measured, inside the volume the orbit covered. Outside that volume nothing was measured, and the picture stops rather than filling in — which is why this one shows its limit as an edge you can see.',
+      'Every direction in it was acquired, inside the reconstruction volume. Outside that volume nothing was acquired, and the image stops rather than filling in — which is why CBCT shows its limit as a truncation edge you can see.',
     canAsk: [
-      'Where the instrument sits relative to the lesion in three dimensions, inside the volume that was covered.',
+      'Where the biopsy tool sits relative to the lesion in three dimensions, inside the reconstruction volume.',
       'What the lesion looks like on a plane the acquisition never pointed along.',
       'Whether tissue that looked separate on one view is separate in space.',
     ],
     cannotAsk: [
-      'Anything about tissue that fell outside the covered volume; a target off centre can be cut off at the edge.',
-      'A reading from a volume the patient moved during. Movement across the orbit disagrees with itself and the block is built from the disagreement.',
+      'Anything about tissue outside the reconstruction volume; a lesion off centre can be truncated at the edge.',
+      'A reading from a volume the patient moved during. Motion during the spin makes the projections disagree, and the volume is built from the disagreement.',
       'The detail of a diagnostic scan. It answers where things are, in the room, at that moment.',
     ],
     boundary:
-      'What this module displays after the orbit is the original planning scan standing in for a reconstructed block, labelled as such. Those pictures were not reconstructed from the projections the orbit collected.',
+      'What this module displays after the spin is the original planning CT standing in for a reconstructed volume, labelled as such. Those images were not reconstructed from the projections the spin acquired.',
     sourceIds: ['setser', 'mobile'],
     shownIn: 'cbct-acquisition',
   },
@@ -107,7 +107,7 @@ export const RECONSTRUCTION_ACCOUNTS: readonly ReconstructionAccount[] = [
 
 /** The sentence that holds the two together, and the reason the comparison exists. */
 export const RECONSTRUCTION_CONTRAST =
-  'Both begin the same way: images from more than one direction, and both can end as a picture that is cut in any plane. What separates them is how much of that picture was measured. A wide orbit measures every direction inside the volume it covers, and at the edge of that volume it stops. A narrow span measures one direction well and the other poorly, so something else stands in for the second — an older scan, or a model built from scans. That is how a sweep can show a plane it never travelled, and how it can be confidently off.'
+  'Both begin the same way — projections from more than one direction — and both can end as images reviewed in any plane. What separates them is how much of that image was acquired. A CBCT spin acquires every direction inside the reconstruction volume, and at the edge of that volume it stops. A DTS acquisition resolves one direction well and the other poorly, so something else stands in for the second — an older scan, or a model built from scans. That is how DTS can show a plane its arc never covered, and how it can be confidently off.'
 
 export function reconstructionAccount(id: ReconstructionAccount['id']): ReconstructionAccount {
   const found = RECONSTRUCTION_ACCOUNTS.find((account) => account.id === id)

@@ -1,8 +1,12 @@
-import type { CriticalCareCurriculumStage } from '@/features/learning-module/activity/types'
 import type { LearningPathwaySection } from '@/features/learning-module/curriculum/types'
 
 import { isSectionCompleted, type ImagingRecord } from '../engine/learnProgress'
-import { peripheralImagingPathwaySections } from './pathway'
+import { imagingLearnerCopyErrors } from './learnerCopy'
+import {
+  peripheralImagingPathwaySections,
+  peripheralImagingSectionIds,
+  type ImagingSectionId,
+} from './pathway'
 import { PERIPHERAL_IMAGING_NAV_BASE } from './routes'
 
 /**
@@ -58,101 +62,153 @@ export function workedImagingSectionIds(record: ImagingRecord): ReadonlySet<stri
   )
 }
 
-const STAGE_ORDER: readonly CriticalCareCurriculumStage[] = [
-  'orientation',
-  'foundation',
-  'mechanism',
-  'application',
-  'integration',
-]
+/**
+ * The clinical sequence the pathway is presented in: plan, localize and optimize, confirm, sample
+ * and reconfirm, then radiation safety and the integrated cases.
+ *
+ * Each phase is a contiguous run of the canonical order, and the phases tile it exactly once, so a
+ * grouped view is a presentation of the one order, never a second one. The teaching stage each
+ * section carries (orientation, foundation, mechanism, application, integration) stays internal to
+ * the pedagogy checks; learners see the clinical phase.
+ */
+export type ImagingPhaseId = 'plan' | 'localize' | 'confirm' | 'sample' | 'safety' | 'cases'
 
-const STAGE_TITLES: Readonly<Record<CriticalCareCurriculumStage, string>> = {
-  orientation: 'What the image is for',
-  foundation: 'The chain, and what you can change on it',
-  mechanism: 'One stop at a time',
-  application: 'The suite, one decision at a time',
-  integration: 'Every row of the table',
+export interface ImagingPhase {
+  readonly id: ImagingPhaseId
+  readonly title: string
+  readonly description: string
+  readonly sectionIds: readonly ImagingSectionId[]
 }
 
-const STAGE_DESCRIPTIONS: Readonly<Record<CriticalCareCurriculumStage, string>> = {
-  orientation: 'Four questions an image can be asked, and why no display answers all of them.',
-  foundation:
-    'Walk the six stops on a running suite, meet the five things you can change, then the map and the ray.',
-  mechanism:
-    'Why a target is hard to see, what a field and a clock decide, what a sweep and an orbit add, and where the dose numbers come from.',
-  application:
-    'A fixed room, a mobile scanner, the actual sampling component, and what to do when the anatomy has changed.',
-  integration:
-    'Every finding placed on the chain, then the eight case decisions on the Assess page.',
-}
+export const IMAGING_PHASES: readonly ImagingPhase[] = Object.freeze([
+  {
+    id: 'plan',
+    title: 'Plan',
+    description:
+      'Decide what the imaging must answer — navigation, localization, tool confirmation or diagnosis — and how the fluoroscopic image that answers it is formed.',
+    sectionIds: ['imaging-questions', 'chain-walk'],
+  },
+  {
+    id: 'localize',
+    title: 'Localize and optimize',
+    description:
+      'Account for CT-to-body divergence, then optimize the fluoroscopic image: projection and parallax, lesion conspicuity, collimation and magnification, pulse rate and pulse width.',
+    sectionIds: ['good-image', 'current-anatomy', 'projection', 'signal', 'field', 'time'],
+  },
+  {
+    id: 'confirm',
+    title: 'Confirm',
+    description:
+      'Work through a practical 2D fluoroscopy sequence, then use digital tomosynthesis and CBCT, fixed or mobile, when 2D imaging cannot resolve the lesion–tool relationship.',
+    sectionIds: [
+      'two-dimensional',
+      'dts-acquisition',
+      'dts-interpretation',
+      'cbct-acquisition',
+      'fixed-suite',
+      'mobile-suite',
+    ],
+  },
+  {
+    id: 'sample',
+    title: 'Sample and reconfirm',
+    description:
+      'Confirm that the part of the biopsy tool that acquires tissue lies within the lesion, and recognize when localization has to be repeated.',
+    sectionIds: ['tool-confirmation', 'changing-anatomy'],
+  },
+  {
+    id: 'safety',
+    title: 'Radiation safety',
+    description:
+      'Protect the team from scatter radiation, and read fluoroscopy and CBCT dose metrics correctly.',
+    sectionIds: ['staff-protection', 'dose-reporting'],
+  },
+  {
+    id: 'cases',
+    title: 'Integrated cases',
+    description:
+      'Troubleshooting findings placed in context, then the eight case decisions on the Assess page.',
+    sectionIds: ['suite-cases'],
+  },
+])
 
-const STAGE_WORDS: Readonly<Record<CriticalCareCurriculumStage, readonly [string, string]>> = {
-  orientation: ['orientation', 'orientations'],
-  foundation: ['foundation', 'foundations'],
-  mechanism: ['mechanism', 'mechanisms'],
-  application: ['application', 'applications'],
-  integration: ['capstone', 'capstones'],
+export function imagingPhaseOf(sectionId: ImagingSectionId): ImagingPhase {
+  const phase = IMAGING_PHASES.find((candidate) => candidate.sectionIds.includes(sectionId))
+  if (!phase) throw new Error(`Section ${sectionId} belongs to no phase`)
+  return phase
 }
 
 export interface ImagingPathwayComposition {
   readonly total: number
   readonly minutes: number
-  readonly byStage: readonly {
-    readonly stage: CriticalCareCurriculumStage
+  readonly byPhase: readonly {
+    readonly phase: ImagingPhaseId
     readonly title: string
     readonly count: number
   }[]
 }
 
 export function imagingPathwayComposition(): ImagingPathwayComposition {
-  const byStage = STAGE_ORDER.map((stage) => ({
-    stage,
-    title: STAGE_TITLES[stage],
-    count: peripheralImagingPathwaySections.filter((section) => section.stage === stage).length,
-  })).filter((entry) => entry.count > 0)
   return {
     total: peripheralImagingPathwaySections.length,
     minutes: peripheralImagingPathwaySections.reduce((sum, section) => sum + section.minutes, 0),
-    byStage,
+    byPhase: IMAGING_PHASES.map((phase) => ({
+      phase: phase.id,
+      title: phase.title,
+      count: phase.sectionIds.length,
+    })),
   }
 }
 
-/** "19 sections · 1 orientation · 4 foundations · 9 mechanisms · 4 applications · 1 capstone · 111 min". */
+/** "19 sections in 6 phases · 106 min". */
 export function imagingCompositionLine(): string {
   const composition = imagingPathwayComposition()
-  const parts = composition.byStage.map(
-    (entry) => `${entry.count} ${STAGE_WORDS[entry.stage][entry.count === 1 ? 0 : 1]}`,
-  )
-  return `${composition.total} sections · ${parts.join(' · ')} · ${composition.minutes} min`
+  return `${composition.total} sections in ${composition.byPhase.length} phases · ${composition.minutes} min`
 }
 
 export interface ImagingPathwayGroup {
-  readonly stage: CriticalCareCurriculumStage
+  readonly phase: ImagingPhaseId
   readonly title: string
   readonly description: string
   readonly sections: readonly LearningPathwaySection[]
 }
 
-/**
- * The canonical order as contiguous runs by stage. Flattening the groups reproduces the order
- * exactly — a grouped view is a presentation of the one order, never a second one. The ladder
- * returns to mechanism when a new modality is introduced, so a stage may appear as more than one
- * run.
- */
+/** The canonical order as its clinical phases. Flattening the groups reproduces the order exactly. */
 export function imagingPathwayGroups(): readonly ImagingPathwayGroup[] {
-  const groups: ImagingPathwayGroup[] = []
-  for (const section of peripheralImagingPathwaySections) {
-    const last = groups.at(-1)
-    if (last && last.stage === section.stage) {
-      groups[groups.length - 1] = { ...last, sections: [...last.sections, section] }
-    } else {
-      groups.push({
-        stage: section.stage,
-        title: STAGE_TITLES[section.stage],
-        description: STAGE_DESCRIPTIONS[section.stage],
-        sections: [section],
-      })
-    }
+  const sectionById = new Map(
+    peripheralImagingPathwaySections.map((section) => [section.id, section] as const),
+  )
+  return IMAGING_PHASES.map((phase) => ({
+    phase: phase.id,
+    title: phase.title,
+    description: phase.description,
+    sections: phase.sectionIds.map((id) => {
+      const section = sectionById.get(id)
+      if (!section) throw new Error(`Phase ${phase.id} names an unknown section ${id}`)
+      return section
+    }),
+  }))
+}
+
+export function validateImagingPhases(
+  phases: readonly ImagingPhase[] = IMAGING_PHASES,
+): readonly string[] {
+  const errors: string[] = []
+  const tiled = phases.flatMap((phase) => phase.sectionIds)
+  if (tiled.join('|') !== peripheralImagingSectionIds.join('|')) {
+    errors.push('The clinical phases do not tile the canonical order exactly once, in order.')
   }
-  return groups
+  for (const phase of phases) {
+    if (phase.sectionIds.length === 0) errors.push(`Phase ${phase.id} holds no section.`)
+    errors.push(
+      ...imagingLearnerCopyErrors(`Phase ${phase.id} title`, phase.title, { allowDigits: false }),
+      ...imagingLearnerCopyErrors(`Phase ${phase.id} description`, phase.description),
+    )
+  }
+  return errors
+}
+
+const phaseErrors = validateImagingPhases()
+if (phaseErrors.length > 0) {
+  throw new Error(`The clinical phases are invalid:\n${phaseErrors.join('\n')}`)
 }

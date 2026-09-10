@@ -72,7 +72,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'tilt',
       kind: 'range',
-      label: 'Cranial / caudal tilt',
+      label: 'Cranial / caudal angulation',
       min: -25,
       max: 25,
       step: 1,
@@ -101,7 +101,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'field',
       kind: 'range',
-      label: 'Field side length',
+      label: 'Collimated field width',
       min: 45,
       max: 100,
       step: 1,
@@ -111,13 +111,13 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'crop',
       kind: 'toggle',
-      label: 'Use display crop instead of physical shutters',
+      label: 'Use electronic cropping instead of collimation',
       default: false,
     },
     {
       key: 'zoom',
       kind: 'range',
-      label: 'Stored-image display zoom',
+      label: 'Display zoom on the stored image',
       min: 1,
       max: 2,
       step: 0.25,
@@ -129,7 +129,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'rate',
       kind: 'select',
-      label: 'Acquisition pulse rate',
+      label: 'Pulse rate',
       options: PULSE_RATES.map((value) => ({ value, label: `${value} pulses/s` })),
       default: 7.5,
     },
@@ -146,7 +146,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'speed',
       kind: 'range',
-      label: 'Authored object speed',
+      label: 'Authored tool speed',
       min: 0,
       max: 40,
       step: 1,
@@ -158,7 +158,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'sweep',
       kind: 'range',
-      label: 'Authored angular sweep',
+      label: 'Authored DTS arc',
       min: 20,
       max: 60,
       step: 10,
@@ -168,7 +168,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'plane',
       kind: 'range',
-      label: 'Reconstruction depth plane',
+      label: 'DTS plane depth',
       min: -30,
       max: 30,
       step: 1,
@@ -201,7 +201,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'kind',
       kind: 'choice',
-      label: 'Suite workflow',
+      label: 'CBCT workflow',
       options: [
         { value: 'fixed', label: 'Fixed CBCT suite' },
         { value: 'mobile', label: 'Mobile CBCT suite' },
@@ -211,7 +211,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'acquisitionOrbit',
       kind: 'range',
-      label: 'Authored orbit inspection angle',
+      label: 'Authored rotation for the collision check',
       min: -100,
       max: 100,
       step: 1,
@@ -221,7 +221,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'offsetX',
       kind: 'range',
-      label: 'Target horizontal offset',
+      label: 'Lesion horizontal offset',
       min: -30,
       max: 30,
       step: 1,
@@ -231,7 +231,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'offsetDepth',
       kind: 'range',
-      label: 'Target depth offset',
+      label: 'Lesion depth offset',
       min: -30,
       max: 30,
       step: 1,
@@ -241,7 +241,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'center',
       kind: 'action',
-      label: 'Center the teaching target',
+      label: 'Center the lesion',
       default: false,
       patch: { offsetX: 0, offsetDepth: 0 },
     },
@@ -254,7 +254,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'clearance',
       kind: 'toggle',
-      label: 'Complete supported orbit and line routing checked',
+      label: 'Full CBCT spin path and lines checked',
       default: false,
     },
     {
@@ -272,7 +272,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'captured',
       kind: 'action',
-      label: 'Capture teaching state',
+      label: 'Capture the verified setup',
       default: false,
       patch: { captured: true },
     },
@@ -363,7 +363,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'showCurrent',
       kind: 'toggle',
-      label: 'Show current target ground truth',
+      label: 'Show the current lesion position (teaching ground truth)',
       default: true,
     },
     { key: 'capture', kind: 'action', label: 'Capture a new teaching contour', default: false },
@@ -382,7 +382,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'orbit',
       kind: 'range',
-      label: 'C-arm orientation',
+      label: 'C-arm rotation',
       min: -90,
       max: 90,
       step: 1,
@@ -392,7 +392,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'shield',
       kind: 'toggle',
-      label: 'Place the schematic barrier between patient and staff',
+      label: 'Place the schematic shielding barrier between patient and staff',
       default: false,
     },
   ],
@@ -541,24 +541,24 @@ export interface LabMetricSpec {
 
 /** The readout labels the draft printed, one per metric. */
 export const LAB_METRICS: Readonly<Record<LabMetricId, LabMetricSpec>> = {
-  separationMm: { label: 'Detector-plane center separation', unit: ' mm', digits: 1 },
-  depthMm: { label: 'Physical depth offset', unit: ' mm', digits: 0 },
+  separationMm: { label: 'Projected tool–lesion separation', unit: ' mm', digits: 1 },
+  depthMm: { label: 'True depth offset along the X-ray path', unit: ' mm', digits: 0 },
   irradiatedAreaPct: { label: 'Irradiated area vs full field', unit: '%', digits: 0 },
-  zoomAddsExposure: { label: 'Extra exposure from stored-image zoom' },
-  pulseRate: { label: 'Acquisition pulse rate', unit: ' pulses/s', digits: 2 },
+  zoomAddsExposure: { label: 'Extra exposure from display zoom' },
+  pulseRate: { label: 'Pulse rate', unit: ' pulses/s', digits: 2 },
   masPerSecond: { label: 'Tube load at fixed 20 mA', unit: ' mAs/s', digits: 2 },
-  inFrameBlurMm: { label: 'Movement during one pulse', unit: ' mm', digits: 2 },
+  inFrameBlurMm: { label: 'Motion blur during one pulse', unit: ' mm', digits: 2 },
   interFrameTravelMm: { label: 'Travel between frames', unit: ' mm', digits: 1 },
-  intervalMs: { label: 'Time between measurements', unit: ' ms', digits: 0 },
-  sweepDeg: { label: 'Angular sweep', unit: '°', digits: 0 },
-  planeMm: { label: 'Reconstruction depth plane', unit: ' mm', digits: 0 },
-  centered: { label: 'Target centered on both scouts' },
+  intervalMs: { label: 'Time between acquired frames', unit: ' ms', digits: 0 },
+  sweepDeg: { label: 'DTS arc', unit: '°', digits: 0 },
+  planeMm: { label: 'DTS plane depth', unit: ' mm', digits: 0 },
+  centered: { label: 'Lesion centered on both scout images' },
   ready: { label: 'Acquisition readiness' },
-  captured: { label: 'Teaching state captured' },
-  windowLabel: { label: 'Sampling window and target' },
-  windowIntersects: { label: 'Sampling window intersects the target' },
-  windowFull: { label: 'Sampling window fully within the target' },
-  tipInside: { label: 'Tip inside the target' },
+  captured: { label: 'Verified setup captured' },
+  windowLabel: { label: 'Side-cutting window and lesion' },
+  windowIntersects: { label: 'Side-cutting window intersects the lesion' },
+  windowFull: { label: 'Side-cutting window fully within the lesion' },
+  tipInside: { label: 'Needle tip inside the lesion' },
   storedShiftMm: { label: 'Stored contour state', unit: ' mm', digits: 0 },
   currentShiftMm: { label: 'Current anatomy state', unit: ' mm', digits: 0 },
   contourStale: { label: 'Stored contour differs from current anatomy' },

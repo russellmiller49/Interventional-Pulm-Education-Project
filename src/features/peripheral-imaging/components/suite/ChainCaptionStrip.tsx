@@ -25,7 +25,7 @@ export function ChainCaptionStrip({
       </p>
       <ol
         className={styles.chainStrip}
-        aria-label="The imaging chain"
+        aria-label="Image formation"
         {...{ [SUITE_DOM.chainMap]: '' }}
       >
         {CHAIN_STOPS.map((stop) => (
