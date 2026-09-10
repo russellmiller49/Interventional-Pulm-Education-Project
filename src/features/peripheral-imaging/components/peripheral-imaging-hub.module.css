@@ -165,3 +165,64 @@
 .chip[data-kind='case'] {
   border-style: dashed;
 }
+
+/*
+ * The suite, drawn once on the front door. The picture is rendered on the shell's own base colour,
+ * so the figure paints itself with the same token and its edge disappears; the caption reads the
+ * shell's dark tokens directly rather than the light ones above, because it sits on that colour.
+ */
+.hero {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 1.5rem;
+  background: var(--surface-base, #061519);
+}
+
+.heroImage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.heroCaption {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1rem clamp(1rem, 2.5vw, 1.75rem) 1.25rem;
+  border-top: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  color: var(--muted, #9fb4b7);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.heroLede {
+  margin: 0;
+  color: var(--ink, #eaf4f4);
+  font-weight: 600;
+}
+
+.heroStops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The arrow is the chain's own separator; it carries no words, so assistive technology skips it. */
+.heroStops li + li::before {
+  content: '→' / '';
+  margin-right: 0.6rem;
+  color: var(--cyan-bright, #71e1e5);
+}
+
+.heroStops strong {
+  color: var(--ink, #eaf4f4);
+  font-weight: 700;
+}
+
+.heroBoundary {
+  margin: 0;
+  font-size: 0.8125rem;
+}
