@@ -61,8 +61,13 @@ function Harness() {
   const [camera, setCamera] = useState<SuiteCamera>('suite')
   const [spotlight, setSpotlight] = useState(false)
   const [paused, setPaused] = useState(false)
+  const [hiddenRoomLayers, setHiddenRoomLayers] = useState<readonly string[]>([])
   const view = {
     ...baseView,
+    layers:
+      baseView.mode === 'room'
+        ? baseView.layers.filter((layer) => !hiddenRoomLayers.includes(layer))
+        : baseView.layers,
     mode: authored ? baseView.mode : mode,
     camera: authored ? baseView.camera : camera,
     monitor: hideMonitor ? ('hidden' as const) : baseView.monitor,
@@ -87,6 +92,23 @@ function Harness() {
         </button>
         <button onClick={() => setSpotlight(!spotlight)}>Spotlight tool depth</button>
         <button onClick={() => setPaused(!paused)}>Toggle review pause</button>
+        {baseView.mode === 'room' &&
+          ['Thoracic envelope', 'Lungs', 'Ribs and spine', 'cone'].map((layer) => (
+            <label key={layer}>
+              <input
+                type="checkbox"
+                checked={!hiddenRoomLayers.includes(layer)}
+                onChange={() =>
+                  setHiddenRoomLayers((current) =>
+                    current.includes(layer)
+                      ? current.filter((item) => item !== layer)
+                      : [...current, layer],
+                  )
+                }
+              />{' '}
+              Show {layer}
+            </label>
+          ))}
       </div>
       <ImagingSuitePane
         key={mode}

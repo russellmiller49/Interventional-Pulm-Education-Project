@@ -47,6 +47,7 @@ export function ChainPins({
   answer,
   onCamera,
   spread = false,
+  monitorOffset,
 }: {
   frame: SuiteFrame
   portal: RefObject<HTMLDivElement>
@@ -54,8 +55,9 @@ export function ChainPins({
   answer?: ChainAnswer
   onCamera: (camera: SuiteCamera) => void
   spread?: boolean
+  monitorOffset?: Point3
 }) {
-  const anchors = chainStopAnchors(frame)
+  const anchors = chainStopAnchors(frame, monitorOffset)
   const shortTitles: Record<ChainStop, string> = {
     source: 'Source',
     beam: 'Beam',

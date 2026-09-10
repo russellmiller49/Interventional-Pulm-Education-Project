@@ -4,14 +4,14 @@ CT-derived teaching context and authored geometry for the peripheral-imaging
 course. Source headers, identifiers and local absolute paths are excluded. The
 original clinical source files remain outside Git in the primary checkout.
 
-| Asset                         | What it contains                                                                                           |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `anatomy/thorax.glb`          | Four Slicer-derived layers: airways, lungs, ribs/spine and thoracic envelope; embedded Draco geometry      |
-| `anatomy/ct-atlas.png`        | 192³ quantized CT packed into a 16 × 12 PNG atlas, with a baked authored part-solid nodule                 |
-| `anatomy/dts-projections.png` | Thirteen parallel projections for each of five authored sweeps, using the same nodule plus a straight tool |
-| `anatomy/fluoroview-carm.glb` | Retained original FluoroView gantry animation; retirement remains an owner decision                        |
-| `sampling-window.glb`         | Repository-authored sphere and fictional needle side window                                                |
-| `room-hero.png`               | Text-free 2400 × 1000 still from the real room mode, on `#061519`; approximately 134 KB                    |
+| Asset                         | What it contains                                                                                                       |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `anatomy/thorax.glb`          | Four Slicer-derived layers: airways, lungs, ribs/spine and thoracic envelope; embedded Draco geometry                  |
+| `anatomy/ct-atlas.png`        | 192³ quantized CT packed into a 16 × 12 PNG atlas, with a baked authored part-solid nodule                             |
+| `anatomy/dts-projections.png` | Thirteen parallel projections for each of five authored sweeps, using the same nodule plus a straight tool             |
+| `anatomy/fluoroview-carm.glb` | Retained original FluoroView gantry animation; retirement remains an owner decision                                    |
+| `sampling-window.glb`         | Repository-authored sphere and fictional needle side window                                                            |
+| `room-hero.png`               | Text-free 2400 × 1000 room-mode still with visible thorax, beam and grounded suite, on `#061519`; approximately 201 KB |
 
 `manifest.json` records source/output SHA-256 hashes and sizes for every binary
 asset. `anatomy/manifest.json` records CT coordinates, quantization, source SHA,

@@ -2,7 +2,9 @@ import { SUITE_VIEWS } from '../../src/features/peripheral-imaging/content/suite
 import { ROOM_FIXTURE } from './room-fixture'
 import { test, expect, type Locator, type Page } from '@playwright/test'
 import { createRequire } from 'node:module'
+import { createHash } from 'node:crypto'
 import type { AxeResults } from 'axe-core'
+import sharp from 'sharp'
 import {
   DEFAULT_GEOMETRY,
   LESION_CENTER,
@@ -480,11 +482,14 @@ test('DTS prior colours provenance separately and keeps the measured image recov
   await page.bringToFront()
   await expect(page.locator('[data-suite-state=ready]')).toBeVisible({ timeout: 15000 })
   const image = page.locator('[data-dts-state=ready] canvas')
-  // The authored provenance section is a sorter with a hidden monitor and a console camera.
+  // Keep the camera check aligned with the owner's authored provenance composition.
   await expect(page.locator('[data-dts-state]')).toHaveAttribute('data-dts-state', 'ready')
-  await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-camera', 'console')
+  await expect(page.locator('[data-suite-scene]')).toHaveAttribute(
+    'data-suite-camera',
+    SUITE_VIEWS['dts-interpretation'].camera,
+  )
   const scene = page.locator('canvas[data-three-state=ready]')
-  const consoleImage = await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
+  const sceneImage = await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
   const measured = await image.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
   await page.getByRole('button', { name: 'Planning CT prior', exact: true }).click()
   await expect(page.locator('[data-image-provenance]')).toHaveAttribute(
@@ -495,7 +500,7 @@ test('DTS prior colours provenance separately and keeps the measured image recov
   expect(prior).not.toBe(measured)
   await expect
     .poll(() => scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
-    .not.toBe(consoleImage)
+    .not.toBe(sceneImage)
   const colour = await image.evaluate((c) => {
     const context = (c as HTMLCanvasElement).getContext('2d')!
     const rgba = context.getImageData(80, 80, 80, 80).data
@@ -806,6 +811,73 @@ test('room is a resting single canvas with no DRR, pins, control dock or readout
     ),
   )
   expect(result.violations).toEqual([])
+})
+
+test('room hero visibly includes the envelope, lungs, ribs and cone at its export camera', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 2400, height: 1300 })
+  await page.goto(`${preview}?mode=room`)
+  await page.bringToFront()
+  await page.addStyleTag({
+    content:
+      'main { max-width: none !important; margin: 0 !important; padding: 0 !important; } [data-suite-viewport] { width: 2400px !important; height: 1000px !important; }',
+  })
+  const canvas = page.locator('canvas[data-three-state=ready]')
+  await canvas.waitFor()
+  await page.waitForFunction(() => document.querySelector('canvas')?.height === 1000)
+  const capture = () =>
+    canvas.evaluate(async (node) => {
+      const element = node as HTMLCanvasElement
+      const gl = element.getContext('webgl2')!
+      let previous = '',
+        stable = 0
+      for (let frame = 0; frame < 60; frame++) {
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+        gl.finish()
+        const current = element.toDataURL()
+        stable = current === previous ? stable + 1 : 0
+        previous = current
+        if (stable === 3) return current
+      }
+      throw new Error('Room layer change did not settle')
+    })
+  const digest = (url: string) => createHash('sha256').update(url).digest('hex')
+  const decode = (url: string) =>
+    sharp(Buffer.from(url.split(',')[1], 'base64'))
+      .removeAlpha()
+      .raw()
+      .toBuffer()
+  for (const [layer, minimum] of [
+    ['Thoracic envelope', 2500],
+    ['Lungs', 500],
+    ['Ribs and spine', 500],
+    ['cone', 5000],
+  ] as const) {
+    const complete = await capture()
+    const all = await decode(complete)
+    const checkbox = page.getByRole('checkbox', { name: `Show ${layer}`, exact: true })
+    await checkbox.uncheck()
+    await expect.poll(async () => digest(await capture())).not.toBe(digest(complete))
+    const omittedImage = await capture()
+    const omitted = await decode(omittedImage)
+    let changed = 0
+    for (let i = 0; i < all.length; i += 3) {
+      if (
+        Math.abs(all[i] - omitted[i]) +
+          Math.abs(all[i + 1] - omitted[i + 1]) +
+          Math.abs(all[i + 2] - omitted[i + 2]) >
+        12
+      )
+        changed++
+    }
+    expect(changed, `${layer} must contribute visible pixels in the finished room`).toBeGreaterThan(
+      minimum,
+    )
+    console.log(`Room layer visibility: ${layer}: ${changed} pixels`)
+    await checkbox.check()
+    await expect.poll(async () => digest(await capture())).not.toBe(digest(omittedImage))
+  }
 })
 
 test('room keeps its contract through reduced motion, locking, narrow layout and context recovery', async ({

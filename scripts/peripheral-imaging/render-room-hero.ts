@@ -100,6 +100,14 @@ async function main() {
       .removeAlpha()
       .png({ compressionLevel: 9, adaptiveFiltering: true })
       .toBuffer()
+    // Art-direction previews never replace the delivered asset or its provenance.
+    const previewIndex = process.argv.indexOf('--preview')
+    if (previewIndex !== -1) {
+      assert(process.argv[previewIndex + 1], '--preview requires an output PNG path')
+      writeFileSync(path.resolve(process.argv[previewIndex + 1]), png)
+      console.log(`Preview: ${png.length} bytes`)
+      return
+    }
     assert(
       png.length < ROOM_HERO.maximumBytes,
       `PNG is ${png.length} bytes; budget is ${ROOM_HERO.maximumBytes}`,
@@ -129,6 +137,10 @@ async function main() {
         'Anatomy.tsx',
         'CameraRig.tsx',
         'Room.tsx',
+        'RoomGantry.tsx',
+        'RoomGround.tsx',
+        'RoomPatient.tsx',
+        'ChainPins.tsx',
         'ParametricCarm.tsx',
         'DetectorImage.tsx',
         'SuiteScene.tsx',
@@ -145,7 +157,7 @@ async function main() {
       schema: 'peripheral-imaging-room-render/v1',
       authoredOn: '2026-09-09',
       source:
-        'Repository-authored room and gantry with the Slicer-derived thorax; actual room mode, without DOM overlays or a DRR',
+        'Repository-authored room, gantry and schematic patient context with the Slicer-derived thorax; actual room mode, without DOM overlays or a DRR',
       sourceSha256: sha256(JSON.stringify(sources)),
       ctSourceSha256: anatomy.sourceSha256,
       airwaySourceSha256: anatomy.airwaySourceSha256,

@@ -6,14 +6,14 @@ It does not require Slicer, an external image service or a clinical scanner at r
 
 ## Provenance
 
-| Delivered asset               | Source and processing                                                                                                                                    | Runtime use                                                                  |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `anatomy/thorax.glb`          | Existing `target_clean_ct.nrrd` and `Final_airway_target.vtk`; Slicer/VTK thresholding, surface extraction, smoothing, decimation and Draco compression  | Independently selectable airways, lungs, ribs/spine and thoracic envelope    |
-| `anatomy/ct-atlas.png`        | Same CT; 192³ samples with a baked authored part-solid nodule, quantized to 8-bit over −1100 to 1800 HU, packed into a 16 × 12 PNG atlas                 | Original FluoroView volume DRR renderer and linked CT slice context          |
-| `anatomy/fluoroview-carm.glb` | Existing `public/fluoroview/cases/patient-new/carm/c_arm_animation.glb`; Draco compression preserves its animation                                       | Original FluoroView C-arm motion reference                                   |
-| `anatomy/dts-projections.png` | Parallel projections of the derived CT with its baked part-solid target and a straight tool added to the volume; horizontal Gaussian high-pass filtering | Browser shift-and-add refocusing of 13 views at each of five authored sweeps |
-| `sampling-window.glb`         | Original procedural sphere and fictional side-window needle                                                                                              | Download of the geometry used in the sampling exercise                       |
-| `room-hero.png`               | Actual `room` mode: procedural gantry, table and monitor boom with `anatomy/thorax.glb`; software WebGL capture and lossless PNG compression             | Static 2400 × 1000 hero asset; hub integration remains with the owner        |
+| Delivered asset               | Source and processing                                                                                                                                          | Runtime use                                                                  |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `anatomy/thorax.glb`          | Existing `target_clean_ct.nrrd` and `Final_airway_target.vtk`; Slicer/VTK thresholding, surface extraction, smoothing, decimation and Draco compression        | Independently selectable airways, lungs, ribs/spine and thoracic envelope    |
+| `anatomy/ct-atlas.png`        | Same CT; 192³ samples with a baked authored part-solid nodule, quantized to 8-bit over −1100 to 1800 HU, packed into a 16 × 12 PNG atlas                       | Original FluoroView volume DRR renderer and linked CT slice context          |
+| `anatomy/fluoroview-carm.glb` | Existing `public/fluoroview/cases/patient-new/carm/c_arm_animation.glb`; Draco compression preserves its animation                                             | Original FluoroView C-arm motion reference                                   |
+| `anatomy/dts-projections.png` | Parallel projections of the derived CT with its baked part-solid target and a straight tool added to the volume; horizontal Gaussian high-pass filtering       | Browser shift-and-add refocusing of 13 views at each of five authored sweeps |
+| `sampling-window.glb`         | Original procedural sphere and fictional side-window needle                                                                                                    | Download of the geometry used in the sampling exercise                       |
+| `room-hero.png`               | Actual `room` mode: procedural suite, beam cone and schematic patient context around `anatomy/thorax.glb`; software WebGL capture and lossless PNG compression | Static 2400 × 1000 hero asset; hub integration remains with the owner        |
 
 The local source stays in the primary checkout's `fluoro_2/New_patient` directory.
 No raw NRRD, DICOM headers, local absolute path, name, or identifier is copied into
@@ -328,12 +328,34 @@ display and container sizing rules are unchanged; the room's goal text has its o
 contrast treatment because there is no light dock behind it.
 
 The delivered `public/peripheral-imaging/room-hero.png` is 2400 × 1000 RGB PNG,
-133,643 bytes (about 134 KB), with background `#061519` across every outer pixel.
-It shows the procedural gantry, table, monitor boom and the existing CT-derived
-thorax. Its fixed teaching gantry rests at orbit 30°, tilt 0° to expose the thorax;
-there is no motion, beam, authored tool, target marker, chain pin, label or baked
-text. The floor shares the clear colour. The monitor is a blank physical screen;
-no projection renderer is allocated.
+201,045 bytes (about 201 KB), with background `#061519` across every outer pixel.
+It shows the procedural gantry, table, monitor boom, beam cone and the existing
+CT-derived thorax at orbit 45°, tilt 0°. There is no motion, authored tool, target
+marker, chain pin, label or baked text. The monitor is a blank physical screen;
+no projection renderer is allocated. The output SHA-256 is
+`dfa096a52a72a13b9f59666eaa5acc069fb2045b51a7015af9a56ce8a30ad72c`.
+
+The art-direction revision adds `Thoracic envelope` and `cone` to the script
+fixture. The missing lung/rib visibility was an opacity issue, not camera culling:
+the GLB materials are double-sided, but the scene used 12% lung and 23% bone
+opacity; the previously omitted envelope would have inherited 5.5%. Room mode now
+uses 22% envelope, 36% lungs and 70% ribs/spine, with opaque airways and a 14% beam
+cone. The source anatomy, alignment and other modes' materials are unchanged.
+
+The C-arm has a broad bevelled band, thicker source/detector housings and a solid
+connection to its pedestal. The band joins behind the housings, preserving the
+shared source and detector imaging planes. The lowered table and mattress meet
+the posterior torso; a continuous underframe, connected bases and soft procedural
+ground cues make the supports legible. The floor cues fade into the shell at the
+image edges and are authored illustration, not simulated illumination or scatter.
+A schematic head, neck, pillow and draped lower-body continuation contextualize
+the cropped CT thorax. These additions are repository-authored teaching geometry,
+not further CT-derived anatomy or a device/clearance model.
+
+The named `room` camera uses a more frontal direction for room mode, and the
+monitor furniture is spaced to the right to fill the banner. The same furniture
+offset feeds optional chain pins and console camera anchors. Other modes using
+the `room` camera retain their existing composition.
 
 Regenerate from the repository root with the installed lockfile dependencies and
 Playwright Chromium (`npx playwright install chromium` if it is missing):
@@ -349,6 +371,10 @@ fixture is for rendering and contract checks; it is not a section or a hub view
 spec. Camera fitting includes each furniture piece, and the output needs no crop.
 No route, hub component or authored view registry is changed.
 
+For a local art-direction preview without replacing the published asset or its
+provenance, append `--preview /tmp/room-preview.png`. Preview output skips the
+publication size/edge checks; the normal command always enforces them.
+
 Rendering uses DPR 1, antialiasing, sRGB and ANGLE SwiftShader to avoid depending on
 the workstation GPU. Sharp removes the redundant alpha channel and compresses
 losslessly at level 9 with adaptive filtering. It neither resizes nor quantizes
@@ -361,13 +387,19 @@ original CT and airway source hashes, output hash/bytes, the fixture settings an
 Chromium/Playwright/Sharp/libvips versions. Reproduction uses those sources and the
 lockfile's browser version; a renderer upgrade can change rasterization. The
 anatomy comes from the same Slicer export documented above, and the furniture is
-repository-authored teaching geometry. No new clinical anatomy, device geometry,
+repository-authored teaching geometry. No new clinical measurement, manufacturer specification,
 clearance claim or reconstruction is introduced.
 
-Verification: 193 peripheral-imaging Jest tests, 31 scene scenarios, seven app
+Verification: 201 peripheral-imaging Jest tests, 32 scene scenarios, eight app
 scenarios, TypeScript and ESLint passed. Room coverage checks one live WebGL
 context, no volume-atlas requests, no draw calls while idle, reduced motion,
 control locking, context recovery, native chain answers, narrow layout and axe.
+Paired renders at the actual 2400 × 1000 export camera check each requested layer:
+omitting the envelope layer (including its schematic patient context) changes
+63,798 pixels, lungs 16,331, ribs/spine 10,996 and
+cone 154,388 (summed RGB channel difference above 12). A model test also checks
+that the room furniture offset keeps chain anchors aligned without moving the
+source, beam, patient or detector anchors.
 Fresh software-rendered runs produced the same PNG SHA-256 and byte count. The
 asset check verifies dimensions, byte budget, nonblank pixels, every outer pixel
 and the manifest's output/source links.

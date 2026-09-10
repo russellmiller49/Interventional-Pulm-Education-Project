@@ -28,6 +28,8 @@ export function CameraRig({
   focus = LESION_CENTER,
   closeupDistance,
   labelled = true,
+  roomComposition = false,
+  monitorOffset,
 }: {
   view: SuiteCamera
   frame: SuiteFrame
@@ -36,11 +38,13 @@ export function CameraRig({
   focus?: Point3
   closeupDistance?: number
   labelled?: boolean
+  roomComposition?: boolean
+  monitorOffset?: Point3
 }) {
   const { camera, invalidate, size } = useThree()
   const config = useMemo(() => {
     const f = frame.geometry.field
-    const anchors = chainStopAnchors(frame)
+    const anchors = chainStopAnchors(frame, monitorOffset)
     const target: Point3 =
       view === 'target'
         ? focus
@@ -49,7 +53,7 @@ export function CameraRig({
           : frame.iso
     const positions: Record<SuiteCamera, Point3> = {
       suite: [f * 2.1, f * 0.3, f * 1.8],
-      room: [f * 2.5, f * 1.8, f * 2.5],
+      room: roomComposition ? [f * 1.6, f * 1.45, f * 3.2] : [f * 2.5, f * 1.8, f * 2.5],
       anterior: [0, f * 2.5, 0.01],
       side: [f * 2.8, 0, 0.01],
       head: [0, 0.01, f * 2.8],
@@ -107,6 +111,8 @@ export function CameraRig({
     focus,
     closeupDistance,
     labelled,
+    roomComposition,
+    monitorOffset,
   ])
   useEffect(() => {
     camera.position.set(...config.position)
