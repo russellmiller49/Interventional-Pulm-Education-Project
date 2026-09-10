@@ -18,3 +18,7 @@ public/bronch-navigation-trainer/app
 
 
 
+
+# Preserve imported source formatting and asset metadata.
+navigation_module
+EBUS-course

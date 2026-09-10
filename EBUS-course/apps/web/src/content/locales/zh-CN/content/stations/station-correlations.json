@@ -1,0 +1,502 @@
+[
+  {
+    "stationId": "2R",
+    "aliases": [
+      "右上气管旁",
+      "高位右气管旁"
+    ],
+    "landmarkChecklist": [
+      "保持在气管右侧高位。",
+      "保持目标位于 4R 及奇静脉交界以上。",
+      "用气管左外侧缘规则判断左右侧，而不是气管中线。",
+      "思考右上气管旁通道，而不是肺门入口。"
+    ],
+    "views": {
+      "ct": {
+        "title": "轴位 CT 对照",
+        "orientation": "4R 以上的高位右气管旁通道。",
+        "focusLabel": "气管右侧，上气管旁条带",
+        "caption": "先从右上序列关系开始，再确认淋巴结仍位于气管左外侧缘右侧。",
+        "visualAnchor": "upper-right"
+      },
+      "bronchoscopy": {
+        "title": "支气管镜对照",
+        "orientation": "右上气管扫查。",
+        "focusLabel": "右侧气管壁高位目标",
+        "caption": "这仍是气管视图；如果感觉像肺门，可能已经漂移得过于远端。",
+        "visualAnchor": "upper-right"
+      },
+      "ultrasound": {
+        "title": "EBUS 对照",
+        "orientation": "右上气管旁 EBUS 窗口。",
+        "focusLabel": "右上气管旁淋巴结目标",
+        "caption": "将其定位在 4R 上方，并在分期前用气管边界规则核实左右侧。",
+        "visualAnchor": "upper-right"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "2r-ct",
+        "viewId": "ct",
+        "prompt": "此高位右气管旁 CT 视图中高亮的是哪个站点？",
+        "optionIds": [
+          "2R",
+          "4R",
+          "2L",
+          "10R"
+        ],
+        "explanation": "正确答案是 2R，因为目标仍位于高位、右侧且高于 4R 水平。"
+      }
+    ]
+  },
+  {
+    "stationId": "2L",
+    "aliases": [
+      "左上气管旁",
+      "高位左气管旁"
+    ],
+    "landmarkChecklist": [
+      "保持在气管左侧高位。",
+      "保持目标在 4L 边界以上。",
+      "判定左右侧前使用气管左外侧缘规则。",
+      "这仍是气管站点，不是肺门站点。"
+    ],
+    "views": {
+      "ct": {
+        "title": "轴位 CT 对照",
+        "orientation": "4L 以上的高位左气管旁通道。",
+        "focusLabel": "气管左侧，上气管旁条带",
+        "caption": "在 4L 和 10L 过渡之前，将 2L 读作左上气管旁目标。",
+        "visualAnchor": "upper-left"
+      },
+      "bronchoscopy": {
+        "title": "支气管镜对照",
+        "orientation": "左上气管扫查。",
+        "focusLabel": "左侧气管壁高位目标",
+        "caption": "如果视图感觉在远端或分支层级，很可能已不在 2L。",
+        "visualAnchor": "upper-left"
+      },
+      "ultrasound": {
+        "title": "EBUS 对照",
+        "orientation": "左上气管旁 EBUS 窗口。",
+        "focusLabel": "左上气管旁淋巴结目标",
+        "caption": "确认左侧位置，并保持目标在 4L 交界以上。",
+        "visualAnchor": "upper-left"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "2l-bronchoscopy",
+        "viewId": "bronchoscopy",
+        "prompt": "从左上气管壁视角看，高亮的是哪个站点？",
+        "optionIds": [
+          "2L",
+          "4L",
+          "2R",
+          "10L"
+        ],
+        "explanation": "正确答案是 2L，因为目标仍位于上方且为左气管旁，而不是下方或肺门。"
+      }
+    ]
+  },
+  {
+    "stationId": "4R",
+    "aliases": [
+      "右下气管旁",
+      "常用 4R 站"
+    ],
+    "landmarkChecklist": [
+      "将 4R 放在 2R 下方、10R 上方。",
+      "将奇静脉下缘作为下界。",
+      "保持目标为气管旁，而非肺门。",
+      "记住气管左外侧缘仍然区分左右侧。"
+    ],
+    "views": {
+      "ct": {
+        "title": "轴位 CT 对照",
+        "orientation": "10R 以上的右下气管旁通道。",
+        "focusLabel": "右下气管旁目标",
+        "caption": "将 4R 定位在 2R 下方、由奇静脉定义的肺门交界上方。",
+        "visualAnchor": "middle-right"
+      },
+      "bronchoscopy": {
+        "title": "支气管镜对照",
+        "orientation": "隆突下降附近的右外侧气管壁。",
+        "focusLabel": "右气管旁扫查窗口",
+        "caption": "这仍是气管和气管旁；若感觉为主支气管，则提示 10R。",
+        "visualAnchor": "middle-right"
+      },
+      "ultrasound": {
+        "title": "EBUS 对照",
+        "orientation": "右下气管旁 EBUS 窗口。",
+        "focusLabel": "经典 4R 分期窗口",
+        "caption": "在将淋巴结称为肺门而非气管旁之前，先检查奇静脉边界。",
+        "visualAnchor": "middle-right"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "4r-ultrasound",
+        "viewId": "ultrasound",
+        "prompt": "此右下气管旁 EBUS 视图中高亮的是哪个站点？",
+        "optionIds": [
+          "4R",
+          "2R",
+          "10R",
+          "7"
+        ],
+        "explanation": "正确答案是 4R，因为目标仍是下气管旁，尚未低于奇静脉下缘进入 10R。"
+      }
+    ]
+  },
+  {
+    "stationId": "4L",
+    "aliases": [
+      "左下气管旁",
+      "主动脉侧 4L"
+    ],
+    "landmarkChecklist": [
+      "将 4L 放在 2L 下方、10L 上方。",
+      "将左主肺动脉上缘作为下界。",
+      "保持 4L 位于动脉韧带内侧。",
+      "不要将气管旁目标与主动脉肺动脉窗或肺门目标混淆。"
+    ],
+    "views": {
+      "ct": {
+        "title": "轴位 CT 对照",
+        "orientation": "10L 以上的左下气管旁通道。",
+        "focusLabel": "左下气管旁目标",
+        "caption": "利用肺动脉边界和动脉韧带内侧关系将 4L 与邻近站点区分。",
+        "visualAnchor": "middle-left"
+      },
+      "bronchoscopy": {
+        "title": "支气管镜对照",
+        "orientation": "隆突附近的左气管旁扫查。",
+        "focusLabel": "左气管旁扫查窗口",
+        "caption": "视图仍应感觉为纵隔，而非左肺门。",
+        "visualAnchor": "middle-left"
+      },
+      "ultrasound": {
+        "title": "EBUS 对照",
+        "orientation": "左下气管旁 EBUS 窗口。",
+        "focusLabel": "2L 下方的左气管旁目标",
+        "caption": "最大的混淆对象是 10L，因此确认淋巴结仍在左主肺动脉上缘以上。",
+        "visualAnchor": "middle-left"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "4l-ct",
+        "viewId": "ct",
+        "prompt": "此左下气管旁 CT 图中高亮的是哪个站点？",
+        "optionIds": [
+          "4L",
+          "2L",
+          "10L",
+          "7"
+        ],
+        "explanation": "正确答案是 4L，因为淋巴结仍为左气管旁并位于 10L 边界以上。"
+      }
+    ]
+  },
+  {
+    "stationId": "7",
+    "aliases": [
+      "隆突下",
+      "中线隆突下锚点"
+    ],
+    "landmarkChecklist": [
+      "先找到隆突。",
+      "保持目标位于主支气管内侧缘之间。",
+      "记住 7 站是中线站点，而不是右侧或左侧站点。",
+      "将此站点作为方向重置点。"
+    ],
+    "views": {
+      "ct": {
+        "title": "轴位 CT 对照",
+        "orientation": "隆突下方的中线站点。",
+        "focusLabel": "隆突下桥接目标",
+        "caption": "如果迷失方向，7 站是最快的中线重置点和分期锚点。",
+        "visualAnchor": "center"
+      },
+      "bronchoscopy": {
+        "title": "支气管镜对照",
+        "orientation": "隆突分叉及其正下方目标。",
+        "focusLabel": "隆突下检查点",
+        "caption": "保持在分叉下方中央；向外侧漂移通常意味着进入 10 站区域。",
+        "visualAnchor": "center"
+      },
+      "ultrasound": {
+        "title": "EBUS 对照",
+        "orientation": "中线隆突下 EBUS 视图。",
+        "focusLabel": "隆突下方中线淋巴结",
+        "caption": "应思考位于支气管内侧缘之间，而不是简单地认为“某个中央位置”。",
+        "visualAnchor": "center"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "7-bronchoscopy",
+        "viewId": "bronchoscopy",
+        "prompt": "隆突分叉正下方高亮的是哪个站点？",
+        "optionIds": [
+          "7",
+          "10R",
+          "10L",
+          "4R"
+        ],
+        "explanation": "正确答案是 7 站，因为目标位于隆突下方中央、主支气管内侧缘之间。"
+      }
+    ]
+  },
+  {
+    "stationId": "10R",
+    "aliases": [
+      "右肺门",
+      "右肺门检查点"
+    ],
+    "landmarkChecklist": [
+      "将 10R 放在 4R 下方、11R 分支层级目标之前。",
+      "将奇静脉下缘作为上界。",
+      "检查淋巴结是否位于主支气管内侧缘之外，而不是在 7 站内。",
+      "这是主支气管肺门线索，尚不是分支层级线索。"
+    ],
+    "views": {
+      "ct": {
+        "title": "轴位 CT 对照",
+        "orientation": "4R 以远的右肺门入口区。",
+        "focusLabel": "右肺门检查点",
+        "caption": "关键区分点是肺门交界，而不是叶间分支。",
+        "visualAnchor": "lower-right"
+      },
+      "bronchoscopy": {
+        "title": "支气管镜对照",
+        "orientation": "更深部分支点之前的右主支气管。",
+        "focusLabel": "右肺门气道标志",
+        "caption": "进入 11Rs 或 11Ri 前，保持在主支气管肺门入口。",
+        "visualAnchor": "lower-right"
+      },
+      "ultrasound": {
+        "title": "EBUS 对照",
+        "orientation": "右肺门 EBUS 窗口。",
+        "focusLabel": "主支气管入口附近的右肺门目标",
+        "caption": "如果线索感觉过于远端或过于特定于分支，可能已进入 11R 区域。",
+        "visualAnchor": "lower-right"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "10r-ultrasound",
+        "viewId": "ultrasound",
+        "prompt": "右肺门检查点而非叶间分支层级高亮的是哪个站点？",
+        "optionIds": [
+          "10R",
+          "4R",
+          "11Rs",
+          "7"
+        ],
+        "explanation": "正确答案是 10R，因为目标位于右肺门主支气管检查点，而不是远端叶间分支点。"
+      }
+    ]
+  },
+  {
+    "stationId": "10L",
+    "aliases": [
+      "左肺门",
+      "左肺门检查点"
+    ],
+    "landmarkChecklist": [
+      "将 10L 放在 4L 下方、11L 之前。",
+      "将左主肺动脉上缘作为上界。",
+      "确保目标感觉为肺门，而不是气管旁。",
+      "这是主支气管左肺门线索，尚不是叶间分支层级目标。"
+    ],
+    "views": {
+      "ct": {
+        "title": "轴位 CT 对照",
+        "orientation": "4L 以远的左肺门入口区。",
+        "focusLabel": "左肺门检查点",
+        "caption": "保持目标位于气管旁序列以远、左叶间分支点近端。",
+        "visualAnchor": "lower-left"
+      },
+      "bronchoscopy": {
+        "title": "支气管镜对照",
+        "orientation": "更远端分支之前的左主支气管。",
+        "focusLabel": "左肺门气道标志",
+        "caption": "这是 4L 气管旁逻辑与 11L 分支层级逻辑之间的入口。",
+        "visualAnchor": "lower-left"
+      },
+      "ultrasound": {
+        "title": "EBUS 对照",
+        "orientation": "左肺门 EBUS 窗口。",
+        "focusLabel": "主支气管入口附近的左肺门目标",
+        "caption": "利用与主支气管的邻近关系和肺动脉边界，将 10L 与 4L、11L 区分。",
+        "visualAnchor": "lower-left"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "10l-ct",
+        "viewId": "ct",
+        "prompt": "CT 上左肺门检查点高亮的是哪个站点？",
+        "optionIds": [
+          "10L",
+          "4L",
+          "11L",
+          "7"
+        ],
+        "explanation": "正确答案是 10L，因为目标位于 4L 边界以下，但在左叶间分支点近端。"
+      }
+    ]
+  },
+  {
+    "stationId": "11Rs",
+    "aliases": [
+      "右上叶间",
+      "右上叶开口叶间站"
+    ],
+    "landmarkChecklist": [
+      "定位右上叶支气管和中间支气管。",
+      "确认已越过 10R 肺门检查点。",
+      "思考分支层级解剖，而不是主支气管解剖。",
+      "将 11Rs 与下方 11Ri 区分。"
+    ],
+    "views": {
+      "ct": {
+        "title": "CT 对照",
+        "orientation": "右上叶间分支层级。",
+        "focusLabel": "位于右上叶支气管与中间支气管之间的 11Rs",
+        "caption": "肺窗分支细节有助于确认这是右上叶间亚站。",
+        "visualAnchor": "lower-right"
+      },
+      "bronchoscopy": {
+        "title": "支气管镜对照",
+        "orientation": "右上叶开口和中间支气管。",
+        "focusLabel": "右上叶间气道线索",
+        "caption": "这是位于 10R 以远、11Ri 以上的分支层级视图。",
+        "visualAnchor": "lower-right"
+      },
+      "ultrasound": {
+        "title": "EBUS 对照",
+        "orientation": "右上叶间 EBUS 窗口。",
+        "focusLabel": "11Rs 分支层级目标",
+        "caption": "如果目标仍像主支气管检查点，应考虑 10R 而不是 11Rs。",
+        "visualAnchor": "lower-right"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "11rs-bronchoscopy",
+        "viewId": "bronchoscopy",
+        "prompt": "右上叶支气管与中间支气管之间高亮的是哪个站点？",
+        "optionIds": [
+          "11Rs",
+          "10R",
+          "11Ri",
+          "4R"
+        ],
+        "explanation": "正确答案是 11Rs，因为气道标志是右上叶支气管与中间支气管之间的右上叶间分支点。"
+      }
+    ]
+  },
+  {
+    "stationId": "11Ri",
+    "aliases": [
+      "右下叶间",
+      "右中/下叶叶间站"
+    ],
+    "landmarkChecklist": [
+      "找到中叶和下叶支气管分叉。",
+      "确认位置比 10R 更远端、比 11Rs 更下方。",
+      "使用分支解剖，而不是笼统肺门直觉。",
+      "这是右下叶间亚站。"
+    ],
+    "views": {
+      "ct": {
+        "title": "CT 对照",
+        "orientation": "右下叶间分支层级。",
+        "focusLabel": "位于中叶和下叶支气管之间的 11Ri",
+        "caption": "这是更下方的右叶间目标，不应合并为笼统的 11R 标签。",
+        "visualAnchor": "lower-right"
+      },
+      "bronchoscopy": {
+        "title": "支气管镜对照",
+        "orientation": "右中叶和右下叶支气管分支。",
+        "focusLabel": "右下叶间气道线索",
+        "caption": "分支细节是区分 11Ri 与 10R、11Rs 的关键。",
+        "visualAnchor": "lower-right"
+      },
+      "ultrasound": {
+        "title": "EBUS 对照",
+        "orientation": "右下叶间 EBUS 窗口。",
+        "focusLabel": "11Ri 分支层级目标",
+        "caption": "先命名分支关系；站点标签由气道解剖得出。",
+        "visualAnchor": "lower-right"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "11ri-ultrasound",
+        "viewId": "ultrasound",
+        "prompt": "右下叶间分支层级高亮的是哪个站点？",
+        "optionIds": [
+          "11Ri",
+          "11Rs",
+          "10R",
+          "7"
+        ],
+        "explanation": "正确答案是 11Ri，因为目标位于右下叶间分支点，而不是上叶间或肺门检查点。"
+      }
+    ]
+  },
+  {
+    "stationId": "11L",
+    "aliases": [
+      "左叶间",
+      "左侧分支级肺门延续"
+    ],
+    "landmarkChecklist": [
+      "确认已越过 10L 肺门检查点。",
+      "寻找左侧分支层级气道解剖，而不是主支气管视图。",
+      "这是左叶间目标，而不是气管旁目标。",
+      "将 10L 作为主要混淆对象。"
+    ],
+    "views": {
+      "ct": {
+        "title": "CT 对照",
+        "orientation": "10L 以远的左叶间分支层级。",
+        "focusLabel": "左叶间目标",
+        "caption": "线索是肺门检查点以远的左侧分支层级气道解剖。",
+        "visualAnchor": "lower-left"
+      },
+      "bronchoscopy": {
+        "title": "支气管镜对照",
+        "orientation": "主支气管以远的左侧分支层级气道。",
+        "focusLabel": "左叶间气道线索",
+        "caption": "这比 10L 更远端，应感觉为分支层级而不是肺门。",
+        "visualAnchor": "lower-left"
+      },
+      "ultrasound": {
+        "title": "EBUS 对照",
+        "orientation": "左叶间 EBUS 窗口。",
+        "focusLabel": "11L 分支层级目标",
+        "caption": "更远端、分支层级的左侧气道关系支持 11L 而不是 10L。",
+        "visualAnchor": "lower-left"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "11l-bronchoscopy",
+        "viewId": "bronchoscopy",
+        "prompt": "左肺门检查点以远、分支层级高亮的是哪个站点？",
+        "optionIds": [
+          "11L",
+          "10L",
+          "4L",
+          "7"
+        ],
+        "explanation": "正确答案是 11L，因为气道线索位于分支层级且在 10L 肺门检查点远端。"
+      }
+    ]
+  }
+]

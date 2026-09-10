@@ -1,0 +1,747 @@
+[
+  {
+    "id": "2R",
+    "displayName": "Station 2R",
+    "shortLabel": "Upper Paratracheal",
+    "iaslcName": "Right upper paratracheal",
+    "zone": "Upper mediastinal",
+    "laterality": "Right",
+    "description": "Upper right paratracheal station in the superior mediastinum above the 4R level.",
+    "accessNotes": "Best reviewed from the upper trachea with stable balloon contact and deliberate confirmation of the great-vessel relationships before needle planning.",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "Upper right lateral tracheal sweep above the 4R window and above the azygos transition.",
+    "landmarkVessels": [
+      "Superior vena cava",
+      "Innominate vein",
+      "Azygos transition"
+    ],
+    "boundaryDefinition": {
+      "superior": "Lung apex / pleural cupula",
+      "inferior": "Intersection of the caudal margin of the innominate vein with the trachea",
+      "medial": "Left lateral border of the trachea",
+      "lateral": "Right mediastinal pleura and great-vessel sidewall"
+    },
+    "boundaryNotes": [
+      "Use the left lateral tracheal border, not the tracheal midline, to separate 2R from 2L.",
+      "Think of 2R as the superior half of the right paratracheal stack, with 4R directly below it."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Mediastinal disease (N2) for a right-sided primary.",
+      "contralateral": "Contralateral mediastinal disease (N3) for a left-sided primary.",
+      "note": "Laterality matters because 2R is a right mediastinal station defined relative to the left lateral tracheal border."
+    },
+    "clinicalImportance": "2R is not always the first positive station, but a malignant 2R node can upstage disease quickly and is easy to mislabel if the superior-inferior right paratracheal stack is lost.",
+    "memoryCues": [
+      "High right paratracheal corridor.",
+      "2R sits above 4R in the same right-sided stack."
+    ],
+    "confusionPairs": [
+      "2L",
+      "4R"
+    ],
+    "commonConfusionPair": "4R",
+    "relatedStationIds": [
+      "2L",
+      "4R"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "A superior right paratracheal node above the 4R level.",
+        "Relationship to the trachea matters more than rough symmetry.",
+        "Check whether the node still lies to the right of the left lateral tracheal border."
+      ],
+      "bronchoscopy": [
+        "Survey stays high on the right lateral tracheal wall.",
+        "This is a tracheal rather than hilar window.",
+        "You should not yet feel like you are descending into the carina or main bronchus."
+      ],
+      "ultrasound": [
+        "Target sits in the superior right paratracheal field above 4R.",
+        "Great-vessel orientation helps confirm laterality.",
+        "Contact and depth matter because the window is relatively superior and narrow."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Confirm the tract relative to adjacent great vessels before committing to a pass.",
+      "Do not let a seemingly midline target drift into a mislabeled 2L or 4R call."
+    ],
+    "stagingChangeFinding": "A malignant 2R node is N2 for a right lung primary and N3 for a left lung primary.",
+    "assetKeys": {
+      "map": "station-map-2r",
+      "ct": "ct-2r",
+      "bronchoscopy": "bronchoscopy-2r",
+      "ultrasound": "ultrasound-2r"
+    }
+  },
+  {
+    "id": "2L",
+    "displayName": "Station 2L",
+    "shortLabel": "Upper Paratracheal",
+    "iaslcName": "Left upper paratracheal",
+    "zone": "Upper mediastinal",
+    "laterality": "Left",
+    "description": "Upper left paratracheal station above 4L in the superior mediastinum.",
+    "accessNotes": "Keep the target clearly left-sided and superior before assuming you have reached 4L or a hilar structure.",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "Upper left tracheal survey before descending to the 4L window.",
+    "landmarkVessels": [
+      "Aortic arch",
+      "Left common carotid and subclavian region",
+      "Upper left mediastinal vascular contour"
+    ],
+    "boundaryDefinition": {
+      "superior": "Lung apex / pleural cupula",
+      "inferior": "Upper border of the aortic arch",
+      "medial": "Left lateral border of the trachea",
+      "lateral": "Left mediastinal pleura"
+    },
+    "boundaryNotes": [
+      "2L begins left of the left lateral tracheal border and remains the superior half of the left paratracheal stack.",
+      "If the node is already low and closely related to the aortic/pulmonary artery region, reconsider 4L."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Mediastinal disease (N2) for a left-sided primary.",
+      "contralateral": "Contralateral mediastinal disease (N3) for a right-sided primary.",
+      "note": "Like 2R, this is a laterality-sensitive mediastinal station."
+    },
+    "clinicalImportance": "2L is a high-value station because a positive result can immediately define contralateral mediastinal disease for a right-sided primary.",
+    "memoryCues": [
+      "High left paratracheal corridor.",
+      "Stay above the 4L window."
+    ],
+    "confusionPairs": [
+      "2R",
+      "4L"
+    ],
+    "commonConfusionPair": "4L",
+    "relatedStationIds": [
+      "2R",
+      "4L"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "Superior left paratracheal target above the 4L level.",
+        "Node sits left of the left lateral tracheal border.",
+        "The aortic arch helps confirm that you are still in the upper left mediastinum."
+      ],
+      "bronchoscopy": [
+        "High left tracheal wall survey rather than a hilar or subcarinal view.",
+        "Orientation should still feel proximal and tracheal.",
+        "The learner should not yet feel the left main bronchus handoff."
+      ],
+      "ultrasound": [
+        "Upper left paratracheal target above the 4L window.",
+        "Great-vessel relationships confirm that the target remains left-sided.",
+        "Depth and contact adjustments matter because the space is compact."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Reconfirm laterality before sampling because a mislabeled 2L node can create a major staging error.",
+      "Use Doppler to clarify nearby vascular structures when the window is crowded."
+    ],
+    "stagingChangeFinding": "A malignant 2L node is N2 for a left lung primary and N3 for a right lung primary.",
+    "assetKeys": {
+      "map": "station-map-2l",
+      "ct": "ct-2l",
+      "bronchoscopy": "bronchoscopy-2l",
+      "ultrasound": "ultrasound-2l"
+    }
+  },
+  {
+    "id": "4R",
+    "displayName": "Station 4R",
+    "shortLabel": "Lower Paratracheal",
+    "iaslcName": "Right lower paratracheal",
+    "zone": "Upper mediastinal",
+    "laterality": "Right",
+    "description": "Lower right paratracheal workhorse station beneath 2R and above the right hilar handoff.",
+    "accessNotes": "This is a common staging target, so learners should be able to identify it reliably before comparing it with 10R.",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "Right lateral tracheal survey near the carinal descent, above the inferior azygos margin.",
+    "landmarkVessels": [
+      "Azygos vein",
+      "Superior vena cava",
+      "Right pulmonary artery region"
+    ],
+    "boundaryDefinition": {
+      "superior": "Intersection of the caudal margin of the innominate vein with the trachea",
+      "inferior": "Lower border of the azygos vein",
+      "medial": "Left lateral border of the trachea",
+      "lateral": "Right mediastinal pleura and vessel-bearing paratracheal soft tissue"
+    },
+    "boundaryNotes": [
+      "4R remains right-sided relative to the left lateral tracheal border.",
+      "Below the inferior azygos margin, the station becomes 10R rather than 4R."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Mediastinal disease (N2) for a right-sided primary.",
+      "contralateral": "Contralateral mediastinal disease (N3) for a left-sided primary.",
+      "note": "4R often carries major staging weight because it is both accessible and clinically consequential."
+    },
+    "clinicalImportance": "4R is a classic EBUS staging station and a frequent decision-maker in mediastinal staging pathways.",
+    "memoryCues": [
+      "Right lower paratracheal workhorse.",
+      "2R above, 10R below."
+    ],
+    "confusionPairs": [
+      "2R",
+      "10R"
+    ],
+    "commonConfusionPair": "10R",
+    "relatedStationIds": [
+      "2R",
+      "10R"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "Lower right paratracheal node above the hilar handoff.",
+        "The azygos vein helps define the inferior border.",
+        "Check whether the node is still paratracheal rather than hilar."
+      ],
+      "bronchoscopy": [
+        "Right lateral tracheal wall near the carinal descent.",
+        "Still proximal enough to feel paratracheal rather than right main bronchial.",
+        "Orientation should remain central rather than branch-level."
+      ],
+      "ultrasound": [
+        "Classic right paratracheal staging window.",
+        "Target lies below 2R but above the 10R zone.",
+        "Azygos anatomy helps avoid a 10R mislabel."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Use Doppler around the vessel-bearing right paratracheal field before passing the needle.",
+      "Do not call a node 4R if it has already moved below the inferior azygos margin into the hilar zone."
+    ],
+    "stagingChangeFinding": "A malignant 4R node is N2 for a right lung primary and N3 for a left lung primary.",
+    "assetKeys": {
+      "map": "station-map-4r",
+      "ct": "ct-4r",
+      "bronchoscopy": "bronchoscopy-4r",
+      "ultrasound": "ultrasound-4r"
+    }
+  },
+  {
+    "id": "4L",
+    "displayName": "Station 4L",
+    "shortLabel": "Lower Paratracheal",
+    "iaslcName": "Left lower paratracheal",
+    "zone": "Upper mediastinal",
+    "laterality": "Left",
+    "description": "Lower left paratracheal station beneath 2L and above the left hilar handoff.",
+    "accessNotes": "Keep 4L conceptually separate from both 10L and the AP-window stations; it is still a paratracheal mediastinal target.",
+    "accessProfile": "Both",
+    "bestEbusWindow": "Left paratracheal window above the superior rim of the left main pulmonary artery and medial to the ligamentum arteriosum.",
+    "landmarkVessels": [
+      "Aortic arch",
+      "Left main pulmonary artery",
+      "Aortopulmonary window structures"
+    ],
+    "boundaryDefinition": {
+      "superior": "Upper border of the aortic arch",
+      "inferior": "Upper rim of the left main pulmonary artery",
+      "medial": "Left lateral border of the trachea",
+      "lateral": "Ligamentum arteriosum / AP-window side"
+    },
+    "boundaryNotes": [
+      "4L is medial to the ligamentum arteriosum; stations 5 and 6 are lateral or anterolateral.",
+      "Below the upper rim of the left main pulmonary artery, the station becomes 10L."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Mediastinal disease (N2) for a left-sided primary.",
+      "contralateral": "Contralateral mediastinal disease (N3) for a right-sided primary.",
+      "note": "4L is frequently the left-sided station where laterality and boundary precision matter most."
+    },
+    "clinicalImportance": "4L is a pivotal left mediastinal station because it can separate ipsilateral mediastinal disease from contralateral mediastinal spread depending on tumor side.",
+    "memoryCues": [
+      "Left lower paratracheal before the hilar handoff.",
+      "Medial to the ligamentum arteriosum."
+    ],
+    "confusionPairs": [
+      "2L",
+      "10L",
+      "5"
+    ],
+    "commonConfusionPair": "10L",
+    "relatedStationIds": [
+      "2L",
+      "10L"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "Lower left paratracheal node above the left hilar boundary.",
+        "Check the upper rim of the left main pulmonary artery for the 4L-to-10L transition.",
+        "Stay medial to the ligamentum arteriosum when distinguishing 4L from station 5."
+      ],
+      "bronchoscopy": [
+        "Left paratracheal view before the left main bronchus takes over the scene.",
+        "Orientation should still feel mediastinal rather than branch-level.",
+        "This is not yet the left hilar checkpoint."
+      ],
+      "ultrasound": [
+        "Left paratracheal target below 2L and above 10L.",
+        "Pulmonary artery position helps define the lower boundary.",
+        "The AP-window relationship matters when distinguishing from lateral stations."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Reconfirm that the node is still above the superior left main pulmonary artery margin before calling it 4L.",
+      "A crowded vascular field makes Doppler review essential before puncture."
+    ],
+    "stagingChangeFinding": "A malignant 4L node is N2 for a left lung primary and N3 for a right lung primary.",
+    "assetKeys": {
+      "map": "station-map-4l",
+      "ct": "ct-4l",
+      "bronchoscopy": "bronchoscopy-4l",
+      "ultrasound": "ultrasound-4l"
+    }
+  },
+  {
+    "id": "7",
+    "displayName": "Station 7",
+    "shortLabel": "Subcarinal",
+    "iaslcName": "Subcarinal",
+    "zone": "Subcarinal",
+    "laterality": "Midline",
+    "description": "Midline subcarinal station beneath the carina, between the main bronchi.",
+    "accessNotes": "Use station 7 as a reset point when the learner loses orientation because it bridges the right and left hilar pathways.",
+    "accessProfile": "Both",
+    "bestEbusWindow": "Subcarinal view below the carina and between the medial margins of the main bronchi.",
+    "landmarkVessels": [
+      "Main bronchi",
+      "Left atrium region",
+      "Subcarinal mediastinal vessels"
+    ],
+    "boundaryDefinition": {
+      "superior": "Carina",
+      "inferior": "Lower border of bronchus intermedius on the right and upper border of the left lower lobe bronchus on the left",
+      "anterior": "Subcarinal space between the main bronchi",
+      "posterior": "Extends posteriorly around the esophagus within the subcarinal zone"
+    },
+    "boundaryNotes": [
+      "Station 7 lies between the medial margins of the main bronchi; nodes outside that space are station 10.",
+      "Station 7 is not lateralized in the same way as stations 2, 4, 10, or 11."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Mediastinal disease (N2) irrespective of primary side.",
+      "contralateral": "Laterality distinction is not applied the same way because station 7 is midline.",
+      "note": "Station 7 remains an ipsilateral mediastinal station regardless of whether the primary is right- or left-sided."
+    },
+    "clinicalImportance": "Station 7 is a central staging anchor and one of the highest-yield mediastinal targets in both teaching and practice.",
+    "memoryCues": [
+      "Midline below the carina.",
+      "Bridge between right and left hilar pathways."
+    ],
+    "confusionPairs": [
+      "10R",
+      "10L"
+    ],
+    "commonConfusionPair": "10R/10L",
+    "relatedStationIds": [
+      "10R",
+      "10L"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "Node sits below the carina and between the main bronchi.",
+        "Outside the medial bronchial margins is no longer station 7.",
+        "Coronal orientation is especially helpful for its cranio-caudal boundaries."
+      ],
+      "bronchoscopy": [
+        "The carinal bifurcation is the central anchor.",
+        "This is a midline target rather than a lateralized hilar target.",
+        "Orientation should feel centered below the main bifurcation."
+      ],
+      "ultrasound": [
+        "Centerline subcarinal target beneath the bifurcation.",
+        "A classic place to reset orientation when the map feels confusing.",
+        "Do not drift outside the medial bronchial margins and still call it station 7."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Keep the target clearly subcarinal rather than hilar before sampling.",
+      "Because station 7 is often broad, target the most representative viable tissue rather than the first visible edge."
+    ],
+    "stagingChangeFinding": "A malignant station 7 node is mediastinal disease (N2) irrespective of whether the primary is in the right or left lung.",
+    "assetKeys": {
+      "map": "station-map-7",
+      "ct": "ct-7",
+      "bronchoscopy": "bronchoscopy-7",
+      "ultrasound": "ultrasound-7"
+    }
+  },
+  {
+    "id": "10R",
+    "displayName": "Station 10R",
+    "shortLabel": "Hilar",
+    "iaslcName": "Right hilar",
+    "zone": "Hilar",
+    "laterality": "Right",
+    "description": "Right hilar station adjacent to the main bronchus and hilar vessels, below the 4R boundary.",
+    "accessNotes": "Teach 10R as the hilar checkpoint that follows 4R and precedes the 11R substations.",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "Right hilar view below the inferior azygos margin and adjacent to the right main bronchus.",
+    "landmarkVessels": [
+      "Right main pulmonary artery",
+      "Proximal pulmonary veins",
+      "Azygos vein boundary above"
+    ],
+    "boundaryDefinition": {
+      "superior": "Lower border of the azygos vein",
+      "inferior": "Proximal interlobar branching region leading into station 11",
+      "medial": "Vertical line from the medial margin of the right main bronchus / tracheal bifurcation",
+      "lateral": "Right hilar soft tissue and vessels"
+    },
+    "boundaryNotes": [
+      "10R begins below the inferior azygos margin, where 4R ends.",
+      "Nodes between the medial margins of the main bronchi belong to station 7; outside that space is station 10."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Hilar disease (N1) for a right-sided primary.",
+      "contralateral": "Contralateral hilar disease (N3) for a left-sided primary.",
+      "note": "This is the key right-sided transition from mediastinal to hilar staging."
+    },
+    "clinicalImportance": "10R matters because the 4R-to-10R handoff can change a case from mediastinal disease to hilar disease or vice versa.",
+    "memoryCues": [
+      "Right hilar checkpoint.",
+      "4R above, 11R beyond."
+    ],
+    "confusionPairs": [
+      "4R",
+      "11Rs",
+      "11Ri",
+      "7"
+    ],
+    "commonConfusionPair": "4R",
+    "relatedStationIds": [
+      "4R",
+      "11Rs",
+      "11Ri",
+      "7"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "Node sits at the right hilar handoff below the azygos boundary.",
+        "Check whether the target remains adjacent to the main bronchus rather than an interlobar branch.",
+        "If it is still between the medial main bronchial margins, reconsider station 7."
+      ],
+      "bronchoscopy": [
+        "Right main bronchus checkpoint before more distal branching.",
+        "This is beyond paratracheal territory but not yet deep interlobar.",
+        "Orientation feels hilar rather than tracheal."
+      ],
+      "ultrasound": [
+        "Right hilar target near the main bronchus entry zone.",
+        "Too distal usually means you have drifted toward 11R.",
+        "Too proximal or above the azygos margin means you may still be in 4R."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Use Doppler because hilar vessels can make the shortest path unsafe.",
+      "Confirm that the target is hilar rather than subcarinal or lower paratracheal before sampling."
+    ],
+    "stagingChangeFinding": "A malignant 10R node is N1 for a right lung primary and N3 for a left lung primary.",
+    "assetKeys": {
+      "map": "station-map-10r",
+      "ct": "ct-10r",
+      "bronchoscopy": "bronchoscopy-10r",
+      "ultrasound": "ultrasound-10r"
+    }
+  },
+  {
+    "id": "10L",
+    "displayName": "Station 10L",
+    "shortLabel": "Hilar",
+    "iaslcName": "Left hilar",
+    "zone": "Hilar",
+    "laterality": "Left",
+    "description": "Left hilar station below the 4L boundary and proximal to the left interlobar station.",
+    "accessNotes": "Reinforce the idea that 10L is distal to 4L but not yet as distal as 11L.",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "Left hilar view below the upper rim of the left main pulmonary artery and adjacent to the left main bronchus.",
+    "landmarkVessels": [
+      "Left main pulmonary artery",
+      "Left hilar vessels",
+      "Left main bronchus"
+    ],
+    "boundaryDefinition": {
+      "superior": "Upper rim of the left main pulmonary artery",
+      "inferior": "Proximal interlobar transition toward station 11L",
+      "medial": "Vertical line from the medial margin of the left main bronchus / tracheal bifurcation",
+      "lateral": "Left hilar vessels and soft tissue"
+    },
+    "boundaryNotes": [
+      "10L begins below the superior left main pulmonary artery margin, where 4L ends.",
+      "A target that is still clearly paratracheal and above that vessel boundary should not be labeled 10L."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Hilar disease (N1) for a left-sided primary.",
+      "contralateral": "Contralateral hilar disease (N3) for a right-sided primary.",
+      "note": "10L is the left hilar counterpart to 10R and often the main confusion pair for 4L."
+    },
+    "clinicalImportance": "10L is a frequent staging pivot because its distinction from 4L can change a finding from N1 to N2 or N3 depending on primary side.",
+    "memoryCues": [
+      "Left hilar checkpoint.",
+      "Below 4L, before 11L."
+    ],
+    "confusionPairs": [
+      "4L",
+      "11L",
+      "7"
+    ],
+    "commonConfusionPair": "4L",
+    "relatedStationIds": [
+      "4L",
+      "11L",
+      "7"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "Node lies below the superior margin of the left main pulmonary artery.",
+        "Target behaves like a hilar rather than paratracheal structure.",
+        "If it is too distal, reconsider 11L."
+      ],
+      "bronchoscopy": [
+        "Left main bronchus checkpoint before the interlobar split.",
+        "This is more distal than 4L but not yet a branch-level station.",
+        "The perspective should feel hilar rather than upper mediastinal."
+      ],
+      "ultrasound": [
+        "Left hilar target near the left main bronchus entry zone.",
+        "Keep the pulmonary artery boundary in mind when separating from 4L.",
+        "Greater distal branching cues suggest 11L instead."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Do not call the station 10L unless you are truly below the superior left main pulmonary artery margin.",
+      "Vascular crowding on the left makes Doppler review important before puncture."
+    ],
+    "stagingChangeFinding": "A malignant 10L node is N1 for a left lung primary and N3 for a right lung primary.",
+    "assetKeys": {
+      "map": "station-map-10l",
+      "ct": "ct-10l",
+      "bronchoscopy": "bronchoscopy-10l",
+      "ultrasound": "ultrasound-10l"
+    }
+  },
+  {
+    "id": "11Rs",
+    "displayName": "Station 11Rs",
+    "shortLabel": "Interlobar",
+    "iaslcName": "Right interlobar superior",
+    "zone": "Hilar",
+    "laterality": "Right",
+    "description": "Right interlobar superior substation located between the right upper lobe bronchus and bronchus intermedius.",
+    "accessNotes": "Treat 11Rs as a branch-level continuation beyond 10R, not as a second version of the hilar checkpoint.",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "Right interlobar view around the right upper lobe bronchus takeoff and bronchus intermedius.",
+    "landmarkVessels": [
+      "Right hilar vessels",
+      "Right upper lobe bronchial takeoff",
+      "Bronchus intermedius"
+    ],
+    "boundaryDefinition": {
+      "superior": "Distal continuation beyond the 10R hilar level",
+      "inferior": "Right upper lobe bronchus / bronchus intermedius interlobar region",
+      "medial": "Peribronchial interlobar soft tissue",
+      "lateral": "Branch-level hilar vessels"
+    },
+    "boundaryNotes": [
+      "11Rs specifically refers to the superior right interlobar substation between the right upper lobe bronchus and bronchus intermedius.",
+      "If the target still feels like a main bronchus checkpoint rather than a branch-level target, reconsider 10R."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Interlobar disease (N1) for a right-sided primary.",
+      "contralateral": "Contralateral hilar/interlobar disease (N3) for a left-sided primary.",
+      "note": "The 11R substations remain N1 when ipsilateral because they are branch-level hilar/interlobar nodes."
+    },
+    "clinicalImportance": "Splitting 11R into 11Rs and 11Ri improves teaching precision and helps the learner link each branch point to a specific airway landmark.",
+    "memoryCues": [
+      "Superior right interlobar branch point.",
+      "Between the right upper lobe bronchus and bronchus intermedius."
+    ],
+    "confusionPairs": [
+      "10R",
+      "11Ri"
+    ],
+    "commonConfusionPair": "10R",
+    "relatedStationIds": [
+      "10R",
+      "11Ri"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "Node sits beyond the right hilar checkpoint at the superior interlobar branch level.",
+        "Lung window detail can help confirm the bronchial branching anatomy.",
+        "This is more distal than 10R."
+      ],
+      "bronchoscopy": [
+        "View is anchored by the right upper lobe bronchus and bronchus intermedius.",
+        "This is a branch-level cue rather than a main bronchus cue.",
+        "If the learner still feels at the main right bronchus, they are likely too proximal."
+      ],
+      "ultrasound": [
+        "More distal right hilar target compared with 10R.",
+        "Branch-level anatomy should be clear before assigning 11Rs.",
+        "Keep the superior substation separate from 11Ri below."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Confirm the branch-level airway relationship because the distinction from 10R changes the teaching point and stage.",
+      "Hilar vessels remain close by, so Doppler review still matters even in smaller branch-level targets."
+    ],
+    "stagingChangeFinding": "A malignant 11Rs node is N1 for a right lung primary and N3 for a left lung primary.",
+    "assetKeys": {
+      "map": "station-map-11rs",
+      "ct": "ct-11rs",
+      "bronchoscopy": "bronchoscopy-11rs",
+      "ultrasound": "ultrasound-11rs"
+    }
+  },
+  {
+    "id": "11Ri",
+    "displayName": "Station 11Ri",
+    "shortLabel": "Interlobar",
+    "iaslcName": "Right interlobar inferior",
+    "zone": "Hilar",
+    "laterality": "Right",
+    "description": "Right interlobar inferior substation between the right middle and lower lobe bronchi.",
+    "accessNotes": "Teach 11Ri as the more inferior branch-level right interlobar target, distinct from both 10R and 11Rs.",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "Right interlobar view around the middle and lower lobe bronchial branching region.",
+    "landmarkVessels": [
+      "Right hilar vessels",
+      "Right middle lobe bronchus",
+      "Right lower lobe bronchus"
+    ],
+    "boundaryDefinition": {
+      "superior": "Distal continuation beyond the 10R hilar level",
+      "inferior": "Interlobar space between the right middle and lower lobe bronchi",
+      "medial": "Peribronchial interlobar soft tissue",
+      "lateral": "Branch-level hilar vessels"
+    },
+    "boundaryNotes": [
+      "11Ri is specifically the inferior right interlobar substation between the middle and lower lobe bronchi.",
+      "Branch detail matters; this is not just a generic '11R' label."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Interlobar disease (N1) for a right-sided primary.",
+      "contralateral": "Contralateral hilar/interlobar disease (N3) for a left-sided primary.",
+      "note": "Like 11Rs, this remains an N1 station when ipsilateral."
+    },
+    "clinicalImportance": "Separating 11Ri from 11Rs teaches the learner to use branch-level airway anatomy instead of treating all right interlobar nodes as one undifferentiated group.",
+    "memoryCues": [
+      "Inferior right interlobar branch point.",
+      "Between the middle and lower lobe bronchi."
+    ],
+    "confusionPairs": [
+      "10R",
+      "11Rs"
+    ],
+    "commonConfusionPair": "11Rs",
+    "relatedStationIds": [
+      "10R",
+      "11Rs"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "Node sits at the inferior right interlobar branch level.",
+        "The bronchial branch pattern is more important than a generic hilar silhouette.",
+        "This is farther along the branching pathway than 10R."
+      ],
+      "bronchoscopy": [
+        "Target is associated with the middle and lower lobe bronchial split.",
+        "The view should feel clearly more distal than the 10R checkpoint.",
+        "This is the inferior right interlobar branch point, not the superior one."
+      ],
+      "ultrasound": [
+        "Inferior right interlobar EBUS view.",
+        "The learner should name the branch-level landmark before naming the station.",
+        "Confusion with 11Rs usually means the branch anatomy has not been reconstructed clearly."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Because the field is smaller and more distal, keep scope stability and Doppler review deliberate rather than rushed.",
+      "Mislabeling 11Ri as 10R or 11Rs changes the teaching message even if the cytology result is the same N category."
+    ],
+    "stagingChangeFinding": "A malignant 11Ri node is N1 for a right lung primary and N3 for a left lung primary.",
+    "assetKeys": {
+      "map": "station-map-11ri",
+      "ct": "ct-11ri",
+      "bronchoscopy": "bronchoscopy-11ri",
+      "ultrasound": "ultrasound-11ri"
+    }
+  },
+  {
+    "id": "11L",
+    "displayName": "Station 11L",
+    "shortLabel": "Interlobar",
+    "iaslcName": "Left interlobar",
+    "zone": "Hilar",
+    "laterality": "Left",
+    "description": "Left interlobar station beyond the left hilar checkpoint.",
+    "accessNotes": "Use 11L as the left branch-level continuation beyond 10L and keep it separate from the left hilar checkpoint.",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "Left interlobar view distal to the left hilar checkpoint and along the branch-level airway landmark.",
+    "landmarkVessels": [
+      "Left hilar vessels",
+      "Branch-level left bronchial anatomy",
+      "Left pulmonary artery branches"
+    ],
+    "boundaryDefinition": {
+      "superior": "Distal continuation beyond the 10L hilar level",
+      "inferior": "Interlobar left bronchial branching region",
+      "medial": "Peribronchial interlobar soft tissue",
+      "lateral": "Left branch-level hilar vessels"
+    },
+    "boundaryNotes": [
+      "11L is the branch-level continuation beyond 10L rather than a second hilar checkpoint.",
+      "If the target still feels proximal and main-bronchial, reconsider 10L."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Interlobar disease (N1) for a left-sided primary.",
+      "contralateral": "Contralateral hilar/interlobar disease (N3) for a right-sided primary.",
+      "note": "This is the left interlobar counterpart to the right 11R substations."
+    },
+    "clinicalImportance": "11L reinforces the learner's understanding that not every left-sided central node is paratracheal or hilar; some are distinctly interlobar branch-level targets.",
+    "memoryCues": [
+      "Left interlobar after the hilar checkpoint.",
+      "Branch-level left airway cue, not paratracheal cue."
+    ],
+    "confusionPairs": [
+      "10L"
+    ],
+    "commonConfusionPair": "10L",
+    "relatedStationIds": [
+      "10L"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "Node sits beyond the left hilar checkpoint at the interlobar level.",
+        "The branch-level bronchial relationship is more distal than 10L.",
+        "Keep the branching anatomy in view when naming the station."
+      ],
+      "bronchoscopy": [
+        "View is tied to the left branch-level airway beyond the main bronchus.",
+        "This should feel more distal than 10L.",
+        "The learner should be thinking branch-level left airway anatomy."
+      ],
+      "ultrasound": [
+        "Left interlobar target beyond the left hilar checkpoint.",
+        "Branch-level cue is the key discriminator from 10L.",
+        "The EBUS image may be less familiar than 10L and benefits from deliberate orientation."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Do not force a 10L label onto a target that is clearly branch-level and more distal.",
+      "If no approved EBUS still is available, teach the anatomy and staging logic anyway instead of inventing image certainty."
+    ],
+    "stagingChangeFinding": "A malignant 11L node is N1 for a left lung primary and N3 for a right lung primary.",
+    "assetKeys": {
+      "map": "station-map-11l",
+      "ct": "ct-11l",
+      "bronchoscopy": "bronchoscopy-11l",
+      "ultrasound": "ultrasound-11l"
+    }
+  }
+]

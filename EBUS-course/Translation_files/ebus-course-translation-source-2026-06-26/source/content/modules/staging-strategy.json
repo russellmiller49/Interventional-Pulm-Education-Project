@@ -1,0 +1,64 @@
+{
+  "id": "staging-strategy",
+  "title": "Staging and Sampling Strategy",
+  "summary": "A practical framework for deciding which node to sample first, how laterality changes N-stage, and why false negatives still happen.",
+  "learningObjectives": [
+    "Connect station laterality and zone to the difference between N1, N2, and N3 disease.",
+    "Explain why station 7 behaves differently from lateralized paratracheal and hilar stations.",
+    "Choose a sampling order that answers the staging question rather than simply the easiest puncture question.",
+    "Recognize the main reasons EBUS can be falsely negative even when technically successful."
+  ],
+  "sections": [
+    {
+      "id": "sample-order",
+      "title": "Sample to answer the staging question",
+      "kind": "staging",
+      "body": "The highest-yield node to sample is not always the largest node or the easiest node. Sampling strategy should be organized around what changes management: proving or excluding contralateral mediastinal disease, clarifying whether disease is hilar versus mediastinal, and prioritizing the node that would most alter stage if positive.",
+      "bullets": [
+        "Ask which node would change the stage the most before you ask which node is easiest.",
+        "A smaller but strategically located node can matter more than a dramatic hilar node.",
+        "Station identity is part of specimen value."
+      ],
+      "pearl": "Make the staging question explicit before the first puncture so the rest of the procedure stays coherent.",
+      "pitfall": "Starting with the most visually obvious node can consume time while leaving the decisive station unanswered."
+    },
+    {
+      "id": "laterality",
+      "title": "Laterality is not a footnote",
+      "kind": "staging",
+      "body": "Ipsilateral hilar and interlobar stations are usually N1, ipsilateral mediastinal stations are N2, and contralateral mediastinal or hilar disease becomes N3. The exception that learners must internalize is station 7: it is a midline station and is considered ipsilateral mediastinal disease irrespective of the side of the primary tumor.",
+      "bullets": [
+        "2 and 4 stations: ipsilateral N2, contralateral N3.",
+        "10 and 11 stations: ipsilateral N1, contralateral N3.",
+        "7 remains N2 regardless of tumor side."
+      ],
+      "pearl": "A laterality mistake can be a staging mistake even when the image interpretation itself is correct.",
+      "pitfall": "Do not import the laterality logic of 2, 4, 10, or 11 into station 7."
+    },
+    {
+      "id": "false-negatives",
+      "title": "Why false negatives happen",
+      "kind": "pitfall",
+      "body": "False negatives follow biology as much as technique. Small-volume disease, heterogeneous nodes, sampling of necrotic or nonrepresentative areas, and incorrect station assignment all contribute. A negative EBUS result is strongest when the right stations were targeted for the right staging question and sampled well.",
+      "bullets": [
+        "Wrong station equals wrong answer even if cytology is technically adequate.",
+        "Necrotic or avascular centers may not represent viable tumor burden.",
+        "Heterogeneous nodes demand thoughtful target selection inside the node."
+      ],
+      "pearl": "A negative result has value only in the context of the stations you intentionally excluded or included.",
+      "pitfall": "Calling the procedure negative without revisiting whether the decisive station was actually sampled can create false reassurance."
+    },
+    {
+      "id": "staging-vignette",
+      "title": "Case vignette: big hilar node, small contralateral node",
+      "kind": "case",
+      "body": "A right lung primary has a large 10R node and a smaller left paratracheal node just across the left lateral tracheal border.",
+      "caseVignette": {
+        "title": "The small node may matter more",
+        "scenario": "The 10R node is easier to reach and more visually impressive, but the left paratracheal node would change the disease to contralateral mediastinal involvement if malignant.",
+        "prompt": "Which station deserves explicit staging attention first in teaching discussion?",
+        "takeaway": "The contralateral paratracheal node deserves priority in the staging discussion because it can establish N3 disease, whereas 10R alone would still be ipsilateral hilar involvement."
+      }
+    }
+  ]
+}

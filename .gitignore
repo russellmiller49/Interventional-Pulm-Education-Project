@@ -302,3 +302,7 @@ Preference_card_module/Catalogs and IFU for confirmation/*.pdf
 # Excel lock/temp files.
 ~$*
 /public/ecmo-teaching-preview/
+
+# Embedded apps are built automatically from the in-repository sources.
+/public/bronch-navigation-trainer/app/
+/public/socal-ebus-course/app/

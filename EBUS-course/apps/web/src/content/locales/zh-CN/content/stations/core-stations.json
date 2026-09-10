@@ -1,0 +1,747 @@
+[
+  {
+    "id": "2R",
+    "displayName": "2R 站",
+    "shortLabel": "上气管旁",
+    "iaslcName": "右上气管旁",
+    "zone": "上纵隔",
+    "laterality": "右侧",
+    "description": "位于上纵隔、4R 水平以上的右上气管旁站。",
+    "accessNotes": "最好从上段气管评估，保持球囊接触稳定，并在规划进针前仔细确认与大血管的关系。",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "在 4R 窗口及奇静脉过渡区以上进行右上外侧气管扫查。",
+    "landmarkVessels": [
+      "上腔静脉",
+      "无名静脉",
+      "奇静脉过渡区"
+    ],
+    "boundaryDefinition": {
+      "superior": "肺尖 / 胸膜顶",
+      "inferior": "无名静脉尾侧缘与气管的交点",
+      "medial": "气管左外侧缘",
+      "lateral": "右侧纵隔胸膜及大血管侧壁"
+    },
+    "boundaryNotes": [
+      "使用气管左外侧缘而不是气管中线来区分 2R 与 2L。",
+      "将 2R 理解为右气管旁序列的上半部，4R 位于其正下方。"
+    ],
+    "nStageImplication": {
+      "ipsilateral": "右侧原发灶为纵隔病变（N2）。",
+      "contralateral": "左侧原发灶为对侧纵隔病变（N3）。",
+      "note": "左右侧很重要，因为 2R 是相对于气管左外侧缘定义的右侧纵隔站。"
+    },
+    "clinicalImportance": "2R 不一定总是最先阳性的站点，但恶性 2R 淋巴结可迅速升期；若丢失右气管旁上下序列，容易误标。",
+    "memoryCues": [
+      "高位右气管旁通道。",
+      "2R 位于同一右侧序列中 4R 的上方。"
+    ],
+    "confusionPairs": [
+      "2L",
+      "4R"
+    ],
+    "commonConfusionPair": "4R",
+    "relatedStationIds": [
+      "2L",
+      "4R"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "位于 4R 水平以上的右上气管旁淋巴结。",
+        "与气管的关系比粗略对称性更重要。",
+        "检查淋巴结是否仍位于气管左外侧缘的右侧。"
+      ],
+      "bronchoscopy": [
+        "扫查保持在右侧气管外侧壁的高位。",
+        "这是气管窗口，而不是肺门窗口。",
+        "此时不应感觉已经下降到隆突或主支气管。"
+      ],
+      "ultrasound": [
+        "目标位于 4R 以上的右上气管旁区域。",
+        "大血管方位有助于确认左右侧。",
+        "由于窗口位置较高且狭窄，接触和深度很重要。"
+      ]
+    },
+    "safePunctureConsiderations": [
+      "进针前确认路径与邻近大血管的关系。",
+      "不要让看似中线的目标被误判为 2L 或 4R。"
+    ],
+    "stagingChangeFinding": "恶性 2R 淋巴结对于右肺原发灶为 N2，对于左肺原发灶为 N3。",
+    "assetKeys": {
+      "map": "station-map-2r",
+      "ct": "ct-2r",
+      "bronchoscopy": "bronchoscopy-2r",
+      "ultrasound": "ultrasound-2r"
+    }
+  },
+  {
+    "id": "2L",
+    "displayName": "2L 站",
+    "shortLabel": "上气管旁",
+    "iaslcName": "左上气管旁",
+    "zone": "上纵隔",
+    "laterality": "左侧",
+    "description": "位于上纵隔、4L 以上的左上气管旁站。",
+    "accessNotes": "在认为已到达 4L 或肺门结构前，应确保目标明确位于左侧且较高。",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "下降到 4L 窗口前进行左上气管扫查。",
+    "landmarkVessels": [
+      "主动脉弓",
+      "左颈总动脉和锁骨下动脉区域",
+      "左上纵隔血管轮廓"
+    ],
+    "boundaryDefinition": {
+      "superior": "肺尖 / 胸膜顶",
+      "inferior": "主动脉弓上缘",
+      "medial": "气管左外侧缘",
+      "lateral": "左纵隔胸膜"
+    },
+    "boundaryNotes": [
+      "2L 始于气管左外侧缘左侧，并且仍是左气管旁序列的上半部。",
+      "如果淋巴结位置已较低并与主动脉/肺动脉区域关系密切，应重新考虑 4L。"
+    ],
+    "nStageImplication": {
+      "ipsilateral": "左侧原发灶为纵隔病变（N2）。",
+      "contralateral": "右侧原发灶为对侧纵隔病变（N3）。",
+      "note": "与 2R 一样，这是一个对左右侧敏感的纵隔站。"
+    },
+    "clinicalImportance": "2L 是高价值站点，因为阳性结果可立即定义右侧原发灶的对侧纵隔病变。",
+    "memoryCues": [
+      "高位左气管旁通道。",
+      "保持在 4L 窗口以上。"
+    ],
+    "confusionPairs": [
+      "2R",
+      "4L"
+    ],
+    "commonConfusionPair": "4L",
+    "relatedStationIds": [
+      "2R",
+      "4L"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "4L 水平以上的左上气管旁目标。",
+        "淋巴结位于气管左外侧缘左侧。",
+        "主动脉弓有助于确认仍在左上纵隔。"
+      ],
+      "bronchoscopy": [
+        "高位左侧气管壁扫查，而非肺门或隆突下视图。",
+        "方向感仍应是近端且气管内的。",
+        "学习者此时不应感到已经过渡到左主支气管。"
+      ],
+      "ultrasound": [
+        "4L 窗口以上的左上气管旁目标。",
+        "大血管关系确认目标仍位于左侧。",
+        "由于空间紧凑，深度和接触调整很重要。"
+      ]
+    },
+    "safePunctureConsiderations": [
+      "取样前重新确认左右侧，因为误标的 2L 淋巴结可能造成重大分期错误。",
+      "当窗口拥挤时，用多普勒明确邻近血管结构。"
+    ],
+    "stagingChangeFinding": "恶性 2L 淋巴结对于左肺原发灶为 N2，对于右肺原发灶为 N3。",
+    "assetKeys": {
+      "map": "station-map-2l",
+      "ct": "ct-2l",
+      "bronchoscopy": "bronchoscopy-2l",
+      "ultrasound": "ultrasound-2l"
+    }
+  },
+  {
+    "id": "4R",
+    "displayName": "4R 站",
+    "shortLabel": "下气管旁",
+    "iaslcName": "右下气管旁",
+    "zone": "上纵隔",
+    "laterality": "右侧",
+    "description": "位于 2R 下方、右肺门交界上方的常用右下气管旁站。",
+    "accessNotes": "这是常见分期目标，学习者应能可靠识别后再与 10R 比较。",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "在隆突下降附近、奇静脉下缘以上进行右外侧气管扫查。",
+    "landmarkVessels": [
+      "奇静脉",
+      "上腔静脉",
+      "右肺动脉区域"
+    ],
+    "boundaryDefinition": {
+      "superior": "无名静脉尾侧缘与气管的交点",
+      "inferior": "奇静脉下缘",
+      "medial": "气管左外侧缘",
+      "lateral": "右侧纵隔胸膜及含血管的气管旁软组织"
+    },
+    "boundaryNotes": [
+      "相对于气管左外侧缘，4R 仍位于右侧。",
+      "在奇静脉下缘以下，该站点变为 10R 而不是 4R。"
+    ],
+    "nStageImplication": {
+      "ipsilateral": "右侧原发灶为纵隔病变（N2）。",
+      "contralateral": "左侧原发灶为对侧纵隔病变（N3）。",
+      "note": "4R 通常具有重要分期权重，因为它既易到达又有临床后果。"
+    },
+    "clinicalImportance": "4R 是经典 EBUS 分期站点，在纵隔分期路径中常决定决策。",
+    "memoryCues": [
+      "右下气管旁常用站点。",
+      "2R 在上，10R 在下。"
+    ],
+    "confusionPairs": [
+      "2R",
+      "10R"
+    ],
+    "commonConfusionPair": "10R",
+    "relatedStationIds": [
+      "2R",
+      "10R"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "位于肺门交界上方的右下气管旁淋巴结。",
+        "奇静脉有助于定义下界。",
+        "检查淋巴结是否仍为气管旁，而不是肺门。"
+      ],
+      "bronchoscopy": [
+        "隆突下降附近的右外侧气管壁。",
+        "位置仍足够近端，应感觉为气管旁，而非右主支气管。",
+        "方向感应保持在中央，而不是分支层级。"
+      ],
+      "ultrasound": [
+        "经典右气管旁分期窗口。",
+        "目标位于 2R 下方但在 10R 区域以上。",
+        "奇静脉解剖有助于避免误标为 10R。"
+      ]
+    },
+    "safePunctureConsiderations": [
+      "进针前在含血管的右气管旁区域使用多普勒。",
+      "如果淋巴结已低于奇静脉下缘进入肺门区，不要称为 4R。"
+    ],
+    "stagingChangeFinding": "恶性 4R 淋巴结对于右肺原发灶为 N2，对于左肺原发灶为 N3。",
+    "assetKeys": {
+      "map": "station-map-4r",
+      "ct": "ct-4r",
+      "bronchoscopy": "bronchoscopy-4r",
+      "ultrasound": "ultrasound-4r"
+    }
+  },
+  {
+    "id": "4L",
+    "displayName": "4L 站",
+    "shortLabel": "下气管旁",
+    "iaslcName": "左下气管旁",
+    "zone": "上纵隔",
+    "laterality": "左侧",
+    "description": "位于 2L 下方、左肺门交界上方的左下气管旁站。",
+    "accessNotes": "概念上将 4L 与 10L 及主动脉肺动脉窗站点分开；它仍是气管旁纵隔目标。",
+    "accessProfile": "Both",
+    "bestEbusWindow": "位于左主肺动脉上缘以上、动脉韧带内侧的左气管旁窗口。",
+    "landmarkVessels": [
+      "主动脉弓",
+      "左主肺动脉",
+      "主动脉肺动脉窗结构"
+    ],
+    "boundaryDefinition": {
+      "superior": "主动脉弓上缘",
+      "inferior": "左主肺动脉上缘",
+      "medial": "气管左外侧缘",
+      "lateral": "动脉韧带 / 主动脉肺动脉窗侧"
+    },
+    "boundaryNotes": [
+      "4L 位于动脉韧带内侧；5 站和 6 站位于外侧或前外侧。",
+      "在左主肺动脉上缘以下，该站点变为 10L。"
+    ],
+    "nStageImplication": {
+      "ipsilateral": "左侧原发灶为纵隔病变（N2）。",
+      "contralateral": "右侧原发灶为对侧纵隔病变（N3）。",
+      "note": "4L 常是左侧最需要注意左右侧和边界精确性的站点。"
+    },
+    "clinicalImportance": "4L 是关键左纵隔站点，因为根据肿瘤侧别，它可区分同侧纵隔病变和对侧纵隔播散。",
+    "memoryCues": [
+      "肺门交界前的左下气管旁。",
+      "位于动脉韧带内侧。"
+    ],
+    "confusionPairs": [
+      "2L",
+      "10L",
+      "5"
+    ],
+    "commonConfusionPair": "10L",
+    "relatedStationIds": [
+      "2L",
+      "10L"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "位于左肺门边界以上的左下气管旁淋巴结。",
+        "检查左主肺动脉上缘以判断 4L 到 10L 的过渡。",
+        "区分 4L 与 5 站时，应位于动脉韧带内侧。"
+      ],
+      "bronchoscopy": [
+        "在左主支气管主导视野前的左气管旁视图。",
+        "方向感仍应是纵隔，而不是分支层级。",
+        "这还不是左肺门检查点。"
+      ],
+      "ultrasound": [
+        "位于 2L 下方、10L 上方的左气管旁目标。",
+        "肺动脉位置有助于定义下界。",
+        "与主动脉肺动脉窗的关系有助于与外侧站点区分。"
+      ]
+    },
+    "safePunctureConsiderations": [
+      "称其为 4L 前，重新确认淋巴结仍位于左主肺动脉上缘以上。",
+      "血管拥挤区域使穿刺前多普勒检查必不可少。"
+    ],
+    "stagingChangeFinding": "恶性 4L 淋巴结对于左肺原发灶为 N2，对于右肺原发灶为 N3。",
+    "assetKeys": {
+      "map": "station-map-4l",
+      "ct": "ct-4l",
+      "bronchoscopy": "bronchoscopy-4l",
+      "ultrasound": "ultrasound-4l"
+    }
+  },
+  {
+    "id": "7",
+    "displayName": "7 站",
+    "shortLabel": "隆突下",
+    "iaslcName": "隆突下",
+    "zone": "隆突下",
+    "laterality": "中线",
+    "description": "位于隆突下方、主支气管之间的中线隆突下站。",
+    "accessNotes": "当学习者迷失方向时，将 7 站作为重置点，因为它连接左右肺门路径。",
+    "accessProfile": "Both",
+    "bestEbusWindow": "位于隆突下方、主支气管内侧缘之间的隆突下视图。",
+    "landmarkVessels": [
+      "主支气管",
+      "左心房区域",
+      "隆突下纵隔血管"
+    ],
+    "boundaryDefinition": {
+      "superior": "隆突",
+      "inferior": "右侧为中间支气管下缘，左侧为左下叶支气管上缘",
+      "anterior": "主支气管之间的隆突下空间",
+      "posterior": "在隆突下区域内围绕食管向后延伸"
+    },
+    "boundaryNotes": [
+      "7 站位于主支气管内侧缘之间；该空间外的淋巴结属于 10 站。",
+      "7 站不像 2、4、10 或 11 站那样具有同样的左右侧划分。"
+    ],
+    "nStageImplication": {
+      "ipsilateral": "无论原发灶侧别如何，均为纵隔病变（N2）。",
+      "contralateral": "由于 7 站位于中线，左右侧区分不以同样方式适用。",
+      "note": "无论原发灶在右侧还是左侧，7 站仍视为同侧纵隔站。"
+    },
+    "clinicalImportance": "7 站是中央分期锚点，也是教学和实践中产出最高的纵隔目标之一。",
+    "memoryCues": [
+      "隆突下方中线。",
+      "左右肺门路径之间的桥梁。"
+    ],
+    "confusionPairs": [
+      "10R",
+      "10L"
+    ],
+    "commonConfusionPair": "10R/10L",
+    "relatedStationIds": [
+      "10R",
+      "10L"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "淋巴结位于隆突下方、主支气管之间。",
+        "位于支气管内侧缘之外就不再是 7 站。",
+        "冠状面方向对判断其头尾边界特别有用。"
+      ],
+      "bronchoscopy": [
+        "隆突分叉是中央锚点。",
+        "这是中线目标，而不是有侧别的肺门目标。",
+        "方向感应集中在主分叉下方。"
+      ],
+      "ultrasound": [
+        "位于分叉下方中线的隆突下目标。",
+        "当图谱令人困惑时，这是重置方向的经典位置。",
+        "不要漂移到支气管内侧缘之外却仍称为 7 站。"
+      ]
+    },
+    "safePunctureConsiderations": [
+      "取样前确保目标明确为隆突下，而非肺门。",
+      "由于 7 站常较宽，应选择最具代表性的有活性组织，而不是第一个可见边缘。"
+    ],
+    "stagingChangeFinding": "恶性 7 站淋巴结为纵隔病变（N2），无论原发灶在右肺还是左肺。",
+    "assetKeys": {
+      "map": "station-map-7",
+      "ct": "ct-7",
+      "bronchoscopy": "bronchoscopy-7",
+      "ultrasound": "ultrasound-7"
+    }
+  },
+  {
+    "id": "10R",
+    "displayName": "10R 站",
+    "shortLabel": "肺门",
+    "iaslcName": "右肺门",
+    "zone": "肺门",
+    "laterality": "右侧",
+    "description": "位于 4R 边界以下、邻近主支气管和肺门血管的右肺门站。",
+    "accessNotes": "将 10R 教授为 4R 之后、11R 亚站之前的肺门检查点。",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "位于奇静脉下缘以下、邻近右主支气管的右肺门视图。",
+    "landmarkVessels": [
+      "右主肺动脉",
+      "近端肺静脉",
+      "上方奇静脉边界"
+    ],
+    "boundaryDefinition": {
+      "superior": "奇静脉下缘",
+      "inferior": "通向 11 站的近端叶间分支区域",
+      "medial": "从右主支气管内侧缘 / 气管分叉引出的垂直线",
+      "lateral": "右肺门软组织和血管"
+    },
+    "boundaryNotes": [
+      "10R 始于奇静脉下缘以下，也就是 4R 结束处。",
+      "主支气管内侧缘之间的淋巴结属于 7 站；该空间之外为 10 站。"
+    ],
+    "nStageImplication": {
+      "ipsilateral": "右侧原发灶为肺门病变（N1）。",
+      "contralateral": "左侧原发灶为对侧肺门病变（N3）。",
+      "note": "这是右侧从纵隔分期过渡到肺门分期的关键点。"
+    },
+    "clinicalImportance": "10R 重要，因为 4R 到 10R 的交界可使病例从纵隔病变变为肺门病变，或相反。",
+    "memoryCues": [
+      "右肺门检查点。",
+      "4R 在上，11R 在远端。"
+    ],
+    "confusionPairs": [
+      "4R",
+      "11Rs",
+      "11Ri",
+      "7"
+    ],
+    "commonConfusionPair": "4R",
+    "relatedStationIds": [
+      "4R",
+      "11Rs",
+      "11Ri",
+      "7"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "淋巴结位于奇静脉边界以下的右肺门交界处。",
+        "检查目标是否仍邻近主支气管，而不是叶间分支。",
+        "如果它仍位于主支气管内侧缘之间，应重新考虑 7 站。"
+      ],
+      "bronchoscopy": [
+        "更远端分支之前的右主支气管检查点。",
+        "这已超出气管旁区域，但尚未到达深部叶间。",
+        "方向感为肺门，而不是气管。"
+      ],
+      "ultrasound": [
+        "位于主支气管入口区附近的右肺门目标。",
+        "太远端通常意味着已漂移向 11R。",
+        "太近端或位于奇静脉边缘以上，意味着可能仍在 4R。"
+      ]
+    },
+    "safePunctureConsiderations": [
+      "使用多普勒，因为肺门血管可使最短路径不安全。",
+      "取样前确认目标为肺门，而不是隆突下或下气管旁。"
+    ],
+    "stagingChangeFinding": "恶性 10R 淋巴结对于右肺原发灶为 N1，对于左肺原发灶为 N3。",
+    "assetKeys": {
+      "map": "station-map-10r",
+      "ct": "ct-10r",
+      "bronchoscopy": "bronchoscopy-10r",
+      "ultrasound": "ultrasound-10r"
+    }
+  },
+  {
+    "id": "10L",
+    "displayName": "10L 站",
+    "shortLabel": "肺门",
+    "iaslcName": "左肺门",
+    "zone": "肺门",
+    "laterality": "左侧",
+    "description": "位于 4L 边界以下、左叶间站近端的左肺门站。",
+    "accessNotes": "强化这一概念：10L 比 4L 更远端，但尚未远至 11L。",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "位于左主肺动脉上缘以下、邻近左主支气管的左肺门视图。",
+    "landmarkVessels": [
+      "左主肺动脉",
+      "左肺门血管",
+      "左主支气管"
+    ],
+    "boundaryDefinition": {
+      "superior": "左主肺动脉上缘",
+      "inferior": "通向 11L 站的近端叶间过渡区",
+      "medial": "从左主支气管内侧缘 / 气管分叉引出的垂直线",
+      "lateral": "左肺门血管和软组织"
+    },
+    "boundaryNotes": [
+      "10L 始于左主肺动脉上缘以下，即 4L 结束处。",
+      "仍明显为气管旁且位于该血管边界以上的目标不应标为 10L。"
+    ],
+    "nStageImplication": {
+      "ipsilateral": "左侧原发灶为肺门病变（N1）。",
+      "contralateral": "右侧原发灶为对侧肺门病变（N3）。",
+      "note": "10L 是 10R 的左肺门对应站，也常是 4L 的主要混淆对象。"
+    },
+    "clinicalImportance": "10L 是常见分期枢纽，因为与 4L 的区分可根据原发侧将发现从 N1 改为 N2 或 N3。",
+    "memoryCues": [
+      "左肺门检查点。",
+      "在 4L 下方、11L 之前。"
+    ],
+    "confusionPairs": [
+      "4L",
+      "11L",
+      "7"
+    ],
+    "commonConfusionPair": "4L",
+    "relatedStationIds": [
+      "4L",
+      "11L",
+      "7"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "淋巴结位于左主肺动脉上缘以下。",
+        "目标表现为肺门结构，而不是气管旁结构。",
+        "如果过于远端，应重新考虑 11L。"
+      ],
+      "bronchoscopy": [
+        "叶间分叉前的左主支气管检查点。",
+        "这比 4L 更远端，但尚未到达分支层级站。",
+        "视角应感觉为肺门，而不是上纵隔。"
+      ],
+      "ultrasound": [
+        "位于左主支气管入口区附近的左肺门目标。",
+        "与 4L 区分时，应记住肺动脉边界。",
+        "更远端的分支线索提示应考虑 11L。"
+      ]
+    },
+    "safePunctureConsiderations": [
+      "除非确实位于左主肺动脉上缘以下，否则不要称为 10L。",
+      "左侧血管拥挤使穿刺前多普勒检查很重要。"
+    ],
+    "stagingChangeFinding": "恶性 10L 淋巴结对于左肺原发灶为 N1，对于右肺原发灶为 N3。",
+    "assetKeys": {
+      "map": "station-map-10l",
+      "ct": "ct-10l",
+      "bronchoscopy": "bronchoscopy-10l",
+      "ultrasound": "ultrasound-10l"
+    }
+  },
+  {
+    "id": "11Rs",
+    "displayName": "11Rs 站",
+    "shortLabel": "叶间",
+    "iaslcName": "右上叶间",
+    "zone": "肺门",
+    "laterality": "右侧",
+    "description": "位于右上叶支气管与中间支气管之间的右上叶间亚站。",
+    "accessNotes": "将 11Rs 视为 10R 远端的分支层级延续，而不是肺门检查点的第二版本。",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "围绕右上叶支气管开口和中间支气管的右叶间视图。",
+    "landmarkVessels": [
+      "右肺门血管",
+      "右上叶支气管开口",
+      "中间支气管"
+    ],
+    "boundaryDefinition": {
+      "superior": "10R 肺门水平以远的延续",
+      "inferior": "右上叶支气管 / 中间支气管叶间区域",
+      "medial": "支气管周围叶间软组织",
+      "lateral": "分支层级肺门血管"
+    },
+    "boundaryNotes": [
+      "11Rs 特指位于右上叶支气管与中间支气管之间的右上叶间亚站。",
+      "如果目标仍像主支气管检查点，而不是分支层级目标，应重新考虑 10R。"
+    ],
+    "nStageImplication": {
+      "ipsilateral": "右侧原发灶为叶间病变（N1）。",
+      "contralateral": "左侧原发灶为对侧肺门/叶间病变（N3）。",
+      "note": "11R 亚站在同侧时仍为 N1，因为它们是分支层级的肺门/叶间淋巴结。"
+    },
+    "clinicalImportance": "将 11R 分为 11Rs 和 11Ri 可提高教学精确性，并帮助学习者将每个分支点与具体气道标志相联系。",
+    "memoryCues": [
+      "右上叶间分支点。",
+      "位于右上叶支气管与中间支气管之间。"
+    ],
+    "confusionPairs": [
+      "10R",
+      "11Ri"
+    ],
+    "commonConfusionPair": "10R",
+    "relatedStationIds": [
+      "10R",
+      "11Ri"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "淋巴结位于右肺门检查点以远的上叶间分支层级。",
+        "肺窗细节可帮助确认支气管分支解剖。",
+        "这比 10R 更远端。"
+      ],
+      "bronchoscopy": [
+        "视图由右上叶支气管和中间支气管定位。",
+        "这是分支层级线索，而不是主支气管线索。",
+        "如果学习者仍感觉位于右主支气管，则很可能太近端。"
+      ],
+      "ultrasound": [
+        "相较于 10R 更远端的右肺门目标。",
+        "分配为 11Rs 前，分支层级解剖应清楚。",
+        "将上方亚站与下方 11Ri 区分开。"
+      ]
+    },
+    "safePunctureConsiderations": [
+      "确认分支层级气道关系，因为与 10R 的区分会改变教学重点和分期。",
+      "肺门血管仍靠近，因此即使在较小的分支层级目标中，多普勒检查仍很重要。"
+    ],
+    "stagingChangeFinding": "恶性 11Rs 淋巴结对于右肺原发灶为 N1，对于左肺原发灶为 N3。",
+    "assetKeys": {
+      "map": "station-map-11rs",
+      "ct": "ct-11rs",
+      "bronchoscopy": "bronchoscopy-11rs",
+      "ultrasound": "ultrasound-11rs"
+    }
+  },
+  {
+    "id": "11Ri",
+    "displayName": "11Ri 站",
+    "shortLabel": "叶间",
+    "iaslcName": "右下叶间",
+    "zone": "肺门",
+    "laterality": "右侧",
+    "description": "位于右中叶和右下叶支气管之间的右下叶间亚站。",
+    "accessNotes": "将 11Ri 教授为较下方的右叶间分支层级目标，并与 10R 和 11Rs 区分。",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "围绕中叶和下叶支气管分支区域的右叶间视图。",
+    "landmarkVessels": [
+      "右肺门血管",
+      "右中叶支气管",
+      "右下叶支气管"
+    ],
+    "boundaryDefinition": {
+      "superior": "10R 肺门水平以远的延续",
+      "inferior": "右中叶和右下叶支气管之间的叶间空间",
+      "medial": "支气管周围叶间软组织",
+      "lateral": "分支层级肺门血管"
+    },
+    "boundaryNotes": [
+      "11Ri 特指右中叶与右下叶支气管之间的右下叶间亚站。",
+      "分支细节很重要；这不只是一个笼统的“11R”标签。"
+    ],
+    "nStageImplication": {
+      "ipsilateral": "右侧原发灶为叶间病变（N1）。",
+      "contralateral": "左侧原发灶为对侧肺门/叶间病变（N3）。",
+      "note": "与 11Rs 一样，同侧时该站仍为 N1。"
+    },
+    "clinicalImportance": "区分 11Ri 与 11Rs 可教会学习者使用分支层级气道解剖，而不是将所有右叶间淋巴结视为一个无差别群组。",
+    "memoryCues": [
+      "右下叶间分支点。",
+      "位于中叶和下叶支气管之间。"
+    ],
+    "confusionPairs": [
+      "10R",
+      "11Rs"
+    ],
+    "commonConfusionPair": "11Rs",
+    "relatedStationIds": [
+      "10R",
+      "11Rs"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "淋巴结位于右下叶间分支层级。",
+        "支气管分支模式比笼统的肺门轮廓更重要。",
+        "这位于比 10R 更远的分支路径上。"
+      ],
+      "bronchoscopy": [
+        "目标与中叶和下叶支气管分叉相关。",
+        "视图应明显感觉比 10R 检查点更远端。",
+        "这是右下叶间分支点，而不是上方分支点。"
+      ],
+      "ultrasound": [
+        "右下叶间 EBUS 视图。",
+        "学习者应先命名分支层级标志，再命名站点。",
+        "与 11Rs 混淆通常意味着分支解剖尚未清楚重建。"
+      ]
+    },
+    "safePunctureConsiderations": [
+      "由于视野更小且更远端，应有意识地保持镜体稳定并进行多普勒检查，而不要匆忙。",
+      "即使细胞学结果属于同一 N 类别，将 11Ri 误标为 10R 或 11Rs 也会改变教学信息。"
+    ],
+    "stagingChangeFinding": "恶性 11Ri 淋巴结对于右肺原发灶为 N1，对于左肺原发灶为 N3。",
+    "assetKeys": {
+      "map": "station-map-11ri",
+      "ct": "ct-11ri",
+      "bronchoscopy": "bronchoscopy-11ri",
+      "ultrasound": "ultrasound-11ri"
+    }
+  },
+  {
+    "id": "11L",
+    "displayName": "11L 站",
+    "shortLabel": "叶间",
+    "iaslcName": "左叶间",
+    "zone": "肺门",
+    "laterality": "左侧",
+    "description": "位于左肺门检查点以远的左叶间站。",
+    "accessNotes": "将 11L 作为 10L 远端的左侧分支层级延续，并与左肺门检查点区分。",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "位于左肺门检查点远端并沿分支层级气道标志的左叶间视图。",
+    "landmarkVessels": [
+      "左肺门血管",
+      "左侧分支级支气管解剖",
+      "左肺动脉分支"
+    ],
+    "boundaryDefinition": {
+      "superior": "10L 肺门水平以远的延续",
+      "inferior": "左侧叶间支气管分支区域",
+      "medial": "支气管周围叶间软组织",
+      "lateral": "左侧分支层级肺门血管"
+    },
+    "boundaryNotes": [
+      "11L 是 10L 远端的分支层级延续，而不是第二个肺门检查点。",
+      "如果目标仍感觉近端且为主支气管层级，应重新考虑 10L。"
+    ],
+    "nStageImplication": {
+      "ipsilateral": "左侧原发灶为叶间病变（N1）。",
+      "contralateral": "右侧原发灶为对侧肺门/叶间病变（N3）。",
+      "note": "这是右侧 11R 亚站的左叶间对应站。"
+    },
+    "clinicalImportance": "11L 强化学习者的理解：并非所有左侧中央淋巴结都是气管旁或肺门；有些明确是叶间分支层级目标。",
+    "memoryCues": [
+      "肺门检查点之后的左叶间。",
+      "左侧分支层级气道线索，而非气管旁线索。"
+    ],
+    "confusionPairs": [
+      "10L"
+    ],
+    "commonConfusionPair": "10L",
+    "relatedStationIds": [
+      "10L"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "淋巴结位于左肺门检查点以远的叶间层级。",
+        "分支层级支气管关系比 10L 更远端。",
+        "命名站点时保持分支解剖在视野中。"
+      ],
+      "bronchoscopy": [
+        "视图与主支气管以远的左侧分支层级气道相关。",
+        "这应感觉比 10L 更远端。",
+        "学习者应思考左侧分支层级气道解剖。"
+      ],
+      "ultrasound": [
+        "左肺门检查点以远的左叶间目标。",
+        "分支层级线索是与 10L 区分的关键。",
+        "该 EBUS 图像可能不如 10L 熟悉，因此需要有意识地定向。"
+      ]
+    },
+    "safePunctureConsiderations": [
+      "不要将明显属于分支层级且更远端的目标强行标为 10L。",
+      "如果没有获准使用的 EBUS 静态图像，仍应教授解剖和分期逻辑，而不是杜撰图像确定性。"
+    ],
+    "stagingChangeFinding": "恶性 11L 淋巴结对于左肺原发灶为 N1，对于右肺原发灶为 N3。",
+    "assetKeys": {
+      "map": "station-map-11l",
+      "ct": "ct-11l",
+      "bronchoscopy": "bronchoscopy-11l",
+      "ultrasound": "ultrasound-11l"
+    }
+  }
+]

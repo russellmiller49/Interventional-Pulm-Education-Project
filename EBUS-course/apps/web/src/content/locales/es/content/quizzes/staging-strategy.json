@@ -1,0 +1,122 @@
+[
+  {
+    "id": "staging-priority-01",
+    "moduleId": "station-explorer",
+    "prompt": "Un primario pulmonar derecho tiene un ganglio 10R grande y un ganglio 2L más pequeño al otro lado del borde lateral izquierdo de la tráquea. ¿Qué estación tiene la consecuencia inmediata de estadificación más importante si es positiva?",
+    "type": "case-vignette",
+    "caseTitle": "Ganglio ipsilateral grande, ganglio contralateral más pequeño",
+    "caseSummary": "El ganglio más fácil de alcanzar no es necesariamente el que más cambia la etapa.",
+    "options": [
+      {
+        "id": "a",
+        "label": "El ganglio 2L, porque una estación mediastínica contralateral puede establecer enfermedad N3",
+        "rationale": "Correcto. La enfermedad mediastínica contralateral tiene una consecuencia de estadificación mayor que la enfermedad hiliar ipsilateral."
+      },
+      {
+        "id": "b",
+        "label": "El ganglio 10R, porque el ganglio más grande siempre determina la etapa más alta",
+        "rationale": "Incorrecto. El tamaño por sí solo no determina la estación de mayor consecuencia."
+      },
+      {
+        "id": "c",
+        "label": "Ninguno importa porque ambos son ganglios torácicos centrales",
+        "rationale": "Incorrecto. Su lateralidad y zona generan implicaciones de estadificación muy diferentes."
+      },
+      {
+        "id": "d",
+        "label": "Solo la estación 7 cambiaría la estadificación en este escenario",
+        "rationale": "Incorrecto. Cualquiera de los ganglios podría importar, pero el ganglio mediastínico contralateral tiene la mayor consecuencia inmediata de estadificación."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "Una mentalidad centrada primero en la estadificación pregunta qué ganglio cambia más el manejo. Aquí, un ganglio mediastínico contralateral tiene mayor consecuencia inmediata que un ganglio hiliar ipsilateral, aunque el hiliar sea más grande.",
+    "difficulty": "advanced",
+    "tags": [
+      "station-explorer",
+      "staging-strategy",
+      "N3",
+      "2L",
+      "10R"
+    ]
+  },
+  {
+    "id": "staging-11ri-02",
+    "moduleId": "station-explorer",
+    "prompt": "Para un primario pulmonar derecho, ¿el compromiso maligno de 11Ri se enseña mejor como qué categoría ganglionar?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "Enfermedad interlobar ipsilateral (N1)",
+        "rationale": "Correcto. Las subestaciones 11R ipsilaterales son enfermedad hiliar/interlobar y cuentan como N1."
+      },
+      {
+        "id": "b",
+        "label": "Enfermedad mediastínica ipsilateral (N2)",
+        "rationale": "Incorrecto. 11Ri es interlobar, no mediastínica."
+      },
+      {
+        "id": "c",
+        "label": "Enfermedad mediastínica contralateral (N3)",
+        "rationale": "Incorrecto. Eso requeriría compromiso contralateral o supraclavicular, no 11Ri ipsilateral."
+      },
+      {
+        "id": "d",
+        "label": "No tiene efecto formal sobre la etapa ganglionar",
+        "rationale": "Incorrecto. La enfermedad de estación 11 forma parte de la estadificación ganglionar."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "La estación 11Ri es una estación interlobar ipsilateral para un primario derecho y se categoriza como N1 cuando está comprometida.",
+    "difficulty": "basic",
+    "tags": [
+      "station-explorer",
+      "staging-strategy",
+      "11Ri",
+      "N1"
+    ]
+  },
+  {
+    "id": "staging-contralateral-03",
+    "moduleId": "station-explorer",
+    "prompt": "Un tumor primario del lado derecho tiene compromiso maligno de 4L. ¿Cuál es el punto docente clave?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "4L es enfermedad mediastínica contralateral y por lo tanto N3",
+        "rationale": "Correcto. El compromiso mediastínico contralateral eleva la estadificación a N3."
+      },
+      {
+        "id": "b",
+        "label": "4L siempre es N2 porque todos los ganglios de estación 4 son mediastínicos",
+        "rationale": "Incorrecto. La lateralidad sigue importando para la estación 4."
+      },
+      {
+        "id": "c",
+        "label": "4L es enfermedad hiliar si el ganglio está cerca del bronquio principal izquierdo",
+        "rationale": "Incorrecto. La estación 4L sigue siendo mediastínica; la transición a 10L está por debajo de la arteria pulmonar principal izquierda."
+      },
+      {
+        "id": "d",
+        "label": "La etapa no puede asignarse hasta conocer el tamaño del ganglio",
+        "rationale": "Incorrecto. El tamaño no define aquí la categoría N."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "La estación 4L es una estación mediastínica izquierda. Para un primario derecho, el compromiso maligno es enfermedad mediastínica contralateral y se enseña como N3.",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-explorer",
+      "staging-strategy",
+      "4L",
+      "N3"
+    ]
+  }
+]

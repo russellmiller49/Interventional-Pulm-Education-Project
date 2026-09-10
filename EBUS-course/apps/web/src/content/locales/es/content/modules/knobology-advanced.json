@@ -1,0 +1,127 @@
+{
+  "id": "knobology-advanced",
+  "title": "Fundamentos de ultrasonido y knobology de EBUS",
+  "summary": "Revisión concisa de nivel de beca sobre cómo se forman las imágenes EBUS, cómo los controles cambian lo que se ve y cómo esos ajustes afectan el abordaje seguro de ganglios.",
+  "learningObjectives": [
+    "Explicar por qué el aire, el contacto del balón y el acoplamiento tisular cambian la calidad de imagen antes de tocar cualquier control del procesador.",
+    "Diferenciar frecuencia, longitud de onda, resolución y penetración en el contexto práctico de CP-EBUS frente a RP-EBUS.",
+    "Usar de forma consistente el vocabulario de ecogenicidad, CHS, CNS, márgenes y artefactos al describir una imagen EBUS.",
+    "Aplicar profundidad, ganancia, contraste, Doppler, congelación y calibradores en una secuencia deliberada en lugar de ensayo y error aleatorio.",
+    "Reconocer artefactos comunes y trampas de muestreo que pueden hacer que un objetivo parezca más tranquilizador o más peligroso de lo que realmente es."
+  ],
+  "sections": [
+    {
+      "id": "image-formation",
+      "title": "Por qué las imágenes EBUS se ven como se ven",
+      "kind": "core-concept",
+      "body": "EBUS depende del acoplamiento acústico. El aire es un reflector importante, por lo que ni siquiera un ajuste técnicamente perfecto del procesador puede rescatar una imagen si el balón no mantiene contacto estable o si la sonda apunta en parte hacia una vía aérea llena de aire. Empiece por mejorar contacto, orientación y centrado del objetivo antes de asumir que los ajustes de la máquina son incorrectos.",
+      "bullets": [
+        "La discordancia de impedancia acústica en una interfase aire-tejido causa gran pérdida de señal.",
+        "Pequeños cambios en el contacto del balón pueden mejorar la imagen más que grandes cambios de ganancia.",
+        "Una imagen legible comienza con la posición de la sonda, no con el panel de control."
+      ],
+      "pearl": "Si la imagen mejora de repente con un pequeño cambio de contacto, mantenga estable la máquina y aprenda esa ventana acústica antes de ajustar el procesador.",
+      "pitfall": "Aplicar demasiada ganancia a una imagen mal acoplada puede crear una neblina brillante que oculta aún más el borde real."
+    },
+    {
+      "id": "frequency-penetration",
+      "title": "Frecuencia, longitud de onda y la compensación entre CP-EBUS y RP-EBUS",
+      "kind": "core-concept",
+      "body": "El ultrasonido de mayor frecuencia ofrece mejor resolución espacial, pero pierde penetración en profundidad con mayor rapidez. En términos prácticos de enseñanza, RP-EBUS es una herramienta periférica de localización de alta frecuencia, mientras que CP-EBUS sacrifica algo de resolución a cambio de mayor penetración y guía de aguja en tiempo real alrededor de estructuras mediastínicas e hiliares.",
+      "bullets": [
+        "Una longitud de onda más corta mejora el detalle, pero se atenúa antes.",
+        "RP-EBUS suele ser de alta frecuencia y está optimizado para localizar lesiones periféricas.",
+        "CP-EBUS permite imágenes más profundas, Doppler y muestreo en tiempo real."
+      ],
+      "pearl": "Cuando un objetivo profundo se ve borroso o mal definido, recuerde que la limitación puede ser la profundidad y el acoplamiento, no solo la habilidad del alumno.",
+      "pitfall": "No prometa a los alumnos que un mejor ajuste puede superar por completo la compensación física entre penetración y resolución."
+    },
+    {
+      "id": "echogenicity-language",
+      "title": "El lenguaje de ecogenicidad importa",
+      "kind": "core-concept",
+      "body": "Las estructuras anecoicas son casi negras, las áreas hipoecoicas son más oscuras que el fondo, el tejido isoecoico se mezcla con su entorno y las estructuras hiperecoicas son brillantes. Este vocabulario se vuelve importante al decidir si un hallazgo parece quístico, vascular, necrótico, calcificado o simplemente con ganancia insuficiente.",
+      "bullets": [
+        "CHS es una estructura central lineal o plana hiperecoica que, cuando se conserva, tiende a favorecer benignidad.",
+        "CNS se refiere a un área hipoecoica de aspecto necrótico sin flujo y puede aumentar la preocupación por malignidad.",
+        "Describir primero la ecogenicidad mantiene más objetiva la interpretación posterior."
+      ],
+      "pearl": "Enseñe al alumno a describir lo visible antes de inferir su significado.",
+      "pitfall": "Llamar necrosis a una región oscura antes de revisar Doppler, contacto y artefacto puede llevar a exceso de confianza."
+    },
+    {
+      "id": "control-sequence",
+      "title": "Secuencia de controles antes del muestreo",
+      "kind": "technique",
+      "body": "Use una secuencia predecible: centrar el objetivo, ajustar la profundidad, regular la ganancia, refinar el contraste, revisar vasos con Doppler, congelar cuando la imagen sea confiable, medir solo si cambia el manejo y luego guardar. Una secuencia estable reduce la carga cognitiva y hace que la enseñanza sea reproducible entre estaciones.",
+      "bullets": [
+        "La profundidad responde primero la pregunta de encuadre.",
+        "La ganancia corrige el brillo global; el contraste ayuda a separar bordes después de lograr un encuadre razonable.",
+        "Doppler es un paso de seguridad antes de la punción, no un sustituto de la interpretación en escala de grises.",
+        "Congelar y usar calibradores solo importa después de que valga la pena conservar la imagen."
+      ],
+      "checklist": [
+        "Objetivo centrado y completamente visible",
+        "Márgenes legibles sin neblina excesiva",
+        "Estructuras vasculares revisadas con Doppler",
+        "Medición realizada solo si es clínicamente útil",
+        "Imagen docente guardada después de la optimización"
+      ],
+      "pearl": "Una secuencia consistente permite que el alumno explique cada ajuste en lugar de buscar al azar una imagen más bonita.",
+      "pitfall": "Medir o guardar demasiado pronto fija una imagen deficiente y enseña un estándar visual equivocado."
+    },
+    {
+      "id": "artifacts",
+      "title": "Patrones de artefacto relevantes en EBUS",
+      "kind": "artifact",
+      "body": "Los artefactos no son solo curiosidades de examen. La reverberación, la cola de cometa y la cola de renacuajo aparecen a menudo cuando reflectores fuertes o interfases con aire crean ecos repetidos; la sombra acústica puede ocultar tejido detrás de estructuras calcificadas o muy reflectantes; los efectos de imagen en espejo pueden crear falsa simetría. Los alumnos deben reconocer que un artefacto puede explicar un patrón de forma más convincente que la patología.",
+      "bullets": [
+        "La reverberación repite un reflector y es común cerca de interfases de aire y cartílago.",
+        "Los artefactos de cola de cometa y cola de renacuajo son variantes de reverberación en disminución que pueden exagerar interfases brillantes.",
+        "La sombra acústica oculta información detrás de un reflector fuerte.",
+        "El artefacto de imagen en espejo puede hacer que la anatomía parezca duplicada a través de un límite reflectante."
+      ],
+      "pearl": "Si un hallazgo sorprendente permanece perfectamente unido a una interfase brillante mientras se mueve la sonda, piense en artefacto antes que en anatomía.",
+      "pitfall": "Un alumno que confunde sombra o reverberación con un borde real puede colocar calibradores o planificar una trayectoria de aguja contra un objetivo falso."
+    },
+    {
+      "id": "doppler-sampling",
+      "title": "Perlas sobre Doppler y selección de objetivo ganglionar",
+      "kind": "clinical-pearl",
+      "body": "El Doppler color o power ayuda a separar vasos de tejido avascular, pero la interpretación en escala de grises sigue siendo lo primero. La punción más segura rara vez es la línea más corta en la pantalla; es la línea que conserva la estabilidad del broncoscopio, confirma un trayecto sin vasos y muestrea tejido viable en lugar de necrosis evidente.",
+      "bullets": [
+        "Identifique vasos antes de la punción, especialmente cuando el trayecto parece engañosamente directo.",
+        "Evite áreas avasculares de aspecto claramente necrótico cuando exista un mejor objetivo sólido.",
+        "Cuando sea necesario, puncione entre los anillos cartilaginosos con control deliberado del broncoscopio en lugar de fuerza.",
+        "Use abaniqueo y muestreo de cápsula a cápsula para atravesar más de una parte del ganglio."
+      ],
+      "pearl": "Un trayecto ligeramente menos directo pero mejor controlado suele ser una opción educativa más segura que una punción recta llamativa.",
+      "pitfall": "Una región negativa en Doppler no es automáticamente segura si el objetivo en escala de grises es principalmente necrótico o está mal acoplado."
+    },
+    {
+      "id": "non-diagnostic-frames",
+      "title": "Cuando las imágenes son engañosas",
+      "kind": "pitfall",
+      "body": "Una imagen nítida aún puede engañar si el objetivo está incluido solo parcialmente, si el borde aparente es artefacto o si la imagen se congeló durante el movimiento. Las muestras no diagnósticas a menudo comienzan con imágenes no diagnósticas: mal contacto, mala selección del objetivo, muestreo repetido del mismo trayecto o muestreo de una cavidad necrótica avascular en lugar de tejido viable.",
+      "bullets": [
+        "No confunda una imagen fija con una imagen confiable.",
+        "Pases repetidos por el mismo trayecto pueden crear falsa confianza sin ampliar la muestra.",
+        "Una punción técnicamente prolija puede seguir teniendo bajo rendimiento biológico si la selección del objetivo es mala."
+      ],
+      "pearl": "Cuando el rendimiento es bajo, revise la elección del objetivo y la calidad de imagen antes de culpar a la aguja o al flujo de patología.",
+      "pitfall": "Los alumnos a menudo se concentran en la coreografía de la aguja y pasan por alto que la imagen subyacente nunca justificó el pase."
+    },
+    {
+      "id": "sampling-vignette",
+      "title": "Viñeta clínica: imagen brillante, mal objetivo",
+      "kind": "case",
+      "body": "Un alumno obtiene una imagen brillante y centrada de un ganglio grande, pero el centro es avascular y casi anecoico mientras la cápsula permanece sólida. Doppler descarta un vaso cercano y el primer impulso es puncionar el centro porque es lo más fácil de ver.",
+      "caseVignette": {
+        "title": "Muestree el borde viable, no el centro llamativo",
+        "scenario": "El trayecto de aspecto más seguro no cruza ninguna señal Doppler, pero la parte más llamativa del ganglio parece necrótica.",
+        "prompt": "¿Qué debe cambiar primero: el trayecto de punción, los ajustes de imagen o el objetivo dentro del ganglio?",
+        "takeaway": "Debe cambiar primero el objetivo dentro del ganglio. Después de revisar vasos y optimizar la imagen, apunte a tejido viable y use abaniqueo en lugar de muestrear repetidamente una cavidad necrótica evidente."
+      }
+    }
+  ]
+}

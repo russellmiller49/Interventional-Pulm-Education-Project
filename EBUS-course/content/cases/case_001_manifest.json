@@ -1,0 +1,1416 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case_001",
+  "title": "Curated EBUS case 001",
+  "description": "Segmented airway, vascular landmarks, and lymph nodes for a linked 3D + slice explorer.",
+  "assets": {
+    "glbFile": "Model/CT_segmentation_1.glb",
+    "glbHighlightFile": "Model/CT_segmentation_2.glb",
+    "ctVolumeFile": "Model/case_001_ct.nrrd",
+    "segmentationFile": "Model/case_001_segmentation.nrrd"
+  },
+  "coordinateAssumptions": {
+    "worldCoordinateSystem": "respect per-markup coordinateSystem",
+    "sliceIndicesMustBeDerivedFrom": [
+      "markup control point position",
+      "markup coordinateSystem",
+      "CT volume geometry",
+      "slice series counts"
+    ],
+    "note": "Do not assume RAS. Read each .mrk.json coordinateSystem and convert to the CT volume frame before deriving slice indices."
+  },
+  "sliceSeries": {
+    "axial": {
+      "folder": "Model/sliceSeries/axial",
+      "count": 180,
+      "framePattern": null,
+      "displayOrientation": "axial",
+      "indexDerivation": "derive from .mrk.json + CT volume geometry + series count",
+      "coverageAssumption": [
+        0.0,
+        1.0
+      ]
+    },
+    "coronal": {
+      "folder": "Model/sliceSeries/coronal",
+      "count": 220,
+      "framePattern": null,
+      "displayOrientation": "coronal",
+      "indexDerivation": "derive from .mrk.json + CT volume geometry + series count",
+      "coverageAssumption": [
+        0.0,
+        1.0
+      ]
+    },
+    "sagittal": {
+      "folder": "Model/sliceSeries/sagital",
+      "count": 160,
+      "framePattern": null,
+      "displayOrientation": "sagittal",
+      "sourceFolderSpelling": "sagital",
+      "indexDerivation": "derive from .mrk.json + CT volume geometry + series count",
+      "coverageAssumption": [
+        1.0,
+        0.02
+      ]
+    }
+  },
+  "stations": [
+    {
+      "id": "1R",
+      "label": "1R",
+      "groupLabel": "1R",
+      "targetIds": [
+        "node_1R"
+      ],
+      "primaryTargetId": "node_1R",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "1L",
+      "label": "1L",
+      "groupLabel": "1L",
+      "targetIds": [
+        "node_1L"
+      ],
+      "primaryTargetId": "node_1L",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "2R",
+      "label": "2R",
+      "groupLabel": "2R",
+      "targetIds": [
+        "node_2R"
+      ],
+      "primaryTargetId": "node_2R",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "2L",
+      "label": "2L",
+      "groupLabel": "2L",
+      "targetIds": [
+        "node_2L"
+      ],
+      "primaryTargetId": "node_2L",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "3A",
+      "label": "3A",
+      "groupLabel": "3A",
+      "targetIds": [
+        "node_3A_1",
+        "node_3A_2",
+        "node_3A_3",
+        "node_3A_4",
+        "node_3A_5",
+        "node_3A_6",
+        "node_3A_7"
+      ],
+      "primaryTargetId": "node_3A_1",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "4R",
+      "label": "4R",
+      "groupLabel": "4R",
+      "targetIds": [
+        "node_4R_1",
+        "node_4R_2",
+        "node_4R_3"
+      ],
+      "primaryTargetId": "node_4R_1",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "4L",
+      "label": "4L",
+      "groupLabel": "4L",
+      "targetIds": [
+        "node_4L_1",
+        "node_4L_2",
+        "node_4L_3"
+      ],
+      "primaryTargetId": "node_4L_1",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "5",
+      "label": "5",
+      "groupLabel": "5",
+      "targetIds": [
+        "node_5_nod5"
+      ],
+      "primaryTargetId": "node_5_nod5",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "6",
+      "label": "6",
+      "groupLabel": "6",
+      "targetIds": [
+        "node_6_nod5"
+      ],
+      "primaryTargetId": "node_6_nod5",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "7",
+      "label": "7",
+      "groupLabel": "7",
+      "targetIds": [
+        "node_7_1"
+      ],
+      "primaryTargetId": "node_7_1",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "10R",
+      "label": "10R",
+      "groupLabel": "10R",
+      "targetIds": [
+        "node_10R_1",
+        "node_10R_2"
+      ],
+      "primaryTargetId": "node_10R_1",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "10L",
+      "label": "10L",
+      "groupLabel": "10L",
+      "targetIds": [
+        "node_10L"
+      ],
+      "primaryTargetId": "node_10L",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "11L",
+      "label": "11L",
+      "groupLabel": "11L",
+      "targetIds": [
+        "node_11L"
+      ],
+      "primaryTargetId": "node_11L",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "11Ri",
+      "label": "11Ri",
+      "groupLabel": "11R",
+      "targetIds": [
+        "node_11Ri"
+      ],
+      "primaryTargetId": "node_11Ri",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "11Rs",
+      "label": "11Rs",
+      "groupLabel": "11R",
+      "targetIds": [
+        "node_11Rs_1",
+        "node_11Rs_2"
+      ],
+      "primaryTargetId": "node_11Rs_1",
+      "kind": "nodal_station"
+    }
+  ],
+  "targets": [
+    {
+      "id": "node_1R",
+      "label": "1R",
+      "displayLabel": "1R",
+      "kind": "lymph_node",
+      "stationId": "1R",
+      "stationGroupId": "1R",
+      "markupFile": "Model/markups/1R.mrk.json",
+      "meshNameExpected": "Station 1R",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 1R"
+    },
+    {
+      "id": "node_1L",
+      "label": "1L",
+      "displayLabel": "1L",
+      "kind": "lymph_node",
+      "stationId": "1L",
+      "stationGroupId": "1L",
+      "markupFile": "Model/markups/1L.mrk.json",
+      "meshNameExpected": "Station 1L",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 1L"
+    },
+    {
+      "id": "node_2R",
+      "label": "2R",
+      "displayLabel": "2R",
+      "kind": "lymph_node",
+      "stationId": "2R",
+      "stationGroupId": "2R",
+      "markupFile": "Model/markups/2R.mrk.json",
+      "meshNameExpected": "Station 2R",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 2R"
+    },
+    {
+      "id": "node_2L",
+      "label": "2L",
+      "displayLabel": "2L",
+      "kind": "lymph_node",
+      "stationId": "2L",
+      "stationGroupId": "2L",
+      "markupFile": "Model/markups/2L.mrk.json",
+      "meshNameExpected": "Station 2L",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 2L"
+    },
+    {
+      "id": "node_3A_1",
+      "label": "3A_1",
+      "displayLabel": "3A 1",
+      "kind": "lymph_node",
+      "stationId": "3A",
+      "stationGroupId": "3A",
+      "markupFile": "Model/markups/3A_1.mrk.json",
+      "meshNameExpected": "Station 3A",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 3A"
+    },
+    {
+      "id": "node_3A_2",
+      "label": "3A_2",
+      "displayLabel": "3A 2",
+      "kind": "lymph_node",
+      "stationId": "3A",
+      "stationGroupId": "3A",
+      "markupFile": "Model/markups/3A_2.mrk.json",
+      "meshNameExpected": "Station 3A",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "Station 3A"
+    },
+    {
+      "id": "node_3A_3",
+      "label": "3A_3",
+      "displayLabel": "3A 3",
+      "kind": "lymph_node",
+      "stationId": "3A",
+      "stationGroupId": "3A",
+      "markupFile": "Model/markups/3A_3.mrk.json",
+      "meshNameExpected": "Station 3A",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "Station 3A"
+    },
+    {
+      "id": "node_3A_4",
+      "label": "3A_4",
+      "displayLabel": "3A 4",
+      "kind": "lymph_node",
+      "stationId": "3A",
+      "stationGroupId": "3A",
+      "markupFile": "Model/markups/3A_4.mrk.json",
+      "meshNameExpected": "Station 3A",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "Station 3A"
+    },
+    {
+      "id": "node_3A_5",
+      "label": "3A_5",
+      "displayLabel": "3A 5",
+      "kind": "lymph_node",
+      "stationId": "3A",
+      "stationGroupId": "3A",
+      "markupFile": "Model/markups/3A_5.mrk.json",
+      "meshNameExpected": "Station 3A",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "Station 3A"
+    },
+    {
+      "id": "node_3A_6",
+      "label": "3A_6",
+      "displayLabel": "3A 6",
+      "kind": "lymph_node",
+      "stationId": "3A",
+      "stationGroupId": "3A",
+      "markupFile": "Model/markups/3A_6.mrk.json",
+      "meshNameExpected": "Station 3A",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "Station 3A"
+    },
+    {
+      "id": "node_3A_7",
+      "label": "3A_7",
+      "displayLabel": "3A 7",
+      "kind": "lymph_node",
+      "stationId": "3A",
+      "stationGroupId": "3A",
+      "markupFile": "Model/markups/3A_7.mrk.json",
+      "meshNameExpected": "Station 3A",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "Station 3A"
+    },
+    {
+      "id": "node_4R_1",
+      "label": "4R_1",
+      "displayLabel": "4R 1",
+      "kind": "lymph_node",
+      "stationId": "4R",
+      "stationGroupId": "4R",
+      "markupFile": "Model/markups/4R_1.mrk.json",
+      "meshNameExpected": "Station 4R",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 4R"
+    },
+    {
+      "id": "node_4R_2",
+      "label": "4R_2",
+      "displayLabel": "4R 2",
+      "kind": "lymph_node",
+      "stationId": "4R",
+      "stationGroupId": "4R",
+      "markupFile": "Model/markups/4R_2.mrk.json",
+      "meshNameExpected": "Station 4R",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "Station 4R"
+    },
+    {
+      "id": "node_4R_3",
+      "label": "4R_3",
+      "displayLabel": "4R 3",
+      "kind": "lymph_node",
+      "stationId": "4R",
+      "stationGroupId": "4R",
+      "markupFile": "Model/markups/4R_3.mrk.json",
+      "meshNameExpected": "Station 4R",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "Station 4R"
+    },
+    {
+      "id": "node_4L_1",
+      "label": "4L_1",
+      "displayLabel": "4L 1",
+      "kind": "lymph_node",
+      "stationId": "4L",
+      "stationGroupId": "4L",
+      "markupFile": "Model/markups/4L_1.mrk.json",
+      "meshNameExpected": "Station 4L",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 4L"
+    },
+    {
+      "id": "node_4L_2",
+      "label": "4L_2",
+      "displayLabel": "4L 2",
+      "kind": "lymph_node",
+      "stationId": "4L",
+      "stationGroupId": "4L",
+      "markupFile": "Model/markups/4L_2.mrk.json",
+      "meshNameExpected": "Station 4L",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "Station 4L"
+    },
+    {
+      "id": "node_4L_3",
+      "label": "4L_3",
+      "displayLabel": "4L 3",
+      "kind": "lymph_node",
+      "stationId": "4L",
+      "stationGroupId": "4L",
+      "markupFile": "Model/markups/4L_3.mrk.json",
+      "meshNameExpected": "Station 4L",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "Station 4L"
+    },
+    {
+      "id": "node_5_nod5",
+      "label": "5_nod5",
+      "displayLabel": "5 nod5",
+      "kind": "lymph_node",
+      "stationId": "5",
+      "stationGroupId": "5",
+      "markupFile": "Model/markups/5_nod5.mrk.json",
+      "meshNameExpected": "Station 5",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 5"
+    },
+    {
+      "id": "node_6_nod5",
+      "label": "6_nod5",
+      "displayLabel": "6 nod5",
+      "kind": "lymph_node",
+      "stationId": "6",
+      "stationGroupId": "6",
+      "markupFile": "Model/markups/6_nod5.mrk.json",
+      "meshNameExpected": "Station 6",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 6"
+    },
+    {
+      "id": "node_7_1",
+      "label": "7_1",
+      "displayLabel": "7 1",
+      "kind": "lymph_node",
+      "stationId": "7",
+      "stationGroupId": "7",
+      "markupFile": "Model/markups/7_1.mrk.json",
+      "meshNameExpected": "Station 7",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 7"
+    },
+    {
+      "id": "node_10R_1",
+      "label": "10R_1",
+      "displayLabel": "10R 1",
+      "kind": "lymph_node",
+      "stationId": "10R",
+      "stationGroupId": "10R",
+      "markupFile": "Model/markups/10R_1.mrk.json",
+      "meshNameExpected": "Station 10R",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 10R"
+    },
+    {
+      "id": "node_10R_2",
+      "label": "10R_2",
+      "displayLabel": "10R 2",
+      "kind": "lymph_node",
+      "stationId": "10R",
+      "stationGroupId": "10R",
+      "markupFile": "Model/markups/10R_2.mrk.json",
+      "meshNameExpected": "Station 10R",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "Station 10R"
+    },
+    {
+      "id": "node_10L",
+      "label": "10L",
+      "displayLabel": "10L",
+      "kind": "lymph_node",
+      "stationId": "10L",
+      "stationGroupId": "10L",
+      "markupFile": "Model/markups/10L.mrk.json",
+      "meshNameExpected": "Station 10L",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 10L"
+    },
+    {
+      "id": "node_11L",
+      "label": "11L",
+      "displayLabel": "11L",
+      "kind": "lymph_node",
+      "stationId": "11L",
+      "stationGroupId": "11L",
+      "markupFile": "Model/markups/11L.mrk.json",
+      "meshNameExpected": "Station 11L",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 11L"
+    },
+    {
+      "id": "node_11Ri",
+      "label": "11Ri",
+      "displayLabel": "11Ri",
+      "kind": "lymph_node",
+      "stationId": "11Ri",
+      "stationGroupId": "11R",
+      "markupFile": "Model/markups/11Ri.mrk.json",
+      "meshNameExpected": "Station 11Ri",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 11Ri"
+    },
+    {
+      "id": "node_11Rs_1",
+      "label": "11Rs_1",
+      "displayLabel": "11Rs 1",
+      "kind": "lymph_node",
+      "stationId": "11Rs",
+      "stationGroupId": "11R",
+      "markupFile": "Model/markups/11Rs_1.mrk.json",
+      "meshNameExpected": "Station 11Rs",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 11Rs"
+    },
+    {
+      "id": "node_11Rs_2",
+      "label": "11Rs_2",
+      "displayLabel": "11Rs 2",
+      "kind": "lymph_node",
+      "stationId": "11Rs",
+      "stationGroupId": "11R",
+      "markupFile": "Model/markups/11Rs_2.mrk.json",
+      "meshNameExpected": "Station 11Rs",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "Station 11Rs"
+    },
+    {
+      "id": "landmark_aorta",
+      "label": "aorta",
+      "displayLabel": "aorta",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/aorta.mrk.json",
+      "meshNameExpected": "aorta",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "aorta"
+    },
+    {
+      "id": "landmark_azygous_vein",
+      "label": "azygous vein",
+      "displayLabel": "azygous vein",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/azygous vein.mrk.json",
+      "meshNameExpected": "azygous vein",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "azygous vein"
+    },
+    {
+      "id": "landmark_brachiocephalic_trunk",
+      "label": "brachiocephalic trunk",
+      "displayLabel": "brachiocephalic trunk",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/brachiocephalic trunk.mrk.json",
+      "meshNameExpected": "brachiocephalic trunk",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "brachiocephalic trunk"
+    },
+    {
+      "id": "landmark_right_brachiocephalic_vein",
+      "label": "right brachiocephalic vein",
+      "displayLabel": "right brachiocephalic vein",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/right brachiocephalic vein.mrk.json",
+      "meshNameExpected": "right brachiocephalic vein",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "right brachiocephalic vein"
+    },
+    {
+      "id": "landmark_left_brachiocephalic_vein",
+      "label": "left brachiocephalic vein",
+      "displayLabel": "left brachiocephalic vein",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/left brachiocephalic vein.mrk.json",
+      "meshNameExpected": "left brachiocephalic vein",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "left brachiocephalic vein"
+    },
+    {
+      "id": "landmark_superior_vena_cava",
+      "label": "superior vena cava",
+      "displayLabel": "superior vena cava",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/superior vena cava.mrk.json",
+      "meshNameExpected": "superior vena cava",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "superior vena cava"
+    },
+    {
+      "id": "landmark_inferior_vena_cava",
+      "label": "inferior vena cava",
+      "displayLabel": "inferior vena cava",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/inferior vena cava.mrk.json",
+      "meshNameExpected": "inferior vena cava",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "inferior vena cava"
+    },
+    {
+      "id": "landmark_right_common_carotid_artery",
+      "label": "right common carotid artery",
+      "displayLabel": "right common carotid artery",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/right common carotid artery.mrk.json",
+      "meshNameExpected": "right common carotid artery",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "right common carotid artery"
+    },
+    {
+      "id": "landmark_left_common_carotid_artery",
+      "label": "left common carotid artery",
+      "displayLabel": "left common carotid artery",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/left common carotid artery.mrk.json",
+      "meshNameExpected": "left common carotid artery",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "left common carotid artery"
+    },
+    {
+      "id": "landmark_right_subclavian_artery",
+      "label": "right subclavian artery",
+      "displayLabel": "right subclavian artery",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/right subclavian artery.mrk.json",
+      "meshNameExpected": "right subclavian artery",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "right subclavian artery"
+    },
+    {
+      "id": "landmark_left_subclavian_artery",
+      "label": "left subclavian artery",
+      "displayLabel": "left subclavian artery",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/left subclavian artery.mrk.json",
+      "meshNameExpected": "left subclavian artery",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "left subclavian artery"
+    },
+    {
+      "id": "landmark_bronchus_intermedius",
+      "label": "bronchus intermedius",
+      "displayLabel": "bronchus intermedius",
+      "kind": "landmark",
+      "landmarkGroup": "airway",
+      "markupFile": "Model/markups/bronchus intermedius.mrk.json",
+      "meshNameExpected": "airway",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "airway"
+    },
+    {
+      "id": "landmark_carina",
+      "label": "carina",
+      "displayLabel": "carina",
+      "kind": "landmark",
+      "landmarkGroup": "airway",
+      "markupFile": "Model/markups/carina.mrk.json",
+      "meshNameExpected": "airway",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "airway"
+    },
+    {
+      "id": "landmark_trachea",
+      "label": "trachea",
+      "displayLabel": "trachea",
+      "kind": "landmark",
+      "landmarkGroup": "airway",
+      "markupFile": "Model/markups/trachea.mrk.json",
+      "meshNameExpected": "airway",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "airway"
+    },
+    {
+      "id": "landmark_left_mainstem",
+      "label": "left mainstem",
+      "displayLabel": "left mainstem",
+      "kind": "landmark",
+      "landmarkGroup": "airway",
+      "markupFile": "Model/markups/left mainstem.mrk.json",
+      "meshNameExpected": "airway",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "airway"
+    },
+    {
+      "id": "landmark_right_mainstem",
+      "label": "right mainstem",
+      "displayLabel": "right mainstem",
+      "kind": "landmark",
+      "landmarkGroup": "airway",
+      "markupFile": "Model/markups/right mainstem.mrk.json",
+      "meshNameExpected": "airway",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "airway"
+    },
+    {
+      "id": "landmark_esophagus",
+      "label": "esophagus",
+      "displayLabel": "esophagus",
+      "kind": "landmark",
+      "landmarkGroup": "gi",
+      "markupFile": "Model/markups/esophagus.mrk.json",
+      "meshNameExpected": "esophagus",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "esophagus"
+    },
+    {
+      "id": "landmark_main_pa",
+      "label": "main PA",
+      "displayLabel": "main PA",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/main PA.mrk.json",
+      "meshNameExpected": "pulmonary artery",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "pulmonary artery"
+    },
+    {
+      "id": "landmark_left_pa",
+      "label": "left PA",
+      "displayLabel": "left PA",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/left PA.mrk.json",
+      "meshNameExpected": "pulmonary artery",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "pulmonary artery"
+    },
+    {
+      "id": "landmark_right_pa",
+      "label": "right PA",
+      "displayLabel": "right PA",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/right PA.mrk.json",
+      "meshNameExpected": "pulmonary artery",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "pulmonary artery"
+    },
+    {
+      "id": "landmark_left_inferior_pv",
+      "label": "left inferior PV",
+      "displayLabel": "left inferior PV",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/left inferior PV.mrk.json",
+      "meshNameExpected": "pulmonary venous system",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "pulmonary venous system"
+    },
+    {
+      "id": "landmark_left_superior_pv",
+      "label": "left superior PV",
+      "displayLabel": "left superior PV",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/left superior PV.mrk.json",
+      "meshNameExpected": "pulmonary venous system",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "pulmonary venous system"
+    },
+    {
+      "id": "landmark_right_inferior_pv",
+      "label": "right inferior PV",
+      "displayLabel": "right inferior PV",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/right inferior PV.mrk.json",
+      "meshNameExpected": "pulmonary venous system",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "pulmonary venous system"
+    },
+    {
+      "id": "landmark_right_superior_pv",
+      "label": "right superior PV",
+      "displayLabel": "right superior PV",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/right superior PV.mrk.json",
+      "meshNameExpected": "pulmonary venous system",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "pulmonary venous system"
+    },
+    {
+      "id": "landmark_left_atrium",
+      "label": "left atrium",
+      "displayLabel": "left atrium",
+      "kind": "landmark",
+      "landmarkGroup": "cardiac",
+      "markupFile": "Model/markups/left atrium.mrk.json",
+      "meshNameExpected": "left atrium",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "left atrium"
+    },
+    {
+      "id": "landmark_left_atrial_appendage",
+      "label": "left atrial appendage",
+      "displayLabel": "left atrial appendage",
+      "kind": "landmark",
+      "landmarkGroup": "cardiac",
+      "markupFile": "Model/markups/left atrial appendage.mrk.json",
+      "meshNameExpected": "left atrial appendage",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "left atrial appendage"
+    },
+    {
+      "id": "landmark_left_ventricle",
+      "label": "left ventricle",
+      "displayLabel": "left ventricle",
+      "kind": "landmark",
+      "landmarkGroup": "cardiac",
+      "markupFile": "Model/markups/left ventricle.mrk.json",
+      "meshNameExpected": "left ventricle",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "left ventricle"
+    },
+    {
+      "id": "landmark_right_atrium",
+      "label": "right atrium",
+      "displayLabel": "right atrium",
+      "kind": "landmark",
+      "landmarkGroup": "cardiac",
+      "markupFile": "Model/markups/right atrium.mrk.json",
+      "meshNameExpected": "right atrium",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "right atrium"
+    },
+    {
+      "id": "landmark_right_ventricle",
+      "label": "right ventricle",
+      "displayLabel": "right ventricle",
+      "kind": "landmark",
+      "landmarkGroup": "cardiac",
+      "markupFile": "Model/markups/right ventricle.mrk.json",
+      "meshNameExpected": "right ventricle",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": null,
+        "coronal": null,
+        "sagittal": null
+      },
+      "notes": "",
+      "meshName": "right ventricle"
+    }
+  ],
+  "toggleSets": [
+    {
+      "id": "lymph_nodes",
+      "label": "Lymph nodes",
+      "targetIds": [
+        "node_1R",
+        "node_1L",
+        "node_2R",
+        "node_2L",
+        "node_3A_1",
+        "node_3A_2",
+        "node_3A_3",
+        "node_3A_4",
+        "node_3A_5",
+        "node_3A_6",
+        "node_3A_7",
+        "node_4R_1",
+        "node_4R_2",
+        "node_4R_3",
+        "node_4L_1",
+        "node_4L_2",
+        "node_4L_3",
+        "node_5_nod5",
+        "node_6_nod5",
+        "node_7_1",
+        "node_10R_1",
+        "node_10R_2",
+        "node_10L",
+        "node_11L",
+        "node_11Ri",
+        "node_11Rs_1",
+        "node_11Rs_2"
+      ]
+    },
+    {
+      "id": "airway",
+      "label": "Airway",
+      "targetIds": [
+        "landmark_bronchus_intermedius",
+        "landmark_carina",
+        "landmark_left_mainstem",
+        "landmark_right_mainstem",
+        "landmark_trachea"
+      ]
+    },
+    {
+      "id": "vessels",
+      "label": "Vessels",
+      "targetIds": [
+        "landmark_aorta",
+        "landmark_azygous_vein",
+        "landmark_brachiocephalic_trunk",
+        "landmark_left_brachiocephalic_vein",
+        "landmark_left_inferior_pv",
+        "landmark_left_pa",
+        "landmark_left_superior_pv",
+        "landmark_main_pa",
+        "landmark_right_inferior_pv",
+        "landmark_right_pa",
+        "landmark_right_superior_pv",
+        "landmark_superior_vena_cava",
+        "landmark_right_brachiocephalic_vein",
+        "landmark_inferior_vena_cava",
+        "landmark_right_subclavian_artery",
+        "landmark_left_subclavian_artery",
+        "landmark_right_common_carotid_artery",
+        "landmark_left_common_carotid_artery"
+      ]
+    },
+    {
+      "id": "cardiac",
+      "label": "Cardiac",
+      "targetIds": [
+        "landmark_left_atrium",
+        "landmark_left_atrial_appendage",
+        "landmark_left_ventricle",
+        "landmark_right_atrium",
+        "landmark_right_ventricle"
+      ]
+    },
+    {
+      "id": "gi",
+      "label": "GI",
+      "targetIds": [
+        "landmark_esophagus"
+      ]
+    }
+  ],
+  "preprocessingRequired": {
+    "required": true,
+    "tasks": [
+      "Verify actual mesh names inside Model/case_001.glb and either rename meshes to match meshNameExpected or update this manifest.",
+      "Read each .mrk.json file and extract the first control point position plus its coordinateSystem.",
+      "Read the CT volume geometry from Model/case_001_ct.nrrd and derive the voxel-to-world and world-to-voxel transforms.",
+      "Convert each markup point into continuous voxel coordinates automatically, honoring the markup coordinateSystem.",
+      "Determine which voxel axis corresponds to sagittal, coronal, and axial using the CT orientation matrix rather than assuming i/j/k order.",
+      "Map the continuous voxel position to exported slice-series frame indices using the series counts; if counts differ from the volume dimensions, scale by normalized position.",
+      "Clamp derived slice indices to valid ranges and write them back into the enriched manifest.",
+      "Enumerate actual slice filenames in each folder and write a generated asset index for Expo bundling.",
+      "Optionally compute a station centroid or station-level bounds for grouped highlighting."
+    ]
+  },
+  "moduleDefaults": {
+    "defaultStationId": "4R",
+    "defaultToggleSetIds": [
+      "lymph_nodes",
+      "airway",
+      "vessels"
+    ],
+    "defaultSliceLayout": "single-plane",
+    "defaultPlane": "axial"
+  },
+  "glbMeshes": [
+    "airway",
+    "esophagus",
+    "right brachiocephalic vein",
+    "left brachiocephalic vein",
+    "superior vena cava",
+    "azygous vein",
+    "inferior vena cava",
+    "right atrium",
+    "right ventricle",
+    "pulmonary artery",
+    "pulmonary venous system",
+    "left atrium",
+    "left atrial appendage",
+    "left ventricle",
+    "aorta",
+    "brachiocephalic trunk",
+    "right subclavian artery",
+    "left subclavian artery",
+    "right common carotid artery",
+    "left common carotid artery",
+    "Station 1R",
+    "Station 1L",
+    "Station 2R",
+    "Station 2L",
+    "Station 3A",
+    "Station 4R",
+    "Station 4L",
+    "Station 5",
+    "Station 6",
+    "Station 7",
+    "Station 10R",
+    "Station 10L",
+    "Station 11Rs",
+    "Station 11Ri",
+    "Station 11L"
+  ],
+  "meshMappingNotes": {
+    "lymphNodes": "The GLB stores one mesh per station, not one mesh per individual segmented node. Multiple markup targets within the same station therefore point to the same station mesh.",
+    "airwayLandmarks": "trachea, carina, bronchus intermedius, left mainstem, and right mainstem all map to the single GLB mesh named 'airway'.",
+    "pulmonaryArteryLandmarks": "main PA, left PA, and right PA all map to the single GLB mesh named 'pulmonary artery'.",
+    "pulmonaryVenousLandmarks": "left/right superior and inferior PV landmarks all map to the single GLB mesh named 'pulmonary venous system'.",
+    "stationMeshes": "Station 6 spelling has been normalized to match the corrected GLB mesh name. Each nodal target within a station points to the corresponding station mesh.",
+    "uniqueLandmarks": "Aorta, brachiocephalic trunk, brachiocephalic veins, SVC, IVC, subclavian arteries, carotids, atria, ventricles, esophagus, and left atrial appendage each map to their own GLB mesh when present."
+  }
+}

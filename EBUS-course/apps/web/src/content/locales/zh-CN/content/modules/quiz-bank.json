@@ -1,0 +1,156 @@
+[
+  {
+    "id": "knobology-depth-01",
+    "moduleId": "knobology",
+    "prompt": "目标结构在屏幕上显得过浅。学习者应首先调节哪个控制项？",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "深度"
+      },
+      {
+        "id": "b",
+        "label": "冻结"
+      },
+      {
+        "id": "c",
+        "label": "保存"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "当目标解剖未正确取景时，深度是首先应调节的控制项。"
+  },
+  {
+    "id": "knobology-gain-02",
+    "moduleId": "knobology",
+    "prompt": "整幅图像过暗，目标边界难以看清。学习者接下来应改变什么？",
+    "type": "scenario",
+    "options": [
+      {
+        "id": "a",
+        "label": "增加增益"
+      },
+      {
+        "id": "b",
+        "label": "冻结画面"
+      },
+      {
+        "id": "c",
+        "label": "保存图像"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "增益是亮度控制项。应在冻结或保存差图像之前调节它。"
+  },
+  {
+    "id": "knobology-contrast-03",
+    "moduleId": "knobology",
+    "prompt": "画面明亮但平坦，边界混入背景雾影。哪个控制项最能恢复分离？",
+    "type": "image-interpretation",
+    "options": [
+      {
+        "id": "a",
+        "label": "对比度"
+      },
+      {
+        "id": "b",
+        "label": "保存"
+      },
+      {
+        "id": "c",
+        "label": "测量卡尺"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "取景和亮度已经接近合适后，对比度有助于区分细微灰阶。"
+  },
+  {
+    "id": "knobology-doppler-04",
+    "moduleId": "knobology",
+    "prompt": "规划路径前，学习者应使用哪个控制项检查可疑结构是否为血管？",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "彩色多普勒"
+      },
+      {
+        "id": "b",
+        "label": "冻结"
+      },
+      {
+        "id": "c",
+        "label": "深度"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "彩色多普勒增加血流信息，可显示灰阶图像中隐藏的血管。"
+  },
+  {
+    "id": "knobology-freeze-save-05",
+    "moduleId": "knobology",
+    "prompt": "图像取景良好且目标边界清楚后，哪个顺序最合理？",
+    "type": "scenario",
+    "options": [
+      {
+        "id": "a",
+        "label": "冻结；如需要用卡尺测量；然后保存"
+      },
+      {
+        "id": "b",
+        "label": "先保存，然后再修正深度和增益"
+      },
+      {
+        "id": "c",
+        "label": "关闭多普勒，然后忽略边界"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "画面良好后冻结才有用，边界清楚后再用卡尺，保存应放在最后。"
+  },
+  {
+    "id": "station-map-7-01",
+    "moduleId": "station-map",
+    "prompt": "哪个站通常位于隆突下方中央，并且是核心分期站？",
+    "type": "image-interpretation",
+    "options": [
+      {
+        "id": "a",
+        "label": "4R"
+      },
+      {
+        "id": "b",
+        "label": "7"
+      },
+      {
+        "id": "c",
+        "label": "11L"
+      }
+    ],
+    "correctOptionId": "b",
+    "explanation": "7 站是隆突下站，仍是高产出的核心标志。"
+  },
+  {
+    "id": "explorer-confusion-01",
+    "moduleId": "station-explorer",
+    "prompt": "学习者复习气道标志时混淆 10R 和 11R。探索器接下来应强调什么？",
+    "type": "scenario",
+    "options": [
+      {
+        "id": "a",
+        "label": "突出显示混淆配对和邻近气道标志"
+      },
+      {
+        "id": "b",
+        "label": "隐藏标志检查清单"
+      },
+      {
+        "id": "c",
+        "label": "直接跳到总结屏幕"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "探索器约定将混淆配对和标志提示保留在局部，以便识别挑战能够强化它们。"
+  }
+]

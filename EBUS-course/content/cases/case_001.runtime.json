@@ -1,0 +1,6172 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case_001",
+  "title": "Curated EBUS case 001",
+  "description": "Segmented airway, vascular landmarks, and lymph nodes for a linked 3D + slice explorer.",
+  "assets": {
+    "glbFile": "Model/CT_segmentation_1.glb",
+    "glbHighlightFile": "Model/CT_segmentation_2.glb",
+    "ctVolumeFile": "Model/case_001_ct.nrrd",
+    "segmentationFile": "Model/case_001_segmentation.nrrd"
+  },
+  "coordinateAssumptions": {
+    "worldCoordinateSystem": "respect per-markup coordinateSystem",
+    "sliceIndicesMustBeDerivedFrom": [
+      "markup control point position",
+      "markup coordinateSystem",
+      "CT volume geometry",
+      "slice series counts"
+    ],
+    "note": "Do not assume RAS. Read each .mrk.json coordinateSystem and convert to the CT volume frame before deriving slice indices."
+  },
+  "sliceSeries": {
+    "axial": {
+      "folder": "Model/sliceSeries/axial",
+      "count": 180,
+      "framePattern": null,
+      "displayOrientation": "axial",
+      "indexDerivation": "derive from .mrk.json + CT volume geometry + series count",
+      "coverageAssumption": [
+        0,
+        1
+      ]
+    },
+    "coronal": {
+      "folder": "Model/sliceSeries/coronal",
+      "count": 220,
+      "framePattern": null,
+      "displayOrientation": "coronal",
+      "indexDerivation": "derive from .mrk.json + CT volume geometry + series count",
+      "coverageAssumption": [
+        0,
+        1
+      ]
+    },
+    "sagittal": {
+      "folder": "Model/sliceSeries/sagital",
+      "count": 160,
+      "framePattern": null,
+      "displayOrientation": "sagittal",
+      "sourceFolderSpelling": "sagital",
+      "indexDerivation": "derive from .mrk.json + CT volume geometry + series count",
+      "coverageAssumption": [
+        1,
+        0.02
+      ]
+    }
+  },
+  "stations": [
+    {
+      "id": "1R",
+      "label": "1R",
+      "groupLabel": "1R",
+      "targetIds": [
+        "node_1R"
+      ],
+      "primaryTargetId": "node_1R",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "1L",
+      "label": "1L",
+      "groupLabel": "1L",
+      "targetIds": [
+        "node_1L"
+      ],
+      "primaryTargetId": "node_1L",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "2R",
+      "label": "2R",
+      "groupLabel": "2R",
+      "targetIds": [
+        "node_2R"
+      ],
+      "primaryTargetId": "node_2R",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "2L",
+      "label": "2L",
+      "groupLabel": "2L",
+      "targetIds": [
+        "node_2L"
+      ],
+      "primaryTargetId": "node_2L",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "3A",
+      "label": "3A",
+      "groupLabel": "3A",
+      "targetIds": [
+        "node_3A_1",
+        "node_3A_2",
+        "node_3A_3",
+        "node_3A_4",
+        "node_3A_5",
+        "node_3A_6",
+        "node_3A_7"
+      ],
+      "primaryTargetId": "node_3A_1",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "4R",
+      "label": "4R",
+      "groupLabel": "4R",
+      "targetIds": [
+        "node_4R_1",
+        "node_4R_2",
+        "node_4R_3"
+      ],
+      "primaryTargetId": "node_4R_1",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "4L",
+      "label": "4L",
+      "groupLabel": "4L",
+      "targetIds": [
+        "node_4L_1",
+        "node_4L_2",
+        "node_4L_3"
+      ],
+      "primaryTargetId": "node_4L_1",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "5",
+      "label": "5",
+      "groupLabel": "5",
+      "targetIds": [
+        "node_5_nod5"
+      ],
+      "primaryTargetId": "node_5_nod5",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "6",
+      "label": "6",
+      "groupLabel": "6",
+      "targetIds": [
+        "node_6_nod5"
+      ],
+      "primaryTargetId": "node_6_nod5",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "7",
+      "label": "7",
+      "groupLabel": "7",
+      "targetIds": [
+        "node_7_1"
+      ],
+      "primaryTargetId": "node_7_1",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "10R",
+      "label": "10R",
+      "groupLabel": "10R",
+      "targetIds": [
+        "node_10R_1",
+        "node_10R_2"
+      ],
+      "primaryTargetId": "node_10R_1",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "10L",
+      "label": "10L",
+      "groupLabel": "10L",
+      "targetIds": [
+        "node_10L"
+      ],
+      "primaryTargetId": "node_10L",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "11L",
+      "label": "11L",
+      "groupLabel": "11L",
+      "targetIds": [
+        "node_11L"
+      ],
+      "primaryTargetId": "node_11L",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "11Ri",
+      "label": "11Ri",
+      "groupLabel": "11R",
+      "targetIds": [
+        "node_11Ri"
+      ],
+      "primaryTargetId": "node_11Ri",
+      "kind": "nodal_station"
+    },
+    {
+      "id": "11Rs",
+      "label": "11Rs",
+      "groupLabel": "11R",
+      "targetIds": [
+        "node_11Rs_1",
+        "node_11Rs_2"
+      ],
+      "primaryTargetId": "node_11Rs_1",
+      "kind": "nodal_station"
+    }
+  ],
+  "targets": [
+    {
+      "id": "node_1R",
+      "label": "1R",
+      "displayLabel": "1R",
+      "kind": "lymph_node",
+      "stationId": "1R",
+      "stationGroupId": "1R",
+      "markupFile": "Model/markups/1R.mrk.json",
+      "meshNameExpected": "Station 1R",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 161,
+        "coronal": 143,
+        "sagittal": 86
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 1R",
+      "voxelIndex": {
+        "axial": 108,
+        "coronal": 148,
+        "sagittal": 143
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -9.572087152711095,
+          -197.84134289115147,
+          1287.5124715199843
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -9.572087152711095,
+          -197.84134289115147,
+          1287.5124715199843
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          142.85059169523808,
+          148.48142156618832,
+          108.45624796702339
+        ],
+        "roundedVoxel": [
+          143,
+          148,
+          108
+        ],
+        "normalized": {
+          "sagittal": 0.4673202614379085,
+          "coronal": 0.6519823788546255,
+          "axial": 0.9
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.009572087152711095,
+          1.2875124715199844,
+          0.19784134289115146
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 1R",
+      "recommendedSliceIndex": {
+        "axial": 161,
+        "coronal": 143,
+        "sagittal": 86
+      },
+      "matchedSegmentIds": [
+        "2.25.53993552652818166383402955961129171632"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_1L",
+      "label": "1L",
+      "displayLabel": "1L",
+      "kind": "lymph_node",
+      "stationId": "1L",
+      "stationGroupId": "1L",
+      "markupFile": "Model/markups/1L.mrk.json",
+      "meshNameExpected": "Station 1L",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 154,
+        "coronal": 146,
+        "sagittal": 93
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 1L",
+      "voxelIndex": {
+        "axial": 103,
+        "coronal": 151,
+        "sagittal": 131
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -0.16830999103041933,
+          -200.07447710673816,
+          1276.4128428859017
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -0.16830999103041933,
+          -200.07447710673816,
+          1276.4128428859017
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          131.16434434868347,
+          151.25657864963586,
+          102.90643364998209
+        ],
+        "roundedVoxel": [
+          131,
+          151,
+          103
+        ],
+        "normalized": {
+          "sagittal": 0.42810457516339867,
+          "coronal": 0.6651982378854625,
+          "axial": 0.8583333333333333
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.00016830999103041933,
+          1.2764128428859016,
+          0.20007447710673817
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 1L",
+      "recommendedSliceIndex": {
+        "axial": 154,
+        "coronal": 146,
+        "sagittal": 93
+      },
+      "matchedSegmentIds": [
+        "2.25.60762053273684785009037968769448832207"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_2R",
+      "label": "2R",
+      "displayLabel": "2R",
+      "kind": "lymph_node",
+      "stationId": "2R",
+      "stationGroupId": "2R",
+      "markupFile": "Model/markups/2R.mrk.json",
+      "meshNameExpected": "Station 2R",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 158,
+        "coronal": 112,
+        "sagittal": 84
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 2R",
+      "voxelIndex": {
+        "axial": 106,
+        "coronal": 116,
+        "sagittal": 148
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -13.647973590408863,
+          -171.57171722444872,
+          1282.8934773581566
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -13.647973590408863,
+          -171.57171722444872,
+          1282.8934773581566
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          147.9157709576198,
+          115.83567316484896,
+          106.14675088610954
+        ],
+        "roundedVoxel": [
+          148,
+          116,
+          106
+        ],
+        "normalized": {
+          "sagittal": 0.48366013071895425,
+          "coronal": 0.5110132158590308,
+          "axial": 0.8833333333333333
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.013647973590408863,
+          1.2828934773581566,
+          0.17157171722444872
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 2R",
+      "recommendedSliceIndex": {
+        "axial": 158,
+        "coronal": 112,
+        "sagittal": 84
+      },
+      "matchedSegmentIds": [
+        "2.25.20830374192229656165820331138320646873"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_2L",
+      "label": "2L",
+      "displayLabel": "2L",
+      "kind": "lymph_node",
+      "stationId": "2L",
+      "stationGroupId": "2L",
+      "markupFile": "Model/markups/2L.mrk.json",
+      "meshNameExpected": "Station 2L",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 131,
+        "coronal": 109,
+        "sagittal": 93
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 2L",
+      "voxelIndex": {
+        "axial": 88,
+        "coronal": 113,
+        "sagittal": 130
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          0.798289522383806,
+          -169.22106966432835,
+          1246.3818368829643
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          0.798289522383806,
+          -169.22106966432835,
+          1246.3818368829643
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          129.96313330288714,
+          112.91448008042754,
+          87.8909306485134
+        ],
+        "roundedVoxel": [
+          130,
+          113,
+          88
+        ],
+        "normalized": {
+          "sagittal": 0.42483660130718953,
+          "coronal": 0.4977973568281938,
+          "axial": 0.7333333333333333
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.000798289522383806,
+          1.2463818368829644,
+          0.16922106966432834
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 2L",
+      "recommendedSliceIndex": {
+        "axial": 131,
+        "coronal": 109,
+        "sagittal": 93
+      },
+      "matchedSegmentIds": [
+        "2.25.48624296096474164041790855708405278758"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_3A_1",
+      "label": "3A_1",
+      "displayLabel": "3A 1",
+      "kind": "lymph_node",
+      "stationId": "3A",
+      "stationGroupId": "3A",
+      "markupFile": "Model/markups/3A_1.mrk.json",
+      "meshNameExpected": "Station 3A",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 115,
+        "coronal": 158,
+        "sagittal": 74
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 3A",
+      "voxelIndex": {
+        "axial": 77,
+        "coronal": 164,
+        "sagittal": 167
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -28.82176941588532,
+          -210.17294269591582,
+          1224.3502342573918
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -28.82176941588532,
+          -210.17294269591582,
+          1224.3502342573918
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          166.77252693491093,
+          163.8061281196819,
+          76.87512933572714
+        ],
+        "roundedVoxel": [
+          167,
+          164,
+          77
+        ],
+        "normalized": {
+          "sagittal": 0.545751633986928,
+          "coronal": 0.7224669603524229,
+          "axial": 0.6416666666666667
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.02882176941588532,
+          1.2243502342573918,
+          0.21017294269591583
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 3A",
+      "recommendedSliceIndex": {
+        "axial": 115,
+        "coronal": 158,
+        "sagittal": 74
+      },
+      "matchedSegmentIds": [
+        "2.25.312506753561539454691948452144159132025"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_3A_2",
+      "label": "3A_2",
+      "displayLabel": "3A 2",
+      "kind": "lymph_node",
+      "stationId": "3A",
+      "stationGroupId": "3A",
+      "markupFile": "Model/markups/3A_2.mrk.json",
+      "meshNameExpected": "Station 3A",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 131,
+        "coronal": 168,
+        "sagittal": 85
+      },
+      "notes": "",
+      "meshName": "Station 3A",
+      "voxelIndex": {
+        "axial": 88,
+        "coronal": 174,
+        "sagittal": 145
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -11.545040218685273,
+          -218.57414179777012,
+          1246.4004700979663
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -11.545040218685273,
+          -218.57414179777012,
+          1246.4004700979663
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          145.30241686460406,
+          174.2464532171319,
+          87.90024725601438
+        ],
+        "roundedVoxel": [
+          145,
+          174,
+          88
+        ],
+        "normalized": {
+          "sagittal": 0.4738562091503268,
+          "coronal": 0.7665198237885462,
+          "axial": 0.7333333333333333
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.011545040218685272,
+          1.2464004700979663,
+          0.21857414179777013
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 3A",
+      "recommendedSliceIndex": {
+        "axial": 131,
+        "coronal": 168,
+        "sagittal": 85
+      },
+      "matchedSegmentIds": [
+        "2.25.312506753561539454691948452144159132025"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_3A_3",
+      "label": "3A_3",
+      "displayLabel": "3A 3",
+      "kind": "lymph_node",
+      "stationId": "3A",
+      "stationGroupId": "3A",
+      "markupFile": "Model/markups/3A_3.mrk.json",
+      "meshNameExpected": "Station 3A",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 134,
+        "coronal": 169,
+        "sagittal": 79
+      },
+      "notes": "",
+      "meshName": "Station 3A",
+      "voxelIndex": {
+        "axial": 90,
+        "coronal": 175,
+        "sagittal": 157
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -21.006854443442222,
+          -219.35027690354323,
+          1251.3070895938372
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -21.006854443442222,
+          -219.35027690354323,
+          1251.3070895938372
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          157.0607879400302,
+          175.21097063013147,
+          90.35355700394985
+        ],
+        "roundedVoxel": [
+          157,
+          175,
+          90
+        ],
+        "normalized": {
+          "sagittal": 0.5130718954248366,
+          "coronal": 0.7709251101321586,
+          "axial": 0.75
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.021006854443442222,
+          1.2513070895938372,
+          0.21935027690354322
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 3A",
+      "recommendedSliceIndex": {
+        "axial": 134,
+        "coronal": 169,
+        "sagittal": 79
+      },
+      "matchedSegmentIds": [
+        "2.25.312506753561539454691948452144159132025"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_3A_4",
+      "label": "3A_4",
+      "displayLabel": "3A 4",
+      "kind": "lymph_node",
+      "stationId": "3A",
+      "stationGroupId": "3A",
+      "markupFile": "Model/markups/3A_4.mrk.json",
+      "meshNameExpected": "Station 3A",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 131,
+        "coronal": 156,
+        "sagittal": 77
+      },
+      "notes": "",
+      "meshName": "Station 3A",
+      "voxelIndex": {
+        "axial": 88,
+        "coronal": 162,
+        "sagittal": 161
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -24.114476296234628,
+          -208.51635525586195,
+          1247.440185546875
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -24.114476296234628,
+          -208.51635525586195,
+          1247.440185546875
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          160.9226869415586,
+          161.74745634951785,
+          88.42010498046875
+        ],
+        "roundedVoxel": [
+          161,
+          162,
+          88
+        ],
+        "normalized": {
+          "sagittal": 0.5261437908496732,
+          "coronal": 0.7136563876651982,
+          "axial": 0.7333333333333333
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.02411447629623463,
+          1.247440185546875,
+          0.20851635525586196
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 3A",
+      "recommendedSliceIndex": {
+        "axial": 131,
+        "coronal": 156,
+        "sagittal": 77
+      },
+      "matchedSegmentIds": [
+        "2.25.312506753561539454691948452144159132025"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_3A_5",
+      "label": "3A_5",
+      "displayLabel": "3A 5",
+      "kind": "lymph_node",
+      "stationId": "3A",
+      "stationGroupId": "3A",
+      "markupFile": "Model/markups/3A_5.mrk.json",
+      "meshNameExpected": "Station 3A",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 130,
+        "coronal": 161,
+        "sagittal": 84
+      },
+      "notes": "",
+      "meshName": "Station 3A",
+      "voxelIndex": {
+        "axial": 87,
+        "coronal": 167,
+        "sagittal": 148
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -13.458456100911484,
+          -212.8168487548828,
+          1243.6670188376431
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -13.458456100911484,
+          -212.8168487548828,
+          1243.6670188376431
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          147.6802540774677,
+          167.0917589502428,
+          86.53352162585281
+        ],
+        "roundedVoxel": [
+          148,
+          167,
+          87
+        ],
+        "normalized": {
+          "sagittal": 0.48366013071895425,
+          "coronal": 0.73568281938326,
+          "axial": 0.725
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.013458456100911485,
+          1.243667018837643,
+          0.21281684875488283
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 3A",
+      "recommendedSliceIndex": {
+        "axial": 130,
+        "coronal": 161,
+        "sagittal": 84
+      },
+      "matchedSegmentIds": [
+        "2.25.312506753561539454691948452144159132025"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_3A_6",
+      "label": "3A_6",
+      "displayLabel": "3A 6",
+      "kind": "lymph_node",
+      "stationId": "3A",
+      "stationGroupId": "3A",
+      "markupFile": "Model/markups/3A_6.mrk.json",
+      "meshNameExpected": "Station 3A",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 119,
+        "coronal": 170,
+        "sagittal": 96
+      },
+      "notes": "",
+      "meshName": "Station 3A",
+      "voxelIndex": {
+        "axial": 80,
+        "coronal": 176,
+        "sagittal": 125
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          4.400092133199834,
+          -219.6369567415788,
+          1231.4450348491332
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          4.400092133199834,
+          -219.6369567415788,
+          1231.4450348491332
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          125.48710675740703,
+          175.56723295312716,
+          80.42252963159785
+        ],
+        "roundedVoxel": [
+          125,
+          176,
+          80
+        ],
+        "normalized": {
+          "sagittal": 0.4084967320261438,
+          "coronal": 0.775330396475771,
+          "axial": 0.6666666666666666
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.004400092133199834,
+          1.2314450348491333,
+          0.21963695674157882
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 3A",
+      "recommendedSliceIndex": {
+        "axial": 119,
+        "coronal": 170,
+        "sagittal": 96
+      },
+      "matchedSegmentIds": [
+        "2.25.312506753561539454691948452144159132025"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_3A_7",
+      "label": "3A_7",
+      "displayLabel": "3A 7",
+      "kind": "lymph_node",
+      "stationId": "3A",
+      "stationGroupId": "3A",
+      "markupFile": "Model/markups/3A_7.mrk.json",
+      "meshNameExpected": "Station 3A",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 109,
+        "coronal": 107,
+        "sagittal": 74
+      },
+      "notes": "",
+      "meshName": "Station 3A",
+      "voxelIndex": {
+        "axial": 73,
+        "coronal": 111,
+        "sagittal": 167
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -28.93680763244629,
+          -167.94192650634722,
+          1215.8315612501672
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -28.93680763244629,
+          -167.94192650634722,
+          1215.8315612501672
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          166.91548704869544,
+          111.3248652821597,
+          72.61579283211483
+        ],
+        "roundedVoxel": [
+          167,
+          111,
+          73
+        ],
+        "normalized": {
+          "sagittal": 0.545751633986928,
+          "coronal": 0.4889867841409692,
+          "axial": 0.6083333333333333
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.028936807632446288,
+          1.2158315612501671,
+          0.1679419265063472
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 3A",
+      "recommendedSliceIndex": {
+        "axial": 109,
+        "coronal": 107,
+        "sagittal": 74
+      },
+      "matchedSegmentIds": [
+        "2.25.312506753561539454691948452144159132025"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_4R_1",
+      "label": "4R_1",
+      "displayLabel": "4R 1",
+      "kind": "lymph_node",
+      "stationId": "4R",
+      "stationGroupId": "4R",
+      "markupFile": "Model/markups/4R_1.mrk.json",
+      "meshNameExpected": "Station 4R",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 112,
+        "coronal": 120,
+        "sagittal": 82
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 4R",
+      "voxelIndex": {
+        "axial": 75,
+        "coronal": 124,
+        "sagittal": 152
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -17.060216670665696,
+          -177.95478321979417,
+          1220.0412926391382
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -17.060216670665696,
+          -177.95478321979417,
+          1220.0412926391382
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          152.15622837774478,
+          123.76802702314234,
+          74.72065852660035
+        ],
+        "roundedVoxel": [
+          152,
+          124,
+          75
+        ],
+        "normalized": {
+          "sagittal": 0.49673202614379086,
+          "coronal": 0.5462555066079295,
+          "axial": 0.625
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.017060216670665696,
+          1.2200412926391382,
+          0.17795478321979416
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 4R",
+      "recommendedSliceIndex": {
+        "axial": 112,
+        "coronal": 120,
+        "sagittal": 82
+      },
+      "matchedSegmentIds": [
+        "2.25.121062370142623028444183689976439892722"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_4R_2",
+      "label": "4R_2",
+      "displayLabel": "4R 2",
+      "kind": "lymph_node",
+      "stationId": "4R",
+      "stationGroupId": "4R",
+      "markupFile": "Model/markups/4R_2.mrk.json",
+      "meshNameExpected": "Station 4R",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 130,
+        "coronal": 130,
+        "sagittal": 85
+      },
+      "notes": "",
+      "meshName": "Station 4R",
+      "voxelIndex": {
+        "axial": 87,
+        "coronal": 135,
+        "sagittal": 145
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -10.990352215325188,
+          -186.9976425104035,
+          1244.0412926391382
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -10.990352215325188,
+          -186.9976425104035,
+          1244.0412926391382
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          144.6130958507197,
+          135.0057550736083,
+          86.72065852660035
+        ],
+        "roundedVoxel": [
+          145,
+          135,
+          87
+        ],
+        "normalized": {
+          "sagittal": 0.4738562091503268,
+          "coronal": 0.5947136563876652,
+          "axial": 0.725
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.010990352215325188,
+          1.2440412926391382,
+          0.1869976425104035
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 4R",
+      "recommendedSliceIndex": {
+        "axial": 130,
+        "coronal": 130,
+        "sagittal": 85
+      },
+      "matchedSegmentIds": [
+        "2.25.121062370142623028444183689976439892722"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_4R_3",
+      "label": "4R_3",
+      "displayLabel": "4R 3",
+      "kind": "lymph_node",
+      "stationId": "4R",
+      "stationGroupId": "4R",
+      "markupFile": "Model/markups/4R_3.mrk.json",
+      "meshNameExpected": "Station 4R",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 142,
+        "coronal": 123,
+        "sagittal": 81
+      },
+      "notes": "",
+      "meshName": "Station 4R",
+      "voxelIndex": {
+        "axial": 95,
+        "coronal": 128,
+        "sagittal": 153
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -17.8034653794829,
+          -181.17552762466872,
+          1260.0412926391382
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -17.8034653794829,
+          -181.17552762466872,
+          1260.0412926391382
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          153.079877258605,
+          127.77050550686994,
+          94.72065852660035
+        ],
+        "roundedVoxel": [
+          153,
+          128,
+          95
+        ],
+        "normalized": {
+          "sagittal": 0.5,
+          "coronal": 0.5638766519823789,
+          "axial": 0.7916666666666666
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.0178034653794829,
+          1.2600412926391382,
+          0.1811755276246687
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 4R",
+      "recommendedSliceIndex": {
+        "axial": 142,
+        "coronal": 123,
+        "sagittal": 81
+      },
+      "matchedSegmentIds": [
+        "2.25.121062370142623028444183689976439892722"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_4L_1",
+      "label": "4L_1",
+      "displayLabel": "4L 1",
+      "kind": "lymph_node",
+      "stationId": "4L",
+      "stationGroupId": "4L",
+      "markupFile": "Model/markups/4L_1.mrk.json",
+      "meshNameExpected": "Station 4L",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 106,
+        "coronal": 114,
+        "sagittal": 92
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 4L",
+      "voxelIndex": {
+        "axial": 71,
+        "coronal": 118,
+        "sagittal": 133
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -1.5909734767025014,
+          -173.6342078853047,
+          1211.631921563806
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -1.5909734767025014,
+          -173.6342078853047,
+          1211.631921563806
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          132.9323145056352,
+          118.39876835503892,
+          70.51597298893421
+        ],
+        "roundedVoxel": [
+          133,
+          118,
+          71
+        ],
+        "normalized": {
+          "sagittal": 0.434640522875817,
+          "coronal": 0.5198237885462555,
+          "axial": 0.5916666666666667
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.0015909734767025016,
+          1.2116319215638058,
+          0.1736342078853047
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 4L",
+      "recommendedSliceIndex": {
+        "axial": 106,
+        "coronal": 114,
+        "sagittal": 92
+      },
+      "matchedSegmentIds": [
+        "2.25.276115978171104054815639826201025438059"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_4L_2",
+      "label": "4L_2",
+      "displayLabel": "4L 2",
+      "kind": "lymph_node",
+      "stationId": "4L",
+      "stationGroupId": "4L",
+      "markupFile": "Model/markups/4L_2.mrk.json",
+      "meshNameExpected": "Station 4L",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 107,
+        "coronal": 114,
+        "sagittal": 102
+      },
+      "notes": "",
+      "meshName": "Station 4L",
+      "voxelIndex": {
+        "axial": 72,
+        "coronal": 118,
+        "sagittal": 114
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          13.68159584204524,
+          -173.55347636539645,
+          1214.204404970215
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          13.68159584204524,
+          -173.55347636539645,
+          1214.204404970215
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          113.9528108862205,
+          118.29844180602672,
+          71.8022146921387
+        ],
+        "roundedVoxel": [
+          114,
+          118,
+          72
+        ],
+        "normalized": {
+          "sagittal": 0.37254901960784315,
+          "coronal": 0.5198237885462555,
+          "axial": 0.6
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.01368159584204524,
+          1.214204404970215,
+          0.17355347636539645
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 4L",
+      "recommendedSliceIndex": {
+        "axial": 107,
+        "coronal": 114,
+        "sagittal": 102
+      },
+      "matchedSegmentIds": [
+        "2.25.276115978171104054815639826201025438059"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_4L_3",
+      "label": "4L_3",
+      "displayLabel": "4L 3",
+      "kind": "lymph_node",
+      "stationId": "4L",
+      "stationGroupId": "4L",
+      "markupFile": "Model/markups/4L_3.mrk.json",
+      "meshNameExpected": "Station 4L",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 107,
+        "coronal": 94,
+        "sagittal": 102
+      },
+      "notes": "",
+      "meshName": "Station 4L",
+      "voxelIndex": {
+        "axial": 72,
+        "coronal": 97,
+        "sagittal": 114
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          13.418924520143378,
+          -156.12623131510122,
+          1214.649008377584
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          13.418924520143378,
+          -156.12623131510122,
+          1214.649008377584
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          114.27923738334127,
+          96.64128290857245,
+          72.0245163958233
+        ],
+        "roundedVoxel": [
+          114,
+          97,
+          72
+        ],
+        "normalized": {
+          "sagittal": 0.37254901960784315,
+          "coronal": 0.42731277533039647,
+          "axial": 0.6
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.013418924520143378,
+          1.214649008377584,
+          0.15612623131510123
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 4L",
+      "recommendedSliceIndex": {
+        "axial": 107,
+        "coronal": 94,
+        "sagittal": 102
+      },
+      "matchedSegmentIds": [
+        "2.25.276115978171104054815639826201025438059"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_5_nod5",
+      "label": "5_nod5",
+      "displayLabel": "5 nod5",
+      "kind": "lymph_node",
+      "stationId": "5",
+      "stationGroupId": "5",
+      "markupFile": "Model/markups/5_nod5.mrk.json",
+      "meshNameExpected": "Station 5",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 104,
+        "coronal": 122,
+        "sagittal": 108
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 5",
+      "voxelIndex": {
+        "axial": 70,
+        "coronal": 126,
+        "sagittal": 102
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          22.970476633020297,
+          -179.70470469207044,
+          1210.3502342573918
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          22.970476633020297,
+          -179.70470469207044,
+          1210.3502342573918
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          102.40934737898937,
+          125.94268671684489,
+          69.87512933572714
+        ],
+        "roundedVoxel": [
+          102,
+          126,
+          70
+        ],
+        "normalized": {
+          "sagittal": 0.3333333333333333,
+          "coronal": 0.5550660792951542,
+          "axial": 0.5833333333333334
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.022970476633020296,
+          1.2103502342573917,
+          0.17970470469207045
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 5",
+      "recommendedSliceIndex": {
+        "axial": 104,
+        "coronal": 122,
+        "sagittal": 108
+      },
+      "matchedSegmentIds": [
+        "2.25.212414958810818875948453230124833991184"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_6_nod5",
+      "label": "6_nod5",
+      "displayLabel": "6 nod5",
+      "kind": "lymph_node",
+      "stationId": "6",
+      "stationGroupId": "6",
+      "markupFile": "Model/markups/6_nod5.mrk.json",
+      "meshNameExpected": "Station 6",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 119,
+        "coronal": 115,
+        "sagittal": 110
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 6",
+      "voxelIndex": {
+        "axial": 80,
+        "coronal": 119,
+        "sagittal": 99
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          26.10255620214059,
+          -173.84381508805475,
+          1230.1392824441064
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          26.10255620214059,
+          -173.84381508805475,
+          1230.1392824441064
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          98.51705432221851,
+          118.65925109243705,
+          79.76965342908443
+        ],
+        "roundedVoxel": [
+          99,
+          119,
+          80
+        ],
+        "normalized": {
+          "sagittal": 0.3235294117647059,
+          "coronal": 0.5242290748898678,
+          "axial": 0.6666666666666666
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.02610255620214059,
+          1.2301392824441064,
+          0.17384381508805477
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 6",
+      "recommendedSliceIndex": {
+        "axial": 119,
+        "coronal": 115,
+        "sagittal": 110
+      },
+      "matchedSegmentIds": [
+        "2.25.239492796546459861507994252932045774720"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_7_1",
+      "label": "7_1",
+      "displayLabel": "7 1",
+      "kind": "lymph_node",
+      "stationId": "7",
+      "stationGroupId": "7",
+      "markupFile": "Model/markups/7_1.mrk.json",
+      "meshNameExpected": "Station 7",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 94,
+        "coronal": 93,
+        "sagittal": 83
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 7",
+      "voxelIndex": {
+        "axial": 63,
+        "coronal": 96,
+        "sagittal": 149
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -14.706595759411217,
+          -155.7811967400809,
+          1196.0412926391382
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -14.706595759411217,
+          -155.7811967400809,
+          1196.0412926391382
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          149.23134025502077,
+          96.21250207747924,
+          62.720658526600346
+        ],
+        "roundedVoxel": [
+          149,
+          96,
+          63
+        ],
+        "normalized": {
+          "sagittal": 0.4869281045751634,
+          "coronal": 0.42290748898678415,
+          "axial": 0.525
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.014706595759411217,
+          1.1960412926391382,
+          0.1557811967400809
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 7",
+      "recommendedSliceIndex": {
+        "axial": 94,
+        "coronal": 93,
+        "sagittal": 83
+      },
+      "matchedSegmentIds": [
+        "2.25.268879151571743626125047618104203736194"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_10R_1",
+      "label": "10R_1",
+      "displayLabel": "10R 1",
+      "kind": "lymph_node",
+      "stationId": "10R",
+      "stationGroupId": "10R",
+      "markupFile": "Model/markups/10R_1.mrk.json",
+      "meshNameExpected": "Station 10R",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 100,
+        "coronal": 120,
+        "sagittal": 78
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 10R",
+      "voxelIndex": {
+        "axial": 67,
+        "coronal": 124,
+        "sagittal": 159
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -22.437059121548383,
+          -177.81774049496937,
+          1204.888449697744
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -22.437059121548383,
+          -177.81774049496937,
+          1204.888449697744
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          158.8381296759291,
+          123.59772150102997,
+          67.1442370559032
+        ],
+        "roundedVoxel": [
+          159,
+          124,
+          67
+        ],
+        "normalized": {
+          "sagittal": 0.5196078431372549,
+          "coronal": 0.5462555066079295,
+          "axial": 0.5583333333333333
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.022437059121548385,
+          1.204888449697744,
+          0.17781774049496937
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 10R",
+      "recommendedSliceIndex": {
+        "axial": 100,
+        "coronal": 120,
+        "sagittal": 78
+      },
+      "matchedSegmentIds": [
+        "2.25.108758159455925476842465611424706367338"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_10R_2",
+      "label": "10R_2",
+      "displayLabel": "10R 2",
+      "kind": "lymph_node",
+      "stationId": "10R",
+      "stationGroupId": "10R",
+      "markupFile": "Model/markups/10R_2.mrk.json",
+      "meshNameExpected": "Station 10R",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 109,
+        "coronal": 108,
+        "sagittal": 73
+      },
+      "notes": "",
+      "meshName": "Station 10R",
+      "voxelIndex": {
+        "axial": 73,
+        "coronal": 112,
+        "sagittal": 168
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -29.671346554035843,
+          -168.09168225995705,
+          1215.6287981625358
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -29.671346554035843,
+          -168.09168225995705,
+          1215.6287981625358
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          167.82831211630187,
+          111.51096951965543,
+          72.51441128829913
+        ],
+        "roundedVoxel": [
+          168,
+          112,
+          73
+        ],
+        "normalized": {
+          "sagittal": 0.5490196078431373,
+          "coronal": 0.4933920704845815,
+          "axial": 0.6083333333333333
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.029671346554035843,
+          1.2156287981625358,
+          0.16809168225995705
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 10R",
+      "recommendedSliceIndex": {
+        "axial": 109,
+        "coronal": 108,
+        "sagittal": 73
+      },
+      "matchedSegmentIds": [
+        "2.25.108758159455925476842465611424706367338"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_10L",
+      "label": "10L",
+      "displayLabel": "10L",
+      "kind": "lymph_node",
+      "stationId": "10L",
+      "stationGroupId": "10L",
+      "markupFile": "Model/markups/10L.mrk.json",
+      "meshNameExpected": "Station 10L",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 88,
+        "coronal": 97,
+        "sagittal": 104
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 10L",
+      "voxelIndex": {
+        "axial": 59,
+        "coronal": 101,
+        "sagittal": 109
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          17.835157732022797,
+          -159.7564549815841,
+          1189.0246110717826
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          17.835157732022797,
+          -159.7564549815841,
+          1189.0246110717826
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          108.79110290644257,
+          101.15262882420168,
+          59.21231774292255
+        ],
+        "roundedVoxel": [
+          109,
+          101,
+          59
+        ],
+        "normalized": {
+          "sagittal": 0.3562091503267974,
+          "coronal": 0.44493392070484583,
+          "axial": 0.49166666666666664
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.017835157732022797,
+          1.1890246110717826,
+          0.1597564549815841
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 10L",
+      "recommendedSliceIndex": {
+        "axial": 88,
+        "coronal": 97,
+        "sagittal": 104
+      },
+      "matchedSegmentIds": [
+        "2.25.265963977509172877070359499184196808585"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_11L",
+      "label": "11L",
+      "displayLabel": "11L",
+      "kind": "lymph_node",
+      "stationId": "11L",
+      "stationGroupId": "11L",
+      "markupFile": "Model/markups/11L.mrk.json",
+      "meshNameExpected": "Station 11L",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 84,
+        "coronal": 85,
+        "sagittal": 116
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 11L",
+      "voxelIndex": {
+        "axial": 56,
+        "coronal": 88,
+        "sagittal": 88
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          34.898386391024445,
+          -148.92565036362996,
+          1181.6709307147491
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          34.898386391024445,
+          -148.92565036362996,
+          1181.6709307147491
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          87.58631389331431,
+          87.69298813392855,
+          55.535477564405824
+        ],
+        "roundedVoxel": [
+          88,
+          88,
+          56
+        ],
+        "normalized": {
+          "sagittal": 0.2875816993464052,
+          "coronal": 0.3876651982378855,
+          "axial": 0.4666666666666667
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.034898386391024445,
+          1.1816709307147493,
+          0.14892565036362995
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 11L",
+      "recommendedSliceIndex": {
+        "axial": 84,
+        "coronal": 85,
+        "sagittal": 116
+      },
+      "matchedSegmentIds": [
+        "2.25.26054851494271011036540584591024408830"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_11Ri",
+      "label": "11Ri",
+      "displayLabel": "11Ri",
+      "kind": "lymph_node",
+      "stationId": "11Ri",
+      "stationGroupId": "11R",
+      "markupFile": "Model/markups/11Ri.mrk.json",
+      "meshNameExpected": "Station 11Ri",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 72,
+        "coronal": 94,
+        "sagittal": 54
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 11Ri",
+      "voxelIndex": {
+        "axial": 48,
+        "coronal": 97,
+        "sagittal": 204
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -58.571725422348635,
+          -156.1657563181315,
+          1166.3350107574483
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -58.571725422348635,
+          -156.1657563181315,
+          1166.3350107574483
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          203.74334604973913,
+          96.69040135894019,
+          47.86751758575542
+        ],
+        "roundedVoxel": [
+          204,
+          97,
+          48
+        ],
+        "normalized": {
+          "sagittal": 0.6666666666666666,
+          "coronal": 0.42731277533039647,
+          "axial": 0.4
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.05857172542234863,
+          1.1663350107574484,
+          0.1561657563181315
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 11Ri",
+      "recommendedSliceIndex": {
+        "axial": 72,
+        "coronal": 94,
+        "sagittal": 54
+      },
+      "matchedSegmentIds": [
+        "2.25.203565841377755533927323140586090706777"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_11Rs_1",
+      "label": "11Rs_1",
+      "displayLabel": "11Rs 1",
+      "kind": "lymph_node",
+      "stationId": "11Rs",
+      "stationGroupId": "11R",
+      "markupFile": "Model/markups/11Rs_1.mrk.json",
+      "meshNameExpected": "Station 11Rs",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 95,
+        "coronal": 96,
+        "sagittal": 64
+      },
+      "notes": "Primary teaching target for this station.",
+      "meshName": "Station 11Rs",
+      "voxelIndex": {
+        "axial": 64,
+        "coronal": 100,
+        "sagittal": 186
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -44.68960240920485,
+          -158.5468347864842,
+          1198.007359511826
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -44.68960240920485,
+          -158.5468347864842,
+          1198.007359511826
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          186.491775703308,
+          99.64941149436878,
+          63.703691962944276
+        ],
+        "roundedVoxel": [
+          186,
+          100,
+          64
+        ],
+        "normalized": {
+          "sagittal": 0.6078431372549019,
+          "coronal": 0.44052863436123346,
+          "axial": 0.5333333333333333
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.04468960240920485,
+          1.1980073595118261,
+          0.1585468347864842
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 11Rs",
+      "recommendedSliceIndex": {
+        "axial": 95,
+        "coronal": 96,
+        "sagittal": 64
+      },
+      "matchedSegmentIds": [
+        "2.25.273934619515693923059552848848411656207"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "node_11Rs_2",
+      "label": "11Rs_2",
+      "displayLabel": "11Rs 2",
+      "kind": "lymph_node",
+      "stationId": "11Rs",
+      "stationGroupId": "11R",
+      "markupFile": "Model/markups/11Rs_2.mrk.json",
+      "meshNameExpected": "Station 11Rs",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 91,
+        "coronal": 109,
+        "sagittal": 62
+      },
+      "notes": "",
+      "meshName": "Station 11Rs",
+      "voxelIndex": {
+        "axial": 61,
+        "coronal": 113,
+        "sagittal": 190
+      },
+      "structureGroupId": "lymph_nodes",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -47.8420757222722,
+          -169.23750298841807,
+          1193.2762707905492
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -47.8420757222722,
+          -169.23750298841807,
+          1193.2762707905492
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          190.40941244187715,
+          112.93490207541282,
+          61.33814760230587
+        ],
+        "roundedVoxel": [
+          190,
+          113,
+          61
+        ],
+        "normalized": {
+          "sagittal": 0.6209150326797386,
+          "coronal": 0.4977973568281938,
+          "axial": 0.5083333333333333
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.0478420757222722,
+          1.1932762707905493,
+          0.16923750298841808
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "Station 11Rs",
+      "recommendedSliceIndex": {
+        "axial": 91,
+        "coronal": 109,
+        "sagittal": 62
+      },
+      "matchedSegmentIds": [
+        "2.25.273934619515693923059552848848411656207"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_aorta",
+      "label": "aorta",
+      "displayLabel": "aorta",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/aorta.mrk.json",
+      "meshNameExpected": "aorta",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 121,
+        "coronal": 114,
+        "sagittal": 101
+      },
+      "notes": "",
+      "meshName": "aorta",
+      "voxelIndex": {
+        "axial": 81,
+        "coronal": 118,
+        "sagittal": 115
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          13.22746691934276,
+          -173.26671697547613,
+          1232.8883918389774
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          13.22746691934276,
+          -173.26671697547613,
+          1232.8883918389774
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          114.51716527559834,
+          117.94208062243642,
+          81.14420812651997
+        ],
+        "roundedVoxel": [
+          115,
+          118,
+          81
+        ],
+        "normalized": {
+          "sagittal": 0.3758169934640523,
+          "coronal": 0.5198237885462555,
+          "axial": 0.675
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.01322746691934276,
+          1.2328883918389775,
+          0.17326671697547613
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "aorta",
+      "recommendedSliceIndex": {
+        "axial": 121,
+        "coronal": 114,
+        "sagittal": 101
+      },
+      "matchedSegmentIds": [
+        "aorta"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_azygous_vein",
+      "label": "azygous vein",
+      "displayLabel": "azygous vein",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/azygous vein.mrk.json",
+      "meshNameExpected": "azygous vein",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 124,
+        "coronal": 106,
+        "sagittal": 76
+      },
+      "notes": "",
+      "meshName": "azygous vein",
+      "voxelIndex": {
+        "axial": 83,
+        "coronal": 110,
+        "sagittal": 162
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -25.05715251037651,
+          -166.79470398190327,
+          1237.1281264072636
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -25.05715251037651,
+          -166.79470398190327,
+          1237.1281264072636
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          162.0941680620456,
+          109.89919068867597,
+          83.26407541066305
+        ],
+        "roundedVoxel": [
+          162,
+          110,
+          83
+        ],
+        "normalized": {
+          "sagittal": 0.5294117647058824,
+          "coronal": 0.4845814977973568,
+          "axial": 0.6916666666666667
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.02505715251037651,
+          1.2371281264072636,
+          0.16679470398190327
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "azygous vein",
+      "recommendedSliceIndex": {
+        "axial": 124,
+        "coronal": 106,
+        "sagittal": 76
+      },
+      "matchedSegmentIds": [
+        "2.25.111239317664077265941812615039469954434"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_brachiocephalic_trunk",
+      "label": "brachiocephalic trunk",
+      "displayLabel": "brachiocephalic trunk",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/brachiocephalic trunk.mrk.json",
+      "meshNameExpected": "brachiocephalic trunk",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 143,
+        "coronal": 138,
+        "sagittal": 89
+      },
+      "notes": "",
+      "meshName": "brachiocephalic trunk",
+      "voxelIndex": {
+        "axial": 96,
+        "coronal": 143,
+        "sagittal": 139
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -6.394236111576021,
+          -193.66002442896,
+          1263.2654123770576
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -6.394236111576021,
+          -193.66002442896,
+          1263.2654123770576
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          138.90141758586634,
+          143.28521998210573,
+          96.33271839556005
+        ],
+        "roundedVoxel": [
+          139,
+          143,
+          96
+        ],
+        "normalized": {
+          "sagittal": 0.4542483660130719,
+          "coronal": 0.6299559471365639,
+          "axial": 0.8
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.006394236111576021,
+          1.2632654123770577,
+          0.19366002442896002
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "brachiocephalic trunk",
+      "recommendedSliceIndex": {
+        "axial": 143,
+        "coronal": 138,
+        "sagittal": 89
+      },
+      "matchedSegmentIds": [
+        "brachiocephalic_trunk"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_right_brachiocephalic_vein",
+      "label": "right brachiocephalic vein",
+      "displayLabel": "right brachiocephalic vein",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/right brachiocephalic vein.mrk.json",
+      "meshNameExpected": "right brachiocephalic vein",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 143,
+        "coronal": 137,
+        "sagittal": 73
+      },
+      "notes": "",
+      "meshName": "right brachiocephalic vein",
+      "voxelIndex": {
+        "axial": 96,
+        "coronal": 142,
+        "sagittal": 169
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -30.44104435111175,
+          -192.49091730698146,
+          1262.6529242002327
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -30.44104435111175,
+          -192.49091730698146,
+          1262.6529242002327
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          168.78482976703697,
+          141.83234899556928,
+          96.02647430714762
+        ],
+        "roundedVoxel": [
+          169,
+          142,
+          96
+        ],
+        "normalized": {
+          "sagittal": 0.5522875816993464,
+          "coronal": 0.6255506607929515,
+          "axial": 0.8
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.03044104435111175,
+          1.2626529242002327,
+          0.19249091730698145
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "right brachiocephalic vein",
+      "recommendedSliceIndex": {
+        "axial": 143,
+        "coronal": 137,
+        "sagittal": 73
+      },
+      "matchedSegmentIds": [
+        "brachiocephalic_vein_right"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_left_brachiocephalic_vein",
+      "label": "left brachiocephalic vein",
+      "displayLabel": "left brachiocephalic vein",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/left brachiocephalic vein.mrk.json",
+      "meshNameExpected": "left brachiocephalic vein",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 140,
+        "coronal": 158,
+        "sagittal": 90
+      },
+      "notes": "",
+      "meshName": "left brachiocephalic vein",
+      "voxelIndex": {
+        "axial": 94,
+        "coronal": 164,
+        "sagittal": 136
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -4.2395104549813425,
+          -210.71826921033454,
+          1258.5978472776178
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -4.2395104549813425,
+          -210.71826921033454,
+          1258.5978472776178
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          136.22370026504967,
+          164.48381543857116,
+          93.99893584584015
+        ],
+        "roundedVoxel": [
+          136,
+          164,
+          94
+        ],
+        "normalized": {
+          "sagittal": 0.4444444444444444,
+          "coronal": 0.7224669603524229,
+          "axial": 0.7833333333333333
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.004239510454981343,
+          1.2585978472776178,
+          0.21071826921033454
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "left brachiocephalic vein",
+      "recommendedSliceIndex": {
+        "axial": 140,
+        "coronal": 158,
+        "sagittal": 90
+      },
+      "matchedSegmentIds": [
+        "brachiocephalic_vein_left"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_superior_vena_cava",
+      "label": "superior vena cava",
+      "displayLabel": "superior vena cava",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/superior vena cava.mrk.json",
+      "meshNameExpected": "superior vena cava",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 122,
+        "coronal": 132,
+        "sagittal": 73
+      },
+      "notes": "",
+      "meshName": "superior vena cava",
+      "voxelIndex": {
+        "axial": 82,
+        "coronal": 137,
+        "sagittal": 169
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -30.64965529626175,
+          -188.2784838371971,
+          1235.1281264072636
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -30.64965529626175,
+          -188.2784838371971,
+          1235.1281264072636
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          169.04407443673796,
+          136.5974802175848,
+          82.26407541066305
+        ],
+        "roundedVoxel": [
+          169,
+          137,
+          82
+        ],
+        "normalized": {
+          "sagittal": 0.5522875816993464,
+          "coronal": 0.6035242290748899,
+          "axial": 0.6833333333333333
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.03064965529626175,
+          1.2351281264072635,
+          0.18827848383719709
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "superior vena cava",
+      "recommendedSliceIndex": {
+        "axial": 122,
+        "coronal": 132,
+        "sagittal": 73
+      },
+      "matchedSegmentIds": [
+        "superior_vena_cava"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_inferior_vena_cava",
+      "label": "inferior vena cava",
+      "displayLabel": "inferior vena cava",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/inferior vena cava.mrk.json",
+      "meshNameExpected": "inferior vena cava",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 27,
+        "coronal": 119,
+        "sagittal": 72
+      },
+      "notes": "",
+      "meshName": "inferior vena cava",
+      "voxelIndex": {
+        "axial": 18,
+        "coronal": 123,
+        "sagittal": 171
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -31.995774268410457,
+          -177.40705256683287,
+          1106.0101318359375
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -31.995774268410457,
+          -177.40705256683287,
+          1106.0101318359375
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          170.716921314748,
+          123.08735203693801,
+          17.705078125
+        ],
+        "roundedVoxel": [
+          171,
+          123,
+          18
+        ],
+        "normalized": {
+          "sagittal": 0.5588235294117647,
+          "coronal": 0.5418502202643172,
+          "axial": 0.15
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.03199577426841046,
+          1.1060101318359374,
+          0.17740705256683287
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "inferior vena cava",
+      "recommendedSliceIndex": {
+        "axial": 27,
+        "coronal": 119,
+        "sagittal": 72
+      },
+      "matchedSegmentIds": [
+        "inferior_vena_cava"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_right_common_carotid_artery",
+      "label": "right common carotid artery",
+      "displayLabel": "right common carotid artery",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/right common carotid artery.mrk.json",
+      "meshNameExpected": "right common carotid artery",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 167,
+        "coronal": 129,
+        "sagittal": 82
+      },
+      "notes": "",
+      "meshName": "right common carotid artery",
+      "voxelIndex": {
+        "axial": 112,
+        "coronal": 134,
+        "sagittal": 152
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -17.13595377416726,
+          -186.2766539982334,
+          1295.2818245852272
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -17.13595377416726,
+          -186.2766539982334,
+          1295.2818245852272
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          152.25034827335838,
+          134.10976934974644,
+          112.34092449964487
+        ],
+        "roundedVoxel": [
+          152,
+          134,
+          112
+        ],
+        "normalized": {
+          "sagittal": 0.49673202614379086,
+          "coronal": 0.5903083700440529,
+          "axial": 0.9333333333333333
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.01713595377416726,
+          1.2952818245852273,
+          0.1862766539982334
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "right common carotid artery",
+      "recommendedSliceIndex": {
+        "axial": 167,
+        "coronal": 129,
+        "sagittal": 82
+      },
+      "matchedSegmentIds": [
+        "common_carotid_artery_right"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_left_common_carotid_artery",
+      "label": "left common carotid artery",
+      "displayLabel": "left common carotid artery",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/left common carotid artery.mrk.json",
+      "meshNameExpected": "left common carotid artery",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 167,
+        "coronal": 127,
+        "sagittal": 100
+      },
+      "notes": "",
+      "meshName": "left common carotid artery",
+      "voxelIndex": {
+        "axial": 112,
+        "coronal": 132,
+        "sagittal": 118
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          10.501593089524182,
+          -184.86336507166618,
+          1294.2476806640625
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          10.501593089524182,
+          -184.86336507166618,
+          1294.2476806640625
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          117.90465896702338,
+          132.3534491303231,
+          111.8238525390625
+        ],
+        "roundedVoxel": [
+          118,
+          132,
+          112
+        ],
+        "normalized": {
+          "sagittal": 0.38562091503267976,
+          "coronal": 0.5814977973568282,
+          "axial": 0.9333333333333333
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.010501593089524182,
+          1.2942476806640626,
+          0.18486336507166617
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "left common carotid artery",
+      "recommendedSliceIndex": {
+        "axial": 167,
+        "coronal": 127,
+        "sagittal": 100
+      },
+      "matchedSegmentIds": [
+        "common_carotid_artery_left"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_right_subclavian_artery",
+      "label": "right subclavian artery",
+      "displayLabel": "right subclavian artery",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/right subclavian artery.mrk.json",
+      "meshNameExpected": "right subclavian artery",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 164,
+        "coronal": 119,
+        "sagittal": 76
+      },
+      "notes": "",
+      "meshName": "right subclavian artery",
+      "voxelIndex": {
+        "axial": 110,
+        "coronal": 123,
+        "sagittal": 162
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -25.186295498394234,
+          -177.09542505428277,
+          1290.3516845703125
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -25.186295498394234,
+          -177.09542505428277,
+          1290.3516845703125
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          162.25465643550453,
+          122.70008677862332,
+          109.8758544921875
+        ],
+        "roundedVoxel": [
+          162,
+          123,
+          110
+        ],
+        "normalized": {
+          "sagittal": 0.5294117647058824,
+          "coronal": 0.5418502202643172,
+          "axial": 0.9166666666666666
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.025186295498394233,
+          1.2903516845703125,
+          0.17709542505428277
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "right subclavian artery",
+      "recommendedSliceIndex": {
+        "axial": 164,
+        "coronal": 119,
+        "sagittal": 76
+      },
+      "matchedSegmentIds": [
+        "subclavian_artery_right"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_left_subclavian_artery",
+      "label": "left subclavian artery",
+      "displayLabel": "left subclavian artery",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/left subclavian artery.mrk.json",
+      "meshNameExpected": "left subclavian artery",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 151,
+        "coronal": 117,
+        "sagittal": 99
+      },
+      "notes": "",
+      "meshName": "left subclavian artery",
+      "voxelIndex": {
+        "axial": 101,
+        "coronal": 121,
+        "sagittal": 120
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          8.687915423994824,
+          -175.5670623779297,
+          1272.8781166930617
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          8.687915423994824,
+          -175.5670623779297,
+          1272.8781166930617
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          120.15854965816666,
+          120.80076228762142,
+          101.13907055356208
+        ],
+        "roundedVoxel": [
+          120,
+          121,
+          101
+        ],
+        "normalized": {
+          "sagittal": 0.39215686274509803,
+          "coronal": 0.5330396475770925,
+          "axial": 0.8416666666666667
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.008687915423994825,
+          1.2728781166930616,
+          0.17556706237792968
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "left subclavian artery",
+      "recommendedSliceIndex": {
+        "axial": 151,
+        "coronal": 117,
+        "sagittal": 99
+      },
+      "matchedSegmentIds": [
+        "subclavian_artery_left"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_bronchus_intermedius",
+      "label": "bronchus intermedius",
+      "displayLabel": "bronchus intermedius",
+      "kind": "landmark",
+      "landmarkGroup": "airway",
+      "markupFile": "Model/markups/bronchus intermedius.mrk.json",
+      "meshNameExpected": "airway",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 87,
+        "coronal": 86,
+        "sagittal": 67
+      },
+      "notes": "",
+      "meshName": "airway",
+      "voxelIndex": {
+        "axial": 58,
+        "coronal": 89,
+        "sagittal": 179
+      },
+      "structureGroupId": "airway",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -38.42111602055939,
+          -150.22014935438048,
+          1185.6719906360465
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -38.42111602055939,
+          -150.22014935438048,
+          1185.6719906360465
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          178.70181203586512,
+          89.30168590884182,
+          57.536007525054515
+        ],
+        "roundedVoxel": [
+          179,
+          89,
+          58
+        ],
+        "normalized": {
+          "sagittal": 0.5849673202614379,
+          "coronal": 0.3920704845814978,
+          "axial": 0.48333333333333334
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.03842111602055939,
+          1.1856719906360464,
+          0.1502201493543805
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "airway",
+      "recommendedSliceIndex": {
+        "axial": 87,
+        "coronal": 86,
+        "sagittal": 67
+      },
+      "matchedSegmentIds": [
+        "2.25.314609811388436314422080028160079540590"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_carina",
+      "label": "carina",
+      "displayLabel": "carina",
+      "kind": "landmark",
+      "landmarkGroup": "airway",
+      "markupFile": "Model/markups/carina.mrk.json",
+      "meshNameExpected": "airway",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 104,
+        "coronal": 96,
+        "sagittal": 84
+      },
+      "notes": "",
+      "meshName": "airway",
+      "voxelIndex": {
+        "axial": 70,
+        "coronal": 99,
+        "sagittal": 147
+      },
+      "structureGroupId": "airway",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -12.767176630104522,
+          -157.77453819821739,
+          1210.7629090195594
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -12.767176630104522,
+          -157.77453819821739,
+          1210.7629090195594
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          146.8211883273387,
+          98.68966427788186,
+          70.08146671681095
+        ],
+        "roundedVoxel": [
+          147,
+          99,
+          70
+        ],
+        "normalized": {
+          "sagittal": 0.4803921568627451,
+          "coronal": 0.43612334801762115,
+          "axial": 0.5833333333333334
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.012767176630104522,
+          1.2107629090195595,
+          0.15777453819821738
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "airway",
+      "recommendedSliceIndex": {
+        "axial": 104,
+        "coronal": 96,
+        "sagittal": 84
+      },
+      "matchedSegmentIds": [
+        "2.25.314609811388436314422080028160079540590"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_trachea",
+      "label": "trachea",
+      "displayLabel": "trachea",
+      "kind": "landmark",
+      "landmarkGroup": "airway",
+      "markupFile": "Model/markups/trachea.mrk.json",
+      "meshNameExpected": "airway",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 133,
+        "coronal": 111,
+        "sagittal": 87
+      },
+      "notes": "",
+      "meshName": "airway",
+      "voxelIndex": {
+        "axial": 89,
+        "coronal": 115,
+        "sagittal": 142
+      },
+      "structureGroupId": "airway",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -9.046358244334094,
+          -170.5155223676737,
+          1248.7629090195594
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -9.046358244334094,
+          -170.5155223676737,
+          1248.7629090195594
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          142.19725868288612,
+          114.52312033312855,
+          89.08146671681095
+        ],
+        "roundedVoxel": [
+          142,
+          115,
+          89
+        ],
+        "normalized": {
+          "sagittal": 0.46405228758169936,
+          "coronal": 0.5066079295154186,
+          "axial": 0.7416666666666667
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.009046358244334094,
+          1.2487629090195593,
+          0.1705155223676737
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "airway",
+      "recommendedSliceIndex": {
+        "axial": 133,
+        "coronal": 111,
+        "sagittal": 87
+      },
+      "matchedSegmentIds": [
+        "2.25.314609811388436314422080028160079540590"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_left_mainstem",
+      "label": "left mainstem",
+      "displayLabel": "left mainstem",
+      "kind": "landmark",
+      "landmarkGroup": "airway",
+      "markupFile": "Model/markups/left mainstem.mrk.json",
+      "meshNameExpected": "airway",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 98,
+        "coronal": 92,
+        "sagittal": 92
+      },
+      "notes": "",
+      "meshName": "airway",
+      "voxelIndex": {
+        "axial": 66,
+        "coronal": 95,
+        "sagittal": 133
+      },
+      "structureGroupId": "airway",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -1.6210419837718888,
+          -154.58663418607236,
+          1202.518246750665
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -1.6210419837718888,
+          -154.58663418607236,
+          1202.518246750665
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          132.9696811940321,
+          94.7279971559929,
+          65.95913558236373
+        ],
+        "roundedVoxel": [
+          133,
+          95,
+          66
+        ],
+        "normalized": {
+          "sagittal": 0.434640522875817,
+          "coronal": 0.4185022026431718,
+          "axial": 0.55
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.0016210419837718888,
+          1.202518246750665,
+          0.15458663418607235
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "airway",
+      "recommendedSliceIndex": {
+        "axial": 98,
+        "coronal": 92,
+        "sagittal": 92
+      },
+      "matchedSegmentIds": [
+        "2.25.314609811388436314422080028160079540590"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_right_mainstem",
+      "label": "right mainstem",
+      "displayLabel": "right mainstem",
+      "kind": "landmark",
+      "landmarkGroup": "airway",
+      "markupFile": "Model/markups/right mainstem.mrk.json",
+      "meshNameExpected": "airway",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 101,
+        "coronal": 94,
+        "sagittal": 76
+      },
+      "notes": "",
+      "meshName": "airway",
+      "voxelIndex": {
+        "axial": 68,
+        "coronal": 97,
+        "sagittal": 162
+      },
+      "structureGroupId": "airway",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -25.009533482707944,
+          -156.19600918607236,
+          1206.7706997504715
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -25.009533482707944,
+          -156.19600918607236,
+          1206.7706997504715
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          162.03499101795265,
+          96.7279971559929,
+          68.08536208226701
+        ],
+        "roundedVoxel": [
+          162,
+          97,
+          68
+        ],
+        "normalized": {
+          "sagittal": 0.5294117647058824,
+          "coronal": 0.42731277533039647,
+          "axial": 0.5666666666666667
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.025009533482707944,
+          1.2067706997504715,
+          0.15619600918607238
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "airway",
+      "recommendedSliceIndex": {
+        "axial": 101,
+        "coronal": 94,
+        "sagittal": 76
+      },
+      "matchedSegmentIds": [
+        "2.25.314609811388436314422080028160079540590"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_esophagus",
+      "label": "esophagus",
+      "displayLabel": "esophagus",
+      "kind": "landmark",
+      "landmarkGroup": "gi",
+      "markupFile": "Model/markups/esophagus.mrk.json",
+      "meshNameExpected": "esophagus",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 95,
+        "coronal": 74,
+        "sagittal": 88
+      },
+      "notes": "",
+      "meshName": "esophagus",
+      "voxelIndex": {
+        "axial": 64,
+        "coronal": 77,
+        "sagittal": 140
+      },
+      "structureGroupId": "gi",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -6.904068870708699,
+          -140.52347113691818,
+          1198.7629090195594
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -6.904068870708699,
+          -140.52347113691818,
+          1198.7629090195594
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          139.5349961603225,
+          77.25144501723818,
+          64.08146671681095
+        ],
+        "roundedVoxel": [
+          140,
+          77,
+          64
+        ],
+        "normalized": {
+          "sagittal": 0.45751633986928103,
+          "coronal": 0.3392070484581498,
+          "axial": 0.5333333333333333
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.006904068870708699,
+          1.1987629090195595,
+          0.14052347113691818
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "esophagus",
+      "recommendedSliceIndex": {
+        "axial": 95,
+        "coronal": 74,
+        "sagittal": 88
+      },
+      "matchedSegmentIds": [
+        "esophagus"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_main_pa",
+      "label": "main PA",
+      "displayLabel": "main PA",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/main PA.mrk.json",
+      "meshNameExpected": "pulmonary artery",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 84,
+        "coronal": 157,
+        "sagittal": 98
+      },
+      "notes": "",
+      "meshName": "pulmonary artery",
+      "voxelIndex": {
+        "axial": 56,
+        "coronal": 163,
+        "sagittal": 121
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          8.30116469131218,
+          -209.6028340240154,
+          1183.5243634673996
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          8.30116469131218,
+          -209.6028340240154,
+          1183.5243634673996
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          120.6391719279082,
+          163.0976435565435,
+          56.46219394073103
+        ],
+        "roundedVoxel": [
+          121,
+          163,
+          56
+        ],
+        "normalized": {
+          "sagittal": 0.3954248366013072,
+          "coronal": 0.7180616740088106,
+          "axial": 0.4666666666666667
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.008301164691312181,
+          1.1835243634673995,
+          0.20960283402401542
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "pulmonary artery",
+      "recommendedSliceIndex": {
+        "axial": 84,
+        "coronal": 157,
+        "sagittal": 98
+      },
+      "matchedSegmentIds": [
+        "pulmonary_artery"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_left_pa",
+      "label": "left PA",
+      "displayLabel": "left PA",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/left PA.mrk.json",
+      "meshNameExpected": "pulmonary artery",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 97,
+        "coronal": 100,
+        "sagittal": 106
+      },
+      "notes": "",
+      "meshName": "pulmonary artery",
+      "voxelIndex": {
+        "axial": 65,
+        "coronal": 104,
+        "sagittal": 106
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          20.062582669992707,
+          -161.98049880130864,
+          1200.7629090195594
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          20.062582669992707,
+          -161.98049880130864,
+          1200.7629090195594
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          106.02304084760618,
+          103.9164891050244,
+          65.08146671681095
+        ],
+        "roundedVoxel": [
+          106,
+          104,
+          65
+        ],
+        "normalized": {
+          "sagittal": 0.3464052287581699,
+          "coronal": 0.4581497797356828,
+          "axial": 0.5416666666666666
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.02006258266999271,
+          1.2007629090195595,
+          0.16198049880130863
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "pulmonary artery",
+      "recommendedSliceIndex": {
+        "axial": 97,
+        "coronal": 100,
+        "sagittal": 106
+      },
+      "matchedSegmentIds": [
+        "pulmonary_artery"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_right_pa",
+      "label": "right PA",
+      "displayLabel": "right PA",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/right PA.mrk.json",
+      "meshNameExpected": "pulmonary artery",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 87,
+        "coronal": 107,
+        "sagittal": 74
+      },
+      "notes": "",
+      "meshName": "pulmonary artery",
+      "voxelIndex": {
+        "axial": 58,
+        "coronal": 111,
+        "sagittal": 167
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -29.084557399152487,
+          -167.93500883405022,
+          1186.041963330251
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -29.084557399152487,
+          -167.93500883405022,
+          1186.041963330251
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          167.09909840926235,
+          111.31626856318869,
+          57.72099387215678
+        ],
+        "roundedVoxel": [
+          167,
+          111,
+          58
+        ],
+        "normalized": {
+          "sagittal": 0.545751633986928,
+          "coronal": 0.4889867841409692,
+          "axial": 0.48333333333333334
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.02908455739915249,
+          1.186041963330251,
+          0.16793500883405021
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "pulmonary artery",
+      "recommendedSliceIndex": {
+        "axial": 87,
+        "coronal": 107,
+        "sagittal": 74
+      },
+      "matchedSegmentIds": [
+        "pulmonary_artery"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_left_inferior_pv",
+      "label": "left inferior PV",
+      "displayLabel": "left inferior PV",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/left inferior PV.mrk.json",
+      "meshNameExpected": "pulmonary venous system",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 73,
+        "coronal": 81,
+        "sagittal": 104
+      },
+      "notes": "",
+      "meshName": "pulmonary venous system",
+      "voxelIndex": {
+        "axial": 49,
+        "coronal": 84,
+        "sagittal": 110
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          16.948248234858113,
+          -146.02948052569982,
+          1168.9793701171875
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          16.948248234858113,
+          -146.02948052569982,
+          1168.9793701171875
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          109.89328169903558,
+          84.09386445184062,
+          49.189697265625
+        ],
+        "roundedVoxel": [
+          110,
+          84,
+          49
+        ],
+        "normalized": {
+          "sagittal": 0.35947712418300654,
+          "coronal": 0.3700440528634361,
+          "axial": 0.4083333333333333
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.016948248234858115,
+          1.1689793701171876,
+          0.14602948052569983
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "pulmonary venous system",
+      "recommendedSliceIndex": {
+        "axial": 73,
+        "coronal": 81,
+        "sagittal": 104
+      },
+      "matchedSegmentIds": [
+        "pulmonary_vein"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_left_superior_pv",
+      "label": "left superior PV",
+      "displayLabel": "left superior PV",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/left superior PV.mrk.json",
+      "meshNameExpected": "pulmonary venous system",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 81,
+        "coronal": 93,
+        "sagittal": 108
+      },
+      "notes": "",
+      "meshName": "pulmonary venous system",
+      "voxelIndex": {
+        "axial": 54,
+        "coronal": 96,
+        "sagittal": 102
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          23.429883653802136,
+          -155.94256998996715,
+          1178.9793701171875
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          23.429883653802136,
+          -155.94256998996715,
+          1178.9793701171875
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          101.83843379976534,
+          96.41304359190099,
+          54.189697265625
+        ],
+        "roundedVoxel": [
+          102,
+          96,
+          54
+        ],
+        "normalized": {
+          "sagittal": 0.3333333333333333,
+          "coronal": 0.42290748898678415,
+          "axial": 0.45
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.023429883653802136,
+          1.1789793701171876,
+          0.15594256998996717
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "pulmonary venous system",
+      "recommendedSliceIndex": {
+        "axial": 81,
+        "coronal": 93,
+        "sagittal": 108
+      },
+      "matchedSegmentIds": [
+        "pulmonary_vein"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_right_inferior_pv",
+      "label": "right inferior PV",
+      "displayLabel": "right inferior PV",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/right inferior PV.mrk.json",
+      "meshNameExpected": "pulmonary venous system",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 64,
+        "coronal": 79,
+        "sagittal": 72
+      },
+      "notes": "",
+      "meshName": "pulmonary venous system",
+      "voxelIndex": {
+        "axial": 43,
+        "coronal": 82,
+        "sagittal": 171
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -32.23592641477598,
+          -144.31375350303816,
+          1156.9793701171875
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -32.23592641477598,
+          -144.31375350303816,
+          1156.9793701171875
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          171.01536281702747,
+          81.96169883144553,
+          43.189697265625
+        ],
+        "roundedVoxel": [
+          171,
+          82,
+          43
+        ],
+        "normalized": {
+          "sagittal": 0.5588235294117647,
+          "coronal": 0.36123348017621143,
+          "axial": 0.35833333333333334
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.03223592641477598,
+          1.1569793701171875,
+          0.14431375350303816
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "pulmonary venous system",
+      "recommendedSliceIndex": {
+        "axial": 64,
+        "coronal": 79,
+        "sagittal": 72
+      },
+      "matchedSegmentIds": [
+        "pulmonary_vein"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_right_superior_pv",
+      "label": "right superior PV",
+      "displayLabel": "right superior PV",
+      "kind": "landmark",
+      "landmarkGroup": "vessel",
+      "markupFile": "Model/markups/right superior PV.mrk.json",
+      "meshNameExpected": "pulmonary venous system",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 70,
+        "coronal": 108,
+        "sagittal": 64
+      },
+      "notes": "",
+      "meshName": "pulmonary venous system",
+      "voxelIndex": {
+        "axial": 47,
+        "coronal": 112,
+        "sagittal": 186
+      },
+      "structureGroupId": "vessels",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -44.05537923755627,
+          -168.3339318203013,
+          1164.9793701171875
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -44.05537923755627,
+          -168.3339318203013,
+          1164.9793701171875
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          185.70361486863794,
+          111.81201751697644,
+          47.189697265625
+        ],
+        "roundedVoxel": [
+          186,
+          112,
+          47
+        ],
+        "normalized": {
+          "sagittal": 0.6078431372549019,
+          "coronal": 0.4933920704845815,
+          "axial": 0.39166666666666666
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.044055379237556265,
+          1.1649793701171876,
+          0.16833393182030132
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "pulmonary venous system",
+      "recommendedSliceIndex": {
+        "axial": 70,
+        "coronal": 108,
+        "sagittal": 64
+      },
+      "matchedSegmentIds": [
+        "pulmonary_vein"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_left_atrium",
+      "label": "left atrium",
+      "displayLabel": "left atrium",
+      "kind": "landmark",
+      "landmarkGroup": "cardiac",
+      "markupFile": "Model/markups/left atrium.mrk.json",
+      "meshNameExpected": "left atrium",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 58,
+        "coronal": 107,
+        "sagittal": 91
+      },
+      "notes": "",
+      "meshName": "left atrium",
+      "voxelIndex": {
+        "axial": 39,
+        "coronal": 111,
+        "sagittal": 134
+      },
+      "structureGroupId": "cardiac",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -2.8354312015674736,
+          -168.0365183093985,
+          1149.047899207885
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -2.8354312015674736,
+          -168.0365183093985,
+          1149.047899207885
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          134.47882507634117,
+          111.44241626070888,
+          39.22396181097372
+        ],
+        "roundedVoxel": [
+          134,
+          111,
+          39
+        ],
+        "normalized": {
+          "sagittal": 0.43790849673202614,
+          "coronal": 0.4889867841409692,
+          "axial": 0.325
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.002835431201567474,
+          1.149047899207885,
+          0.1680365183093985
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "left atrium",
+      "recommendedSliceIndex": {
+        "axial": 58,
+        "coronal": 107,
+        "sagittal": 91
+      },
+      "matchedSegmentIds": [
+        "2.25.11162851537065423916236596478087091296"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_left_atrial_appendage",
+      "label": "left atrial appendage",
+      "displayLabel": "left atrial appendage",
+      "kind": "landmark",
+      "landmarkGroup": "cardiac",
+      "markupFile": "Model/markups/left atrial appendage.mrk.json",
+      "meshNameExpected": "left atrial appendage",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 78,
+        "coronal": 130,
+        "sagittal": 108
+      },
+      "notes": "",
+      "meshName": "left atrial appendage",
+      "voxelIndex": {
+        "axial": 52,
+        "coronal": 135,
+        "sagittal": 102
+      },
+      "structureGroupId": "cardiac",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          23.24896544875024,
+          -187.38375177214144,
+          1174.6614698140588
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          23.24896544875024,
+          -187.38375177214144,
+          1174.6614698140588
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          102.06326419050944,
+          135.4855801755739,
+          52.03074711406066
+        ],
+        "roundedVoxel": [
+          102,
+          135,
+          52
+        ],
+        "normalized": {
+          "sagittal": 0.3333333333333333,
+          "coronal": 0.5947136563876652,
+          "axial": 0.43333333333333335
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.023248965448750242,
+          1.174661469814059,
+          0.18738375177214145
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "left atrial appendage",
+      "recommendedSliceIndex": {
+        "axial": 78,
+        "coronal": 130,
+        "sagittal": 108
+      },
+      "matchedSegmentIds": [
+        "atrial_appendage_left"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_left_ventricle",
+      "label": "left ventricle",
+      "displayLabel": "left ventricle",
+      "kind": "landmark",
+      "landmarkGroup": "cardiac",
+      "markupFile": "Model/markups/left ventricle.mrk.json",
+      "meshNameExpected": "left ventricle",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 33,
+        "coronal": 140,
+        "sagittal": 118
+      },
+      "notes": "",
+      "meshName": "left ventricle",
+      "voxelIndex": {
+        "axial": 22,
+        "coronal": 145,
+        "sagittal": 83
+      },
+      "structureGroupId": "cardiac",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          38.49588173414643,
+          -194.91694772864025,
+          1114.9793701171875
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          38.49588173414643,
+          -194.91694772864025,
+          1114.9793701171875
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          83.11564006885204,
+          144.84722175258213,
+          22.189697265625
+        ],
+        "roundedVoxel": [
+          83,
+          145,
+          22
+        ],
+        "normalized": {
+          "sagittal": 0.27124183006535946,
+          "coronal": 0.6387665198237885,
+          "axial": 0.18333333333333332
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.038495881734146434,
+          1.1149793701171875,
+          0.19491694772864027
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "left ventricle",
+      "recommendedSliceIndex": {
+        "axial": 33,
+        "coronal": 140,
+        "sagittal": 118
+      },
+      "matchedSegmentIds": [
+        "2.25.122868581635728138705614725803586075780"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_right_atrium",
+      "label": "right atrium",
+      "displayLabel": "right atrium",
+      "kind": "landmark",
+      "landmarkGroup": "cardiac",
+      "markupFile": "Model/markups/right atrium.mrk.json",
+      "meshNameExpected": "right atrium",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 48,
+        "coronal": 145,
+        "sagittal": 68
+      },
+      "notes": "",
+      "meshName": "right atrium",
+      "voxelIndex": {
+        "axial": 32,
+        "coronal": 150,
+        "sagittal": 177
+      },
+      "structureGroupId": "cardiac",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          -37.278637189433084,
+          -198.68771762768097,
+          1134.9793701171875
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          -37.278637189433084,
+          -198.68771762768097,
+          1134.9793701171875
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          177.28203251757222,
+          149.53322706401138,
+          32.189697265625
+        ],
+        "roundedVoxel": [
+          177,
+          150,
+          32
+        ],
+        "normalized": {
+          "sagittal": 0.5784313725490197,
+          "coronal": 0.6607929515418502,
+          "axial": 0.26666666666666666
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          -0.037278637189433084,
+          1.1349793701171875,
+          0.19868771762768098
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "right atrium",
+      "recommendedSliceIndex": {
+        "axial": 48,
+        "coronal": 145,
+        "sagittal": 68
+      },
+      "matchedSegmentIds": [
+        "2.25.94981541103766622373479159084072708115"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    },
+    {
+      "id": "landmark_right_ventricle",
+      "label": "right ventricle",
+      "displayLabel": "right ventricle",
+      "kind": "landmark",
+      "landmarkGroup": "cardiac",
+      "markupFile": "Model/markups/right ventricle.mrk.json",
+      "meshNameExpected": "right ventricle",
+      "meshNameVerified": true,
+      "deriveSliceIndexFromMarkup": true,
+      "sliceIndex": {
+        "axial": 30,
+        "coronal": 172,
+        "sagittal": 95
+      },
+      "notes": "",
+      "meshName": "right ventricle",
+      "voxelIndex": {
+        "axial": 20,
+        "coronal": 178,
+        "sagittal": 126
+      },
+      "structureGroupId": "cardiac",
+      "markup": {
+        "coordinateSystem": "LPS",
+        "sourceCoordinateSystem": "LPS",
+        "position": [
+          3.8407107572487007,
+          -221.67145796469083,
+          1110.9793701171875
+        ]
+      },
+      "world": {
+        "coordinateSystem": "LPS",
+        "position": [
+          3.8407107572487007,
+          -221.67145796469083,
+          1110.9793701171875
+        ]
+      },
+      "derived": {
+        "continuousVoxel": [
+          126.18226031198708,
+          178.09554515272268,
+          20.189697265625
+        ],
+        "roundedVoxel": [
+          126,
+          178,
+          20
+        ],
+        "normalized": {
+          "sagittal": 0.4117647058823529,
+          "coronal": 0.7841409691629956,
+          "axial": 0.16666666666666666
+        },
+        "axisMap": {
+          "sagittal": "i",
+          "coronal": "j",
+          "axial": "k"
+        },
+        "scenePosition": [
+          0.0038407107572487006,
+          1.1109793701171875,
+          0.22167145796469084
+        ]
+      },
+      "meshExists": true,
+      "meshNameResolved": "right ventricle",
+      "recommendedSliceIndex": {
+        "axial": 30,
+        "coronal": 172,
+        "sagittal": 95
+      },
+      "matchedSegmentIds": [
+        "2.25.306757321920428423854529791107945832273"
+      ],
+      "insideCtBounds": true,
+      "insideSegmentationBounds": true
+    }
+  ],
+  "toggleSets": [
+    {
+      "id": "lymph_nodes",
+      "label": "Lymph nodes",
+      "targetIds": [
+        "node_1R",
+        "node_1L",
+        "node_2R",
+        "node_2L",
+        "node_3A_1",
+        "node_3A_2",
+        "node_3A_3",
+        "node_3A_4",
+        "node_3A_5",
+        "node_3A_6",
+        "node_3A_7",
+        "node_4R_1",
+        "node_4R_2",
+        "node_4R_3",
+        "node_4L_1",
+        "node_4L_2",
+        "node_4L_3",
+        "node_5_nod5",
+        "node_6_nod5",
+        "node_7_1",
+        "node_10R_1",
+        "node_10R_2",
+        "node_10L",
+        "node_11L",
+        "node_11Ri",
+        "node_11Rs_1",
+        "node_11Rs_2"
+      ]
+    },
+    {
+      "id": "airway",
+      "label": "Airway",
+      "targetIds": [
+        "landmark_bronchus_intermedius",
+        "landmark_carina",
+        "landmark_left_mainstem",
+        "landmark_right_mainstem",
+        "landmark_trachea"
+      ]
+    },
+    {
+      "id": "vessels",
+      "label": "Vessels",
+      "targetIds": [
+        "landmark_aorta",
+        "landmark_azygous_vein",
+        "landmark_brachiocephalic_trunk",
+        "landmark_left_brachiocephalic_vein",
+        "landmark_left_inferior_pv",
+        "landmark_left_pa",
+        "landmark_left_superior_pv",
+        "landmark_main_pa",
+        "landmark_right_inferior_pv",
+        "landmark_right_pa",
+        "landmark_right_superior_pv",
+        "landmark_superior_vena_cava",
+        "landmark_right_brachiocephalic_vein",
+        "landmark_inferior_vena_cava",
+        "landmark_right_subclavian_artery",
+        "landmark_left_subclavian_artery",
+        "landmark_right_common_carotid_artery",
+        "landmark_left_common_carotid_artery"
+      ]
+    },
+    {
+      "id": "cardiac",
+      "label": "Cardiac",
+      "targetIds": [
+        "landmark_left_atrium",
+        "landmark_left_atrial_appendage",
+        "landmark_left_ventricle",
+        "landmark_right_atrium",
+        "landmark_right_ventricle"
+      ]
+    },
+    {
+      "id": "gi",
+      "label": "GI",
+      "targetIds": [
+        "landmark_esophagus"
+      ]
+    }
+  ],
+  "preprocessingRequired": {
+    "required": true,
+    "tasks": [
+      "Verify actual mesh names inside Model/case_001.glb and either rename meshes to match meshNameExpected or update this manifest.",
+      "Read each .mrk.json file and extract the first control point position plus its coordinateSystem.",
+      "Read the CT volume geometry from Model/case_001_ct.nrrd and derive the voxel-to-world and world-to-voxel transforms.",
+      "Convert each markup point into continuous voxel coordinates automatically, honoring the markup coordinateSystem.",
+      "Determine which voxel axis corresponds to sagittal, coronal, and axial using the CT orientation matrix rather than assuming i/j/k order.",
+      "Map the continuous voxel position to exported slice-series frame indices using the series counts; if counts differ from the volume dimensions, scale by normalized position.",
+      "Clamp derived slice indices to valid ranges and write them back into the enriched manifest.",
+      "Enumerate actual slice filenames in each folder and write a generated asset index for Expo bundling.",
+      "Optionally compute a station centroid or station-level bounds for grouped highlighting."
+    ]
+  },
+  "moduleDefaults": {
+    "defaultStationId": "4R",
+    "defaultToggleSetIds": [
+      "lymph_nodes",
+      "airway",
+      "vessels"
+    ],
+    "defaultSliceLayout": "single-plane",
+    "defaultPlane": "axial"
+  },
+  "glbMeshes": [
+    "airway",
+    "esophagus",
+    "right brachiocephalic vein",
+    "left brachiocephalic vein",
+    "superior vena cava",
+    "azygous vein",
+    "inferior vena cava",
+    "right atrium",
+    "right ventricle",
+    "pulmonary artery",
+    "pulmonary venous system",
+    "left atrium",
+    "left atrial appendage",
+    "left ventricle",
+    "aorta",
+    "brachiocephalic trunk",
+    "right subclavian artery",
+    "left subclavian artery",
+    "right common carotid artery",
+    "left common carotid artery",
+    "Station 1R",
+    "Station 1L",
+    "Station 2R",
+    "Station 2L",
+    "Station 3A",
+    "Station 4R",
+    "Station 4L",
+    "Station 5",
+    "Station 6",
+    "Station 7",
+    "Station 10R",
+    "Station 10L",
+    "Station 11Rs",
+    "Station 11Ri",
+    "Station 11L"
+  ],
+  "meshMappingNotes": {
+    "lymphNodes": "The GLB stores one mesh per station, not one mesh per individual segmented node. Multiple markup targets within the same station therefore point to the same station mesh.",
+    "airwayLandmarks": "trachea, carina, bronchus intermedius, left mainstem, and right mainstem all map to the single GLB mesh named 'airway'.",
+    "pulmonaryArteryLandmarks": "main PA, left PA, and right PA all map to the single GLB mesh named 'pulmonary artery'.",
+    "pulmonaryVenousLandmarks": "left/right superior and inferior PV landmarks all map to the single GLB mesh named 'pulmonary venous system'.",
+    "stationMeshes": "Station 6 spelling has been normalized to match the corrected GLB mesh name. Each nodal target within a station points to the corresponding station mesh.",
+    "uniqueLandmarks": "Aorta, brachiocephalic trunk, brachiocephalic veins, SVC, IVC, subclavian arteries, carotids, atria, ventricles, esophagus, and left atrial appendage each map to their own GLB mesh when present."
+  },
+  "generatedAt": "2026-03-29T04:51:53.761Z",
+  "runtimeSchemaVersion": 1,
+  "volumeGeometry": {
+    "coordinateSystem": "LPS",
+    "sizes": [
+      307,
+      228,
+      121
+    ],
+    "spaceDirections": [
+      [
+        -0.8046874999999998,
+        0,
+        0
+      ],
+      [
+        0,
+        -0.8046874999999998,
+        0
+      ],
+      [
+        0,
+        0,
+        2
+      ]
+    ],
+    "spaceOrigin": [
+      105.37799835205078,
+      -78.36019897460935,
+      1070.5999755859375
+    ],
+    "axisMap": {
+      "sagittal": "i",
+      "coronal": "j",
+      "axial": "k"
+    },
+    "ijkToWorldMatrix": [
+      -0.8046874999999998,
+      0,
+      0,
+      105.37799835205078,
+      0,
+      -0.8046874999999998,
+      0,
+      -78.36019897460935,
+      0,
+      0,
+      2,
+      1070.5999755859375,
+      0,
+      0,
+      0,
+      1
+    ],
+    "worldToIjkMatrix": [
+      -1.242718446601942,
+      0,
+      0,
+      130.95518241808256,
+      0,
+      -1.242718446601942,
+      0,
+      -97.37966474514562,
+      0,
+      0,
+      0.5,
+      -535.2999877929688,
+      0,
+      0,
+      0,
+      1
+    ]
+  },
+  "patientToScene": {
+    "name": "patientToScene",
+    "from": "LPS-mm",
+    "to": "three-scene-meters",
+    "matrix": [
+      0.001,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.001,
+      0,
+      0,
+      -0.001,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    "inverseMatrix": [
+      1000,
+      0,
+      0,
+      0,
+      0,
+      0,
+      -1000,
+      0,
+      0,
+      1000,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    "note": "This explicit transform maps CT/markup patient-space coordinates into the shared Three scene basis. The GLB is already exported in that scene basis, so it should be wrapped in the inverse transform before joining the patient-space group."
+  },
+  "meshNames": [
+    "airway",
+    "aorta",
+    "azygous vein",
+    "brachiocephalic trunk",
+    "esophagus",
+    "inferior vena cava",
+    "left atrial appendage",
+    "left atrium",
+    "left brachiocephalic vein",
+    "left common carotid artery",
+    "left subclavian artery",
+    "left ventricle",
+    "pulmonary artery",
+    "pulmonary venous system",
+    "right atrium",
+    "right brachiocephalic vein",
+    "right common carotid artery",
+    "right subclavian artery",
+    "right ventricle",
+    "Station 1L",
+    "Station 1R",
+    "Station 2L",
+    "Station 2R",
+    "Station 3A",
+    "Station 4L",
+    "Station 4R",
+    "Station 5",
+    "Station 6",
+    "Station 7",
+    "Station 10L",
+    "Station 10R",
+    "Station 11L",
+    "Station 11Ri",
+    "Station 11Rs",
+    "superior vena cava"
+  ],
+  "sliceAssetCounts": {
+    "axial": 180,
+    "coronal": 220,
+    "sagittal": 160
+  },
+  "sliceTextureMetadata": {
+    "axial": {
+      "pixelWidth": 714,
+      "pixelHeight": 556,
+      "crop": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
+      "sourceLooksCropped": false,
+      "warning": null
+    },
+    "coronal": {
+      "pixelWidth": 714,
+      "pixelHeight": 556,
+      "crop": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
+      "sourceLooksCropped": true,
+      "warning": "coronal slice textures look cropped or viewport-exported relative to CT geometry; use crop metadata for clean co-registration."
+    },
+    "sagittal": {
+      "pixelWidth": 712,
+      "pixelHeight": 556,
+      "crop": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
+      "sourceLooksCropped": true,
+      "warning": "sagittal slice textures look cropped or viewport-exported relative to CT geometry; use crop metadata for clean co-registration."
+    }
+  },
+  "warnings": [
+    "coronal slice textures look cropped or viewport-exported relative to CT geometry; use crop metadata for clean co-registration.",
+    "sagittal slice textures look cropped or viewport-exported relative to CT geometry; use crop metadata for clean co-registration."
+  ],
+  "bounds": {
+    "ct": {
+      "coordinateSystem": "LPS",
+      "min": [
+        -140.85637664794916,
+        -261.02426147460926,
+        1070.5999755859375
+      ],
+      "max": [
+        105.37799835205078,
+        -78.36019897460935,
+        1310.5999755859375
+      ]
+    },
+    "segmentation": {
+      "coordinateSystem": "LPS",
+      "min": [
+        -219.59765625000009,
+        -386.59765625000017,
+        688
+      ],
+      "max": [
+        191.59765625000003,
+        24.597656249999943,
+        1340
+      ]
+    },
+    "union": {
+      "coordinateSystem": "LPS",
+      "min": [
+        -219.59765625000009,
+        -386.59765625000017,
+        688
+      ],
+      "max": [
+        191.59765625000003,
+        24.597656249999943,
+        1340
+      ]
+    }
+  },
+  "segmentation": {
+    "coordinateSystem": "LPS",
+    "sizes": [
+      512,
+      512,
+      327
+    ],
+    "componentCount": 3,
+    "spaceDirections": [
+      [
+        0.8046875000000002,
+        0,
+        0
+      ],
+      [
+        0,
+        0.8046875000000002,
+        0
+      ],
+      [
+        0,
+        0,
+        2
+      ]
+    ],
+    "spaceOrigin": [
+      -219.59765625000009,
+      -386.59765625000017,
+      688
+    ],
+    "ijkToWorldMatrix": [
+      0.8046875000000002,
+      0,
+      0,
+      -219.59765625000009,
+      0,
+      0.8046875000000002,
+      0,
+      -386.59765625000017,
+      0,
+      0,
+      2,
+      688,
+      0,
+      0,
+      0,
+      1
+    ],
+    "worldToIjkMatrix": [
+      1.2427184466019414,
+      0,
+      0,
+      272.89805825242723,
+      0,
+      1.2427184466019414,
+      0,
+      480.4320388349515,
+      0,
+      0,
+      0.5,
+      -344,
+      0,
+      0,
+      0,
+      1
+    ],
+    "worldBounds": {
+      "coordinateSystem": "LPS",
+      "min": [
+        -219.59765625000009,
+        -386.59765625000017,
+        688
+      ],
+      "max": [
+        191.59765625000003,
+        24.597656249999943,
+        1340
+      ]
+    },
+    "referenceImageGeometry": "-0.8046875000000001;0;0;219.59765625000003;0;-0.8046875000000001;0;386.59765625000006;0;0;2;688;0;0;0;1;0;511;0;511;0;326;",
+    "segments": [
+      {
+        "index": 0,
+        "id": "2.25.314609811388436314422080028160079540590",
+        "name": "airway",
+        "labelValue": 2,
+        "layer": 0,
+        "color": [
+          0.666667,
+          1,
+          1
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "airway",
+        "targetIds": [
+          "landmark_bronchus_intermedius",
+          "landmark_carina",
+          "landmark_trachea",
+          "landmark_left_mainstem",
+          "landmark_right_mainstem"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "airway"
+      },
+      {
+        "index": 1,
+        "id": "esophagus",
+        "name": "esophagus",
+        "labelValue": 3,
+        "layer": 0,
+        "color": [
+          0.827451,
+          0.670588,
+          0.560784
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "gi",
+        "targetIds": [
+          "landmark_esophagus"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "esophagus"
+      },
+      {
+        "index": 2,
+        "id": "brachiocephalic_vein_right",
+        "name": "right brachiocephalic vein",
+        "labelValue": 4,
+        "layer": 0,
+        "color": [
+          0,
+          0.592157,
+          0.807843
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "vessels",
+        "targetIds": [
+          "landmark_right_brachiocephalic_vein"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "right brachiocephalic vein"
+      },
+      {
+        "index": 3,
+        "id": "brachiocephalic_vein_left",
+        "name": "left brachiocephalic vein",
+        "labelValue": 5,
+        "layer": 0,
+        "color": [
+          0,
+          0.631373,
+          0.768627
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "vessels",
+        "targetIds": [
+          "landmark_left_brachiocephalic_vein"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "left brachiocephalic vein"
+      },
+      {
+        "index": 4,
+        "id": "superior_vena_cava",
+        "name": "superior vena cava",
+        "labelValue": 6,
+        "layer": 0,
+        "color": [
+          0.556863,
+          0.698039,
+          0.603922
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "vessels",
+        "targetIds": [
+          "landmark_superior_vena_cava"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "superior vena cava"
+      },
+      {
+        "index": 5,
+        "id": "2.25.111239317664077265941812615039469954434",
+        "name": "azygous vein",
+        "labelValue": 1,
+        "layer": 1,
+        "color": [
+          0.52549,
+          0.611765,
+          1
+        ],
+        "extent": [
+          222,
+          317,
+          187,
+          341,
+          136,
+          301
+        ],
+        "groupId": "vessels",
+        "targetIds": [
+          "landmark_azygous_vein"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "azygous vein"
+      },
+      {
+        "index": 6,
+        "id": "inferior_vena_cava",
+        "name": "inferior vena cava",
+        "labelValue": 7,
+        "layer": 0,
+        "color": [
+          0,
+          0.592157,
+          0.807843
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "vessels",
+        "targetIds": [
+          "landmark_inferior_vena_cava"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "inferior vena cava"
+      },
+      {
+        "index": 7,
+        "id": "2.25.94981541103766622373479159084072708115",
+        "name": "right atrium",
+        "labelValue": 1,
+        "layer": 2,
+        "color": [
+          0,
+          0.333333,
+          1
+        ],
+        "extent": [
+          194,
+          326,
+          192,
+          318,
+          204,
+          261
+        ],
+        "groupId": "cardiac",
+        "targetIds": [
+          "landmark_right_atrium"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "right atrium"
+      },
+      {
+        "index": 8,
+        "id": "2.25.306757321920428423854529791107945832273",
+        "name": "right ventricle",
+        "labelValue": 2,
+        "layer": 1,
+        "color": [
+          0,
+          0.333333,
+          1
+        ],
+        "extent": [
+          222,
+          317,
+          187,
+          341,
+          136,
+          301
+        ],
+        "groupId": "cardiac",
+        "targetIds": [
+          "landmark_right_ventricle"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "right ventricle"
+      },
+      {
+        "index": 9,
+        "id": "pulmonary_artery",
+        "name": "pulmonary artery",
+        "labelValue": 2,
+        "layer": 2,
+        "color": [
+          0,
+          0,
+          1
+        ],
+        "extent": [
+          194,
+          326,
+          192,
+          318,
+          204,
+          261
+        ],
+        "groupId": "vessels",
+        "targetIds": [
+          "landmark_main_pa",
+          "landmark_left_pa",
+          "landmark_right_pa"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "pulmonary artery"
+      },
+      {
+        "index": 10,
+        "id": "pulmonary_vein",
+        "name": "pulmonary venous system",
+        "labelValue": 3,
+        "layer": 2,
+        "color": [
+          0.729412,
+          0.301961,
+          0.25098
+        ],
+        "extent": [
+          194,
+          326,
+          192,
+          318,
+          204,
+          261
+        ],
+        "groupId": "vessels",
+        "targetIds": [
+          "landmark_left_inferior_pv",
+          "landmark_left_superior_pv",
+          "landmark_right_inferior_pv",
+          "landmark_right_superior_pv"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "pulmonary venous system"
+      },
+      {
+        "index": 11,
+        "id": "2.25.11162851537065423916236596478087091296",
+        "name": "left atrium",
+        "labelValue": 3,
+        "layer": 1,
+        "color": [
+          1,
+          0,
+          0
+        ],
+        "extent": [
+          222,
+          317,
+          187,
+          341,
+          136,
+          301
+        ],
+        "groupId": "cardiac",
+        "targetIds": [
+          "landmark_left_atrium"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "left atrium"
+      },
+      {
+        "index": 12,
+        "id": "atrial_appendage_left",
+        "name": "left atrial appendage",
+        "labelValue": 8,
+        "layer": 0,
+        "color": [
+          0.858824,
+          0.298039,
+          0.211765
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "cardiac",
+        "targetIds": [
+          "landmark_left_atrial_appendage"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "left atrial appendage"
+      },
+      {
+        "index": 13,
+        "id": "2.25.122868581635728138705614725803586075780",
+        "name": "left ventricle",
+        "labelValue": 1,
+        "layer": 0,
+        "color": [
+          1,
+          0,
+          0
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "cardiac",
+        "targetIds": [
+          "landmark_left_ventricle"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "left ventricle"
+      },
+      {
+        "index": 14,
+        "id": "aorta",
+        "name": "aorta",
+        "labelValue": 4,
+        "layer": 1,
+        "color": [
+          0.878431,
+          0.380392,
+          0.298039
+        ],
+        "extent": [
+          222,
+          317,
+          187,
+          341,
+          136,
+          301
+        ],
+        "groupId": "vessels",
+        "targetIds": [
+          "landmark_aorta"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "aorta"
+      },
+      {
+        "index": 15,
+        "id": "brachiocephalic_trunk",
+        "name": "brachiocephalic trunk",
+        "labelValue": 9,
+        "layer": 0,
+        "color": [
+          0.768627,
+          0.47451,
+          0.309804
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "other",
+        "targetIds": [
+          "landmark_brachiocephalic_trunk"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "brachiocephalic trunk"
+      },
+      {
+        "index": 16,
+        "id": "subclavian_artery_right",
+        "name": "right subclavian artery",
+        "labelValue": 10,
+        "layer": 0,
+        "color": [
+          0.847059,
+          0.396078,
+          0.34902
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "vessels",
+        "targetIds": [
+          "landmark_right_subclavian_artery"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "right subclavian artery"
+      },
+      {
+        "index": 17,
+        "id": "subclavian_artery_left",
+        "name": "left subclavian artery",
+        "labelValue": 11,
+        "layer": 0,
+        "color": [
+          0.847059,
+          0.396078,
+          0.270588
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "vessels",
+        "targetIds": [
+          "landmark_left_subclavian_artery"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "left subclavian artery"
+      },
+      {
+        "index": 18,
+        "id": "common_carotid_artery_right",
+        "name": "right common carotid artery",
+        "labelValue": 12,
+        "layer": 0,
+        "color": [
+          0,
+          0.439216,
+          0.647059
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "vessels",
+        "targetIds": [
+          "landmark_right_common_carotid_artery"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "right common carotid artery"
+      },
+      {
+        "index": 19,
+        "id": "common_carotid_artery_left",
+        "name": "left common carotid artery",
+        "labelValue": 13,
+        "layer": 0,
+        "color": [
+          0.0392157,
+          0.411765,
+          0.607843
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "vessels",
+        "targetIds": [
+          "landmark_left_common_carotid_artery"
+        ],
+        "stationIds": [],
+        "meshNameResolved": "left common carotid artery"
+      },
+      {
+        "index": 20,
+        "id": "2.25.53993552652818166383402955961129171632",
+        "name": "Station 1R",
+        "labelValue": 14,
+        "layer": 0,
+        "color": [
+          0,
+          1,
+          0
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "nodes",
+        "targetIds": [
+          "node_1R"
+        ],
+        "stationIds": [
+          "1R"
+        ],
+        "meshNameResolved": "Station 1R"
+      },
+      {
+        "index": 21,
+        "id": "2.25.60762053273684785009037968769448832207",
+        "name": "Station 1L",
+        "labelValue": 19,
+        "layer": 0,
+        "color": [
+          0.564706,
+          0.933333,
+          0.564706
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "nodes",
+        "targetIds": [
+          "node_1L"
+        ],
+        "stationIds": [
+          "1L"
+        ],
+        "meshNameResolved": "Station 1L"
+      },
+      {
+        "index": 22,
+        "id": "2.25.20830374192229656165820331138320646873",
+        "name": "Station 2R",
+        "labelValue": 5,
+        "layer": 1,
+        "color": [
+          0,
+          1,
+          0
+        ],
+        "extent": [
+          222,
+          317,
+          187,
+          341,
+          136,
+          301
+        ],
+        "groupId": "nodes",
+        "targetIds": [
+          "node_2R"
+        ],
+        "stationIds": [
+          "2R"
+        ],
+        "meshNameResolved": "Station 2R"
+      },
+      {
+        "index": 23,
+        "id": "2.25.48624296096474164041790855708405278758",
+        "name": "Station 2L",
+        "labelValue": 6,
+        "layer": 1,
+        "color": [
+          0,
+          1,
+          0
+        ],
+        "extent": [
+          222,
+          317,
+          187,
+          341,
+          136,
+          301
+        ],
+        "groupId": "nodes",
+        "targetIds": [
+          "node_2L"
+        ],
+        "stationIds": [
+          "2L"
+        ],
+        "meshNameResolved": "Station 2L"
+      },
+      {
+        "index": 24,
+        "id": "2.25.312506753561539454691948452144159132025",
+        "name": "Station 3A",
+        "labelValue": 15,
+        "layer": 0,
+        "color": [
+          0,
+          1,
+          0
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "nodes",
+        "targetIds": [
+          "node_3A_1",
+          "node_3A_2",
+          "node_3A_3",
+          "node_3A_4",
+          "node_3A_5",
+          "node_3A_6",
+          "node_3A_7"
+        ],
+        "stationIds": [
+          "3A"
+        ],
+        "meshNameResolved": "Station 3A"
+      },
+      {
+        "index": 25,
+        "id": "2.25.121062370142623028444183689976439892722",
+        "name": "Station 4R",
+        "labelValue": 20,
+        "layer": 0,
+        "color": [
+          0,
+          1,
+          0
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "nodes",
+        "targetIds": [
+          "node_4R_1",
+          "node_4R_2",
+          "node_4R_3"
+        ],
+        "stationIds": [
+          "4R"
+        ],
+        "meshNameResolved": "Station 4R"
+      },
+      {
+        "index": 26,
+        "id": "2.25.276115978171104054815639826201025438059",
+        "name": "Station 4L",
+        "labelValue": 21,
+        "layer": 0,
+        "color": [
+          0,
+          1,
+          0
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "nodes",
+        "targetIds": [
+          "node_4L_1",
+          "node_4L_2",
+          "node_4L_3"
+        ],
+        "stationIds": [
+          "4L"
+        ],
+        "meshNameResolved": "Station 4L"
+      },
+      {
+        "index": 27,
+        "id": "2.25.212414958810818875948453230124833991184",
+        "name": "Station 5",
+        "labelValue": 22,
+        "layer": 0,
+        "color": [
+          0,
+          1,
+          0
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "nodes",
+        "targetIds": [
+          "node_5_nod5"
+        ],
+        "stationIds": [
+          "5"
+        ],
+        "meshNameResolved": "Station 5"
+      },
+      {
+        "index": 28,
+        "id": "2.25.239492796546459861507994252932045774720",
+        "name": "Station 6",
+        "labelValue": 23,
+        "layer": 0,
+        "color": [
+          0,
+          1,
+          0
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "nodes",
+        "targetIds": [
+          "node_6_nod5"
+        ],
+        "stationIds": [
+          "6"
+        ],
+        "meshNameResolved": "Station 6"
+      },
+      {
+        "index": 29,
+        "id": "2.25.268879151571743626125047618104203736194",
+        "name": "Station 7",
+        "labelValue": 7,
+        "layer": 1,
+        "color": [
+          0,
+          1,
+          0
+        ],
+        "extent": [
+          222,
+          317,
+          187,
+          341,
+          136,
+          301
+        ],
+        "groupId": "nodes",
+        "targetIds": [
+          "node_7_1"
+        ],
+        "stationIds": [
+          "7"
+        ],
+        "meshNameResolved": "Station 7"
+      },
+      {
+        "index": 30,
+        "id": "2.25.108758159455925476842465611424706367338",
+        "name": "Station 10R",
+        "labelValue": 16,
+        "layer": 0,
+        "color": [
+          0,
+          1,
+          0
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "nodes",
+        "targetIds": [
+          "node_10R_1",
+          "node_10R_2"
+        ],
+        "stationIds": [
+          "10R"
+        ],
+        "meshNameResolved": "Station 10R"
+      },
+      {
+        "index": 31,
+        "id": "2.25.265963977509172877070359499184196808585",
+        "name": "Station 10L",
+        "labelValue": 17,
+        "layer": 0,
+        "color": [
+          0,
+          1,
+          0
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "nodes",
+        "targetIds": [
+          "node_10L"
+        ],
+        "stationIds": [
+          "10L"
+        ],
+        "meshNameResolved": "Station 10L"
+      },
+      {
+        "index": 32,
+        "id": "2.25.273934619515693923059552848848411656207",
+        "name": "Station 11Rs",
+        "labelValue": 24,
+        "layer": 0,
+        "color": [
+          0,
+          1,
+          0
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "nodes",
+        "targetIds": [
+          "node_11Rs_1",
+          "node_11Rs_2"
+        ],
+        "stationIds": [
+          "11Rs"
+        ],
+        "meshNameResolved": "Station 11Rs"
+      },
+      {
+        "index": 33,
+        "id": "2.25.203565841377755533927323140586090706777",
+        "name": "Station 11Ri",
+        "labelValue": 25,
+        "layer": 0,
+        "color": [
+          0,
+          1,
+          0
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "nodes",
+        "targetIds": [
+          "node_11Ri"
+        ],
+        "stationIds": [
+          "11Ri"
+        ],
+        "meshNameResolved": "Station 11Ri"
+      },
+      {
+        "index": 34,
+        "id": "2.25.26054851494271011036540584591024408830",
+        "name": "Station 11L",
+        "labelValue": 18,
+        "layer": 0,
+        "color": [
+          0,
+          1,
+          0
+        ],
+        "extent": [
+          159,
+          382,
+          187,
+          335,
+          84,
+          326
+        ],
+        "groupId": "nodes",
+        "targetIds": [
+          "node_11L"
+        ],
+        "stationIds": [
+          "11L"
+        ],
+        "meshNameResolved": "Station 11L"
+      }
+    ]
+  }
+}

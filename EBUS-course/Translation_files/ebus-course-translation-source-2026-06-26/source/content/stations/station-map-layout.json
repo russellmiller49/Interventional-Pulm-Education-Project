@@ -1,0 +1,138 @@
+{
+  "designWidth": 320,
+  "designHeight": 420,
+  "landmarks": [
+    {
+      "id": "trachea",
+      "kind": "tube",
+      "x": 144,
+      "y": 16,
+      "width": 32,
+      "height": 154,
+      "rotation": 0,
+      "label": "Trachea"
+    },
+    {
+      "id": "carina",
+      "kind": "hub",
+      "x": 122,
+      "y": 176,
+      "width": 76,
+      "height": 34,
+      "rotation": 0,
+      "label": "Carina"
+    },
+    {
+      "id": "left-main",
+      "kind": "branch",
+      "x": 66,
+      "y": 214,
+      "width": 94,
+      "height": 18,
+      "rotation": -24,
+      "label": "Left Main"
+    },
+    {
+      "id": "right-main",
+      "kind": "branch",
+      "x": 160,
+      "y": 214,
+      "width": 94,
+      "height": 18,
+      "rotation": 24,
+      "label": "Right Main"
+    },
+    {
+      "id": "left-hilar",
+      "kind": "branch",
+      "x": 44,
+      "y": 286,
+      "width": 74,
+      "height": 14,
+      "rotation": -16,
+      "label": "Left Hilar"
+    },
+    {
+      "id": "right-hilar",
+      "kind": "branch",
+      "x": 202,
+      "y": 286,
+      "width": 74,
+      "height": 14,
+      "rotation": 16,
+      "label": "Right Hilar"
+    }
+  ],
+  "nodes": [
+    {
+      "stationId": "2R",
+      "x": 214,
+      "y": 40,
+      "width": 72,
+      "height": 48
+    },
+    {
+      "stationId": "2L",
+      "x": 34,
+      "y": 40,
+      "width": 72,
+      "height": 48
+    },
+    {
+      "stationId": "4R",
+      "x": 214,
+      "y": 106,
+      "width": 74,
+      "height": 52
+    },
+    {
+      "stationId": "4L",
+      "x": 30,
+      "y": 106,
+      "width": 74,
+      "height": 52
+    },
+    {
+      "stationId": "7",
+      "x": 126,
+      "y": 232,
+      "width": 68,
+      "height": 56
+    },
+    {
+      "stationId": "10R",
+      "x": 228,
+      "y": 254,
+      "width": 66,
+      "height": 48
+    },
+    {
+      "stationId": "10L",
+      "x": 26,
+      "y": 254,
+      "width": 66,
+      "height": 48
+    },
+    {
+      "stationId": "11Rs",
+      "x": 220,
+      "y": 318,
+      "width": 68,
+      "height": 50
+    },
+    {
+      "stationId": "11Ri",
+      "x": 224,
+      "y": 358,
+      "width": 68,
+      "height": 50
+    },
+    {
+      "stationId": "11L",
+      "x": 28,
+      "y": 326,
+      "width": 68,
+      "height": 50
+    }
+  ]
+}

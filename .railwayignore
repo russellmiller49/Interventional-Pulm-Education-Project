@@ -66,3 +66,16 @@ public/fluoroview/*.glb
 public/socal-ebus-course/app/assets/*.glb
 public/socal-ebus-course/app/assets/*.nrrd
 public/socal-ebus-course/app/assets/*.png
+
+# Training app source is built in this repository; omit offline authoring inputs.
+navigation_module/data
+navigation_module/annotations
+navigation_module/outputs
+navigation_module/external_repos
+navigation_module/.venv
+EBUS-course/outputs
+EBUS-course/tmp
+EBUS-course/Codex_handoff_items
+EBUS-course/tools/ebus-simulator/3D_slicer_files
+**/node_modules
+**/.venv

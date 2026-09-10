@@ -1,0 +1,525 @@
+{
+  "locale": "es",
+  "note": "Starter course-shell translation overlay. Long clinical/assessment prose remains in the inventory for medical translation review.",
+  "content/course/course-info.json": {
+    "courseTitle": "10.º Curso anual regional del Suroeste de EBUS para becarios de neumología/PCCM",
+    "hostLine": "Organizado por Loma Linda University Health",
+    "hostDepartment": "División de Neumología, Cuidados Críticos, Medicina Hiperbárica y Medicina del Sueño",
+    "dateLabel": "Domingo, 31 de mayo de 2026",
+    "timeLabel": "7:30 a. m. a 5:00 p. m.",
+    "venueName": "Complejo Centennial de Loma Linda",
+    "venueDetail": "Facultad de Medicina de Loma Linda University",
+    "audience": "Diseñado para establecer expectativas desde el inicio para becarios de primer año de neumología y neumología/cuidados críticos que están construyendo los fundamentos cognitivos y técnicos de EBUS.",
+    "overview": "Un curso regional de EBUS con modelo invertido y prioridad en la simulación que ayuda a los becarios a llegar con la lógica de estadificación, el marco anatómico y la memoria procedimental necesarios para una evaluación mediastínica más estandarizada.",
+    "quickFacts": [
+      {
+        "value": "10.º",
+        "label": "curso regional anual",
+        "detail": "Una experiencia consolidada de formación de becarios en el Suroeste."
+      },
+      {
+        "value": ">15 h",
+        "label": "preparación en video antes del curso",
+        "detail": "Las conferencias de alto rendimiento se distribuyen 3 a 4 semanas antes del día presencial."
+      },
+      {
+        "value": "~2.5:1",
+        "label": "proporción becarios-docentes",
+        "detail": "Los grupos pequeños permiten retroalimentación directa y práctica."
+      },
+      {
+        "value": "24+",
+        "label": "profesorado regional",
+        "detail": "El profesorado incluye LLU, Stanford, Cedars-Sinai, USC, UCSD, UCLA, UCI y más."
+      }
+    ],
+    "positioningHighlights": [
+      "Diseñado específicamente para becarios de primer año de neumología y PCCM.",
+      "El único curso de este tipo en el Suroeste que combina didáctica integral con simulación EBUS en vivo.",
+      "Enfocado en estandarizar tanto la estrategia cognitiva de estadificación como la ejecución técnica desde etapas tempranas de la beca."
+    ],
+    "courseDirectors": [
+      "Ara A. Chrissian, MD",
+      "Lamia Aljundi, MD"
+    ],
+    "facultySummary": "El profesorado listado en el folleto incluye LLU, Stanford, Cedars-Sinai, USC, UCSD, City of Hope, UCLA, UCI, Harbor-UCLA, Scripps, Eisenhower, UNLV, UT Southwestern, la Navy y University at Buffalo.",
+    "facultyInstitutions": [
+      "Loma Linda University Health",
+      "Stanford",
+      "Cedars-Sinai",
+      "USC",
+      "UC San Diego",
+      "City of Hope",
+      "UCLA",
+      "UC Irvine",
+      "Harbor-UCLA",
+      "Scripps",
+      "Eisenhower",
+      "UNLV",
+      "UT Southwestern",
+      "Navy",
+      "University at Buffalo"
+    ],
+    "formatHighlights": [
+      "Modelo invertido con más de 15 horas de conferencias precurso de alto rendimiento preparadas por el profesorado.",
+      "El día presencial se basa casi por completo en simulación, no en conferencias extensas.",
+      "Modelo de enseñanza en grupos pequeños con baja proporción de becarios por docente.",
+      "Tiempo dedicado para exposición a tecnología, networking e interacción directa con el profesorado.",
+      "Las pruebas previa y posterior basadas en la app, con retroalimentación, son una novedad del curso 2026."
+    ],
+    "experienceHighlights": [
+      {
+        "title": "Preparación invertida",
+        "detail": "Las conferencias en video creadas por el profesorado cubren la base de conocimiento esencial antes de que los becarios ingresen al centro de simulación."
+      },
+      {
+        "title": "Día presencial centrado en la simulación",
+        "detail": "La sesión presencial se estructura en torno a estaciones, repetición guiada y práctica deliberada, no a una agenda cargada de conferencias."
+      },
+      {
+        "title": "Anatomía y repaso gamificados",
+        "detail": "El folleto destaca un juego de anatomía mediastínica al inicio y un cierre estilo Final Jeopardy para reforzar la retención."
+      },
+      {
+        "title": "Baja proporción alumno-docente",
+        "detail": "Los equipos pequeños que rotan permiten corrección en tiempo real, preguntas y entrenamiento técnico."
+      },
+      {
+        "title": "Tiempo para tecnología y networking",
+        "detail": "Las pausas protegidas están incorporadas para exposición práctica a tecnología e interacción entre becarios y docentes."
+      },
+      {
+        "title": "Pruebas basadas en la app",
+        "detail": "El curso 2026 introduce pruebas previas y posteriores con retroalimentación para cerrar el ciclo de aprendizaje."
+      }
+    ],
+    "prepWindow": "Los materiales preparatorios se distribuyen 3 a 4 semanas antes del evento presencial y deben completarse entre el 1 y el 30 de mayo de 2026.",
+    "prepTopics": [
+      "Bienvenida, introducción al curso y reconocimiento de los becarios.",
+      "Introducción al ultrasonido endobronquial y a los aspectos prácticos del procedimiento.",
+      "Anatomía mediastínica y estadificación sistemática del cáncer de pulmón con TNM 9.",
+      "Abordaje del linfoma y de la enfermedad torácica no maligna.",
+      "Histología, pruebas moleculares y adecuación tisular.",
+      "Biopsia líquida, técnicas avanzadas de EBUS y actualización de la evidencia 2026.",
+      "Planificación basada en guías, síntesis de casos y prueba previa al curso."
+    ],
+    "liveSessionTracks": [
+      {
+        "title": "Herramientas y técnicas de la mañana",
+        "detail": "Los equipos rotan por el juego de anatomía mediastínica, anatomía y ensamblaje del broncoscopio, examen EBUS, agujas estándar y técnica TBNA, además de herramientas avanzadas."
+      },
+      {
+        "title": "Pausa para tecnología y networking",
+        "detail": "El horario de la mañana reserva tiempo específico en el área principal de conferencias para exposición a la industria y conversaciones entre programas."
+      },
+      {
+        "title": "Conferencia honoraria del mediodía",
+        "detail": "El almuerzo incluye la sesión de guías AABIP con el Dr. Russell Miller antes del bloque de síntesis de la tarde."
+      },
+      {
+        "title": "Síntesis y ejecución de la tarde",
+        "detail": "La tarde pasa a planificación basada en casos, casos y técnicas avanzadas, y ejecución técnica antes del cierre de Final Jeopardy."
+      }
+    ],
+    "liveDayAgenda": [
+      {
+        "time": "7:30-7:50",
+        "title": "Registro y desayuno",
+        "detail": "Primer piso del Centennial Complex antes de iniciar las rotaciones por equipos."
+      },
+      {
+        "time": "8:00-8:20",
+        "title": "Bienvenida y resumen del curso",
+        "detail": "Todos los becarios se reúnen en Damazo Auditorium."
+      },
+      {
+        "time": "8:35-12:00",
+        "title": "Rotaciones matutinas de herramientas y técnicas",
+        "detail": "Juego de anatomía mediastínica, anatomía y ensamblaje del broncoscopio, examen EBUS, agujas estándar y técnica TBNA, además de herramientas avanzadas."
+      },
+      {
+        "time": "10:20-10:50",
+        "title": "Pausa para tecnología y networking",
+        "detail": "Tiempo protegido en el área principal de conferencias."
+      },
+      {
+        "time": "12:10-12:55",
+        "title": "Almuerzo y conferencia honoraria",
+        "detail": "Sesión de guías AABIP con el Dr. Russell Miller."
+      },
+      {
+        "time": "13:10-16:00",
+        "title": "Rotaciones vespertinas de síntesis y ejecución",
+        "detail": "Planificación basada en casos, casos y técnicas avanzadas, y luego ejecución técnica."
+      },
+      {
+        "time": "16:15-17:00",
+        "title": "Final Jeopardy y despedida",
+        "detail": "Todos los becarios vuelven a reunirse en Damazo Auditorium para cerrar el día."
+      }
+    ],
+    "addressLines": [
+      "24760 Stewart Street",
+      "Centennial Complex, 4th Floor",
+      "Loma Linda, CA 92354"
+    ],
+    "parkingNote": "El estacionamiento se dirige al lote X junto a Campus Street.",
+    "travelNote": "El folleto incluye indicaciones de manejo separadas para asistentes que vienen de Los Ángeles, Palm Springs, San Diego y Las Vegas.",
+    "travelDirections": [
+      {
+        "origin": "Desde Los Ángeles",
+        "detail": "Tome la I-10 Este hasta la salida Tippecanoe/Anderson, continúe hasta Stewart Street, gire hacia Campus Street y estacione en el lote X."
+      },
+      {
+        "origin": "Desde Palm Springs",
+        "detail": "Tome la I-10 Oeste hasta Tippecanoe/Anderson, diríjase a Stewart Street, luego a Campus Street y use el lote X."
+      },
+      {
+        "origin": "Desde San Diego",
+        "detail": "Tome la I-15 Norte hasta la I-215 Norte, salga en Mt Vernon, continúe por Washington/Barton hasta Campus Street y estacione en el lote X."
+      },
+      {
+        "origin": "Desde Las Vegas",
+        "detail": "Tome la I-15 Sur hasta la I-10 Este, salga en Tippecanoe/Anderson y luego siga Stewart Street hasta Campus Street y el lote X."
+      }
+    ],
+    "facilityUrl": "https://medicine.llu.edu/about/medical-simulation-center",
+    "endorsement": {
+      "text": "Esta actividad educativa cuenta con el respaldo de la American Association for Bronchology and Interventional Pulmonology (AABIP).",
+      "image": {
+        "src": "/media/course/aabip-endorsement.png",
+        "alt": "Logotipo de la American Association for Bronchology and Interventional Pulmonology"
+      }
+    },
+    "visuals": {
+      "logo": {
+        "src": "/media/course/loma-linda-school-of-medicine.png",
+        "alt": "Logotipo del Departamento de Medicina de la Facultad de Medicina de Loma Linda University"
+      },
+      "hero": {
+        "src": "/media/course/hands-on-sim-lab.jpg",
+        "alt": "Docentes guiando a becarios durante una estación práctica de simulación de broncoscopia y ultrasonido.",
+        "caption": "El entrenamiento práctico es una parte central del día presencial."
+      },
+      "inset": {
+        "src": "/media/course/fellows-and-faculty-group.jpg",
+        "alt": "Becarios y docentes regionales reunidos fuera de la sede del curso.",
+        "caption": "Becarios y docentes regionales se reúnen entre distintos programas."
+      },
+      "gallery": [
+        {
+          "src": "/media/course/simulation-bay-panorama.jpg",
+          "alt": "Varios grupos de becarios rotando por una gran sala de simulación equipada con broncoscopios.",
+          "caption": "Los equipos pequeños en rotación mantienen el día presencial activo, social y centrado en habilidades."
+        },
+        {
+          "src": "/media/course/course-recognition-moment.jpg",
+          "alt": "Becarios y docentes reunidos durante un momento de reconocimiento al final del día dentro del aula.",
+          "caption": "El curso está diseñado para sentirse guiado y colegiado desde la primera bienvenida hasta el debrief final."
+        },
+        {
+          "src": "/media/course/outdoor-group-portrait.jpg",
+          "alt": "Gran retrato grupal al aire libre de becarios y docentes de cursos EBUS anteriores.",
+          "caption": "El profesorado regional ayuda a los becarios a comparar técnica, flujo de trabajo y hábitos de estadificación entre programas."
+        }
+      ]
+    }
+  },
+  "content/course/welcome.json": {
+    "id": "lecture-01",
+    "title": "Bienvenida, agradecimientos e introducción al curso",
+    "subtitle": "Bienvenida y orientación del curso",
+    "week": "Bienvenida",
+    "duration": "Video",
+    "video": "https://ebus2026.s3.us-east-1.amazonaws.com/LECTURE+WELCOME_INTRO.mp4",
+    "topics": [
+      "Orientación del curso",
+      "Agradecimientos al profesorado",
+      "Cómo funciona la progresión"
+    ],
+    "status": "disponible"
+  },
+  "content/modules/modules.json": [
+    {
+      "id": "pretest",
+      "slug": "pretest",
+      "shortTitle": "Prueba previa al curso",
+      "title": "Encuesta y prueba previas al curso",
+      "summary": "Encuesta previa al curso más evaluación basal de 25 preguntas con respuestas ocultas y registro local de progresión del curso.",
+      "overview": "Este módulo registra la preparación de la cuenta, una encuesta previa al curso y una puntuación basal antes de desbloquear la Conferencia 1 y los módulos prácticos posteriores.",
+      "estimatedMinutes": 25,
+      "featureFolder": "features/pretest",
+      "route": "/modules/pretest",
+      "goals": [
+        "Recopilar una línea basal previa al curso sin revelar las respuestas correctas.",
+        "Guardar localmente las respuestas en curso y la puntuación guardada más reciente.",
+        "Desbloquear el siguiente paso del curso al completarlo."
+      ],
+      "plannedExperiences": [
+        "Orientación breve",
+        "Evaluación de 25 preguntas",
+        "Resumen de envío de demostración"
+      ],
+      "assetPlaceholders": [
+        {
+          "key": "pretest-q2-figure",
+          "label": "Figura de la pregunta 2",
+          "folder": "assets/pretest",
+          "note": "Extraído del documento de prueba previa proporcionado para el flujo de evaluación de demostración."
+        },
+        {
+          "key": "pretest-q8-figure",
+          "label": "Figura de la pregunta 8",
+          "folder": "assets/pretest",
+          "note": "Extraído del documento de prueba previa proporcionado para el flujo de evaluación de demostración."
+        },
+        {
+          "key": "pretest-q22-figure",
+          "label": "Figura de la pregunta 22",
+          "folder": "assets/pretest",
+          "note": "Extraído del documento de prueba previa proporcionado para el flujo de evaluación de demostración."
+        }
+      ],
+      "relatedStationIds": []
+    },
+    {
+      "id": "knobology",
+      "slug": "knobology",
+      "shortTitle": "Controles del equipo",
+      "title": "Fundamentos de ultrasonido + controles de EBUS",
+      "summary": "Enseñar los controles centrales del ultrasonido mediante un módulo rápido, apto para pantallas táctiles, y puntos de entrada provisionales al simulador.",
+      "overview": "Esta estructura establece las rutas, el contrato de contenido y los puntos de persistencia para la introducción, laboratorio de controles, mini-laboratorio Doppler, tarjetas de referencia rápida, cuestionario y resumen.",
+      "estimatedMinutes": 20,
+      "featureFolder": "features/knobology",
+      "route": "/modules/knobology",
+      "goals": [
+        "Explicar profundidad, ganancia, contraste, Doppler color, calibradores, congelar y guardar.",
+        "Preparar la estructura del laboratorio de controles para futuros ejercicios de corregir la imagen.",
+        "Guardar localmente la finalización del alumno y la puntuación del cuestionario."
+      ],
+      "plannedExperiences": [
+        "Introducción",
+        "Laboratorio de controles",
+        "Mini-laboratorio Doppler",
+        "Tarjetas de referencia rápida",
+        "Cuestionario de cinco preguntas",
+        "Resumen de finalización"
+      ],
+      "assetPlaceholders": [
+        {
+          "key": "us-primer-hero",
+          "label": "Imagen principal de la introducción",
+          "folder": "assets/ultrasound",
+          "note": "Reemplazar con una imagen docente o ilustración desidentificada propiedad de la app."
+        },
+        {
+          "key": "us-control-lab-bad-image-01",
+          "label": "Preajuste de imagen deficiente 01",
+          "folder": "assets/ultrasound",
+          "note": "Reservar para futuros ejercicios de corregir la imagen."
+        }
+      ],
+      "relatedStationIds": []
+    },
+    {
+      "id": "station-map",
+      "slug": "station-map",
+      "shortTitle": "Mapa de estaciones",
+      "title": "Mapa de estaciones mediastínicas",
+      "summary": "Proporcionar un punto de entrada claro al módulo para reconocimiento de estaciones IASLC, exploración del mapa y trabajo de cuestionario.",
+      "overview": "La estructura comparte un esquema tipado de estaciones con el módulo explorador y deja claves de recursos estables para una futura implementación de mapa vectorial.",
+      "estimatedMinutes": 18,
+      "featureFolder": "features/stations",
+      "route": "/modules/station-map",
+      "goals": [
+        "Admitir las estaciones principales v1 en un esquema local estructurado.",
+        "Mantener separados los datos de dibujo del mapa y el contenido textual.",
+        "Conectar marcadores y estado de finalización con el progreso persistente del alumno."
+      ],
+      "plannedExperiences": [
+        "Resumen",
+        "Mapa ampliable y táctil",
+        "Ficha de detalle de estación",
+        "Tarjetas de repaso",
+        "Cuestionario para ubicar la estación",
+        "Resumen de repaso"
+      ],
+      "assetPlaceholders": [
+        {
+          "key": "station-map-core-illustration",
+          "label": "Ilustración del mapa de estaciones principales",
+          "folder": "assets/illustrations",
+          "note": "Reemplazar con un mapa vectorial propiedad de la app. Las capturas externas existentes no se incluyen intencionalmente."
+        }
+      ],
+      "relatedStationIds": [
+        "2R",
+        "2L",
+        "4R",
+        "4L",
+        "7",
+        "10R",
+        "10L",
+        "11Rs",
+        "11Ri",
+        "11L"
+      ]
+    },
+    {
+      "id": "station-explorer",
+      "slug": "station-explorer",
+      "shortTitle": "Explorador",
+      "title": "Explorador de estaciones CT ↔ broncoscopia ↔ ultrasonido",
+      "summary": "Configurar vistas provisionales sincronizadas para que la experiencia de triple vista correlacionada pueda publicarse sin cambiar el modelo de datos.",
+      "overview": "Esta estructura se centra en datos locales estructurados de estaciones, estado sincronizado a nivel de ruta y un contrato de recursos preparado para futuras vistas de CT, broncoscopia y ultrasonido.",
+      "estimatedMinutes": 22,
+      "featureFolder": "features/explorer",
+      "route": "/modules/station-explorer",
+      "goals": [
+        "Usar el mismo esquema de contenido de estaciones que el módulo de mapa de estaciones.",
+        "Preparar paneles provisionales sincronizados de CT, broncoscopia y ultrasonido.",
+        "Registrar localmente la última estación vista y la precisión de reconocimiento."
+      ],
+      "plannedExperiences": [
+        "Selector de estación",
+        "Explorador de triple vista correlacionada",
+        "Lista de verificación de referencias anatómicas",
+        "Desafío de reconocimiento",
+        "Resumen de repaso"
+      ],
+      "assetPlaceholders": [
+        {
+          "key": "explorer-ct-placeholder",
+          "label": "Panel provisional de CT",
+          "folder": "assets/ct",
+          "note": "Sustituir posteriormente por material docente aprobado y desidentificado sin cambios de interfaz."
+        },
+        {
+          "key": "explorer-bronchoscopy-placeholder",
+          "label": "Panel provisional de broncoscopia",
+          "folder": "assets/bronchoscopy",
+          "note": "Reservar para futuros recursos de referencias anatómicas de la vía aérea."
+        },
+        {
+          "key": "explorer-ultrasound-placeholder",
+          "label": "Panel provisional de ultrasonido",
+          "folder": "assets/ultrasound",
+          "note": "Reservar para futuros recursos de vista EBUS."
+        }
+      ],
+      "relatedStationIds": [
+        "2R",
+        "2L",
+        "4R",
+        "4L",
+        "7",
+        "10R",
+        "10L",
+        "11Rs",
+        "11Ri",
+        "11L"
+      ]
+    },
+    {
+      "id": "tnm-staging",
+      "slug": "tnm-staging",
+      "shortTitle": "TNM-9",
+      "title": "Estadificación TNM de la IASLC, 9.ª edición",
+      "summary": "Enseñar descriptores T, N y M y agrupación por estadios mediante una referencia buscable, estadificador interactivo, constructores visuales, integración con mapa de estaciones y casos.",
+      "overview": "Este módulo convierte la estadificación TNM del cáncer de pulmón IASLC 9.ª edición en un flujo educativo apto para pantallas táctiles para alumnos de EBUS. No es un dispositivo diagnóstico.",
+      "estimatedMinutes": 30,
+      "featureFolder": "features/tnm-staging",
+      "route": "/tnm-staging",
+      "goals": [
+        "Aplicar descriptores T, N y M con una matriz de estadios coherente de 9.ª edición.",
+        "Distinguir N2a de N2b y M1c1 de M1c2.",
+        "Conectar estaciones positivas en EBUS/PET con cN preservando lateralidad y contexto de estadificación sistemática."
+      ],
+      "plannedExperiences": [
+        "Tarjetas de referencia buscables",
+        "Estadificador TNM interactivo",
+        "Constructor visual de descriptores T",
+        "Mapa de descriptores N",
+        "Escenarios de estadificación basados en casos"
+      ],
+      "assetPlaceholders": [
+        {
+          "key": "tnm-lung-schematic",
+          "label": "Esquema pulmonar propiedad de la app",
+          "folder": "features/tnm-staging",
+          "note": "Renderizado como SVG/CSS local para práctica educativa de estadificación."
+        }
+      ],
+      "relatedStationIds": [
+        "2R",
+        "2L",
+        "4R",
+        "4L",
+        "7",
+        "10R",
+        "10L",
+        "11Rs",
+        "11Ri",
+        "11L"
+      ]
+    },
+    {
+      "id": "case-3d-explorer",
+      "slug": "case-3d-explorer",
+      "shortTitle": "Explorador 3D",
+      "title": "Anatomía 3D + explorador de cortes",
+      "summary": "Explorar un caso EBUS curado con selección de estaciones vinculada, saltos derivados a cortes de CT y filtros de estructuras.",
+      "overview": "Este módulo enriquece en tiempo de compilación un manifiesto local de caso a partir de puntos de control de marcado, geometría de CT, nombres de mallas GLB y pilas de cortes exportadas, para que el alumno pueda moverse entre estaciones y referencias anatómicas sin índices de imagen codificados manualmente.",
+      "estimatedMinutes": 16,
+      "category": "anatomy",
+      "status": "disponible",
+      "featureFolder": "features/case3d",
+      "route": "/modules/case-3d-explorer",
+      "goals": [
+        "Vincular la selección de estación y objetivo con índices derivados de cortes axiales, coronales y sagitales.",
+        "Permitir que el alumno filtre el caso por ganglios linfáticos, vía aérea, vasos, estructuras cardíacas y gastrointestinales.",
+        "Guardar localmente el estado de reanudación, objetivos visitados y puntuación ligera de revisión."
+      ],
+      "plannedExperiences": [
+        "Panel de introducción",
+        "Selector de estación y objetivo",
+        "Navegador de objetivos 3D derivados",
+        "Visor de cortes de un solo plano",
+        "Tarjeta docente",
+        "Revisión de cinco indicaciones",
+        "Resumen"
+      ],
+      "assetPlaceholders": [
+        {
+          "key": "case-001-glb",
+          "label": "GLB segmentado del caso 001",
+          "folder": "model",
+          "note": "Incluido localmente y verificado en tiempo de compilación contra los nombres de malla esperados."
+        },
+        {
+          "key": "case-001-slices",
+          "label": "Serie de cortes CT del caso 001",
+          "folder": "model/sliceSeries",
+          "note": "Los índices de imagen se derivan de la geometría del volumen CT y de los puntos de control de marcado."
+        }
+      ],
+      "relatedStationIds": [
+        "1R",
+        "1L",
+        "2R",
+        "2L",
+        "3A",
+        "4R",
+        "4L",
+        "5",
+        "6",
+        "7",
+        "10R",
+        "10L",
+        "11L",
+        "11Ri",
+        "11Rs"
+      ]
+    }
+  ]
+}

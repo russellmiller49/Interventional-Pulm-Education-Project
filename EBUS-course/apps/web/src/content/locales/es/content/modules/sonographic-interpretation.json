@@ -1,0 +1,77 @@
+{
+  "id": "sonographic-interpretation",
+  "title": "Interpretación sonográfica de ganglios linfáticos",
+  "summary": "Una capa de interpretación para leer características ecográficas ganglionares sin pretender que la imagen por sí sola sustituye al tejido.",
+  "learningObjectives": [
+    "Describir características ganglionares sospechosas y tranquilizadoras usando terminología de CHS, CNS, margen, forma, patrón vascular y ecogenicidad.",
+    "Reconocer que ninguna característica ecográfica aislada determina malignidad y que el tejido sigue siendo definitivo.",
+    "Usar Doppler y elastografía como complementos que refinan la elección del objetivo, no como árbitros independientes de benignidad o malignidad.",
+    "Separar el lenguaje descriptivo de la certeza diagnóstica al enseñar a alumnos junior."
+  ],
+  "sections": [
+    {
+      "id": "chs-cns",
+      "title": "CHS y CNS son descriptores de alto rendimiento",
+      "kind": "sonographic-pattern",
+      "body": "Una estructura hiliar central conservada suele ser tranquilizadora, mientras que su ausencia aumenta la preocupación. El signo de necrosis coagulativa es un área hipoecoica avascular dentro del ganglio y, cuando está presente, incrementa la sospecha de malignidad. Estas características son útiles porque obligan al alumno a inspeccionar la arquitectura interna del ganglio y no solo el contorno externo.",
+      "bullets": [
+        "La CHS conservada tiende a favorecer benignidad.",
+        "La CHS ausente es preocupante, pero por sí sola no es diagnóstica.",
+        "La CNS debe comprobarse con Doppler porque un área oscura sin flujo es más persuasiva que la escala de grises sola."
+      ],
+      "pearl": "Describa CHS y CNS explícitamente antes de resumir la sospecha global.",
+      "pitfall": "No llame necrosis a todo foco oscuro central; el mal contacto y el artefacto pueden imitarla."
+    },
+    {
+      "id": "margins-echogenicity",
+      "title": "Márgenes, heterogeneidad y conglomeración ganglionar",
+      "kind": "sonographic-pattern",
+      "body": "Los márgenes definidos, la ecotextura heterogénea y la conglomeración ganglionar pueden aumentar la preocupación, especialmente cuando aparecen juntos. El alumno debe recordar que los ganglios inflamatorios pueden violar estas reglas y que en la práctica aún existen ganglios malignos de aspecto anodino.",
+      "bullets": [
+        "La ecogenicidad heterogénea es más sospechosa que un ganglio uniformemente homogéneo.",
+        "Los márgenes definidos pueden aumentar la preocupación en algunas series, pero el contexto importa.",
+        "Los ganglios conglomerados o apelmazados deben provocar un razonamiento cuidadoso de estadificación, no solo reconocimiento de patrones."
+      ],
+      "pearl": "Enseñe combinaciones de características en lugar de sobrevalorar cualquier signo aislado.",
+      "pitfall": "Un ganglio ovalado aparentemente ordenado con arquitectura conservada aún puede requerir muestreo si cambiaría el manejo."
+    },
+    {
+      "id": "vascular-patterns",
+      "title": "Doppler añade información de patrón",
+      "kind": "sonographic-pattern",
+      "body": "Doppler ayuda de dos maneras: identifica vasos a lo largo del trayecto de punción previsto y contribuye a la interpretación al mostrar si un área de aspecto sospechoso es vascular o avascular. La vascularidad periférica o caótica puede ser preocupante, mientras que un patrón vascular hiliar central conservado es más tranquilizador, pero los hallazgos Doppler siguen formando parte del cuadro clínico más amplio.",
+      "bullets": [
+        "Use Doppler antes de la punción por seguridad, no solo para interpretación.",
+        "Las áreas oscuras centrales avasculares merecen una verificación de necrosis.",
+        "El patrón vascular puede cambiar el objetivo dentro del mismo ganglio."
+      ],
+      "pearl": "El mejor uso de Doppler a menudo cambia dónde se muestrea dentro del ganglio, no solo si se muestrea.",
+      "pitfall": "Una imagen Doppler negativa no es automáticamente benigna y una imagen Doppler positiva no es automáticamente maligna."
+    },
+    {
+      "id": "elastography",
+      "title": "La elastografía es un complemento, no un sustituto del tejido",
+      "kind": "sonographic-pattern",
+      "body": "La elastografía puede ayudar a priorizar qué ganglio o qué región de un ganglio parece más anormal al resaltar la rigidez relativa del tejido. Mejora el reconocimiento de patrones cuando se combina con características ecográficas convencionales, pero no reemplaza la histopatología ni debe anular la lógica de estadificación.",
+      "bullets": [
+        "Las regiones predominantemente azules o rígidas pueden aumentar la sospecha.",
+        "La elastografía funciona mejor cuando se interpreta junto con características convencionales en escala de grises y Doppler.",
+        "La estrategia de muestreo debe seguir respondiendo a la pregunta clínica de estadificación."
+      ],
+      "pearl": "Use elastografía para refinar la selección del objetivo, no para convencerse de no muestrear un ganglio clínicamente decisivo.",
+      "pitfall": "Presentar la elastografía como una prueba casi patológica enseña un umbral incorrecto de confianza."
+    },
+    {
+      "id": "interpretation-vignette",
+      "title": "Viñeta clínica: característica tranquilizadora, conclusión equivocada",
+      "kind": "case",
+      "body": "Un ganglio hiliar conserva forma ovalada y cierta ecogenicidad central, por lo que el alumno quiere omitir el muestreo y continuar.",
+      "caseVignette": {
+        "title": "Una imagen tranquilizadora aún puede llevar a una decisión de manejo equivocada",
+        "scenario": "El ganglio está en la estación exacta que separaría enfermedad N1 de N2 o N3 si otro ganglio sospechoso es negativo.",
+        "prompt": "¿Qué importa más aquí: el aspecto parcialmente tranquilizador o la consecuencia de estadificación?",
+        "takeaway": "La consecuencia de estadificación importa más. Las características sonográficas ayudan a priorizar la sospecha, pero no sustituyen al tejido cuando la respuesta cambia el manejo."
+      }
+    }
+  ]
+}

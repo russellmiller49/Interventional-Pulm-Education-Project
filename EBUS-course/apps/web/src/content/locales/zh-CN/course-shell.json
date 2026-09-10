@@ -1,0 +1,525 @@
+{
+  "locale": "zh-CN",
+  "note": "Starter course-shell translation overlay. Long clinical/assessment prose remains in the inventory for medical translation review.",
+  "content/course/course-info.json": {
+    "courseTitle": "第10届年度美国西南区域肺科/PCCM专培医师 EBUS 课程",
+    "hostLine": "由 Loma Linda University Health 主办",
+    "hostDepartment": "肺病、重症医学、高压氧与睡眠医学科",
+    "dateLabel": "2026年5月31日，星期日",
+    "timeLabel": "上午7:30至下午5:00",
+    "venueName": "洛马林达 Centennial Complex",
+    "venueDetail": "Loma Linda University 医学院",
+    "audience": "本课程旨在尽早为正在建立 EBUS 认知和技术基础的一年级肺科及肺科-重症医学专培医师设定学习预期。",
+    "overview": "这是一门采用翻转课堂、以模拟训练为先的区域性 EBUS 课程，帮助专培医师在到达现场时具备更标准化纵隔评估所需的分期逻辑、解剖框架和操作肌肉记忆。",
+    "quickFacts": [
+      {
+        "value": "第10届",
+        "label": "年度区域课程",
+        "detail": "美国西南地区长期开展的专培培训项目。"
+      },
+      {
+        "value": "15+ 小时",
+        "label": "课前视频准备",
+        "detail": "高产出教学视频将在现场课程前3至4周发放。"
+      },
+      {
+        "value": "~2.5:1",
+        "label": "学员与教师比例",
+        "detail": "小组教学便于直接反馈和手把手训练。"
+      },
+      {
+        "value": "24+",
+        "label": "区域教师团队",
+        "detail": "教师来自 LLU、Stanford、Cedars-Sinai、USC、UCSD、UCLA、UCI 等机构。"
+      }
+    ],
+    "positioningHighlights": [
+      "专为一年级肺科和 PCCM 专培医师设计。",
+      "美国西南地区唯一将系统化教学与现场 EBUS 模拟训练结合的同类课程。",
+      "重点是在专培早期规范认知层面的分期策略和技术操作执行。"
+    ],
+    "courseDirectors": [
+      "Ara A. Chrissian, MD",
+      "Lamia Aljundi, MD"
+    ],
+    "facultySummary": "传单列出的教师来自 LLU、Stanford、Cedars-Sinai、USC、UCSD、City of Hope、UCLA、UCI、Harbor-UCLA、Scripps、Eisenhower、UNLV、UT Southwestern、美国海军和 University at Buffalo。",
+    "facultyInstitutions": [
+      "Loma Linda University Health",
+      "Stanford",
+      "Cedars-Sinai",
+      "USC",
+      "UC San Diego",
+      "City of Hope",
+      "UCLA",
+      "UC Irvine",
+      "Harbor-UCLA",
+      "Scripps",
+      "Eisenhower",
+      "UNLV",
+      "UT Southwestern",
+      "Navy",
+      "University at Buffalo"
+    ],
+    "formatHighlights": [
+      "翻转课堂模式，包含由教师准备的15小时以上高产出课前讲座。",
+      "现场课程日几乎完全以模拟训练为主，而不是以讲座为主。",
+      "低学员-教师比例的小组教学模式。",
+      "专门安排技术体验、交流和与教师直接互动的时间。",
+      "基于应用程序并带有反馈的课前和课后测试是2026年课程的新内容。"
+    ],
+    "experienceHighlights": [
+      {
+        "title": "翻转准备",
+        "detail": "教师制作的视频讲座涵盖核心知识基础，帮助学员在进入模拟中心前做好准备。"
+      },
+      {
+        "title": "以模拟为先的现场课程日",
+        "detail": "现场课程围绕站点、指导下的重复练习和刻意练习构建，而不是以讲座密集的日程为主。"
+      },
+      {
+        "title": "游戏化解剖与复习",
+        "detail": "传单突出展示了开场的纵隔解剖游戏和结尾的 Final Jeopardy 风格环节，以强化记忆。"
+      },
+      {
+        "title": "低学员-教师比例",
+        "detail": "小型轮转团队为实时纠正、提问和技术指导留出空间。"
+      },
+      {
+        "title": "技术与交流时间",
+        "detail": "日程中设置了受保护的休息时间，用于技术实操体验和学员-教师互动。"
+      },
+      {
+        "title": "基于应用程序的测试",
+        "detail": "2026年课程引入带反馈的课前和课后测试，以强化学习闭环。"
+      }
+    ],
+    "prepWindow": "准备材料将在现场活动前3至4周发放，并应在2026年5月1日至5月30日期间完成。",
+    "prepTopics": [
+      "欢迎、课程介绍与学员认可。",
+      "支气管内超声简介及操作要点。",
+      "纵隔解剖以及使用 TNM 9 进行肺癌系统分期。",
+      "淋巴瘤和非恶性胸部疾病的处理思路。",
+      "组织学、分子检测和组织充分性。",
+      "液体活检、EBUS 高级技术和 2026 年证据更新。",
+      "基于指南的计划制定、病例综合分析和课前测试。"
+    ],
+    "liveSessionTracks": [
+      {
+        "title": "上午工具与技术",
+        "detail": "各团队轮转完成纵隔解剖游戏、内镜解剖与组装、EBUS 检查、标准针和 TBNA 技术，以及高级工具。"
+      },
+      {
+        "title": "技术体验与交流休息",
+        "detail": "上午日程在主会议区保留专门时间，用于行业展示和跨项目交流。"
+      },
+      {
+        "title": "午间荣誉讲座",
+        "detail": "午餐包括 Russell Miller 医生的 AABIP 指南课程，随后进入下午综合环节。"
+      },
+      {
+        "title": "下午综合与执行",
+        "detail": "下午转向基于病例的计划制定、高级病例与技术，以及 Final Jeopardy 结束前的技术执行。"
+      }
+    ],
+    "liveDayAgenda": [
+      {
+        "time": "7:30-7:50",
+        "title": "报到与早餐",
+        "detail": "团队轮转开始前在 Centennial Complex 一楼。"
+      },
+      {
+        "time": "8:00-8:20",
+        "title": "欢迎与课程概览",
+        "detail": "所有学员在 Damazo Auditorium 集合。"
+      },
+      {
+        "time": "8:35-12:00",
+        "title": "上午工具与技术轮转",
+        "detail": "纵隔解剖游戏、内镜解剖与组装、EBUS 检查、标准针和 TBNA 技术，以及高级工具。"
+      },
+      {
+        "time": "10:20-10:50",
+        "title": "技术体验与交流休息",
+        "detail": "主会议区的保留时间。"
+      },
+      {
+        "time": "12:10-12:55",
+        "title": "午餐与荣誉讲座",
+        "detail": "Russell Miller 医生的 AABIP 指南课程。"
+      },
+      {
+        "time": "13:10-16:00",
+        "title": "下午综合与执行轮转",
+        "detail": "基于病例的计划制定、高级病例与技术，然后进行技术执行。"
+      },
+      {
+        "time": "16:15-17:00",
+        "title": "Final Jeopardy 与结束告别",
+        "detail": "所有学员回到 Damazo Auditorium 集合，结束当天课程。"
+      }
+    ],
+    "addressLines": [
+      "24760 Stewart Street",
+      "Centennial Complex, 4th Floor",
+      "Loma Linda, CA 92354"
+    ],
+    "parkingNote": "停车请前往 Campus Street 旁的 X 停车场。",
+    "travelNote": "传单为来自洛杉矶、棕榈泉、圣迭戈和拉斯维加斯的参会者分别提供驾车路线。",
+    "travelDirections": [
+      {
+        "origin": "从洛杉矶出发",
+        "detail": "走 I-10 East 至 Tippecanoe/Anderson 出口，继续前往 Stewart Street，然后转入 Campus Street，并停在 X 停车场。"
+      },
+      {
+        "origin": "从棕榈泉出发",
+        "detail": "走 I-10 West 至 Tippecanoe/Anderson，前往 Stewart Street，然后到 Campus Street，并使用 X 停车场。"
+      },
+      {
+        "origin": "从圣迭戈出发",
+        "detail": "走 I-15 North 转 I-215 North，在 Mt Vernon 出口下，沿 Washington/Barton 至 Campus Street，并停在 X 停车场。"
+      },
+      {
+        "origin": "从拉斯维加斯出发",
+        "detail": "走 I-15 South 至 I-10 East，在 Tippecanoe/Anderson 出口下，然后沿 Stewart Street 至 Campus Street 和 X 停车场。"
+      }
+    ],
+    "facilityUrl": "https://medicine.llu.edu/about/medical-simulation-center",
+    "endorsement": {
+      "text": "本教育活动获得 American Association for Bronchology and Interventional Pulmonology（AABIP）认可。",
+      "image": {
+        "src": "/media/course/aabip-endorsement.png",
+        "alt": "American Association for Bronchology and Interventional Pulmonology 标志"
+      }
+    },
+    "visuals": {
+      "logo": {
+        "src": "/media/course/loma-linda-school-of-medicine.png",
+        "alt": "Loma Linda University 医学院内科系标志"
+      },
+      "hero": {
+        "src": "/media/course/hands-on-sim-lab.jpg",
+        "alt": "教师在支气管镜和超声模拟实操站中指导学员。",
+        "caption": "手把手指导是现场课程日的核心组成部分。"
+      },
+      "inset": {
+        "src": "/media/course/fellows-and-faculty-group.jpg",
+        "alt": "区域学员和教师聚集在课程场地外。",
+        "caption": "来自不同项目的区域学员和教师汇聚在一起。"
+      },
+      "gallery": [
+        {
+          "src": "/media/course/simulation-bay-panorama.jpg",
+          "alt": "多个学员小组在配备支气管镜设备的大型模拟训练区轮转。",
+          "caption": "小型轮转团队让现场课程日保持活跃、互动并聚焦技能。"
+        },
+        {
+          "src": "/media/course/course-recognition-moment.jpg",
+          "alt": "学员和教师在教室内进行课程结束时的认可环节。",
+          "caption": "课程设计从开场欢迎到最后复盘都体现指导性和同伴协作氛围。"
+        },
+        {
+          "src": "/media/course/outdoor-group-portrait.jpg",
+          "alt": "往届 EBUS 课程学员和教师的大型户外合影。",
+          "caption": "区域教师帮助学员比较不同项目中的技术、工作流程和分期习惯。"
+        }
+      ]
+    }
+  },
+  "content/course/welcome.json": {
+    "id": "lecture-01",
+    "title": "欢迎、致谢与课程介绍",
+    "subtitle": "课程欢迎与导览",
+    "week": "欢迎",
+    "duration": "视频",
+    "video": "https://ebus2026.s3.us-east-1.amazonaws.com/LECTURE+WELCOME_INTRO.mp4",
+    "topics": [
+      "课程导览",
+      "教师致谢",
+      "进度如何运作"
+    ],
+    "status": "可用"
+  },
+  "content/modules/modules.json": [
+    {
+      "id": "pretest",
+      "slug": "pretest",
+      "shortTitle": "课前测试",
+      "title": "课前问卷与测试",
+      "summary": "课前问卷加25题基线评估；答案隐藏，并在本地记录课程进度。",
+      "overview": "本模块在第1讲和后续练习模块解锁前记录账号准备情况、课前问卷和基线分数。",
+      "estimatedMinutes": 25,
+      "featureFolder": "features/pretest",
+      "route": "/modules/pretest",
+      "goals": [
+        "在不显示正确答案的情况下收集课前基线。",
+        "在本地保存进行中的作答和最新保存分数。",
+        "完成后解锁课程的下一步。"
+      ],
+      "plannedExperiences": [
+        "简报",
+        "25题评估",
+        "演示提交摘要"
+      ],
+      "assetPlaceholders": [
+        {
+          "key": "pretest-q2-figure",
+          "label": "第2题图像",
+          "folder": "assets/pretest",
+          "note": "从所提供的课前测试文档中提取，用于演示评估流程。"
+        },
+        {
+          "key": "pretest-q8-figure",
+          "label": "第8题图像",
+          "folder": "assets/pretest",
+          "note": "从所提供的课前测试文档中提取，用于演示评估流程。"
+        },
+        {
+          "key": "pretest-q22-figure",
+          "label": "第22题图像",
+          "folder": "assets/pretest",
+          "note": "从所提供的课前测试文档中提取，用于演示评估流程。"
+        }
+      ],
+      "relatedStationIds": []
+    },
+    {
+      "id": "knobology",
+      "slug": "knobology",
+      "shortTitle": "设备控制",
+      "title": "超声基础 + EBUS 设备控制",
+      "summary": "通过快速、适合触控的模块和占位模拟器入口教授核心超声控制。",
+      "overview": "此框架为入门内容、控制实验室、Doppler 小实验室、速查卡、测验和总结建立路由、内容契约和持久化钩子。",
+      "estimatedMinutes": 20,
+      "featureFolder": "features/knobology",
+      "route": "/modules/knobology",
+      "goals": [
+        "解释深度、增益、对比度、彩色多普勒、测量卡尺、冻结和保存。",
+        "为未来的“修正图像”练习准备控制实验室外壳。",
+        "在本地保存学习者完成状态和测验分数。"
+      ],
+      "plannedExperiences": [
+        "入门",
+        "控制实验室",
+        "Doppler 小实验室",
+        "速查卡",
+        "五题测验",
+        "完成总结"
+      ],
+      "assetPlaceholders": [
+        {
+          "key": "us-primer-hero",
+          "label": "入门主画面",
+          "folder": "assets/ultrasound",
+          "note": "替换为应用自有的去标识化教学帧或插图。"
+        },
+        {
+          "key": "us-control-lab-bad-image-01",
+          "label": "不佳图像预设 01",
+          "folder": "assets/ultrasound",
+          "note": "预留给未来的修正图像练习。"
+        }
+      ],
+      "relatedStationIds": []
+    },
+    {
+      "id": "station-map",
+      "slug": "station-map",
+      "shortTitle": "站点地图",
+      "title": "纵隔站点地图",
+      "summary": "为 IASLC 站点识别、地图探索和测验练习提供清晰的模块入口。",
+      "overview": "该框架与探索器模块共享类型化站点架构，并为未来矢量地图实现保留稳定资源键。",
+      "estimatedMinutes": 18,
+      "featureFolder": "features/stations",
+      "route": "/modules/station-map",
+      "goals": [
+        "在结构化本地架构中支持 v1 核心站点。",
+        "保持地图绘制数据与文本内容分离。",
+        "将书签和完成状态连接到持久化学习进度。"
+      ],
+      "plannedExperiences": [
+        "概览",
+        "可缩放可点击地图",
+        "站点详情表",
+        "抽认卡",
+        "站点定位测验",
+        "复习总结"
+      ],
+      "assetPlaceholders": [
+        {
+          "key": "station-map-core-illustration",
+          "label": "核心站点地图插图",
+          "folder": "assets/illustrations",
+          "note": "替换为应用自有矢量地图。现有外部截图有意不打包。"
+        }
+      ],
+      "relatedStationIds": [
+        "2R",
+        "2L",
+        "4R",
+        "4L",
+        "7",
+        "10R",
+        "10L",
+        "11Rs",
+        "11Ri",
+        "11L"
+      ]
+    },
+    {
+      "id": "station-explorer",
+      "slug": "station-explorer",
+      "shortTitle": "探索器",
+      "title": "CT ↔ 支气管镜 ↔ 超声站点探索器",
+      "summary": "设置同步占位视图，使相关联的三视图体验无需更改数据模型即可发布。",
+      "overview": "该框架聚焦本地结构化站点数据、同步的路由级状态，以及面向未来的 CT、支气管镜和超声视图资源契约。",
+      "estimatedMinutes": 22,
+      "featureFolder": "features/explorer",
+      "route": "/modules/station-explorer",
+      "goals": [
+        "使用与站点地图模块相同的站点内容架构。",
+        "准备同步的 CT、支气管镜和超声占位面板。",
+        "在本地跟踪上次查看的站点和识别准确率。"
+      ],
+      "plannedExperiences": [
+        "站点选择器",
+        "相关三视图探索器",
+        "解剖标志检查清单",
+        "识别挑战",
+        "复习总结"
+      ],
+      "assetPlaceholders": [
+        {
+          "key": "explorer-ct-placeholder",
+          "label": "CT 占位面板",
+          "folder": "assets/ct",
+          "note": "之后可在不更改界面的情况下替换为获批的去标识化教学图像。"
+        },
+        {
+          "key": "explorer-bronchoscopy-placeholder",
+          "label": "支气管镜占位面板",
+          "folder": "assets/bronchoscopy",
+          "note": "预留给未来气道解剖标志资源。"
+        },
+        {
+          "key": "explorer-ultrasound-placeholder",
+          "label": "超声占位面板",
+          "folder": "assets/ultrasound",
+          "note": "预留给未来 EBUS 视图资源。"
+        }
+      ],
+      "relatedStationIds": [
+        "2R",
+        "2L",
+        "4R",
+        "4L",
+        "7",
+        "10R",
+        "10L",
+        "11Rs",
+        "11Ri",
+        "11L"
+      ]
+    },
+    {
+      "id": "tnm-staging",
+      "slug": "tnm-staging",
+      "shortTitle": "TNM-9",
+      "title": "IASLC 第9版 TNM 分期",
+      "summary": "通过可搜索参考、交互式分期工具、可视化构建器、站点地图集成和病例教授 T、N、M 描述符及分期分组。",
+      "overview": "本模块将 IASLC 第9版肺癌 TNM 分期转换为适合触控的 EBUS 学习流程。它不是诊断设备。",
+      "estimatedMinutes": 30,
+      "featureFolder": "features/tnm-staging",
+      "route": "/tnm-staging",
+      "goals": [
+        "使用一致的第9版分期矩阵应用 T、N、M 描述符。",
+        "区分 N2a 与 N2b，以及 M1c1 与 M1c2。",
+        "在保留侧别和系统分期语境的同时，将 EBUS/PET 阳性站点关联到 cN。"
+      ],
+      "plannedExperiences": [
+        "可搜索参考卡",
+        "交互式 TNM 分期工具",
+        "可视化 T 描述符构建器",
+        "N 描述符地图",
+        "基于病例的分期情景"
+      ],
+      "assetPlaceholders": [
+        {
+          "key": "tnm-lung-schematic",
+          "label": "应用自有肺部示意图",
+          "folder": "features/tnm-staging",
+          "note": "以本地 SVG/CSS 渲染，用于分期教学练习。"
+        }
+      ],
+      "relatedStationIds": [
+        "2R",
+        "2L",
+        "4R",
+        "4L",
+        "7",
+        "10R",
+        "10L",
+        "11Rs",
+        "11Ri",
+        "11L"
+      ]
+    },
+    {
+      "id": "case-3d-explorer",
+      "slug": "case-3d-explorer",
+      "shortTitle": "3D 探索器",
+      "title": "3D 解剖 + 切片探索器",
+      "summary": "探索一个精选 EBUS 病例，包含联动站点选择、派生 CT 切片跳转和结构筛选。",
+      "overview": "本模块在构建时根据标注控制点、CT 几何、GLB 网格名称和导出的切片堆栈丰富本地病例清单，使学习者无需硬编码帧索引即可在站点和解剖标志之间移动。",
+      "estimatedMinutes": 16,
+      "category": "anatomy",
+      "status": "可用",
+      "featureFolder": "features/case3d",
+      "route": "/modules/case-3d-explorer",
+      "goals": [
+        "将站点和目标选择关联到派生的轴位、冠状位和矢状位切片索引。",
+        "让学习者按淋巴结、气道、血管、心脏和胃肠结构筛选病例。",
+        "在本地保存恢复状态、已访问目标和轻量复习评分。"
+      ],
+      "plannedExperiences": [
+        "介绍面板",
+        "站点与目标选择器",
+        "派生 3D 目标导航器",
+        "单平面切片查看器",
+        "教学卡",
+        "五个提示复习",
+        "总结"
+      ],
+      "assetPlaceholders": [
+        {
+          "key": "case-001-glb",
+          "label": "病例 001 分割 GLB",
+          "folder": "model",
+          "note": "本地打包，并在构建时根据预期网格名称进行验证。"
+        },
+        {
+          "key": "case-001-slices",
+          "label": "病例 001 CT 切片序列",
+          "folder": "model/sliceSeries",
+          "note": "帧索引由 CT 体积几何和标注控制点推导。"
+        }
+      ],
+      "relatedStationIds": [
+        "1R",
+        "1L",
+        "2R",
+        "2L",
+        "3A",
+        "4R",
+        "4L",
+        "5",
+        "6",
+        "7",
+        "10R",
+        "10L",
+        "11L",
+        "11Ri",
+        "11Rs"
+      ]
+    }
+  ]
+}

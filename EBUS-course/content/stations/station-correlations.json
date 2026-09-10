@@ -1,0 +1,502 @@
+[
+  {
+    "stationId": "2R",
+    "aliases": [
+      "Right upper paratracheal",
+      "High right paratracheal"
+    ],
+    "landmarkChecklist": [
+      "Stay high on the right side of the trachea.",
+      "Keep the target above 4R and above the azygos handoff.",
+      "Use the left lateral tracheal border rule for laterality rather than the tracheal midline.",
+      "Think superior right paratracheal corridor, not hilar gateway."
+    ],
+    "views": {
+      "ct": {
+        "title": "Axial CT Correlate",
+        "orientation": "High right paratracheal corridor above 4R.",
+        "focusLabel": "Right of trachea, superior paratracheal stripe",
+        "caption": "Start with the superior-right stack relationship, then confirm the node remains right of the left lateral tracheal border.",
+        "visualAnchor": "upper-right"
+      },
+      "bronchoscopy": {
+        "title": "Bronchoscopic Correlate",
+        "orientation": "Upper right tracheal survey.",
+        "focusLabel": "High right tracheal wall target",
+        "caption": "This is still a tracheal view; if it feels hilar, you have likely drifted too far distal.",
+        "visualAnchor": "upper-right"
+      },
+      "ultrasound": {
+        "title": "EBUS Correlate",
+        "orientation": "Superior right paratracheal EBUS window.",
+        "focusLabel": "Upper right paratracheal node target",
+        "caption": "Stack it above 4R and verify laterality with the tracheal border rule before assigning stage.",
+        "visualAnchor": "upper-right"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "2r-ct",
+        "viewId": "ct",
+        "prompt": "Which station is highlighted in this high right paratracheal CT view?",
+        "optionIds": [
+          "2R",
+          "4R",
+          "2L",
+          "10R"
+        ],
+        "explanation": "The correct answer is 2R because the target remains high, right-sided, and superior to the 4R level."
+      }
+    ]
+  },
+  {
+    "stationId": "2L",
+    "aliases": [
+      "Left upper paratracheal",
+      "High left paratracheal"
+    ],
+    "landmarkChecklist": [
+      "Stay high on the left side of the trachea.",
+      "Keep the target above the 4L boundary.",
+      "Use the left lateral tracheal border rule before calling laterality.",
+      "This is still a tracheal station, not a hilar one."
+    ],
+    "views": {
+      "ct": {
+        "title": "Axial CT Correlate",
+        "orientation": "High left paratracheal corridor above 4L.",
+        "focusLabel": "Left of trachea, superior paratracheal stripe",
+        "caption": "Read 2L as the superior left paratracheal target before the 4L and 10L transitions.",
+        "visualAnchor": "upper-left"
+      },
+      "bronchoscopy": {
+        "title": "Bronchoscopic Correlate",
+        "orientation": "Upper left tracheal survey.",
+        "focusLabel": "High left tracheal wall target",
+        "caption": "If the view feels distal or branch-level, you are likely no longer at 2L.",
+        "visualAnchor": "upper-left"
+      },
+      "ultrasound": {
+        "title": "EBUS Correlate",
+        "orientation": "Superior left paratracheal EBUS window.",
+        "focusLabel": "Upper left paratracheal node target",
+        "caption": "Confirm left-sided position and keep the target above the 4L handoff.",
+        "visualAnchor": "upper-left"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "2l-bronchoscopy",
+        "viewId": "bronchoscopy",
+        "prompt": "Which station is highlighted from the superior left tracheal wall perspective?",
+        "optionIds": [
+          "2L",
+          "4L",
+          "2R",
+          "10L"
+        ],
+        "explanation": "The correct answer is 2L because the target remains superior and left paratracheal rather than lower or hilar."
+      }
+    ]
+  },
+  {
+    "stationId": "4R",
+    "aliases": [
+      "Right lower paratracheal",
+      "Workhorse 4R station"
+    ],
+    "landmarkChecklist": [
+      "Place 4R below 2R and above 10R.",
+      "Use the inferior azygos margin as the lower boundary.",
+      "Keep the target paratracheal rather than hilar.",
+      "Remember that the left lateral tracheal border still divides right from left."
+    ],
+    "views": {
+      "ct": {
+        "title": "Axial CT Correlate",
+        "orientation": "Lower right paratracheal corridor above 10R.",
+        "focusLabel": "Right lower paratracheal target",
+        "caption": "Anchor 4R beneath 2R and above the azygos-defined hilar handoff.",
+        "visualAnchor": "middle-right"
+      },
+      "bronchoscopy": {
+        "title": "Bronchoscopic Correlate",
+        "orientation": "Right lateral tracheal wall near the carinal descent.",
+        "focusLabel": "Right paratracheal survey window",
+        "caption": "This is still tracheal and paratracheal; a main-bronchus feel suggests 10R instead.",
+        "visualAnchor": "middle-right"
+      },
+      "ultrasound": {
+        "title": "EBUS Correlate",
+        "orientation": "Right lower paratracheal EBUS window.",
+        "focusLabel": "Classic 4R staging window",
+        "caption": "Check the azygos boundary before calling the node hilar instead of paratracheal.",
+        "visualAnchor": "middle-right"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "4r-ultrasound",
+        "viewId": "ultrasound",
+        "prompt": "Which station is highlighted in this right lower paratracheal EBUS view?",
+        "optionIds": [
+          "4R",
+          "2R",
+          "10R",
+          "7"
+        ],
+        "explanation": "The correct answer is 4R because the target is still lower paratracheal and has not passed below the inferior azygos margin into 10R."
+      }
+    ]
+  },
+  {
+    "stationId": "4L",
+    "aliases": [
+      "Left lower paratracheal",
+      "Aortic-side 4L"
+    ],
+    "landmarkChecklist": [
+      "Place 4L below 2L and above 10L.",
+      "Use the upper rim of the left main pulmonary artery as the lower boundary.",
+      "Keep 4L medial to the ligamentum arteriosum.",
+      "Do not confuse a paratracheal target with an AP-window or hilar target."
+    ],
+    "views": {
+      "ct": {
+        "title": "Axial CT Correlate",
+        "orientation": "Lower left paratracheal corridor above 10L.",
+        "focusLabel": "Left lower paratracheal target",
+        "caption": "Use the pulmonary artery boundary and the medial ligamentum relationship to separate 4L from neighboring stations.",
+        "visualAnchor": "middle-left"
+      },
+      "bronchoscopy": {
+        "title": "Bronchoscopic Correlate",
+        "orientation": "Left paratracheal survey near the carina.",
+        "focusLabel": "Left paratracheal survey window",
+        "caption": "The view should still feel mediastinal rather than left hilar.",
+        "visualAnchor": "middle-left"
+      },
+      "ultrasound": {
+        "title": "EBUS Correlate",
+        "orientation": "Left lower paratracheal EBUS window.",
+        "focusLabel": "Left paratracheal target beneath 2L",
+        "caption": "The biggest confusion pair is 10L, so confirm that the node remains above the superior left main pulmonary artery margin.",
+        "visualAnchor": "middle-left"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "4l-ct",
+        "viewId": "ct",
+        "prompt": "Which station is highlighted in this lower left paratracheal CT panel?",
+        "optionIds": [
+          "4L",
+          "2L",
+          "10L",
+          "7"
+        ],
+        "explanation": "The correct answer is 4L because the node remains left paratracheal and above the 10L boundary."
+      }
+    ]
+  },
+  {
+    "stationId": "7",
+    "aliases": [
+      "Subcarinal",
+      "Midline subcarinal anchor"
+    ],
+    "landmarkChecklist": [
+      "Find the carina first.",
+      "Keep the target between the medial margins of the main bronchi.",
+      "Remember that station 7 is midline rather than right- or left-lateralized.",
+      "Use this station as an orientation reset point."
+    ],
+    "views": {
+      "ct": {
+        "title": "Axial CT Correlate",
+        "orientation": "Midline station beneath the carina.",
+        "focusLabel": "Subcarinal bridge target",
+        "caption": "If you lose orientation, station 7 is the quickest midline reset and staging anchor.",
+        "visualAnchor": "center"
+      },
+      "bronchoscopy": {
+        "title": "Bronchoscopic Correlate",
+        "orientation": "Carinal bifurcation with a target just beneath it.",
+        "focusLabel": "Subcarinal checkpoint",
+        "caption": "Stay centered below the bifurcation; drifting laterally often means you are moving into station 10 territory.",
+        "visualAnchor": "center"
+      },
+      "ultrasound": {
+        "title": "EBUS Correlate",
+        "orientation": "Midline subcarinal EBUS view.",
+        "focusLabel": "Centerline node below the carina",
+        "caption": "Think between the medial bronchial margins rather than simply 'somewhere central.'",
+        "visualAnchor": "center"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "7-bronchoscopy",
+        "viewId": "bronchoscopy",
+        "prompt": "Which station is highlighted directly beneath the carinal bifurcation?",
+        "optionIds": [
+          "7",
+          "10R",
+          "10L",
+          "4R"
+        ],
+        "explanation": "The correct answer is station 7 because the target is centered beneath the carina and between the medial main bronchial margins."
+      }
+    ]
+  },
+  {
+    "stationId": "10R",
+    "aliases": [
+      "Right hilar",
+      "Right hilar checkpoint"
+    ],
+    "landmarkChecklist": [
+      "Place 10R below 4R and before 11R branch-level targets.",
+      "Use the inferior azygos margin as the upper boundary.",
+      "Check whether the node is outside the medial main bronchial margins rather than in station 7.",
+      "This is a main-bronchus hilar cue, not yet a branch-level cue."
+    ],
+    "views": {
+      "ct": {
+        "title": "Axial CT Correlate",
+        "orientation": "Right hilar entry zone beyond 4R.",
+        "focusLabel": "Right hilar checkpoint",
+        "caption": "The key distinction is hilar handoff rather than interlobar branching.",
+        "visualAnchor": "lower-right"
+      },
+      "bronchoscopy": {
+        "title": "Bronchoscopic Correlate",
+        "orientation": "Right main bronchus before deeper branch points.",
+        "focusLabel": "Right hilar airway landmark",
+        "caption": "Stay at the main-bronchus hilar gateway before moving into 11Rs or 11Ri.",
+        "visualAnchor": "lower-right"
+      },
+      "ultrasound": {
+        "title": "EBUS Correlate",
+        "orientation": "Right hilar EBUS window.",
+        "focusLabel": "Right hilar target near the main bronchus entry",
+        "caption": "If the cue feels too distal or too branch-specific, you may already be in 11R territory.",
+        "visualAnchor": "lower-right"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "10r-ultrasound",
+        "viewId": "ultrasound",
+        "prompt": "Which station is highlighted at the right hilar checkpoint rather than the interlobar branch level?",
+        "optionIds": [
+          "10R",
+          "4R",
+          "11Rs",
+          "7"
+        ],
+        "explanation": "The correct answer is 10R because the target sits at the right hilar main-bronchus checkpoint rather than the distal interlobar branch points."
+      }
+    ]
+  },
+  {
+    "stationId": "10L",
+    "aliases": [
+      "Left hilar",
+      "Left hilar checkpoint"
+    ],
+    "landmarkChecklist": [
+      "Place 10L below 4L and before 11L.",
+      "Use the superior left main pulmonary artery margin as the upper boundary.",
+      "Make sure the target feels hilar rather than paratracheal.",
+      "This is a main-bronchus left hilar cue, not yet the interlobar branch-level target."
+    ],
+    "views": {
+      "ct": {
+        "title": "Axial CT Correlate",
+        "orientation": "Left hilar entry zone beyond 4L.",
+        "focusLabel": "Left hilar checkpoint",
+        "caption": "Keep the target distal to the paratracheal stack but proximal to the left interlobar branch point.",
+        "visualAnchor": "lower-left"
+      },
+      "bronchoscopy": {
+        "title": "Bronchoscopic Correlate",
+        "orientation": "Left main bronchus before more distal branching.",
+        "focusLabel": "Left hilar airway landmark",
+        "caption": "This is the gateway between the 4L paratracheal logic and 11L branch-level logic.",
+        "visualAnchor": "lower-left"
+      },
+      "ultrasound": {
+        "title": "EBUS Correlate",
+        "orientation": "Left hilar EBUS window.",
+        "focusLabel": "Left hilar target near the main bronchus entry",
+        "caption": "Use proximity to the main bronchus and the pulmonary artery boundary to separate 10L from 4L and 11L.",
+        "visualAnchor": "lower-left"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "10l-ct",
+        "viewId": "ct",
+        "prompt": "Which station is highlighted at the left hilar checkpoint on CT?",
+        "optionIds": [
+          "10L",
+          "4L",
+          "11L",
+          "7"
+        ],
+        "explanation": "The correct answer is 10L because the target sits below the 4L boundary but proximal to the interlobar left branch point."
+      }
+    ]
+  },
+  {
+    "stationId": "11Rs",
+    "aliases": [
+      "Right interlobar superior",
+      "Right upper-lobe takeoff interlobar station"
+    ],
+    "landmarkChecklist": [
+      "Locate the right upper lobe bronchus and bronchus intermedius.",
+      "Confirm you are beyond the 10R hilar checkpoint.",
+      "Think branch-level anatomy, not main-bronchus anatomy.",
+      "Keep 11Rs separate from 11Ri below."
+    ],
+    "views": {
+      "ct": {
+        "title": "CT Correlate",
+        "orientation": "Right interlobar superior branch level.",
+        "focusLabel": "11Rs between the RUL bronchus and bronchus intermedius",
+        "caption": "Lung-window branch detail helps confirm this is the superior right interlobar substation.",
+        "visualAnchor": "lower-right"
+      },
+      "bronchoscopy": {
+        "title": "Bronchoscopic Correlate",
+        "orientation": "Right upper lobe takeoff and bronchus intermedius.",
+        "focusLabel": "Superior right interlobar airway cue",
+        "caption": "This is a branch-level view beyond 10R and above 11Ri.",
+        "visualAnchor": "lower-right"
+      },
+      "ultrasound": {
+        "title": "EBUS Correlate",
+        "orientation": "Superior right interlobar EBUS window.",
+        "focusLabel": "11Rs branch-level target",
+        "caption": "If the target still feels like a main bronchus checkpoint, reconsider 10R instead of 11Rs.",
+        "visualAnchor": "lower-right"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "11rs-bronchoscopy",
+        "viewId": "bronchoscopy",
+        "prompt": "Which station is highlighted between the right upper lobe bronchus and bronchus intermedius?",
+        "optionIds": [
+          "11Rs",
+          "10R",
+          "11Ri",
+          "4R"
+        ],
+        "explanation": "The correct answer is 11Rs because the airway landmark is the superior right interlobar branch point between the right upper lobe bronchus and bronchus intermedius."
+      }
+    ]
+  },
+  {
+    "stationId": "11Ri",
+    "aliases": [
+      "Right interlobar inferior",
+      "Right middle/lower lobe interlobar station"
+    ],
+    "landmarkChecklist": [
+      "Find the middle and lower lobe bronchial split.",
+      "Confirm you are more distal than 10R and more inferior than 11Rs.",
+      "Use branch anatomy rather than general hilar intuition.",
+      "This is the inferior right interlobar substation."
+    ],
+    "views": {
+      "ct": {
+        "title": "CT Correlate",
+        "orientation": "Inferior right interlobar branch level.",
+        "focusLabel": "11Ri between the middle and lower lobe bronchi",
+        "caption": "This is the more inferior right interlobar target and should not be collapsed into a generic 11R label.",
+        "visualAnchor": "lower-right"
+      },
+      "bronchoscopy": {
+        "title": "Bronchoscopic Correlate",
+        "orientation": "Right middle and lower lobe bronchial branching.",
+        "focusLabel": "Inferior right interlobar airway cue",
+        "caption": "The branch detail is what distinguishes 11Ri from both 10R and 11Rs.",
+        "visualAnchor": "lower-right"
+      },
+      "ultrasound": {
+        "title": "EBUS Correlate",
+        "orientation": "Inferior right interlobar EBUS window.",
+        "focusLabel": "11Ri branch-level target",
+        "caption": "Name the branch relationship first; the station label follows from the airway anatomy.",
+        "visualAnchor": "lower-right"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "11ri-ultrasound",
+        "viewId": "ultrasound",
+        "prompt": "Which station is highlighted at the inferior right interlobar branch level?",
+        "optionIds": [
+          "11Ri",
+          "11Rs",
+          "10R",
+          "7"
+        ],
+        "explanation": "The correct answer is 11Ri because the target is at the inferior right interlobar branch point rather than the superior interlobar or hilar checkpoint."
+      }
+    ]
+  },
+  {
+    "stationId": "11L",
+    "aliases": [
+      "Left interlobar",
+      "Left branch-level hilar continuation"
+    ],
+    "landmarkChecklist": [
+      "Confirm you are beyond the 10L hilar checkpoint.",
+      "Look for left branch-level airway anatomy rather than a main-bronchus view.",
+      "This is a left interlobar target, not a paratracheal one.",
+      "Use 10L as the main confusion pair."
+    ],
+    "views": {
+      "ct": {
+        "title": "CT Correlate",
+        "orientation": "Left interlobar branch level beyond 10L.",
+        "focusLabel": "Left interlobar target",
+        "caption": "The clue is branch-level left airway anatomy beyond the hilar checkpoint.",
+        "visualAnchor": "lower-left"
+      },
+      "bronchoscopy": {
+        "title": "Bronchoscopic Correlate",
+        "orientation": "Left branch-level airway beyond the main bronchus.",
+        "focusLabel": "Left interlobar airway cue",
+        "caption": "This is more distal than 10L and should feel branch-level rather than hilar.",
+        "visualAnchor": "lower-left"
+      },
+      "ultrasound": {
+        "title": "EBUS Correlate",
+        "orientation": "Left interlobar EBUS window.",
+        "focusLabel": "11L branch-level target",
+        "caption": "A more distal, branch-level left airway relationship supports 11L rather than 10L.",
+        "visualAnchor": "lower-left"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "11l-bronchoscopy",
+        "viewId": "bronchoscopy",
+        "prompt": "Which station is highlighted beyond the left hilar checkpoint at the branch level?",
+        "optionIds": [
+          "11L",
+          "10L",
+          "4L",
+          "7"
+        ],
+        "explanation": "The correct answer is 11L because the airway cue is branch-level and distal to the 10L hilar checkpoint."
+      }
+    ]
+  }
+]

@@ -1,0 +1,159 @@
+[
+  {
+    "id": "sono-chs-01",
+    "moduleId": "station-explorer",
+    "prompt": "关于中央肺门结构（CHS），哪项表述最准确？",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "保留的 CHS 往往是令人放心的特征，尽管其本身不能排除恶性",
+        "rationale": "正确。CHS 是有用的较安心征象，但诊断仍由组织决定。"
+      },
+      {
+        "id": "b",
+        "label": "保留 CHS 证明淋巴结良性且不需要取样",
+        "rationale": "错误。没有任何单一超声征象能替代分期问题或组织需求。"
+      },
+      {
+        "id": "c",
+        "label": "CHS 主要是多普勒伪影，对解读无用",
+        "rationale": "错误。CHS 是有意义的灰阶描述指标。"
+      },
+      {
+        "id": "d",
+        "label": "CHS 只能在弹性成像后评估",
+        "rationale": "错误。CHS 是常规灰阶评估的一部分。"
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "保留 CHS 往往倾向良性，但绝不能作为单独理由忽略一个若阳性会改变处理的淋巴结。",
+    "difficulty": "basic",
+    "tags": [
+      "station-explorer",
+      "sonographic-interpretation",
+      "CHS"
+    ]
+  },
+  {
+    "id": "sono-suspicion-02",
+    "moduleId": "station-explorer",
+    "prompt": "请选择同时出现时通常会增加恶性担忧的超声特征。",
+    "type": "multi-select",
+    "options": [
+      {
+        "id": "a",
+        "label": "回声不均质",
+        "rationale": "正确。不均质性常增加担忧。"
+      },
+      {
+        "id": "b",
+        "label": "无血管中央坏死样区域（CNS）",
+        "rationale": "正确。CNS 是令人担忧的特征，尤其是多普勒支持无血管性时。"
+      },
+      {
+        "id": "c",
+        "label": "中央肺门结构保留",
+        "rationale": "错误。保留的 CHS 相对令人放心，而不是可疑。"
+      },
+      {
+        "id": "d",
+        "label": "外周性或混乱血管模式",
+        "rationale": "正确。异常血管模式会增加担忧。"
+      }
+    ],
+    "correctOptionIds": [
+      "a",
+      "b",
+      "d"
+    ],
+    "explanation": "可疑程度通常来自特征组合，而不是单一征象。不均质、CNS 和异常血管性同时存在，比任何单个特征更令人担忧。",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-explorer",
+      "sonographic-interpretation",
+      "CNS",
+      "vascular-pattern"
+    ]
+  },
+  {
+    "id": "sono-elastography-03",
+    "moduleId": "station-explorer",
+    "prompt": "在 EBUS 淋巴结分期中，应如何教授弹性成像？",
+    "type": "case-vignette",
+    "caseTitle": "有帮助的彩色图，却得出错误结论",
+    "caseSummary": "学习者因为弹性成像模式看似令人放心而想跳过活检。",
+    "options": [
+      {
+        "id": "a",
+        "label": "作为帮助优先选择目标的辅助手段，但不能替代组织",
+        "rationale": "正确。弹性成像可细化可疑程度和目标选择；不能替代病理。"
+      },
+      {
+        "id": "b",
+        "label": "作为判断淋巴结是否恶性的最可靠单项检查",
+        "rationale": "错误。弹性成像与常规 EBUS 特征结合时效果最佳，而不应作为独立结论。"
+      },
+      {
+        "id": "c",
+        "label": "作为忽视该淋巴结分期后果的理由",
+        "rationale": "错误。是否需要组织仍由分期后果决定。"
+      },
+      {
+        "id": "d",
+        "label": "作为规划穿刺路径时多普勒的替代",
+        "rationale": "错误。弹性成像不能替代多普勒安全检查。"
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "弹性成像最好作为辅助工具来教授。它可帮助判断哪个淋巴结或淋巴结的哪个部分最可疑，但组织诊断仍是决定性的，多普勒仍是安全所需。",
+    "difficulty": "basic",
+    "tags": [
+      "station-explorer",
+      "sonographic-interpretation",
+      "elastography"
+    ]
+  },
+  {
+    "id": "sono-cns-04",
+    "moduleId": "station-explorer",
+    "prompt": "一个淋巴结中央有暗区且无多普勒血流，周围回声纹理不规则。哪种解读最合理？",
+    "type": "image-interpretation",
+    "options": [
+      {
+        "id": "a",
+        "label": "该发现符合凝固性坏死征并增加可疑程度，但仍不能替代组织",
+        "rationale": "正确。这兼顾了描述准确性和适当的诊断谨慎。"
+      },
+      {
+        "id": "b",
+        "label": "因为中央无血流，所以淋巴结一定是良性",
+        "rationale": "错误。中央无血管暗区可能增加可疑程度，而不是令人放心。"
+      },
+      {
+        "id": "c",
+        "label": "图像证明病灶为恶性，因此不需要活检",
+        "rationale": "错误。即使影像高度可疑，也不能排除组织诊断的作用。"
+      },
+      {
+        "id": "d",
+        "label": "除非淋巴结大于 2 cm，否则该发现没有意义",
+        "rationale": "错误。在多种淋巴结大小下，内部结构都很重要。"
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "适当的教学做法是准确命名超声模式，将其纳入总体可疑程度估计，然后回到临床分期问题和组织需求。",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-explorer",
+      "image-interpretation",
+      "CNS"
+    ]
+  }
+]

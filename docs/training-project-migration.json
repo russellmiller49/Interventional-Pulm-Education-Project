@@ -1,0 +1,41 @@
+{
+  "navigation_module": {
+    "source": "/Users/russellmiller/Projects/navigation_module",
+    "branch": "tracing",
+    "commit": "838135771cc27b34c451198da0860423986782bb",
+    "importedFiles": 561,
+    "workingTreeStatus": [
+      " M Airway.seg.nrrd",
+      " M \"data/airway/Centerline model.vtk\"",
+      " M \"data/airway/Network model.vtk\"",
+      " M data/source/CT.nrrd",
+      " M data/source/lung_nodule_1_mask.nrrd",
+      " M data/target/target_clean_ct.nrrd",
+      " M web/public/cases/default/airway_surface.stl",
+      " M web/public/cases/default/scope_calibration.json",
+      " M web/src/App.tsx",
+      " M web/src/caseLoader.ts",
+      " M web/src/components/AirwayMap.tsx",
+      " M web/src/components/BronchoscopeView.tsx",
+      " M web/src/components/CtPane.tsx",
+      " M web/src/main.tsx",
+      " M web/src/styles.css",
+      " M web/src/types.ts",
+      " M web/vite.config.ts",
+      "?? web/src/candidateDisplayLabels.ts",
+      "?? web/src/i18n.ts",
+      "?? web/src/scope-input/",
+      "?? web/src/useScopeTrackerDrive.ts"
+    ]
+  },
+  "EBUS-course": {
+    "source": "/Users/russellmiller/Projects/EBUS-course",
+    "branch": "sim_mod_3",
+    "commit": "bdb2bdb3d9eba7cb1abbb1e89c759a4aa49abb53",
+    "importedFiles": 1707,
+    "workingTreeStatus": [
+      "?? outputs/learning-outcomes-report-2026-07-14/",
+      "?? outputs/learning-outcomes-report-2026-07-22/"
+    ]
+  }
+}

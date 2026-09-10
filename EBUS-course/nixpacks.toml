@@ -1,0 +1,15 @@
+[phases.install]
+cmds = ['npm --prefix apps/web ci --legacy-peer-deps']
+
+[phases.build]
+cmds = ['npm --prefix apps/web run build']
+
+[start]
+cmd = 'npm run start:prod'
+runImage = 'node:20-alpine'
+onlyIncludeFiles = [
+  'package.json',
+  'apps/web/package.json',
+  'apps/web/dist',
+  'apps/web/node_modules',
+]

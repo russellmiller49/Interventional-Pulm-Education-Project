@@ -41,6 +41,8 @@
     "in-development",
     "fluoro-viewer/scripts",
     "supabase/functions",
-    "pleural_updates"
+    "pleural_updates",
+    "navigation_module",
+    "EBUS-course"
   ]
 }

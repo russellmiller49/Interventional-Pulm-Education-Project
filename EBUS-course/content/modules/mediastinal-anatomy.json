@@ -1,0 +1,88 @@
+{
+  "id": "mediastinal-anatomy",
+  "title": "Mediastinal Anatomy and IASLC Stations",
+  "summary": "A boundary-focused review of the core EBUS stations, emphasizing the IASLC rules that most often change staging and most often confuse learners.",
+  "learningObjectives": [
+    "Use the IASLC boundary rules rather than rough intuition when separating adjacent paratracheal, hilar, and interlobar stations.",
+    "Explain why the left lateral tracheal border matters for 2 and 4 stations on both sides.",
+    "Differentiate the 4-to-10 transition using the inferior azygos margin on the right and the superior left main pulmonary artery margin on the left.",
+    "Recognize when 4L is medial to the ligamentum arteriosum and why stations 5 and 6 sit lateral or anterolateral to that relationship.",
+    "Connect station identity to staging significance, access route, and clinical relevance."
+  ],
+  "sections": [
+    {
+      "id": "tracheal-border-rule",
+      "title": "The left lateral tracheal border is the divider for 2 and 4",
+      "kind": "landmarks",
+      "body": "One of the most important IASLC changes is that the border between 2R and 2L, and again between 4R and 4L, follows the left lateral tracheal border rather than the tracheal midline. If the learner keeps using the midline, both laterality and stage can be mislabeled.",
+      "bullets": [
+        "2R and 4R can extend farther left than many beginners expect.",
+        "The same rule applies at both upper and lower paratracheal levels.",
+        "This boundary matters because contralateral mediastinal disease becomes N3."
+      ],
+      "imageIds": [
+        "station:2R:ct",
+        "station:2L:ct"
+      ],
+      "pearl": "When a node looks almost midline, ask where it sits relative to the left lateral tracheal wall rather than guessing by symmetry alone.",
+      "pitfall": "The old mental model of the tracheal midline is one of the fastest ways to misstage paratracheal disease."
+    },
+    {
+      "id": "four-vs-ten",
+      "title": "The 4-to-10 handoff is vessel-based but still needs airway context",
+      "kind": "landmarks",
+      "body": "On the right, 4R ends at the lower border of the azygos vein and 10R begins below it. On the left, 4L ends at the upper rim of the left main pulmonary artery and 10L begins below it. Those landmarks are high-yield, but the airway context still matters because a single vessel snapshot can be misleading when orientation is poor.",
+      "bullets": [
+        "4R above inferior azygos margin; 10R below it.",
+        "4L above the superior left main pulmonary artery margin; 10L below it.",
+        "Station 7 lies between the medial margins of the main bronchi; outside that space is station 10."
+      ],
+      "imageIds": [
+        "station:4R:ct",
+        "station:10R:ct",
+        "station:4L:ct",
+        "station:10L:ct"
+      ],
+      "pearl": "If the image gives you the vessel but not the bronchial context, regain orientation before you assign the station.",
+      "pitfall": "A single vascular landmark without airway context can downstage or upstage the case incorrectly."
+    },
+    {
+      "id": "ap-window-rule",
+      "title": "4L stays medial to the ligamentum arteriosum",
+      "kind": "landmarks",
+      "body": "4L remains medial to the ligamentum arteriosum; stations 5 and 6 are lateral or anterolateral in the aortopulmonary region. This matters because 4L belongs with the mediastinal paratracheal group, whereas 5 and 6 are aortopulmonary window stations and are not sampled through the same mindset.",
+      "bullets": [
+        "4L is a paratracheal station even when it feels close to the AP window.",
+        "Station 5 is lateral to the ligamentum arteriosum.",
+        "Station 6 lies anterior and lateral to the ascending aorta and aortic arch."
+      ],
+      "pearl": "On the left, think medial-paratracheal before you think lateral-AP-window.",
+      "pitfall": "Calling a lateral AP-window target 4L can make the station sound more EBUS-friendly and more routine than it really is."
+    },
+    {
+      "id": "access-and-staging",
+      "title": "Access route and stage are part of station identity",
+      "kind": "staging",
+      "body": "A station label should immediately imply how you expect to approach it and what the result means for nodal stage. Right and left hilar/interlobar stations behave as N1 when ipsilateral, while paratracheal and other mediastinal stations are N2 when ipsilateral and N3 when contralateral. Station 7 is the important exception: it is midline and treated as ipsilateral mediastinal disease regardless of primary side.",
+      "bullets": [
+        "2 and 4 stations are mediastinal, so laterality can convert N2 to N3.",
+        "10 and 11 stations are hilar/interlobar, so ipsilateral disease is usually N1.",
+        "Station 7 is a staging anchor because it is midline and still N2 irrespective of side."
+      ],
+      "pearl": "Do not memorize station names separately from their staging consequences.",
+      "pitfall": "Learners often know the number but not whether the finding changes the patient from N1 to N2 or N3."
+    },
+    {
+      "id": "boundary-vignette",
+      "title": "Case vignette: 4L or 10L?",
+      "kind": "case",
+      "body": "A left-sided primary tumor has an enlarged node adjacent to the left main bronchus. The learner sees the left pulmonary artery and immediately calls the node 10L.",
+      "caseVignette": {
+        "title": "Do not stop at the vessel name",
+        "scenario": "The node is still proximal, medial, and above the upper rim of the left main pulmonary artery when the airway anatomy is reconstructed.",
+        "prompt": "What is the safer teaching move before assigning the stage?",
+        "takeaway": "Rebuild the airway-and-vessel relationship first. If the node is still above the upper rim of the left main pulmonary artery and remains paratracheal, it is 4L rather than 10L."
+      }
+    }
+  ]
+}

@@ -93,3 +93,10 @@ Start with:
   arrays, synthetic patient truth, detailed command histories, PHI, or free-text notes.
 - Use visible education-only and model-limitation notices anywhere compatibility, reach, procedural
   technique, device operation, or simulated patient response is discussed.
+
+## Embedded training projects
+
+The navigation trainer (`navigation_module/`) and SoCal EBUS course (`EBUS-course/`)
+are authored in this repository. Root installation installs their dependencies;
+`npm run dev` watches their source and `npm run build` builds them automatically.
+See [the migration guide](docs/training-project-migration.md).

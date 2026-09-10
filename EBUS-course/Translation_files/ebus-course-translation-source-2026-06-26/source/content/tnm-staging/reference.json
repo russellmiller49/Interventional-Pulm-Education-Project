@@ -1,0 +1,135 @@
+[
+  {
+    "id": "t-overview",
+    "category": "T",
+    "title": "Primary tumor descriptor",
+    "summary": "T is driven by the highest qualifying feature: size, local invasion, airway/pleural features, or separate tumor nodules.",
+    "bullets": [
+      "Use the largest invasive dimension when assigning a size-based T category.",
+      "A qualifying invasion or separate-nodule rule can outrank size.",
+      "Contralateral pulmonary nodules are metastatic disease rather than a higher T category."
+    ],
+    "changedFrom8th": "No T category change was adopted for the 9th edition; the learning task is applying the existing T rules consistently."
+  },
+  {
+    "id": "t1",
+    "category": "T",
+    "title": "T1: 3 cm or smaller without higher-risk features",
+    "summary": "T1 is subdivided by size: T1a is 1 cm or smaller, T1b is greater than 1 to 2 cm, and T1c is greater than 2 to 3 cm.",
+    "bullets": [
+      "T1 tumors are surrounded by lung or visceral pleura, or are in a lobar or more peripheral bronchus.",
+      "A superficial spreading tumor limited to the bronchial wall remains T1 even if it extends proximally.",
+      "Any higher qualifying invasion or separate-nodule feature should override the size-only T1 call."
+    ],
+    "changedFrom8th": "The 9th edition keeps the 8th-edition T1 cut points."
+  },
+  {
+    "id": "t2",
+    "category": "T",
+    "title": "T2: 3-5 cm or selected airway/pleural features",
+    "summary": "T2a covers tumors greater than 3 to 4 cm or selected T2 features; T2b covers tumors greater than 4 to 5 cm.",
+    "bullets": [
+      "Visceral pleural invasion, adjacent-lobe invasion, main bronchus involvement without carina, and hilar fat invasion are T2a features unless size assigns a higher T.",
+      "Atelectasis or obstructive pneumonitis extending to the hilar region remains a T2 feature.",
+      "If atelectasis/pneumonitis is present with a measurable tumor greater than 4 to 5 cm, size drives T2b."
+    ],
+    "changedFrom8th": "T2 wording remains materially unchanged in the 9th edition; teach atelectasis/pneumonitis as a T2 feature, not a new 9th-edition change."
+  },
+  {
+    "id": "t3",
+    "category": "T",
+    "title": "T3: 5-7 cm, selected invasion, or same-lobe nodules",
+    "summary": "T3 includes tumors greater than 5 to 7 cm, invasion of selected nearby structures, or separate tumor nodules in the same lobe.",
+    "bullets": [
+      "Parietal pleura or chest wall invasion is T3.",
+      "Pericardium, phrenic nerve, azygos vein, thoracic nerve root, or stellate ganglion invasion is T3.",
+      "Separate tumor nodules in the same lobe as the primary are T3."
+    ],
+    "changedFrom8th": "The 9th edition did not change the T3 category, although survival analyses re-tested the descriptors."
+  },
+  {
+    "id": "t4",
+    "category": "T",
+    "title": "T4: greater than 7 cm, major invasion, or different ipsilateral lobe nodules",
+    "summary": "T4 includes tumors greater than 7 cm, invasion of major mediastinal or neurovascular structures, or separate nodules in a different ipsilateral lobe.",
+    "bullets": [
+      "Mediastinum, thymus, trachea, carina, recurrent laryngeal nerve, vagus nerve, esophagus, and diaphragm invasion are T4 features.",
+      "Heart, great vessel, subclavian vessel, vertebral body, spinal canal, cervical nerve root, and brachial plexus invasion are T4 features.",
+      "Separate tumor nodules in a different ipsilateral lobe are T4."
+    ],
+    "changedFrom8th": "The 9th edition keeps the 8th-edition T4 descriptor set."
+  },
+  {
+    "id": "n-overview",
+    "category": "N",
+    "title": "Regional nodal descriptor",
+    "summary": "N is determined by laterality, nodal basin, and in the 9th edition the number of involved N2 stations.",
+    "bullets": [
+      "Ipsilateral hilar, peribronchial, and intrapulmonary nodes are N1.",
+      "Ipsilateral mediastinal and subcarinal nodes are N2.",
+      "Contralateral mediastinal or hilar nodes, plus scalene/supraclavicular nodes, are N3."
+    ],
+    "changedFrom8th": "The main N update is subdivision of N2 into N2a for one N2 station and N2b for multiple N2 stations."
+  },
+  {
+    "id": "n2a-n2b",
+    "category": "N",
+    "title": "N2a versus N2b",
+    "summary": "N2a means a single ipsilateral mediastinal or subcarinal station is involved; N2b means more than one such station is involved.",
+    "bullets": [
+      "Station 7 is a subcarinal N2 station regardless of primary tumor side.",
+      "For lateralized mediastinal stations such as 2R/2L and 4R/4L, primary tumor side determines N2 versus N3.",
+      "Counting stations matters because some TNM combinations move when N2a becomes N2b."
+    ],
+    "changedFrom8th": "8th edition used a single N2 category; 9th edition separates single-station and multi-station N2 disease."
+  },
+  {
+    "id": "n3",
+    "category": "N",
+    "title": "N3: contralateral or supraclavicular/scalene disease",
+    "summary": "N3 outranks N1 and N2 whenever a positive node is contralateral or in scalene/supraclavicular territory.",
+    "bullets": [
+      "Contralateral station 2 or 4 is N3.",
+      "Contralateral hilar or intrapulmonary disease is also N3.",
+      "Scalene or supraclavicular nodal involvement is N3 on either side."
+    ],
+    "changedFrom8th": "The N3 definition is carried forward; the 9th-edition novelty is the additional detail below N2."
+  },
+  {
+    "id": "m-overview",
+    "category": "M",
+    "title": "Distant metastasis descriptor",
+    "summary": "M describes pleural/pericardial spread, contralateral pulmonary nodules, and extrathoracic metastasis burden.",
+    "bullets": [
+      "M1a includes malignant pleural or pericardial effusion, pleural/pericardial nodules, or a contralateral lung nodule.",
+      "M1b is a single extrathoracic metastasis in one organ system.",
+      "M1c is reserved for multiple extrathoracic metastases and is now subdivided."
+    ],
+    "changedFrom8th": "The 9th edition divides M1c into M1c1 and M1c2."
+  },
+  {
+    "id": "m1c",
+    "category": "M",
+    "title": "M1c1 versus M1c2",
+    "summary": "M1c1 means multiple extrathoracic metastases in one organ system; M1c2 means multiple extrathoracic metastases in more than one organ system.",
+    "bullets": [
+      "Multiple bone lesions remain one organ system and are M1c1.",
+      "Multiple liver lesions remain one organ system and are M1c1.",
+      "Bone plus liver disease crosses organ systems and is M1c2."
+    ],
+    "changedFrom8th": "8th edition grouped these as M1c; 9th edition separates single-organ-system from multi-organ-system metastatic burden."
+  },
+  {
+    "id": "stage-group-changes",
+    "category": "Stage",
+    "title": "Selected 9th-edition stage-group moves",
+    "summary": "Stage groups were adjusted to reflect N2a/N2b and contemporary prognosis while preserving treatment judgment.",
+    "bullets": [
+      "T1N1 is stage IIA.",
+      "T1N2a is stage IIB.",
+      "T2N2b is stage IIIB.",
+      "T3N2a is stage IIIA."
+    ],
+    "changedFrom8th": "These are the most visible stage-group shifts for learners using the 9th-edition matrix."
+  }
+]

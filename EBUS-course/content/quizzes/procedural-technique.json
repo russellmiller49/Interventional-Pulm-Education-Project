@@ -1,0 +1,168 @@
+[
+  {
+    "id": "technique-order-01",
+    "moduleId": "station-explorer",
+    "prompt": "Order the procedural steps in the most defensible teaching sequence.",
+    "type": "ordering",
+    "options": [
+      {
+        "id": "orientation",
+        "label": "Re-establish airway landmark and neutral orientation",
+        "rationale": "This is the safest starting point because it restores spatial context."
+      },
+      {
+        "id": "contact",
+        "label": "Optimize balloon contact and image coupling",
+        "rationale": "This should occur before detailed image interpretation or needle deployment."
+      },
+      {
+        "id": "optimize",
+        "label": "Set depth, gain, and contrast to define the target",
+        "rationale": "Image optimization matters after contact creates a real acoustic window."
+      },
+      {
+        "id": "doppler",
+        "label": "Check the intended puncture path with Doppler",
+        "rationale": "This is the safety review immediately before the pass."
+      },
+      {
+        "id": "puncture",
+        "label": "Deploy the needle and sample with controlled fanning",
+        "rationale": "This is the final step once the tract and target are confirmed."
+      }
+    ],
+    "correctOptionIds": [
+      "orientation",
+      "contact",
+      "optimize",
+      "doppler",
+      "puncture"
+    ],
+    "explanation": "A reliable sequence begins with spatial orientation, then coupling, then grayscale optimization, then Doppler safety review, and only then needle deployment with controlled sampling.",
+    "difficulty": "basic",
+    "tags": [
+      "station-explorer",
+      "procedural-technique",
+      "ordering"
+    ]
+  },
+  {
+    "id": "technique-target-02",
+    "moduleId": "station-explorer",
+    "prompt": "A heterogeneous node has a necrotic-appearing avascular center and a solid viable-looking rim. Which target strategy is best?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "Prioritize the solid viable rim and fan through representative areas",
+        "rationale": "Correct. This strategy is more likely to capture viable diagnostic tissue."
+      },
+      {
+        "id": "b",
+        "label": "Aim repeatedly at the center because it is easiest to keep in view",
+        "rationale": "Incorrect. The easiest visual target may be the lowest-yield biologic target."
+      },
+      {
+        "id": "c",
+        "label": "Ignore the grayscale architecture if the tract is Doppler-negative",
+        "rationale": "Incorrect. Doppler helps with safety, but target selection within the node still matters."
+      },
+      {
+        "id": "d",
+        "label": "Sample only the capsule without traversing meaningful tissue",
+        "rationale": "Incorrect. Capsule-only passes do not fulfill the point of capsule-to-capsule sampling."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "The highest-yield pass is not always the easiest path. In a heterogeneous node, viable tissue selection and angle variation matter as much as safe tract planning.",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-explorer",
+      "procedural-technique",
+      "target-selection"
+    ]
+  },
+  {
+    "id": "technique-low-yield-03",
+    "moduleId": "station-explorer",
+    "prompt": "Select the factors that commonly contribute to non-diagnostic EBUS-TBNA specimens.",
+    "type": "multi-select",
+    "options": [
+      {
+        "id": "a",
+        "label": "Poor probe contact that creates a misleading image",
+        "rationale": "Correct. Bad coupling can make both interpretation and targeting unreliable."
+      },
+      {
+        "id": "b",
+        "label": "Repeated passes through the same narrow tract without fanning",
+        "rationale": "Correct. That limits tissue diversity and can repeat a low-yield path."
+      },
+      {
+        "id": "c",
+        "label": "Sampling a necrotic central cavity instead of viable tissue",
+        "rationale": "Correct. Necrotic regions often reduce diagnostic yield."
+      },
+      {
+        "id": "d",
+        "label": "Performing a Doppler vessel check before puncture",
+        "rationale": "Incorrect. Doppler review is part of safe technique, not a cause of low yield."
+      }
+    ],
+    "correctOptionIds": [
+      "a",
+      "b",
+      "c"
+    ],
+    "explanation": "Low yield often starts before the needle enters the node. Poor contact, poor target choice, and repetitive sampling of the same path are more common causes than inadequate force or speed.",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-explorer",
+      "procedural-technique",
+      "pitfalls"
+    ]
+  },
+  {
+    "id": "technique-fanning-04",
+    "moduleId": "station-explorer",
+    "prompt": "Which statement best describes fanning and capsule-to-capsule sampling?",
+    "type": "case-vignette",
+    "caseTitle": "One tract feels busy, but does not broaden the sample",
+    "caseSummary": "A learner performs multiple vigorous strokes through the same line and assumes that this automatically equals adequate sampling.",
+    "options": [
+      {
+        "id": "a",
+        "label": "Fanning means changing angle to sample different viable regions, and capsule-to-capsule language emphasizes using the breadth of the node rather than a single tunnel",
+        "rationale": "Correct. That is the key educational concept."
+      },
+      {
+        "id": "b",
+        "label": "Fanning means increasing gain during the pass so more of the node appears bright",
+        "rationale": "Incorrect. Fanning is a needle path concept, not a processor control."
+      },
+      {
+        "id": "c",
+        "label": "Capsule-to-capsule sampling means puncturing only the outermost shell of the node",
+        "rationale": "Incorrect. The phrase refers to traversing across the representative tissue breadth, not skimming only the edge."
+      },
+      {
+        "id": "d",
+        "label": "If the first pass is smooth, fanning adds no educational value",
+        "rationale": "Incorrect. Smooth mechanics do not guarantee broad or representative tissue capture."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "Fanning broadens tissue capture. Capsule-to-capsule language reminds the learner to use the node's viable breadth rather than repeatedly drilling the same tunnel.",
+    "difficulty": "advanced",
+    "tags": [
+      "station-explorer",
+      "procedural-technique",
+      "fanning",
+      "capsule-to-capsule"
+    ]
+  }
+]

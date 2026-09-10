@@ -1,5 +1,5 @@
 [variables]
-NIXPACKS_NODE_VERSION = "20.12.2"
+NIXPACKS_NODE_VERSION = "22"
 
 [phases.install]
 cmds = ["npm install --legacy-peer-deps"]

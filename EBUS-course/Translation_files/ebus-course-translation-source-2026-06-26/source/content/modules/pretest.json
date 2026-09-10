@@ -1,0 +1,638 @@
+{
+  "id": "pretest",
+  "title": "EBUS 2026 Pre-Test",
+  "summary": "Baseline 25-question assessment from the final 2026 pre/post-test set. Scores are recorded before the practice modules and lecture sequence unlock.",
+  "instructions": [
+    "Complete the full pre-test after the welcome and course introduction video.",
+    "Correct answers and explanations are intentionally hidden during the pre-test experience.",
+    "Your saved score unlocks the practice modules and the next course video."
+  ],
+  "demoPolicy": "This educational pre-test records score and completion status for course progression. It is not a diagnostic instrument.",
+  "questions": [
+    {
+      "id": "pretest-final-2026-q01",
+      "prompt": "A 67-year-old never-smoker presents with mediastinal adenopathy and a right hilar mass. Convex-probe endobronchial ultrasound-guided transbronchial needle aspiration (cpEBUS-TBNA) of station 7 establishes metastatic lung adenocarcinoma. The cytopathologist reports that the specimen is adequate for one coordinated ancillary-testing strategy, but material is limited. Which testing approach is most likely to preserve tissue while maximizing detection of actionable genomic alterations?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "PD-L1 testing alone because it can guide first-line treatment decisions"
+        },
+        {
+          "id": "b",
+          "label": "Repeat cpEBUS-TBNA before any molecular testing is sent"
+        },
+        {
+          "id": "c",
+          "label": "Sequential single-gene testing one assay at a time, starting with EGFR and adding others only if negative"
+        },
+        {
+          "id": "d",
+          "label": "A broad DNA/RNA next-generation sequencing (NGS) panel coordinated with programmed death ligand 1 (PD-L1) testing"
+        }
+      ],
+      "correctOptionId": "d"
+    },
+    {
+      "id": "pretest-final-2026-q02",
+      "prompt": "A 64-year-old man with a 45-pack-year smoking history undergoes PET-CT for a 2.6-cm right upper lobe adenocarcinoma. EBUS-TBNA is malignant at station 4R and negative at stations 7 and 11R. There is no evidence of other metastases. Given the available information, which of the following is the correct TNM-overall stage pairing according to the 9th edition of the IASLC/UICC TNM lung cancer staging classification?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "T1cN3Mo--Stage IIIB"
+        },
+        {
+          "id": "b",
+          "label": "T1aN1M0--Stage IIA"
+        },
+        {
+          "id": "c",
+          "label": "T1cN2aM0--Stage IIB"
+        },
+        {
+          "id": "d",
+          "label": "T1cN2M0\u2014Stage IIIA"
+        }
+      ],
+      "correctOptionId": "c"
+    },
+    {
+      "id": "pretest-final-2026-q03",
+      "prompt": "A patient with suspected metastatic left lung adenocarcinoma has three accessible nodes on cpEBUS: an 8mm, round and well-circumscribed 11L node, a 19mm, partially necrotic station 7 node, and a 13mm intensely FDG-avid 4R node. Which is the best choice to maximize chances of successful comprehensive next-generation sequencing (NGS) tumor genetic analysis?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "The 7 node"
+        },
+        {
+          "id": "b",
+          "label": "The 4R node"
+        },
+        {
+          "id": "c",
+          "label": "Any node, as long as malignant cells are identified on rapid on-site evaluation (ROSE)"
+        },
+        {
+          "id": "d",
+          "label": "The 11R node"
+        }
+      ],
+      "correctOptionId": "b"
+    },
+    {
+      "id": "pretest-final-2026-q04",
+      "prompt": "Which of the following sets contains only lymph node stations that are directly and routinely accessible by standard convex-probe EBUS-TBNA from the airway?",
+      "type": "single-best-answer",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "2R, 10R, 11L"
+        },
+        {
+          "id": "b",
+          "label": "1R, 3A, 11R"
+        },
+        {
+          "id": "c",
+          "label": "4L, 7, 8L"
+        },
+        {
+          "id": "d",
+          "label": "5, 6, 9"
+        }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "pretest-final-2026-q05",
+      "prompt": "A 71-year-old obese man with obstructive sleep apnea presents with multistation mediastinal adenopathy and a 1.8-cm right upper lobe lung nodule lacking a bronchus sign. He is booked for advanced diagnostic bronchoscopy. A fellow will assist/perform much of the case under supervision, and rapid on-site evaluation (ROSE) is unavailable. Which anesthesia approach should be planned?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "Deep/GA for the nodule portion first, with de-escalation to moderate sedation if needed for cpEBUS nodal sampling"
+        },
+        {
+          "id": "b",
+          "label": "Moderate sedation with IV midazolam and fentanyl for the entire case"
+        },
+        {
+          "id": "c",
+          "label": "Deep sedation/general anesthesia (GA) using IV propofol and remifentanil for the entire case"
+        },
+        {
+          "id": "d",
+          "label": "Moderate sedation for the convex-probe (cp)EBUS portion first, with escalation to deep/GA if needed for lung nodule sampling"
+        }
+      ],
+      "correctOptionId": "c"
+    },
+    {
+      "id": "pretest-final-2026-q06",
+      "prompt": "A 64-year-old woman with heavy smoking history has a 4.2 cm spiculated peripheral right upper lobe lung mass. PET/CT shows multiple mediastinal nodes that are all subcentimeter in size and without significant FDG avidity. She is an operative candidate. Which is the best next step in management?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "CT-guided transthoracic needle biopsy of the lung mass"
+        },
+        {
+          "id": "b",
+          "label": "Mediastinoscopy for directed mediastinal staging of the right paratracheal space"
+        },
+        {
+          "id": "c",
+          "label": "Systematic cpEBUS-TBNA mediastinal staging"
+        },
+        {
+          "id": "d",
+          "label": "Proceed to right upper lobectomy"
+        }
+      ],
+      "correctOptionId": "c"
+    },
+    {
+      "id": "pretest-final-2026-q07",
+      "prompt": "A patient with a right upper lobe non-small cell lung cancer has sonographically visible station 4L, station 7, and station 11R nodes at the time of staging cpEBUS. Which planned sampling sequence will minimize the risk of false upstaging from needle contamination?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "4L -> 7 -> 11R"
+        },
+        {
+          "id": "b",
+          "label": "11R -> 4L -> 7"
+        },
+        {
+          "id": "c",
+          "label": "11R -> 7 -> 4L"
+        },
+        {
+          "id": "d",
+          "label": "7 -> 4L -> 11R"
+        }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "pretest-final-2026-q08",
+      "prompt": "A patient with a left upper lobe primary lung cancer has a suspicious node seen along the left lateral tracheal wall, above the superior border of the aortic arch and below the thoracic inlet. Which IASLC nodal station is most consistent with this description?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "2L"
+        },
+        {
+          "id": "b",
+          "label": "1L"
+        },
+        {
+          "id": "c",
+          "label": "4L"
+        },
+        {
+          "id": "d",
+          "label": "5"
+        }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "pretest-final-2026-q09",
+      "prompt": "A 55-year-old man receives an EBUS bronchoscopy to evaluate a right upper lobe cavitary lesion and necrotic mediastinal adenopathy. ROSE of the first EBUS-TBNA pass from the 4R node shows granulomatous inflammation. Which specimen-handling plan is best for the tissue obtained from additional sampling?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "Place remaining material in Roswell Park Memorial Institute (RPMI) solution and saline for flow cytometry, culture, and polymerase chain reaction (PCR) testing"
+        },
+        {
+          "id": "b",
+          "label": "Place remaining material on slides for further on-site cytology testing"
+        },
+        {
+          "id": "c",
+          "label": "Place remaining material in formalin and saline for cytohistology, culture, and PCR testing."
+        },
+        {
+          "id": "d",
+          "label": "Place remaining material in formalin for cytohistology testing"
+        }
+      ],
+      "correctOptionId": "c"
+    },
+    {
+      "id": "pretest-final-2026-q10",
+      "prompt": "A 66-year-old man with symptomatic gastroesophageal reflux and a suspicious left lower lobe lesion plus mediastinal adenopathy at stations 4R and 7 is scheduled for same-session cpEBUS-TBNA and advanced peripheral bronchoscopy. Which airway plan is most appropriate?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "Large endotracheal tube, ideally 8.5\u20139.0 mm if anatomy allows"
+        },
+        {
+          "id": "b",
+          "label": "No artificial airway; just nasal cannula oxygen"
+        },
+        {
+          "id": "c",
+          "label": "Supraglottic airway"
+        },
+        {
+          "id": "d",
+          "label": "CPAP with spontaneous breathing"
+        }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "pretest-final-2026-q11",
+      "prompt": "A 44-year-old man with fever, weight loss, and multistation mediastinal and hilar adenopathy undergoes CP-EBUS. Which sampling plan is most guideline-concordant?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "Four or more passes per relevant node, with material triaged for cell block plus saline and/or Roswell Park Memorial Institute (RPMI) medium as clinically indicated."
+        },
+        {
+          "id": "b",
+          "label": "Four passes combined across nodes, utilizing direct smears for sample processing."
+        },
+        {
+          "id": "c",
+          "label": "Two passes per relevant node, utilizing formalin-fixed cell block and microbiology triage for processing."
+        },
+        {
+          "id": "d",
+          "label": "Three passes per relevant node, utilizing formalin-fixed cell block only."
+        }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "pretest-final-2026-q12",
+      "prompt": "A novice EBUS bronchoscopist who is fairly skilled with routine therapeutic bronchoscopy has trouble intubating the trachea with the EBUS scope during a procedure without an airway adjunct. Once in the lower airway, they then repeatedly scrape the posterior airway wall and have difficulty with maneuvering, frequently getting \u2018stuck\u2019 at multiple carinae. What is the likely reason for this learning curve with EBUS bronchoscopy?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "The endoscopic view of the EBUS scope is forward-oblique rather than a straight 0-degree view."
+        },
+        {
+          "id": "b",
+          "label": "The working channel is too small to permit adequate suction of secretions."
+        },
+        {
+          "id": "c",
+          "label": "The transducer scans 360 degrees around the axis of the bronchoscope."
+        },
+        {
+          "id": "d",
+          "label": "The EBUS scope is much larger in diameter than a conventional therapeutic bronchoscope"
+        }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "pretest-final-2026-q13",
+      "prompt": "A 71-year-old woman has a 3.8-cm left lower lobe adenocarcinoma and multistation adenopathy.  She receives combined EBUS/EUS-B-TBNA during which nodal stations 4L, 7 and 8L are found to be involved with malignancy. Which nodal category is most appropriate?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "N2b"
+        },
+        {
+          "id": "b",
+          "label": "N3"
+        },
+        {
+          "id": "c",
+          "label": "N1"
+        },
+        {
+          "id": "d",
+          "label": "N2a"
+        }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "pretest-final-2026-q14",
+      "prompt": "A 61-year-old man with a heavy smoking history has a 3.9 cm left upper lobe spiculated central lung mass, multistation enlarged mediastinal nodes, and a 2.7 cm fluorodeoxyglucose-avid liver lesion. Assuming the patient is a reasonable medical candidate for all of the listed options, what is the appropriate approach in evaluating this patient\u2019s suspected lung cancer?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "Systematic cpEBUS-TBNA of mediastinal lymph nodes"
+        },
+        {
+          "id": "b",
+          "label": "Percutaneous biopsy of the liver lesion"
+        },
+        {
+          "id": "c",
+          "label": "CT-guided transthoracic needle biopsy of the lung mass"
+        },
+        {
+          "id": "d",
+          "label": "Mediastinoscopy of the largest mediastinal node"
+        }
+      ],
+      "correctOptionId": "b"
+    },
+    {
+      "id": "pretest-final-2026-q15",
+      "prompt": "A 66-year-old man with a right upper lobe squamous cell carcinoma is undergoing systematic convex-probe endobronchial ultrasound (cpEBUS) staging. From the distal trachea, the operator identifies a heterogenous, round node with well-defined margins in the right paratracheal region (Figure). On computed tomography, the node lies below the caudal margin of the left brachiocephalic (innominate) vein and above the lower rim of the azygos vein. Which International Association for the Study of Lung Cancer (IASLC) nodal station is being sampled?",
+      "type": "image-interpretation",
+      "imageAssetKey": "ebus-2026-final-station-4r",
+      "options": [
+        {
+          "id": "a",
+          "label": "4R"
+        },
+        {
+          "id": "b",
+          "label": "10R"
+        },
+        {
+          "id": "c",
+          "label": "7"
+        },
+        {
+          "id": "d",
+          "label": "2R"
+        }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "pretest-final-2026-q16",
+      "prompt": "A 64-year-old man presenting with dyspnea, weight loss, facial plethora and hyponatremia is found to have SVC syndrome and right mainstem bronchial narrowing related to bulky mediastinal adenopathy and a central lung mass. EBUS-TBNA shows dispersed and loosely cohesive sheets of malignant cells with scant cytoplasm, nuclear molding, and frequent mitotic figures. Immunohistochemistry is positive for synaptophysin and TTF-1, and the Ki-67 proliferation index is very high. Which diagnosis is most likely?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "Squamous cell carcinoma"
+        },
+        {
+          "id": "b",
+          "label": "Typical carcinoid tumor"
+        },
+        {
+          "id": "c",
+          "label": "Lung adenocarcinoma"
+        },
+        {
+          "id": "d",
+          "label": "Small cell lung carcinoma"
+        }
+      ],
+      "correctOptionId": "d"
+    },
+    {
+      "id": "pretest-final-2026-q17",
+      "prompt": "During a complete CP-EBUS mediastinal staging examination for a right upper lobe non-small cell lung cancer, rapid on-site evaluation from station 7 shows metastatic carcinoma. Station 4R is also enlarged. What is the best next step?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "Conclude cpEBUS and switch to peripheral navigation bronchoscopy and sample the primary lesion."
+        },
+        {
+          "id": "b",
+          "label": "Complete sample acquisition from station 7 to ensure tissue for molecular marker analysis and conclude the procedure."
+        },
+        {
+          "id": "c",
+          "label": "Conclude the procedure and refer for mediastinoscopy for 4R sampling."
+        },
+        {
+          "id": "d",
+          "label": "Complete sample acquisition from station 7 to ensure tissue for molecular marker analysis and then continue to station 4R for further cpEBUS sampling."
+        }
+      ],
+      "correctOptionId": "d"
+    },
+    {
+      "id": "pretest-final-2026-q18",
+      "prompt": "Immediately after needle puncture of a station 4R lymph node, the image below is seen on the EBUS monitor. What should be the immediate next step in technique?",
+      "type": "image-interpretation",
+      "imageAssetKey": "ebus-2026-final-reverberation",
+      "options": [
+        {
+          "id": "a",
+          "label": "Retract the needle back into the scope and readjust the depth of the sheath-needle apparatus."
+        },
+        {
+          "id": "b",
+          "label": "Stabilize the needle and ensure scope angulation and anchoring against the airway wall"
+        },
+        {
+          "id": "c",
+          "label": "Adjust the gain on the EBUS console."
+        },
+        {
+          "id": "d",
+          "label": "Retract the needle back into the scope and reattempt puncture."
+        }
+      ],
+      "correctOptionId": "b"
+    },
+    {
+      "id": "pretest-final-2026-q19",
+      "prompt": "A 63-year-old woman with a right lower lobe mass, multistation thoracic adenopathy and a pleural effusion undergoes EBUS-TBNA. After two passes of a large N3 station node, rapid on-site evaluation (ROSE) shows abundant malignant cells consistent with likely adenocarcinoma. The oncologist emphasizes the need for a high probability of successful broad molecular profiling from the initial procedure. What is the best approach to further work up in this scenario?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "Perform advanced peripheral navigational bronchoscopy with cryobiopsy of the primary lung mass to obtain more tissue."
+        },
+        {
+          "id": "b",
+          "label": "Complete EBUS-TBNA of the remaining nodal stations."
+        },
+        {
+          "id": "c",
+          "label": "Obtain at least two more passes for ROSE from the N3 lymph node and then conclude the procedure."
+        },
+        {
+          "id": "d",
+          "label": "Obtain at least two more passes for cell block from the N3 lymph node and then conclude the procedure."
+        }
+      ],
+      "correctOptionId": "d"
+    },
+    {
+      "id": "pretest-final-2026-q20",
+      "prompt": "A 58-year-old woman with recurrent lung cancer is undergoing cpEBUS-TBNA for targeted sampling of a single enlarged station 2R lymph node. Because of narcotic tolerance due to chronic pain, a previous case initiated with moderate sedation was prematurely aborted due to patient agitation, and thus general anesthesia is planned for the current procedure.  Otherwise, the patient has no significant reflux or aspiration risk, and peripheral bronchoscopy is not planned. Which airway conduit is most appropriate?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "High-flow nasal oxygen"
+        },
+        {
+          "id": "b",
+          "label": "Supraglottic airway"
+        },
+        {
+          "id": "c",
+          "label": "A 7.5-mm endotracheal tube (ETT)"
+        },
+        {
+          "id": "d",
+          "label": "Rigid bronchoscope"
+        }
+      ],
+      "correctOptionId": "b"
+    },
+    {
+      "id": "pretest-final-2026-q21",
+      "prompt": "A 70-year-old former smoker has a 4.3-cm spiculated right upper lobe mass and a second 1.8-cm left lower lobe nodule. Both are FDG-avid. There are several non-enlarged, PET-negative lymph nodes in the mediastinum. What is the best tissue evaluation strategy for this patient?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "Sample the dominant mass and mediastinal nodes by combined PNB+cpEBUS, perform CT-guided biopsy of the smaller nodule in a separate session."
+        },
+        {
+          "id": "b",
+          "label": "Perform PNB of the larger mass and cpEBUS mediastinal staging, observe the smaller nodule."
+        },
+        {
+          "id": "c",
+          "label": "Proceed to resection of the dominant mass, observe the smaller nodule."
+        },
+        {
+          "id": "d",
+          "label": "Same-session advanced peripheral navigational bronchoscopic (PNB) sampling of both lung lesions, with cpEBUS mediastinal staging."
+        }
+      ],
+      "correctOptionId": "d"
+    },
+    {
+      "id": "pretest-final-2026-q22",
+      "prompt": "A 72-year-old man with a drug-eluting coronary stent placed 6 weeks ago has a positron emission tomography-avid subcarinal node that requires tissue confirmation. He is taking aspirin 81mg and clopidogrel 75mg, has no active bleeding, and has a normal platelet count. Which is the cpEBUS preparation plan most consistent with current EBUS guidance?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "Stop both agents for 7 days"
+        },
+        {
+          "id": "b",
+          "label": "Bridge with low-molecular-weight heparin and stop both antiplatelet agents"
+        },
+        {
+          "id": "c",
+          "label": "Stop aspirin for 7 days and continue clopidogrel"
+        },
+        {
+          "id": "d",
+          "label": "Continue aspirin; clopidogrel may be continued if thrombosis risk is judged to exceed bleeding risk after cardiology input"
+        }
+      ],
+      "correctOptionId": "d"
+    },
+    {
+      "id": "pretest-final-2026-q23",
+      "prompt": "A 66-year-old man undergoes endobronchial ultrasound-guided transbronchial needle aspiration (EBUS-TBNA) of a right lower paratracheal lymph node during lung cancer staging. Rapid on-site evaluation shows abundant small mature lymphocytes with scant cytoplasm, and the nuclei are fairly uniform and similar in size to nearby red blood cells. There are scattered bronchial epithelial cells with preserved polarity and cilia. Which cytologic interpretation is most accurate?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "Representative benign lymph node with respiratory contamination"
+        },
+        {
+          "id": "b",
+          "label": "Granulomatous lymphadenitis"
+        },
+        {
+          "id": "c",
+          "label": "Metastatic squamous cell carcinoma"
+        },
+        {
+          "id": "d",
+          "label": "Nonrepresentative needle aspirate"
+        }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "pretest-final-2026-q24",
+      "prompt": "Tissue sampling is planned in a patient with suspected advanced lung cancer. The primary lesion is in the right upper lobe and 2.8-cm in size. There are multifocal FDG-avid lymph nodes, including in the 4R, 7 and 4L stations (Figure). Rapid on-site evaluation is available. Which procedural approach is most appropriate?",
+      "type": "image-interpretation",
+      "imageAssetKey": "ebus-2026-final-mediastinal-pet",
+      "options": [
+        {
+          "id": "a",
+          "label": "CT-guided transthoracic needle biopsy (CT-TTNB) of the right upper lobe mass, then cpEBUS if CT-TTNB is nondiagnostic"
+        },
+        {
+          "id": "b",
+          "label": "cpEBUS first, then PNB only if ROSE is negative."
+        },
+        {
+          "id": "c",
+          "label": "Both cpEBUS and PNB in either sequence, regardless of ROSE results"
+        },
+        {
+          "id": "d",
+          "label": "Advanced peripheral navigational bronchoscopy (PNB) only since the PET scan already shows metastases"
+        }
+      ],
+      "correctOptionId": "b"
+    },
+    {
+      "id": "pretest-final-2026-q25",
+      "prompt": "A patient is being evaluated for the first time for suspected sarcoidosis and cpEBUS-TBNA of thoracic nodes is planned. Which of the following is an appropriate technical approach to the procedure?",
+      "type": "scenario",
+      "imageAssetKey": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "At least 20 agitations per needle pass is needed for suspected granulomatous disease"
+        },
+        {
+          "id": "b",
+          "label": "Intranodal cryobiopsy should be the default sampling technique"
+        },
+        {
+          "id": "c",
+          "label": "A 21-gauge needle is preferred"
+        },
+        {
+          "id": "d",
+          "label": "If rapid on-site cytologic evaluation is unavailable, 3 needle passes from a single node are sufficient for diagnosis"
+        }
+      ],
+      "correctOptionId": "c"
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "locations": [
+    {
+      "id": "peripheral",
+      "label": "Peripheral",
+      "summary": "No central airway or invasion feature selected."
+    },
+    {
+      "id": "central",
+      "label": "Central/main bronchus",
+      "summary": "Main bronchus involvement without carina is a T2a feature."
+    },
+    {
+      "id": "pleural",
+      "label": "Visceral pleural",
+      "summary": "Visceral pleural invasion is a T2a feature."
+    },
+    {
+      "id": "mediastinal",
+      "label": "Mediastinal",
+      "summary": "Mediastinal or selected organ invasion can make the tumor T4."
+    },
+    {
+      "id": "diaphragmatic",
+      "label": "Diaphragmatic",
+      "summary": "Diaphragm invasion is a T4 feature."
+    }
+  ],
+  "invasionRules": [
+    {
+      "id": "visceral-pleura",
+      "label": "Visceral pleura",
+      "t": "T2a",
+      "summary": "Invasion beyond the elastic layer to visceral pleura is a T2 feature."
+    },
+    {
+      "id": "main-bronchus",
+      "label": "Main bronchus without carina",
+      "t": "T2a",
+      "summary": "Main bronchus involvement up to but not including the carina is T2a."
+    },
+    {
+      "id": "adjacent-lobe",
+      "label": "Adjacent lobe by direct invasion",
+      "t": "T2a",
+      "summary": "Direct invasion across or through a fissure is T2a unless another feature is higher."
+    },
+    {
+      "id": "chest-wall",
+      "label": "Parietal pleura/chest wall",
+      "t": "T3",
+      "summary": "Parietal pleural or chest wall invasion is T3."
+    },
+    {
+      "id": "phrenic-azygos",
+      "label": "Pericardium, phrenic nerve, or azygos",
+      "t": "T3",
+      "summary": "These selected local invasion findings are T3."
+    },
+    {
+      "id": "mediastinum",
+      "label": "Mediastinum/trachea/carina/esophagus",
+      "t": "T4",
+      "summary": "Invasion of major mediastinal structures is T4."
+    },
+    {
+      "id": "diaphragm",
+      "label": "Diaphragm",
+      "t": "T4",
+      "summary": "Diaphragm invasion is T4 in the 9th-edition descriptor set."
+    },
+    {
+      "id": "great-vessel-heart",
+      "label": "Heart or great vessel",
+      "t": "T4",
+      "summary": "Heart, great vessel, and major thoracic vessel invasion are T4 features."
+    }
+  ],
+  "separateNoduleRules": [
+    {
+      "id": "none",
+      "label": "No separate nodule",
+      "summary": "T is driven by size and invasion features."
+    },
+    {
+      "id": "same-lobe",
+      "label": "Same lobe",
+      "t": "T3",
+      "summary": "Separate tumor nodules in the same lobe as the primary are T3."
+    },
+    {
+      "id": "different-ipsilateral-lobe",
+      "label": "Different ipsilateral lobe",
+      "t": "T4",
+      "summary": "Separate tumor nodules in a different ipsilateral lobe are T4."
+    },
+    {
+      "id": "contralateral-lobe",
+      "label": "Contralateral lung",
+      "m": "M1a",
+      "summary": "A separate tumor nodule in the contralateral lung is M1a rather than a higher T descriptor."
+    }
+  ],
+  "atelectasisNote": "Atelectasis or obstructive pneumonitis extending to the hilar region remains a T2 feature. In this module it raises a small tumor to T2a, but it does not outrank a larger size category or a T3/T4 invasion feature."
+}

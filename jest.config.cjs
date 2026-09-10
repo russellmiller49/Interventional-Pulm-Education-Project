@@ -14,6 +14,8 @@ const config = createJestConfig({
   // the main checkout collects every suite twice — once here and once inside each worktree — which
   // roughly doubles the suite count and fails the handful of tests that assert on repo paths.
   modulePathIgnorePatterns: [
+    '<rootDir>/navigation_module/',
+    '<rootDir>/EBUS-course/',
     '<rootDir>/.deploy_push/',
     '<rootDir>/.next/',
     '<rootDir>/e2e/',

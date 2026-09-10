@@ -1,0 +1,20 @@
+{
+  "createdAt": "2026-06-26",
+  "sourceLocale": "en",
+  "targetLocales": ["es", "zh-CN"],
+  "sourceRoot": "source",
+  "app": "SoCal EBUS Prep",
+  "repo": "/Users/russellmiller/Projects/EBUS-course",
+  "notes": [
+    "Structured curriculum files are the primary translation payload.",
+    "TypeScript and TSX files are included where learner-facing UI copy remains hard-coded.",
+    "Media binaries and built dist output are intentionally excluded.",
+    "Keep identifiers, route paths, asset paths, station IDs, and data schemas unchanged."
+  ],
+  "categories": {
+    "courseContent": "content/course, content/modules, content/quizzes, content/stations, content/tnm-staging",
+    "runtimeContent": "apps/web/src/content JSON and content definition TypeScript files",
+    "uiShellCopy": "selected apps/web/src app routes, components, and feature files with visible labels or messages",
+    "schemaContext": "apps/web/src/content/types.ts"
+  }
+}

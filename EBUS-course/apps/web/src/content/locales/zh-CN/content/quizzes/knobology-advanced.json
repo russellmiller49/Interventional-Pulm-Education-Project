@@ -1,0 +1,239 @@
+[
+  {
+    "id": "knobology-sequence-01",
+    "moduleId": "knobology",
+    "prompt": "图像顶部有一部分淋巴结被截断。应首先调整哪个控制项？",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "depth",
+        "label": "增加深度，使目标完整进入画面",
+        "rationale": "正确。先做好取景，再进行细微亮度调整或测量决策。"
+      },
+      {
+        "id": "gain",
+        "label": "增加增益，让被截断的淋巴结看起来更亮",
+        "rationale": "错误。亮度不能修正未完整进入视野的解剖结构。"
+      },
+      {
+        "id": "freeze",
+        "label": "冻结画面以检查边界",
+        "rationale": "错误。过早冻结只会保留一张取景不佳的图像。"
+      },
+      {
+        "id": "calipers",
+        "label": "在改变视图前放置测量卡尺",
+        "rationale": "错误。当目标尚未完整显示时，测量并不可靠。"
+      }
+    ],
+    "correctOptionIds": [
+      "depth"
+    ],
+    "explanation": "EBUS 图像补救从取景开始。一旦目标完全可见，增益和对比度的调整才更有意义。",
+    "difficulty": "basic",
+    "tags": [
+      "knobology",
+      "depth",
+      "control-sequence"
+    ]
+  },
+  {
+    "id": "knobology-cp-vs-rp-02",
+    "moduleId": "knobology",
+    "prompt": "哪项表述最能概括 RP-EBUS 与 CP-EBUS 之间的实际取舍？",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "RP-EBUS 通常更适合高分辨率的外周定位，而 CP-EBUS 提供更深部成像和实时针引导",
+        "rationale": "正确。这是记住分辨率与穿透深度、以及引导能力之间取舍的临床实用方法。"
+      },
+      {
+        "id": "b",
+        "label": "CP-EBUS 总是比 RP-EBUS 同时具有更好的穿透深度和更高分辨率",
+        "rationale": "错误。两种方式各有取舍，并不是一种在所有方面都更优。"
+      },
+      {
+        "id": "c",
+        "label": "RP-EBUS 主要因为具有多普勒并能实时引导经支气管针吸活检而被优先选择",
+        "rationale": "错误。多普勒和实时 TBNA 是 CP-EBUS 的关键优势，而不是 RP-EBUS 的优势。"
+      },
+      {
+        "id": "d",
+        "label": "两种系统只是在屏幕布局上不同，超声行为并无差异",
+        "rationale": "错误。它们的频率、几何结构、穿透深度和操作角色都有显著差异。"
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "一个有用的教学简化说法是：RP-EBUS 是用于外周操作的较高分辨率定位工具，而 CP-EBUS 为纵隔和肺门目标提供更深部成像、多普勒和实时取样。",
+    "difficulty": "intermediate",
+    "tags": [
+      "knobology",
+      "ultrasound-physics",
+      "cp-ebus",
+      "rp-ebus"
+    ]
+  },
+  {
+    "id": "knobology-artifact-03",
+    "moduleId": "knobology",
+    "prompt": "请选择哪些发现应使学习者更倾向于判断为伪影而非真实解剖。",
+    "type": "multi-select",
+    "options": [
+      {
+        "id": "a",
+        "label": "明亮界面产生等间距重复回声，并随反射界面移动",
+        "rationale": "正确。这种模式符合混响伪影，而不是真正的分层结构。"
+      },
+      {
+        "id": "b",
+        "label": "探头接触改善并改变角度后，暗区消失",
+        "rationale": "正确。随耦合改善和角度改变而消失的发现应怀疑为伪影。"
+      },
+      {
+        "id": "c",
+        "label": "多普勒在灰阶提示血管的位置正好显示血流信号",
+        "rationale": "错误。这更支持真实血管，而不是伪影。"
+      },
+      {
+        "id": "d",
+        "label": "疑似边界在改变接触后仍保持稳定，并得到多个视图支持",
+        "rationale": "错误。跨视图稳定性更支持真实解剖，而不是伪影。"
+      }
+    ],
+    "correctOptionIds": [
+      "a",
+      "b"
+    ],
+    "explanation": "伪影常表现得像反射：随界面移动、随角度改变，并在耦合改善时消失。真实解剖通常在小幅技术调整中更稳定。",
+    "difficulty": "intermediate",
+    "tags": [
+      "knobology",
+      "artifact",
+      "image-interpretation"
+    ]
+  },
+  {
+    "id": "knobology-order-04",
+    "moduleId": "knobology",
+    "prompt": "对于可能需要取样的目标，请按最合理的顺序排列工作流程。",
+    "type": "ordering",
+    "options": [
+      {
+        "id": "frame",
+        "label": "设置深度和取景",
+        "rationale": "这应放在第一步，因为需要先看到目标及其周围解剖结构。"
+      },
+      {
+        "id": "brightness",
+        "label": "调节增益和对比度",
+        "rationale": "这一步在取景之后，因为图像几何合理后才更容易判断边缘质量。"
+      },
+      {
+        "id": "doppler",
+        "label": "用多普勒检查预期路径",
+        "rationale": "这一步应在穿刺和测量前进行，因为它是安全步骤。"
+      },
+      {
+        "id": "freeze",
+        "label": "仅在有用时冻结并测量",
+        "rationale": "这应在图像可靠且完成血管检查后进行。"
+      }
+    ],
+    "correctOptionIds": [
+      "frame",
+      "brightness",
+      "doppler",
+      "freeze"
+    ],
+    "explanation": "可重复的流程可减少随机按键：先取景，其次优化灰阶图像，第三进行多普勒安全检查，只有当图像真正值得保存时才冻结或测量。",
+    "difficulty": "basic",
+    "tags": [
+      "knobology",
+      "ordering",
+      "safe-sampling"
+    ]
+  },
+  {
+    "id": "knobology-necrosis-05",
+    "moduleId": "knobology",
+    "prompt": "一个较大淋巴结中央为暗色无血管区，周边缘较实性。多普勒确认路径无血管后，下一步最好的教学做法是什么？",
+    "type": "case-vignette",
+    "caseTitle": "图像明亮，但中心取样产出低",
+    "caseSummary": "最容易的路径不穿过血流，但直接指向淋巴结最暗的部分。",
+    "options": [
+      {
+        "id": "a",
+        "label": "瞄准有活性的实性边缘，并在多个代表性区域进行扇形取样",
+        "rationale": "正确。明显坏死中心可能产出低；有活性的组织是更好的目标。"
+      },
+      {
+        "id": "b",
+        "label": "因为中心最容易显示，所以反复取样中心",
+        "rationale": "错误。易于显示并不意味着无血管坏死中心就是最佳取样目标。"
+      },
+      {
+        "id": "c",
+        "label": "因为多普勒阴性而忽略灰阶目标",
+        "rationale": "错误。多普勒有助于安全，但灰阶仍指导淋巴结中哪个部分值得取样。"
+      },
+      {
+        "id": "d",
+        "label": "穿刺前增加增益，直到暗色中心看起来更实性",
+        "rationale": "错误。人为提高图像亮度不会把坏死组织变成更高产出的目标。"
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "多普勒有助于排除血管，但淋巴结内部的目标选择仍然重要。淋巴结不均质时，应取样有活性的组织并进行扇形取样，而不是反复穿过明显坏死腔。",
+    "difficulty": "advanced",
+    "tags": [
+      "knobology",
+      "case",
+      "doppler",
+      "necrosis",
+      "target-selection"
+    ]
+  },
+  {
+    "id": "knobology-doppler-06",
+    "moduleId": "knobology",
+    "prompt": "在进行一次 EBUS-TBNA 前开启多普勒的最佳理由是什么？",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "识别邻近血管内血流并优化安全穿刺路径",
+        "rationale": "正确。这是取样前最有价值的实际用途。"
+      },
+      {
+        "id": "b",
+        "label": "替代对淋巴结结构的灰阶解读",
+        "rationale": "错误。多普勒补充灰阶成像，而不是替代它。"
+      },
+      {
+        "id": "c",
+        "label": "像对比度一样改善淋巴结边界",
+        "rationale": "错误。多普勒提供血流信息，而不是灰阶边缘分离。"
+      },
+      {
+        "id": "d",
+        "label": "不取组织就确定最终诊断",
+        "rationale": "错误。多普勒可细化可疑程度和安全性，但组织诊断仍是决定性的。"
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "在此情境中，多普勒主要是安全和目标选择工具。它帮助确认预期路径是否穿过血管结构，以及可疑区域是无血管还是有血管。",
+    "difficulty": "basic",
+    "tags": [
+      "knobology",
+      "doppler",
+      "safety"
+    ]
+  }
+]

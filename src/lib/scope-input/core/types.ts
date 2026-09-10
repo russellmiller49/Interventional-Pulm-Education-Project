@@ -3,7 +3,7 @@
  * Contract: docs/scope-tracker-web-contract.md (this repo).
  *
  * This module is dependency-free and browser/SSR safe. It is the canonical copy;
- * vendored copies in the simulator repos are overwritten by `npm run sync:scope-input`.
+ * both embedded apps import this source directly.
  */
 
 export interface GamepadButtonLike {

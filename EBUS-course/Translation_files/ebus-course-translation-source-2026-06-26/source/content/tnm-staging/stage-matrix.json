@@ -1,0 +1,179 @@
+{
+  "sourceLabel": "IASLC 9th edition lung cancer TNM stage groups",
+  "tCategories": [
+    {
+      "id": "T1a",
+      "label": "T1a",
+      "descriptor": "Tumor 1 cm or smaller"
+    },
+    {
+      "id": "T1b",
+      "label": "T1b",
+      "descriptor": "Tumor greater than 1 cm and 2 cm or smaller"
+    },
+    {
+      "id": "T1c",
+      "label": "T1c",
+      "descriptor": "Tumor greater than 2 cm and 3 cm or smaller"
+    },
+    {
+      "id": "T2a",
+      "label": "T2a",
+      "descriptor": "Tumor greater than 3 cm and 4 cm or smaller, or a qualifying T2 feature"
+    },
+    {
+      "id": "T2b",
+      "label": "T2b",
+      "descriptor": "Tumor greater than 4 cm and 5 cm or smaller"
+    },
+    {
+      "id": "T3",
+      "label": "T3",
+      "descriptor": "Tumor greater than 5 cm and 7 cm or smaller, selected local invasion, or same-lobe separate nodules"
+    },
+    {
+      "id": "T4",
+      "label": "T4",
+      "descriptor": "Tumor greater than 7 cm, major invasion, or separate nodule in a different ipsilateral lobe"
+    }
+  ],
+  "nCategories": [
+    {
+      "id": "N0",
+      "label": "N0",
+      "descriptor": "No regional nodal metastasis"
+    },
+    {
+      "id": "N1",
+      "label": "N1",
+      "descriptor": "Ipsilateral peribronchial, hilar, or intrapulmonary nodes"
+    },
+    {
+      "id": "N2a",
+      "label": "N2a",
+      "descriptor": "Single ipsilateral mediastinal or subcarinal station"
+    },
+    {
+      "id": "N2b",
+      "label": "N2b",
+      "descriptor": "Multiple ipsilateral mediastinal or subcarinal stations"
+    },
+    {
+      "id": "N3",
+      "label": "N3",
+      "descriptor": "Contralateral mediastinal or hilar, or scalene/supraclavicular nodes"
+    }
+  ],
+  "mCategories": [
+    {
+      "id": "M0",
+      "label": "M0",
+      "descriptor": "No distant metastasis"
+    },
+    {
+      "id": "M1a",
+      "label": "M1a",
+      "descriptor": "Pleural/pericardial nodules or malignant effusion, or contralateral lung nodule"
+    },
+    {
+      "id": "M1b",
+      "label": "M1b",
+      "descriptor": "Single extrathoracic metastasis in one organ system"
+    },
+    {
+      "id": "M1c1",
+      "label": "M1c1",
+      "descriptor": "Multiple extrathoracic metastases in one organ system"
+    },
+    {
+      "id": "M1c2",
+      "label": "M1c2",
+      "descriptor": "Multiple extrathoracic metastases in multiple organ systems"
+    }
+  ],
+  "mStageOverrides": {
+    "M1a": "IVA",
+    "M1b": "IVA",
+    "M1c1": "IVB",
+    "M1c2": "IVB"
+  },
+  "rows": [
+    {
+      "t": "T1a",
+      "descriptor": "1 cm or smaller",
+      "stages": {
+        "N0": "IA1",
+        "N1": "IIA",
+        "N2a": "IIB",
+        "N2b": "IIIA",
+        "N3": "IIIB"
+      }
+    },
+    {
+      "t": "T1b",
+      "descriptor": "greater than 1 cm and 2 cm or smaller",
+      "stages": {
+        "N0": "IA2",
+        "N1": "IIA",
+        "N2a": "IIB",
+        "N2b": "IIIA",
+        "N3": "IIIB"
+      }
+    },
+    {
+      "t": "T1c",
+      "descriptor": "greater than 2 cm and 3 cm or smaller",
+      "stages": {
+        "N0": "IA3",
+        "N1": "IIA",
+        "N2a": "IIB",
+        "N2b": "IIIA",
+        "N3": "IIIB"
+      }
+    },
+    {
+      "t": "T2a",
+      "descriptor": "T2a size or feature",
+      "stages": {
+        "N0": "IB",
+        "N1": "IIB",
+        "N2a": "IIIA",
+        "N2b": "IIIB",
+        "N3": "IIIB"
+      }
+    },
+    {
+      "t": "T2b",
+      "descriptor": "greater than 4 cm and 5 cm or smaller",
+      "stages": {
+        "N0": "IIA",
+        "N1": "IIB",
+        "N2a": "IIIA",
+        "N2b": "IIIB",
+        "N3": "IIIB"
+      }
+    },
+    {
+      "t": "T3",
+      "descriptor": "T3 size, invasion, or same-lobe nodule",
+      "stages": {
+        "N0": "IIB",
+        "N1": "IIIA",
+        "N2a": "IIIA",
+        "N2b": "IIIB",
+        "N3": "IIIC"
+      }
+    },
+    {
+      "t": "T4",
+      "descriptor": "T4 size, invasion, or different ipsilateral lobe nodule",
+      "stages": {
+        "N0": "IIIA",
+        "N1": "IIIA",
+        "N2a": "IIIB",
+        "N2b": "IIIB",
+        "N3": "IIIC"
+      }
+    }
+  ]
+}

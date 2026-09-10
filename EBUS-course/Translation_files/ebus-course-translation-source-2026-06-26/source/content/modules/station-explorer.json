@@ -1,0 +1,28 @@
+{
+  "introSections": [
+    {
+      "id": "triangulate",
+      "title": "Triangulate one station across three views",
+      "summary": "Keep the same station selected while you compare how it presents on CT, in the airway, and on the ultrasound screen. The goal is to translate one station identity across three representations without losing the staging implications.",
+      "takeaway": "One mental target, three representations, one staging consequence."
+    },
+    {
+      "id": "selector",
+      "title": "Use the selector as your anchor",
+      "summary": "Switch stations quickly, then read the same laterality, boundary cue, and memory cue across the tri-view cards and checklist.",
+      "takeaway": "If orientation slips, reset with the selected station chip, its confusion pair, and its boundary rule."
+    },
+    {
+      "id": "challenge",
+      "title": "Test recognition by representation",
+      "summary": "The challenge rotates CT, bronchoscopy, and ultrasound prompts so recall is not tied to just one view. The feedback should teach why the answer is correct, not just whether the learner clicked correctly.",
+      "takeaway": "Immediate explanation plus local accuracy tracking shows which stations still blur together."
+    }
+  ],
+  "reviewPrompts": [
+    "Can you move from CT to airway to ultrasound without changing the target station or its staging meaning?",
+    "Which confusion pair still slows you down when the representation changes?",
+    "Can you name one airway landmark and one ultrasound cue for each hilar or interlobar station?"
+  ],
+  "extensionNote": ""
+}
