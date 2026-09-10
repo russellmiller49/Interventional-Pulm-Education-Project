@@ -4,11 +4,11 @@
   "assets": [
     {
       "path": "room-hero.png",
-      "sourceSha256": "c9f8147dcb16a46c85ee03b65a4c3827fd2968d89025092ad3adf5403a7ce8c3",
-      "source": "Repository-authored room and gantry with the Slicer-derived thorax; actual room mode, without DOM overlays or a DRR",
+      "sourceSha256": "3ef1f256e3de70c4878af9bcd1b347ada2238747d6cf8aa815c3a357fec38b3d",
+      "source": "Repository-authored room, gantry and schematic patient context with the Slicer-derived thorax; actual room mode, without DOM overlays or a DRR",
       "provenance": "room-hero.json",
-      "sha256": "73391f4b86b12757c188f5314f5f716b550ca33dba26b97a54ae9cf0b32dbcf9",
-      "bytes": 133643
+      "sha256": "dfa096a52a72a13b9f59666eaa5acc069fb2045b51a7015af9a56ce8a30ad72c",
+      "bytes": 201045
     },
     {
       "path": "anatomy/thorax.glb",

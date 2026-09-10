@@ -9,12 +9,26 @@ import {
   rayThrough,
   subtract,
   suiteFrame,
+  chainStopAnchors,
+  roomMonitorOffset,
 } from '../components/suite/suiteModel'
 
 const closeVector = (actual: readonly number[], expected: readonly number[]) => {
   expect(actual).toHaveLength(expected.length)
   actual.forEach((n, i) => expect(n).toBeCloseTo(expected[i], 8))
 }
+it('room furniture spacing preserves the imaging frame and keeps the two monitor anchors together', () => {
+  const frame = suiteFrame(45, 0)
+  const initial = chainStopAnchors(frame)
+  const room = chainStopAnchors(frame, roomMonitorOffset(frame.geometry))
+  for (const stop of ['source', 'beam', 'patient', 'detector'] as const)
+    closeVector(room[stop], initial[stop])
+  closeVector(
+    subtract(room.display, room.reconstruction),
+    subtract(initial.display, initial.reconstruction),
+  )
+  expect(room.display[0]).toBeGreaterThan(initial.display[0])
+})
 describe('suite and existing FluoroView detector agreement to eight decimals', () => {
   for (const orbit of [-75, 0, 30, 90])
     for (const tilt of [-25, 0, 15, 25]) {

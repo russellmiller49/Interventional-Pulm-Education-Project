@@ -48,7 +48,7 @@ import { rayProfile } from '../../lib/rayProfile'
 import { labControl, labNumber } from '../../engine/labMetrics'
 import { LESION_CENTER, clamp, type Point3 } from '../../lib/physics'
 import { resolveSuiteInputs } from './suiteViewSpec'
-import { rayThrough, suiteFrame, temporal, cbctOrbitSamples } from './suiteModel'
+import { rayThrough, suiteFrame, temporal, cbctOrbitSamples, roomMonitorOffset } from './suiteModel'
 import { SuiteFallback } from './SuiteFallback'
 import type { ImagingSuitePaneProps, SuiteCamera } from './types'
 import styles from './suite-scene.module.css'
@@ -117,6 +117,10 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
   const dts = useTomosynthesis(view, inputs, props.controlsEnabled, visible, reducedMotion)
   const sceneOrbit = isCbct ? cbct.angle : dts.active ? dts.angle : inputs.orbit
   const sceneGeometry = isCbct ? cbct.setup.geometry : inputs.geometry
+  const monitorOffset = useMemo(
+    () => (isRoom ? roomMonitorOffset(sceneGeometry) : undefined),
+    [isRoom, sceneGeometry],
+  )
   const translation = isCbct ? cbct.setup.offset : registered?.currentOffset
   const overviewBounds = useMemo(
     () =>
@@ -131,7 +135,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
               return [f.source, ...f.corners]
             })
           : isRoom
-            ? roomBounds(sceneGeometry)
+            ? roomBounds(suiteFrame(sceneOrbit, inputs.tilt, sceneGeometry))
             : staffModel
               ? [
                   ...staffModel.rings.flatMap((ring) =>
@@ -148,6 +152,8 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
       inputs.sweepDeg,
       inputs.geometry,
       sceneGeometry,
+      sceneOrbit,
+      inputs.tilt,
       staffModel,
     ],
   )
@@ -357,6 +363,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                         layers={view.layers}
                         offset={translation}
                         contextOpacity={view.mode === 'sampling' ? 0.12 : 1}
+                        room={isRoom}
                       />
                       <Room
                         layers={view.layers}
@@ -368,6 +375,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                         <ParametricCarm
                           frame={frame}
                           variant={inputs.variant}
+                          atRest={isRoom}
                           lit={
                             view.mode === 'time' ? timeModel.pulseIsOn : view.litStop === 'source'
                           }
@@ -381,6 +389,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                             dose ? dose.fieldPercent : inputs.crop ? 100 : inputs.fieldPercent
                           }
                           target={dose ? frame.iso : undefined}
+                          opacity={isRoom ? 0.14 : undefined}
                         />
                       )}
                       {view.layers.includes('gantry') && (
@@ -454,6 +463,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                           lit={view.litStop}
                           answer={props.chainAnswer}
                           onCamera={onCamera}
+                          monitorOffset={monitorOffset}
                         />
                       )}
                       <FrameReady ready={onReady} />
@@ -463,6 +473,8 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       frame={frame}
                       enabled={props.controlsEnabled}
                       labelled={showChain}
+                      roomComposition={isRoom}
+                      monitorOffset={monitorOffset}
                       overviewBounds={overviewBounds}
                       focus={isCbct ? cbct.setup.target : undefined}
                       closeupDistance={

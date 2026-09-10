@@ -1,12 +1,22 @@
 'use client'
 import { DEFAULT_GEOMETRY, type ImagingGeometry, type Point3 } from '../../lib/physics'
 import type { SuiteLayer } from './types'
-import { add, chainStopAnchors, suiteFrame } from './suiteModel'
+import {
+  add,
+  scale,
+  chainStopAnchors,
+  suiteFrame,
+  roomMonitorOffset,
+  type SuiteFrame,
+} from './suiteModel'
+import { RoomGround } from './RoomGround'
+import { RoomPatient } from './RoomPatient'
 
 export const ROOM_BACKGROUND = '#061519'
 
 /** Fit each piece of furniture, rather than the empty corners of a box around the whole room. */
-export function roomBounds({ field, sid, sod }: ImagingGeometry): Point3[] {
+export function roomBounds(frame: SuiteFrame): Point3[] {
+  const { field, sid, sod } = frame.geometry
   const floorY = -sod - field * 0.25
   const boxes: [Point3, Point3][] = [
     [
@@ -38,11 +48,34 @@ export function roomBounds({ field, sid, sod }: ImagingGeometry): Point3[] {
       [field * 1.325, sod * 0.15 + field * 0.17, -field * 0.52],
     ],
   ]
-  return boxes.flatMap(([min, max]) =>
+  const monitorOffset = roomMonitorOffset(frame.geometry)
+  const furniture = boxes.flatMap(([min, max], index) =>
     [min[0], max[0]].flatMap((x) =>
-      [min[1], max[1]].flatMap((y) => [min[2], max[2]].map((z): Point3 => [x, y, z])),
+      [min[1], max[1]].flatMap((y) =>
+        [min[2], max[2]].map((z): Point3 => [x + (index >= 3 ? monitorOffset[0] : 0), y, z]),
+      ),
     ),
   )
+  const casing = frame.corners.map((point) => add(point, scale(frame.normal, field * 0.14)))
+  const arm = Array.from(
+    { length: 33 },
+    (_, index) => Math.PI / 2 + (Math.PI * index) / 32,
+  ).flatMap((angle) =>
+    [-1, 1].map((side) =>
+      add(
+        frame.iso,
+        add(
+          scale(frame.u, Math.cos(angle) * (sid / 2 + field * 0.195)),
+          add(
+            scale(frame.normal, sid / 2 - sod + Math.sin(angle) * (sid / 2 + field * 0.195)),
+            scale(frame.v, side * field * 0.1),
+          ),
+        ),
+      ),
+    ),
+  )
+  // The decorative ground cue fades at the viewport edge; fit the physical subject itself.
+  return [...furniture, ...casing, ...arm]
 }
 
 export function Room({
@@ -58,6 +91,8 @@ export function Room({
 }) {
   const f = geometry.field
   const floorY = -geometry.sod - f * 0.25
+  const tableY = -f * (atRest ? 0.33 : 0.26)
+  const supportTop = tableY - f * 0.0225
   const anchors = chainStopAnchors(suiteFrame(0, 0, geometry))
   return (
     <group>
@@ -69,26 +104,38 @@ export function Room({
           <meshStandardMaterial color="#192c36" roughness={1} />
         )}
       </mesh>
+      {atRest && <RoomGround geometry={geometry} />}
+      {atRest && layers.includes('Thoracic envelope') && <RoomPatient geometry={geometry} />}
       {layers.includes('table') && (
         <group>
-          <mesh position={[0, -f * 0.26, 0]}>
+          <mesh position={[0, tableY, 0]}>
             <boxGeometry args={[f * 0.7, f * 0.045, f * 2.3]} />
             <meshStandardMaterial color="#78909a" roughness={0.75} />
           </mesh>
-          <mesh position={[0, atRest ? (floorY - f * 0.29) / 2 : -f * 0.53, -f * 0.6]}>
-            <boxGeometry args={[f * 0.28, atRest ? -f * 0.29 - floorY : f * 0.5, f * 0.45]} />
+          <mesh position={[0, atRest ? (floorY + supportTop) / 2 : -f * 0.53, -f * 0.6]}>
+            <boxGeometry args={[f * 0.28, atRest ? supportTop - floorY : f * 0.5, f * 0.45]} />
             <meshStandardMaterial color="#415b68" />
           </mesh>
           {atRest && (
-            <mesh position={[0, floorY + f * 0.04, -f * 0.6]}>
-              <boxGeometry args={[f * 0.55, f * 0.08, f * 0.85]} />
-              <meshStandardMaterial color="#344f5d" roughness={0.8} />
-            </mesh>
+            <>
+              <mesh position={[0, tableY - f * 0.07, 0]}>
+                <boxGeometry args={[f * 0.5, f * 0.1, f * 2.15]} />
+                <meshStandardMaterial color="#466772" roughness={0.75} />
+              </mesh>
+              <mesh position={[0, tableY + f * 0.04, 0]}>
+                <boxGeometry args={[f * 0.64, f * 0.035, f * 2.23]} />
+                <meshStandardMaterial color="#5c7f86" roughness={1} />
+              </mesh>
+              <mesh position={[0, floorY + f * 0.04, -f * 0.6]}>
+                <boxGeometry args={[f * 0.55, f * 0.08, f * 0.85]} />
+                <meshStandardMaterial color="#344f5d" roughness={0.8} />
+              </mesh>
+            </>
           )}
         </group>
       )}
       {layers.includes('monitor') && (
-        <group>
+        <group position={atRest ? roomMonitorOffset(geometry) : undefined}>
           <mesh position={add(anchors.reconstruction, [0, -f * 0.15, 0])}>
             <boxGeometry args={[f * 0.32, f * 0.7, f * 0.3]} />
             <meshStandardMaterial color="#344f5d" />

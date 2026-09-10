@@ -1,8 +1,8 @@
 {
   "schema": "peripheral-imaging-room-render/v1",
   "authoredOn": "2026-09-09",
-  "source": "Repository-authored room and gantry with the Slicer-derived thorax; actual room mode, without DOM overlays or a DRR",
-  "sourceSha256": "c9f8147dcb16a46c85ee03b65a4c3827fd2968d89025092ad3adf5403a7ce8c3",
+  "source": "Repository-authored room, gantry and schematic patient context with the Slicer-derived thorax; actual room mode, without DOM overlays or a DRR",
+  "sourceSha256": "3ef1f256e3de70c4878af9bcd1b347ada2238747d6cf8aa815c3a357fec38b3d",
   "ctSourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
   "airwaySourceSha256": "277223b59550c1e037585e09205bdd7f8dc24e8abf9b4fd5875b5cb6f369ee69",
   "sources": [
@@ -16,15 +16,15 @@
     },
     {
       "path": "scripts/peripheral-imaging/room-fixture.ts",
-      "sha256": "a680b64e7fe0e58b039843e4fe86875bf5d1cc0052de2d465bb60036cc31587e"
+      "sha256": "6e393521f83b4ab84399b4caa9457d47325979bd32bf7f6454e2c4fe33111413"
     },
     {
       "path": "scripts/peripheral-imaging/render-room-hero.ts",
-      "sha256": "acc2069b0fc415d3660b4850ba9cffeb9aa20deeb85465c5140e42e174c39c1f"
+      "sha256": "3ff0c2b2fcfcd4cc153b87c10d7a04ead4ee628be830935aea5c2b0196398a08"
     },
     {
       "path": "scripts/peripheral-imaging/suite-harness.tsx",
-      "sha256": "00fd021058233c7ab124231f72cdf881523611f5532e3c425fa6299c4eefd4c3"
+      "sha256": "7f67ae7654bc0b7c248fa1641fbad86c05d92c38afa3fcb559f56cc1f05ac94e"
     },
     {
       "path": "src/features/peripheral-imaging/lib/physics.ts",
@@ -36,19 +36,35 @@
     },
     {
       "path": "src/features/peripheral-imaging/components/suite/Anatomy.tsx",
-      "sha256": "69c732b054ff1c06ee235ace60dc49b32dc86415e60c911312b5cd8f2abf246f"
+      "sha256": "10b2f6b1a27a4c6ffbcc7a5eb4d3528d2086e86f011bbb5a5c89ce674dfa1d95"
     },
     {
       "path": "src/features/peripheral-imaging/components/suite/CameraRig.tsx",
-      "sha256": "d3fa7ce634c924d055414f7d83efa5475f5271e893f01a6c264a436a65f9082a"
+      "sha256": "cc3815cf295a0f99909441efc0f96b79acf18de8470716e44065f6af603121d5"
     },
     {
       "path": "src/features/peripheral-imaging/components/suite/Room.tsx",
-      "sha256": "c1f06a3ecefc29abffaf8eec2603a055015c2f25d68855595dd8d84bdd0b393f"
+      "sha256": "cec5b55ad1fa5433b99405a2d343ba7434d633141d5969565876956b1c7f50de"
+    },
+    {
+      "path": "src/features/peripheral-imaging/components/suite/RoomGantry.tsx",
+      "sha256": "330acd9cc89dbfcb07369f2f88e20fb699c85ede5de97c90518bbbbb027a1743"
+    },
+    {
+      "path": "src/features/peripheral-imaging/components/suite/RoomGround.tsx",
+      "sha256": "278dcf3806ce2d6dc86756b4b3d174605eb2adc35400b6cdb4794c27d5738649"
+    },
+    {
+      "path": "src/features/peripheral-imaging/components/suite/RoomPatient.tsx",
+      "sha256": "fa5174f29e88d053404d2c5e5be64ef90b11695a8df81123e39d1c38f4e0c511"
+    },
+    {
+      "path": "src/features/peripheral-imaging/components/suite/ChainPins.tsx",
+      "sha256": "082611c3765732e802bc3348660b6fdc3238f707356423b7df54c2c5306395b3"
     },
     {
       "path": "src/features/peripheral-imaging/components/suite/ParametricCarm.tsx",
-      "sha256": "c05efdec2da031819a62fc4c6bc478cecfd207c5e77d8c03d908a8149bee9438"
+      "sha256": "3f66dd4985d0fbc325a19ecab10ef4932764a703e419a26538cce1c98a3182fb"
     },
     {
       "path": "src/features/peripheral-imaging/components/suite/DetectorImage.tsx",
@@ -56,7 +72,7 @@
     },
     {
       "path": "src/features/peripheral-imaging/components/suite/SuiteScene.tsx",
-      "sha256": "04eb54c6f0bf4bd8fc6fa2c6defe58a38e0aa0560ae8d2be70057f0ce8cf428a"
+      "sha256": "3f56eb607abb7d9dc83378f97732713dc274a334338ca25b29c26ee84d20d463"
     },
     {
       "path": "src/features/peripheral-imaging/components/suite/SuiteScenePane.tsx",
@@ -72,7 +88,7 @@
     },
     {
       "path": "src/features/peripheral-imaging/components/suite/suiteModel.ts",
-      "sha256": "cb67507a8f5def191944ac064b898121f4a57f332a52cf37c2ce25b0fb4439fb"
+      "sha256": "a182f74f4065f86db16706cdb248796af8664d0bdad4a528c17102bb62a0e960"
     },
     {
       "path": "src/features/peripheral-imaging/components/suite/suiteViewSpec.ts",
@@ -91,18 +107,27 @@
     "path": "room-hero.png",
     "width": 2400,
     "height": 1000,
-    "bytes": 133643,
-    "sha256": "73391f4b86b12757c188f5314f5f716b550ca33dba26b97a54ae9cf0b32dbcf9"
+    "bytes": 201045,
+    "sha256": "dfa096a52a72a13b9f59666eaa5acc069fb2045b51a7015af9a56ce8a30ad72c"
   },
   "render": {
     "background": "#061519",
     "camera": "room",
     "variant": "fixed",
     "defaults": {
-      "orbit": 30,
+      "orbit": 45,
       "tilt": 0
     },
-    "layers": ["Airways", "Lungs", "Ribs and spine", "table", "gantry", "monitor"],
+    "layers": [
+      "Thoracic envelope",
+      "Airways",
+      "Lungs",
+      "Ribs and spine",
+      "table",
+      "gantry",
+      "monitor",
+      "cone"
+    ],
     "deviceScaleFactor": 1,
     "antialias": true,
     "renderer": "ANGLE SwiftShader",

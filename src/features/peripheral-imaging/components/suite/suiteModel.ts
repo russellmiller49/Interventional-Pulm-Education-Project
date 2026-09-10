@@ -125,8 +125,15 @@ export function projectionMarkers(
 export function penumbraMm(focalSpotMm: number, depth: number, geometry = DEFAULT_GEOMETRY) {
   return focalSpotMm * (magnificationAt(depth, geometry) - 1)
 }
+/** Authored room spacing; labels and furniture use the same placement. */
+export function roomMonitorOffset(geometry: ImagingGeometry): Point3 {
+  return [geometry.field * 1.1, 0, 0]
+}
 /** The room is schematic; relative placements are expressed through the shared beam dimensions. */
-export function chainStopAnchors(frame: SuiteFrame): Record<ChainStop, Point3> {
+export function chainStopAnchors(
+  frame: SuiteFrame,
+  monitorOffset: Point3 = [0, 0, 0],
+): Record<ChainStop, Point3> {
   const { sod } = frame.geometry
   const field = DEFAULT_GEOMETRY.field
   return {
@@ -134,8 +141,8 @@ export function chainStopAnchors(frame: SuiteFrame): Record<ChainStop, Point3> {
     beam: add(frame.source, scale(frame.normal, sod * 0.45)),
     patient: frame.iso,
     detector: frame.detectorCenter,
-    reconstruction: [field * 0.85, -sod * 0.2, -field * 0.85],
-    display: [field * 1.1, sod * 0.15, -field * 0.55],
+    reconstruction: add([field * 0.85, -sod * 0.2, -field * 0.85], monitorOffset),
+    display: add([field * 1.1, sod * 0.15, -field * 0.55], monitorOffset),
   }
 }
 export function anatomyOffset(inputs: SuiteInputs, registration = false): Point3 {

@@ -13,11 +13,13 @@ export function Anatomy({
   offset = [0, 0, 0],
   map = false,
   contextOpacity = 1,
+  room = false,
 }: {
   layers: readonly SuiteLayer[]
   offset?: Point3
   map?: boolean
   contextOpacity?: number
+  room?: boolean
 }) {
   const { scene: original } = useGLTF(ANATOMY_MODEL, '/fluoroview/draco/')
   const invalidate = useThree((state) => state.invalidate)
@@ -43,6 +45,22 @@ export function Anatomy({
           )
           if (name === 'Lungs') material.opacity = map ? 0.06 : 0.12
           if (name === 'Ribs and spine') material.opacity = 0.23
+          if (room) {
+            // The room needs a patient silhouette at banner scale. Other teaching views keep
+            // their lighter context, including the registration map and sampling close-up.
+            const appearance = {
+              'Thoracic envelope': { color: '#a5c7cd', opacity: 0.22, order: 3 },
+              Lungs: { color: '#46b8b3', opacity: 0.36, order: 2 },
+              'Ribs and spine': { color: '#efe2c4', opacity: 0.7, order: 1 },
+              Airways: { color: '#c6ded8', opacity: 1, order: 0 },
+            }[name]
+            if (appearance) {
+              material.color.set(appearance.color)
+              material.opacity = appearance.opacity
+              material.transparent = appearance.opacity < 1
+              object.renderOrder = appearance.order
+            }
+          }
           material.roughness = 0.8
           if (contextOpacity < 1) {
             material.transparent = true
@@ -53,7 +71,7 @@ export function Anatomy({
       }
     })
     return clone
-  }, [original, map, contextOpacity])
+  }, [original, map, contextOpacity, room])
   useEffect(() => {
     scene.traverse((object) => {
       if (object instanceof Mesh)

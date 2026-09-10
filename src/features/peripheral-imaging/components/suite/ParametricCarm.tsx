@@ -4,15 +4,18 @@ import { BufferGeometry, DoubleSide, Float32BufferAttribute } from 'three'
 import { radians, type Point3 } from '../../lib/physics'
 import { coneFrustum, type SuiteFrame } from './suiteModel'
 import type { SuiteVariant } from './types'
+import { RoomGantryArm, RoomGantryMount } from './RoomGantry'
 
 export function BeamCone({
   frame,
   fieldPercent,
   target,
+  opacity = 0.065,
 }: {
   frame: SuiteFrame
   fieldPercent: number
   target?: Point3
+  opacity?: number
 }) {
   const geometry = useMemo(() => {
     const cone = coneFrustum(frame, fieldPercent, target)
@@ -33,7 +36,7 @@ export function BeamCone({
         color="#e3ba74"
         side={DoubleSide}
         transparent
-        opacity={0.065}
+        opacity={opacity}
         depthWrite={false}
         toneMapped={false}
       />
@@ -45,23 +48,37 @@ export function ParametricCarm({
   variant,
   lit,
   shutters = true,
+  atRest = false,
 }: {
   frame: SuiteFrame
   variant: SuiteVariant
   lit: boolean
   shutters?: boolean
+  atRest?: boolean
 }) {
   const { sod, sid, field } = frame.geometry
   return (
     <group position={frame.iso}>
       <group rotation={[0, 0, radians(frame.orbit)]}>
         <group rotation={[radians(frame.tilt), 0, 0]}>
-          <mesh position={[0, sid / 2 - sod, 0]} rotation={[0, 0, Math.PI / 2]}>
-            <torusGeometry args={[sid / 2, field * 0.025, 12, 72, Math.PI]} />
-            <meshStandardMaterial color="#9baeb7" metalness={0.38} roughness={0.5} />
-          </mesh>
-          <mesh position={[0, -sod - field * 0.055, 0]}>
-            <boxGeometry args={[field * 0.2, field * 0.11, field * 0.18]} />
+          {atRest ? (
+            <group position={[0, sid / 2 - sod, 0]}>
+              <RoomGantryArm geometry={frame.geometry} />
+            </group>
+          ) : (
+            <mesh position={[0, sid / 2 - sod, 0]} rotation={[0, 0, Math.PI / 2]}>
+              <torusGeometry args={[sid / 2, field * 0.025, 12, 72, Math.PI]} />
+              <meshStandardMaterial color="#9baeb7" metalness={0.38} roughness={0.5} />
+            </mesh>
+          )}
+          <mesh position={[0, -sod - field * (atRest ? 0.08 : 0.055), 0]}>
+            <boxGeometry
+              args={
+                atRest
+                  ? [field * 0.28, field * 0.16, field * 0.26]
+                  : [field * 0.2, field * 0.11, field * 0.18]
+              }
+            />
             <meshStandardMaterial color="#c0c9ca" metalness={0.25} roughness={0.55} />
           </mesh>
           <mesh position={[0, -sod, 0]}>
@@ -72,8 +89,8 @@ export function ParametricCarm({
               emissiveIntensity={lit ? 2 : 0.45}
             />
           </mesh>
-          <mesh position={[0, sid - sod + field * 0.027, 0]}>
-            <boxGeometry args={[field * 1.035, field * 0.05, field * 1.035]} />
+          <mesh position={[0, sid - sod + field * (atRest ? 0.063 : 0.027), 0]}>
+            <boxGeometry args={[field * 1.035, field * (atRest ? 0.12 : 0.05), field * 1.035]} />
             <meshStandardMaterial color="#506b78" metalness={0.2} roughness={0.65} />
           </mesh>
           {shutters &&
@@ -91,6 +108,7 @@ export function ParametricCarm({
             ))}
         </group>
       </group>
+      {atRest && <RoomGantryMount frame={frame} />}
       {variant === 'mobile' && (
         <group position={[-sid * 0.52, -sod, 0]}>
           <mesh>
