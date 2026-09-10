@@ -475,13 +475,18 @@ test('every section draws its suite and shows the stop its caption names', async
   // a small anatomy and a console board in an otherwise empty room, and the camera that fits the
   // whole chain framed almost nothing. Two measurements catch that class of defect: how much of
   // the viewport the scene actually paints, and whether the stop the caption names is on screen.
+  // Nineteen sections, each loading a 3D scene: this one needs room, and it should wait on the
+  // scene reporting itself ready rather than on a fixed sleep, or it sits at its own limit.
+  test.setTimeout(420_000)
   await page.setViewportSize({ width: 1600, height: 950 })
   const sparse: string[] = []
   const hidden: string[] = []
   for (const sectionId of peripheralImagingSectionIds) {
     await page.goto(`${base()}/en/peripheral-imaging/learn?section=${sectionId}`)
-    await page.waitForSelector('[data-suite-scene]', { timeout: 90_000 })
-    await page.waitForTimeout(5500)
+    await page.waitForSelector('[data-suite-scene][data-suite-state="ready"]', { timeout: 90_000 })
+    await page.waitForSelector('canvas[data-three-state="ready"]', { timeout: 90_000 })
+    // one settled frame after the scene reports ready
+    await page.waitForTimeout(900)
     const seen = await page.evaluate(() => {
       const q = (s: string) => document.querySelector(s)
       const scene = q('[data-suite-scene]')

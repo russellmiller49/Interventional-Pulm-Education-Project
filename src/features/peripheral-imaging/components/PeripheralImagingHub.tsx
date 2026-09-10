@@ -14,6 +14,7 @@ import { LESSONS, OBJECTIVES } from '../data/lessons'
 import { DECISION_GUIDE, GLOSSARY, MODALITIES } from '../data/resources'
 import { REVIEWED_ON, SOURCES } from '../data/sources'
 import { ImagingContinueCta, ImagingStoredPathwayAccordion } from './hub/ImagingPathwayAccordion'
+import { ReconstructionComparison } from './stage/ReconstructionComparison'
 import styles from './peripheral-imaging-hub.module.css'
 
 /**
@@ -227,6 +228,22 @@ export function PeripheralImagingHub() {
               ))}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <section
+        id="reconstruction"
+        aria-labelledby="imaging-reconstruction-heading"
+        className="rounded-3xl border bg-card p-6 shadow-sm lg:p-8"
+      >
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
+          How a reconstruction is made
+        </p>
+        <h2 id="imaging-reconstruction-heading" className="mt-2 text-2xl font-bold">
+          A sweep and an orbit do not return the same thing
+        </h2>
+        <div className="mt-5">
+          <ReconstructionComparison />
         </div>
       </section>
 

@@ -15,6 +15,8 @@ import { chainStop, type ChainStopId } from '../../content/imagingChain'
 import type { ImagingStageLesson } from '../../content/stageLessons'
 import { classifyTeachingBlocks } from '../../content/teachingBlocks'
 import type { TeachingBlock } from '../../types'
+import { RECONSTRUCTION_SECTIONS } from '../../content/reconstruction'
+import { ReconstructionComparison } from './ReconstructionComparison'
 import styles from './imaging-stage.module.css'
 
 /**
@@ -206,6 +208,15 @@ export function ImagingTeachingColumn({
                 </section>
               </StageBlock>
             ))}
+
+          {RECONSTRUCTION_SECTIONS.includes(lesson.sectionId) ? (
+            <StageBlock kind="after-commitment" heading="How a reconstruction is made">
+              <section className={styles.teachingCard} data-teaching-block="reconstruction">
+                <p className={styles.kicker}>How a reconstruction is made</p>
+                <ReconstructionComparison />
+              </section>
+            </StageBlock>
+          ) : null}
 
           <StageBlock kind="after-commitment" heading="What this section adds">
             <section className={styles.teachingCard} data-teaching-block="adds">
