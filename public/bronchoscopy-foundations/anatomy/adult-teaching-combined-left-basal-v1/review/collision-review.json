@@ -1,0 +1,171 @@
+{
+  "schema": "bronchoscopy_foundations_collision_review/v1",
+  "centerlineSamples": 694,
+  "interpolatedSamples": 4262,
+  "outsideSamples": 0,
+  "outside": [],
+  "minimumClearanceMm": 0.005863299423656311,
+  "tipRadiusMm": 1.9,
+  "airwayClearances": [
+    { "label": "TR", "edgeId": 0, "minClearanceMm": 0.005863299423656311, "freeDriveFits": false },
+    { "label": "RMSB", "edgeId": 1, "minClearanceMm": 2.3959717579801456, "freeDriveFits": true },
+    { "label": "LMSB", "edgeId": 2, "minClearanceMm": 3.6807462653075835, "freeDriveFits": true },
+    { "label": "RUL", "edgeId": 3, "minClearanceMm": 1.3787936285918572, "freeDriveFits": false },
+    { "label": "BI", "edgeId": 4, "minClearanceMm": 2.3959717579801456, "freeDriveFits": true },
+    { "label": "LLL", "edgeId": 5, "minClearanceMm": 2.4859851615447544, "freeDriveFits": true },
+    { "label": "RB3", "edgeId": 7, "minClearanceMm": 1.9846475379082833, "freeDriveFits": true },
+    { "label": "RLL", "edgeId": 8, "minClearanceMm": 0.5827131691078322, "freeDriveFits": false },
+    { "label": "RML", "edgeId": 9, "minClearanceMm": 1.5282508252354703, "freeDriveFits": false },
+    { "label": "LB6", "edgeId": 10, "minClearanceMm": 1.8863285504823437, "freeDriveFits": false },
+    { "label": "RB2", "edgeId": 12, "minClearanceMm": 0.9215861319904589, "freeDriveFits": false },
+    { "label": "RB1", "edgeId": 13, "minClearanceMm": 0.620680455457096, "freeDriveFits": false },
+    { "label": "RB6", "edgeId": 17, "minClearanceMm": 0.05842328353754111, "freeDriveFits": false },
+    { "label": "RB4", "edgeId": 18, "minClearanceMm": 1.2574380444832929, "freeDriveFits": false },
+    { "label": "RB5", "edgeId": 19, "minClearanceMm": 1.0436191326219508, "freeDriveFits": false },
+    {
+      "label": "LB4+5",
+      "edgeId": 20,
+      "minClearanceMm": 1.2570804119386312,
+      "freeDriveFits": false
+    },
+    {
+      "label": "LUL-UD",
+      "edgeId": 21,
+      "minClearanceMm": 1.1181671093988055,
+      "freeDriveFits": false
+    },
+    { "label": "LB10", "edgeId": 25, "minClearanceMm": 1.909927756467042, "freeDriveFits": true },
+    { "label": "RB7", "edgeId": 35, "minClearanceMm": 1.5047608872603964, "freeDriveFits": false },
+    { "label": "LB4", "edgeId": 42, "minClearanceMm": 1.3928022061186345, "freeDriveFits": false },
+    { "label": "LB5", "edgeId": 43, "minClearanceMm": 1.5504227484509132, "freeDriveFits": false },
+    { "label": "LB3", "edgeId": 44, "minClearanceMm": 1.5035641481276725, "freeDriveFits": false },
+    { "label": "LB1+2", "edgeId": 45, "minClearanceMm": 1.483669627500676, "freeDriveFits": false },
+    { "label": "LB9", "edgeId": 51, "minClearanceMm": 0.5735765432950839, "freeDriveFits": false },
+    {
+      "label": "LB7+8",
+      "edgeId": 52,
+      "minClearanceMm": 0.40617973245300404,
+      "freeDriveFits": false
+    },
+    { "label": "RB8", "edgeId": 71, "minClearanceMm": 1.0161819412564104, "freeDriveFits": false },
+    { "label": "RB9", "edgeId": 137, "minClearanceMm": 1.544596923189963, "freeDriveFits": false },
+    { "label": "RB10", "edgeId": 138, "minClearanceMm": 1.72456938266379, "freeDriveFits": false },
+    { "label": "LUL", "edgeId": 496, "minClearanceMm": 1.258572104068218, "freeDriveFits": false }
+  ],
+  "belowTipRadius": [
+    "TR",
+    "RUL",
+    "RLL",
+    "RML",
+    "LB6",
+    "RB2",
+    "RB1",
+    "RB6",
+    "RB4",
+    "RB5",
+    "LB4+5",
+    "LUL-UD",
+    "RB7",
+    "LB4",
+    "LB5",
+    "LB3",
+    "LB1+2",
+    "LB9",
+    "LB7+8",
+    "RB8",
+    "RB9",
+    "RB10",
+    "LUL"
+  ],
+  "actualSurfaceAdvanceWithdraw": true,
+  "largeStepWallStop": true,
+  "wallStopClearanceMm": 1.957872143971639,
+  "rootEntry": {
+    "clearanceMm": 0.0061013193510014874,
+    "freeDriveAdvanceMm": 5.000000000000082,
+    "message": null
+  },
+  "deviation": {
+    "method": "Exhaustive vertex correspondence and oriented triangle equivalence before/after Draco. Maximum vertex displacement bounds every point of each corresponding triangle in both directions.",
+    "sourceSurface": "Retained source triangles; authored distal closing caps reported separately.",
+    "decimation": "None",
+    "vertexSamples": 100133,
+    "topologyPreserved": true,
+    "maxSurfaceDeviationBoundMm": 0.00018723131091015667,
+    "meanVertexDisplacementMm": 0.00009856097174178622
+  },
+  "authoredCaps": {
+    "triangleCentroidSamples": 1507,
+    "maxDistanceToSourceMm": 0.8004185253012974,
+    "meanDistanceToSourceMm": 0.5407037793555157
+  },
+  "browser": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+    "dracoDecodeAndParseMs": 67.19999998807907,
+    "bvhBuildMs": 44.80000001192093,
+    "decoderPath": "/fluoroview/draco/",
+    "timingMethod": "Cold GLTFLoader.parseAsync including decoder initialization and one worker; BVH on decoded geometry; performance.now; one run.",
+    "errors": []
+  },
+  "lumenSha256": "d491154d389dc8fdbc95806180d28bdf1d415165775d176a1cf41a684f395c52",
+  "graphSha256": "68085358711a1c00e1e22e63fbdf04a90166a6e598f0a1955f33901af4006055",
+  "sourceLumenSha256": "8c6d320fc459129da3fdb9440ca7a8b9f3b43ebbbc495a5285e9fabf6c2c1b9a",
+  "build": {
+    "schema": "bronchoscopy_foundations_surface_build/v1",
+    "sourceSha256": "8c6d320fc459129da3fdb9440ca7a8b9f3b43ebbbc495a5285e9fabf6c2c1b9a",
+    "sourceTriangles": 673216,
+    "triangles": 200262,
+    "vertices": 100133,
+    "connectedComponents": 1,
+    "nonManifoldEdges": 0,
+    "outwardNormals": true,
+    "authoredCaps": 68,
+    "authoredCapTriangles": 1507,
+    "removedDisconnectedComponents": 0,
+    "trimming": "Source centerline ownership; retain through half the second generation beyond segmental origins; close simple cut rims with triangle fans.",
+    "decimation": "None: retained source vertices and triangles are unchanged before Draco.",
+    "authoredParameters": {
+      "centerlineSampleSpacingMm": 0.5,
+      "maxGenerationBeyondSegmentalOrigin": 2,
+      "lastGenerationFraction": 0.5
+    }
+  },
+  "references": [
+    {
+      "id": "rul",
+      "edgeId": 3,
+      "distanceMm": 10,
+      "frame": {
+        "position": [-38.90339258761194, -158.8581325648674, -177.65101810976066],
+        "forward": [-0.9231991756893706, -0.2546446877288223, 0.2878530267653223],
+        "right": [-0.28962220423485474, 0.9533108614492134, -0.08554168724722704],
+        "up": [0.25263068067954625, 0.16234064326116526, 0.9538465572223556]
+      },
+      "expectation": "RB1 above RB2 and RB3"
+    },
+    {
+      "id": "rml",
+      "edgeId": 9,
+      "distanceMm": 6,
+      "frame": {
+        "position": [-42.30650063892783, -166.39217305267255, -212.326872924887],
+        "forward": [-0.7232640594541059, -0.6758852495574639, -0.1416623793835619],
+        "right": [-0.6853186558550546, 0.7277518233438968, 0.026751141221541035],
+        "up": [-0.08501435313515382, -0.11643201041929331, 0.9895535087658136]
+      },
+      "expectation": "RB5 left of RB4"
+    },
+    {
+      "id": "lul",
+      "edgeId": 496,
+      "distanceMm": 9,
+      "frame": {
+        "position": [39.48714471339284, -167.43595119575662, -197.26555191279454],
+        "forward": [0.777896195254452, -0.5556652904240209, 0.29345117894913336],
+        "right": [-0.5843712170960615, -0.8113874252579936, 0.012677805917089113],
+        "up": [-0.23105797981960136, 0.18134643958785723, 0.9558899930486209]
+      },
+      "expectation": "Upper division above lingula"
+    }
+  ]
+}
