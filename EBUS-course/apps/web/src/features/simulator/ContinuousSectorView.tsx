@@ -48,7 +48,7 @@ export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,
   const change=(key:'depthMm'|'gainDb',value:number)=>setControls(c=>({...c,[key]:value}));
   return <section className={`simulator-sector-pane${compact?' simulator-sector-pane--compact':''}`} aria-label={t('Continuous EBUS ultrasound')} data-sector-source="acoustic-volume" data-acoustic-version={volume?.metadata.assetVersion}>
     <div className="simulator-pane-header"><div><span className="eyebrow">{t('EBUS ultrasound')}</span><h2>{selectedPreset?`${t('Station')} ${formatSimulatorStation(selectedPreset.station)}`:t('Live scan')}</h2></div>
-      <div className="simulator-sector-header-actions">{onEnlarge&&<button className="simulator-sector-style-toggle" onClick={onEnlarge}>{t('Enlarge')}</button>}{onShowAll&&<button className="simulator-sector-style-toggle" onClick={onShowAll}>{t('All views')}</button>}<button className="simulator-sector-style-toggle" aria-pressed={frozen} onClick={()=>setFrozen(!frozen)}>{t(frozen?'Resume':'Freeze')}</button></div>
+      <div className="simulator-sector-header-actions">{onEnlarge&&<button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={onEnlarge}>{t('Enlarge')}</button>}{onShowAll&&<button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={onShowAll}>{t('All views')}</button>}<button className="simulator-sector-style-toggle" aria-pressed={frozen} onClick={()=>setFrozen(!frozen)}>{t(frozen?'Resume':'Freeze')}</button></div>
     </div>
     <div className="simulator-continuous-ultrasound">
       <canvas ref={canvas} aria-label={t('Grayscale ultrasound image')}/><canvas ref={overlay} aria-hidden="true"/>

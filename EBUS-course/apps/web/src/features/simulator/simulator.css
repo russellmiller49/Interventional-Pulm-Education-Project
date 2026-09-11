@@ -190,62 +190,59 @@
   }
 }
 
+/* The dock owns a separate row, so controls cannot cover any imaging pane. */
+.simulator-imaging-console {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.simulator-view-tabs {
+  display: none;
+}
+
+@media (min-width: 1081px) {
+  .simulator-imaging-console {
+    grid-template-rows: minmax(0, 1fr) auto;
+    height: clamp(560px, calc(100dvh - 170px), 1040px);
+  }
+}
+
 .simulator-workspace {
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(330px, 0.72fr);
   gap: 12px;
-  /* Anchor for the floating drive pad. */
   position: relative;
 }
 
-/* One learner-facing navigation panel replaces the former split branch dropdown, raw roll rail,
-   and screen-relative arrow pad. It stays draggable on wide screens and sticky on narrow ones. */
 .simulator-drive-pad {
-  position: absolute;
-  left: 18px;
-  bottom: 18px;
-  z-index: 6;
   display: grid;
-  gap: 10px;
-  width: min(330px, calc(100% - 36px));
-  padding: 12px;
-  border: 1px solid rgba(222, 232, 226, 0.18);
-  border-radius: 14px;
-  background: rgba(7, 10, 12, 0.92);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.42);
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.85fr) minmax(0, 0.85fr) minmax(0, 1.4fr);
+  align-items: center;
+  gap: 10px 18px;
+  min-width: 0;
+  padding: 12px 16px;
+  border: 1px solid rgba(139, 212, 255, 0.22);
+  border-radius: 10px;
+  background: #111a1e;
 }
 
-/* The pad is draggable anywhere over the workspace (wide layouts): grab affordance on the pad
-   surface; its buttons and slider keep their own cursors and never start a drag. */
-.simulator-drive-pad {
-  cursor: grab;
-  touch-action: none;
-}
-
-.simulator-drive-pad--dragging {
-  cursor: grabbing;
+.simulator-drive-pad > * {
+  min-width: 0;
 }
 
 .simulator-drive-pad__readout {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 9px;
+  grid-column: 1 / -1;
   color: rgba(222, 232, 226, 0.78);
-  user-select: none;
-}
-
-.simulator-drive-pad__grip {
-  color: rgba(222, 232, 226, 0.45);
-  font-size: 13px;
-  line-height: 1;
 }
 
 .simulator-drive-pad__status {
-  display: grid;
-  gap: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
   min-width: 0;
 }
 
@@ -343,7 +340,7 @@
 
 .simulator-drive-pad__flex {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 8px;
   font-size: 0.75rem;
@@ -351,16 +348,28 @@
   color: rgba(222, 232, 226, 0.78);
 }
 
+.simulator-drive-pad__flex > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.simulator-drive-pad__flex output {
+  color: #8bd4ff;
+  font-variant-numeric: tabular-nums;
+}
+
 .simulator-drive-pad__flex input {
   width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  margin: 0;
   accent-color: #8bd4ff;
 }
 
 .simulator-drive-pad__roll {
   display: grid;
   gap: 8px;
-  border-top: 1px solid rgba(222, 232, 226, 0.12);
-  padding-top: 8px;
 }
 
 .simulator-drive-pad__roll-heading {
@@ -406,13 +415,16 @@
 }
 
 .simulator-drive-pad__roll-controls input {
+  min-height: 44px;
+  min-width: 0;
+  margin: 0;
   width: 100%;
   accent-color: #8bd4ff;
 }
 
 .simulator-drive-pad__roll-step {
-  min-width: 40px;
-  min-height: 40px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 0;
   border: 1px solid rgba(139, 212, 255, 0.24);
   border-radius: 8px;
@@ -427,7 +439,7 @@
 }
 
 .simulator-drive-pad__reset {
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 10px;
   border: 1px solid rgba(139, 212, 255, 0.28);
   border-radius: 8px;
@@ -458,8 +470,6 @@
   grid-template-areas:
     'main sideA'
     'main sideB';
-  /* Explicit height so the two rows split it; otherwise 1fr rows grow to their content. */
-  height: clamp(640px, calc(100vh - 240px), 960px);
 }
 
 .simulator-workspace--virtual[data-primary='anatomy'] > :nth-child(1),
@@ -487,9 +497,6 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: minmax(0, 1fr);
   grid-template-areas: none;
-  /* Offset = topbar + compact control rail + grid gaps, so topbar, rail, all three panes, and
-     the floating drive pad share one viewport once the intro scrolls off. */
-  height: clamp(520px, calc(100vh - 260px), 900px);
 }
 
 /* Auto placement in DOM order (anatomy, endoluminal, sector) overrides the focus-layout
@@ -963,7 +970,35 @@
     grid-template-columns: 1fr;
   }
 
-  /* Both multi-pane layouts stack into a single column on narrow screens. */
+  /* One selected view keeps the dock close on tablet and phone screens. */
+  .simulator-view-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .simulator-view-tabs button {
+    min-height: 44px;
+    padding: 8px;
+    border: 1px solid rgba(139, 212, 255, 0.24);
+    border-radius: 8px;
+    background: #111a1e;
+    color: #d9e5e1;
+    font: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+
+  .simulator-view-tabs button[aria-pressed='true'] {
+    border-color: #8bd4ff;
+    background: #243e4c;
+  }
+
+  .simulator-view-tabs button:focus-visible {
+    outline: 2px solid #8bd4ff;
+    outline-offset: 2px;
+  }
+
   .simulator-workspace--virtual,
   .simulator-workspace--virtual[data-layout='grid'] {
     grid-template-columns: 1fr;
@@ -972,14 +1007,39 @@
     height: auto;
   }
 
+  .simulator-workspace--virtual > .simulator-scene-pane,
+  .simulator-workspace--virtual > .simulator-sector-pane {
+    display: none;
+  }
+
+  .simulator-workspace--virtual[data-primary='anatomy'] > :nth-child(1),
+  .simulator-workspace--virtual[data-primary='bronch'] > :nth-child(2),
+  .simulator-workspace--virtual[data-primary='sector'] > :nth-child(3) {
+    display: grid;
+    height: clamp(340px, 50dvh, 480px);
+  }
+
+  .simulator-workspace--virtual .simulator-pane-layout-toggle {
+    display: none;
+  }
+
+  .simulator-workspace--virtual .simulator-sector-pane--compact .simulator-ultrasound-controls {
+    display: grid;
+  }
+
+  /* The legacy two-pane learner view has no tab-selected height. */
+  .simulator-workspace:not(.simulator-workspace--virtual) > .simulator-sector-pane {
+    min-height: 480px;
+  }
+
   .simulator-workspace--virtual[data-primary] > :nth-child(n) {
     grid-area: auto;
   }
 
-  /* Stacked panes size themselves once the workspace stops defining rows. */
+  /* Fit the selected optical view without pushing its dock off the screen. */
   .simulator-workspace--virtual .simulator-scene-canvas,
   .simulator-workspace--virtual .simulator-bronch-canvas {
-    min-height: 380px;
+    min-height: 0;
   }
 
   .simulator-workspace--virtual[data-layout='grid'] .simulator-bronch-canvas {
@@ -990,19 +1050,13 @@
   }
 
   .simulator-workspace--virtual .simulator-sector-viewport {
-    min-height: 380px;
-    height: auto;
+    min-height: 0;
+    height: 100%;
   }
 
-  /* On narrow screens the pad becomes a normal row that sticks to the viewport bottom.
-     !important so a dragged position (inline style from wide layouts) can never detach it. */
   .simulator-drive-pad {
-    position: sticky !important;
-    left: auto !important;
-    top: auto !important;
-    right: auto !important;
-    bottom: 10px !important;
-    justify-self: center;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
   }
 
   .simulator-topbar {
@@ -1026,6 +1080,23 @@
 }
 
 @media (max-width: 560px) {
+  .simulator-drive-pad {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 12px;
+  }
+
+  .simulator-drive-pad__status span {
+    white-space: normal;
+  }
+
+  .simulator-drive-pad__flex {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .simulator-drive-pad__flex > span {
+    gap: 12px;
+  }
+
   .simulator-layer-toggles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1436,8 +1507,8 @@
 }
 
 /* Continuous grayscale ultrasound. Teaching colors occupy a separate overlay canvas. */
-.simulator-sector-pane[data-sector-source='acoustic-volume'] { display:flex; flex-direction:column; }
-.simulator-continuous-ultrasound { position:relative; aspect-ratio:1; flex:0 0 auto; min-height:180px; background:#000; border-radius:12px; overflow:hidden; }
+.simulator-sector-pane[data-sector-source='acoustic-volume'] { grid-template-rows:auto minmax(0,1fr) auto auto; }
+.simulator-continuous-ultrasound { position:relative; min-height:0; background:#000; border-radius:12px; overflow:hidden; }
 .simulator-continuous-ultrasound canvas { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
 .simulator-ultrasound-readout { position:absolute; left:12px; top:9px; color:#d9e2eb; font:11px ui-monospace,monospace; }
 .simulator-ultrasound-message,.simulator-ultrasound-coupling { position:absolute; inset:auto 14px 18px; color:#f8d9a4; text-align:center; font-size:12px; }
