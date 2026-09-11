@@ -95,12 +95,12 @@ export const SPINE_STOPS: readonly SpineStop[] = [
     id: 'main-bronchi',
     title: 'The main bronchi',
     precise:
-      'The right main bronchus is short before the right upper lobe takeoff; beyond that origin the bronchus intermedius continues toward the middle and lower lobes. The left main bronchus is longer and divides into the upper and lower lobes.',
+      'The right main bronchus is short before the right upper lobe origin; beyond that origin the bronchus intermedius continues toward the middle and lower lobes. The left main bronchus is longer and divides into the upper and lower lobes.',
     analogy: 'Two hallways of different length; the right one opens a side door almost at once.',
     checklistLabel: 'What distinguishes the two sides',
     checklist: [
       'The short right main bronchus',
-      'The early right upper lobe takeoff',
+      'The early right upper lobe origin',
       'The bronchus intermedius — a bronchus, not a lobe',
       'The longer left main bronchus',
     ],
@@ -130,14 +130,14 @@ export const SPINE_STOPS: readonly SpineStop[] = [
     id: 'segmental',
     title: 'The segmental bronchi',
     precise:
-      'Eighteen segmental bronchi in this teaching profile, named by parent and number. On the right, B4 is lateral and B5 medial; on the left, B4 is superior lingular and B5 inferior lingular. The left anteromedial basal bronchus is taught as one combined LB7+8, a declared convention rather than universal anatomy.',
+      'Eighteen segmental bronchi in this teaching profile, each named by its parent lobe and a number. The same number names a different segment on each side, so a segment is read with its side and its lobe, never by number alone. The left anteromedial basal bronchus is taught as one combined LB7+8, a declared convention rather than universal anatomy.',
     analogy:
       'Street addresses: the lobe is the street and the number the house — and the same number names a different house on each side.',
     checklistLabel: 'Naming a segment',
     checklist: [
       'Name the parent lobe first',
-      'Right B4 is lateral; right B5 is medial',
-      'Left B4 is superior lingular; left B5 is inferior lingular',
+      'Read the number with its side and its lobe',
+      'Check the segment against its parent, not its place on the screen',
       'State the left basal convention you are using',
     ],
     airways: [

@@ -193,6 +193,9 @@ function itemErrors(
   for (const id of item.objectiveIds)
     if (!OBJECTIVE_BY_ID.has(id)) c.add(`${where} names an unknown objective ${id}.`)
   c.add(sourceErrors(where, item.sourceRefs, item.claimClass))
+  for (const id of item.localPolicyIds ?? []) {
+    if (!LOCAL_POLICY_BY_ID.has(id)) c.add(`${where} names an unknown local policy ${id}.`)
+  }
   c.add(reviewIdErrors(where, item.reviewItemIds))
   if (item.choiceAirways) {
     const keys = Object.keys(item.choiceAirways).sort()

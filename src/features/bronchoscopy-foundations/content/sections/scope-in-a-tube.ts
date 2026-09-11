@@ -15,7 +15,9 @@ import type { BronchSectionDefinition } from '../types'
  * revealed outcome (C17, R30) belong to `icu-physiology`, which retrieves this section's idea.
  *
  * The practice case decides the return after a paused loss of ventilation, not the response at the
- * moment of the change: that decision is capstone C09's, made once and cold.
+ * moment of the change: that decision is capstone C09's, made once and cold. C17, the manifest case
+ * the guide assigns to `icu-physiology`, also turns on stopping to restore ventilation, inside a
+ * broader differential; that overlap with C09 comes from the two source cases.
  */
 
 // ── Citations, exactly as the knowledge spec's brackets give them ────────────────────────────────

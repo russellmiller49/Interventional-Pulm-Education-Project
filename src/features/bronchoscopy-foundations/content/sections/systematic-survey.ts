@@ -43,9 +43,10 @@ const SURVEY_VIEW: ScopeViewSpec = {
 }
 
 /**
- * The Act's view: the same walk with one scripted smear on the lens, so entering a segment and
- * seeing it can come apart. The Recognize workspace stays on SURVEY_VIEW, so the smear is not shown
- * before the commitment.
+ * The Act's view: the same walk with one scripted smear on the lens, starting at the first entry
+ * into the lateral basal segment (RB9), so entering a segment and seeing it come apart inside an
+ * airway the goals ask to be inspected. The Recognize workspace stays on SURVEY_VIEW, so the smear
+ * is not shown before the commitment.
  */
 const ACT_VIEW: ScopeViewSpec = {
   ...SURVEY_VIEW,
@@ -61,6 +62,7 @@ const ACT_VIEW: ScopeViewSpec = {
     'reset',
   ],
   script: 'lens-contamination',
+  scriptAirway: 'RB9',
   boundary:
     'An assisted walk along the airway centerlines of one teaching profile, with one scripted narrowing and one scripted smear on the lens. No mucosa, secretions or patient are drawn and no device’s lens-clearing mechanism is modeled, so the app cannot judge the quality of any view.',
 }

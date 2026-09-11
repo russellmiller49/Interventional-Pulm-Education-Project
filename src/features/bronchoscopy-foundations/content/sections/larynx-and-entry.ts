@@ -104,7 +104,7 @@ export const section: BronchSectionDefinition = {
     /\bagainst (the )?(closed|closing) folds\b|\bagainst closure\b/i,
   ],
   modelBoundary:
-    'The larynx in this course is a model. Its folds move on a scripted cycle that stands in for a patient’s; its tissue has no feel and does not cough, bleed or swell; and contact is counted, not felt as force. A patient’s larynx can be narrower, can close on contact and can cough, so the ease of crossing here says nothing about crossing in a patient. A still image is a single frame and cannot show how the folds move.',
+    'The larynx in this course is a model. Its folds move on a scripted cycle, with a scripted cough now and then, that stands in for a patient’s; its tissue has no feel and does not bleed or swell; and contact is counted, not felt as force. A patient’s larynx can be narrower, can close on contact and can cough, so the ease of crossing here says nothing about crossing in a patient. A still image is a single frame and cannot show how the folds move.',
   physicalSkillNote:
     'The app cannot see your hands. Oral or nasal entry on a model, a supported shaft, depth held while the lever moves, and a crossing of the glottis without force are observed by faculty before any supervised patient practice. Crossing in this scene shows the timing and the target, not the hand skill.',
   localPolicyIds: ['topical_anesthetic_policy', 'icu_bronchoscopy_policy'],
@@ -299,7 +299,7 @@ export const section: BronchSectionDefinition = {
       script: 'breathing-cords',
       litAirways: ['TR'],
       boundary:
-        'A model larynx: the folds open on each breath in and close on each breath out, on a scripted cycle rather than a patient’s own pattern. A patient’s folds also come together with voice and can close on contact. The tissue does not cough or bleed, and contact is counted, not felt. The ease of crossing here says nothing about a patient.',
+        'A model larynx on a scripted cycle rather than a patient’s own pattern: the folds open widest on each breath in, narrow on each breath out, and close with a scripted cough now and then. A patient’s folds also come together with voice and can close on contact. The tissue does not bleed or swell, and contact is counted, not felt. The ease of crossing here says nothing about a patient.',
     },
     goals: [
       {

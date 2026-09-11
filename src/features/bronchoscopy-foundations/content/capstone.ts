@@ -78,7 +78,7 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
     situation:
       'In a teaching case, a 45-year-old woman has progressive stridor, and her imaging shows marked narrowing of the proximal trachea. A fellow early in bronchoscopy training is asked to take a quick look with the flexible bronchoscope in the standard procedure room.',
     critical: true,
-    pairedSectionId: 'shared-airway',
+    pairedSectionId: 'clinical-question',
     item: {
       id: 'C04',
       itemType: 'management-decision',
@@ -217,7 +217,7 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
             'Suggest continuous suction through the wedged scope, so the view clears before anyone moves',
           rationale:
             'Clearing the picture is not the aim while the wedge holds a fresh bleed: continuous suction through it can disrupt the clot that is forming and work against the tamponade. How and when to suction belongs to the supervisor’s plan.',
-          plausibility: 'incorrect-mechanism',
+          plausibility: 'unsafe',
         },
         {
           id: 'd',

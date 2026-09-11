@@ -96,6 +96,8 @@ export interface AuthoredItem {
   readonly reviewItemIds?: readonly string[]
   /** Refuted register phrases a rationale or the explanation may carry, each naming its R-item. */
   readonly registerExemptions?: readonly RegisterExemption[]
+  /** Institutional policies the item's answer depends on; shown with the verdict. */
+  readonly localPolicyIds?: readonly LocalPolicyId[]
   readonly copyExemptions?: readonly CopyExemption[]
   /** When the answer is an airway, the map pin each choice corresponds to (answer on the map). */
   readonly choiceAirways?: Readonly<Record<string, AirwayLabel | null>>
@@ -233,7 +235,7 @@ export interface BronchIdentifyRow {
   readonly id: string
   readonly media: MediaRef
   readonly prompt: string
-  /** Three to five. */
+  /** Three to five. Display order is rotated per row; the photograph's own caption is not shown. */
   readonly choices: readonly { readonly id: string; readonly label: string }[]
   readonly answerId: string
   /** Why, in landmarks and parentage — never "because it is". */
@@ -292,6 +294,11 @@ export interface BronchLedger {
   readonly rows: readonly BronchLedgerRow[]
   /** The learner enters milligrams for each measured row, then answers this. */
   readonly totalPrompt: string
+  /**
+   * Exactly one `best`, which completes the step. An `unsafe` total is refused with its rationale and
+   * the table stays open; any other choice shows its rationale and the learner answers again. The
+   * first answer is the one recorded.
+   */
   readonly totalChoices: readonly AuthoredChoice[]
   /** True when an unknown row means no total can be stated; must agree with the rows. */
   readonly totalIsUnknown: boolean
@@ -333,7 +340,9 @@ export interface BronchScenarioFrame {
   readonly prompt: string
   /**
    * Exactly one `best`, which advances the scenario. An `unsafe` choice is refused with its
-   * rationale and the frame stays; it can never complete the step (A13, A32).
+   * rationale and the frame stays; it can never complete the step (A13, A32). Any other choice shows
+   * its rationale and the learner chooses again. The first choice in each frame is the one recorded.
+   * Display order is rotated per frame.
    */
   readonly choices: readonly AuthoredChoice[]
   readonly registerExemptions?: readonly RegisterExemption[]
@@ -424,9 +433,15 @@ export interface BronchSectionDefinition {
   readonly controlStrip: ControlStrip
   /** Phrases naming the keyed answer; no pre-commit surface may carry one. Each must match the key. */
   readonly precommitDenyPatterns: readonly RegExp[]
-  /** What the model and the section do not represent. Printed under the scene and at Explain. */
+  /**
+   * What the model and the section do not represent. Shown at Explain, under "What this model leaves
+   * out". The Simulator panel prints the current view's own `boundary` under the scene.
+   */
   readonly modelBoundary: string
-  /** Required when an objective needs observed physical skill: what the app cannot see. */
+  /**
+   * Required when an objective needs observed physical skill: what the app cannot see. Shown at
+   * Explain and on the completion card, never before the prediction.
+   */
   readonly physicalSkillNote?: string
   readonly localPolicyIds: readonly LocalPolicyId[]
   readonly reviewItemIds: readonly string[]

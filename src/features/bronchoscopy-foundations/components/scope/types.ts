@@ -141,7 +141,11 @@ export type AccessoryState =
   | 'needle-exposed'
 /** Where the accessory is: loaded in the channel, at the tip, or extended beyond it. */
 export type AccessoryPosition = 'none' | 'in-channel' | 'at-tip' | 'extended'
-export type CordsState = 'abducted' | 'adducted'
+/**
+ * The true folds in the scripted breath cycle: widest on inspiration, narrower on expiration, and
+ * closed only with a scripted cough or phonation (knowledge spec §6.1, §10.3).
+ */
+export type CordsState = 'abducted' | 'narrowing' | 'adducted'
 
 export interface TubeSpec {
   readonly kind: 'ett' | 'tracheostomy'
@@ -269,7 +273,10 @@ export type ScopeScriptId =
   | 'assistant-interrupt'
   /** Drill D21: the assistant reports a protected state that the image contradicts. */
   | 'assistant-misreport'
-  /** Larynx: the folds abduct on inspiration and adduct on expiration, on a scripted cycle. */
+  /**
+   * Larynx: the folds open widest on inspiration and narrow on expiration, with a scripted cough
+   * that closes them now and then. Crossing is refused unless they are open.
+   */
   | 'breathing-cords'
 
 export type InspectionStatus =
@@ -416,6 +423,11 @@ export interface ScopeViewSpec {
   /** Which airways the ledger lists on this step. */
   readonly ledger?: { readonly expected: readonly AirwayLabel[] | 'segmental' | 'profile' }
   readonly script?: ScopeScriptId
+  /**
+   * Where a scripted lens or view event begins: the first entry into this airway. Omitted, the
+   * script is active from the start of the step.
+   */
+  readonly scriptAirway?: AirwayLabel
   /** Airways a scripted narrowing makes impossible to enter safely (drill D14, M10-O4). */
   readonly inaccessible?: readonly AirwayLabel[]
   /** Airways lit on the map; [] while a map-answered prediction is open. */
@@ -479,6 +491,8 @@ export interface ScopeState {
   readonly pose: ScopePoseSnapshot | null
   /** Where the tip is: the bench, the larynx, a tube, or an airway of the profile. */
   readonly place: 'bench' | 'larynx' | 'tube' | 'airway'
+  /** Insertion depth: along the airway path from its entry point, or net advance on the bench. */
+  readonly depthMm: number
   readonly location: {
     readonly label: AirwayLabel | null
     readonly fullLabel: string

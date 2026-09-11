@@ -52,7 +52,7 @@ export const SCOPE_CONTROL_PANEL: ScopeControlPanel = {
       id: 'deflection',
       plainName: 'Distal deflection',
       changes:
-        'the bend of the distal tip within its plane, toward the top or the bottom of the image.',
+        'the bend of the distal tip within its one plane. On this teaching scope that is toward the top or the bottom of the image; how a real scope’s image is oriented is set by its instructions for use.',
       doesNotChange:
         'the plane itself. Lever movement is not “go left” or “go right” in the patient; rotation chooses the plane.',
     },

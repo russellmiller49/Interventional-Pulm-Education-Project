@@ -173,7 +173,7 @@ export const BRONCH_GRAMMAR: readonly GrammarRow[] = [
   {
     id: 'poor-return-collapse',
     see: 'The visible distal lumen collapses when suction is applied',
-    lives: 'Excessive suction on a vulnerable distal airway',
+    lives: 'Excessive suction, or a vulnerable distal airway',
     shortlist: ['Release or reduce suction', 'Reassess the tip position and method'],
     verdict: 'this-control',
     thisControl: ['suction'],
@@ -187,7 +187,7 @@ export const BRONCH_GRAMMAR: readonly GrammarRow[] = [
     id: 'no-return-patent-view',
     see: 'No return at all, with a patent distal view',
     lives:
-      'The collection pathway: channel, trap, valve, tubing, source or an accessory in the channel',
+      'The suction path: channel, valve, trap, tubing, vacuum source, or an accessory in the channel',
     shortlist: [
       'Check the channel and valve',
       'Check the trap and tubing',
@@ -226,9 +226,9 @@ export const BRONCH_GRAMMAR: readonly GrammarRow[] = [
     see: 'Reduced effort or responsiveness while oximetry still looks acceptable',
     lives: 'The patient: hypoventilation, with supplemental oxygen delaying desaturation',
     shortlist: [
-      'Pause the procedure',
-      'Assess airway, effort and capnography',
-      'Announce it to the team',
+      'Announce it and pause the procedure',
+      'Assess the airway, effort, oxygen delivery and sedation',
+      'Support ventilation with the team',
     ],
     verdict: 'no-control-stop-and-communicate',
     thisControl: [],
@@ -241,8 +241,9 @@ export const BRONCH_GRAMMAR: readonly GrammarRow[] = [
   },
   {
     id: 'pressure-up-volume-down',
-    see: 'On a ventilator: peak pressure up and exhaled volume down, oximetry unchanged at first',
-    lives: 'Scope-in-tube resistance, secretions, the circuit, air trapping or a pneumothorax',
+    see: 'On a volume-targeted mode: peak pressure up and exhaled volume down, oximetry unchanged at first',
+    lives:
+      'Scope or tube obstruction, secretions or clot, the circuit, dynamic hyperinflation, a pneumothorax or a displaced tube',
     shortlist: [
       'Pause and restore ventilation',
       'Work it through with the respiratory therapist',
@@ -265,7 +266,7 @@ export const BRONCH_GRAMMAR: readonly GrammarRow[] = [
       'Stop the channel movement',
       'Verify the visible state',
       'Restore the protected state',
-      'Then withdraw',
+      'Then draw it into the channel',
     ],
     verdict: 'this-control',
     thisControl: ['accessory'],

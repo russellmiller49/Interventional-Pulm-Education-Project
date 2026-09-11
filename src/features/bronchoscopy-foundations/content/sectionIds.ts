@@ -149,8 +149,7 @@ export const BRONCH_PHASES: readonly BronchPhase[] = [
   {
     id: 'close',
     title: 'Close',
-    description:
-      'An honest report, and what finishing this course does — and does not — establish.',
+    description: 'An honest report, and what each record in a training program shows.',
     sectionIds: ['honest-report', 'what-completion-means'],
   },
 ]

@@ -225,7 +225,8 @@ export const section: BronchSectionDefinition = {
 
   steps: {
     recognize: {
-      instruction: `In the Simulator panel, look at ${SIMULATOR_LANDMARKS.image}: an axial CT slice beside a camera still looking down the right main bronchus. For each, note what it shows and which way it is oriented.`,
+      instruction:
+        'Look at the image in the Simulator panel: an axial CT slice beside a camera still looking down the right main bronchus. For each, note what it shows and which way it is oriented.',
       lookIn: { pane: 'simulator', landmark: SIMULATOR_LANDMARKS.image },
     },
     act: {
@@ -326,7 +327,7 @@ export const section: BronchSectionDefinition = {
           id: 'still-takeoff',
           media: { kind: 'endoscopic-still', structureId: 'rul', outline: true },
           prompt:
-            'A camera still from the right main bronchus, below the main carina, with the image rolled. Name the outlined opening that leaves its wall here.',
+            'A camera still from the right main bronchus, below the main carina; the camera’s roll for this image was not recorded. Name the outlined opening that leaves its wall here.',
           choices: [
             { id: 'rul', label: 'Right upper lobe bronchus' },
             { id: 'bi', label: 'Bronchus intermedius' },

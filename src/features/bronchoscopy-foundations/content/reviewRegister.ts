@@ -45,7 +45,7 @@ export const REGISTER_PATTERNS: readonly RegisterPattern[] = [
     reviewItemId: 'R06',
     pattern: /\b(90|ninety)[- ]second/i,
     scope: 'instruction',
-    say: 'Completeness is a status per airway, not elapsed time.',
+    say: 'A survey is complete when each expected airway has been examined or its limitation recorded; elapsed time is not a standard.',
   },
   {
     reviewItemId: 'R08',
