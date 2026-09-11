@@ -162,8 +162,9 @@ const output = {
 }
 const text = `${JSON.stringify(output)}\n`
 if (check) {
-  const current = existsSync(OUT) ? readFileSync(OUT, 'utf8') : null
-  if (current !== text) {
+  // The commit hook formats JSON with prettier, so compare the content, not the bytes.
+  const current = existsSync(OUT) ? JSON.stringify(JSON.parse(readFileSync(OUT, 'utf8'))) : null
+  if (current !== JSON.stringify(output)) {
     console.error(`${path.relative(process.cwd(), OUT)} is out of date. Re-run without --check.`)
     process.exit(1)
   }
