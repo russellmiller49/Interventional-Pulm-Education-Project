@@ -9,6 +9,7 @@ import {
   pixelToDisplay,
   sliceZ,
   ORIENTATION_LABELS,
+  targetForTrace,
 } from '../geometry/native-ct'
 import { LESSONS, lessonLocationErrors } from '../content/lessons'
 import { ctSessionReducer, emptyCtSession } from '../engine/ct-session'
@@ -45,7 +46,7 @@ test('native Slicer PNGs match their hashes and source HU window at every compar
     const slice = Number(asset.path.match(/(\d+)\.png/)![1])
     slices.set(slice, pngPixels(bytes))
   }
-  for (const trace of CT_TRACES) {
+  for (const trace of manifest.traces) {
     expect(trace.anchor.slice).toBeGreaterThanOrEqual(trace.range[0])
     expect(trace.anchor.slice).toBeLessThanOrEqual(trace.range[1])
     for (const point of trace.checkpoints) {
@@ -93,16 +94,19 @@ test('every lesson has real CT traces, a changed transfer and a visible stage la
     for (const id of [lesson.example, lesson.prediction, lesson.transfer])
       expect(CT_TRACES.some((t) => t.id === id)).toBe(true)
     expect(lesson.prediction).not.toBe(lesson.transfer)
+    expect(targetForTrace(CT_TRACES.find((t) => t.id === lesson.prediction)!).id).not.toBe(
+      targetForTrace(CT_TRACES.find((t) => t.id === lesson.transfer)!).id,
+    )
   }
 })
 test('named checkpoints distinguish segment identity from CT indices and distal sampling positions', () => {
   const codes: Record<string, string[]> = {
-    'central-right': ['Trachea', 'RMSB', 'RMSB'],
-    'central-left': ['Trachea', 'LMSB', 'LMSB'],
-    'right-upper-entry': ['RMSB', 'RUL', 'RB1/B2'],
+    'central-right': ['Trachea', 'RMSB', 'RB5b'],
+    'central-left': ['Trachea', 'LMSB', 'LB5'],
+    'right-upper-entry': ['RMSB', 'RUL', 'RB1b'],
     'right-upper-apical': ['RB1/B2', 'RB1', 'RB1b'],
     'right-upper-distal': ['RB1', 'RB1a', 'RB1a'],
-    'middle-lobe-entry': ['BI', 'RML', 'RB5'],
+    'middle-lobe-entry': ['BI', 'RML', 'RB5a'],
     'middle-lobe-lateral': ['RML', 'RML', 'RB4a'],
     'middle-lobe-caudal': ['RB5', 'RB5', 'RB5b'],
     'middle-lobe-cranial': ['RB5', 'RB5', 'RB5a'],
@@ -145,11 +149,23 @@ test('anatomical labels use the exact matching case graph and preserve the sourc
     readFileSync('scripts/branch-tracing/authoring/ct-traces.json', 'utf8'),
   )
   for (const trace of CT_TRACES) {
-    const ids = specs.traces.find((t) => t.id === trace.id)!.edges
+    const ids = trace.sourceEdgeIds
+    expect(ids.slice(0, specs.traces.find((t) => t.id === trace.id)!.edges.length)).toEqual(
+      specs.traces.find((t) => t.id === trace.id)!.edges,
+    )
     for (const id of ids) {
       const edge = original.edges.find((e) => e.id === id)!
       const other = labeled.edges.find((e) => e.id === id)!
-      expect(edge.pointsLps).toEqual(other.pointsLps)
+      expect(edge.pointsLps.length).toBe(other.pointsLps.length)
+      edge.pointsLps.forEach((point, i) => {
+        // Both hash-pinned graphs retain the same LB6 junction and topology; node 186 differs by 0.135 mm.
+        if ((id === 184 && i === edge.pointsLps.length - 1) || (id === 281 && i === 0))
+          expect(Math.hypot(...point.map((v, j) => v - other.pointsLps[i][j]))).toBeCloseTo(
+            0.13499082206873328,
+            10,
+          )
+        else expect(point).toEqual(other.pointsLps[i])
+      })
       expect([edge.startNodeId, edge.endNodeId]).toEqual([other.startNodeId, other.endNodeId])
     }
     for (const point of trace.checkpoints) {
@@ -193,7 +209,10 @@ test('CT actions reject an unrecorded response and wrong slice while preserving 
   s = reduce(s, { type: 'advance' })
   expect(reduce(s, { type: 'advance' })).toBe(s)
   s = reduce(s, { type: 'course', value: 'cranial' })
+  expect(reduce(s, { type: 'advance' })).toBe(s)
+  s = reduce(s, { type: 'target-relation', value: 'unresolved' })
   s = reduce(s, { type: 'advance' })
+  expect(s.prediction?.targetRelation).toBe('unresolved')
   expect(s.prediction?.marks[0].pixel).toEqual([10, 10])
   expect(
     reduce(s, {
@@ -204,6 +223,7 @@ test('CT actions reject an unrecorded response and wrong slice while preserving 
   ).toBe(s)
   s = reduce(reduce(s, { type: 'advance' }), { type: 'advance' })
   expect(s.marks).toEqual([null, null, null])
+  expect(s.targetRelation).toBe('')
   expect(reduce(s, { type: 'advance' })).toBe(s)
   expect(s.complete).toBe(false)
 })

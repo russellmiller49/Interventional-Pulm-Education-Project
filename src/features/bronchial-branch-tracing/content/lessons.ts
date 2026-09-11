@@ -5,7 +5,7 @@ import {
 import type { CtLesson } from './ct-types'
 
 export const BASE_PATH = '/learn/anatomy/branch-tracing'
-export const VERSION = 'c2-ct1-r2'
+export const VERSION = 'c3-target1-r1'
 export const SOURCE = {
   title: 'Kurimoto & Morita. Bronchial Branch Tracing (2020)',
   url: 'https://doi.org/10.1007/978-981-13-9905-3',
@@ -17,7 +17,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     phase: 'recognize',
     title: 'Orient to the CT',
     instruction:
-      'Read the worked example. Scroll through its CT slices and identify the parent airway before starting your own trace.',
+      'Read the worked example. Use Show target to inspect the simulated nodule, then identify the parent airway before starting your own trace.',
     lookIn: { pane: 'teaching', landmark: 'Worked CT example' },
     actionLabel: 'Trace this airway',
     interaction: 'read',
@@ -29,7 +29,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     phase: 'predict',
     title: 'Follow the lumen',
     instruction:
-      'At each named airway checkpoint, mark the lumen you believe continues from the starting airway. Browse neighboring slices to establish continuity.',
+      'Follow the airway toward the nodule in the named segment. At each checkpoint, mark the continuing lumen or record unresolved continuity.',
     lookIn: { pane: 'simulator', landmark: 'CT tracing stack' },
     actionLabel: 'Record trace',
     interaction: 'choose',
@@ -41,7 +41,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     phase: 'act',
     title: 'Describe its course',
     instruction:
-      'Review your three marked airway points and record how this airway continues in patient space.',
+      'Review your marked airway points, describe the course, then inspect the distal airway–nodule relationship using Show target and adjacent slices.',
     lookIn: { pane: 'steps', landmark: 'Your branch map' },
     actionLabel: 'Reveal CT comparison',
     interaction: 'map',
@@ -65,7 +65,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     phase: 'explain',
     title: 'Relate the two views',
     instruction:
-      'Explain to yourself how the airway course affects the view from its parent. Keep patient direction separate from the display orientation.',
+      'Explain how the airway course affects the view from its parent. State what supports an approach to the nodule and where continuity remains uncertain.',
     lookIn: { pane: 'teaching', landmark: 'Reading this airway' },
     actionLabel: 'Trace another airway',
     interaction: 'explain',
@@ -77,7 +77,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     phase: 'transfer',
     title: 'Apply it to another trace',
     instruction:
-      'Trace this different airway on the real CT. Place three lumen marks and describe the course before opening the comparison.',
+      'Plan a route to this new nodule target. Place three lumen marks, describe the course and record the airway–nodule relationship before comparing.',
     lookIn: {
       pane: 'simulator',
       landmark: 'CT tracing stack',

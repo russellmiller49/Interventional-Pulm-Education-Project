@@ -6,6 +6,7 @@ import { BASE_PATH, LESSONS, nextLesson, SOURCE } from '../content/lessons'
 import { completedLessons, progressVersionChanged } from '../engine/progress'
 import { useDeviceProgress } from './useDeviceProgress'
 import { ModuleFrame } from './ModuleFrame'
+import { TargetCtPreview } from './TargetCtPreview'
 import styles from './branch-tracing.module.css'
 
 export function BranchTracingOverview() {
@@ -23,10 +24,11 @@ export function BranchTracingOverview() {
         <header className={styles.hero}>
           <div>
             <h1>Bronchial branch tracing</h1>
-            <p className={styles.subtitle}>Follow the real airway, one CT slice at a time.</p>
+            <p className={styles.subtitle}>Trace an airway route to a nodule in a named segment.</p>
             <p>
-              Orient the CT using the book’s tracing conventions. Follow the air column, mark your
-              route, then compare it on the same images.
+              Find the simulated nodule on real CT. Orient the images using the book’s tracing
+              conventions, follow the named bronchi toward it, and decide what the visible airway
+              supports.
             </p>
             <Link
               className={styles.primary}
@@ -51,33 +53,7 @@ export function BranchTracingOverview() {
               · {completed.length} completed on this device
             </p>
           </div>
-          <figure className={styles.ctHero}>
-            <svg
-              viewBox="0 0 100 100"
-              role="img"
-              aria-label="Actual right-upper-lobe CT rotated 90 degrees counterclockwise"
-            >
-              <g transform="translate(50 50) rotate(-90) scale(.52) translate(-184 -305)">
-                <image href="/branch-tracing/native-v1/axial/390.png" width="512" height="512" />
-              </g>
-              <text x="50" y="6" textAnchor="middle">
-                L
-              </text>
-              <text x="50" y="97" textAnchor="middle">
-                R
-              </text>
-              <text x="3" y="51">
-                A
-              </text>
-              <text x="96" y="51">
-                P
-              </text>
-            </svg>
-            <figcaption>
-              <strong>Right upper lobe · 90° counterclockwise</strong>
-              <span>Real CT · native 0.5 mm slices</span>
-            </figcaption>
-          </figure>
+          <TargetCtPreview />
         </header>
         {changed && (
           <p className={styles.notice}>
@@ -92,7 +68,9 @@ export function BranchTracingOverview() {
               <li>Maintain continuity of one airway across axial planes.</li>
               <li>Relate the four tracing patterns to the parent-airway viewpoint.</li>
               <li>Separate patient direction, camera roll, and screen position.</li>
-              <li>Record a continuous trace and the limits of visible airway evidence.</li>
+              <li>
+                Plan a segmental airway approach to a nodule and record uncertain distal continuity.
+              </li>
             </ul>
           </section>
           <section>
@@ -110,9 +88,10 @@ export function BranchTracingOverview() {
         <section className={styles.notice}>
           <h2>What this preview contains</h2>
           <p>
-            Learn, Practice and Assess use actual CT slices from one teaching scan, with the
-            appropriate reflection or rotation for each region. You mark the lumen yourself before
-            seeing the source-derived comparison. Clinical grading awaits reviewed case checkpoints.
+            Learn, Practice and Assess use actual CT slices from one teaching scan with simulated
+            nodules in ten pulmonary segments. Each region uses the appropriate reflection or
+            rotation. You mark the lumen and record its relationship to the nodule before seeing the
+            source-derived comparison.
           </p>
           <p>
             Educational spatial reasoning only. This module does not establish device reach,
@@ -148,6 +127,11 @@ export function BranchTracingOverview() {
             </a>
             , Chapter 1. The native CT was exported with 3D Slicer from the same source volume as
             the existing airway model. The textbook guides the method; its figures are not copied.
+          </p>
+          <p>
+            Target nodules use the navigation trainer’s CT intensity compositor. They are authored
+            teaching targets, not findings in the original scan. CT route planning does not confirm
+            instrument reach or tool-in-lesion.
           </p>
           <p>
             Progress stays in this browser’s existing education progress store. Completed lessons

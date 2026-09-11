@@ -3,7 +3,9 @@ import { readFile, writeFile } from 'node:fs/promises'
 
 const base = process.env.BRANCH_TRACING_BASE_URL ?? 'http://localhost:3110'
 const output = process.argv[2] ?? '/tmp/branch-tracing-metrics.json'
-const manifest = JSON.parse(await readFile('public/branch-tracing/native-v1/manifest.json', 'utf8'))
+const manifest = JSON.parse(
+  await readFile('public/branch-tracing/targets-v1/manifest.json', 'utf8'),
+)
 const trace = manifest.traces.find((t) => t.id === 'right-upper-distal')
 const browser = await chromium.launch({ headless: true, args: ['--enable-precise-memory-info'] })
 const errors = []
@@ -56,7 +58,7 @@ try {
   await page.screenshot({ path: '/tmp/branch-tracing-ct-reflow.png', fullPage: true })
   const result = {
     capturedAt: new Date().toISOString(),
-    version: 'c2-ct1-r2',
+    version: 'c3-target1-r1',
     browser: browser.version(),
     base,
     environment: 'Local macOS, headless Chromium; standalone server when base is port 3112.',
@@ -69,6 +71,9 @@ try {
       .reduce((n, r) => n + r.bytes, 0),
     nativeImageRequestsAtReady: resources.filter((r) => r.path.includes('/native-v1/axial/'))
       .length,
+    nodulePatchTransferBytes: resources
+      .filter((r) => r.path.includes('/targets-v1/patches/'))
+      .reduce((n, r) => n + r.bytes, 0),
     optionalModelRequestsAtReady: resources.filter((r) => /\.glb$/.test(r.path)).length,
     sliceInputToLoadedImageMs: latencies,
     twoTimesEquivalentReflowDocumentOverflowPx: overflow,

@@ -1,0 +1,5554 @@
+{
+  "schema": "branch-tracing-nodule-targets/v1",
+  "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+  "sourceGraphSha256": "68226a87928135f8be1435c78774f455dab8f792c085509100aa6c21304c18f4",
+  "sourceLabelsSha256": "fc446faabf7654592b88ec7315321a9c874244efac29f5de2dcd501d2a9f7f8a",
+  "sourceLabeledGraphSha256": "ea98834c7612e59600fd7f89edceb730a876b2f174d51f1ddb70f4e2eb009624",
+  "geometryDifferences": [
+    {
+      "edgeId": 184,
+      "pointIndex": 2,
+      "offsetMm": 0.13499082206873328
+    },
+    {
+      "edgeId": 281,
+      "pointIndex": 0,
+      "offsetMm": 0.13499082206873328
+    }
+  ],
+  "donor": {
+    "assetId": "lung_nodule_1",
+    "residualSha256": "4ebbba12d14e4b541bc86059b2e95ac7988babed4b5a48c3c8378f50bcb6dd7d",
+    "alphaSha256": "73aba41c7e729dbc27a3eef1771f49bf76b14b2fd8ac57db2e20953ac033b859",
+    "scale": 0.65,
+    "compositor": "src/lib/bronchoscopy-core/ct-overlay.ts:residualHuAt",
+    "compositorSha256": "f53c086ee68b3dcb740826ac577e6be9d617a33d037bbcc9a4ee08ed51c01c10"
+  },
+  "targets": [
+    {
+      "id": "r-apical-anterior",
+      "terminalEdgeId": 117,
+      "segment": {
+        "code": "RS1",
+        "name": "Right apical segment",
+        "bronchusCode": "RB1"
+      },
+      "approachCode": "RB1b",
+      "sourceEdgeIds": [0, 1, 3, 6, 13, 28, 59, 117],
+      "centerLps": [-50.0828, -179.4289, -146.2753],
+      "pixel": [191.5611, 282.436],
+      "slice": 444,
+      "patch": {
+        "originPixel": [173, 261],
+        "size": [38, 43],
+        "frames": [
+          {
+            "slice": 431,
+            "path": "patches/r-apical-anterior/431.png",
+            "changedPixels": 55
+          },
+          {
+            "slice": 432,
+            "path": "patches/r-apical-anterior/432.png",
+            "changedPixels": 108
+          },
+          {
+            "slice": 433,
+            "path": "patches/r-apical-anterior/433.png",
+            "changedPixels": 137
+          },
+          {
+            "slice": 434,
+            "path": "patches/r-apical-anterior/434.png",
+            "changedPixels": 175
+          },
+          {
+            "slice": 435,
+            "path": "patches/r-apical-anterior/435.png",
+            "changedPixels": 215
+          },
+          {
+            "slice": 436,
+            "path": "patches/r-apical-anterior/436.png",
+            "changedPixels": 255
+          },
+          {
+            "slice": 437,
+            "path": "patches/r-apical-anterior/437.png",
+            "changedPixels": 286
+          },
+          {
+            "slice": 438,
+            "path": "patches/r-apical-anterior/438.png",
+            "changedPixels": 318
+          },
+          {
+            "slice": 439,
+            "path": "patches/r-apical-anterior/439.png",
+            "changedPixels": 352
+          },
+          {
+            "slice": 440,
+            "path": "patches/r-apical-anterior/440.png",
+            "changedPixels": 376
+          },
+          {
+            "slice": 441,
+            "path": "patches/r-apical-anterior/441.png",
+            "changedPixels": 395
+          },
+          {
+            "slice": 442,
+            "path": "patches/r-apical-anterior/442.png",
+            "changedPixels": 407
+          },
+          {
+            "slice": 443,
+            "path": "patches/r-apical-anterior/443.png",
+            "changedPixels": 419
+          },
+          {
+            "slice": 444,
+            "path": "patches/r-apical-anterior/444.png",
+            "changedPixels": 428
+          },
+          {
+            "slice": 445,
+            "path": "patches/r-apical-anterior/445.png",
+            "changedPixels": 424
+          },
+          {
+            "slice": 446,
+            "path": "patches/r-apical-anterior/446.png",
+            "changedPixels": 429
+          },
+          {
+            "slice": 447,
+            "path": "patches/r-apical-anterior/447.png",
+            "changedPixels": 420
+          },
+          {
+            "slice": 448,
+            "path": "patches/r-apical-anterior/448.png",
+            "changedPixels": 414
+          },
+          {
+            "slice": 449,
+            "path": "patches/r-apical-anterior/449.png",
+            "changedPixels": 399
+          },
+          {
+            "slice": 450,
+            "path": "patches/r-apical-anterior/450.png",
+            "changedPixels": 376
+          },
+          {
+            "slice": 451,
+            "path": "patches/r-apical-anterior/451.png",
+            "changedPixels": 348
+          },
+          {
+            "slice": 452,
+            "path": "patches/r-apical-anterior/452.png",
+            "changedPixels": 311
+          },
+          {
+            "slice": 453,
+            "path": "patches/r-apical-anterior/453.png",
+            "changedPixels": 277
+          },
+          {
+            "slice": 454,
+            "path": "patches/r-apical-anterior/454.png",
+            "changedPixels": 228
+          },
+          {
+            "slice": 455,
+            "path": "patches/r-apical-anterior/455.png",
+            "changedPixels": 179
+          },
+          {
+            "slice": 456,
+            "path": "patches/r-apical-anterior/456.png",
+            "changedPixels": 140
+          },
+          {
+            "slice": 457,
+            "path": "patches/r-apical-anterior/457.png",
+            "changedPixels": 83
+          },
+          {
+            "slice": 458,
+            "path": "patches/r-apical-anterior/458.png",
+            "changedPixels": 11
+          }
+        ]
+      },
+      "approach": {
+        "slice": 441,
+        "pixel": [189.2368, 293.2359],
+        "lps": [-51.6854, -171.9829, -148.1852],
+        "sourceHu": -885,
+        "sourceEdgeId": 117
+      },
+      "centerSourceHu": -895
+    },
+    {
+      "id": "r-apical-posterior",
+      "terminalEdgeId": 122,
+      "segment": {
+        "code": "RS1",
+        "name": "Right apical segment",
+        "bronchusCode": "RB1"
+      },
+      "approachCode": "RB1a",
+      "sourceEdgeIds": [0, 1, 3, 6, 13, 29, 61, 122],
+      "centerLps": [-44.6206, -147.8245, -138.4868],
+      "pixel": [199.4837, 328.2758],
+      "slice": 460,
+      "patch": {
+        "originPixel": [181, 307],
+        "size": [38, 43],
+        "frames": [
+          {
+            "slice": 446,
+            "path": "patches/r-apical-posterior/446.png",
+            "changedPixels": 14
+          },
+          {
+            "slice": 447,
+            "path": "patches/r-apical-posterior/447.png",
+            "changedPixels": 70
+          },
+          {
+            "slice": 448,
+            "path": "patches/r-apical-posterior/448.png",
+            "changedPixels": 117
+          },
+          {
+            "slice": 449,
+            "path": "patches/r-apical-posterior/449.png",
+            "changedPixels": 163
+          },
+          {
+            "slice": 450,
+            "path": "patches/r-apical-posterior/450.png",
+            "changedPixels": 184
+          },
+          {
+            "slice": 451,
+            "path": "patches/r-apical-posterior/451.png",
+            "changedPixels": 230
+          },
+          {
+            "slice": 452,
+            "path": "patches/r-apical-posterior/452.png",
+            "changedPixels": 274
+          },
+          {
+            "slice": 453,
+            "path": "patches/r-apical-posterior/453.png",
+            "changedPixels": 312
+          },
+          {
+            "slice": 454,
+            "path": "patches/r-apical-posterior/454.png",
+            "changedPixels": 332
+          },
+          {
+            "slice": 455,
+            "path": "patches/r-apical-posterior/455.png",
+            "changedPixels": 364
+          },
+          {
+            "slice": 456,
+            "path": "patches/r-apical-posterior/456.png",
+            "changedPixels": 389
+          },
+          {
+            "slice": 457,
+            "path": "patches/r-apical-posterior/457.png",
+            "changedPixels": 399
+          },
+          {
+            "slice": 458,
+            "path": "patches/r-apical-posterior/458.png",
+            "changedPixels": 415
+          },
+          {
+            "slice": 459,
+            "path": "patches/r-apical-posterior/459.png",
+            "changedPixels": 422
+          },
+          {
+            "slice": 460,
+            "path": "patches/r-apical-posterior/460.png",
+            "changedPixels": 432
+          },
+          {
+            "slice": 461,
+            "path": "patches/r-apical-posterior/461.png",
+            "changedPixels": 421
+          },
+          {
+            "slice": 462,
+            "path": "patches/r-apical-posterior/462.png",
+            "changedPixels": 418
+          },
+          {
+            "slice": 463,
+            "path": "patches/r-apical-posterior/463.png",
+            "changedPixels": 420
+          },
+          {
+            "slice": 464,
+            "path": "patches/r-apical-posterior/464.png",
+            "changedPixels": 405
+          },
+          {
+            "slice": 465,
+            "path": "patches/r-apical-posterior/465.png",
+            "changedPixels": 388
+          },
+          {
+            "slice": 466,
+            "path": "patches/r-apical-posterior/466.png",
+            "changedPixels": 364
+          },
+          {
+            "slice": 467,
+            "path": "patches/r-apical-posterior/467.png",
+            "changedPixels": 319
+          },
+          {
+            "slice": 468,
+            "path": "patches/r-apical-posterior/468.png",
+            "changedPixels": 305
+          },
+          {
+            "slice": 469,
+            "path": "patches/r-apical-posterior/469.png",
+            "changedPixels": 264
+          },
+          {
+            "slice": 470,
+            "path": "patches/r-apical-posterior/470.png",
+            "changedPixels": 203
+          },
+          {
+            "slice": 471,
+            "path": "patches/r-apical-posterior/471.png",
+            "changedPixels": 141
+          },
+          {
+            "slice": 472,
+            "path": "patches/r-apical-posterior/472.png",
+            "changedPixels": 123
+          },
+          {
+            "slice": 473,
+            "path": "patches/r-apical-posterior/473.png",
+            "changedPixels": 74
+          },
+          {
+            "slice": 474,
+            "path": "patches/r-apical-posterior/474.png",
+            "changedPixels": 5
+          }
+        ]
+      },
+      "approach": {
+        "slice": 453,
+        "pixel": [193.3603, 321.0067],
+        "lps": [-48.8424, -152.8362, -141.9495],
+        "sourceHu": -952,
+        "sourceEdgeId": 61
+      },
+      "centerSourceHu": -867
+    },
+    {
+      "id": "r-middle-lateral",
+      "terminalEdgeId": 156,
+      "segment": {
+        "code": "RS4",
+        "name": "Right middle lobe lateral segment",
+        "bronchusCode": "RB4"
+      },
+      "approachCode": "RB4a",
+      "sourceEdgeIds": [0, 1, 4, 9, 18, 39, 82, 156],
+      "centerLps": [-104.1562, -180.4968, -208.3512],
+      "pixel": [113.1319, 280.8871],
+      "slice": 320,
+      "patch": {
+        "originPixel": [95, 259],
+        "size": [38, 44],
+        "frames": [
+          {
+            "slice": 306,
+            "path": "patches/r-middle-lateral/306.png",
+            "changedPixels": 10
+          },
+          {
+            "slice": 307,
+            "path": "patches/r-middle-lateral/307.png",
+            "changedPixels": 58
+          },
+          {
+            "slice": 308,
+            "path": "patches/r-middle-lateral/308.png",
+            "changedPixels": 108
+          },
+          {
+            "slice": 309,
+            "path": "patches/r-middle-lateral/309.png",
+            "changedPixels": 137
+          },
+          {
+            "slice": 310,
+            "path": "patches/r-middle-lateral/310.png",
+            "changedPixels": 185
+          },
+          {
+            "slice": 311,
+            "path": "patches/r-middle-lateral/311.png",
+            "changedPixels": 215
+          },
+          {
+            "slice": 312,
+            "path": "patches/r-middle-lateral/312.png",
+            "changedPixels": 266
+          },
+          {
+            "slice": 313,
+            "path": "patches/r-middle-lateral/313.png",
+            "changedPixels": 293
+          },
+          {
+            "slice": 314,
+            "path": "patches/r-middle-lateral/314.png",
+            "changedPixels": 331
+          },
+          {
+            "slice": 315,
+            "path": "patches/r-middle-lateral/315.png",
+            "changedPixels": 359
+          },
+          {
+            "slice": 316,
+            "path": "patches/r-middle-lateral/316.png",
+            "changedPixels": 381
+          },
+          {
+            "slice": 317,
+            "path": "patches/r-middle-lateral/317.png",
+            "changedPixels": 401
+          },
+          {
+            "slice": 318,
+            "path": "patches/r-middle-lateral/318.png",
+            "changedPixels": 414
+          },
+          {
+            "slice": 319,
+            "path": "patches/r-middle-lateral/319.png",
+            "changedPixels": 421
+          },
+          {
+            "slice": 320,
+            "path": "patches/r-middle-lateral/320.png",
+            "changedPixels": 426
+          },
+          {
+            "slice": 321,
+            "path": "patches/r-middle-lateral/321.png",
+            "changedPixels": 421
+          },
+          {
+            "slice": 322,
+            "path": "patches/r-middle-lateral/322.png",
+            "changedPixels": 421
+          },
+          {
+            "slice": 323,
+            "path": "patches/r-middle-lateral/323.png",
+            "changedPixels": 417
+          },
+          {
+            "slice": 324,
+            "path": "patches/r-middle-lateral/324.png",
+            "changedPixels": 413
+          },
+          {
+            "slice": 325,
+            "path": "patches/r-middle-lateral/325.png",
+            "changedPixels": 394
+          },
+          {
+            "slice": 326,
+            "path": "patches/r-middle-lateral/326.png",
+            "changedPixels": 376
+          },
+          {
+            "slice": 327,
+            "path": "patches/r-middle-lateral/327.png",
+            "changedPixels": 344
+          },
+          {
+            "slice": 328,
+            "path": "patches/r-middle-lateral/328.png",
+            "changedPixels": 292
+          },
+          {
+            "slice": 329,
+            "path": "patches/r-middle-lateral/329.png",
+            "changedPixels": 266
+          },
+          {
+            "slice": 330,
+            "path": "patches/r-middle-lateral/330.png",
+            "changedPixels": 215
+          },
+          {
+            "slice": 331,
+            "path": "patches/r-middle-lateral/331.png",
+            "changedPixels": 173
+          },
+          {
+            "slice": 332,
+            "path": "patches/r-middle-lateral/332.png",
+            "changedPixels": 126
+          },
+          {
+            "slice": 333,
+            "path": "patches/r-middle-lateral/333.png",
+            "changedPixels": 81
+          },
+          {
+            "slice": 334,
+            "path": "patches/r-middle-lateral/334.png",
+            "changedPixels": 11
+          }
+        ]
+      },
+      "approach": {
+        "slice": 318,
+        "pixel": [121.1102, 283.9292],
+        "lps": [-98.6555, -178.3994, -209.386],
+        "sourceHu": -905,
+        "sourceEdgeId": 156
+      },
+      "centerSourceHu": -979
+    },
+    {
+      "id": "r-middle-medial-a",
+      "terminalEdgeId": 243,
+      "segment": {
+        "code": "RS5",
+        "name": "Right middle lobe medial segment",
+        "bronchusCode": "RB5"
+      },
+      "approachCode": "RB5a",
+      "sourceEdgeIds": [0, 1, 4, 9, 19, 40, 84, 159, 243],
+      "centerLps": [-82.7316, -255.4327, -212.6473],
+      "pixel": [144.2066, 172.1982],
+      "slice": 312,
+      "patch": {
+        "originPixel": [126, 151],
+        "size": [38, 43],
+        "frames": [
+          {
+            "slice": 298,
+            "path": "patches/r-middle-medial-a/298.png",
+            "changedPixels": 47
+          },
+          {
+            "slice": 299,
+            "path": "patches/r-middle-medial-a/299.png",
+            "changedPixels": 74
+          },
+          {
+            "slice": 300,
+            "path": "patches/r-middle-medial-a/300.png",
+            "changedPixels": 125
+          },
+          {
+            "slice": 301,
+            "path": "patches/r-middle-medial-a/301.png",
+            "changedPixels": 171
+          },
+          {
+            "slice": 302,
+            "path": "patches/r-middle-medial-a/302.png",
+            "changedPixels": 211
+          },
+          {
+            "slice": 303,
+            "path": "patches/r-middle-medial-a/303.png",
+            "changedPixels": 236
+          },
+          {
+            "slice": 304,
+            "path": "patches/r-middle-medial-a/304.png",
+            "changedPixels": 278
+          },
+          {
+            "slice": 305,
+            "path": "patches/r-middle-medial-a/305.png",
+            "changedPixels": 322
+          },
+          {
+            "slice": 306,
+            "path": "patches/r-middle-medial-a/306.png",
+            "changedPixels": 345
+          },
+          {
+            "slice": 307,
+            "path": "patches/r-middle-medial-a/307.png",
+            "changedPixels": 372
+          },
+          {
+            "slice": 308,
+            "path": "patches/r-middle-medial-a/308.png",
+            "changedPixels": 386
+          },
+          {
+            "slice": 309,
+            "path": "patches/r-middle-medial-a/309.png",
+            "changedPixels": 411
+          },
+          {
+            "slice": 310,
+            "path": "patches/r-middle-medial-a/310.png",
+            "changedPixels": 420
+          },
+          {
+            "slice": 311,
+            "path": "patches/r-middle-medial-a/311.png",
+            "changedPixels": 428
+          },
+          {
+            "slice": 312,
+            "path": "patches/r-middle-medial-a/312.png",
+            "changedPixels": 425
+          },
+          {
+            "slice": 313,
+            "path": "patches/r-middle-medial-a/313.png",
+            "changedPixels": 426
+          },
+          {
+            "slice": 314,
+            "path": "patches/r-middle-medial-a/314.png",
+            "changedPixels": 422
+          },
+          {
+            "slice": 315,
+            "path": "patches/r-middle-medial-a/315.png",
+            "changedPixels": 420
+          },
+          {
+            "slice": 316,
+            "path": "patches/r-middle-medial-a/316.png",
+            "changedPixels": 406
+          },
+          {
+            "slice": 317,
+            "path": "patches/r-middle-medial-a/317.png",
+            "changedPixels": 385
+          },
+          {
+            "slice": 318,
+            "path": "patches/r-middle-medial-a/318.png",
+            "changedPixels": 356
+          },
+          {
+            "slice": 319,
+            "path": "patches/r-middle-medial-a/319.png",
+            "changedPixels": 314
+          },
+          {
+            "slice": 320,
+            "path": "patches/r-middle-medial-a/320.png",
+            "changedPixels": 275
+          },
+          {
+            "slice": 321,
+            "path": "patches/r-middle-medial-a/321.png",
+            "changedPixels": 247
+          },
+          {
+            "slice": 322,
+            "path": "patches/r-middle-medial-a/322.png",
+            "changedPixels": 187
+          },
+          {
+            "slice": 323,
+            "path": "patches/r-middle-medial-a/323.png",
+            "changedPixels": 145
+          },
+          {
+            "slice": 324,
+            "path": "patches/r-middle-medial-a/324.png",
+            "changedPixels": 88
+          },
+          {
+            "slice": 325,
+            "path": "patches/r-middle-medial-a/325.png",
+            "changedPixels": 62
+          }
+        ]
+      },
+      "approach": {
+        "slice": 311,
+        "pixel": [149.3595, 179.8935],
+        "lps": [-79.1789, -250.1271, -213.0828],
+        "sourceHu": -937,
+        "sourceEdgeId": 243
+      },
+      "centerSourceHu": -900
+    },
+    {
+      "id": "r-middle-medial-b",
+      "terminalEdgeId": 249,
+      "segment": {
+        "code": "RS5",
+        "name": "Right middle lobe medial segment",
+        "bronchusCode": "RB5"
+      },
+      "approachCode": "RB5b",
+      "sourceEdgeIds": [0, 1, 4, 9, 19, 41, 85, 162, 249],
+      "centerLps": [-101.8748, -241.6233, -222.9317],
+      "pixel": [116.4408, 192.2276],
+      "slice": 291,
+      "patch": {
+        "originPixel": [98, 171],
+        "size": [38, 43],
+        "frames": [
+          {
+            "slice": 277,
+            "path": "patches/r-middle-medial-b/277.png",
+            "changedPixels": 10
+          },
+          {
+            "slice": 278,
+            "path": "patches/r-middle-medial-b/278.png",
+            "changedPixels": 63
+          },
+          {
+            "slice": 279,
+            "path": "patches/r-middle-medial-b/279.png",
+            "changedPixels": 116
+          },
+          {
+            "slice": 280,
+            "path": "patches/r-middle-medial-b/280.png",
+            "changedPixels": 160
+          },
+          {
+            "slice": 281,
+            "path": "patches/r-middle-medial-b/281.png",
+            "changedPixels": 181
+          },
+          {
+            "slice": 282,
+            "path": "patches/r-middle-medial-b/282.png",
+            "changedPixels": 226
+          },
+          {
+            "slice": 283,
+            "path": "patches/r-middle-medial-b/283.png",
+            "changedPixels": 276
+          },
+          {
+            "slice": 284,
+            "path": "patches/r-middle-medial-b/284.png",
+            "changedPixels": 308
+          },
+          {
+            "slice": 285,
+            "path": "patches/r-middle-medial-b/285.png",
+            "changedPixels": 330
+          },
+          {
+            "slice": 286,
+            "path": "patches/r-middle-medial-b/286.png",
+            "changedPixels": 364
+          },
+          {
+            "slice": 287,
+            "path": "patches/r-middle-medial-b/287.png",
+            "changedPixels": 385
+          },
+          {
+            "slice": 288,
+            "path": "patches/r-middle-medial-b/288.png",
+            "changedPixels": 401
+          },
+          {
+            "slice": 289,
+            "path": "patches/r-middle-medial-b/289.png",
+            "changedPixels": 421
+          },
+          {
+            "slice": 290,
+            "path": "patches/r-middle-medial-b/290.png",
+            "changedPixels": 420
+          },
+          {
+            "slice": 291,
+            "path": "patches/r-middle-medial-b/291.png",
+            "changedPixels": 428
+          },
+          {
+            "slice": 292,
+            "path": "patches/r-middle-medial-b/292.png",
+            "changedPixels": 424
+          },
+          {
+            "slice": 293,
+            "path": "patches/r-middle-medial-b/293.png",
+            "changedPixels": 424
+          },
+          {
+            "slice": 294,
+            "path": "patches/r-middle-medial-b/294.png",
+            "changedPixels": 424
+          },
+          {
+            "slice": 295,
+            "path": "patches/r-middle-medial-b/295.png",
+            "changedPixels": 405
+          },
+          {
+            "slice": 296,
+            "path": "patches/r-middle-medial-b/296.png",
+            "changedPixels": 393
+          },
+          {
+            "slice": 297,
+            "path": "patches/r-middle-medial-b/297.png",
+            "changedPixels": 366
+          },
+          {
+            "slice": 298,
+            "path": "patches/r-middle-medial-b/298.png",
+            "changedPixels": 330
+          },
+          {
+            "slice": 299,
+            "path": "patches/r-middle-medial-b/299.png",
+            "changedPixels": 301
+          },
+          {
+            "slice": 300,
+            "path": "patches/r-middle-medial-b/300.png",
+            "changedPixels": 269
+          },
+          {
+            "slice": 301,
+            "path": "patches/r-middle-medial-b/301.png",
+            "changedPixels": 203
+          },
+          {
+            "slice": 302,
+            "path": "patches/r-middle-medial-b/302.png",
+            "changedPixels": 160
+          },
+          {
+            "slice": 303,
+            "path": "patches/r-middle-medial-b/303.png",
+            "changedPixels": 123
+          },
+          {
+            "slice": 304,
+            "path": "patches/r-middle-medial-b/304.png",
+            "changedPixels": 76
+          },
+          {
+            "slice": 305,
+            "path": "patches/r-middle-medial-b/305.png",
+            "changedPixels": 5
+          }
+        ]
+      },
+      "approach": {
+        "slice": 290,
+        "pixel": [123.3773, 198.0974],
+        "lps": [-97.0924, -237.5764, -223.6176],
+        "sourceHu": -967,
+        "sourceEdgeId": 249
+      },
+      "centerSourceHu": -934
+    },
+    {
+      "id": "r-anterior-upper",
+      "terminalEdgeId": 67,
+      "segment": {
+        "code": "RS3",
+        "name": "Right anterior segment",
+        "bronchusCode": "RB3"
+      },
+      "approachCode": "RB3a",
+      "sourceEdgeIds": [0, 1, 3, 7, 15, 32, 67],
+      "centerLps": [-111.4229, -171.6742, -158.8417],
+      "pixel": [102.592, 293.6836],
+      "slice": 419,
+      "patch": {
+        "originPixel": [84, 272],
+        "size": [38, 43],
+        "frames": [
+          {
+            "slice": 405,
+            "path": "patches/r-anterior-upper/405.png",
+            "changedPixels": 10
+          },
+          {
+            "slice": 406,
+            "path": "patches/r-anterior-upper/406.png",
+            "changedPixels": 66
+          },
+          {
+            "slice": 407,
+            "path": "patches/r-anterior-upper/407.png",
+            "changedPixels": 114
+          },
+          {
+            "slice": 408,
+            "path": "patches/r-anterior-upper/408.png",
+            "changedPixels": 135
+          },
+          {
+            "slice": 409,
+            "path": "patches/r-anterior-upper/409.png",
+            "changedPixels": 179
+          },
+          {
+            "slice": 410,
+            "path": "patches/r-anterior-upper/410.png",
+            "changedPixels": 221
+          },
+          {
+            "slice": 411,
+            "path": "patches/r-anterior-upper/411.png",
+            "changedPixels": 263
+          },
+          {
+            "slice": 412,
+            "path": "patches/r-anterior-upper/412.png",
+            "changedPixels": 289
+          },
+          {
+            "slice": 413,
+            "path": "patches/r-anterior-upper/413.png",
+            "changedPixels": 324
+          },
+          {
+            "slice": 414,
+            "path": "patches/r-anterior-upper/414.png",
+            "changedPixels": 353
+          },
+          {
+            "slice": 415,
+            "path": "patches/r-anterior-upper/415.png",
+            "changedPixels": 386
+          },
+          {
+            "slice": 416,
+            "path": "patches/r-anterior-upper/416.png",
+            "changedPixels": 404
+          },
+          {
+            "slice": 417,
+            "path": "patches/r-anterior-upper/417.png",
+            "changedPixels": 415
+          },
+          {
+            "slice": 418,
+            "path": "patches/r-anterior-upper/418.png",
+            "changedPixels": 419
+          },
+          {
+            "slice": 419,
+            "path": "patches/r-anterior-upper/419.png",
+            "changedPixels": 432
+          },
+          {
+            "slice": 420,
+            "path": "patches/r-anterior-upper/420.png",
+            "changedPixels": 429
+          },
+          {
+            "slice": 421,
+            "path": "patches/r-anterior-upper/421.png",
+            "changedPixels": 425
+          },
+          {
+            "slice": 422,
+            "path": "patches/r-anterior-upper/422.png",
+            "changedPixels": 421
+          },
+          {
+            "slice": 423,
+            "path": "patches/r-anterior-upper/423.png",
+            "changedPixels": 414
+          },
+          {
+            "slice": 424,
+            "path": "patches/r-anterior-upper/424.png",
+            "changedPixels": 392
+          },
+          {
+            "slice": 425,
+            "path": "patches/r-anterior-upper/425.png",
+            "changedPixels": 382
+          },
+          {
+            "slice": 426,
+            "path": "patches/r-anterior-upper/426.png",
+            "changedPixels": 337
+          },
+          {
+            "slice": 427,
+            "path": "patches/r-anterior-upper/427.png",
+            "changedPixels": 306
+          },
+          {
+            "slice": 428,
+            "path": "patches/r-anterior-upper/428.png",
+            "changedPixels": 267
+          },
+          {
+            "slice": 429,
+            "path": "patches/r-anterior-upper/429.png",
+            "changedPixels": 203
+          },
+          {
+            "slice": 430,
+            "path": "patches/r-anterior-upper/430.png",
+            "changedPixels": 176
+          },
+          {
+            "slice": 431,
+            "path": "patches/r-anterior-upper/431.png",
+            "changedPixels": 132
+          },
+          {
+            "slice": 432,
+            "path": "patches/r-anterior-upper/432.png",
+            "changedPixels": 81
+          },
+          {
+            "slice": 433,
+            "path": "patches/r-anterior-upper/433.png",
+            "changedPixels": 11
+          }
+        ]
+      },
+      "approach": {
+        "slice": 419,
+        "pixel": [112.6622, 294.5087],
+        "lps": [-104.4799, -171.1053, -158.9428],
+        "sourceHu": -973,
+        "sourceEdgeId": 67
+      },
+      "centerSourceHu": -848
+    },
+    {
+      "id": "r-anterior-lower",
+      "terminalEdgeId": 131,
+      "segment": {
+        "code": "RS3",
+        "name": "Right anterior segment",
+        "bronchusCode": "RB3"
+      },
+      "approachCode": "RB3a",
+      "sourceEdgeIds": [0, 1, 3, 7, 15, 33, 69, 131],
+      "centerLps": [-107.4092, -161.4067, -180.4092],
+      "pixel": [108.4136, 308.5759],
+      "slice": 376,
+      "patch": {
+        "originPixel": [90, 287],
+        "size": [38, 43],
+        "frames": [
+          {
+            "slice": 362,
+            "path": "patches/r-anterior-lower/362.png",
+            "changedPixels": 10
+          },
+          {
+            "slice": 363,
+            "path": "patches/r-anterior-lower/363.png",
+            "changedPixels": 64
+          },
+          {
+            "slice": 364,
+            "path": "patches/r-anterior-lower/364.png",
+            "changedPixels": 120
+          },
+          {
+            "slice": 365,
+            "path": "patches/r-anterior-lower/365.png",
+            "changedPixels": 148
+          },
+          {
+            "slice": 366,
+            "path": "patches/r-anterior-lower/366.png",
+            "changedPixels": 184
+          },
+          {
+            "slice": 367,
+            "path": "patches/r-anterior-lower/367.png",
+            "changedPixels": 222
+          },
+          {
+            "slice": 368,
+            "path": "patches/r-anterior-lower/368.png",
+            "changedPixels": 273
+          },
+          {
+            "slice": 369,
+            "path": "patches/r-anterior-lower/369.png",
+            "changedPixels": 300
+          },
+          {
+            "slice": 370,
+            "path": "patches/r-anterior-lower/370.png",
+            "changedPixels": 330
+          },
+          {
+            "slice": 371,
+            "path": "patches/r-anterior-lower/371.png",
+            "changedPixels": 361
+          },
+          {
+            "slice": 372,
+            "path": "patches/r-anterior-lower/372.png",
+            "changedPixels": 387
+          },
+          {
+            "slice": 373,
+            "path": "patches/r-anterior-lower/373.png",
+            "changedPixels": 405
+          },
+          {
+            "slice": 374,
+            "path": "patches/r-anterior-lower/374.png",
+            "changedPixels": 420
+          },
+          {
+            "slice": 375,
+            "path": "patches/r-anterior-lower/375.png",
+            "changedPixels": 420
+          },
+          {
+            "slice": 376,
+            "path": "patches/r-anterior-lower/376.png",
+            "changedPixels": 434
+          },
+          {
+            "slice": 377,
+            "path": "patches/r-anterior-lower/377.png",
+            "changedPixels": 425
+          },
+          {
+            "slice": 378,
+            "path": "patches/r-anterior-lower/378.png",
+            "changedPixels": 430
+          },
+          {
+            "slice": 379,
+            "path": "patches/r-anterior-lower/379.png",
+            "changedPixels": 424
+          },
+          {
+            "slice": 380,
+            "path": "patches/r-anterior-lower/380.png",
+            "changedPixels": 413
+          },
+          {
+            "slice": 381,
+            "path": "patches/r-anterior-lower/381.png",
+            "changedPixels": 389
+          },
+          {
+            "slice": 382,
+            "path": "patches/r-anterior-lower/382.png",
+            "changedPixels": 372
+          },
+          {
+            "slice": 383,
+            "path": "patches/r-anterior-lower/383.png",
+            "changedPixels": 331
+          },
+          {
+            "slice": 384,
+            "path": "patches/r-anterior-lower/384.png",
+            "changedPixels": 306
+          },
+          {
+            "slice": 385,
+            "path": "patches/r-anterior-lower/385.png",
+            "changedPixels": 268
+          },
+          {
+            "slice": 386,
+            "path": "patches/r-anterior-lower/386.png",
+            "changedPixels": 206
+          },
+          {
+            "slice": 387,
+            "path": "patches/r-anterior-lower/387.png",
+            "changedPixels": 172
+          },
+          {
+            "slice": 388,
+            "path": "patches/r-anterior-lower/388.png",
+            "changedPixels": 126
+          },
+          {
+            "slice": 389,
+            "path": "patches/r-anterior-lower/389.png",
+            "changedPixels": 79
+          },
+          {
+            "slice": 390,
+            "path": "patches/r-anterior-lower/390.png",
+            "changedPixels": 6
+          }
+        ]
+      },
+      "approach": {
+        "slice": 375,
+        "pixel": [119.4842, 309.9253],
+        "lps": [-99.7765, -160.4763, -180.8452],
+        "sourceHu": -1001,
+        "sourceEdgeId": 131
+      },
+      "centerSourceHu": -951
+    },
+    {
+      "id": "l-apicoposterior",
+      "terminalEdgeId": 415,
+      "segment": {
+        "code": "LS1+2",
+        "name": "Left apicoposterior segment",
+        "bronchusCode": "LB1+2"
+      },
+      "approachCode": "LB1+2",
+      "sourceEdgeIds": [0, 2, 496, 21, 45, 93, 174, 269, 362, 415],
+      "centerLps": [67.8067, -122.1321, -137.8948],
+      "pixel": [362.5511, 365.5407],
+      "slice": 461,
+      "patch": {
+        "originPixel": [344, 344],
+        "size": [38, 43],
+        "frames": [
+          {
+            "slice": 447,
+            "path": "patches/l-apicoposterior/447.png",
+            "changedPixels": 9
+          },
+          {
+            "slice": 448,
+            "path": "patches/l-apicoposterior/448.png",
+            "changedPixels": 66
+          },
+          {
+            "slice": 449,
+            "path": "patches/l-apicoposterior/449.png",
+            "changedPixels": 120
+          },
+          {
+            "slice": 450,
+            "path": "patches/l-apicoposterior/450.png",
+            "changedPixels": 143
+          },
+          {
+            "slice": 451,
+            "path": "patches/l-apicoposterior/451.png",
+            "changedPixels": 179
+          },
+          {
+            "slice": 452,
+            "path": "patches/l-apicoposterior/452.png",
+            "changedPixels": 226
+          },
+          {
+            "slice": 453,
+            "path": "patches/l-apicoposterior/453.png",
+            "changedPixels": 270
+          },
+          {
+            "slice": 454,
+            "path": "patches/l-apicoposterior/454.png",
+            "changedPixels": 302
+          },
+          {
+            "slice": 455,
+            "path": "patches/l-apicoposterior/455.png",
+            "changedPixels": 324
+          },
+          {
+            "slice": 456,
+            "path": "patches/l-apicoposterior/456.png",
+            "changedPixels": 362
+          },
+          {
+            "slice": 457,
+            "path": "patches/l-apicoposterior/457.png",
+            "changedPixels": 379
+          },
+          {
+            "slice": 458,
+            "path": "patches/l-apicoposterior/458.png",
+            "changedPixels": 401
+          },
+          {
+            "slice": 459,
+            "path": "patches/l-apicoposterior/459.png",
+            "changedPixels": 416
+          },
+          {
+            "slice": 460,
+            "path": "patches/l-apicoposterior/460.png",
+            "changedPixels": 417
+          },
+          {
+            "slice": 461,
+            "path": "patches/l-apicoposterior/461.png",
+            "changedPixels": 436
+          },
+          {
+            "slice": 462,
+            "path": "patches/l-apicoposterior/462.png",
+            "changedPixels": 428
+          },
+          {
+            "slice": 463,
+            "path": "patches/l-apicoposterior/463.png",
+            "changedPixels": 424
+          },
+          {
+            "slice": 464,
+            "path": "patches/l-apicoposterior/464.png",
+            "changedPixels": 426
+          },
+          {
+            "slice": 465,
+            "path": "patches/l-apicoposterior/465.png",
+            "changedPixels": 405
+          },
+          {
+            "slice": 466,
+            "path": "patches/l-apicoposterior/466.png",
+            "changedPixels": 396
+          },
+          {
+            "slice": 467,
+            "path": "patches/l-apicoposterior/467.png",
+            "changedPixels": 372
+          },
+          {
+            "slice": 468,
+            "path": "patches/l-apicoposterior/468.png",
+            "changedPixels": 335
+          },
+          {
+            "slice": 469,
+            "path": "patches/l-apicoposterior/469.png",
+            "changedPixels": 306
+          },
+          {
+            "slice": 470,
+            "path": "patches/l-apicoposterior/470.png",
+            "changedPixels": 271
+          },
+          {
+            "slice": 471,
+            "path": "patches/l-apicoposterior/471.png",
+            "changedPixels": 206
+          },
+          {
+            "slice": 472,
+            "path": "patches/l-apicoposterior/472.png",
+            "changedPixels": 175
+          },
+          {
+            "slice": 473,
+            "path": "patches/l-apicoposterior/473.png",
+            "changedPixels": 128
+          },
+          {
+            "slice": 474,
+            "path": "patches/l-apicoposterior/474.png",
+            "changedPixels": 78
+          },
+          {
+            "slice": 475,
+            "path": "patches/l-apicoposterior/475.png",
+            "changedPixels": 6
+          }
+        ]
+      },
+      "approach": {
+        "slice": 455,
+        "pixel": [362.4626, 355.2241],
+        "lps": [67.7457, -129.2449, -140.8501],
+        "sourceHu": -880,
+        "sourceEdgeId": 415
+      },
+      "centerSourceHu": -870
+    },
+    {
+      "id": "l-anterior",
+      "terminalEdgeId": 357,
+      "segment": {
+        "code": "LS3",
+        "name": "Left anterior segment",
+        "bronchusCode": "LB3"
+      },
+      "approachCode": "LB3",
+      "sourceEdgeIds": [0, 2, 496, 21, 44, 92, 172, 267, 357],
+      "centerLps": [72.0135, -212.7061, -165.1876],
+      "pixel": [368.6528, 234.1699],
+      "slice": 407,
+      "patch": {
+        "originPixel": [350, 213],
+        "size": [38, 43],
+        "frames": [
+          {
+            "slice": 393,
+            "path": "patches/l-anterior/393.png",
+            "changedPixels": 54
+          },
+          {
+            "slice": 394,
+            "path": "patches/l-anterior/394.png",
+            "changedPixels": 82
+          },
+          {
+            "slice": 395,
+            "path": "patches/l-anterior/395.png",
+            "changedPixels": 130
+          },
+          {
+            "slice": 396,
+            "path": "patches/l-anterior/396.png",
+            "changedPixels": 175
+          },
+          {
+            "slice": 397,
+            "path": "patches/l-anterior/397.png",
+            "changedPixels": 211
+          },
+          {
+            "slice": 398,
+            "path": "patches/l-anterior/398.png",
+            "changedPixels": 239
+          },
+          {
+            "slice": 399,
+            "path": "patches/l-anterior/399.png",
+            "changedPixels": 281
+          },
+          {
+            "slice": 400,
+            "path": "patches/l-anterior/400.png",
+            "changedPixels": 320
+          },
+          {
+            "slice": 401,
+            "path": "patches/l-anterior/401.png",
+            "changedPixels": 351
+          },
+          {
+            "slice": 402,
+            "path": "patches/l-anterior/402.png",
+            "changedPixels": 365
+          },
+          {
+            "slice": 403,
+            "path": "patches/l-anterior/403.png",
+            "changedPixels": 393
+          },
+          {
+            "slice": 404,
+            "path": "patches/l-anterior/404.png",
+            "changedPixels": 407
+          },
+          {
+            "slice": 405,
+            "path": "patches/l-anterior/405.png",
+            "changedPixels": 423
+          },
+          {
+            "slice": 406,
+            "path": "patches/l-anterior/406.png",
+            "changedPixels": 427
+          },
+          {
+            "slice": 407,
+            "path": "patches/l-anterior/407.png",
+            "changedPixels": 428
+          },
+          {
+            "slice": 408,
+            "path": "patches/l-anterior/408.png",
+            "changedPixels": 433
+          },
+          {
+            "slice": 409,
+            "path": "patches/l-anterior/409.png",
+            "changedPixels": 419
+          },
+          {
+            "slice": 410,
+            "path": "patches/l-anterior/410.png",
+            "changedPixels": 411
+          },
+          {
+            "slice": 411,
+            "path": "patches/l-anterior/411.png",
+            "changedPixels": 402
+          },
+          {
+            "slice": 412,
+            "path": "patches/l-anterior/412.png",
+            "changedPixels": 388
+          },
+          {
+            "slice": 413,
+            "path": "patches/l-anterior/413.png",
+            "changedPixels": 357
+          },
+          {
+            "slice": 414,
+            "path": "patches/l-anterior/414.png",
+            "changedPixels": 319
+          },
+          {
+            "slice": 415,
+            "path": "patches/l-anterior/415.png",
+            "changedPixels": 272
+          },
+          {
+            "slice": 416,
+            "path": "patches/l-anterior/416.png",
+            "changedPixels": 241
+          },
+          {
+            "slice": 417,
+            "path": "patches/l-anterior/417.png",
+            "changedPixels": 190
+          },
+          {
+            "slice": 418,
+            "path": "patches/l-anterior/418.png",
+            "changedPixels": 135
+          },
+          {
+            "slice": 419,
+            "path": "patches/l-anterior/419.png",
+            "changedPixels": 81
+          },
+          {
+            "slice": 420,
+            "path": "patches/l-anterior/420.png",
+            "changedPixels": 57
+          }
+        ]
+      },
+      "approach": {
+        "slice": 403,
+        "pixel": [361.8194, 240.1554],
+        "lps": [67.3023, -208.5793, -166.8019],
+        "sourceHu": -921,
+        "sourceEdgeId": 357
+      },
+      "centerSourceHu": -972
+    },
+    {
+      "id": "l-inferior-lingula",
+      "terminalEdgeId": 353,
+      "segment": {
+        "code": "LS5",
+        "name": "Left inferior lingular segment",
+        "bronchusCode": "LB5"
+      },
+      "approachCode": "LB5",
+      "sourceEdgeIds": [0, 2, 496, 20, 43, 89, 168, 262, 353],
+      "centerLps": [106.8131, -231.8048, -239.8442],
+      "pixel": [419.1269, 206.4687],
+      "slice": 257,
+      "patch": {
+        "originPixel": [401, 185],
+        "size": [38, 43],
+        "frames": [
+          {
+            "slice": 243,
+            "path": "patches/l-inferior-lingula/243.png",
+            "changedPixels": 7
+          },
+          {
+            "slice": 244,
+            "path": "patches/l-inferior-lingula/244.png",
+            "changedPixels": 60
+          },
+          {
+            "slice": 245,
+            "path": "patches/l-inferior-lingula/245.png",
+            "changedPixels": 113
+          },
+          {
+            "slice": 246,
+            "path": "patches/l-inferior-lingula/246.png",
+            "changedPixels": 136
+          },
+          {
+            "slice": 247,
+            "path": "patches/l-inferior-lingula/247.png",
+            "changedPixels": 179
+          },
+          {
+            "slice": 248,
+            "path": "patches/l-inferior-lingula/248.png",
+            "changedPixels": 214
+          },
+          {
+            "slice": 249,
+            "path": "patches/l-inferior-lingula/249.png",
+            "changedPixels": 264
+          },
+          {
+            "slice": 250,
+            "path": "patches/l-inferior-lingula/250.png",
+            "changedPixels": 293
+          },
+          {
+            "slice": 251,
+            "path": "patches/l-inferior-lingula/251.png",
+            "changedPixels": 328
+          },
+          {
+            "slice": 252,
+            "path": "patches/l-inferior-lingula/252.png",
+            "changedPixels": 358
+          },
+          {
+            "slice": 253,
+            "path": "patches/l-inferior-lingula/253.png",
+            "changedPixels": 388
+          },
+          {
+            "slice": 254,
+            "path": "patches/l-inferior-lingula/254.png",
+            "changedPixels": 401
+          },
+          {
+            "slice": 255,
+            "path": "patches/l-inferior-lingula/255.png",
+            "changedPixels": 409
+          },
+          {
+            "slice": 256,
+            "path": "patches/l-inferior-lingula/256.png",
+            "changedPixels": 422
+          },
+          {
+            "slice": 257,
+            "path": "patches/l-inferior-lingula/257.png",
+            "changedPixels": 434
+          },
+          {
+            "slice": 258,
+            "path": "patches/l-inferior-lingula/258.png",
+            "changedPixels": 429
+          },
+          {
+            "slice": 259,
+            "path": "patches/l-inferior-lingula/259.png",
+            "changedPixels": 431
+          },
+          {
+            "slice": 260,
+            "path": "patches/l-inferior-lingula/260.png",
+            "changedPixels": 423
+          },
+          {
+            "slice": 261,
+            "path": "patches/l-inferior-lingula/261.png",
+            "changedPixels": 408
+          },
+          {
+            "slice": 262,
+            "path": "patches/l-inferior-lingula/262.png",
+            "changedPixels": 393
+          },
+          {
+            "slice": 263,
+            "path": "patches/l-inferior-lingula/263.png",
+            "changedPixels": 370
+          },
+          {
+            "slice": 264,
+            "path": "patches/l-inferior-lingula/264.png",
+            "changedPixels": 344
+          },
+          {
+            "slice": 265,
+            "path": "patches/l-inferior-lingula/265.png",
+            "changedPixels": 301
+          },
+          {
+            "slice": 266,
+            "path": "patches/l-inferior-lingula/266.png",
+            "changedPixels": 269
+          },
+          {
+            "slice": 267,
+            "path": "patches/l-inferior-lingula/267.png",
+            "changedPixels": 212
+          },
+          {
+            "slice": 268,
+            "path": "patches/l-inferior-lingula/268.png",
+            "changedPixels": 175
+          },
+          {
+            "slice": 269,
+            "path": "patches/l-inferior-lingula/269.png",
+            "changedPixels": 129
+          },
+          {
+            "slice": 270,
+            "path": "patches/l-inferior-lingula/270.png",
+            "changedPixels": 76
+          },
+          {
+            "slice": 271,
+            "path": "patches/l-inferior-lingula/271.png",
+            "changedPixels": 11
+          }
+        ]
+      },
+      "approach": {
+        "slice": 262,
+        "pixel": [412.1042, 209.7658],
+        "lps": [101.9713, -229.5316, -237.3071],
+        "sourceHu": -1024,
+        "sourceEdgeId": 353
+      },
+      "centerSourceHu": -1024
+    },
+    {
+      "id": "l-superior",
+      "terminalEdgeId": 281,
+      "segment": {
+        "code": "LS6",
+        "name": "Left lower lobe superior segment",
+        "bronchusCode": "LB6"
+      },
+      "approachCode": "LB6",
+      "sourceEdgeIds": [0, 2, 5, 10, 23, 50, 101, 184, 281],
+      "centerLps": [43.0932, -99.4876, -177.0647],
+      "pixel": [326.706, 398.3848],
+      "slice": 383,
+      "patch": {
+        "originPixel": [309, 377],
+        "size": [37, 43],
+        "frames": [
+          {
+            "slice": 369,
+            "path": "patches/l-superior/369.png",
+            "changedPixels": 11
+          },
+          {
+            "slice": 370,
+            "path": "patches/l-superior/370.png",
+            "changedPixels": 69
+          },
+          {
+            "slice": 371,
+            "path": "patches/l-superior/371.png",
+            "changedPixels": 126
+          },
+          {
+            "slice": 372,
+            "path": "patches/l-superior/372.png",
+            "changedPixels": 163
+          },
+          {
+            "slice": 373,
+            "path": "patches/l-superior/373.png",
+            "changedPixels": 195
+          },
+          {
+            "slice": 374,
+            "path": "patches/l-superior/374.png",
+            "changedPixels": 237
+          },
+          {
+            "slice": 375,
+            "path": "patches/l-superior/375.png",
+            "changedPixels": 280
+          },
+          {
+            "slice": 376,
+            "path": "patches/l-superior/376.png",
+            "changedPixels": 307
+          },
+          {
+            "slice": 377,
+            "path": "patches/l-superior/377.png",
+            "changedPixels": 339
+          },
+          {
+            "slice": 378,
+            "path": "patches/l-superior/378.png",
+            "changedPixels": 370
+          },
+          {
+            "slice": 379,
+            "path": "patches/l-superior/379.png",
+            "changedPixels": 389
+          },
+          {
+            "slice": 380,
+            "path": "patches/l-superior/380.png",
+            "changedPixels": 406
+          },
+          {
+            "slice": 381,
+            "path": "patches/l-superior/381.png",
+            "changedPixels": 423
+          },
+          {
+            "slice": 382,
+            "path": "patches/l-superior/382.png",
+            "changedPixels": 425
+          },
+          {
+            "slice": 383,
+            "path": "patches/l-superior/383.png",
+            "changedPixels": 433
+          },
+          {
+            "slice": 384,
+            "path": "patches/l-superior/384.png",
+            "changedPixels": 431
+          },
+          {
+            "slice": 385,
+            "path": "patches/l-superior/385.png",
+            "changedPixels": 417
+          },
+          {
+            "slice": 386,
+            "path": "patches/l-superior/386.png",
+            "changedPixels": 416
+          },
+          {
+            "slice": 387,
+            "path": "patches/l-superior/387.png",
+            "changedPixels": 407
+          },
+          {
+            "slice": 388,
+            "path": "patches/l-superior/388.png",
+            "changedPixels": 390
+          },
+          {
+            "slice": 389,
+            "path": "patches/l-superior/389.png",
+            "changedPixels": 361
+          },
+          {
+            "slice": 390,
+            "path": "patches/l-superior/390.png",
+            "changedPixels": 330
+          },
+          {
+            "slice": 391,
+            "path": "patches/l-superior/391.png",
+            "changedPixels": 294
+          },
+          {
+            "slice": 392,
+            "path": "patches/l-superior/392.png",
+            "changedPixels": 257
+          },
+          {
+            "slice": 393,
+            "path": "patches/l-superior/393.png",
+            "changedPixels": 199
+          },
+          {
+            "slice": 394,
+            "path": "patches/l-superior/394.png",
+            "changedPixels": 149
+          },
+          {
+            "slice": 395,
+            "path": "patches/l-superior/395.png",
+            "changedPixels": 108
+          },
+          {
+            "slice": 396,
+            "path": "patches/l-superior/396.png",
+            "changedPixels": 60
+          }
+        ]
+      },
+      "approach": {
+        "slice": 373,
+        "pixel": [325.5706, 390.4002],
+        "lps": [42.3104, -104.9926, -181.7814],
+        "sourceHu": -904,
+        "sourceEdgeId": 281
+      },
+      "centerSourceHu": -910
+    },
+    {
+      "id": "r-anterior-basal",
+      "terminalEdgeId": 220,
+      "segment": {
+        "code": "RS8",
+        "name": "Right anterior basal segment",
+        "bronchusCode": "RB8"
+      },
+      "approachCode": "RB8",
+      "sourceEdgeIds": [0, 1, 4, 8, 16, 34, 71, 136, 220],
+      "centerLps": [-81.9804, -180.4776, -240.4782],
+      "pixel": [145.2962, 280.915],
+      "slice": 256,
+      "patch": {
+        "originPixel": [127, 259],
+        "size": [38, 44],
+        "frames": [
+          {
+            "slice": 242,
+            "path": "patches/r-anterior-basal/242.png",
+            "changedPixels": 13
+          },
+          {
+            "slice": 243,
+            "path": "patches/r-anterior-basal/243.png",
+            "changedPixels": 71
+          },
+          {
+            "slice": 244,
+            "path": "patches/r-anterior-basal/244.png",
+            "changedPixels": 118
+          },
+          {
+            "slice": 245,
+            "path": "patches/r-anterior-basal/245.png",
+            "changedPixels": 161
+          },
+          {
+            "slice": 246,
+            "path": "patches/r-anterior-basal/246.png",
+            "changedPixels": 189
+          },
+          {
+            "slice": 247,
+            "path": "patches/r-anterior-basal/247.png",
+            "changedPixels": 226
+          },
+          {
+            "slice": 248,
+            "path": "patches/r-anterior-basal/248.png",
+            "changedPixels": 277
+          },
+          {
+            "slice": 249,
+            "path": "patches/r-anterior-basal/249.png",
+            "changedPixels": 310
+          },
+          {
+            "slice": 250,
+            "path": "patches/r-anterior-basal/250.png",
+            "changedPixels": 334
+          },
+          {
+            "slice": 251,
+            "path": "patches/r-anterior-basal/251.png",
+            "changedPixels": 369
+          },
+          {
+            "slice": 252,
+            "path": "patches/r-anterior-basal/252.png",
+            "changedPixels": 391
+          },
+          {
+            "slice": 253,
+            "path": "patches/r-anterior-basal/253.png",
+            "changedPixels": 406
+          },
+          {
+            "slice": 254,
+            "path": "patches/r-anterior-basal/254.png",
+            "changedPixels": 420
+          },
+          {
+            "slice": 255,
+            "path": "patches/r-anterior-basal/255.png",
+            "changedPixels": 423
+          },
+          {
+            "slice": 256,
+            "path": "patches/r-anterior-basal/256.png",
+            "changedPixels": 428
+          },
+          {
+            "slice": 257,
+            "path": "patches/r-anterior-basal/257.png",
+            "changedPixels": 418
+          },
+          {
+            "slice": 258,
+            "path": "patches/r-anterior-basal/258.png",
+            "changedPixels": 420
+          },
+          {
+            "slice": 259,
+            "path": "patches/r-anterior-basal/259.png",
+            "changedPixels": 420
+          },
+          {
+            "slice": 260,
+            "path": "patches/r-anterior-basal/260.png",
+            "changedPixels": 408
+          },
+          {
+            "slice": 261,
+            "path": "patches/r-anterior-basal/261.png",
+            "changedPixels": 393
+          },
+          {
+            "slice": 262,
+            "path": "patches/r-anterior-basal/262.png",
+            "changedPixels": 370
+          },
+          {
+            "slice": 263,
+            "path": "patches/r-anterior-basal/263.png",
+            "changedPixels": 330
+          },
+          {
+            "slice": 264,
+            "path": "patches/r-anterior-basal/264.png",
+            "changedPixels": 298
+          },
+          {
+            "slice": 265,
+            "path": "patches/r-anterior-basal/265.png",
+            "changedPixels": 255
+          },
+          {
+            "slice": 266,
+            "path": "patches/r-anterior-basal/266.png",
+            "changedPixels": 212
+          },
+          {
+            "slice": 267,
+            "path": "patches/r-anterior-basal/267.png",
+            "changedPixels": 142
+          },
+          {
+            "slice": 268,
+            "path": "patches/r-anterior-basal/268.png",
+            "changedPixels": 122
+          },
+          {
+            "slice": 269,
+            "path": "patches/r-anterior-basal/269.png",
+            "changedPixels": 74
+          },
+          {
+            "slice": 270,
+            "path": "patches/r-anterior-basal/270.png",
+            "changedPixels": 5
+          }
+        ]
+      },
+      "approach": {
+        "slice": 255,
+        "pixel": [153.4318, 287.7751],
+        "lps": [-76.3712, -175.7478, -240.9047],
+        "sourceHu": -890,
+        "sourceEdgeId": 220
+      },
+      "centerSourceHu": -885
+    },
+    {
+      "id": "l-lateral-basal",
+      "terminalEdgeId": 103,
+      "segment": {
+        "code": "LS9",
+        "name": "Left lateral basal segment",
+        "bronchusCode": "LB9"
+      },
+      "approachCode": "LB9",
+      "sourceEdgeIds": [0, 2, 5, 11, 24, 51, 103],
+      "centerLps": [73.8374, -125.7748, -240.5104],
+      "pixel": [371.2981, 360.2572],
+      "slice": 256,
+      "patch": {
+        "originPixel": [353, 339],
+        "size": [38, 43],
+        "frames": [
+          {
+            "slice": 242,
+            "path": "patches/l-lateral-basal/242.png",
+            "changedPixels": 15
+          },
+          {
+            "slice": 243,
+            "path": "patches/l-lateral-basal/243.png",
+            "changedPixels": 71
+          },
+          {
+            "slice": 244,
+            "path": "patches/l-lateral-basal/244.png",
+            "changedPixels": 118
+          },
+          {
+            "slice": 245,
+            "path": "patches/l-lateral-basal/245.png",
+            "changedPixels": 162
+          },
+          {
+            "slice": 246,
+            "path": "patches/l-lateral-basal/246.png",
+            "changedPixels": 187
+          },
+          {
+            "slice": 247,
+            "path": "patches/l-lateral-basal/247.png",
+            "changedPixels": 237
+          },
+          {
+            "slice": 248,
+            "path": "patches/l-lateral-basal/248.png",
+            "changedPixels": 273
+          },
+          {
+            "slice": 249,
+            "path": "patches/l-lateral-basal/249.png",
+            "changedPixels": 314
+          },
+          {
+            "slice": 250,
+            "path": "patches/l-lateral-basal/250.png",
+            "changedPixels": 332
+          },
+          {
+            "slice": 251,
+            "path": "patches/l-lateral-basal/251.png",
+            "changedPixels": 366
+          },
+          {
+            "slice": 252,
+            "path": "patches/l-lateral-basal/252.png",
+            "changedPixels": 388
+          },
+          {
+            "slice": 253,
+            "path": "patches/l-lateral-basal/253.png",
+            "changedPixels": 404
+          },
+          {
+            "slice": 254,
+            "path": "patches/l-lateral-basal/254.png",
+            "changedPixels": 419
+          },
+          {
+            "slice": 255,
+            "path": "patches/l-lateral-basal/255.png",
+            "changedPixels": 426
+          },
+          {
+            "slice": 256,
+            "path": "patches/l-lateral-basal/256.png",
+            "changedPixels": 434
+          },
+          {
+            "slice": 257,
+            "path": "patches/l-lateral-basal/257.png",
+            "changedPixels": 421
+          },
+          {
+            "slice": 258,
+            "path": "patches/l-lateral-basal/258.png",
+            "changedPixels": 424
+          },
+          {
+            "slice": 259,
+            "path": "patches/l-lateral-basal/259.png",
+            "changedPixels": 421
+          },
+          {
+            "slice": 260,
+            "path": "patches/l-lateral-basal/260.png",
+            "changedPixels": 412
+          },
+          {
+            "slice": 261,
+            "path": "patches/l-lateral-basal/261.png",
+            "changedPixels": 386
+          },
+          {
+            "slice": 262,
+            "path": "patches/l-lateral-basal/262.png",
+            "changedPixels": 359
+          },
+          {
+            "slice": 263,
+            "path": "patches/l-lateral-basal/263.png",
+            "changedPixels": 323
+          },
+          {
+            "slice": 264,
+            "path": "patches/l-lateral-basal/264.png",
+            "changedPixels": 297
+          },
+          {
+            "slice": 265,
+            "path": "patches/l-lateral-basal/265.png",
+            "changedPixels": 263
+          },
+          {
+            "slice": 266,
+            "path": "patches/l-lateral-basal/266.png",
+            "changedPixels": 204
+          },
+          {
+            "slice": 267,
+            "path": "patches/l-lateral-basal/267.png",
+            "changedPixels": 142
+          },
+          {
+            "slice": 268,
+            "path": "patches/l-lateral-basal/268.png",
+            "changedPixels": 116
+          },
+          {
+            "slice": 269,
+            "path": "patches/l-lateral-basal/269.png",
+            "changedPixels": 74
+          },
+          {
+            "slice": 270,
+            "path": "patches/l-lateral-basal/270.png",
+            "changedPixels": 5
+          }
+        ]
+      },
+      "approach": {
+        "slice": 257,
+        "pixel": [365.0306, 348.033],
+        "lps": [69.5162, -134.2029, -240.2427],
+        "sourceHu": -963,
+        "sourceEdgeId": 103
+      },
+      "centerSourceHu": -906
+    }
+  ],
+  "traces": [
+    {
+      "id": "central-right",
+      "preset": "mirror",
+      "region": "Central airways",
+      "range": [274, 453],
+      "cropCenter": [181.6918, 255.6114],
+      "cropSize": 195.5019,
+      "anchor": {
+        "slice": 435,
+        "pixel": [246.5723, 318.9188],
+        "sourceEdgeId": 0,
+        "airway": {
+          "code": "Trachea",
+          "name": "Trachea",
+          "shortName": "Trachea"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 428,
+          "pixel": [246.9427, 318.9952],
+          "lps": [-11.8998, -154.223, -154.5218],
+          "sourceHu": -1021,
+          "sourceEdgeId": 0,
+          "airway": {
+            "code": "Trachea",
+            "name": "Trachea",
+            "shortName": "Trachea"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 391,
+          "pixel": [245.9542, 316.3607],
+          "lps": [-12.5814, -156.0394, -172.7839],
+          "sourceHu": -1018,
+          "sourceEdgeId": 1,
+          "airway": {
+            "code": "RMSB",
+            "name": "Right main bronchus",
+            "shortName": "Main bronchus"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-3",
+          "slice": 290,
+          "pixel": [123.3773, 198.0974],
+          "lps": [-97.0924, -237.5764, -223.6176],
+          "sourceHu": -967,
+          "sourceEdgeId": 249,
+          "airway": {
+            "code": "RB5b",
+            "name": "Right medial bronchus, subsegment b",
+            "shortName": "Medial · subsegment b"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [-12.15521218272999, -154.2757095620951, -150.78062182753658],
+      "scopeDirectionLps": [0.03358069177785027, 0.0035512309600005502, -0.9994297003283371],
+      "airwayPath": [
+        {
+          "code": "Trachea",
+          "name": "Trachea",
+          "shortName": "Trachea"
+        },
+        {
+          "code": "RMSB",
+          "name": "Right main bronchus",
+          "shortName": "Main bronchus"
+        },
+        {
+          "code": "BI",
+          "name": "Bronchus intermedius",
+          "shortName": "Bronchus intermedius"
+        },
+        {
+          "code": "RML",
+          "name": "Right middle lobe bronchus",
+          "shortName": "Middle lobe"
+        },
+        {
+          "code": "RB5",
+          "name": "Right medial segmental bronchus",
+          "shortName": "Medial"
+        },
+        {
+          "code": "RB5b",
+          "name": "Right medial bronchus, subsegment b",
+          "shortName": "Medial · subsegment b"
+        }
+      ],
+      "targetId": "r-middle-medial-b",
+      "sourceEdgeIds": [0, 1, 4, 9, 19, 41, 85, 162, 249]
+    },
+    {
+      "id": "central-left",
+      "preset": "mirror",
+      "region": "Central airways",
+      "range": [240, 436],
+      "cropCenter": [332.9995, 262.7297],
+      "cropSize": 237.2547,
+      "anchor": {
+        "slice": 431,
+        "pixel": [246.8722, 318.9907],
+        "sourceEdgeId": 0,
+        "airway": {
+          "code": "Trachea",
+          "name": "Trachea",
+          "shortName": "Trachea"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 420,
+          "pixel": [247.0296, 318.7336],
+          "lps": [-11.8399, -154.4034, -158.5691],
+          "sourceHu": -989,
+          "sourceEdgeId": 0,
+          "airway": {
+            "code": "Trachea",
+            "name": "Trachea",
+            "shortName": "Trachea"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 375,
+          "pixel": [264.8513, 316.1771],
+          "lps": [0.4473, -156.166, -180.8106],
+          "sourceHu": -1024,
+          "sourceEdgeId": 2,
+          "airway": {
+            "code": "LMSB",
+            "name": "Left main bronchus",
+            "shortName": "Main bronchus"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-3",
+          "slice": 262,
+          "pixel": [412.1042, 209.7658],
+          "lps": [101.9713, -229.5316, -237.3071],
+          "sourceHu": -1024,
+          "sourceEdgeId": 353,
+          "airway": {
+            "code": "LB5",
+            "name": "Left inferior lingular segmental bronchus",
+            "shortName": "Inferior lingular"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [-11.948495374549314, -154.22614091216758, -152.76929251675588],
+      "scopeDirectionLps": [0.02054263683515044, -0.03249881243809145, -0.9992606403046069],
+      "airwayPath": [
+        {
+          "code": "Trachea",
+          "name": "Trachea",
+          "shortName": "Trachea"
+        },
+        {
+          "code": "LMSB",
+          "name": "Left main bronchus",
+          "shortName": "Main bronchus"
+        },
+        {
+          "code": "LUL",
+          "name": "Left upper lobe bronchus",
+          "shortName": "Upper lobe"
+        },
+        {
+          "code": "LB4+5",
+          "name": "Left lingular bronchus",
+          "shortName": "Lingular bronchus"
+        },
+        {
+          "code": "LB5",
+          "name": "Left inferior lingular segmental bronchus",
+          "shortName": "Inferior lingular"
+        }
+      ],
+      "targetId": "l-inferior-lingula",
+      "sourceEdgeIds": [0, 2, 496, 20, 43, 89, 168, 262, 353]
+    },
+    {
+      "id": "right-upper-entry",
+      "preset": "rul",
+      "region": "Right upper lobe",
+      "range": [352, 461],
+      "cropCenter": [211.818, 298.6844],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 382,
+        "pixel": [234.3992, 314.9328],
+        "sourceEdgeId": 1,
+        "airway": {
+          "code": "RMSB",
+          "name": "Right main bronchus",
+          "shortName": "Main bronchus"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 379,
+          "pixel": [230.7924, 314.4685],
+          "lps": [-23.0347, -157.344, -179.1598],
+          "sourceHu": -996,
+          "sourceEdgeId": 1,
+          "airway": {
+            "code": "RMSB",
+            "name": "Right main bronchus",
+            "shortName": "Main bronchus"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 371,
+          "pixel": [213.5473, 312.9333],
+          "lps": [-34.9245, -158.4025, -183.2032],
+          "sourceHu": -1024,
+          "sourceEdgeId": 3,
+          "airway": {
+            "code": "RUL",
+            "name": "Right upper lobe bronchus",
+            "shortName": "Upper lobe"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-3",
+          "slice": 441,
+          "pixel": [189.2368, 293.2359],
+          "lps": [-51.6854, -171.9829, -148.1852],
+          "sourceHu": -885,
+          "sourceEdgeId": 117,
+          "airway": {
+            "code": "RB1b",
+            "name": "Right apical bronchus, anterior subsegment",
+            "shortName": "Apical · anterior subsegment"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [-20.548035078942632, -157.02385314529232, -177.42963163390527],
+      "scopeDirectionLps": [-0.8123603009974109, -0.10496520845670969, -0.5736314551844552],
+      "airwayPath": [
+        {
+          "code": "RMSB",
+          "name": "Right main bronchus",
+          "shortName": "Main bronchus"
+        },
+        {
+          "code": "RUL",
+          "name": "Right upper lobe bronchus",
+          "shortName": "Upper lobe"
+        },
+        {
+          "code": "RB1/B2",
+          "name": "Right B1–B2 common trunk",
+          "shortName": "B1–B2 common trunk"
+        },
+        {
+          "code": "RB1",
+          "name": "Right apical segmental bronchus",
+          "shortName": "Apical"
+        },
+        {
+          "code": "RB1b",
+          "name": "Right apical bronchus, anterior subsegment",
+          "shortName": "Apical · anterior subsegment"
+        }
+      ],
+      "targetId": "r-apical-anterior",
+      "sourceEdgeIds": [1, 3, 6, 13, 28, 59, 117]
+    },
+    {
+      "id": "right-upper-apical",
+      "preset": "rul",
+      "region": "Right upper lobe",
+      "range": [367, 461],
+      "cropCenter": [193.0944, 297.2491],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 387,
+        "pixel": [196.952, 310.0046],
+        "sourceEdgeId": 6,
+        "airway": {
+          "code": "RB1/B2",
+          "name": "Right B1–B2 common trunk",
+          "shortName": "B1–B2 common trunk"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 390,
+          "pixel": [195.6542, 312.0622],
+          "lps": [-47.2609, -159.003, -173.5255],
+          "sourceHu": -1011,
+          "sourceEdgeId": 6,
+          "airway": {
+            "code": "RB1/B2",
+            "name": "Right B1–B2 common trunk",
+            "shortName": "B1–B2 common trunk"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 409,
+          "pixel": [192.3549, 308.9998],
+          "lps": [-49.5356, -161.1144, -164.2236],
+          "sourceHu": -1018,
+          "sourceEdgeId": 13,
+          "airway": {
+            "code": "RB1",
+            "name": "Right apical segmental bronchus",
+            "shortName": "Apical"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-3",
+          "slice": 441,
+          "pixel": [189.2368, 293.2359],
+          "lps": [-51.6854, -171.9829, -148.1852],
+          "sourceHu": -885,
+          "sourceEdgeId": 117,
+          "airway": {
+            "code": "RB1b",
+            "name": "Right apical bronchus, anterior subsegment",
+            "shortName": "Apical · anterior subsegment"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [-48.11624112036115, -157.86436505067343, -172.1050093748732],
+      "scopeDirectionLps": [-0.04628401212534779, -0.5306765864302508, 0.846309725122143],
+      "airwayPath": [
+        {
+          "code": "RB1/B2",
+          "name": "Right B1–B2 common trunk",
+          "shortName": "B1–B2 common trunk"
+        },
+        {
+          "code": "RB1",
+          "name": "Right apical segmental bronchus",
+          "shortName": "Apical"
+        },
+        {
+          "code": "RB1b",
+          "name": "Right apical bronchus, anterior subsegment",
+          "shortName": "Apical · anterior subsegment"
+        }
+      ],
+      "targetId": "r-apical-anterior",
+      "sourceEdgeIds": [6, 13, 28, 59, 117]
+    },
+    {
+      "id": "right-upper-distal",
+      "preset": "rul",
+      "region": "Right upper lobe",
+      "range": [385, 477],
+      "cropCenter": [194.2522, 319.1491],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 395,
+        "pixel": [194.3245, 312.9059],
+        "sourceEdgeId": 13,
+        "airway": {
+          "code": "RB1",
+          "name": "Right apical segmental bronchus",
+          "shortName": "Apical"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 399,
+          "pixel": [194.5992, 310.0224],
+          "lps": [-47.9883, -160.4094, -169.1663],
+          "sourceHu": -1019,
+          "sourceEdgeId": 13,
+          "airway": {
+            "code": "RB1",
+            "name": "Right apical segmental bronchus",
+            "shortName": "Apical"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 424,
+          "pixel": [189.0207, 311.7318],
+          "lps": [-51.8344, -159.2308, -156.4923],
+          "sourceHu": -984,
+          "sourceEdgeId": 29,
+          "airway": {
+            "code": "RB1a",
+            "name": "Right apical bronchus, posterior subsegment",
+            "shortName": "Apical · posterior subsegment"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-3",
+          "slice": 453,
+          "pixel": [193.3603, 321.0067],
+          "lps": [-48.8424, -152.8362, -141.9495],
+          "sourceHu": -952,
+          "sourceEdgeId": 61,
+          "airway": {
+            "code": "RB1a",
+            "name": "Right apical bronchus, posterior subsegment",
+            "shortName": "Apical · posterior subsegment"
+          },
+          "landmark": "Distal"
+        }
+      ],
+      "scopePositionLps": [-48.29567322563038, -160.7547549813284, -167.72751759961605],
+      "scopeDirectionLps": [-0.3207242908241333, -0.08148384354914719, 0.9436611216511015],
+      "airwayPath": [
+        {
+          "code": "RB1",
+          "name": "Right apical segmental bronchus",
+          "shortName": "Apical"
+        },
+        {
+          "code": "RB1a",
+          "name": "Right apical bronchus, posterior subsegment",
+          "shortName": "Apical · posterior subsegment"
+        }
+      ],
+      "targetId": "r-apical-posterior",
+      "sourceEdgeIds": [13, 29, 61, 122]
+    },
+    {
+      "id": "middle-lobe-entry",
+      "preset": "mirror",
+      "region": "Right middle lobe",
+      "range": [287, 343],
+      "cropCenter": [179.0317, 242.3109],
+      "cropSize": 205.2253,
+      "anchor": {
+        "slice": 337,
+        "pixel": [213.8567, 312.4235],
+        "sourceEdgeId": 4,
+        "airway": {
+          "code": "BI",
+          "name": "Bronchus intermedius",
+          "shortName": "Bronchus intermedius"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 330,
+          "pixel": [211.3334, 311.4858],
+          "lps": [-36.4508, -159.4004, -203.5232],
+          "sourceHu": -973,
+          "sourceEdgeId": 4,
+          "airway": {
+            "code": "BI",
+            "name": "Bronchus intermedius",
+            "shortName": "Bronchus intermedius"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 308,
+          "pixel": [197.4129, 296.8732],
+          "lps": [-46.0483, -169.4751, -214.4122],
+          "sourceHu": -899,
+          "sourceEdgeId": 9,
+          "airway": {
+            "code": "RML",
+            "name": "Right middle lobe bronchus",
+            "shortName": "Middle lobe"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-3",
+          "slice": 311,
+          "pixel": [149.3595, 179.8935],
+          "lps": [-79.1789, -250.1271, -213.0828],
+          "sourceHu": -937,
+          "sourceEdgeId": 243,
+          "airway": {
+            "code": "RB5a",
+            "name": "Right medial bronchus, subsegment a",
+            "shortName": "Medial · subsegment a"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [-34.71110277714268, -158.7539206706968, -199.93110518761804],
+      "scopeDirectionLps": [-0.4586340722021453, -0.14502650241787018, -0.8767109565938576],
+      "airwayPath": [
+        {
+          "code": "BI",
+          "name": "Bronchus intermedius",
+          "shortName": "Bronchus intermedius"
+        },
+        {
+          "code": "RML",
+          "name": "Right middle lobe bronchus",
+          "shortName": "Middle lobe"
+        },
+        {
+          "code": "RB5",
+          "name": "Right medial segmental bronchus",
+          "shortName": "Medial"
+        },
+        {
+          "code": "RB5a",
+          "name": "Right medial bronchus, subsegment a",
+          "shortName": "Medial · subsegment a"
+        }
+      ],
+      "targetId": "r-middle-medial-a",
+      "sourceEdgeIds": [4, 9, 19, 40, 84, 159, 243]
+    },
+    {
+      "id": "middle-lobe-lateral",
+      "preset": "mirror",
+      "region": "Right middle lobe",
+      "range": [287, 337],
+      "cropCenter": [158.6755, 295.1575],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 315,
+        "pixel": [204.2192, 309.4279],
+        "sourceEdgeId": 9,
+        "airway": {
+          "code": "RML",
+          "name": "Right middle lobe bronchus",
+          "shortName": "Middle lobe"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 314,
+          "pixel": [203.7012, 303.8087],
+          "lps": [-41.7128, -164.6934, -211.7379],
+          "sourceHu": -1018,
+          "sourceEdgeId": 9,
+          "airway": {
+            "code": "RML",
+            "name": "Right middle lobe bronchus",
+            "shortName": "Middle lobe"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 307,
+          "pixel": [184.5606, 284.0839],
+          "lps": [-54.9094, -178.2927, -215.062],
+          "sourceHu": -1024,
+          "sourceEdgeId": 9,
+          "airway": {
+            "code": "RML",
+            "name": "Right middle lobe bronchus",
+            "shortName": "Middle lobe"
+          },
+          "landmark": "Distal"
+        },
+        {
+          "id": "point-3",
+          "slice": 318,
+          "pixel": [121.1102, 283.9292],
+          "lps": [-98.6555, -178.3994, -209.386],
+          "sourceHu": -905,
+          "sourceEdgeId": 156,
+          "airway": {
+            "code": "RB4a",
+            "name": "Right lateral bronchus, subsegment a",
+            "shortName": "Lateral · subsegment a"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [-43.289811046664624, -167.24095225508043, -212.98114849280577],
+      "scopeDirectionLps": [-0.7260278980181053, -0.6231313484278275, -0.29084499979530176],
+      "airwayPath": [
+        {
+          "code": "RML",
+          "name": "Right middle lobe bronchus",
+          "shortName": "Middle lobe"
+        },
+        {
+          "code": "RB4",
+          "name": "Right lateral segmental bronchus",
+          "shortName": "Lateral"
+        },
+        {
+          "code": "RB4a",
+          "name": "Right lateral bronchus, subsegment a",
+          "shortName": "Lateral · subsegment a"
+        }
+      ],
+      "targetId": "r-middle-lateral",
+      "sourceEdgeIds": [9, 18, 39, 82, 156]
+    },
+    {
+      "id": "middle-lobe-caudal",
+      "preset": "mirror",
+      "region": "Right middle lobe",
+      "range": [274, 329],
+      "cropCenter": [150.3603, 237.8382],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 307,
+        "pixel": [183.8781, 283.4489],
+        "sourceEdgeId": 19,
+        "airway": {
+          "code": "RB5",
+          "name": "Right medial segmental bronchus",
+          "shortName": "Medial"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 307,
+          "pixel": [184.2797, 281.1578],
+          "lps": [-55.1031, -180.3102, -215.1017],
+          "sourceHu": -953,
+          "sourceEdgeId": 19,
+          "airway": {
+            "code": "RB5",
+            "name": "Right medial segmental bronchus",
+            "shortName": "Medial"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 307,
+          "pixel": [184.0695, 274.9552],
+          "lps": [-55.248, -184.5865, -215.1883],
+          "sourceHu": -1024,
+          "sourceEdgeId": 19,
+          "airway": {
+            "code": "RB5",
+            "name": "Right medial segmental bronchus",
+            "shortName": "Medial"
+          },
+          "landmark": "Distal"
+        },
+        {
+          "id": "point-3",
+          "slice": 290,
+          "pixel": [123.3773, 198.0974],
+          "lps": [-97.0924, -237.5764, -223.6176],
+          "sourceHu": -967,
+          "sourceEdgeId": 249,
+          "airway": {
+            "code": "RB5b",
+            "name": "Right medial bronchus, subsegment b",
+            "shortName": "Medial · subsegment b"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [-54.86086429437588, -181.69235695585155, -215.1276442875574],
+      "scopeDirectionLps": [-0.23254405669290953, -0.9724891736049954, -0.01371382214694238],
+      "airwayPath": [
+        {
+          "code": "RB5",
+          "name": "Right medial segmental bronchus",
+          "shortName": "Medial"
+        },
+        {
+          "code": "RB5b",
+          "name": "Right medial bronchus, subsegment b",
+          "shortName": "Medial · subsegment b"
+        }
+      ],
+      "targetId": "r-middle-medial-b",
+      "sourceEdgeIds": [19, 41, 85, 162, 249]
+    },
+    {
+      "id": "middle-lobe-cranial",
+      "preset": "mirror",
+      "region": "Right middle lobe",
+      "range": [291, 329],
+      "cropCenter": [164.3017, 227.8236],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 307,
+        "pixel": [183.8781, 283.4489],
+        "sourceEdgeId": 19,
+        "airway": {
+          "code": "RB5",
+          "name": "Right medial segmental bronchus",
+          "shortName": "Medial"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 307,
+          "pixel": [184.2336, 281.4207],
+          "lps": [-55.1349, -180.1289, -215.0983],
+          "sourceHu": -953,
+          "sourceEdgeId": 19,
+          "airway": {
+            "code": "RB5",
+            "name": "Right medial segmental bronchus",
+            "shortName": "Medial"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 307,
+          "pixel": [184.3969, 275.9001],
+          "lps": [-55.0223, -183.9351, -215.1626],
+          "sourceHu": -989,
+          "sourceEdgeId": 19,
+          "airway": {
+            "code": "RB5",
+            "name": "Right medial segmental bronchus",
+            "shortName": "Medial"
+          },
+          "landmark": "Distal"
+        },
+        {
+          "id": "point-3",
+          "slice": 311,
+          "pixel": [149.3595, 179.8935],
+          "lps": [-79.1789, -250.1271, -213.0828],
+          "sourceHu": -937,
+          "sourceEdgeId": 243,
+          "airway": {
+            "code": "RB5a",
+            "name": "Right medial bronchus, subsegment a",
+            "shortName": "Medial · subsegment a"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [-54.920426765330774, -181.3524824404896, -215.12126845089315],
+      "scopeDirectionLps": [-0.20589474707596425, -0.9784970423533209, -0.012283779236379213],
+      "airwayPath": [
+        {
+          "code": "RB5",
+          "name": "Right medial segmental bronchus",
+          "shortName": "Medial"
+        },
+        {
+          "code": "RB5a",
+          "name": "Right medial bronchus, subsegment a",
+          "shortName": "Medial · subsegment a"
+        }
+      ],
+      "targetId": "r-middle-medial-a",
+      "sourceEdgeIds": [19, 40, 84, 159, 243]
+    },
+    {
+      "id": "upper-oblique-lateral",
+      "preset": "rul",
+      "region": "Right upper lobe",
+      "range": [365, 436],
+      "cropCenter": [144.5018, 297.5634],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 385,
+        "pixel": [186.4116, 298.3936],
+        "sourceEdgeId": 15,
+        "airway": {
+          "code": "RB3a",
+          "name": "Right anterior bronchus, lateral subsegment",
+          "shortName": "Anterior · lateral subsegment"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 385,
+          "pixel": [182.1176, 299.2761],
+          "lps": [-56.5937, -167.8184, -175.9567],
+          "sourceHu": -991,
+          "sourceEdgeId": 15,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior · lateral subsegment"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 395,
+          "pixel": [162.9673, 301.4431],
+          "lps": [-69.7969, -166.3244, -171.2412],
+          "sourceHu": -1024,
+          "sourceEdgeId": 32,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior · lateral subsegment"
+          },
+          "landmark": "Midportion"
+        },
+        {
+          "id": "point-3",
+          "slice": 419,
+          "pixel": [112.6622, 294.5087],
+          "lps": [-104.4799, -171.1053, -158.9428],
+          "sourceHu": -973,
+          "sourceEdgeId": 67,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior · lateral subsegment"
+          },
+          "landmark": "Distal"
+        }
+      ],
+      "scopePositionLps": [-59.17208704018554, -167.71884871081906, -175.46316047410713],
+      "scopeDirectionLps": [-0.9830217213892387, 0.11046187413867292, 0.14651440078951222],
+      "airwayPath": [
+        {
+          "code": "RB3a",
+          "name": "Right anterior bronchus, lateral subsegment",
+          "shortName": "Anterior · lateral subsegment"
+        }
+      ],
+      "targetId": "r-anterior-upper",
+      "sourceEdgeIds": [15, 32, 67]
+    },
+    {
+      "id": "upper-oblique-medial",
+      "preset": "rul",
+      "region": "Right upper lobe",
+      "range": [359, 409],
+      "cropCenter": [147.4126, 304.1594],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 385,
+        "pixel": [186.4116, 298.3936],
+        "sourceEdgeId": 15,
+        "airway": {
+          "code": "RB3a",
+          "name": "Right anterior bronchus, lateral subsegment",
+          "shortName": "Anterior · lateral subsegment"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 385,
+          "pixel": [183.9739, 298.8946],
+          "lps": [-55.3139, -168.0814, -176.0474],
+          "sourceHu": -945,
+          "sourceEdgeId": 15,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior · lateral subsegment"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 388,
+          "pixel": [171.8006, 300.2005],
+          "lps": [-63.7068, -167.1811, -174.7204],
+          "sourceHu": -925,
+          "sourceEdgeId": 15,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior · lateral subsegment"
+          },
+          "landmark": "Midportion"
+        },
+        {
+          "id": "point-3",
+          "slice": 375,
+          "pixel": [119.4842, 309.9253],
+          "lps": [-99.7765, -160.4763, -180.8452],
+          "sourceHu": -1001,
+          "sourceEdgeId": 131,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior · lateral subsegment"
+          },
+          "landmark": "Distal"
+        }
+      ],
+      "scopePositionLps": [-56.78454245038505, -167.7792118022781, -175.94315062462576],
+      "scopeDirectionLps": [-0.9775252078327431, 0.08829088264320112, 0.19143977667568696],
+      "airwayPath": [
+        {
+          "code": "RB3a",
+          "name": "Right anterior bronchus, lateral subsegment",
+          "shortName": "Anterior · lateral subsegment"
+        }
+      ],
+      "targetId": "r-anterior-lower",
+      "sourceEdgeIds": [15, 33, 69, 131]
+    },
+    {
+      "id": "left-upper-division",
+      "preset": "upper-division",
+      "region": "Left upper division",
+      "range": [325, 478],
+      "cropCenter": [336.9036, 329.307],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 339,
+        "pixel": [311.2561, 307.5814],
+        "sourceEdgeId": 496,
+        "airway": {
+          "code": "LUL",
+          "name": "Left upper lobe bronchus",
+          "shortName": "Upper lobe"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 340,
+          "pixel": [315.2026, 304.5135],
+          "lps": [35.1622, -164.2075, -198.2506],
+          "sourceHu": -1010,
+          "sourceEdgeId": 496,
+          "airway": {
+            "code": "LUL",
+            "name": "Left upper lobe bronchus",
+            "shortName": "Upper lobe"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 353,
+          "pixel": [330.9251, 293.0733],
+          "lps": [46.0021, -172.095, -191.8081],
+          "sourceHu": -988,
+          "sourceEdgeId": 21,
+          "airway": {
+            "code": "LUL division",
+            "name": "Left upper division bronchus",
+            "shortName": "Upper division"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-3",
+          "slice": 455,
+          "pixel": [362.4626, 355.2241],
+          "lps": [67.7457, -129.2449, -140.8501],
+          "sourceHu": -880,
+          "sourceEdgeId": 415,
+          "airway": {
+            "code": "LB1+2",
+            "name": "Left apicoposterior segmental bronchus",
+            "shortName": "Apicoposterior"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [37.54300769705786, -166.05820688056718, -197.67548664309638],
+      "scopeDirectionLps": [0.8004163129678061, -0.5627872918058741, 0.20640782474710828],
+      "airwayPath": [
+        {
+          "code": "LUL",
+          "name": "Left upper lobe bronchus",
+          "shortName": "Upper lobe"
+        },
+        {
+          "code": "LUL division",
+          "name": "Left upper division bronchus",
+          "shortName": "Upper division"
+        },
+        {
+          "code": "LB1+2",
+          "name": "Left apicoposterior segmental bronchus",
+          "shortName": "Apicoposterior"
+        }
+      ],
+      "targetId": "l-apicoposterior",
+      "sourceEdgeIds": [496, 21, 45, 93, 174, 269, 362, 415]
+    },
+    {
+      "id": "left-upper-anterior",
+      "preset": "upper-division",
+      "region": "Left upper division",
+      "range": [342, 423],
+      "cropCenter": [349.9839, 263.4866],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 348,
+        "pixel": [331.7897, 292.4743],
+        "sourceEdgeId": 21,
+        "airway": {
+          "code": "LUL division",
+          "name": "Left upper division bronchus",
+          "shortName": "Upper division"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 351,
+          "pixel": [331.315, 292.8032],
+          "lps": [46.2709, -172.2812, -193.0715],
+          "sourceHu": -1024,
+          "sourceEdgeId": 21,
+          "airway": {
+            "code": "LUL division",
+            "name": "Left upper division bronchus",
+            "shortName": "Upper division"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 366,
+          "pixel": [332.4079, 292.557],
+          "lps": [47.0244, -172.451, -185.5365],
+          "sourceHu": -982,
+          "sourceEdgeId": 21,
+          "airway": {
+            "code": "LUL division",
+            "name": "Left upper division bronchus",
+            "shortName": "Upper division"
+          },
+          "landmark": "Distal"
+        },
+        {
+          "id": "point-3",
+          "slice": 403,
+          "pixel": [361.8194, 240.1554],
+          "lps": [67.3023, -208.5793, -166.8019],
+          "sourceHu": -921,
+          "sourceEdgeId": 357,
+          "airway": {
+            "code": "LB3",
+            "name": "Left anterior segmental bronchus",
+            "shortName": "Anterior"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [45.98451796079199, -172.08280188990423, -191.72559487705587],
+      "scopeDirectionLps": [0.15276134001855501, -0.04593867285709094, 0.9871948193400655],
+      "airwayPath": [
+        {
+          "code": "LUL division",
+          "name": "Left upper division bronchus",
+          "shortName": "Upper division"
+        },
+        {
+          "code": "LB3",
+          "name": "Left anterior segmental bronchus",
+          "shortName": "Anterior"
+        }
+      ],
+      "targetId": "l-anterior",
+      "sourceEdgeIds": [21, 44, 92, 172, 267, 357]
+    },
+    {
+      "id": "left-lingula",
+      "preset": "mirror",
+      "region": "Lingula",
+      "range": [240, 368],
+      "cropCenter": [365.1915, 257.025],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 339,
+        "pixel": [311.2561, 307.5814],
+        "sourceEdgeId": 496,
+        "airway": {
+          "code": "LUL",
+          "name": "Left upper lobe bronchus",
+          "shortName": "Upper lobe"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 340,
+          "pixel": [315.0948, 304.5974],
+          "lps": [35.0878, -164.1496, -198.2686],
+          "sourceHu": -1010,
+          "sourceEdgeId": 496,
+          "airway": {
+            "code": "LUL",
+            "name": "Left upper lobe bronchus",
+            "shortName": "Upper lobe"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 344,
+          "pixel": [333.2928, 291.3839],
+          "lps": [47.6345, -173.2597, -196.5427],
+          "sourceHu": -1018,
+          "sourceEdgeId": 20,
+          "airway": {
+            "code": "LB4+5",
+            "name": "Left lingular bronchus",
+            "shortName": "Lingular bronchus"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-3",
+          "slice": 262,
+          "pixel": [412.1042, 209.7658],
+          "lps": [101.9713, -229.5316, -237.3071],
+          "sourceHu": -1024,
+          "sourceEdgeId": 353,
+          "airway": {
+            "code": "LB5",
+            "name": "Left inferior lingular segmental bronchus",
+            "shortName": "Inferior lingular"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [37.40354546275158, -165.94979597299582, -197.70917491814913],
+      "scopeDirectionLps": [0.8003155518361361, -0.5641709979612539, 0.20299286329480593],
+      "airwayPath": [
+        {
+          "code": "LUL",
+          "name": "Left upper lobe bronchus",
+          "shortName": "Upper lobe"
+        },
+        {
+          "code": "LB4+5",
+          "name": "Left lingular bronchus",
+          "shortName": "Lingular bronchus"
+        },
+        {
+          "code": "LB5",
+          "name": "Left inferior lingular segmental bronchus",
+          "shortName": "Inferior lingular"
+        }
+      ],
+      "targetId": "l-inferior-lingula",
+      "sourceEdgeIds": [496, 20, 43, 89, 168, 262, 353]
+    },
+    {
+      "id": "left-lower-returning",
+      "preset": "mirror",
+      "region": "Left lower lobe",
+      "range": [307, 399],
+      "cropCenter": [318.981, 352.9831],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 339,
+        "pixel": [311.2561, 307.5814],
+        "sourceEdgeId": 5,
+        "airway": {
+          "code": "LLL",
+          "name": "Left lower lobe bronchus",
+          "shortName": "Lower lobe"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 335,
+          "pixel": [313.6398, 310.0207],
+          "lps": [34.0847, -160.4105, -201.1534],
+          "sourceHu": -997,
+          "sourceEdgeId": 5,
+          "airway": {
+            "code": "LLL",
+            "name": "Left lower lobe bronchus",
+            "shortName": "Lower lobe"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 327,
+          "pixel": [321.5905, 325.2959],
+          "lps": [39.5663, -149.879, -205.0906],
+          "sourceHu": -1020,
+          "sourceEdgeId": 10,
+          "airway": {
+            "code": "LB6",
+            "name": "Left superior segmental bronchus",
+            "shortName": "Superior"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-3",
+          "slice": 373,
+          "pixel": [325.5706, 390.4002],
+          "lps": [42.3104, -104.9926, -181.7814],
+          "sourceHu": -904,
+          "sourceEdgeId": 281,
+          "airway": {
+            "code": "LB6",
+            "name": "Left superior segmental bronchus",
+            "shortName": "Superior"
+          },
+          "landmark": "Distal"
+        }
+      ],
+      "scopePositionLps": [35.52270508889162, -158.9389701885842, -203.11827382576413],
+      "scopeDirectionLps": [0.5151039700189624, 0.5287522147509105, -0.6746028427650681],
+      "airwayPath": [
+        {
+          "code": "LLL",
+          "name": "Left lower lobe bronchus",
+          "shortName": "Lower lobe"
+        },
+        {
+          "code": "LB6",
+          "name": "Left superior segmental bronchus",
+          "shortName": "Superior"
+        }
+      ],
+      "targetId": "l-superior",
+      "sourceEdgeIds": [5, 10, 23, 50, 101, 184, 281]
+    },
+    {
+      "id": "right-lower-basal",
+      "preset": "mirror",
+      "region": "Right lower lobe",
+      "range": [239, 328],
+      "cropCenter": [174.7577, 299.8374],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 315,
+        "pixel": [204.2192, 309.4279],
+        "sourceEdgeId": 8,
+        "airway": {
+          "code": "RLL",
+          "name": "Right lower lobe bronchus",
+          "shortName": "Lower lobe"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 311,
+          "pixel": [201.7849, 313.0665],
+          "lps": [-43.0341, -158.3106, -212.7551],
+          "sourceHu": -1004,
+          "sourceEdgeId": 8,
+          "airway": {
+            "code": "RLL",
+            "name": "Right lower lobe bronchus",
+            "shortName": "Lower lobe"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 284,
+          "pixel": [192.9799, 318.7597],
+          "lps": [-49.1047, -154.3854, -226.4282],
+          "sourceHu": -913,
+          "sourceEdgeId": 34,
+          "airway": {
+            "code": "R basal",
+            "name": "Right basal bronchus",
+            "shortName": "Basal bronchus"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-3",
+          "slice": 255,
+          "pixel": [153.4318, 287.7751],
+          "lps": [-76.3712, -175.7478, -240.9047],
+          "sourceHu": -890,
+          "sourceEdgeId": 220,
+          "airway": {
+            "code": "RB8",
+            "name": "Right anterior basal segmental bronchus",
+            "shortName": "Anterior basal"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [-44.44830651726785, -156.48807729946847, -214.76710708726378],
+      "scopeDirectionLps": [-0.3820110482258086, 0.203217594784659, -0.9015376687656247],
+      "airwayPath": [
+        {
+          "code": "RLL",
+          "name": "Right lower lobe bronchus",
+          "shortName": "Lower lobe"
+        },
+        {
+          "code": "R basal",
+          "name": "Right basal bronchus",
+          "shortName": "Basal bronchus"
+        },
+        {
+          "code": "RB8",
+          "name": "Right anterior basal segmental bronchus",
+          "shortName": "Anterior basal"
+        }
+      ],
+      "targetId": "r-anterior-basal",
+      "sourceEdgeIds": [8, 16, 34, 71, 136, 220]
+    },
+    {
+      "id": "left-lower-basal",
+      "preset": "mirror",
+      "region": "Left lower lobe",
+      "range": [239, 328],
+      "cropCenter": [346.3383, 337.8387],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 321,
+        "pixel": [321.3786, 317.9269],
+        "sourceEdgeId": 11,
+        "airway": {
+          "code": "L basal",
+          "name": "Left basal bronchus",
+          "shortName": "Basal bronchus"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 316,
+          "pixel": [322.8127, 315.4201],
+          "lps": [40.409, -156.6879, -210.3488],
+          "sourceHu": -866,
+          "sourceEdgeId": 11,
+          "airway": {
+            "code": "L basal",
+            "name": "Left basal bronchus",
+            "shortName": "Basal bronchus"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 291,
+          "pixel": [334.3786, 318.6454],
+          "lps": [48.3831, -154.4642, -223.0964],
+          "sourceHu": -1022,
+          "sourceEdgeId": 11,
+          "airway": {
+            "code": "L basal",
+            "name": "Left basal bronchus",
+            "shortName": "Basal bronchus"
+          },
+          "landmark": "Distal"
+        },
+        {
+          "id": "point-3",
+          "slice": 257,
+          "pixel": [365.0306, 348.033],
+          "lps": [69.5162, -134.2029, -240.2427],
+          "sourceHu": -963,
+          "sourceEdgeId": 103,
+          "airway": {
+            "code": "LB9",
+            "name": "Left lateral basal segmental bronchus",
+            "shortName": "Lateral basal"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [41.61122400296233, -156.9837627040734, -212.6202308286373],
+      "scopeDirectionLps": [0.5741117818382363, 0.14777795226874466, -0.8053305773269644],
+      "airwayPath": [
+        {
+          "code": "L basal",
+          "name": "Left basal bronchus",
+          "shortName": "Basal bronchus"
+        },
+        {
+          "code": "LB7+8/B9",
+          "name": "Left B7+8–B9 common trunk",
+          "shortName": "B7+8–B9 common trunk"
+        },
+        {
+          "code": "LB9",
+          "name": "Left lateral basal segmental bronchus",
+          "shortName": "Lateral basal"
+        }
+      ],
+      "targetId": "l-lateral-basal",
+      "sourceEdgeIds": [11, 24, 51, 103]
+    }
+  ],
+  "assets": [
+    {
+      "path": "patches/r-apical-anterior/431.png",
+      "bytes": 262,
+      "sha256": "0d84195fa57197085c45aaeb5f6e47886d686cf407de83d3e43ca4525df1c389"
+    },
+    {
+      "path": "patches/r-apical-anterior/432.png",
+      "bytes": 405,
+      "sha256": "c3bd1f99c65a416afc0bf8da6b5769d722cf082f44bd7a374eacd22d96cd2a7f"
+    },
+    {
+      "path": "patches/r-apical-anterior/433.png",
+      "bytes": 456,
+      "sha256": "25288594b43cd97be7c7af21f8a9da96c252918ee3990e57f8aacfcf7d9cad3f"
+    },
+    {
+      "path": "patches/r-apical-anterior/434.png",
+      "bytes": 506,
+      "sha256": "d297e19b5e2d10f83ccb532c9afa94ec7962bd7b317450de802b9ef09a479e70"
+    },
+    {
+      "path": "patches/r-apical-anterior/435.png",
+      "bytes": 601,
+      "sha256": "0aea9a1beaadc0002dcb185ede8d8765ad43d6c15baf34f9d6bff738cb322a72"
+    },
+    {
+      "path": "patches/r-apical-anterior/436.png",
+      "bytes": 671,
+      "sha256": "62ec953a91e25c361da17df005327b9bd267c762727970559fc1379d28787069"
+    },
+    {
+      "path": "patches/r-apical-anterior/437.png",
+      "bytes": 762,
+      "sha256": "882a9f26e464ca5076f85f4f06320088047aed0172ab0e141ac618820c41eb09"
+    },
+    {
+      "path": "patches/r-apical-anterior/438.png",
+      "bytes": 840,
+      "sha256": "0eee621479fb53be6d60ef659ce653bc57e4ac52616461aa2922f2921d64ff56"
+    },
+    {
+      "path": "patches/r-apical-anterior/439.png",
+      "bytes": 941,
+      "sha256": "6e808b1d0f72734c0eca3e70f67b64c73e5474a24e5e4f19ba99256f82979649"
+    },
+    {
+      "path": "patches/r-apical-anterior/440.png",
+      "bytes": 1021,
+      "sha256": "00d73200f0b57709da1e0413ec25468bb6ed309324d658681a1b082936845ee2"
+    },
+    {
+      "path": "patches/r-apical-anterior/441.png",
+      "bytes": 1103,
+      "sha256": "8e90916924aba3666fb13f6c6b5e459779e946afc745c3308124b98c0dcf225a"
+    },
+    {
+      "path": "patches/r-apical-anterior/442.png",
+      "bytes": 1100,
+      "sha256": "0644d0835ea32f45d2bc18ebd6ea21e12330461e77ce0f35433b09ffa3805c0f"
+    },
+    {
+      "path": "patches/r-apical-anterior/443.png",
+      "bytes": 1159,
+      "sha256": "0b7fe81e0a3e82a37f70a09b30cc4b8e9516479d8d2cf373bd874e4c72a959dd"
+    },
+    {
+      "path": "patches/r-apical-anterior/444.png",
+      "bytes": 1226,
+      "sha256": "9f5469d509f8698bacddc686bfd1b58d1e9f7591a3d118f44bb168c2aabe2050"
+    },
+    {
+      "path": "patches/r-apical-anterior/445.png",
+      "bytes": 1187,
+      "sha256": "79685ed31af66fdc3f13fa0f8d5a12f172b96e055be11dd489dd97bc7366eb05"
+    },
+    {
+      "path": "patches/r-apical-anterior/446.png",
+      "bytes": 1177,
+      "sha256": "a8e53e4429f21ecd4d6bcb08cb0029d20b2d09ead069c5b0fa14dfec1bed5da2"
+    },
+    {
+      "path": "patches/r-apical-anterior/447.png",
+      "bytes": 1159,
+      "sha256": "c6b2a63e1892424763a5d4736f65abf2333db938dad3f7fe6ff3e2acee3034e1"
+    },
+    {
+      "path": "patches/r-apical-anterior/448.png",
+      "bytes": 1108,
+      "sha256": "e626384752df29d012017313a50258338b31e8320102e426a0121bd1b8c98f85"
+    },
+    {
+      "path": "patches/r-apical-anterior/449.png",
+      "bytes": 1020,
+      "sha256": "e59e5bb1f4c125cfbe34fa296a293d9e21a0a4e27fddefa26a7b8cd7d23e0b4c"
+    },
+    {
+      "path": "patches/r-apical-anterior/450.png",
+      "bytes": 955,
+      "sha256": "88d351d4c931ab9753fd0ef4eb6208db2e9156598d102635e692aa71094015c8"
+    },
+    {
+      "path": "patches/r-apical-anterior/451.png",
+      "bytes": 849,
+      "sha256": "a06531710c26fe6318ba421efb78ee00f82d941d7745a6d4c1f56f295cdd37c0"
+    },
+    {
+      "path": "patches/r-apical-anterior/452.png",
+      "bytes": 781,
+      "sha256": "daaa97cb2a7649e144b2db4db454294422cb943db92155d6df37573f70281035"
+    },
+    {
+      "path": "patches/r-apical-anterior/453.png",
+      "bytes": 686,
+      "sha256": "cd8ee7a1055f2f821ecfc3710edb123cf96f01b1a70fecb3490893ccbb0b6d89"
+    },
+    {
+      "path": "patches/r-apical-anterior/454.png",
+      "bytes": 578,
+      "sha256": "38a6da78ae5c392e3b8d94f1313384379da4202dffcb0ed57d3c9eed213c89ec"
+    },
+    {
+      "path": "patches/r-apical-anterior/455.png",
+      "bytes": 491,
+      "sha256": "268d0b5fd76c9d9c1ec26859cf20c89f1ce17dc90156647e293db7109fd94cc7"
+    },
+    {
+      "path": "patches/r-apical-anterior/456.png",
+      "bytes": 433,
+      "sha256": "2a0c0e05ff946f30417f21e461e0b4e64c888e862dbc9281a6579ff260ffd1d6"
+    },
+    {
+      "path": "patches/r-apical-anterior/457.png",
+      "bytes": 324,
+      "sha256": "e1a180dbbd2bd9ba800818d899bcb859f79abcc885e9c404413b15b99bf2f1f0"
+    },
+    {
+      "path": "patches/r-apical-anterior/458.png",
+      "bytes": 137,
+      "sha256": "d48025f35ada1afc316e537818bc5fc1496adc46a1740877fb8aa483c9a43051"
+    },
+    {
+      "path": "patches/r-apical-posterior/446.png",
+      "bytes": 147,
+      "sha256": "06a12052e3d2c35c8652fb9589b6a8b74931c6e6759351b323b966fdbddc4a8e"
+    },
+    {
+      "path": "patches/r-apical-posterior/447.png",
+      "bytes": 276,
+      "sha256": "cfa8d04e64782f7fbe409ff05585c2f4196e759452a94fa565a1fd82bbe39e57"
+    },
+    {
+      "path": "patches/r-apical-posterior/448.png",
+      "bytes": 367,
+      "sha256": "cbc49db4b8beda30f02af3a207b30b0593cd9069423b32eb47e3b2daa1a9af25"
+    },
+    {
+      "path": "patches/r-apical-posterior/449.png",
+      "bytes": 432,
+      "sha256": "fdfd1c24bc2c8f9878acc29f3cdcd50ddcc840928a00ff60795aa420baa6bd94"
+    },
+    {
+      "path": "patches/r-apical-posterior/450.png",
+      "bytes": 504,
+      "sha256": "47d519583e343c6abfac94750b9ae9ba54e3ed27163b8ee425a62af3b8c3d063"
+    },
+    {
+      "path": "patches/r-apical-posterior/451.png",
+      "bytes": 579,
+      "sha256": "cfb56cd97c48fd385982c5055fd8691b66ebcfe8e194ba7bd25aa03bd22d4e42"
+    },
+    {
+      "path": "patches/r-apical-posterior/452.png",
+      "bytes": 699,
+      "sha256": "0eb2081884c3bd7b6c37b5b89ec55e025c27d3df49696967669d7f53841e7c3f"
+    },
+    {
+      "path": "patches/r-apical-posterior/453.png",
+      "bytes": 814,
+      "sha256": "f45612900dc1cfa6b4169e3dee22bd582700aafb2dfd3704b24a497f4bc5e12a"
+    },
+    {
+      "path": "patches/r-apical-posterior/454.png",
+      "bytes": 909,
+      "sha256": "963d8f1a35b0108e29f6a4492bd6c9a7702c9afa442693957f8c03b82ea6f253"
+    },
+    {
+      "path": "patches/r-apical-posterior/455.png",
+      "bytes": 1026,
+      "sha256": "bf22c7ef56ee5c7e5a295d427a167600748a4212cad89462868e9d636dceef70"
+    },
+    {
+      "path": "patches/r-apical-posterior/456.png",
+      "bytes": 1125,
+      "sha256": "5c78dbae536f0cacec817313b2f617f49a81a63031b06cd9c354cd896eb7df62"
+    },
+    {
+      "path": "patches/r-apical-posterior/457.png",
+      "bytes": 1139,
+      "sha256": "26c00a73810d527c359cc9eb0ea913eb1116bbfc7471d58411762c6e092fdc63"
+    },
+    {
+      "path": "patches/r-apical-posterior/458.png",
+      "bytes": 1230,
+      "sha256": "7b62d99ae1f4b07a7a3f64a1cf5e68c606eb4c092c739ae11cd31fc49399ccc0"
+    },
+    {
+      "path": "patches/r-apical-posterior/459.png",
+      "bytes": 1235,
+      "sha256": "8e9a5391061335f28372b1482c07c71c692a5925a90a0410a58c9c223086c4ac"
+    },
+    {
+      "path": "patches/r-apical-posterior/460.png",
+      "bytes": 1252,
+      "sha256": "bf70733c62b7581e911a165f2f2e5d1f86b6edcbbfe0a727798a5bc6b283a9dc"
+    },
+    {
+      "path": "patches/r-apical-posterior/461.png",
+      "bytes": 1245,
+      "sha256": "3c1ac7eb6bf5b4e50ef126854381067b2dec4a5af825955f0e244fe613b18f68"
+    },
+    {
+      "path": "patches/r-apical-posterior/462.png",
+      "bytes": 1211,
+      "sha256": "d2d2712da87ffa2d91a1fb64bb51ad47a7e510ff7306f79763a9148afe776d19"
+    },
+    {
+      "path": "patches/r-apical-posterior/463.png",
+      "bytes": 1251,
+      "sha256": "cd684b24f1ae95a26a701905b71df9f6bb5bc049a59beb00aa0407e970445cae"
+    },
+    {
+      "path": "patches/r-apical-posterior/464.png",
+      "bytes": 1246,
+      "sha256": "4752813e5e7ab614cfb2ec39f83ee47229d1856a51c6dc95a8fdd17fc0d70b38"
+    },
+    {
+      "path": "patches/r-apical-posterior/465.png",
+      "bytes": 1167,
+      "sha256": "ce1bf97e0e8d44760631327bedd56901f66053162fbb5dc41ce615c4e403026d"
+    },
+    {
+      "path": "patches/r-apical-posterior/466.png",
+      "bytes": 1094,
+      "sha256": "044ebd305c31d7771d350d9b6862d0976f060eef6949a373a55b700f0fc27327"
+    },
+    {
+      "path": "patches/r-apical-posterior/467.png",
+      "bytes": 971,
+      "sha256": "5c797062026b3098427e4cc20817b0030f3be0519896e7b8932e90b4de0a79a7"
+    },
+    {
+      "path": "patches/r-apical-posterior/468.png",
+      "bytes": 906,
+      "sha256": "01e84be789f94a99ac2a569673d1cfd3fb3833c8c3d0a86bfb6d253b0000bd2a"
+    },
+    {
+      "path": "patches/r-apical-posterior/469.png",
+      "bytes": 796,
+      "sha256": "36fce13dca0e4c258468204659d325cd67b1b5e71252dd5e07784b3a47582e12"
+    },
+    {
+      "path": "patches/r-apical-posterior/470.png",
+      "bytes": 660,
+      "sha256": "58c20844e04b2a675e8d1d495eb91d61e23b00e6b3c588137643ef2bf8878469"
+    },
+    {
+      "path": "patches/r-apical-posterior/471.png",
+      "bytes": 500,
+      "sha256": "8295c199a1dfe100edf271582449e715b787ebf7bbc5849889cc5b19d789ab61"
+    },
+    {
+      "path": "patches/r-apical-posterior/472.png",
+      "bytes": 463,
+      "sha256": "432f096705b79f15d454d0d45024678ed01f523cb60fb5cb2b7618e18a8e2f24"
+    },
+    {
+      "path": "patches/r-apical-posterior/473.png",
+      "bytes": 332,
+      "sha256": "9ea6a3b57a9985e3e9b31d6515d68f59aefeffe6f0f2c668de26b4ad749b881d"
+    },
+    {
+      "path": "patches/r-apical-posterior/474.png",
+      "bytes": 117,
+      "sha256": "15f6392aaea5937a15cf9df5d75a0f016d9ac7c6d9a579a3128b8da9b7c5c4c2"
+    },
+    {
+      "path": "patches/r-middle-lateral/306.png",
+      "bytes": 133,
+      "sha256": "c12ec8d7e9c9746adb22ed3bdd71dd8b903c418f4d2dc9b0f4c638e7883ff704"
+    },
+    {
+      "path": "patches/r-middle-lateral/307.png",
+      "bytes": 298,
+      "sha256": "77c6b7b09be86d2585aab79bcd18fab0b7219723f76c5fac61017b1dd1172305"
+    },
+    {
+      "path": "patches/r-middle-lateral/308.png",
+      "bytes": 456,
+      "sha256": "7e479a47065707d3c2274da446f7cd9cd4b3fe5261de612c69419485fac1369c"
+    },
+    {
+      "path": "patches/r-middle-lateral/309.png",
+      "bytes": 516,
+      "sha256": "93586e3b84e761955d4a163567efd83535b0fd1f080be6e23df50d27d3986992"
+    },
+    {
+      "path": "patches/r-middle-lateral/310.png",
+      "bytes": 642,
+      "sha256": "2ea0ab99316441db68bd3a8cbdba1ea2746b2a14687de95d70a1c7cd2ad284c7"
+    },
+    {
+      "path": "patches/r-middle-lateral/311.png",
+      "bytes": 700,
+      "sha256": "59bd5c519f869a7108dcdea9e82ae981eca8e629698b69363a964765c512c5a8"
+    },
+    {
+      "path": "patches/r-middle-lateral/312.png",
+      "bytes": 781,
+      "sha256": "46d4913d9cfda4b6fafaca466f4838d845f47eb16bd2a4998946a30c016fe553"
+    },
+    {
+      "path": "patches/r-middle-lateral/313.png",
+      "bytes": 799,
+      "sha256": "2bbce17c5177934b7f545e6149de2efe688dc8e79ae7a1e25cc375d140e2ddd6"
+    },
+    {
+      "path": "patches/r-middle-lateral/314.png",
+      "bytes": 886,
+      "sha256": "456c52f52eeeca27756c94d7b422d973253c5886f6b0b7e758bbde680107f31b"
+    },
+    {
+      "path": "patches/r-middle-lateral/315.png",
+      "bytes": 943,
+      "sha256": "a99fbd3eb201c153107bfe77204d209922eaa96982f68543fdfd1b927accb5de"
+    },
+    {
+      "path": "patches/r-middle-lateral/316.png",
+      "bytes": 988,
+      "sha256": "5d7e0c03affcf1a265642ea503c8fb4b0e398136cf47a9721c9b05ea8437ff73"
+    },
+    {
+      "path": "patches/r-middle-lateral/317.png",
+      "bytes": 1062,
+      "sha256": "5fa60ecd980dc904cb59dc687c4414c0f00f534097b8b5354000c3d1406a03f7"
+    },
+    {
+      "path": "patches/r-middle-lateral/318.png",
+      "bytes": 1140,
+      "sha256": "669302d93df4b057b7f348f756c04d5961c0804f936f72b96313de07a35a035e"
+    },
+    {
+      "path": "patches/r-middle-lateral/319.png",
+      "bytes": 1178,
+      "sha256": "40cfe3f3bcd3e4e18eee52c6bea81992563dcdf5ceb50a992164fa516438dd07"
+    },
+    {
+      "path": "patches/r-middle-lateral/320.png",
+      "bytes": 1209,
+      "sha256": "1588cfac48283f88e9ef6686a5374bfd8885cc175d086da4af11165839a31188"
+    },
+    {
+      "path": "patches/r-middle-lateral/321.png",
+      "bytes": 1216,
+      "sha256": "8fd9edba85fc7a3a57baf9f366ae049ddef37e715ae955fd4d255ed9ce245c25"
+    },
+    {
+      "path": "patches/r-middle-lateral/322.png",
+      "bytes": 1175,
+      "sha256": "a0c842867a26feb30d3bb746c724e87dfc80e4f83d81872dd5693de5d82b92e2"
+    },
+    {
+      "path": "patches/r-middle-lateral/323.png",
+      "bytes": 1147,
+      "sha256": "b371e01099096e57f9387186032f358c4065d13527d0502e2d6fd6c617f4ec38"
+    },
+    {
+      "path": "patches/r-middle-lateral/324.png",
+      "bytes": 1112,
+      "sha256": "c777083abbc24b33112502f69647e0695c84c6b267f6a80337effe945f9a7d72"
+    },
+    {
+      "path": "patches/r-middle-lateral/325.png",
+      "bytes": 1036,
+      "sha256": "ff2600f9f36ffdbea6522d7134d8c1d937200eb148b3c74ed4b5ac08044fd3ee"
+    },
+    {
+      "path": "patches/r-middle-lateral/326.png",
+      "bytes": 940,
+      "sha256": "417b5e8154af17efce42cc9cb159a8e87dbdfa3aefc57200d9999147bf3505b3"
+    },
+    {
+      "path": "patches/r-middle-lateral/327.png",
+      "bytes": 843,
+      "sha256": "6e1e4b0676da8ffc91586e529c0fa877de264f9850d826de46caa76aa9136ded"
+    },
+    {
+      "path": "patches/r-middle-lateral/328.png",
+      "bytes": 707,
+      "sha256": "10b60e5026a8ce81b4f26e83476997db682ebf7f4f244cd4a126ef688f25904d"
+    },
+    {
+      "path": "patches/r-middle-lateral/329.png",
+      "bytes": 674,
+      "sha256": "e1c92466ecaab5a57e8201d1574a2b50764669ea60ac69edb5ec75a4c9c0ce2f"
+    },
+    {
+      "path": "patches/r-middle-lateral/330.png",
+      "bytes": 568,
+      "sha256": "203d30f9baf032fcacf708354df8019a67fd5dbf1b9ce8046ee158f4ea7168e5"
+    },
+    {
+      "path": "patches/r-middle-lateral/331.png",
+      "bytes": 503,
+      "sha256": "d86d7a257b223f9cafdc29e6ef74fce6376d15b3a8a2b6f9b9a16ffd566c7570"
+    },
+    {
+      "path": "patches/r-middle-lateral/332.png",
+      "bytes": 411,
+      "sha256": "e1af6d5b6406e1f390d4f7af4d829cd0eb05e33a2b994544f8635f4fc1af775c"
+    },
+    {
+      "path": "patches/r-middle-lateral/333.png",
+      "bytes": 335,
+      "sha256": "3b9baa2571d05e29510c576fdf8102d347b3f534f8a3e80d56f0b8f2e354fa1a"
+    },
+    {
+      "path": "patches/r-middle-lateral/334.png",
+      "bytes": 139,
+      "sha256": "badee4d109827f9ebe3895db4effe6834f28014a1f248bad401ac406fd34fa13"
+    },
+    {
+      "path": "patches/r-middle-medial-a/298.png",
+      "bytes": 204,
+      "sha256": "544bc4ad1b4b89b0a6a8db00c6f1d29e6e216e45bb49d923bf62a923ecc500e2"
+    },
+    {
+      "path": "patches/r-middle-medial-a/299.png",
+      "bytes": 258,
+      "sha256": "f4c2fbd010b240ef670d5f2fef4b32677aa34d3b9c1c52762a06213d944a45d7"
+    },
+    {
+      "path": "patches/r-middle-medial-a/300.png",
+      "bytes": 344,
+      "sha256": "4d16f45f4ec3974fa4b46250a33100178a4cbe88980aebe0757e2100ebd45041"
+    },
+    {
+      "path": "patches/r-middle-medial-a/301.png",
+      "bytes": 424,
+      "sha256": "43c8a7833d96117d5b82112ec248d1867049042b260127e2947ab5e175cf02c0"
+    },
+    {
+      "path": "patches/r-middle-medial-a/302.png",
+      "bytes": 501,
+      "sha256": "24166dc5e49c9803465307732b330bf139aeb98ee1d4da8217ef9fc3c9d6c814"
+    },
+    {
+      "path": "patches/r-middle-medial-a/303.png",
+      "bytes": 568,
+      "sha256": "9c830e332b3276973a4a69aa7459b3d390b871de4e9aac79c0f23868723a00c1"
+    },
+    {
+      "path": "patches/r-middle-medial-a/304.png",
+      "bytes": 695,
+      "sha256": "bfb204376cdf34dad709b5cff703babe163c978fb931385d8489930f5250f2dd"
+    },
+    {
+      "path": "patches/r-middle-medial-a/305.png",
+      "bytes": 804,
+      "sha256": "3eb663f404d2c358d8849df2bfd492bda6e3c659845d429eb7ec6bc903df63e7"
+    },
+    {
+      "path": "patches/r-middle-medial-a/306.png",
+      "bytes": 889,
+      "sha256": "f10511d4bba0600770d0f044f1b12c2aa6989c0d3077389d98c3c7bff2a8518b"
+    },
+    {
+      "path": "patches/r-middle-medial-a/307.png",
+      "bytes": 959,
+      "sha256": "e79d80fb351490d6c2293656170ce90485840cc99a4ece5f7d5a5d034fa5b7dc"
+    },
+    {
+      "path": "patches/r-middle-medial-a/308.png",
+      "bytes": 1007,
+      "sha256": "d5b80ed994418495421bf4ecb8b278ad6f3a2cc996012dd9128c97565b36fb74"
+    },
+    {
+      "path": "patches/r-middle-medial-a/309.png",
+      "bytes": 1088,
+      "sha256": "f2bd10480d1b2ebfb0b4a91a8fe64e36d072f7f1d0092de9ae5ce9b0a5c2e5b0"
+    },
+    {
+      "path": "patches/r-middle-medial-a/310.png",
+      "bytes": 1101,
+      "sha256": "cabe8d12fdcc4822183996b1dd6a2a7be3cf4e9319b9ecf6c1bf9b25d684c489"
+    },
+    {
+      "path": "patches/r-middle-medial-a/311.png",
+      "bytes": 1150,
+      "sha256": "d1df20d6ded6963a48dcf8f9d8e190b053ecbec80a17cb2eaa934b2e5438c92f"
+    },
+    {
+      "path": "patches/r-middle-medial-a/312.png",
+      "bytes": 1122,
+      "sha256": "07f101dbccf0350506a38c4460276ee71d950b25b4aabc9c6f4fa33ad44a2e42"
+    },
+    {
+      "path": "patches/r-middle-medial-a/313.png",
+      "bytes": 1100,
+      "sha256": "b3660e352c40dbb63bc91e0c7e1cbaaa5230f860db47ee15ecbe5f3decb50b66"
+    },
+    {
+      "path": "patches/r-middle-medial-a/314.png",
+      "bytes": 1077,
+      "sha256": "ca1a3c2da452fde4a06178ca6f5b4879c227633e4eb470585b2d0e24c080559a"
+    },
+    {
+      "path": "patches/r-middle-medial-a/315.png",
+      "bytes": 1045,
+      "sha256": "83fb5cfb782130566f04b8d780204704bcd8aae795e858717c4db65590af2e19"
+    },
+    {
+      "path": "patches/r-middle-medial-a/316.png",
+      "bytes": 1008,
+      "sha256": "8b55d5467e3ef5eca976ed435a91cf2ed8e9200171f3a1306fc8f994881d2ea1"
+    },
+    {
+      "path": "patches/r-middle-medial-a/317.png",
+      "bytes": 919,
+      "sha256": "a4f6f7a42473c69932bef0b51943d01fc58b24d0bb7c9fab7cf548c42bbec1b6"
+    },
+    {
+      "path": "patches/r-middle-medial-a/318.png",
+      "bytes": 814,
+      "sha256": "00c5d57218d0003b3e3bd2a38bf3cf7dab39b06666103d7fde7cd60a18db1709"
+    },
+    {
+      "path": "patches/r-middle-medial-a/319.png",
+      "bytes": 696,
+      "sha256": "2256a18200703d73673031810e0bbd2e134bffad86e177dd4095ef3843ded63d"
+    },
+    {
+      "path": "patches/r-middle-medial-a/320.png",
+      "bytes": 633,
+      "sha256": "16badeceee22eca07dc98684542ac08ea18e5a9a9c5745a9b56a11666d6bc3ae"
+    },
+    {
+      "path": "patches/r-middle-medial-a/321.png",
+      "bytes": 577,
+      "sha256": "9ea664cb751817ce4aaa16111daf6d87c9190761207168870d830f38c3cae240"
+    },
+    {
+      "path": "patches/r-middle-medial-a/322.png",
+      "bytes": 504,
+      "sha256": "82d6c40a710ce1a7bfaebd3dfb25ed3d58f0730461b052d4fcb7c9a0379e7890"
+    },
+    {
+      "path": "patches/r-middle-medial-a/323.png",
+      "bytes": 452,
+      "sha256": "3aa5656f1442370b60970dad621161bd26a20b9da8f2d88fe6c19e835a737f72"
+    },
+    {
+      "path": "patches/r-middle-medial-a/324.png",
+      "bytes": 354,
+      "sha256": "89caf5855e20259b53f0ddc91f057ceb73f2e44772c579ce4e996d2f48fd4254"
+    },
+    {
+      "path": "patches/r-middle-medial-a/325.png",
+      "bytes": 285,
+      "sha256": "ea230d3bf68490d11be1d69384be3bb62cb94c2e318b787f03004f6008abeaba"
+    },
+    {
+      "path": "patches/r-middle-medial-b/277.png",
+      "bytes": 132,
+      "sha256": "bbeec02a7d8c0a669c14edb844e308fa10555c0967323655014fce26dead1316"
+    },
+    {
+      "path": "patches/r-middle-medial-b/278.png",
+      "bytes": 246,
+      "sha256": "9998259c2c0f8ed74b69db9f2d314fbbc9ed16788ce45086294fccae9c03d772"
+    },
+    {
+      "path": "patches/r-middle-medial-b/279.png",
+      "bytes": 341,
+      "sha256": "2c5d9e6c1e5466904f971c2433dc92e0e631d5c70ac115a24fc9269f77f84b4b"
+    },
+    {
+      "path": "patches/r-middle-medial-b/280.png",
+      "bytes": 434,
+      "sha256": "58b299c42303757b29769c06f19a77b69048e3bffb5115c77d2b546324494993"
+    },
+    {
+      "path": "patches/r-middle-medial-b/281.png",
+      "bytes": 484,
+      "sha256": "1db6f1b1fe8ebe3b5e4f473c710baf85382d7081aec9c3ead5ba39b51263542c"
+    },
+    {
+      "path": "patches/r-middle-medial-b/282.png",
+      "bytes": 592,
+      "sha256": "38280ce8bb7fea6b1c0c33cfae27e2ed04fc928aeb332288d6dd99ab4c745ab0"
+    },
+    {
+      "path": "patches/r-middle-medial-b/283.png",
+      "bytes": 756,
+      "sha256": "f6710676aee56c0194622a21d850246744847e1ddf004fd8ccdf0b2470b22699"
+    },
+    {
+      "path": "patches/r-middle-medial-b/284.png",
+      "bytes": 843,
+      "sha256": "cb1b35331b0c80cfd03e0ef70aa9a34aa848cb4fccbb76b087b8450f28ee09ad"
+    },
+    {
+      "path": "patches/r-middle-medial-b/285.png",
+      "bytes": 881,
+      "sha256": "b65880e7a42911a970ad876e54a4eaa9cede3d8f6be107b951991f603b29692f"
+    },
+    {
+      "path": "patches/r-middle-medial-b/286.png",
+      "bytes": 954,
+      "sha256": "1a62fefd7d17ee319fce8d1aa6098f0471906f2c21e36733fa58f353eee1441a"
+    },
+    {
+      "path": "patches/r-middle-medial-b/287.png",
+      "bytes": 1004,
+      "sha256": "9aafb23cd0642b2a80f441ef1a3b9b4cdf2f028926009a6c6edb83016caf71ae"
+    },
+    {
+      "path": "patches/r-middle-medial-b/288.png",
+      "bytes": 1016,
+      "sha256": "c20423fcac70c9b76ecab3ac4293b3ef646bdbebb385c8dc94dd87edd15cd0c3"
+    },
+    {
+      "path": "patches/r-middle-medial-b/289.png",
+      "bytes": 1068,
+      "sha256": "5f71f7b3ab238807e11d872a37f628dc3860ea351718ee77a13f77f685410ea0"
+    },
+    {
+      "path": "patches/r-middle-medial-b/290.png",
+      "bytes": 1070,
+      "sha256": "6cf7314c7b09ac2351babae421689eb50a9404e711eaab4c7829d7604d2ab387"
+    },
+    {
+      "path": "patches/r-middle-medial-b/291.png",
+      "bytes": 1083,
+      "sha256": "0553abc071a0319172ec20f358da8ccc24c79091a6475a4a85a89a38a8bfdf09"
+    },
+    {
+      "path": "patches/r-middle-medial-b/292.png",
+      "bytes": 1088,
+      "sha256": "ad70074ca0d4bf97fc56b2be921dbc69491880c14c391391cd93b031be0c1ae0"
+    },
+    {
+      "path": "patches/r-middle-medial-b/293.png",
+      "bytes": 1073,
+      "sha256": "b53b655a29609884abab7bebbe88341e3708bc0b73b3652116dcbad4e4d2f53f"
+    },
+    {
+      "path": "patches/r-middle-medial-b/294.png",
+      "bytes": 1060,
+      "sha256": "4e7e448d39f335b6745ec8a194183272f65640d6763239b5ee656026951d777c"
+    },
+    {
+      "path": "patches/r-middle-medial-b/295.png",
+      "bytes": 1009,
+      "sha256": "573938cf7e24674bb307ae6ea467203c15255013a4d6308505d78eff860ea746"
+    },
+    {
+      "path": "patches/r-middle-medial-b/296.png",
+      "bytes": 930,
+      "sha256": "3693f4df9500d03e96fa3612d99bfc32b7b4929e0b33076915823ad384ada3e5"
+    },
+    {
+      "path": "patches/r-middle-medial-b/297.png",
+      "bytes": 850,
+      "sha256": "cb62b26c44726e16ad29e8438eee6e646b39f299d8bf4660c765df6c6af430a7"
+    },
+    {
+      "path": "patches/r-middle-medial-b/298.png",
+      "bytes": 710,
+      "sha256": "3a8f99b3ac2a496111ec7fcd6c780e25f841c4a0419a319908cfed5292f7558b"
+    },
+    {
+      "path": "patches/r-middle-medial-b/299.png",
+      "bytes": 605,
+      "sha256": "6b452f79c0c0c53c4d9e4527e5f0def35030381646b26e9e7810d1750af8f4c6"
+    },
+    {
+      "path": "patches/r-middle-medial-b/300.png",
+      "bytes": 556,
+      "sha256": "b5f07c237f3d697173c3e63420f36e9b70d93af6b4033e41dfd55cb31c551407"
+    },
+    {
+      "path": "patches/r-middle-medial-b/301.png",
+      "bytes": 474,
+      "sha256": "0cf299d511d024a1f7d387bcfa0766d3b6d7efb188023843f5bda1006c7e71f3"
+    },
+    {
+      "path": "patches/r-middle-medial-b/302.png",
+      "bytes": 415,
+      "sha256": "2206be452e3463c57feccad6a6d593c86bf2799359de8931a55fbf2cd479ad7f"
+    },
+    {
+      "path": "patches/r-middle-medial-b/303.png",
+      "bytes": 338,
+      "sha256": "70b58bb4831ac09abe14696717b93c1dea42c2d0a02115d2e43c88072681d8a3"
+    },
+    {
+      "path": "patches/r-middle-medial-b/304.png",
+      "bytes": 272,
+      "sha256": "2c82d04811d43cd07c61076feb882594513efbf575a41990a8d9b6f90de188d1"
+    },
+    {
+      "path": "patches/r-middle-medial-b/305.png",
+      "bytes": 109,
+      "sha256": "1ee0271ddc7a7728f8d8db22687cb843eb2413039e854cf360f9f320bd2454bb"
+    },
+    {
+      "path": "patches/r-anterior-upper/405.png",
+      "bytes": 129,
+      "sha256": "e6e9890a3aaec6aeec7da980047e23be1e38c2770eb6c29246f028285c1c9104"
+    },
+    {
+      "path": "patches/r-anterior-upper/406.png",
+      "bytes": 308,
+      "sha256": "831a0d00374c0137e0d981ba51274c8f3a3aa8043d8477cb29a02deb7a6d4c44"
+    },
+    {
+      "path": "patches/r-anterior-upper/407.png",
+      "bytes": 404,
+      "sha256": "66b35b747d6e41f3fd197abbdff5f7dedea54a5ec50c068407e17e384eb4b9da"
+    },
+    {
+      "path": "patches/r-anterior-upper/408.png",
+      "bytes": 461,
+      "sha256": "dfdfa9db344f819358e1e32718740bc8c5aaf19d768365a164159c7039481447"
+    },
+    {
+      "path": "patches/r-anterior-upper/409.png",
+      "bytes": 527,
+      "sha256": "7c621910afac295cf8c0c4b89fff50a3016df8f8489530b3345bee8f56e3d690"
+    },
+    {
+      "path": "patches/r-anterior-upper/410.png",
+      "bytes": 592,
+      "sha256": "beebdadc18ff56d52ba921506cb8355621c264cc08851b0970fef82611907b58"
+    },
+    {
+      "path": "patches/r-anterior-upper/411.png",
+      "bytes": 684,
+      "sha256": "306b32af31e190fee0b37c94280ad1882348b51b85f35f8c284cc476ca26b6d4"
+    },
+    {
+      "path": "patches/r-anterior-upper/412.png",
+      "bytes": 744,
+      "sha256": "b58d17bac7ae3537b45dad12258157dbe18e4a6a58e88e6a302171aa2f960ac2"
+    },
+    {
+      "path": "patches/r-anterior-upper/413.png",
+      "bytes": 824,
+      "sha256": "b192f1addaa93bb958faf3bf6bf00461814b27783a950be01b85af2428d97816"
+    },
+    {
+      "path": "patches/r-anterior-upper/414.png",
+      "bytes": 908,
+      "sha256": "f72af524bf4a05c7d896cb0d01a047d60bce337ffdd44f3a6040abeb68c8a904"
+    },
+    {
+      "path": "patches/r-anterior-upper/415.png",
+      "bytes": 973,
+      "sha256": "575cff702412d17a2bd8ddd057973bb87be6b2fc4217e7b5697c23506af1cdd1"
+    },
+    {
+      "path": "patches/r-anterior-upper/416.png",
+      "bytes": 1044,
+      "sha256": "57e02b2b510807c96b3973e2be5d114868ee93bc01f5b22b733150edf02009c6"
+    },
+    {
+      "path": "patches/r-anterior-upper/417.png",
+      "bytes": 1096,
+      "sha256": "09dbda3a3948783a1e14b99bab140722efb6b9da8a5e1ca39386191c3f7b6659"
+    },
+    {
+      "path": "patches/r-anterior-upper/418.png",
+      "bytes": 1137,
+      "sha256": "7a150faba028bd79bb130c3288a1fdf283455719a1cd2e0fa0833fdc8784a017"
+    },
+    {
+      "path": "patches/r-anterior-upper/419.png",
+      "bytes": 1159,
+      "sha256": "4cb93aba55505a5f1eb540a5af1c46772fe090ca765670c9630f41aa4200ca93"
+    },
+    {
+      "path": "patches/r-anterior-upper/420.png",
+      "bytes": 1162,
+      "sha256": "fb80d2120603933858dea3c4e1e0bc8e68819010aa5b3366fc82a9ebcfd8c1b5"
+    },
+    {
+      "path": "patches/r-anterior-upper/421.png",
+      "bytes": 1129,
+      "sha256": "d638c4ff86cea12e0e16cd8ca1e7128f3e8fc0eb07707fa9a6844c896fc7a190"
+    },
+    {
+      "path": "patches/r-anterior-upper/422.png",
+      "bytes": 1094,
+      "sha256": "5b088a174ee9b466e15aee6e96dbe0d96612ee18c3498a2e7c18587961a0a585"
+    },
+    {
+      "path": "patches/r-anterior-upper/423.png",
+      "bytes": 1048,
+      "sha256": "f81da848fe485bbdb94b0eaa2842c7c1c1199ab2b5b163c1f055c21086febebc"
+    },
+    {
+      "path": "patches/r-anterior-upper/424.png",
+      "bytes": 978,
+      "sha256": "d67ffb1a62171adf8e1f407520cc4a5abf9891d75597b44a5ea4b2fee9c924ad"
+    },
+    {
+      "path": "patches/r-anterior-upper/425.png",
+      "bytes": 906,
+      "sha256": "9d5b4e2df7bca17594e7de0f409db0a4f075ef08103e1ada603b98da6b99408e"
+    },
+    {
+      "path": "patches/r-anterior-upper/426.png",
+      "bytes": 801,
+      "sha256": "4a7c5162551adda0fcd83d8ea13577d227d9d8e5a165970bf066ce51a88df82c"
+    },
+    {
+      "path": "patches/r-anterior-upper/427.png",
+      "bytes": 715,
+      "sha256": "e4f4b950c7d50b0b36f84df82d8004c49d57d31677903eec3b842d092e0f492b"
+    },
+    {
+      "path": "patches/r-anterior-upper/428.png",
+      "bytes": 626,
+      "sha256": "01d3b3d234478f36578dd70ae4a85144646b59a89701532d48d70f408b15722a"
+    },
+    {
+      "path": "patches/r-anterior-upper/429.png",
+      "bytes": 542,
+      "sha256": "bebefd3ddca51d0b6e47ac4be7ff87fabad7cf138c5ef2c0f3e4323400745906"
+    },
+    {
+      "path": "patches/r-anterior-upper/430.png",
+      "bytes": 469,
+      "sha256": "0fc70cb53d8f95529ad060e76f22260a09418da52301c45a4aeca88632e08a32"
+    },
+    {
+      "path": "patches/r-anterior-upper/431.png",
+      "bytes": 386,
+      "sha256": "f491b274089e036950f360cb0aba647e0c1d1df618818229b1d06e29ec9a494c"
+    },
+    {
+      "path": "patches/r-anterior-upper/432.png",
+      "bytes": 299,
+      "sha256": "3618bcc95567d9879085affa8f0a5cfddfb9849e480d54dee34ae0f98dbce9b9"
+    },
+    {
+      "path": "patches/r-anterior-upper/433.png",
+      "bytes": 135,
+      "sha256": "3089860404975861362fd0436f0eae06f21c3c2c4ef30e3f7510ad4c7df5e790"
+    },
+    {
+      "path": "patches/r-anterior-lower/362.png",
+      "bytes": 128,
+      "sha256": "a5c53a4111f95928e90b316fb2bdd5a03e7d7220d469643ffc54928d4cd9d23f"
+    },
+    {
+      "path": "patches/r-anterior-lower/363.png",
+      "bytes": 274,
+      "sha256": "b6e3a25357a45b36b6d039f808a631d5fcf638302a066c513d79975dea1fb0f8"
+    },
+    {
+      "path": "patches/r-anterior-lower/364.png",
+      "bytes": 395,
+      "sha256": "b950ff8045a7b844fa4b0c65e55ef7c07c42fcd041076e65652516eb5bbc3316"
+    },
+    {
+      "path": "patches/r-anterior-lower/365.png",
+      "bytes": 463,
+      "sha256": "44ff86f4a91cdd722fbc3811189f05b2e35a476022649b053b7baa072eef892d"
+    },
+    {
+      "path": "patches/r-anterior-lower/366.png",
+      "bytes": 581,
+      "sha256": "9fb265d86cd939b071911161dd7e1c3961f79dfe11f47e553646fc7b6e3c6348"
+    },
+    {
+      "path": "patches/r-anterior-lower/367.png",
+      "bytes": 663,
+      "sha256": "bc1fbe5fd4116c2bf7d9225ad9aa6c7c8f4f624c35a247a3cbd311e5e08efa69"
+    },
+    {
+      "path": "patches/r-anterior-lower/368.png",
+      "bytes": 818,
+      "sha256": "e78cc722168d90331426c7d9f9624744e96ef3cb5a3190d93122241eb41ae642"
+    },
+    {
+      "path": "patches/r-anterior-lower/369.png",
+      "bytes": 885,
+      "sha256": "c5fe7b4d688fb9b380771041b4b8cb4f16194b9283b40bcbb5cb30b368e7d070"
+    },
+    {
+      "path": "patches/r-anterior-lower/370.png",
+      "bytes": 949,
+      "sha256": "a06c988b88bc5c48ae888c368fd9310888b45319f4952df99bd55183c8500764"
+    },
+    {
+      "path": "patches/r-anterior-lower/371.png",
+      "bytes": 999,
+      "sha256": "0a5f68ee78c336f8243e2a990cb1a301d296db3d685771b295f8d6df01dd7651"
+    },
+    {
+      "path": "patches/r-anterior-lower/372.png",
+      "bytes": 1034,
+      "sha256": "6e05745d9d671fe400d00caee530ac2c30b1eafec27322509cd5305b9508fff0"
+    },
+    {
+      "path": "patches/r-anterior-lower/373.png",
+      "bytes": 1043,
+      "sha256": "81fee7f680d77272c0d97665683b4f1517c340371ed227b90c6b8fb9e906db00"
+    },
+    {
+      "path": "patches/r-anterior-lower/374.png",
+      "bytes": 1100,
+      "sha256": "989c760306c56afc7987225f0782aa39761aeaf46acc95d16f6d7073ba9c7dcb"
+    },
+    {
+      "path": "patches/r-anterior-lower/375.png",
+      "bytes": 1125,
+      "sha256": "4dec1d3dac7d54f13966cd7482fcff861d6c1daa4873f810453e4d75c5bc476a"
+    },
+    {
+      "path": "patches/r-anterior-lower/376.png",
+      "bytes": 1119,
+      "sha256": "ac51061f577f09051e80646235a2bb72c95c1e69d227a36f00adb27d539283c2"
+    },
+    {
+      "path": "patches/r-anterior-lower/377.png",
+      "bytes": 1130,
+      "sha256": "d9eb8253148efabfc78573d227f1afb0cd925264ee9cc67b423f193290ba4217"
+    },
+    {
+      "path": "patches/r-anterior-lower/378.png",
+      "bytes": 1125,
+      "sha256": "c084963f9c3b7e39d8dfe734fbba448e81ae9729569b49c9d974958fee5cb2b9"
+    },
+    {
+      "path": "patches/r-anterior-lower/379.png",
+      "bytes": 1077,
+      "sha256": "bd324de1f5ccc8072824cc358c477e8297018097bcc38eb75662f7bf125dc12e"
+    },
+    {
+      "path": "patches/r-anterior-lower/380.png",
+      "bytes": 1034,
+      "sha256": "f225edb117c46d273d031e1c5343de876b8be38a68e923933b0f502879eb510e"
+    },
+    {
+      "path": "patches/r-anterior-lower/381.png",
+      "bytes": 963,
+      "sha256": "0ab1e21ed3e3a39fa33a8acc849e7cb519b6d3f42dea282bfaeb02418a2f5587"
+    },
+    {
+      "path": "patches/r-anterior-lower/382.png",
+      "bytes": 882,
+      "sha256": "4b055c73da826f2563c3a6b04b47695b51f6dd3f1a503f788dd2b5bd4b1332ec"
+    },
+    {
+      "path": "patches/r-anterior-lower/383.png",
+      "bytes": 734,
+      "sha256": "6e942635e052b0b585110efe3230f90d4072e6fe306c34fdbaef8edebbbb27d6"
+    },
+    {
+      "path": "patches/r-anterior-lower/384.png",
+      "bytes": 648,
+      "sha256": "94cfca5a1a5d714f42544a08e37b324de07dbae2fe0265c2be6a87cbf844b938"
+    },
+    {
+      "path": "patches/r-anterior-lower/385.png",
+      "bytes": 591,
+      "sha256": "b90739b95a8ae63ba52b3b22f2254b6c74679b927db0f7b05a65ad089190b918"
+    },
+    {
+      "path": "patches/r-anterior-lower/386.png",
+      "bytes": 489,
+      "sha256": "45804275d8f702fe61573761fe6afad66e83fff63ec04fe0debbaf69bd763521"
+    },
+    {
+      "path": "patches/r-anterior-lower/387.png",
+      "bytes": 441,
+      "sha256": "dd9214ce9dd1df877e60059576189005e6ae8f80c5114c059f6abfdbff58f7d0"
+    },
+    {
+      "path": "patches/r-anterior-lower/388.png",
+      "bytes": 374,
+      "sha256": "bd217d9693a168e14c5c6051ed8e2a52dbb0bec692f8e54596ae7948f49bdac5"
+    },
+    {
+      "path": "patches/r-anterior-lower/389.png",
+      "bytes": 288,
+      "sha256": "ca5a68a014bda3a6199c1ab677568a38ae89e3d64ffc9ec9673e0b060fc5837d"
+    },
+    {
+      "path": "patches/r-anterior-lower/390.png",
+      "bytes": 120,
+      "sha256": "bb21434888ddff0463da76ac8dbfbfc90b04264ca4b8f2ce930da30e004e77e5"
+    },
+    {
+      "path": "patches/l-apicoposterior/447.png",
+      "bytes": 127,
+      "sha256": "0ae1c76c3fcae67d4abf0b64dbdabc49a262370c1efb311e6284078d108a90d8"
+    },
+    {
+      "path": "patches/l-apicoposterior/448.png",
+      "bytes": 276,
+      "sha256": "6c2bee8c02b2dda1eb5cb672a9df4000fcd5f2e4de7c36e43ec77bc474c5fe97"
+    },
+    {
+      "path": "patches/l-apicoposterior/449.png",
+      "bytes": 395,
+      "sha256": "569ea5d51320fb7bddf4669e7814f41238e8d1220eb8074a5e5d25c91495fbeb"
+    },
+    {
+      "path": "patches/l-apicoposterior/450.png",
+      "bytes": 443,
+      "sha256": "a468de28f9a5b1d73e0127b12d1036866633f1414e03b4924996627c035a27da"
+    },
+    {
+      "path": "patches/l-apicoposterior/451.png",
+      "bytes": 489,
+      "sha256": "3c43203780f6ae0b384c0957facd94b536ab47a6214cca138509e2363c75597d"
+    },
+    {
+      "path": "patches/l-apicoposterior/452.png",
+      "bytes": 579,
+      "sha256": "442d03bbd1eba5573cfb7fe2854c03458ee7fe09f10b154d3b183f8c339e549b"
+    },
+    {
+      "path": "patches/l-apicoposterior/453.png",
+      "bytes": 672,
+      "sha256": "5773035c9f9581d9f8abadea835bea3a63fb77ae373cc185156c8e10116ae379"
+    },
+    {
+      "path": "patches/l-apicoposterior/454.png",
+      "bytes": 756,
+      "sha256": "ccbff0015057b8b954b84a537e3303db846d725c85f0c80525e323771949970a"
+    },
+    {
+      "path": "patches/l-apicoposterior/455.png",
+      "bytes": 819,
+      "sha256": "4728c1c1a715d9507b4179570e02dbf032af5d084ed8e7978902f87b8b3c510e"
+    },
+    {
+      "path": "patches/l-apicoposterior/456.png",
+      "bytes": 922,
+      "sha256": "4bbb75a6eb5e79e8c9f6c9927ef1189ef9f17344c46c6d5fc20c42f999fd0749"
+    },
+    {
+      "path": "patches/l-apicoposterior/457.png",
+      "bytes": 991,
+      "sha256": "95f2d7328f284732a122ddf4771a7bb4e88c8bb1f351600151e6fb29461a36ec"
+    },
+    {
+      "path": "patches/l-apicoposterior/458.png",
+      "bytes": 1063,
+      "sha256": "d08ce088c9a7322f9ed84152a4fcacc656770394d7718883a80d81e3f116b055"
+    },
+    {
+      "path": "patches/l-apicoposterior/459.png",
+      "bytes": 1106,
+      "sha256": "faa7ac46da80a967e5176704b31a6074ab10d8665b0662d1b8c6c1c32caa5acf"
+    },
+    {
+      "path": "patches/l-apicoposterior/460.png",
+      "bytes": 1111,
+      "sha256": "05631e59d7288f56879482aaa0f8d35166e2110aa3029a2fca27b09dba86396d"
+    },
+    {
+      "path": "patches/l-apicoposterior/461.png",
+      "bytes": 1184,
+      "sha256": "1249c57ad5ff9c9c56083bcd057cd43e3447a6f992aee595021da912d922d39e"
+    },
+    {
+      "path": "patches/l-apicoposterior/462.png",
+      "bytes": 1118,
+      "sha256": "de793453385f9fb475dadd231205698de692db8bbd46488526a1727defd562c0"
+    },
+    {
+      "path": "patches/l-apicoposterior/463.png",
+      "bytes": 1123,
+      "sha256": "3224f5368fe1d81969ad24905690f72d71957683dca78826a4e97993d3269d7b"
+    },
+    {
+      "path": "patches/l-apicoposterior/464.png",
+      "bytes": 1100,
+      "sha256": "48a834f9998fa1a9c8bd97cf0eca753a3dc87ca951a64a3ac3354c7012ce9619"
+    },
+    {
+      "path": "patches/l-apicoposterior/465.png",
+      "bytes": 1042,
+      "sha256": "b0d915004b05933a2cebbbac144abd21270273802a201314b9a2a5af40652d77"
+    },
+    {
+      "path": "patches/l-apicoposterior/466.png",
+      "bytes": 1000,
+      "sha256": "1ea605c73efc6b0b5b6832b79a62251d3f3b7ce3674d3880eac0a4a6bb2d0992"
+    },
+    {
+      "path": "patches/l-apicoposterior/467.png",
+      "bytes": 913,
+      "sha256": "9feea47efa884001acb85405f6d8fa9d1a9830e6e1cc6f55b45525fcd7014ba6"
+    },
+    {
+      "path": "patches/l-apicoposterior/468.png",
+      "bytes": 796,
+      "sha256": "e0dcc3cf251aaa78b37c7b0f656029e37053ebce0791d2eb8aa3c6e6d2e9ed46"
+    },
+    {
+      "path": "patches/l-apicoposterior/469.png",
+      "bytes": 698,
+      "sha256": "6085f544a46a5db135d3b9d90ffe068f3e867cb0f5d76d39a23b9484c08eb9ab"
+    },
+    {
+      "path": "patches/l-apicoposterior/470.png",
+      "bytes": 635,
+      "sha256": "33cb94de13b56731404e75d86202064fe5777cc5178faf0fa10afe3481a4e7ed"
+    },
+    {
+      "path": "patches/l-apicoposterior/471.png",
+      "bytes": 527,
+      "sha256": "e5f74c5df9e6a118ea4c690ee4b2bbbfcff4b214666d05f7346c3a7431362041"
+    },
+    {
+      "path": "patches/l-apicoposterior/472.png",
+      "bytes": 471,
+      "sha256": "5978cd626b30ed1141266b6142d83bd7500b9938651c934eee10a86156cb0e35"
+    },
+    {
+      "path": "patches/l-apicoposterior/473.png",
+      "bytes": 384,
+      "sha256": "d416639444fe39f5e4a4ad0b79f2b4c71c47f48f3eba1dfd6371c9cadfb3522a"
+    },
+    {
+      "path": "patches/l-apicoposterior/474.png",
+      "bytes": 300,
+      "sha256": "4863c5e93b15a03c8bda7f550636e0cf96c3eb9b70352a730cc4c770dc6acdc1"
+    },
+    {
+      "path": "patches/l-apicoposterior/475.png",
+      "bytes": 122,
+      "sha256": "ac8655452c6e8a891de9e7d250c5c82584e54b33715df139328155c075afd23c"
+    },
+    {
+      "path": "patches/l-anterior/393.png",
+      "bytes": 234,
+      "sha256": "86c4ece181b46206f3b45672d5867384a5a4c77b45c7ed37d62ef13d6f947cdf"
+    },
+    {
+      "path": "patches/l-anterior/394.png",
+      "bytes": 284,
+      "sha256": "af3070184c53cc4a147917ec2d1fe189ef8a07cc81a99ca42ebe198556f38b09"
+    },
+    {
+      "path": "patches/l-anterior/395.png",
+      "bytes": 356,
+      "sha256": "f876bc0e874ca1977d783c98cbd6124a3c274a6a51cc04167af5e31c6b8cef9e"
+    },
+    {
+      "path": "patches/l-anterior/396.png",
+      "bytes": 440,
+      "sha256": "86000c5c196a0ae6e8c751e9dfb153d3a46f558d552c45f2665624c1b153f964"
+    },
+    {
+      "path": "patches/l-anterior/397.png",
+      "bytes": 495,
+      "sha256": "6d017fd61482f937dcb0905fb40bb7755d75613afb006a4aa5e6c2efcc24236f"
+    },
+    {
+      "path": "patches/l-anterior/398.png",
+      "bytes": 562,
+      "sha256": "5428898e0b480c9b97f13f20db6ec21ca316172ba9c5f200d296a6c8abc53529"
+    },
+    {
+      "path": "patches/l-anterior/399.png",
+      "bytes": 630,
+      "sha256": "12a236a24a642145deb1fc6e18b2e2673ff85d7d3cf42241258d19525ebbb7b9"
+    },
+    {
+      "path": "patches/l-anterior/400.png",
+      "bytes": 781,
+      "sha256": "ed78440b8bb31456dd8e603cd97be1fb44030e9510bf470e2be8e8f1362af08c"
+    },
+    {
+      "path": "patches/l-anterior/401.png",
+      "bytes": 829,
+      "sha256": "2af222f0ba1d74ba50a5380c1b2a57ed04272a6eaee0fe294bde7b2ffa40f5f7"
+    },
+    {
+      "path": "patches/l-anterior/402.png",
+      "bytes": 924,
+      "sha256": "15b37ef27dbc66a58277a1283b652fe7aa60da53deaf4fd3fe01f2057bb4f1e3"
+    },
+    {
+      "path": "patches/l-anterior/403.png",
+      "bytes": 990,
+      "sha256": "a999a1f574af753b731cb38787f6d6a6cdf28b9db01f8ed465d3bce976feaaf9"
+    },
+    {
+      "path": "patches/l-anterior/404.png",
+      "bytes": 1085,
+      "sha256": "2ccf2cd84dba416161aced3c1980e43cb2a728dfbf0806ea8641a455f5405af7"
+    },
+    {
+      "path": "patches/l-anterior/405.png",
+      "bytes": 1109,
+      "sha256": "e30ddf4d8bb9c069d78c4c0b62cf736876a6684c53b55fe8ebed7ddf7527bfa5"
+    },
+    {
+      "path": "patches/l-anterior/406.png",
+      "bytes": 1153,
+      "sha256": "a7ea3414c306a1f94ef8f183bf0ece827ff2562caec5820233610658cd5489bb"
+    },
+    {
+      "path": "patches/l-anterior/407.png",
+      "bytes": 1138,
+      "sha256": "5739f188251fb8743d2013f823c511903dbd4b7e9c4bd5a60d67d8f17f4cd73d"
+    },
+    {
+      "path": "patches/l-anterior/408.png",
+      "bytes": 1178,
+      "sha256": "fa3757c801f8fa3ee386095c8cbc6929e865bcef751e0d550dbd5f9e5dac9520"
+    },
+    {
+      "path": "patches/l-anterior/409.png",
+      "bytes": 1137,
+      "sha256": "8f1b91e816819b26f7f7961764883858bd36a4a4224726a6664cb5cc6d75ecef"
+    },
+    {
+      "path": "patches/l-anterior/410.png",
+      "bytes": 1157,
+      "sha256": "42ffd42ef1f8929031d407d9aecdd8dcaf4922c6da58aa5c622a6fcc183637d2"
+    },
+    {
+      "path": "patches/l-anterior/411.png",
+      "bytes": 1097,
+      "sha256": "9f407928eb42af3ad413dbe7ca28ead1b1849e72ba8a102b5c126261c6fe772c"
+    },
+    {
+      "path": "patches/l-anterior/412.png",
+      "bytes": 1074,
+      "sha256": "941ef0958f7ff0d6dabcf65b5fc357dfd88c623559fc8d8420682c42d97e51ec"
+    },
+    {
+      "path": "patches/l-anterior/413.png",
+      "bytes": 997,
+      "sha256": "254e9f0bbab0c1a6093066dec5279d0677973673cdc673a0dade7d301d6bae3f"
+    },
+    {
+      "path": "patches/l-anterior/414.png",
+      "bytes": 919,
+      "sha256": "9ea2cb096acafa9c384353eaad57002fabb8f6ff00b84a5801499c030fbb12bf"
+    },
+    {
+      "path": "patches/l-anterior/415.png",
+      "bytes": 765,
+      "sha256": "a4d22d68c92d0edcc34895188a3567a4fc8e3bf8681f55b78bf6189a58e3f05f"
+    },
+    {
+      "path": "patches/l-anterior/416.png",
+      "bytes": 667,
+      "sha256": "e04078453b0db2a3f40e0603fdf017aff90dd6595f9a15c1ca92abb0c174e97e"
+    },
+    {
+      "path": "patches/l-anterior/417.png",
+      "bytes": 525,
+      "sha256": "a2f5bb3878f5dc3cf2b7e8abe1f547eacc62012c6f1897982bff2b902036c68d"
+    },
+    {
+      "path": "patches/l-anterior/418.png",
+      "bytes": 414,
+      "sha256": "4e6eb9df58215913b304662ccb3f84ad34ef70a5e6b9db823782734eb8382c51"
+    },
+    {
+      "path": "patches/l-anterior/419.png",
+      "bytes": 300,
+      "sha256": "ba14abca0c64a49233539721ee8b5de16a0ffc1a4ae169b66c23d164ed601511"
+    },
+    {
+      "path": "patches/l-anterior/420.png",
+      "bytes": 257,
+      "sha256": "2c2a015ee91666d31e682603dc64dbb89c695bcd815c2177d0ab7d8bf2074c4b"
+    },
+    {
+      "path": "patches/l-inferior-lingula/243.png",
+      "bytes": 119,
+      "sha256": "bef449fbf23bc7450ecc56f4ee99bcbc0c42ca7d373e7edca2a1e137b27ce51c"
+    },
+    {
+      "path": "patches/l-inferior-lingula/244.png",
+      "bytes": 259,
+      "sha256": "92302155856b28755d8ff9b48afe9a06c2ba09e10fb19c89f7d039f59940205a"
+    },
+    {
+      "path": "patches/l-inferior-lingula/245.png",
+      "bytes": 341,
+      "sha256": "8b1c7172c23eab693f96df2173781cc8ff951d85631262738e7f7f26b8a0205a"
+    },
+    {
+      "path": "patches/l-inferior-lingula/246.png",
+      "bytes": 401,
+      "sha256": "f732cb61b790894278af70ab817329a1ae5888b69f708237770524b80c7c50d6"
+    },
+    {
+      "path": "patches/l-inferior-lingula/247.png",
+      "bytes": 501,
+      "sha256": "0ebb2ff7452dcd87ae96f02799178f47bc76424d7e0cb08d2e4522b6ba6c4e78"
+    },
+    {
+      "path": "patches/l-inferior-lingula/248.png",
+      "bytes": 606,
+      "sha256": "82615bb27912bff7a55171fd0e6f8032463407f934d242a6e26e4f58f2577faa"
+    },
+    {
+      "path": "patches/l-inferior-lingula/249.png",
+      "bytes": 742,
+      "sha256": "ef78f415dc7492ca60cca87cfc36494fbe44062f74ba2e7b5425333f20b346ad"
+    },
+    {
+      "path": "patches/l-inferior-lingula/250.png",
+      "bytes": 826,
+      "sha256": "2d488f7f73ef7771b6580f6cbd85c7d4da7a75be323c5929b23ff92ddc6078f9"
+    },
+    {
+      "path": "patches/l-inferior-lingula/251.png",
+      "bytes": 893,
+      "sha256": "b7fe33991f59df3f6b20753bc8d52142640beea6ead5cfe9dd7b227b54e4d3bc"
+    },
+    {
+      "path": "patches/l-inferior-lingula/252.png",
+      "bytes": 977,
+      "sha256": "890d5c62ddf584e2c8e4f9d331490e055202b1f135af935dd009198aa502abaf"
+    },
+    {
+      "path": "patches/l-inferior-lingula/253.png",
+      "bytes": 1070,
+      "sha256": "33398d18a30bceea18f8a6d261e7be0706c8af35fd8c4f9e5bd97547f8dde038"
+    },
+    {
+      "path": "patches/l-inferior-lingula/254.png",
+      "bytes": 1103,
+      "sha256": "a28825b4dd297d3f0a877c892f1356ccfbe8aff40daa9e2fa59275cb309e8f41"
+    },
+    {
+      "path": "patches/l-inferior-lingula/255.png",
+      "bytes": 1111,
+      "sha256": "1a38a861ce174a8852a1721cdbc75f3027bb30e17fcddfc19614ba22714be726"
+    },
+    {
+      "path": "patches/l-inferior-lingula/256.png",
+      "bytes": 1129,
+      "sha256": "f8532af847ee4d35fb58810eb37aa4c39213dd63d39deac39d746aabe72d6c35"
+    },
+    {
+      "path": "patches/l-inferior-lingula/257.png",
+      "bytes": 1144,
+      "sha256": "8dd07f8d0ddcdb6af1323d8dc5d24ef1cace0453a7f1d03909ca43dc60f7fee5"
+    },
+    {
+      "path": "patches/l-inferior-lingula/258.png",
+      "bytes": 1152,
+      "sha256": "b32ed10bd8f78aa1e25359012c52278c770784661bd6eb53465861c0ddd6cf2a"
+    },
+    {
+      "path": "patches/l-inferior-lingula/259.png",
+      "bytes": 1141,
+      "sha256": "a3f23150e5bfb520529c751a880b66bd1c80af07c8f5523ee585334124405157"
+    },
+    {
+      "path": "patches/l-inferior-lingula/260.png",
+      "bytes": 1102,
+      "sha256": "03951192ede0012237dc8a6a1da00f20d390527df7984e98fc5912fb6068e23c"
+    },
+    {
+      "path": "patches/l-inferior-lingula/261.png",
+      "bytes": 1108,
+      "sha256": "f65c93bf5475eff9e67158568cf42241676039e26951c38325efce5832aef007"
+    },
+    {
+      "path": "patches/l-inferior-lingula/262.png",
+      "bytes": 1038,
+      "sha256": "27a0da9cdb941243f095f8f62416184b2e83168bfdcd41d34cebc83edc584a6b"
+    },
+    {
+      "path": "patches/l-inferior-lingula/263.png",
+      "bytes": 948,
+      "sha256": "f915d32ccc7e480cb02688c94ba0e5534abe075fdd8da214785f53d72f4f061c"
+    },
+    {
+      "path": "patches/l-inferior-lingula/264.png",
+      "bytes": 806,
+      "sha256": "2b8274d325b9d4045993b4f70d5dd544a8b62c6ddbbb8f80917efd6ee3c53d42"
+    },
+    {
+      "path": "patches/l-inferior-lingula/265.png",
+      "bytes": 674,
+      "sha256": "63dcb3c9854d09c3894e72f3914beac9b2013495765a3013f35882b7bdb64cfa"
+    },
+    {
+      "path": "patches/l-inferior-lingula/266.png",
+      "bytes": 579,
+      "sha256": "dcbda8887b622a62a955f8120c708cb5f0b770080c85d267fefb3bd6f1e00083"
+    },
+    {
+      "path": "patches/l-inferior-lingula/267.png",
+      "bytes": 488,
+      "sha256": "f246ba57de92ea30ced4c7cb44348e0351a0baf19dd22cf407292a083d33aacd"
+    },
+    {
+      "path": "patches/l-inferior-lingula/268.png",
+      "bytes": 439,
+      "sha256": "cda8b4306b14986d5943f9a2760a46b9e5e7255b313f5f9dfb2da74d012b6cf2"
+    },
+    {
+      "path": "patches/l-inferior-lingula/269.png",
+      "bytes": 359,
+      "sha256": "1b1f9cef377b73a57179e4035235e0ad71053a4b1b5929b222395d0863c004ea"
+    },
+    {
+      "path": "patches/l-inferior-lingula/270.png",
+      "bytes": 284,
+      "sha256": "4a5f4e672132cf0fa42eedafbc192cf2e441423a22560911d914cb67a6d9c134"
+    },
+    {
+      "path": "patches/l-inferior-lingula/271.png",
+      "bytes": 132,
+      "sha256": "a51985fa841d4174377f5652568ea0352d384009088e5d562c7b81a6b7d78e0e"
+    },
+    {
+      "path": "patches/l-superior/369.png",
+      "bytes": 142,
+      "sha256": "51f8f4ea0c602a9fdf01f96a9edc4653455e3c82b6d82922526d6ce346f769f9"
+    },
+    {
+      "path": "patches/l-superior/370.png",
+      "bytes": 271,
+      "sha256": "eda514da1e6d891c2218ca8c5e9d9115c3339b73a5dfaee04d21dd453de2b4d2"
+    },
+    {
+      "path": "patches/l-superior/371.png",
+      "bytes": 390,
+      "sha256": "bd058e2f2fe708975e74ca3beec78565e82e224a77684085243606a768c702ba"
+    },
+    {
+      "path": "patches/l-superior/372.png",
+      "bytes": 445,
+      "sha256": "d773bafcfce73224ab0445cebc230874bd2bbecd1be38494d0ae5cb9ab670fc9"
+    },
+    {
+      "path": "patches/l-superior/373.png",
+      "bytes": 504,
+      "sha256": "15a34813ec9f85f8439313a25f2f74e4543263e34221f0e011e190cc03ceb297"
+    },
+    {
+      "path": "patches/l-superior/374.png",
+      "bytes": 584,
+      "sha256": "6a645a81d3e159a217922c46179c4a8c832c880cd9889ac67bcf3ea899cf55f5"
+    },
+    {
+      "path": "patches/l-superior/375.png",
+      "bytes": 687,
+      "sha256": "9feb26780ffc8302ebc209d980a7d59a3f45aafe5fd5f86df5a5493117777e04"
+    },
+    {
+      "path": "patches/l-superior/376.png",
+      "bytes": 767,
+      "sha256": "1b88d35bc9730eb07c201ecb1fd13b69c35d73c2adf072ef46cf56f537a5c44c"
+    },
+    {
+      "path": "patches/l-superior/377.png",
+      "bytes": 844,
+      "sha256": "baa35f42dca7b53b54747d7e7955d48fa56411a04117541611f25789e6e38bdd"
+    },
+    {
+      "path": "patches/l-superior/378.png",
+      "bytes": 943,
+      "sha256": "dd877c80bc8fbbcc590305ca9469c74e23edccb1a04e78629925714939bb76de"
+    },
+    {
+      "path": "patches/l-superior/379.png",
+      "bytes": 1005,
+      "sha256": "0f4d5d0e9c2c998904197b86134f14da6401b1b9f37666a406d524b49e956e79"
+    },
+    {
+      "path": "patches/l-superior/380.png",
+      "bytes": 1069,
+      "sha256": "073c298641de03e9be9f203c1f44afc2f5c9dc6279fc71c10728034dae2b6575"
+    },
+    {
+      "path": "patches/l-superior/381.png",
+      "bytes": 1130,
+      "sha256": "bb3a73d70bf292137db9e4e0238dd59782535adeecf1f78139d40cbd630bfaa5"
+    },
+    {
+      "path": "patches/l-superior/382.png",
+      "bytes": 1175,
+      "sha256": "ba29c41d276e1a708f660cc91e4086fab238e4d81d072bd7a93910e424575475"
+    },
+    {
+      "path": "patches/l-superior/383.png",
+      "bytes": 1200,
+      "sha256": "cd67ec949f6a914695a814feabc87969284dfd71ccca1ed5cbc00e6564ac0c51"
+    },
+    {
+      "path": "patches/l-superior/384.png",
+      "bytes": 1183,
+      "sha256": "c31fd35f4323b855f2c80e08cf8aa9e475925c825200ecab19c29c75df24d15f"
+    },
+    {
+      "path": "patches/l-superior/385.png",
+      "bytes": 1168,
+      "sha256": "63e30a971c91f037b61e0922a2b7b125a3be964515e36e20e712a4c394867415"
+    },
+    {
+      "path": "patches/l-superior/386.png",
+      "bytes": 1144,
+      "sha256": "4ae5d6198cab82346be730769e9bcde741079fac7ea7dd26fb7a6fa5971c7b9d"
+    },
+    {
+      "path": "patches/l-superior/387.png",
+      "bytes": 1085,
+      "sha256": "32dca1323b00b7e6d1eeb46d4b22446c994501afc0881dcc43d9d355a24d8c15"
+    },
+    {
+      "path": "patches/l-superior/388.png",
+      "bytes": 1015,
+      "sha256": "036d29fd39d453ed908189585783c1e3a2ac580c5c6236d3b7bacb9c49515a7b"
+    },
+    {
+      "path": "patches/l-superior/389.png",
+      "bytes": 915,
+      "sha256": "4fefe781883cecaa04ce40e78bf2365d56c99be8616b4d24142b56f440fa78be"
+    },
+    {
+      "path": "patches/l-superior/390.png",
+      "bytes": 858,
+      "sha256": "7742c8a8be580f29457e276902326bcca8895340fb98a93f3af60437878e5207"
+    },
+    {
+      "path": "patches/l-superior/391.png",
+      "bytes": 790,
+      "sha256": "a28b0b189ca23d7b9c0ba4b1109a4a1567d0cdb67fbaad4b923ad75a7ac9df6d"
+    },
+    {
+      "path": "patches/l-superior/392.png",
+      "bytes": 748,
+      "sha256": "3259bd9beec248783ade06821f9214323f63c8e5ca1e1b5e0216fc260b0ffb5f"
+    },
+    {
+      "path": "patches/l-superior/393.png",
+      "bytes": 680,
+      "sha256": "822fb7c806c5742d4d4d203f06d77989f1dfbbe2dacffb26e6d7895a86a8a140"
+    },
+    {
+      "path": "patches/l-superior/394.png",
+      "bytes": 546,
+      "sha256": "06257273c0de4bc7d8abaeb7ecba55bd329e3ac6c31fee92aae4d377ae7fadff"
+    },
+    {
+      "path": "patches/l-superior/395.png",
+      "bytes": 468,
+      "sha256": "bf22f81a65095d4e86de2c9319d434641b01fcecf8403556ac80a80a05bb14c8"
+    },
+    {
+      "path": "patches/l-superior/396.png",
+      "bytes": 303,
+      "sha256": "3266350165c85146e7e4aff0a0e35ef6407fbffded9634d3a824df060d0c4a09"
+    },
+    {
+      "path": "patches/r-anterior-basal/242.png",
+      "bytes": 143,
+      "sha256": "5b9caf895a6ff27b240dabaca820ca967b2f2a2eb7d4bc11560f9087972261f2"
+    },
+    {
+      "path": "patches/r-anterior-basal/243.png",
+      "bytes": 271,
+      "sha256": "696a7ccebbe788705a14290d69bdef88aa1510204972361a62d551407b454cab"
+    },
+    {
+      "path": "patches/r-anterior-basal/244.png",
+      "bytes": 367,
+      "sha256": "7bed69419fba126e4a62fc3272cc7a185facc3e6836839fec2bcea4db80c1f72"
+    },
+    {
+      "path": "patches/r-anterior-basal/245.png",
+      "bytes": 451,
+      "sha256": "0c6a74e2b2fe06896d2bc5114b90ece26166dd2fcf6755c9ebca1e1b7273049c"
+    },
+    {
+      "path": "patches/r-anterior-basal/246.png",
+      "bytes": 497,
+      "sha256": "cf9d2539283c61ad18db04a9ffda766933ef38265b45f9aadc71c6e12d88de9a"
+    },
+    {
+      "path": "patches/r-anterior-basal/247.png",
+      "bytes": 543,
+      "sha256": "1da8c2a0e80f2ac8a1c705d9656759ac4501d3dc476113200c0741c5c4aed313"
+    },
+    {
+      "path": "patches/r-anterior-basal/248.png",
+      "bytes": 650,
+      "sha256": "57cbe6c6ed8cb201e4dd3a2719a3831ead41812d506bb8571a25ab86b2a496d7"
+    },
+    {
+      "path": "patches/r-anterior-basal/249.png",
+      "bytes": 750,
+      "sha256": "bee4949aa34f5f1a092079112f2adb12835941b419f21328755c2fc97578139e"
+    },
+    {
+      "path": "patches/r-anterior-basal/250.png",
+      "bytes": 812,
+      "sha256": "801fa060de85dc9401428a468a5d182448a799590569bdc6b17deca65b6096a4"
+    },
+    {
+      "path": "patches/r-anterior-basal/251.png",
+      "bytes": 897,
+      "sha256": "26cfed77704898d83c0c803e98b3c8f2fa925443e0029bc83a001db13c65e75d"
+    },
+    {
+      "path": "patches/r-anterior-basal/252.png",
+      "bytes": 974,
+      "sha256": "72e6b059a6744375ba00c433d406f073fdabd0903d42f38bac957c806001e867"
+    },
+    {
+      "path": "patches/r-anterior-basal/253.png",
+      "bytes": 1053,
+      "sha256": "1afddb7eb9614c885896f6f697a82b176ac832afef4fb2df78d86246b49f140b"
+    },
+    {
+      "path": "patches/r-anterior-basal/254.png",
+      "bytes": 1103,
+      "sha256": "f90d163a2f2e7e7ce6255d26cd0d8ff2ed97136d94d2883bd09e24b0efed5027"
+    },
+    {
+      "path": "patches/r-anterior-basal/255.png",
+      "bytes": 1120,
+      "sha256": "d79f89f00e7f6e224c5c5ab5e8e35f8a4257c854077ebba9b241403a77319803"
+    },
+    {
+      "path": "patches/r-anterior-basal/256.png",
+      "bytes": 1145,
+      "sha256": "51a4a60e413667f9630fce71066f0352cb2dc998e52d16601d882e35a6c009fb"
+    },
+    {
+      "path": "patches/r-anterior-basal/257.png",
+      "bytes": 1160,
+      "sha256": "34f66d30042b784709d2af2335d4a64470846439a1938deafd218e71fab20368"
+    },
+    {
+      "path": "patches/r-anterior-basal/258.png",
+      "bytes": 1181,
+      "sha256": "d399e6b7397f673e64a66426f05d597d1cc6b05327e6ba6edf1ca9f4f7de513c"
+    },
+    {
+      "path": "patches/r-anterior-basal/259.png",
+      "bytes": 1156,
+      "sha256": "24deedc887b792a0f94cbb8827688a1e3433b5e1129712e3a57d0f4c852b9dd0"
+    },
+    {
+      "path": "patches/r-anterior-basal/260.png",
+      "bytes": 1108,
+      "sha256": "ccd7e8bfd3a3adf44759f156826a251694e3dbcca1e76fd4ada841062252aaf8"
+    },
+    {
+      "path": "patches/r-anterior-basal/261.png",
+      "bytes": 1052,
+      "sha256": "bbf54c93ccac3bd87646bac987367bb5ac2321b1e88b3354278b275ba5ca4ec5"
+    },
+    {
+      "path": "patches/r-anterior-basal/262.png",
+      "bytes": 952,
+      "sha256": "4f20c2bf9bb1a24bab9de6badbc4d436e4d8b767957063d7e5a07ad0328744f2"
+    },
+    {
+      "path": "patches/r-anterior-basal/263.png",
+      "bytes": 764,
+      "sha256": "ff5c95f50b1e93e816840aa2faaadf6b3d80fd260ccf810d162978a86b4d0c7b"
+    },
+    {
+      "path": "patches/r-anterior-basal/264.png",
+      "bytes": 636,
+      "sha256": "edbc546e0d9c08ce42e19304c566d63cd522bc15feb4322364a25c8ed86b8a95"
+    },
+    {
+      "path": "patches/r-anterior-basal/265.png",
+      "bytes": 551,
+      "sha256": "0ed1c5af9b0ad546aa2d42c915ebe811695adf485d4db0dcb45d4555cf70cdc1"
+    },
+    {
+      "path": "patches/r-anterior-basal/266.png",
+      "bytes": 488,
+      "sha256": "f618c50e9e084649d47cbd2dcf28329b500080a361d7310005f444ebefa6341f"
+    },
+    {
+      "path": "patches/r-anterior-basal/267.png",
+      "bytes": 374,
+      "sha256": "c69dcc907f50fe9309ff9b2aeb2f9bbb1bbf8001c1375493131af1d2ee0a894c"
+    },
+    {
+      "path": "patches/r-anterior-basal/268.png",
+      "bytes": 334,
+      "sha256": "7944961d380bb0dd0d993fa5dab9af8d50b694a660215e9d6db6be870fa101b3"
+    },
+    {
+      "path": "patches/r-anterior-basal/269.png",
+      "bytes": 270,
+      "sha256": "4567461628bd295cf5930073af85fe0daa139a16fcd889382f7e0298bbc57769"
+    },
+    {
+      "path": "patches/r-anterior-basal/270.png",
+      "bytes": 110,
+      "sha256": "9b0a081e15493c351b179242637c5c489282f04fc0fdbec00eec06eb967dfc20"
+    },
+    {
+      "path": "patches/l-lateral-basal/242.png",
+      "bytes": 147,
+      "sha256": "41b3589859031a1be92e93298fbab11ba5024022fcbd5aadb28cb3045a4599ae"
+    },
+    {
+      "path": "patches/l-lateral-basal/243.png",
+      "bytes": 276,
+      "sha256": "79751127e55460ec9358ecda475e93cb4988c42a2524c70c297abfc15a4ccd4b"
+    },
+    {
+      "path": "patches/l-lateral-basal/244.png",
+      "bytes": 354,
+      "sha256": "b12842a3435fb018a2f8c5355b0430f59b6cc00eb7e959af55fcf9df5044981a"
+    },
+    {
+      "path": "patches/l-lateral-basal/245.png",
+      "bytes": 434,
+      "sha256": "87ddc7cb978aa87f0052f0a59061f62d0aba72a100e39f17266e19c656e3dd8d"
+    },
+    {
+      "path": "patches/l-lateral-basal/246.png",
+      "bytes": 487,
+      "sha256": "a99b94da9b658a727950624e58143cdcf713a45640583fad4908f4559cc1d02b"
+    },
+    {
+      "path": "patches/l-lateral-basal/247.png",
+      "bytes": 589,
+      "sha256": "e564bf2759b623e5a3f09893f693927f67e323a84dd3878314031502ad4af443"
+    },
+    {
+      "path": "patches/l-lateral-basal/248.png",
+      "bytes": 708,
+      "sha256": "aea73911d86b74219ea680255b754fc6d59531ec3e48a829d3ba421923ab2c8e"
+    },
+    {
+      "path": "patches/l-lateral-basal/249.png",
+      "bytes": 837,
+      "sha256": "0a20719c8038a6e279c92defd0cf245f1371b077364b1deafd07cb685d8012bc"
+    },
+    {
+      "path": "patches/l-lateral-basal/250.png",
+      "bytes": 933,
+      "sha256": "152ce1a9bf7a3c52596e74932175a4b3ad425d96eb4f4cd90ab54b541ab3bfcc"
+    },
+    {
+      "path": "patches/l-lateral-basal/251.png",
+      "bytes": 1043,
+      "sha256": "5618ce3d8edfe63653eab59b342a8610297cfc3075144036b8d11d09dca8260d"
+    },
+    {
+      "path": "patches/l-lateral-basal/252.png",
+      "bytes": 1084,
+      "sha256": "8808f944a2536c98a29622b85be071b21869b02576e0674b0e98d46e8aa76295"
+    },
+    {
+      "path": "patches/l-lateral-basal/253.png",
+      "bytes": 1100,
+      "sha256": "3b200216a51cb1d0d9bb116a0878ba468430af0189879ac2a32658ab2a8bb00a"
+    },
+    {
+      "path": "patches/l-lateral-basal/254.png",
+      "bytes": 1148,
+      "sha256": "f63c58112dd57e787c0c0dd05ff554c94f63a0a08e89d1ad65dde679e7cf5474"
+    },
+    {
+      "path": "patches/l-lateral-basal/255.png",
+      "bytes": 1142,
+      "sha256": "47a001a0cd088e125f1ef37a19e263e83acc54ca1eced6e5eeb4a3ea053b2e54"
+    },
+    {
+      "path": "patches/l-lateral-basal/256.png",
+      "bytes": 1164,
+      "sha256": "171b0c3c98084004de2ed3cfeb5b4a01f6519cdb8addb96e542d797de766cdf7"
+    },
+    {
+      "path": "patches/l-lateral-basal/257.png",
+      "bytes": 1145,
+      "sha256": "36ebf56f609708a6ae039ffa4993112ae7b3f6ccc866d5912f5ea82a45f69335"
+    },
+    {
+      "path": "patches/l-lateral-basal/258.png",
+      "bytes": 1144,
+      "sha256": "41e1cd9517c887b19dc546bb00fa3bb1136ab39411b7d12a6fa447b017ed64d2"
+    },
+    {
+      "path": "patches/l-lateral-basal/259.png",
+      "bytes": 1123,
+      "sha256": "bffc4d0b7820cb85e7ff81964efb790ec780bae376eeb6c45555343a813eb901"
+    },
+    {
+      "path": "patches/l-lateral-basal/260.png",
+      "bytes": 1066,
+      "sha256": "32df110d0a0556a060a9c27fc3ecd0c2d8d96cecc6aa7579327009b56f7c82b0"
+    },
+    {
+      "path": "patches/l-lateral-basal/261.png",
+      "bytes": 960,
+      "sha256": "381b80bc6c9d29ff797b4f5f6042ef104b499c8c21b4742d696af1ee2603aca5"
+    },
+    {
+      "path": "patches/l-lateral-basal/262.png",
+      "bytes": 856,
+      "sha256": "84f7a17ff14731aa34b127afd585b82cd9dfeed23c7609c5a44cd212a38a96a3"
+    },
+    {
+      "path": "patches/l-lateral-basal/263.png",
+      "bytes": 720,
+      "sha256": "5741508c552228a496135ff2a23d0bdd805e0a9685e1116e629fa4f315150f8b"
+    },
+    {
+      "path": "patches/l-lateral-basal/264.png",
+      "bytes": 659,
+      "sha256": "b002ef4bc293d7ee878a6be0586a5b4b43abef8a41eef047858a51d92db6f1cc"
+    },
+    {
+      "path": "patches/l-lateral-basal/265.png",
+      "bytes": 584,
+      "sha256": "c2f88423e19a94f53134f7992d8c0ff62f6c789afaca7bcb4a8341bed34d4d58"
+    },
+    {
+      "path": "patches/l-lateral-basal/266.png",
+      "bytes": 487,
+      "sha256": "6f7d15aac43ae18a608ef2e9be0aeb24af1179d3bf46a06bce78d8ee515319cb"
+    },
+    {
+      "path": "patches/l-lateral-basal/267.png",
+      "bytes": 414,
+      "sha256": "081abd69fae94e4a6ebe038f5492e5906a8f0abdf835c212b22a67ac486b65cf"
+    },
+    {
+      "path": "patches/l-lateral-basal/268.png",
+      "bytes": 361,
+      "sha256": "d0ace81782ca6e4972e43d8858480ffe98833b31653eaf508a2a6f8b0c0ec0c2"
+    },
+    {
+      "path": "patches/l-lateral-basal/269.png",
+      "bytes": 288,
+      "sha256": "8d866a57b72ce3c4eafeb5ee3143f3fe02621d4ae2d4c9e79ac667a663b53d8d"
+    },
+    {
+      "path": "patches/l-lateral-basal/270.png",
+      "bytes": 118,
+      "sha256": "3ea1b3531cdc6e7deb285beb0e940843519a4ed385a8f1cccb7c788b558df13c"
+    },
+    {
+      "path": "axial/239.png",
+      "bytes": 217057,
+      "sha256": "a1759080c87cec9bde309a0eb9e542361a70f61cea4ec0a666dfdc1c51b9a226"
+    },
+    {
+      "path": "axial/476.png",
+      "bytes": 201668,
+      "sha256": "e9a4c3a0b0026279bb7bfa50c31cbf81992045a117eaaaa0a1e27a8b58838e49"
+    },
+    {
+      "path": "axial/477.png",
+      "bytes": 201488,
+      "sha256": "26a3a0b98f4ce5b4d6433062e85a21c14e62b13781780e2422b363fca3018816"
+    },
+    {
+      "path": "axial/478.png",
+      "bytes": 201307,
+      "sha256": "502664ca59af3c296ad39e9d660fa30665835917a972e21912ae4b8a960ab470"
+    }
+  ],
+  "extraSlices": [239, 476, 477, 478]
+}

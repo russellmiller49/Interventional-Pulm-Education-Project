@@ -1,16 +1,20 @@
 # Bronchial branch tracing — current teaching brief
 
-September 11, 2026 · reference checkout `7da3886e` · content `c2-ct1-r2` · unpublished, anonymous direct URL.
+September 11, 2026 · reference checkout `7da3886e` · content `c3-target1-r1` · unpublished, anonymous direct URL.
 
 The owner first requested actual CT slices rotated according to the supplied **Bronchial Branch Tracing** textbook, then explicitly requested anatomical airway names in place of level numbers using textbook vision and clinical knowledge. The six planning documents inform requirements; their audit-only kickoff is an example, not a restriction on the build request. The owner also requested the structured-medical-modules skill. Its existing Steps → Teaching → Simulator stage remains the host.
 
 ## Teaching flow
 
-Audience: PCCM/IP fellows and bronchoscopists familiar with lobar CT anatomy. Observable task: follow a continuous lumen across acquisition planes, record three points, describe its course and compare the evidence. This is image interpretation practice, not procedural certification. Eight sessions are authored estimates of 5–7 minutes.
+Current extension: reuse the navigation trainer's shared `residualHuAt` nodule compositor and existing donor residual/alpha volume. Each of the 17 traces leads toward a simulated nodule in a named segment; third checkpoints extend into the appropriate distal branch rather than ending at the previous regional sample. Learn retains the eight concepts and six stages, now anchored to a target. Practice adds a segment selector alongside the mixed four-target set. Target viewing, actual airway marks, course and a lesion–airway relationship interpretation precede comparison. A nodule-location button is orientation support, never task completion. The task teaches CT route planning, not instrument reach or tool-in-lesion confirmation.
+
+Nodule intensities are computed from original signed CT plus the existing donor signal with the same shared function as the trainer. Only compact native-pixel composited patches and any missing native planes are added; original CT/assets remain unchanged. Target placement is explicitly authored simulation. A new participation version retains prior records as history, without treating earlier regional tracing completion as completion of the new nodule task. Target/reference state and user responses remain in the existing feature session and bounded progress adapter. Named targets are known task context; reference airway positions remain withheld in pending activities.
+
+Audience: PCCM/IP fellows and bronchoscopists familiar with lobar CT anatomy. Observable task: follow a continuous lumen toward a nodule in a named segment, record three points, describe the course and distal relationship, and compare the evidence. This is image interpretation practice, not procedural certification. Eight sessions are authored estimates of 5–7 minutes.
 
 The canonical LESSONS registry retains stable IDs and order: orientation; continuity; vertical; horizontal–horizontal; horizontal–vertical; horizontal–oblique; direction reversal; variants/limits. Each renders a purpose, prerequisite, explanatory concept, worked CT example, a new learner trace, comparison, explanation and changed CT transfer. One source patient supplies these regional variations. Assess is an ungraded independent worksheet with delayed comparison; it is not held-out patient validation.
 
-Six real stages: orient using a worked image → mark three named airway checkpoints → describe the course → compare on the same CT → explain the relationship → trace another airway. Initial responses are empty. A lumen mark or explicit unresolved response is required at each level; recording a course is also required before revealing the comparison. Reference points are absent from the learner DOM before submission. Comparison requires a separate manual continuation; completing a lesson requires another trace and manual Finish.
+Six real stages: orient using a worked image → mark three named airway checkpoints → describe the course → compare on the same CT → explain the relationship → trace another airway. Initial responses are empty. A lumen mark or explicit unresolved response is required at each level; recording a course and an airway–nodule relationship is also required before revealing the comparison. Reference points are absent from the learner DOM before submission. Comparison requires a separate manual continuation; completing a lesson requires another trace and manual Finish.
 
 ## Source and preservation
 
@@ -20,13 +24,13 @@ Slicer 5.12.3 loaded the original CT read-only in an isolated process. Source SH
 
 Preserved: canonical URLs and IDs, shared stage/navigation, bounded progress adapter, public-unlisted/noindex behavior, exterior/intraluminal explorer, all original assets and other modules. No source volume, user scene, protected mount, textbook page, shared stage, global CSS, dependency, database, catalog, upload or release state is changed. Old synthetic geometry remains internal regression fixtures only.
 
-Nomenclature version `nomenclature-v1` adds side-specific bronchial codes, expanded names, source-edge IDs and proximal/distal qualifiers. It changes labels, instructions and local worksheet metadata without moving any CT sample or resetting participation. The current task is tracing a named airway, not identifying its name; lumen reference coordinates remain withheld until submission. See [nomenclature-review.md](nomenclature-review.md) for source figures and assignments.
+Nomenclature version `nomenclature-v1` adds side-specific bronchial codes, expanded names, source-edge IDs and proximal/distal qualifiers. It changes labels, instructions and local worksheet metadata without moving any CT sample or resetting participation. The current task is tracing a named airway, not identifying its name; lumen reference coordinates remain withheld until submission. See [nomenclature-review.md](nomenclature-review.md) for source figures and assignments. The current nodule extension retains those first two checkpoints and replaces the third with a distal approach point. [Nodule target review](nodule-target-review.md) documents the new geometry, the ten available segments and the authored placement boundary.
 
 ## Components and progress
 
 Reuse StageLayout, NowCard, LookInLine, StepList, SectionHeader, StageBlock and ModuleNavV2. Pass pane order Steps/Teaching/Simulator, opening fractions 0.26/0.29 and floors 300/280/340 explicitly. Feature-owned NativeCtViewer implements native pixels, inverse coordinate transforms, slice browsing, full-screen expansion, keyboard marking and recoverable load errors.
 
-The site's existing bounded activity envelope is the only progress store. Version `c2-ct1-r2` separates CT participation from earlier synthetic outcomes without deleting history. First-trace participation is written on Record trace, before course/comparison; first hint count is immutable. Completed lessons persist. No scores or mastery are awarded. Incomplete work restarts after reload; source/learner coordinates and camera state are session-only. Independent debrief has an explicit local JSON export.
+The site's existing bounded activity envelope is the only progress store. Version `c3-target1-r1` separates nodule-route participation from earlier regional tracing and synthetic outcomes without deleting history. First-trace participation is written on Record trace, before course/comparison; first hint count is immutable. Completed lessons persist. No scores or mastery are awarded. Incomplete work restarts after reload; source/learner coordinates and camera state are session-only. Independent debrief has an explicit local JSON export.
 
 ## Verification
 

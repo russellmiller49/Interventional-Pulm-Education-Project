@@ -28,8 +28,12 @@ beforeEach(() => {
   }
 })
 function imageReady() {
-  const image = document.querySelector('image')!
-  fireEvent.load(image)
+  document.querySelectorAll('image').forEach((image) => fireEvent.load(image))
+}
+function relation(value = 'unresolved') {
+  fireEvent.change(screen.getByRole('combobox', { name: 'Airway–nodule relationship' }), {
+    target: { value },
+  })
 }
 function markLevels(wrong = false) {
   for (let i = 0; i < 3; i++) {
@@ -72,6 +76,8 @@ it('requires a real three-level response, withholds references, preserves a wron
   fireEvent.change(screen.getByRole('combobox', { name: 'Airway course' }), {
     target: { value: 'cranial' },
   })
+  expect(screen.getByRole('button', { name: 'Reveal CT comparison' })).toBeDisabled()
+  relation()
   fireEvent.click(screen.getByRole('button', { name: 'Reveal CT comparison' }))
   imageReady()
   expect(document.querySelector('[data-ct-reference]')).not.toBeNull()
@@ -89,6 +95,8 @@ it('requires a real three-level response, withholds references, preserves a wron
   fireEvent.change(screen.getByRole('combobox', { name: 'Airway course' }), {
     target: { value: 'uncertain' },
   })
+  expect(screen.getByRole('button', { name: 'Compare new trace' })).toBeDisabled()
+  relation('different-structure')
   fireEvent.click(screen.getByRole('button', { name: 'Compare new trace' }))
   expect(completedLessons(readProgress())).toEqual([])
   fireEvent.click(screen.getByRole('button', { name: 'Finish lesson' }))
@@ -139,6 +147,7 @@ it('teaches named RB5 subsegments while withholding their lumen locations until 
   fireEvent.change(screen.getByRole('combobox', { name: 'Airway course' }), {
     target: { value: 'uncertain' },
   })
+  relation()
   fireEvent.click(screen.getByRole('button', { name: 'Reveal CT comparison' }))
   imageReady()
   expect(screen.getByLabelText('Reference: Right medial bronchus, subsegment b')).toBeVisible()

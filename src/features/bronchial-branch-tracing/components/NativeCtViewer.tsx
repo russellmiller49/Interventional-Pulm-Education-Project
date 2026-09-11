@@ -18,6 +18,8 @@ import {
   nativeImageUrl,
   pixelToDisplay,
   sliceZ,
+  targetForTrace,
+  TARGET_CT_BASE,
 } from '../geometry/native-ct'
 import styles from './branch-tracing.module.css'
 
@@ -41,10 +43,11 @@ export function NativeCtViewer({
   revealed = false,
   showAnchor = false,
 }: Props) {
+  const target = targetForTrace(trace)
   const [sliceState, setSliceState] = useState({
     active,
     levelRequest,
-    slice: revealed ? trace.checkpoints[active].slice : trace.anchor.slice,
+    slice: revealed ? trace.checkpoints[active].slice : target.slice,
   })
   const slice =
     sliceState.active === active && sliceState.levelRequest === levelRequest
@@ -67,9 +70,16 @@ export function NativeCtViewer({
   )
   const [preset, setPreset] = useState<DisplayPreset>(trace.preset)
   const [full, setFull] = useState(false)
+  const [targetFocus, setTargetFocus] = useState<{ active: number; levelRequest: number } | null>(
+    revealed ? null : { active, levelRequest },
+  )
+  const focusedOnTarget =
+    targetFocus?.active === active && targetFocus?.levelRequest === levelRequest
+  const [showNodule, setShowNodule] = useState(true)
   const [magnification, setMagnification] = useState(1)
   const [cursor, setCursor] = useState<[number, number]>([50, 50])
   const [imageStatus, setImageStatus] = useState<{ url: string; failed: boolean } | null>(null)
+  const [patchStatus, setPatchStatus] = useState<{ url: string; failed: boolean } | null>(null)
   const [retry, setRetry] = useState(0)
   const [expanded, setExpanded] = useState(false)
   const [expandError, setExpandError] = useState(false)
@@ -90,10 +100,14 @@ export function NativeCtViewer({
   }
   const surface = useRef<HTMLDivElement>(null)
   const url = nativeImageUrl(slice)
-  const ready = imageStatus?.url === url && !imageStatus.failed
-  const failed = imageStatus?.url === url && imageStatus.failed
-  const center = full ? [255.5, 255.5] : trace.cropCenter
-  const size = (full ? 512 : trace.cropSize) / magnification
+  const patch = showNodule ? target.patch.frames.find((frame) => frame.slice === slice) : undefined
+  const patchUrl = patch ? `${TARGET_CT_BASE}/${patch.path}` : null
+  const patchReady = !patchUrl || (patchStatus?.url === patchUrl && !patchStatus.failed)
+  const ready = imageStatus?.url === url && !imageStatus.failed && patchReady
+  const patchFailed = patchUrl && patchStatus?.url === patchUrl && patchStatus.failed
+  const failed = (imageStatus?.url === url && imageStatus.failed) || patchFailed
+  const center = full ? [255.5, 255.5] : focusedOnTarget ? target.pixel : trace.cropCenter
+  const size = (full ? 512 : focusedOnTarget ? 190 : trace.cropSize) / magnification
   const labels = ORIENTATION_LABELS[preset]
   const checkpoint = trace.checkpoints[active]
   const atCheckpoint = slice === checkpoint.slice
@@ -156,8 +170,16 @@ export function NativeCtViewer({
     }
   }
   function selectCheckpoint(index: number) {
+    setTargetFocus(null)
     setSlice(trace.checkpoints[index].slice)
     onActive?.(index)
+  }
+  function showTarget() {
+    setTargetFocus({ active, levelRequest })
+    setFull(false)
+    setMagnification(1)
+    setShowNodule(true)
+    setSlice(target.slice)
   }
   return (
     <section ref={viewer} className={styles.nativeViewer} aria-label="CT tracing viewer">
@@ -169,6 +191,13 @@ export function NativeCtViewer({
         <button className={styles.ctExpand} onClick={toggleExpanded}>
           {expanded ? 'Close expanded CT' : 'Expand CT'}
         </button>
+      </div>
+      <div className={styles.targetBar}>
+        <div>
+          <strong>Target · {target.segment.code}</strong>
+          <span>{target.segment.name} · simulated nodule</span>
+        </div>
+        <button onClick={showTarget}>Show target</button>
       </div>
       <div className={styles.ctViewButtons} role="group" aria-label="CT orientation">
         <button aria-pressed={preset === trace.preset} onClick={() => setPreset(trace.preset)}>
@@ -210,7 +239,10 @@ export function NativeCtViewer({
           }}
         >
           <title>
-            Tracing {checkpoint.airway.name}, axial CT slice {slice}, {DISPLAY_PRESETS[preset]}
+            {focusedOnTarget
+              ? `Target in ${target.segment.name}`
+              : `Tracing ${checkpoint.airway.name}`}
+            , axial CT slice {slice}, {DISPLAY_PRESETS[preset]}
           </title>
           <rect width="100" height="100" fill="#020507" />
           <g
@@ -226,7 +258,51 @@ export function NativeCtViewer({
               onLoad={() => setImageStatus({ url, failed: false })}
               onError={() => setImageStatus({ url, failed: true })}
             />
+            {patchUrl && (
+              <image
+                key={`${patchUrl}-${retry}`}
+                href={patchUrl}
+                x={target.patch.originPixel[0] - 0.5}
+                y={target.patch.originPixel[1] - 0.5}
+                width={target.patch.size[0]}
+                height={target.patch.size[1]}
+                data-ct-nodule={target.id}
+                onLoad={() => setPatchStatus({ url: patchUrl, failed: false })}
+                onError={() => setPatchStatus({ url: patchUrl, failed: true })}
+              />
+            )}
           </g>
+          {ready &&
+            showNodule &&
+            slice === target.slice &&
+            (() => {
+              const p = pixelToDisplay(target.pixel, center, size, preset)
+              return (
+                <g aria-label={`Simulated nodule target in ${target.segment.code}`}>
+                  <circle
+                    cx={p[0]}
+                    cy={p[1]}
+                    r="7"
+                    fill="none"
+                    stroke="#e6b0ef"
+                    strokeWidth=".35"
+                    strokeDasharray="1 1"
+                  />
+                  <text
+                    x={p[0]}
+                    y={p[1] + 11}
+                    textAnchor="middle"
+                    fill="#f3c8fa"
+                    fontSize="3.6"
+                    stroke="#07151b"
+                    strokeWidth=".5"
+                    paintOrder="stroke"
+                  >
+                    Target nodule
+                  </text>
+                </g>
+              )
+            })()}
           {ready &&
             showAnchor &&
             slice === trace.anchor.slice &&
@@ -335,10 +411,13 @@ export function NativeCtViewer({
           <div className={styles.ctLoad} role={failed ? 'alert' : 'status'}>
             {failed ? (
               <>
-                This CT slice could not load.{' '}
+                {patchFailed
+                  ? 'The simulated nodule could not load.'
+                  : 'This CT slice could not load.'}{' '}
                 <button
                   onClick={() => {
                     setImageStatus(null)
+                    setPatchStatus(null)
                     setRetry((v) => v + 1)
                   }}
                 >
@@ -353,10 +432,11 @@ export function NativeCtViewer({
       </div>
       <div className={styles.ctActiveAirway} aria-live="polite">
         <strong>
-          Tracing {checkpoint.airway.code}
-          {checkpoint.landmark && ` · ${checkpoint.landmark}`}
+          {focusedOnTarget
+            ? `Target region · ${target.segment.code}`
+            : `Tracing ${checkpoint.airway.code}${checkpoint.landmark ? ` · ${checkpoint.landmark}` : ''}`}
         </strong>
-        <span>{checkpoint.airway.name}</span>
+        <span>{focusedOnTarget ? target.segment.name : checkpoint.airway.name}</span>
       </div>
       <div className={styles.nativeSliceControls}>
         <button
@@ -388,7 +468,10 @@ export function NativeCtViewer({
       </div>
       <div className={styles.ctLevels} role="group" aria-label="Airway checkpoints">
         <button
-          onClick={() => setSlice(trace.anchor.slice)}
+          onClick={() => {
+            setTargetFocus(null)
+            setSlice(trace.anchor.slice)
+          }}
           aria-label={`Start: ${trace.anchor.airway.name}`}
         >
           <strong>Start</strong>
@@ -410,7 +493,7 @@ export function NativeCtViewer({
       {onMark && (
         <p className={styles.ctInstruction}>
           {!atCheckpoint ? (
-            <button onClick={() => setSlice(checkpoint.slice)}>
+            <button onClick={() => selectCheckpoint(active)}>
               Return to {checkpoint.airway.code}
               {checkpoint.landmark && ` (${checkpoint.landmark.toLowerCase()})`} to mark the lumen
             </button>
@@ -433,6 +516,9 @@ export function NativeCtViewer({
       <details className={styles.options}>
         <summary>Image details, orientation and controls</summary>
         <p>{ORIENTATION_NOTES[preset]}</p>
+        <button aria-pressed={!showNodule} onClick={() => setShowNodule((value) => !value)}>
+          {showNodule ? 'View original CT without nodule' : 'Restore simulated nodule'}
+        </button>
         <label>
           Image magnification{' '}
           <input
@@ -448,6 +534,7 @@ export function NativeCtViewer({
         <button
           onClick={() => {
             setSlice(trace.anchor.slice)
+            setTargetFocus(null)
             setFull(false)
             setMagnification(1)
           }}
@@ -463,7 +550,16 @@ export function NativeCtViewer({
           Native 512×512 axial acquisition planes; 0.69×0.69 mm in-plane spacing. Fixed lung window
           −1000 to 400 HU. Display rotation does not alter patient coordinates.
         </p>
+        <p>
+          Simulated nodule added to real CT using the navigation trainer’s intensity overlay. CT
+          route planning does not demonstrate instrument reach or tool-in-lesion.
+        </p>
       </details>
+      {!showNodule && (
+        <p className={styles.ctInstruction} role="status">
+          Original CT · simulated nodule hidden
+        </p>
+      )}
     </section>
   )
 }

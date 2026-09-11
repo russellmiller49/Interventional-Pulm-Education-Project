@@ -4,6 +4,8 @@ import { ASSESS_TRACES } from '../src/features/bronchial-branch-tracing/content/
 import {
   traceById,
   pixelToDisplay,
+  targetForTrace,
+  nativeImageUrl,
 } from '../src/features/bronchial-branch-tracing/geometry/native-ct'
 
 const base = '/en/learn/anatomy/branch-tracing'
@@ -66,6 +68,9 @@ test('every lesson supports actual CT marking, withheld comparison, changed tran
     await page.getByRole('button', { name: 'Record trace' }).click()
     await expect(page.locator('[data-ct-reference]')).toHaveCount(0)
     await page.getByRole('combobox', { name: 'Airway course' }).selectOption('cranial')
+    await page
+      .getByRole('combobox', { name: 'Airway–nodule relationship' })
+      .selectOption('unresolved')
     if (lesson.id === 'horizontal-vertical')
       await page.screenshot({ path: '/tmp/branch-tracing-ct-pending.png', fullPage: true })
     await page.getByRole('button', { name: 'Reveal CT comparison' }).click()
@@ -77,6 +82,9 @@ test('every lesson supports actual CT marking, withheld comparison, changed tran
     await expect(page.getByRole('button', { name: 'Compare new trace' })).toBeDisabled()
     await markTrace(page, lesson.transfer)
     await page.getByRole('combobox', { name: 'Airway course' }).selectOption('uncertain')
+    await page
+      .getByRole('combobox', { name: 'Airway–nodule relationship' })
+      .selectOption('unresolved')
     await page.getByRole('button', { name: 'Compare new trace' }).click()
     await expect(page.getByRole('button', { name: 'Finish lesson' })).toBeVisible()
     await page.getByRole('button', { name: 'Finish lesson' }).click()
@@ -97,6 +105,9 @@ test('independent interpretation withholds comparison through backtracking and e
     await expect(page.getByRole('button', { name: 'Tracing reminder' })).toHaveCount(0)
     await markTrace(page, id)
     await page.getByRole('combobox', { name: 'Airway course' }).selectOption('horizontal')
+    await page
+      .getByRole('combobox', { name: 'Airway–nodule relationship' })
+      .selectOption('unresolved')
     await page.getByRole('button', { name: 'Record CT interpretation' }).click()
   }
   await expect(page.locator('[data-ct-reference]')).toHaveCount(0)
@@ -104,6 +115,9 @@ test('independent interpretation withholds comparison through backtracking and e
   await expect(page.getByRole('combobox', { name: 'Airway course' })).toHaveValue('horizontal')
   await page.getByRole('button', { name: 'Trace 4 · recorded', exact: true }).click()
   await page.getByRole('combobox', { name: 'Airway course' }).selectOption('uncertain')
+  await page
+    .getByRole('combobox', { name: 'Airway–nodule relationship' })
+    .selectOption('unresolved')
   await expect(page.getByRole('button', { name: 'Submit all CT interpretations' })).toHaveCount(0)
   await page.getByRole('button', { name: 'Record CT interpretation' }).click()
   await page.getByRole('button', { name: 'Submit all CT interpretations' }).click()
@@ -114,7 +128,7 @@ test('independent interpretation withholds comparison through backtracking and e
   expect((await downloadPromise).suggestedFilename()).toBe('bronchial-ct-interpretation.json')
   await page.screenshot({ path: '/tmp/branch-tracing-ct-debrief.png', fullPage: true })
   for (let i = 0; i < ASSESS_TRACES.length; i++) {
-    const heading = page.getByRole('heading', { name: new RegExp(`^Trace ${i + 1} ·`) })
+    const heading = page.getByRole('heading', { name: new RegExp(`^Target ${i + 1} ·`) })
     await heading.scrollIntoViewIfNeeded()
     await expect(heading).toBeInViewport()
     const row = page.locator('section').filter({ has: heading })
@@ -139,6 +153,9 @@ test('book orientations rotate the actual CT and keep a learner point registered
       await markTrace(page, trace.id)
       await page.getByRole('button', { name: 'Record trace' }).click()
       await page.getByRole('combobox', { name: 'Airway course' }).selectOption('cranial')
+      await page
+        .getByRole('combobox', { name: 'Airway–nodule relationship' })
+        .selectOption('unresolved')
       await page.getByRole('button', { name: 'Reveal CT comparison' }).click()
       await page.getByRole('button', { name: 'Review the relationship' }).click()
       await page.getByRole('button', { name: 'Trace another airway' }).click()
@@ -186,6 +203,9 @@ test('named RB5 checkpoints label the correct CT lumen after submission, includi
   await markTrace(page, 'middle-lobe-caudal')
   await page.getByRole('button', { name: 'Record trace' }).click()
   await page.getByRole('combobox', { name: 'Airway course' }).selectOption('caudal')
+  await page
+    .getByRole('combobox', { name: 'Airway–nodule relationship' })
+    .selectOption('unresolved')
   await page.getByRole('button', { name: 'Reveal CT comparison' }).click()
   const reference = page.getByLabel('Reference: Right medial bronchus, subsegment b', {
     exact: true,
@@ -203,6 +223,9 @@ test('named RB5 checkpoints label the correct CT lumen after submission, includi
   await expect(page.locator('[data-ct-reference]')).toHaveCount(0)
   await markTrace(page, 'middle-lobe-cranial')
   await page.getByRole('combobox', { name: 'Airway course' }).selectOption('horizontal')
+  await page
+    .getByRole('combobox', { name: 'Airway–nodule relationship' })
+    .selectOption('unresolved')
   await page.getByRole('button', { name: 'Compare new trace' }).click()
   await expect(
     page
@@ -221,12 +244,12 @@ test('a missing native slice blocks marking and recovers without losing a record
   await page.getByRole('button', { name: 'Trace this airway' }).click()
   await markTrace(page, trace.id)
   const failedSlice = trace.checkpoints[2].slice + 1
-  await page.route(`**/native-v1/axial/${failedSlice}.png`, (route) =>
+  await page.route(`**${nativeImageUrl(failedSlice)}`, (route) =>
     route.fulfill({ status: 404, body: 'missing' }),
   )
   await page.getByRole('slider', { name: 'CT slice', exact: true }).fill(String(failedSlice))
   await expect(page.getByRole('button', { name: 'Retry slice' })).toBeVisible()
-  await page.unroute(`**/native-v1/axial/${failedSlice}.png`)
+  await page.unroute(`**${nativeImageUrl(failedSlice)}`)
   await page.getByRole('button', { name: 'Retry slice' }).click()
   await expect(page.getByRole('button', { name: 'Retry slice' })).toHaveCount(0)
   await page
@@ -341,4 +364,138 @@ test('WebGL context loss preserves the CT task and offers a surface retry', asyn
   await expect(page.getByRole('slider', { name: 'Real CT slice' })).toBeEnabled()
   await page.getByRole('button', { name: 'Reload 3D view' }).click()
   await expect(canvas).toBeVisible({ timeout: 30000 })
+})
+
+test('a selected segment uses a registered 3D nodule overlay and requires the distal relationship before debrief', async ({
+  page,
+}) => {
+  await page.goto(base + '/practice')
+  const selector = page.getByRole('combobox', { name: 'Target segment' })
+  await expect(selector.locator('option')).toHaveCount(11)
+  await selector.selectOption('left-upper-anterior')
+  await page.getByRole('button', { name: 'Start CT practice' }).click()
+  const trace = traceById('left-upper-anterior'),
+    target = targetForTrace(trace)
+  await expect(page.getByRole('heading', { name: 'Trace 1 of 1', exact: true })).toBeVisible()
+  await expect(page.getByText('Loading CT slice…', { exact: true })).toHaveCount(0)
+  await expect(page.locator('[data-ct-reference]')).toHaveCount(0)
+  const overlay = page.locator('[data-ct-nodule]')
+  await expect(overlay).toHaveAttribute('data-ct-nodule', target.id)
+  const originalUrl = await overlay.getAttribute('href')
+  await expect(page.getByRole('slider', { name: 'CT slice', exact: true })).toHaveValue(
+    String(target.slice),
+  )
+  await page.getByRole('button', { name: 'More cranial CT slice' }).click()
+  await expect(overlay).not.toHaveAttribute('href', originalUrl!)
+  await page.getByRole('button', { name: 'Show target', exact: true }).click()
+  await expect(overlay).toHaveAttribute('href', originalUrl!)
+  await page.getByRole('button', { name: 'Standard axial', exact: true }).click()
+  await expect(overlay.locator('..')).not.toHaveAttribute('transform', /rotate/)
+  await page.getByRole('button', { name: 'Book tracing view' }).click()
+  await expect(overlay.locator('..')).toHaveAttribute('transform', /rotate\(90\)/)
+  await page.getByText('Image details, orientation and controls', { exact: true }).click()
+  await page.getByRole('button', { name: 'View original CT without nodule' }).click()
+  await expect(overlay).toHaveCount(0)
+  await expect(
+    page.getByText('Original CT · simulated nodule hidden', { exact: true }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Restore simulated nodule' }).click()
+  await expect(overlay).toHaveAttribute('href', originalUrl!)
+  await page.getByText('Image details, orientation and controls', { exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Record CT interpretation' })).toBeDisabled()
+  await page.getByRole('button', { name: 'Expand CT', exact: true }).click()
+  await page.screenshot({ path: '/tmp/branch-tracing-target-ls3-expanded.png' })
+  await page.getByRole('button', { name: 'Close expanded CT' }).click()
+  await markTrace(page, trace.id, true)
+  await page.getByRole('combobox', { name: 'Airway course' }).selectOption('cranial')
+  await expect(page.getByRole('button', { name: 'Record CT interpretation' })).toBeDisabled()
+  await page
+    .getByRole('combobox', { name: 'Airway–nodule relationship' })
+    .selectOption('different-structure')
+  await page.getByRole('button', { name: 'Record CT interpretation' }).click()
+  await expect(page.locator('[data-ct-reference]')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Submit all CT interpretations' }).click()
+  await expect(page.getByText('Possible adjacent structure.', { exact: false })).toBeVisible()
+  await expect(
+    page.getByText(/Return to the parent junction and follow the air column again/),
+  ).toBeVisible()
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Export your CT worksheet' }).click()
+  const download = await downloadPromise
+  const stream = await download.createReadStream(),
+    chunks: Buffer[] = []
+  for await (const chunk of stream!) chunks.push(chunk)
+  const worksheet = JSON.parse(Buffer.concat(chunks).toString())
+  expect(worksheet.traces).toHaveLength(1)
+  expect(worksheet.traces[0].target).toMatchObject({
+    id: target.id,
+    segment: { code: 'LS3' },
+    simulated: true,
+  })
+  expect(worksheet.traces[0].interpretation.targetRelation).toBe('different-structure')
+})
+
+test('a failed nodule patch is disclosed and recovers while retaining the recorded airway marks', async ({
+  page,
+}) => {
+  const trace = traceById('middle-lobe-caudal'),
+    target = targetForTrace(trace)
+  await page.goto(base + '/practice')
+  await page.getByRole('combobox', { name: 'Target segment' }).selectOption(trace.id)
+  await page.getByRole('button', { name: 'Start CT practice' }).click()
+  await markTrace(page, trace.id)
+  await page.route(`**/targets-v1/patches/${target.id}/*.png`, (route) =>
+    route.fulfill({ status: 404, body: 'missing' }),
+  )
+  await page.getByRole('button', { name: 'Show target', exact: true }).click()
+  await expect(
+    page.getByText('The simulated nodule could not load.', { exact: false }),
+  ).toBeVisible()
+  await expect(page.locator('[data-ct-reference]')).toHaveCount(0)
+  await page.unroute(`**/targets-v1/patches/${target.id}/*.png`)
+  await page.getByRole('button', { name: 'Retry slice' }).click()
+  await expect(page.getByRole('button', { name: 'Retry slice' })).toHaveCount(0)
+  await page
+    .getByRole('group', { name: 'Airway checkpoints', exact: true })
+    .getByRole('button')
+    .nth(3)
+    .click()
+  await expect(page.getByLabel(/^Your mark 3 for /)).toBeVisible()
+})
+
+test('a phone learner can inspect the nodule, mark the airway and submit a chosen-segment interpretation', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto(base + '/practice')
+  await page.getByRole('combobox', { name: 'Target segment' }).selectOption('left-lingula')
+  await page.getByRole('button', { name: 'Start CT practice' }).click()
+  await expect(page.locator('[data-ct-nodule]')).toHaveAttribute(
+    'data-ct-nodule',
+    'l-inferior-lingula',
+  )
+  for (let i = 0; i < 3; i++) {
+    await page
+      .getByRole('group', { name: 'Airway checkpoints', exact: true })
+      .getByRole('button')
+      .nth(i + 1)
+      .click()
+    await expect(page.getByRole('button', { name: 'Lumen unresolved here' })).toBeEnabled()
+    const image = page.getByRole('group', { name: /^CT image\./ })
+    await image.focus()
+    await image.press('Enter')
+    await expect(page.getByLabel(new RegExp(`^Your mark ${i + 1} for `))).toBeVisible()
+  }
+  await page.getByRole('tab', { name: 'Steps', exact: true }).click()
+  await page.getByRole('combobox', { name: 'Airway course' }).selectOption('caudal')
+  await page
+    .getByRole('combobox', { name: 'Airway–nodule relationship' })
+    .selectOption('unresolved')
+  await page.getByRole('button', { name: 'Record CT interpretation' }).click()
+  await expect(page.locator('[data-ct-reference]')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Submit all CT interpretations' }).click()
+  await expect(page.getByRole('heading', { name: 'CT interpretation debrief' })).toBeVisible()
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth - innerWidth),
+  ).toBeLessThanOrEqual(1)
 })

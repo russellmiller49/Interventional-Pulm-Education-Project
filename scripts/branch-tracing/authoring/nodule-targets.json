@@ -1,0 +1,156 @@
+{
+  "schema": "branch-tracing-target-authoring/v1",
+  "source": "navigation_module/web/public/cases/default/case.json, noduleAsset lung_nodule_1",
+  "scale": 0.65,
+  "targets": [
+    {
+      "id": "r-apical-anterior",
+      "terminalEdgeId": 117,
+      "segment": {
+        "code": "RS1",
+        "name": "Right apical segment",
+        "bronchusCode": "RB1"
+      },
+      "approachCode": "RB1b"
+    },
+    {
+      "id": "r-apical-posterior",
+      "terminalEdgeId": 122,
+      "segment": {
+        "code": "RS1",
+        "name": "Right apical segment",
+        "bronchusCode": "RB1"
+      },
+      "approachCode": "RB1a"
+    },
+    {
+      "id": "r-middle-lateral",
+      "terminalEdgeId": 156,
+      "segment": {
+        "code": "RS4",
+        "name": "Right middle lobe lateral segment",
+        "bronchusCode": "RB4"
+      },
+      "approachCode": "RB4a"
+    },
+    {
+      "id": "r-middle-medial-a",
+      "terminalEdgeId": 243,
+      "segment": {
+        "code": "RS5",
+        "name": "Right middle lobe medial segment",
+        "bronchusCode": "RB5"
+      },
+      "approachCode": "RB5a"
+    },
+    {
+      "id": "r-middle-medial-b",
+      "terminalEdgeId": 249,
+      "segment": {
+        "code": "RS5",
+        "name": "Right middle lobe medial segment",
+        "bronchusCode": "RB5"
+      },
+      "approachCode": "RB5b"
+    },
+    {
+      "id": "r-anterior-upper",
+      "terminalEdgeId": 67,
+      "segment": {
+        "code": "RS3",
+        "name": "Right anterior segment",
+        "bronchusCode": "RB3"
+      },
+      "approachCode": "RB3a"
+    },
+    {
+      "id": "r-anterior-lower",
+      "terminalEdgeId": 131,
+      "segment": {
+        "code": "RS3",
+        "name": "Right anterior segment",
+        "bronchusCode": "RB3"
+      },
+      "approachCode": "RB3a"
+    },
+    {
+      "id": "l-apicoposterior",
+      "terminalEdgeId": 415,
+      "segment": {
+        "code": "LS1+2",
+        "name": "Left apicoposterior segment",
+        "bronchusCode": "LB1+2"
+      },
+      "approachCode": "LB1+2"
+    },
+    {
+      "id": "l-anterior",
+      "terminalEdgeId": 357,
+      "segment": {
+        "code": "LS3",
+        "name": "Left anterior segment",
+        "bronchusCode": "LB3"
+      },
+      "approachCode": "LB3"
+    },
+    {
+      "id": "l-inferior-lingula",
+      "terminalEdgeId": 353,
+      "segment": {
+        "code": "LS5",
+        "name": "Left inferior lingular segment",
+        "bronchusCode": "LB5"
+      },
+      "approachCode": "LB5"
+    },
+    {
+      "id": "l-superior",
+      "terminalEdgeId": 281,
+      "segment": {
+        "code": "LS6",
+        "name": "Left lower lobe superior segment",
+        "bronchusCode": "LB6"
+      },
+      "approachCode": "LB6"
+    },
+    {
+      "id": "r-anterior-basal",
+      "terminalEdgeId": 220,
+      "segment": {
+        "code": "RS8",
+        "name": "Right anterior basal segment",
+        "bronchusCode": "RB8"
+      },
+      "approachCode": "RB8"
+    },
+    {
+      "id": "l-lateral-basal",
+      "terminalEdgeId": 103,
+      "segment": {
+        "code": "LS9",
+        "name": "Left lateral basal segment",
+        "bronchusCode": "LB9"
+      },
+      "approachCode": "LB9"
+    }
+  ],
+  "traceTargets": {
+    "central-right": "r-middle-medial-b",
+    "central-left": "l-inferior-lingula",
+    "right-upper-entry": "r-apical-anterior",
+    "right-upper-apical": "r-apical-anterior",
+    "right-upper-distal": "r-apical-posterior",
+    "middle-lobe-entry": "r-middle-medial-a",
+    "middle-lobe-lateral": "r-middle-lateral",
+    "middle-lobe-caudal": "r-middle-medial-b",
+    "middle-lobe-cranial": "r-middle-medial-a",
+    "upper-oblique-lateral": "r-anterior-upper",
+    "upper-oblique-medial": "r-anterior-lower",
+    "left-upper-division": "l-apicoposterior",
+    "left-upper-anterior": "l-anterior",
+    "left-lingula": "l-inferior-lingula",
+    "left-lower-returning": "l-superior",
+    "right-lower-basal": "r-anterior-basal",
+    "left-lower-basal": "l-lateral-basal"
+  }
+}

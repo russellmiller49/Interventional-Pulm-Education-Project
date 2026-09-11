@@ -712,6 +712,32 @@
   white-space: nowrap;
   letter-spacing: 0.06em;
 }
+.targetBar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0.7rem 0.5rem;
+  padding: 0.45rem 0.55rem;
+  border-left: 2px solid #d8a7e1;
+  background: #292237;
+}
+.targetBar > div {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: #d9c9de;
+}
+.targetBar strong {
+  color: #f1d1f6;
+  font-size: 0.8rem;
+}
+.targetBar button {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  padding: 0.3rem 0.45rem;
+}
 .ctViewButtons {
   display: flex;
   flex-wrap: wrap;
@@ -1043,7 +1069,7 @@
   padding: 0.5rem max(1rem, calc((100vw - 1000px) / 2));
 }
 .nativeViewer:fullscreen .nativeImage {
-  max-width: min(100%, calc(100dvh - 430px));
+  max-width: min(100%, calc(100dvh - 495px));
 }
 .nativeViewer:fullscreen .ctLevels {
   padding-bottom: 0.3rem;

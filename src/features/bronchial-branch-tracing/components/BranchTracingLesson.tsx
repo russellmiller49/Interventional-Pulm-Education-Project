@@ -10,7 +10,7 @@ import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { StageBlock } from '@/features/learning-module/stage/StageBlock'
 import { BASE_PATH, LESSONS, SOURCE, lessonById, nextLesson } from '../content/lessons'
 import { COURSE_OPTIONS, type CtLesson } from '../content/ct-types'
-import { traceById, sliceZ } from '../geometry/native-ct'
+import { traceById, sliceZ, targetForTrace } from '../geometry/native-ct'
 import { DISPLAY_PRESETS } from '../geometry/coordinates'
 import {
   completedLessons,
@@ -26,7 +26,13 @@ import {
   type CtAction,
 } from '../engine/ct-session'
 import { NativeCtViewer } from './NativeCtViewer'
-import { CtAirwayGuide, CtCourseControl, CtTraceList } from './CtTraceControls'
+import {
+  CtAirwayGuide,
+  CtCourseControl,
+  CtTraceList,
+  CtTargetRelationControl,
+  CtTargetFeedback,
+} from './CtTraceControls'
 import { ModuleFrame } from './ModuleFrame'
 import { useDeviceProgress } from './useDeviceProgress'
 import styles from './branch-tracing.module.css'
@@ -68,6 +74,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
   const step = lesson.steps[s.step],
     transfer = s.step === 5
   const trace = s.step === 0 ? traceById(lesson.example) : transfer ? transferTrace : prediction
+  const target = targetForTrace(trace)
   const response = transfer ? s.transfer : s.prediction
   const revealed = s.step === 0 || Boolean(response)
   const marking = s.step === 1 || (transfer && !response)
@@ -76,7 +83,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
     s.step === 1
       ? !marksComplete(s.marks)
       : describing
-        ? !marksComplete(s.marks) || !s.course
+        ? !marksComplete(s.marks) || !s.course || !s.targetRelation
         : false
   const next = nextLesson([...completedLessons(readProgress()), lesson.id])
   function perform(action: CtAction) {
@@ -127,7 +134,9 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
       }
       contextStrip={
         <div className={styles.context}>
-          <span>{trace.region}</span>
+          <span>
+            Target: {target.segment.code} · {target.segment.name}
+          </span>
           <span>{DISPLAY_PRESETS[trace.preset]}</span>
           <span>One source CT · ungraded interpretation</span>
         </div>
@@ -139,7 +148,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
               kicker: s.complete ? 'Lesson completed' : `Step ${s.step + 1} of 6 · ${step.phase}`,
               heading: s.complete ? 'CT trace completed' : step.title,
               body: s.complete
-                ? 'You recorded two CT interpretations and compared their continuity. Completion records the work, not clinical competence.'
+                ? 'You recorded two routes toward simulated nodules and compared their CT continuity. Completion records the work, not clinical competence.'
                 : step.instruction,
               where: s.complete ? undefined : <LookInLine location={step.lookIn!} />,
               primary: s.complete
@@ -154,7 +163,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                     disabledReason:
                       s.step === 1
                         ? 'Record a lumen mark or unresolved continuation at all three airway checkpoints.'
-                        : 'Record three airway checkpoints and select the airway course.',
+                        : 'Record three airway checkpoints, the airway course and its relationship to the nodule.',
                   },
             }}
           >
@@ -170,10 +179,16 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
               />
             )}
             {describing && (
-              <CtCourseControl
-                value={s.course}
-                onChange={(value) => perform({ type: 'course', value })}
-              />
+              <>
+                <CtCourseControl
+                  value={s.course}
+                  onChange={(value) => perform({ type: 'course', value })}
+                />
+                <CtTargetRelationControl
+                  value={s.targetRelation}
+                  onChange={(value) => perform({ type: 'target-relation', value })}
+                />
+              </>
             )}
             {response && (
               <div className={styles.feedback} role="status">
@@ -183,6 +198,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                   {response.marks.filter((m) => m.pixel === null).length} checkpoints marked
                   unresolved.
                 </p>
+                <CtTargetFeedback value={response.targetRelation} />
                 <p>
                   Compare the image evidence before accepting either trace. No clinical accuracy
                   score is assigned.
@@ -235,6 +251,13 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
               <StageBlock kind="question" heading="Clinical purpose" visibility="shown">
                 <h2>Clinical purpose</h2>
                 <p>{lesson.objective}</p>
+                <p>
+                  Plan an airway approach to the simulated nodule in the{' '}
+                  <strong>
+                    {target.segment.name.toLowerCase()} ({target.segment.code})
+                  </strong>
+                  .
+                </p>
                 <p className={styles.small}>Prerequisite: {lesson.prerequisite}</p>
               </StageBlock>
               <StageBlock kind="pattern" heading="Read the course" visibility="shown">
@@ -249,6 +272,11 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
               <StageBlock kind="signals" heading="Worked CT example" visibility="shown">
                 <h2>Worked CT example</h2>
                 <p>{lesson.worked}</p>
+                <p>
+                  Use <strong>Show target</strong> to inspect the nodule, then Start to follow the
+                  parent airway. Trace the named bronchi toward the target and inspect the interval
+                  beyond the last visible lumen.
+                </p>
                 <p className={styles.small}>
                   The gold crosses identify the source-derived trace in this worked example. Your
                   next trace begins without those crosses.
@@ -260,6 +288,12 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
               <StageBlock kind="question" heading="Start from the parent" visibility="shown">
                 <h2>{transfer ? 'Another airway to trace' : 'Start from the parent'}</h2>
                 <p>
+                  <strong>
+                    Destination: {target.segment.name} ({target.segment.code}).
+                  </strong>{' '}
+                  Inspect the simulated nodule with Show target before tracing from Start.
+                </p>
+                <p>
                   {transfer
                     ? lesson.transferPrompt
                     : `Use Start to identify the ${trace.anchor.airway.name.toLowerCase()}, then follow the named airway checkpoints.`}
@@ -267,6 +301,11 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 <p>
                   Browse the slices between checkpoints. Place your marks on the visible air column,
                   or record that the continuation is unresolved.
+                </p>
+                <p>
+                  At the distal checkpoint, scroll toward the nodule. Decide whether you can follow
+                  the air column toward it, whether the connection remains unresolved, or whether
+                  you may have followed an adjacent structure.
                 </p>
               </StageBlock>
               {s.step === 3 || s.step === 4 || (transfer && response) ? (
@@ -327,19 +366,25 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                   : 'Open exterior / virtual airway comparison'}
               </button>
               {comparison3d && (
-                <ClinicalAirwayView
-                  position={trace.scopePositionLps}
-                  direction={trace.scopeDirectionLps}
-                  roll={0}
-                  slice={Math.round(
-                    (sliceZ(trace.checkpoints[s.active].slice) + 368.5) / 1.2421875,
-                  )}
-                />
+                <>
+                  <p className={styles.small}>
+                    Airway anatomy comparison. The simulated nodule is shown in the CT stack above.
+                  </p>
+                  <ClinicalAirwayView
+                    position={trace.scopePositionLps}
+                    direction={trace.scopeDirectionLps}
+                    roll={0}
+                    slice={Math.round(
+                      (sliceZ(trace.checkpoints[s.active].slice) + 368.5) / 1.2421875,
+                    )}
+                  />
+                </>
               )}
             </div>
           ) : (
             <p className={styles.comparisonLock}>
-              CT and airway comparisons become available after you record the trace and its course.
+              CT and airway comparisons become available after you record the trace, its course and
+              its relationship to the nodule.
             </p>
           )}
         </div>

@@ -1,5 +1,5 @@
-import manifest from '../../../../public/branch-tracing/native-v1/manifest.json'
-import type { CtTrace } from '../content/ct-types'
+import manifest from '../../../../public/branch-tracing/targets-v1/manifest.json'
+import type { CtTrace, CtNoduleTarget } from '../content/ct-types'
 import { displayPoint, undisplayPoint, type DisplayPreset } from './coordinates'
 
 export const NATIVE_CT_BASE = '/branch-tracing/native-v1'
@@ -10,6 +10,13 @@ export const NATIVE_CT = {
   window: [-1000, 400],
 } as const
 export const CT_TRACES = manifest.traces as unknown as CtTrace[]
+export const CT_TARGETS = manifest.targets as unknown as CtNoduleTarget[]
+export const TARGET_CT_BASE = '/branch-tracing/targets-v1'
+export function targetForTrace(trace: CtTrace): CtNoduleTarget {
+  const target = CT_TARGETS.find((t) => t.id === trace.targetId)
+  if (!target) throw new Error(`Missing target for ${trace.id}`)
+  return target
+}
 export function traceById(id: string): CtTrace {
   const trace = CT_TRACES.find((t) => t.id === id)
   if (!trace) throw new Error(`Unknown CT trace: ${id}`)
@@ -17,7 +24,9 @@ export function traceById(id: string): CtTrace {
 }
 export const sliceZ = (slice: number) => NATIVE_CT.origin[2] + slice * NATIVE_CT.spacing[2]
 export const nativeImageUrl = (slice: number) =>
-  `${NATIVE_CT_BASE}/axial/${String(slice).padStart(3, '0')}.png`
+  slice >= 240 && slice <= 475
+    ? `${NATIVE_CT_BASE}/axial/${String(slice).padStart(3, '0')}.png`
+    : `${TARGET_CT_BASE}/axial/${slice}.png`
 export function pixelToDisplay(
   pixel: readonly number[],
   center: readonly number[],

@@ -1,7 +1,11 @@
 'use client'
 
-import type { Course, CtMark, CtTrace } from '../content/ct-types'
-import { COURSE_OPTIONS } from '../content/ct-types'
+import type { Course, CtMark, CtTrace, TargetRelation } from '../content/ct-types'
+import {
+  COURSE_OPTIONS,
+  TARGET_RELATION_OPTIONS,
+  TARGET_RELATION_FEEDBACK,
+} from '../content/ct-types'
 import styles from './branch-tracing.module.css'
 
 export function CtTraceList({
@@ -98,5 +102,44 @@ export function CtCourseControl({
         ))}
       </select>
     </label>
+  )
+}
+
+export function CtTargetRelationControl({
+  value,
+  onChange,
+}: {
+  value: TargetRelation | ''
+  onChange: (value: TargetRelation) => void
+}) {
+  return (
+    <label className={styles.courseChoice}>
+      <strong>How does the airway relate to the nodule?</strong>
+      <select
+        aria-label="Airway–nodule relationship"
+        value={value}
+        onChange={(e) => onChange(e.target.value as TargetRelation)}
+      >
+        <option value="" disabled>
+          Choose what the CT supports
+        </option>
+        {Object.entries(TARGET_RELATION_OPTIONS).map(([key, label]) => (
+          <option key={key} value={key}>
+            {label}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
+export function CtTargetFeedback({ value }: { value: TargetRelation }) {
+  return (
+    <>
+      <p>
+        <strong>Your airway–nodule interpretation:</strong> {TARGET_RELATION_OPTIONS[value]}.
+      </p>
+      <p>{TARGET_RELATION_FEEDBACK[value]}</p>
+    </>
   )
 }

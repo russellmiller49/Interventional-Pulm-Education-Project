@@ -1,22 +1,34 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import Image from 'next/image'
 import { useState } from 'react'
 import { StageLayout } from '@/features/learning-module/stage/StageLayout'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { NowCard } from '@/features/learning-module/stage/NowCard'
 import { LookInLine } from '@/features/learning-module/stage/LookInLine'
-import { BASE_PATH, SOURCE } from '../content/lessons'
-import { ASSESS_TRACES, PRACTICE_TRACES } from '../content/practice'
-import { COURSE_OPTIONS, type Course, type CtMark, type CtResponse } from '../content/ct-types'
-import { traceById } from '../geometry/native-ct'
+import { BASE_PATH, SOURCE, VERSION } from '../content/lessons'
+import { ASSESS_TRACES, PRACTICE_TRACES, SEGMENT_PRACTICE_TRACES } from '../content/practice'
+import {
+  COURSE_OPTIONS,
+  type Course,
+  type CtMark,
+  type CtResponse,
+  type TargetRelation,
+} from '../content/ct-types'
+import { traceById, targetForTrace } from '../geometry/native-ct'
 import { DISPLAY_PRESETS } from '../geometry/coordinates'
 import { marksComplete, validCtMark } from '../engine/ct-session'
 import { saveCtAttempt } from '../engine/progress'
 import { ModuleFrame } from './ModuleFrame'
 import { NativeCtViewer } from './NativeCtViewer'
-import { CtAirwayGuide, CtCourseControl, CtTraceList } from './CtTraceControls'
+import {
+  CtAirwayGuide,
+  CtCourseControl,
+  CtTraceList,
+  CtTargetRelationControl,
+  CtTargetFeedback,
+} from './CtTraceControls'
+import { TargetCtPreview } from './TargetCtPreview'
 import styles from './branch-tracing.module.css'
 
 const RealCtExplorer = dynamic(() => import('./RealCtExplorer').then((m) => m.RealCtExplorer), {
@@ -26,10 +38,13 @@ const RealCtExplorer = dynamic(() => import('./RealCtExplorer').then((m) => m.Re
 export function BranchTracingPractice({ mode }: { mode: 'practice' | 'assess' }) {
   const [started, setStarted] = useState(false),
     [explorer, setExplorer] = useState(false)
+  const [selection, setSelection] = useState('mixed')
+  const ids =
+    mode === 'assess' ? ASSESS_TRACES : selection === 'mixed' ? PRACTICE_TRACES : [selection]
   if (started)
     return (
       <ModuleFrame section={mode} activity>
-        <CtPracticeSession mode={mode} onExit={() => setStarted(false)} />
+        <CtPracticeSession mode={mode} ids={ids} onExit={() => setStarted(false)} />
       </ModuleFrame>
     )
   return (
@@ -41,46 +56,57 @@ export function BranchTracingPractice({ mode }: { mode: 'practice' | 'assess' })
         </div>
         <h1 className={styles.pageTitle}>
           {mode === 'practice'
-            ? 'Trace the airway yourself'
+            ? 'Trace to a nodule in a named segment'
             : 'Record an independent CT interpretation'}
         </h1>
         <p className={styles.subtitle}>
-          Four real CT traces. Your marks first; comparison after submission.
+          {mode === 'practice'
+            ? 'Choose a segment or practice a mixed set of four targets.'
+            : 'Plan four airway approaches to simulated nodules.'}{' '}
+          Your marks first; comparison after submission.
         </p>
         <div className={styles.introGrid}>
           <section>
-            <h2>Follow the air column</h2>
+            <h2>Follow the airway toward the target</h2>
             <p>
-              Start in the identified parent airway. At each named airway checkpoint, mark the lumen
-              that continues from it. Use neighboring slices, the book-oriented view and the
-              standard axial view to check the connection.
+              Inspect the target nodule, then start in the identified parent airway. At each named
+              checkpoint, mark the lumen that continues from it. Use neighboring slices, the
+              book-oriented view and the standard axial view to check the connection.
             </p>
             <p>
-              Record the patient-space course after each trace. You may revisit your interpretations
-              before submitting all four.
+              Record the patient-space course and whether the distal airway can be followed toward
+              the nodule. You may revisit your interpretations before submitting the set.
             </p>
+            {mode === 'practice' && (
+              <label className={styles.courseChoice}>
+                <strong>Target segment</strong>
+                <select
+                  aria-label="Target segment"
+                  value={selection}
+                  onChange={(e) => setSelection(e.target.value)}
+                >
+                  <option value="mixed">Mixed set · four targets</option>
+                  {SEGMENT_PRACTICE_TRACES.map((id) => {
+                    const target = targetForTrace(traceById(id))
+                    return (
+                      <option key={id} value={id}>
+                        {target.segment.code} · {target.segment.name}
+                      </option>
+                    )
+                  })}
+                </select>
+              </label>
+            )}
             <button className={styles.startButton} onClick={() => setStarted(true)}>
               {mode === 'practice' ? 'Start CT practice' : 'Start CT interpretation'}
             </button>
           </section>
-          <section className={styles.ctPreviewPanel}>
-            <Image
-              unoptimized
-              src="/branch-tracing/native-v1/axial/387.png"
-              alt="Actual axial CT used for the tracing exercises"
-              width={512}
-              height={512}
-            />
-            <p>
-              Native CT from the same source as the airway model. The appropriate reflection or 90°
-              rotation is applied to each trace.
-            </p>
-          </section>
+          <TargetCtPreview traceId={ids[0]} />
         </div>
         <p className={styles.notice}>
-          These traces come from one teaching CT. Source-derived comparisons support self-review;
-          clinical case labels and camera checkpoints are awaiting faculty review. No automated
-          clinical grade or pass threshold is assigned.
+          These authored nodule targets share one teaching CT. Source-derived comparisons support
+          self-review; clinical case labels and camera checkpoints are awaiting faculty review. No
+          automated clinical grade or pass threshold is assigned.
         </p>
         {mode === 'practice' && (
           <section className={styles.source}>
@@ -100,54 +126,76 @@ export function BranchTracingPractice({ mode }: { mode: 'practice' | 'assess' })
   )
 }
 
-function CtPracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onExit: () => void }) {
-  const ids = mode === 'practice' ? PRACTICE_TRACES : ASSESS_TRACES
+function CtPracticeSession({
+  mode,
+  ids,
+  onExit,
+}: {
+  mode: 'practice' | 'assess'
+  ids: string[]
+  onExit: () => void
+}) {
   const [index, setIndex] = useState(0),
     [active, setActive] = useState(0)
   const [levelRequest, setLevelRequest] = useState(0)
   const [marks, setMarks] = useState<(CtMark | null)[]>([null, null, null])
   const [course, setCourse] = useState<Course | ''>('')
+  const [targetRelation, setTargetRelation] = useState<TargetRelation | ''>('')
   const [hints, setHints] = useState(0)
   const [responses, setResponses] = useState<(CtResponse | null)[]>(ids.map(() => null))
   const [submitted, setSubmitted] = useState(false),
     [saveFailed, setSaveFailed] = useState(false)
   const trace = traceById(ids[index])
-  const ready = marksComplete(marks) && Boolean(course)
+  const target = targetForTrace(trace)
+  const ready = marksComplete(marks) && Boolean(course) && Boolean(targetRelation)
   const recorded = responses.every(Boolean)
-  const dirty = JSON.stringify(responses[index]) !== JSON.stringify({ marks, course, hints })
+  const dirty =
+    JSON.stringify(responses[index]) !== JSON.stringify({ marks, course, hints, targetRelation })
   function open(i: number) {
     const response = responses[i]
     setIndex(i)
     setActive(0)
     setMarks(response?.marks ?? [null, null, null])
     setCourse(response?.course ?? '')
+    setTargetRelation(response?.targetRelation ?? '')
     setHints(response?.hints ?? 0)
   }
   function record() {
     if (!ready) return
-    const response: CtResponse = { marks: marks as CtMark[], course: course as Course, hints }
+    const response: CtResponse = {
+      marks: marks as CtMark[],
+      course: course as Course,
+      hints,
+      targetRelation: targetRelation as TargetRelation,
+    }
     const next = responses.map((r, i) => (i === index ? response : r))
     setResponses(next)
-    if (!saveCtAttempt(`${mode}.item-${index + 1}`, hints)) setSaveFailed(true)
+    if (!saveCtAttempt(`${mode}.${trace.id}`, hints)) setSaveFailed(true)
     if (index < ids.length - 1) {
       const nextResponse = next[index + 1]
       setIndex(index + 1)
       setActive(0)
       setMarks(nextResponse?.marks ?? [null, null, null])
       setCourse(nextResponse?.course ?? '')
+      setTargetRelation(nextResponse?.targetRelation ?? '')
       setHints(nextResponse?.hints ?? 0)
     }
   }
   function exportWorksheet() {
     const content = {
       module: 'bronchial-branch-tracing',
-      version: 'c2-ct1-r2',
+      version: VERSION,
       mode,
       sourceCaseCount: 1,
-      assessment: 'Ungraded CT interpretation',
+      assessment: 'Ungraded CT route planning toward simulated nodules',
       nomenclatureVersion: 'nomenclature-v1',
       traces: ids.map((id, i) => ({
         id,
+        target: {
+          id: targetForTrace(traceById(id)).id,
+          segment: targetForTrace(traceById(id)).segment,
+          simulated: true,
+        },
         airwayPath: traceById(id).airwayPath,
         checkpoints: traceById(id).checkpoints.map(({ id, airway, landmark }) => ({
           id,
@@ -171,8 +219,9 @@ function CtPracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onEx
       <div className={styles.debrief}>
         <h1>CT interpretation debrief</h1>
         <p>
-          You recorded four real CT traces. Compare each marked lumen with the source-derived path
-          at that level, then inspect the intervening slices.
+          You recorded {ids.length} {ids.length === 1 ? 'route' : 'routes'} toward{' '}
+          {ids.length === 1 ? 'a simulated nodule' : 'simulated nodules'}. Compare each marked lumen
+          with the source-derived path, then inspect the distal airway–nodule relationship.
         </p>
         <p className={styles.small}>
           ○ Your trace · ＋ Source-derived comparison. These are interpretations within one CT; no
@@ -192,9 +241,10 @@ function CtPracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onEx
           <section key={id} className={styles.ctDebriefRow}>
             <div>
               <h2>
-                Trace {i + 1} · {traceById(id).airwayPath.at(-1)?.name}
+                Target {i + 1} · {targetForTrace(traceById(id)).segment.code}
               </h2>
               <p>{COURSE_OPTIONS[responses[i]!.course]}</p>
+              <CtTargetFeedback value={responses[i]!.targetRelation} />
               <p>
                 {responses[i]!.marks.filter((m) => m.pixel === null).length} checkpoints marked
                 unresolved.{' '}
@@ -229,7 +279,7 @@ function CtPracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onEx
         <SectionHeader
           kicker={mode === 'practice' ? 'Practice · Real CT' : 'Assess · CT worksheet'}
           title={`Trace ${index + 1} of ${ids.length}`}
-          meta={[trace.region, 'Feedback after submission']}
+          meta={[`Target: ${target.segment.code}`, 'Feedback after submission']}
           onRestart={onExit}
           restartLabel="Exit this set"
           saveAndExitHref={BASE_PATH}
@@ -242,7 +292,9 @@ function CtPracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onEx
       }
       contextStrip={
         <div className={styles.context}>
-          <span>{DISPLAY_PRESETS[trace.preset]}</span>
+          <span>
+            {target.segment.name} · {DISPLAY_PRESETS[trace.preset]}
+          </span>
           <span>Native 0.5 mm axial slices</span>
           <span>One source CT · ungraded</span>
         </div>
@@ -253,7 +305,7 @@ function CtPracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onEx
             model={{
               kicker: `Interpretation ${index + 1}`,
               heading: 'Follow and record the airway',
-              body: 'Place a lumen mark, or record unresolved continuity, at each named airway checkpoint. Then describe its course.',
+              body: `Plan an airway approach to the nodule in ${target.segment.code}. Record three airway checkpoints, the course and the airway–nodule relationship.`,
               where: <LookInLine location={{ pane: 'simulator', landmark: 'CT tracing stack' }} />,
               primary: {
                 label:
@@ -263,7 +315,8 @@ function CtPracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onEx
                   else record()
                 },
                 disabled: !ready,
-                disabledReason: 'Record all three airway checkpoints and select the airway course.',
+                disabledReason:
+                  'Record all three checkpoints, the airway course and its relationship to the nodule.',
               },
             }}
           >
@@ -277,6 +330,7 @@ function CtPracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onEx
               }}
             />
             <CtCourseControl value={course} onChange={setCourse} />
+            <CtTargetRelationControl value={targetRelation} onChange={setTargetRelation} />
             {mode === 'practice' && (
               <div className={styles.hints}>
                 <button disabled={hints > 0} onClick={() => setHints(1)}>
@@ -310,9 +364,21 @@ function CtPracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onEx
         <div className={styles.teaching}>
           <h2>Trace without the reference</h2>
           <p>
+            Use <strong>Show target</strong> to inspect the simulated nodule in the{' '}
+            <strong>
+              {target.segment.name.toLowerCase()} ({target.segment.code})
+            </strong>
+            .
+          </p>
+          <p>
             Use Start to find the parent airway, then follow the air column through the stack. At
             the three named airway checkpoints, record the lumen you believe continues from that
             parent.
+          </p>
+          <p>
+            After the distal checkpoint, inspect adjacent slices toward the nodule. Record what the
+            visible air column supports. Proximity alone does not establish a continuous airway
+            approach.
           </p>
           <p>
             Book tracing view applies the convention for this region. Standard axial changes only

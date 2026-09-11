@@ -1,11 +1,12 @@
-import type { Course, CtMark, CtResponse, CtTrace } from '../content/ct-types'
-import { COURSE_OPTIONS } from '../content/ct-types'
+import type { Course, CtMark, CtResponse, CtTrace, TargetRelation } from '../content/ct-types'
+import { COURSE_OPTIONS, TARGET_RELATION_OPTIONS } from '../content/ct-types'
 
 export interface CtSession {
   step: number
   active: number
   marks: (CtMark | null)[]
   course: Course | ''
+  targetRelation: TargetRelation | ''
   hints: number
   prediction: CtResponse | null
   transfer: CtResponse | null
@@ -16,6 +17,7 @@ export const emptyCtSession = (): CtSession => ({
   active: 0,
   marks: [null, null, null],
   course: '',
+  targetRelation: '',
   hints: 0,
   prediction: null,
   transfer: null,
@@ -25,6 +27,7 @@ export type CtAction =
   | { type: 'mark'; index: number; mark: CtMark }
   | { type: 'active'; index: number }
   | { type: 'course'; value: Course }
+  | { type: 'target-relation'; value: TargetRelation }
   | { type: 'hint' }
   | { type: 'advance' }
   | { type: 'restart' }
@@ -60,19 +63,46 @@ export function ctSessionReducer(prediction: CtTrace, transfer: CtTrace) {
     )
       return { ...s, course: action.value }
     if (action.type === 'hint' && canMark) return { ...s, hints: Math.min(1, s.hints + 1) }
+    if (
+      action.type === 'target-relation' &&
+      (s.step === 2 || (s.step === 5 && !s.transfer)) &&
+      action.value in TARGET_RELATION_OPTIONS
+    )
+      return { ...s, targetRelation: action.value }
     if (action.type !== 'advance') return s
     if (s.step === 0 || s.step === 3) return { ...s, step: s.step + 1 }
     if (s.step === 1 && marksComplete(s.marks)) return { ...s, step: 2 }
-    if (s.step === 2 && marksComplete(s.marks) && s.course)
+    if (s.step === 2 && marksComplete(s.marks) && s.course && s.targetRelation)
       return {
         ...s,
         step: 3,
-        prediction: { marks: s.marks as CtMark[], course: s.course, hints: s.hints },
+        prediction: {
+          marks: s.marks as CtMark[],
+          course: s.course,
+          hints: s.hints,
+          targetRelation: s.targetRelation,
+        },
       }
     if (s.step === 4)
-      return { ...s, step: 5, active: 0, marks: [null, null, null], course: '', hints: 0 }
-    if (s.step === 5 && !s.transfer && marksComplete(s.marks) && s.course)
-      return { ...s, transfer: { marks: s.marks as CtMark[], course: s.course, hints: s.hints } }
+      return {
+        ...s,
+        step: 5,
+        active: 0,
+        marks: [null, null, null],
+        course: '',
+        targetRelation: '',
+        hints: 0,
+      }
+    if (s.step === 5 && !s.transfer && marksComplete(s.marks) && s.course && s.targetRelation)
+      return {
+        ...s,
+        transfer: {
+          marks: s.marks as CtMark[],
+          course: s.course,
+          hints: s.hints,
+          targetRelation: s.targetRelation,
+        },
+      }
     if (s.step === 5 && s.transfer) return { ...s, complete: true }
     return s
   }
