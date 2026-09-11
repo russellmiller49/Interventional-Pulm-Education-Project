@@ -165,3 +165,186 @@ Git: a new worktree from the local branch `claude/intro-to-bronch-9-10` at or af
 adds this brief, on branch `codex/bronch-foundations-scope`; small commits per step; PRs against
 `claude/intro-to-bronch-9-10` once that branch is on origin (until then, report your commits to the
 owner). Never commit to `main`; stage specific reviewed paths only.
+
+---
+
+# Part 2 of 2 — the 3D scope pane (`components/scope/**`)
+
+Added 2026-09-11 after the seam landed on `claude/intro-to-bronch-9-10`. Part 1's assets are merged
+into that branch (`dbe42220`); the larynx junction remains an owner decision (see
+`scope-assets.md`). Start part 2 from the branch head that carries this section.
+
+## Implementation note (read this first)
+
+- **The seam is in.** `components/scope/types.ts` is the contract (read every comment again: it
+  changed since the plan — the pane sends **commands**, `OstiumPin.inView` is the round field
+  inscribed in the 4:3 frame, and there are seven modes, not ten). `ScopePane.tsx` routes a view
+  to your `ScopeScenePane` when `SCOPE_MODES_READY` has its mode and to `ScopeFallback` otherwise.
+  `ScopeScenePane.tsx` is a stub that renders the fallback; **you replace its body and grow
+  `SCOPE_MODES_READY` one mode at a time**. Keep its two re-exports (`resolveScopeInputs`,
+  `scopeViewErrors` from `engine/scope/`).
+- **`ScopeFallback.tsx` is the reference implementation of the DOM contract.** It is DOM-only and
+  honours every prop and data attribute; the flow tests mount it (through `ScopeTestDouble`) and
+  never mount your scene. Read it before writing a line: the ids the dock's controls carry
+  (`scopeControlId(key)`, plus `accessory-move` and `declare-<label>`), the readouts
+  (`scopeReadouts`), the inspection record (`inspectionRecords`, `ledgerStatus`,
+  `declarationAllowed`, `LEDGER_CAVEAT`), the goals list, the boundary line, the caption strip and
+  the tree answer fieldset. Your scene may reuse `LocationCaptionStrip`, `TreeAnswerFieldset` and
+  `TreeMap` as they are; it must produce the same attributes where it draws its own.
+- **The host reduces; you render.** Every learner action is `onCommand(command, inputMode)`. The
+  scene never integrates position, never re-rolls, never mutates `state`. The camera is
+  `scopeOpticalFrame(state.pose)` and nothing else; a unit test you own asserts that every
+  projected pin equals `projectOptical(ostium.pointLps, frame, OPTICAL_ASPECT, OPTICAL_FOV_DEG)`
+  (both constants in `engine/scope/scopeOstia.ts`).
+- **Simulated time is a command.** The host holds no clock. While a script animates (the larynx
+  breath cycle, the D10 hold), the pane sends `{ type: 'tick', seconds }` at wall-clock rate from
+  `useScopePlayback`; with reduced motion, or whenever the view lists `step`, a visible **Step**
+  control sends one second per press. Never tick while `controlsEnabled` is false.
+- **Reuse the primitives, do not fork them.** `src/components/airway-anatomy/scope-primitives/`
+  now exports `AirwaySurface` (pass `dracoDecoderPath="/fluoroview/draco/"` for the teaching
+  lumen), `ScopeCamera`/`updateScopeCamera` (pass `fovDeg={OPTICAL_FOV_DEG}`),
+  `BronchLabelOverlay`/`projectToViewport` (use `renderPin` to draw a pin as
+  `<label htmlFor={treeChoiceInputId(...)}>` or as an align button), `ScopeBody`/`Polyline`,
+  `SteeringRing`/`HoldButton`/`useHoldRepeat`, `useElementSize`, `AdaptiveViewportQuality`. The
+  pure ostia helpers are in `src/lib/airway-anatomy/ostia.ts`. Changing any of them changes the
+  admin module's captures; if you need a change, ask.
+- **Where to see it.** `npm run dev:claude` (:3120), then
+  `/en/bronchoscopy-foundations/learn?section=five-controls` (bench), `branch-entry` (guided walk),
+  `view-loss` (free drive + red-out), `larynx-and-entry`, `scope-in-a-tube`,
+  `protected-accessories`. No sign-in: the route is public-unlisted. Until a mode is in
+  `SCOPE_MODES_READY` you will see the fallback there.
+
+### B1. What you are building and why
+
+The simulator pane of every Learn section: the airway tree with one explicit normal profile,
+driven by five distinguishable controls and read back through an inspection record that never
+confuses passing a boundary with inspecting a wall. You own `components/scope/**` **except**
+`types.ts`, `ScopePane.tsx`, `ScopeFallback.tsx`, `TreeMap.tsx`, `TreeAnswerFieldset.tsx`,
+`LocationCaptionStrip.tsx`, `scope-fallback.module.css`; the Playwright scene harness under
+`scripts/bronchoscopy-foundations/` (`scope-harness.html` + a spec, in the shape of
+`scripts/peripheral-imaging/suite-harness.html`); your own `__tests__/{sceneDom,scenePins}.test.tsx`;
+and `docs/bronchoscopy-foundations/scope-pane.md`. Never edit `content/**`, `engine/**`,
+`components/stage/**`, `test-support/**`, `learning-module/stage/**`,
+`src/components/airway-anatomy/**`, `src/lib/airway-anatomy/**`, `site-auth/**`, routes or
+`next.config.mjs`.
+
+### B2. The contract
+
+`components/scope/types.ts`, verbatim. Additive fields are fine; tell Claude before relying on
+one. The DOM contract (`SCOPE_DOM`) is what the flow tests, the e2e suite and the host read:
+
+- `[data-scope-scene][data-scope-mode][data-scope-state=ready|failed|fallback][data-anatomy-profile]`
+- the optical canvas host carries `data-three-state="ready"` once it has drawn
+- `[data-view-signal=clear|red-out|contaminated|dark]` on the optical view — **name what is seen,
+  never why** (the fallback's `VIEW_SEEN_WORDS`): a section's deny patterns forbid the cause
+- `[data-airway-map] [data-airway-pin=<label>]`, the current airway `aria-current="location"`;
+  pins show the short label and carry no full-name `title` before commit (a full name leaks)
+- `[data-tree-answer]` fieldset with `treeChoiceInputId` inputs; rows `[data-off-tree]`;
+  `[data-tree-outcome]` after commit
+- `[data-readouts] [data-readout=<metricId>]` with `SCOPE_METRIC_LABELS` and `formatScopeMetric`
+- `[data-inspection-ledger] [data-ledger-row=<label>][data-ledger-status=<status>]`
+- `[data-input-mode]`, `[data-assists-used]`; every control `id={scopeControlId(key)}`;
+  `[data-model-boundary]` printing `view.boundary` verbatim (the section authors it; you do not)
+- `data-scope-controls` on the dock, disabled when `controlsEnabled` is false, with
+  `lockedReason`/`pausedReason` printed in a `role="status"`
+- `data-spotlight="true"` on the control whose key equals `spotlightKey`
+
+### B3. Hard rules
+
+- Every frame derives from the engine (camera = `scopeOpticalFrame(state.pose)`); the scene never
+  integrates position or re-rolls; pins are projected with the engine's aspect and field of view.
+- No new dependencies, no CDN; the Draco decoder is `/fluoroview/draco/`.
+- One WebGL context per pane: observer, bench, tube-cutaway and larynx views are drei `<View>`s in
+  one `<Canvas>`; the airway map stays SVG (`TreeMap`). `frameloop="demand"`; `"always"` only
+  while a drive or script animates; `"never"` when offscreen. `dpr` `[1, 1.5]`.
+- Reduced motion → a visible Step button and no autonomous animation.
+- Assists reach the engine only as commands (`align-to-branch`, `recenter`, `teleport-to-start`,
+  `branch-labels`); the scene never applies one itself.
+- Pins that answer are `<label htmlFor>` portaled outside the `role="img"` host; a `role="img"`
+  hides its children from assistive technology, so use `role="group"` where live controls sit
+  inside the field (the fallback does).
+- `WebGLContextGuard` remount on context loss; `data-scope-state="failed"` with a message when the
+  lumen cannot load; jest has no WebGL — your RTL tests mock the canvas.
+- Every learner-facing string passes the copy gate (`content/learnerCopy.ts`): no score, points,
+  grade, percent, %, pass, fail, mastery, exam, test, quiz, assessment, certification, competent,
+  correct, incorrect, wrong, route, seed, engine, query, reducer. Say "decision held / did not
+  hold", "check", "the airway path".
+
+### B4. Files (under `components/scope/`)
+
+`ScopeScenePane.tsx` (grow `SCOPE_MODES_READY`; keep the re-exports) · `ScopeScene.tsx`
+(`next/dynamic`, `ssr: false`, the one `<Canvas>`) · `ScopeOpticalView.tsx` (`AirwaySurface`
+`mode="bronch"` on the teaching lumen, `ScopeCamera`, `BronchLabelOverlay` with `renderPin` for
+the in-view `state.ostia` pins — only those with `inView`, only labelled when
+`state.inputs.branchLabels` — a `LensStateOverlay` for the vignette and aperture (EBUS `optics.ts`),
+the red-out tint from `state.signals.view`, the contamination decal from `state.script`) ·
+`ObserverView.tsx` (bench, tube cutaway, larynx sagittal cutaway, tree-in-3D for `idle`) ·
+`ScopeDock.tsx` + `useScopeKeyboard.ts` (the dock renders one control per key in `view.controls`
+with the contract ids; keys: W/S advance/withdraw by `state.inputs.stepMm`, A/D rotate ±5°, ↑/↓
+deflect ±5°, Space suction, R recenter, Home teleport-to-start, L labels, C capture, K
+acknowledge; every command tagged `'keyboard'`, pointer presses `'pointer'`, touch `'touch'`;
+author the map as data in `scopeKeyMap.ts` — `scope-primitives/keyMap.ts` is the admin module's
+and stays untouched) · `ScopeReadouts.tsx` (`scopeReadouts`) · `InspectionLedgerPanel.tsx`
+(`inspectionRecords`, `ledgerStatus`, `declarationAllowed`, `DECLARATION_MESSAGES`, `LEDGER_CAVEAT`)
+· `TubeModel.tsx` (from `devices.json`, along edge 0 from `TUBE_START_MM` to `TUBE_TIP_MM`; the
+scope's diameter is `state.inputs.scopeOdMm`) · `AccessoryTip.tsx` (`accessories.glb` nodes, +Z
+forward, origin at the distal-most point, offsets from `devices.json`: `at-tip` and `extended`;
+`in-channel` hidden) · `LarynxLumen.tsx` (`larynx-lumen.glb`; `adduct` morph weight 0 / 0.5 / 1 for
+`abducted` / `narrowing` / `adducted` from `state.inputs.cords`; the tip travels `larynx.json`'s
+path by `state.depthMm`; the wall shells are display only — never a collider) · `HandleModel.tsx`
+(optional) · pure `scopeSceneModel.ts` · `useScopePlayback.tsx` (Step, reduced motion, the tick
+sender, a drive-queue integrator ≤ 24 mm/s that turns a held advance into `advance` commands of
+`stepMm`) · `WebGLContextGuard.tsx`.
+
+### B5. Modes (`SCOPE_MODES`)
+
+`idle` (the scope at rest; the map and the caption; no controls) · `controls-isolated` (the bench:
+the tip outside the model; hold depth and rotate → the image rolls and the bending plane turns;
+hold rotation and deflect → one plane; then advance and withdraw; suction as an indicator) ·
+`guided-walk` (centerline-locked, the aim guard refuses an undecided fork; a wrong aim is refused,
+not corrected — the engine already does this; you draw where the tip is) · `free-drive` (the tip
+against the collider; red-out when the lens is on the wall; the same drills unaided) ·
+`larynx-entry` (oropharynx → epiglottis → folds → subglottis; the folds follow the scripted
+breath cycle; crossing emits `entered:TR` and hands off to the trachea) · `tube` (the procedural
+tube along edge 0 with the annulus readouts, labelled geometric) · `accessory` (a visible target
+and the accessory's protected and exposed states; the assistant-misreport script's speech is in
+`state.message`, already marked scripted).
+
+### B6. Assets (part 1, merged)
+
+`public/bronchoscopy-foundations/anatomy/manifest.json` inventories everything.
+`adult-teaching-combined-left-basal-v1/lumen.glb` (node `PatientLpsLumen`, LPS mm, identity,
+Draco; display = collision; the host builds the collider through `createLumenCollider` with the
+same geometry `loadAirwayStlGeometry(url, { dracoDecoderPath })` decodes — share that geometry,
+do not decode twice). `larynx/larynx-lumen.glb` + `larynx.json` (91 path points, exit at graph
+node 0; the unresolved 2.4 mm ring gap is an owner decision — draw it as authored; do not widen
+the source). `devices/devices.json`, `devices/accessories.glb` (six `ACC_*` nodes).
+
+### B7. What you do not author
+
+Boundary sentences (each view's `boundary`), the goals, the scripts' words (`SCOPE_MESSAGES`,
+`SCRIPT_REPORTS`), the readout labels, the caption, the ledger words: all Claude's, all printed
+verbatim. Anything the pane says that is not in the engine or the view spec is a bug.
+
+### B8. Order of work and what to report
+
+1. **Pane shell + `guided-walk`** (≈2.5 d): `ScopeScene` with the teaching lumen, `ScopeOpticalView`,
+   the dock, the readouts, the map; `SCOPE_MODES_READY = {'guided-walk'}`; `branch-entry`,
+   `right-side`, `left-side` and `systematic-survey` walkable in the browser. Report **S2**:
+   screenshots at 1440×900 and 390×844, decode/BVH timings, the pin-projection test green.
+2. **`free-drive` + the loss-of-view scripts + D10 hold/drift** (≈2 d) → **S3** (`view-loss`,
+   `branch-entry`'s Observe).
+3. `controls-isolated` (1.5 d) → `tube` + `accessory` (2 d) → `larynx-entry` (2.5 d), each merged as
+   it lands.
+4. Harness e2e (`data-scope-state=ready`, pixel signal, rotate → image rotates while pins and the
+   record are unchanged, deflect → a pin moves, advance into RUL → `entered:RUL`, red-out → recovery,
+   tube readouts, reduced motion + Step, context recovery, one live context across mode
+   switches), `scope-pane.md`, lint/type-check/build (1.5 d).
+
+Gates before every commit: `npx tsc --noEmit -p tsconfig.json`; `npx eslint
+src/features/bronchoscopy-foundations/components/scope`; `npx jest src/features/bronchoscopy-foundations
+--runInBand` (every existing suite stays green — the stage-host and leak suites never mount your
+scene, the fallback suite must keep passing on `ScopePane` routing); `npm run build` before a PR.
+Git: continue on `codex/bronch-foundations-scope` rebased onto `claude/intro-to-bronch-9-10` at the
+commit carrying this section; PRs against that branch once it is on origin; never `main`; stage
+reviewed paths only.
