@@ -1,0 +1,375 @@
+/*
+ * Claude-owned styles for the DOM parts of the scope pane: the caption strip, the tree answer
+ * fieldset, the round optical field, the airway map, the control dock, the readouts, the
+ * inspection record and the boundary line. Codex's 3D scene has its own stylesheet; these stay
+ * minimal, on the dark stage tokens, so the two do not fight.
+ */
+.pane {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  color: var(--ink, #e2e8f0);
+}
+
+.caption {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink, #e2e8f0);
+}
+
+.spineStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.spineStrip li {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--line, rgba(148, 163, 184, 0.35));
+  border-radius: 999px;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  color: var(--muted, rgba(226, 232, 240, 0.7));
+  background: transparent;
+}
+
+.spineStrip li[aria-current='step'] {
+  color: var(--ink, #e2e8f0);
+  border-color: var(--cyan-bright, #67e8f9);
+  box-shadow: inset 0 0 0 1px var(--cyan-bright, #67e8f9);
+  font-weight: 600;
+}
+
+.answer {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--line, rgba(148, 163, 184, 0.35));
+  border-radius: 0.6rem;
+}
+
+.answer legend {
+  font-weight: 600;
+  padding: 0 0.25rem;
+}
+
+.answer label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.answer label:hover {
+  border-color: var(--cyan-bright, #67e8f9);
+}
+
+.answer label[data-selected='true'] {
+  border-color: var(--cyan-bright, #67e8f9);
+}
+
+.answer[disabled] label {
+  cursor: default;
+}
+
+.answer label[data-outcome='best'] {
+  border-color: var(--green, #4ade80);
+}
+
+.answer label[data-outcome='chosen'] {
+  border-color: var(--amber, #f6c177);
+}
+
+.hint,
+.reason,
+.boundary,
+.caveat,
+.performance,
+.place,
+.message,
+.loading {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted, rgba(226, 232, 240, 0.7));
+}
+
+.reason {
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--amber, #f6c177);
+}
+
+.message {
+  padding: 0.4rem 0.75rem;
+  border-left: 3px solid var(--cyan-bright, #67e8f9);
+  color: var(--ink, #e2e8f0);
+}
+
+/* The optical view: a 4:3 frame with the round field inscribed, tinted by the view signal. */
+.optical {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.field {
+  position: relative;
+  width: 100%;
+  max-width: 28rem;
+  aspect-ratio: 4 / 3;
+  margin: 0 auto;
+  border: 1px solid var(--line, rgba(148, 163, 184, 0.35));
+  border-radius: 0.6rem;
+  background: var(--panel, #0b1620);
+  overflow: hidden;
+}
+
+.lumen {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, #2a0a10 0%, #6b1f2b 60%, #a63a48 100%);
+}
+
+.field[data-view-signal='red-out'] .lumen {
+  background: var(--red, #b3261e);
+}
+
+.field[data-view-signal='contaminated'] .lumen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 240, 200, 0.6),
+    rgba(255, 255, 255, 0.15) 40%,
+    rgba(230, 200, 160, 0.55)
+  );
+  filter: blur(6px);
+}
+
+.field[data-view-signal='dark'] .lumen {
+  background: #05080b;
+}
+
+.ostium {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--cyan-bright, #67e8f9);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: var(--ink, #e2e8f0);
+  background: rgba(11, 22, 32, 0.75);
+}
+
+.ostium::before {
+  content: '';
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--cyan-bright, #67e8f9);
+}
+
+button.ostium {
+  cursor: pointer;
+}
+
+/* The airway map: the coronal projection, lit per step, with a pin per airway over it. */
+.map {
+  padding: 0.5rem;
+  border: 1px solid var(--line, rgba(148, 163, 184, 0.35));
+  border-radius: 0.6rem;
+  background: var(--panel, #0b1620);
+}
+
+.mapBox {
+  position: relative;
+  width: 100%;
+  max-width: 22rem;
+  margin: 0 auto;
+}
+
+.mapSvg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mapSvg path {
+  fill: none;
+  stroke: var(--muted, rgba(226, 232, 240, 0.35));
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mapSvg path[data-lit='true'] {
+  stroke: var(--cyan-bright, #67e8f9);
+}
+
+.mapTip {
+  fill: var(--amber, #f6c177);
+}
+
+.mapPin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 0.05rem 0.3rem;
+  border: 1px solid var(--line, rgba(148, 163, 184, 0.35));
+  border-radius: 999px;
+  font-size: 0.62rem;
+  line-height: 1.3;
+  color: var(--muted, rgba(226, 232, 240, 0.7));
+  background: var(--panel, #0b1620);
+  white-space: nowrap;
+}
+
+.mapPin[data-lit='true'] {
+  color: var(--cyan-bright, #67e8f9);
+  border-color: var(--cyan-bright, #67e8f9);
+}
+
+.mapPin[aria-current='location'] {
+  color: var(--ink, #e2e8f0);
+  border-color: var(--amber, #f6c177);
+  box-shadow: 0 0 0 1px var(--amber, #f6c177);
+  font-weight: 600;
+}
+
+label.mapPin {
+  cursor: pointer;
+}
+
+/* The control dock: one native control per key the step offers. */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.controls[disabled] {
+  opacity: 0.7;
+}
+
+.control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  border-radius: 0.4rem;
+}
+
+.control label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.control button {
+  font: inherit;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--line, rgba(148, 163, 184, 0.35));
+  border-radius: 0.4rem;
+  color: var(--ink, #e2e8f0);
+  background: var(--panel, #0b1620);
+  cursor: pointer;
+}
+
+.control[data-spotlight='true'],
+.ledger[data-spotlight='true'] {
+  outline: 2px solid var(--amber, #f6c177);
+  outline-offset: 3px;
+}
+
+/* The readouts, under the controls: one definition per metric the step names. */
+.readouts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.5rem 0.75rem;
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line, rgba(148, 163, 184, 0.35));
+  border-radius: 0.6rem;
+  font-size: 0.8rem;
+}
+
+.readouts div {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.readouts dt {
+  color: var(--muted, rgba(226, 232, 240, 0.7));
+}
+
+.readouts dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The inspection record: one row per expected airway, with its declaration control. */
+.ledger {
+  display: grid;
+  gap: 0.4rem;
+  border-radius: 0.4rem;
+}
+
+.ledger table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.ledger th,
+.ledger td {
+  text-align: left;
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--line, rgba(148, 163, 184, 0.35));
+}
+
+.ledger tr[data-ledger-status='inspected'] td:first-of-type {
+  color: var(--green, #4ade80);
+}
+
+.ledger tr[data-ledger-status='not-safely-accessible'] td:first-of-type {
+  color: var(--amber, #f6c177);
+}
+
+.ledger select {
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.goals {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.85rem;
+}
+
+.goals li[data-met='true'] {
+  color: var(--green, #4ade80);
+}
