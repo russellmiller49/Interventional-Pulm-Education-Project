@@ -1,0 +1,21 @@
+{
+  "capturedAt": "2026-09-11T18:06:16.490Z",
+  "browser": "151.0.7922.34",
+  "base": "http://127.0.0.1:3112",
+  "environment": "Local macOS; headless Chromium 151.0.7922.34; Next.js 16.2.2 standalone production build on loopback port 3112.",
+  "viewport": "1440x900",
+  "network": "20 Mbps down / 5 Mbps up / 40 ms emulated latency, initial cold browser context",
+  "realExplorerReadyFromNavigationMs": 3545,
+  "transferBytesAtExplorerReady": 3207604,
+  "imageAndModelTransferBytes": 2052936,
+  "sliceInputToDecodedImageMs": [491, 184, 180, 187, 197, 389, 396, 202, 200, 194],
+  "heapAfterCloseAndGcBytes": [16350344, 16503080, 16803568],
+  "twoTimesEquivalentReflowDocumentOverflowPx": 0,
+  "limitations": [
+    "Not a reference physical-device benchmark.",
+    "On-demand rendering has no continuous guided animation; no GPU frame-rate claim.",
+    "Three close/reopen cycles are a limited leak check, not proof of constant memory.",
+    "720\u00d7450 CSS viewport tests reflow equivalent to 200% on 1440\u00d7900; native browser zoom UI was not exercised.",
+    "Standalone runtime had no Supabase credentials for unrelated site analytics and protected-route prefetch; the unlisted module and its assets loaded and passed all browser tests."
+  ]
+}

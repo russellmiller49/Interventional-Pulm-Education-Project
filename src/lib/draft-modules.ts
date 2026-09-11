@@ -63,6 +63,7 @@ const draftModulePathPrefixes = [
 ] as const
 
 const unlistedModulePathPrefixes = [
+  '/learn/anatomy/branch-tracing',
   ...baxterCrrtUnlistedPathPrefixes,
   ...icuHemodynamicsUnlistedPathPrefixes,
   ...icuSimulationUnlistedPathPrefixes,
