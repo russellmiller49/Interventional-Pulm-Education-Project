@@ -1,14 +1,12 @@
 'use client'
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { AdaptiveQuality, opticalPixelRatio } from '../../lib/bronchoscopy-core/quality'
+import { Canvas } from '@react-three/fiber'
 import { Html, OrbitControls } from '@react-three/drei'
 import {
   ArrowDown,
   ArrowUp,
   Compass,
-  Crosshair,
   Eye,
   EyeOff,
   Gamepad2,
@@ -17,16 +15,11 @@ import {
   Save,
   SlidersHorizontal,
 } from 'lucide-react'
-import * as THREE from 'three'
-
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { resolveAdminAirwayAssetPath } from '@/lib/airway-anatomy/admin-assets'
-import { add, clamp, scale, subtract } from '@/lib/airway-anatomy/geometry'
-import {
-  createBronchoscopyMaterial,
-  loadAirwayStlGeometry,
-} from '@/lib/airway-anatomy/airway-render'
+import { clamp } from '@/lib/airway-anatomy/geometry'
+import { loadAirwayStlGeometry } from '@/lib/airway-anatomy/airway-render'
 import { AirwayXRSceneDynamic } from '@/components/airway-anatomy/AirwayXRSceneDynamic'
 import {
   GameHudOverlay,
@@ -36,15 +29,18 @@ import {
   useAirwayGame,
   type AirwayGameController,
 } from '@/components/airway-anatomy/AirwayGameLayer'
-import { LOBE_COLORS, type GameTarget } from '@/lib/airway-anatomy/airway-game'
+import { edgePathToNode, LOBE_COLORS, type GameTarget } from '@/lib/airway-anatomy/airway-game'
 import {
-  buildScopePathLps,
+  buildUpcomingOstia,
+  shortAnatomicalLabel,
+  type OstiumLabel,
+} from '@/lib/airway-anatomy/ostia'
+import {
   buildScopePoseSnapshot,
   createGraphIndex,
   createInitialScopeState,
   sampleEdgePose,
   updateLookOffset,
-  type AirwayGraphIndex,
   type ScopeState,
 } from '@/lib/airway-anatomy/scope-state'
 import {
@@ -84,8 +80,6 @@ import {
   minus,
   unit,
   makeFrame,
-  verticalFov,
-  projectOptical,
   type LumenCollider,
 } from '@/lib/bronchoscopy-core/frame'
 import {
@@ -94,6 +88,19 @@ import {
   useLinkedCt,
   type CtSliceImage,
 } from './LinkedCtWorkspace'
+import {
+  AdaptiveViewportQuality,
+  AirwaySurface,
+  BRONCH_FOV_DEG,
+  BronchLabelOverlay,
+  HoldButton,
+  Polyline,
+  ScopeBody,
+  ScopeCamera,
+  SteeringRing,
+  scopeKeyAction,
+  useElementSize,
+} from './scope-primitives'
 import {
   GamepadScopeSource,
   ScopeDeltaTracker,
@@ -111,9 +118,7 @@ const SCOPE_ORIENTATION_PROFILE_QUERY_PARAM = 'scopeProfile'
 const VIEWPORT_CLASS =
   'relative min-h-[360px] overflow-hidden rounded-lg border border-slate-700/80 bg-slate-950'
 
-const BRONCH_FOV_DEG = 88
 const STEER_STEP_DEG = 3
-const OSTIUM_LABEL_RANGE_MM = 60
 
 interface LoadedCase {
   manifest: AirwayAnatomyCaseManifest
@@ -129,13 +134,6 @@ interface AirwayTarget {
   nodeId: number
   edgePath: number[]
   anchorLps: Vec3
-}
-
-interface OstiumLabel {
-  edgeId: number
-  pointLps: Vec3
-  abbr: string
-  descriptor: string
 }
 
 interface CurrentLocation {
@@ -562,41 +560,21 @@ export function AirwayAnatomyModule() {
     if ((event.target as HTMLElement).closest('input, select, textarea')) return
     if (!loadedCase) return
     const moveStep = (event.shiftKey ? 5 : 1) * stepMm
-    switch (event.key) {
-      case 'ArrowUp':
-        applySteer(0, STEER_STEP_DEG)
+    const action = scopeKeyAction(event.key)
+    if (!action) return
+    switch (action.kind) {
+      case 'steer':
+        applySteer(action.dxUnit * STEER_STEP_DEG, action.dyUpUnit * STEER_STEP_DEG)
         break
-      case 'ArrowDown':
-        applySteer(0, -STEER_STEP_DEG)
+      case 'move':
+        handleMove(action.direction * moveStep)
         break
-      case 'ArrowLeft':
-        applySteer(-STEER_STEP_DEG, 0)
+      case 'roll':
+        handleRollChange((scopeState?.rollDeg ?? 0) + action.deltaDeg)
         break
-      case 'ArrowRight':
-        applySteer(STEER_STEP_DEG, 0)
-        break
-      case 'w':
-      case 'W':
-        handleMove(moveStep)
-        break
-      case 's':
-      case 'S':
-        handleMove(-moveStep)
-        break
-      case 'q':
-      case 'Q':
-        handleRollChange((scopeState?.rollDeg ?? 0) - 5)
-        break
-      case 'e':
-      case 'E':
-        handleRollChange((scopeState?.rollDeg ?? 0) + 5)
-        break
-      case 'r':
-      case 'R':
+      case 'recenter':
         handleRecenter()
         break
-      default:
-        return
     }
     event.preventDefault()
   }
@@ -1234,155 +1212,6 @@ function ControlPanel({
   )
 }
 
-const STEER_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315]
-
-function SteeringRing({
-  onSteer,
-  onRecenter,
-}: {
-  onSteer: (dxUnit: number, dyUpUnit: number) => void
-  onRecenter: () => void
-}) {
-  return (
-    <HandoffContent>
-      {
-        <div className="relative mx-auto mt-2 h-44 w-44">
-          {STEER_ANGLES.map((angleDeg) => (
-            <SteerButton key={angleDeg} angleDeg={angleDeg} onSteer={onSteer} />
-          ))}
-          <button
-            type="button"
-            aria-label="Recenter view"
-            title="Recenter view (R)"
-            onClick={onRecenter}
-            className="absolute left-1/2 top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-slate-600 bg-slate-900 text-slate-300 transition hover:border-cyan-300 hover:text-cyan-200 active:bg-cyan-400/15"
-          >
-            <Crosshair className="h-5 w-5" />
-          </button>
-        </div>
-      }
-    </HandoffContent>
-  )
-}
-
-function SteerButton({
-  angleDeg,
-  onSteer,
-}: {
-  angleDeg: number
-  onSteer: (dxUnit: number, dyUpUnit: number) => void
-}) {
-  const rad = (angleDeg * Math.PI) / 180
-  const dx = Math.sin(rad)
-  const dyUp = Math.cos(rad)
-  const hold = useHoldRepeat(() => onSteer(dx, dyUp), 80)
-  const left = 50 + 36 * Math.sin(rad)
-  const top = 50 - 36 * Math.cos(rad)
-
-  return (
-    <HandoffContent>
-      {
-        <button
-          type="button"
-          aria-label={`Steer ${angleDeg} degrees clockwise from up`}
-          style={{ left: `${left}%`, top: `${top}%` }}
-          className="absolute flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 touch-none select-none items-center justify-center rounded-full border border-slate-600 bg-slate-800/90 text-slate-100 transition hover:border-cyan-300 hover:text-cyan-200 active:border-cyan-200 active:bg-cyan-400/20"
-          onPointerDown={(event) => {
-            event.preventDefault()
-            event.currentTarget.setPointerCapture(event.pointerId)
-            hold.start()
-          }}
-          onPointerUp={hold.stop}
-          onPointerCancel={hold.stop}
-          onLostPointerCapture={hold.stop}
-          onContextMenu={(event) => event.preventDefault()}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-5 w-5"
-            style={{ transform: `rotate(${angleDeg}deg)` }}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2.4}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 19V6" />
-            <path d="m6 11 6-6 6 6" />
-          </svg>
-        </button>
-      }
-    </HandoffContent>
-  )
-}
-
-function HoldButton({
-  onTrigger,
-  intervalMs,
-  className,
-  ariaLabel,
-  children,
-}: {
-  onTrigger: () => void
-  intervalMs?: number
-  className?: string
-  ariaLabel: string
-  children: React.ReactNode
-}) {
-  const hold = useHoldRepeat(onTrigger, intervalMs)
-  return (
-    <HandoffContent>
-      {
-        <button
-          type="button"
-          aria-label={ariaLabel}
-          className={`touch-none select-none ${className ?? ''}`}
-          onPointerDown={(event) => {
-            event.preventDefault()
-            event.currentTarget.setPointerCapture(event.pointerId)
-            hold.start()
-          }}
-          onPointerUp={hold.stop}
-          onPointerCancel={hold.stop}
-          onLostPointerCapture={hold.stop}
-          onContextMenu={(event) => event.preventDefault()}
-        >
-          {children}
-        </button>
-      }
-    </HandoffContent>
-  )
-}
-
-function useHoldRepeat(action: () => void, intervalMs = 90, delayMs = 260) {
-  const actionRef = useRef(action)
-  useEffect(() => {
-    actionRef.current = action
-  })
-  const timersRef = useRef<{ timeout: number | null; interval: number | null }>({
-    timeout: null,
-    interval: null,
-  })
-
-  const stop = useCallback(() => {
-    if (timersRef.current.timeout != null) window.clearTimeout(timersRef.current.timeout)
-    if (timersRef.current.interval != null) window.clearInterval(timersRef.current.interval)
-    timersRef.current = { timeout: null, interval: null }
-  }, [])
-
-  const start = useCallback(() => {
-    stop()
-    actionRef.current()
-    timersRef.current.timeout = window.setTimeout(() => {
-      timersRef.current.interval = window.setInterval(() => actionRef.current(), intervalMs)
-    }, delayMs)
-  }, [delayMs, intervalMs, stop])
-
-  useEffect(() => stop, [stop])
-
-  return { start, stop }
-}
-
 async function fetchScopeOrientationCalibration(caseId: string) {
   try {
     const response = await fetch(ORIENTATION_CALIBRATION_URL, { cache: 'no-store' })
@@ -1560,87 +1389,6 @@ function VirtualBronchoscopyViewport({
   )
 }
 
-function BronchLabelOverlay({
-  ostia,
-  pose,
-  aspect,
-  onAlignBranch,
-  collider,
-}: {
-  collider: LumenCollider | null
-  ostia: OstiumLabel[]
-  pose: ScopePoseSnapshot
-  aspect: number
-  onAlignBranch: (edgeId: number) => void
-}) {
-  const placed = ostia
-    .map((ostium) => {
-      if (collider && !collider.visible(pose.tipLps, ostium.pointLps)) return null
-      const projected = projectToViewport(ostium.pointLps, pose, aspect)
-      if (!projected || projected.depthMm < 1.5 || projected.depthMm > 130) return null
-      if (
-        projected.leftPct < 1 ||
-        projected.leftPct > 99 ||
-        projected.topPct < 3 ||
-        projected.topPct > 97
-      ) {
-        return null
-      }
-      return { ...ostium, ...projected }
-    })
-    .filter((item): item is NonNullable<typeof item> => item != null)
-
-  if (!placed.length) return <HandoffContent>{null}</HandoffContent>
-
-  return (
-    <HandoffContent>
-      {
-        <div className="pointer-events-none absolute inset-0 z-10">
-          {placed.map((item) => {
-            const labelScale = clamp(34 / item.depthMm, 0.78, 1.35)
-            return (
-              <button
-                type="button"
-                key={`${item.abbr}-${item.edgeId}`}
-                onPointerDown={(event) => event.stopPropagation()}
-                onClick={() => onAlignBranch(item.edgeId)}
-                title={`Align scope toward ${item.abbr}`}
-                className="pointer-events-auto absolute cursor-pointer text-center leading-tight transition-opacity hover:opacity-80 focus:outline-none"
-                style={{
-                  left: `${item.leftPct}%`,
-                  top: `${item.topPct}%`,
-                  transform: `translate(-50%, -50%) scale(${labelScale})`,
-                }}
-              >
-                <span
-                  className="block text-[15px] font-semibold tracking-wide"
-                  style={{
-                    color: '#8fe3d9',
-                    textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.7)',
-                  }}
-                >
-                  {item.abbr}
-                </span>
-                {item.descriptor && (
-                  <span
-                    className="block text-[12px] font-medium"
-                    style={{
-                      color: '#9ce8de',
-                      textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.7)',
-                    }}
-                  >
-                    {item.descriptor}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </div>
-      }
-    </HandoffContent>
-  )
-}
-
 function AirwayTreeViewport({
   manifest,
   graph,
@@ -1760,229 +1508,6 @@ function AirwayTreeViewport({
   )
 }
 
-function AirwaySurface({
-  stlUrl,
-  transform,
-  mode,
-}: {
-  stlUrl: string | null
-  transform: AirwayAnatomyCaseManifest['airwayTransform']
-  mode: 'bronch' | 'tree'
-}) {
-  const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null)
-
-  useEffect(() => {
-    if (!stlUrl) return
-    let cancelled = false
-    loadAirwayStlGeometry(stlUrl)
-      .then((nextGeometry) => {
-        if (!cancelled) {
-          setGeometry(nextGeometry)
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setGeometry(null)
-        }
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [stlUrl])
-
-  const material = useMemo(
-    () =>
-      mode === 'bronch'
-        ? createBronchoscopyMaterial()
-        : new THREE.MeshStandardMaterial({
-            color: '#7dd3fc',
-            roughness: 0.55,
-            metalness: 0.02,
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.22,
-            depthWrite: false,
-          }),
-    [mode],
-  )
-
-  useEffect(() => {
-    return () => {
-      material.dispose()
-    }
-  }, [material])
-
-  if (!stlUrl || !geometry) return <HandoffContent>{null}</HandoffContent>
-
-  return (
-    <HandoffContent>
-      {
-        <mesh
-          geometry={geometry}
-          material={material}
-          scale={transform.sceneScale}
-          rotation={transform.rotationDeg.map((deg) => THREE.MathUtils.degToRad(deg)) as Vec3}
-          position={transform.positionOffsetMm}
-        />
-      }
-    </HandoffContent>
-  )
-}
-
-function ScopeCamera({ pose }: { pose: ScopePoseSnapshot }) {
-  const { camera, size } = useThree()
-  useFrame(() => {
-    updateScopeCamera(camera, pose, size.width / Math.max(1, size.height))
-  })
-
-  return null
-}
-
-function updateScopeCamera(camera: THREE.Camera, pose: ScopePoseSnapshot, aspect: number) {
-  const frame = scopeOpticalFrame(pose)
-  camera.position.set(...frame.position)
-  camera.up.set(...frame.up)
-  camera.lookAt(...add(frame.position, frame.forward))
-  if (camera instanceof THREE.PerspectiveCamera) {
-    const fov = verticalFov(BRONCH_FOV_DEG, aspect)
-    if (camera.fov !== fov) {
-      camera.fov = fov
-      camera.updateProjectionMatrix()
-    }
-  }
-  camera.updateMatrixWorld()
-}
-
-/** Bronchoscope rendered as an insertion tube from the tracheal inlet to the tip. */
-function ScopeBody({ graph, pose }: { graph: AirwayGraph; pose: ScopePoseSnapshot }) {
-  const pathLps = useMemo(
-    () => pose.shaftPathLps ?? buildScopePathLps(graph, pose.edgeId, pose.distanceMm),
-    [graph, pose.edgeId, pose.distanceMm, pose.shaftPathLps],
-  )
-
-  const tubeGeometry = useMemo(() => {
-    const points: THREE.Vector3[] = []
-    let lastKept: Vec3 | null = null
-    for (const point of pathLps) {
-      if (
-        !lastKept ||
-        Math.hypot(point[0] - lastKept[0], point[1] - lastKept[1], point[2] - lastKept[2]) >= 2
-      ) {
-        points.push(new THREE.Vector3(...point))
-        lastKept = point
-      }
-    }
-    const tail = pathLps[pathLps.length - 1]
-    if (tail && lastKept && lastKept !== tail) {
-      points.push(new THREE.Vector3(...tail))
-    }
-    if (points.length < 2) return null
-    const curve = new THREE.CatmullRomCurve3(points, false, 'centripetal', 0.5)
-    const segments = Math.min(400, Math.max(24, Math.round(curve.getLength() / 1.5)))
-    return new THREE.TubeGeometry(curve, segments, 1.9, 12, false)
-  }, [pathLps])
-
-  useEffect(() => () => tubeGeometry?.dispose(), [tubeGeometry])
-
-  const tangent = useMemo(
-    () => new THREE.Vector3(...pose.tangentLps).normalize(),
-    [pose.tangentLps],
-  )
-  const tipQuaternion = useMemo(
-    () => new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), tangent),
-    [tangent],
-  )
-  const viewForward = useMemo(() => scopeOpticalFrame(pose).forward, [pose])
-  const beamQuaternion = useMemo(
-    () =>
-      new THREE.Quaternion().setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        new THREE.Vector3(...viewForward).negate(),
-      ),
-    [viewForward],
-  )
-
-  const beamLength = 16
-  const tipSegmentPosition = subtract(pose.tipLps, scale(pose.tangentLps, 3.2))
-  const beamPosition = add(pose.tipLps, scale(viewForward, beamLength / 2))
-
-  return (
-    <HandoffContent>
-      {
-        <group>
-          {tubeGeometry && (
-            <mesh geometry={tubeGeometry}>
-              <meshStandardMaterial
-                color="#3f4754"
-                roughness={0.35}
-                metalness={0.35}
-                emissive="#1e293b"
-                emissiveIntensity={0.5}
-              />
-            </mesh>
-          )}
-          <mesh position={tipSegmentPosition} quaternion={tipQuaternion}>
-            <cylinderGeometry args={[2.1, 2.1, 7, 16]} />
-            <meshStandardMaterial
-              color="#9ca3af"
-              roughness={0.28}
-              metalness={0.6}
-              emissive="#475569"
-              emissiveIntensity={0.4}
-            />
-          </mesh>
-          <mesh position={pose.tipLps}>
-            <sphereGeometry args={[1.5, 16, 16]} />
-            <meshStandardMaterial color="#eff6ff" emissive="#bfdbfe" emissiveIntensity={2.2} />
-          </mesh>
-          <mesh position={beamPosition} quaternion={beamQuaternion}>
-            <coneGeometry args={[6.5, beamLength, 20, 1, true]} />
-            <meshBasicMaterial
-              color="#bfdbfe"
-              transparent
-              opacity={0.15}
-              blending={THREE.AdditiveBlending}
-              depthWrite={false}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
-          <pointLight
-            position={pose.tipLps}
-            intensity={5}
-            distance={34}
-            decay={1.4}
-            color="#cfe3ff"
-          />
-        </group>
-      }
-    </HandoffContent>
-  )
-}
-
-function Polyline({ points, color, opacity }: { points: Vec3[]; color: string; opacity: number }) {
-  const geometry = useMemo(() => {
-    const next = new THREE.BufferGeometry()
-    next.setFromPoints(points.map((point) => new THREE.Vector3(...point)))
-    return next
-  }, [points])
-  const material = useMemo(
-    () => new THREE.LineBasicMaterial({ color, transparent: true, opacity }),
-    [color, opacity],
-  )
-  const line = useMemo(() => new THREE.Line(geometry, material), [geometry, material])
-
-  useEffect(
-    () => () => {
-      geometry.dispose()
-      material.dispose()
-    },
-    [geometry, material],
-  )
-
-  if (points.length < 2) return <HandoffContent>{null}</HandoffContent>
-  return <HandoffContent>{<primitive object={line} />}</HandoffContent>
-}
-
 function SceneLabels({ targets }: { targets: AirwayTarget[] }) {
   return (
     <HandoffContent>
@@ -2008,167 +1533,6 @@ function SceneLabels({ targets }: { targets: AirwayTarget[] }) {
       }
     </HandoffContent>
   )
-}
-
-function projectToViewport(
-  pointLps: Vec3,
-  pose: ScopePoseSnapshot,
-  aspect: number,
-): { leftPct: number; topPct: number; depthMm: number } | null {
-  const projected = projectOptical(pointLps, scopeOpticalFrame(pose), aspect, BRONCH_FOV_DEG)
-  if (!projected) return null
-  return {
-    leftPct: (0.5 + projected.x / 2) * 100,
-    topPct: (0.5 - projected.y / 2) * 100,
-    depthMm: projected.depth,
-  }
-}
-
-function buildUpcomingOstia(
-  index: AirwayGraphIndex,
-  labels: CenterlineLabels,
-  pose: ScopePoseSnapshot,
-  landmarks: AirwayAnatomyCaseManifest['ostialLandmarks'] = [],
-): OstiumLabel[] {
-  const edge = index.edgesById.get(pose.edgeId)
-  if (!edge) return []
-  const node = index.nodesById.get(edge.endNodeId)
-  if (!node || !node.childEdgeIds.length) return []
-  const distanceToNode = pose.edgeLengthMm - pose.distanceMm
-  if (distanceToNode > OSTIUM_LABEL_RANGE_MM) return []
-
-  const currentInfo = labels.edgeLabels[String(edge.id)]
-  const ostia: OstiumLabel[] = []
-  const seenAbbr = new Set<string>()
-  for (const childEdgeId of node.childEdgeIds) {
-    for (const resolved of resolveOstiaForChild(index, labels, childEdgeId)) {
-      const reviewed = landmarks.find((l) => l.edgeId === resolved.steerEdgeId)
-      const info = reviewed
-        ? { abbreviatedLabel: reviewed.label, fullLabel: reviewed.description }
-        : resolved.info
-      const abbr = info?.abbreviatedLabel ?? `Branch ${resolved.steerEdgeId}`
-      if (info && info.abbreviatedLabel === currentInfo?.abbreviatedLabel) continue
-      if (seenAbbr.has(abbr)) continue
-      seenAbbr.add(abbr)
-      const descriptor = info ? shortAnatomicalLabel(info.fullLabel, info.abbreviatedLabel) : ''
-      ostia.push({
-        edgeId: resolved.steerEdgeId,
-        pointLps: reviewed?.pointLps ?? resolved.pointLps,
-        abbr,
-        descriptor: descriptor === abbr ? '' : descriptor,
-      })
-    }
-  }
-  return ostia
-}
-
-/** How short an unlabeled connector can be before we look through it to the next split. */
-const CONNECTOR_PASSTHROUGH_MM = 14
-
-interface ResolvedOstium {
-  /** The immediate child of the current branch the user must steer into. */
-  steerEdgeId: number
-  pointLps: Vec3
-  info: { abbreviatedLabel: string; fullLabel: string } | undefined
-}
-
-/**
- * Map a single child edge to the ostium label(s) the user should see. A labeled
- * child yields itself. A short unlabeled connector that immediately splits (e.g.
- * the RUL stem that opens into RB1 + RB2) is looked through, surfacing the
- * deeper ostia — but the user still steers into the connector edge.
- */
-function resolveOstiaForChild(
-  index: AirwayGraphIndex,
-  labels: CenterlineLabels,
-  steerEdgeId: number,
-): ResolvedOstium[] {
-  const child = index.edgesById.get(steerEdgeId)
-  if (!child) return []
-  const ostiumPoint = sampleEdgePose(child, Math.min(7, child.lengthMm * 0.6)).point
-  const directInfo = labels.edgeLabels[String(steerEdgeId)]
-  if (directInfo) {
-    return [{ steerEdgeId, pointLps: ostiumPoint, info: directInfo }]
-  }
-
-  const endNode = index.nodesById.get(child.endNodeId)
-  if (child.lengthMm <= CONNECTOR_PASSTHROUGH_MM && endNode && endNode.childEdgeIds.length > 1) {
-    const expanded: ResolvedOstium[] = []
-    for (const grandchildId of endNode.childEdgeIds) {
-      const grandchild = index.edgesById.get(grandchildId)
-      if (!grandchild) continue
-      const info =
-        labels.edgeLabels[String(grandchildId)] ??
-        firstLabeledDescendant(index, labels, grandchildId)
-      // Aim at the deeper ostium so tapping RB1 vs RB2 biases the steered
-      // descent differently even though both pass through the same connector.
-      expanded.push({
-        steerEdgeId: grandchildId,
-        pointLps: sampleEdgePose(grandchild, Math.min(7, grandchild.lengthMm * 0.6)).point,
-        info,
-      })
-    }
-    if (expanded.length) return expanded
-  }
-
-  return [
-    {
-      steerEdgeId,
-      pointLps: ostiumPoint,
-      info: firstLabeledDescendant(index, labels, steerEdgeId),
-    },
-  ]
-}
-
-function firstLabeledDescendant(
-  index: AirwayGraphIndex,
-  labels: CenterlineLabels,
-  edgeId: number,
-): { abbreviatedLabel: string; fullLabel: string } | undefined {
-  const queue: number[] = [edgeId]
-  let guard = 0
-  while (queue.length && guard < 64) {
-    guard += 1
-    const currentId = queue.shift()
-    if (currentId == null) break
-    const info = labels.edgeLabels[String(currentId)]
-    if (info) return info
-    const edge = index.edgesById.get(currentId)
-    const node = edge ? index.nodesById.get(edge.endNodeId) : undefined
-    // Only follow an unambiguous continuation; a bifurcation introduces a new
-    // decision point that should surface as its own labels later.
-    if (node?.childEdgeIds.length === 1) {
-      queue.push(node.childEdgeIds[0])
-    }
-  }
-  return undefined
-}
-
-function shortAnatomicalLabel(fullLabel: string, abbreviatedLabel: string): string {
-  if (/^bronchus intermedius$/i.test(fullLabel)) return 'B. Intermedius'
-  let label = fullLabel.replace(/\s+Segment$/i, '').replace(/\s+Bronchus$/i, '')
-  if (/^[RL]B\d/i.test(abbreviatedLabel)) {
-    label = label.replace(/^(Right|Left)\s+(Upper|Middle|Lower)\s+Lobe\s+/i, '')
-  }
-  return label
-}
-
-function useElementSize<T extends HTMLElement>() {
-  const ref = useRef<T | null>(null)
-  const [size, setSize] = useState({ width: 0, height: 0 })
-
-  useEffect(() => {
-    const element = ref.current
-    if (!element) return
-    const observer = new ResizeObserver((entries) => {
-      const rect = entries[0]?.contentRect
-      if (rect) setSize({ width: rect.width, height: rect.height })
-    })
-    observer.observe(element)
-    return () => observer.disconnect()
-  }, [])
-
-  return { ref, size }
 }
 
 function buildAirwayTargets(graph: AirwayGraph, labels: CenterlineLabels): AirwayTarget[] {
@@ -2210,18 +1574,6 @@ function buildAirwayTargets(graph: AirwayGraph, labels: CenterlineLabels): Airwa
   )
 }
 
-function edgePathToNode(nodeId: number, nodeById: Map<number, AirwayGraphNode>): number[] {
-  const reversed: number[] = []
-  let current = nodeById.get(nodeId)
-  let guard = 0
-  while (current?.parentEdgeId != null && guard < nodeById.size + 1) {
-    guard += 1
-    reversed.push(current.parentEdgeId)
-    current = current.parentNodeId == null ? undefined : nodeById.get(current.parentNodeId)
-  }
-  return reversed.reverse()
-}
-
 function nearestGraphNode(graph: AirwayGraph, point: Vec3): AirwayGraphNode {
   let nearest = graph.nodes[0]
   let nearestDistance = Number.POSITIVE_INFINITY
@@ -2260,18 +1612,4 @@ function boundsForGraph(graph: AirwayGraph): { center: Vec3; radius: number } {
   const center: Vec3 = [(min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2]
   const radius = Math.max(160, Math.hypot(max[0] - min[0], max[1] - min[1], max[2] - min[2]) * 0.62)
   return { center, radius }
-}
-
-function AdaptiveViewportQuality() {
-  const { size, setDpr } = useThree(),
-    quality = useRef(new AdaptiveQuality())
-  useEffect(
-    () => setDpr(opticalPixelRatio(size.width, window.devicePixelRatio, quality.current.level)),
-    [size.width, setDpr],
-  )
-  useFrame(() => {
-    const changed = quality.current.frame(performance.now())
-    if (changed) setDpr(opticalPixelRatio(size.width, window.devicePixelRatio, changed))
-  })
-  return null
 }
