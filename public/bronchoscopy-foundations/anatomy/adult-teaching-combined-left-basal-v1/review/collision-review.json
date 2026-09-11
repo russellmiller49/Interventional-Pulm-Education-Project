@@ -92,22 +92,22 @@
     "vertexSamples": 100133,
     "topologyPreserved": true,
     "maxSurfaceDeviationBoundMm": 0.00018723131091015667,
-    "meanVertexDisplacementMm": 0.00009856097174178622
+    "meanVertexDisplacementMm": 0.0000985605424971609
   },
   "authoredCaps": {
     "triangleCentroidSamples": 1507,
-    "maxDistanceToSourceMm": 0.8004185253012974,
-    "meanDistanceToSourceMm": 0.5407037793555157
+    "maxDistanceToSourceMm": 0.8004235452209402,
+    "meanDistanceToSourceMm": 0.5407036013769148
   },
   "browser": {
     "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
-    "dracoDecodeAndParseMs": 67.19999998807907,
-    "bvhBuildMs": 44.80000001192093,
+    "dracoDecodeAndParseMs": 69.2999999821186,
+    "bvhBuildMs": 46.20000001788139,
     "decoderPath": "/fluoroview/draco/",
     "timingMethod": "Cold GLTFLoader.parseAsync including decoder initialization and one worker; BVH on decoded geometry; performance.now; one run.",
     "errors": []
   },
-  "lumenSha256": "d491154d389dc8fdbc95806180d28bdf1d415165775d176a1cf41a684f395c52",
+  "lumenSha256": "7fb74ea16ef63a7fa42e97164e15f677b3cc0120bf04a8567e885ba827110d39",
   "graphSha256": "68085358711a1c00e1e22e63fbdf04a90166a6e598f0a1955f33901af4006055",
   "sourceLumenSha256": "8c6d320fc459129da3fdb9440ca7a8b9f3b43ebbbc495a5285e9fabf6c2c1b9a",
   "build": {
@@ -141,7 +141,10 @@
         "right": [-0.28962220423485474, 0.9533108614492134, -0.08554168724722704],
         "up": [0.25263068067954625, 0.16234064326116526, 0.9538465572223556]
       },
-      "expectation": "RB1 above RB2 and RB3"
+      "expectation": "RB1 above RB2 and RB3",
+      "screenRightMm": 0.005467174353399273,
+      "screenUpMm": 8.00155197794231,
+      "relationshipMatches": true
     },
     {
       "id": "rml",
@@ -153,7 +156,10 @@
         "right": [-0.6853186558550546, 0.7277518233438968, 0.026751141221541035],
         "up": [-0.08501435313515382, -0.11643201041929331, 0.9895535087658136]
       },
-      "expectation": "RB5 left of RB4"
+      "expectation": "RB5 left of RB4",
+      "screenRightMm": -9.894829687663105,
+      "screenUpMm": 0.04014736233407601,
+      "relationshipMatches": true
     },
     {
       "id": "lul",
@@ -165,7 +171,10 @@
         "right": [-0.5843712170960615, -0.8113874252579936, 0.012677805917089113],
         "up": [-0.23105797981960136, 0.18134643958785723, 0.9558899930486209]
       },
-      "expectation": "Upper division above lingula"
+      "expectation": "Upper division above lingula",
+      "screenRightMm": -0.10447348024706721,
+      "screenUpMm": 12.69024152009845,
+      "relationshipMatches": true
     }
   ]
 }

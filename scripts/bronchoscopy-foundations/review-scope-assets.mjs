@@ -94,6 +94,40 @@ try {
     path.join(out, 'collision-review.json'),
     await prettier.format(JSON.stringify(report), { ...options, parser: 'json' }),
   )
+  await page.waitForFunction(() => Boolean(globalThis.scopeDeviceReview), null, { timeout: 60000 })
+  const deviceReview = await page.evaluate(() => globalThis.scopeDeviceReview.report)
+  const deviceOutput = path.join(root, 'public/bronchoscopy-foundations/anatomy/review')
+  await mkdir(deviceOutput, { recursive: true })
+  for (const [state, weight] of [
+    ['abducted', 0],
+    ['narrowing', 0.5],
+    ['adducted', 1],
+  ]) {
+    await page.evaluate((weight) => globalThis.scopeDeviceReview.renderLarynx(weight), weight)
+    await page
+      .locator('canvas')
+      .screenshot({ path: path.join(deviceOutput, `larynx-${state}.png`) })
+  }
+  await page.evaluate(() => globalThis.scopeDeviceReview.renderLarynx(0, true))
+  await page.locator('canvas').screenshot({ path: path.join(deviceOutput, 'larynx-framework.png') })
+  deviceReview.accessories = await page.evaluate(() =>
+    globalThis.scopeDeviceReview.renderAccessories(),
+  )
+  await page.locator('canvas').screenshot({ path: path.join(deviceOutput, 'accessories.png') })
+  deviceReview.accessoriesSha256 = sha(
+    await readFile(path.join(deviceOutput, '../devices/accessories.glb')),
+  )
+  deviceReview.larynxSha256 = sha(
+    await readFile(path.join(deviceOutput, '../larynx/larynx-lumen.glb')),
+  )
+  deviceReview.larynxPathSha256 = sha(
+    await readFile(path.join(deviceOutput, '../larynx/larynx.json')),
+  )
+  await writeFile(
+    path.join(deviceOutput, 'device-review.json'),
+    await prettier.format(JSON.stringify(deviceReview), { ...options, parser: 'json' }),
+  )
+  console.log(JSON.stringify(deviceReview, null, 2))
   console.log(
     JSON.stringify(
       { ...report, airwayClearances: undefined, references: undefined, build: undefined },
