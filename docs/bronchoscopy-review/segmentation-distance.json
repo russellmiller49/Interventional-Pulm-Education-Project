@@ -1,0 +1,11 @@
+{
+  "segmentationSha256": "bc1412cd763b75813cd182613033613b6e8e271e6bf5d95c14e3da0283de13c1",
+  "meshSha256": "c6c46e69beaceffc6d1214625bf8486224047db7c847e97b23ed46929f7b6c9e",
+  "coordinateMetric": "Euclidean distance in source IJK voxel units",
+  "verticesChecked": 336606,
+  "triangleCentersChecked": 673216,
+  "medianVoxelDistance": 0.13742327667597465,
+  "p99VoxelDistance": 0.4908648446708057,
+  "maxVoxelDistance": 0.8922922568462468,
+  "samplesOverOneVoxel": 0
+}

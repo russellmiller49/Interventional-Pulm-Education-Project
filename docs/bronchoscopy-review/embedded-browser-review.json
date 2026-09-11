@@ -1,0 +1,10 @@
+{
+  "embeddedEbus": true,
+  "embeddedEbusStation": "4r",
+  "populatedUltrasound": true,
+  "embeddedTrainer": true,
+  "expectedMissingAuthoringOverlays": [
+    "http://localhost:3130/bronch-navigation-trainer/app/cases/default/book_candidates.json"
+  ],
+  "errors": []
+}

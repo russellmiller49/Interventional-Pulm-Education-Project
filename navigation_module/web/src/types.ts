@@ -1,6 +1,8 @@
 export type Vec3 = [number, number, number];
 
 export interface CtMetadata {
+  signedPreview?:{url:string;sha256:string;sourceSha256:string};
+  nativeBricks?:import('@bronchoscopy-core/ct').NativeBricks;
   raw: string;
   sizeXyz: [number, number, number];
   originalSizeXyz: [number, number, number];

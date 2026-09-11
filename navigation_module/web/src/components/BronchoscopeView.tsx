@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
 import * as THREE from "three";
+import {mergeVertices} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import {mucosaVertexShader,mucosaFragmentShader} from '@bronchoscopy-core/mucosa';
+import {makeFrame,steerFrame,rollFrame,verticalFov,type OpticalFrame} from '@bronchoscopy-core/frame';
+import {trainerWebToPatient,patientToTrainerWeb} from '@bronchoscopy-core/devices';
+import {opticalPixelRatio} from '@bronchoscopy-core/quality';
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import type { Decision, ScopeAdjustment, Vec3 } from "../types";
 import { add, normalize, rasToScene, scale, subtract } from "../geometry";
@@ -53,6 +58,7 @@ interface BronchoscopeViewProps {
   onOptionSelect?: (edgeId: number) => void;
   liveSteer?: LiveScopeSteer | null;
   onAimOption?: (edgeId: number | null) => void;
+  onRenderedFrame?:(frame:OpticalFrame)=>void;
   footer?: ReactNode;
   meshUrl?: string;
   messages?: Messages["bronchoscope"];
@@ -122,6 +128,7 @@ export function BronchoscopeView({
   liveSteer = null,
   onAimOption,
   footer,
+  onRenderedFrame,
   meshUrl = appAssetUrl("cases/default/airway_surface.stl"),
   messages = getMessages("en").bronchoscope
 }: BronchoscopeViewProps) {
@@ -130,6 +137,7 @@ export function BronchoscopeView({
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const headlightRef = useRef<THREE.PointLight | null>(null);
+  const airwayMeshRef=useRef<THREE.Mesh|null>(null);
   const materialRef = useRef<THREE.ShaderMaterial | null>(null);
   const tumorMeshRef = useRef<THREE.Mesh | null>(null);
   const tumorMaterialRef = useRef<THREE.MeshStandardMaterial | null>(null);
@@ -161,9 +169,14 @@ export function BronchoscopeView({
     positionCamera(camera, decision, indexes, adjustment, drivePose, applyDriveAdjustment, liveSteer);
     camera.updateMatrixWorld(true);
     headlight.position.copy(camera.position);
+    const forward=camera.getWorldDirection(new THREE.Vector3());
+    materialRef.current?.uniforms.uHeadlightAxis.value.copy(forward);
+    const renderedFrame=makeFrame(trainerWebToPatient(camera.position.toArray()),trainerWebToPatient(forward.toArray()),trainerWebToPatient(new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1).toArray()));
+    mount.dataset.scopePoseLps=JSON.stringify(renderedFrame);
+    onRenderedFrame?.(renderedFrame);
     if (showDecisionLabels && decision) {
       labelsVisibleRef.current = true;
-      const nextLabels = buildLabels(camera, mount, decision, indexes, selectedEdgeId, adjustment, onAimOption != null);
+      const nextLabels = buildLabels(camera, mount, decision, indexes, selectedEdgeId, adjustment, onAimOption != null,airwayMeshRef.current);
       setLabels(nextLabels);
       reportAimedOption(nextLabels.find((item) => item.aimed)?.edgeId ?? null);
     } else if (labelsVisibleRef.current) {
@@ -195,7 +208,7 @@ export function BronchoscopeView({
 
     let cancelled = false;
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(opticalPixelRatio(mount.clientWidth,window.devicePixelRatio));
     renderer.setSize(mount.clientWidth, mount.clientHeight);
     renderer.setClearColor(0x070201, 1);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -228,7 +241,7 @@ export function BronchoscopeView({
         }
         setMeshStatus("ready");
         const mesh = new THREE.Mesh(geometry, material);
-        scene.add(mesh);
+        scene.add(mesh);airwayMeshRef.current=mesh;
         renderRef.current();
       })
       .catch(() => {
@@ -261,7 +274,7 @@ export function BronchoscopeView({
       sceneRef.current = null;
       cameraRef.current = null;
       headlightRef.current = null;
-      materialRef.current = null;
+      materialRef.current = null;airwayMeshRef.current=null;
       tumorMeshRef.current = null;
       tumorMaterialRef.current = null;
       mount.innerHTML = "";
@@ -383,7 +396,7 @@ export function BronchoscopeView({
         <div ref={mountRef} className="scope-render" />
         {meshStatus === "loading" && <div className="scope-status">{messages.loadingAirwaySurface}</div>}
         {meshStatus === "error" && <div className="scope-status">{messages.airwaySurfaceUnavailable}</div>}
-        {labels.map((item) => (
+        {labels.filter((item)=>item.visible).map((item) => (
           <button
             type="button"
             key={item.label}
@@ -438,10 +451,8 @@ function loadAirwayGeometry(url: string): Promise<THREE.BufferGeometry> {
     }
     positions.needsUpdate = true;
     geometry.deleteAttribute("normal");
-    geometry.computeVertexNormals();
-    geometry.computeBoundingSphere();
-    geometry.computeBoundingBox();
-    return geometry;
+    const welded=mergeVertices(geometry,1e-5);geometry.dispose();
+    welded.computeVertexNormals();welded.computeBoundingSphere();welded.computeBoundingBox();return welded;
   });
   geometryCache.set(url, promise);
   return promise;
@@ -472,67 +483,8 @@ function loadNoduleGeometry(url: string): Promise<THREE.BufferGeometry> {
   return promise;
 }
 
-function createBronchoscopyMaterial(): THREE.ShaderMaterial {
-  return new THREE.ShaderMaterial({
-    side: THREE.BackSide,
-    vertexShader: `
-      varying vec3 vWorldPosition;
-      varying vec3 vNormalWorld;
-
-      void main() {
-        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-        vWorldPosition = worldPosition.xyz;
-        vNormalWorld = normalize(mat3(modelMatrix) * normal);
-        gl_Position = projectionMatrix * viewMatrix * worldPosition;
-      }
-    `,
-    fragmentShader: `
-      varying vec3 vWorldPosition;
-      varying vec3 vNormalWorld;
-
-      float hash(vec3 p) {
-        return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453123);
-      }
-
-      void main() {
-        vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-        vec3 n = normalize(vNormalWorld);
-        if (dot(n, viewDir) < 0.0) {
-          n = -n;
-        }
-
-        float dist = length(cameraPosition - vWorldPosition);
-        float headlight = max(dot(n, viewDir), 0.0);
-        float falloff = mix(1.18, 0.20, smoothstep(28.0, 145.0, dist));
-
-        vec3 p = vWorldPosition * 0.055;
-        float broadFold = 0.5 + 0.5 * sin(p.z * 5.5 + p.y * 2.2 + sin(p.x * 2.6) * 1.4);
-        float fineFold = 0.5 + 0.5 * sin(p.x * 12.0 + p.y * 7.0 + p.z * 4.0);
-        float speckle = hash(floor(vWorldPosition * 0.95));
-        float mucosa = 0.78 + broadFold * 0.18 + fineFold * 0.055 + (speckle - 0.5) * 0.045;
-
-        vec3 shadowTone = vec3(0.38, 0.105, 0.075);
-        vec3 midTone = vec3(0.92, 0.42, 0.285);
-        vec3 highTone = vec3(1.0, 0.72, 0.49);
-        vec3 base = mix(shadowTone, midTone, clamp(mucosa, 0.0, 1.0));
-        base = mix(base, highTone, pow(headlight, 2.4) * 0.38);
-
-        float rimWet = pow(max(dot(reflect(-viewDir, n), viewDir), 0.0), 20.0);
-        float sparkleGate = smoothstep(0.982, 1.0, hash(floor(vWorldPosition * 2.15)));
-        float sparkle = sparkleGate * pow(headlight, 10.0) * 0.58;
-
-        float exposure = 0.58 + headlight * 1.45;
-        vec3 color = base * exposure * falloff;
-        color += vec3(1.0, 0.86, 0.68) * (rimWet * 0.38 + sparkle);
-
-        float depthDarken = smoothstep(80.0, 185.0, dist);
-        color = mix(color, vec3(0.035, 0.012, 0.009), depthDarken * 0.82);
-        color = pow(max(color, vec3(0.0)), vec3(0.82));
-
-        gl_FragColor = vec4(color, 1.0);
-      }
-    `
-  });
+function createBronchoscopyMaterial():THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({side:THREE.BackSide,toneMapped:false,uniforms:{uHeadlightAxis:{value:new THREE.Vector3(0,0,-1)},uHeadlightFalloff:{value:1},uWallAlpha:{value:1}},vertexShader:mucosaVertexShader,fragmentShader:mucosaFragmentShader});
 }
 
 function createScopeTumorMaterial(): THREE.MeshStandardMaterial {
@@ -557,7 +509,7 @@ function positionCamera(
 ) {
   const useDrivePose = Boolean(drivePose && !(applyDriveAdjustment && decision));
   const cameraAdjustment = useDrivePose ? DEFAULT_SCOPE_ADJUSTMENT : adjustment;
-  camera.fov = cameraAdjustment.fovDeg;
+  camera.fov = verticalFov(cameraAdjustment.fovDeg,camera.aspect);
   camera.updateProjectionMatrix();
   if (useDrivePose && drivePose) {
     aimCamera(camera, toVector3(drivePose.cameraRas), toVector3(drivePose.targetRas), cameraAdjustment, liveSteer);
@@ -589,33 +541,13 @@ function aimCamera(
   adjustment: ScopeAdjustment,
   liveSteer: LiveScopeSteer | null = null
 ) {
-  const upHint = toVector3([0, 1, 0]).normalize();
-  const forward = targetPosition.clone().sub(cameraPosition);
-  if (forward.lengthSq() < 1e-6) {
-    forward.set(0, 0, -1);
-  }
-  forward.normalize();
-  let right = new THREE.Vector3().crossVectors(forward, upHint).normalize();
-  if (right.lengthSq() < 1e-6) {
-    right = new THREE.Vector3(1, 0, 0);
-  }
-  let up = new THREE.Vector3().crossVectors(right, forward).normalize();
-  const yaw = new THREE.Quaternion().setFromAxisAngle(up, THREE.MathUtils.degToRad(adjustment.yawDeg));
-  forward.applyQuaternion(yaw).normalize();
-  right.applyQuaternion(yaw).normalize();
-  const pitch = new THREE.Quaternion().setFromAxisAngle(right, THREE.MathUtils.degToRad(adjustment.pitchDeg));
-  forward.applyQuaternion(pitch).normalize();
-  up.applyQuaternion(pitch).normalize();
-  camera.up.copy(up);
-  camera.position.copy(cameraPosition);
-  camera.lookAt(cameraPosition.clone().add(forward));
-  camera.rotateZ(THREE.MathUtils.degToRad(adjustment.rollDeg));
-  if (liveSteer) {
-    // Physical scope order: rolling the shaft rotates the flexion plane, then the
-    // thumb lever pitches within that plane.
-    camera.rotateZ(THREE.MathUtils.degToRad(liveSteer.rollDeg));
-    camera.rotateX(THREE.MathUtils.degToRad(liveSteer.pitchDeg));
-  }
+  let frame=makeFrame(trainerWebToPatient(cameraPosition.toArray()),trainerWebToPatient(targetPosition.clone().sub(cameraPosition).toArray()),[0,-1,0]);
+  frame=steerFrame(frame,-adjustment.yawDeg,adjustment.pitchDeg);
+  frame=rollFrame(frame,adjustment.rollDeg);
+  if(liveSteer)frame=steerFrame(rollFrame(frame,liveSteer.rollDeg),0,liveSteer.pitchDeg);
+  camera.position.set(...patientToTrainerWeb(frame.position));
+  camera.up.set(...patientToTrainerWeb(frame.up));
+  camera.lookAt(camera.position.clone().add(new THREE.Vector3(...patientToTrainerWeb(frame.forward))));
 }
 
 const AIM_RADIUS_FRACTION = 0.4;
@@ -627,7 +559,8 @@ function buildLabels(
   indexes: CaseIndexes,
   selectedEdgeId: number | null,
   adjustment: ScopeAdjustment,
-  aimEnabled: boolean
+  aimEnabled: boolean,
+  airwayMesh:THREE.Mesh|null
 ): ScopeLabel[] {
   if (!decision) {
     return [];
@@ -641,7 +574,9 @@ function buildLabels(
   const labels = decision.options.map((option) => {
     const points = optionPathPoints(decision, option, indexes);
     const labelRas = pointAlong(points, 16);
-    const projected = toVector3(labelRas).project(camera);
+    const anchor=toVector3(labelRas),rayDirection=anchor.clone().sub(camera.position),distance=rayDirection.length();
+    const wall=airwayMesh?new THREE.Raycaster(camera.position,rayDirection.normalize(),.05,Math.max(.05,distance-1)).intersectObject(airwayMesh,false)[0]:null;
+    const projected = anchor.project(camera);
     const offset = adjustment.labelOffsets[option.label] ?? { x: 0, y: 0 };
     const selected = selectedEdgeId === option.edgeId;
     const state: ScopeLabel["state"] = selected
@@ -656,7 +591,7 @@ function buildLabels(
       edgeId: option.edgeId,
       x: (projected.x * 0.5 + 0.5) * width + offset.x,
       y: (-projected.y * 0.5 + 0.5) * height + offset.y,
-      visible: projected.z > -1 && projected.z < 1,
+      visible: !wall && projected.z > -1 && projected.z < 1 && Math.abs(projected.x)<1 && Math.abs(projected.y)<1,
       state,
       aimed: false
     };

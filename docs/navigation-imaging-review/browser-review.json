@@ -1,0 +1,29 @@
+{
+  "journeys": [
+    {
+      "level": "Beginner",
+      "stops": 5,
+      "completed": true,
+      "wrongFeedback": true,
+      "withdrawal": true,
+      "sessionRestore": true,
+      "windowLevel": true,
+      "follow": true,
+      "physicalAspect": true,
+      "ctTipAgreement": true
+    },
+    {
+      "level": "Advanced",
+      "stops": 7,
+      "completed": true,
+      "wrongFeedback": true,
+      "withdrawal": true,
+      "sessionRestore": true,
+      "windowLevel": true,
+      "follow": true,
+      "physicalAspect": true,
+      "ctTipAgreement": true
+    }
+  ],
+  "errors": []
+}

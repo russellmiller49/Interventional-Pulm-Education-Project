@@ -26,7 +26,7 @@ The shared shader replaces discrete sparkles and repeating material bands with c
 
 Linked CT provides axial, coronal, sagittal and scope-oblique views; physical aspect ratios, anatomical edge labels, crosshairs, window/level, zoom, pan, slice browsing and follow-scope controls. Resampling runs in a worker, old requests are coalesced, and the 3D plane reuses one texture. A 64 MiB LRU promotes signed source-HU regions around the scope from gzip-compressed 64-voxel bricks, with preview fallback.
 
-Validation: 60 airway/core tests passed (42 prior tests plus 18 navigation, orientation, collision and CT tests); root TypeScript passed. Headless Chromium rendered all three reference views and exercised insertion/withdrawal with no browser errors. Comparison captures and the repeatable review script are under `artifacts/bronchoscopy-review` and `scripts/airway-anatomy/visual-review.mjs`. Hardware throughput and full physical-controller operation still require the reference desktop/controller; software-rendered headless Chromium is not a valid 60 fps benchmark.
+Validation: 63 airway/core tests passed (42 prior tests plus 21 navigation, orientation, collision and CT tests); root TypeScript passed. Headless Chromium rendered all three reference views and exercised insertion/withdrawal with no browser errors. Comparison captures and the repeatable review script are under `artifacts/bronchoscopy-review` and `scripts/airway-anatomy/visual-review.mjs`. Hardware throughput and full physical-controller operation still require the reference desktop/controller; software-rendered headless Chromium is not a valid 60 fps benchmark.
 
 ### Rebuild the case
 
@@ -36,3 +36,11 @@ Validation: 60 airway/core tests passed (42 prior tests plus 18 navigation, orie
 ```
 
 The original graph is read from the primary checkout alongside the source directory; rerunning does not accumulate centerline corrections. The reviewed mesh/manifest/graph ship in the standalone bundle together. The 225,837,459-byte native CT brick set is a generated, ignored asset for the existing module-assets publishing workflow. Until those bricks are published, production retains the signed-HU preview and all linked CT controls. No storage or database changes have been made.
+
+### Final geometry and collision checks
+
+`review-segmentation.py` compares the unchanged source mesh with the original binary labelmap in source IJK voxel units. All 336,606 vertices and 673,216 triangle centers are within one voxel; the maximum sampled distance is 0.8923 voxel and the 99th percentile is 0.4909. `segmentation-distance.json` records the source hashes and measurements. This is an automated surface-distance check, not clinical confirmation of every ostium.
+
+`review-collision.mts` tests the browser collider against the actual GLB: all 8,294 centerline samples are inside; tracheal advancement/withdrawal round-trips; a 50 mm lateral request stops with 1.954 mm clearance for the 1.9 mm tip radius. Insertion history is bounded at 8,192 points, blocked advancement adds no duplicate points, and a rejected withdrawal preserves the recorded path.
+
+The native CT publication inventory at `bronchoscopy-review/native-ct-publication.json` lists 640 files, their hashes and the exact existing storage path. It is prepared locally and has not been uploaded.

@@ -1070,6 +1070,11 @@ input[type="range"] {
   overflow: hidden;
   background: #000;
 }
+.ct-knob-controls { position:absolute;left:6px;top:5px;z-index:2;display:flex;gap:7px;align-items:center;font-size:10px;color:#d3e8ed;background:#081017d9;padding:4px 6px;border-radius:5px; }
+.ct-knob-controls label { display:flex;gap:3px;align-items:center; }
+.ct-knob-controls input[type=number] { width:43px;border:1px solid #38525e;background:#081017;color:#d3e8ed;font-size:10px; }
+.ct-knob-controls input[type=checkbox] { width:12px;height:12px;accent-color:#67d8e7; }
+.ct-source-level { color:#81dfe8;font-size:10px; }
 
 .ct-canvas-wrap-pannable {
   cursor: grab;

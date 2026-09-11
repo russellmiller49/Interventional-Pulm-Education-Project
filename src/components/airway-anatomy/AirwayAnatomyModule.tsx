@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { AdaptiveQuality, opticalPixelRatio } from '../../lib/bronchoscopy-core/quality'
 import { Html, OrbitControls } from '@react-three/drei'
 import {
   ArrowDown,
@@ -1487,7 +1488,7 @@ function VirtualBronchoscopyViewport({
           <div className="absolute inset-0">
             <Canvas
               frameloop={game ? 'always' : 'demand'}
-              dpr={[1, 2]}
+              dpr={[1, 1.75]}
               camera={{
                 fov: BRONCH_FOV_DEG,
                 near: 0.06,
@@ -1497,6 +1498,7 @@ function VirtualBronchoscopyViewport({
               gl={{ antialias: true, alpha: false }}
             >
               <color attach="background" args={[0x070201]} />
+              <AdaptiveViewportQuality />
               <ambientLight intensity={0.55} color={0xffc4a6} />
               <Suspense fallback={null}>
                 <AirwaySurface
@@ -1680,7 +1682,7 @@ function AirwayTreeViewport({
         <div className={VIEWPORT_CLASS}>
           <Canvas
             frameloop={gameTarget ? 'always' : 'demand'}
-            dpr={[1, 2]}
+            dpr={[1, 1.75]}
             camera={{
               fov: 34,
               near: 0.5,
@@ -1691,6 +1693,7 @@ function AirwayTreeViewport({
             gl={{ antialias: true, alpha: false }}
           >
             <color attach="background" args={[0x040812]} />
+            <AdaptiveViewportQuality />
             <ambientLight intensity={0.55} />
             <directionalLight position={[180, -260, 120]} intensity={1.15} />
             <directionalLight position={[-120, 180, -100]} intensity={0.35} color={0x9bb8ff} />
@@ -2257,4 +2260,18 @@ function boundsForGraph(graph: AirwayGraph): { center: Vec3; radius: number } {
   const center: Vec3 = [(min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2]
   const radius = Math.max(160, Math.hypot(max[0] - min[0], max[1] - min[1], max[2] - min[2]) * 0.62)
   return { center, radius }
+}
+
+function AdaptiveViewportQuality() {
+  const { size, setDpr } = useThree(),
+    quality = useRef(new AdaptiveQuality())
+  useEffect(
+    () => setDpr(opticalPixelRatio(size.width, window.devicePixelRatio, quality.current.level)),
+    [size.width, setDpr],
+  )
+  useFrame(() => {
+    const changed = quality.current.frame(performance.now())
+    if (changed) setDpr(opticalPixelRatio(size.width, window.devicePixelRatio, changed))
+  })
+  return null
 }

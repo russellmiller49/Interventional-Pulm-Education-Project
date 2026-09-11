@@ -34,6 +34,8 @@ export async function loadCase(locale: Locale = "en", caseUrl = appAssetUrl("cas
   });
 
   const localizedMetadata = localizeCaseMetadata(metadata, locale);
+  if(localizedMetadata.ct.signedPreview)localizedMetadata.ct.signedPreview.url=new URL(localizedMetadata.ct.signedPreview.url,new URL(caseUrl,window.location.origin)).toString();
+  if(localizedMetadata.ct.nativeBricks)localizedMetadata.ct.nativeBricks.baseUrl=new URL(localizedMetadata.ct.nativeBricks.baseUrl,new URL(caseUrl,window.location.origin)).toString();
   const noduleAsset = localizedMetadata.noduleAsset ? await loadNoduleAsset(localizedMetadata.noduleAsset, caseUrl, locale) : null;
   const noduleAssets: Record<string, LoadedNoduleAsset> = {};
   for (const target of localizedMetadata.noduleTargets ?? []) {

@@ -59,6 +59,19 @@ export function useLinkedCt(
     [ct, sliceFrame, zoom, pan, offset, axis],
   )
   const desired = useRef({ planes, low, high, tip: frame?.position })
+  const inFlight = useRef(false),
+    dirty = useRef(false)
+  const schedule = useCallback(() => {
+    dirty.current = true
+    if (inFlight.current || timer.current || !worker.current) return
+    timer.current = setTimeout(() => {
+      timer.current = null
+      if (!worker.current || !desired.current.planes.length) return
+      dirty.current = false
+      inFlight.current = true
+      worker.current.postMessage({ type: 'render', id: ++sequence.current, ...desired.current })
+    }, 80)
+  }, [])
   useEffect(() => {
     desired.current = {
       planes,
@@ -75,7 +88,10 @@ export function useLinkedCt(
     )
     worker.current = instance
     instance.onmessage = (event) => {
-      if (event.data.id === sequence.current) setResult(event.data)
+      if (event.data.id !== sequence.current) return
+      setResult(event.data)
+      inFlight.current = false
+      if (dirty.current) schedule()
     }
     instance.onerror = () => setError('CT resampling could not start. Reload this view to retry.')
     // Transfer a single copy; the original remains available to the immersive viewer.
@@ -84,23 +100,19 @@ export function useLinkedCt(
       { type: 'init', geometry: ct, volume: copy.buffer, native: ct.nativeBricks },
       [copy.buffer],
     )
-    const id = ++sequence.current
-    instance.postMessage({ type: 'render', id, ...desired.current })
+    schedule()
     return () => {
       instance.terminate()
       worker.current = null
       if (timer.current) clearTimeout(timer.current)
       timer.current = null
+      inFlight.current = false
+      dirty.current = false
     }
-  }, [ct, volume])
+  }, [ct, volume, schedule])
   useEffect(() => {
-    if (!worker.current || !planes.length || timer.current) return
-    timer.current = setTimeout(() => {
-      timer.current = null
-      const id = ++sequence.current
-      worker.current?.postMessage({ type: 'render', id, ...desired.current })
-    }, 80)
-  }, [planes, low, high, windowLevel])
+    if (planes.length) schedule()
+  }, [planes, low, high, windowLevel, schedule])
   return {
     result,
     planes,
