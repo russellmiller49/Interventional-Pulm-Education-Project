@@ -1,3 +1,4 @@
+import type { OpticalFrame } from '../bronchoscopy-core/frame'
 export type Vec3 = [number, number, number]
 
 export type CtAxis = 'axial' | 'coronal' | 'sagittal'
@@ -14,6 +15,7 @@ export interface AirwayAnatomyCaseManifest {
   assetBaseUrl: string
   assets: {
     airwayGlb: string
+    reviewedLumenGlb?: string
     airwayStl?: string
     airwayGraphJson: string
     centerlineLabelsJson: string
@@ -22,6 +24,16 @@ export interface AirwayAnatomyCaseManifest {
   airwayTransform: AirwaySurfaceTransform
   airwaySurfaceTransform?: AirwaySurfaceTransform
   ct: CtPreviewAsset
+  geometryValidation?: {
+    schema: string
+    closed: boolean
+    sourceSha256: string
+    displaySha256: string
+    coordinateSystem: string
+    units: string
+  }
+  orientationLandmarks?: OrientationLandmark[]
+  ostialLandmarks?: Array<{ edgeId: number; pointLps: Vec3; label: string; description: string }>
   interaction: {
     rootNodeId: number
     carinaNodeId: number
@@ -31,6 +43,17 @@ export interface AirwayAnatomyCaseManifest {
     lookAheadMm: number
     trailMaxPoints: number
   }
+}
+
+export interface OrientationLandmark {
+  id: string
+  label: string
+  edgeId: number
+  distanceMm: number
+  targetEdgeId: number
+  oppositeEdgeId?: number
+  screenDirection: 'up' | 'left'
+  expectation: string
 }
 
 export interface AirwaySurfaceTransform {
@@ -54,6 +77,16 @@ export interface CtPreviewAsset {
   originLps: Vec3
   directionLps: number[]
   space: string
+  nativeBricks?: {
+    schema: string
+    baseUrl: string
+    brickSize: number
+    sizeXyz: Vec3
+    spacingXyzMm: Vec3
+    sourceSha256: string
+    compressedBytes: number
+    format: string
+  }
   windowPresets: Array<{
     id: 'lung' | 'mediastinal' | string
     label: string
@@ -134,6 +167,8 @@ export interface BranchOption {
 }
 
 export interface ScopePoseSnapshot {
+  opticalFrame?: OpticalFrame
+  shaftPathLps?: Vec3[]
   edgeId: number
   distanceMm: number
   edgeLengthMm: number

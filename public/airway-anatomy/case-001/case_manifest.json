@@ -2,7 +2,7 @@
   "schema": "airway_anatomy_case/v1",
   "id": "airway-anatomy-case-001",
   "title": "Airway Anatomy Synchronized Bronchoscopy",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "coordinateSystem": "LPS",
   "units": "mm",
   "safetyLabel": "Educational simulation only - not for diagnosis, treatment, or procedure guidance.",
@@ -13,7 +13,8 @@
     "airwayStl": "/airway-anatomy/case-001/airway_large.stl",
     "airwayGraphJson": "/airway-anatomy/case-001/metadata/airway_graph.json",
     "centerlineLabelsJson": "/airway-anatomy/case-001/metadata/centerline_labels.json",
-    "ctPreviewRaw": "/airway-anatomy/case-001/ct/target_clean_ct_preview_i16.raw"
+    "ctPreviewRaw": "/airway-anatomy/case-001/ct/target_clean_ct_preview_i16.raw",
+    "reviewedLumenGlb": "/airway-anatomy/case-001/lumen-v2.glb"
   },
   "airwayTransform": {
     "sceneScale": 1,
@@ -39,7 +40,7 @@
     "spacingXyzMm": [1.37890625, 1.37890625, 1.5],
     "originalSpacingXyzMm": [0.689453125, 0.689453125, 0.5],
     "originLps": [-182.15527343749997, -374.1552734374999, -368.5],
-    "directionLps": [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+    "directionLps": [1, 0, 0, 0, 1, 0, 0, 0, 1],
     "space": "left-posterior-superior",
     "windowPresets": [
       {
@@ -54,7 +55,17 @@
         "low": -160,
         "high": 240
       }
-    ]
+    ],
+    "nativeBricks": {
+      "schema": "ct-bricks/v1",
+      "baseUrl": "/airway-anatomy/case-001/ct/native-v1",
+      "brickSize": 64,
+      "sizeXyz": [512, 512, 636],
+      "spacingXyzMm": [0.689453125, 0.689453125, 0.5],
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "compressedBytes": 225837459,
+      "format": "int16-le-gzip"
+    }
   },
   "interaction": {
     "rootNodeId": 0,
@@ -64,5 +75,93 @@
     "stepMm": 3,
     "lookAheadMm": 12,
     "trailMaxPoints": 180
-  }
+  },
+  "geometryValidation": {
+    "schema": "lumen-validation/v1",
+    "closed": true,
+    "sourceSha256": "c6c46e69beaceffc6d1214625bf8486224047db7c847e97b23ed46929f7b6c9e",
+    "displaySha256": "8c6d320fc459129da3fdb9440ca7a8b9f3b43ebbbc495a5285e9fabf6c2c1b9a",
+    "coordinateSystem": "LPS",
+    "units": "mm",
+    "topology": {
+      "boundary": 0,
+      "nonmanifold": 0,
+      "components": 1
+    }
+  },
+  "orientationLandmarks": [
+    {
+      "id": "rul",
+      "label": "Right upper lobe",
+      "edgeId": 3,
+      "distanceMm": 10,
+      "targetEdgeId": 13,
+      "screenDirection": "up",
+      "expectation": "RB1 above RB2 and RB3"
+    },
+    {
+      "id": "rml",
+      "label": "Right middle lobe",
+      "edgeId": 9,
+      "distanceMm": 6,
+      "targetEdgeId": 19,
+      "oppositeEdgeId": 18,
+      "screenDirection": "left",
+      "expectation": "RB5 left of RB4"
+    },
+    {
+      "id": "lul",
+      "label": "Left upper lobe",
+      "edgeId": 496,
+      "distanceMm": 9,
+      "targetEdgeId": 21,
+      "oppositeEdgeId": 20,
+      "screenDirection": "up",
+      "expectation": "Upper division above lingula"
+    }
+  ],
+  "ostialLandmarks": [
+    {
+      "edgeId": 7,
+      "pointLps": [-47.90363695960996, -162.84167335133338, -175.98788777315355],
+      "label": "RB3",
+      "description": "Right Upper Lobe Anterior Segment"
+    },
+    {
+      "edgeId": 12,
+      "pointLps": [-49.08760809989354, -155.0182012820948, -172.8919347459041],
+      "label": "RB2",
+      "description": "Right Upper Lobe Posterior Segment"
+    },
+    {
+      "edgeId": 13,
+      "pointLps": [-48.0444821048336, -159.81909497642374, -169.76780091412277],
+      "label": "RB1",
+      "description": "Right Upper Lobe Apical Segment"
+    },
+    {
+      "edgeId": 18,
+      "pointLps": [-58.206134985802464, -177.72436641370192, -215.0622195026617],
+      "label": "RB4",
+      "description": "Right Middle Lobe Lateral Segment"
+    },
+    {
+      "edgeId": 19,
+      "pointLps": [-54.862152294243586, -181.68500738952557, -215.1275064142179],
+      "label": "RB5",
+      "description": "Right Middle Lobe Medial Segment"
+    },
+    {
+      "edgeId": 20,
+      "pointLps": [47.93904806350746, -173.48070557460528, -197.11090455116454],
+      "label": "LB4+5",
+      "description": "Left Upper Lobe Lingular Bronchus"
+    },
+    {
+      "edgeId": 21,
+      "pointLps": [45.98023338191462, -172.0798338318391, -191.70545852565752],
+      "label": "Upper division",
+      "description": "Upper division"
+    }
+  ]
 }

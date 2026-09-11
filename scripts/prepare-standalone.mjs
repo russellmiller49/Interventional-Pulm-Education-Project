@@ -28,7 +28,16 @@ const copiedOpenFdaReviewDir = path.join(
 
 // Most model assets are hosted by MODULE_ASSET_ORIGIN and intentionally omitted.
 // Compact ECMO and cardiac teaching assets ship with the standalone application.
-const bundledAssetPrefixes = ['models/cardiohelp-ecmo', 'models/cardiac', 'models/cardiac-devices']
+const bundledAssetPrefixes = [
+  'models/cardiohelp-ecmo',
+  'models/cardiac',
+  'models/cardiac-devices',
+  // Keep geometry, graph and frame calibration from the same reviewed case version.
+  // Native CT bricks stay remote; the existing preview remains the loading fallback.
+  'airway-anatomy/case-001/case_manifest.json',
+  'airway-anatomy/case-001/metadata',
+  'airway-anatomy/case-001/lumen-v2.glb',
+]
 
 const remoteAssetPrefixes = [
   'airway-anatomy',

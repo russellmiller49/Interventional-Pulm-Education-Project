@@ -1,3 +1,4 @@
+import { verticalFov, type OpticalFrame } from '../bronchoscopy-core/frame'
 import { clamp, distance, dot, normalize, subtract } from './geometry'
 import { computeViewBasis } from './scope-state'
 import type { AirwayGraph, AirwayGraphNode, CenterlineLabels, Vec3 } from './types'
@@ -303,6 +304,7 @@ export interface TargetGuide {
 }
 
 interface GuidePose {
+  opticalFrame?: OpticalFrame
   tipLps: Vec3
   lookAtLps: Vec3
   tangentLps: Vec3
@@ -331,7 +333,8 @@ export function computeTargetGuide(
   )
 
   const base = normalize(subtract(pose.lookAtLps, pose.tipLps), pose.tangentLps)
-  const { forward, right, up } = computeViewBasis(base, pose.yawDeg, pose.pitchDeg, pose.rollDeg)
+  const { forward, right, up } =
+    pose.opticalFrame ?? computeViewBasis(base, pose.yawDeg, pose.pitchDeg, pose.rollDeg)
   const offset = subtract(anchorLps, pose.tipLps)
   const depthMm = dot(offset, forward)
   const rightComponent = dot(offset, right)
@@ -343,7 +346,9 @@ export function computeTargetGuide(
   let leftPct = 50
   let topPct = 50
   if (depthMm > 1.5) {
-    const tanHalfFov = Math.tan((fovDeg * Math.PI) / 360)
+    const tanHalfFov = Math.tan(
+      ((pose.opticalFrame ? verticalFov(fovDeg, aspect) : fovDeg) * Math.PI) / 360,
+    )
     const ndcX = rightComponent / (depthMm * tanHalfFov * Math.max(aspect, 0.1))
     const ndcY = upComponent / (depthMm * tanHalfFov)
     leftPct = (0.5 + ndcX / 2) * 100
