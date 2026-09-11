@@ -108,3 +108,21 @@ export function progressVersionChanged(envelope: CriticalCareProgressEnvelope) {
     (a) => a.activityId.startsWith('branch-tracing.') && !a.activityId.startsWith(`${PREFIX}.`),
   )
 }
+
+/** CT responses record participation and assistance, never unreviewed clinical scores. */
+export function saveCtAttempt(key: string, hints: number) {
+  const activityId = `${PREFIX}.${key}.trace.first`
+  const current = readProgress()
+  if (current.activities.some((a) => a.activityId === activityId)) return true
+  return writeCriticalCareProgress(
+    browserStorage(),
+    upsertCriticalCareActivityProgress(current, {
+      activityId,
+      status: 'completed',
+      attempts: 1,
+      hintCount: hints,
+      competencyEvidenceIds: [],
+      updatedAt: new Date().toISOString(),
+    }),
+  )
+}

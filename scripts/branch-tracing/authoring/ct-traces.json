@@ -1,0 +1,145 @@
+{
+  "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+  "graphSha256": "68226a87928135f8be1435c78774f455dab8f792c085509100aa6c21304c18f4",
+  "traces": [
+    {
+      "id": "central-right",
+      "edges": [0, 1],
+      "trimStartMm": 108,
+      "preset": "mirror",
+      "region": "Central airways",
+      "range": [355, 450]
+    },
+    {
+      "id": "central-left",
+      "edges": [0, 2],
+      "trimStartMm": 110,
+      "preset": "mirror",
+      "region": "Central airways",
+      "range": [330, 420]
+    },
+    {
+      "id": "right-upper-entry",
+      "edges": [1, 3, 6],
+      "trimStartMm": 10,
+      "preset": "rul",
+      "region": "Right upper lobe",
+      "range": [355, 410]
+    },
+    {
+      "id": "right-upper-apical",
+      "edges": [6, 13, 28],
+      "trimStartMm": 0,
+      "preset": "rul",
+      "region": "Right upper lobe",
+      "range": [370, 440]
+    },
+    {
+      "id": "right-upper-distal",
+      "edges": [13, 29, 61],
+      "trimStartMm": 1,
+      "preset": "rul",
+      "region": "Right upper lobe",
+      "range": [388, 470]
+    },
+    {
+      "id": "middle-lobe-entry",
+      "edges": [4, 9, 19],
+      "trimStartMm": 15,
+      "preset": "mirror",
+      "region": "Right middle lobe",
+      "range": [290, 340],
+      "fractions": [0.08, 0.48, 0.8]
+    },
+    {
+      "id": "middle-lobe-lateral",
+      "edges": [9, 18, 39],
+      "trimStartMm": 0,
+      "preset": "mirror",
+      "region": "Right middle lobe",
+      "range": [290, 330]
+    },
+    {
+      "id": "middle-lobe-caudal",
+      "edges": [19, 41],
+      "trimStartMm": 0,
+      "preset": "mirror",
+      "region": "Right middle lobe",
+      "range": [286, 326],
+      "fractions": [0.08, 0.3, 0.85]
+    },
+    {
+      "id": "middle-lobe-cranial",
+      "edges": [19, 40],
+      "trimStartMm": 0,
+      "preset": "mirror",
+      "region": "Right middle lobe",
+      "range": [294, 326],
+      "fractions": [0.08, 0.3, 0.85]
+    },
+    {
+      "id": "upper-oblique-lateral",
+      "edges": [15, 32],
+      "trimStartMm": 0,
+      "preset": "rul",
+      "region": "Right upper lobe",
+      "range": [368, 432]
+    },
+    {
+      "id": "upper-oblique-medial",
+      "edges": [15, 33],
+      "trimStartMm": 0,
+      "preset": "rul",
+      "region": "Right upper lobe",
+      "range": [370, 406]
+    },
+    {
+      "id": "left-upper-division",
+      "edges": [496, 21, 45],
+      "trimStartMm": 0,
+      "preset": "upper-division",
+      "region": "Left upper division",
+      "range": [328, 410]
+    },
+    {
+      "id": "left-upper-anterior",
+      "edges": [21, 44],
+      "trimStartMm": 0,
+      "preset": "upper-division",
+      "region": "Left upper division",
+      "range": [345, 395]
+    },
+    {
+      "id": "left-lingula",
+      "edges": [496, 20, 43],
+      "trimStartMm": 0,
+      "preset": "mirror",
+      "region": "Lingula",
+      "range": [302, 365]
+    },
+    {
+      "id": "left-lower-returning",
+      "edges": [5, 10, 23, 50],
+      "trimStartMm": 0,
+      "preset": "mirror",
+      "region": "Left lower lobe",
+      "range": [310, 370]
+    },
+    {
+      "id": "right-lower-basal",
+      "edges": [8, 16, 34, 71],
+      "trimStartMm": 0,
+      "preset": "mirror",
+      "region": "Right lower lobe",
+      "range": [245, 325]
+    },
+    {
+      "id": "left-lower-basal",
+      "edges": [11, 24, 51],
+      "trimStartMm": 0,
+      "preset": "mirror",
+      "region": "Left lower lobe",
+      "range": [245, 325]
+    }
+  ]
+}

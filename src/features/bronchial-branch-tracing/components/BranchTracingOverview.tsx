@@ -23,10 +23,10 @@ export function BranchTracingOverview() {
         <header className={styles.hero}>
           <div>
             <h1>Bronchial branch tracing</h1>
-            <p className={styles.subtitle}>From CT to the bronchoscopic view</p>
+            <p className={styles.subtitle}>Follow the real airway, one CT slice at a time.</p>
             <p>
-              Follow a lumen through neighboring slices. Build its branch map. Predict the next
-              opening before looking from inside the parent airway.
+              Orient the CT using the book’s tracing conventions. Follow the air column, mark your
+              route, then compare it on the same images.
             </p>
             <Link
               className={styles.primary}
@@ -51,20 +51,33 @@ export function BranchTracingOverview() {
               · {completed.length} completed on this device
             </p>
           </div>
-          <div className={styles.heroDiagram} aria-label="Learning sequence">
-            <div>
-              01 <strong>Follow the CT</strong>
-              <span>Patient axes · lumen continuity</span>
-            </div>
-            <div>
-              02 <strong>Build a branch map</strong>
-              <span>Parent · siblings · destination</span>
-            </div>
-            <div>
-              03 <strong>Predict the opening</strong>
-              <span>View along the parent · account for roll</span>
-            </div>
-          </div>
+          <figure className={styles.ctHero}>
+            <svg
+              viewBox="0 0 100 100"
+              role="img"
+              aria-label="Actual right-upper-lobe CT rotated 90 degrees counterclockwise"
+            >
+              <g transform="translate(50 50) rotate(-90) scale(.52) translate(-184 -305)">
+                <image href="/branch-tracing/native-v1/axial/390.png" width="512" height="512" />
+              </g>
+              <text x="50" y="6" textAnchor="middle">
+                L
+              </text>
+              <text x="50" y="97" textAnchor="middle">
+                R
+              </text>
+              <text x="3" y="51">
+                A
+              </text>
+              <text x="96" y="51">
+                P
+              </text>
+            </svg>
+            <figcaption>
+              <strong>Right upper lobe · 90° counterclockwise</strong>
+              <span>Real CT · native 0.5 mm slices</span>
+            </figcaption>
+          </figure>
         </header>
         {changed && (
           <p className={styles.notice}>
@@ -79,7 +92,7 @@ export function BranchTracingOverview() {
               <li>Maintain continuity of one airway across axial planes.</li>
               <li>Relate the four tracing patterns to the parent-airway viewpoint.</li>
               <li>Separate patient direction, camera roll, and screen position.</li>
-              <li>Recognize variants and the limits of visible airway evidence.</li>
+              <li>Record a continuous trace and the limits of visible airway evidence.</li>
             </ul>
           </section>
           <section>
@@ -97,10 +110,9 @@ export function BranchTracingOverview() {
         <section className={styles.notice}>
           <h2>What this preview contains</h2>
           <p>
-            The lessons use original synthetic airway geometry. The real CT explorer uses one
-            existing teaching CT preview. Clinical subsegmental checkpoints and held-out clinical
-            cases are awaiting review; synthetic exercise results do not establish skill on a new
-            patient CT.
+            Learn, Practice and Assess use actual CT slices from one teaching scan, with the
+            appropriate reflection or rotation for each region. You mark the lumen yourself before
+            seeing the source-derived comparison. Clinical grading awaits reviewed case checkpoints.
           </p>
           <p>
             Educational spatial reasoning only. This module does not establish device reach,
@@ -134,14 +146,13 @@ export function BranchTracingOverview() {
             <a href={SOURCE.url} target="_blank" rel="noreferrer">
               {SOURCE.title}
             </a>
-            , chapters 1–2, as mapped in the supplied planning documents. Lesson diagrams, geometry,
-            exercises and scoring are original teaching constructs. No textbook plates are
-            reproduced.
+            , Chapter 1. The native CT was exported with 3D Slicer from the same source volume as
+            the existing airway model. The textbook guides the method; its figures are not copied.
           </p>
           <p>
             Progress stays in this browser’s existing education progress store. Completed lessons
-            and first-attempt outcomes are saved. Reloading restarts an incomplete lesson; image,
-            camera and sketch state are not saved. English preview.
+            and first-attempt participation are saved. Reloading restarts an incomplete lesson;
+            image coordinates and camera state are not saved. CT interpretation is ungraded.
           </p>
         </section>
       </main>

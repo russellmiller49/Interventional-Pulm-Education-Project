@@ -1,29 +1,31 @@
-# Bronchial branch tracing — implementation brief
+# Bronchial branch tracing — current teaching brief
 
-September 11, 2026 · reference checkout `7da3886e` · unpublished, public by direct URL.
+September 11, 2026 · reference checkout `7da3886e` · content `c2-ct1-r2` · unpublished, anonymous direct URL.
 
-The owner's request is to build the module. The audit-only kickoff inside the supplied planning package is an example, not the task scope. The requested structured-medical-modules skill supersedes the package's proposed three-view layout: use the existing Steps → Teaching → Simulator stage, with explicit 0.26/0.29 opening fractions and 300/280/340 px floors.
+The owner's current request replaces the synthetic teaching surface with actual CT slices rotated according to the supplied **Bronchial Branch Tracing** textbook. The six planning documents inform requirements; their audit-only kickoff is an example, not a restriction on the build request. The owner also requested the structured-medical-modules skill. Its existing Steps → Teaching → Simulator stage remains the host.
 
-## Delivery and teaching flow
+## Teaching flow
 
-Canonical route: `/[locale]/learn/anatomy/branch-tracing`, with Overview, Learn, Practice, Assess subroutes. English preview; no authentication, navigation entry, site-search entry, sitemap entry, or publication. Reuse the shared module navigation, stage, NowCard, LookInLine, StepList, and bounded activity progress store without editing those components.
+Audience: PCCM/IP fellows and bronchoscopists familiar with lobar CT anatomy. Observable task: follow a continuous lumen across acquisition planes, record three points, describe its course and compare the evidence. This is image interpretation practice, not procedural certification. Eight sessions are authored estimates of 5–7 minutes.
 
-Audience: PCCM/IP fellows and bronchoscopists with basic lobar anatomy; image interpretation at Miller's knows-how level. Sessions are authored estimates of 5–8 minutes. This preview cannot certify bronchoscopy competence.
+The canonical LESSONS registry retains stable IDs and order: orientation; continuity; vertical; horizontal–horizontal; horizontal–vertical; horizontal–oblique; direction reversal; variants/limits. Each renders a purpose, prerequisite, explanatory concept, worked CT example, a new learner trace, comparison, explanation and changed CT transfer. One source patient supplies these regional variations. Assess is an ungraded independent worksheet with delayed comparison; it is not held-out patient validation.
 
-Ordered lessons: patient orientation; lumen continuity; vertical; horizontal–horizontal; horizontal–vertical; horizontal–oblique; scope roll and direction reversal; common trunks and uncertainty. Each contains a worked example, an interactive prediction, a submitted branch map and opening arrangement, response-specific explanation, and a changed transfer exercise. Practice mixes patterns and delays correctness until submission. Assess provides a separately authored geometric exercise set, explicitly distinct from held-out clinical-case assessment.
+Six real stages: orient using a worked image → mark three levels → describe the course → compare on the same CT → explain the relationship → trace another airway. Initial responses are empty. A lumen mark or explicit unresolved response is required at each level; recording a course is also required before revealing the comparison. Reference points are absent from the learner DOM before submission. Comparison requires a separate manual continuation; completing a lesson requires another trace and manual Finish.
 
-## Asset and content preservation
+## Source and preservation
 
-The site's patient-new FluoroView CT and case-001 source manifest identify the same source CT SHA-256. Their previews differ in resampling. Existing labels are spreadsheet/geometry associations, with no checkpoint-level physician approval record. A public geometric teaching fixture must not silently promote those labels into clinical answer keys.
+The supplied PDF's Chapter 1 was read with relevant orientation and pattern figures visually inspected. It specifies horizontal reflection for middle/lingula/lower-lobe caudal tracing, 90° counterclockwise for RUL and 90° clockwise for left upper division. These are image display transforms; patient coordinates and click storage do not rotate. The chapter's “left superior segment” wording in this context refers to left upper division, not lower-lobe B6. No textbook images are shipped.
 
-Use original, explicitly synthetic airway phantoms to teach the four tracing patterns and orientation. Use one public CT preview for ungraded anatomy exploration, with an independently browsed continuous stack and a matched exterior/intraluminal surface only after verifying its transform. Candidate branch labels are excluded. No source inputs, textbook illustrations, generated trainer builds, Slicer scenes, or other modules are changed.
+Slicer 5.12.3 loaded the original CT read-only in an isolated process. Source SHA `572afc5…a29b` matches the site's airway model source. Native size is 512×512×636, spacing 0.689453125×0.689453125×0.5 mm. Exported images retain native axial pixel resolution, with a fixed lung window. Source geometry selects comparison points; these do not become physician-approved answer keys. Case-specific subsegment labels and camera/ostial approval remain outside this preview's claim.
 
-The original CT, native subsegmental review, final browser camera/ostium annotations, B5a/B5b labels, and a distinct approved transfer CT remain clinical authoring gates. The UI and contracts support their later addition; this build does not claim those gates have passed.
+Preserved: canonical URLs and IDs, shared stage/navigation, bounded progress adapter, public-unlisted/noindex behavior, exterior/intraluminal explorer, all original assets and other modules. No source volume, user scene, protected mount, textbook page, shared stage, global CSS, dependency, database, catalog, upload or release state is changed. Old synthetic geometry remains internal regression fixtures only.
 
-## Completion and persistence
+## Components and progress
 
-The existing shared activity envelope is the only store. Feature/version-prefixed IDs retain first-attempt domain outcomes and hint count. No coordinates, images, camera paths, free text, answer keys, or click histories are persisted. A lesson completes only after a submitted prediction, opening map, explanation and a new transfer action. Incomplete lessons restart on reload; first attempts and completed lessons survive. A new incompatible content/asset/rubric ID restarts current work and preserves historical records. No mastery status or aggregate clinical pass threshold.
+Reuse StageLayout, NowCard, LookInLine, StepList, SectionHeader, StageBlock and ModuleNavV2. Pass pane order Steps/Teaching/Simulator, opening fractions 0.26/0.29 and floors 300/280/340 explicitly. Feature-owned NativeCtViewer implements native pixels, inverse coordinate transforms, slice browsing, full-screen expansion, keyboard marking and recoverable load errors.
 
-## Acceptance
+The site's existing bounded activity envelope is the only progress store. Version `c2-ct1-r2` separates CT participation from earlier synthetic outcomes without deleting history. First-trace participation is written on Record trace, before course/comparison; first hint count is immutable. Completed lessons persist. No scores or mastery are awarded. Incomplete work restarts after reload; source/learner coordinates and camera state are session-only. Independent debrief has an explicit local JSON export.
 
-Test one complete lesson before expanding. Verify actual handlers for wrong/correct choices, reference withholding, manual continuation, transfer gating, review/reset, reload, independent-practice masking, and domain denominators. Verify RAS/LPS/display inverse transforms, asymmetric fixtures, direction reversal, trifurcation/common trunks, malformed graph rejection, review eligibility, and unlisted anonymous routes. Capture the actual shared reference and new stage at wide/compact/phone/reflow sizes. Record H1–H12 and clinical review gaps in the QA report.
+## Verification
+
+Exercise actual image/keyboard handlers, deliberately misplaced marks, unresolved continuity, wrong-slice guards, three-level/course/transfer gates, delayed independent feedback, manual completion, backtracking, reset, reload, storage failure and export. Check every native PNG hash and HU-window sample, patient/display inverse transforms, crop bounds, source frame and slice order. Inspect actual CT and shared-reference screenshots at matching viewports and test compact reflow down to 320 px. Report engineering checks separately from faculty approval and novel-patient validity.

@@ -1,37 +1,40 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useEffect, useReducer, useState } from 'react'
-import { Link } from '@/i18n/navigation'
 import { StageLayout } from '@/features/learning-module/stage/StageLayout'
 import { NowCard } from '@/features/learning-module/stage/NowCard'
 import { LookInLine } from '@/features/learning-module/stage/LookInLine'
 import { StepList } from '@/features/learning-module/stage/StepList'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { StageBlock } from '@/features/learning-module/stage/StageBlock'
-import { BASE_PATH, LESSONS, lessonById, nextLesson, SOURCE } from '../content/lessons'
-import type { Lesson } from '../content/types'
+import { BASE_PATH, LESSONS, SOURCE, lessonById, nextLesson } from '../content/lessons'
+import { COURSE_OPTIONS, type CtLesson } from '../content/ct-types'
+import { traceById, sliceZ } from '../geometry/native-ct'
+import { DISPLAY_PRESETS } from '../geometry/coordinates'
 import {
   completedLessons,
   readProgress,
-  saveBranchFirst,
-  saveFirst,
+  saveCtAttempt,
   saveVisit,
   browserStorage,
 } from '../engine/progress'
 import {
-  emptySession,
-  feedbackFor,
-  mapComplete,
-  scoreResponse,
-  sessionReducer,
-  validChoice,
-} from '../engine/session'
-import { AxialStack, ReferenceComparison } from './TracingViews'
-import { BranchChoice, LearnerRoute, OpeningEditor } from './ResponseControls'
+  ctSessionReducer,
+  emptyCtSession,
+  marksComplete,
+  type CtAction,
+} from '../engine/ct-session'
+import { NativeCtViewer } from './NativeCtViewer'
+import { CtCourseControl, CtTraceList } from './CtTraceControls'
 import { ModuleFrame } from './ModuleFrame'
 import { useDeviceProgress } from './useDeviceProgress'
 import styles from './branch-tracing.module.css'
 
+const ClinicalAirwayView = dynamic(
+  () => import('./ClinicalAirwayView').then((m) => m.ClinicalAirwayView),
+  { ssr: false, loading: () => <p>Loading airway comparison…</p> },
+)
 export function BranchTracingLesson({ requestedId }: { requestedId?: string }) {
   const { ready } = useDeviceProgress()
   return (
@@ -44,91 +47,75 @@ export function BranchTracingLesson({ requestedId }: { requestedId?: string }) {
     </ModuleFrame>
   )
 }
-
 function LessonEntry({ requestedId }: { requestedId?: string }) {
-  // Resolve once per URL. Completion must never auto-advance a direct /learn visit.
   const [lesson] = useState(
     () => lessonById(requestedId) ?? nextLesson(completedLessons(readProgress())) ?? LESSONS[0],
   )
   return <LessonSession lesson={lesson} />
 }
-
-function LessonSession({ lesson }: { lesson: Lesson }) {
-  const [session, dispatch] = useReducer(
-    sessionReducer(lesson.prediction, lesson.transfer),
-    undefined,
-    emptySession,
-  )
+function LessonSession({ lesson }: { lesson: CtLesson }) {
+  const prediction = traceById(lesson.prediction),
+    transferTrace = traceById(lesson.transfer)
+  const reduce = ctSessionReducer(prediction, transferTrace)
+  const [s, dispatch] = useReducer(reduce, undefined, emptyCtSession)
   const [review, setReview] = useState<number | null>(null)
   const [saved, setSaved] = useState(() => browserStorage() !== null)
+  const [comparison3d, setComparison3d] = useState(false)
+  const [levelRequest, setLevelRequest] = useState(0)
   useEffect(() => {
     saveVisit(lesson.id)
   }, [lesson.id])
-  const index = LESSONS.indexOf(lesson)
-  const step = lesson.steps[session.step]
-  const transfer = session.step === 5
-  const exercise =
-    session.step === 0 ? lesson.example : transfer ? lesson.transfer : lesson.prediction
-  const response = transfer ? session.transfer : session.prediction
-  const revealed = session.step === 0 || Boolean(response)
-  const answering = session.step === 1 || session.step === 2 || (transfer && !response)
-  const showMap = session.step === 2 || (transfer && !response)
+  const step = lesson.steps[s.step],
+    transfer = s.step === 5
+  const trace = s.step === 0 ? traceById(lesson.example) : transfer ? transferTrace : prediction
+  const response = transfer ? s.transfer : s.prediction
+  const revealed = s.step === 0 || Boolean(response)
+  const marking = s.step === 1 || (transfer && !response)
+  const describing = s.step === 2 || (transfer && !response)
   const disabled =
-    session.step === 1
-      ? !validChoice(exercise, session.choice)
-      : showMap
-        ? !validChoice(exercise, session.choice) || !mapComplete(exercise, session.openings)
+    s.step === 1
+      ? !marksComplete(s.marks)
+      : describing
+        ? !marksComplete(s.marks) || !s.course
         : false
-  const scores = response ? scoreResponse(exercise, response) : null
   const next = nextLesson([...completedLessons(readProgress()), lesson.id])
-  const primaryLabel = transfer && response ? 'Finish lesson' : step.actionLabel
-  const select = (id: string) => dispatch({ type: 'choose', id })
-  const perform = () => {
-    setReview(null)
-    const action = { type: showMap ? ('submit' as const) : ('advance' as const) }
-    const nextState = sessionReducer(lesson.prediction, lesson.transfer)(session, action)
-    if (!session.committedBranch && nextState.committedBranch)
-      setSaved(
-        saveBranchFirst(
-          `learn.${lesson.id}.prediction`,
-          lesson.prediction,
-          nextState.committedBranch,
-        ),
-      )
-    if (!session.prediction && nextState.prediction)
-      setSaved(saveFirst(`learn.${lesson.id}.prediction`, lesson.prediction, nextState.prediction))
-    if (!session.transfer && nextState.transfer)
-      setSaved(saveFirst(`learn.${lesson.id}.transfer`, lesson.transfer, nextState.transfer))
-    if (!session.complete && nextState.complete) setSaved(saveVisit(lesson.id, true))
+  function perform(action: CtAction) {
+    const nextState = reduce(s, action)
+    if (s.step === 1 && nextState.step === 2)
+      setSaved(saveCtAttempt(`learn.${lesson.id}.prediction`, s.hints))
+    if (!s.prediction && nextState.prediction)
+      setSaved(saveCtAttempt(`learn.${lesson.id}.prediction`, nextState.prediction.hints))
+    if (!s.transfer && nextState.transfer)
+      setSaved(saveCtAttempt(`learn.${lesson.id}.transfer`, nextState.transfer.hints))
+    if (!s.complete && nextState.complete) setSaved(saveVisit(lesson.id, true))
+    if (action.type === 'advance' || action.type === 'restart') {
+      setReview(null)
+      setComparison3d(false)
+    }
     dispatch(action)
   }
-  const doneIds = new Set(
-    lesson.steps.slice(0, session.step + (session.complete ? 1 : 0)).map((s) => s.id),
-  )
+  const done = new Set(lesson.steps.slice(0, s.step + (s.complete ? 1 : 0)).map((v) => v.id))
   return (
     <StageLayout
-      stageId={session.complete ? 'complete' : step.id}
-      label="Branch tracing lesson"
       module="bronchial-branch-tracing"
+      stageId={s.complete ? 'complete' : step.id}
+      label="Branch tracing lesson"
       workspaceLabel="Branch tracing workspace"
       paneOrder={['steps', 'teaching', 'simulator']}
       defaultWidthFractions={{ primary: 0.26, secondary: 0.29 }}
       paneMinimums={{ primary: 300, secondary: 280, tertiary: 340 }}
       paneCaptions={{
-        steps: 'what to do',
-        teaching: 'what to read',
-        simulator: 'CT and airway comparison',
+        steps: 'your CT trace',
+        teaching: 'how to read the airway',
+        simulator: 'real CT and comparison',
       }}
-      compactPane={session.complete || response ? 'steps' : step.lookIn?.pane}
+      compactPane={s.complete ? 'steps' : step.lookIn?.pane}
       header={
         <SectionHeader
-          kicker={`Learn · Lesson ${index + 1} of ${LESSONS.length}`}
+          kicker={`Learn · Lesson ${LESSONS.indexOf(lesson) + 1} of ${LESSONS.length}`}
           title={lesson.title}
-          meta={[`${lesson.minutes} min`, 'Synthetic geometry · unpublished preview']}
-          onRestart={() => {
-            dispatch({ type: 'restart' })
-            setReview(null)
-          }}
+          meta={['Real CT · 0.5 mm slices', `${lesson.minutes} min`]}
+          onRestart={() => perform({ type: 'restart' })}
           restartLabel="Restart lesson"
           saveAndExitHref={BASE_PATH}
           resumedNote={
@@ -140,75 +127,79 @@ function LessonSession({ lesson }: { lesson: Lesson }) {
       }
       contextStrip={
         <div className={styles.context}>
-          <span>Patient axes: R / L · A / P · cranial / caudal</span>
-          <span>Reference roll: {exercise.phantom.camera.roll}°</span>
-          <span>{session.hints ? `${session.hints} hints used` : 'No hints used'}</span>
+          <span>{trace.region}</span>
+          <span>{DISPLAY_PRESETS[trace.preset]}</span>
+          <span>One source CT · ungraded interpretation</span>
         </div>
       }
       task={
         <>
           <NowCard
             model={{
-              kicker: session.complete
-                ? 'Lesson completed'
-                : `Step ${session.step + 1} of ${lesson.steps.length} · ${step.phase}`,
-              heading: session.complete ? 'Ready for the next branch' : step.title,
-              body: session.complete
-                ? 'You submitted a branch interpretation and opening map, reviewed the comparison, and applied the concept to a changed arrangement. Completion is separate from correctness.'
+              kicker: s.complete ? 'Lesson completed' : `Step ${s.step + 1} of 6 · ${step.phase}`,
+              heading: s.complete ? 'CT trace completed' : step.title,
+              body: s.complete
+                ? 'You recorded two CT interpretations and compared their continuity. Completion records the work, not clinical competence.'
                 : step.instruction,
-              where: session.complete ? undefined : <LookInLine location={step.lookIn!} />,
-              primary: session.complete
+              where: s.complete ? undefined : <LookInLine location={step.lookIn!} />,
+              primary: s.complete
                 ? {
                     label: next ? `Next: ${next.title}` : 'Return to overview',
                     href: next ? `${BASE_PATH}/learn?lesson=${next.id}` : BASE_PATH,
                   }
                 : {
-                    label: primaryLabel,
-                    onActivate: perform,
+                    label: transfer && response ? 'Finish lesson' : step.actionLabel,
+                    onActivate: () => perform({ type: 'advance' }),
                     disabled,
                     disabledReason:
-                      session.step === 1
-                        ? 'Select a branch or state that continuation is unresolved.'
-                        : 'Choose a branch and place every proximal opening at a distinct position.',
+                      s.step === 1
+                        ? 'Record a lumen mark or unresolved continuation at all three CT levels.'
+                        : 'Record three levels and select the airway course.',
                   },
             }}
           >
-            {(session.step === 1 || (transfer && !response)) && (
-              <BranchChoice exercise={exercise} selected={session.choice} onChange={select} />
+            {s.step > 0 && !s.complete && (
+              <CtTraceList
+                trace={trace}
+                marks={s.marks}
+                active={s.active}
+                onActive={(index) => {
+                  perform({ type: 'active', index })
+                  setLevelRequest((v) => v + 1)
+                }}
+              />
             )}
-            {showMap && (
-              <OpeningEditor
-                exercise={exercise}
-                openings={session.openings}
-                onChange={(id, position) => dispatch({ type: 'place', id, position })}
+            {describing && (
+              <CtCourseControl
+                value={s.course}
+                onChange={(value) => perform({ type: 'course', value })}
               />
             )}
             {response && (
               <div className={styles.feedback} role="status">
-                <strong>
-                  {scores?.connectivity
-                    ? 'Branch choice consistent with the evidence'
-                    : 'Review the branch connection'}
-                </strong>
-                <p>{feedbackFor(exercise, response)}</p>
+                <strong>Your interpretation is recorded</strong>
                 <p>
-                  Opening arrangement: {scores?.viewpoint}/{scores?.viewpointTotal} positions match
-                  this reference.{' '}
-                  {response.hints > 0 ? 'Supported attempt.' : 'Unassisted attempt.'}
+                  {COURSE_OPTIONS[response.course]}.{' '}
+                  {response.marks.filter((m) => m.pixel === null).length} levels marked unresolved.
+                </p>
+                <p>
+                  Compare the image evidence before accepting either trace. No clinical accuracy
+                  score is assigned.
                 </p>
               </div>
             )}
-            {answering && (
+            {marking && (
               <div className={styles.hints}>
-                <button
-                  disabled={session.hints >= exercise.hints.length}
-                  onClick={() => dispatch({ type: 'hint' })}
-                >
-                  Show a hint
+                <button disabled={s.hints > 0} onClick={() => perform({ type: 'hint' })}>
+                  Tracing reminder
                 </button>
-                {exercise.hints.slice(0, session.hints).map((h) => (
-                  <p key={h}>{h}</p>
-                ))}
+                {s.hints > 0 && (
+                  <p>
+                    Return to Start, follow the same air column through neighboring planes, then
+                    mark it at each numbered level. A nearby vessel does not establish airway
+                    continuity.
+                  </p>
+                )}
               </div>
             )}
           </NowCard>
@@ -217,37 +208,35 @@ function LessonSession({ lesson }: { lesson: Lesson }) {
               sectionId: lesson.id,
               title: lesson.title,
               minutes: lesson.minutes,
-              index,
+              index: LESSONS.indexOf(lesson),
               total: LESSONS.length,
               steps: lesson.steps,
               predictionStepIndex: 1,
             }}
-            currentIndex={session.step}
-            furthestPerformedIndex={session.step - 1}
-            performedStepIds={doneIds}
-            predictionCommitted={session.step >= 2}
+            currentIndex={s.step}
+            furthestPerformedIndex={s.step - 1}
+            performedStepIds={done}
+            predictionCommitted={Boolean(s.prediction)}
             reviewIndex={review}
+            onSelect={(i) => setReview(review === i ? null : i)}
             recapFor={(i) => [
               i === 0
                 ? lesson.worked
-                : i === 1
-                  ? `Recorded branch: ${session.prediction?.branchId.replace('branch-', '').toUpperCase() ?? session.choice?.replace('branch-', '').toUpperCase() ?? 'unresolved'}.`
-                  : 'Review only. Your first attempt and the current exercise remain unchanged.',
+                : 'Review only. The current trace and the original recorded attempt are preserved.',
             ]}
-            onSelect={(i) => setReview(review === i ? null : i)}
           />
         </>
       }
       teaching={
         <div className={styles.teaching}>
-          {session.step === 0 ? (
+          {s.step === 0 ? (
             <>
-              <StageBlock kind="question" heading="Clinical purpose">
+              <StageBlock kind="question" heading="Clinical purpose" visibility="shown">
                 <h2>Clinical purpose</h2>
                 <p>{lesson.objective}</p>
                 <p className={styles.small}>Prerequisite: {lesson.prerequisite}</p>
               </StageBlock>
-              <StageBlock kind="pattern" heading="Read the course">
+              <StageBlock kind="pattern" heading="Read the course" visibility="shown">
                 <h2>Read the course</h2>
                 <p>
                   <strong>{lesson.concept}</strong>
@@ -256,67 +245,100 @@ function LessonSession({ lesson }: { lesson: Lesson }) {
                   <p key={p}>{p}</p>
                 ))}
               </StageBlock>
-              <StageBlock kind="signals" heading="Worked example">
-                <h2>Worked example</h2>
+              <StageBlock kind="signals" heading="Worked CT example" visibility="shown">
+                <h2>Worked CT example</h2>
                 <p>{lesson.worked}</p>
-                <p>{lesson.example.rationale}</p>
+                <p className={styles.small}>
+                  The gold crosses identify the source-derived trace in this worked example. Your
+                  next trace begins without those crosses.
+                </p>
               </StageBlock>
             </>
           ) : (
             <>
-              <h2>
-                {session.step === 4
-                  ? 'Why this branch'
-                  : transfer
-                    ? 'A changed arrangement'
-                    : 'Trace this airway'}
-              </h2>
-              <p>{exercise.question}</p>
-              <p>{exercise.evidence}</p>
-              {session.step === 4 ? (
-                <>
-                  <p>{session.prediction && feedbackFor(lesson.prediction, session.prediction)}</p>
-                  <h3>Use the same sequence next time</h3>
-                  <ol>
-                    {lesson.checklist.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ol>
-                </>
-              ) : (
+              <StageBlock kind="question" heading="Start from the parent" visibility="shown">
+                <h2>{transfer ? 'Another airway to trace' : 'Start from the parent'}</h2>
                 <p>
-                  Use the axial plane control to inspect the course. The diagram records your route;
-                  the comparison becomes available after you submit the opening map.
+                  {transfer
+                    ? lesson.transferPrompt
+                    : `Use Start to identify the parent in the ${trace.region.toLowerCase()} region, then trace its continuity to the three numbered CT levels.`}
                 </p>
+                <p>
+                  Browse between the numbered levels. Place your marks on the visible air column, or
+                  record that the continuation is unresolved.
+                </p>
+              </StageBlock>
+              {s.step === 3 || s.step === 4 || (transfer && response) ? (
+                <StageBlock
+                  kind="after-commitment"
+                  heading="Reading this airway"
+                  visibility="shown"
+                >
+                  <h2>Reading this airway</h2>
+                  <p>
+                    {transfer
+                      ? 'Compare the marked air column with the source-derived trace at each level. State the patient-space course, then explain how the display convention changes its appearance.'
+                      : lesson.interpretation}
+                  </p>
+                  <p className={styles.small}>
+                    The comparison follows existing centerline geometry. It is not a
+                    physician-approved clinical answer key or an annotation of mucosal ostia.
+                  </p>
+                </StageBlock>
+              ) : (
+                <StageBlock kind="pattern" heading="Keep the view straight" visibility="shown">
+                  <h2>Keep the view straight</h2>
+                  <p>
+                    Use the R/L/A/P letters after changing the display. A slice number describes an
+                    axial level, not the order of a bronchial generation.
+                  </p>
+                  <p>
+                    At a horizontal division, inspect the next branch from the parent direction
+                    instead of copying the axial Y shape.
+                  </p>
+                </StageBlock>
               )}
-              <h3>Your branch map</h3>
-              <LearnerRoute branchId={response?.branchId ?? session.choice} exercise={exercise} />
             </>
           )}
-          <p className={styles.small}>
-            A phantom makes the geometry explicit. It cannot establish named patient anatomy,
-            mucosal appearance, or device passage.
-          </p>
         </div>
       }
       simulator={
         <div className={styles.viewStack}>
-          <AxialStack
-            key={exercise.id}
-            exercise={exercise}
-            onSelect={session.step === 1 || (transfer && !response) ? select : undefined}
-            selected={response?.branchId ?? session.choice}
+          <NativeCtViewer
+            key={`${trace.id}-${s.step === 0 ? 'example' : transfer ? 'transfer' : 'prediction'}`}
+            trace={trace}
+            marks={s.step === 0 ? [null, null, null] : s.marks}
+            active={s.active}
+            levelRequest={levelRequest}
+            onActive={(index) => perform({ type: 'active', index })}
+            onMark={
+              marking ? (mark) => perform({ type: 'mark', index: s.active, mark }) : undefined
+            }
+            revealed={revealed}
+            showAnchor
           />
           {revealed ? (
-            <ReferenceComparison key={`ref-${exercise.id}`} exercise={exercise} />
-          ) : (
-            <div className={styles.locked}>
-              <h3>Comparison after your prediction</h3>
-              <p>
-                Submit the branch choice and opening map to see the parent view and exterior
-                geometry.
-              </p>
+            <div className={styles.optionalComparison}>
+              <button onClick={() => setComparison3d((v) => !v)}>
+                {comparison3d
+                  ? 'Close airway comparison'
+                  : 'Open exterior / virtual airway comparison'}
+              </button>
+              {comparison3d && (
+                <ClinicalAirwayView
+                  position={trace.scopePositionLps}
+                  direction={trace.scopeDirectionLps}
+                  roll={0}
+                  slice={Math.round(
+                    (sliceZ(trace.checkpoints[s.active].slice) + 368.5) / 1.2421875,
+                  )}
+                />
+              )}
             </div>
+          ) : (
+            <p className={styles.comparisonLock}>
+              CT and airway comparisons become available after you record the trace and its course.
+            </p>
           )}
         </div>
       }
@@ -326,8 +348,7 @@ function LessonSession({ lesson }: { lesson: Lesson }) {
             {SOURCE.title}
           </a>
           <span>{lesson.sourcePages}</span>
-          <span>Restart and reload preserve first attempts; incomplete work restarts.</span>
-          <Link href={BASE_PATH}>Lesson pathway</Link>
+          <span>Native CT · Slicer 5.12.3 · clinical review pending</span>
         </div>
       }
     />

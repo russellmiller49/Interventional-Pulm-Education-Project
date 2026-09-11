@@ -2,11 +2,10 @@ import {
   stageStepLocationErrors,
   type StageStepBase,
 } from '@/features/learning-module/stage/stageModel'
-import { makeExercise } from './phantoms'
-import type { Lesson } from './types'
+import type { CtLesson } from './ct-types'
 
 export const BASE_PATH = '/learn/anatomy/branch-tracing'
-export const VERSION = 'c1-a1-r1'
+export const VERSION = 'c2-ct1-r2'
 export const SOURCE = {
   title: 'Kurimoto & Morita. Bronchial Branch Tracing (2020)',
   url: 'https://doi.org/10.1007/978-981-13-9905-3',
@@ -16,11 +15,11 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     id: 'orientation',
     ordinal: 1,
     phase: 'recognize',
-    title: 'Read a worked example',
+    title: 'Orient to the CT',
     instruction:
-      'Read the example and match its course to the patient axes. This demonstration carries no score.',
-    lookIn: { pane: 'teaching', landmark: 'Worked example' },
-    actionLabel: 'Try a new branch',
+      'Read the worked example. Scroll through its CT levels and identify the parent airway before starting your own trace.',
+    lookIn: { pane: 'teaching', landmark: 'Worked CT example' },
+    actionLabel: 'Trace this airway',
     interaction: 'read',
     gate: 'open',
   },
@@ -28,11 +27,11 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     id: 'prediction',
     ordinal: 2,
     phase: 'predict',
-    title: 'Trace the next branch',
+    title: 'Follow the lumen',
     instruction:
-      'Browse neighboring axial planes. Select a daughter branch from the supplied evidence.',
-    lookIn: { pane: 'simulator', landmark: 'Axial tracing stack' },
-    actionLabel: 'Record branch choice',
+      'At each of the three trace levels, mark the lumen you believe continues from the starting airway. Browse neighboring slices to establish continuity.',
+    lookIn: { pane: 'simulator', landmark: 'CT tracing stack' },
+    actionLabel: 'Record trace',
     interaction: 'choose',
     gate: 'open',
   },
@@ -40,10 +39,11 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     id: 'map',
     ordinal: 3,
     phase: 'act',
-    title: 'Draw the opening arrangement',
-    instruction: 'Place each daughter opening in the stated parent view.',
-    lookIn: { pane: 'steps', landmark: 'Your opening map' },
-    actionLabel: 'Submit opening map',
+    title: 'Describe its course',
+    instruction:
+      'Review your three marked levels and record how this airway continues in patient space.',
+    lookIn: { pane: 'steps', landmark: 'Your branch map' },
+    actionLabel: 'Reveal CT comparison',
     interaction: 'map',
     gate: 'after-prediction',
   },
@@ -51,11 +51,11 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     id: 'comparison',
     ordinal: 4,
     phase: 'observe',
-    title: 'Compare the two views',
+    title: 'Compare on the CT',
     instruction:
-      'Compare your branch choice and opening map with the reference. Your original choice remains recorded.',
-    lookIn: { pane: 'simulator', landmark: 'Reference comparison' },
-    actionLabel: 'Read the explanation',
+      'Compare your marks with the source-derived trace. Use adjacent slices to resolve a difference rather than following a point in isolation.',
+    lookIn: { pane: 'simulator', landmark: 'CT tracing stack' },
+    actionLabel: 'Review the relationship',
     interaction: 'observe',
     gate: 'after-prediction',
   },
@@ -63,11 +63,11 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     id: 'reasoning',
     ordinal: 5,
     phase: 'explain',
-    title: 'Explain the relationship',
+    title: 'Relate the two views',
     instruction:
-      'Review the feedback for your choice. Separate patient direction from position on the image.',
-    lookIn: { pane: 'teaching', landmark: 'Why this branch' },
-    actionLabel: 'Apply it to a changed view',
+      'Explain to yourself how the airway course affects the view from its parent. Keep patient direction separate from the display orientation.',
+    lookIn: { pane: 'teaching', landmark: 'Reading this airway' },
+    actionLabel: 'Trace another airway',
     interaction: 'explain',
     gate: 'after-prediction',
   },
@@ -75,242 +75,216 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     id: 'transfer',
     ordinal: 6,
     phase: 'transfer',
-    title: 'Trace a changed arrangement',
+    title: 'Apply it to another trace',
     instruction:
-      'This is a new geometric arrangement. Trace a branch and construct its opening map before viewing feedback.',
+      'Trace this different airway on the real CT. Place three lumen marks and describe the course before opening the comparison.',
     lookIn: {
       pane: 'simulator',
-      landmark: 'Axial tracing stack',
+      landmark: 'CT tracing stack',
       alsoPane: 'steps',
-      alsoLandmark: 'Your opening map',
+      alsoLandmark: 'Your branch map',
     },
-    actionLabel: 'Submit new interpretation',
+    actionLabel: 'Compare new trace',
     interaction: 'transfer',
     gate: 'after-prediction',
   },
 ]
 
-// The horizontal–vertical lesson was exercised through the real renderer before expansion.
-const horizontalVertical: Lesson = {
-  id: 'horizontal-vertical',
-  title: 'Horizontal–vertical pattern',
-  minutes: 6,
-  objective:
-    'Distinguish cranial and caudal daughter branches while looking along a horizontal parent.',
-  prerequisite: 'Axial orientation and a continuous parent–child airway relationship.',
-  concept: 'A horizontal parent can divide toward different superior–inferior levels.',
-  teaching: [
-    'Follow the parent in the axial plane, then scroll through neighboring planes to establish whether each daughter courses cranially or caudally.',
-    'The bronchoscopic view looks along the parent airway. Up and down on that view depend on the camera orientation; the patient directions do not change when the scope rolls.',
-  ],
-  checklist: [
-    'Find the parent lumen.',
-    'Trace each daughter through adjacent planes.',
-    'State the patient direction.',
-    'Apply the stated camera orientation.',
-  ],
-  worked:
-    'In the demonstration, the selected daughter rises toward more cranial planes. With cranial at screen-up in the horizontal parent view and zero roll, its opening is above its sibling. The next exercise changes the arrangement.',
-  sourcePages: 'Chapter 1, printed pp. 10–11',
-  example: makeExercise('horizontal-vertical', 0),
-  prediction: makeExercise('horizontal-vertical', 1),
-  transfer: makeExercise('horizontal-vertical', 4),
-  steps: LESSON_STEPS,
-}
-
-export const LESSONS: Lesson[] = [
+export const LESSONS: CtLesson[] = [
   {
     id: 'orientation',
-    title: 'Patient axes and the parent view',
+    title: 'Orient the CT for branch tracing',
     minutes: 5,
     objective:
-      'Identify patient right and left while distinguishing an axial image from a view down an airway.',
-    prerequisite: 'Basic lobar anatomy; no branch-tracing experience required.',
-    concept: 'Patient axes stay fixed when the display changes.',
+      'Change from standard axial display to the tracing view while preserving patient right and left.',
+    prerequisite: 'Recognize the trachea and main bronchi on axial CT.',
+    concept: 'Orient the image before interpreting an opening.',
     teaching: [
-      'Start with the entire relationship: CT shows cross-sections through the patient; the bronchoscopic view looks along a particular airway. A route map records which airways connect.',
-      'On a standard axial display viewed from the feet, patient right is on screen-left and anterior is toward the top. Read the orientation letters whenever the display is rotated or reflected.',
-    ],
-    checklist: [
-      'Read R, L, A and P.',
-      'Locate the parent airway.',
-      'Follow the daughter in patient space.',
-      'Name the viewpoint before describing screen position.',
+      'Start in the central airway and identify R, L, A and P. In standard axial viewing, the image is seen from the feet. Patient right is on screen-left.',
+      'For caudal tracing in the middle lobe, lingula and lower lobes, the book reflects the image left-to-right. For the right upper lobe it rotates standard axial images 90° counterclockwise; for the left upper division, 90° clockwise. These change the display, not the patient anatomy.',
     ],
     worked:
-      'In this demonstration, a daughter moves toward patient left. It appears on the right side of the standard axial display. The parent-view diagram uses its own stated up direction; copy the relationship, not the screen position.',
-    sourcePages: 'Chapter 1, printed pp. 3–7',
-    example: makeExercise('vertical', 0),
-    prediction: makeExercise('vertical', 1),
-    transfer: makeExercise('horizontal-horizontal', 2),
+      'This central-airway example is shown in the reflected tracing convention. Toggle Standard axial and Book tracing view: the airway moves across the screen, while its patient-space location and CT level stay the same.',
+    interpretation:
+      'A left/right reflection changes the displayed branch positions. The R and L labels move with the anatomy. Following the same lumen through adjacent levels is the check that branch identity has been preserved.',
+    transferPrompt:
+      'Now follow a right-upper-lobe trace. Compare its 90° counterclockwise view with standard axial before marking the lumen.',
+    sourcePages: 'Chapter 1, pp. 4–8; Figs. 1.5–1.12',
+    example: 'central-right',
+    prediction: 'central-left',
+    transfer: 'right-upper-entry',
     steps: LESSON_STEPS,
   },
   {
     id: 'continuity',
-    title: 'Follow one continuous lumen',
+    title: 'Follow the airway through adjacent slices',
     minutes: 6,
-    objective: 'Maintain one parent–daughter connection through neighboring planes.',
-    prerequisite: 'Patient axes and the distinction between CT and parent-airway views.',
-    concept: 'Continuity establishes a connection; proximity alone does not.',
+    objective: 'Maintain one lumen across a branch point instead of switching to a nearby airway.',
+    prerequisite: 'Patient axes and the three tracing display conventions.',
+    concept: 'A branch connection is established by continuity, not proximity.',
     teaching: [
-      'Begin in the parent lumen and follow it to the division. Scroll in short increments so that each next lumen can be related to the previous one.',
-      'Keep the adjacent branch in your map. A nearby round lucency can belong to another airway, and an accompanying vessel does not establish an airway connection.',
-    ],
-    checklist: [
-      'Start in a known lumen.',
-      'Follow through adjacent planes.',
-      'Identify the shared division.',
-      'Retain the sibling branch as a landmark.',
+      'Begin at the outlined parent lumen. Move through adjacent slices in small increments and keep its walls in view. At the division, follow each candidate far enough to understand its course.',
+      'The three trace levels are checkpoints, not the whole evidence. Use the slider, arrow buttons or mouse wheel to inspect every intervening 0.5 mm plane. A nearby vessel or another airway is not proof of a connection.',
     ],
     worked:
-      'The parent in the example continues into two daughters at the same junction. Follow each daughter away from that division before assigning the target. The exterior comparison is a check on the same mathematical geometry.',
-    sourcePages: 'Chapter 1, printed pp. 4, 15–18',
-    example: makeExercise('vertical', 2),
-    prediction: makeExercise('horizontal-oblique', 0),
-    transfer: makeExercise('vertical', 3),
+      'In the right-upper-lobe example, the route first descends in the right main bronchus and then turns cranially. The slice order can reverse along a continuous route.',
+    interpretation:
+      'Review where your trace diverges from the parent. Return to the last level where the lumen is clear, then advance one slice at a time. Keep the neighboring bronchus as a landmark rather than jumping to the nearest round lucency.',
+    transferPrompt:
+      'Continue from the bronchus intermedius into an anterior branch. Follow its walls rather than relying on how close the next lucency appears.',
+    sourcePages: 'Chapter 1, pp. 4, 15–18',
+    example: 'right-upper-entry',
+    prediction: 'central-right',
+    transfer: 'middle-lobe-entry',
     steps: LESSON_STEPS,
   },
   {
     id: 'vertical',
-    title: 'Vertical pattern',
-    minutes: 5,
-    objective: 'Relate a near-vertical parent on axial CT to its daughter openings.',
-    prerequisite: 'Patient axes and continuous parent–child tracing.',
-    concept: 'A near-vertical airway intersects successive axial planes as a compact lumen.',
+    title: 'Read a vertical airway on real CT',
+    minutes: 6,
+    objective:
+      'Follow a predominantly craniocaudal airway and recognize its changing lumen across axial planes.',
+    prerequisite: 'Continuous parent-to-daughter tracing.',
+    concept: 'A vertical airway crosses successive axial planes as a compact lumen.',
     teaching: [
-      'When the airway runs nearly perpendicular to the axial plane, follow the compact lumen from one level to the next. The division becomes apparent as connected daughter lumens separate.',
-      'Predict the opening arrangement from the direction along the parent. Even in a simple vertical example, a rolled camera can change the apparent clock positions.',
-    ],
-    checklist: [
-      'Find the near-vertical parent.',
-      'Identify the separating lumens.',
-      'Trace each daughter.',
-      'Apply the stated parent-view orientation.',
+      'When a bronchus runs close to perpendicular to the axial plane, its lumen appears on successive CT levels. Track that lumen until the division separates into daughter airways.',
+      'In the book’s vertical pattern, the spur angle seen on the correctly oriented CT can guide the branch diagram. First confirm the airway direction and display convention; a screen clock position is not a fixed anatomical name.',
     ],
     worked:
-      'Scroll from the single proximal lumen toward the division. The daughter lumens separate laterally in this original phantom. Their connection to the parent is unchanged when the external model is rotated.',
-    sourcePages: 'Chapter 1, printed pp. 7–9',
-    example: makeExercise('vertical', 3),
-    prediction: makeExercise('vertical', 2),
-    transfer: makeExercise('vertical', 5),
+      'The upper-lobe example advances toward more cranial levels. Scroll through the stack to see the lumen move and divide, with the right chest wall at the bottom of the rotated view.',
+    interpretation:
+      'Compare the change in CT level with the smaller in-plane displacement. Then inspect the bifurcation through neighboring slices. The vertical pattern describes the local course; an entire route can contain several different patterns.',
+    transferPrompt:
+      'Trace a lower-lobe airway that descends through successive planes. Its reflected display differs from the upper-lobe view.',
+    sourcePages: 'Chapter 1, pp. 7–9; Figs. 1.12–1.13',
+    example: 'right-upper-apical',
+    prediction: 'right-upper-distal',
+    transfer: 'right-lower-basal',
     steps: LESSON_STEPS,
   },
   {
     id: 'horizontal-horizontal',
-    title: 'Horizontal–horizontal pattern',
+    title: 'Follow a horizontal branch',
     minutes: 6,
     objective:
-      'Reconstruct daughter openings when parent and daughters course near the axial plane.',
-    prerequisite: 'Lumen continuity and the vertical tracing pattern.',
-    concept: 'Looking along a horizontal parent requires a change in viewpoint.',
+      'Recognize an airway that travels mainly within the axial plane and interpret it from its parent.',
+    prerequisite: 'Vertical tracing and the distinction between image and patient directions.',
+    concept: 'A long in-plane lumen needs a change in viewpoint.',
     teaching: [
-      'A horizontal parent and its horizontal daughters can remain visible within a narrow set of axial planes. The CT depiction is a view across those airways, not a view into the parent opening.',
-      'Mentally move the viewpoint along the parent before drawing the daughter arrangement. Copying the apparent shape of the axial division can reverse the intended opening relationship.',
-    ],
-    checklist: [
-      'Establish the parent direction.',
-      'Trace the in-plane daughters.',
-      'Look along the parent.',
-      'Place the openings in that view.',
+      'A horizontal airway can travel a considerable distance while remaining within a narrow range of axial levels. Follow the elongated lumen across the image, and confirm the connection in neighboring slices.',
+      'For a horizontal–horizontal division, reconstruct the relationship as seen along the parent airway. Copying the Y shape of the axial image directly into a bronchoscopic opening map can reverse the intended relationship.',
     ],
     worked:
-      'The example is viewed along a parent directed anteriorly. The daughters separate to patient right and left. Compare their positions only after specifying which direction is up in the parent view.',
-    sourcePages: 'Chapter 1, printed pp. 8–10',
-    example: makeExercise('horizontal-horizontal', 0),
-    prediction: makeExercise('horizontal-horizontal', 3),
-    transfer: makeExercise('horizontal-horizontal', 4),
+      'The middle-lobe example extends anteriorly while changing CT level only slightly. Several trace points may lie on the same acquisition plane because the airway is almost horizontal.',
+    interpretation:
+      'Look at the in-plane distance between your marked lumens and their small difference in CT level. The source-derived trace is a comparison aid; inspect the actual air column before accepting its path.',
+    transferPrompt:
+      'Trace an upper-lobe branch in the counterclockwise view. Separate the display rotation from the airway’s local course.',
+    sourcePages: 'Chapter 1, pp. 8–10; Figs. 1.14–1.16',
+    example: 'middle-lobe-entry',
+    prediction: 'middle-lobe-lateral',
+    transfer: 'upper-oblique-medial',
     steps: LESSON_STEPS,
   },
-  horizontalVertical,
   {
-    id: 'horizontal-oblique',
-    title: 'Horizontal–oblique pattern',
+    id: 'horizontal-vertical',
+    title: 'Find the cranial and caudal continuations',
     minutes: 6,
-    objective:
-      'Use both in-plane course and changing axial level to distinguish oblique daughter branches.',
-    prerequisite: 'Horizontal–horizontal and horizontal–vertical relationships.',
-    concept: 'An oblique daughter changes both in-plane position and axial level.',
+    objective: 'Use neighboring CT levels to distinguish a cranial continuation from a caudal one.',
+    prerequisite: 'Following a horizontal parent lumen.',
+    concept: 'The daughter’s change in level resolves a horizontal–vertical relationship.',
     teaching: [
-      'Follow the daughter in two ways: where it moves within each axial plane, and how it changes level as you scroll. One isolated image cannot show the full course.',
-      'Use a neighboring branch as a second landmark. State whether the course approaches or moves away from that landmark, then translate the relationship into the stated parent view.',
-    ],
-    checklist: [
-      'Find the horizontal parent.',
-      'Follow the in-plane displacement.',
-      'Check the change in axial level.',
-      'Compare the daughter with its neighbor.',
+      'Locate the horizontal parent first. At its distal division, compare the daughter airways above and below the junction. A single axial frame cannot establish both courses.',
+      'Viewed along a horizontal parent, cranial and caudal daughters can form an up–down relationship. The direction called screen-up still depends on the stated viewing orientation.',
     ],
     worked:
-      'One daughter in the example moves laterally and cranially, while its sibling moves to the opposite side and caudally. The exterior view makes both components visible. The next exercise requires you to infer the course from the axial stack first.',
-    sourcePages: 'Chapter 1, printed pp. 11–15',
-    example: makeExercise('horizontal-oblique', 0),
-    prediction: makeExercise('horizontal-oblique', 1),
-    transfer: makeExercise('horizontal-oblique', 4),
+      'The worked middle-lobe trace follows one continuation beyond a nearly horizontal parent. Compare its final level with the parent level, then return to the junction to look for the other continuation.',
+    interpretation:
+      'The reference follows the caudal continuation in this local example. A neighboring cranial continuation appears at higher levels. Review the source lumen before assigning a subsegmental name; graph depth alone does not supply that name.',
+    transferPrompt:
+      'Return to the same parent and follow the other continuation. This is deliberate comparison within one CT, not a new patient assessment.',
+    sourcePages: 'Chapter 1, pp. 10–11; Fig. 1.17',
+    example: 'middle-lobe-entry',
+    prediction: 'middle-lobe-caudal',
+    transfer: 'middle-lobe-cranial',
+    steps: LESSON_STEPS,
+  },
+  {
+    id: 'horizontal-oblique',
+    title: 'Trace an oblique daughter airway',
+    minutes: 6,
+    objective: 'Combine in-plane movement and changing CT level to follow an oblique daughter.',
+    prerequisite: 'Horizontal and vertical airway relationships.',
+    concept: 'An oblique branch moves across the image and through the stack.',
+    teaching: [
+      'An oblique daughter leaves a horizontal parent with both in-plane and craniocaudal motion. Inspect successive levels while retaining the parent and the adjacent branch as landmarks.',
+      'The book emphasizes whether the traced airway approaches or moves away from a neighboring branch. A single fixed clock label does not describe that three-dimensional relationship.',
+    ],
+    worked:
+      'In this upper-lobe example, the lumen changes level as it advances laterally. The right-upper-lobe display is already rotated 90° counterclockwise, so read the patient labels before interpreting the movement.',
+    interpretation:
+      'Follow the marked continuation both laterally and cranially through the stack. Compare it with the neighboring continuation rather than projecting the entire route onto one axial image.',
+    transferPrompt:
+      'Trace a left-upper-division airway using the opposite display rotation. Re-establish the patient directions before drawing the route.',
+    sourcePages: 'Chapter 1, pp. 11–15; Figs. 1.18–1.23',
+    example: 'upper-oblique-medial',
+    prediction: 'upper-oblique-lateral',
+    transfer: 'left-upper-anterior',
     steps: LESSON_STEPS,
   },
   {
     id: 'orientation-changes',
-    title: 'Scope roll and a returning branch',
+    title: 'Handle a change in tracing direction',
     minutes: 7,
-    objective: 'Maintain branch identity after camera roll or a caudal-to-cranial turn.',
-    prerequisite: 'All four tracing patterns and patient-coordinate orientation.',
-    concept: 'The route can change direction without changing anatomical identity.',
+    objective: 'Maintain airway identity when the route turns from caudal toward cranial levels.',
+    prerequisite: 'The three book display conventions and continuous tracing.',
+    concept: 'The slice direction can reverse without changing the airway connection.',
     teaching: [
-      'A bronchoscope can turn from a caudal course toward a cranial daughter. Following the route can therefore require reversing the direction of CT scrolling.',
-      'Camera roll changes screen-up. Patient cranial, caudal, right and left remain the same. Use the roll indicator and fixed reference frame before interpreting opening positions.',
-      'The book describes a horizontally reversed CT display for middle lobe, lingula and lower lobes, and rotated displays for upper-lobe interpretation. These are reading conventions, not universal scope orientations. Its “left superior segment” in this context refers to the left upper division (B1+2 and B3), not left lower-lobe B6.',
-    ],
-    checklist: [
-      'Retain the last confirmed parent.',
-      'Follow the returning daughter.',
-      'Reverse slice direction when needed.',
-      'Recalculate the opening after roll.',
+      'A route can descend and then turn cranially. Do not force every distal step to move toward a lower slice number. Follow the lumen from the last certain connection.',
+      'For the left upper division, the book rotates axial images clockwise by 90°. Its term “left superior segment” in this discussion refers to the upper division, not the lower-lobe superior segment. A lower-lobe returning route still uses the lower-lobe reflection convention.',
     ],
     worked:
-      'The returning branch descends before turning upward in the example. A single rule such as “keep scrolling caudally” would lose it. Follow the connected course; then inspect the same parent geometry with a stated 90° roll in the next exercise.',
-    sourcePages: 'Chapter 1, printed pp. 4–7, 15–17; chapter 2, pp. 56–59',
-    example: makeExercise('reversal', 0),
-    prediction: makeExercise('reversal', 5),
-    transfer: makeExercise('horizontal-oblique', 6, 'roll'),
+      'Follow the left-upper-division example in its clockwise view. The direction labels rotate with the image, while cranial and caudal remain defined by the CT level.',
+    interpretation:
+      'This lower-lobe route initially descends and then returns toward more cranial levels. A reversed slice order is expected along that path. The book also illustrates a rotated coronal MPR as a supporting check; the axial continuity remains the primary task here.',
+    transferPrompt:
+      'Follow the right main bronchus toward an upper-lobe branch and find the point where the slice direction reverses.',
+    sourcePages: 'Chapter 1, pp. 5–8, 15–17; Figs. 1.24–1.26',
+    example: 'left-upper-division',
+    prediction: 'left-lower-returning',
+    transfer: 'right-upper-entry',
     steps: LESSON_STEPS,
   },
   {
     id: 'variants-limits',
-    title: 'Variants and the limit of the evidence',
+    title: 'Build and check a complete CT trace',
     minutes: 7,
     objective:
-      'Preserve a nonbinary division and recognize an unresolved distal airway connection.',
-    prerequisite: 'Continuity, parent-view interpretation and orientation changes.',
-    concept: 'The observed topology takes priority over a memorized binary tree.',
+      'Record a continuous route and explicitly identify any level where the lumen cannot be resolved.',
+    prerequisite: 'All four patterns and the display conventions.',
+    concept: 'A defensible trace preserves uncertainty.',
     teaching: [
-      'A division may have three daughters or share a common stem. Preserve what the images actually show in the branch map instead of forcing a two-child template.',
-      'A formal bronchial name and the count of graph edges are different descriptions. Daughter-branch suffixes do not automatically add a named generation; a subsuperior bronchus designated B* is distinct from an asterisk suffix on a parent name.',
-      'When the lumen becomes indistinct, mark the limit of demonstrated continuity. The course of an accompanying artery may support a hypothesis, but it does not turn an unseen connection into an observed airway.',
-    ],
-    checklist: [
-      'Count the observed daughters.',
-      'Preserve shared stems.',
-      'Keep labels separate from connectivity.',
-      'Mark where direct lumen evidence ends.',
+      'Apply the same sequence to each junction: identify the parent, follow its lumen, inspect the next division, and draw the relationship from the parent viewpoint. Preserve siblings and common stems rather than forcing every division into two identical branches.',
+      'If the air column cannot be resolved, record that uncertainty. A nearby vessel or a centerline is supporting context, not confirmation of a patent airway. The book distinguishes a lateral daughter-branch asterisk from a subsuperior bronchus; neither should be inferred from this graph.',
     ],
     worked:
-      'The example contains three daughters at one junction. Its topology has one parent and three children. None is discarded to make a binary drawing. In the later uncertainty task, visible proximal openings remain in the map while the distal connection is recorded as unresolved.',
-    sourcePages: 'Chapter 1, printed pp. 1–2, 19–20; chapter 2, pp. 61, 65, 72',
-    example: makeExercise('variant', 0),
-    prediction: makeExercise('variant', 2),
-    transfer: makeExercise('variant', 4, 'uncertainty'),
+      'The basal example provides a longer caudal trace. Check each interval between the three levels; do not treat the three marked points as sufficient proof of continuity.',
+    interpretation:
+      'Compare your route one level at a time. If you marked uncertainty, revisit that interval and state what remains unresolved. This preview uses one source CT and does not establish performance on a new patient.',
+    transferPrompt:
+      'Trace another lobar route and decide whether the lumen is adequately visible at every level. Record uncertainty when the source image does not resolve it.',
+    sourcePages: 'Chapter 1, pp. 1–4, 15–18',
+    example: 'right-lower-basal',
+    prediction: 'left-lower-basal',
+    transfer: 'left-lingula',
     steps: LESSON_STEPS,
   },
 ]
-
-export const lessonById = (id?: string | null) => LESSONS.find((l) => l.id === id)
-export function nextLesson(completed: readonly string[]) {
-  return LESSONS.find((l) => !completed.includes(l.id)) ?? null
-}
-
-for (const lesson of LESSONS) {
-  for (const step of lesson.steps) {
-    const errors = stageStepLocationErrors(`${lesson.id}/${step.id}`, step.lookIn)
-    if (errors.length) throw new Error(errors.join('; '))
-  }
+export const lessonById = (id?: string) => LESSONS.find((l) => l.id === id)
+export const nextLesson = (completed: string[]) =>
+  LESSONS.find((l) => !completed.includes(l.id)) ?? null
+export function lessonLocationErrors() {
+  return LESSONS.flatMap((l) =>
+    l.steps.flatMap((s) => stageStepLocationErrors(`${l.id}.${s.id}`, s.lookIn)),
+  )
 }

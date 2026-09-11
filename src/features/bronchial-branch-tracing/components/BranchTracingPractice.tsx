@@ -1,33 +1,35 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useEffect, useReducer, useState } from 'react'
+import Image from 'next/image'
+import { useState } from 'react'
 import { StageLayout } from '@/features/learning-module/stage/StageLayout'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { NowCard } from '@/features/learning-module/stage/NowCard'
 import { LookInLine } from '@/features/learning-module/stage/LookInLine'
-import { BASE_PATH } from '../content/lessons'
-import { ASSESS_EXERCISES, PRACTICE_EXERCISES } from '../content/practice'
-import { emptyPractice, practiceReducer } from '../engine/practice'
-import { feedbackFor, mapComplete, scoreResponse, validChoice } from '../engine/session'
-import { PREFIX, readProgress, saveFirst } from '../engine/progress'
+import { BASE_PATH, SOURCE } from '../content/lessons'
+import { ASSESS_TRACES, PRACTICE_TRACES } from '../content/practice'
+import { COURSE_OPTIONS, type Course, type CtMark, type CtResponse } from '../content/ct-types'
+import { traceById } from '../geometry/native-ct'
+import { DISPLAY_PRESETS } from '../geometry/coordinates'
+import { marksComplete, validCtMark } from '../engine/ct-session'
+import { saveCtAttempt } from '../engine/progress'
 import { ModuleFrame } from './ModuleFrame'
-import { AxialStack, ReferenceComparison } from './TracingViews'
-import { BranchChoice, LearnerRoute, OpeningEditor } from './ResponseControls'
+import { NativeCtViewer } from './NativeCtViewer'
+import { CtCourseControl, CtTraceList } from './CtTraceControls'
 import styles from './branch-tracing.module.css'
 
 const RealCtExplorer = dynamic(() => import('./RealCtExplorer').then((m) => m.RealCtExplorer), {
   ssr: false,
-  loading: () => <p className={styles.loading}>Loading CT explorer…</p>,
+  loading: () => <p>Loading CT explorer…</p>,
 })
-
 export function BranchTracingPractice({ mode }: { mode: 'practice' | 'assess' }) {
-  const [started, setStarted] = useState(false)
-  const [explorer, setExplorer] = useState(false)
+  const [started, setStarted] = useState(false),
+    [explorer, setExplorer] = useState(false)
   if (started)
     return (
       <ModuleFrame section={mode} activity>
-        <PracticeSession mode={mode} onExit={() => setStarted(false)} />
+        <CtPracticeSession mode={mode} onExit={() => setStarted(false)} />
       </ModuleFrame>
     )
   return (
@@ -35,58 +37,57 @@ export function BranchTracingPractice({ mode }: { mode: 'practice' | 'assess' })
       <main className={styles.overview}>
         <div className={styles.eyebrow}>
           BRANCH TRACING / {mode === 'practice' ? 'PRACTICE' : 'ASSESS'}
+          <span>Real CT · 0.5 mm</span>
         </div>
         <h1 className={styles.pageTitle}>
           {mode === 'practice'
-            ? 'Build the relationship yourself'
-            : 'Check your spatial interpretation'}
+            ? 'Trace the airway yourself'
+            : 'Record an independent CT interpretation'}
         </h1>
         <p className={styles.subtitle}>
-          {mode === 'practice'
-            ? 'Four interpretations. Less assistance. Feedback after submission.'
-            : 'A separate set of geometric arrangements, with delayed feedback.'}
+          Four real CT traces. Your marks first; comparison after submission.
         </p>
         <div className={styles.introGrid}>
           <section>
-            <h2>What you will do</h2>
+            <h2>Follow the air column</h2>
             <p>
-              For each arrangement, follow the axial stack, choose the next branch and place the
-              daughter openings in the stated parent view. You may revisit recorded choices before
-              submitting the whole set.
+              Start in the identified parent airway. At each numbered level, mark the lumen that
+              continues from it. Use neighboring slices, the book-oriented view and the standard
+              axial view to check the connection.
             </p>
             <p>
-              {mode === 'practice'
-                ? 'Hints are available on request and count as assistance.'
-                : 'Permitted tools: independent axial browsing, display presets, zoom and the neutral description of geometric coordinates. Hints and reference views are withheld.'}
+              Record the patient-space course after each trace. You may revisit your interpretations
+              before submitting all four.
             </p>
             <button className={styles.startButton} onClick={() => setStarted(true)}>
-              {mode === 'practice' ? 'Start independent practice' : 'Start geometric assessment'}
+              {mode === 'practice' ? 'Start CT practice' : 'Start CT interpretation'}
             </button>
           </section>
-          <section className={styles.notice}>
-            <h2>
-              {mode === 'practice'
-                ? 'Interpret the course'
-                : 'Clinical assessment is awaiting review'}
-            </h2>
+          <section className={styles.ctPreviewPanel}>
+            <Image
+              unoptimized
+              src="/branch-tracing/native-v1/axial/387.png"
+              alt="Actual axial CT used for the tracing exercises"
+              width={512}
+              height={512}
+            />
             <p>
-              These are synthetic geometric exercises. Their results describe branch choice and
-              opening interpretation in this model. They are not held-out patient CTs and do not
-              carry a clinical pass threshold.
-            </p>
-            <p>
-              Initial responses and hint use are retained. An edited or repeated answer cannot
-              replace the first attempt. Backtracking itself carries no penalty.
+              Native CT from the same source as the airway model. The appropriate reflection or 90°
+              rotation is applied to each trace.
             </p>
           </section>
         </div>
+        <p className={styles.notice}>
+          These traces come from one teaching CT. Source-derived comparisons support self-review;
+          clinical case labels and camera checkpoints are awaiting faculty review. No automated
+          clinical grade or pass threshold is assigned.
+        </p>
         {mode === 'practice' && (
           <section className={styles.source}>
-            <h2>Explore the existing teaching CT</h2>
+            <h2>Explore the CT and airway freely</h2>
             <p>
-              Independently browse a real CT preview, inspect the matched airway surface, and build
-              a route by choosing openings. This ungraded viewer contains one source CT and no
-              candidate anatomical labels.
+              The original whole-volume preview and matched exterior/virtual airway viewer remain
+              available for ungraded exploration.
             </p>
             <button onClick={() => setExplorer((v) => !v)}>
               {explorer ? 'Close CT explorer' : 'Open CT and airway explorer'}
@@ -99,219 +100,259 @@ export function BranchTracingPractice({ mode }: { mode: 'practice' | 'assess' })
   )
 }
 
-function PracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onExit: () => void }) {
-  const exercises = mode === 'practice' ? PRACTICE_EXERCISES : ASSESS_EXERCISES
-  const [s, dispatch] = useReducer(
-    practiceReducer(exercises, mode === 'practice'),
-    exercises,
-    emptyPractice,
-  )
-  const [saveFailed, setSaveFailed] = useState(false)
-  const e = exercises[s.index]
-  useEffect(() => {
-    s.responses.forEach((response, i) => {
-      if (response && !saveFirst(`${mode}.item-${i + 1}`, exercises[i], response))
-        setSaveFailed(true)
-    })
-  }, [exercises, mode, s.responses])
-  const ready = s.responses.every(Boolean)
-  const current = s.responses[s.index]
-  const dirty =
-    !current ||
-    current.branchId !== s.choice ||
-    JSON.stringify(current.openings) !== JSON.stringify(s.openings) ||
-    current.hints !== s.hints
-  if (s.submitted) {
-    const rows = exercises.map((ex, i) => ({
-      exercise: ex,
-      response: s.responses[i]!,
-      score: scoreResponse(ex, s.responses[i]!),
-    }))
-    const first = readProgress().activities.filter(
-      (a) =>
-        a.activityId.startsWith(`${PREFIX}.${mode}.`) &&
-        a.activityId.endsWith('.connectivity.first'),
+function CtPracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onExit: () => void }) {
+  const ids = mode === 'practice' ? PRACTICE_TRACES : ASSESS_TRACES
+  const [index, setIndex] = useState(0),
+    [active, setActive] = useState(0)
+  const [levelRequest, setLevelRequest] = useState(0)
+  const [marks, setMarks] = useState<(CtMark | null)[]>([null, null, null])
+  const [course, setCourse] = useState<Course | ''>('')
+  const [hints, setHints] = useState(0)
+  const [responses, setResponses] = useState<(CtResponse | null)[]>(ids.map(() => null))
+  const [submitted, setSubmitted] = useState(false),
+    [saveFailed, setSaveFailed] = useState(false)
+  const trace = traceById(ids[index])
+  const ready = marksComplete(marks) && Boolean(course)
+  const recorded = responses.every(Boolean)
+  const dirty = JSON.stringify(responses[index]) !== JSON.stringify({ marks, course, hints })
+  function open(i: number) {
+    const response = responses[i]
+    setIndex(i)
+    setActive(0)
+    setMarks(response?.marks ?? [null, null, null])
+    setCourse(response?.course ?? '')
+    setHints(response?.hints ?? 0)
+  }
+  function record() {
+    if (!ready) return
+    const response: CtResponse = { marks: marks as CtMark[], course: course as Course, hints }
+    const next = responses.map((r, i) => (i === index ? response : r))
+    setResponses(next)
+    if (!saveCtAttempt(`${mode}.item-${index + 1}`, hints)) setSaveFailed(true)
+    if (index < ids.length - 1) {
+      const nextResponse = next[index + 1]
+      setIndex(index + 1)
+      setActive(0)
+      setMarks(nextResponse?.marks ?? [null, null, null])
+      setCourse(nextResponse?.course ?? '')
+      setHints(nextResponse?.hints ?? 0)
+    }
+  }
+  function exportWorksheet() {
+    const content = {
+      module: 'bronchial-branch-tracing',
+      version: 'c2-ct1-r2',
+      mode,
+      sourceCaseCount: 1,
+      assessment: 'Ungraded CT interpretation',
+      traces: ids.map((id, i) => ({ id, interpretation: responses[i] })),
+    }
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(content, null, 2)], { type: 'application/json' }),
     )
-    const eligible = first.filter((a) => a.hintCount === 0)
-    const divergence = rows.findIndex((r) => !r.score.connectivity)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'bronchial-ct-interpretation.json'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+  if (submitted)
     return (
       <div className={styles.debrief}>
-        <h1>Interpretation debrief</h1>
+        <h1>CT interpretation debrief</h1>
         <p>
-          First-attempt unassisted branch decisions:{' '}
-          {eligible.filter((a) => a.bestScore === 100).length}/{eligible.length}. Assisted first
-          attempts: {first.length - eligible.length}.{' '}
-          {eligible.length === 0 ? 'No unassisted denominator is available.' : ''}
+          You recorded four real CT traces. Compare each marked lumen with the source-derived path
+          at that level, then inspect the intervening slices.
         </p>
-        <p>
-          {divergence < 0
-            ? 'All final branch choices match the supplied geometric evidence.'
-            : `First final divergence: interpretation ${divergence + 1}. Review its continuity before repeating the set.`}{' '}
-          These interpretations are separate geometric checkpoints, not one clinical route.
+        <p className={styles.small}>
+          ○ Your trace · ＋ Source-derived comparison. These are interpretations within one CT; no
+          clinical accuracy grade is assigned.
         </p>
         {saveFailed && (
-          <p role="status">Storage is unavailable. First-attempt counts above may be incomplete.</p>
+          <p role="status">
+            Browser storage is unavailable. The current worksheet remains available for local
+            export.
+          </p>
         )}
-        {rows.map((r, i) => (
-          <section className={styles.debriefRow} key={r.exercise.id}>
+        <div className={styles.tabs}>
+          <button onClick={exportWorksheet}>Export your CT worksheet</button>
+          <button onClick={onExit}>Return to {mode === 'practice' ? 'Practice' : 'Assess'}</button>
+        </div>
+        {ids.map((id, i) => (
+          <section key={id} className={styles.ctDebriefRow}>
             <div>
-              <h2>Interpretation {i + 1}</h2>
+              <h2>
+                Trace {i + 1} · {traceById(id).region}
+              </h2>
+              <p>{COURSE_OPTIONS[responses[i]!.course]}</p>
               <p>
-                <strong>
-                  Branch choice: {r.score.connectivity ? 'consistent' : 'review needed'} · opening
-                  positions: {r.score.viewpoint}/{r.score.viewpointTotal}
-                </strong>
+                {responses[i]!.marks.filter((m) => m.pixel === null).length} levels marked
+                unresolved.{' '}
+                {responses[i]!.hints > 0 ? 'Tracing reminder used.' : 'No tracing reminder used.'}
               </p>
-              <p>{feedbackFor(r.exercise, r.response)}</p>
-              <LearnerRoute exercise={r.exercise} branchId={r.response.branchId} />
+              <p>
+                Start with the parent lumen and examine continuity toward each mark. A difference
+                from the centerline is a reason to inspect the image, not an automatic wrong answer.
+              </p>
             </div>
-            <ReferenceComparison exercise={r.exercise} />
+            <DebriefViewer id={id} response={responses[i]!} />
           </section>
         ))}
-        <p className={styles.notice}>
-          Completed means you submitted the set. No mastery or procedural competence is awarded. The
-          clinical-case review gate remains open.
-        </p>
-        <button onClick={onExit}>Return to {mode === 'assess' ? 'Assess' : 'Practice'}</button>
       </div>
     )
-  }
   return (
     <StageLayout
-      section={mode}
-      stageId={`interpretation-${s.index + 1}`}
-      label="Independent branch interpretation"
       module="bronchial-branch-tracing"
-      workspaceLabel="Independent tracing workspace"
+      stageId={`ct-${index}`}
+      label="Independent CT tracing"
+      workspaceLabel="CT interpretation workspace"
       paneOrder={['steps', 'teaching', 'simulator']}
       defaultWidthFractions={{ primary: 0.26, secondary: 0.29 }}
       paneMinimums={{ primary: 300, secondary: 280, tertiary: 340 }}
       paneCaptions={{
-        steps: 'what to do',
-        teaching: 'the current problem',
-        simulator: 'independent axial browsing',
+        steps: 'your interpretation',
+        teaching: 'task and orientation',
+        simulator: 'real CT stack',
       }}
-      compactPane="steps"
+      compactPane="simulator"
       header={
         <SectionHeader
-          kicker={`${mode === 'assess' ? 'Assess' : 'Practice'} · Interpretation ${s.index + 1} of ${exercises.length}`}
-          title="Trace and map the next opening"
-          onRestart={() => dispatch({ type: 'restart' })}
-          restartLabel="Restart set"
-          onSaveAndExit={onExit}
+          kicker={mode === 'practice' ? 'Practice · Real CT' : 'Assess · CT worksheet'}
+          title={`Trace ${index + 1} of ${ids.length}`}
+          meta={[trace.region, 'Feedback after submission']}
+          onRestart={onExit}
+          restartLabel="Exit this set"
+          saveAndExitHref={BASE_PATH}
           resumedNote={
-            saveFailed ? 'Storage is unavailable; this set will not be saved.' : undefined
+            saveFailed
+              ? 'Browser storage is unavailable. Work continues, but progress cannot be saved.'
+              : undefined
           }
         />
       }
       contextStrip={
         <div className={styles.context}>
-          <span>Synthetic geometry · no clinical-case score</span>
-          <span>Reference roll {e.phantom.camera.roll}°</span>
-          <span>
-            {s.responses.filter(Boolean).length}/{exercises.length} recorded
-          </span>
+          <span>{DISPLAY_PRESETS[trace.preset]}</span>
+          <span>Native 0.5 mm axial slices</span>
+          <span>One source CT · ungraded</span>
         </div>
       }
       task={
         <>
           <NowCard
             model={{
-              kicker: 'Independent interpretation',
-              heading: 'Your branch and opening map',
-              body: 'Record the relationship from the evidence. Correctness and reference views remain withheld until you submit the complete set.',
-              where: (
-                <LookInLine
-                  location={{
-                    pane: 'simulator',
-                    landmark: 'Axial tracing stack',
-                    alsoPane: 'steps',
-                    alsoLandmark: 'Your opening map',
-                  }}
-                />
-              ),
+              kicker: `Interpretation ${index + 1}`,
+              heading: 'Follow and record the airway',
+              body: 'Place a lumen mark, or record unresolved continuity, at each numbered CT level. Then describe its course.',
+              where: <LookInLine location={{ pane: 'simulator', landmark: 'CT tracing stack' }} />,
               primary: {
-                label: ready && !dirty ? 'Submit all interpretations' : 'Record interpretation',
-                onActivate: () => dispatch({ type: ready && !dirty ? 'submit' : 'record' }),
-                disabled: !validChoice(e, s.choice) || !mapComplete(e, s.openings),
-                disabledReason:
-                  'Choose a branch and assign every proximal opening a distinct position.',
+                label:
+                  recorded && !dirty ? 'Submit all CT interpretations' : 'Record CT interpretation',
+                onActivate: () => {
+                  if (recorded && !dirty) setSubmitted(true)
+                  else record()
+                },
+                disabled: !ready,
+                disabledReason: 'Record all three levels and select the airway course.',
               },
             }}
           >
-            <BranchChoice
-              exercise={e}
-              selected={s.choice}
-              onChange={(id) => dispatch({ type: 'choose', id })}
+            <CtTraceList
+              trace={trace}
+              marks={marks}
+              active={active}
+              onActive={(i) => {
+                setActive(i)
+                setLevelRequest((v) => v + 1)
+              }}
             />
-            <OpeningEditor
-              exercise={e}
-              openings={s.openings}
-              onChange={(id, position) => dispatch({ type: 'place', id, position })}
-            />
+            <CtCourseControl value={course} onChange={setCourse} />
             {mode === 'practice' && (
               <div className={styles.hints}>
-                <button
-                  disabled={s.hints >= e.hints.length}
-                  onClick={() => dispatch({ type: 'hint' })}
-                >
-                  Show a hint
+                <button disabled={hints > 0} onClick={() => setHints(1)}>
+                  Tracing reminder
                 </button>
-                {e.hints.slice(0, s.hints).map((h) => (
-                  <p key={h}>{h}</p>
-                ))}
+                {hints > 0 && (
+                  <p>
+                    Follow the walls from Start through neighboring planes. The next numbered level
+                    may lie cranially or caudally.
+                  </p>
+                )}
               </div>
             )}
+            <div className={styles.checkpoints}>
+              {ids.map((id, i) => (
+                <button
+                  key={id}
+                  disabled={i > index && !responses[i]}
+                  aria-current={i === index ? 'step' : undefined}
+                  onClick={() => open(i)}
+                >
+                  Trace {i + 1}
+                  {responses[i] ? ' · recorded' : ''}
+                </button>
+              ))}
+            </div>
           </NowCard>
-          <div className={styles.checkpoints} aria-label="Recorded interpretations">
-            {exercises.map((_, i) => (
-              <button
-                key={i}
-                disabled={i > s.responses.filter(Boolean).length}
-                aria-current={i === s.index ? 'step' : undefined}
-                onClick={() => dispatch({ type: 'go', index: i })}
-              >
-                {i + 1}
-                {s.responses[i] ? ' · recorded' : ''}
-              </button>
-            ))}
-          </div>
-          <p className={styles.small}>
-            Changes to this item must be recorded before moving on. First-attempt results remain
-            unchanged.
-          </p>
         </>
       }
       teaching={
         <div className={styles.teaching}>
-          <h2>Current tracing problem</h2>
-          <p>{e.question}</p>
-          <p>{e.evidence}</p>
-          <h3>Your branch map</h3>
-          <LearnerRoute exercise={e} branchId={s.choice} />
+          <h2>Trace without the reference</h2>
           <p>
-            Use patient directions and the stated camera roll. The route displayed here is your
-            choice; it is not a correctness signal.
+            Use Start to find the parent airway, then follow the air column through the stack. At
+            the three numbered levels, record the lumen you believe continues from that parent.
+          </p>
+          <p>
+            Book tracing view applies the convention for this region. Standard axial changes only
+            the display; your marks remain attached to the same anatomy.
+          </p>
+          <h2>Record uncertainty honestly</h2>
+          <p>
+            If the source image does not resolve the connection, use “Lumen unresolved at this
+            level.” A centerline or nearby vessel would not establish continuity by itself.
+          </p>
+          <p className={styles.small}>
+            The whole set must be submitted before its comparison is shown. Changes to a recorded
+            response do not erase the first attempt.
           </p>
         </div>
       }
       simulator={
-        <AxialStack
-          key={e.id}
-          exercise={e}
-          selected={s.choice}
-          onSelect={(id) => dispatch({ type: 'choose', id })}
+        <NativeCtViewer
+          key={trace.id}
+          trace={trace}
+          marks={marks}
+          active={active}
+          levelRequest={levelRequest}
+          onActive={setActive}
+          onMark={(mark) => {
+            if (validCtMark(mark, trace, active))
+              setMarks((current) => current.map((m, i) => (i === active ? mark : m)))
+          }}
+          showAnchor
         />
       }
       footer={
         <div className={styles.footer}>
-          <span>
-            First attempts are retained. Reloading restarts this set. No reference answers are
-            mounted before submission.
-          </span>
-          <a href={BASE_PATH}>Overview</a>
+          <a href={SOURCE.url} target="_blank" rel="noreferrer">
+            {SOURCE.title}
+          </a>
+          <span>CT/source comparison · no clinical pass threshold</span>
         </div>
       }
+    />
+  )
+}
+function DebriefViewer({ id, response }: { id: string; response: CtResponse }) {
+  const [active, setActive] = useState(0)
+  return (
+    <NativeCtViewer
+      trace={traceById(id)}
+      marks={response.marks}
+      active={active}
+      onActive={setActive}
+      revealed
     />
   )
 }

@@ -1,18 +1,27 @@
-# Native stage with separate geometric and clinical evidence
+# Native CT within the shared clinical lesson stage
 
-The learning flow reuses the shared stage, NowCard, LookInLine, StepList, module navigation and activity-progress envelope. Feature-owned reducers control answer timing, actual responses and completion; viewers cannot award credit. No new renderer, state library, database, global style or shared-stage fork is introduced.
+The shared stage and bounded activity store remain unchanged. Feature-owned CT reducers manage actual marks, course responses, manual reveal and completion. NativeCtViewer cannot award credit. Steps → Teaching → Simulator is explicit, with 0.26/0.29 opening fractions and 300/280/340 px floors. The mechanical-ventilation host at base `7da3886e` is the visual reference.
 
-The exact public-unlisted root is `/learn/anatomy/branch-tracing`; its Learn/Practice/Assess subroutes inherit that policy and metadata. Preview assets under `/branch-tracing/preview-v1` receive noindex headers too. Nothing is registered in the site catalog, search or sitemap. Existing `/learn/anatomy/airway` and `/airway-anatomy/*` gates are unchanged. The owner explicitly authorized this narrow access-policy addition.
+`/learn/anatomy/branch-tracing` and its Learn/Practice/Assess children are anonymous, unlisted and noindex. Assets under `/branch-tracing/` share the narrow public asset access. Existing admin anatomy routes remain protected; no catalog/search/sitemap addition or release action occurs.
 
-Two evidence classes are visible:
+## Native images and coordinates
 
-- **Synthetic**: explicit RAS-mm polyline/tube phantoms rendered as sampled axial intersections, a rotatable exterior schematic and a parent-view opening diagram. Exact discrete opening positions are geometric teaching assumptions; they are not clinical ostial measurements. Positive display roll is clockwise. The reference is withheld until the branch and opening map are submitted. Practice/Assess mount reference content only after final submission.
-- **Existing CT**: one continuous, resampled, quantized preview, its matched source surface and graph. New PNGs are deterministic derivatives of an already-public uint8 volume. A self-contained GLB exposes only the complete airway node and mesh, with named branch nodes and materials removed. The compressed geometry buffer is preserved byte-for-byte. The browser applies the existing patient-new transform, welds duplicate vertices for normals without smoothing positions, and checks the exact derivative SHA. Camera movement follows polyline arc length; CT scrolling is independent. No candidate labels, target route, scored ostium or claim of source HU is exported.
+Slicer reads the source NRRD and exports native 512×512 axial planes at 0.5 mm spacing, windowed −1000 to 400 HU. No interpolated through-plane resampling, synthetic fill or textbook images are used. The 236 PNGs contain only IHDR/IDAT/IEND chunks. The current image and at most two adjacent planes are fetched when browsing. The full 48.3 MB stack is not preloaded. Existing standalone packaging includes these feature assets without new hosting infrastructure.
 
-All preview assets live under `/branch-tracing/preview-v1` and are included by the existing standalone packager. This avoids depending on the separate remote-asset fallback used for `fluoroview/cases`. The existing public Draco decoder remains shared. The deterministic package contains 6,414,026 bytes of image, model and graph assets; the surface derivative SHA is `24edef81dd18f10ea2c45b548a2410c54b9b5c5685e4fe221997b0534f3577f9`. Full hashes and sizes are in its manifest.
+Original IJK→LPS is diagonal: spacing [0.689453125, 0.689453125, 0.5], origin [−182.1552734375, −374.1552734375, −368.5]. Positive image x is patient left, positive y posterior, and increasing acquisition k cranial. The RAS matrix in Slicer is converted explicitly; no recentering is applied to source geometry.
 
-There is one progress store: the site's bounded activity envelope. Namespaced version IDs separate new content/assets/rubric from historical attempts. Each committed branch and completed map records first-attempt domain results exactly once, including hint use. Completion comes after a submitted transfer and manual Finish. Restart/reload preserves history and restarts incomplete work; old graph state is never restored. Route/sketch coordinates are session state. Explicit learner route export is local and is not analytics.
+The image, source points, learner points and orientation labels all use one display transform. Standard axial is unchanged; caudal tracing reflects x; RUL rotates −90°; left upper division rotates +90°. Clicks apply the inverse crop/zoom/display transform before recording native pixel coordinates. Repeated levels are valid for a horizontal airway; a returning route may reverse slice order. Full field and expanded viewing preserve the same coordinates.
 
-Reference host inspected: mechanical ventilation `VentilationStageHost`, base commit `7da3886e`, with the current shared StageLayout. Opening fractions 0.26/0.29, floors 300/280/340 and Steps → Teaching → Simulator are explicit. The feature wrapper supplies the viewport sizing that a non-critical-care route needs.
+Comparison points are sampled from the matching source graph and checked against native source intensities. They are sparse geometric comparison aids, not continuous physician annotations. Partial-volume departures in intervening distal graph geometry are documented and prevent a clinical accuracy-score claim.
 
-Authoring tools can later populate a reviewed clinical case contract. They cannot silently promote candidate labels or synthetic exercises into clinical assessment. The clinical worksheet lists the exact remaining decisions.
+## Teaching and evidence
+
+The canonical eight lessons each use a real CT example, a three-level learner trace, course interpretation and a changed trace for transfer. Reference points are not mounted before recording the trace and course. Practice and Assess require all four recorded interpretations before any comparison appears. Backtracking restores the current recorded response; an edit must be recorded before final submission. Neither mode assigns automated clinical correctness.
+
+The first CT participation record, with hint count, is immutable in the existing activity envelope. A lesson's initial trace is recorded before course/comparison; completion is stored only after transfer and manual Finish. No coordinates, images, free text, camera paths or answer keys are persisted. Incomplete lessons restart on reload. Old c1 records remain historical under their original prefix. A learner may explicitly download their session's CT worksheet locally.
+
+## Preserved secondary explorer
+
+The original whole-volume quantized 256³ preview and complete airway surface remain under `preview-v1`. The GLB exposes only Complete_airway, preserves its compressed buffer and uses original node scale plus case scale/rotation. It is loaded lazily for exterior/virtual comparisons. Graph traversal, backtracking, camera/slice independence and route export remain unchanged. No candidate subsegment labels become answer keys.
+
+No added library, shared stage fork, second progress store, trainer rebuild edit or source-scene mutation is needed. Old synthetic renderers are no longer reachable from the learner routes; mathematical fixtures remain useful regression checks.
