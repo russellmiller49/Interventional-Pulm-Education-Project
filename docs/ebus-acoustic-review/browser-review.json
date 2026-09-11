@@ -1,0 +1,9 @@
+{
+  "stations": 11,
+  "stationary": true,
+  "freeze": true,
+  "resume": true,
+  "gain": true,
+  "advanceWithdraw": true,
+  "errors": []
+}

@@ -470,7 +470,7 @@ export function AnatomyScene({
     controls.rotateSpeed = 0.55;
     controls.zoomSpeed = 0.8;
 
-    scene.add(new THREE.AmbientLight('#f2f7ef', 1.75));
+    scene.add(new THREE.AmbientLight('#f2f7ef', .85));
     const light = new THREE.DirectionalLight('#ffffff', 2);
     light.position.copy(boundsCenter.clone().add(new THREE.Vector3(100, 160, 120)));
     scene.add(light);
@@ -482,7 +482,7 @@ export function AnatomyScene({
     // loop from highlightStateRef — a highlight change never rebuilds the scene.
     const highlightMeshes: Array<{
       layer: keyof SimulatorLayerState;
-      material: THREE.MeshBasicMaterial;
+      material: THREE.MeshStandardMaterial;
       structureId: string;
     }> = [];
     const highlightPoints: Array<{ kind: 'node' | 'vessel'; material: THREE.PointsMaterial; structureId: string }> = [];
@@ -555,8 +555,10 @@ export function AnatomyScene({
 
             mesh.userData.sharedAssetGeometry = true;
             const material = withClipping(
-              new THREE.MeshBasicMaterial({
+              new THREE.MeshStandardMaterial({
                 color: cleanModelColor(structureId, caseData.color_map),
+                roughness: .62,
+                metalness: .03,
                 depthWrite: false,
                 opacity: 0.5,
                 side: THREE.DoubleSide,

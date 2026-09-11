@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { sweepClearance } from '@bronchoscopy-core/frame';
 
 import { pointAtS, tangentAtS, type SimulatorProbePose } from './pose';
 import type { SimulatorCenterlinePolyline, SimulatorMeshAsset } from './types';
@@ -162,6 +163,28 @@ export function clampPosePositionInsideChannel(
   }
 
   return { ...pose, position: anchor.clone().addScaledVector(direction, maxLength) };
+}
+
+/** Subdivide insertion along its curved route and sweep each transducer segment.
+ * A station picker is a deliberate jump; drive controls and hardware use this path.
+ */
+export function constrainedPathAdvance(fromS:number,toS:number,poseAt:(s:number)=>SimulatorProbePose,mesh:THREE.Mesh):number {
+  const count=Math.max(1,Math.ceil(Math.abs(toS-fromS)/.5));
+  let accepted=fromS,prior=poseAt(fromS).position;
+  const ray=new THREE.Raycaster();
+  for(let i=1;i<=count;i++){
+    const s=fromS+(toS-fromS)*i/count,next=poseAt(s),delta=next.position.clone().sub(prior),distance=delta.length();
+    if(distance>1e-6){
+      ray.set(prior,delta.clone().normalize());ray.near=0;ray.far=distance+.2;
+      if(ray.intersectObject(mesh,false).some(hit=>hit.distance<distance+.2))break;
+      // The shared sweep also rejects an already invalid endpoint; radial parity
+      // uses the same closed surface as the optical eye and contact checks.
+      const checked=sweepClearance(p=>isInsideChannel(mesh,new THREE.Vector3(...p),next.tangent)?1:-1,prior.toArray(),next.position.toArray(),.2);
+      if(checked.contact.blockedMm>.001)break;
+    }
+    accepted=s;prior=next.position;
+  }
+  return accepted;
 }
 
 // Steering: candidate branches must pass within JOIN of the current position, and are compared a

@@ -3,7 +3,8 @@ import * as THREE from 'three';
 
 import { useCourseShellText } from '@/i18n/courseShell';
 
-import { clamp } from './pose';
+import { clamp, type SimulatorProbePose } from './pose';
+import { physicsSnapshotMatchesPose } from './acousticAdapter';
 import {
   persistSectorStyle,
   readBrowserSectorStyle,
@@ -1178,6 +1179,7 @@ export function SectorView({
   caseData,
   compact = false,
   contactQuality = 1,
+  pose=null,
   items,
   onEnlarge = null,
   onShowAll = null,
@@ -1192,6 +1194,7 @@ export function SectorView({
   compact?: boolean;
   /** Acoustic coupling of the transducer face in [0, 1]; below 1 the image is veiled. */
   contactQuality?: number;
+  pose?: SimulatorProbePose|null;
   items: SimulatorSectorItem[];
   /** Promote this pane to the focus layout's large slot; hidden when already there. */
   onEnlarge?: (() => void) | null;
@@ -1256,7 +1259,7 @@ export function SectorView({
   }, [physicsImageUrl]);
 
   // 'physics' falls back to the realistic path until the snapshot PNG is loaded.
-  const renderPath = sectorRenderPath(sectorStyle, Boolean(physicsSnapshot && physicsImage));
+  const renderPath = sectorRenderPath(sectorStyle, Boolean(physicsSnapshot && physicsImage && pose && physicsSnapshotMatchesPose(physicsSnapshot,caseData,pose)));
   const visibleItems = items.filter((item) => item.visible || item.kind === 'airway' || item.kind === 'contact');
 
   function itemPosition(item: SimulatorSectorItem) {

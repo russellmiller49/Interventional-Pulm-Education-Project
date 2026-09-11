@@ -1434,3 +1434,19 @@
     transform: translate(var(--quest-confetti-drift, 0px), 105vh) rotate(560deg);
   }
 }
+
+/* Continuous grayscale ultrasound. Teaching colors occupy a separate overlay canvas. */
+.simulator-sector-pane[data-sector-source='acoustic-volume'] { display:flex; flex-direction:column; }
+.simulator-continuous-ultrasound { position:relative; aspect-ratio:1; flex:0 0 auto; min-height:180px; background:#000; border-radius:12px; overflow:hidden; }
+.simulator-continuous-ultrasound canvas { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+.simulator-ultrasound-readout { position:absolute; left:12px; top:9px; color:#d9e2eb; font:11px ui-monospace,monospace; }
+.simulator-ultrasound-message,.simulator-ultrasound-coupling { position:absolute; inset:auto 14px 18px; color:#f8d9a4; text-align:center; font-size:12px; }
+.simulator-ultrasound-message { inset:45% 15px auto; }
+.simulator-ultrasound-controls { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; padding:12px; font-size:11px; color:var(--muted,#afbac9); }
+.simulator-ultrasound-controls label { display:flex; flex-direction:column; gap:5px; }
+.simulator-ultrasound-controls input[type=range] { width:100%; accent-color:#71d8d0; }
+.simulator-ultrasound-controls .simulator-ultrasound-teaching { flex-direction:row; align-items:center; }
+.simulator-ultrasound-structures { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+.simulator-ultrasound-structures button { background:#16232d; border:1px solid #3c5966; border-radius:5px; color:#b4e7e1; padding:4px 6px; font-size:11px; }
+.simulator-sector-pane--compact .simulator-ultrasound-controls { display:none; }
+@media(max-width:700px) { .simulator-ultrasound-controls { grid-template-columns:repeat(2,minmax(0,1fr)); } }

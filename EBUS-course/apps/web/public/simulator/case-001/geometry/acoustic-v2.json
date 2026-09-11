@@ -1,0 +1,394 @@
+{
+  "schema": "acoustic-volume/v1",
+  "assetVersion": "simplified-v2",
+  "coordinateSystem": "LPS",
+  "units": "mm",
+  "sourceGeometrySha256": "98dab0cac8fe3a06772a980996742f1b21bb4a2963d262064c221562c91a64fb",
+  "dataSha256": "efa3bdc9bb372564c9de7847ea0bf64d8716f0202f26375385adf66f116e31b3",
+  "format": "uint8-labels-gzip",
+  "sizeXyz": [
+    226,
+    175,
+    489
+  ],
+  "spacingXyzMm": [
+    0.8,
+    0.8,
+    0.8
+  ],
+  "originLps": [
+    -94.4,
+    -244.8,
+    960.0
+  ],
+  "labels": [
+    {
+      "id": 0,
+      "key": "outside",
+      "label": "Outside modeled anatomy",
+      "kind": "air"
+    },
+    {
+      "id": 1,
+      "key": "soft_tissue",
+      "label": "Surrounding soft tissue",
+      "kind": "soft"
+    },
+    {
+      "id": 2,
+      "key": "airway",
+      "label": "Airway lumen",
+      "kind": "air"
+    },
+    {
+      "id": 3,
+      "key": "aorta",
+      "label": "aorta",
+      "kind": "blood"
+    },
+    {
+      "id": 4,
+      "key": "right_subclavian_artery",
+      "label": "right subclavian artery",
+      "kind": "blood"
+    },
+    {
+      "id": 5,
+      "key": "brachiocephalic_trunk",
+      "label": "brachiocephalic trunk",
+      "kind": "blood"
+    },
+    {
+      "id": 6,
+      "key": "right_common_carotid_artery",
+      "label": "right common carotid artery",
+      "kind": "blood"
+    },
+    {
+      "id": 7,
+      "key": "left_common_carotid_artery",
+      "label": "left common carotid artery",
+      "kind": "blood"
+    },
+    {
+      "id": 8,
+      "key": "left_subclavian_artery",
+      "label": "left subclavian artery",
+      "kind": "blood"
+    },
+    {
+      "id": 9,
+      "key": "left_atrium",
+      "label": "Left Atrium",
+      "kind": "blood"
+    },
+    {
+      "id": 10,
+      "key": "atrial_appendage_left",
+      "label": "atrial_appendage_left",
+      "kind": "blood"
+    },
+    {
+      "id": 11,
+      "key": "left_ventricle",
+      "label": "Left Ventricle",
+      "kind": "blood"
+    },
+    {
+      "id": 12,
+      "key": "pulmonary_venous_system",
+      "label": "pulmonary venous system",
+      "kind": "blood"
+    },
+    {
+      "id": 13,
+      "key": "esophagus",
+      "label": "esophagus",
+      "kind": "wall"
+    },
+    {
+      "id": 14,
+      "key": "right_atrium",
+      "label": "Right Atrium",
+      "kind": "blood"
+    },
+    {
+      "id": 15,
+      "key": "right_ventricle",
+      "label": "Right Ventricle",
+      "kind": "blood"
+    },
+    {
+      "id": 16,
+      "key": "superior_vena_cava",
+      "label": "superior_vena_cava",
+      "kind": "blood"
+    },
+    {
+      "id": 17,
+      "key": "left_brachiocephalic_vein",
+      "label": "left brachiocephalic vein",
+      "kind": "blood"
+    },
+    {
+      "id": 18,
+      "key": "right_brachiocephalic_vein",
+      "label": "right brachiocephalic vein",
+      "kind": "blood"
+    },
+    {
+      "id": 19,
+      "key": "azygous",
+      "label": "azygous",
+      "kind": "blood"
+    },
+    {
+      "id": 20,
+      "key": "pulmonary_artery",
+      "label": "pulmonary artery",
+      "kind": "blood"
+    },
+    {
+      "id": 21,
+      "key": "station_2l",
+      "label": "Station 2L",
+      "kind": "node"
+    },
+    {
+      "id": 22,
+      "key": "station_2r",
+      "label": "Station 2R",
+      "kind": "node"
+    },
+    {
+      "id": 23,
+      "key": "station_4l",
+      "label": "Station 4L",
+      "kind": "node"
+    },
+    {
+      "id": 24,
+      "key": "station_4r",
+      "label": "Station 4R",
+      "kind": "node"
+    },
+    {
+      "id": 25,
+      "key": "station_7",
+      "label": "Station 7",
+      "kind": "node"
+    },
+    {
+      "id": 26,
+      "key": "station_10l",
+      "label": "Station 10L",
+      "kind": "node"
+    },
+    {
+      "id": 27,
+      "key": "station_10r",
+      "label": "Station 10R",
+      "kind": "node"
+    },
+    {
+      "id": 28,
+      "key": "station_11l",
+      "label": "Station 11L",
+      "kind": "node"
+    },
+    {
+      "id": 29,
+      "key": "station_11ri",
+      "label": "Station 11Ri",
+      "kind": "node"
+    },
+    {
+      "id": 30,
+      "key": "station_11rs",
+      "label": "Station 11Rs",
+      "kind": "node"
+    }
+  ],
+  "review": [
+    {
+      "key": "aorta",
+      "triangles": 30076,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 361427
+    },
+    {
+      "key": "right_subclavian_artery",
+      "triangles": 3364,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 14310
+    },
+    {
+      "key": "brachiocephalic_trunk",
+      "triangles": 1536,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 8601
+    },
+    {
+      "key": "right_common_carotid_artery",
+      "triangles": 1434,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 5082
+    },
+    {
+      "key": "left_common_carotid_artery",
+      "triangles": 2256,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 9592
+    },
+    {
+      "key": "left_subclavian_artery",
+      "triangles": 3620,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 14540
+    },
+    {
+      "key": "left_atrium",
+      "triangles": 11894,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 178600
+    },
+    {
+      "key": "atrial_appendage_left",
+      "triangles": 6102,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 37422
+    },
+    {
+      "key": "left_ventricle",
+      "triangles": 18942,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 361724
+    },
+    {
+      "key": "pulmonary_venous_system",
+      "triangles": 8484,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 40628
+    },
+    {
+      "key": "esophagus",
+      "triangles": 12348,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 93011
+    },
+    {
+      "key": "right_atrium",
+      "triangles": 11926,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 164462
+    },
+    {
+      "key": "right_ventricle",
+      "triangles": 11996,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 137663
+    },
+    {
+      "key": "superior_vena_cava",
+      "triangles": 5294,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 59007
+    },
+    {
+      "key": "left_brachiocephalic_vein",
+      "triangles": 3658,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 21294
+    },
+    {
+      "key": "right_brachiocephalic_vein",
+      "triangles": 2050,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 15495
+    },
+    {
+      "key": "azygous",
+      "triangles": 2308,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 9653
+    },
+    {
+      "key": "pulmonary_artery",
+      "triangles": 12430,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 83142
+    },
+    {
+      "key": "station_2l",
+      "triangles": 188,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 351
+    },
+    {
+      "key": "station_2r",
+      "triangles": 322,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 867
+    },
+    {
+      "key": "station_4l",
+      "triangles": 700,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 2699
+    },
+    {
+      "key": "station_4r",
+      "triangles": 566,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 2009
+    },
+    {
+      "key": "station_7",
+      "triangles": 700,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 2803
+    },
+    {
+      "key": "station_10l",
+      "triangles": 226,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 353
+    },
+    {
+      "key": "station_10r",
+      "triangles": 566,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 2010
+    },
+    {
+      "key": "station_11l",
+      "triangles": 194,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 360
+    },
+    {
+      "key": "station_11ri",
+      "triangles": 194,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 369
+    },
+    {
+      "key": "station_11rs",
+      "triangles": 412,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 1315
+    },
+    {
+      "key": "airway",
+      "triangles": 13698,
+      "sourceBoundaryEdges": 0,
+      "occupiedVoxels": 49747
+    }
+  ],
+  "assumptions": [
+    "Background is a homogeneous soft-tissue approximation, not CT-derived anatomy.",
+    "Source boundary loops are capped only for voxelization.",
+    "Where presentation meshes overlap, airway lumen takes precedence."
+  ],
+  "decodedSha256": "350c0ab48405457810b2a284f934bd32f3ebf752cbe72f66c71ea6ccc859fca2"
+}

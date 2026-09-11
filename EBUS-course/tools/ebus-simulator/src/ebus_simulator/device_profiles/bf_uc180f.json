@@ -1,21 +1,27 @@
 {
   "model": "bf_uc180f",
-  "shaft_label": "Olympus BF-UC180F-like",
-  "optical_axis_offset_deg": 30.0,
+  "shaft_label": "Olympus BF-UC180F",
+  "optical_axis_offset_deg": 35,
   "obliquity_axis": "depth_axis",
   "probe_origin_offset_mm": 6.0,
   "sector_angle_deg": 60.0,
   "displayed_range_mm": 40.0,
   "source_oblique_size_mm": 51.79,
   "reference_fov_mm": 100.0,
-  "fov_deg": 85.0,
+  "fov_deg": 80,
   "near_mm": 0.4,
   "far_mm": 4000.0,
-  "eye_offset_mm": { "shaft": -6.0, "depth": 0.0, "lateral": 0.0 },
+  "eye_offset_mm": {
+    "shaft": -6.0,
+    "depth": 0.0,
+    "lateral": 0.0
+  },
   "circular_aperture": true,
   "lens_distortion": true,
   "scope_tip_occlusion": false,
   "contact_cap": true,
   "headlight_falloff": true,
-  "contact_min_distance_mm": 1.5
+  "contact_min_distance_mm": 1.5,
+  "specification_source": "https://medical.olympusamerica.com/products/bf-uc180f-ebus-bronchoscope",
+  "case_calibration_note": "Eye/probe origin offsets are case calibration values, not manufacturer dimensions."
 }

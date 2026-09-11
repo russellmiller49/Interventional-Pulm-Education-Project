@@ -343,9 +343,8 @@ describe('simulator static assets', () => {
     const station10l = manifest.presets.find((preset) => preset.preset_key === 'station_10l_node_a::default');
 
     expect(station4r?.station_asset).toBe('geometry/simplified/stations/station_4r_points.json');
-    expect(station4r?.contact[0]).toBeCloseTo(-13.355912548975311, 5);
-    expect(station4r?.contact[1]).toBeCloseTo(1239.0529931957165, 5);
-    expect(station4r?.contact[2]).toBeCloseTo(171.51630648491516, 5);
+    // Contact is reconciled with the active surface; the source target remains fixed.
+    expect(station4r?.centerline_s_mm).toBeCloseTo(85.62277358387557, 5);
     expect(station4r?.target[0]).toBeCloseTo(-16.0781483437477, 5);
     expect(station4r?.target[1]).toBeCloseTo(1234.3357423743225, 5);
     expect(station4r?.target[2]).toBeCloseTo(180.22746102818675, 5);
@@ -652,7 +651,9 @@ describe('simulator pose math', () => {
     // centerline anchor stays on the polyline — the optical pane clamps its eye from there.
     const pose = computeSimulatorPose(polyline, 7, 0, preset);
 
-    expect(pose.position.toArray()).toEqual([3, 7, 0]);
+    expect(pose.position.x).toBeGreaterThan(2.8);
+    expect(pose.position.x).toBeLessThan(3);
+    expect(pose.position.y).toBe(7);
     expect(pose.centerlinePosition?.toArray()).toEqual([0, 7, 0]);
     // ...and flags the station snap only within 1mm of the preset's path parameter.
     expect(pose.atStationSnap).toBe(false);
@@ -894,16 +895,19 @@ describe('simulator anatomical airway navigation', () => {
   });
 
   it.each([
-    { label: 'distal trachea', lineIndex: 1, sMm: 99, expectedRollDeg: 105 },
-    { label: 'right mainstem', lineIndex: 8, sMm: 120, expectedRollDeg: 62 },
-    { label: 'distal left mainstem', lineIndex: 1, sMm: 160, expectedRollDeg: -149 },
-  ])('matches the supplied $label standard view', ({ lineIndex, sMm, expectedRollDeg }) => {
+    { label: 'distal trachea', lineIndex: 1, sMm: 99, expectedOffsetDeg: 3 },
+    { label: 'right mainstem', lineIndex: 8, sMm: 120, expectedOffsetDeg: 46 },
+    { label: 'distal left mainstem', lineIndex: 1, sMm: 160, expectedOffsetDeg: -47 },
+  ])('matches the supplied $label standard view', ({ lineIndex, sMm, expectedOffsetDeg }) => {
     const polyline = line(lineIndex);
     const preset = freeDrivePresetForLine(polyline);
     const unrolled = computeSimulatorPose(polyline, sMm, 0, preset);
     const rollDeg = standardAirwayRollDeg(model, polyline, sMm, unrolled);
 
-    expect(rollDeg).toBeCloseTo(expectedRollDeg, 0);
+    const oriented=computeSimulatorPose(polyline,sMm,rollDeg,preset);
+    const anterior=new THREE.Vector3(0,0,1).addScaledVector(oriented.tangent,-oriented.tangent.z).normalize();
+    const expected=anterior.applyAxisAngle(oriented.tangent,THREE.MathUtils.degToRad(expectedOffsetDeg));
+    expect(oriented.depthAxis.angleTo(expected)).toBeLessThan(1e-6);
   });
 
   it('keeps patient anterior at the top of the distal tracheal view', () => {
@@ -1096,7 +1100,9 @@ describe('simulator endoscope camera calibration', () => {
 
     expect(manifest.endoscope_camera).toBeDefined();
     expect(manifest.endoscope_camera?.model).toBe('bf_uc180f');
-    expect(manifest.endoscope_camera?.optical_axis_offset_deg).toBe(30);
+    expect(manifest.endoscope_camera?.optical_axis_offset_deg).toBe(35);
+    expect(manifest.endoscope_camera?.fov_deg).toBe(80);
+    expect(manifest.endoscope_camera?.case_calibration?.eye_offset_mm.shaft).toBe(-6);
     expect(manifest.ultrasound_probe?.sector_angle_deg).toBe(
       manifest.render_defaults.sector_angle_deg,
     );

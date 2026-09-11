@@ -1,4 +1,7 @@
 import * as THREE from 'three';
+import { BF_UC180F_NOMINAL } from '@bronchoscopy-core/devices';
+import { makeFrame, transport, type OpticalFrame } from '@bronchoscopy-core/frame';
+import { ebusWebToPatient, patientToEbusWeb } from '@bronchoscopy-core/devices';
 
 import type {
   SimulatorCenterlinePolyline,
@@ -52,13 +55,13 @@ export function resolveScopeFrame(pose: SimulatorProbePose): SimulatorScopeFrame
 /**
  * Default device profile for the endoscopic optical camera (`bf_uc180f`). The manifest's
  * `endoscope_camera` record is the source of truth; this is only the fallback for manifests that
- * predate the calibration record, and matches the Phase-1 constants.
+ * predate the calibration record, and uses the sourced nominal optical angles.
  */
 export const DEFAULT_ENDOSCOPE_CAMERA: SimulatorEndoscopeCamera = {
   model: 'bf_uc180f',
-  optical_axis_offset_deg: 30,
+  optical_axis_offset_deg: BF_UC180F_NOMINAL.forwardObliquityDeg,
   obliquity_axis: 'depth_axis',
-  fov_deg: 85,
+  fov_deg: BF_UC180F_NOMINAL.fieldOfViewDeg,
   near_mm: 0.4,
   far_mm: 4000,
   eye_offset_mm: { shaft: 0, depth: 0, lateral: 0 },
@@ -66,7 +69,7 @@ export const DEFAULT_ENDOSCOPE_CAMERA: SimulatorEndoscopeCamera = {
 
 /**
  * Merge a manifest `endoscope_camera` record over the default device profile. Manifests without
- * the record (or hand-edited ones missing fields) resolve to the Phase-1 defaults.
+ * the record (or hand-edited ones missing fields) resolve to the nominal profile. Existing explicit calibration values are preserved.
  */
 export function resolveEndoscopeCameraCalibration(
   record?: Partial<SimulatorEndoscopeCamera> | null,
@@ -251,6 +254,35 @@ function normalizedVectorOrNull(point: Vec3 | null | undefined): THREE.Vector3 |
 // the scope's short bending section pressing the transducer onto the channel wall.
 export const FLEXION_TIP_SHIFT_MM = 12;
 
+const transportedFrames=new WeakMap<SimulatorCenterlinePolyline,Map<string,OpticalFrame[]>>();
+function transportedScopeFrame(line:SimulatorCenterlinePolyline,s:number,preset:SimulatorPreset) {
+  const referenceS=clamp(preset.centerline_s_mm,0,line.total_length_mm);
+  const shaft=normalizedVectorOrNull(preset.shaft_axis)??tangentAtS(line,referenceS);
+  const depth=normalizedVectorOrNull(preset.depth_axis)??fallbackDepthAxis(shaft);
+  const tangent=(at:number)=>{
+    const t=tangentAtS(line,at);if(t.dot(shaft)<0)t.negate();
+    const distance=Math.abs(at-referenceS),weight=1-clamp(distance/12,0,1);
+    return t.lerp(shaft,weight*weight*(3-2*weight)).normalize();
+  };
+  const seed=makeFrame(ebusWebToPatient(pointAtS(line,referenceS).toArray()),ebusWebToPatient(shaft.toArray()),ebusWebToPatient(depth.toArray()));
+  if(Math.abs(s-referenceS)<1e-7)return seed;
+  const key=JSON.stringify([preset.preset_key,referenceS,preset.shaft_axis,preset.depth_axis]);
+  let cache=transportedFrames.get(line);if(!cache){cache=new Map();transportedFrames.set(line,cache);}
+  let frames=cache.get(key);
+  if(!frames){
+    frames=new Array(line.points.length);
+    const pivot=line.cumulative_lengths_mm.findIndex(at=>at>=referenceS),split=pivot<0?line.points.length:pivot;
+    let frame=seed;
+    for(let i=split;i<line.points.length;i++){frame=transport(frame,ebusWebToPatient(line.points[i]),ebusWebToPatient(tangent(line.cumulative_lengths_mm[i]).toArray()));frames[i]=frame;}
+    frame=seed;
+    for(let i=split-1;i>=0;i--){frame=transport(frame,ebusWebToPatient(line.points[i]),ebusWebToPatient(tangent(line.cumulative_lengths_mm[i]).toArray()));frames[i]=frame;}
+    if(cache.size>=16)cache.delete(cache.keys().next().value!);
+    cache.set(key,frames);
+  }
+  let index=0;while(index<line.points.length-1&&line.cumulative_lengths_mm[index+1]<s)index++;
+  return transport(frames[index]??seed,ebusWebToPatient(pointAtS(line,s).toArray()),ebusWebToPatient(tangent(s).toArray()));
+}
+
 export function computeSimulatorPose(
   polyline: SimulatorCenterlinePolyline,
   sMm: number,
@@ -260,41 +292,23 @@ export function computeSimulatorPose(
 ): SimulatorProbePose {
   const centerlinePosition = pointAtS(polyline, sMm);
   let position = centerlinePosition.clone();
-  let tangent = tangentAtS(polyline, sMm);
-  const presetShaft = normalizedVectorOrNull(preset.shaft_axis);
-
-  if (presetShaft && tangent.dot(presetShaft) < 0) {
-    tangent.multiplyScalar(-1);
-  }
+  const transported=transportedScopeFrame(polyline,sMm,preset);
+  let tangent = toVector(patientToEbusWeb(transported.forward));
 
   const atStationSnap = polyline.line_index === preset.line_index && Math.abs(sMm - preset.centerline_s_mm) <= 1;
-
-  if (presetShaft && atStationSnap) {
-    tangent = presetShaft;
-  }
 
   if (polyline.line_index === preset.line_index) {
     const referenceCenterlinePosition = pointAtS(polyline, preset.centerline_s_mm);
     const radialOffset = toVector(preset.contact).sub(referenceCenterlinePosition);
-    radialOffset.sub(tangent.clone().multiplyScalar(radialOffset.dot(tangent)));
-
     if (radialOffset.lengthSq() > 1e-8) {
-      position = atStationSnap ? toVector(preset.contact) : centerlinePosition.clone().add(radialOffset);
+      // Continuous approach to the calibrated contact, including its longitudinal
+      // component. The previous one-millimeter snap boundary jumped the tip.
+      const distance=Math.abs(sMm-preset.centerline_s_mm),blend=Math.max(0,1-distance/18);
+      position = centerlinePosition.clone().addScaledVector(radialOffset,blend*blend*(3-2*blend));
     }
   }
 
-  let depthAxis = normalizedVectorOrNull(preset.depth_axis) ?? toVector(preset.target).sub(position);
-  depthAxis.sub(tangent.clone().multiplyScalar(depthAxis.dot(tangent)));
-
-  if (depthAxis.lengthSq() <= 1e-8) {
-    depthAxis = fallbackDepthAxis(tangent);
-  } else {
-    depthAxis.normalize();
-  }
-
-  if (toVector(preset.target).sub(position).dot(depthAxis) < 0) {
-    depthAxis.multiplyScalar(-1);
-  }
+  let depthAxis = toVector(patientToEbusWeb(transported.up));
 
   depthAxis.applyAxisAngle(tangent, THREE.MathUtils.degToRad(rollDeg)).normalize();
   const lateralAxis = new THREE.Vector3().crossVectors(tangent, depthAxis).normalize();
