@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Package an existing public 8-bit CT derivative; never reads a raw clinical source.
 
-Run from the website checkout with Python 3. No third-party dependencies.
+Run from the website checkout with Python 3 and its installed Prettier.
+No third-party Python dependencies.
 Output is idempotent and confined to public/branch-tracing/preview-v1.
 The original published case, private authoring inputs and Slicer scene are unchanged.
 """
@@ -9,6 +10,7 @@ import hashlib
 import json
 from pathlib import Path
 import struct
+import subprocess
 import zlib
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -20,6 +22,15 @@ EXPECTED_SURFACE = 'bfad25b4a0baf07cc16f27cda8fd8287346eb29ef03d84c47b1fc1205343
 
 def sha(data):
     return hashlib.sha256(data).hexdigest()
+
+
+def repository_json(value, path):
+    # Match the pre-commit hook before hashing: it formats all staged JSON.
+    return subprocess.run(
+        [str(ROOT / 'node_modules/.bin/prettier'), '--stdin-filepath', str(path)],
+        input=(json.dumps(value) + '\n').encode(), stdout=subprocess.PIPE,
+        check=True, cwd=ROOT,
+    ).stdout
 
 
 def png_gray(size, pixels):
@@ -79,7 +90,7 @@ def main():
         'rootNodeId': graph['rootNodeId'],
         'edges': [{k: e[k] for k in ['id', 'startNodeId', 'endNodeId', 'pointsLps']} for e in graph['edges']],
     }
-    geometry_bytes = (json.dumps(geometry, separators=(',', ':')) + '\n').encode()
+    geometry_bytes = repository_json(geometry, OUT / 'geometry.json')
     (OUT / 'geometry.json').write_bytes(geometry_bytes)
     assets.append({'path': 'geometry.json', 'bytes': len(geometry_bytes), 'sha256': sha(geometry_bytes)})
     result = {
@@ -94,7 +105,7 @@ def main():
         'airway': {'url': '/branch-tracing/preview-v1/airway.glb', 'sha256': sha(surface), 'sourceSha256': EXPECTED_SURFACE, 'meshName': 'Complete_airway', 'sceneScale': 1000, 'rotationDeg': [90, 0, 0], 'positionOffsetMm': [0, 0, 0]},
         'assets': assets,
     }
-    (OUT / 'manifest.json').write_text(json.dumps(result, indent=2) + '\n')
+    (OUT / 'manifest.json').write_bytes(repository_json(result, OUT / 'manifest.json'))
     print(json.dumps({'slices': 256, 'bytes': sum(a['bytes'] for a in assets), 'clinicalAssessmentEligible': False}))
 
 

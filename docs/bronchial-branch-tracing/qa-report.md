@@ -41,7 +41,7 @@ npx --no-install playwright test --config playwright.branch-tracing.config.ts
 - TypeScript: **PASS**; feature-scoped ESLint: **PASS, no warnings**.
 - Playwright: **8 tests passed** on the development server; **8/8 passed again in 17.1 seconds against the final standalone package** at `http://127.0.0.1:3112`. The module and all required images, GLB and decoder loaded without sign-in. The standalone runtime lacked Supabase credentials for unrelated site analytics/protected-route prefetch and logged those errors; this feature has no Supabase dependency. Environment files were not changed.
 - Synthetic geometry and display tests include asymmetric coordinates, LPS/RAS involution, display inverse, 360° direction versus 180° line comparison, reversing arc-length travel, common stems/trifurcations, disconnected/cyclic graph rejection and fails-closed clinical eligibility.
-- Packaging tests hash all 258 preview assets, validate the stripped graph and single-node GLB, and confirm the compressed binary geometry and original complete-node transform remain unchanged.
+- Packaging tests hash all 258 preview assets after the repository formatter (the exporter matches the commit hook before hashing), validate the stripped graph and single-node GLB, and confirm the compressed binary geometry and original complete-node transform remain unchanged.
 
 The shared stage audit was run at 1440×900, 1280×720, 1024×768, 900×800 and 390×844 against the new horizontal–vertical lesson. **PASS** at all five sizes. Its screenshots were opened, not just generated. The same audit on `/en/mechanical-ventilation/learn?activity=breathing-with-support` misidentified internal console tabs as workspace compact tabs and reported a false compact-layout failure; its actual wide three-pane screenshot was inspected. Neither the reference module nor shared audit was modified to suppress that limitation.
 
@@ -66,10 +66,10 @@ Additional overview, pending opening map, assessment debrief, real CT/exterior a
 | -------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | Browser / layout                       | Chromium 151.0.7922.34, macOS, 1440×900                                                                     |
 | Emulated network                       | 20 Mbps down, 5 Mbps up, 40 ms latency, fresh browser context                                               |
-| Navigation to CT/exterior canvas ready | 3,545 ms                                                                                                    |
-| Bytes transferred by explorer ready    | 3,207,604 total; 2,052,936 for image/model/graph/decoder resources                                          |
-| Ten CT slice input-to-decode samples   | 180–491 ms, including Playwright action overhead and network; no sub-100 ms claim                           |
-| JS heap after close and forced GC      | 16,350,344 → 16,503,080 → 16,803,568 bytes over three cycles; small growth, not proof of a leak-free viewer |
+| Navigation to CT/exterior canvas ready | 3,312 ms                                                                                                    |
+| Bytes transferred by explorer ready    | 3,217,198 total; 2,062,532 for image/model/graph/decoder resources                                          |
+| Ten CT slice input-to-decode samples   | 157–463 ms, including Playwright action overhead and network; no sub-100 ms claim                           |
+| JS heap after close and forced GC      | 16,369,788 → 16,518,628 → 16,914,364 bytes over three cycles; small growth, not proof of a leak-free viewer |
 | 720×450 CSS reflow                     | Zero horizontal document overflow; inspected Steps controls                                                 |
 | GPU frame rate                         | NOT RUN: on-demand rendering has no continuous guided animation; no FPS claim                               |
 
