@@ -25,10 +25,15 @@ export function CtTraceList({
               aria-current={active === i ? 'step' : undefined}
               onClick={() => onActive?.(i)}
               disabled={!onActive}
+              aria-label={`Mark ${i + 1}: ${point.airway.name}${point.landmark ? `, ${point.landmark.toLowerCase()}` : ''}`}
             >
-              <span>{i + 1}</span>
+              <span aria-hidden="true">{marks[i] ? '✓' : '○'}</span>
               <div>
-                <strong>CT level {point.slice}</strong>
+                <strong>
+                  {point.airway.code}
+                  {point.landmark && ` · ${point.landmark}`}
+                </strong>
+                <span>{point.airway.name}</span>
                 <small>
                   {!marks[i]
                     ? 'Awaiting your lumen mark'
@@ -42,8 +47,28 @@ export function CtTraceList({
         ))}
       </ol>
       <p className={styles.small}>
-        The sequence records your proposed connection. Level numbers may rise, fall or stay the same
-        along a real airway.
+        Follow these named bronchi in order. Proximal and distal distinguish positions within the
+        same bronchus along this trace.
+      </p>
+    </div>
+  )
+}
+export function CtAirwayGuide({ trace }: { trace: CtTrace }) {
+  return (
+    <div className={styles.airwayGuide}>
+      <h3>Airway names</h3>
+      <p aria-label="Named airway route">
+        {trace.airwayPath.map((airway, i) => (
+          <span key={`${i}-${airway.code}`}>
+            {i > 0 && <span aria-hidden="true"> → </span>}
+            <abbr title={airway.name}>{airway.code}</abbr>
+          </span>
+        ))}
+      </p>
+      <p>
+        R/L identifies the side; B denotes a bronchus and S its pulmonary segment. Numbers identify
+        segmental bronchi; a, b and c identify subsegments. LB1+2 is the left apicoposterior
+        bronchus.
       </p>
     </div>
   )

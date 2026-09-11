@@ -155,7 +155,7 @@ export function NativeCtViewer({
       setSlice((k) => clampSlice(k + (event.key === 'PageUp' ? 1 : -1)))
     }
   }
-  function selectLevel(index: number) {
+  function selectCheckpoint(index: number) {
     setSlice(trace.checkpoints[index].slice)
     onActive?.(index)
   }
@@ -210,7 +210,7 @@ export function NativeCtViewer({
           }}
         >
           <title>
-            {trace.region}, axial CT level {slice}, {DISPLAY_PRESETS[preset]}
+            Tracing {checkpoint.airway.name}, axial CT slice {slice}, {DISPLAY_PRESETS[preset]}
           </title>
           <rect width="100" height="100" fill="#020507" />
           <g
@@ -233,10 +233,19 @@ export function NativeCtViewer({
             (() => {
               const p = pixelToDisplay(trace.anchor.pixel, center, size, preset)
               return (
-                <g aria-label="Starting airway">
+                <g aria-label={`Starting airway: ${trace.anchor.airway.name}`}>
                   <circle cx={p[0]} cy={p[1]} r="3" fill="none" stroke="#f1ca79" strokeWidth=".5" />
-                  <text x={p[0] + 4} y={p[1]} fill="#ffe1a6" fontSize="3">
-                    Start
+                  <text
+                    x={p[0] + (p[0] > 60 ? -4 : 4)}
+                    y={p[1]}
+                    textAnchor={p[0] > 60 ? 'end' : 'start'}
+                    fill="#ffe1a6"
+                    fontSize="4.3"
+                    stroke="#07151b"
+                    strokeWidth=".6"
+                    paintOrder="stroke"
+                  >
+                    {trace.anchor.airway.code}
                   </text>
                 </g>
               )
@@ -246,7 +255,10 @@ export function NativeCtViewer({
               if (!mark?.pixel || mark.slice !== slice) return null
               const p = pixelToDisplay(mark.pixel, center, size, preset)
               return (
-                <g key={i} aria-label={`Your mark ${i + 1}`}>
+                <g
+                  key={i}
+                  aria-label={`Your mark ${i + 1} for ${trace.checkpoints[i].airway.code}`}
+                >
                   <circle
                     cx={p[0]}
                     cy={p[1]}
@@ -255,17 +267,20 @@ export function NativeCtViewer({
                     stroke="#81f1ed"
                     strokeWidth=".65"
                   />
-                  <text
-                    x={p[0] + 3}
-                    y={p[1] - 2}
-                    fill="#a8fffa"
-                    stroke="#07151b"
-                    strokeWidth=".5"
-                    paintOrder="stroke"
-                    fontSize="3.2"
-                  >
-                    {i + 1}
-                  </text>
+                  {i === active && (
+                    <text
+                      x={p[0] + (p[0] > 60 ? -4 : 4)}
+                      y={p[1] - 2}
+                      textAnchor={p[0] > 60 ? 'end' : 'start'}
+                      fill="#a8fffa"
+                      stroke="#07151b"
+                      strokeWidth=".5"
+                      paintOrder="stroke"
+                      fontSize="4.3"
+                    >
+                      Your mark
+                    </text>
+                  )}
                 </g>
               )
             })}
@@ -275,23 +290,30 @@ export function NativeCtViewer({
               if (point.slice !== slice) return null
               const p = pixelToDisplay(point.pixel, center, size, preset)
               return (
-                <g key={point.id} data-ct-reference={i + 1}>
+                <g
+                  key={point.id}
+                  data-ct-reference={i + 1}
+                  aria-label={`Reference: ${point.airway.name}${point.landmark ? `, ${point.landmark.toLowerCase()}` : ''}`}
+                >
                   <path
                     d={`M${p[0] - 2},${p[1]}h4 M${p[0]},${p[1] - 2}v4`}
                     stroke="#f6c66c"
                     strokeWidth=".6"
                   />
-                  <text
-                    x={p[0] + 3}
-                    y={p[1] + 4}
-                    fill="#ffe0a1"
-                    stroke="#07151b"
-                    strokeWidth=".5"
-                    paintOrder="stroke"
-                    fontSize="3"
-                  >
-                    Reference {i + 1}
-                  </text>
+                  {i === active && (
+                    <text
+                      x={p[0] + (p[0] > 60 ? -4 : 4)}
+                      y={p[1] + 5}
+                      textAnchor={p[0] > 60 ? 'end' : 'start'}
+                      fill="#ffe0a1"
+                      stroke="#07151b"
+                      strokeWidth=".5"
+                      paintOrder="stroke"
+                      fontSize="4.3"
+                    >
+                      {point.airway.code}
+                    </text>
+                  )}
                 </g>
               )
             })}
@@ -329,6 +351,13 @@ export function NativeCtViewer({
           </div>
         )}
       </div>
+      <div className={styles.ctActiveAirway} aria-live="polite">
+        <strong>
+          Tracing {checkpoint.airway.code}
+          {checkpoint.landmark && ` · ${checkpoint.landmark}`}
+        </strong>
+        <span>{checkpoint.airway.name}</span>
+      </div>
       <div className={styles.nativeSliceControls}>
         <button
           aria-label="More caudal CT slice"
@@ -338,9 +367,7 @@ export function NativeCtViewer({
           −
         </button>
         <label>
-          <span>
-            Caudal ← <strong>Level {slice}</strong> → Cranial
-          </span>
+          <span>Caudal ← Browse adjacent CT slices → Cranial</span>
           <input
             aria-label="CT slice"
             type="range"
@@ -359,19 +386,23 @@ export function NativeCtViewer({
           +
         </button>
       </div>
-      <div className={styles.ctLevels} role="group" aria-label="Trace levels">
-        <button onClick={() => setSlice(trace.anchor.slice)}>
+      <div className={styles.ctLevels} role="group" aria-label="Airway checkpoints">
+        <button
+          onClick={() => setSlice(trace.anchor.slice)}
+          aria-label={`Start: ${trace.anchor.airway.name}`}
+        >
           <strong>Start</strong>
-          <span>Parent airway</span>
+          <span>{trace.anchor.airway.code}</span>
         </button>
         {trace.checkpoints.map((point, i) => (
           <button
             key={point.id}
             aria-pressed={active === i && atCheckpoint}
-            onClick={() => selectLevel(i)}
+            onClick={() => selectCheckpoint(i)}
+            aria-label={`Trace ${point.airway.code}${point.landmark ? `, ${point.landmark.toLowerCase()}` : ''}: ${point.airway.name}`}
           >
-            <strong>{i + 1}</strong>
-            <span>Level {point.slice}</span>
+            <strong>{point.airway.code}</strong>
+            <span>{point.landmark || point.airway.shortName}</span>
             {marks[i] && <span aria-label="recorded">✓</span>}
           </button>
         ))}
@@ -380,13 +411,14 @@ export function NativeCtViewer({
         <p className={styles.ctInstruction}>
           {!atCheckpoint ? (
             <button onClick={() => setSlice(checkpoint.slice)}>
-              Return to trace level {checkpoint.slice} to place mark {active + 1}
+              Return to {checkpoint.airway.code}
+              {checkpoint.landmark && ` (${checkpoint.landmark.toLowerCase()})`} to mark the lumen
             </button>
           ) : (
             <>
-              Click the continuing lumen to place <strong>mark {active + 1}</strong>.{' '}
+              Mark the continuing lumen of <strong>{checkpoint.airway.code}</strong>.{' '}
               <button disabled={!ready} onClick={() => onMark({ slice, pixel: null })}>
-                Lumen unresolved at this level
+                Lumen unresolved here
               </button>
             </>
           )}
@@ -399,7 +431,7 @@ export function NativeCtViewer({
         </p>
       )}
       <details className={styles.options}>
-        <summary>Orientation, zoom and keyboard controls</summary>
+        <summary>Image details, orientation and controls</summary>
         <p>{ORIENTATION_NOTES[preset]}</p>
         <label>
           Image magnification{' '}
@@ -424,7 +456,8 @@ export function NativeCtViewer({
         </button>
         <p>
           Focus the image. Arrow keys move the cursor; Shift moves faster; Enter places a mark. Page
-          Up/Down or the mouse wheel scrolls the CT. Patient z: {sliceZ(slice).toFixed(1)} mm.
+          Up/Down or the mouse wheel scrolls the CT. Acquisition slice index: {slice}; patient z:{' '}
+          {sliceZ(slice).toFixed(1)} mm.
         </p>
         <p>
           Native 512×512 axial acquisition planes; 0.69×0.69 mm in-plane spacing. Fixed lung window

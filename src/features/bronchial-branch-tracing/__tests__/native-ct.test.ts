@@ -95,6 +95,82 @@ test('every lesson has real CT traces, a changed transfer and a visible stage la
     expect(lesson.prediction).not.toBe(lesson.transfer)
   }
 })
+test('named checkpoints distinguish segment identity from CT indices and distal sampling positions', () => {
+  const codes: Record<string, string[]> = {
+    'central-right': ['Trachea', 'RMSB', 'RMSB'],
+    'central-left': ['Trachea', 'LMSB', 'LMSB'],
+    'right-upper-entry': ['RMSB', 'RUL', 'RB1/B2'],
+    'right-upper-apical': ['RB1/B2', 'RB1', 'RB1b'],
+    'right-upper-distal': ['RB1', 'RB1a', 'RB1a'],
+    'middle-lobe-entry': ['BI', 'RML', 'RB5'],
+    'middle-lobe-lateral': ['RML', 'RML', 'RB4a'],
+    'middle-lobe-caudal': ['RB5', 'RB5', 'RB5b'],
+    'middle-lobe-cranial': ['RB5', 'RB5', 'RB5a'],
+    'upper-oblique-lateral': ['RB3a', 'RB3a', 'RB3a'],
+    'upper-oblique-medial': ['RB3a', 'RB3a', 'RB3a'],
+    'left-upper-division': ['LUL', 'LUL division', 'LB1+2'],
+    'left-upper-anterior': ['LUL division', 'LUL division', 'LB3'],
+    'left-lingula': ['LUL', 'LB4+5', 'LB5'],
+    'left-lower-returning': ['LLL', 'LB6', 'LB6'],
+    'right-lower-basal': ['RLL', 'R basal', 'RB8'],
+    'left-lower-basal': ['L basal', 'L basal', 'LB9'],
+  }
+  expect(CT_TRACES.map((t) => t.id).sort()).toEqual(Object.keys(codes).sort())
+  for (const trace of CT_TRACES) {
+    expect(trace.checkpoints.map((p) => p.airway.code)).toEqual(codes[trace.id])
+    expect(new Set(trace.checkpoints.map((p) => `${p.airway.code}:${p.landmark}`)).size).toBe(3)
+    expect(trace.anchor.airway.name).toBeTruthy()
+  }
+  const middle = CT_TRACES.find((t) => t.id === 'middle-lobe-caudal')!
+  // Two separate positions in RB5 share an acquisition plane. They are not two segments.
+  expect(middle.checkpoints[0].slice).toBe(middle.checkpoints[1].slice)
+  expect(middle.checkpoints.slice(0, 2).map((p) => p.landmark)).toEqual(['Proximal', 'Distal'])
+})
+test('anatomical labels use the exact matching case graph and preserve the source branch lineage', () => {
+  const labels = readFileSync('public/airway-anatomy/case-001/metadata/centerline_labels.json')
+  expect(createHash('sha256').update(labels).digest('hex')).toBe(
+    manifest.nomenclature.sourceLabelsSha256,
+  )
+  const graphPath = 'public/airway-anatomy/case-001/metadata/airway_graph.json'
+  const labeledBytes = readFileSync(graphPath)
+  expect(createHash('sha256').update(labeledBytes).digest('hex')).toBe(
+    manifest.nomenclature.sourceLabeledGraphSha256,
+  )
+  type Edge = { id: number; startNodeId: number; endNodeId: number; pointsLps: number[][] }
+  const original: { edges: Edge[] } = JSON.parse(
+    readFileSync('public/fluoroview/cases/patient-new/metadata/airway_graph.json', 'utf8'),
+  )
+  const labeled: { edges: Edge[] } = JSON.parse(labeledBytes.toString())
+  const specs: { traces: { id: string; edges: number[] }[] } = JSON.parse(
+    readFileSync('scripts/branch-tracing/authoring/ct-traces.json', 'utf8'),
+  )
+  for (const trace of CT_TRACES) {
+    const ids = specs.traces.find((t) => t.id === trace.id)!.edges
+    for (const id of ids) {
+      const edge = original.edges.find((e) => e.id === id)!
+      const other = labeled.edges.find((e) => e.id === id)!
+      expect(edge.pointsLps).toEqual(other.pointsLps)
+      expect([edge.startNodeId, edge.endNodeId]).toEqual([other.startNodeId, other.endNodeId])
+    }
+    for (const point of trace.checkpoints) {
+      expect(ids).toContain(point.sourceEdgeId)
+      const edge = original.edges.find((e) => e.id === point.sourceEdgeId)!
+      const distances = edge.pointsLps.slice(1).map((b, i) => {
+        const a = edge.pointsLps[i],
+          v = b.map((n, j) => n - a[j])
+        const squared = v.reduce((sum, n) => sum + n * n, 0)
+        const t = squared
+          ? Math.max(
+              0,
+              Math.min(1, v.reduce((sum, n, j) => sum + n * (point.lps[j] - a[j]), 0) / squared),
+            )
+          : 0
+        return Math.hypot(...a.map((n, j) => point.lps[j] - (n + t * v[j])))
+      })
+      expect(Math.min(...distances)).toBeLessThan(0.0001)
+    }
+  }
+})
 test('CT actions reject an unrecorded response and wrong slice while preserving the actual learner point', () => {
   const [prediction, transfer] = CT_TRACES
   const reduce = ctSessionReducer(prediction, transfer)

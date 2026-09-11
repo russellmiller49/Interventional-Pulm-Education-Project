@@ -1,0 +1,342 @@
+{
+  "version": "nomenclature-v1",
+  "reference": {
+    "title": "Kurimoto & Morita. Bronchial Branch Tracing (2020)",
+    "url": "https://doi.org/10.1007/978-981-13-9905-3",
+    "pages": "Chapter 1, pp. 1–3, Figs. 1.1–1.2; Chapter 2, p. 27, Figs. 2.9–2.10; pp. 45–47, Figs. 2.47–2.49"
+  },
+  "graphPath": "public/airway-anatomy/case-001/metadata/airway_graph.json",
+  "graphSha256": "ea98834c7612e59600fd7f89edceb730a876b2f174d51f1ddb70f4e2eb009624",
+  "labelsPath": "public/airway-anatomy/case-001/metadata/centerline_labels.json",
+  "labelsSha256": "fc446faabf7654592b88ec7315321a9c874244efac29f5de2dcd501d2a9f7f8a",
+  "airways": {
+    "trachea": {
+      "code": "Trachea",
+      "name": "Trachea",
+      "shortName": "Trachea"
+    },
+    "rmsb": {
+      "code": "RMSB",
+      "name": "Right main bronchus",
+      "shortName": "Main bronchus"
+    },
+    "lmsb": {
+      "code": "LMSB",
+      "name": "Left main bronchus",
+      "shortName": "Main bronchus"
+    },
+    "rul": {
+      "code": "RUL",
+      "name": "Right upper lobe bronchus",
+      "shortName": "Upper lobe"
+    },
+    "bi": {
+      "code": "BI",
+      "name": "Bronchus intermedius",
+      "shortName": "Bronchus intermedius"
+    },
+    "lll": {
+      "code": "LLL",
+      "name": "Left lower lobe bronchus",
+      "shortName": "Lower lobe"
+    },
+    "rul12": {
+      "code": "RB1/B2",
+      "name": "Right B1–B2 common trunk",
+      "shortName": "B1–B2 common trunk"
+    },
+    "rll": {
+      "code": "RLL",
+      "name": "Right lower lobe bronchus",
+      "shortName": "Lower lobe"
+    },
+    "rml": {
+      "code": "RML",
+      "name": "Right middle lobe bronchus",
+      "shortName": "Middle lobe"
+    },
+    "lb6": {
+      "code": "LB6",
+      "name": "Left superior segmental bronchus",
+      "shortName": "Superior"
+    },
+    "lbasal": {
+      "code": "L basal",
+      "name": "Left basal bronchus",
+      "shortName": "Basal bronchus"
+    },
+    "rb1": {
+      "code": "RB1",
+      "name": "Right apical segmental bronchus",
+      "shortName": "Apical"
+    },
+    "rb3a": {
+      "code": "RB3a",
+      "name": "Right anterior bronchus, lateral subsegment",
+      "shortName": "Anterior · lateral subsegment"
+    },
+    "rbasal": {
+      "code": "R basal",
+      "name": "Right basal bronchus",
+      "shortName": "Basal bronchus"
+    },
+    "rb4": {
+      "code": "RB4",
+      "name": "Right lateral segmental bronchus",
+      "shortName": "Lateral"
+    },
+    "rb5": {
+      "code": "RB5",
+      "name": "Right medial segmental bronchus",
+      "shortName": "Medial"
+    },
+    "lingula": {
+      "code": "LB4+5",
+      "name": "Left lingular bronchus",
+      "shortName": "Lingular bronchus"
+    },
+    "lud": {
+      "code": "LUL division",
+      "name": "Left upper division bronchus",
+      "shortName": "Upper division"
+    },
+    "lbasal89": {
+      "code": "LB7+8/B9",
+      "name": "Left B7+8–B9 common trunk",
+      "shortName": "B7+8–B9 common trunk"
+    },
+    "rb1b": {
+      "code": "RB1b",
+      "name": "Right apical bronchus, anterior subsegment",
+      "shortName": "Apical · anterior subsegment"
+    },
+    "rb1a": {
+      "code": "RB1a",
+      "name": "Right apical bronchus, posterior subsegment",
+      "shortName": "Apical · posterior subsegment"
+    },
+    "rb4a": {
+      "code": "RB4a",
+      "name": "Right lateral bronchus, subsegment a",
+      "shortName": "Lateral · subsegment a"
+    },
+    "rb5a": {
+      "code": "RB5a",
+      "name": "Right medial bronchus, subsegment a",
+      "shortName": "Medial · subsegment a"
+    },
+    "rb5b": {
+      "code": "RB5b",
+      "name": "Right medial bronchus, subsegment b",
+      "shortName": "Medial · subsegment b"
+    },
+    "lb5": {
+      "code": "LB5",
+      "name": "Left inferior lingular segmental bronchus",
+      "shortName": "Inferior lingular"
+    },
+    "lb3": {
+      "code": "LB3",
+      "name": "Left anterior segmental bronchus",
+      "shortName": "Anterior"
+    },
+    "lb12": {
+      "code": "LB1+2",
+      "name": "Left apicoposterior segmental bronchus",
+      "shortName": "Apicoposterior"
+    },
+    "lb9": {
+      "code": "LB9",
+      "name": "Left lateral basal segmental bronchus",
+      "shortName": "Lateral basal"
+    },
+    "rb8": {
+      "code": "RB8",
+      "name": "Right anterior basal segmental bronchus",
+      "shortName": "Anterior basal"
+    },
+    "lul": {
+      "code": "LUL",
+      "name": "Left upper lobe bronchus",
+      "shortName": "Upper lobe"
+    }
+  },
+  "edges": {
+    "0": {
+      "airway": "trachea",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "TR"
+    },
+    "1": {
+      "airway": "rmsb",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "RMSB"
+    },
+    "2": {
+      "airway": "lmsb",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "LMSB"
+    },
+    "3": {
+      "airway": "rul",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "RUL"
+    },
+    "4": {
+      "airway": "bi",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "BI"
+    },
+    "5": {
+      "airway": "lll",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "LLL"
+    },
+    "6": {
+      "airway": "rul12",
+      "basis": "Common stem between the RUL bronchus and separately labeled RB1/RB2 daughters (edges 13/12). A common trunk, not a fused apicoposterior segment."
+    },
+    "8": {
+      "airway": "rll",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "RLL"
+    },
+    "9": {
+      "airway": "rml",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "RML"
+    },
+    "10": {
+      "airway": "lb6",
+      "basis": "Existing LB6 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+      "existingLabel": "LB6"
+    },
+    "23": {
+      "airway": "lb6",
+      "basis": "Existing LB6 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+      "existingLabel": "LB6"
+    },
+    "50": {
+      "airway": "lb6",
+      "basis": "Existing LB6 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+      "existingLabel": "LB6"
+    },
+    "11": {
+      "airway": "lbasal",
+      "basis": "Lower-lobe continuation distal to the LB6 takeoff.",
+      "existingLabel": "LLL"
+    },
+    "13": {
+      "airway": "rb1",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "RB1"
+    },
+    "15": {
+      "airway": "rb3a",
+      "basis": "Existing RB3 territory. Edge 15 is the lateral daughter versus ventral sibling 14; textbook p. 27, Fig. 2.9. Descendants 32/33 retain the subsegment label without assigning i/ii.",
+      "existingLabel": "RB3"
+    },
+    "32": {
+      "airway": "rb3a",
+      "basis": "Existing RB3 territory. Edge 15 is the lateral daughter versus ventral sibling 14; textbook p. 27, Fig. 2.9. Descendants 32/33 retain the subsegment label without assigning i/ii.",
+      "existingLabel": "RB3"
+    },
+    "33": {
+      "airway": "rb3a",
+      "basis": "Existing RB3 territory. Edge 15 is the lateral daughter versus ventral sibling 14; textbook p. 27, Fig. 2.9. Descendants 32/33 retain the subsegment label without assigning i/ii.",
+      "existingLabel": "RB3"
+    },
+    "16": {
+      "airway": "rbasal",
+      "basis": "Lower-lobe continuation distal to the RB6 takeoff; edge 34 lies distal to RB7 and proximal to RB8/basal continuation.",
+      "existingLabel": "RLL"
+    },
+    "34": {
+      "airway": "rbasal",
+      "basis": "Lower-lobe continuation distal to the RB6 takeoff; edge 34 lies distal to RB7 and proximal to RB8/basal continuation.",
+      "existingLabel": "RLL"
+    },
+    "18": {
+      "airway": "rb4",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "RB4"
+    },
+    "19": {
+      "airway": "rb5",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "RB5"
+    },
+    "20": {
+      "airway": "lingula",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "LB4+5"
+    },
+    "21": {
+      "airway": "lud",
+      "basis": "LUL daughter opposite lingular stem 20, leading to LB3/LB1+2 (44/45). Upper division is distinct from lower-lobe superior segment LB6.",
+      "existingLabel": "LUL"
+    },
+    "24": {
+      "airway": "lbasal89",
+      "basis": "Stem between the left basal bronchus and labeled LB7+8/LB9 daughters (52/51), opposite LB10 (25)."
+    },
+    "28": {
+      "airway": "rb1b",
+      "basis": "Existing RB1 territory; anterior (negative LPS y) daughter of edge 13, sibling 29 posterior. Textbook p. 27, Figs. 2.9–2.10.",
+      "existingLabel": "RB1"
+    },
+    "29": {
+      "airway": "rb1a",
+      "basis": "Existing RB1 territory; posterior (positive LPS y) daughter of edge 13, sibling 28 anterior. Textbook p. 27, Figs. 2.9–2.10. Edge 61 remains RB1a distal, without claiming a finer suffix.",
+      "existingLabel": "RB1"
+    },
+    "61": {
+      "airway": "rb1a",
+      "basis": "Existing RB1 territory; posterior (positive LPS y) daughter of edge 13, sibling 28 anterior. Textbook p. 27, Figs. 2.9–2.10. Edge 61 remains RB1a distal, without claiming a finer suffix.",
+      "existingLabel": "RB1"
+    },
+    "39": {
+      "airway": "rb4a",
+      "basis": "Existing RB4 territory; posterolateral daughter of edge 18, opposite anterolateral sibling 38. Textbook pp. 45–47, Figs. 2.47–2.49.",
+      "existingLabel": "RB4"
+    },
+    "40": {
+      "airway": "rb5a",
+      "basis": "Daughter of labeled RB5 (19), anterior and approximately horizontal versus caudal sibling 41. Textbook pp. 45–47, Figs. 2.47–2.49. Local +z excursion is not a different segment identity."
+    },
+    "41": {
+      "airway": "rb5b",
+      "basis": "Daughter of labeled RB5 (19), anterior and caudal versus near-horizontal sibling 40. Textbook pp. 45–47, Figs. 2.47–2.49."
+    },
+    "43": {
+      "airway": "lb5",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "LB5"
+    },
+    "44": {
+      "airway": "lb3",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "LB3"
+    },
+    "45": {
+      "airway": "lb12",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "LB1+2"
+    },
+    "51": {
+      "airway": "lb9",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "LB9"
+    },
+    "71": {
+      "airway": "rb8",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "RB8"
+    },
+    "496": {
+      "airway": "lul",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "LUL"
+    }
+  }
+}

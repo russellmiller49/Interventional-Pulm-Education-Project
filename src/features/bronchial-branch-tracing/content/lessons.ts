@@ -17,7 +17,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     phase: 'recognize',
     title: 'Orient to the CT',
     instruction:
-      'Read the worked example. Scroll through its CT levels and identify the parent airway before starting your own trace.',
+      'Read the worked example. Scroll through its CT slices and identify the parent airway before starting your own trace.',
     lookIn: { pane: 'teaching', landmark: 'Worked CT example' },
     actionLabel: 'Trace this airway',
     interaction: 'read',
@@ -29,7 +29,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     phase: 'predict',
     title: 'Follow the lumen',
     instruction:
-      'At each of the three trace levels, mark the lumen you believe continues from the starting airway. Browse neighboring slices to establish continuity.',
+      'At each named airway checkpoint, mark the lumen you believe continues from the starting airway. Browse neighboring slices to establish continuity.',
     lookIn: { pane: 'simulator', landmark: 'CT tracing stack' },
     actionLabel: 'Record trace',
     interaction: 'choose',
@@ -41,7 +41,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     phase: 'act',
     title: 'Describe its course',
     instruction:
-      'Review your three marked levels and record how this airway continues in patient space.',
+      'Review your three marked airway points and record how this airway continues in patient space.',
     lookIn: { pane: 'steps', landmark: 'Your branch map' },
     actionLabel: 'Reveal CT comparison',
     interaction: 'map',
@@ -124,14 +124,14 @@ export const LESSONS: CtLesson[] = [
     concept: 'A branch connection is established by continuity, not proximity.',
     teaching: [
       'Begin at the outlined parent lumen. Move through adjacent slices in small increments and keep its walls in view. At the division, follow each candidate far enough to understand its course.',
-      'The three trace levels are checkpoints, not the whole evidence. Use the slider, arrow buttons or mouse wheel to inspect every intervening 0.5 mm plane. A nearby vessel or another airway is not proof of a connection.',
+      'The named checkpoints sample a continuous airway route. Use the slider, arrow buttons or mouse wheel to inspect every intervening 0.5 mm plane. A nearby vessel or another airway is not proof of a connection.',
     ],
     worked:
       'In the right-upper-lobe example, the route first descends in the right main bronchus and then turns cranially. The slice order can reverse along a continuous route.',
     interpretation:
       'Review where your trace diverges from the parent. Return to the last level where the lumen is clear, then advance one slice at a time. Keep the neighboring bronchus as a landmark rather than jumping to the nearest round lucency.',
     transferPrompt:
-      'Continue from the bronchus intermedius into an anterior branch. Follow its walls rather than relying on how close the next lucency appears.',
+      'Continue from the bronchus intermedius through RML to the medial segmental bronchus (RB5). Follow its walls rather than relying on how close the next lucency appears.',
     sourcePages: 'Chapter 1, pp. 4, 15–18',
     example: 'right-upper-entry',
     prediction: 'central-right',
@@ -151,12 +151,12 @@ export const LESSONS: CtLesson[] = [
       'In the book’s vertical pattern, the spur angle seen on the correctly oriented CT can guide the branch diagram. First confirm the airway direction and display convention; a screen clock position is not a fixed anatomical name.',
     ],
     worked:
-      'The upper-lobe example advances toward more cranial levels. Scroll through the stack to see the lumen move and divide, with the right chest wall at the bottom of the rotated view.',
+      'The upper-lobe example follows the apical bronchus (RB1) into its anterior subsegment (RB1b), advancing toward more cranial slices. Scroll through the stack to see the lumen move and divide, with the right chest wall at the bottom of the rotated view.',
     interpretation:
       'Compare the change in CT level with the smaller in-plane displacement. Then inspect the bifurcation through neighboring slices. The vertical pattern describes the local course; an entire route can contain several different patterns.',
     transferPrompt:
       'Trace a lower-lobe airway that descends through successive planes. Its reflected display differs from the upper-lobe view.',
-    sourcePages: 'Chapter 1, pp. 7–9; Figs. 1.12–1.13',
+    sourcePages: 'Chapter 1, pp. 1–3, 7–9; Chapter 2, p. 27, Figs. 2.9–2.10',
     example: 'right-upper-apical',
     prediction: 'right-upper-distal',
     transfer: 'right-lower-basal',
@@ -188,9 +188,9 @@ export const LESSONS: CtLesson[] = [
   },
   {
     id: 'horizontal-vertical',
-    title: 'Find the cranial and caudal continuations',
+    title: 'Trace the RB5 subsegments',
     minutes: 6,
-    objective: 'Use neighboring CT levels to distinguish a cranial continuation from a caudal one.',
+    objective: 'Follow the medial segmental bronchus into RB5a and RB5b using adjacent CT slices.',
     prerequisite: 'Following a horizontal parent lumen.',
     concept: 'The daughter’s change in level resolves a horizontal–vertical relationship.',
     teaching: [
@@ -198,12 +198,12 @@ export const LESSONS: CtLesson[] = [
       'Viewed along a horizontal parent, cranial and caudal daughters can form an up–down relationship. The direction called screen-up still depends on the stated viewing orientation.',
     ],
     worked:
-      'The worked middle-lobe trace follows one continuation beyond a nearly horizontal parent. Compare its final level with the parent level, then return to the junction to look for the other continuation.',
+      'Follow the bronchus intermedius (BI) into the right middle lobe bronchus (RML), then the medial segmental bronchus (RB5). RB4 is the lateral segmental bronchus at the middle-lobe division. Use this parent anatomy to locate the RB5 subsegments in your next trace.',
     interpretation:
-      'The reference follows the caudal continuation in this local example. A neighboring cranial continuation appears at higher levels. Review the source lumen before assigning a subsegmental name; graph depth alone does not supply that name.',
+      'This trace follows RB5 into RB5b, its caudally directed subsegment in the textbook pattern. The sibling RB5a advances more nearly horizontally and has a small cranial excursion here. The a/b suffix identifies the subsegment; a small local bend does not create a different segment.',
     transferPrompt:
-      'Return to the same parent and follow the other continuation. This is deliberate comparison within one CT, not a new patient assessment.',
-    sourcePages: 'Chapter 1, pp. 10–11; Fig. 1.17',
+      'Return to the medial segmental bronchus (RB5) and trace its other subsegment, RB5a. Inspect the intervening slices to confirm its connection and describe its course.',
+    sourcePages: 'Chapter 1, pp. 1–3, 10–11; Chapter 2, pp. 45–47, Figs. 2.47–2.49',
     example: 'middle-lobe-entry',
     prediction: 'middle-lobe-caudal',
     transfer: 'middle-lobe-cranial',
@@ -244,7 +244,7 @@ export const LESSONS: CtLesson[] = [
       'For the left upper division, the book rotates axial images clockwise by 90°. Its term “left superior segment” in this discussion refers to the upper division, not the lower-lobe superior segment. A lower-lobe returning route still uses the lower-lobe reflection convention.',
     ],
     worked:
-      'Follow the left-upper-division example in its clockwise view. The direction labels rotate with the image, while cranial and caudal remain defined by the CT level.',
+      'Follow the left upper division into the apicoposterior bronchus (LB1+2) in its clockwise view. The direction labels rotate with the image, while cranial and caudal remain defined by the CT level.',
     interpretation:
       'This lower-lobe route initially descends and then returns toward more cranial levels. A reversed slice order is expected along that path. The book also illustrates a rotated coronal MPR as a supporting check; the axial continuity remains the primary task here.',
     transferPrompt:
@@ -268,7 +268,7 @@ export const LESSONS: CtLesson[] = [
       'If the air column cannot be resolved, record that uncertainty. A nearby vessel or a centerline is supporting context, not confirmation of a patent airway. The book distinguishes a lateral daughter-branch asterisk from a subsuperior bronchus; neither should be inferred from this graph.',
     ],
     worked:
-      'The basal example provides a longer caudal trace. Check each interval between the three levels; do not treat the three marked points as sufficient proof of continuity.',
+      'The basal example provides a longer caudal trace. Check each interval between the three checkpoints; do not treat the three marked points as sufficient proof of continuity.',
     interpretation:
       'Compare your route one level at a time. If you marked uncertainty, revisit that interval and state what remains unresolved. This preview uses one source CT and does not establish performance on a new patient.',
     transferPrompt:

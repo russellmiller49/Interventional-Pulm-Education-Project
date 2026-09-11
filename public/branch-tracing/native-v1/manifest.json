@@ -23,32 +23,50 @@
       "range": [355, 450],
       "cropCenter": [243.6139, 316.0715],
       "cropSize": 190,
-      "anchor": { "slice": 435, "pixel": [246.5723, 318.9188] },
+      "anchor": {
+        "slice": 435,
+        "pixel": [246.5723, 318.9188],
+        "sourceEdgeId": 0,
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
+      },
       "checkpoints": [
         {
           "id": "point-1",
           "slice": 428,
           "pixel": [246.9427, 318.9952],
           "lps": [-11.8998, -154.223, -154.5218],
-          "sourceHu": -1021
+          "sourceHu": -1021,
+          "sourceEdgeId": 0,
+          "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
+          "landmark": ""
         },
         {
           "id": "point-2",
           "slice": 391,
           "pixel": [245.9542, 316.3607],
           "lps": [-12.5814, -156.0394, -172.7839],
-          "sourceHu": -1018
+          "sourceHu": -1018,
+          "sourceEdgeId": 1,
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+          "landmark": "Proximal"
         },
         {
           "id": "point-3",
           "slice": 371,
           "pixel": [221.7641, 313.7446],
           "lps": [-29.2593, -157.8431, -183.1052],
-          "sourceHu": -1001
+          "sourceHu": -1001,
+          "sourceEdgeId": 1,
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+          "landmark": "Distal"
         }
       ],
       "scopePositionLps": [-12.15521218272999, -154.2757095620951, -150.78062182753658],
-      "scopeDirectionLps": [0.03358069177785027, 0.0035512309600005502, -0.9994297003283371]
+      "scopeDirectionLps": [0.03358069177785027, 0.0035512309600005502, -0.9994297003283371],
+      "airwayPath": [
+        { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" }
+      ]
     },
     {
       "id": "central-left",
@@ -57,32 +75,50 @@
       "range": [330, 433],
       "cropCenter": [267.931, 315.3759],
       "cropSize": 190,
-      "anchor": { "slice": 431, "pixel": [246.8722, 318.9907] },
+      "anchor": {
+        "slice": 431,
+        "pixel": [246.8722, 318.9907],
+        "sourceEdgeId": 0,
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
+      },
       "checkpoints": [
         {
           "id": "point-1",
           "slice": 420,
           "pixel": [247.0296, 318.7336],
           "lps": [-11.8399, -154.4034, -158.5691],
-          "sourceHu": -989
+          "sourceHu": -989,
+          "sourceEdgeId": 0,
+          "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
+          "landmark": ""
         },
         {
           "id": "point-2",
           "slice": 375,
           "pixel": [264.8513, 316.1771],
           "lps": [0.4473, -156.166, -180.8106],
-          "sourceHu": -1024
+          "sourceHu": -1024,
+          "sourceEdgeId": 2,
+          "airway": { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
+          "landmark": "Proximal"
         },
         {
           "id": "point-3",
           "slice": 344,
           "pixel": [301.3662, 308.7467],
           "lps": [25.6226, -161.2889, -196.5187],
-          "sourceHu": -1021
+          "sourceHu": -1021,
+          "sourceEdgeId": 2,
+          "airway": { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
+          "landmark": "Distal"
         }
       ],
       "scopePositionLps": [-11.948495374549314, -154.22614091216758, -152.76929251675588],
-      "scopeDirectionLps": [0.02054263683515044, -0.03249881243809145, -0.9992606403046069]
+      "scopeDirectionLps": [0.02054263683515044, -0.03249881243809145, -0.9992606403046069],
+      "airwayPath": [
+        { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
+        { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" }
+      ]
     },
     {
       "id": "right-upper-entry",
@@ -91,32 +127,63 @@
       "range": [355, 410],
       "cropCenter": [212.2685, 312.7872],
       "cropSize": 190,
-      "anchor": { "slice": 382, "pixel": [234.3992, 314.9328] },
+      "anchor": {
+        "slice": 382,
+        "pixel": [234.3992, 314.9328],
+        "sourceEdgeId": 1,
+        "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" }
+      },
       "checkpoints": [
         {
           "id": "point-1",
           "slice": 379,
           "pixel": [230.7924, 314.4685],
           "lps": [-23.0347, -157.344, -179.1598],
-          "sourceHu": -996
+          "sourceHu": -996,
+          "sourceEdgeId": 1,
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+          "landmark": ""
         },
         {
           "id": "point-2",
           "slice": 371,
           "pixel": [213.5473, 312.9333],
           "lps": [-34.9245, -158.4025, -183.2032],
-          "sourceHu": -1024
+          "sourceHu": -1024,
+          "sourceEdgeId": 3,
+          "airway": {
+            "code": "RUL",
+            "name": "Right upper lobe bronchus",
+            "shortName": "Upper lobe"
+          },
+          "landmark": ""
         },
         {
           "id": "point-3",
           "slice": 388,
           "pixel": [196.5086, 310.7075],
           "lps": [-46.6718, -159.937, -174.5654],
-          "sourceHu": -981
+          "sourceHu": -981,
+          "sourceEdgeId": 6,
+          "airway": {
+            "code": "RB1/B2",
+            "name": "Right B1\u2013B2 common trunk",
+            "shortName": "B1\u2013B2 common trunk"
+          },
+          "landmark": ""
         }
       ],
       "scopePositionLps": [-20.548035078942632, -157.02385314529232, -177.42963163390527],
-      "scopeDirectionLps": [-0.8123603009974109, -0.10496520845670969, -0.5736314551844552]
+      "scopeDirectionLps": [-0.8123603009974109, -0.10496520845670969, -0.5736314551844552],
+      "airwayPath": [
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+        { "code": "RUL", "name": "Right upper lobe bronchus", "shortName": "Upper lobe" },
+        {
+          "code": "RB1/B2",
+          "name": "Right B1\u2013B2 common trunk",
+          "shortName": "B1\u2013B2 common trunk"
+        }
+      ]
     },
     {
       "id": "right-upper-apical",
@@ -125,32 +192,75 @@
       "range": [370, 440],
       "cropCenter": [191.8546, 308.9706],
       "cropSize": 190,
-      "anchor": { "slice": 387, "pixel": [196.952, 310.0046] },
+      "anchor": {
+        "slice": 387,
+        "pixel": [196.952, 310.0046],
+        "sourceEdgeId": 6,
+        "airway": {
+          "code": "RB1/B2",
+          "name": "Right B1\u2013B2 common trunk",
+          "shortName": "B1\u2013B2 common trunk"
+        }
+      },
       "checkpoints": [
         {
           "id": "point-1",
           "slice": 390,
           "pixel": [195.6542, 312.0622],
           "lps": [-47.2609, -159.003, -173.5255],
-          "sourceHu": -1011
+          "sourceHu": -1011,
+          "sourceEdgeId": 6,
+          "airway": {
+            "code": "RB1/B2",
+            "name": "Right B1\u2013B2 common trunk",
+            "shortName": "B1\u2013B2 common trunk"
+          },
+          "landmark": ""
         },
         {
           "id": "point-2",
           "slice": 409,
           "pixel": [192.3549, 308.9998],
           "lps": [-49.5356, -161.1144, -164.2236],
-          "sourceHu": -1018
+          "sourceHu": -1018,
+          "sourceEdgeId": 13,
+          "airway": {
+            "code": "RB1",
+            "name": "Right apical segmental bronchus",
+            "shortName": "Apical"
+          },
+          "landmark": ""
         },
         {
           "id": "point-3",
           "slice": 427,
           "pixel": [187.4521, 300.7297],
           "lps": [-52.9159, -166.8162, -154.9758],
-          "sourceHu": -999
+          "sourceHu": -999,
+          "sourceEdgeId": 28,
+          "airway": {
+            "code": "RB1b",
+            "name": "Right apical bronchus, anterior subsegment",
+            "shortName": "Apical \u00b7 anterior subsegment"
+          },
+          "landmark": ""
         }
       ],
       "scopePositionLps": [-48.11624112036115, -157.86436505067343, -172.1050093748732],
-      "scopeDirectionLps": [-0.04628401212534779, -0.5306765864302508, 0.846309725122143]
+      "scopeDirectionLps": [-0.04628401212534779, -0.5306765864302508, 0.846309725122143],
+      "airwayPath": [
+        {
+          "code": "RB1/B2",
+          "name": "Right B1\u2013B2 common trunk",
+          "shortName": "B1\u2013B2 common trunk"
+        },
+        { "code": "RB1", "name": "Right apical segmental bronchus", "shortName": "Apical" },
+        {
+          "code": "RB1b",
+          "name": "Right apical bronchus, anterior subsegment",
+          "shortName": "Apical \u00b7 anterior subsegment"
+        }
+      ]
     },
     {
       "id": "right-upper-distal",
@@ -159,32 +269,70 @@
       "range": [388, 470],
       "cropCenter": [189.0248, 312.3252],
       "cropSize": 190,
-      "anchor": { "slice": 395, "pixel": [194.3245, 312.9059] },
+      "anchor": {
+        "slice": 395,
+        "pixel": [194.3245, 312.9059],
+        "sourceEdgeId": 13,
+        "airway": {
+          "code": "RB1",
+          "name": "Right apical segmental bronchus",
+          "shortName": "Apical"
+        }
+      },
       "checkpoints": [
         {
           "id": "point-1",
           "slice": 399,
           "pixel": [194.5992, 310.0224],
           "lps": [-47.9883, -160.4094, -169.1663],
-          "sourceHu": -1019
+          "sourceHu": -1019,
+          "sourceEdgeId": 13,
+          "airway": {
+            "code": "RB1",
+            "name": "Right apical segmental bronchus",
+            "shortName": "Apical"
+          },
+          "landmark": ""
         },
         {
           "id": "point-2",
           "slice": 424,
           "pixel": [189.0207, 311.7318],
           "lps": [-51.8344, -159.2308, -156.4923],
-          "sourceHu": -984
+          "sourceHu": -984,
+          "sourceEdgeId": 29,
+          "airway": {
+            "code": "RB1a",
+            "name": "Right apical bronchus, posterior subsegment",
+            "shortName": "Apical \u00b7 posterior subsegment"
+          },
+          "landmark": "Proximal"
         },
         {
           "id": "point-3",
           "slice": 450,
           "pixel": [192.4392, 319.4934],
           "lps": [-49.4775, -153.8795, -143.7373],
-          "sourceHu": -1018
+          "sourceHu": -1018,
+          "sourceEdgeId": 61,
+          "airway": {
+            "code": "RB1a",
+            "name": "Right apical bronchus, posterior subsegment",
+            "shortName": "Apical \u00b7 posterior subsegment"
+          },
+          "landmark": "Distal"
         }
       ],
       "scopePositionLps": [-48.29567322563038, -160.7547549813284, -167.72751759961605],
-      "scopeDirectionLps": [-0.3207242908241333, -0.08148384354914719, 0.9436611216511015]
+      "scopeDirectionLps": [-0.3207242908241333, -0.08148384354914719, 0.9436611216511015],
+      "airwayPath": [
+        { "code": "RB1", "name": "Right apical segmental bronchus", "shortName": "Apical" },
+        {
+          "code": "RB1a",
+          "name": "Right apical bronchus, posterior subsegment",
+          "shortName": "Apical \u00b7 posterior subsegment"
+        }
+      ]
     },
     {
       "id": "middle-lobe-entry",
@@ -193,32 +341,67 @@
       "range": [290, 340],
       "cropCenter": [195.2936, 294.8767],
       "cropSize": 190,
-      "anchor": { "slice": 337, "pixel": [213.8567, 312.4235] },
+      "anchor": {
+        "slice": 337,
+        "pixel": [213.8567, 312.4235],
+        "sourceEdgeId": 4,
+        "airway": {
+          "code": "BI",
+          "name": "Bronchus intermedius",
+          "shortName": "Bronchus intermedius"
+        }
+      },
       "checkpoints": [
         {
           "id": "point-1",
           "slice": 330,
           "pixel": [211.3334, 311.4858],
           "lps": [-36.4508, -159.4004, -203.5232],
-          "sourceHu": -973
+          "sourceHu": -973,
+          "sourceEdgeId": 4,
+          "airway": {
+            "code": "BI",
+            "name": "Bronchus intermedius",
+            "shortName": "Bronchus intermedius"
+          },
+          "landmark": ""
         },
         {
           "id": "point-2",
           "slice": 308,
           "pixel": [197.4129, 296.8732],
           "lps": [-46.0483, -169.4751, -214.4122],
-          "sourceHu": -899
+          "sourceHu": -899,
+          "sourceEdgeId": 9,
+          "airway": {
+            "code": "RML",
+            "name": "Right middle lobe bronchus",
+            "shortName": "Middle lobe"
+          },
+          "landmark": ""
         },
         {
           "id": "point-3",
           "slice": 307,
           "pixel": [184.6441, 279.0784],
           "lps": [-54.8518, -181.7438, -215.1286],
-          "sourceHu": -998
+          "sourceHu": -998,
+          "sourceEdgeId": 19,
+          "airway": {
+            "code": "RB5",
+            "name": "Right medial segmental bronchus",
+            "shortName": "Medial"
+          },
+          "landmark": ""
         }
       ],
       "scopePositionLps": [-34.71110277714268, -158.7539206706968, -199.93110518761804],
-      "scopeDirectionLps": [-0.4586340722021453, -0.14502650241787018, -0.8767109565938576]
+      "scopeDirectionLps": [-0.4586340722021453, -0.14502650241787018, -0.8767109565938576],
+      "airwayPath": [
+        { "code": "BI", "name": "Bronchus intermedius", "shortName": "Bronchus intermedius" },
+        { "code": "RML", "name": "Right middle lobe bronchus", "shortName": "Middle lobe" },
+        { "code": "RB5", "name": "Right medial segmental bronchus", "shortName": "Medial" }
+      ]
     },
     {
       "id": "middle-lobe-lateral",
@@ -227,32 +410,71 @@
       "range": [290, 330],
       "cropCenter": [182.0406, 284.1031],
       "cropSize": 190,
-      "anchor": { "slice": 315, "pixel": [204.2192, 309.4279] },
+      "anchor": {
+        "slice": 315,
+        "pixel": [204.2192, 309.4279],
+        "sourceEdgeId": 9,
+        "airway": {
+          "code": "RML",
+          "name": "Right middle lobe bronchus",
+          "shortName": "Middle lobe"
+        }
+      },
       "checkpoints": [
         {
           "id": "point-1",
           "slice": 314,
           "pixel": [203.7012, 303.8087],
           "lps": [-41.7128, -164.6934, -211.7379],
-          "sourceHu": -1018
+          "sourceHu": -1018,
+          "sourceEdgeId": 9,
+          "airway": {
+            "code": "RML",
+            "name": "Right middle lobe bronchus",
+            "shortName": "Middle lobe"
+          },
+          "landmark": "Proximal"
         },
         {
           "id": "point-2",
           "slice": 307,
           "pixel": [184.5606, 284.0839],
           "lps": [-54.9094, -178.2927, -215.062],
-          "sourceHu": -1024
+          "sourceHu": -1024,
+          "sourceEdgeId": 9,
+          "airway": {
+            "code": "RML",
+            "name": "Right middle lobe bronchus",
+            "shortName": "Middle lobe"
+          },
+          "landmark": "Distal"
         },
         {
           "id": "point-3",
           "slice": 306,
           "pixel": [156.211, 282.139],
           "lps": [-74.4551, -179.6337, -215.2868],
-          "sourceHu": -1024
+          "sourceHu": -1024,
+          "sourceEdgeId": 39,
+          "airway": {
+            "code": "RB4a",
+            "name": "Right lateral bronchus, subsegment a",
+            "shortName": "Lateral \u00b7 subsegment a"
+          },
+          "landmark": ""
         }
       ],
       "scopePositionLps": [-43.289811046664624, -167.24095225508043, -212.98114849280577],
-      "scopeDirectionLps": [-0.7260278980181053, -0.6231313484278275, -0.29084499979530176]
+      "scopeDirectionLps": [-0.7260278980181053, -0.6231313484278275, -0.29084499979530176],
+      "airwayPath": [
+        { "code": "RML", "name": "Right middle lobe bronchus", "shortName": "Middle lobe" },
+        { "code": "RB4", "name": "Right lateral segmental bronchus", "shortName": "Lateral" },
+        {
+          "code": "RB4a",
+          "name": "Right lateral bronchus, subsegment a",
+          "shortName": "Lateral \u00b7 subsegment a"
+        }
+      ]
     },
     {
       "id": "middle-lobe-caudal",
@@ -261,32 +483,70 @@
       "range": [286, 326],
       "cropCenter": [182.0548, 268.8937],
       "cropSize": 190,
-      "anchor": { "slice": 307, "pixel": [183.8781, 283.4489] },
+      "anchor": {
+        "slice": 307,
+        "pixel": [183.8781, 283.4489],
+        "sourceEdgeId": 19,
+        "airway": {
+          "code": "RB5",
+          "name": "Right medial segmental bronchus",
+          "shortName": "Medial"
+        }
+      },
       "checkpoints": [
         {
           "id": "point-1",
           "slice": 307,
           "pixel": [184.2797, 281.1578],
           "lps": [-55.1031, -180.3102, -215.1017],
-          "sourceHu": -953
+          "sourceHu": -953,
+          "sourceEdgeId": 19,
+          "airway": {
+            "code": "RB5",
+            "name": "Right medial segmental bronchus",
+            "shortName": "Medial"
+          },
+          "landmark": "Proximal"
         },
         {
           "id": "point-2",
           "slice": 307,
           "pixel": [184.0695, 274.9552],
           "lps": [-55.248, -184.5865, -215.1883],
-          "sourceHu": -1024
+          "sourceHu": -1024,
+          "sourceEdgeId": 19,
+          "airway": {
+            "code": "RB5",
+            "name": "Right medial segmental bronchus",
+            "shortName": "Medial"
+          },
+          "landmark": "Distal"
         },
         {
           "id": "point-3",
           "slice": 301,
           "pixel": [177.3898, 262.8537],
           "lps": [-59.8533, -192.93, -218.041],
-          "sourceHu": -954
+          "sourceHu": -954,
+          "sourceEdgeId": 41,
+          "airway": {
+            "code": "RB5b",
+            "name": "Right medial bronchus, subsegment b",
+            "shortName": "Medial \u00b7 subsegment b"
+          },
+          "landmark": ""
         }
       ],
       "scopePositionLps": [-54.86086429437588, -181.69235695585155, -215.1276442875574],
-      "scopeDirectionLps": [-0.23254405669290953, -0.9724891736049954, -0.01371382214694238]
+      "scopeDirectionLps": [-0.23254405669290953, -0.9724891736049954, -0.01371382214694238],
+      "airwayPath": [
+        { "code": "RB5", "name": "Right medial segmental bronchus", "shortName": "Medial" },
+        {
+          "code": "RB5b",
+          "name": "Right medial bronchus, subsegment b",
+          "shortName": "Medial \u00b7 subsegment b"
+        }
+      ]
     },
     {
       "id": "middle-lobe-cranial",
@@ -295,32 +555,70 @@
       "range": [294, 326],
       "cropCenter": [182.5549, 270.5516],
       "cropSize": 190,
-      "anchor": { "slice": 307, "pixel": [183.8781, 283.4489] },
+      "anchor": {
+        "slice": 307,
+        "pixel": [183.8781, 283.4489],
+        "sourceEdgeId": 19,
+        "airway": {
+          "code": "RB5",
+          "name": "Right medial segmental bronchus",
+          "shortName": "Medial"
+        }
+      },
       "checkpoints": [
         {
           "id": "point-1",
           "slice": 307,
           "pixel": [184.2336, 281.4207],
           "lps": [-55.1349, -180.1289, -215.0983],
-          "sourceHu": -953
+          "sourceHu": -953,
+          "sourceEdgeId": 19,
+          "airway": {
+            "code": "RB5",
+            "name": "Right medial segmental bronchus",
+            "shortName": "Medial"
+          },
+          "landmark": "Proximal"
         },
         {
           "id": "point-2",
           "slice": 307,
           "pixel": [184.3969, 275.9001],
           "lps": [-55.0223, -183.9351, -215.1626],
-          "sourceHu": -989
+          "sourceHu": -989,
+          "sourceEdgeId": 19,
+          "airway": {
+            "code": "RB5",
+            "name": "Right medial segmental bronchus",
+            "shortName": "Medial"
+          },
+          "landmark": "Distal"
         },
         {
           "id": "point-3",
           "slice": 308,
           "pixel": [181.4973, 262.8202],
           "lps": [-57.0214, -192.9531, -214.4741],
-          "sourceHu": -1013
+          "sourceHu": -1013,
+          "sourceEdgeId": 40,
+          "airway": {
+            "code": "RB5a",
+            "name": "Right medial bronchus, subsegment a",
+            "shortName": "Medial \u00b7 subsegment a"
+          },
+          "landmark": ""
         }
       ],
       "scopePositionLps": [-54.920426765330774, -181.3524824404896, -215.12126845089315],
-      "scopeDirectionLps": [-0.20589474707596425, -0.9784970423533209, -0.012283779236379213]
+      "scopeDirectionLps": [-0.20589474707596425, -0.9784970423533209, -0.012283779236379213],
+      "airwayPath": [
+        { "code": "RB5", "name": "Right medial segmental bronchus", "shortName": "Medial" },
+        {
+          "code": "RB5a",
+          "name": "Right medial bronchus, subsegment a",
+          "shortName": "Medial \u00b7 subsegment a"
+        }
+      ]
     },
     {
       "id": "upper-oblique-lateral",
@@ -329,32 +627,69 @@
       "range": [368, 432],
       "cropCenter": [161.4108, 301.6162],
       "cropSize": 190,
-      "anchor": { "slice": 385, "pixel": [186.4116, 298.3936] },
+      "anchor": {
+        "slice": 385,
+        "pixel": [186.4116, 298.3936],
+        "sourceEdgeId": 15,
+        "airway": {
+          "code": "RB3a",
+          "name": "Right anterior bronchus, lateral subsegment",
+          "shortName": "Anterior \u00b7 lateral subsegment"
+        }
+      },
       "checkpoints": [
         {
           "id": "point-1",
           "slice": 385,
           "pixel": [182.1176, 299.2761],
           "lps": [-56.5937, -167.8184, -175.9567],
-          "sourceHu": -991
+          "sourceHu": -991,
+          "sourceEdgeId": 15,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior \u00b7 lateral subsegment"
+          },
+          "landmark": "Proximal"
         },
         {
           "id": "point-2",
           "slice": 395,
           "pixel": [162.9673, 301.4431],
           "lps": [-69.7969, -166.3244, -171.2412],
-          "sourceHu": -1024
+          "sourceHu": -1024,
+          "sourceEdgeId": 32,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior \u00b7 lateral subsegment"
+          },
+          "landmark": "Midportion"
         },
         {
           "id": "point-3",
           "slice": 412,
           "pixel": [144.0752, 303.5924],
           "lps": [-82.8222, -164.8425, -162.6926],
-          "sourceHu": -1024
+          "sourceHu": -1024,
+          "sourceEdgeId": 32,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior \u00b7 lateral subsegment"
+          },
+          "landmark": "Distal"
         }
       ],
       "scopePositionLps": [-59.17208704018554, -167.71884871081906, -175.46316047410713],
-      "scopeDirectionLps": [-0.9830217213892387, 0.11046187413867292, 0.14651440078951222]
+      "scopeDirectionLps": [-0.9830217213892387, 0.11046187413867292, 0.14651440078951222],
+      "airwayPath": [
+        {
+          "code": "RB3a",
+          "name": "Right anterior bronchus, lateral subsegment",
+          "shortName": "Anterior \u00b7 lateral subsegment"
+        }
+      ]
     },
     {
       "id": "upper-oblique-medial",
@@ -363,32 +698,69 @@
       "range": [370, 406],
       "cropCenter": [170.5614, 300.2903],
       "cropSize": 190,
-      "anchor": { "slice": 385, "pixel": [186.4116, 298.3936] },
+      "anchor": {
+        "slice": 385,
+        "pixel": [186.4116, 298.3936],
+        "sourceEdgeId": 15,
+        "airway": {
+          "code": "RB3a",
+          "name": "Right anterior bronchus, lateral subsegment",
+          "shortName": "Anterior \u00b7 lateral subsegment"
+        }
+      },
       "checkpoints": [
         {
           "id": "point-1",
           "slice": 385,
           "pixel": [183.9739, 298.8946],
           "lps": [-55.3139, -168.0814, -176.0474],
-          "sourceHu": -945
+          "sourceHu": -945,
+          "sourceEdgeId": 15,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior \u00b7 lateral subsegment"
+          },
+          "landmark": "Proximal"
         },
         {
           "id": "point-2",
           "slice": 388,
           "pixel": [171.8006, 300.2005],
           "lps": [-63.7068, -167.1811, -174.7204],
-          "sourceHu": -925
+          "sourceHu": -925,
+          "sourceEdgeId": 15,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior \u00b7 lateral subsegment"
+          },
+          "landmark": "Midportion"
         },
         {
           "id": "point-3",
           "slice": 383,
           "pixel": [160.1325, 301.4372],
           "lps": [-71.7515, -166.3284, -176.7897],
-          "sourceHu": -975
+          "sourceHu": -975,
+          "sourceEdgeId": 33,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior \u00b7 lateral subsegment"
+          },
+          "landmark": "Distal"
         }
       ],
       "scopePositionLps": [-56.78454245038505, -167.7792118022781, -175.94315062462576],
-      "scopeDirectionLps": [-0.9775252078327431, 0.08829088264320112, 0.19143977667568696]
+      "scopeDirectionLps": [-0.9775252078327431, 0.08829088264320112, 0.19143977667568696],
+      "airwayPath": [
+        {
+          "code": "RB3a",
+          "name": "Right anterior bronchus, lateral subsegment",
+          "shortName": "Anterior \u00b7 lateral subsegment"
+        }
+      ]
     },
     {
       "id": "left-upper-division",
@@ -397,32 +769,71 @@
       "range": [328, 410],
       "cropCenter": [330.401, 293.4364],
       "cropSize": 190,
-      "anchor": { "slice": 339, "pixel": [311.2561, 307.5814] },
+      "anchor": {
+        "slice": 339,
+        "pixel": [311.2561, 307.5814],
+        "sourceEdgeId": 496,
+        "airway": { "code": "LUL", "name": "Left upper lobe bronchus", "shortName": "Upper lobe" }
+      },
       "checkpoints": [
         {
           "id": "point-1",
           "slice": 340,
           "pixel": [315.2026, 304.5135],
           "lps": [35.1622, -164.2075, -198.2506],
-          "sourceHu": -1010
+          "sourceHu": -1010,
+          "sourceEdgeId": 496,
+          "airway": {
+            "code": "LUL",
+            "name": "Left upper lobe bronchus",
+            "shortName": "Upper lobe"
+          },
+          "landmark": ""
         },
         {
           "id": "point-2",
           "slice": 353,
           "pixel": [330.9251, 293.0733],
           "lps": [46.0021, -172.095, -191.8081],
-          "sourceHu": -988
+          "sourceHu": -988,
+          "sourceEdgeId": 21,
+          "airway": {
+            "code": "LUL division",
+            "name": "Left upper division bronchus",
+            "shortName": "Upper division"
+          },
+          "landmark": ""
         },
         {
           "id": "point-3",
           "slice": 386,
           "pixel": [333.0508, 298.956],
           "lps": [47.4677, -168.0391, -175.4856],
-          "sourceHu": -1022
+          "sourceHu": -1022,
+          "sourceEdgeId": 45,
+          "airway": {
+            "code": "LB1+2",
+            "name": "Left apicoposterior segmental bronchus",
+            "shortName": "Apicoposterior"
+          },
+          "landmark": ""
         }
       ],
       "scopePositionLps": [37.54300769705786, -166.05820688056718, -197.67548664309638],
-      "scopeDirectionLps": [0.8004163129678061, -0.5627872918058741, 0.20640782474710828]
+      "scopeDirectionLps": [0.8004163129678061, -0.5627872918058741, 0.20640782474710828],
+      "airwayPath": [
+        { "code": "LUL", "name": "Left upper lobe bronchus", "shortName": "Upper lobe" },
+        {
+          "code": "LUL division",
+          "name": "Left upper division bronchus",
+          "shortName": "Upper division"
+        },
+        {
+          "code": "LB1+2",
+          "name": "Left apicoposterior segmental bronchus",
+          "shortName": "Apicoposterior"
+        }
+      ]
     },
     {
       "id": "left-upper-anterior",
@@ -431,32 +842,70 @@
       "range": [345, 395],
       "cropCenter": [332.7457, 292.34],
       "cropSize": 190,
-      "anchor": { "slice": 348, "pixel": [331.7897, 292.4743] },
+      "anchor": {
+        "slice": 348,
+        "pixel": [331.7897, 292.4743],
+        "sourceEdgeId": 21,
+        "airway": {
+          "code": "LUL division",
+          "name": "Left upper division bronchus",
+          "shortName": "Upper division"
+        }
+      },
       "checkpoints": [
         {
           "id": "point-1",
           "slice": 351,
           "pixel": [331.315, 292.8032],
           "lps": [46.2709, -172.2812, -193.0715],
-          "sourceHu": -1024
+          "sourceHu": -1024,
+          "sourceEdgeId": 21,
+          "airway": {
+            "code": "LUL division",
+            "name": "Left upper division bronchus",
+            "shortName": "Upper division"
+          },
+          "landmark": "Proximal"
         },
         {
           "id": "point-2",
           "slice": 366,
           "pixel": [332.4079, 292.557],
           "lps": [47.0244, -172.451, -185.5365],
-          "sourceHu": -982
+          "sourceHu": -982,
+          "sourceEdgeId": 21,
+          "airway": {
+            "code": "LUL division",
+            "name": "Left upper division bronchus",
+            "shortName": "Upper division"
+          },
+          "landmark": "Distal"
         },
         {
           "id": "point-3",
           "slice": 375,
           "pixel": [337.9802, 285.8363],
           "lps": [50.8662, -177.0845, -180.891],
-          "sourceHu": -1024
+          "sourceHu": -1024,
+          "sourceEdgeId": 44,
+          "airway": {
+            "code": "LB3",
+            "name": "Left anterior segmental bronchus",
+            "shortName": "Anterior"
+          },
+          "landmark": ""
         }
       ],
       "scopePositionLps": [45.98451796079199, -172.08280188990423, -191.72559487705587],
-      "scopeDirectionLps": [0.15276134001855501, -0.04593867285709094, 0.9871948193400655]
+      "scopeDirectionLps": [0.15276134001855501, -0.04593867285709094, 0.9871948193400655],
+      "airwayPath": [
+        {
+          "code": "LUL division",
+          "name": "Left upper division bronchus",
+          "shortName": "Upper division"
+        },
+        { "code": "LB3", "name": "Left anterior segmental bronchus", "shortName": "Anterior" }
+      ]
     },
     {
       "id": "left-lingula",
@@ -465,32 +914,67 @@
       "range": [302, 365],
       "cropCenter": [334.3989, 290.5814],
       "cropSize": 190,
-      "anchor": { "slice": 339, "pixel": [311.2561, 307.5814] },
+      "anchor": {
+        "slice": 339,
+        "pixel": [311.2561, 307.5814],
+        "sourceEdgeId": 496,
+        "airway": { "code": "LUL", "name": "Left upper lobe bronchus", "shortName": "Upper lobe" }
+      },
       "checkpoints": [
         {
           "id": "point-1",
           "slice": 340,
           "pixel": [315.0948, 304.5974],
           "lps": [35.0878, -164.1496, -198.2686],
-          "sourceHu": -1010
+          "sourceHu": -1010,
+          "sourceEdgeId": 496,
+          "airway": {
+            "code": "LUL",
+            "name": "Left upper lobe bronchus",
+            "shortName": "Upper lobe"
+          },
+          "landmark": ""
         },
         {
           "id": "point-2",
           "slice": 344,
           "pixel": [333.2928, 291.3839],
           "lps": [47.6345, -173.2597, -196.5427],
-          "sourceHu": -1018
+          "sourceHu": -1018,
+          "sourceEdgeId": 20,
+          "airway": {
+            "code": "LB4+5",
+            "name": "Left lingular bronchus",
+            "shortName": "Lingular bronchus"
+          },
+          "landmark": ""
         },
         {
           "id": "point-3",
           "slice": 322,
           "pixel": [347.8871, 279.9949],
           "lps": [57.6965, -181.1119, -207.3091],
-          "sourceHu": -979
+          "sourceHu": -979,
+          "sourceEdgeId": 43,
+          "airway": {
+            "code": "LB5",
+            "name": "Left inferior lingular segmental bronchus",
+            "shortName": "Inferior lingular"
+          },
+          "landmark": ""
         }
       ],
       "scopePositionLps": [37.40354546275158, -165.94979597299582, -197.70917491814913],
-      "scopeDirectionLps": [0.8003155518361361, -0.5641709979612539, 0.20299286329480593]
+      "scopeDirectionLps": [0.8003155518361361, -0.5641709979612539, 0.20299286329480593],
+      "airwayPath": [
+        { "code": "LUL", "name": "Left upper lobe bronchus", "shortName": "Upper lobe" },
+        { "code": "LB4+5", "name": "Left lingular bronchus", "shortName": "Lingular bronchus" },
+        {
+          "code": "LB5",
+          "name": "Left inferior lingular segmental bronchus",
+          "shortName": "Inferior lingular"
+        }
+      ]
     },
     {
       "id": "left-lower-returning",
@@ -499,32 +983,62 @@
       "range": [310, 370],
       "cropCenter": [322.3358, 327.4818],
       "cropSize": 190,
-      "anchor": { "slice": 339, "pixel": [311.2561, 307.5814] },
+      "anchor": {
+        "slice": 339,
+        "pixel": [311.2561, 307.5814],
+        "sourceEdgeId": 5,
+        "airway": { "code": "LLL", "name": "Left lower lobe bronchus", "shortName": "Lower lobe" }
+      },
       "checkpoints": [
         {
           "id": "point-1",
           "slice": 335,
           "pixel": [313.6398, 310.0207],
           "lps": [34.0847, -160.4105, -201.1534],
-          "sourceHu": -997
+          "sourceHu": -997,
+          "sourceEdgeId": 5,
+          "airway": {
+            "code": "LLL",
+            "name": "Left lower lobe bronchus",
+            "shortName": "Lower lobe"
+          },
+          "landmark": ""
         },
         {
           "id": "point-2",
           "slice": 327,
           "pixel": [321.5905, 325.2959],
           "lps": [39.5663, -149.879, -205.0906],
-          "sourceHu": -1020
+          "sourceHu": -1020,
+          "sourceEdgeId": 10,
+          "airway": {
+            "code": "LB6",
+            "name": "Left superior segmental bronchus",
+            "shortName": "Superior"
+          },
+          "landmark": "Proximal"
         },
         {
           "id": "point-3",
           "slice": 346,
           "pixel": [325.8048, 341.6523],
           "lps": [42.4719, -138.602, -195.5371],
-          "sourceHu": -1012
+          "sourceHu": -1012,
+          "sourceEdgeId": 50,
+          "airway": {
+            "code": "LB6",
+            "name": "Left superior segmental bronchus",
+            "shortName": "Superior"
+          },
+          "landmark": "Distal"
         }
       ],
       "scopePositionLps": [35.52270508889162, -158.9389701885842, -203.11827382576413],
-      "scopeDirectionLps": [0.5151039700189624, 0.5287522147509105, -0.6746028427650681]
+      "scopeDirectionLps": [0.5151039700189624, 0.5287522147509105, -0.6746028427650681],
+      "airwayPath": [
+        { "code": "LLL", "name": "Left lower lobe bronchus", "shortName": "Lower lobe" },
+        { "code": "LB6", "name": "Left superior segmental bronchus", "shortName": "Superior" }
+      ]
     },
     {
       "id": "right-lower-basal",
@@ -533,32 +1047,67 @@
       "range": [245, 325],
       "cropCenter": [190.824, 318.7912],
       "cropSize": 190,
-      "anchor": { "slice": 315, "pixel": [204.2192, 309.4279] },
+      "anchor": {
+        "slice": 315,
+        "pixel": [204.2192, 309.4279],
+        "sourceEdgeId": 8,
+        "airway": { "code": "RLL", "name": "Right lower lobe bronchus", "shortName": "Lower lobe" }
+      },
       "checkpoints": [
         {
           "id": "point-1",
           "slice": 311,
           "pixel": [201.7849, 313.0665],
           "lps": [-43.0341, -158.3106, -212.7551],
-          "sourceHu": -1004
+          "sourceHu": -1004,
+          "sourceEdgeId": 8,
+          "airway": {
+            "code": "RLL",
+            "name": "Right lower lobe bronchus",
+            "shortName": "Lower lobe"
+          },
+          "landmark": ""
         },
         {
           "id": "point-2",
           "slice": 284,
           "pixel": [192.9799, 318.7597],
           "lps": [-49.1047, -154.3854, -226.4282],
-          "sourceHu": -913
+          "sourceHu": -913,
+          "sourceEdgeId": 34,
+          "airway": {
+            "code": "R basal",
+            "name": "Right basal bronchus",
+            "shortName": "Basal bronchus"
+          },
+          "landmark": ""
         },
         {
           "id": "point-3",
           "slice": 264,
           "pixel": [173.344, 317.723],
           "lps": [-62.6427, -155.1002, -236.4998],
-          "sourceHu": -1024
+          "sourceHu": -1024,
+          "sourceEdgeId": 71,
+          "airway": {
+            "code": "RB8",
+            "name": "Right anterior basal segmental bronchus",
+            "shortName": "Anterior basal"
+          },
+          "landmark": ""
         }
       ],
       "scopePositionLps": [-44.44830651726785, -156.48807729946847, -214.76710708726378],
-      "scopeDirectionLps": [-0.3820110482258086, 0.203217594784659, -0.9015376687656247]
+      "scopeDirectionLps": [-0.3820110482258086, 0.203217594784659, -0.9015376687656247],
+      "airwayPath": [
+        { "code": "RLL", "name": "Right lower lobe bronchus", "shortName": "Lower lobe" },
+        { "code": "R basal", "name": "Right basal bronchus", "shortName": "Basal bronchus" },
+        {
+          "code": "RB8",
+          "name": "Right anterior basal segmental bronchus",
+          "shortName": "Anterior basal"
+        }
+      ]
     },
     {
       "id": "left-lower-basal",
@@ -567,32 +1116,75 @@
       "range": [245, 325],
       "cropCenter": [335.4133, 319.4144],
       "cropSize": 190,
-      "anchor": { "slice": 321, "pixel": [321.3786, 317.9269] },
+      "anchor": {
+        "slice": 321,
+        "pixel": [321.3786, 317.9269],
+        "sourceEdgeId": 11,
+        "airway": {
+          "code": "L basal",
+          "name": "Left basal bronchus",
+          "shortName": "Basal bronchus"
+        }
+      },
       "checkpoints": [
         {
           "id": "point-1",
           "slice": 316,
           "pixel": [322.8127, 315.4201],
           "lps": [40.409, -156.6879, -210.3488],
-          "sourceHu": -866
+          "sourceHu": -866,
+          "sourceEdgeId": 11,
+          "airway": {
+            "code": "L basal",
+            "name": "Left basal bronchus",
+            "shortName": "Basal bronchus"
+          },
+          "landmark": "Proximal"
         },
         {
           "id": "point-2",
           "slice": 291,
           "pixel": [334.3786, 318.6454],
           "lps": [48.3831, -154.4642, -223.0964],
-          "sourceHu": -1022
+          "sourceHu": -1022,
+          "sourceEdgeId": 11,
+          "airway": {
+            "code": "L basal",
+            "name": "Left basal bronchus",
+            "shortName": "Basal bronchus"
+          },
+          "landmark": "Distal"
         },
         {
           "id": "point-3",
           "slice": 267,
           "pixel": [344.5897, 322.9444],
           "lps": [55.4232, -151.5003, -235.2028],
-          "sourceHu": -999
+          "sourceHu": -999,
+          "sourceEdgeId": 51,
+          "airway": {
+            "code": "LB9",
+            "name": "Left lateral basal segmental bronchus",
+            "shortName": "Lateral basal"
+          },
+          "landmark": ""
         }
       ],
       "scopePositionLps": [41.61122400296233, -156.9837627040734, -212.6202308286373],
-      "scopeDirectionLps": [0.5741117818382363, 0.14777795226874466, -0.8053305773269644]
+      "scopeDirectionLps": [0.5741117818382363, 0.14777795226874466, -0.8053305773269644],
+      "airwayPath": [
+        { "code": "L basal", "name": "Left basal bronchus", "shortName": "Basal bronchus" },
+        {
+          "code": "LB7+8/B9",
+          "name": "Left B7+8\u2013B9 common trunk",
+          "shortName": "B7+8\u2013B9 common trunk"
+        },
+        {
+          "code": "LB9",
+          "name": "Left lateral basal segmental bronchus",
+          "shortName": "Lateral basal"
+        }
+      ]
     }
   ],
   "assets": [
@@ -1776,5 +2368,17 @@
       "bytes": 199920,
       "sha256": "76205ca12c01753e58025bbfebb59c3d2c37a19b63fb46a31f0a2501dabfb732"
     }
-  ]
+  ],
+  "nomenclature": {
+    "version": "nomenclature-v1",
+    "reference": {
+      "title": "Kurimoto & Morita. Bronchial Branch Tracing (2020)",
+      "url": "https://doi.org/10.1007/978-981-13-9905-3",
+      "pages": "Chapter 1, pp. 1\u20133, Figs. 1.1\u20131.2; Chapter 2, p. 27, Figs. 2.9\u20132.10; pp. 45\u201347, Figs. 2.47\u20132.49"
+    },
+    "sourceLabelsSha256": "fc446faabf7654592b88ec7315321a9c874244efac29f5de2dcd501d2a9f7f8a",
+    "sourceLabeledGraphSha256": "ea98834c7612e59600fd7f89edceb730a876b2f174d51f1ddb70f4e2eb009624",
+    "correspondence": "All selected complete LPS polylines and node connections match the existing labeled case exactly.",
+    "method": "Existing segment labels, parent/daughter topology and textbook figures; explicit anatomical assignments documented in authoring/airway-nomenclature.json. No finer suffix inferred from graph depth."
+  }
 }

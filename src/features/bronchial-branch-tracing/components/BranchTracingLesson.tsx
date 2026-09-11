@@ -26,7 +26,7 @@ import {
   type CtAction,
 } from '../engine/ct-session'
 import { NativeCtViewer } from './NativeCtViewer'
-import { CtCourseControl, CtTraceList } from './CtTraceControls'
+import { CtAirwayGuide, CtCourseControl, CtTraceList } from './CtTraceControls'
 import { ModuleFrame } from './ModuleFrame'
 import { useDeviceProgress } from './useDeviceProgress'
 import styles from './branch-tracing.module.css'
@@ -153,8 +153,8 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                     disabled,
                     disabledReason:
                       s.step === 1
-                        ? 'Record a lumen mark or unresolved continuation at all three CT levels.'
-                        : 'Record three levels and select the airway course.',
+                        ? 'Record a lumen mark or unresolved continuation at all three airway checkpoints.'
+                        : 'Record three airway checkpoints and select the airway course.',
                   },
             }}
           >
@@ -180,7 +180,8 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 <strong>Your interpretation is recorded</strong>
                 <p>
                   {COURSE_OPTIONS[response.course]}.{' '}
-                  {response.marks.filter((m) => m.pixel === null).length} levels marked unresolved.
+                  {response.marks.filter((m) => m.pixel === null).length} checkpoints marked
+                  unresolved.
                 </p>
                 <p>
                   Compare the image evidence before accepting either trace. No clinical accuracy
@@ -196,7 +197,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 {s.hints > 0 && (
                   <p>
                     Return to Start, follow the same air column through neighboring planes, then
-                    mark it at each numbered level. A nearby vessel does not establish airway
+                    mark it at each named checkpoint. A nearby vessel does not establish airway
                     continuity.
                   </p>
                 )}
@@ -261,11 +262,11 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 <p>
                   {transfer
                     ? lesson.transferPrompt
-                    : `Use Start to identify the parent in the ${trace.region.toLowerCase()} region, then trace its continuity to the three numbered CT levels.`}
+                    : `Use Start to identify the ${trace.anchor.airway.name.toLowerCase()}, then follow the named airway checkpoints.`}
                 </p>
                 <p>
-                  Browse between the numbered levels. Place your marks on the visible air column, or
-                  record that the continuation is unresolved.
+                  Browse the slices between checkpoints. Place your marks on the visible air column,
+                  or record that the continuation is unresolved.
                 </p>
               </StageBlock>
               {s.step === 3 || s.step === 4 || (transfer && response) ? (
@@ -300,6 +301,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
               )}
             </>
           )}
+          <CtAirwayGuide trace={trace} />
         </div>
       }
       simulator={

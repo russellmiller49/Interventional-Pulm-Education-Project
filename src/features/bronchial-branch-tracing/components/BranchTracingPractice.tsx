@@ -16,7 +16,7 @@ import { marksComplete, validCtMark } from '../engine/ct-session'
 import { saveCtAttempt } from '../engine/progress'
 import { ModuleFrame } from './ModuleFrame'
 import { NativeCtViewer } from './NativeCtViewer'
-import { CtCourseControl, CtTraceList } from './CtTraceControls'
+import { CtAirwayGuide, CtCourseControl, CtTraceList } from './CtTraceControls'
 import styles from './branch-tracing.module.css'
 
 const RealCtExplorer = dynamic(() => import('./RealCtExplorer').then((m) => m.RealCtExplorer), {
@@ -51,9 +51,9 @@ export function BranchTracingPractice({ mode }: { mode: 'practice' | 'assess' })
           <section>
             <h2>Follow the air column</h2>
             <p>
-              Start in the identified parent airway. At each numbered level, mark the lumen that
-              continues from it. Use neighboring slices, the book-oriented view and the standard
-              axial view to check the connection.
+              Start in the identified parent airway. At each named airway checkpoint, mark the lumen
+              that continues from it. Use neighboring slices, the book-oriented view and the
+              standard axial view to check the connection.
             </p>
             <p>
               Record the patient-space course after each trace. You may revisit your interpretations
@@ -145,7 +145,17 @@ function CtPracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onEx
       mode,
       sourceCaseCount: 1,
       assessment: 'Ungraded CT interpretation',
-      traces: ids.map((id, i) => ({ id, interpretation: responses[i] })),
+      nomenclatureVersion: 'nomenclature-v1',
+      traces: ids.map((id, i) => ({
+        id,
+        airwayPath: traceById(id).airwayPath,
+        checkpoints: traceById(id).checkpoints.map(({ id, airway, landmark }) => ({
+          id,
+          airway,
+          landmark,
+        })),
+        interpretation: responses[i],
+      })),
     }
     const url = URL.createObjectURL(
       new Blob([JSON.stringify(content, null, 2)], { type: 'application/json' }),
@@ -182,11 +192,11 @@ function CtPracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onEx
           <section key={id} className={styles.ctDebriefRow}>
             <div>
               <h2>
-                Trace {i + 1} · {traceById(id).region}
+                Trace {i + 1} · {traceById(id).airwayPath.at(-1)?.name}
               </h2>
               <p>{COURSE_OPTIONS[responses[i]!.course]}</p>
               <p>
-                {responses[i]!.marks.filter((m) => m.pixel === null).length} levels marked
+                {responses[i]!.marks.filter((m) => m.pixel === null).length} checkpoints marked
                 unresolved.{' '}
                 {responses[i]!.hints > 0 ? 'Tracing reminder used.' : 'No tracing reminder used.'}
               </p>
@@ -243,7 +253,7 @@ function CtPracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onEx
             model={{
               kicker: `Interpretation ${index + 1}`,
               heading: 'Follow and record the airway',
-              body: 'Place a lumen mark, or record unresolved continuity, at each numbered CT level. Then describe its course.',
+              body: 'Place a lumen mark, or record unresolved continuity, at each named airway checkpoint. Then describe its course.',
               where: <LookInLine location={{ pane: 'simulator', landmark: 'CT tracing stack' }} />,
               primary: {
                 label:
@@ -253,7 +263,7 @@ function CtPracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onEx
                   else record()
                 },
                 disabled: !ready,
-                disabledReason: 'Record all three levels and select the airway course.',
+                disabledReason: 'Record all three airway checkpoints and select the airway course.',
               },
             }}
           >
@@ -274,8 +284,8 @@ function CtPracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onEx
                 </button>
                 {hints > 0 && (
                   <p>
-                    Follow the walls from Start through neighboring planes. The next numbered level
-                    may lie cranially or caudally.
+                    Follow the walls from Start through neighboring planes. The next airway
+                    checkpoint may lie cranially or caudally.
                   </p>
                 )}
               </div>
@@ -301,7 +311,8 @@ function CtPracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onEx
           <h2>Trace without the reference</h2>
           <p>
             Use Start to find the parent airway, then follow the air column through the stack. At
-            the three numbered levels, record the lumen you believe continues from that parent.
+            the three named airway checkpoints, record the lumen you believe continues from that
+            parent.
           </p>
           <p>
             Book tracing view applies the convention for this region. Standard axial changes only
@@ -309,13 +320,14 @@ function CtPracticeSession({ mode, onExit }: { mode: 'practice' | 'assess'; onEx
           </p>
           <h2>Record uncertainty honestly</h2>
           <p>
-            If the source image does not resolve the connection, use “Lumen unresolved at this
-            level.” A centerline or nearby vessel would not establish continuity by itself.
+            If the source image does not resolve the connection, use “Lumen unresolved here.” A
+            centerline or nearby vessel would not establish continuity by itself.
           </p>
           <p className={styles.small}>
             The whole set must be submitted before its comparison is shown. Changes to a recorded
             response do not erase the first attempt.
           </p>
+          <CtAirwayGuide trace={trace} />
         </div>
       }
       simulator={

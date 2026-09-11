@@ -11,12 +11,16 @@ import os
 from pathlib import Path
 import struct
 import subprocess
+import sys
 import traceback
 import zlib
 
 import numpy as np
 import slicer
 import vtk
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from label_native_traces import annotate
 
 
 def digest(data):
@@ -97,6 +101,7 @@ def main():
         target=sample(points,min(length,pose_distance+6))
         traces.append({**{k:spec[k] for k in ['id','preset','region','range']},'cropCenter':center,'cropSize':190,'anchor':{'slice':int(round(anchor_ijk[2])),'pixel':[round(float(anchor_ijk[0]),4),round(float(anchor_ijk[1]),4)]},'checkpoints':checkpoints,'scopePositionLps':position.tolist(),'scopeDirectionLps':((target-position)/np.linalg.norm(target-position)).tolist()})
     result={'schema':'branch-tracing-native/v1','sourceSha256':author['sourceSha256'],'sourceGraphSha256':author['graphSha256'],'sourceCaseCount':1,'slicerVersion':slicer.app.applicationVersion,'sizeXyz':[512,512,636],'spacingXyzMm':[.689453125,.689453125,.5],'ijkToLps':ijk_lps.tolist(),'exportedSliceRange':[240,475],'windowHu':[-1000,400],'review':'Source-derived geometric comparison. Clinical labels and camera poses are not assessment keys.','traces':traces,'assets':assets}
+    result = annotate(result, root)
     # Exactly match repository formatting before hashing/reviewing generated JSON.
     formatted=subprocess.run([str(root/'node_modules/.bin/prettier'),'--stdin-filepath',str(out/'manifest.json')],input=json.dumps(result).encode(),stdout=subprocess.PIPE,check=True,cwd=root).stdout
     (out/'manifest.json').write_bytes(formatted)

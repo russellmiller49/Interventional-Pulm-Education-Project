@@ -807,6 +807,19 @@
   gap: 0.5rem;
   padding: 0.6rem 0.7rem;
 }
+.ctActiveAirway {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.55rem 0.7rem 0;
+  font-size: 0.78rem;
+  color: #d3e7eb;
+}
+.ctActiveAirway strong {
+  color: #b5f1eb;
+}
+.ctActiveAirway span {
+  font-size: 0.72rem;
+}
 .nativeSliceControls label {
   flex: 1;
   min-width: 0;
@@ -823,15 +836,16 @@
 }
 .ctLevels {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.35rem;
   padding: 0 0.7rem 0.6rem;
 }
 .ctLevels button {
-  display: flex;
+  display: grid;
+  min-width: 0;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
+  overflow-wrap: anywhere;
   gap: 0.2rem 0.4rem;
   padding: 0.45rem 0.35rem;
   font-size: 0.65rem;
@@ -906,6 +920,25 @@
 .traceList button div {
   display: grid;
   gap: 0.1rem;
+}
+.traceList button div > span {
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+.airwayGuide {
+  border-top: 1px solid #385460;
+  margin-top: 1rem;
+  padding-top: 0.6rem;
+}
+.airwayGuide h3 {
+  font-size: 0.85rem;
+}
+.airwayGuide p {
+  font-size: 0.78rem;
+}
+.airwayGuide abbr {
+  color: #b5eae5;
+  text-decoration: none;
 }
 .traceList strong {
   font-size: 0.75rem;
@@ -1010,7 +1043,7 @@
   padding: 0.5rem max(1rem, calc((100vw - 1000px) / 2));
 }
 .nativeViewer:fullscreen .nativeImage {
-  max-width: min(100%, calc(100dvh - 360px));
+  max-width: min(100%, calc(100dvh - 430px));
 }
 .nativeViewer:fullscreen .ctLevels {
   padding-bottom: 0.3rem;

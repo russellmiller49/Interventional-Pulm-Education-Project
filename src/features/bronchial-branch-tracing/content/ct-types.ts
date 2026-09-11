@@ -1,12 +1,20 @@
 import type { StageStepBase } from '@/features/learning-module/stage/stageModel'
 import type { DisplayPreset, Vec3 } from '../geometry/coordinates'
 
+export interface AirwayLabel {
+  code: string
+  name: string
+  shortName: string
+}
 export interface CtCheckpoint {
   id: string
   slice: number
   pixel: [number, number]
   lps: Vec3
   sourceHu: number
+  sourceEdgeId: number
+  airway: AirwayLabel
+  landmark: string
 }
 export interface CtTrace {
   id: string
@@ -15,7 +23,8 @@ export interface CtTrace {
   range: [number, number]
   cropCenter: [number, number]
   cropSize: number
-  anchor: { slice: number; pixel: [number, number] }
+  airwayPath: AirwayLabel[]
+  anchor: { slice: number; pixel: [number, number]; sourceEdgeId: number; airway: AirwayLabel }
   checkpoints: CtCheckpoint[]
   scopePositionLps: Vec3
   scopeDirectionLps: Vec3
