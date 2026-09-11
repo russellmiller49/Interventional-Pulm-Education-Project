@@ -3,6 +3,8 @@ import type { ReactNode } from 'react'
 import type { ScopeState as EngineScopeState } from '@/lib/airway-anatomy/scope-state'
 import type { ScopePoseSnapshot, Vec3 } from '@/lib/airway-anatomy/types'
 
+import type { SpineStopId } from '../../content/spine'
+
 /**
  * THE CONTRACT between the lesson stage (Claude) and the bronchoscopy simulator pane (Codex/Astra).
  *
@@ -467,7 +469,11 @@ export interface OstiumPin {
   /** The child edge the learner steers into to enter it. */
   readonly edgeId: number
   readonly pointLps: Vec3
-  /** Inside the optical field from the current frame (nominal 4:3, 88°). */
+  /**
+   * Inside the round optical field — the circle inscribed in the nominal 4:3, 88° frame — and near
+   * enough to be seen. Round, so rolling the scope never moves an opening into or out of view
+   * (A06/A28).
+   */
   readonly inView: boolean
 }
 
@@ -498,6 +504,8 @@ export interface ScopeState {
     readonly fullLabel: string
     /** Labels from the trachea to the current airway. */
     readonly parentage: readonly AirwayLabel[]
+    /** The spine stop the caption strip names; null on the bench. */
+    readonly spineStop: SpineStopId | null
   }
   readonly ostia: readonly OstiumPin[]
   readonly events: readonly ScopeEventId[]
