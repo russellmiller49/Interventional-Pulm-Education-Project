@@ -1,5 +1,9 @@
 # Pleural ultrasound PLUS quickstart
 
+> The case folder lives outside Git. `$IP_LOCAL_DATA` means
+> `/Users/russellmiller/Projects/Interventional-Pulm-Local-Data` unless the variable is set.
+> The scripts below resolve it through `scripts/local_data.py`; see `docs/local-authoring-assets.md`.
+
 This is the practical path from a 3D Slicer segmentation to more anatomically realistic ultrasound frames for the browser simulator.
 
 The key idea: use 3D Slicer for patient anatomy, use PLUS Toolkit as an offline frame generator, and let the web app load cached frames. PLUS is native C++/PlusServer software, not a browser package.
@@ -46,7 +50,7 @@ right kidney
 Then export one STL per structure into:
 
 ```text
-Pleural_effusion_simulation/plus/Models/
+$IP_LOCAL_DATA/raw-assets/pleural-effusion-simulation/plus/Models/
 ```
 
 Expected output:
@@ -138,7 +142,7 @@ On other PLUS builds, the binaries may instead be under:
 Create:
 
 ```text
-Pleural_effusion_simulation/plus/
+$IP_LOCAL_DATA/raw-assets/pleural-effusion-simulation/plus/
   PlusDeviceSet_PleuralEffusionSimulator.xml
   Models/
     skin.stl
@@ -155,7 +159,7 @@ Copy this template:
 
 ```bash
 cp scripts/pleural-ultrasound/plus/PlusDeviceSet_PleuralEffusionSimulator.template.xml \
-  Pleural_effusion_simulation/plus/PlusDeviceSet_PleuralEffusionSimulator.xml
+  $IP_LOCAL_DATA/raw-assets/pleural-effusion-simulation/plus/PlusDeviceSet_PleuralEffusionSimulator.xml
 ```
 
 Then tune the material parameters in the XML. The template is intentionally a starting point, not a validated acoustic model.
@@ -172,7 +176,7 @@ cd /Users/russellmiller/Projects/Interventional-Pulm-Education-Project
 The current XML reads from:
 
 ```text
-Pleural_effusion_simulation/plus/ModelsLowRes/
+$IP_LOCAL_DATA/raw-assets/pleural-effusion-simulation/plus/ModelsLowRes/
 ```
 
 Keep the original full-resolution exports in `Models/`; `ModelsLowRes/` is
@@ -206,7 +210,7 @@ Then start PlusServer:
 
 ```bash
 /Users/russellmiller/Projects/PlusBuild-bin/bin/PlusServer \
-  --config-file=Pleural_effusion_simulation/plus/PlusDeviceSet_PleuralEffusionSimulator.xml \
+  --config-file=$IP_LOCAL_DATA/raw-assets/pleural-effusion-simulation/plus/PlusDeviceSet_PleuralEffusionSimulator.xml \
   --verbose=3
 ```
 
@@ -262,7 +266,7 @@ Use smaller rotation nudges, usually 2 to 5 degrees.
 If PLUS is not running, the command still updates:
 
 ```text
-Pleural_effusion_simulation/plus/current-probe-pose.json
+$IP_LOCAL_DATA/raw-assets/pleural-effusion-simulation/plus/current-probe-pose.json
 ```
 
 Then restart `run-plus-simulator.sh` and reconnect Slicer's OpenIGTLinkIF
@@ -333,7 +337,7 @@ python3 scripts/pleural-ultrasound/plus/set-probe-pose.py --preset alternate-int
 If markup landmarks have been saved under:
 
 ```text
-Pleural_effusion_simulation/plus/markups/
+$IP_LOCAL_DATA/raw-assets/pleural-effusion-simulation/plus/markups/
 ```
 
 derive a safer interspace pose from the rib, diaphragm, liver, and saved skin
@@ -399,7 +403,7 @@ python3 scripts/pleural-ultrasound/plus/capture-plus-atlas-frame.py \
 
 The helper connects to `localhost:18944`, skips the first few IMAGE messages,
 writes a PNG, and writes a JSON sidecar with the current pose from
-`Pleural_effusion_simulation/plus/current-probe-pose.json`. Review the image in
+`$IP_LOCAL_DATA/raw-assets/pleural-effusion-simulation/plus/current-probe-pose.json`. Review the image in
 Slicer/web before adding or replacing a `case.json` `frameAtlas.entries[]`
 record.
 

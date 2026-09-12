@@ -8,10 +8,11 @@
  */
 import path from 'node:path'
 
+import { localDataPath } from '../local-data-root.mjs'
 import { generateCasePackage } from '../thoracic-ultrasound/generate-thoracic-case-assets.mjs'
 
 const repoRoot = process.cwd()
-const sourceDir = process.argv[2] ?? path.join(repoRoot, 'Pleural_effusion_simulation')
+const sourceDir = process.argv[2] ?? localDataPath('raw-assets', 'pleural-effusion-simulation')
 const outputDir =
   process.argv[3] ??
   path.join(

@@ -16,6 +16,8 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+
+import { localDataPath } from '../local-data-root.mjs'
 import zlib from 'node:zlib'
 
 export const defaultLabelCodes = {
@@ -272,7 +274,15 @@ const structureCategoryByLabel = {
   airway: 'airway',
 }
 
-const hazardLabels = new Set(['rib', 'diaphragm', 'liver', 'spleen', 'kidney', 'heart', 'greatVessel'])
+const hazardLabels = new Set([
+  'rib',
+  'diaphragm',
+  'liver',
+  'spleen',
+  'kidney',
+  'heart',
+  'greatVessel',
+])
 
 const structureColorByLabel = {
   skin: '#d4a373',
@@ -409,7 +419,14 @@ export function generateCasePackage(options) {
         const outputIndex = outX + outputSize[0] * (outY + outputSize[1] * outZ)
         output[outputIndex] = bestLabel
         counts[bestLabel] += 1
-        updateBounds(bounds, bestLabel, labelCodes.background, bestSource, header.originLpsMm, header.spacingMm)
+        updateBounds(
+          bounds,
+          bestLabel,
+          labelCodes.background,
+          bestSource,
+          header.originLpsMm,
+          header.spacingMm,
+        )
       }
     }
   }
@@ -480,8 +497,7 @@ export function generateCasePackage(options) {
   if (schema === 'pleural-v1') {
     manifest = {
       id: caseId,
-      name:
-        name ?? 'Patient-specific pleural effusion ultrasound simulator',
+      name: name ?? 'Patient-specific pleural effusion ultrasound simulator',
       description:
         description ??
         'Derived educational case from a Slicer segmentation with skin, diaphragm, pleural effusion, lungs, chest wall, and upper abdominal structures.',
@@ -654,7 +670,7 @@ function main() {
   const { positional, flags } = parseCliArgs(process.argv.slice(2))
   const caseId = flags['case-id'] ?? 'thoracic-case-001'
   const moduleDir = flags.module ?? 'thoracic-ultrasound-simulator'
-  const sourceDir = positional[0] ?? path.join(repoRoot, 'Pleural_effusion_simulation')
+  const sourceDir = positional[0] ?? localDataPath('raw-assets', 'pleural-effusion-simulation')
   const outputDir =
     positional[1] ?? path.join(repoRoot, 'public', 'module-assets', 'v1', moduleDir, caseId)
 

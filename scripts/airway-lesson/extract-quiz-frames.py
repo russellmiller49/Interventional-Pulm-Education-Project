@@ -18,8 +18,13 @@ import os
 import subprocess
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, os.path.join(REPO, "scripts"))
+from local_data import local_data_path  # noqa: E402
+
+# Source video and annotation exports live outside Git (Local-Data/raw-assets/video).
+SOURCE_VIDEO_DIR = str(local_data_path("raw-assets", "video", "normal_airway_anotated_video"))
 OVERLAYS = os.path.join(REPO, "public", "airway-lesson", "airway-survey-overlays.json")
-SRC_VIDEO = os.path.join(REPO, "normal_airway_anotated_video", "V0002.mp4")
+SRC_VIDEO = os.path.join(SOURCE_VIDEO_DIR, "V0002.mp4")
 CT_MANIFEST = os.path.join(REPO, "public", "airway-lesson", "airway-survey-ct.json")
 OUT_DIR = os.path.join(REPO, "public", "airway-lesson", "quiz")
 OUT_MANIFEST = os.path.join(REPO, "public", "airway-lesson", "airway-quiz-frames.json")

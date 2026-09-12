@@ -5,7 +5,8 @@
  * Both embedded apps import this source directly; no generated copies are needed.
  *
  * Contract: docs/scope-tracker-web-contract.md
- * Hardware plan: bronch_sim/Gen 2/universal_scope_tracker_plan_v4.md
+ * Hardware plan: Local-Data raw-assets/hardware/bronch_sim/Gen 2/universal_scope_tracker_plan_v4.md
+ *   (outside Git; see docs/local-authoring-assets.md)
  */
 
 export * from './types'

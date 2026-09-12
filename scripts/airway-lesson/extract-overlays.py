@@ -30,12 +30,13 @@ import zipfile
 from collections import defaultdict
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-DEFAULT_ZIP = os.path.join(
-    REPO, "normal_airway_anotated_video", "updated_airway_annotations_7_6.zip"
-)
-FALLBACK_XML = os.path.join(
-    REPO, "normal_airway_anotated_video", "extracted", "annotations.xml"
-)
+sys.path.insert(0, os.path.join(REPO, "scripts"))
+from local_data import local_data_path  # noqa: E402
+
+# Source video and annotation exports live outside Git (Local-Data/raw-assets/video).
+SOURCE_VIDEO_DIR = str(local_data_path("raw-assets", "video", "normal_airway_anotated_video"))
+DEFAULT_ZIP = os.path.join(SOURCE_VIDEO_DIR, "updated_airway_annotations_7_6.zip")
+FALLBACK_XML = os.path.join(SOURCE_VIDEO_DIR, "extracted", "annotations.xml")
 SRC = os.environ.get(
     "AIRWAY_ANNOTATIONS",
     DEFAULT_ZIP if os.path.exists(DEFAULT_ZIP) else FALLBACK_XML,

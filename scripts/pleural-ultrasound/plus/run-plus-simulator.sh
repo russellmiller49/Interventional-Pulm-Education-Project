@@ -2,7 +2,8 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-CASE_PLUS_DIR="$REPO_ROOT/Pleural_effusion_simulation/plus"
+LOCAL_DATA_ROOT="${IP_LOCAL_DATA:-/Users/russellmiller/Projects/Interventional-Pulm-Local-Data}"
+CASE_PLUS_DIR="$LOCAL_DATA_ROOT/raw-assets/pleural-effusion-simulation/plus"
 CONFIG_FILE="$CASE_PLUS_DIR/PlusDeviceSet_PleuralEffusionSimulator.xml"
 TRANSFORM_SENDER="$REPO_ROOT/scripts/pleural-ultrasound/plus/send-probe-transform.py"
 POSE_FILE="${POSE_FILE:-$CASE_PLUS_DIR/current-probe-pose.json}"

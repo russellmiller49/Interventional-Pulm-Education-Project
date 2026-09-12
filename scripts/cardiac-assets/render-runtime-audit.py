@@ -17,6 +17,8 @@ from mathutils.bvhtree import BVHTree
 
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "scripts"))
+from local_data import local_data_path  # noqa: E402
 OUTPUT_DIR = Path("/tmp/cardiac-runtime-audit")
 RIG = json.loads(
     (
@@ -1255,7 +1257,7 @@ def render_lvad_source_components() -> None:
     configure_render()
     add_lighting()
     add_camera(RIG["cameras"]["preview"])
-    source_path = ROOT / "3D assets" / "Cardiac" / "Devices" / "LVAD.glb"
+    source_path = local_data_path("raw-assets", "3d-assets") / "Cardiac" / "Devices" / "LVAD.glb"
     bpy.ops.import_scene.gltf(filepath=str(source_path))
     meshes = [
         object_ for object_ in bpy.context.scene.objects if object_.type == "MESH"

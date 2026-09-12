@@ -2,7 +2,7 @@
 
 Run with:
   blender --background --python scripts/tracheostomy/render_model_audit.py -- \
-    "3D assets/Tracheostomy" /tmp/tracheostomy-model-audit
+    "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/raw-assets/3d-assets/Tracheostomy" /tmp/tracheostomy-model-audit
 """
 
 from __future__ import annotations

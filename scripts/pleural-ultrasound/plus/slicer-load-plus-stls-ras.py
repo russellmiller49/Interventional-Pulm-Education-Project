@@ -12,6 +12,7 @@ exec(open("/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/s
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import slicer  # type: ignore
@@ -19,7 +20,10 @@ import vtk
 
 
 REPO_ROOT = Path("/Users/russellmiller/Projects/Interventional-Pulm-Education-Project")
-MODEL_DIR = REPO_ROOT / "Pleural_effusion_simulation" / "plus" / "ModelsLowRes"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from local_data import local_data_path  # noqa: E402
+
+MODEL_DIR = local_data_path("raw-assets", "pleural-effusion-simulation", "plus", "ModelsLowRes")
 
 MODEL_COLORS = {
     "skin": (0.74, 0.52, 0.36),

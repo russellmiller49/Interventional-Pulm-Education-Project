@@ -13,12 +13,15 @@ import json
 import socket
 import struct
 from collections.abc import Sequence
+import sys
 from pathlib import Path
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[2]
-DEFAULT_POSE_FILE = REPO_ROOT / "Pleural_effusion_simulation" / "plus" / "current-probe-pose.json"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from local_data import local_data_path  # noqa: E402
+DEFAULT_POSE_FILE = local_data_path("raw-assets", "pleural-effusion-simulation") / "plus" / "current-probe-pose.json"
 DEFAULT_OUTPUT = (
     REPO_ROOT
     / "public"

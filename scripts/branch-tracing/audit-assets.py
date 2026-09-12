@@ -18,7 +18,6 @@ FILES = [
     'public/fluoroview/cases/patient-new/airway_segments.glb',
     'public/fluoroview/airway_full.glb',
     'public/airway-lesson/airway-survey-ct.json',
-    'new_anatomy_module/labels_cleaned_names.xlsx',
 ]
 
 

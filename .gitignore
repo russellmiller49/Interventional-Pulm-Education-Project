@@ -237,18 +237,30 @@ Thumbs.db
 /podcasts/**/*.pdf
 /Imports/Journal_Club_Podcasts/**/*.mp3
 
-# Raw 3D and medical-imaging authoring inputs. Derived learner-facing assets
-# under public/ remain tracked and/or are delivered through MODULE_ASSET_ORIGIN.
+# Relocated to Interventional-Pulm-Local-Data on 2026-09-12 (folder map and rules:
+# docs/local-authoring-assets.md). Raw authoring inputs, private references, renders and
+# prompts live there; scripts resolve them through scripts/local-data-root.mjs or
+# scripts/local_data.py. These paths must not come back into the repository.
 /3D assets/
-/3D assets/Slicer Cardiac_model/
-/3D assets/**/*.glb
 /anatomy_assets/**/*.glb
-/new_anatomy_module/**/*.glb
-/Pleural_effusion_simulation/**/*.glb
-/Pleural_effusion_simulation/**/*.vtk
-/Pleural_effusion_simulation/**/*.h5
-/Pleural_effusion_simulation/**/*.nii
-/Pleural_effusion_simulation/**/*.nrrd
+/new_anatomy_module/
+/normal_airway_anotated_video/
+/Pleural_effusion_simulation/
+/updated_fistual_5_25_26/
+/bronch_sim/
+/Imports/
+/Translation_files/
+/pleural knowlege/
+/output/
+/outputs/
+/marketing/
+/GITINGEST.md
+/EBUS-course/model/sliceSeries/
+/EBUS-course/model/markups/
+/EBUS-course/model/case_001.glb
+/EBUS-course/Pre-course tests/
+/EBUS-course/surveys/
+/EBUS-course/Translation_files/
 
 # Private authoring corpus — copyrighted source material, never commit.
 # Keep the implementation plan and its review in version control as project documentation.
@@ -258,17 +270,6 @@ Thumbs.db
 /critical_care_references/
 **/Full_textbooks/
 **/Summary files/
-
-/updated_fistual_5_25_26/**/*.glb
-/Imports/**/*.glb
-/Imports/**/*.vtk
-
-# Generated marketing renders; retain their build scripts and README files.
-/marketing/**/captures/
-/marketing/**/*.mp4
-/marketing/**/*-poster.png
-/marketing/**/*-contact-sheet.png
-/marketing/**/*.ffprobe.json
 
 # Vercel
 .vercel
