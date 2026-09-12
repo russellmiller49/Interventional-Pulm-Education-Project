@@ -599,3 +599,28 @@
   background: #203940;
   color: #dcecee;
 }
+/* Respect the site's saved dark theme outside the intentionally dark lesson stage. */
+:global(.dark) .root {
+  --ink: #eaf4f4;
+  --muted: #adc2c5;
+  --tb-muted: #adc2c5;
+  --line: #3b515c;
+}
+:global(.dark) .root a {
+  color: #88d8dc;
+}
+:global(.dark) .root .eyebrow {
+  color: #88d8dc;
+}
+:global(.dark) .root .card {
+  background: linear-gradient(130deg, #10262b, #14212d);
+}
+.root .note {
+  color: #204d57;
+}
+.root .energy {
+  color: #443808;
+}
+.root .feedback {
+  color: #214a36;
+}
