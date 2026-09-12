@@ -16,6 +16,12 @@
       "autoPort": false
     },
     {
+      "name": "claude-worktree-attached",
+      "url": "http://localhost:3120",
+      "port": 3120,
+      "autoPort": false
+    },
+    {
       "name": "bronch-trainer",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
