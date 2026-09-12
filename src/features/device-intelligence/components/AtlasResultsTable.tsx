@@ -8,6 +8,7 @@ import {
 } from '@/features/device-intelligence/domain/product-status'
 import { EvidenceBadge } from './EvidenceBadge'
 import { ProductStatusBadges, type ProductStatusLabels } from './ProductStatus'
+import { SaveDeviceButton, type SaveDeviceLabels } from './SavedDevicesProvider'
 
 /** One semantic table becomes a compact card for each product on narrow screens.
  * Identity and material status stay together without a horizontal swipe. Explicit table
@@ -20,9 +21,11 @@ export function AtlasResultsTable({
   statusLabels,
   labels,
   exactIdentifierMatchIds = [],
+  saveLabels,
 }: {
   locale: string
   exactIdentifierMatchIds?: string[]
+  saveLabels?: SaveDeviceLabels
   items: CatalogListItem[]
   statusByProductId: Record<string, ProductStatusView>
   /**
@@ -146,6 +149,16 @@ export function AtlasResultsTable({
                   >
                     {labels.exactMatch}
                   </span>
+                ) : null}
+                {saveLabels ? (
+                  <div className="mt-2">
+                    <SaveDeviceButton
+                      productId={item.productId}
+                      productName={item.productName}
+                      catalogNumber={item.catalogNumber}
+                      labels={saveLabels}
+                    />
+                  </div>
                 ) : null}
               </td>
               <td

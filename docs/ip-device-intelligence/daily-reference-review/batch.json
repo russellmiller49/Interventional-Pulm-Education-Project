@@ -1,0 +1,2251 @@
+{
+  "format_version": 1,
+  "purpose": "editorial_review_only_no_runtime_publication",
+  "selection_policy": "Recorded active notices first; then authored exemplar options and mapped roles, rotating families. This is a proposed pilot, not measured usage or device preference.",
+  "input_sha256": {
+    "data/ip-preference-cards/generated/catalog-products.json": "16779325490bcdfc848742c2242553df742f9f4dab8d20d86e6032f9bfcdee5a",
+    "data/ip-preference-cards/generated/procedures.json": "9deef89bf686a5d9c1ca6842e1af2cdafcc647137638aa5886332abe9dde91f0",
+    "data/ip-preference-cards/generated/procedure-slots.json": "c11720c8d209b22c56813265ea53f70a348a0fd3af7b4cef9c6ca1a6b43a3ea7",
+    "data/ip-preference-cards/generated/slot-product-options.json": "a2a85385f00584e0a52da3af638b3e02744cb24d7dca4c1110bc111f10da47c0",
+    "data/ip-preference-cards/generated/product-roles.json": "58a53bdebdf5c82f568da4a7478466cdebcca1e35f471609f15c1e4ed544dc5e",
+    "data/ip-preference-cards/generated/sources.json": "5c48ca21eb194b02a75590b421cf57c619067b35858f45a43b0a12334c7ba98e",
+    "data/ip-preference-cards/generated/product-sources.json": "f436fc50ec9a7928ae3c7cdfdd076bd7c1956815df7d91d4bd10b0baa8f8e3f0",
+    "data/ip-device-intelligence/generated/product-status-overlay.json": "87656505e4ef7d25316f660f7d766b201f110e9e599614bdf181f7ffb3c92736",
+    "data/ip-device-intelligence/generated/product-safety-evidence.json": "aafadcf1b8317ab9535913f41ef200f8b59a8b35c5878baeb60668c25b02117f",
+    "data/ip-device-intelligence/generated/product-profile-overlay.json": "6dff82598371e9a701cd1f9dceabe5200dc73cac860ada9873b064afae323454",
+    "data/ip-device-intelligence/reviewed/atlas-visibility-exclusions.json": "0f58f498854568f3d41520f3d9b482ca0fff115176810e6a6995180052243f0a"
+  },
+  "products": [
+    {
+      "product_id": "PRD-05670F1B5F",
+      "manufacturer": "ERBE",
+      "product_name": "Flexible Cryoprobe 2.4 mm",
+      "catalog_number": "20402-411",
+      "size_display": "2.4 mm x 115 cm",
+      "gtin": null,
+      "family_group": "ERBE · ERBECRYO 2",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": "2026-08-24",
+      "existing_reviewed_summary": "ERBE 20402-411 is a single-use flexible cryoprobe for the ERBECRYO 2 system, with a 2.4 mm outer diameter and 115 cm working length.",
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-1568-2026",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=218710"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC007",
+          "title": "Equipment seeds",
+          "locator": "Therapeutic bronchoscopy!4",
+          "revision_date": null,
+          "as_of_date": null
+        },
+        {
+          "source_id": "SRC018",
+          "title": "ERBE Instruments and Accessories for Cryosurgery",
+          "locator": "Cryoprobes for ERBECRYO 2, catalog p. 5",
+          "revision_date": "2023-10-01",
+          "as_of_date": "2023-10-01"
+        }
+      ],
+      "discovery_query": "ERBE \"20402-411\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-07CDEDC2AB",
+      "manufacturer": "Teleflex",
+      "product_name": "Arrow Pneumothorax Water-Seal Set",
+      "catalog_number": "ASK-01500",
+      "size_display": "8 Fr × 16 cm",
+      "gtin": null,
+      "family_group": "Teleflex · Arrow",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [
+        "CHEST_TUBE"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-2382-2026",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=220262"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC031",
+          "title": "Arrow Diagnostic and Drainage Products",
+          "locator": "p. 73",
+          "revision_date": "MC-000411 Rev 9; 12/2020",
+          "as_of_date": "2020-12-01"
+        }
+      ],
+      "discovery_query": "Teleflex \"ASK-01500\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-12231F4168",
+      "manufacturer": "Cook Medical",
+      "product_name": "Wayne Pneumothorax Catheter Set – Trocar",
+      "catalog_number": "G56532",
+      "size_display": null,
+      "gtin": null,
+      "family_group": "Cook Medical · Cook Pleural Drainage",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [
+        "CHEST_TUBE"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-1791-2026",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=218933"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC008",
+          "title": "FDA Pleural Drainage Devices US",
+          "locator": "CSV row 23",
+          "revision_date": null,
+          "as_of_date": null
+        },
+        {
+          "source_id": "SRC020",
+          "title": "Cook Medical Chest Tubes and Catheters for Pleural and Pericardial Drainage",
+          "locator": "Wayne Pneumothorax Trocar page",
+          "revision_date": null,
+          "as_of_date": null
+        }
+      ],
+      "discovery_query": "Cook Medical \"G56532\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-1D87D6EA1E",
+      "manufacturer": "Teleflex",
+      "product_name": "Arrow Percutaneous Cavity Drainage Kit – Curved",
+      "catalog_number": "AK-01600",
+      "size_display": "14 Fr × 23 cm; curved",
+      "gtin": null,
+      "family_group": "Teleflex · Arrow",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [
+        "CHEST_TUBE"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-2382-2026",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=220262"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC031",
+          "title": "Arrow Diagnostic and Drainage Products",
+          "locator": "p. 74",
+          "revision_date": "MC-000411 Rev 9; 12/2020",
+          "as_of_date": "2020-12-01"
+        }
+      ],
+      "discovery_query": "Teleflex \"AK-01600\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-2FAFEA973E",
+      "manufacturer": "Verathon",
+      "product_name": "GlideScope Core 15",
+      "catalog_number": "GlideScope Core 15",
+      "size_display": null,
+      "gtin": null,
+      "family_group": "Verathon · GlideScope",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [
+        "EBUS_TBNA",
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-2021-2024",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=207644"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC032",
+          "title": "BFlex 2 Next Level Performance",
+          "locator": "p. 95",
+          "revision_date": "0900-5207 Rev-02",
+          "as_of_date": "2023"
+        }
+      ],
+      "discovery_query": "Verathon \"GlideScope Core 15\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-48C48C68BA",
+      "manufacturer": "Intuitive Surgical",
+      "product_name": "Ion Fully Articulating Catheter",
+      "catalog_number": "490105",
+      "size_display": "3.5 mm OD; 2.0 mm working channel",
+      "gtin": null,
+      "family_group": "Intuitive Surgical · Ion Endoluminal System",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-0355-2024",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=203733"
+        },
+        {
+          "recall_number": "Z-0489-2021",
+          "recorded_state": "historical",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=184275"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC037",
+          "title": "Ion Endoluminal System",
+          "locator": "pp. 255-257",
+          "revision_date": "PN1051118-US RevA",
+          "as_of_date": "2019-03-01"
+        }
+      ],
+      "discovery_query": "Intuitive Surgical \"490105\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-4A04124FF2",
+      "manufacturer": "Olympus",
+      "product_name": "BF-1TH190 Video Bronchoscope",
+      "catalog_number": "BF-1TH190",
+      "size_display": "Insertion tube 6.0 mm; distal 6.2 mm; channel 2.8 mm; WL 600 mm",
+      "gtin": null,
+      "family_group": "Olympus · EVIS EXERA III",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-0049-2026",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=216176"
+        },
+        {
+          "recall_number": "Z-0192-2024",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=203338"
+        },
+        {
+          "recall_number": "Z-0327-2024",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=203696"
+        },
+        {
+          "recall_number": "Z-2017-2023",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=200496"
+        },
+        {
+          "recall_number": "Z-2496-2023",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=202557"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC007",
+          "title": "Equipment seeds",
+          "locator": "Flexible bronchoscopy platforms!2",
+          "revision_date": null,
+          "as_of_date": null
+        }
+      ],
+      "discovery_query": "Olympus \"BF-1TH190\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-4F4AA966A9",
+      "manufacturer": "Teleflex",
+      "product_name": "Arrow-Clarke Thoracentesis Kit",
+      "catalog_number": "AK-01000-T",
+      "size_display": "8 Fr × 19 cm",
+      "gtin": null,
+      "family_group": "Teleflex · Arrow",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-1298-2018",
+          "recorded_state": "historical",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=161833"
+        },
+        {
+          "recall_number": "Z-2382-2026",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=220262"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC031",
+          "title": "Arrow Diagnostic and Drainage Products",
+          "locator": "pp. 70-71",
+          "revision_date": "MC-000411 Rev 9; 12/2020",
+          "as_of_date": "2020-12-01"
+        }
+      ],
+      "discovery_query": "Teleflex \"AK-01000-T\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-5543746F59",
+      "manufacturer": "Olympus",
+      "product_name": "Olympus OER-Pro Automated Endoscope Reprocessor",
+      "catalog_number": "OER-Pro",
+      "size_display": null,
+      "gtin": null,
+      "family_group": "Olympus · OER-Pro",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-0138-2017",
+          "recorded_state": "historical",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=147873"
+        },
+        {
+          "recall_number": "Z-0873-2026",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=216764"
+        },
+        {
+          "recall_number": "Z-1613-2026",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=218482"
+        },
+        {
+          "recall_number": "Z-2342-2023",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=201893"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC039",
+          "title": "Olympus OER-Pro Automated Endoscope Reprocessor",
+          "locator": "pp. 49-53",
+          "revision_date": "OAICDS0516BRO443",
+          "as_of_date": "2015-2016"
+        }
+      ],
+      "discovery_query": "Olympus \"OER-Pro\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-7397B6CA00",
+      "manufacturer": "Intuitive Surgical",
+      "product_name": "Ion Flexision Biopsy Needle 19G",
+      "catalog_number": "490104",
+      "size_display": "19G; adjustable needle extension to 3 cm",
+      "gtin": null,
+      "family_group": "Intuitive Surgical · Ion Endoluminal System",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-0106-2022",
+          "recorded_state": "historical",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=188906"
+        },
+        {
+          "recall_number": "Z-0355-2024",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=203733"
+        },
+        {
+          "recall_number": "Z-2401-2024",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=208437"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC037",
+          "title": "Ion Endoluminal System",
+          "locator": "pp. 255-257",
+          "revision_date": "PN1051118-US RevA",
+          "as_of_date": "2019-03-01"
+        }
+      ],
+      "discovery_query": "Intuitive Surgical \"490104\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-7BE12DDECD",
+      "manufacturer": "Teleflex",
+      "product_name": "Arrow Pneumothorax Kit",
+      "catalog_number": "ASK-01500-JCM",
+      "size_display": "8 Fr × 16 cm",
+      "gtin": null,
+      "family_group": "Teleflex · Arrow",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [
+        "CHEST_TUBE"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-2382-2026",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=220262"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC031",
+          "title": "Arrow Diagnostic and Drainage Products",
+          "locator": "p. 73",
+          "revision_date": "MC-000411 Rev 9; 12/2020",
+          "as_of_date": "2020-12-01"
+        }
+      ],
+      "discovery_query": "Teleflex \"ASK-01500-JCM\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-7DC3645CFA",
+      "manufacturer": "ERBE",
+      "product_name": "Flexible Cryoprobe 1.7 mm",
+      "catalog_number": "20402-410",
+      "size_display": "1.7 mm x 115 cm",
+      "gtin": null,
+      "family_group": "ERBE · ERBECRYO 2",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-1567-2026",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=218709"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC007",
+          "title": "Equipment seeds",
+          "locator": "Therapeutic bronchoscopy!3",
+          "revision_date": null,
+          "as_of_date": null
+        },
+        {
+          "source_id": "SRC018",
+          "title": "ERBE Instruments and Accessories for Cryosurgery",
+          "locator": "Cryoprobes for ERBECRYO 2, catalog p. 5",
+          "revision_date": "2023-10-01",
+          "as_of_date": "2023-10-01"
+        }
+      ],
+      "discovery_query": "ERBE \"20402-410\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-7E17F5F17E",
+      "manufacturer": "Teleflex",
+      "product_name": "Arrow Pneumothorax Kit",
+      "catalog_number": "AK-01500",
+      "size_display": "8 Fr × 16 cm",
+      "gtin": null,
+      "family_group": "Teleflex · Arrow",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [
+        "CHEST_TUBE"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-2382-2026",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=220262"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC008",
+          "title": "FDA Pleural Drainage Devices US",
+          "locator": "CSV row 30",
+          "revision_date": null,
+          "as_of_date": null
+        },
+        {
+          "source_id": "SRC031",
+          "title": "Arrow Diagnostic and Drainage Products",
+          "locator": "p. 73",
+          "revision_date": "MC-000411 Rev 9; 12/2020",
+          "as_of_date": "2020-12-01"
+        }
+      ],
+      "discovery_query": "Teleflex \"AK-01500\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-88DA368B9C",
+      "manufacturer": "Olympus",
+      "product_name": "BF-XP190 Ultrathin Video Bronchoscope",
+      "catalog_number": "BF-XP190",
+      "size_display": "Insertion tube 2.8 mm; distal 3.1 mm; channel 1.2 mm; WL 600 mm",
+      "gtin": null,
+      "family_group": "Olympus · EVIS EXERA III",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-0327-2024",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=203696"
+        },
+        {
+          "recall_number": "Z-0687-2024",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=204911"
+        },
+        {
+          "recall_number": "Z-2500-2023",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=202561"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC029",
+          "title": "Olympus Peripheral Bronchoscopy Solutions",
+          "locator": "p. 1",
+          "revision_date": "2023-04-01",
+          "as_of_date": "2023-04-01"
+        }
+      ],
+      "discovery_query": "Olympus \"BF-XP190\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-8A4A27BDD7",
+      "manufacturer": "Intuitive Surgical",
+      "product_name": "Ion Flexision Biopsy Needle 21G",
+      "catalog_number": "490103",
+      "size_display": "21G; adjustable needle extension to 3 cm",
+      "gtin": null,
+      "family_group": "Intuitive Surgical · Ion Endoluminal System",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-0355-2024",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=203733"
+        },
+        {
+          "recall_number": "Z-2400-2024",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=208436"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC037",
+          "title": "Ion Endoluminal System",
+          "locator": "pp. 255-257",
+          "revision_date": "PN1051118-US RevA",
+          "as_of_date": "2019-03-01"
+        }
+      ],
+      "discovery_query": "Intuitive Surgical \"490103\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-8C6C29BE46",
+      "manufacturer": "Cook Medical",
+      "product_name": "Wayne Pneumothorax Catheter Set and Tray – Seldinger",
+      "catalog_number": "G56535",
+      "size_display": null,
+      "gtin": null,
+      "family_group": "Cook Medical · Cook Pleural Drainage",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [
+        "CHEST_TUBE"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-1791-2026",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=218933"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC007",
+          "title": "Equipment seeds",
+          "locator": "pleural seed",
+          "revision_date": null,
+          "as_of_date": null
+        },
+        {
+          "source_id": "SRC008",
+          "title": "FDA Pleural Drainage Devices US",
+          "locator": "CSV row 22",
+          "revision_date": null,
+          "as_of_date": null
+        },
+        {
+          "source_id": "SRC020",
+          "title": "Cook Medical Chest Tubes and Catheters for Pleural and Pericardial Drainage",
+          "locator": "Wayne Pneumothorax Seldinger page",
+          "revision_date": null,
+          "as_of_date": null
+        }
+      ],
+      "discovery_query": "Cook Medical \"G56535\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-9143E639BA",
+      "manufacturer": "Teleflex",
+      "product_name": "Arrow Percutaneous Cavity Drainage Kit – Straight",
+      "catalog_number": "AK-01601",
+      "size_display": "14 Fr × 23 cm; straight",
+      "gtin": null,
+      "family_group": "Teleflex · Arrow",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [
+        "CHEST_TUBE"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-2382-2026",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=220262"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC031",
+          "title": "Arrow Diagnostic and Drainage Products",
+          "locator": "p. 74",
+          "revision_date": "MC-000411 Rev 9; 12/2020",
+          "as_of_date": "2020-12-01"
+        }
+      ],
+      "discovery_query": "Teleflex \"AK-01601\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-A2C49C9352",
+      "manufacturer": "ERBE",
+      "product_name": "Flexible Cryoprobe 1.1 mm with 817 mm Oversheath",
+      "catalog_number": "20402-401",
+      "size_display": "1.1 mm x 115 cm; 2.6 mm x 81.7 cm oversheath",
+      "gtin": null,
+      "family_group": "ERBE · ERBECRYO 2",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-1566-2026",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=218707"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC007",
+          "title": "Equipment seeds",
+          "locator": "Therapeutic bronchoscopy!2",
+          "revision_date": null,
+          "as_of_date": null
+        },
+        {
+          "source_id": "SRC018",
+          "title": "ERBE Instruments and Accessories for Cryosurgery",
+          "locator": "Cryoprobes for ERBECRYO 2, catalog p. 5",
+          "revision_date": "2023-10-01",
+          "as_of_date": "2023-10-01"
+        }
+      ],
+      "discovery_query": "ERBE \"20402-401\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-A72E811F09",
+      "manufacturer": "Teleflex",
+      "product_name": "Arrow-Clarke Thoracentesis Kit",
+      "catalog_number": "AK-01000",
+      "size_display": "8 Fr × 19 cm",
+      "gtin": null,
+      "family_group": "Teleflex · Arrow",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-1298-2018",
+          "recorded_state": "historical",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=161833"
+        },
+        {
+          "recall_number": "Z-2382-2026",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=220262"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC008",
+          "title": "FDA Pleural Drainage Devices US",
+          "locator": "CSV row 29",
+          "revision_date": null,
+          "as_of_date": null
+        },
+        {
+          "source_id": "SRC031",
+          "title": "Arrow Diagnostic and Drainage Products",
+          "locator": "pp. 70-71",
+          "revision_date": "MC-000411 Rev 9; 12/2020",
+          "as_of_date": "2020-12-01"
+        }
+      ],
+      "discovery_query": "Teleflex \"AK-01000\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-CB1622624D",
+      "manufacturer": "Olympus",
+      "product_name": "BF-MP190F Video Bronchoscope",
+      "catalog_number": "BF-MP190F",
+      "size_display": "Insertion tube 3.7 mm; distal 3.0 mm; channel 1.7 mm; WL 600 mm",
+      "gtin": null,
+      "family_group": "Olympus · EVIS EXERA III",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-0327-2024",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=203696"
+        },
+        {
+          "recall_number": "Z-2497-2023",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=202558"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC029",
+          "title": "Olympus Peripheral Bronchoscopy Solutions",
+          "locator": "p. 1",
+          "revision_date": "2023-04-01",
+          "as_of_date": "2023-04-01"
+        }
+      ],
+      "discovery_query": "Olympus \"BF-MP190F\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-D6F54A6D11",
+      "manufacturer": "Olympus",
+      "product_name": "BF-H190 Video Bronchoscope",
+      "catalog_number": "BF-H190",
+      "size_display": "Insertion tube 5.1 mm; distal 5.5 mm; channel 2.0 mm; WL 600 mm",
+      "gtin": null,
+      "family_group": "Olympus · EVIS EXERA III",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-0053-2026",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=216180"
+        },
+        {
+          "recall_number": "Z-0192-2024",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=203338"
+        },
+        {
+          "recall_number": "Z-0327-2024",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=203696"
+        },
+        {
+          "recall_number": "Z-2017-2023",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=200496"
+        },
+        {
+          "recall_number": "Z-2496-2023",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=202557"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC007",
+          "title": "Equipment seeds",
+          "locator": "Flexible bronchoscopy platforms!4",
+          "revision_date": null,
+          "as_of_date": null
+        }
+      ],
+      "discovery_query": "Olympus \"BF-H190\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-F43740CB5C",
+      "manufacturer": "Intuitive Surgical",
+      "product_name": "Ion Flexision Biopsy Needle 23G",
+      "catalog_number": "490102",
+      "size_display": "23G; adjustable needle extension to 3 cm",
+      "gtin": null,
+      "family_group": "Intuitive Surgical · Ion Endoluminal System",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-0355-2024",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=203733"
+        },
+        {
+          "recall_number": "Z-2399-2024",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=208435"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC037",
+          "title": "Ion Endoluminal System",
+          "locator": "pp. 255-257",
+          "revision_date": "PN1051118-US RevA",
+          "as_of_date": "2019-03-01"
+        }
+      ],
+      "discovery_query": "Intuitive Surgical \"490102\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-FD34401E04",
+      "manufacturer": "Cook Medical",
+      "product_name": "Vinyl Connecting Tube",
+      "catalog_number": "G02898",
+      "size_display": null,
+      "gtin": null,
+      "family_group": "Cook Medical · Cook Pleural Drainage",
+      "priority": 0,
+      "priority_reason": "recorded_active_safety_notice",
+      "exemplar_procedures": [
+        "CHEST_TUBE"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [
+        {
+          "recall_number": "Z-1844-2022",
+          "recorded_state": "active",
+          "url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=195932"
+        }
+      ],
+      "catalog_sources": [
+        {
+          "source_id": "SRC020",
+          "title": "Cook Medical Chest Tubes and Catheters for Pleural and Pericardial Drainage",
+          "locator": "Vinyl Connecting Tube page",
+          "revision_date": null,
+          "as_of_date": null
+        }
+      ],
+      "discovery_query": "Cook Medical \"G02898\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-04A0F61F62",
+      "manufacturer": "Ambu",
+      "product_name": "Ambu aScope 5 Broncho HD 5.6/2.8 Sampler Set",
+      "catalog_number": "622002000US",
+      "size_display": "5.6 mm OD / 2.8 mm working channel",
+      "gtin": null,
+      "family_group": "Ambu · aScope 5 Broncho",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC038",
+          "title": "Ambu aScope 5 Broncho U.S. Brochure",
+          "locator": "pp. 55-57",
+          "revision_date": "PUB-001763 V01",
+          "as_of_date": "2023-08-01"
+        }
+      ],
+      "discovery_query": "Ambu \"622002000US\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-2F1DF55F3C",
+      "manufacturer": "Atrium Medical (Getinge)",
+      "product_name": "Atrium Express Mini 500 Mobile Dry Seal Chest Drain",
+      "catalog_number": "16400",
+      "size_display": "Dry seal one-way valve, mobile/ambulatory",
+      "gtin": "00650862164008",
+      "family_group": "Atrium Medical (Getinge) · EXPRESS",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "CHEST_TUBE"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC046",
+          "title": "AccessGUDID Delimited Full Release 20260723",
+          "locator": "device.txt, PrimaryDI 00650862164008",
+          "revision_date": "2026-07-23",
+          "as_of_date": "2026-07-23"
+        },
+        {
+          "source_id": "SRC047",
+          "title": "Getinge US Thoracic Drainage Solutions product pages",
+          "locator": "Express Mini 500 mobile dry seal drain",
+          "revision_date": null,
+          "as_of_date": "2026-07-23"
+        }
+      ],
+      "discovery_query": "Atrium Medical (Getinge) \"16400\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-94C61697D9",
+      "manufacturer": "Atrium Medical (Getinge)",
+      "product_name": "Atrium Oasis Dry Suction Water Seal Chest Drain",
+      "catalog_number": "3600-100",
+      "size_display": "Dry suction regulation with calibrated water seal",
+      "gtin": "00650862110012",
+      "family_group": "Atrium Medical (Getinge) · OASIS",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "CHEST_TUBE"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC046",
+          "title": "AccessGUDID Delimited Full Release 20260723",
+          "locator": "device.txt, PrimaryDI 00650862110012",
+          "revision_date": "2026-07-23",
+          "as_of_date": "2026-07-23"
+        },
+        {
+          "source_id": "SRC047",
+          "title": "Getinge US Thoracic Drainage Solutions product pages",
+          "locator": "Oasis dry suction water seal chest drain — Ordering Information",
+          "revision_date": null,
+          "as_of_date": "2026-07-23"
+        }
+      ],
+      "discovery_query": "Atrium Medical (Getinge) \"3600-100\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-A31173136E",
+      "manufacturer": "Atrium Medical (Getinge)",
+      "product_name": "Atrium Ocean Water Seal Chest Drain",
+      "catalog_number": "2002-057",
+      "size_display": "Wet suction control with water seal",
+      "gtin": "00650862100327",
+      "family_group": "Atrium Medical (Getinge) · OCEAN",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "CHEST_TUBE"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC046",
+          "title": "AccessGUDID Delimited Full Release 20260723",
+          "locator": "device.txt, PrimaryDI 00650862100327",
+          "revision_date": "2026-07-23",
+          "as_of_date": "2026-07-23"
+        },
+        {
+          "source_id": "SRC047",
+          "title": "Getinge US Thoracic Drainage Solutions product pages",
+          "locator": "AccessGUDID device record",
+          "revision_date": null,
+          "as_of_date": "2026-07-23"
+        }
+      ],
+      "discovery_query": "Atrium Medical (Getinge) \"2002-057\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-D826F63F9A",
+      "manufacturer": "Boston Scientific",
+      "product_name": "Acquire Pulmonary EBUS Fine Needle Biopsy Device",
+      "catalog_number": "M00552351",
+      "size_display": null,
+      "gtin": "08714729986232",
+      "family_group": "Boston Scientific · Acquire Pulmonary",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "EBUS_TBNA"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC003",
+          "title": "Products for Pulmonary Endoscopy",
+          "locator": "p. 4",
+          "revision_date": "2022",
+          "as_of_date": "2022"
+        }
+      ],
+      "discovery_query": "Boston Scientific \"M00552351\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-35EC8EE328",
+      "manufacturer": "Boston Scientific",
+      "product_name": "Alliance II Inflation Handle",
+      "catalog_number": "M00550620",
+      "size_display": null,
+      "gtin": "08714729283881",
+      "family_group": "Boston Scientific · Alliance II",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC003",
+          "title": "Products for Pulmonary Endoscopy",
+          "locator": "p. 12",
+          "revision_date": "2022",
+          "as_of_date": "2022"
+        }
+      ],
+      "discovery_query": "Boston Scientific \"M00550620\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-5F801B5A8E",
+      "manufacturer": "Boston Scientific",
+      "product_name": "Amplatz Super Stiff Guidewire",
+      "catalog_number": "M00550090",
+      "size_display": "0.038 in x 260 mm, straight tip",
+      "gtin": "08714729301929",
+      "family_group": "Boston Scientific · Amplatz Super Stiff",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC003",
+          "title": "Products for Pulmonary Endoscopy",
+          "locator": "p. 13",
+          "revision_date": "2022",
+          "as_of_date": "2022"
+        }
+      ],
+      "discovery_query": "Boston Scientific \"M00550090\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-C2875D269C",
+      "manufacturer": "Boston Scientific",
+      "product_name": "CoreDx Pulmonary Mini-Forceps",
+      "catalog_number": "M00515220",
+      "size_display": null,
+      "gtin": "08714729971054",
+      "family_group": "Boston Scientific · CoreDx",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "EBUS_TBNA"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC003",
+          "title": "Products for Pulmonary Endoscopy",
+          "locator": "p. 5",
+          "revision_date": "2022",
+          "as_of_date": "2022"
+        },
+        {
+          "source_id": "SRC005",
+          "title": "CoreDx Pulmonary Mini-Forceps",
+          "locator": "p. 5",
+          "revision_date": "2019",
+          "as_of_date": "2019"
+        }
+      ],
+      "discovery_query": "Boston Scientific \"M00515220\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-189E7EF27A",
+      "manufacturer": "Boston Scientific",
+      "product_name": "CRE Single-Use Pulmonary Balloon Dilatation Catheter",
+      "catalog_number": "M00550350",
+      "size_display": null,
+      "gtin": "08714729456230",
+      "family_group": "Boston Scientific · CRE",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC003",
+          "title": "Products for Pulmonary Endoscopy",
+          "locator": "p. 12",
+          "revision_date": "2022",
+          "as_of_date": "2022"
+        }
+      ],
+      "discovery_query": "Boston Scientific \"M00550350\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-61915862CE",
+      "manufacturer": "Boston Scientific",
+      "product_name": "CRE SteriFlate Disposable Inflation Device",
+      "catalog_number": "M00550630",
+      "size_display": null,
+      "gtin": "00856877002506",
+      "family_group": "Boston Scientific · CRE SteriFlate",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC003",
+          "title": "Products for Pulmonary Endoscopy",
+          "locator": "p. 12",
+          "revision_date": "2022",
+          "as_of_date": "2022"
+        }
+      ],
+      "discovery_query": "Boston Scientific \"M00550630\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-2302DA77DA",
+      "manufacturer": "Boston Scientific",
+      "product_name": "Expect Pulmonary EBUS-TBNA Needle",
+      "catalog_number": "M00558220",
+      "size_display": null,
+      "gtin": "08714729861409",
+      "family_group": "Boston Scientific · Expect Pulmonary",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "EBUS_TBNA"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC003",
+          "title": "Products for Pulmonary Endoscopy",
+          "locator": "p. 3",
+          "revision_date": "2022",
+          "as_of_date": "2022"
+        }
+      ],
+      "discovery_query": "Boston Scientific \"M00558220\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-602AA2F147",
+      "manufacturer": "Boston Scientific",
+      "product_name": "Jagwire Single-Use Pulmonary Guidewire",
+      "catalog_number": "M00515171",
+      "size_display": "0.035 in x 180 cm",
+      "gtin": "08714729455813",
+      "family_group": "Boston Scientific · Jagwire",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC003",
+          "title": "Products for Pulmonary Endoscopy",
+          "locator": "p. 13",
+          "revision_date": "2022",
+          "as_of_date": "2022"
+        }
+      ],
+      "discovery_query": "Boston Scientific \"M00515171\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-217AB10438",
+      "manufacturer": "Boston Scientific",
+      "product_name": "Radial Jaw 4 Single-Use Pulmonary Biopsy Forceps",
+      "catalog_number": "M00515202",
+      "size_display": null,
+      "gtin": "08714729818076",
+      "family_group": "Boston Scientific · Radial Jaw 4",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC003",
+          "title": "Products for Pulmonary Endoscopy",
+          "locator": "p. 6",
+          "revision_date": "2022",
+          "as_of_date": "2022"
+        }
+      ],
+      "discovery_query": "Boston Scientific \"M00515202\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-9844E2B578",
+      "manufacturer": "Boston Scientific",
+      "product_name": "Rescue Pulmonary Grasping Forceps",
+      "catalog_number": "M00515101",
+      "size_display": null,
+      "gtin": "26948318968828",
+      "family_group": "Boston Scientific · Rescue",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC003",
+          "title": "Products for Pulmonary Endoscopy",
+          "locator": "p. 10",
+          "revision_date": "2022",
+          "as_of_date": "2022"
+        }
+      ],
+      "discovery_query": "Boston Scientific \"M00515101\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-05780FEDD7",
+      "manufacturer": "Boston Scientific",
+      "product_name": "Ultraflex Partially Covered Tracheobronchial Stent System",
+      "catalog_number": "M00576560",
+      "size_display": "12 mm x 40 mm",
+      "gtin": "08714729842361",
+      "family_group": "Boston Scientific · Ultraflex",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC003",
+          "title": "Products for Pulmonary Endoscopy",
+          "locator": "pp. 13-14",
+          "revision_date": "2022",
+          "as_of_date": "2022"
+        },
+        {
+          "source_id": "SRC004",
+          "title": "Ultraflex Single-Use Tracheobronchial Stent System",
+          "locator": "p. 4",
+          "revision_date": "10/2014",
+          "as_of_date": "2014-10-01"
+        },
+        {
+          "source_id": "SRC015",
+          "title": "Ultraflex Tracheobronchial Stent System manufacturer product page",
+          "locator": "Ordering information, pp. 2-3",
+          "revision_date": "2025-06-26",
+          "as_of_date": "2025-06-26"
+        }
+      ],
+      "discovery_query": "Boston Scientific \"M00576560\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-4E9069C30F",
+      "manufacturer": "Boston Scientific",
+      "product_name": "Zero Tip Single-Use Airway Retrieval Basket",
+      "catalog_number": "M00513210",
+      "size_display": null,
+      "gtin": "08714729415008",
+      "family_group": "Boston Scientific · Zero Tip",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC003",
+          "title": "Products for Pulmonary Endoscopy",
+          "locator": "p. 9",
+          "revision_date": "2022",
+          "as_of_date": "2022"
+        }
+      ],
+      "discovery_query": "Boston Scientific \"M00513210\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-35BAC12D9F",
+      "manufacturer": "Butterfly Network",
+      "product_name": "Butterfly iQ3 Accessory Cable, Lightning, 2.50 m",
+      "catalog_number": "900-20054-03",
+      "size_display": null,
+      "gtin": null,
+      "family_group": "Butterfly Network · Butterfly iQ3",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "CHEST_TUBE"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC033",
+          "title": "Butterfly iQ3 Personal Ultrasound System User Manual",
+          "locator": "p. 77",
+          "revision_date": "Revision B",
+          "as_of_date": "2025-03-25"
+        }
+      ],
+      "discovery_query": "Butterfly Network \"900-20054-03\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-0410844D48",
+      "manufacturer": "Cook Medical",
+      "product_name": "Fuhrman Pleural/Pneumopericardial Drainage Set and Tray",
+      "catalog_number": "G55713",
+      "size_display": null,
+      "gtin": null,
+      "family_group": "Cook Medical · Cook Pleural Drainage",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "CHEST_TUBE"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC008",
+          "title": "FDA Pleural Drainage Devices US",
+          "locator": "CSV row 18",
+          "revision_date": null,
+          "as_of_date": null
+        },
+        {
+          "source_id": "SRC020",
+          "title": "Cook Medical Chest Tubes and Catheters for Pleural and Pericardial Drainage",
+          "locator": "Fuhrman Pleural Drainage page",
+          "revision_date": null,
+          "as_of_date": null
+        }
+      ],
+      "discovery_query": "Cook Medical \"G55713\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-19AC7F0794",
+      "manufacturer": "Cook Medical",
+      "product_name": "EchoTip Endobronchial HD Ultrasound Needle",
+      "catalog_number": "G53408",
+      "size_display": "22G; 0–5 cm extension; 4.1 Fr sheath",
+      "gtin": null,
+      "family_group": "Cook Medical · EchoTip Ultra / ProCore",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "EBUS_TBNA"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": null,
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC024",
+          "title": "EchoTip ProCore and EchoTip Ultra Endobronchial HD Ultrasound Needles",
+          "locator": "p. 2",
+          "revision_date": "2026-01-01",
+          "as_of_date": "2026-01-01"
+        }
+      ],
+      "discovery_query": "Cook Medical \"G53408\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-09AF1B1AE5",
+      "manufacturer": "ERBE",
+      "product_name": "Pressure Reducer with Sensor for APC 2/APC 3, CGA Group",
+      "catalog_number": "20134-006",
+      "size_display": null,
+      "gtin": null,
+      "family_group": "ERBE · ERBE APC",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC019",
+          "title": "ERBE Instruments and Accessories for Argon Plasma Coagulation",
+          "locator": "APC pressure reducers and gas accessories, catalog pp. 10-11",
+          "revision_date": "2025-06-01",
+          "as_of_date": "2025-06-01"
+        }
+      ],
+      "discovery_query": "ERBE \"20134-006\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-0A9806F6F2",
+      "manufacturer": "ERBE",
+      "product_name": "Bipolar Connecting Cable, Martin Standard, 5 m",
+      "catalog_number": "20196-059",
+      "size_display": "5 m; generator: Martin Standard",
+      "gtin": null,
+      "family_group": "ERBE · ERBE Electrosurgery",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC017",
+          "title": "ERBE Connecting Cables and Adapters",
+          "locator": "Bipolar cables, catalog p. 11",
+          "revision_date": "2024-05-01",
+          "as_of_date": "2024-05-01"
+        }
+      ],
+      "discovery_query": "ERBE \"20196-059\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-0C821995AC",
+      "manufacturer": "ERBE",
+      "product_name": "ERBECRYO 2 Exhaust Gas Hose, 5 m",
+      "catalog_number": "20402-007",
+      "size_display": null,
+      "gtin": null,
+      "family_group": "ERBE · ERBECRYO 2",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC018",
+          "title": "ERBE Instruments and Accessories for Cryosurgery",
+          "locator": "Accessories for ERBECRYO 2, catalog p. 7",
+          "revision_date": "2023-10-01",
+          "as_of_date": "2023-10-01"
+        }
+      ],
+      "discovery_query": "ERBE \"20402-007\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-3A183102CF",
+      "manufacturer": "ERBE",
+      "product_name": "FiAPC Probe 3000 A",
+      "catalog_number": "20132-223",
+      "size_display": "2.3 mm x 3 m; Axial beam",
+      "gtin": null,
+      "family_group": "ERBE · FiAPC",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC019",
+          "title": "ERBE Instruments and Accessories for Argon Plasma Coagulation",
+          "locator": "FiAPC probes, catalog pp. 5-6",
+          "revision_date": "2025-06-01",
+          "as_of_date": "2025-06-01"
+        }
+      ],
+      "discovery_query": "ERBE \"20132-223\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-19BAA6E1D6",
+      "manufacturer": "ERBE",
+      "product_name": "FiAPC plus Probe 3000 A with Filter",
+      "catalog_number": "20132-323",
+      "size_display": "2.3 mm x 3 m; Axial beam",
+      "gtin": null,
+      "family_group": "ERBE · FiAPC plus",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "THERAPEUTIC_BRONCH"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC019",
+          "title": "ERBE Instruments and Accessories for Argon Plasma Coagulation",
+          "locator": "FiAPC plus probes, catalog p. 4",
+          "revision_date": "2025-06-01",
+          "as_of_date": "2025-06-01"
+        }
+      ],
+      "discovery_query": "ERBE \"20132-323\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-075C3EC5EE",
+      "manufacturer": "FUJIFILM SonoSite",
+      "product_name": "SonoSite L13-6 Transducer",
+      "catalog_number": "L13-6",
+      "size_display": null,
+      "gtin": null,
+      "family_group": "FUJIFILM SonoSite · SonoSite",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "CHEST_TUBE"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC034",
+          "title": "FUJIFILM SonoSite LX User Guide",
+          "locator": "LX transducer and exam-type tables",
+          "revision_date": "P28669-08",
+          "as_of_date": "2025-09-08"
+        }
+      ],
+      "discovery_query": "FUJIFILM SonoSite \"L13-6\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-629828B799",
+      "manufacturer": "FUJIFILM SonoSite",
+      "product_name": "SonoSite LX Ultrasound System",
+      "catalog_number": "SonoSite LX",
+      "size_display": null,
+      "gtin": null,
+      "family_group": "FUJIFILM SonoSite · SonoSite LX",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "CHEST_TUBE"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC034",
+          "title": "FUJIFILM SonoSite LX User Guide",
+          "locator": "pp. 1-18",
+          "revision_date": "P28669-08",
+          "as_of_date": "2025-09-08"
+        }
+      ],
+      "discovery_query": "FUJIFILM SonoSite \"SonoSite LX\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    },
+    {
+      "product_id": "PRD-59D02C1811",
+      "manufacturer": "FUJIFILM SonoSite",
+      "product_name": "SonoSite PX Ultrasound System",
+      "catalog_number": "SonoSite PX",
+      "size_display": null,
+      "gtin": null,
+      "family_group": "FUJIFILM SonoSite · SonoSite PX",
+      "priority": 1,
+      "priority_reason": "authored_exemplar_option",
+      "exemplar_procedures": [
+        "CHEST_TUBE"
+      ],
+      "reviewed_description_as_of": null,
+      "existing_reviewed_summary": null,
+      "market_safety_assessment_as_of": "2026-08-13",
+      "safety_notices": [],
+      "catalog_sources": [
+        {
+          "source_id": "SRC035",
+          "title": "FUJIFILM SonoSite PX User Guide",
+          "locator": "pp. 152-161 and PX user-guide sections",
+          "revision_date": "P21894-02",
+          "as_of_date": "2020-06-01"
+        }
+      ],
+      "discovery_query": "FUJIFILM SonoSite \"SonoSite PX\" manufacturer instructions for use specifications",
+      "review_status": "pending_clinical_owner_review",
+      "required_review": [
+        "exact_model_and_package_identity",
+        "current_manufacturer_labeling",
+        "description_claims_and_locators",
+        "category_specific_specifications",
+        "FDA_and_manufacturer_safety_scope",
+        "model_specific_dependencies"
+      ]
+    }
+  ],
+  "procedures": [
+    {
+      "code": "EBUS_TBNA",
+      "name": "EBUS-TBNA / EBUS-FNB",
+      "status": "Draft - clinician/pathology review required",
+      "template_version": "0.3",
+      "scope": "base_authored_template_only; composed scenario findings are shown in the worksheet",
+      "required_slots_without_selectable_option": [
+        {
+          "slot_id": "SLOT-12ACA27E54",
+          "label": "Slides, cell-block, formalin/RPMI and labels"
+        },
+        {
+          "slot_id": "SLOT-2E3065C976",
+          "label": "Suction source/tubing/syringes"
+        }
+      ],
+      "review_status": "pending_clinical_and_operational_review"
+    },
+    {
+      "code": "THERAPEUTIC_BRONCH",
+      "name": "Therapeutic flexible bronchoscopy",
+      "status": "Draft - clinician review required",
+      "template_version": "0.3",
+      "scope": "base_authored_template_only; composed scenario findings are shown in the worksheet",
+      "required_slots_without_selectable_option": [
+        {
+          "slot_id": "SLOT-13609A744F",
+          "label": "High-flow suction tubing/canisters"
+        }
+      ],
+      "review_status": "pending_clinical_and_operational_review"
+    },
+    {
+      "code": "CHEST_TUBE",
+      "name": "Chest tube insertion",
+      "status": "Draft - clinician review required",
+      "template_version": "0.3",
+      "scope": "base_authored_template_only; composed scenario findings are shown in the worksheet",
+      "required_slots_without_selectable_option": [
+        {
+          "slot_id": "SLOT-4BE1D79D6C",
+          "label": "Securement, suture, dressing, and labels"
+        },
+        {
+          "slot_id": "SLOT-CE48C1B108",
+          "label": "Suction tubing/connectors"
+        }
+      ],
+      "review_status": "pending_clinical_and_operational_review"
+    }
+  ]
+}

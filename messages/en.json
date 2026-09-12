@@ -8901,7 +8901,9 @@
         "authoredOptions": "Authored options",
         "noAuthoredOptions": "No authored options exist for this requirement.",
         "optionsWithheld": "{count, plural, one {# authored option} other {# authored options}} ({selectable} selectable) withheld from this public view — products outside the Device Atlas cohort are not identified here.",
-        "optionSafetyNote": "A safety label beside an option reports an FDA safety action matched to that product at the research snapshot. It is not a statement about compatibility, and it does not change which options this release authors as selectable."
+        "optionSafetyNote": "A safety label beside an option reports an FDA safety action matched to that product at the research snapshot. It is not a statement about compatibility, and it does not change which options this release authors as selectable.",
+        "catalogNumber": "Catalog number",
+        "missingIdentifier": "Not recorded — confirm exact configuration"
       },
       "setupZones": {
         "room_capital_equipment": "Room / capital equipment",
@@ -9240,6 +9242,136 @@
         "platform_accessory": "Platform accessory",
         "vacuum_syringe": "Vacuum locking syringe",
         "unclassified_device": "Unclassified — needs review"
+      }
+    },
+    "reference": {
+      "save": "Save device",
+      "saved": "Saved device",
+      "savedDevices": "Saved devices & compare",
+      "storage": "Changes are available in this tab only. Browser storage could not be read or updated.",
+      "limit": "This browser list holds up to 100 devices. Remove a device before adding another."
+    },
+    "savedDevices": {
+      "title": "Saved devices",
+      "note": "Keep exact devices for quick reference, then select two to four to compare. This list is stored in this browser and is shared by people using the same browser profile. Device descriptions and safety information load from the current reference each time. Saving an item does not establish availability, suitability or local approval.",
+      "loading": "Loading saved devices…",
+      "empty": "No devices saved yet.",
+      "find": "Find devices",
+      "failed": "The current device reference could not be loaded. Your saved identifiers are still available; retry to see current reference data.",
+      "retry": "Retry",
+      "remove": "Remove",
+      "select": "Compare device",
+      "compare": "Compare selected devices",
+      "selectionNote": "Select two to four devices",
+      "unavailable": "Some saved items are no longer available in this reference. Their identifiers remain saved until you remove them.",
+      "removeUnavailable": "Remove unavailable items",
+      "safety": "Review safety evidence",
+      "snapshot": "Assessment dated"
+    },
+    "comparison": {
+      "title": "Device comparison",
+      "prepared": "Prepared {date} (UTC). Evidence dates are shown separately.",
+      "boundary": "For education and device comparison. Shared dimensions or device types do not establish interchangeability, compatibility or clinical suitability. Confirm the exact model, configuration, current manufacturer instructions and local requirements before use.",
+      "changeDevices": "Choose from saved devices",
+      "invalid": "The comparison link is invalid. Select two to four exact devices from your saved list.",
+      "unavailable": "{count} selected items are unavailable in this reference and were omitted.",
+      "choose": "Select at least two available devices to create a comparison.",
+      "mixedClasses": "These devices belong to different physical classes. Identity and safety information are shown together; select devices from the same class to compare category-specific fields.",
+      "sourceNote": "Reviewed values cite their supporting passages. Catalog fields retain their recorded meaning and have no field-level citation in this view. Missing values remain unknown. Neither the catalog diameter nor a tool’s minimum channel requirement is treated as a bronchoscope working-channel diameter.",
+      "scroll": "On a small screen, scroll the comparison table horizontally to inspect each device.",
+      "tableLabel": "Exact device comparison",
+      "field": "Reference field",
+      "missingIdentifier": "Catalog number not recorded",
+      "missing": "Not established in this reference",
+      "type": "Physical device type",
+      "taxonomyReview": "Classification needs review",
+      "safety": "Safety & market evidence",
+      "openSafety": "Full safety evidence and instructions",
+      "summary": "Description",
+      "origin": {
+        "reviewed": "Reviewed source",
+        "catalog": "Catalog field — verify against current labeling",
+        "missing": "Not established"
+      },
+      "scope": {
+        "exact": "Exact product",
+        "family": "Family evidence only",
+        "configuration": "Configuration evidence"
+      },
+      "sources": "Specification sources",
+      "safetyNote": "Safety labels are dated reference findings. A missing notice is not evidence that a device is unaffected. Review complete FDA and manufacturer notices, including affected lots or serial numbers and required actions. Printed copies do not update automatically.",
+      "fields": {
+        "insertionDiameter": "Insertion diameter",
+        "outerDiameter": "Outer diameter",
+        "catalogDiameter": "Recorded diameter (catalog field)",
+        "workingChannel": "Scope working-channel diameter",
+        "minChannel": "Minimum channel required by tool",
+        "workingLength": "Working length",
+        "length": "Recorded length",
+        "gauge": "Needle gauge",
+        "french": "French size",
+        "deliveryDiameter": "Delivery system outer diameter",
+        "material": "Material",
+        "tip": "Tip geometry",
+        "reuse": "Reuse labeling",
+        "sterile": "Sterility labeling",
+        "package": "Package / unit of measure",
+        "packageQuantity": "Units per package",
+        "distalDiameter": "Distal-end outer diameter"
+      },
+      "catalogSources": "Inspect catalog evidence",
+      "descriptionSources": "Description evidence",
+      "descriptionScope": {
+        "exact_product": "Exact-product description",
+        "family_inherited": "Inherited family description",
+        "configuration_variant": "Configuration description",
+        "minimal_identity": "Minimal identity only",
+        "insufficient_evidence": "Insufficient evidence"
+      },
+      "configuration": "Recorded configuration / compatibility notes",
+      "configurationSources": "Inspect configuration evidence"
+    },
+    "procedureReview": {
+      "title": "Review before local use",
+      "openWorksheet": "Open setup review worksheet",
+      "note": "These findings come from the draft template. They identify work for clinical and operational review; they do not establish procedure readiness.",
+      "ownerMissing": "No clinical owner is recorded for this procedure.",
+      "requiredGaps": "Required items without an authored selectable device option: {count}.",
+      "ifu": "{count} requirements call for current manufacturer instructions.",
+      "roles": "{count} requirements have no responsible role recorded.",
+      "identifiers": "{count} authored option entries lack a catalog number; exact configuration needs confirmation.",
+      "laser": "The authored laser pathway lacks selectable device coverage.",
+      "rescue": "No rescue module is reachable from this procedure’s allowed modifiers; review the authoring gap."
+    },
+    "setupWorksheet": {
+      "title": "Draft setup review worksheet",
+      "back": "Back to procedure workspace",
+      "prepared": "Prepared {date} (UTC) · Template {version}",
+      "boundary": "For review of the educational demonstration scenario. This worksheet carries draft requirements and kit assumptions from the existing preview. A clinician and local team must confirm exact equipment, current instructions, conditional requirements and local responsibilities before a clinical setup sheet can be approved. It contains no patient or local inventory data.",
+      "requirement": "Requirement",
+      "details": "Authored requirement & dependencies",
+      "localReview": "Local review notes",
+      "localPrompt": "Confirm exact model, configuration, local item and current instructions.",
+      "dependency": "Condition",
+      "ifu": "Current manufacturer instructions required",
+      "role": "Responsible role",
+      "includedInKit": "Requirements included in a demonstration kit",
+      "kitNote": "The existing demonstration resolver suppresses these separate rows because its selected kit includes them. Confirm the actual kit’s contents locally.",
+      "remainingReview": "Review model-specific connections, supplies, safety notices, kit contents and rescue equipment with the responsible clinical team. Handwritten notes do not change the module’s approval or readiness state. Printed copies do not update automatically.",
+      "source": "Reference workspace",
+      "requiredness": {
+        "required": "Required",
+        "conditional": "Conditional",
+        "optional": "Optional",
+        "backup": "Backup",
+        "emergency_only": "Emergency only"
+      },
+      "openHold": {
+        "open_or_set_up_now": "Open or set up now",
+        "have_in_room": "Have in room",
+        "hold_unopened": "Hold unopened",
+        "emergency_pull": "Retrieve in an emergency",
+        "do_not_substitute": "Do not substitute"
       }
     }
   }

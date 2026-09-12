@@ -1,0 +1,46 @@
+@media print {
+  body:has(.output) > div,
+  body:has(.output) > div > main {
+    min-height: 0;
+    background: white !important;
+  }
+  body:has(.output) > a:global(.skip-link),
+  body:has(.output) > div > header,
+  body:has(.output) > div > footer {
+    display: none !important;
+  }
+  .output {
+    max-width: none !important;
+    padding: 0 !important;
+    color: #111827;
+    background: white !important;
+    font-size: 9pt;
+  }
+  .output table {
+    min-width: 0 !important;
+    table-layout: fixed;
+  }
+  .output th,
+  .output td {
+    padding: 6px;
+    overflow-wrap: anywhere;
+  }
+  .output th,
+  .output td,
+  .output section {
+    background: white !important;
+  }
+  .output :where(th, td, p, span, li, a) {
+    color: #111827 !important;
+  }
+  .output tr {
+    break-inside: avoid;
+  }
+  .output [role='region'] {
+    overflow: visible;
+    border: 0;
+  }
+  .output a {
+    color: inherit;
+  }
+}

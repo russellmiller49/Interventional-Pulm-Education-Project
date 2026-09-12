@@ -213,6 +213,7 @@ describe('D2B workspace — nothing governed moved', () => {
             'productId',
             'productName',
             'selectable',
+            'sizeDisplay',
             'status',
           ])
         }

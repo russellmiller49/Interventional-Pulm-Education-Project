@@ -1,0 +1,1356 @@
+{
+  "format_version": 1,
+  "purpose": "identity_candidates_only_no_runtime_publication",
+  "batch_sha256": "df327b060d2608f04b30bb8fc1fa13267e8196427965dcd5939b71f437fa53be",
+  "snapshot": "2026-09-12",
+  "products": [
+    {
+      "product_id": "PRD-05670F1B5F",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"20402-411\" OR version_or_model_number.exact:\"20402-411\"",
+      "retrieved_at": "2026-09-12T01:44:08.858Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "ce82aa770755ffd725ba37fe7603ba0aab0e01b5aa1c483081cc459295be725d",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "04050147021839",
+          "company_name": "Erbe Elektromedizin GmbH",
+          "brand_name": "ERBE",
+          "catalog_number": "20402-411",
+          "model_number": "20402-411",
+          "device_record_version_date": "2021-11-01",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/04050147021839",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-07CDEDC2AB",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"ASK-01500\" OR version_or_model_number.exact:\"ASK-01500\"",
+      "retrieved_at": "2026-09-12T01:44:09.169Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "58353739e459eb2c3aece8c54939beecdb4cba1162ec12af2e27e9510cff8140",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "10801902156232",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "ASK-01500",
+          "model_number": "IPN055455",
+          "device_record_version_date": "2025-01-16",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/10801902156232",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-12231F4168",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"G56532\" OR version_or_model_number.exact:\"G56532\"",
+      "retrieved_at": "2026-09-12T01:44:09.661Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "8e1c7fe6a7046467f4bffe2c2b4bdbf652c886a84d1cedc537ac7ba293bb3973",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "00827002565326",
+          "company_name": "COOK INCORPORATED",
+          "brand_name": "Wayne",
+          "catalog_number": "C-UTPT-1020-WAYNE-IMH",
+          "model_number": "G56532",
+          "device_record_version_date": "2024-01-03",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00827002565326",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-1D87D6EA1E",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"AK-01600\" OR version_or_model_number.exact:\"AK-01600\"",
+      "retrieved_at": "2026-09-12T01:44:10.164Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "277c19a5f1715ce52c3ce8a4f45b4280a99f43fff223a4fcc4e0de81544d8e7b",
+      "result_total": 4,
+      "returned_count": 4,
+      "candidates": [
+        {
+          "primary_di": "20801902120155",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01600",
+          "model_number": "IPN036836",
+          "device_record_version_date": "2025-09-24",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/20801902120155",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "00801902004819",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01600",
+          "model_number": "IPN033840",
+          "device_record_version_date": "2018-07-06",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00801902004819",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "50801902120156",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01600",
+          "model_number": "IPN036836",
+          "device_record_version_date": "2025-01-16",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/50801902120156",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "10801902120158",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01600",
+          "model_number": "IPN036836",
+          "device_record_version_date": "2025-09-24",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/10801902120158",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-2FAFEA973E",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"GlideScope Core 15\" OR version_or_model_number.exact:\"GlideScope Core 15\"",
+      "retrieved_at": "2026-09-12T01:44:10.671Z",
+      "dataset_as_of": null,
+      "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+      "result_total": 0,
+      "returned_count": 0,
+      "candidates": []
+    },
+    {
+      "product_id": "PRD-48C48C68BA",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"490105\" OR version_or_model_number.exact:\"490105\"",
+      "retrieved_at": "2026-09-12T01:44:11.169Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "bc5f40b077a8ab4f547585eb2afd83c6b790d0921232a6e967036beb1d27c71f",
+      "result_total": 2,
+      "returned_count": 2,
+      "candidates": [
+        {
+          "primary_di": "04046964186165",
+          "company_name": "B. BRAUN MEDICAL INC.",
+          "brand_name": "Infusomat®",
+          "catalog_number": "490105",
+          "model_number": "490105",
+          "device_record_version_date": "2026-07-16",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/04046964186165",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "00886874116258",
+          "company_name": "INTUITIVE SURGICAL, INC.",
+          "brand_name": "Ion",
+          "catalog_number": null,
+          "model_number": "490105",
+          "device_record_version_date": "2026-04-21",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00886874116258",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-4A04124FF2",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"BF-1TH190\" OR version_or_model_number.exact:\"BF-1TH190\"",
+      "retrieved_at": "2026-09-12T01:44:11.662Z",
+      "dataset_as_of": null,
+      "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+      "result_total": 0,
+      "returned_count": 0,
+      "candidates": []
+    },
+    {
+      "product_id": "PRD-4F4AA966A9",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"AK-01000-T\" OR version_or_model_number.exact:\"AK-01000-T\"",
+      "retrieved_at": "2026-09-12T01:44:12.205Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "0484f0f2f99c44f6d3af56f27dc7e64844c65fabd4ebab3ca06ba42877289a82",
+      "result_total": 8,
+      "returned_count": 8,
+      "candidates": [
+        {
+          "primary_di": "10801902120134",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01000-T",
+          "model_number": "IPN036831",
+          "device_record_version_date": "2018-07-06",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/10801902120134",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "60801902004798",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01000-T",
+          "model_number": "IPN033838",
+          "device_record_version_date": "2019-03-08",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/60801902004798",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "60801902120139",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01000-T",
+          "model_number": "IPN036831",
+          "device_record_version_date": "2019-03-08",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/60801902120139",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "00801902004796",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01000-T",
+          "model_number": "IPN033838",
+          "device_record_version_date": "2018-07-06",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00801902004796",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "40801902004794",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01000-T",
+          "model_number": "IPN033838",
+          "device_record_version_date": "2018-07-06",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/40801902004794",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "20801902120131",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01000-T",
+          "model_number": "IPN036831",
+          "device_record_version_date": "2018-07-06",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/20801902120131",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "10801902145434",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01000-T",
+          "model_number": "IPN039728",
+          "device_record_version_date": "2019-03-15",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/10801902145434",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "10801902145120",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01000-T",
+          "model_number": "IPN039282",
+          "device_record_version_date": "2024-01-11",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/10801902145120",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-5543746F59",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"OER-Pro\" OR version_or_model_number.exact:\"OER-Pro\"",
+      "retrieved_at": "2026-09-12T01:44:12.666Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "7236102713f3cb7ac06fdc51a9b88ebf21fc356514184b11cf4cde991af5bec1",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "04953170258589",
+          "company_name": "OLYMPUS MEDICAL SYSTEMS CORP.",
+          "brand_name": "ENDOSCOPE REPROCESSOR",
+          "catalog_number": null,
+          "model_number": "OER-Pro",
+          "device_record_version_date": "2025-11-24",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/04953170258589",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-7397B6CA00",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"490104\" OR version_or_model_number.exact:\"490104\"",
+      "retrieved_at": "2026-09-12T01:44:13.169Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "99192db167863498f9634e4ee7fe2704d0342c4c4269e830ba6b0095d10fb299",
+      "result_total": 3,
+      "returned_count": 3,
+      "candidates": [
+        {
+          "primary_di": "04046964186141",
+          "company_name": "B. BRAUN MEDICAL INC.",
+          "brand_name": "Infusomat®",
+          "catalog_number": "490104",
+          "model_number": "490104",
+          "device_record_version_date": "2026-07-16",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/04046964186141",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "00886874115978",
+          "company_name": "INTUITIVE SURGICAL, INC.",
+          "brand_name": "Flexision",
+          "catalog_number": null,
+          "model_number": "490104",
+          "device_record_version_date": "2026-05-05",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00886874115978",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "00382904901042",
+          "company_name": "TRIPATH IMAGING, INC.",
+          "brand_name": "BD PrepStain Slide Processor",
+          "catalog_number": "490104",
+          "model_number": "490104",
+          "device_record_version_date": "2018-07-06",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00382904901042",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-7BE12DDECD",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"ASK-01500-JCM\" OR version_or_model_number.exact:\"ASK-01500-JCM\"",
+      "retrieved_at": "2026-09-12T01:44:13.666Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "ba8c1e31a9ea037e3a103c884b9ab4811b00eace618bfdfcbd50080920fb9662",
+      "result_total": 4,
+      "returned_count": 4,
+      "candidates": [
+        {
+          "primary_di": "10801902120202",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "ASK-01500-JCM",
+          "model_number": "IPN037140",
+          "device_record_version_date": "2025-09-24",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/10801902120202",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "00801902053275",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "ASK-01500-JCM",
+          "model_number": "IPN034176",
+          "device_record_version_date": "2018-07-06",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00801902053275",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "30801902120206",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "ASK-01500-JCM",
+          "model_number": "IPN037140",
+          "device_record_version_date": "2025-01-16",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/30801902120206",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "20801902053279",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "ASK-01500-JCM",
+          "model_number": "IPN034176",
+          "device_record_version_date": "2018-07-06",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/20801902053279",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-7DC3645CFA",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"20402-410\" OR version_or_model_number.exact:\"20402-410\"",
+      "retrieved_at": "2026-09-12T01:44:14.165Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "f77af8ecf9295694032c70d97066b0f3bafeb689280489f2d8130cb012cd939a",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "04050147021815",
+          "company_name": "Erbe Elektromedizin GmbH",
+          "brand_name": "ERBE",
+          "catalog_number": "20402-410",
+          "model_number": "20402-410",
+          "device_record_version_date": "2021-11-01",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/04050147021815",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-7E17F5F17E",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"AK-01500\" OR version_or_model_number.exact:\"AK-01500\"",
+      "retrieved_at": "2026-09-12T01:44:15.000Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "b07cffaedb88ee2f296cd220287a25b4e9ed3766059d1ec4808ac794bbc8b19e",
+      "result_total": 5,
+      "returned_count": 5,
+      "candidates": [
+        {
+          "primary_di": "10801902120141",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01500",
+          "model_number": "IPN036822",
+          "device_record_version_date": "2018-07-06",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/10801902120141",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "30801902120145",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01500",
+          "model_number": "IPN036822",
+          "device_record_version_date": "2021-01-20",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/30801902120145",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "20801902004806",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01500",
+          "model_number": "IPN033839",
+          "device_record_version_date": "2018-07-06",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/20801902004806",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "50801902004807",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01500",
+          "model_number": "IPN033839",
+          "device_record_version_date": "2020-01-31",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/50801902004807",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "00801902004802",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01500",
+          "model_number": "IPN033839",
+          "device_record_version_date": "2018-07-06",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00801902004802",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-88DA368B9C",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"BF-XP190\" OR version_or_model_number.exact:\"BF-XP190\"",
+      "retrieved_at": "2026-09-12T01:44:15.164Z",
+      "dataset_as_of": null,
+      "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+      "result_total": 0,
+      "returned_count": 0,
+      "candidates": []
+    },
+    {
+      "product_id": "PRD-8A4A27BDD7",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"490103\" OR version_or_model_number.exact:\"490103\"",
+      "retrieved_at": "2026-09-12T01:44:15.667Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "4ffe04cb98644a50481941342e63cd346d3a2b3235f4b59211d585a4decb0879",
+      "result_total": 2,
+      "returned_count": 2,
+      "candidates": [
+        {
+          "primary_di": "00886874115961",
+          "company_name": "INTUITIVE SURGICAL, INC.",
+          "brand_name": "Flexision",
+          "catalog_number": null,
+          "model_number": "490103",
+          "device_record_version_date": "2026-05-05",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00886874115961",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "04046964302107",
+          "company_name": "B. BRAUN MEDICAL INC.",
+          "brand_name": "Infusomat®",
+          "catalog_number": "490103",
+          "model_number": "490103",
+          "device_record_version_date": "2020-11-12",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/04046964302107",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-8C6C29BE46",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"G56535\" OR version_or_model_number.exact:\"G56535\"",
+      "retrieved_at": "2026-09-12T01:44:16.173Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "056b2605bd1f19fcaee166feb1c6dd117f5b140cf36f7d8338ad957c1d217f7e",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "00827002565357",
+          "company_name": "COOK INCORPORATED",
+          "brand_name": "Wayne",
+          "catalog_number": "C-UTPT-1400-WAYNE-112497-IMH",
+          "model_number": "G56535",
+          "device_record_version_date": "2024-01-03",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00827002565357",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-9143E639BA",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"AK-01601\" OR version_or_model_number.exact:\"AK-01601\"",
+      "retrieved_at": "2026-09-12T01:44:16.666Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "55c9bbdc653bcddaaadeae9728ae1bad7b3b3f92237aa5589254e84336ebd2cd",
+      "result_total": 3,
+      "returned_count": 3,
+      "candidates": [
+        {
+          "primary_di": "00801902004826",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01601",
+          "model_number": "IPN033841",
+          "device_record_version_date": "2018-07-06",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00801902004826",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "10801902120165",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01601",
+          "model_number": "IPN036841",
+          "device_record_version_date": "2025-09-24",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/10801902120165",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "60801902120160",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01601",
+          "model_number": "IPN036841",
+          "device_record_version_date": "2025-01-16",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/60801902120160",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-A2C49C9352",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"20402-401\" OR version_or_model_number.exact:\"20402-401\"",
+      "retrieved_at": "2026-09-12T01:44:17.168Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "919b7b1ec2ab9c7854eeb134e97745b16be12524ae566b5f8bb813d69c04113e",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "04050147021778",
+          "company_name": "Erbe Elektromedizin GmbH",
+          "brand_name": "ERBE",
+          "catalog_number": "20402-401",
+          "model_number": "20402-401",
+          "device_record_version_date": "2021-11-01",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/04050147021778",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-A72E811F09",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"AK-01000\" OR version_or_model_number.exact:\"AK-01000\"",
+      "retrieved_at": "2026-09-12T01:44:17.700Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "9ed1ca7e3d65553ba19ce1e7210baa3a5bcaf3fda63f2f1e371ac9e254874221",
+      "result_total": 4,
+      "returned_count": 4,
+      "candidates": [
+        {
+          "primary_di": "10801902120127",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01000",
+          "model_number": "IPN036977",
+          "device_record_version_date": "2018-07-06",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/10801902120127",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "10801902142914",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01000",
+          "model_number": "IPN038623",
+          "device_record_version_date": "2021-11-17",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/10801902142914",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "00801902004789",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01000",
+          "model_number": "IPN033837",
+          "device_record_version_date": "2019-03-08",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00801902004789",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "30801902120121",
+          "company_name": "TELEFLEX INCORPORATED",
+          "brand_name": "ARROW",
+          "catalog_number": "AK-01000",
+          "model_number": "IPN036977",
+          "device_record_version_date": "2024-02-14",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/30801902120121",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-CB1622624D",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"BF-MP190F\" OR version_or_model_number.exact:\"BF-MP190F\"",
+      "retrieved_at": "2026-09-12T01:44:18.166Z",
+      "dataset_as_of": null,
+      "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+      "result_total": 0,
+      "returned_count": 0,
+      "candidates": []
+    },
+    {
+      "product_id": "PRD-D6F54A6D11",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"BF-H190\" OR version_or_model_number.exact:\"BF-H190\"",
+      "retrieved_at": "2026-09-12T01:44:18.661Z",
+      "dataset_as_of": null,
+      "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+      "result_total": 0,
+      "returned_count": 0,
+      "candidates": []
+    },
+    {
+      "product_id": "PRD-F43740CB5C",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"490102\" OR version_or_model_number.exact:\"490102\"",
+      "retrieved_at": "2026-09-12T01:44:19.226Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "2329577ad7f194f40fc85084c525b2e61e670d1373f5742fc7aeee3e4365a527",
+      "result_total": 2,
+      "returned_count": 2,
+      "candidates": [
+        {
+          "primary_di": "04046964186127",
+          "company_name": "B. BRAUN MEDICAL INC.",
+          "brand_name": "Infusomat®",
+          "catalog_number": "490102",
+          "model_number": "490102",
+          "device_record_version_date": "2026-07-16",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/04046964186127",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "00886874115954",
+          "company_name": "INTUITIVE SURGICAL, INC.",
+          "brand_name": "Flexision",
+          "catalog_number": null,
+          "model_number": "490102",
+          "device_record_version_date": "2026-05-15",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00886874115954",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-FD34401E04",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"G02898\" OR version_or_model_number.exact:\"G02898\"",
+      "retrieved_at": "2026-09-12T01:44:19.672Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "61a434b178f03f8da775607f6a85a53ce5156ed66690cb010f7be8c4513d95b0",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "00827002028982",
+          "company_name": "COOK INCORPORATED",
+          "brand_name": "Cook",
+          "catalog_number": "C-CTU14.0-30-ST",
+          "model_number": "G02898",
+          "device_record_version_date": "2023-01-20",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00827002028982",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-04A0F61F62",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"622002000US\" OR version_or_model_number.exact:\"622002000US\"",
+      "retrieved_at": "2026-09-12T01:44:20.179Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "59cac3f973ceffbdcb665c3eef40f163bb9a127f81b6ed2988377e2c920574a5",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "05707480156542",
+          "company_name": "Ambu A/S",
+          "brand_name": "aScope™ 5 Broncho HD 5.6/2.8 Sampler Set",
+          "catalog_number": "622002000US",
+          "model_number": "622002000US",
+          "device_record_version_date": "2026-01-30",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/05707480156542",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-2F1DF55F3C",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"16400\" OR version_or_model_number.exact:\"16400\"",
+      "retrieved_at": "2026-09-12T01:44:20.689Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "0d9e83af4df4be0fcdfb748748b4907f62b377bb0e8b084a2ce68a4f0b3cbbaf",
+      "result_total": 6,
+      "returned_count": 6,
+      "candidates": [
+        {
+          "primary_di": "00650862164008",
+          "company_name": "Atrium Medical Corporation",
+          "brand_name": "EXPRESS",
+          "catalog_number": null,
+          "model_number": "16400",
+          "device_record_version_date": "2026-02-11",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00650862164008",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "00850012315506",
+          "company_name": "KICO KNEE INNOVATION COMPANY PTY LIMITED",
+          "brand_name": "ARVIS ®",
+          "catalog_number": null,
+          "model_number": "16400",
+          "device_record_version_date": "2025-03-21",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00850012315506",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "00840216122178",
+          "company_name": "Asp Global, LLC",
+          "brand_name": "MEDCO SPORTS MEDICINE",
+          "catalog_number": null,
+          "model_number": "16400",
+          "device_record_version_date": "2023-02-10",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00840216122178",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "00886799001776",
+          "company_name": "Terumo Cardiovascular Systems Corporation",
+          "brand_name": "Sarns™ Modular Perfusion System 8000",
+          "catalog_number": "16400",
+          "model_number": "16400",
+          "device_record_version_date": "2018-07-06",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00886799001776",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "00190376236056",
+          "company_name": "ALPHATEC SPINE, INC.",
+          "brand_name": "Invictus",
+          "catalog_number": null,
+          "model_number": "16400",
+          "device_record_version_date": "2020-04-09",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00190376236056",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        },
+        {
+          "primary_di": "03596010455031",
+          "company_name": "Smith & Nephew, Inc.",
+          "brand_name": "Neer 3",
+          "catalog_number": "16400",
+          "model_number": "16400",
+          "device_record_version_date": "2023-09-07",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/03596010455031",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-94C61697D9",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"3600-100\" OR version_or_model_number.exact:\"3600-100\"",
+      "retrieved_at": "2026-09-12T01:44:21.180Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "1750c8f7ae84c943b721bb691d182d1ddf718e14f68b6fa544b1148e53fe3796",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "00650862110012",
+          "company_name": "Atrium Medical Corporation",
+          "brand_name": "OASIS",
+          "catalog_number": null,
+          "model_number": "3600-100",
+          "device_record_version_date": "2026-02-12",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00650862110012",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-A31173136E",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"2002-057\" OR version_or_model_number.exact:\"2002-057\"",
+      "retrieved_at": "2026-09-12T01:44:21.673Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "ac90f45a43225af773b547c256e6438fb7e0a6a38453019f328734bd05df1bc1",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "00650862100327",
+          "company_name": "Atrium Medical Corporation",
+          "brand_name": "OCEAN",
+          "catalog_number": null,
+          "model_number": "2002-057",
+          "device_record_version_date": "2020-10-15",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00650862100327",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-D826F63F9A",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"M00552351\" OR version_or_model_number.exact:\"M00552351\"",
+      "retrieved_at": "2026-09-12T01:44:22.181Z",
+      "dataset_as_of": null,
+      "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+      "result_total": 0,
+      "returned_count": 0,
+      "candidates": []
+    },
+    {
+      "product_id": "PRD-35EC8EE328",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"M00550620\" OR version_or_model_number.exact:\"M00550620\"",
+      "retrieved_at": "2026-09-12T01:44:22.683Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "2864abc6d82c382c1939c88af8d9ae08df63def41ab75dc3071bb25efc48573a",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "08714729283881",
+          "company_name": "BOSTON SCIENTIFIC CORPORATION",
+          "brand_name": "Alliance II",
+          "catalog_number": null,
+          "model_number": "M00550620",
+          "device_record_version_date": "2020-09-30",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/08714729283881",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-5F801B5A8E",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"M00550090\" OR version_or_model_number.exact:\"M00550090\"",
+      "retrieved_at": "2026-09-12T01:44:23.182Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "739a1e7f3c1e6af57c9916efce56994dd098eaab946b672b77cdd51a82090ec3",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "08714729301929",
+          "company_name": "BOSTON SCIENTIFIC CORPORATION",
+          "brand_name": "Amplatz Super Stiff",
+          "catalog_number": null,
+          "model_number": "M00550090",
+          "device_record_version_date": "2024-12-23",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/08714729301929",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-C2875D269C",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"M00515220\" OR version_or_model_number.exact:\"M00515220\"",
+      "retrieved_at": "2026-09-12T01:44:23.692Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "d15c5241e546e36f652c4603991a568d74a0466810d59b0bcb7730db18d831ae",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "08714729971054",
+          "company_name": "BOSTON SCIENTIFIC CORPORATION",
+          "brand_name": "CoreDx™",
+          "catalog_number": null,
+          "model_number": "M00515220",
+          "device_record_version_date": "2019-03-27",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/08714729971054",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-189E7EF27A",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"M00550350\" OR version_or_model_number.exact:\"M00550350\"",
+      "retrieved_at": "2026-09-12T01:44:24.205Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "718c6b9d925c524c943944230907d2de2dc7451c9943e808b3f23bfb03462a78",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "08714729456230",
+          "company_name": "BOSTON SCIENTIFIC CORPORATION",
+          "brand_name": "CRE Pulmonary",
+          "catalog_number": null,
+          "model_number": "M00550350",
+          "device_record_version_date": "2018-03-29",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/08714729456230",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-61915862CE",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"M00550630\" OR version_or_model_number.exact:\"M00550630\"",
+      "retrieved_at": "2026-09-12T01:44:24.687Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "fd53745d2a72d8ec0ed01c0517b0c033eceba6a57ac8b758c9be903b890961cd",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "00856877002506",
+          "company_name": "ATRION MEDICAL PRODUCTS, INC.",
+          "brand_name": "CRE SteriFlate Disposable Inflation Device",
+          "catalog_number": "M00550630",
+          "model_number": "QL6015",
+          "device_record_version_date": "2021-01-11",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00856877002506",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-2302DA77DA",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"M00558220\" OR version_or_model_number.exact:\"M00558220\"",
+      "retrieved_at": "2026-09-12T01:44:25.201Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "060ae6848ac473d8a071daa194e5bf924e3908e5251b70f09baec16ac85d5ba1",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "08714729861409",
+          "company_name": "BOSTON SCIENTIFIC CORPORATION",
+          "brand_name": "Expect Pulmonary",
+          "catalog_number": null,
+          "model_number": "M00558220",
+          "device_record_version_date": "2019-07-12",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/08714729861409",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-602AA2F147",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"M00515171\" OR version_or_model_number.exact:\"M00515171\"",
+      "retrieved_at": "2026-09-12T01:44:25.682Z",
+      "dataset_as_of": null,
+      "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+      "result_total": 0,
+      "returned_count": 0,
+      "candidates": []
+    },
+    {
+      "product_id": "PRD-217AB10438",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"M00515202\" OR version_or_model_number.exact:\"M00515202\"",
+      "retrieved_at": "2026-09-12T01:44:26.175Z",
+      "dataset_as_of": null,
+      "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+      "result_total": 0,
+      "returned_count": 0,
+      "candidates": []
+    },
+    {
+      "product_id": "PRD-9844E2B578",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"M00515101\" OR version_or_model_number.exact:\"M00515101\"",
+      "retrieved_at": "2026-09-12T01:44:26.680Z",
+      "dataset_as_of": null,
+      "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+      "result_total": 0,
+      "returned_count": 0,
+      "candidates": []
+    },
+    {
+      "product_id": "PRD-05780FEDD7",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"M00576560\" OR version_or_model_number.exact:\"M00576560\"",
+      "retrieved_at": "2026-09-12T01:44:27.187Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "a77f4ffdf29a651c99dadd1651ee890a87977174dc4aed32ceba2850f2bb9ee9",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "08714729842361",
+          "company_name": "BOSTON SCIENTIFIC CORPORATION",
+          "brand_name": "Ultraflex™ Tracheobronchial",
+          "catalog_number": null,
+          "model_number": "M00576560",
+          "device_record_version_date": "2021-02-19",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/08714729842361",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-4E9069C30F",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"M00513210\" OR version_or_model_number.exact:\"M00513210\"",
+      "retrieved_at": "2026-09-12T01:44:27.687Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "519ac73c64e5f75909a800c9c63724d55822083f791b416d8e32625118aab08d",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "08714729415008",
+          "company_name": "BOSTON SCIENTIFIC CORPORATION",
+          "brand_name": "Zero Tip",
+          "catalog_number": null,
+          "model_number": "M00513210",
+          "device_record_version_date": "2021-04-07",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/08714729415008",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-35BAC12D9F",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"900-20054-03\" OR version_or_model_number.exact:\"900-20054-03\"",
+      "retrieved_at": "2026-09-12T01:44:28.193Z",
+      "dataset_as_of": null,
+      "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+      "result_total": 0,
+      "returned_count": 0,
+      "candidates": []
+    },
+    {
+      "product_id": "PRD-0410844D48",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"G55713\" OR version_or_model_number.exact:\"G55713\"",
+      "retrieved_at": "2026-09-12T01:44:28.685Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "3e4a90643fb301d962aa93409186ee56a21f924cfe87e7a3b6d5ba1b294dd759",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "00827002557130",
+          "company_name": "COOK INCORPORATED",
+          "brand_name": "Fuhrman",
+          "catalog_number": "C-PPD-500-WCE-IMH",
+          "model_number": "G55713",
+          "device_record_version_date": "2020-10-12",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00827002557130",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-19AC7F0794",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"G53408\" OR version_or_model_number.exact:\"G53408\"",
+      "retrieved_at": "2026-09-12T01:44:29.188Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "79e27ece34c053312b508758a56376f781fdd86a3e34dcdc5f21341d1d10c9ab",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "00827002534087",
+          "company_name": "COOK IRELAND LTD",
+          "brand_name": "EchoTip",
+          "catalog_number": "ECHO-HD-22-EBUS-P",
+          "model_number": "G53408",
+          "device_record_version_date": "2025-12-05",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/00827002534087",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-09AF1B1AE5",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"20134-006\" OR version_or_model_number.exact:\"20134-006\"",
+      "retrieved_at": "2026-09-12T01:44:29.685Z",
+      "dataset_as_of": null,
+      "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+      "result_total": 0,
+      "returned_count": 0,
+      "candidates": []
+    },
+    {
+      "product_id": "PRD-0A9806F6F2",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"20196-059\" OR version_or_model_number.exact:\"20196-059\"",
+      "retrieved_at": "2026-09-12T01:44:30.192Z",
+      "dataset_as_of": null,
+      "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+      "result_total": 0,
+      "returned_count": 0,
+      "candidates": []
+    },
+    {
+      "product_id": "PRD-0C821995AC",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"20402-007\" OR version_or_model_number.exact:\"20402-007\"",
+      "retrieved_at": "2026-09-12T01:44:30.688Z",
+      "dataset_as_of": null,
+      "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+      "result_total": 0,
+      "returned_count": 0,
+      "candidates": []
+    },
+    {
+      "product_id": "PRD-3A183102CF",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"20132-223\" OR version_or_model_number.exact:\"20132-223\"",
+      "retrieved_at": "2026-09-12T01:44:31.192Z",
+      "dataset_as_of": null,
+      "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+      "result_total": 0,
+      "returned_count": 0,
+      "candidates": []
+    },
+    {
+      "product_id": "PRD-19BAA6E1D6",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"20132-323\" OR version_or_model_number.exact:\"20132-323\"",
+      "retrieved_at": "2026-09-12T01:44:31.703Z",
+      "dataset_as_of": "2026-09-02",
+      "response_sha256": "b9956871d7d84d08009adc089fcd2a32812842a5e3e42a85070d7da497902f95",
+      "result_total": 1,
+      "returned_count": 1,
+      "candidates": [
+        {
+          "primary_di": "04050147023611",
+          "company_name": "Erbe Elektromedizin GmbH",
+          "brand_name": "Erbe",
+          "catalog_number": "20132-323",
+          "model_number": "20132-323",
+          "device_record_version_date": "2025-02-19",
+          "source_url": "https://accessgudid.nlm.nih.gov/devices/04050147023611",
+          "exact_catalog_or_model_string": true,
+          "manufacturer_match": "not_adjudicated"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-075C3EC5EE",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"L13-6\" OR version_or_model_number.exact:\"L13-6\"",
+      "retrieved_at": "2026-09-12T01:44:32.199Z",
+      "dataset_as_of": null,
+      "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+      "result_total": 0,
+      "returned_count": 0,
+      "candidates": []
+    },
+    {
+      "product_id": "PRD-629828B799",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"SonoSite LX\" OR version_or_model_number.exact:\"SonoSite LX\"",
+      "retrieved_at": "2026-09-12T01:44:32.705Z",
+      "dataset_as_of": null,
+      "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+      "result_total": 0,
+      "returned_count": 0,
+      "candidates": []
+    },
+    {
+      "product_id": "PRD-59D02C1811",
+      "review_status": "pending_clinical_owner_review",
+      "query_status": "complete",
+      "query": "catalog_number.exact:\"SonoSite PX\" OR version_or_model_number.exact:\"SonoSite PX\"",
+      "retrieved_at": "2026-09-12T01:44:33.199Z",
+      "dataset_as_of": null,
+      "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+      "result_total": 0,
+      "returned_count": 0,
+      "candidates": []
+    }
+  ]
+}

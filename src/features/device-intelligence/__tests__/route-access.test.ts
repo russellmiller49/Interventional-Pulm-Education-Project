@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { isPublicUnlistedPath, resolveSiteModuleId } from '@/lib/site-auth/access'
@@ -14,10 +14,13 @@ const ROUTE_DIRS = ['devices', 'clinical-roles', 'procedures'].map((dir) =>
 const D1_PATHS = [
   '/devices',
   '/devices/PRD-ABCDEF1234',
+  '/devices/saved',
+  '/devices/compare',
   '/clinical-roles/EBUS_SCOPE',
   '/procedures',
   '/procedures/EBUS_TBNA',
   '/procedures/EBUS_TBNA/readiness',
+  '/procedures/EBUS_TBNA/setup',
 ]
 
 describe('D1 route access model', () => {
@@ -90,7 +93,7 @@ describe('D1 route access model', () => {
         return entry === 'page.tsx' ? [path] : []
       })
     const pages = ROUTE_DIRS.flatMap(collectPages)
-    expect(pages.length).toBe(6)
+    expect(pages.length).toBe(9)
     for (const page of pages) {
       const source = readFileSync(page, 'utf8')
       expect(source).toContain('robots: { index: false, follow: false, noarchive: true }')
@@ -98,7 +101,7 @@ describe('D1 route access model', () => {
     }
   })
 
-  it('exposes no server action, API route, or other write path under the D1 areas', () => {
+  it('exposes no server action or server write path; the sole API is a bounded GET lookup', () => {
     for (const dir of ROUTE_DIRS) {
       const offenders: string[] = []
       const walk = (current: string) => {
@@ -118,10 +121,18 @@ describe('D1 route access model', () => {
       walk(dir)
       expect(offenders).toEqual([])
     }
-    expect(existsSync(join(REPO_ROOT, 'src/app/api/device-intelligence'))).toBe(false)
+    const apiDir = join(REPO_ROOT, 'src/app/api/device-intelligence')
+    const routes = readdirSync(apiDir, { recursive: true }).filter((file) =>
+      String(file).endsWith('route.ts'),
+    )
+    expect(routes).toEqual(['saved/route.ts'])
+    const api = readFileSync(join(apiDir, 'saved/route.ts'), 'utf8')
+    expect(api).toContain('export async function GET')
+    expect(api).toContain('MAX_SAVED_DEVICES')
+    expect(api).not.toMatch(/export\s+(?:async\s+)?function\s+(?:POST|PUT|PATCH|DELETE)/)
   })
 
-  it('performs no persistence from the device-intelligence feature', () => {
+  it('confines persistence to the browser identifier list and performs no backend writes', () => {
     const featureDir = join(REPO_ROOT, 'src/features/device-intelligence')
     const offenders: string[] = []
     const walk = (current: string) => {
@@ -144,6 +155,11 @@ describe('D1 route access model', () => {
       }
     }
     walk(featureDir)
-    expect(offenders).toEqual([])
+    expect(offenders).toEqual([join(featureDir, 'components/SavedDevicesProvider.tsx')])
+    const browserStore = readFileSync(offenders[0], 'utf8')
+    expect(browserStore).toContain('serializeSavedDevices(next)')
+    expect(browserStore).not.toMatch(
+      /supabase|createServerClient|writeFileSync|\.insert\(|\.upsert\(/,
+    )
   })
 })

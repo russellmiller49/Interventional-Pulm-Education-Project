@@ -291,6 +291,7 @@ export interface WorkspaceOptionLink {
   productName: string
   manufacturerDisplay: string | null
   catalogNumber: string | null
+  sizeDisplay: string | null
   selectable: boolean
   eligibilityStatus: string | null
   status: ProductStatusView
@@ -561,6 +562,7 @@ export function getProcedureWorkspace(procedureCode: string): ProcedureWorkspace
       productName: product.product_name,
       manufacturerDisplay: product.manufacturerDisplay,
       catalogNumber: product.catalog_number,
+      sizeDisplay: product.size_display,
       selectable: option.selectable === true,
       eligibilityStatus: option.eligibility_status,
       status: getProductStatus(product.product_id),

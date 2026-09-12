@@ -22,6 +22,7 @@ import {
 } from '@/features/device-intelligence/server/atlas.server'
 import { getTaxonomyLabels } from '@/features/device-intelligence/server/product-taxonomy.server'
 import { getProductStatusLabels } from '@/features/device-intelligence/server/status-labels.server'
+import { getSaveDeviceLabels } from '@/features/device-intelligence/server/reference-labels.server'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,6 +46,7 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
   setRequestLocale(locale)
   const t = await getTranslations('deviceIntelligence.devices')
   const tCommon = await getTranslations('deviceIntelligence.common')
+  const tReference = await getTranslations('deviceIntelligence.reference')
 
   const urlSearchParams = catalogPageSearchParamsToUrl(await searchParams)
   const parsed = catalogSearchSchema.safeParse(catalogSearchInputFromUrl(urlSearchParams))
@@ -84,6 +86,12 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
           className="rounded-full border border-border px-4 py-2 hover:bg-muted"
         >
           {t('prepareProcedure')}
+        </Link>
+        <Link
+          href={`/${locale}/devices/saved` as Route}
+          className="rounded-full border border-border px-4 py-2 hover:bg-muted"
+        >
+          {tReference('savedDevices')}
         </Link>
       </nav>
       <header className="max-w-4xl space-y-3">
@@ -178,6 +186,7 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
               statusByProductId={results.statusByProductId}
               deviceTypeByProductId={deviceTypeByProductId}
               statusLabels={statusLabels}
+              saveLabels={await getSaveDeviceLabels(locale)}
               labels={{
                 product: t('table.product'),
                 manufacturer: t('table.manufacturer'),

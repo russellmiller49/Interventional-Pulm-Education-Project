@@ -18,6 +18,7 @@ import {
 } from '@/features/device-intelligence/components/RequirementBrowser'
 import { getProductStatusLabels } from '@/features/device-intelligence/server/status-labels.server'
 import { DraftWatermark } from '@/features/device-intelligence/components/Watermarks'
+import { ProcedureReviewPanel } from '@/features/device-intelligence/components/ProcedureReviewPanel'
 import { getProcedureOutputPreviews } from '@/features/device-intelligence/server/outputs.server'
 import {
   getProcedureWorkspace,
@@ -158,6 +159,7 @@ export default async function ProcedureWorkspacePage({ params, searchParams }: P
   // Awaited here rather than embedded as async elements so the page resolves to a plain
   // element tree — renderable by the jsdom test renderer as well as the RSC pipeline.
   const statusLabels = await getProductStatusLabels(locale)
+  const procedureReview = await ProcedureReviewPanel({ locale, workspace })
   const requirementBrowser = await RequirementBrowser({ locale, workspace, view, statusLabels })
   const outputsPanel = await OutputsPanel({
     locale,
@@ -215,6 +217,8 @@ export default async function ProcedureWorkspacePage({ params, searchParams }: P
             : tCommon('draftDisclaimer')
         }
       />
+
+      {procedureReview}
 
       <section aria-label={t('ladderHeading')} className="space-y-2">
         <h2 className="text-2xl font-semibold tracking-tight">{t('ladderHeading')}</h2>
