@@ -77,7 +77,8 @@ export function shortSegmentName(fullLabel: string, abbr: string): string {
   return label.trim() || abbr
 }
 
-function edgePathToNode(nodeId: number, nodeById: Map<number, AirwayGraphNode>): number[] {
+/** The edge ids from the root to a node, in order. */
+export function edgePathToNode(nodeId: number, nodeById: Map<number, AirwayGraphNode>): number[] {
   const reversed: number[] = []
   let current = nodeById.get(nodeId)
   let guard = 0

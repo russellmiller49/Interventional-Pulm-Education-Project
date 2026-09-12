@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { mucosaVertexShader, mucosaFragmentShader } from '../bronchoscopy-core/mucosa'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
@@ -15,15 +16,33 @@ import type { CtAxis, CtPreviewAsset } from './types'
 
 const airwayGeometryCache = new Map<string, Promise<THREE.BufferGeometry>>()
 
+export interface AirwayGeometryOptions {
+  /**
+   * Where the Draco decoder lives (for example `/fluoroview/draco/`). Set it for a
+   * Draco-compressed GLB such as the Bronchoscopy Foundations teaching lumen; omitted, the loader
+   * is exactly the one the admin module has always used.
+   */
+  dracoDecoderPath?: string
+}
+
 /** Load + weld the airway STL once per URL; geometry is shared across viewports and the XR scene. */
-export function loadAirwayStlGeometry(stlUrl: string): Promise<THREE.BufferGeometry> {
-  const cached = airwayGeometryCache.get(stlUrl)
+export function loadAirwayStlGeometry(
+  stlUrl: string,
+  options?: AirwayGeometryOptions,
+): Promise<THREE.BufferGeometry> {
+  const dracoDecoderPath = options?.dracoDecoderPath
+  const cacheKey = dracoDecoderPath ? `${stlUrl}|draco:${dracoDecoderPath}` : stlUrl
+  const cached = airwayGeometryCache.get(cacheKey)
   if (cached) return cached
 
   const promise = (async () => {
     let geometry: THREE.BufferGeometry
     if (/\.glb(?:$|\?)/i.test(stlUrl)) {
-      const gltf = await new GLTFLoader().loadAsync(stlUrl)
+      const loader = new GLTFLoader()
+      if (dracoDecoderPath) {
+        loader.setDRACOLoader(new DRACOLoader().setDecoderPath(dracoDecoderPath))
+      }
+      const gltf = await loader.loadAsync(stlUrl)
       gltf.scene.updateMatrixWorld(true)
       const meshes: THREE.Mesh[] = []
       gltf.scene.traverse((object) => {
@@ -43,10 +62,10 @@ export function loadAirwayStlGeometry(stlUrl: string): Promise<THREE.BufferGeome
     geometry.computeBoundingSphere()
     return geometry
   })().catch((error) => {
-    airwayGeometryCache.delete(stlUrl)
+    airwayGeometryCache.delete(cacheKey)
     throw error
   })
-  airwayGeometryCache.set(stlUrl, promise)
+  airwayGeometryCache.set(cacheKey, promise)
   return promise
 }
 

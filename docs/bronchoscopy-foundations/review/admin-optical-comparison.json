@@ -1,0 +1,170 @@
+[
+  {
+    "file": "rul.png",
+    "comparison": "before-b",
+    "changedPixels": 0,
+    "totalPixels": 4521600,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0
+  },
+  {
+    "file": "rul.png",
+    "comparison": "after-a",
+    "changedPixels": 211293,
+    "totalPixels": 4521600,
+    "maxChannelDelta": 106,
+    "meanChannelDelta": 0.1563369161358811
+  },
+  {
+    "file": "rul.png",
+    "comparison": "after-b",
+    "changedPixels": 45199,
+    "totalPixels": 4521600,
+    "maxChannelDelta": 36,
+    "meanChannelDelta": 0.00819938369898561
+  },
+  {
+    "file": "rml.png",
+    "comparison": "before-b",
+    "changedPixels": 0,
+    "totalPixels": 4521600,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0
+  },
+  {
+    "file": "rml.png",
+    "comparison": "after-a",
+    "changedPixels": 208312,
+    "totalPixels": 4521600,
+    "maxChannelDelta": 64,
+    "meanChannelDelta": 0.1529256605331446
+  },
+  {
+    "file": "rml.png",
+    "comparison": "after-b",
+    "changedPixels": 44778,
+    "totalPixels": 4521600,
+    "maxChannelDelta": 28,
+    "meanChannelDelta": 0.008467577848549186
+  },
+  {
+    "file": "lul.png",
+    "comparison": "before-b",
+    "changedPixels": 0,
+    "totalPixels": 4521600,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0
+  },
+  {
+    "file": "lul.png",
+    "comparison": "after-a",
+    "changedPixels": 212707,
+    "totalPixels": 4521600,
+    "maxChannelDelta": 80,
+    "meanChannelDelta": 0.15481282436895494
+  },
+  {
+    "file": "lul.png",
+    "comparison": "after-b",
+    "changedPixels": 47536,
+    "totalPixels": 4521600,
+    "maxChannelDelta": 29,
+    "meanChannelDelta": 0.00879732837933475
+  },
+  {
+    "file": "rul-optical.png",
+    "comparison": "before-b",
+    "changedPixels": 0,
+    "totalPixels": 431871,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0
+  },
+  {
+    "file": "rul-optical.png",
+    "comparison": "after-a",
+    "changedPixels": 0,
+    "totalPixels": 431871,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0
+  },
+  {
+    "file": "rul-optical.png",
+    "comparison": "after-b",
+    "changedPixels": 0,
+    "totalPixels": 431871,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0
+  },
+  {
+    "file": "rml-optical.png",
+    "comparison": "before-b",
+    "changedPixels": 0,
+    "totalPixels": 431871,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0
+  },
+  {
+    "file": "rml-optical.png",
+    "comparison": "after-a",
+    "changedPixels": 0,
+    "totalPixels": 431871,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0
+  },
+  {
+    "file": "rml-optical.png",
+    "comparison": "after-b",
+    "changedPixels": 0,
+    "totalPixels": 431871,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0
+  },
+  {
+    "file": "lul-optical.png",
+    "comparison": "before-b",
+    "changedPixels": 0,
+    "totalPixels": 431871,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0
+  },
+  {
+    "file": "lul-optical.png",
+    "comparison": "after-a",
+    "changedPixels": 0,
+    "totalPixels": 431871,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0
+  },
+  {
+    "file": "lul-optical.png",
+    "comparison": "after-b",
+    "changedPixels": 0,
+    "totalPixels": 431871,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0
+  },
+  {
+    "file": "realistic.png",
+    "comparison": "before-b",
+    "changedPixels": 424535,
+    "totalPixels": 4521600,
+    "maxChannelDelta": 71,
+    "meanChannelDelta": 0.7178433150507195
+  },
+  {
+    "file": "realistic.png",
+    "comparison": "after-a",
+    "changedPixels": 212348,
+    "totalPixels": 4521600,
+    "maxChannelDelta": 80,
+    "meanChannelDelta": 0.15394653809860817
+  },
+  {
+    "file": "realistic.png",
+    "comparison": "after-b",
+    "changedPixels": 43965,
+    "totalPixels": 4521600,
+    "maxChannelDelta": 29,
+    "meanChannelDelta": 0.00829986435480066
+  }
+]

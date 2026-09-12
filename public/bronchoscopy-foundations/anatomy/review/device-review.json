@@ -1,0 +1,70 @@
+{
+  "schema": "bronchoscopy_foundations_device_review/v1",
+  "foldChecks": [
+    { "weight": 0, "midGlottisGapMm": 6.044995107543059 },
+    { "weight": 0.5, "midGlottisGapMm": 3.0224955173228523 },
+    { "weight": 1, "midGlottisGapMm": -0.000004072897354490124 }
+  ],
+  "pathLengthMm": 45.00000831042319,
+  "maxPathSpacingMm": 0.5000080551923538,
+  "pathEndpointGapMm": 0,
+  "junction": {
+    "status": "pending-source-inlet-decision",
+    "exitRingSourceMaxDistanceMm": 2.4167953883039535,
+    "exitRingSourceMeanDistanceMm": 1.2575974136934411,
+    "continuousOpeningVerified": false
+  },
+  "accessories": [
+    {
+      "state": "forceps-closed",
+      "node": "ACC_forceps_closed",
+      "vertices": 848,
+      "triangles": 1680,
+      "min": [-0.8199997544288635, -0.800000011920929, -12],
+      "max": [0.8199973702430725, 0.800000011920929, 0]
+    },
+    {
+      "state": "forceps-open",
+      "node": "ACC_forceps_open",
+      "vertices": 848,
+      "triangles": 1680,
+      "min": [-2.5486984252929688, -0.800000011920929, -11.678223609924316],
+      "max": [2.548701763153076, 0.7999971508979797, 0]
+    },
+    {
+      "state": "brush-sheathed",
+      "node": "ACC_brush_sheathed",
+      "vertices": 50,
+      "triangles": 96,
+      "min": [-0.699999988079071, -0.699999988079071, -12],
+      "max": [0.7000028491020203, 0.7000028491020203, 0]
+    },
+    {
+      "state": "brush-exposed",
+      "node": "ACC_brush_exposed",
+      "vertices": 6100,
+      "triangles": 11712,
+      "min": [-1.4970333576202393, -1.4970333576202393, -12],
+      "max": [1.4970300197601318, 1.4970300197601318, 0]
+    },
+    {
+      "state": "needle-sheathed",
+      "node": "ACC_needle_sheathed",
+      "vertices": 50,
+      "triangles": 96,
+      "min": [-0.699999988079071, -0.699999988079071, -12],
+      "max": [0.7000028491020203, 0.7000028491020203, 0]
+    },
+    {
+      "state": "needle-exposed",
+      "node": "ACC_needle_exposed",
+      "vertices": 126,
+      "triangles": 240,
+      "min": [-0.699999988079071, -0.699999988079071, -12],
+      "max": [0.7000028491020203, 0.7000028491020203, 0]
+    }
+  ],
+  "accessoriesSha256": "d0c579febb0b317d48cbcf280b2a9f61de6888c7327762c8602249be21bb9ed0",
+  "larynxSha256": "fc707d8f8fe17c7e4050cfce361dca20f432c5ad87a36ea322d61b5e017a5afb",
+  "larynxPathSha256": "ca82ec35dd6266a85bad961f34160faeac2f96de0b245eb08360aa2233ff269a"
+}

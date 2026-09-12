@@ -109,6 +109,13 @@ export const nonPublicModules: NonPublicModule[] = [
       'A guided course on one imaging suite, built around the chain from the X-ray tube to the decision: 2D fluoroscopy, digital tomosynthesis, fixed and mobile cone-beam CT, tool confirmation and radiation protection. Separate from the original FluoroView simulator, which keeps its own route.',
   },
   {
+    path: '/bronchoscopy-foundations',
+    title: 'Bronchoscopy Foundations',
+    group: 'Bronchoscopy',
+    summary:
+      'The guided introduction to flexible bronchoscopy on the shared lesson stage: equipment and the five scope controls, orientation and view loss, right and left airway anatomy, a systematic survey with an honest record, sampling, deterioration and documentation. Separate from the earlier Intro Bronchoscopy course, which keeps its own route.',
+  },
+  {
     path: '/critical-care',
     title: 'Critical Care Hub',
     group: 'Critical care',

@@ -1,0 +1,117 @@
+{
+  "schema": "bronchoscopy_foundations_devices/v1",
+  "units": "mm",
+  "numberClass": "authored-for-simulation",
+  "source": "scope asset brief and authored geometric model",
+  "authoredDate": "2026-09-11",
+  "clinicalReviewStatus": "pending",
+  "interpretation": "Teaching geometry only. Dimensions and offsets are not manufacturer specifications or compatibility claims.",
+  "coordinateConvention": {
+    "forwardAxis": "+Z",
+    "origin": "distal-most accessory point",
+    "placement": "Place the named node origin at the specified distance beyond the scope tip; rotate +Z along the scope forward axis."
+  },
+  "tubes": [
+    {
+      "id": "ett-7.0",
+      "kind": "ett",
+      "idMm": 7.0,
+      "odMm": 9.4,
+      "lengthMm": 35,
+      "startMm": 35,
+      "tipMm": 70,
+      "edgeId": 0,
+      "lengthMeaning": "Authored visible tracheal segment, not total device length",
+      "numberClass": "authored-for-simulation"
+    },
+    {
+      "id": "ett-7.5",
+      "kind": "ett",
+      "idMm": 7.5,
+      "odMm": 10.0,
+      "lengthMm": 35,
+      "startMm": 35,
+      "tipMm": 70,
+      "edgeId": 0,
+      "lengthMeaning": "Authored visible tracheal segment, not total device length",
+      "numberClass": "authored-for-simulation"
+    },
+    {
+      "id": "ett-8.0",
+      "kind": "ett",
+      "idMm": 8.0,
+      "odMm": 10.7,
+      "lengthMm": 35,
+      "startMm": 35,
+      "tipMm": 70,
+      "edgeId": 0,
+      "lengthMeaning": "Authored visible tracheal segment, not total device length",
+      "numberClass": "authored-for-simulation"
+    }
+  ],
+  "accessories": [
+    {
+      "kind": "forceps",
+      "tipOffsetBeyondScopeTipMm": {
+        "at-tip": 2.5,
+        "extended": 10
+      },
+      "inChannelVisible": false,
+      "numberClass": "authored-for-simulation",
+      "states": [
+        {
+          "state": "forceps-closed",
+          "node": "ACC_forceps_closed",
+          "protected": true
+        },
+        {
+          "state": "forceps-open",
+          "node": "ACC_forceps_open",
+          "protected": false
+        }
+      ]
+    },
+    {
+      "kind": "brush",
+      "tipOffsetBeyondScopeTipMm": {
+        "at-tip": 2.5,
+        "extended": 10
+      },
+      "inChannelVisible": false,
+      "numberClass": "authored-for-simulation",
+      "states": [
+        {
+          "state": "brush-sheathed",
+          "node": "ACC_brush_sheathed",
+          "protected": true
+        },
+        {
+          "state": "brush-exposed",
+          "node": "ACC_brush_exposed",
+          "protected": false
+        }
+      ]
+    },
+    {
+      "kind": "needle",
+      "tipOffsetBeyondScopeTipMm": {
+        "at-tip": 2.5,
+        "extended": 10
+      },
+      "inChannelVisible": false,
+      "numberClass": "authored-for-simulation",
+      "states": [
+        {
+          "state": "needle-sheathed",
+          "node": "ACC_needle_sheathed",
+          "protected": true
+        },
+        {
+          "state": "needle-exposed",
+          "node": "ACC_needle_exposed",
+          "protected": false
+        }
+      ]
+    }
+  ]
+}

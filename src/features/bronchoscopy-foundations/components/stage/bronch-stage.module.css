@@ -1,0 +1,392 @@
+/*
+ * The bronchoscopy stage's own surfaces: the teaching cards, the act controls (sort, identify,
+ * sequence, ledger, report, scenario), the media and monitor workspaces and the completion card.
+ * Everything structural (the panes, the Now card, the step list, the footer) is the shared
+ * stage's stylesheet.
+ */
+.teaching {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.teachingCard {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--panel-2, rgba(255, 255, 255, 0.04));
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.teachingCard p {
+  margin: 0;
+}
+
+.kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--stage-muted, var(--muted));
+}
+
+.analogy {
+  margin: 0;
+  font-style: italic;
+  color: var(--ink);
+}
+
+.increment {
+  padding: 0.6rem 0.75rem;
+  border: 1px dashed var(--line);
+  border-radius: 0.6rem;
+}
+
+.checklist {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.grammarTable,
+.ledgerTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.grammarTable th,
+.grammarTable td,
+.ledgerTable th,
+.ledgerTable td {
+  padding: 0.4rem 0.5rem;
+  border-top: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.grammarTable thead th,
+.ledgerTable thead th {
+  border-top: 0;
+  color: var(--stage-muted, var(--muted));
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.trendRule,
+.boundaryLine {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: var(--stage-muted, var(--muted));
+}
+
+.controlStrip {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.controlStrip li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+}
+
+.controlStrip li[data-state='this-one'] {
+  border-color: var(--cyan-bright);
+}
+
+.controlStrip li[data-state='harmful-reflex'] {
+  border-color: var(--amber);
+}
+
+.readBefore {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px dashed var(--line);
+  border-radius: 0.6rem;
+  color: var(--stage-muted, var(--muted));
+  font-size: 0.85rem;
+}
+
+/* Act controls on the Now card. */
+.act {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.origins {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.origins dt {
+  font-weight: 600;
+}
+
+.origins dd {
+  margin: 0 0 0.25rem;
+  color: var(--stage-muted, var(--muted));
+}
+
+.row {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+}
+
+.row[data-outcome='held'] {
+  border-color: var(--green);
+}
+
+.row[data-outcome='other'],
+.row[data-outcome='refused'] {
+  border-color: var(--amber);
+}
+
+.row[data-critical-missed='true'] {
+  border-color: var(--red);
+}
+
+.select,
+.numberInput {
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--panel, transparent);
+  color: var(--ink);
+}
+
+.numberInput {
+  max-width: 9rem;
+}
+
+.verdict {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.verdict[data-tone='refused'] {
+  padding: 0.35rem 0.5rem;
+  border-left: 3px solid var(--red);
+}
+
+.choices {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.choices legend {
+  padding: 0;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+}
+
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  cursor: pointer;
+}
+
+.choice[data-selected='true'] {
+  border-color: var(--cyan-bright);
+}
+
+.choice input {
+  margin-top: 0.2rem;
+}
+
+.orderList {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: order;
+}
+
+.orderList li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.orderActions {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.orderActions button {
+  min-width: 2.25rem;
+  min-height: 2rem;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  background: var(--panel, transparent);
+  color: var(--ink);
+}
+
+.frame {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.frameSummary {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.85rem;
+}
+
+.mediaGrid {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.figure {
+  margin: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.figureFrame {
+  position: relative;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 0.6rem;
+  border: 1px solid var(--line);
+  background: #000;
+}
+
+.figureImage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.figureOverlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.figureCaption {
+  font-size: 0.85rem;
+  color: var(--stage-muted, var(--muted));
+}
+
+.thumb {
+  max-width: 18rem;
+}
+
+/* The monitor: scripted readings in words, with the trend against this patient's own baseline. */
+.monitor {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.monitor div {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) 1fr auto;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.monitor dt {
+  font-weight: 600;
+  color: var(--stage-muted, var(--muted));
+}
+
+.monitor dd {
+  margin: 0;
+}
+
+.trend {
+  padding: 0.05rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.trend[data-trend='rising'],
+.trend[data-trend='falling'],
+.trend[data-trend='lost'],
+.trend[data-trend='new'] {
+  border-color: var(--amber);
+}
+
+.workspace {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.caption {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.completion {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--cyan-bright);
+  border-radius: 0.75rem;
+}
+
+.completion p {
+  margin: 0;
+}
+
+.completionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.completionLink {
+  color: inherit;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.policies {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.85rem;
+}
