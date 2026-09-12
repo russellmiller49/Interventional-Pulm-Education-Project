@@ -1,5 +1,4 @@
 import {
-  DISPLAY_TRANSFORM,
   ORIENTATION_LABELS,
   TARGET_CT_BASE,
   nativeImageUrl,
@@ -8,21 +7,21 @@ import {
 } from '../geometry/native-ct'
 import styles from './branch-tracing.module.css'
 
-/** The actual CT and composited target pixels, displayed in the regional tracing convention. */
+/** Start with standard axial even on the landing page; do not preview the orientation answer. */
 export function TargetCtPreview({ traceId = 'middle-lobe-caudal' }: { traceId?: string }) {
   const trace = traceById(traceId),
     target = targetForTrace(trace)
   const frame = target.patch.frames.find((f) => f.slice === target.slice)!
-  const labels = ORIENTATION_LABELS[trace.preset]
+  const labels = ORIENTATION_LABELS.standard
   return (
     <figure className={styles.ctHero}>
       <svg
         viewBox="0 0 100 100"
         role="img"
-        aria-label={`Simulated nodule in the ${target.segment.name.toLowerCase()} on real CT, in the book tracing view`}
+        aria-label={`Simulated nodule in the ${target.segment.name.toLowerCase()} on real CT, in standard axial view`}
       >
         <g
-          transform={`translate(50 50) ${DISPLAY_TRANSFORM[trace.preset]} scale(${100 / 190}) translate(${-target.pixel[0]} ${-target.pixel[1]})`}
+          transform={`translate(50 50) scale(${100 / 190}) translate(${-target.pixel[0]} ${-target.pixel[1]})`}
         >
           <image href={nativeImageUrl(target.slice)} x={-0.5} y={-0.5} width="512" height="512" />
           <image
@@ -62,7 +61,7 @@ export function TargetCtPreview({ traceId = 'middle-lobe-caudal' }: { traceId?: 
         <strong>
           {target.segment.code} · {target.segment.name}
         </strong>
-        <span>Simulated nodule · real CT · 0.5 mm slices</span>
+        <span>Standard axial · simulated nodule · 0.5 mm slices</span>
       </figcaption>
     </figure>
   )

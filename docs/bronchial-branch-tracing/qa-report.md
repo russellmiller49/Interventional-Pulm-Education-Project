@@ -1,5 +1,8 @@
 # CT nodule route module QA
 
+> Current complete-route revision: [every branch decision review](branch-decisions-qa-report.md). This report retains the earlier source/export verification.
+> Historical c3 report. The current orientation and paired-view revision is documented in [orientation-qa-report.md](orientation-qa-report.md).
+
 September 11, 2026 · `c3-target1-r1` · native-v1 + targets-v1 · unpublished anonymous preview. This report supersedes the regional tracing QA at `6152ade3`. Engineering and image review only; faculty approval is not asserted.
 
 ## Delivered journey

@@ -123,7 +123,7 @@ test('native target pixels use the trainer residual HU calculation before window
   }
 })
 
-test('every trace reaches the intended labeled segment with original proximal checkpoints and available planes', () => {
+test('complete routes preserve target placement, the c3 source fixtures and all browsing planes', () => {
   const graph: { edges: { id: number; startNodeId: number; endNodeId: number }[] } = JSON.parse(
     readFileSync('public/fluoroview/cases/patient-new/metadata/airway_graph.json', 'utf8'),
   )
@@ -134,13 +134,17 @@ test('every trace reaches the intended labeled segment with original proximal ch
     const target = targetForTrace(trace),
       original = native.traces.find((t) => t.id === trace.id)!
     for (let i = 0; i < 2; i++) {
-      expect(trace.checkpoints[i].lps).toEqual(original.checkpoints[i].lps)
-      expect(trace.checkpoints[i].sourceEdgeId).toBe(original.checkpoints[i].sourceEdgeId)
+      expect(manifest.traces.find((t) => t.id === trace.id)!.checkpoints[i].lps).toEqual(
+        original.checkpoints[i].lps,
+      )
+      expect(manifest.traces.find((t) => t.id === trace.id)!.checkpoints[i].sourceEdgeId).toBe(
+        original.checkpoints[i].sourceEdgeId,
+      )
     }
     const terminal = trace.sourceEdgeIds.at(-1)!
     expect(labels[terminal].abbreviatedLabel).toBe(target.segment.bronchusCode)
-    expect(trace.checkpoints[2].airway.code).toBe(target.approachCode)
-    expect(trace.sourceEdgeIds).toContain(trace.checkpoints[2].sourceEdgeId)
+    expect(trace.checkpoints.at(-1)!.airway.code).toBe(target.approachCode)
+    expect(trace.sourceEdgeIds).toContain(trace.checkpoints.at(-1)!.sourceEdgeId)
     for (let i = 1; i < trace.sourceEdgeIds.length; i++)
       expect(graph.edges.find((e) => e.id === trace.sourceEdgeIds[i - 1])!.endNodeId).toBe(
         graph.edges.find((e) => e.id === trace.sourceEdgeIds[i])!.startNodeId,

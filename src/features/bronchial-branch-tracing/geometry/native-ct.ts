@@ -1,4 +1,5 @@
 import manifest from '../../../../public/branch-tracing/targets-v1/manifest.json'
+import decisions from './branch-decisions.json'
 import type { CtTrace, CtNoduleTarget } from '../content/ct-types'
 import { displayPoint, undisplayPoint, type DisplayPreset } from './coordinates'
 
@@ -9,7 +10,11 @@ export const NATIVE_CT = {
   origin: [-182.1552734375, -374.1552734375, -368.5],
   window: [-1000, 400],
 } as const
-export const CT_TRACES = manifest.traces as unknown as CtTrace[]
+export const CT_TRACES = manifest.traces.map((base) => {
+  const route = decisions.traces.find((t) => t.id === base.id)
+  if (!route) throw new Error(`Missing complete branch route for ${base.id}`)
+  return { ...base, ...route, focusAirway: base.anchor.airway }
+}) as unknown as CtTrace[]
 export const CT_TARGETS = manifest.targets as unknown as CtNoduleTarget[]
 export const TARGET_CT_BASE = '/branch-tracing/targets-v1'
 export function targetForTrace(trace: CtTrace): CtNoduleTarget {

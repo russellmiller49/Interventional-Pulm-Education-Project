@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { BranchTracingLesson } from '../components/BranchTracingLesson'
+import { traceById } from '../geometry/native-ct'
 import { LESSONS } from '../content/lessons'
 import { completedLessons, readProgress } from '../engine/progress'
 import { axe } from 'jest-axe'
@@ -35,43 +36,72 @@ function relation(value = 'unresolved') {
     target: { value },
   })
 }
-function markLevels(wrong = false) {
-  for (let i = 0; i < 3; i++) {
-    fireEvent.click(
-      within(screen.getByRole('group', { name: 'Airway checkpoints' })).getAllByRole('button')[
-        i + 1
-      ],
-    )
+function orient(id: string) {
+  const preset = traceById(id).preset
+  fireEvent.click(
+    screen.getByRole('button', {
+      name:
+        preset === 'mirror'
+          ? /Flip left–right/
+          : preset === 'rul'
+            ? /Rotate 90° left/
+            : /Rotate 90° right/,
+    }),
+  )
+  fireEvent.click(screen.getByRole('button', { name: 'Check orientation' }))
+}
+function markLevels(id: string, wrong = false) {
+  const trace = traceById(id)
+  for (const [i, point] of trace.checkpoints.entries()) {
+    expect(document.querySelector(`[data-ct-reference="${i + 1}"]`)).toBeNull()
+    expect(screen.getByRole('button', { name: 'View next junction' })).toBeDisabled()
+    if (point.decision) {
+      const edge =
+        wrong && i === 0
+          ? point.decision.options.find((o) => o.sourceEdgeId !== point.sourceEdgeId)!.sourceEdgeId
+          : point.sourceEdgeId
+      fireEvent.click(
+        screen
+          .getAllByRole('radio')
+          .find((input) => (input as HTMLInputElement).value === String(edge))!,
+      )
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Current junction CT' }))
     imageReady()
     if (wrong && i === 0) {
       const svg = screen.getByRole('group', { name: /^CT image\./ })
-      jest.spyOn(svg, 'getBoundingClientRect').mockReturnValue({
-        x: 0,
-        y: 0,
-        left: 0,
-        top: 0,
-        right: 100,
-        bottom: 100,
-        width: 100,
-        height: 100,
-        toJSON: () => ({}),
-      })
-      // jsdom lacks PointerEvent; the real keyboard placement handler is also supported.
       fireEvent.keyDown(svg, { key: 'ArrowLeft', shiftKey: true })
       fireEvent.keyDown(svg, { key: 'Enter' })
-      expect(screen.getByLabelText(/^Your mark 1 for /)).toBeInTheDocument()
+      expect(screen.getByLabelText('Your mark 1')).toBeInTheDocument()
     } else fireEvent.click(screen.getByRole('button', { name: 'Lumen unresolved here' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: point.decision ? 'Check this junction' : 'Record nodule approach',
+      }),
+    )
+    expect(document.querySelector(`[data-ct-reference="${i + 1}"]`)).not.toBeNull()
+    if (i < trace.checkpoints.length - 1)
+      fireEvent.click(
+        screen.getByRole('button', {
+          name:
+            i + 1 === trace.checkpoints.length - 1
+              ? 'Continue to nodule approach'
+              : 'Next junction',
+        }),
+      )
   }
 }
-it('requires a real three-level response, withholds references, preserves a wrong mark and requires a new transfer', async () => {
+it('requires every real branch response, withholds each junction comparison until recording, retains a wrong choice and requires a complete changed transfer', async () => {
   const lesson = LESSONS[0]
   render(<BranchTracingLesson requestedId={lesson.id} />)
   fireEvent.click(await screen.findByRole('button', { name: 'Trace this airway' }))
   expect(document.querySelector('[data-ct-reference]')).toBeNull()
-  expect(screen.getByRole('button', { name: 'Record trace' })).toBeDisabled()
-  markLevels(true)
+  expect(screen.getByRole('button', { name: 'Check orientation' })).toBeDisabled()
+  orient(lesson.prediction)
+  expect(screen.queryByRole('button', { name: 'Record trace' })).not.toBeInTheDocument()
+  markLevels(lesson.prediction, true)
   fireEvent.click(screen.getByRole('button', { name: 'Record trace' }))
-  expect(document.querySelector('[data-ct-reference]')).toBeNull()
+  expect(document.querySelector('[data-ct-reference]')).not.toBeNull()
   expect(screen.getByRole('button', { name: 'Reveal CT comparison' })).toBeDisabled()
   fireEvent.change(screen.getByRole('combobox', { name: 'Airway course' }), {
     target: { value: 'cranial' },
@@ -81,17 +111,18 @@ it('requires a real three-level response, withholds references, preserves a wron
   fireEvent.click(screen.getByRole('button', { name: 'Reveal CT comparison' }))
   imageReady()
   expect(document.querySelector('[data-ct-reference]')).not.toBeNull()
-  fireEvent.click(
-    within(screen.getByRole('group', { name: 'Airway checkpoints' })).getAllByRole('button')[1],
-  )
+  fireEvent.click(screen.getByText('Review the route in order'))
+  fireEvent.click(screen.getByRole('button', { name: /^Stop 1:/ }))
   imageReady()
-  expect(screen.getByLabelText(/^Your mark 1 for /)).toBeInTheDocument()
+  expect(screen.getByLabelText('Your mark 1')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Review the relationship' }))
   fireEvent.click(screen.getByRole('button', { name: 'Trace another airway' }))
   expect(document.querySelector('[data-ct-reference]')).toBeNull()
-  expect(screen.getByRole('button', { name: 'Compare new trace' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Check orientation' })).toBeDisabled()
+  orient(lesson.transfer)
+  expect(screen.queryByRole('button', { name: 'Compare new trace' })).not.toBeInTheDocument()
   expect(completedLessons(readProgress())).toEqual([])
-  markLevels()
+  markLevels(lesson.transfer)
   fireEvent.change(screen.getByRole('combobox', { name: 'Airway course' }), {
     target: { value: 'uncertain' },
   })
@@ -113,8 +144,9 @@ it('requires a real three-level response, withholds references, preserves a wron
 it('retains the first recorded trace and hint count across reload before comparison', async () => {
   const view = render(<BranchTracingLesson requestedId={LESSONS[0].id} />)
   fireEvent.click(await screen.findByRole('button', { name: 'Trace this airway' }))
+  orient(LESSONS[0].prediction)
   fireEvent.click(screen.getByRole('button', { name: 'Tracing reminder' }))
-  markLevels()
+  markLevels(LESSONS[0].prediction)
   fireEvent.click(screen.getByRole('button', { name: 'Record trace' }))
   const first = readProgress().activities.find((a) =>
     a.activityId.endsWith('prediction.trace.first'),
@@ -126,23 +158,20 @@ it('retains the first recorded trace and hint count across reload before compari
   expect(readProgress().activities.find((a) => a.activityId === first.activityId)).toEqual(first)
   expect(completedLessons(readProgress())).toEqual([])
 })
-it('teaches named RB5 subsegments while withholding their lumen locations until comparison', async () => {
-  render(<BranchTracingLesson requestedId="horizontal-vertical" />)
+it('keeps all RB5 divisions distinct and shows their actual bronchial names at the appropriate junction', async () => {
+  const lesson = LESSONS.find((l) => l.id === 'horizontal-vertical')!
+  render(<BranchTracingLesson requestedId={lesson.id} />)
   await screen.findByRole('button', { name: 'Trace this airway' })
   expect(screen.getByRole('heading', { name: 'Airway names' })).toBeVisible()
   fireEvent.click(screen.getByRole('button', { name: 'Trace this airway' }))
-  expect(
-    screen.getByRole('button', { name: 'Mark 1: Right medial segmental bronchus, proximal' }),
-  ).toBeVisible()
-  expect(
-    screen.getByRole('button', { name: 'Mark 2: Right medial segmental bronchus, distal' }),
-  ).toBeVisible()
-  expect(
-    screen.getByRole('button', { name: 'Mark 3: Right medial bronchus, subsegment b' }),
-  ).toBeVisible()
-  expect(screen.queryByText(/^CT level \d/)).not.toBeInTheDocument()
+  orient(lesson.prediction)
+  expect(screen.getAllByRole('radio').map((n) => n.getAttribute('value'))).toEqual([
+    '1',
+    '2',
+    'unresolved',
+  ])
   expect(document.querySelector('[data-ct-reference]')).toBeNull()
-  markLevels()
+  markLevels(lesson.prediction)
   fireEvent.click(screen.getByRole('button', { name: 'Record trace' }))
   fireEvent.change(screen.getByRole('combobox', { name: 'Airway course' }), {
     target: { value: 'uncertain' },
@@ -150,7 +179,9 @@ it('teaches named RB5 subsegments while withholding their lumen locations until 
   relation()
   fireEvent.click(screen.getByRole('button', { name: 'Reveal CT comparison' }))
   imageReady()
-  expect(screen.getByLabelText('Reference: Right medial bronchus, subsegment b')).toBeVisible()
+  expect(
+    screen.getByLabelText(/Reference: Right medial bronchus, subsegment b, distal nodule approach/),
+  ).toBeVisible()
 })
 it('has no automated accessibility violations in orientation and before comparison', async () => {
   const { container } = render(<BranchTracingLesson requestedId={LESSONS[0].id} />)

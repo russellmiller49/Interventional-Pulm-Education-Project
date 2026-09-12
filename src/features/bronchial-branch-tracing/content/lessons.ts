@@ -5,7 +5,7 @@ import {
 import type { CtLesson } from './ct-types'
 
 export const BASE_PATH = '/learn/anatomy/branch-tracing'
-export const VERSION = 'c3-target1-r1'
+export const VERSION = 'c5-all-branches-r1'
 export const SOURCE = {
   title: 'Kurimoto & Morita. Bronchial Branch Tracing (2020)',
   url: 'https://doi.org/10.1007/978-981-13-9905-3',
@@ -17,8 +17,8 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     phase: 'recognize',
     title: 'Orient to the CT',
     instruction:
-      'Read the worked example. Use Show target to inspect the simulated nodule, then identify the parent airway before starting your own trace.',
-    lookIn: { pane: 'teaching', landmark: 'Worked CT example' },
+      'Follow the visual explanation of rotation and reflection. Try the controls beside the paired CT and virtual bronchoscopy, then inspect the worked trace toward the nodule.',
+    lookIn: { pane: 'teaching', landmark: 'Turn the CT into the tracing convention' },
     actionLabel: 'Trace this airway',
     interaction: 'read',
     gate: 'open',
@@ -29,7 +29,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     phase: 'predict',
     title: 'Follow the lumen',
     instruction:
-      'Follow the airway toward the nodule in the named segment. At each checkpoint, mark the continuing lumen or record unresolved continuity.',
+      'Follow the airway toward the nodule in the named segment. At every junction, choose the daughter branch and mark its lumen. Record the junction, compare it, then continue to the next fork.',
     lookIn: { pane: 'simulator', landmark: 'CT tracing stack' },
     actionLabel: 'Record trace',
     interaction: 'choose',
@@ -77,7 +77,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     phase: 'transfer',
     title: 'Apply it to another trace',
     instruction:
-      'Plan a route to this new nodule target. Place three lumen marks, describe the course and record the airway–nodule relationship before comparing.',
+      'Plan a route to this new nodule target. Work through every junction from the trachea, then mark the distal approach and describe its course and relationship to the nodule.',
     lookIn: {
       pane: 'simulator',
       landmark: 'CT tracing stack',
@@ -94,7 +94,7 @@ export const LESSONS: CtLesson[] = [
   {
     id: 'orientation',
     title: 'Orient the CT for branch tracing',
-    minutes: 5,
+    minutes: 9,
     objective:
       'Change from standard axial display to the tracing view while preserving patient right and left.',
     prerequisite: 'Recognize the trachea and main bronchi on axial CT.',
@@ -104,7 +104,7 @@ export const LESSONS: CtLesson[] = [
       'For caudal tracing in the middle lobe, lingula and lower lobes, the book reflects the image left-to-right. For the right upper lobe it rotates standard axial images 90° counterclockwise; for the left upper division, 90° clockwise. These change the display, not the patient anatomy.',
     ],
     worked:
-      'This central-airway example is shown in the reflected tracing convention. Toggle Standard axial and Book tracing view: the airway moves across the screen, while its patient-space location and CT level stay the same.',
+      'This central-airway example starts in standard axial. Use Flip left–right, then Reset to standard: the airway moves across the screen, while its patient-space location and CT level stay the same. Compare the parent lumen with the virtual bronchoscopy beside it.',
     interpretation:
       'A left/right reflection changes the displayed branch positions. The R and L labels move with the anatomy. Following the same lumen through adjacent levels is the check that branch identity has been preserved.',
     transferPrompt:
@@ -118,13 +118,13 @@ export const LESSONS: CtLesson[] = [
   {
     id: 'continuity',
     title: 'Follow the airway through adjacent slices',
-    minutes: 6,
+    minutes: 10,
     objective: 'Maintain one lumen across a branch point instead of switching to a nearby airway.',
     prerequisite: 'Patient axes and the three tracing display conventions.',
     concept: 'A branch connection is established by continuity, not proximity.',
     teaching: [
       'Begin at the outlined parent lumen. Move through adjacent slices in small increments and keep its walls in view. At the division, follow each candidate far enough to understand its course.',
-      'The named checkpoints sample a continuous airway route. Use the slider, arrow buttons or mouse wheel to inspect every intervening 0.5 mm plane. A nearby vessel or another airway is not proof of a connection.',
+      'The route includes every modeled branch decision from the trachea to the distal approach. Use the slider, arrow buttons or mouse wheel to inspect every intervening 0.5 mm plane. A nearby vessel or another airway is not proof of a connection.',
     ],
     worked:
       'In the right-upper-lobe example, the route first descends in the right main bronchus and then turns cranially. The slice order can reverse along a continuous route.',
@@ -141,7 +141,7 @@ export const LESSONS: CtLesson[] = [
   {
     id: 'vertical',
     title: 'Read a vertical airway on real CT',
-    minutes: 6,
+    minutes: 10,
     objective:
       'Follow a predominantly craniocaudal airway and recognize its changing lumen across axial planes.',
     prerequisite: 'Continuous parent-to-daughter tracing.',
@@ -165,7 +165,7 @@ export const LESSONS: CtLesson[] = [
   {
     id: 'horizontal-horizontal',
     title: 'Follow a horizontal branch',
-    minutes: 6,
+    minutes: 10,
     objective:
       'Recognize an airway that travels mainly within the axial plane and interpret it from its parent.',
     prerequisite: 'Vertical tracing and the distinction between image and patient directions.',
@@ -189,7 +189,7 @@ export const LESSONS: CtLesson[] = [
   {
     id: 'horizontal-vertical',
     title: 'Trace the RB5 subsegments',
-    minutes: 6,
+    minutes: 10,
     objective: 'Follow the medial segmental bronchus into RB5a and RB5b using adjacent CT slices.',
     prerequisite: 'Following a horizontal parent lumen.',
     concept: 'The daughter’s change in level resolves a horizontal–vertical relationship.',
@@ -212,7 +212,7 @@ export const LESSONS: CtLesson[] = [
   {
     id: 'horizontal-oblique',
     title: 'Trace an oblique daughter airway',
-    minutes: 6,
+    minutes: 10,
     objective: 'Combine in-plane movement and changing CT level to follow an oblique daughter.',
     prerequisite: 'Horizontal and vertical airway relationships.',
     concept: 'An oblique branch moves across the image and through the stack.',
@@ -221,7 +221,7 @@ export const LESSONS: CtLesson[] = [
       'The book emphasizes whether the traced airway approaches or moves away from a neighboring branch. A single fixed clock label does not describe that three-dimensional relationship.',
     ],
     worked:
-      'In this upper-lobe example, the lumen changes level as it advances laterally. The right-upper-lobe display is already rotated 90° counterclockwise, so read the patient labels before interpreting the movement.',
+      'In this upper-lobe example, the lumen changes level as it advances laterally. Start with standard axial and use Rotate 90° left for the right-upper-lobe tracing convention. Read the patient labels before interpreting the movement.',
     interpretation:
       'Follow the marked continuation both laterally and cranially through the stack. Compare it with the neighboring continuation rather than projecting the entire route onto one axial image.',
     transferPrompt:
@@ -235,7 +235,7 @@ export const LESSONS: CtLesson[] = [
   {
     id: 'orientation-changes',
     title: 'Handle a change in tracing direction',
-    minutes: 7,
+    minutes: 11,
     objective: 'Maintain airway identity when the route turns from caudal toward cranial levels.',
     prerequisite: 'The three book display conventions and continuous tracing.',
     concept: 'The slice direction can reverse without changing the airway connection.',
@@ -244,7 +244,7 @@ export const LESSONS: CtLesson[] = [
       'For the left upper division, the book rotates axial images clockwise by 90°. Its term “left superior segment” in this discussion refers to the upper division, not the lower-lobe superior segment. A lower-lobe returning route still uses the lower-lobe reflection convention.',
     ],
     worked:
-      'Follow the left upper division into the apicoposterior bronchus (LB1+2) in its clockwise view. The direction labels rotate with the image, while cranial and caudal remain defined by the CT level.',
+      'Use Rotate 90° right, then follow the left upper division into the apicoposterior bronchus (LB1+2). The direction labels rotate with the image, while cranial and caudal remain defined by the CT level.',
     interpretation:
       'This lower-lobe route initially descends and then returns toward more cranial levels. A reversed slice order is expected along that path. The book also illustrates a rotated coronal MPR as a supporting check; the axial continuity remains the primary task here.',
     transferPrompt:
@@ -258,7 +258,7 @@ export const LESSONS: CtLesson[] = [
   {
     id: 'variants-limits',
     title: 'Build and check a complete CT trace',
-    minutes: 7,
+    minutes: 11,
     objective:
       'Record a continuous route and explicitly identify any level where the lumen cannot be resolved.',
     prerequisite: 'All four patterns and the display conventions.',
@@ -268,7 +268,7 @@ export const LESSONS: CtLesson[] = [
       'If the air column cannot be resolved, record that uncertainty. A nearby vessel or a centerline is supporting context, not confirmation of a patent airway. The book distinguishes a lateral daughter-branch asterisk from a subsuperior bronchus; neither should be inferred from this graph.',
     ],
     worked:
-      'The basal example provides a longer caudal trace. Check each interval between the three checkpoints; do not treat the three marked points as sufficient proof of continuity.',
+      'The basal example provides a longer caudal trace. Work through each fork, including the distal daughters that share a segment name. Browse every interval; a mark at each fork does not by itself prove continuity through the intervening slices.',
     interpretation:
       'Compare your route one level at a time. If you marked uncertainty, revisit that interval and state what remains unresolved. This preview uses one source CT and does not establish performance on a new patient.',
     transferPrompt:

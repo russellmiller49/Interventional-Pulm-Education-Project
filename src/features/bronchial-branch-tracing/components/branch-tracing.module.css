@@ -682,11 +682,113 @@
   color: #94abb5;
 }
 .nativeViewer {
+  container-type: inline-size;
   min-width: 0;
   border: 1px solid #354d58;
   border-radius: 10px;
   background: #0b1a22;
   overflow: hidden;
+}
+.pairedViews {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1px;
+  background: #3b525d;
+}
+.pairedColumn {
+  min-width: 0;
+  background: #071018;
+}
+.pairedColumn > h3 {
+  min-height: 3.3rem;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+  margin: 0;
+}
+.pairedColumn > h3 span {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 400;
+  color: #a6bec6;
+}
+.pairedViews .nativeImage {
+  max-width: 100%;
+}
+.pairedScope {
+  width: 100%;
+  aspect-ratio: 1;
+  position: relative;
+  background: #020507;
+}
+.pairedScope .clinicalCanvas {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+}
+.pairedScope > p {
+  padding: 1rem;
+  font-size: 0.8rem;
+}
+.pairCaption {
+  margin: 0;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.68rem;
+  color: #b4cbd3;
+  min-height: 2.8rem;
+}
+.pairExplanation,
+.orientationPrompt {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  color: #c2d4da;
+}
+.orientationPrompt {
+  border-left: 2px solid #9fd9d7;
+  background: #17313c;
+}
+.orientationDiagram {
+  margin: 0.7rem 0;
+}
+.orientationDiagram > div {
+  display: grid;
+  grid-template-columns: 1fr 1.5rem 1fr;
+  align-items: center;
+  gap: 0.25rem;
+}
+.orientationDiagram svg {
+  width: 100%;
+  background: #020507;
+}
+.orientationDiagram figcaption {
+  font-size: 0.78rem;
+  margin-top: 0.5rem;
+}
+@container (max-width: 430px) {
+  .pairedViews {
+    grid-template-columns: 1fr;
+  }
+  .pairedColumn > h3 {
+    min-height: auto;
+  }
+  .pairCaption {
+    min-height: auto;
+  }
+}
+.nativeViewer:fullscreen .pairedViews {
+  max-width: min(100%, calc((100dvh - 320px) * 2));
+  margin: 0 auto;
+}
+.nativeViewer:fullscreen .pairedViews .nativeImage {
+  max-width: 100%;
+}
+@media (min-width: 1024px) and (min-height: 700px) {
+  .nativeViewer:not(:fullscreen) .pairedViews {
+    max-width: min(100%, calc(clamp(220px, calc(100dvh - 680px), 500px) * 2));
+    margin: 0 auto;
+  }
 }
 .nativeHeading {
   display: flex;
@@ -987,6 +1089,64 @@
   gap: 0.5rem;
   margin: 0.8rem 0;
   font-size: 0.8rem;
+}
+.branchDecision fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.branchDecision legend {
+  font-size: 0.85rem;
+  font-weight: 650;
+  margin-bottom: 0.5rem;
+}
+.branchDecision label {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  padding: 0.5rem;
+  border: 1px solid #46636e;
+  border-radius: 6px;
+  margin: 0.35rem 0;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.branchDecision label:has(input:checked) {
+  background: #21414b;
+  border-color: #8ad9d7;
+}
+.branchDecision input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+.branchDecision small,
+.junctionTeaching small {
+  display: block;
+  font-size: 0.72rem;
+  color: #b4cbd1;
+  line-height: 1.4;
+}
+.junctionParent {
+  text-align: center;
+  padding: 0.7rem;
+  border: 1px solid #77aaa9;
+  border-radius: 6px;
+  font-weight: 650;
+}
+.junctionDaughters {
+  display: flex;
+  gap: 0.4rem;
+  text-align: center;
+}
+.junctionDaughters > div {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #53727c;
 }
 .courseChoice select {
   width: 100%;
