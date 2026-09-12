@@ -211,6 +211,11 @@ const nextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
   output: 'standalone',
+  // Keep maintenance scripts and test fixtures out of the production type-check worker.
+  // The editor and full repository type-check still use tsconfig.json.
+  typescript: {
+    tsconfigPath: process.env.NODE_ENV === 'production' ? 'tsconfig.build.json' : 'tsconfig.json',
+  },
   allowedDevOrigins: ['127.0.0.1'],
   // @react-three/xr ships modern ESM/JSX that Next's server compile must transpile.
   transpilePackages: ['@react-three/xr'],

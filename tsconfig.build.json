@@ -1,0 +1,28 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "next-env.d.ts",
+    "global.d.ts",
+    "contentlayer.config.ts",
+    "tailwind.config.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".next/types/**/*.ts",
+    ".contentlayer/generated"
+  ],
+  "exclude": [
+    "node_modules",
+    "in-development",
+    "fluoro-viewer/scripts",
+    "supabase/functions",
+    "pleural_updates",
+    "navigation_module",
+    "EBUS-course",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/__tests__/**",
+    "**/test-support/**"
+  ]
+}
