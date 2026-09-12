@@ -1,0 +1,41 @@
+{
+  "schema": "bronchoscopy-abnormalities/v1",
+  "authored": "2026-09-11",
+  "provenance": "Original synthetic meshes. Supplied stills and video used for visual study only; no source media redistributed.",
+  "coordinateSystem": "normalized lesion-local XYZ; X circumferential, Y distal, Z inward",
+  "bounds": {
+    "x": [-1, 1],
+    "y": [-1, 1],
+    "z": [-0.18, 1]
+  },
+  "clinicalValidation": "Not clinically validated. Morphology does not establish histology.",
+  "assets": [
+    {
+      "id": "obstructing",
+      "file": "obstructing.glb",
+      "vertices": 8601,
+      "triangles": 17198,
+      "closed": true,
+      "bytes": 414160,
+      "sha256": "a73818484fd36fd42e270d78e8c707d3da87860171491194568ed6e3ea19ec5f"
+    },
+    {
+      "id": "polypoid",
+      "file": "polypoid.glb",
+      "vertices": 3132,
+      "triangles": 6260,
+      "closed": true,
+      "bytes": 151640,
+      "sha256": "7a901a3540d5c5061e8f56b1b50c52b21f59ede19dff5b0d253dc9a4dba39daf"
+    },
+    {
+      "id": "mucosal",
+      "file": "mucosal.glb",
+      "vertices": 2498,
+      "triangles": 4992,
+      "closed": true,
+      "bytes": 148596,
+      "sha256": "7ad4c095a5fad21cbcc5632f46ae6ca11e0d789f630b5b8e5ec069b50aa96090"
+    }
+  ]
+}
