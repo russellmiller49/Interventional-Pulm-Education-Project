@@ -3,12 +3,17 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { localDataPath } from '../local-data-root.mjs'
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(scriptDirectory, '..', '..')
 const configPath = path.join(scriptDirectory, 'cardiac-ct-config.json')
 const config = JSON.parse(await readFile(configPath, 'utf8'))
-const extractionDirectory = path.join(root, config.sourceCenterlines)
+// cardiac-ct-config.json records sources as '3D assets/...' for provenance; the raw Slicer
+// extraction lives outside Git in Local-Data/raw-assets/3d-assets (docs/local-authoring-assets.md).
+const extractionDirectory = config.sourceCenterlines.startsWith('3D assets/')
+  ? localDataPath('raw-assets', '3d-assets', config.sourceCenterlines.slice('3D assets/'.length))
+  : path.join(root, config.sourceCenterlines)
 const outputPath = path.join(root, 'src/features/cardiac-anatomy/content/cardiac-ct-rig.json')
 
 const ROUNDING_DIGITS = 5

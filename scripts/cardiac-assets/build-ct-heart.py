@@ -17,6 +17,8 @@ import shutil
 import struct
 import subprocess
 import tempfile
+import pathlib
+import sys
 from pathlib import Path
 from typing import Iterable, Sequence
 
@@ -27,8 +29,22 @@ from mathutils import Vector
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT_DIRECTORY = Path(__file__).resolve().parent
 CONFIG = json.loads((SCRIPT_DIRECTORY / "cardiac-ct-config.json").read_text())
-SOURCE_PATH = ROOT / CONFIG["sourceModel"]
-DETAILED_SEGMENTATION_PATH = ROOT / CONFIG["sourceDetailedSegmentation"]
+sys.path.insert(0, str(ROOT / "scripts"))
+from local_data import local_data_path  # noqa: E402
+
+
+
+def resolve_source(repo_relative: str) -> Path:
+    """cardiac-ct-config.json records sources as "3D assets/..." for provenance. The raw
+    models live outside Git in Local-Data/raw-assets/3d-assets (docs/local-authoring-assets.md)."""
+    parts = pathlib.PurePosixPath(repo_relative).parts
+    if parts and parts[0] == "3D assets":
+        return local_data_path("raw-assets", "3d-assets", *parts[1:])
+    return ROOT / repo_relative
+
+
+SOURCE_PATH = resolve_source(CONFIG["sourceModel"])
+DETAILED_SEGMENTATION_PATH = resolve_source(CONFIG["sourceDetailedSegmentation"])
 VALVE_EXTRACTOR_PATH = SCRIPT_DIRECTORY / "extract-aortic-cusps.py"
 OUTPUT_DIRECTORY = ROOT / "public" / "models" / "cardiac"
 OUTPUT_PATH = OUTPUT_DIRECTORY / "heart-ct-animated-v1.glb"

@@ -4,7 +4,7 @@ Export pleural simulator surfaces from 3D Slicer for PLUS Toolkit.
 How to use:
 1. Open 3D Slicer.
 2. Load the CT and segmentation, or let the script load the default segmentation
-   from Pleural_effusion_simulation.
+   from Local-Data/raw-assets/pleural-effusion-simulation (outside Git).
 3. Open View > Python Interactor.
 4. Adjust SEGMENTATION_NODE_NAME, SEGMENTATION_PATH, and OUTPUT_DIR below if needed.
 5. Run the file with:
@@ -26,8 +26,8 @@ import vtk
 
 
 SEGMENTATION_NODE_NAME = "19_CT_HR segmentation_final"
-SEGMENTATION_PATH = "/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/Pleural_effusion_simulation/19_CT_HR segmentation_final.seg.nrrd"
-OUTPUT_DIR = "/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/Pleural_effusion_simulation/plus/Models"
+SEGMENTATION_PATH = "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/raw-assets/pleural-effusion-simulation/19_CT_HR segmentation_final.seg.nrrd"
+OUTPUT_DIR = "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/raw-assets/pleural-effusion-simulation/plus/Models"
 
 LUNG_SEGMENTS = [
     "upper lobe of left lung",

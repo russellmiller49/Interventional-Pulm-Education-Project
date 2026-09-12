@@ -28,3 +28,12 @@ lifecycle; each agent always works in its own directory.
   `literature:import`, `literature:seed-taxonomy`, `literature:import-gold-reviews`, `upload:*`.
   Only one local Supabase instance can exist (fixed ports) — ask before running these.
 - No force-pushes, no rebasing a pushed branch, and never work on or merge the other agent's branch.
+
+## Local data outside Git
+
+Raw authoring inputs, private references, renders, prompts and secrets live in
+`/Users/russellmiller/Projects/Interventional-Pulm-Local-Data` (override with `IP_LOCAL_DATA`).
+The production build never reads that folder. The folder map, the read-only rules, and the
+resolver helpers (`scripts/local-data-root.mjs`, `scripts/local_data.py`) are in
+`docs/local-authoring-assets.md`. Read from it by absolute path when you need source knowledge
+or an asset to regenerate a derived file; never copy it into a checkout, stage it, or commit it.

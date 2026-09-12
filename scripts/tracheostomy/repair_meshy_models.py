@@ -12,7 +12,7 @@ The original exports are intentionally left untouched. This script:
 Run with Blender, not system Python:
 
   blender --background --python scripts/tracheostomy/repair_meshy_models.py -- \
-    "3D assets/Tracheostomy" public/tracheostomy/models
+    "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/raw-assets/3d-assets/Tracheostomy" public/tracheostomy/models
 """
 
 from __future__ import annotations

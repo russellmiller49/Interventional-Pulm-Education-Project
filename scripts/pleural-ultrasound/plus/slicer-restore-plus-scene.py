@@ -7,13 +7,16 @@ exec(open("/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/s
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import vtk
 
 
 REPO_ROOT = Path("/Users/russellmiller/Projects/Interventional-Pulm-Education-Project")
-CASE_DIR = REPO_ROOT / "Pleural_effusion_simulation"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from local_data import local_data_path  # noqa: E402
+CASE_DIR = local_data_path("raw-assets", "pleural-effusion-simulation")
 CT_PATH = CASE_DIR / "19_CT_HR.nii"
 SEGMENTATION_PATH = CASE_DIR / "19_CT_HR segmentation_final.seg.nrrd"
 CONNECTOR_HOST = "localhost"

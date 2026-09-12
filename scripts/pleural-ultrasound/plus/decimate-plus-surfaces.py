@@ -14,14 +14,17 @@ real-time PLUS UsSimulator XML.
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 import vtk
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_INPUT_DIR = REPO_ROOT / "Pleural_effusion_simulation" / "plus" / "Models"
-DEFAULT_OUTPUT_DIR = REPO_ROOT / "Pleural_effusion_simulation" / "plus" / "ModelsLowRes"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from local_data import local_data_path  # noqa: E402
+DEFAULT_INPUT_DIR = local_data_path("raw-assets", "pleural-effusion-simulation") / "plus" / "Models"
+DEFAULT_OUTPUT_DIR = local_data_path("raw-assets", "pleural-effusion-simulation") / "plus" / "ModelsLowRes"
 
 TARGET_TRIANGLES = {
     "skin.stl": 60_000,

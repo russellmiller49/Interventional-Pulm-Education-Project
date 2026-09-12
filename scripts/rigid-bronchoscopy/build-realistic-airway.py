@@ -20,7 +20,9 @@ import trimesh
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SOURCE_GLB = REPO_ROOT / "new_anatomy_module" / "Airway.glb"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from local_data import local_data_path  # noqa: E402
+SOURCE_GLB = local_data_path("raw-assets", "anatomy", "new_anatomy_module", "Airway.glb")
 SOURCE_GRAPH = (
     REPO_ROOT / "public" / "airway-anatomy" / "case-001" / "metadata" / "airway_graph.json"
 )

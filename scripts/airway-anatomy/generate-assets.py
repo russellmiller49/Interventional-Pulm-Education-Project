@@ -21,10 +21,14 @@ import numpy as np
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PIPELINE_SRC = REPO_ROOT / "tools" / "fluoroview-pipeline" / "src"
 sys.path.insert(0, str(PIPELINE_SRC))
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from fluoroview_pipeline.airway_graph import build_airway_graph  # noqa: E402
 
-SOURCE_DIR = REPO_ROOT / "new_anatomy_module"
+from local_data import local_data_path  # noqa: E402
+
+# Raw Slicer exports live outside Git: <Local-Data>/raw-assets/anatomy/new_anatomy_module
+SOURCE_DIR = local_data_path("raw-assets", "anatomy", "new_anatomy_module")
 OUTPUT_DIR = REPO_ROOT / "public" / "airway-anatomy" / "case-001"
 CT_SOURCE_NAME = "target_clean_ct.nrrd"
 CT_PREVIEW_NAME = "target_clean_ct_preview_i16.raw"
@@ -82,7 +86,7 @@ def main() -> None:
         "units": "mm",
         "safetyLabel": "Educational simulation only - not for diagnosis, treatment, or procedure guidance.",
         "sourcePolicy": (
-            "Raw source assets remain in new_anatomy_module. The app loads derived public/module "
+            "Raw source assets live in Local-Data/raw-assets/anatomy/new_anatomy_module. The app loads derived public/module "
             "assets generated from target_clean_ct.nrrd, airway_large.stl, Airway.glb, Slicer centerlines, and labels."
         ),
         "assetBaseUrl": "/airway-anatomy/case-001",

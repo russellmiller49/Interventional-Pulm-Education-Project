@@ -20,13 +20,15 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+
+import { localDataPath } from '../local-data-root.mjs'
 import os from 'node:os'
 
 import { generateCasePackage } from './generate-thoracic-case-assets.mjs'
 import { pleuralEffusion001CardiacModel } from './pleural-effusion-001-cardiac-model.mjs'
 
 const repoRoot = process.cwd()
-const sourceDir = path.join(repoRoot, 'Pleural_effusion_simulation')
+const sourceDir = localDataPath('raw-assets', 'pleural-effusion-simulation')
 const caseDir = path.join(
   repoRoot,
   'public/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001',
@@ -213,7 +215,8 @@ function main() {
     const box = staged.labelBoundsLpsMm[nameByCode[code]]
     const center = box
       ? `center L≈${((box.min[0] + box.max[0]) / 2).toFixed(0)} P≈${(
-          (box.min[1] + box.max[1]) / 2
+          (box.min[1] + box.max[1]) /
+          2
         ).toFixed(0)} S≈${((box.min[2] + box.max[2]) / 2).toFixed(0)}`
       : ''
     console.log(

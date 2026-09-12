@@ -7,13 +7,17 @@ import argparse
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass
+import sys
 from pathlib import Path
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[2]
-DEFAULT_MARKUPS_DIR = REPO_ROOT / "Pleural_effusion_simulation" / "plus" / "markups"
-DEFAULT_POSE_FILE = REPO_ROOT / "Pleural_effusion_simulation" / "plus" / "current-probe-pose.json"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from local_data import local_data_path  # noqa: E402
+PLUS_DIR = local_data_path("raw-assets", "pleural-effusion-simulation", "plus")
+DEFAULT_MARKUPS_DIR = PLUS_DIR / "markups"
+DEFAULT_POSE_FILE = PLUS_DIR / "current-probe-pose.json"
 
 
 @dataclass(frozen=True)

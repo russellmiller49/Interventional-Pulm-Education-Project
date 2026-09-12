@@ -1,6 +1,6 @@
 """Prepare the user-supplied airway-stent GLBs for the protected web lesson.
 
-The authoring originals in ``3D assets/Stents`` are never modified. This Blender pipeline:
+The authoring originals in Local-Data ``raw-assets/3d-assets/Stents`` are never modified. This Blender pipeline:
 
 - flattens source transforms and normalizes every asset to a shared long-axis convention;
 - centers geometry, welds coincident vertices, removes loose vertices, and recalculates normals;
@@ -14,7 +14,7 @@ Run with Blender, not system Python:
 
   /Applications/Blender.app/Contents/MacOS/Blender --background \
     --python scripts/airway-stent-mechanics/prepare-model-assets.py -- \
-    "3D assets/Stents" public/airway-stent-mechanics/models/v1
+    "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/raw-assets/3d-assets/Stents" public/airway-stent-mechanics/models/v1
 """
 
 from __future__ import annotations

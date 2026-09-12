@@ -1,6 +1,7 @@
 # Airway stent model pipeline
 
-This pipeline converts the authoring GLBs in `3D assets/Stents` into protected, web-ready lesson
+This pipeline converts the authoring GLBs in Local-Data `raw-assets/3d-assets/Stents` (see
+`docs/local-authoring-assets.md`) into protected, web-ready lesson
 assets. It never overwrites the source files.
 
 ## Generate derivatives
@@ -10,7 +11,7 @@ Run from the repository root with Blender 5.1 or newer:
 ```bash
 /Applications/Blender.app/Contents/MacOS/Blender --background \
   --python scripts/airway-stent-mechanics/prepare-model-assets.py -- \
-  "3D assets/Stents" public/airway-stent-mechanics/models/v1
+  "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/raw-assets/3d-assets/Stents" public/airway-stent-mechanics/models/v1
 ```
 
 The command flattens transforms, normalizes orientation and origin, cleans mesh data, applies the

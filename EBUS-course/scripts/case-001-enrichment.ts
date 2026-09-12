@@ -519,6 +519,16 @@ function ensurePathExists(filePath: string, description: string): string {
   return filePath;
 }
 
+/**
+ * Raw case-001 authoring inputs (slice series, markups, the full case GLB) live outside Git in
+ * Interventional-Pulm-Local-Data/raw-assets/ebus-case-001. Only the four runtime files stay in
+ * EBUS-course/model. Paths under model/ resolve from the repository first, then from Local-Data.
+ * See docs/local-authoring-assets.md.
+ */
+const LOCAL_DATA_ROOT =
+  process.env.IP_LOCAL_DATA?.trim() || '/Users/russellmiller/Projects/Interventional-Pulm-Local-Data';
+const LOCAL_DATA_CASE_ROOT = path.join(LOCAL_DATA_ROOT, 'raw-assets', 'ebus-case-001');
+
 export function resolveRepoPath(rootDir: string, repoRelativePath: string): string {
   const normalized = repoRelativePath.replace(/\\/g, '/').replace(/^\.\//, '');
   const segments = normalized.split('/').filter(Boolean);
@@ -527,6 +537,17 @@ export function resolveRepoPath(rootDir: string, repoRelativePath: string): stri
     throw new Error('Cannot resolve an empty repository path.');
   }
 
+  try {
+    return resolveSegmentsFrom(rootDir, segments, repoRelativePath);
+  } catch (error) {
+    if (segments[0].toLowerCase() === 'model' && fs.existsSync(LOCAL_DATA_CASE_ROOT)) {
+      return resolveSegmentsFrom(LOCAL_DATA_CASE_ROOT, segments, repoRelativePath);
+    }
+    throw error;
+  }
+}
+
+function resolveSegmentsFrom(rootDir: string, segments: string[], repoRelativePath: string): string {
   let current = rootDir;
 
   for (const segment of segments) {

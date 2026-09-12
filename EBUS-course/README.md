@@ -48,6 +48,7 @@ assets/
   pretest/
 features/
   case3d/
-model/
+model/           # only the four runtime files; sliceSeries, markups and case_001.glb live in
+                 # Local-Data/raw-assets/ebus-case-001/model (docs/local-authoring-assets.md)
 scripts/
 ```

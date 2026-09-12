@@ -17,6 +17,7 @@ import math
 import shutil
 import struct
 import subprocess
+import sys
 from pathlib import Path
 from typing import Sequence
 
@@ -25,7 +26,9 @@ from mathutils import Matrix, Vector
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE_DIR = ROOT / "3D assets" / "Cardiac" / "Devices"
+sys.path.insert(0, str(ROOT / "scripts"))
+from local_data import local_data_path  # noqa: E402
+SOURCE_DIR = local_data_path("raw-assets", "3d-assets") / "Cardiac" / "Devices"
 OUTPUT_DIR = ROOT / "public" / "models" / "cardiac-devices"
 RIG_PATH = (
     ROOT / "src" / "features" / "cardiac-anatomy" / "content" / "cardiac-rig.json"

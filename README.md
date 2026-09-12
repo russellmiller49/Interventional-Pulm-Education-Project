@@ -62,6 +62,8 @@ Jest, React Testing Library, Storybook, and reducer-based architecture.
 - `docs/` — evidence, clinical review, risk, architecture, and release documentation.
 - `stories/` — Storybook states for shared UI contracts.
 - `supabase/` — reviewed database migrations and server-side infrastructure.
+- Raw authoring inputs, private references, renders and prompts are **not** in this repository.
+  They live in `Interventional-Pulm-Local-Data`; see [docs/local-authoring-assets.md](docs/local-authoring-assets.md).
 
 ## Critical-care architecture
 
