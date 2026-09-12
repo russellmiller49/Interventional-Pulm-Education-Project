@@ -159,7 +159,9 @@
     "dev:navigation": "npm --prefix navigation_module/web run dev",
     "dev:ebus": "npm --prefix EBUS-course/apps/web run dev",
     "test:training-apps": "node --test scripts/training-apps.test.mjs && npm --prefix EBUS-course/apps/web test",
-    "type-check:training-apps": "npm --prefix navigation_module/web run typecheck && npm --prefix EBUS-course/apps/web run typecheck"
+    "type-check:training-apps": "npm --prefix navigation_module/web run typecheck && npm --prefix EBUS-course/apps/web run typecheck",
+    "ip-intel:safety-record-links": "tsx scripts/ip-device-intelligence/acquire-safety-record-links.ts",
+    "ip-intel:safety-evidence": "tsx scripts/ip-device-intelligence/build-safety-evidence.ts"
   },
   "engines": {
     "node": ">=20.19.0"

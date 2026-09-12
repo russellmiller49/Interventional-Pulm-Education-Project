@@ -2,6 +2,13 @@ import { AlertTriangle } from 'lucide-react'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/cn'
+import type { SafetyEvidenceRow } from '../domain/safety-notice-schema'
+import type { SafetyFreshness } from '../domain/evidence-freshness'
+import {
+  SafetyEvidenceCoverage,
+  SafetyNoticeDetails,
+  type SafetyEvidenceLabels,
+} from './SafetyNoticeDetails'
 import {
   safetyDisplayIsMaterialOnCards,
   type MarketConfidence,
@@ -34,6 +41,7 @@ import {
  */
 
 export interface ProductStatusLabels {
+  evidence: SafetyEvidenceLabels
   market: Record<MarketStatus, string>
   marketBadge: Record<MarketStatus, string>
   safety: Record<SafetyDisplay, string>
@@ -153,21 +161,37 @@ export function ProductStatusBadges({
 function SafetyFacts({
   status,
   labels,
+  evidence,
+  freshness,
 }: {
   status: ProductStatusView
   labels: ProductStatusLabels
+  evidence: SafetyEvidenceRow | null
+  freshness: SafetyFreshness
 }) {
+  const display =
+    status.safetyDisplay === 'no_exact_action_found_as_of_snapshot' &&
+    (freshness === 'incomplete' || freshness === 'not_checked')
+      ? 'safety_status_unverified'
+      : status.safetyDisplay
   return (
     <>
-      <p className="text-sm leading-6">{labels.safetyDetail[status.safetyDisplay]}</p>
-      {status.safetyReferenceCodes.length > 0 ? (
+      <p className="text-sm leading-6">{labels.safetyDetail[display]}</p>
+      {status.safetyReferenceCodes.length > 0 && !evidence?.notices.length ? (
         <p className="text-sm">
           {labels.referenceCodesLabel}{' '}
           <span className="font-mono text-xs">{status.safetyReferenceCodes.join(', ')}</span>
         </p>
       ) : null}
-      {status.safetyActionScope ? (
+      {status.safetyActionScope && !evidence?.notices.length ? (
         <p className="text-sm">{labels.scope[status.safetyActionScope]}</p>
+      ) : null}
+      {evidence?.notices.length ? (
+        <SafetyNoticeDetails
+          evidence={evidence}
+          labels={labels.evidence}
+          scopeLabels={labels.scope}
+        />
       ) : null}
     </>
   )
@@ -180,15 +204,19 @@ function SafetyFacts({
  * the two statements the owner requires on every product — that market status does not
  * establish present orderability, and that safety notices may be lot-specific.
  *
- * Research rationales, unresolved-question prose, and raw FDA text are not available here:
- * the compact overlay never carried them into the runtime at all.
+ * Notice details arrive through a separate strict projection of dated FDA fields. Research
+ * rationales, acquisition queries and truncated lot lists never enter this component.
  */
 export function MarketSafetyPanel({
   status,
   labels,
+  evidence,
+  freshness,
 }: {
   status: ProductStatusView
   labels: ProductStatusLabels
+  evidence: SafetyEvidenceRow | null
+  freshness: SafetyFreshness
 }) {
   const active = status.safetyDisplay === 'active_safety_notice'
   const showConfidence =
@@ -196,8 +224,10 @@ export function MarketSafetyPanel({
     (status.marketStatus === 'confirmed_current_us' || status.marketStatus === 'likely_current_us')
 
   return (
-    <section className="space-y-3" aria-label={labels.panelHeading}>
+    <section id="device-safety" className="scroll-mt-24 space-y-3" aria-label={labels.panelHeading}>
       <h2 className="text-2xl font-semibold tracking-tight">{labels.panelHeading}</h2>
+
+      <SafetyEvidenceCoverage evidence={evidence} freshness={freshness} labels={labels.evidence} />
 
       {active ? (
         // Prominent but not alarmist: a bordered notice with an icon and a heading, not a
@@ -208,9 +238,14 @@ export function MarketSafetyPanel({
               aria-hidden="true"
               className="mt-0.5 h-5 w-5 shrink-0 text-rose-700 dark:text-rose-300"
             />
-            <div className="space-y-1.5">
+            <div className="min-w-0 space-y-1.5">
               <p className="text-sm font-bold text-foreground">{labels.activeNoticeHeading}</p>
-              <SafetyFacts status={status} labels={labels} />
+              <SafetyFacts
+                status={status}
+                labels={labels}
+                evidence={evidence}
+                freshness={freshness}
+              />
               <p className="text-xs leading-5 text-muted-foreground">{labels.lotSpecificNote}</p>
             </div>
           </CardContent>
@@ -243,7 +278,12 @@ export function MarketSafetyPanel({
           {active ? null : (
             <div className="space-y-1">
               <h3 className="text-sm font-bold tracking-tight">{labels.safetyHeading}</h3>
-              <SafetyFacts status={status} labels={labels} />
+              <SafetyFacts
+                status={status}
+                labels={labels}
+                evidence={evidence}
+                freshness={freshness}
+              />
             </div>
           )}
 

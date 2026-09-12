@@ -16,6 +16,7 @@ import { EvidenceBadge } from '@/features/device-intelligence/components/Evidenc
 import {
   getAtlasFacets,
   getAtlasOverview,
+  getAtlasEvidenceCoverage,
   searchAtlas,
   validateAtlasFilters,
 } from '@/features/device-intelligence/server/atlas.server'
@@ -56,6 +57,7 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
 
   const facets = getAtlasFacets()
   const overview = getAtlasOverview()
+  const coverage = getAtlasEvidenceCoverage()
   const results = unknownFilter ? null : searchAtlas(query)
   const statusLabels = await getProductStatusLabels(locale)
   const taxonomyLabels = getTaxonomyLabels(locale)
@@ -69,6 +71,21 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
 
   return (
     <div className="container space-y-6 py-8 md:py-10">
+      <nav aria-label={t('navigationLabel')} className="flex flex-wrap gap-2 text-sm font-semibold">
+        <Link
+          href={`/${locale}/devices` as Route}
+          aria-current="page"
+          className="rounded-full bg-primary px-4 py-2 text-primary-foreground"
+        >
+          {t('findDevice')}
+        </Link>
+        <Link
+          href={`/${locale}/procedures` as Route}
+          className="rounded-full border border-border px-4 py-2 hover:bg-muted"
+        >
+          {t('prepareProcedure')}
+        </Link>
+      </nav>
       <header className="max-w-4xl space-y-3">
         <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
           {t('title')}
@@ -78,12 +95,24 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
           <EvidenceBadge state="verified_source_fact">
             {t('cohortBadge', { count: overview.productCount })}
           </EvidenceBadge>
-          <p className="text-xs text-muted-foreground">{t('cohortRule')}</p>
         </div>
-        <p className="text-xs leading-5 text-muted-foreground">{t('exclusionNote')}</p>
-        {/* D2B: the atlas now includes products whose current availability is unestablished,
-            so the index says up front what the market/safety labels do and do not mean. */}
-        <p className="text-xs leading-5 text-muted-foreground">{t('statusNote')}</p>
+        <p className="text-xs leading-5 text-muted-foreground">
+          {t('coverage', {
+            researchedCount: coverage.researched,
+            totalCount: overview.productCount,
+            reviewedCount: coverage.reviewedProfiles,
+          })}
+        </p>
+        <details className="text-xs leading-5 text-muted-foreground">
+          <summary className="cursor-pointer rounded font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            {t('evidenceGuide')}
+          </summary>
+          <div className="mt-2 space-y-2">
+            <p>{t('cohortRule')}</p>
+            <p>{t('exclusionNote')}</p>
+            <p>{t('statusNote')}</p>
+          </div>
+        </details>
       </header>
 
       <Card>
@@ -103,6 +132,7 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
               any: t('form.any'),
               apply: t('form.apply'),
               clear: t('form.clear'),
+              filters: t('form.filters'),
             }}
           />
         </CardContent>
@@ -144,6 +174,7 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
             <AtlasResultsTable
               locale={locale}
               items={results.items}
+              exactIdentifierMatchIds={results.exactIdentifierMatchIds}
               statusByProductId={results.statusByProductId}
               deviceTypeByProductId={deviceTypeByProductId}
               statusLabels={statusLabels}
@@ -158,6 +189,8 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
                 notRecorded: tCommon('notRecorded'),
                 verifiedSource: tCommon('badges.verifiedSource'),
                 region: t('resultsRegionLabel'),
+                exactMatch: t('exactIdentifierMatch'),
+                asOf: t('statusAsOf'),
               }}
             />
           ) : (

@@ -14,6 +14,7 @@ import {
   type UseDetail,
 } from '@/features/preference-cards/server/catalog'
 import type { CatalogSearchQuery } from '@/features/preference-cards/schemas/catalog-search'
+import { normalizeIdentifier } from '@/features/preference-cards/server/catalog-store'
 import type { ProductStatusView } from '@/features/device-intelligence/domain/product-status'
 import {
   isDeviceClassCode,
@@ -53,6 +54,8 @@ import {
  */
 
 export interface AtlasSearchResponse extends CatalogSearchResponse {
+  /** Equality after catalog identifier normalization; prefixes and fuzzy matches are excluded. */
+  exactIdentifierMatchIds: string[]
   /** Market/safety status for every product in `items`. Total: an unresearched product
    *  resolves to the honest "not recently verified" default, never to nothing. */
   statusByProductId: Record<string, ProductStatusView>
@@ -80,6 +83,16 @@ export function searchAtlas(query: CatalogSearchQuery): AtlasSearchResponse {
   })
   return {
     ...response,
+    exactIdentifierMatchIds:
+      normalizeIdentifier(trimmed).length >= 3
+        ? response.items
+            .filter((item) =>
+              store.productById
+                .get(item.productId)
+                ?.searchableIds.includes(normalizeIdentifier(trimmed)),
+            )
+            .map((item) => item.productId)
+        : [],
     statusByProductId: getProductStatusMap(response.items.map((item) => item.productId)),
     taxonomyByProductId: getProductTaxonomyMap(response.items.map((item) => item.productId)),
   }
@@ -102,6 +115,17 @@ export function getAtlasOverview(): CatalogOverview {
   return getCatalogOverview(getAtlasCatalogStore())
 }
 
+export function getAtlasEvidenceCoverage(): { researched: number; reviewedProfiles: number } {
+  const products = getAtlasCatalogStore().products
+  return {
+    researched: products.filter((product) => getProductStatus(product.product_id).researched)
+      .length,
+    reviewedProfiles: products.filter(
+      (product) => getD2dProductEvidence(product.product_id)?.profile?.runtime_state === 'reviewed',
+    ).length,
+  }
+}
+
 export function validateAtlasFilters(query: CatalogSearchQuery): string | null {
   // D2C: an unknown device-class code is a friendly no-op notice, exactly like the other
   // unknown filters. Legacy `category` values are handled separately by the page (an
@@ -111,6 +135,8 @@ export function validateAtlasFilters(query: CatalogSearchQuery): string | null {
 }
 
 export interface AtlasProductDetail extends ProductDetail {
+  /** Reviewed copy takes precedence without mutating the shared canonical catalog. */
+  publicDescription: { text: string; origin: 'reviewed' | 'catalog' } | null
   /** Same-line siblings inside the atlas cohort — a display-only manufacturer grouping. */
   sameManufacturerLine: {
     productId: string
@@ -220,6 +246,15 @@ export function getAtlasProductDetail(productId: string): AtlasProductDetail | n
 
   return {
     ...detail,
+    publicDescription: d2dEvidence?.profile
+      ? d2dEvidence.profile.runtime_state === 'reviewed' &&
+        d2dEvidence.profile.summary_claims.length > 0
+        ? { text: d2dEvidence.profile.summary_claims[0].text, origin: 'reviewed' }
+        : null
+      : detail.product.description?.trim() &&
+          detail.product.description !== detail.product.product_name
+        ? { text: detail.product.description, origin: 'catalog' }
+        : null,
     product: compatibilityTextWithheld
       ? { ...detail.product, compatibility_text: null }
       : detail.product,

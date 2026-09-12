@@ -155,14 +155,34 @@ describe('D2D-B Atlas detail integration', () => {
     expect(container.querySelector('[data-d2d-profile-scope] [lang="en"]')).not.toBeNull()
   })
 
-  it('keeps D2D text out of product metadata', async () => {
+  it('never reintroduces the superseded CLR claim in the header or metadata', async () => {
+    const productId = 'PRD-003C4641E6'
+    const detail = getAtlasProductDetail(productId)!
+    const { container } = await renderProduct(productId)
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ locale: 'en', productId }),
+    })
+    expect(container.querySelector('header')).toHaveTextContent(
+      detail.profile!.summary_claims[0].text,
+    )
+    expect(container.textContent).not.toMatch(/separate suction and irrigation controls/i)
+    expect(metadata.description).not.toMatch(/separate suction and irrigation controls/i)
+    // Canonical data is preserved for its other consumers; the Atlas projection owns precedence.
+    expect(detail.product.description).toMatch(/separate suction and irrigation controls/i)
+    const link = container.querySelector(
+      'a[href="https://accessgudid.nlm.nih.gov/devices/00860003054901"]',
+    )
+    expect(link).not.toBeNull()
+  })
+
+  it('uses the reviewed summary for product metadata', async () => {
     const productId = 'PRD-A0655BF464'
     const detail = getAtlasProductDetail(productId)!
     const metadata = await generateMetadata({
       params: Promise.resolve({ locale: 'en', productId }),
     })
-    expect(metadata.description).toBe(detail.product.description)
-    expect(metadata.description).not.toBe(detail.profile?.summary_claims[0].text)
+    expect(metadata.description).toBe(detail.profile?.summary_claims[0].text)
+    expect(metadata.description).toBe(detail.publicDescription?.text)
   })
 })
 
