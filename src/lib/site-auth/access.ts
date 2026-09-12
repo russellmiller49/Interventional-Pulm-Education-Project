@@ -22,6 +22,7 @@ const PUBLIC_EXACT_PATHS = new Set([
 ])
 
 const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
+  '/learn/anatomy/branch-tracing',
   '/baxter-crrt',
   '/cardiohelp-ecmo',
   // Phase D1 device-intelligence routes (decision D-03 as modified, 2026-08-08): every new
@@ -47,6 +48,8 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
 // Public-unlisted modules whose subroutes (e.g. /cardiohelp-ecmo/learn) share
 // the parent's access and noindex treatment.
 const PUBLIC_UNLISTED_PATH_PREFIXES = [
+  '/branch-tracing',
+  '/learn/anatomy/branch-tracing',
   '/baxter-crrt',
   '/cardiohelp-ecmo',
   // Phase D1 device-intelligence subroutes share the parents' unlisted/noindex treatment.

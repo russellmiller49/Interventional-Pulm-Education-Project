@@ -1,0 +1,2384 @@
+{
+  "schema": "branch-tracing-native/v1",
+  "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+  "sourceGraphSha256": "68226a87928135f8be1435c78774f455dab8f792c085509100aa6c21304c18f4",
+  "sourceCaseCount": 1,
+  "slicerVersion": "5.12.3",
+  "sizeXyz": [512, 512, 636],
+  "spacingXyzMm": [0.689453125, 0.689453125, 0.5],
+  "ijkToLps": [
+    [0.689453125, 0.0, 0.0, -182.15527343749997],
+    [0.0, 0.689453125, 0.0, -374.1552734374999],
+    [0.0, 0.0, 0.5, -368.5],
+    [0.0, 0.0, 0.0, 1.0]
+  ],
+  "exportedSliceRange": [240, 475],
+  "windowHu": [-1000, 400],
+  "review": "Source-derived geometric comparison. Clinical labels and camera poses are not assessment keys.",
+  "traces": [
+    {
+      "id": "central-right",
+      "preset": "mirror",
+      "region": "Central airways",
+      "range": [355, 450],
+      "cropCenter": [243.6139, 316.0715],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 435,
+        "pixel": [246.5723, 318.9188],
+        "sourceEdgeId": 0,
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 428,
+          "pixel": [246.9427, 318.9952],
+          "lps": [-11.8998, -154.223, -154.5218],
+          "sourceHu": -1021,
+          "sourceEdgeId": 0,
+          "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 391,
+          "pixel": [245.9542, 316.3607],
+          "lps": [-12.5814, -156.0394, -172.7839],
+          "sourceHu": -1018,
+          "sourceEdgeId": 1,
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-3",
+          "slice": 371,
+          "pixel": [221.7641, 313.7446],
+          "lps": [-29.2593, -157.8431, -183.1052],
+          "sourceHu": -1001,
+          "sourceEdgeId": 1,
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+          "landmark": "Distal"
+        }
+      ],
+      "scopePositionLps": [-12.15521218272999, -154.2757095620951, -150.78062182753658],
+      "scopeDirectionLps": [0.03358069177785027, 0.0035512309600005502, -0.9994297003283371],
+      "airwayPath": [
+        { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" }
+      ]
+    },
+    {
+      "id": "central-left",
+      "preset": "mirror",
+      "region": "Central airways",
+      "range": [330, 433],
+      "cropCenter": [267.931, 315.3759],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 431,
+        "pixel": [246.8722, 318.9907],
+        "sourceEdgeId": 0,
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 420,
+          "pixel": [247.0296, 318.7336],
+          "lps": [-11.8399, -154.4034, -158.5691],
+          "sourceHu": -989,
+          "sourceEdgeId": 0,
+          "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 375,
+          "pixel": [264.8513, 316.1771],
+          "lps": [0.4473, -156.166, -180.8106],
+          "sourceHu": -1024,
+          "sourceEdgeId": 2,
+          "airway": { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-3",
+          "slice": 344,
+          "pixel": [301.3662, 308.7467],
+          "lps": [25.6226, -161.2889, -196.5187],
+          "sourceHu": -1021,
+          "sourceEdgeId": 2,
+          "airway": { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
+          "landmark": "Distal"
+        }
+      ],
+      "scopePositionLps": [-11.948495374549314, -154.22614091216758, -152.76929251675588],
+      "scopeDirectionLps": [0.02054263683515044, -0.03249881243809145, -0.9992606403046069],
+      "airwayPath": [
+        { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
+        { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" }
+      ]
+    },
+    {
+      "id": "right-upper-entry",
+      "preset": "rul",
+      "region": "Right upper lobe",
+      "range": [355, 410],
+      "cropCenter": [212.2685, 312.7872],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 382,
+        "pixel": [234.3992, 314.9328],
+        "sourceEdgeId": 1,
+        "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 379,
+          "pixel": [230.7924, 314.4685],
+          "lps": [-23.0347, -157.344, -179.1598],
+          "sourceHu": -996,
+          "sourceEdgeId": 1,
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 371,
+          "pixel": [213.5473, 312.9333],
+          "lps": [-34.9245, -158.4025, -183.2032],
+          "sourceHu": -1024,
+          "sourceEdgeId": 3,
+          "airway": {
+            "code": "RUL",
+            "name": "Right upper lobe bronchus",
+            "shortName": "Upper lobe"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-3",
+          "slice": 388,
+          "pixel": [196.5086, 310.7075],
+          "lps": [-46.6718, -159.937, -174.5654],
+          "sourceHu": -981,
+          "sourceEdgeId": 6,
+          "airway": {
+            "code": "RB1/B2",
+            "name": "Right B1\u2013B2 common trunk",
+            "shortName": "B1\u2013B2 common trunk"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [-20.548035078942632, -157.02385314529232, -177.42963163390527],
+      "scopeDirectionLps": [-0.8123603009974109, -0.10496520845670969, -0.5736314551844552],
+      "airwayPath": [
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+        { "code": "RUL", "name": "Right upper lobe bronchus", "shortName": "Upper lobe" },
+        {
+          "code": "RB1/B2",
+          "name": "Right B1\u2013B2 common trunk",
+          "shortName": "B1\u2013B2 common trunk"
+        }
+      ]
+    },
+    {
+      "id": "right-upper-apical",
+      "preset": "rul",
+      "region": "Right upper lobe",
+      "range": [370, 440],
+      "cropCenter": [191.8546, 308.9706],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 387,
+        "pixel": [196.952, 310.0046],
+        "sourceEdgeId": 6,
+        "airway": {
+          "code": "RB1/B2",
+          "name": "Right B1\u2013B2 common trunk",
+          "shortName": "B1\u2013B2 common trunk"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 390,
+          "pixel": [195.6542, 312.0622],
+          "lps": [-47.2609, -159.003, -173.5255],
+          "sourceHu": -1011,
+          "sourceEdgeId": 6,
+          "airway": {
+            "code": "RB1/B2",
+            "name": "Right B1\u2013B2 common trunk",
+            "shortName": "B1\u2013B2 common trunk"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 409,
+          "pixel": [192.3549, 308.9998],
+          "lps": [-49.5356, -161.1144, -164.2236],
+          "sourceHu": -1018,
+          "sourceEdgeId": 13,
+          "airway": {
+            "code": "RB1",
+            "name": "Right apical segmental bronchus",
+            "shortName": "Apical"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-3",
+          "slice": 427,
+          "pixel": [187.4521, 300.7297],
+          "lps": [-52.9159, -166.8162, -154.9758],
+          "sourceHu": -999,
+          "sourceEdgeId": 28,
+          "airway": {
+            "code": "RB1b",
+            "name": "Right apical bronchus, anterior subsegment",
+            "shortName": "Apical \u00b7 anterior subsegment"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [-48.11624112036115, -157.86436505067343, -172.1050093748732],
+      "scopeDirectionLps": [-0.04628401212534779, -0.5306765864302508, 0.846309725122143],
+      "airwayPath": [
+        {
+          "code": "RB1/B2",
+          "name": "Right B1\u2013B2 common trunk",
+          "shortName": "B1\u2013B2 common trunk"
+        },
+        { "code": "RB1", "name": "Right apical segmental bronchus", "shortName": "Apical" },
+        {
+          "code": "RB1b",
+          "name": "Right apical bronchus, anterior subsegment",
+          "shortName": "Apical \u00b7 anterior subsegment"
+        }
+      ]
+    },
+    {
+      "id": "right-upper-distal",
+      "preset": "rul",
+      "region": "Right upper lobe",
+      "range": [388, 470],
+      "cropCenter": [189.0248, 312.3252],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 395,
+        "pixel": [194.3245, 312.9059],
+        "sourceEdgeId": 13,
+        "airway": {
+          "code": "RB1",
+          "name": "Right apical segmental bronchus",
+          "shortName": "Apical"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 399,
+          "pixel": [194.5992, 310.0224],
+          "lps": [-47.9883, -160.4094, -169.1663],
+          "sourceHu": -1019,
+          "sourceEdgeId": 13,
+          "airway": {
+            "code": "RB1",
+            "name": "Right apical segmental bronchus",
+            "shortName": "Apical"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 424,
+          "pixel": [189.0207, 311.7318],
+          "lps": [-51.8344, -159.2308, -156.4923],
+          "sourceHu": -984,
+          "sourceEdgeId": 29,
+          "airway": {
+            "code": "RB1a",
+            "name": "Right apical bronchus, posterior subsegment",
+            "shortName": "Apical \u00b7 posterior subsegment"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-3",
+          "slice": 450,
+          "pixel": [192.4392, 319.4934],
+          "lps": [-49.4775, -153.8795, -143.7373],
+          "sourceHu": -1018,
+          "sourceEdgeId": 61,
+          "airway": {
+            "code": "RB1a",
+            "name": "Right apical bronchus, posterior subsegment",
+            "shortName": "Apical \u00b7 posterior subsegment"
+          },
+          "landmark": "Distal"
+        }
+      ],
+      "scopePositionLps": [-48.29567322563038, -160.7547549813284, -167.72751759961605],
+      "scopeDirectionLps": [-0.3207242908241333, -0.08148384354914719, 0.9436611216511015],
+      "airwayPath": [
+        { "code": "RB1", "name": "Right apical segmental bronchus", "shortName": "Apical" },
+        {
+          "code": "RB1a",
+          "name": "Right apical bronchus, posterior subsegment",
+          "shortName": "Apical \u00b7 posterior subsegment"
+        }
+      ]
+    },
+    {
+      "id": "middle-lobe-entry",
+      "preset": "mirror",
+      "region": "Right middle lobe",
+      "range": [290, 340],
+      "cropCenter": [195.2936, 294.8767],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 337,
+        "pixel": [213.8567, 312.4235],
+        "sourceEdgeId": 4,
+        "airway": {
+          "code": "BI",
+          "name": "Bronchus intermedius",
+          "shortName": "Bronchus intermedius"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 330,
+          "pixel": [211.3334, 311.4858],
+          "lps": [-36.4508, -159.4004, -203.5232],
+          "sourceHu": -973,
+          "sourceEdgeId": 4,
+          "airway": {
+            "code": "BI",
+            "name": "Bronchus intermedius",
+            "shortName": "Bronchus intermedius"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 308,
+          "pixel": [197.4129, 296.8732],
+          "lps": [-46.0483, -169.4751, -214.4122],
+          "sourceHu": -899,
+          "sourceEdgeId": 9,
+          "airway": {
+            "code": "RML",
+            "name": "Right middle lobe bronchus",
+            "shortName": "Middle lobe"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-3",
+          "slice": 307,
+          "pixel": [184.6441, 279.0784],
+          "lps": [-54.8518, -181.7438, -215.1286],
+          "sourceHu": -998,
+          "sourceEdgeId": 19,
+          "airway": {
+            "code": "RB5",
+            "name": "Right medial segmental bronchus",
+            "shortName": "Medial"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [-34.71110277714268, -158.7539206706968, -199.93110518761804],
+      "scopeDirectionLps": [-0.4586340722021453, -0.14502650241787018, -0.8767109565938576],
+      "airwayPath": [
+        { "code": "BI", "name": "Bronchus intermedius", "shortName": "Bronchus intermedius" },
+        { "code": "RML", "name": "Right middle lobe bronchus", "shortName": "Middle lobe" },
+        { "code": "RB5", "name": "Right medial segmental bronchus", "shortName": "Medial" }
+      ]
+    },
+    {
+      "id": "middle-lobe-lateral",
+      "preset": "mirror",
+      "region": "Right middle lobe",
+      "range": [290, 330],
+      "cropCenter": [182.0406, 284.1031],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 315,
+        "pixel": [204.2192, 309.4279],
+        "sourceEdgeId": 9,
+        "airway": {
+          "code": "RML",
+          "name": "Right middle lobe bronchus",
+          "shortName": "Middle lobe"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 314,
+          "pixel": [203.7012, 303.8087],
+          "lps": [-41.7128, -164.6934, -211.7379],
+          "sourceHu": -1018,
+          "sourceEdgeId": 9,
+          "airway": {
+            "code": "RML",
+            "name": "Right middle lobe bronchus",
+            "shortName": "Middle lobe"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 307,
+          "pixel": [184.5606, 284.0839],
+          "lps": [-54.9094, -178.2927, -215.062],
+          "sourceHu": -1024,
+          "sourceEdgeId": 9,
+          "airway": {
+            "code": "RML",
+            "name": "Right middle lobe bronchus",
+            "shortName": "Middle lobe"
+          },
+          "landmark": "Distal"
+        },
+        {
+          "id": "point-3",
+          "slice": 306,
+          "pixel": [156.211, 282.139],
+          "lps": [-74.4551, -179.6337, -215.2868],
+          "sourceHu": -1024,
+          "sourceEdgeId": 39,
+          "airway": {
+            "code": "RB4a",
+            "name": "Right lateral bronchus, subsegment a",
+            "shortName": "Lateral \u00b7 subsegment a"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [-43.289811046664624, -167.24095225508043, -212.98114849280577],
+      "scopeDirectionLps": [-0.7260278980181053, -0.6231313484278275, -0.29084499979530176],
+      "airwayPath": [
+        { "code": "RML", "name": "Right middle lobe bronchus", "shortName": "Middle lobe" },
+        { "code": "RB4", "name": "Right lateral segmental bronchus", "shortName": "Lateral" },
+        {
+          "code": "RB4a",
+          "name": "Right lateral bronchus, subsegment a",
+          "shortName": "Lateral \u00b7 subsegment a"
+        }
+      ]
+    },
+    {
+      "id": "middle-lobe-caudal",
+      "preset": "mirror",
+      "region": "Right middle lobe",
+      "range": [286, 326],
+      "cropCenter": [182.0548, 268.8937],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 307,
+        "pixel": [183.8781, 283.4489],
+        "sourceEdgeId": 19,
+        "airway": {
+          "code": "RB5",
+          "name": "Right medial segmental bronchus",
+          "shortName": "Medial"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 307,
+          "pixel": [184.2797, 281.1578],
+          "lps": [-55.1031, -180.3102, -215.1017],
+          "sourceHu": -953,
+          "sourceEdgeId": 19,
+          "airway": {
+            "code": "RB5",
+            "name": "Right medial segmental bronchus",
+            "shortName": "Medial"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 307,
+          "pixel": [184.0695, 274.9552],
+          "lps": [-55.248, -184.5865, -215.1883],
+          "sourceHu": -1024,
+          "sourceEdgeId": 19,
+          "airway": {
+            "code": "RB5",
+            "name": "Right medial segmental bronchus",
+            "shortName": "Medial"
+          },
+          "landmark": "Distal"
+        },
+        {
+          "id": "point-3",
+          "slice": 301,
+          "pixel": [177.3898, 262.8537],
+          "lps": [-59.8533, -192.93, -218.041],
+          "sourceHu": -954,
+          "sourceEdgeId": 41,
+          "airway": {
+            "code": "RB5b",
+            "name": "Right medial bronchus, subsegment b",
+            "shortName": "Medial \u00b7 subsegment b"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [-54.86086429437588, -181.69235695585155, -215.1276442875574],
+      "scopeDirectionLps": [-0.23254405669290953, -0.9724891736049954, -0.01371382214694238],
+      "airwayPath": [
+        { "code": "RB5", "name": "Right medial segmental bronchus", "shortName": "Medial" },
+        {
+          "code": "RB5b",
+          "name": "Right medial bronchus, subsegment b",
+          "shortName": "Medial \u00b7 subsegment b"
+        }
+      ]
+    },
+    {
+      "id": "middle-lobe-cranial",
+      "preset": "mirror",
+      "region": "Right middle lobe",
+      "range": [294, 326],
+      "cropCenter": [182.5549, 270.5516],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 307,
+        "pixel": [183.8781, 283.4489],
+        "sourceEdgeId": 19,
+        "airway": {
+          "code": "RB5",
+          "name": "Right medial segmental bronchus",
+          "shortName": "Medial"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 307,
+          "pixel": [184.2336, 281.4207],
+          "lps": [-55.1349, -180.1289, -215.0983],
+          "sourceHu": -953,
+          "sourceEdgeId": 19,
+          "airway": {
+            "code": "RB5",
+            "name": "Right medial segmental bronchus",
+            "shortName": "Medial"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 307,
+          "pixel": [184.3969, 275.9001],
+          "lps": [-55.0223, -183.9351, -215.1626],
+          "sourceHu": -989,
+          "sourceEdgeId": 19,
+          "airway": {
+            "code": "RB5",
+            "name": "Right medial segmental bronchus",
+            "shortName": "Medial"
+          },
+          "landmark": "Distal"
+        },
+        {
+          "id": "point-3",
+          "slice": 308,
+          "pixel": [181.4973, 262.8202],
+          "lps": [-57.0214, -192.9531, -214.4741],
+          "sourceHu": -1013,
+          "sourceEdgeId": 40,
+          "airway": {
+            "code": "RB5a",
+            "name": "Right medial bronchus, subsegment a",
+            "shortName": "Medial \u00b7 subsegment a"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [-54.920426765330774, -181.3524824404896, -215.12126845089315],
+      "scopeDirectionLps": [-0.20589474707596425, -0.9784970423533209, -0.012283779236379213],
+      "airwayPath": [
+        { "code": "RB5", "name": "Right medial segmental bronchus", "shortName": "Medial" },
+        {
+          "code": "RB5a",
+          "name": "Right medial bronchus, subsegment a",
+          "shortName": "Medial \u00b7 subsegment a"
+        }
+      ]
+    },
+    {
+      "id": "upper-oblique-lateral",
+      "preset": "rul",
+      "region": "Right upper lobe",
+      "range": [368, 432],
+      "cropCenter": [161.4108, 301.6162],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 385,
+        "pixel": [186.4116, 298.3936],
+        "sourceEdgeId": 15,
+        "airway": {
+          "code": "RB3a",
+          "name": "Right anterior bronchus, lateral subsegment",
+          "shortName": "Anterior \u00b7 lateral subsegment"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 385,
+          "pixel": [182.1176, 299.2761],
+          "lps": [-56.5937, -167.8184, -175.9567],
+          "sourceHu": -991,
+          "sourceEdgeId": 15,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior \u00b7 lateral subsegment"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 395,
+          "pixel": [162.9673, 301.4431],
+          "lps": [-69.7969, -166.3244, -171.2412],
+          "sourceHu": -1024,
+          "sourceEdgeId": 32,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior \u00b7 lateral subsegment"
+          },
+          "landmark": "Midportion"
+        },
+        {
+          "id": "point-3",
+          "slice": 412,
+          "pixel": [144.0752, 303.5924],
+          "lps": [-82.8222, -164.8425, -162.6926],
+          "sourceHu": -1024,
+          "sourceEdgeId": 32,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior \u00b7 lateral subsegment"
+          },
+          "landmark": "Distal"
+        }
+      ],
+      "scopePositionLps": [-59.17208704018554, -167.71884871081906, -175.46316047410713],
+      "scopeDirectionLps": [-0.9830217213892387, 0.11046187413867292, 0.14651440078951222],
+      "airwayPath": [
+        {
+          "code": "RB3a",
+          "name": "Right anterior bronchus, lateral subsegment",
+          "shortName": "Anterior \u00b7 lateral subsegment"
+        }
+      ]
+    },
+    {
+      "id": "upper-oblique-medial",
+      "preset": "rul",
+      "region": "Right upper lobe",
+      "range": [370, 406],
+      "cropCenter": [170.5614, 300.2903],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 385,
+        "pixel": [186.4116, 298.3936],
+        "sourceEdgeId": 15,
+        "airway": {
+          "code": "RB3a",
+          "name": "Right anterior bronchus, lateral subsegment",
+          "shortName": "Anterior \u00b7 lateral subsegment"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 385,
+          "pixel": [183.9739, 298.8946],
+          "lps": [-55.3139, -168.0814, -176.0474],
+          "sourceHu": -945,
+          "sourceEdgeId": 15,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior \u00b7 lateral subsegment"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 388,
+          "pixel": [171.8006, 300.2005],
+          "lps": [-63.7068, -167.1811, -174.7204],
+          "sourceHu": -925,
+          "sourceEdgeId": 15,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior \u00b7 lateral subsegment"
+          },
+          "landmark": "Midportion"
+        },
+        {
+          "id": "point-3",
+          "slice": 383,
+          "pixel": [160.1325, 301.4372],
+          "lps": [-71.7515, -166.3284, -176.7897],
+          "sourceHu": -975,
+          "sourceEdgeId": 33,
+          "airway": {
+            "code": "RB3a",
+            "name": "Right anterior bronchus, lateral subsegment",
+            "shortName": "Anterior \u00b7 lateral subsegment"
+          },
+          "landmark": "Distal"
+        }
+      ],
+      "scopePositionLps": [-56.78454245038505, -167.7792118022781, -175.94315062462576],
+      "scopeDirectionLps": [-0.9775252078327431, 0.08829088264320112, 0.19143977667568696],
+      "airwayPath": [
+        {
+          "code": "RB3a",
+          "name": "Right anterior bronchus, lateral subsegment",
+          "shortName": "Anterior \u00b7 lateral subsegment"
+        }
+      ]
+    },
+    {
+      "id": "left-upper-division",
+      "preset": "upper-division",
+      "region": "Left upper division",
+      "range": [328, 410],
+      "cropCenter": [330.401, 293.4364],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 339,
+        "pixel": [311.2561, 307.5814],
+        "sourceEdgeId": 496,
+        "airway": { "code": "LUL", "name": "Left upper lobe bronchus", "shortName": "Upper lobe" }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 340,
+          "pixel": [315.2026, 304.5135],
+          "lps": [35.1622, -164.2075, -198.2506],
+          "sourceHu": -1010,
+          "sourceEdgeId": 496,
+          "airway": {
+            "code": "LUL",
+            "name": "Left upper lobe bronchus",
+            "shortName": "Upper lobe"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 353,
+          "pixel": [330.9251, 293.0733],
+          "lps": [46.0021, -172.095, -191.8081],
+          "sourceHu": -988,
+          "sourceEdgeId": 21,
+          "airway": {
+            "code": "LUL division",
+            "name": "Left upper division bronchus",
+            "shortName": "Upper division"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-3",
+          "slice": 386,
+          "pixel": [333.0508, 298.956],
+          "lps": [47.4677, -168.0391, -175.4856],
+          "sourceHu": -1022,
+          "sourceEdgeId": 45,
+          "airway": {
+            "code": "LB1+2",
+            "name": "Left apicoposterior segmental bronchus",
+            "shortName": "Apicoposterior"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [37.54300769705786, -166.05820688056718, -197.67548664309638],
+      "scopeDirectionLps": [0.8004163129678061, -0.5627872918058741, 0.20640782474710828],
+      "airwayPath": [
+        { "code": "LUL", "name": "Left upper lobe bronchus", "shortName": "Upper lobe" },
+        {
+          "code": "LUL division",
+          "name": "Left upper division bronchus",
+          "shortName": "Upper division"
+        },
+        {
+          "code": "LB1+2",
+          "name": "Left apicoposterior segmental bronchus",
+          "shortName": "Apicoposterior"
+        }
+      ]
+    },
+    {
+      "id": "left-upper-anterior",
+      "preset": "upper-division",
+      "region": "Left upper division",
+      "range": [345, 395],
+      "cropCenter": [332.7457, 292.34],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 348,
+        "pixel": [331.7897, 292.4743],
+        "sourceEdgeId": 21,
+        "airway": {
+          "code": "LUL division",
+          "name": "Left upper division bronchus",
+          "shortName": "Upper division"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 351,
+          "pixel": [331.315, 292.8032],
+          "lps": [46.2709, -172.2812, -193.0715],
+          "sourceHu": -1024,
+          "sourceEdgeId": 21,
+          "airway": {
+            "code": "LUL division",
+            "name": "Left upper division bronchus",
+            "shortName": "Upper division"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 366,
+          "pixel": [332.4079, 292.557],
+          "lps": [47.0244, -172.451, -185.5365],
+          "sourceHu": -982,
+          "sourceEdgeId": 21,
+          "airway": {
+            "code": "LUL division",
+            "name": "Left upper division bronchus",
+            "shortName": "Upper division"
+          },
+          "landmark": "Distal"
+        },
+        {
+          "id": "point-3",
+          "slice": 375,
+          "pixel": [337.9802, 285.8363],
+          "lps": [50.8662, -177.0845, -180.891],
+          "sourceHu": -1024,
+          "sourceEdgeId": 44,
+          "airway": {
+            "code": "LB3",
+            "name": "Left anterior segmental bronchus",
+            "shortName": "Anterior"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [45.98451796079199, -172.08280188990423, -191.72559487705587],
+      "scopeDirectionLps": [0.15276134001855501, -0.04593867285709094, 0.9871948193400655],
+      "airwayPath": [
+        {
+          "code": "LUL division",
+          "name": "Left upper division bronchus",
+          "shortName": "Upper division"
+        },
+        { "code": "LB3", "name": "Left anterior segmental bronchus", "shortName": "Anterior" }
+      ]
+    },
+    {
+      "id": "left-lingula",
+      "preset": "mirror",
+      "region": "Lingula",
+      "range": [302, 365],
+      "cropCenter": [334.3989, 290.5814],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 339,
+        "pixel": [311.2561, 307.5814],
+        "sourceEdgeId": 496,
+        "airway": { "code": "LUL", "name": "Left upper lobe bronchus", "shortName": "Upper lobe" }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 340,
+          "pixel": [315.0948, 304.5974],
+          "lps": [35.0878, -164.1496, -198.2686],
+          "sourceHu": -1010,
+          "sourceEdgeId": 496,
+          "airway": {
+            "code": "LUL",
+            "name": "Left upper lobe bronchus",
+            "shortName": "Upper lobe"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 344,
+          "pixel": [333.2928, 291.3839],
+          "lps": [47.6345, -173.2597, -196.5427],
+          "sourceHu": -1018,
+          "sourceEdgeId": 20,
+          "airway": {
+            "code": "LB4+5",
+            "name": "Left lingular bronchus",
+            "shortName": "Lingular bronchus"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-3",
+          "slice": 322,
+          "pixel": [347.8871, 279.9949],
+          "lps": [57.6965, -181.1119, -207.3091],
+          "sourceHu": -979,
+          "sourceEdgeId": 43,
+          "airway": {
+            "code": "LB5",
+            "name": "Left inferior lingular segmental bronchus",
+            "shortName": "Inferior lingular"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [37.40354546275158, -165.94979597299582, -197.70917491814913],
+      "scopeDirectionLps": [0.8003155518361361, -0.5641709979612539, 0.20299286329480593],
+      "airwayPath": [
+        { "code": "LUL", "name": "Left upper lobe bronchus", "shortName": "Upper lobe" },
+        { "code": "LB4+5", "name": "Left lingular bronchus", "shortName": "Lingular bronchus" },
+        {
+          "code": "LB5",
+          "name": "Left inferior lingular segmental bronchus",
+          "shortName": "Inferior lingular"
+        }
+      ]
+    },
+    {
+      "id": "left-lower-returning",
+      "preset": "mirror",
+      "region": "Left lower lobe",
+      "range": [310, 370],
+      "cropCenter": [322.3358, 327.4818],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 339,
+        "pixel": [311.2561, 307.5814],
+        "sourceEdgeId": 5,
+        "airway": { "code": "LLL", "name": "Left lower lobe bronchus", "shortName": "Lower lobe" }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 335,
+          "pixel": [313.6398, 310.0207],
+          "lps": [34.0847, -160.4105, -201.1534],
+          "sourceHu": -997,
+          "sourceEdgeId": 5,
+          "airway": {
+            "code": "LLL",
+            "name": "Left lower lobe bronchus",
+            "shortName": "Lower lobe"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 327,
+          "pixel": [321.5905, 325.2959],
+          "lps": [39.5663, -149.879, -205.0906],
+          "sourceHu": -1020,
+          "sourceEdgeId": 10,
+          "airway": {
+            "code": "LB6",
+            "name": "Left superior segmental bronchus",
+            "shortName": "Superior"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-3",
+          "slice": 346,
+          "pixel": [325.8048, 341.6523],
+          "lps": [42.4719, -138.602, -195.5371],
+          "sourceHu": -1012,
+          "sourceEdgeId": 50,
+          "airway": {
+            "code": "LB6",
+            "name": "Left superior segmental bronchus",
+            "shortName": "Superior"
+          },
+          "landmark": "Distal"
+        }
+      ],
+      "scopePositionLps": [35.52270508889162, -158.9389701885842, -203.11827382576413],
+      "scopeDirectionLps": [0.5151039700189624, 0.5287522147509105, -0.6746028427650681],
+      "airwayPath": [
+        { "code": "LLL", "name": "Left lower lobe bronchus", "shortName": "Lower lobe" },
+        { "code": "LB6", "name": "Left superior segmental bronchus", "shortName": "Superior" }
+      ]
+    },
+    {
+      "id": "right-lower-basal",
+      "preset": "mirror",
+      "region": "Right lower lobe",
+      "range": [245, 325],
+      "cropCenter": [190.824, 318.7912],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 315,
+        "pixel": [204.2192, 309.4279],
+        "sourceEdgeId": 8,
+        "airway": { "code": "RLL", "name": "Right lower lobe bronchus", "shortName": "Lower lobe" }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 311,
+          "pixel": [201.7849, 313.0665],
+          "lps": [-43.0341, -158.3106, -212.7551],
+          "sourceHu": -1004,
+          "sourceEdgeId": 8,
+          "airway": {
+            "code": "RLL",
+            "name": "Right lower lobe bronchus",
+            "shortName": "Lower lobe"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-2",
+          "slice": 284,
+          "pixel": [192.9799, 318.7597],
+          "lps": [-49.1047, -154.3854, -226.4282],
+          "sourceHu": -913,
+          "sourceEdgeId": 34,
+          "airway": {
+            "code": "R basal",
+            "name": "Right basal bronchus",
+            "shortName": "Basal bronchus"
+          },
+          "landmark": ""
+        },
+        {
+          "id": "point-3",
+          "slice": 264,
+          "pixel": [173.344, 317.723],
+          "lps": [-62.6427, -155.1002, -236.4998],
+          "sourceHu": -1024,
+          "sourceEdgeId": 71,
+          "airway": {
+            "code": "RB8",
+            "name": "Right anterior basal segmental bronchus",
+            "shortName": "Anterior basal"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [-44.44830651726785, -156.48807729946847, -214.76710708726378],
+      "scopeDirectionLps": [-0.3820110482258086, 0.203217594784659, -0.9015376687656247],
+      "airwayPath": [
+        { "code": "RLL", "name": "Right lower lobe bronchus", "shortName": "Lower lobe" },
+        { "code": "R basal", "name": "Right basal bronchus", "shortName": "Basal bronchus" },
+        {
+          "code": "RB8",
+          "name": "Right anterior basal segmental bronchus",
+          "shortName": "Anterior basal"
+        }
+      ]
+    },
+    {
+      "id": "left-lower-basal",
+      "preset": "mirror",
+      "region": "Left lower lobe",
+      "range": [245, 325],
+      "cropCenter": [335.4133, 319.4144],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 321,
+        "pixel": [321.3786, 317.9269],
+        "sourceEdgeId": 11,
+        "airway": {
+          "code": "L basal",
+          "name": "Left basal bronchus",
+          "shortName": "Basal bronchus"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 316,
+          "pixel": [322.8127, 315.4201],
+          "lps": [40.409, -156.6879, -210.3488],
+          "sourceHu": -866,
+          "sourceEdgeId": 11,
+          "airway": {
+            "code": "L basal",
+            "name": "Left basal bronchus",
+            "shortName": "Basal bronchus"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 291,
+          "pixel": [334.3786, 318.6454],
+          "lps": [48.3831, -154.4642, -223.0964],
+          "sourceHu": -1022,
+          "sourceEdgeId": 11,
+          "airway": {
+            "code": "L basal",
+            "name": "Left basal bronchus",
+            "shortName": "Basal bronchus"
+          },
+          "landmark": "Distal"
+        },
+        {
+          "id": "point-3",
+          "slice": 267,
+          "pixel": [344.5897, 322.9444],
+          "lps": [55.4232, -151.5003, -235.2028],
+          "sourceHu": -999,
+          "sourceEdgeId": 51,
+          "airway": {
+            "code": "LB9",
+            "name": "Left lateral basal segmental bronchus",
+            "shortName": "Lateral basal"
+          },
+          "landmark": ""
+        }
+      ],
+      "scopePositionLps": [41.61122400296233, -156.9837627040734, -212.6202308286373],
+      "scopeDirectionLps": [0.5741117818382363, 0.14777795226874466, -0.8053305773269644],
+      "airwayPath": [
+        { "code": "L basal", "name": "Left basal bronchus", "shortName": "Basal bronchus" },
+        {
+          "code": "LB7+8/B9",
+          "name": "Left B7+8\u2013B9 common trunk",
+          "shortName": "B7+8\u2013B9 common trunk"
+        },
+        {
+          "code": "LB9",
+          "name": "Left lateral basal segmental bronchus",
+          "shortName": "Lateral basal"
+        }
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "path": "axial/240.png",
+      "bytes": 215063,
+      "sha256": "4ee2bfa5772945414e8bf6c9317a67d221b4576f10e15e860967712ab9322830"
+    },
+    {
+      "path": "axial/241.png",
+      "bytes": 214641,
+      "sha256": "cdd104fdb9f61920144c8ae6580904626971a8f004075624bea441b1468e482f"
+    },
+    {
+      "path": "axial/242.png",
+      "bytes": 214419,
+      "sha256": "fb6827ebf4578c73b595fcf2f24dfc1e16b16f0f9ee9cbafc1a9dd28792d2ec0"
+    },
+    {
+      "path": "axial/243.png",
+      "bytes": 214247,
+      "sha256": "2ea5e61124bc428db801f1a9f12e0176bb0eb5c7b0abd068321f5b8dda26d0f2"
+    },
+    {
+      "path": "axial/244.png",
+      "bytes": 214150,
+      "sha256": "105a144d1f95e7d039c9aefebbc87d3306e617624d797f697ca626b0166d22cc"
+    },
+    {
+      "path": "axial/245.png",
+      "bytes": 213797,
+      "sha256": "33294fd3826dd6dbee5d27cafe63bbcd7396ef2f60f75387f553f7c1393e4a76"
+    },
+    {
+      "path": "axial/246.png",
+      "bytes": 213485,
+      "sha256": "3bdfe924443e9840da50bff0001fabf83b136594cb83f231820fd46cd0eeda68"
+    },
+    {
+      "path": "axial/247.png",
+      "bytes": 213118,
+      "sha256": "8e274dead91e2ce7d3cfe1451eb581fea00479aa504c0c66e878e236b787caff"
+    },
+    {
+      "path": "axial/248.png",
+      "bytes": 212826,
+      "sha256": "c323709bfd234b68b306e238ec00f36a424881944c1ccf8e0960e51cdfa5bd7a"
+    },
+    {
+      "path": "axial/249.png",
+      "bytes": 212778,
+      "sha256": "1d74ffff2967e69645af97f5b50dd3da2a5bb6c9e0696adb921fdb97c8ae03b2"
+    },
+    {
+      "path": "axial/250.png",
+      "bytes": 212881,
+      "sha256": "230cb6ce30f9becebbd0467478666b45df488931a083d6e8cdd2968b24d08f58"
+    },
+    {
+      "path": "axial/251.png",
+      "bytes": 212690,
+      "sha256": "7ab59bd7945811963f78c02c42c43c703d522dbcbc0cc0ebbbe65fccd83eeb15"
+    },
+    {
+      "path": "axial/252.png",
+      "bytes": 212598,
+      "sha256": "2d14d279a706c495c6ae46ab4daf8da48f09f442315a0815513db331cb3b1c16"
+    },
+    {
+      "path": "axial/253.png",
+      "bytes": 212705,
+      "sha256": "a96cd2d945ec4fd04379af4f83c3727d8539b9cabb9fe1219646246703894b7f"
+    },
+    {
+      "path": "axial/254.png",
+      "bytes": 212692,
+      "sha256": "143dc9938718d0ec0e7a8298ca3c46f7025bd0451408a1a169eb077f316bb3d5"
+    },
+    {
+      "path": "axial/255.png",
+      "bytes": 212658,
+      "sha256": "9eae3ce72fb15295aeca0af365c9de17e0593502f79c6763d44b95db095fdff3"
+    },
+    {
+      "path": "axial/256.png",
+      "bytes": 212726,
+      "sha256": "ab867ee7a21e4ba94cf6a47222a1683490a7dacea95098b3d407d07921fd7e09"
+    },
+    {
+      "path": "axial/257.png",
+      "bytes": 212536,
+      "sha256": "ac5ac695cd26d4c0b24f38c52e2cfdbb9308662b83ece3befcf0e07b30615c93"
+    },
+    {
+      "path": "axial/258.png",
+      "bytes": 212651,
+      "sha256": "6d4175b6a99b4376f4ed01abecec3622f95fda4ac88203aa9a9831df28254783"
+    },
+    {
+      "path": "axial/259.png",
+      "bytes": 212667,
+      "sha256": "50b01ac02b9de2a92e315d591690b77d8d9cbd82dfabb254a215ba130bf3fdc6"
+    },
+    {
+      "path": "axial/260.png",
+      "bytes": 212466,
+      "sha256": "01462c07ce297546bda6197caf1c0c9e21ff21fd3237de5157837ccf4b423ff4"
+    },
+    {
+      "path": "axial/261.png",
+      "bytes": 212196,
+      "sha256": "5aad4be074cb0f95284340e454730d205340129bfbd630acc7fdf47cd18e09de"
+    },
+    {
+      "path": "axial/262.png",
+      "bytes": 211721,
+      "sha256": "515e3a5cb80f59c9add306c25d5e4f7eee93dda12bf63ff59e1dc71089f12f38"
+    },
+    {
+      "path": "axial/263.png",
+      "bytes": 211590,
+      "sha256": "b015bf487df73eaeaa5e120f7a21bb475e16c99c418bca8b02d63afb1f386972"
+    },
+    {
+      "path": "axial/264.png",
+      "bytes": 211154,
+      "sha256": "bfc417dfaaeed13b1a6c9657b11211e401dfc9eb014401c6b9ad1c37a51415d0"
+    },
+    {
+      "path": "axial/265.png",
+      "bytes": 210900,
+      "sha256": "6b0a322f54e40283714ab304588994578e1aa9fae7dd0adb2045991e6f1084fb"
+    },
+    {
+      "path": "axial/266.png",
+      "bytes": 210531,
+      "sha256": "bda259c08eaa91cdf4f1e79a317731ff5929cd67dfcc4256fe5138d7da4950cd"
+    },
+    {
+      "path": "axial/267.png",
+      "bytes": 210484,
+      "sha256": "e43e77fc6509b599bf2176e5567190c7492e08922d98de6ba2006dfac1e2a8b7"
+    },
+    {
+      "path": "axial/268.png",
+      "bytes": 210141,
+      "sha256": "bfd41678749711f3941c3deb7b24d769dbf1839cd51bd303af57daf89c0450a7"
+    },
+    {
+      "path": "axial/269.png",
+      "bytes": 209647,
+      "sha256": "cbcaf2301a2309d122976e3e35199846906a38e549932d6e1b980c7906a2f6bb"
+    },
+    {
+      "path": "axial/270.png",
+      "bytes": 209550,
+      "sha256": "f8db17e1f42eeaa8aa0cd17ea3c129726f23bacf6103028dfa06e32659d09ad7"
+    },
+    {
+      "path": "axial/271.png",
+      "bytes": 209622,
+      "sha256": "d2900a15cf21a7fc8b7458a011172407e5232d8586b37ad0823728daca865342"
+    },
+    {
+      "path": "axial/272.png",
+      "bytes": 209331,
+      "sha256": "273874594bf2e5292b997841ffd2b76146786f962b0d1c231627511dc682ee67"
+    },
+    {
+      "path": "axial/273.png",
+      "bytes": 209256,
+      "sha256": "608233eaa6a512a910e85bea3db36b2c9802d6eec464c0ab8afb206e202b5edc"
+    },
+    {
+      "path": "axial/274.png",
+      "bytes": 209239,
+      "sha256": "8b43c6a0abcb66a538204b0f1f76fb3a7b3ea808252fb32a14410c468ebf0eb1"
+    },
+    {
+      "path": "axial/275.png",
+      "bytes": 209303,
+      "sha256": "5458eca0d9416141d2e4861b00c5cffe09aee57ddbb56f80e966b5b4c5f611f2"
+    },
+    {
+      "path": "axial/276.png",
+      "bytes": 209486,
+      "sha256": "d8490ea0eb7be1438a261610d596868699ad84d5a0c1b3e12d057cf76e7935b7"
+    },
+    {
+      "path": "axial/277.png",
+      "bytes": 210001,
+      "sha256": "3ca4abaff01c7f474828a33ff8a920a2901f18fd92067f594e6d1ee4785d0741"
+    },
+    {
+      "path": "axial/278.png",
+      "bytes": 209799,
+      "sha256": "4a0e33bd8a607b3eb7134e3c6fb02d75e2b764a56a9ea7ae2881a1419ce9baaa"
+    },
+    {
+      "path": "axial/279.png",
+      "bytes": 209915,
+      "sha256": "5eb947f606eeb538bdf8046c59475a567e0b98e34d96cdc92c7be0ce6622d459"
+    },
+    {
+      "path": "axial/280.png",
+      "bytes": 209919,
+      "sha256": "ef1de4ed8348a92ef27bd6ee74c7b1bb676a268832b150a9185b2fb5655483ac"
+    },
+    {
+      "path": "axial/281.png",
+      "bytes": 209448,
+      "sha256": "8e8773d57132fd9ef60d1c97ae841ad18cbaab2f3e6f0e7646056790397843f0"
+    },
+    {
+      "path": "axial/282.png",
+      "bytes": 209191,
+      "sha256": "655049cec33f60c1c87ce4215e70cb00363673b407962a6290737bb65d40bbc5"
+    },
+    {
+      "path": "axial/283.png",
+      "bytes": 208555,
+      "sha256": "85d3690d701d4cc9b1add2d97becc7fe015e80261aaf2499ecbd01d54e1582b5"
+    },
+    {
+      "path": "axial/284.png",
+      "bytes": 208407,
+      "sha256": "0c8bc8b1c1fe0edcdd532b1a04067df4781a00e9174758cc7db5fa345e0bcc3e"
+    },
+    {
+      "path": "axial/285.png",
+      "bytes": 208364,
+      "sha256": "3d4e35e6a61bb7759047e06da7f7d03f6e524ef69f57dec515e080d7afa35fc6"
+    },
+    {
+      "path": "axial/286.png",
+      "bytes": 208020,
+      "sha256": "f7a6999c6e8542a2c25fab128aeb4726fe7a13dd9352081c08ea399e93270b27"
+    },
+    {
+      "path": "axial/287.png",
+      "bytes": 207811,
+      "sha256": "4c7270c5fec0c7fd91251310971de515ee4ee6b30a26f719f76ff00fa0f495ef"
+    },
+    {
+      "path": "axial/288.png",
+      "bytes": 207532,
+      "sha256": "93b74201b2a3d65b1463b138a1e6a02a19de330cdf7e6323d1611c2f07de3761"
+    },
+    {
+      "path": "axial/289.png",
+      "bytes": 207586,
+      "sha256": "5e17faf00bdb607c2441495ae01a561ca25e5f8eb5341da05fc37f4770e1b3a7"
+    },
+    {
+      "path": "axial/290.png",
+      "bytes": 207673,
+      "sha256": "acd21adc304eb978dcbd7dcac83fe0512de519110c6d8bb14dbc8bd767b3ef7a"
+    },
+    {
+      "path": "axial/291.png",
+      "bytes": 207758,
+      "sha256": "9c7bd75c047d1baa55e04c43f6e8c8e9943189fa56f0cae4841f079fcdb614f6"
+    },
+    {
+      "path": "axial/292.png",
+      "bytes": 207966,
+      "sha256": "896f56b44fc341aa61a409b2e1307dc1881430293705ca3fb6094f8a350034e0"
+    },
+    {
+      "path": "axial/293.png",
+      "bytes": 208292,
+      "sha256": "657e15528f47e8699d13f11a8a695eca5bb086f99c2c8d4a0180525b9da34cd5"
+    },
+    {
+      "path": "axial/294.png",
+      "bytes": 208362,
+      "sha256": "e9a2b7c4edeb0b4a3da8ab87f40a7a83af9ec5577dd2ec70d9233ba4f6eb6343"
+    },
+    {
+      "path": "axial/295.png",
+      "bytes": 208405,
+      "sha256": "0f70260874fe4fd6b652f5cbfe7e9c4628d36d2e2d57731edebf472540a4b19a"
+    },
+    {
+      "path": "axial/296.png",
+      "bytes": 208335,
+      "sha256": "4c827263702994a887d583d8923875c8895b2710e5892169bc6b0758dc84a6c2"
+    },
+    {
+      "path": "axial/297.png",
+      "bytes": 208666,
+      "sha256": "6bb108ded135901e7956698da35b550156f5651b9b6632491186544e106ca85e"
+    },
+    {
+      "path": "axial/298.png",
+      "bytes": 208664,
+      "sha256": "db5736f4d9239f59ebc2359b0b1439ebd92b0880cf501149307c5cf2d60d7cd8"
+    },
+    {
+      "path": "axial/299.png",
+      "bytes": 208520,
+      "sha256": "edc7adfe82bfe703c518ac02026280856b30a4a2b47407afef170b86b797e6b2"
+    },
+    {
+      "path": "axial/300.png",
+      "bytes": 208207,
+      "sha256": "fae9ae62fa0b9ae783931b560cf585be3077042594512e57b1359821e625fa23"
+    },
+    {
+      "path": "axial/301.png",
+      "bytes": 208338,
+      "sha256": "711cf87602d815e9bf3b3af10f898da4833d1e9258cf9df07efbc51a053255d4"
+    },
+    {
+      "path": "axial/302.png",
+      "bytes": 207885,
+      "sha256": "838182c91967a84d98c5a420bb16ba234b5292d1e9839bd3c1451fbed0c2dee4"
+    },
+    {
+      "path": "axial/303.png",
+      "bytes": 207603,
+      "sha256": "f328bf976e9eb92cfb8b278b5a999efa3294b2c5cf29b9066747e9b9b238849b"
+    },
+    {
+      "path": "axial/304.png",
+      "bytes": 207165,
+      "sha256": "f68edb547533914502c94ebde40ff973c1724c4b6aae838f012f0abdc74b7c2d"
+    },
+    {
+      "path": "axial/305.png",
+      "bytes": 206796,
+      "sha256": "d66e9874c756c186aae7f0cce33ccda33736ffee47c6bba04c15e0213e8cb48b"
+    },
+    {
+      "path": "axial/306.png",
+      "bytes": 206654,
+      "sha256": "c1720acc51cb2581031256af16c2aad49e97fb3fdc0e46efa510bc8ed77a98c7"
+    },
+    {
+      "path": "axial/307.png",
+      "bytes": 206582,
+      "sha256": "9e1a241e0a28bd6bc3db7c5edf589361e307238dab813ee8c7635f3dea1dfd36"
+    },
+    {
+      "path": "axial/308.png",
+      "bytes": 206475,
+      "sha256": "8c839ab659559d77ba7f2ec4df2ba46c193f6d96e958eac0ba22bea0e6a2a71d"
+    },
+    {
+      "path": "axial/309.png",
+      "bytes": 206532,
+      "sha256": "df9014204122273210de4982668ffa4b3c806bc4e3224d787efde44be849d593"
+    },
+    {
+      "path": "axial/310.png",
+      "bytes": 206894,
+      "sha256": "73a7fc760534e85dd02808f49adc09f4e85d290e7145343e363720d9a580fad1"
+    },
+    {
+      "path": "axial/311.png",
+      "bytes": 207033,
+      "sha256": "9c8f867de0201a9a58b4fd70d28e5bb7b6c13d85b2a9b484cc5a88d3a15ad1ec"
+    },
+    {
+      "path": "axial/312.png",
+      "bytes": 207090,
+      "sha256": "414041e20e920ec077bc5db9af274f92fae2a6bbc5724d24ad61373cac06f979"
+    },
+    {
+      "path": "axial/313.png",
+      "bytes": 207110,
+      "sha256": "4139f2fbaa1473caed00551134398648f6a53bad76c610e5e28d98430e8be073"
+    },
+    {
+      "path": "axial/314.png",
+      "bytes": 207082,
+      "sha256": "4ec2b9ad6f5bf17ef3cf7147eb6e90b00cc52f4d27ca98a875b67809798fe0ff"
+    },
+    {
+      "path": "axial/315.png",
+      "bytes": 207147,
+      "sha256": "1361ef4a1eeb7b14bb6355a0b72aea21a4e61ab18afc60dd5f81dfe0fc267809"
+    },
+    {
+      "path": "axial/316.png",
+      "bytes": 207160,
+      "sha256": "63d66ad961af32a7d60b1b6e9490f991b4fa167eeb88c0053b8c49c3ae00854c"
+    },
+    {
+      "path": "axial/317.png",
+      "bytes": 206732,
+      "sha256": "70a5d1774850e032f84120ddaca4a268f0af1a4b9c49f70b9deece767255a102"
+    },
+    {
+      "path": "axial/318.png",
+      "bytes": 206442,
+      "sha256": "c5ad716c9d4a35d79d9a65a130e88be7b30e7346963b7b047ea41e4855fdbbf8"
+    },
+    {
+      "path": "axial/319.png",
+      "bytes": 206195,
+      "sha256": "aa727744956e98627b41bc916c4c45a5f164f0a97b8d8f7faee493b9d9737958"
+    },
+    {
+      "path": "axial/320.png",
+      "bytes": 206156,
+      "sha256": "89a8837794af965c33993788e2826a2998d0d7358fa0786575b6260ea275d355"
+    },
+    {
+      "path": "axial/321.png",
+      "bytes": 205986,
+      "sha256": "ed08a787e4d98f6b42884209fd294a4611b31fd84bf1a0ee064621480680b502"
+    },
+    {
+      "path": "axial/322.png",
+      "bytes": 205692,
+      "sha256": "ced3e75f5a3e9a077e7dd93ddd394c0ab8c4e9359b5d2f704075435a02c260d5"
+    },
+    {
+      "path": "axial/323.png",
+      "bytes": 205471,
+      "sha256": "c99253b079a46039fda9ccb92683b3da7865b894b28fb6f87649779e5dbd6808"
+    },
+    {
+      "path": "axial/324.png",
+      "bytes": 205344,
+      "sha256": "51b3f8e17e81a65a9de7ab3e3d92ff320b0300664a8459ec9e59aec67d7c4a1b"
+    },
+    {
+      "path": "axial/325.png",
+      "bytes": 204973,
+      "sha256": "e0411fa9ffffed5053da486b6bd3920351c8b198e129ff91330e5353a7a39451"
+    },
+    {
+      "path": "axial/326.png",
+      "bytes": 204974,
+      "sha256": "d24a16bf879fa911fed06ffd26f473856cc6ad1f66b2821471659516ca06dc31"
+    },
+    {
+      "path": "axial/327.png",
+      "bytes": 204884,
+      "sha256": "e7a6cf293dcabc47cbc3d0d67df1dc2915d37337984b6b4e85ab72ee95793e34"
+    },
+    {
+      "path": "axial/328.png",
+      "bytes": 204884,
+      "sha256": "515ea33b115670fa793aa61e11eed792d48c19fb05aeb003af6497b591c416d8"
+    },
+    {
+      "path": "axial/329.png",
+      "bytes": 205180,
+      "sha256": "a9b0908a1deae014480bf696aa8030fe2369e093546452813eebfd755919eac4"
+    },
+    {
+      "path": "axial/330.png",
+      "bytes": 205379,
+      "sha256": "9940d3002ceee12eeaefe9165802b67ffad4c07056b5e1708bffee19a6414161"
+    },
+    {
+      "path": "axial/331.png",
+      "bytes": 205458,
+      "sha256": "6656d8a05e14c029315e64b86d632ebcd15897d30d2c12dc8254807ff233fe5b"
+    },
+    {
+      "path": "axial/332.png",
+      "bytes": 205605,
+      "sha256": "d0d3de1d22071fd1b8cf27c282768da2195a5f0ed2336c1298ee7dd21515c39d"
+    },
+    {
+      "path": "axial/333.png",
+      "bytes": 205674,
+      "sha256": "b26cfad91749624928f725025f0dc307ee9f69f75ae12a95b76f64cf5188c1d3"
+    },
+    {
+      "path": "axial/334.png",
+      "bytes": 205802,
+      "sha256": "ffd36c620533c6d7056b1f35fefbdb4ff5379a9d9b1eb77a09b4afa9485cbf9e"
+    },
+    {
+      "path": "axial/335.png",
+      "bytes": 205529,
+      "sha256": "8713bc5e691aa2ad8744c4bd55053a8ccfdd21692893957ba75760de447debf7"
+    },
+    {
+      "path": "axial/336.png",
+      "bytes": 205534,
+      "sha256": "e67fac38682d98b34d56a633878acbd3670507073493ab4c74f12e95471d51c8"
+    },
+    {
+      "path": "axial/337.png",
+      "bytes": 205325,
+      "sha256": "a2352ea9ed41303937ae51ca03a01da16daabc731506ea543bb9b0b78639c366"
+    },
+    {
+      "path": "axial/338.png",
+      "bytes": 204946,
+      "sha256": "6bd7a2cdd3cd986c25b32058332e117fa14a3e90f92180a779f34b12d66dfc53"
+    },
+    {
+      "path": "axial/339.png",
+      "bytes": 205040,
+      "sha256": "e860e3cd6ab6fda54d4217433fbfb193784d23d9fffa52f54ed247b8a913ff24"
+    },
+    {
+      "path": "axial/340.png",
+      "bytes": 204790,
+      "sha256": "e7fccd1c3165b242fb84505aa4c189e895073f060bf953512c7722700e556334"
+    },
+    {
+      "path": "axial/341.png",
+      "bytes": 204770,
+      "sha256": "8216235450b25e5dd1111b7abe3ab2ac963f3dbe81cb88e802a2f510dbef400c"
+    },
+    {
+      "path": "axial/342.png",
+      "bytes": 204871,
+      "sha256": "a781049f7d4c8b1bd8a7c175044bcf41a0631bc6804127a4f64a79e23f18532b"
+    },
+    {
+      "path": "axial/343.png",
+      "bytes": 204736,
+      "sha256": "9160be31fa54f1a8ad7be9603480506d96e998945ccfd30809c12fa922e949ca"
+    },
+    {
+      "path": "axial/344.png",
+      "bytes": 204853,
+      "sha256": "e10cdc7fe2b25c3434d54655ffcf3a5fe0487ead903dfd3a1d5d8806ae9a7bb2"
+    },
+    {
+      "path": "axial/345.png",
+      "bytes": 204692,
+      "sha256": "5438feb050b88faf4625bca13bd040254c4ad9a263c85873fbc584aa115c7fec"
+    },
+    {
+      "path": "axial/346.png",
+      "bytes": 204145,
+      "sha256": "ca5f0a222362f6381c8e6aa43fa7195a6fa0eff0a0bcfb6809450a0545cb28f3"
+    },
+    {
+      "path": "axial/347.png",
+      "bytes": 204494,
+      "sha256": "5a90ba808baed599e75ef581cfcaa53031a0b85691a41df63a7aefca4e50f096"
+    },
+    {
+      "path": "axial/348.png",
+      "bytes": 204543,
+      "sha256": "f9909ad066e696329b375fba549d3db1d627bc29ad5b4ba1272c0ac9f1096fda"
+    },
+    {
+      "path": "axial/349.png",
+      "bytes": 204470,
+      "sha256": "b01d5ed572852780d2c5658a15b422d55eed8235b316c741c3f937aa1caee778"
+    },
+    {
+      "path": "axial/350.png",
+      "bytes": 204564,
+      "sha256": "bcde909a954ed889f93c7f383c8eab08d29edc05732b993044669228983b82dc"
+    },
+    {
+      "path": "axial/351.png",
+      "bytes": 204792,
+      "sha256": "5d772e25f89be26f803b065763d68fddf108781ac72f30b71ad3ce25341c874f"
+    },
+    {
+      "path": "axial/352.png",
+      "bytes": 204780,
+      "sha256": "0cb90ca549e2a7450cf7fed6c04057ff12210ab8c6f080c9dc6ff301c277b907"
+    },
+    {
+      "path": "axial/353.png",
+      "bytes": 204781,
+      "sha256": "35d93e39f6ad22869fd86ad2d6119b0632296137b0c5551d5ddbedc4adfce499"
+    },
+    {
+      "path": "axial/354.png",
+      "bytes": 204719,
+      "sha256": "984243b840e4b3f0ea51e79afa97f3497437a66f980d00d92a29af249eaf0fc5"
+    },
+    {
+      "path": "axial/355.png",
+      "bytes": 204617,
+      "sha256": "54389a16c3172a42e1cc2f031b08d452afb8e989462c1dfcd19a620dac0e8a4e"
+    },
+    {
+      "path": "axial/356.png",
+      "bytes": 204235,
+      "sha256": "56c8502d0a09ca1c811426cf38936c9dd61d3c316d87a9cb5980a28a1adb2ae2"
+    },
+    {
+      "path": "axial/357.png",
+      "bytes": 203668,
+      "sha256": "c70295a3d05ee1470e443d69f48f46381ffcdd2a6d4c66215fe859c3b5085dd2"
+    },
+    {
+      "path": "axial/358.png",
+      "bytes": 203117,
+      "sha256": "2e29fc8172186306f974c234d63cb0e96d91fd933613e79e4384a2b62e612172"
+    },
+    {
+      "path": "axial/359.png",
+      "bytes": 203001,
+      "sha256": "375d8c0e8bc650dd58dcfa738cbedb567e07ae042835e00962edcf1663ff2bf2"
+    },
+    {
+      "path": "axial/360.png",
+      "bytes": 202878,
+      "sha256": "60c0aea438200a9934e4f04d53a90f0fca0d1209d398ba1fc63da03355cabadc"
+    },
+    {
+      "path": "axial/361.png",
+      "bytes": 202588,
+      "sha256": "f972127952642a6ec7a718326c9b1c7365e5b48da5cb6b93ce6b2643a4eab907"
+    },
+    {
+      "path": "axial/362.png",
+      "bytes": 202229,
+      "sha256": "9f33d8b0c57de9f28b6e774a61e438a3c76d9f01dcbe533d0d5da43015f4c778"
+    },
+    {
+      "path": "axial/363.png",
+      "bytes": 202065,
+      "sha256": "7f1c0e11b94f159967b1476369143bc8cd003ce7ee9fdd8164a7d2eb19901653"
+    },
+    {
+      "path": "axial/364.png",
+      "bytes": 201864,
+      "sha256": "4c86998640bd7acf11c83cadc062f4a05f9b563c134bd9d6174adda95ff30ebd"
+    },
+    {
+      "path": "axial/365.png",
+      "bytes": 201575,
+      "sha256": "4b9fe42a556960414ba65ad08398ecceac5dbea059f3850178524d9d4e18d448"
+    },
+    {
+      "path": "axial/366.png",
+      "bytes": 201752,
+      "sha256": "6ce214895d34722418d0fb650afb782ec0107b9823ce7448c16ba6ee3f27a90f"
+    },
+    {
+      "path": "axial/367.png",
+      "bytes": 202065,
+      "sha256": "f8c8d8bcd66436c8ccdbb4baeb17cf52bc72be0252db404fc2f65e351322aea3"
+    },
+    {
+      "path": "axial/368.png",
+      "bytes": 202063,
+      "sha256": "17cd91a6ea3836952d904e69d4ff976c866ca72b5de6a368d2124e54d8bd79f7"
+    },
+    {
+      "path": "axial/369.png",
+      "bytes": 202215,
+      "sha256": "c6bc5fe226a9e7272cbe8cdcd39314bc75e37e6986bc40332de0151e120f5efd"
+    },
+    {
+      "path": "axial/370.png",
+      "bytes": 202327,
+      "sha256": "a69f2de4a692be5e86263ba3e902de99cbdbfc344be8966d0318bdc5cbcc8f77"
+    },
+    {
+      "path": "axial/371.png",
+      "bytes": 202251,
+      "sha256": "332e05c5a6d3b6607fa4cf0fced35f6420cc7a11a30cdfd6dd18d7c500c21ff1"
+    },
+    {
+      "path": "axial/372.png",
+      "bytes": 202486,
+      "sha256": "2529e16bbae582177a420bb090ff1678ac24ea6b9bb4df3bf116e8728400a7ca"
+    },
+    {
+      "path": "axial/373.png",
+      "bytes": 202608,
+      "sha256": "679e77185f2178909f7877b991af676dde526887d196b5f2380df17da27e01fb"
+    },
+    {
+      "path": "axial/374.png",
+      "bytes": 202525,
+      "sha256": "888694b52eefabba39d68f8c77856e4e41e203c6f2ea0238268b50a14e7908c9"
+    },
+    {
+      "path": "axial/375.png",
+      "bytes": 202758,
+      "sha256": "35b8972de3c67e060897cfecc8977cb650f3b3513ab85de0c7f4c8f2e6b7a43c"
+    },
+    {
+      "path": "axial/376.png",
+      "bytes": 202858,
+      "sha256": "1c89c80376263f1caa16a5dea11ac25cd1b6e6c14027e97d986c418ff2961fe6"
+    },
+    {
+      "path": "axial/377.png",
+      "bytes": 202581,
+      "sha256": "be9c00a8402df1b184b4d2d6fa4ab59f0f9663dc15a99e4bb62641487635598c"
+    },
+    {
+      "path": "axial/378.png",
+      "bytes": 202419,
+      "sha256": "ba5f7277fe6e92e6efb3ae59afa1d6c9be228431caca35938434daa602ece2db"
+    },
+    {
+      "path": "axial/379.png",
+      "bytes": 202437,
+      "sha256": "8b3339eabd49bec363fa1f1fe583f949682d4b26d3ad1e80e26b399c4de2a10c"
+    },
+    {
+      "path": "axial/380.png",
+      "bytes": 201976,
+      "sha256": "0f3df3cc59e14710a27d9af500b88d6a587b9fdfc011e6669cc7ffd2eed5b2ad"
+    },
+    {
+      "path": "axial/381.png",
+      "bytes": 201821,
+      "sha256": "a6beb04238449fdaba1e4dff757522e77c6e376e6636fe5bbaf4989056da8b02"
+    },
+    {
+      "path": "axial/382.png",
+      "bytes": 201430,
+      "sha256": "f7489aaffbe5298cc5b2d9f7bec9f9559325f3879bb5e4a82504cf417ecd95fe"
+    },
+    {
+      "path": "axial/383.png",
+      "bytes": 201512,
+      "sha256": "4b05d39256961a182653f80fb71bcad5a34abd58bc0a38e196ed70f083b34d26"
+    },
+    {
+      "path": "axial/384.png",
+      "bytes": 201545,
+      "sha256": "d3210c4642effac2399ae64c0e9c125a580ed7f58fc0d16a18758212debb4883"
+    },
+    {
+      "path": "axial/385.png",
+      "bytes": 201518,
+      "sha256": "3de2fcee4d541be35f3f1a396df51397d9de5f759b2074e29c22ab1a262f504e"
+    },
+    {
+      "path": "axial/386.png",
+      "bytes": 202058,
+      "sha256": "6482d69541a768547fcade0c7eb9a15bf669ca5aec2ec7fc6e4fd18541f485e9"
+    },
+    {
+      "path": "axial/387.png",
+      "bytes": 202708,
+      "sha256": "355e4ef39027bb94bd084fea05203f2b9d01e0f013653dd31e3420989ec36946"
+    },
+    {
+      "path": "axial/388.png",
+      "bytes": 203098,
+      "sha256": "ef2531516bdc94bf6dbe163ebf6b4b847d55f79ae4083b11264794361ee2000c"
+    },
+    {
+      "path": "axial/389.png",
+      "bytes": 203049,
+      "sha256": "2e1873412a7efde4bb8119dc05c655a80ad84c72e8092285a8c072bbfc30cdc5"
+    },
+    {
+      "path": "axial/390.png",
+      "bytes": 203344,
+      "sha256": "15e6a6c721c942a95bb7c69b3f08ec54b7f4b370225c133f99849677ef46ebb8"
+    },
+    {
+      "path": "axial/391.png",
+      "bytes": 203442,
+      "sha256": "b5d0e281c9e2ab8162b9050d233703bcb6233308d34132990f117466d786b3ce"
+    },
+    {
+      "path": "axial/392.png",
+      "bytes": 203636,
+      "sha256": "6836c6e4cb40b2514374df04b1371e74f109749b84042ee6d93843012740e128"
+    },
+    {
+      "path": "axial/393.png",
+      "bytes": 203788,
+      "sha256": "403d4bfa4797b938de7cc934ee7e1edf211099de2535c719e8ffbb7e1f465725"
+    },
+    {
+      "path": "axial/394.png",
+      "bytes": 203509,
+      "sha256": "27822a4c150335d6fb60cb353fb0035d4adff79e7ee2d86bc0eb54f61a6ad92e"
+    },
+    {
+      "path": "axial/395.png",
+      "bytes": 203203,
+      "sha256": "15bf8b8e228a9ffba88986297396d49439dee8d8e51aeb9797041a58a45dfa2e"
+    },
+    {
+      "path": "axial/396.png",
+      "bytes": 202839,
+      "sha256": "0d47676c69e902551cc51e91cd711c2189c5c2b55d9e6124d123f8b6340f2f82"
+    },
+    {
+      "path": "axial/397.png",
+      "bytes": 202347,
+      "sha256": "540ba7a9c5cd39da60d2eb2f1bc21346646d171f70dda371829312290a96358e"
+    },
+    {
+      "path": "axial/398.png",
+      "bytes": 201820,
+      "sha256": "ed373c997c83f056e53ec2acdb4d4a43419732f5efbd08fd9d08cdad2fd1a858"
+    },
+    {
+      "path": "axial/399.png",
+      "bytes": 201828,
+      "sha256": "b59e24098b02687423954ab64d0a96924e2074c8041c71d42e27c5397ec104c2"
+    },
+    {
+      "path": "axial/400.png",
+      "bytes": 201460,
+      "sha256": "e5c8fcfb6838ab0e85b64a3b984fbe97c05a23317f482d4ab481ef278a69fe4a"
+    },
+    {
+      "path": "axial/401.png",
+      "bytes": 201206,
+      "sha256": "5caaf76023dc866c95e4cbe02bbc14ea21e8c6d8d85720a44ea12baeaf967cc6"
+    },
+    {
+      "path": "axial/402.png",
+      "bytes": 201064,
+      "sha256": "b87e6720b792d81075629d3a14452d1d7f8de060bbee74a790b9c913cdbbe299"
+    },
+    {
+      "path": "axial/403.png",
+      "bytes": 201057,
+      "sha256": "66ac453a847c7108737d33bf09573e0a2006d2585ea33a0397cf5bb120f8c188"
+    },
+    {
+      "path": "axial/404.png",
+      "bytes": 200829,
+      "sha256": "c84e6c0971d141972b644322fe13822c7589770e661588451b2615c0d57b54ad"
+    },
+    {
+      "path": "axial/405.png",
+      "bytes": 200661,
+      "sha256": "285f052374aa870414ab450a4e4f2ab857fb482382e43fa554dfda5dac9f447a"
+    },
+    {
+      "path": "axial/406.png",
+      "bytes": 201018,
+      "sha256": "f9362f25956aad996a5cf18f06064bc637d8302bdaa59c0be79924d675f74690"
+    },
+    {
+      "path": "axial/407.png",
+      "bytes": 201354,
+      "sha256": "35d0183428afcc3f4feb581f9cebc7146b55b8147ebd0e81cf3ff9d4633b4dc4"
+    },
+    {
+      "path": "axial/408.png",
+      "bytes": 201792,
+      "sha256": "b355d3f08a928978f95ab86254faa94f46682407437393360167dcd2e86713ae"
+    },
+    {
+      "path": "axial/409.png",
+      "bytes": 202253,
+      "sha256": "272288cf99b0ca8d24dc513ed319f82e260af79d88c8b08f9f2a9330fb091b1f"
+    },
+    {
+      "path": "axial/410.png",
+      "bytes": 202596,
+      "sha256": "e7c52e08511b502f7c13272e956dafceae4a186150af4c62e11935733c034bf9"
+    },
+    {
+      "path": "axial/411.png",
+      "bytes": 202436,
+      "sha256": "c99d0900b6339b0f15408adae3026954733e93aa6036b2cb6e326ffdc6ec60e2"
+    },
+    {
+      "path": "axial/412.png",
+      "bytes": 202253,
+      "sha256": "64c5dc476966ea1588cf39daf28e192e5f6e74dd876bf458e3cdb76e6e77ee35"
+    },
+    {
+      "path": "axial/413.png",
+      "bytes": 202314,
+      "sha256": "a2d6b600474fd49eb09c6e5df6c455c31b8e281cb718f98524ab47fb3a5fe3b8"
+    },
+    {
+      "path": "axial/414.png",
+      "bytes": 201981,
+      "sha256": "8b14636a6d1c59f614dd23814c9ebb51b2d0e8b8b8a5bd7f8ab97f4b3b9009e3"
+    },
+    {
+      "path": "axial/415.png",
+      "bytes": 201932,
+      "sha256": "0fc134afd81339cd8b64a1330e2a725a2893091175a8536aed513c4153c6714a"
+    },
+    {
+      "path": "axial/416.png",
+      "bytes": 201360,
+      "sha256": "feb1bad6e563424a38e3e597861ae020baf114178d3710307f2f3ceeacd2e992"
+    },
+    {
+      "path": "axial/417.png",
+      "bytes": 201057,
+      "sha256": "d6cf52a3bb9c1a2b4552ad21d4c1ec340f813683a51ad311c39dd0418b084df2"
+    },
+    {
+      "path": "axial/418.png",
+      "bytes": 200556,
+      "sha256": "67cda812fe09876877a69c0f36022a7a375917a3cdaa3b28337e090d3a1d2f85"
+    },
+    {
+      "path": "axial/419.png",
+      "bytes": 199960,
+      "sha256": "f6ec8d9ed98f37be8741bb40437f6abbe4ce6800a4f2a3cdb8962fa17eb95fd6"
+    },
+    {
+      "path": "axial/420.png",
+      "bytes": 199967,
+      "sha256": "87308aee8b11c1291201e5d22d1774b5f8cdebcdb223af6232f2a8aac60beb0d"
+    },
+    {
+      "path": "axial/421.png",
+      "bytes": 200016,
+      "sha256": "c552b5424575d3f6dafa2d492abcb341058a1fdcb7861f8c2d5f746a118b2d94"
+    },
+    {
+      "path": "axial/422.png",
+      "bytes": 199907,
+      "sha256": "3e3c7b5157e415b9f3f5523728335b8a998882b479866d71371f7935d8c6a051"
+    },
+    {
+      "path": "axial/423.png",
+      "bytes": 200147,
+      "sha256": "2e607f50b05c758d2a46497be4d3fbf04ce13f285cbea3aadd664a043c630583"
+    },
+    {
+      "path": "axial/424.png",
+      "bytes": 200375,
+      "sha256": "359b85f29b2a7168cf4163dfc6d51f855fd1f7c728f01ac6d21d2ce67ee195fd"
+    },
+    {
+      "path": "axial/425.png",
+      "bytes": 200846,
+      "sha256": "8d7387ec0fae4b52c31a65e27cfa074fcc611d242276462316a9347450823e47"
+    },
+    {
+      "path": "axial/426.png",
+      "bytes": 200971,
+      "sha256": "efdd5150c41f58056e926e854f79a1c33a2ac5d5d90dec52779083b988a95fb8"
+    },
+    {
+      "path": "axial/427.png",
+      "bytes": 201375,
+      "sha256": "75fe3f3cc71659cbb33312370a7e10ab294932fc21b96c4ccf711c80a39f83d5"
+    },
+    {
+      "path": "axial/428.png",
+      "bytes": 201039,
+      "sha256": "3ba15f0726640595c5a111380b3605c43ca808a8aa424603a226d1587a741c10"
+    },
+    {
+      "path": "axial/429.png",
+      "bytes": 201415,
+      "sha256": "d667536816c46ed365a599af164c7f74e05ea309e9c82e926a46eef59f33141f"
+    },
+    {
+      "path": "axial/430.png",
+      "bytes": 201731,
+      "sha256": "6c9beb9c3c2d103ef6e82a884738f719a331604ff756b63972de1c86a398387e"
+    },
+    {
+      "path": "axial/431.png",
+      "bytes": 201706,
+      "sha256": "166d2c73b4d07d422a84b55ffb742f13f6e0d0c125fe91adb6b9e62c3e52be68"
+    },
+    {
+      "path": "axial/432.png",
+      "bytes": 201676,
+      "sha256": "3f3532afa200a3c647810ef17d162f89037816b972d228e367eaf1cf1a5fb651"
+    },
+    {
+      "path": "axial/433.png",
+      "bytes": 201346,
+      "sha256": "d941e019dca474e389f764a9f19eea1ee267c15375e44a4d8a50be24b30a5d02"
+    },
+    {
+      "path": "axial/434.png",
+      "bytes": 201283,
+      "sha256": "03ab34bda35ac0035a43e9dfcd2ad77e8240489bbde288173277e4fb29276242"
+    },
+    {
+      "path": "axial/435.png",
+      "bytes": 201147,
+      "sha256": "43fa45bb30f31fe8487a136246d8c0358687d8b77e4abb8723a012848662273b"
+    },
+    {
+      "path": "axial/436.png",
+      "bytes": 201164,
+      "sha256": "dbb0d65f126eed4d429f8484106f5b25d3d6bef463e4d3e9e6a3d1e4631d475e"
+    },
+    {
+      "path": "axial/437.png",
+      "bytes": 201157,
+      "sha256": "3bbbff4a25eb001c98bb9e0e1019399401977bffb0ed1b10e0a02a801cf181ee"
+    },
+    {
+      "path": "axial/438.png",
+      "bytes": 200545,
+      "sha256": "2782aa030c42c22829a2adc1dd1d655a50b4da4c3e025eedb5c5fff63d0314cf"
+    },
+    {
+      "path": "axial/439.png",
+      "bytes": 200180,
+      "sha256": "24d69baee04897c70a444a981a4f470e8356570629c833deb9c4dfeb8b880e76"
+    },
+    {
+      "path": "axial/440.png",
+      "bytes": 200177,
+      "sha256": "b2b36179e15c7a783bd3bd1c5430d8b1247ef0365a7b058bb1dea906ec86389b"
+    },
+    {
+      "path": "axial/441.png",
+      "bytes": 200160,
+      "sha256": "cb0c49d359c1d853d335c1cde43152fddd4ce0eb186a7f2b39b6c2b574119f5b"
+    },
+    {
+      "path": "axial/442.png",
+      "bytes": 199913,
+      "sha256": "90a91e404471d64e4e9fb09ea0d81aa68462a4c3b0b70891620d91d25c73ba98"
+    },
+    {
+      "path": "axial/443.png",
+      "bytes": 199820,
+      "sha256": "5dc3eeffb4218bc8cffcc4404868cb6a5cc7ea3dbe5c849603d599db931c6023"
+    },
+    {
+      "path": "axial/444.png",
+      "bytes": 199881,
+      "sha256": "dfcf3e192cdf9a2524470aae83512ece5605d3df0e60679dade9944d89edb9b4"
+    },
+    {
+      "path": "axial/445.png",
+      "bytes": 200388,
+      "sha256": "8fb6e4deae2b7ce4e513e962537f05d3a2e4a5d5245bfac3513f74e011889937"
+    },
+    {
+      "path": "axial/446.png",
+      "bytes": 200594,
+      "sha256": "b9b0e604a1c78996ea580d0b68da4b8c190eb34fadf225ee4952a4d0a0fa5106"
+    },
+    {
+      "path": "axial/447.png",
+      "bytes": 200941,
+      "sha256": "01d6b772f174689d0b1cdef5a803c09788c7b0bade0f9aaad5aad28438581a99"
+    },
+    {
+      "path": "axial/448.png",
+      "bytes": 200988,
+      "sha256": "0e90ca085d8d25e0e36a0092cc240fae0a1b8527ac099fd66ebf32a9e97fa366"
+    },
+    {
+      "path": "axial/449.png",
+      "bytes": 201170,
+      "sha256": "e3cd93b426b02d352d237c33b271eb577ddf3fc31ac5a5efe11d1e0e17512fac"
+    },
+    {
+      "path": "axial/450.png",
+      "bytes": 201134,
+      "sha256": "75487e8f43324b88d9b5e6af0237120c11f5dcf0fd0439b01e6ad157b7706534"
+    },
+    {
+      "path": "axial/451.png",
+      "bytes": 201113,
+      "sha256": "b3fb91de90dcb03779630e12be3c60d2f1a7ef4077b2f1cab8e24960a4d346e1"
+    },
+    {
+      "path": "axial/452.png",
+      "bytes": 200826,
+      "sha256": "b4fd7952bea347150b72fdc62b42a170ebe82a3ce3d1a3f090fe63b4e0a7095c"
+    },
+    {
+      "path": "axial/453.png",
+      "bytes": 200904,
+      "sha256": "6718c8bbe1479f2ffddc28560d5b017a9b7853be5ab3f48e43e876520cda8667"
+    },
+    {
+      "path": "axial/454.png",
+      "bytes": 200752,
+      "sha256": "57ba252305dff13c78fdbc0d9b9382f9efd7c38d11e8ed7ba4759b77a935463e"
+    },
+    {
+      "path": "axial/455.png",
+      "bytes": 200778,
+      "sha256": "9dc5687e4ab7ec619e61041bce28a28b0f18492b9dc39fd1a4d9e3399cfb5d7d"
+    },
+    {
+      "path": "axial/456.png",
+      "bytes": 200437,
+      "sha256": "435086cd4ec7a844a0a314e1e7e6f553ff0b34ec8478f16b251e0b0648b9dca6"
+    },
+    {
+      "path": "axial/457.png",
+      "bytes": 199863,
+      "sha256": "ac2b985bb8b38118b608ce4bbd8182ed2de4675cba2cdcd899d69c45f2805988"
+    },
+    {
+      "path": "axial/458.png",
+      "bytes": 199631,
+      "sha256": "e1a1aa38d4226978c8cbdeda3017f3b1975493f99c94803665eb26dbd8b83950"
+    },
+    {
+      "path": "axial/459.png",
+      "bytes": 199394,
+      "sha256": "38dc1bdfe413d6c563ac41039a219380f36f9170b355eacdcae0d00b573187da"
+    },
+    {
+      "path": "axial/460.png",
+      "bytes": 199623,
+      "sha256": "da983818bfcfa4464ba4fdef098d93a045a7983d2af87250fb1d469c5f818d08"
+    },
+    {
+      "path": "axial/461.png",
+      "bytes": 199527,
+      "sha256": "b59ebadea5d18708fd77218b7c54c0f4a57ea1897ba9e88ea0d57565f765a0ae"
+    },
+    {
+      "path": "axial/462.png",
+      "bytes": 199921,
+      "sha256": "6f5395695cfca20e76a727ae18c5263c66b16cb1fcdd1437805d80283c5b9e4b"
+    },
+    {
+      "path": "axial/463.png",
+      "bytes": 200303,
+      "sha256": "da203240fd1e8dacf0ffa9cca27f16f048326255d7e666780bbfbdd3d30e4190"
+    },
+    {
+      "path": "axial/464.png",
+      "bytes": 200459,
+      "sha256": "7bf4c8c64e1ab83b6b2271f4bcd9557a38717b6d74771de5efefeed1425870a5"
+    },
+    {
+      "path": "axial/465.png",
+      "bytes": 200639,
+      "sha256": "ea0c7883f737c03fe02d0ec2bf78793cb6e459bf7889ff2da6e892461e0663c6"
+    },
+    {
+      "path": "axial/466.png",
+      "bytes": 200698,
+      "sha256": "0131b05462db10fee8bdb86cb09cec812f42975c6d0ce6b5253b05c508d77935"
+    },
+    {
+      "path": "axial/467.png",
+      "bytes": 200823,
+      "sha256": "8c4ecce0152bff71b1dedc4e17a5bd1174b1a8629160376498a42fa12d27d792"
+    },
+    {
+      "path": "axial/468.png",
+      "bytes": 200830,
+      "sha256": "10c0b922f22006a4156f3a36350f4aec1d76115dcf412dedcf66facaee7dfa78"
+    },
+    {
+      "path": "axial/469.png",
+      "bytes": 200884,
+      "sha256": "e293cf0fb80f35ef82f08814ec244f6e860d6590e89b53ddca09cbde6a096a96"
+    },
+    {
+      "path": "axial/470.png",
+      "bytes": 200672,
+      "sha256": "8a6f8858bd82f42956b04b7b165922362fcaba6c9065ea0da01e2ddcc18ca80f"
+    },
+    {
+      "path": "axial/471.png",
+      "bytes": 200745,
+      "sha256": "3263f76bf9b148810e4e330010e4abe0035c80bb96f81c9ab961a489f7fac292"
+    },
+    {
+      "path": "axial/472.png",
+      "bytes": 200429,
+      "sha256": "8c280aed2a6383d239ed160ef979ccdb7618f139af4db9356eb4eb68bd4b1838"
+    },
+    {
+      "path": "axial/473.png",
+      "bytes": 200395,
+      "sha256": "82351c01c4f9488902463a67ad891ce1ef2c813378d1a07286123c4260158d45"
+    },
+    {
+      "path": "axial/474.png",
+      "bytes": 200101,
+      "sha256": "2cef7d291b293a458a28be958f1eea270ebc3fafedae0b848478666b86705221"
+    },
+    {
+      "path": "axial/475.png",
+      "bytes": 199920,
+      "sha256": "76205ca12c01753e58025bbfebb59c3d2c37a19b63fb46a31f0a2501dabfb732"
+    }
+  ],
+  "nomenclature": {
+    "version": "nomenclature-v1",
+    "reference": {
+      "title": "Kurimoto & Morita. Bronchial Branch Tracing (2020)",
+      "url": "https://doi.org/10.1007/978-981-13-9905-3",
+      "pages": "Chapter 1, pp. 1\u20133, Figs. 1.1\u20131.2; Chapter 2, p. 27, Figs. 2.9\u20132.10; pp. 45\u201347, Figs. 2.47\u20132.49"
+    },
+    "sourceLabelsSha256": "fc446faabf7654592b88ec7315321a9c874244efac29f5de2dcd501d2a9f7f8a",
+    "sourceLabeledGraphSha256": "ea98834c7612e59600fd7f89edceb730a876b2f174d51f1ddb70f4e2eb009624",
+    "correspondence": "All selected complete LPS polylines and node connections match the existing labeled case exactly.",
+    "method": "Existing segment labels, parent/daughter topology and textbook figures; explicit anatomical assignments documented in authoring/airway-nomenclature.json. No finer suffix inferred from graph depth."
+  }
+}

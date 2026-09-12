@@ -1,0 +1,24 @@
+{
+  "capturedAt": "2026-09-11T20:34:14.270Z",
+  "version": "c3-target1-r1",
+  "browser": "151.0.7922.34",
+  "base": "http://127.0.0.1:3112",
+  "environment": "Local macOS, headless Chromium; standalone server when base is port 3112.",
+  "viewport": "1440x900",
+  "network": "20 Mbps down / 5 Mbps up / 40 ms emulated latency; fresh browser context",
+  "nativeCtReadyFromNavigationMs": 1742,
+  "transferBytesAtCtReady": 2120203,
+  "nativeImageTransferBytes": 1210179,
+  "nativeImageRequestsAtReady": 6,
+  "nodulePatchTransferBytes": 1552,
+  "optionalModelRequestsAtReady": 0,
+  "sliceInputToLoadedImageMs": [782, 4, 180, 4, 4, 3, 283, 4, 282, 4],
+  "twoTimesEquivalentReflowDocumentOverflowPx": 0,
+  "browserErrors": [],
+  "limitations": [
+    "Local emulated-network benchmark, not a clinical-device study.",
+    "Latency includes Playwright input and wait overhead; no sub-100 ms claim.",
+    "720x450 CSS viewport approximates 200% reflow; native browser zoom not exercised.",
+    "No prolonged memory, native screen-reader or GPU frame-rate study."
+  ]
+}

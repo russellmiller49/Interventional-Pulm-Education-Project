@@ -1,0 +1,37 @@
+# Source audit and native CT export
+
+September 11, 2026. Website base `7da3886e`. The owner's latest instruction makes real CT the primary teaching object. The original planning package is reference material; the full supplied Kurimoto/Morita PDF was subsequently read for the tracing method. No book figures are included in public assets.
+
+Existing source sizes/hashes are in [asset-inventory.json](asset-inventory.json), reproducible with `python3 scripts/branch-tracing/audit-assets.py`. Native Slicer export evidence is in [native-export-review.json](native-export-review.json). Native image hashes and trace coordinates are in `public/branch-tracing/native-v1/manifest.json`.
+
+| Source                                                                  | Finding and use                                                                                                                                                                                                                                                                           |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Original `target_clean_ct.nrrd` in the navigation_module data directory | SHA-256 `572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b`. Loaded read-only by Slicer 5.12.3. Native 512×512×636, 0.689453125×0.689453125×0.5 mm. Source range −1024 to 1949 HU.                                                                                         |
+| case-001 and patient-new case manifests                                 | Both identify the same original source hash. Their previews have different resampling; neither is substituted for the native volume in this revision. Existing admin access is unchanged.                                                                                                 |
+| patient-new graph                                                       | 498 nodes / 497 edges, LPS mm. SHA `68226a87928135f8be1435c78774f455dab8f792c085509100aa6c21304c18f4`. Source for regional trace sampling, not physician-approved branch keys.                                                                                                            |
+| patient-new complete airway                                             | Same existing source model, embedded node scale 0.001 followed by scene scale 1000 and X rotation +90°. Complete-airway derivative SHA `24edef81dd18f10ea2c45b548a2410c54b9b5c5685e4fe221997b0534f3577f9`. Compressed geometry retained; named submeshes/materials removed in preview-v1. |
+| case-001 graph/lumen-v2/label spreadsheet                               | Selected names now reused after verifying identical complete polylines/node connections for all 36 taught source edges. Textbook-guided refinements documented in nomenclature-review.md; no faculty approval inferred or full label dataset redistributed.                               |
+| patient-new uint8 preview                                               | 256³ at 1.37890625×1.37890625×1.2421875 mm. Retained only for the secondary whole-volume exterior/virtual explorer.                                                                                                                                                                       |
+| Other airway GLB and survey CT                                          | Different frame or pre-annotated/static survey; excluded from this task. Existing lessons untouched.                                                                                                                                                                                      |
+| Supplied Bronchial Branch Tracing PDF                                   | Chapter 1 relevant text and figures inspected. Printed pp. 4–17 establish reflection/rotation and pattern teaching. PDF/figures remain local source material.                                                                                                                             |
+| Slicer                                                                  | CLI confirmed available despite no Slicer connector. Isolated no-main-window/no-settings processes loaded and exported the CT. Existing user Slicer process and scene were not touched.                                                                                                   |
+
+## Export and coordinate checks
+
+Native export contains 236 planes k240–475, 512×512 pixels each, 48,335,710 image bytes. Lung window is −1000 to 400 HU. The PNG writer stores grayscale display intensity with no acquisition metadata chunks. It does not distribute a quantitative HU volume or resample along z. Source HU values in the manifest refer to sampled original voxels, not arbitrary browser cursor measurements.
+
+IJK→LPS spacing is [0.689453125, 0.689453125, 0.5] with origin [−182.1552734375, −374.1552734375, −368.5]. Slicer's IJK→RAS has negative x/y axes; conversion is explicit. Mathematical patient→pixel→patient roundtrip maximum error was 2.84×10⁻¹⁴ mm. **This is affine numerical precision, not clinical registration accuracy.**
+
+The book's horizontal reflection, RUL −90° and left-upper-division +90° transforms affect the image, labels and displayed marks together. User clicks invert the display/crop/zoom transform. An asymmetric landmark test establishes rotation direction, while all trace points roundtrip in full-field and cropped views. Increasing k is cranial; source traversal may increase, decrease or repeat k without changing connectivity.
+
+## Native image review
+
+Seventeen regional traces span central airways, right upper/middle/lower lobes, left upper division, lingula and left lower lobe. Source sampling supplies an anchor and three lumen checkpoints per trace. All 51 final checkpoint samples are −866 to −1024 HU, and the exported intensity at the sampled native pixel matches the declared window. All image hashes, dimensions, marker bounds and coordinate transforms are tested.
+
+Multiple native source planes and actual browser crops were visually inspected. Central/lobar lumens and regional branching are visible. Some intervening fine source centerline segments cross partial-volume/wall voxels; sparse air samples are not approval of every intervening segment. The module therefore preserves the learner's actual mark, shows source points only for comparison and assigns no automatic clinical accuracy score. Native CT is delivered; clinical topology/branch-label/ostial sign-off remains unestablished.
+
+## Preserved assets and release
+
+The source volume, graph and GLB are read-only and hash checked. No Slicer scene, source CT, textbook image, clinical identifier, source label spreadsheet or protected mount is copied into the feature. No new segmentation or trainer-source change was needed. The original 6.4 MB preview-v1 explorer remains available, with independent camera and CT scrolling, graph backtracking and local route export.
+
+The requested route is anonymous and unlisted, with noindex and no catalog/search/sitemap entry. Unpublished direct access is preserved. Exact clinical derivative approval and scored checkpoint review are separate from this engineering build; no production deployment or merge was performed.

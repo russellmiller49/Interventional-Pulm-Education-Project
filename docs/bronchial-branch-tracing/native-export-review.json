@@ -1,0 +1,26 @@
+{
+  "slicerVersion": "5.12.3",
+  "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+  "nativeRoundTripMaxErrorMm": 2.842170943040401e-14,
+  "sourceHuAtCheckpoints": {
+    "central-right": [-1021, -1018, -1001],
+    "central-left": [-989, -1024, -1021],
+    "right-upper-entry": [-996, -1024, -981],
+    "right-upper-apical": [-1011, -1018, -999],
+    "right-upper-distal": [-1019, -984, -1018],
+    "middle-lobe-entry": [-973, -899, -998],
+    "middle-lobe-lateral": [-1018, -1024, -1024],
+    "middle-lobe-caudal": [-953, -1024, -954],
+    "middle-lobe-cranial": [-953, -989, -1013],
+    "upper-oblique-lateral": [-991, -1024, -1024],
+    "upper-oblique-medial": [-945, -925, -975],
+    "left-upper-division": [-1010, -988, -1022],
+    "left-upper-anterior": [-1024, -982, -1024],
+    "left-lingula": [-1010, -1018, -979],
+    "left-lower-returning": [-997, -1020, -1012],
+    "right-lower-basal": [-1004, -913, -1024],
+    "left-lower-basal": [-866, -1022, -999]
+  },
+  "sliceCount": 236,
+  "sliceBytes": 48335710
+}

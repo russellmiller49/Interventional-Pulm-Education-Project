@@ -1,0 +1,98 @@
+{
+  "siteCommitAtInventory": "7da3886e873ed6f744bd7ac78128c389f8677023",
+  "assets": [
+    {
+      "path": "public/airway-anatomy/case-001/case_manifest.json",
+      "bytes": 5540,
+      "sha256": "9cf71deac043c151d70a62b319e6dea5c2d036f84fe59385cb90815ca48d747e"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/ct/target_clean_ct_preview_i16.raw",
+      "bytes": 27787264,
+      "sha256": "f2d687d49bdbea8b03011aeda1f4622e46e5618a2c2afed96206deba611d0942"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/lumen-v2.glb",
+      "bytes": 16158088,
+      "sha256": "8c6d320fc459129da3fdb9440ca7a8b9f3b43ebbbc495a5285e9fabf6c2c1b9a"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/metadata/airway_graph.json",
+      "bytes": 837412,
+      "sha256": "ea98834c7612e59600fd7f89edceb730a876b2f174d51f1ddb70f4e2eb009624"
+    },
+    {
+      "path": "public/airway-anatomy/case-001/metadata/centerline_labels.json",
+      "bytes": 796797,
+      "sha256": "fc446faabf7654592b88ec7315321a9c874244efac29f5de2dcd501d2a9f7f8a"
+    },
+    {
+      "path": "public/fluoroview/cases/patient-new/case_manifest.json",
+      "bytes": 12614,
+      "sha256": "d77a19bb8eecb4fd0d77d84c43f3b5de6901346339ad6e5dce34d51b009e22fb"
+    },
+    {
+      "path": "public/fluoroview/cases/patient-new/ct/ct_preview_uint8.raw",
+      "bytes": 16777216,
+      "sha256": "322ca5cfec3a6edaf40756d822be64243db1e9d19bdf2fa470dd4ee3956cf700"
+    },
+    {
+      "path": "public/fluoroview/cases/patient-new/metadata/airway_graph.json",
+      "bytes": 838080,
+      "sha256": "68226a87928135f8be1435c78774f455dab8f792c085509100aa6c21304c18f4"
+    },
+    {
+      "path": "public/fluoroview/cases/patient-new/airway_segments.glb",
+      "bytes": 1795272,
+      "sha256": "bfad25b4a0baf07cc16f27cda8fd8287346eb29ef03d84c47b1fc1205343d65d"
+    },
+    {
+      "path": "public/fluoroview/airway_full.glb",
+      "bytes": 2173680,
+      "sha256": "d8a9f70987de2b28f99f99f9f7489802ca905a0c9a4259d3f5b458e4e1496c03"
+    },
+    {
+      "path": "public/airway-lesson/airway-survey-ct.json",
+      "bytes": 7272,
+      "sha256": "ed63f8607abd93224d94f2fafbbc40d8bc1a7e8cb3d3b51f686759d70f40a516"
+    },
+    {
+      "path": "new_anatomy_module/labels_cleaned_names.xlsx",
+      "bytes": 18376,
+      "sha256": "90d48ab43d1f83298c3a33d6c23f6e2a12ce8998ef808fccec2efba474313c89"
+    }
+  ],
+  "case001Nodes": 498,
+  "case001Edges": 497,
+  "spreadsheetAssociatedEdgeCountsNotReviewedAnatomicalCounts": {
+    "TR": 1,
+    "LMSB": 1,
+    "LLL": 2,
+    "LB9": 17,
+    "LB10": 30,
+    "LB7+8": 35,
+    "LB6": 56,
+    "LUL": 2,
+    "LB4+5": 1,
+    "LB5": 15,
+    "RMSB": 1,
+    "RUL": 1,
+    "RB2": 24,
+    "LB3": 29,
+    "LB1+2": 41,
+    "BI": 1,
+    "RML": 1,
+    "RB4": 25,
+    "RB1": 21,
+    "RB3": 41,
+    "LB4": 23,
+    "RB5": 18,
+    "RLL": 3,
+    "RB7": 9,
+    "RB6": 37,
+    "RB8": 18,
+    "RB10": 23,
+    "RB9": 7
+  },
+  "clinicalApproval": "No checkpoint-level physician approval record established by this audit."
+}
