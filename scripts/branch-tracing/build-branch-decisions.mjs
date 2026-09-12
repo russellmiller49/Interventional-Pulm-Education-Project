@@ -3,7 +3,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { gunzipSync } from 'node:zlib'
-import { format } from 'prettier'
+import { format, resolveConfig } from 'prettier'
 
 const read = (path) => JSON.parse(readFileSync(path))
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex')
@@ -264,9 +264,13 @@ const output = {
     'Existing named bronchi; relative patient-space daughter positions within unnamed distal divisions. No new segment suffixes.',
   traces,
 }
+const destination = 'src/features/bronchial-branch-tracing/geometry/branch-decisions.json'
 writeFileSync(
-  'src/features/bronchial-branch-tracing/geometry/branch-decisions.json',
-  await format(JSON.stringify(output), { parser: 'json' }),
+  destination,
+  await format(JSON.stringify(output), {
+    ...(await resolveConfig(destination)),
+    filepath: destination,
+  }),
 )
 for (const t of traces)
   console.log(`${t.id}: ${t.checkpoints.length - 1} junctions + distal nodule approach`)

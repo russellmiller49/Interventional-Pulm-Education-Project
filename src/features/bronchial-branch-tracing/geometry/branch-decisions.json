@@ -10,26 +10,10 @@
       "sourceEdgeIds": [0, 1, 4, 9, 19, 41, 85, 162, 249],
       "airwayPath": [
         { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
-        {
-          "code": "RMSB",
-          "name": "Right main bronchus",
-          "shortName": "Main bronchus"
-        },
-        {
-          "code": "BI",
-          "name": "Bronchus intermedius",
-          "shortName": "Bronchus intermedius"
-        },
-        {
-          "code": "RML",
-          "name": "Right middle lobe bronchus",
-          "shortName": "Middle lobe"
-        },
-        {
-          "code": "RB5",
-          "name": "Right medial segmental bronchus",
-          "shortName": "Medial"
-        },
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+        { "code": "BI", "name": "Bronchus intermedius", "shortName": "Bronchus intermedius" },
+        { "code": "RML", "name": "Right middle lobe bronchus", "shortName": "Middle lobe" },
+        { "code": "RB5", "name": "Right medial segmental bronchus", "shortName": "Medial" },
         {
           "code": "RB5b",
           "name": "Right medial bronchus, subsegment b",
@@ -40,11 +24,7 @@
         "slice": 408,
         "pixel": [247.4439, 317.4077],
         "sourceEdgeId": 0,
-        "airway": {
-          "code": "Trachea",
-          "name": "Trachea",
-          "shortName": "Trachea"
-        }
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
       },
       "checkpoints": [
         {
@@ -54,11 +34,7 @@
           "lps": [-16.2532, -156.4931, -174.9251],
           "sourceHu": -1009,
           "sourceEdgeId": 1,
-          "airway": {
-            "code": "RMSB",
-            "name": "Right main bronchus",
-            "shortName": "Main bronchus"
-          },
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
           "landmark": "Daughter lumen",
           "cropCenter": [246.8181, 316.5552],
           "cropSize": 90,
@@ -71,11 +47,7 @@
               "slice": 408,
               "sourceHu": -1024,
               "sourceEdgeId": 0,
-              "airway": {
-                "code": "Trachea",
-                "name": "Trachea",
-                "shortName": "Trachea"
-              }
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
             },
             "options": [
               {
@@ -567,21 +539,9 @@
       "sourceEdgeIds": [0, 2, 496, 20, 43, 89, 168, 262, 353],
       "airwayPath": [
         { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
-        {
-          "code": "LMSB",
-          "name": "Left main bronchus",
-          "shortName": "Main bronchus"
-        },
-        {
-          "code": "LUL",
-          "name": "Left upper lobe bronchus",
-          "shortName": "Upper lobe"
-        },
-        {
-          "code": "LB4+5",
-          "name": "Left lingular bronchus",
-          "shortName": "Lingular bronchus"
-        },
+        { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
+        { "code": "LUL", "name": "Left upper lobe bronchus", "shortName": "Upper lobe" },
+        { "code": "LB4+5", "name": "Left lingular bronchus", "shortName": "Lingular bronchus" },
         {
           "code": "LB5",
           "name": "Left inferior lingular segmental bronchus",
@@ -592,11 +552,7 @@
         "slice": 408,
         "pixel": [247.4439, 317.4077],
         "sourceEdgeId": 0,
-        "airway": {
-          "code": "Trachea",
-          "name": "Trachea",
-          "shortName": "Trachea"
-        }
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
       },
       "checkpoints": [
         {
@@ -606,11 +562,7 @@
           "lps": [-7.7183, -155.8326, -175.0674],
           "sourceHu": -1014,
           "sourceEdgeId": 2,
-          "airway": {
-            "code": "LMSB",
-            "name": "Left main bronchus",
-            "shortName": "Main bronchus"
-          },
+          "airway": { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
           "landmark": "Daughter lumen",
           "cropCenter": [246.8181, 316.5552],
           "cropSize": 90,
@@ -623,11 +575,7 @@
               "slice": 408,
               "sourceHu": -1024,
               "sourceEdgeId": 0,
-              "airway": {
-                "code": "Trachea",
-                "name": "Trachea",
-                "shortName": "Trachea"
-              }
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
             },
             "options": [
               {
@@ -1119,26 +1067,10 @@
       "sourceEdgeIds": [0, 1, 3, 6, 13, 28, 59, 117],
       "airwayPath": [
         { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
-        {
-          "code": "RMSB",
-          "name": "Right main bronchus",
-          "shortName": "Main bronchus"
-        },
-        {
-          "code": "RUL",
-          "name": "Right upper lobe bronchus",
-          "shortName": "Upper lobe"
-        },
-        {
-          "code": "RB1/B2",
-          "name": "Right B1–B2 common trunk",
-          "shortName": "B1–B2 common trunk"
-        },
-        {
-          "code": "RB1",
-          "name": "Right apical segmental bronchus",
-          "shortName": "Apical"
-        },
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+        { "code": "RUL", "name": "Right upper lobe bronchus", "shortName": "Upper lobe" },
+        { "code": "RB1/B2", "name": "Right B1–B2 common trunk", "shortName": "B1–B2 common trunk" },
+        { "code": "RB1", "name": "Right apical segmental bronchus", "shortName": "Apical" },
         {
           "code": "RB1b",
           "name": "Right apical bronchus, anterior subsegment",
@@ -1149,11 +1081,7 @@
         "slice": 408,
         "pixel": [247.4439, 317.4077],
         "sourceEdgeId": 0,
-        "airway": {
-          "code": "Trachea",
-          "name": "Trachea",
-          "shortName": "Trachea"
-        }
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
       },
       "checkpoints": [
         {
@@ -1163,11 +1091,7 @@
           "lps": [-16.2532, -156.4931, -174.9251],
           "sourceHu": -1009,
           "sourceEdgeId": 1,
-          "airway": {
-            "code": "RMSB",
-            "name": "Right main bronchus",
-            "shortName": "Main bronchus"
-          },
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
           "landmark": "Daughter lumen",
           "cropCenter": [246.8181, 316.5552],
           "cropSize": 90,
@@ -1180,11 +1104,7 @@
               "slice": 408,
               "sourceHu": -1024,
               "sourceEdgeId": 0,
-              "airway": {
-                "code": "Trachea",
-                "name": "Trachea",
-                "shortName": "Trachea"
-              }
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
             },
             "options": [
               {
@@ -1614,26 +1534,10 @@
       "sourceEdgeIds": [0, 1, 3, 6, 13, 28, 59, 117],
       "airwayPath": [
         { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
-        {
-          "code": "RMSB",
-          "name": "Right main bronchus",
-          "shortName": "Main bronchus"
-        },
-        {
-          "code": "RUL",
-          "name": "Right upper lobe bronchus",
-          "shortName": "Upper lobe"
-        },
-        {
-          "code": "RB1/B2",
-          "name": "Right B1–B2 common trunk",
-          "shortName": "B1–B2 common trunk"
-        },
-        {
-          "code": "RB1",
-          "name": "Right apical segmental bronchus",
-          "shortName": "Apical"
-        },
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+        { "code": "RUL", "name": "Right upper lobe bronchus", "shortName": "Upper lobe" },
+        { "code": "RB1/B2", "name": "Right B1–B2 common trunk", "shortName": "B1–B2 common trunk" },
+        { "code": "RB1", "name": "Right apical segmental bronchus", "shortName": "Apical" },
         {
           "code": "RB1b",
           "name": "Right apical bronchus, anterior subsegment",
@@ -1644,11 +1548,7 @@
         "slice": 408,
         "pixel": [247.4439, 317.4077],
         "sourceEdgeId": 0,
-        "airway": {
-          "code": "Trachea",
-          "name": "Trachea",
-          "shortName": "Trachea"
-        }
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
       },
       "checkpoints": [
         {
@@ -1658,11 +1558,7 @@
           "lps": [-16.2532, -156.4931, -174.9251],
           "sourceHu": -1009,
           "sourceEdgeId": 1,
-          "airway": {
-            "code": "RMSB",
-            "name": "Right main bronchus",
-            "shortName": "Main bronchus"
-          },
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
           "landmark": "Daughter lumen",
           "cropCenter": [246.8181, 316.5552],
           "cropSize": 90,
@@ -1675,11 +1571,7 @@
               "slice": 408,
               "sourceHu": -1024,
               "sourceEdgeId": 0,
-              "airway": {
-                "code": "Trachea",
-                "name": "Trachea",
-                "shortName": "Trachea"
-              }
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
             },
             "options": [
               {
@@ -2109,26 +2001,10 @@
       "sourceEdgeIds": [0, 1, 3, 6, 13, 29, 61, 122],
       "airwayPath": [
         { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
-        {
-          "code": "RMSB",
-          "name": "Right main bronchus",
-          "shortName": "Main bronchus"
-        },
-        {
-          "code": "RUL",
-          "name": "Right upper lobe bronchus",
-          "shortName": "Upper lobe"
-        },
-        {
-          "code": "RB1/B2",
-          "name": "Right B1–B2 common trunk",
-          "shortName": "B1–B2 common trunk"
-        },
-        {
-          "code": "RB1",
-          "name": "Right apical segmental bronchus",
-          "shortName": "Apical"
-        },
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+        { "code": "RUL", "name": "Right upper lobe bronchus", "shortName": "Upper lobe" },
+        { "code": "RB1/B2", "name": "Right B1–B2 common trunk", "shortName": "B1–B2 common trunk" },
+        { "code": "RB1", "name": "Right apical segmental bronchus", "shortName": "Apical" },
         {
           "code": "RB1a",
           "name": "Right apical bronchus, posterior subsegment",
@@ -2139,11 +2015,7 @@
         "slice": 408,
         "pixel": [247.4439, 317.4077],
         "sourceEdgeId": 0,
-        "airway": {
-          "code": "Trachea",
-          "name": "Trachea",
-          "shortName": "Trachea"
-        }
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
       },
       "checkpoints": [
         {
@@ -2153,11 +2025,7 @@
           "lps": [-16.2532, -156.4931, -174.9251],
           "sourceHu": -1009,
           "sourceEdgeId": 1,
-          "airway": {
-            "code": "RMSB",
-            "name": "Right main bronchus",
-            "shortName": "Main bronchus"
-          },
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
           "landmark": "Daughter lumen",
           "cropCenter": [246.8181, 316.5552],
           "cropSize": 90,
@@ -2170,11 +2038,7 @@
               "slice": 408,
               "sourceHu": -1024,
               "sourceEdgeId": 0,
-              "airway": {
-                "code": "Trachea",
-                "name": "Trachea",
-                "shortName": "Trachea"
-              }
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
             },
             "options": [
               {
@@ -2606,26 +2470,10 @@
       "sourceEdgeIds": [0, 1, 4, 9, 19, 40, 84, 159, 243],
       "airwayPath": [
         { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
-        {
-          "code": "RMSB",
-          "name": "Right main bronchus",
-          "shortName": "Main bronchus"
-        },
-        {
-          "code": "BI",
-          "name": "Bronchus intermedius",
-          "shortName": "Bronchus intermedius"
-        },
-        {
-          "code": "RML",
-          "name": "Right middle lobe bronchus",
-          "shortName": "Middle lobe"
-        },
-        {
-          "code": "RB5",
-          "name": "Right medial segmental bronchus",
-          "shortName": "Medial"
-        },
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+        { "code": "BI", "name": "Bronchus intermedius", "shortName": "Bronchus intermedius" },
+        { "code": "RML", "name": "Right middle lobe bronchus", "shortName": "Middle lobe" },
+        { "code": "RB5", "name": "Right medial segmental bronchus", "shortName": "Medial" },
         {
           "code": "RB5a",
           "name": "Right medial bronchus, subsegment a",
@@ -2636,11 +2484,7 @@
         "slice": 408,
         "pixel": [247.4439, 317.4077],
         "sourceEdgeId": 0,
-        "airway": {
-          "code": "Trachea",
-          "name": "Trachea",
-          "shortName": "Trachea"
-        }
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
       },
       "checkpoints": [
         {
@@ -2650,11 +2494,7 @@
           "lps": [-16.2532, -156.4931, -174.9251],
           "sourceHu": -1009,
           "sourceEdgeId": 1,
-          "airway": {
-            "code": "RMSB",
-            "name": "Right main bronchus",
-            "shortName": "Main bronchus"
-          },
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
           "landmark": "Daughter lumen",
           "cropCenter": [246.8181, 316.5552],
           "cropSize": 90,
@@ -2667,11 +2507,7 @@
               "slice": 408,
               "sourceHu": -1024,
               "sourceEdgeId": 0,
-              "airway": {
-                "code": "Trachea",
-                "name": "Trachea",
-                "shortName": "Trachea"
-              }
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
             },
             "options": [
               {
@@ -3163,26 +2999,10 @@
       "sourceEdgeIds": [0, 1, 4, 9, 18, 39, 82, 156],
       "airwayPath": [
         { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
-        {
-          "code": "RMSB",
-          "name": "Right main bronchus",
-          "shortName": "Main bronchus"
-        },
-        {
-          "code": "BI",
-          "name": "Bronchus intermedius",
-          "shortName": "Bronchus intermedius"
-        },
-        {
-          "code": "RML",
-          "name": "Right middle lobe bronchus",
-          "shortName": "Middle lobe"
-        },
-        {
-          "code": "RB4",
-          "name": "Right lateral segmental bronchus",
-          "shortName": "Lateral"
-        },
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+        { "code": "BI", "name": "Bronchus intermedius", "shortName": "Bronchus intermedius" },
+        { "code": "RML", "name": "Right middle lobe bronchus", "shortName": "Middle lobe" },
+        { "code": "RB4", "name": "Right lateral segmental bronchus", "shortName": "Lateral" },
         {
           "code": "RB4a",
           "name": "Right lateral bronchus, subsegment a",
@@ -3193,11 +3013,7 @@
         "slice": 408,
         "pixel": [247.4439, 317.4077],
         "sourceEdgeId": 0,
-        "airway": {
-          "code": "Trachea",
-          "name": "Trachea",
-          "shortName": "Trachea"
-        }
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
       },
       "checkpoints": [
         {
@@ -3207,11 +3023,7 @@
           "lps": [-16.2532, -156.4931, -174.9251],
           "sourceHu": -1009,
           "sourceEdgeId": 1,
-          "airway": {
-            "code": "RMSB",
-            "name": "Right main bronchus",
-            "shortName": "Main bronchus"
-          },
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
           "landmark": "Daughter lumen",
           "cropCenter": [246.8181, 316.5552],
           "cropSize": 90,
@@ -3224,11 +3036,7 @@
               "slice": 408,
               "sourceHu": -1024,
               "sourceEdgeId": 0,
-              "airway": {
-                "code": "Trachea",
-                "name": "Trachea",
-                "shortName": "Trachea"
-              }
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
             },
             "options": [
               {
@@ -3658,26 +3466,10 @@
       "sourceEdgeIds": [0, 1, 4, 9, 19, 41, 85, 162, 249],
       "airwayPath": [
         { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
-        {
-          "code": "RMSB",
-          "name": "Right main bronchus",
-          "shortName": "Main bronchus"
-        },
-        {
-          "code": "BI",
-          "name": "Bronchus intermedius",
-          "shortName": "Bronchus intermedius"
-        },
-        {
-          "code": "RML",
-          "name": "Right middle lobe bronchus",
-          "shortName": "Middle lobe"
-        },
-        {
-          "code": "RB5",
-          "name": "Right medial segmental bronchus",
-          "shortName": "Medial"
-        },
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+        { "code": "BI", "name": "Bronchus intermedius", "shortName": "Bronchus intermedius" },
+        { "code": "RML", "name": "Right middle lobe bronchus", "shortName": "Middle lobe" },
+        { "code": "RB5", "name": "Right medial segmental bronchus", "shortName": "Medial" },
         {
           "code": "RB5b",
           "name": "Right medial bronchus, subsegment b",
@@ -3688,11 +3480,7 @@
         "slice": 408,
         "pixel": [247.4439, 317.4077],
         "sourceEdgeId": 0,
-        "airway": {
-          "code": "Trachea",
-          "name": "Trachea",
-          "shortName": "Trachea"
-        }
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
       },
       "checkpoints": [
         {
@@ -3702,11 +3490,7 @@
           "lps": [-16.2532, -156.4931, -174.9251],
           "sourceHu": -1009,
           "sourceEdgeId": 1,
-          "airway": {
-            "code": "RMSB",
-            "name": "Right main bronchus",
-            "shortName": "Main bronchus"
-          },
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
           "landmark": "Daughter lumen",
           "cropCenter": [246.8181, 316.5552],
           "cropSize": 90,
@@ -3719,11 +3503,7 @@
               "slice": 408,
               "sourceHu": -1024,
               "sourceEdgeId": 0,
-              "airway": {
-                "code": "Trachea",
-                "name": "Trachea",
-                "shortName": "Trachea"
-              }
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
             },
             "options": [
               {
@@ -4215,26 +3995,10 @@
       "sourceEdgeIds": [0, 1, 4, 9, 19, 40, 84, 159, 243],
       "airwayPath": [
         { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
-        {
-          "code": "RMSB",
-          "name": "Right main bronchus",
-          "shortName": "Main bronchus"
-        },
-        {
-          "code": "BI",
-          "name": "Bronchus intermedius",
-          "shortName": "Bronchus intermedius"
-        },
-        {
-          "code": "RML",
-          "name": "Right middle lobe bronchus",
-          "shortName": "Middle lobe"
-        },
-        {
-          "code": "RB5",
-          "name": "Right medial segmental bronchus",
-          "shortName": "Medial"
-        },
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+        { "code": "BI", "name": "Bronchus intermedius", "shortName": "Bronchus intermedius" },
+        { "code": "RML", "name": "Right middle lobe bronchus", "shortName": "Middle lobe" },
+        { "code": "RB5", "name": "Right medial segmental bronchus", "shortName": "Medial" },
         {
           "code": "RB5a",
           "name": "Right medial bronchus, subsegment a",
@@ -4245,11 +4009,7 @@
         "slice": 408,
         "pixel": [247.4439, 317.4077],
         "sourceEdgeId": 0,
-        "airway": {
-          "code": "Trachea",
-          "name": "Trachea",
-          "shortName": "Trachea"
-        }
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
       },
       "checkpoints": [
         {
@@ -4259,11 +4019,7 @@
           "lps": [-16.2532, -156.4931, -174.9251],
           "sourceHu": -1009,
           "sourceEdgeId": 1,
-          "airway": {
-            "code": "RMSB",
-            "name": "Right main bronchus",
-            "shortName": "Main bronchus"
-          },
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
           "landmark": "Daughter lumen",
           "cropCenter": [246.8181, 316.5552],
           "cropSize": 90,
@@ -4276,11 +4032,7 @@
               "slice": 408,
               "sourceHu": -1024,
               "sourceEdgeId": 0,
-              "airway": {
-                "code": "Trachea",
-                "name": "Trachea",
-                "shortName": "Trachea"
-              }
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
             },
             "options": [
               {
@@ -4772,16 +4524,8 @@
       "sourceEdgeIds": [0, 1, 3, 7, 15, 32, 67],
       "airwayPath": [
         { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
-        {
-          "code": "RMSB",
-          "name": "Right main bronchus",
-          "shortName": "Main bronchus"
-        },
-        {
-          "code": "RUL",
-          "name": "Right upper lobe bronchus",
-          "shortName": "Upper lobe"
-        },
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+        { "code": "RUL", "name": "Right upper lobe bronchus", "shortName": "Upper lobe" },
         {
           "code": "RB3",
           "name": "Right Upper Lobe Anterior segmental bronchus",
@@ -4797,11 +4541,7 @@
         "slice": 408,
         "pixel": [247.4439, 317.4077],
         "sourceEdgeId": 0,
-        "airway": {
-          "code": "Trachea",
-          "name": "Trachea",
-          "shortName": "Trachea"
-        }
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
       },
       "checkpoints": [
         {
@@ -4811,11 +4551,7 @@
           "lps": [-16.2532, -156.4931, -174.9251],
           "sourceHu": -1009,
           "sourceEdgeId": 1,
-          "airway": {
-            "code": "RMSB",
-            "name": "Right main bronchus",
-            "shortName": "Main bronchus"
-          },
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
           "landmark": "Daughter lumen",
           "cropCenter": [246.8181, 316.5552],
           "cropSize": 90,
@@ -4828,11 +4564,7 @@
               "slice": 408,
               "sourceHu": -1024,
               "sourceEdgeId": 0,
-              "airway": {
-                "code": "Trachea",
-                "name": "Trachea",
-                "shortName": "Trachea"
-              }
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
             },
             "options": [
               {
@@ -5200,16 +4932,8 @@
       "sourceEdgeIds": [0, 1, 3, 7, 15, 33, 69, 131],
       "airwayPath": [
         { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
-        {
-          "code": "RMSB",
-          "name": "Right main bronchus",
-          "shortName": "Main bronchus"
-        },
-        {
-          "code": "RUL",
-          "name": "Right upper lobe bronchus",
-          "shortName": "Upper lobe"
-        },
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+        { "code": "RUL", "name": "Right upper lobe bronchus", "shortName": "Upper lobe" },
         {
           "code": "RB3",
           "name": "Right Upper Lobe Anterior segmental bronchus",
@@ -5225,11 +4949,7 @@
         "slice": 408,
         "pixel": [247.4439, 317.4077],
         "sourceEdgeId": 0,
-        "airway": {
-          "code": "Trachea",
-          "name": "Trachea",
-          "shortName": "Trachea"
-        }
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
       },
       "checkpoints": [
         {
@@ -5239,11 +4959,7 @@
           "lps": [-16.2532, -156.4931, -174.9251],
           "sourceHu": -1009,
           "sourceEdgeId": 1,
-          "airway": {
-            "code": "RMSB",
-            "name": "Right main bronchus",
-            "shortName": "Main bronchus"
-          },
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
           "landmark": "Daughter lumen",
           "cropCenter": [246.8181, 316.5552],
           "cropSize": 90,
@@ -5256,11 +4972,7 @@
               "slice": 408,
               "sourceHu": -1024,
               "sourceEdgeId": 0,
-              "airway": {
-                "code": "Trachea",
-                "name": "Trachea",
-                "shortName": "Trachea"
-              }
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
             },
             "options": [
               {
@@ -5690,16 +5402,8 @@
       "sourceEdgeIds": [0, 2, 496, 21, 45, 93, 174, 269, 362, 415],
       "airwayPath": [
         { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
-        {
-          "code": "LMSB",
-          "name": "Left main bronchus",
-          "shortName": "Main bronchus"
-        },
-        {
-          "code": "LUL",
-          "name": "Left upper lobe bronchus",
-          "shortName": "Upper lobe"
-        },
+        { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
+        { "code": "LUL", "name": "Left upper lobe bronchus", "shortName": "Upper lobe" },
         {
           "code": "LUL division",
           "name": "Left upper division bronchus",
@@ -5715,11 +5419,7 @@
         "slice": 408,
         "pixel": [247.4439, 317.4077],
         "sourceEdgeId": 0,
-        "airway": {
-          "code": "Trachea",
-          "name": "Trachea",
-          "shortName": "Trachea"
-        }
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
       },
       "checkpoints": [
         {
@@ -5729,11 +5429,7 @@
           "lps": [-7.7183, -155.8326, -175.0674],
           "sourceHu": -1014,
           "sourceEdgeId": 2,
-          "airway": {
-            "code": "LMSB",
-            "name": "Left main bronchus",
-            "shortName": "Main bronchus"
-          },
+          "airway": { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
           "landmark": "Daughter lumen",
           "cropCenter": [246.8181, 316.5552],
           "cropSize": 90,
@@ -5746,11 +5442,7 @@
               "slice": 408,
               "sourceHu": -1024,
               "sourceEdgeId": 0,
-              "airway": {
-                "code": "Trachea",
-                "name": "Trachea",
-                "shortName": "Trachea"
-              }
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
             },
             "options": [
               {
@@ -6304,36 +5996,20 @@
       "sourceEdgeIds": [0, 2, 496, 21, 44, 92, 172, 267, 357],
       "airwayPath": [
         { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
-        {
-          "code": "LMSB",
-          "name": "Left main bronchus",
-          "shortName": "Main bronchus"
-        },
-        {
-          "code": "LUL",
-          "name": "Left upper lobe bronchus",
-          "shortName": "Upper lobe"
-        },
+        { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
+        { "code": "LUL", "name": "Left upper lobe bronchus", "shortName": "Upper lobe" },
         {
           "code": "LUL division",
           "name": "Left upper division bronchus",
           "shortName": "Upper division"
         },
-        {
-          "code": "LB3",
-          "name": "Left anterior segmental bronchus",
-          "shortName": "Anterior"
-        }
+        { "code": "LB3", "name": "Left anterior segmental bronchus", "shortName": "Anterior" }
       ],
       "anchor": {
         "slice": 408,
         "pixel": [247.4439, 317.4077],
         "sourceEdgeId": 0,
-        "airway": {
-          "code": "Trachea",
-          "name": "Trachea",
-          "shortName": "Trachea"
-        }
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
       },
       "checkpoints": [
         {
@@ -6343,11 +6019,7 @@
           "lps": [-7.7183, -155.8326, -175.0674],
           "sourceHu": -1014,
           "sourceEdgeId": 2,
-          "airway": {
-            "code": "LMSB",
-            "name": "Left main bronchus",
-            "shortName": "Main bronchus"
-          },
+          "airway": { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
           "landmark": "Daughter lumen",
           "cropCenter": [246.8181, 316.5552],
           "cropSize": 90,
@@ -6360,11 +6032,7 @@
               "slice": 408,
               "sourceHu": -1024,
               "sourceEdgeId": 0,
-              "airway": {
-                "code": "Trachea",
-                "name": "Trachea",
-                "shortName": "Trachea"
-              }
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
             },
             "options": [
               {
@@ -6856,21 +6524,9 @@
       "sourceEdgeIds": [0, 2, 496, 20, 43, 89, 168, 262, 353],
       "airwayPath": [
         { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
-        {
-          "code": "LMSB",
-          "name": "Left main bronchus",
-          "shortName": "Main bronchus"
-        },
-        {
-          "code": "LUL",
-          "name": "Left upper lobe bronchus",
-          "shortName": "Upper lobe"
-        },
-        {
-          "code": "LB4+5",
-          "name": "Left lingular bronchus",
-          "shortName": "Lingular bronchus"
-        },
+        { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
+        { "code": "LUL", "name": "Left upper lobe bronchus", "shortName": "Upper lobe" },
+        { "code": "LB4+5", "name": "Left lingular bronchus", "shortName": "Lingular bronchus" },
         {
           "code": "LB5",
           "name": "Left inferior lingular segmental bronchus",
@@ -6881,11 +6537,7 @@
         "slice": 408,
         "pixel": [247.4439, 317.4077],
         "sourceEdgeId": 0,
-        "airway": {
-          "code": "Trachea",
-          "name": "Trachea",
-          "shortName": "Trachea"
-        }
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
       },
       "checkpoints": [
         {
@@ -6895,11 +6547,7 @@
           "lps": [-7.7183, -155.8326, -175.0674],
           "sourceHu": -1014,
           "sourceEdgeId": 2,
-          "airway": {
-            "code": "LMSB",
-            "name": "Left main bronchus",
-            "shortName": "Main bronchus"
-          },
+          "airway": { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
           "landmark": "Daughter lumen",
           "cropCenter": [246.8181, 316.5552],
           "cropSize": 90,
@@ -6912,11 +6560,7 @@
               "slice": 408,
               "sourceHu": -1024,
               "sourceEdgeId": 0,
-              "airway": {
-                "code": "Trachea",
-                "name": "Trachea",
-                "shortName": "Trachea"
-              }
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
             },
             "options": [
               {
@@ -7408,31 +7052,15 @@
       "sourceEdgeIds": [0, 2, 5, 10, 23, 50, 101, 184, 281],
       "airwayPath": [
         { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
-        {
-          "code": "LMSB",
-          "name": "Left main bronchus",
-          "shortName": "Main bronchus"
-        },
-        {
-          "code": "LLL",
-          "name": "Left lower lobe bronchus",
-          "shortName": "Lower lobe"
-        },
-        {
-          "code": "LB6",
-          "name": "Left superior segmental bronchus",
-          "shortName": "Superior"
-        }
+        { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
+        { "code": "LLL", "name": "Left lower lobe bronchus", "shortName": "Lower lobe" },
+        { "code": "LB6", "name": "Left superior segmental bronchus", "shortName": "Superior" }
       ],
       "anchor": {
         "slice": 408,
         "pixel": [247.4439, 317.4077],
         "sourceEdgeId": 0,
-        "airway": {
-          "code": "Trachea",
-          "name": "Trachea",
-          "shortName": "Trachea"
-        }
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
       },
       "checkpoints": [
         {
@@ -7442,11 +7070,7 @@
           "lps": [-7.7183, -155.8326, -175.0674],
           "sourceHu": -1014,
           "sourceEdgeId": 2,
-          "airway": {
-            "code": "LMSB",
-            "name": "Left main bronchus",
-            "shortName": "Main bronchus"
-          },
+          "airway": { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
           "landmark": "Daughter lumen",
           "cropCenter": [246.8181, 316.5552],
           "cropSize": 90,
@@ -7459,11 +7083,7 @@
               "slice": 408,
               "sourceHu": -1024,
               "sourceEdgeId": 0,
-              "airway": {
-                "code": "Trachea",
-                "name": "Trachea",
-                "shortName": "Trachea"
-              }
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
             },
             "options": [
               {
@@ -7955,26 +7575,10 @@
       "sourceEdgeIds": [0, 1, 4, 8, 16, 34, 71, 136, 220],
       "airwayPath": [
         { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
-        {
-          "code": "RMSB",
-          "name": "Right main bronchus",
-          "shortName": "Main bronchus"
-        },
-        {
-          "code": "BI",
-          "name": "Bronchus intermedius",
-          "shortName": "Bronchus intermedius"
-        },
-        {
-          "code": "RLL",
-          "name": "Right lower lobe bronchus",
-          "shortName": "Lower lobe"
-        },
-        {
-          "code": "R basal",
-          "name": "Right basal bronchus",
-          "shortName": "Basal bronchus"
-        },
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+        { "code": "BI", "name": "Bronchus intermedius", "shortName": "Bronchus intermedius" },
+        { "code": "RLL", "name": "Right lower lobe bronchus", "shortName": "Lower lobe" },
+        { "code": "R basal", "name": "Right basal bronchus", "shortName": "Basal bronchus" },
         {
           "code": "RB8",
           "name": "Right anterior basal segmental bronchus",
@@ -7985,11 +7589,7 @@
         "slice": 408,
         "pixel": [247.4439, 317.4077],
         "sourceEdgeId": 0,
-        "airway": {
-          "code": "Trachea",
-          "name": "Trachea",
-          "shortName": "Trachea"
-        }
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
       },
       "checkpoints": [
         {
@@ -7999,11 +7599,7 @@
           "lps": [-16.2532, -156.4931, -174.9251],
           "sourceHu": -1009,
           "sourceEdgeId": 1,
-          "airway": {
-            "code": "RMSB",
-            "name": "Right main bronchus",
-            "shortName": "Main bronchus"
-          },
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
           "landmark": "Daughter lumen",
           "cropCenter": [246.8181, 316.5552],
           "cropSize": 90,
@@ -8016,11 +7612,7 @@
               "slice": 408,
               "sourceHu": -1024,
               "sourceEdgeId": 0,
-              "airway": {
-                "code": "Trachea",
-                "name": "Trachea",
-                "shortName": "Trachea"
-              }
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
             },
             "options": [
               {
@@ -8526,21 +8118,9 @@
       "sourceEdgeIds": [0, 2, 5, 11, 24, 51, 103],
       "airwayPath": [
         { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
-        {
-          "code": "LMSB",
-          "name": "Left main bronchus",
-          "shortName": "Main bronchus"
-        },
-        {
-          "code": "LLL",
-          "name": "Left lower lobe bronchus",
-          "shortName": "Lower lobe"
-        },
-        {
-          "code": "L basal",
-          "name": "Left basal bronchus",
-          "shortName": "Basal bronchus"
-        },
+        { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
+        { "code": "LLL", "name": "Left lower lobe bronchus", "shortName": "Lower lobe" },
+        { "code": "L basal", "name": "Left basal bronchus", "shortName": "Basal bronchus" },
         {
           "code": "LB7+8/B9",
           "name": "Left B7+8–B9 common trunk",
@@ -8556,11 +8136,7 @@
         "slice": 408,
         "pixel": [247.4439, 317.4077],
         "sourceEdgeId": 0,
-        "airway": {
-          "code": "Trachea",
-          "name": "Trachea",
-          "shortName": "Trachea"
-        }
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
       },
       "checkpoints": [
         {
@@ -8570,11 +8146,7 @@
           "lps": [-7.7183, -155.8326, -175.0674],
           "sourceHu": -1014,
           "sourceEdgeId": 2,
-          "airway": {
-            "code": "LMSB",
-            "name": "Left main bronchus",
-            "shortName": "Main bronchus"
-          },
+          "airway": { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
           "landmark": "Daughter lumen",
           "cropCenter": [246.8181, 316.5552],
           "cropSize": 90,
@@ -8587,11 +8159,7 @@
               "slice": 408,
               "sourceHu": -1024,
               "sourceEdgeId": 0,
-              "airway": {
-                "code": "Trachea",
-                "name": "Trachea",
-                "shortName": "Trachea"
-              }
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
             },
             "options": [
               {
