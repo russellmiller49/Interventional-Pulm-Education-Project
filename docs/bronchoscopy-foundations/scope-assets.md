@@ -4,7 +4,7 @@ The part-one assets, build scripts and technical review are implemented. The lar
 junction remains unresolved: the authored exit ring misses the unchanged source surface by up to
 2.4168 mm, beyond the brief's 0.5 mm limit. The manifest and tests preserve this pending status.
 Clinical review, rights confirmation and publication permission remain pending for every asset.
-The optional handle and the part-two production scope pane are not included.
+The production scope pane and the additional handle, distal tip, bench target and generic practice props are now integrated. See [scope-pane.md](scope-pane.md) and [validation.md](validation.md) for the current build.
 
 ## Lumen spike handoff
 
@@ -135,13 +135,14 @@ trimming parameters and camera settings; measured build results are explicitly i
 
 ## Provenance and budgets
 
-| Files                         | Origin / provenance class                                                             | Rights and review                                                         |
-| ----------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| graph.json                    | Existing graph derived from case-001; unchanged                                       | Owner confirmation and clinical review pending                            |
-| lumen.glb                     | Reviewed case-001 lumen; source-derived surface with authored distal caps             | Source rights, de-identification confirmation and clinical review pending |
-| larynx-lumen.glb, larynx.json | Supplied cartilage/ligament model plus authored mucosal walls, folds and registration | Source rights and clinical review pending                                 |
-| devices.json, accessories.glb | Authored teaching geometry and dimensions                                             | Owner rights confirmation and clinical review pending                     |
-| Review PNGs and JSON          | Generated views and technical measurements of these assets                            | Inherit the underlying assets' pending status                             |
+| Files                                                                   | Origin / provenance class                                                             | Rights and review                                                         |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| graph.json                                                              | Existing graph derived from case-001; unchanged                                       | Owner confirmation and clinical review pending                            |
+| lumen.glb                                                               | Reviewed case-001 lumen; source-derived surface with authored distal caps             | Source rights, de-identification confirmation and clinical review pending |
+| larynx-lumen.glb, larynx.json                                           | Supplied cartilage/ligament model plus authored mucosal walls, folds and registration | Source rights and clinical review pending                                 |
+| devices.json, accessories.glb                                           | Authored teaching geometry and dimensions                                             | Owner rights confirmation and clinical review pending                     |
+| handle.glb, scope-tip.glb, bench.glb, findings.glb, teaching-props.json | New Blender-authored teaching props; no product or patient reference implied          | Owner rights confirmation and clinical review pending                     |
+| Review PNGs and JSON                                                    | Generated views and technical measurements of these assets                            | Inherit the underlying assets' pending status                             |
 
 Every file is individually inventoried in `manifest.json` with bytes, SHA-256, provenance, origin,
 rights/permission status, de-identification status, reviewer, review date, profile, camera frame and
@@ -156,9 +157,14 @@ No source rights holder, reviewer identity or publication authorization has been
 | larynx.json            |        14,386 | Included in total |
 | accessories.glb        |        50,464 |           450,000 |
 | devices.json           |         3,041 | Included in total |
+| handle.glb             |        12,160 |           500,000 |
+| scope-tip.glb          |         7,056 |           100,000 |
+| bench.glb              |        10,160 |           100,000 |
+| findings.glb           |         8,632 |           100,000 |
+| teaching-props.json    |           674 | Included in total |
 | Review images and JSON |     1,181,798 | Included in total |
-| Manifest               |        25,320 | Included in total |
-| **All anatomy files**  | **2,057,410** |     **8,000,000** |
+| Manifest               |        33,400 | Included in total |
+| **All anatomy files**  | **2,104,172** |     **8,000,000** |
 
 The GLBs are self-contained and Draco-compressed with gltf-pipeline 4.3.1 / draco3d 1.5.7,
 compression level 10, position quantization 20 bits and normal quantization 12 bits. Geometry units
@@ -189,7 +195,12 @@ node scripts/bronchoscopy-foundations/compress-scope-assets.mjs larynx accessori
 npx prettier --write public/bronchoscopy-foundations/anatomy/larynx/larynx.json \
   public/bronchoscopy-foundations/anatomy/devices/devices.json
 
-# All review images and review JSON, followed by the final manifest.
+# Additional generic props (38,008 bytes of compressed geometry).
+"$BLENDER_EXECUTABLE" --background --factory-startup --python-exit-code 1 \
+  --python scripts/bronchoscopy-foundations/build-teaching-props.py
+node scripts/bronchoscopy-foundations/compress-scope-assets.mjs handle tip bench findings
+
+# All part-one review images and review JSON, followed by the final manifest.
 node scripts/bronchoscopy-foundations/review-scope-assets.mjs
 node scripts/bronchoscopy-foundations/build-scope-manifest.mjs
 
@@ -220,16 +231,10 @@ recognition and visual comparison. They do not establish patient-specific reach,
 compatibility, procedural safety or hands-on competence. The files are ordinary public assets for
 the standalone build; no upload, access rule, rewrite or remote-asset prefix is added.
 
-## Validation and integration handoff
+## Current integration evidence
 
-The scoped run passes 61 tests across the asset, scope-engine and scope-walkthrough suites. One
-explicit pending test tracks the continuous junction and its 0.5 mm surface-gap requirement;
-passing the other tests does not satisfy it. Repository type-checking and the browser-harness
-type-check pass. Repository lint completes with zero errors and 15 existing warnings outside this
-change; the changed test and scripts lint cleanly. Generated Contentlayer output is required before
-the repository-wide type-check on a fresh checkout.
+All seven modes are integrated and the complete survey has been exercised with the loaded lumen and its collider. The updated asset suite decodes every GLB, checks the new movable node names and budgets, and verifies per-file hashes and pending-review fields. The original continuous-junction requirement remains an explicit pending test. See [validation.md](validation.md) for current commands, counts and captures.
 
-All implementation is confined to the owned asset paths, new asset scripts, this document and the
-asset test. No graph, production scope contract, engine, content, stage, auth, route or hosting
-configuration is changed. The local base branch for the requested PR is not yet on origin; hand off
-the local commits to the stage owner rather than open a PR against a different base.
+The four added GLBs total 38,008 bytes. `teaching-props.json` records the authored movable pivots, scope-tip diameter, target position and interpretation limits. The findings file is generic practice geometry; it is not used to reconstruct an unavailable source image or to assert a clinical diagnosis. Existing finding-description activities still use their authored text and normal reference stills.
+
+The old part-one engine/scene ownership boundary is superseded by the core-module takeover. The original source lumen and teaching graph remain unchanged. Shared stage files and admin rendering primitives remain unchanged by this integration.

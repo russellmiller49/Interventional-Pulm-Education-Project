@@ -1,0 +1,27 @@
+{
+  "schema": "bronchoscopy_foundations_teaching_props/v1",
+  "numberClass": "authored-for-simulation",
+  "units": "mm",
+  "clinicalReviewStatus": "pending",
+  "authoredDate": "2026-09-12",
+  "interpretation": "Illustrative teaching props. Not a product, measured finding or patient image.",
+  "handle": {
+    "leverPivotMm": [0, 9, -12],
+    "suctionPivotMm": [-8, 0, -10],
+    "leverVisualLimitDeg": 50,
+    "suctionTravelMm": 1.5
+  },
+  "scopeTip": {
+    "odMm": 3.8,
+    "forwardAxis": "+Z",
+    "origin": "distal face"
+  },
+  "bench": {
+    "cardCenterMm": [0, 0, 65],
+    "forwardAxis": "+Z"
+  },
+  "practiceTarget": {
+    "aheadMm": 18,
+    "radialOffsetMm": 3
+  }
+}

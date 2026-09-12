@@ -245,6 +245,7 @@ function BronchStageSessionView({
   )
   const [scopeCase, setScopeCase] = useState<ScopeCase | null>(null)
   const [caseFailed, setCaseFailed] = useState(false)
+  const [caseLoadGeneration, setCaseLoadGeneration] = useState(0)
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const nowFocusRef = useRef<HTMLDivElement>(null)
 
@@ -290,7 +291,7 @@ function BronchStageSessionView({
     return () => {
       cancelled = true
     }
-  }, [needsCase, profile])
+  }, [needsCase, profile, caseLoadGeneration])
 
   /* The pane's step: an Act or Observe keeps its own state; a reading step shows the most recent
      scope work, or its own workspace view when none has happened yet. */
@@ -443,7 +444,7 @@ function BronchStageSessionView({
         disabled: treeCommittedId !== undefined || lookingBack,
         hint:
           treeCommittedId === undefined
-            ? 'Choose the airway on the map, then commit on the card in the Steps panel.'
+            ? 'Choose the airway on the map, then submit your choice on the card in the Steps panel.'
             : undefined,
       }
     : undefined
@@ -554,7 +555,7 @@ function BronchStageSessionView({
           ...base,
           status:
             interaction.round === 0
-              ? 'The Simulator panel keeps its view while you decide. Its controls unlock once you commit.'
+              ? 'The Simulator panel keeps its view while you decide. Its controls unlock once you submit your prediction.'
               : undefined,
           primary: {
             label: activeStep.actionLabel,
@@ -872,7 +873,7 @@ function BronchStageSessionView({
   const lockedReason = deciding
     ? 'The controls are locked while you decide. Commit your answer to take them.'
     : beforePrediction
-      ? 'The controls open once you have committed the prediction.'
+      ? 'The controls open once you have submitted the prediction.'
       : !scopeLive && !lookingBack
         ? 'The scope rests on this step. Its controls open on the next hands-on step.'
         : undefined
@@ -927,7 +928,22 @@ function BronchStageSessionView({
         if (!paneState) {
           return (
             <p role="status" data-scope-loading={caseFailed ? 'failed' : 'loading'}>
-              {caseFailed ? 'The airway model could not be loaded.' : 'Loading the airway model…'}
+              {caseFailed ? (
+                <>
+                  The airway model could not be loaded.{' '}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCaseFailed(false)
+                      setCaseLoadGeneration((value) => value + 1)
+                    }}
+                  >
+                    Reload the airway model
+                  </button>
+                </>
+              ) : (
+                'Loading the airway model…'
+              )}
             </p>
           )
         }
@@ -1000,7 +1016,7 @@ function BronchStageSessionView({
           : deciding
             ? 'locked while you decide'
             : beforePrediction
-              ? 'locked until you commit'
+              ? 'locked until you submit the prediction'
               : lookingBack
                 ? 'paused'
                 : 'resting',

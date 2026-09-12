@@ -170,7 +170,7 @@ export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
               disabled={!selected}
               onClick={commit}
             >
-              Commit this answer <ArrowRight aria-hidden="true" />
+              Submit this answer <ArrowRight aria-hidden="true" />
             </button>
           </div>
         </div>

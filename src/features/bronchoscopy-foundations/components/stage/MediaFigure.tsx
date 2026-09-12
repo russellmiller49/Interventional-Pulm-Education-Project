@@ -81,7 +81,7 @@ export function mediaDescription(media: MediaRef): string {
   }
 }
 
-export const MEDIA_PENDING_NOTE = 'Authored teaching media, pending clinical review.'
+export const MEDIA_PENDING_NOTE = 'Teaching media, pending clinical review.'
 
 function Frame({
   src,

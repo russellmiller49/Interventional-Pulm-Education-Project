@@ -139,7 +139,7 @@ export function BronchTeachingColumn({ lesson }: { readonly lesson: BronchStageL
       ))}
 
       {spineStopsToShow.length > 0 ? (
-        <StageBlock kind="pattern" heading="The airway spine">
+        <StageBlock kind="pattern" heading="The airway map">
           {spineStopsToShow.map((stopId) => {
             const stop = spineStop(stopId)
             return (

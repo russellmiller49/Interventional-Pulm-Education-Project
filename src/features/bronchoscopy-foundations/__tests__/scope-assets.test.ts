@@ -47,6 +47,9 @@ const BUDGETS: Record<string, number> = {
   'larynx/larynx-lumen.glb': 1_500_000,
   'devices/accessories.glb': 450_000,
   'devices/handle.glb': 500_000,
+  'devices/scope-tip.glb': 100_000,
+  'devices/bench.glb': 100_000,
+  'devices/findings.glb': 100_000,
 }
 interface GlbDoc {
   buffers: { byteLength: number; uri?: string }[]
@@ -194,6 +197,7 @@ describe('scope asset inventory and provenance', () => {
       path.join(ROOT, 'src/features/bronchoscopy-foundations/__tests__/scope-assets.test.ts'),
       ...[
         'build-scope-assets.py',
+        'build-teaching-props.py',
         'compress-scope-assets.mjs',
         'review-scope-assets.browser.mts',
         'review-scope-assets.mjs',
@@ -211,34 +215,33 @@ describe('scope asset inventory and provenance', () => {
 })
 
 describe('decoded runtime geometry', () => {
-  test.each([`${PROFILE}/lumen.glb`, 'larynx/larynx-lumen.glb', 'devices/accessories.glb'])(
-    '%s is self-contained and each primitive decodes with Draco',
-    (relative) => {
-      const glb = readGlb(relative)
-      expect(JSON.stringify(glb.doc)).not.toMatch(/"uri"\s*:/)
-      expect(glb.doc.extensionsRequired).toContain('KHR_draco_mesh_compression')
-      expect(glb.doc.buffers).toHaveLength(1)
-      expect(glb.doc.buffers[0].byteLength).toBeLessThanOrEqual(glb.binary.length)
-      for (const view of glb.doc.bufferViews) {
-        expect(view.buffer).toBe(0)
-        expect((view.byteOffset ?? 0) + view.byteLength).toBeLessThanOrEqual(glb.binary.length)
-      }
-      glb.doc.meshes.forEach((mesh, i) => {
-        expect(mesh.primitives).toHaveLength(1)
-        const decoded = decode(glb, i)
-        expect(decoded.indices.length).toBeGreaterThan(0)
-        expect(Array.from(decoded.positions).every(Number.isFinite)).toBe(true)
-      })
-      for (const node of glb.doc.nodes) {
-        expect(node.translation ?? [0, 0, 0]).toEqual([0, 0, 0])
-        expect(node.rotation ?? [0, 0, 0, 1]).toEqual([0, 0, 0, 1])
-        expect(node.scale ?? [1, 1, 1]).toEqual([1, 1, 1])
-        expect(node.matrix ?? [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]).toEqual([
-          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
-        ])
-      }
-    },
-  )
+  test.each(
+    manifest.files.filter((entry) => entry.path.endsWith('.glb')).map((entry) => entry.path),
+  )('%s is self-contained and each primitive decodes with Draco', (relative) => {
+    const glb = readGlb(relative)
+    expect(JSON.stringify(glb.doc)).not.toMatch(/"uri"\s*:/)
+    expect(glb.doc.extensionsRequired).toContain('KHR_draco_mesh_compression')
+    expect(glb.doc.buffers).toHaveLength(1)
+    expect(glb.doc.buffers[0].byteLength).toBeLessThanOrEqual(glb.binary.length)
+    for (const view of glb.doc.bufferViews) {
+      expect(view.buffer).toBe(0)
+      expect((view.byteOffset ?? 0) + view.byteLength).toBeLessThanOrEqual(glb.binary.length)
+    }
+    glb.doc.meshes.forEach((mesh, i) => {
+      expect(mesh.primitives).toHaveLength(1)
+      const decoded = decode(glb, i)
+      expect(decoded.indices.length).toBeGreaterThan(0)
+      expect(Array.from(decoded.positions).every(Number.isFinite)).toBe(true)
+    })
+    for (const node of glb.doc.nodes) {
+      expect(node.translation ?? [0, 0, 0]).toEqual([0, 0, 0])
+      expect(node.rotation ?? [0, 0, 0, 1]).toEqual([0, 0, 0, 1])
+      expect(node.scale ?? [1, 1, 1]).toEqual([1, 1, 1])
+      expect(node.matrix ?? [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]).toEqual([
+        1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+      ])
+    }
+  })
   test('the lumen is one closed outward mesh containing every graph node in its actual bounds', () => {
     const glb = readGlb(`${PROFILE}/lumen.glb`)
     expect(glb.doc.nodes).toHaveLength(1)
@@ -560,4 +563,25 @@ describe('runtime review evidence and engine contracts', () => {
     expect(manifest.releaseStatus).toBe('pending-clinical-review-and-junction-decision')
     expect(manifest.unresolved.length).toBeGreaterThan(0)
   })
+})
+
+test('teaching props expose the scene nodes and identify authored parameters', () => {
+  const expected: Record<string, string[]> = {
+    handle: ['HANDLE_body', 'HANDLE_lever', 'HANDLE_suction'],
+    'scope-tip': ['TIP_body', 'TIP_lens', 'TIP_light', 'TIP_channel'],
+    bench: ['BENCH_card', 'BENCH_up', 'BENCH_cross'],
+    findings: ['PRACTICE_target', 'PRACTICE_secretion'],
+  }
+  for (const [file, names] of Object.entries(expected)) {
+    const nodes = readGlb(`devices/${file}.glb`).doc.nodes.map((node) => node.name)
+    expect(nodes).toEqual(expect.arrayContaining(names))
+    expect(
+      manifest.files.find((entry) => entry.path === `devices/${file}.glb`)?.provenance,
+    ).toMatchObject({ generatedBy: 'scripts/bronchoscopy-foundations/build-teaching-props.py' })
+  }
+  const props = json<{ scopeTip: { odMm: number }; numberClass: string }>(
+    'devices/teaching-props.json',
+  )
+  expect(props.scopeTip.odMm).toBe(3.8)
+  expect(props.numberClass).toMatch(/authored/i)
 })

@@ -23,7 +23,7 @@ export const AIRWAY_NODES: AirwayNode[] = [
     summary: 'The entry checkpoint: inspect cord mobility and pass midline through the glottis.',
     whatYouSee: [
       'A triangular glottic opening bordered by the pearly-white true vocal cords, with the pink false cords just above.',
-      "The anterior commissure sits at 12 o'clock; the posterior commissure with the arytenoid cartilages sits at 6 o'clock.",
+      "In this schematic orientation, the anterior commissure is at 12 o'clock and the posterior commissure with the arytenoid cartilages is at 6 o'clock. Their screen positions rotate with the scope.",
       'The cords abduct (open) with inspiration and adduct (close) with phonation — confirm symmetric movement before passing.',
     ],
     pearls: [
@@ -45,19 +45,19 @@ export const AIRWAY_NODES: AirwayNode[] = [
     summary:
       'A ~10–12 cm tube of C-shaped cartilage rings anteriorly and a flat membranous wall posteriorly.',
     whatYouSee: [
-      "Horizontal cartilage rings bulge along the anterior and lateral walls (12 and 3/9 o'clock).",
-      "The flat, vertically-striped membranous wall (trachealis muscle) marks posterior — your reliable 6 o'clock landmark.",
+      "Horizontal cartilage rings bulge along the anterior and lateral walls (shown at 12 and 3/9 o'clock in this schematic).",
+      "The flat, vertically-striped membranous wall (trachealis muscle) marks posterior, shown at 6 o'clock in this schematic.",
       'The pulsating aortic arch may indent the left anterolateral wall in the distal third.',
       'The trachea narrows toward the sharp, sagittal main carina at its base.',
     ],
     pearls: [
       'The membranous wall billows inward with cough and expiration — excessive collapse (>50%) suggests tracheomalacia.',
-      "Keep the membranous wall at 6 o'clock to stay oriented; if you lose which way is posterior, find the flat striped wall.",
+      "Find the flat membranous wall to identify posterior. Its position in the image changes with scope rotation; 6 o'clock is this diagram's reference orientation.",
       'Measure lesions from the vocal cords and from the carina — both reference points guide stent and surgical planning.',
     ],
     endoscopicView: {
       orientation:
-        "Anterior cartilage at 12 o'clock, flat membranous wall at 6 o'clock. The patient's right is toward the left of your image.",
+        "In this schematic reference view, anterior cartilage is at 12 o'clock and the membranous wall at 6 o'clock; the patient's right appears on the image's left. These screen positions change with scope rotation.",
       openings: [
         { childId: 'rmb', clock: 9, size: 0.95, label: 'RMB' },
         { childId: 'lmb', clock: 3, size: 0.72, label: 'LMB' },
@@ -141,7 +141,7 @@ export const AIRWAY_NODES: AirwayNode[] = [
     glbMatch: 'RB1',
     summary: 'The most cranial segment of the right lung, pointing straight up toward the apex.',
     whatYouSee: [
-      "Ascends vertically toward the lung apex; the orifice sits at the 12 o'clock position of the trifurcation.",
+      "Ascends vertically toward the lung apex; the orifice is shown at 12 o'clock in this schematic of the trifurcation; the screen position changes with scope rotation.",
     ],
     pearls: [
       'Apical-segment disease (e.g., post-primary TB, apical scarring) lives here and in RB2.',
@@ -704,7 +704,7 @@ export const SURVEY_STEPS: SurveyStep[] = [
     title: 'Vocal cords',
     narration: [
       'Every bronchoscopy begins here. Confirm the cords move symmetrically before you pass — this is your only clean look at cord function.',
-      "Keep the anterior commissure at 12 o'clock. Passing through the posterior glottis is gentler and provokes less cough.",
+      "Use the commissures to orient the image; anterior is at 12 o'clock only in this schematic reference view. Passing through the posterior glottis is gentler and provokes less cough.",
     ],
   },
   {
@@ -712,7 +712,7 @@ export const SURVEY_STEPS: SurveyStep[] = [
     stage: 'Central airways',
     title: 'Trachea & main carina',
     narration: [
-      "Advance down the trachea keeping the flat membranous wall at 6 o'clock. Cartilage rings ridge the anterior and lateral walls.",
+      'As you advance down the trachea, identify posterior from the flat membranous wall, wherever it appears in the rotated image. Cartilage rings ridge the anterior and lateral walls.',
       'The trachea ends at the sharp, sagittal main carina. A widened, splayed carina suggests subcarinal (station 7) nodal disease.',
       "From here, the patient's right main bronchus opens toward the left of your image, the left main bronchus toward the right.",
     ],

@@ -64,7 +64,7 @@ const ACT_VIEW: ScopeViewSpec = {
   script: 'lens-contamination',
   scriptAirway: 'RB9',
   boundary:
-    'An assisted walk along the airway centerlines of one teaching profile, with one scripted narrowing and one scripted smear on the lens. No mucosa, secretions or patient are drawn and no device’s lens-clearing mechanism is modeled, so the app cannot judge the quality of any view.',
+    'An assisted walk along the airway centerlines of one teaching profile, with one scripted narrowing and one scripted smear on the lens. The airway surface and lens smear are illustrations; no patient response or device’s lens-clearing mechanism is modeled, so the app cannot judge the quality of any view.',
 }
 
 export const section: BronchSectionDefinition = {

@@ -73,13 +73,13 @@ export interface BronchStageLesson extends StageLessonBase<BronchStageStep> {
 }
 
 const CONTINUE = 'Continue'
-const COMMIT = 'Commit this answer'
+const COMMIT = 'Submit this answer'
 
 /** The words the Now card uses for each Act, so the instruction and the card agree. */
 export const ACT_ACTION_LABELS = {
-  sort: 'Commit the set',
-  identify: 'Commit the names',
-  sequence: 'Commit the order',
+  sort: 'Submit the set',
+  identify: 'Submit the names',
+  sequence: 'Submit the order',
   ledger: CONTINUE,
   report: CONTINUE,
   scenario: CONTINUE,
@@ -99,13 +99,13 @@ interface StepInput {
 
 function predictionInstruction(stage: BronchStageItem, section: BronchSectionDefinition): string {
   if (stage.choiceAirways) {
-    return 'Read the situation on this card, choose the airway on the airway map in the Simulator panel, then commit on this card.'
+    return 'Read the situation on this card, choose the airway on the airway map in the Simulator panel, then submit your choice on this card.'
   }
   const unlock =
     section.workspace.kind === 'scope' || section.act.kind === 'scope-lab'
       ? ' The scope controls unlock once you have.'
       : ''
-  return `Read the situation, choose one answer on this card, then commit it.${unlock}`
+  return `Read the situation, choose one answer on this card, then submit it.${unlock}`
 }
 
 function predictionLookIn(stage: BronchStageItem): StageStepLocation {
@@ -230,8 +230,8 @@ function buildInputs(section: BronchSectionDefinition): readonly StepInput[] {
     phase: 'transfer',
     title: 'Carry it forward',
     instruction: transfer.retrievesFrom
-      ? 'The same principle from an earlier section, in a different situation. Choose one answer on this card and commit it.'
-      : 'The same principle, in a different situation. Choose one answer on this card and commit it.',
+      ? 'The same principle from an earlier section, in a different situation. Choose one answer on this card and submit it.'
+      : 'The same principle, in a different situation. Choose one answer on this card and submit it.',
     lookIn: predictionLookIn(transfer),
     rationale: transfer.transferVariant,
     actionLabel: COMMIT,

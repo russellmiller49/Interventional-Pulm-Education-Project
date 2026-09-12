@@ -493,7 +493,7 @@ export interface ScopeState {
   readonly inputs: ScopeInputs
   /** The graph position (plain data, no renderer objects); null on the bench or in the larynx. */
   readonly engine: EngineScopeState | null
-  /** The pose the scene renders through `scopeOpticalFrame(pose)`; null on the bench. */
+  /** The pose the scene renders through `scopeOpticalFrame(pose)`, including authored bench/larynx frames. */
   readonly pose: ScopePoseSnapshot | null
   /** Where the tip is: the bench, the larynx, a tube, or an airway of the profile. */
   readonly place: 'bench' | 'larynx' | 'tube' | 'airway'

@@ -245,7 +245,7 @@ export const section: BronchSectionDefinition = {
 
   steps: {
     recognize: {
-      instruction: `In the Simulator panel, look at ${SIMULATOR_LANDMARKS.scopeView}: the tip rests on a bench, outside any airway, and ${SIMULATOR_LANDMARKS.controls} stay locked until you commit. Then read ${TEACHING_LANDMARKS.purpose} and the blocks under it, in the Teaching panel.`,
+      instruction: `In the Simulator panel, look at ${SIMULATOR_LANDMARKS.scopeView}: the tip rests on a bench, outside any airway, and ${SIMULATOR_LANDMARKS.controls} stay locked until you submit the prediction. Then read ${TEACHING_LANDMARKS.purpose} and the blocks under it, in the Teaching panel.`,
       lookIn: {
         pane: 'simulator',
         landmark: SIMULATOR_LANDMARKS.scopeView,

@@ -52,13 +52,20 @@ const TITLES: Readonly<Record<LocalPolicyId, string>> = {
   cryotherapy_ifu: 'Cryotherapy instructions for use',
 }
 
+const DESCRIPTIONS: Partial<Record<LocalPolicyId, string>> = {
+  fasting_and_aspiration_policy:
+    'Current fasting requirements and evaluation of aspiration risk, including altered gastric emptying',
+  specimen_directory:
+    'Local containers, required material, transport, specialized laboratory studies and contact pathway',
+}
+
 export const LOCAL_POLICIES: readonly LocalPolicy[] = MANIFEST_LOCAL_POLICIES.map((policy) => {
   const id = policy.id as LocalPolicyId
   if (!(id in TITLES)) throw new Error(`Unknown local policy ${policy.id}`)
   return {
     id,
     title: TITLES[id],
-    description: policy.description,
+    description: DESCRIPTIONS[id] ?? policy.description,
     missingBehavior: policy.missingBehavior,
     value: null,
   }

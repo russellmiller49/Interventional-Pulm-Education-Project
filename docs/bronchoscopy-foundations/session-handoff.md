@@ -1,5 +1,7 @@
 # Bronchoscopy Foundations — current state and what is left (2026-09-11, end of day)
 
+**Superseded by the core takeover build.** See [implementation-report.md](implementation-report.md), [validation.md](validation.md) and [faculty-review-packet.md](faculty-review-packet.md) for current status. The historical snapshot below is retained for context.
+
 For the next session, Claude or human. Read this, the memory note `bronchoscopy-foundations-rebuild`,
 and the plan `~/.claude/plans/i-would-like-to-bubbly-storm.md`. Those and `git log` are the history.
 

@@ -3,8 +3,8 @@
 import type { Vec3 } from '@/lib/airway-anatomy/types'
 
 import styles from './scope-fallback.module.css'
+import { treePinLayout, MAP_WIDTH, MAP_HEIGHT } from './treePinLayout'
 import {
-  AIRWAY_LABELS,
   SCOPE_DOM,
   treeChoiceInputId,
   type AirwayLabel,
@@ -48,11 +48,7 @@ export function TreeMap({ map, lit, current, tipLps, treeAnswer }: TreeMapProps)
       </div>
     )
   }
-  const [x0, y0, width, height] = map.viewBox
-  const percent = ([x, y]: readonly [number, number]) => ({
-    left: `${((x - x0) / width) * 100}%`,
-    top: `${((y - y0) / height) * 100}%`,
-  })
+  const layout = treePinLayout(map)
   const litSet = new Set<AirwayLabel>(lit)
   const tip = tipLps ? map.project(tipLps) : null
   return (
@@ -62,40 +58,47 @@ export function TreeMap({ map, lit, current, tipLps, treeAnswer }: TreeMapProps)
       aria-label="The airway map"
       {...{ [SCOPE_DOM.map]: '' }}
     >
-      <div className={styles.mapBox} style={{ aspectRatio: `${width} / ${height}` }}>
+      <div className={styles.mapBox} style={{ aspectRatio: `${MAP_WIDTH} / ${MAP_HEIGHT}` }}>
         <svg
           className={styles.mapSvg}
-          viewBox={map.viewBox.join(' ')}
+          viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
           preserveAspectRatio="xMidYMid meet"
           aria-hidden="true"
           focusable="false"
         >
-          {map.paths.map((path, index) => (
+          <g transform={layout.transform}>
+            {map.paths.map((path, index) => (
+              <path
+                key={`${path.label ?? 'unlabeled'}-${index}`}
+                d={path.d}
+                strokeWidth={path.widthMm}
+                data-airway-path={path.label ?? 'unlabeled'}
+                data-lit={path.label && litSet.has(path.label) ? 'true' : undefined}
+              />
+            ))}
+            {tip ? (
+              <circle
+                className={styles.mapTip}
+                cx={tip[0]}
+                cy={tip[1]}
+                r={TIP_RADIUS}
+                data-scope-tip=""
+              />
+            ) : null}
+          </g>
+          {layout.pins.map((pin) => (
             <path
-              key={`${path.label ?? 'unlabeled'}-${index}`}
-              d={path.d}
-              strokeWidth={path.widthMm}
-              data-airway-path={path.label ?? 'unlabeled'}
-              data-lit={path.label && litSet.has(path.label) ? 'true' : undefined}
+              key={pin.label}
+              className={styles.mapLeader}
+              d={`M${pin.anchor[0]},${pin.anchor[1]} L${pin.x},${pin.y}`}
             />
           ))}
-          {tip ? (
-            <circle
-              className={styles.mapTip}
-              cx={tip[0]}
-              cy={tip[1]}
-              r={TIP_RADIUS}
-              data-scope-tip=""
-            />
-          ) : null}
         </svg>
-        {AIRWAY_LABELS.map((label) => {
-          const point = map.pins[label]
-          if (!point) return null
+        {layout.pins.map(({ label, x, y }) => {
           const choice = treeAnswer?.choices.find((candidate) => candidate.airway === label)
           const shared = {
             className: styles.mapPin,
-            style: percent(point),
+            style: { left: `${(x / MAP_WIDTH) * 100}%`, top: `${(y / MAP_HEIGHT) * 100}%` },
             'aria-current': label === current ? ('location' as const) : undefined,
             'data-lit': litSet.has(label) ? 'true' : undefined,
             [SCOPE_DOM.pin]: label,

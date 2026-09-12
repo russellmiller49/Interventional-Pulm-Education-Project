@@ -426,8 +426,8 @@ describe('ScopePane', () => {
   }
 
   it('routes every mode without a ready scene to the fallback', () => {
-    const pending = SCOPE_MODES.filter((mode) => !SCOPE_MODES_READY.has(mode))
-    expect(pending.length).toBeGreaterThan(0)
+    const ready = jest.spyOn(SCOPE_MODES_READY, 'has').mockReturnValue(false)
+    const pending = SCOPE_MODES
     for (const mode of pending) {
       const view = viewFor(mode)
       expect(scopeViewErrors(view)).toEqual([])
@@ -445,5 +445,6 @@ describe('ScopePane', () => {
       expect(copyGateFindings()).toEqual([])
       unmount()
     }
+    ready.mockRestore()
   })
 })

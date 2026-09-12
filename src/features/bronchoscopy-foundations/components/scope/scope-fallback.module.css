@@ -141,7 +141,15 @@
   aspect-ratio: 1 / 1;
   transform: translateX(-50%);
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, #2a0a10 0%, #6b1f2b 60%, #a63a48 100%);
+  background: radial-gradient(
+    ellipse at 50% 46%,
+    #160f14 0%,
+    #302027 24%,
+    #c88c89 43%,
+    #efb9ac 68%,
+    #a56060 94%,
+    #090d13 100%
+  );
 }
 
 .field[data-view-signal='red-out'] .lumen {
@@ -217,7 +225,7 @@ button.ostium {
 
 .mapSvg path {
   fill: none;
-  stroke: var(--muted, rgba(226, 232, 240, 0.35));
+  stroke: #788f9f;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -372,4 +380,45 @@ label.mapPin {
 
 .goals li[data-met='true'] {
   color: var(--green, #4ade80);
+}
+
+.mapSvg .mapLeader {
+  stroke: #65828b;
+  stroke-width: 0.7;
+  opacity: 0.6;
+}
+.mapPin {
+  font-size: clamp(0.5rem, 1.5vw, 0.625rem);
+}
+.benchCard {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 48%;
+  height: 54%;
+  background: #e7e9df;
+  border: 5px solid #384c5a;
+}
+.benchCard span,
+.benchCard i,
+.benchCard b {
+  position: absolute;
+  width: 22%;
+  height: 27%;
+  border-radius: 50%;
+}
+.benchCard span {
+  top: 12%;
+  left: 12%;
+  background: #2698a6;
+}
+.benchCard i {
+  top: 12%;
+  right: 12%;
+  background: #e3a844;
+}
+.benchCard b {
+  bottom: 12%;
+  right: 12%;
+  background: #a55351;
 }

@@ -16,7 +16,7 @@ const CARD = 'rounded-3xl border bg-card p-6 shadow-sm lg:p-8'
 
 const REFERENCE_SECTIONS = [
   { id: 'airway-names', title: 'Airway names' },
-  { id: 'airway-spine', title: 'The airway spine' },
+  { id: 'airway-spine', title: 'The airway map' },
   { id: 'five-controls', title: 'The five controls' },
   { id: 'reading-the-view', title: 'Reading the view' },
   { id: 'local-policies', title: 'Local policies' },
@@ -96,7 +96,7 @@ export function BronchoscopyFoundationsReference() {
       </section>
 
       <section id="airway-spine" aria-labelledby="ref-spine-heading" className={CARD}>
-        <p className={KICKER}>The airway spine</p>
+        <p className={KICKER}>The airway map</p>
         <h2 id="ref-spine-heading" className="mt-2 text-2xl font-bold">
           From the larynx to the segments
         </h2>

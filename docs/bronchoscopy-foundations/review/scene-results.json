@@ -1,0 +1,55 @@
+{
+  "modes": [
+    {
+      "name": "guided-walk",
+      "colors": 52,
+      "bytes": 102753
+    },
+    {
+      "name": "free-drive",
+      "colors": 36,
+      "bytes": 101282
+    },
+    {
+      "name": "controls-isolated",
+      "colors": 64,
+      "bytes": 40243
+    },
+    {
+      "name": "tube",
+      "colors": 46,
+      "bytes": 34146
+    },
+    {
+      "name": "accessory",
+      "colors": 81,
+      "bytes": 55339
+    },
+    {
+      "name": "larynx-entry",
+      "colors": 82,
+      "bytes": 50359
+    },
+    {
+      "name": "idle",
+      "colors": 28,
+      "bytes": 20229
+    }
+  ],
+  "checks": [
+    "guided branch entry reaches the actual RUL",
+    "complete survey on the loaded lumen, declared inspections and return to RB6",
+    "wall-contact red field recovery and contaminated lens clearing",
+    "tube annular geometry agrees with the authored diameters",
+    "keyboard and bench rotation",
+    "locked controls and pointer insertion",
+    "reduced motion, manual breath step and glottic entry",
+    "accessory node and position change",
+    "WebGL context replacement preserves state",
+    "phone reflow, map switch and non-overlapping pins",
+    "normal breath animation pauses when offscreen or locked",
+    "touch insertion is recorded as touch",
+    "missing asset retry and a usable schematic when WebGL is unavailable"
+  ],
+  "errors": []
+}

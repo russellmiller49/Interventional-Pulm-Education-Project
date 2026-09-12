@@ -22,7 +22,7 @@
       "clinical_reviewer": null,
       "review_date": null,
       "anatomy_profile_id": "adult-teaching-combined-left-basal-v1",
-      "camera_orientation_description": "Patient LPS millimetres; buildTransportFrames with the graph orientation landmarks; 88 degree vertical field of view",
+      "camera_orientation_description": "Patient LPS millimetres; buildTransportFrames with the graph orientation landmarks; 88 degree nominal field of view across the wider optical axis",
       "approved_use": "Development and technical review of educational simulation assets; clinical review and publication decision pending",
       "clinical_review_status": "pending",
       "publication_permitted": null
@@ -44,7 +44,7 @@
       "clinical_reviewer": null,
       "review_date": null,
       "anatomy_profile_id": "adult-teaching-combined-left-basal-v1",
-      "camera_orientation_description": "Patient LPS millimetres; buildTransportFrames with the graph orientation landmarks; 88 degree vertical field of view",
+      "camera_orientation_description": "Patient LPS millimetres; buildTransportFrames with the graph orientation landmarks; 88 degree nominal field of view across the wider optical axis",
       "approved_use": "Development and technical review of educational simulation assets; clinical review and publication decision pending",
       "clinical_review_status": "pending",
       "publication_permitted": null
@@ -66,7 +66,7 @@
       "clinical_reviewer": null,
       "review_date": null,
       "anatomy_profile_id": "adult-teaching-combined-left-basal-v1",
-      "camera_orientation_description": "Patient LPS millimetres; buildTransportFrames with the graph orientation landmarks; 88 degree vertical field of view",
+      "camera_orientation_description": "Patient LPS millimetres; buildTransportFrames with the graph orientation landmarks; 88 degree nominal field of view across the wider optical axis",
       "approved_use": "Development and technical review of educational simulation assets; clinical review and publication decision pending",
       "clinical_review_status": "pending",
       "publication_permitted": null
@@ -160,6 +160,28 @@
       "publication_permitted": null
     },
     {
+      "path": "devices/bench.glb",
+      "bytes": 10160,
+      "sha256": "ed5af750097eb78c60724f43a6598ca003780f4db20146abfe778242cb84a71f",
+      "provenance": {
+        "class": "authored-for-simulation",
+        "source": ["scope asset brief; authored geometry parameters"],
+        "generatedBy": "scripts/bronchoscopy-foundations/build-teaching-props.py",
+        "numberClass": "Geometry dimensions, morph states, device values, trimming and review settings are authored for simulation unless explicitly identified as measured build results."
+      },
+      "origin": "Authored scope handle, distal tip, asymmetric bench target and generic practice geometry; not manufacturer or clinical reference assets",
+      "creator_or_rightsholder": "Authored for this educational module; rights holder pending owner confirmation",
+      "license_or_permission": "Supplied for implementation and technical review; publication permission pending owner confirmation",
+      "deidentification_status": "Authored geometry or technical measurements; no patient identifiers added",
+      "clinical_reviewer": null,
+      "review_date": null,
+      "anatomy_profile_id": "adult-teaching-combined-left-basal-v1",
+      "camera_orientation_description": "Authored local millimetres; +Z forward; placement and movable pivots are recorded in devices/teaching-props.json",
+      "approved_use": "Development and technical review of educational simulation assets; clinical review and publication decision pending",
+      "clinical_review_status": "pending",
+      "publication_permitted": null
+    },
+    {
       "path": "devices/devices.json",
       "bytes": 3041,
       "sha256": "456aac85ac3b81e57ca5ed9aa0333e336ebe67febda8fcaa9085e7a6d57e2985",
@@ -177,6 +199,94 @@
       "review_date": null,
       "anatomy_profile_id": "adult-teaching-combined-left-basal-v1",
       "camera_orientation_description": "Accessory local millimetres; distal tip at origin; +Z forward; scene places along the scope optical frame",
+      "approved_use": "Development and technical review of educational simulation assets; clinical review and publication decision pending",
+      "clinical_review_status": "pending",
+      "publication_permitted": null
+    },
+    {
+      "path": "devices/findings.glb",
+      "bytes": 8632,
+      "sha256": "4fa86d4faa83c6e65add0935ed64492d0a7057c2d62dbb64675fe2fa46f04dbc",
+      "provenance": {
+        "class": "authored-for-simulation",
+        "source": ["scope asset brief; authored geometry parameters"],
+        "generatedBy": "scripts/bronchoscopy-foundations/build-teaching-props.py",
+        "numberClass": "Geometry dimensions, morph states, device values, trimming and review settings are authored for simulation unless explicitly identified as measured build results."
+      },
+      "origin": "Authored scope handle, distal tip, asymmetric bench target and generic practice geometry; not manufacturer or clinical reference assets",
+      "creator_or_rightsholder": "Authored for this educational module; rights holder pending owner confirmation",
+      "license_or_permission": "Supplied for implementation and technical review; publication permission pending owner confirmation",
+      "deidentification_status": "Authored geometry or technical measurements; no patient identifiers added",
+      "clinical_reviewer": null,
+      "review_date": null,
+      "anatomy_profile_id": "adult-teaching-combined-left-basal-v1",
+      "camera_orientation_description": "Authored local millimetres; +Z forward; placement and movable pivots are recorded in devices/teaching-props.json",
+      "approved_use": "Development and technical review of educational simulation assets; clinical review and publication decision pending",
+      "clinical_review_status": "pending",
+      "publication_permitted": null
+    },
+    {
+      "path": "devices/handle.glb",
+      "bytes": 12160,
+      "sha256": "acab4e67a3aaca82aed63a9107ec27e2bd733cabffe57c0753fd7e4268250c1e",
+      "provenance": {
+        "class": "authored-for-simulation",
+        "source": ["scope asset brief; authored geometry parameters"],
+        "generatedBy": "scripts/bronchoscopy-foundations/build-teaching-props.py",
+        "numberClass": "Geometry dimensions, morph states, device values, trimming and review settings are authored for simulation unless explicitly identified as measured build results."
+      },
+      "origin": "Authored scope handle, distal tip, asymmetric bench target and generic practice geometry; not manufacturer or clinical reference assets",
+      "creator_or_rightsholder": "Authored for this educational module; rights holder pending owner confirmation",
+      "license_or_permission": "Supplied for implementation and technical review; publication permission pending owner confirmation",
+      "deidentification_status": "Authored geometry or technical measurements; no patient identifiers added",
+      "clinical_reviewer": null,
+      "review_date": null,
+      "anatomy_profile_id": "adult-teaching-combined-left-basal-v1",
+      "camera_orientation_description": "Authored local millimetres; +Z forward; placement and movable pivots are recorded in devices/teaching-props.json",
+      "approved_use": "Development and technical review of educational simulation assets; clinical review and publication decision pending",
+      "clinical_review_status": "pending",
+      "publication_permitted": null
+    },
+    {
+      "path": "devices/scope-tip.glb",
+      "bytes": 7056,
+      "sha256": "04cb5055a9d28292b6d098b9abb3d5dc7b322a19b5392674f9a606090ff0b138",
+      "provenance": {
+        "class": "authored-for-simulation",
+        "source": ["scope asset brief; authored geometry parameters"],
+        "generatedBy": "scripts/bronchoscopy-foundations/build-teaching-props.py",
+        "numberClass": "Geometry dimensions, morph states, device values, trimming and review settings are authored for simulation unless explicitly identified as measured build results."
+      },
+      "origin": "Authored scope handle, distal tip, asymmetric bench target and generic practice geometry; not manufacturer or clinical reference assets",
+      "creator_or_rightsholder": "Authored for this educational module; rights holder pending owner confirmation",
+      "license_or_permission": "Supplied for implementation and technical review; publication permission pending owner confirmation",
+      "deidentification_status": "Authored geometry or technical measurements; no patient identifiers added",
+      "clinical_reviewer": null,
+      "review_date": null,
+      "anatomy_profile_id": "adult-teaching-combined-left-basal-v1",
+      "camera_orientation_description": "Authored local millimetres; +Z forward; placement and movable pivots are recorded in devices/teaching-props.json",
+      "approved_use": "Development and technical review of educational simulation assets; clinical review and publication decision pending",
+      "clinical_review_status": "pending",
+      "publication_permitted": null
+    },
+    {
+      "path": "devices/teaching-props.json",
+      "bytes": 674,
+      "sha256": "3e46bc472c57b06fe631b74660c6c2a075e47b43d988f705b41140355e7430db",
+      "provenance": {
+        "class": "authored-for-simulation",
+        "source": ["scope asset brief; authored geometry parameters"],
+        "generatedBy": "scripts/bronchoscopy-foundations/build-teaching-props.py",
+        "numberClass": "Geometry dimensions, morph states, device values, trimming and review settings are authored for simulation unless explicitly identified as measured build results."
+      },
+      "origin": "Authored scope handle, distal tip, asymmetric bench target and generic practice geometry; not manufacturer or clinical reference assets",
+      "creator_or_rightsholder": "Authored for this educational module; rights holder pending owner confirmation",
+      "license_or_permission": "Supplied for implementation and technical review; publication permission pending owner confirmation",
+      "deidentification_status": "Authored geometry or technical measurements; no patient identifiers added",
+      "clinical_reviewer": null,
+      "review_date": null,
+      "anatomy_profile_id": "adult-teaching-combined-left-basal-v1",
+      "camera_orientation_description": "Authored local millimetres; +Z forward; placement and movable pivots are recorded in devices/teaching-props.json",
       "approved_use": "Development and technical review of educational simulation assets; clinical review and publication decision pending",
       "clinical_review_status": "pending",
       "publication_permitted": null
@@ -264,7 +374,7 @@
       "clinical_reviewer": null,
       "review_date": null,
       "anatomy_profile_id": "adult-teaching-combined-left-basal-v1",
-      "camera_orientation_description": "Patient LPS millimetres; buildTransportFrames with the graph orientation landmarks; 88 degree vertical field of view",
+      "camera_orientation_description": "Patient LPS millimetres; buildTransportFrames with the graph orientation landmarks; 88 degree nominal field of view across the wider optical axis",
       "approved_use": "Development and technical review of educational simulation assets; clinical review and publication decision pending",
       "clinical_review_status": "pending",
       "publication_permitted": null
@@ -358,7 +468,7 @@
       "publication_permitted": null
     }
   ],
-  "payloadBytes": 2032090,
+  "payloadBytes": 2070772,
   "totalBudgetBytes": 8000000,
   "manifestHashPolicy": "Every asset except this self-describing manifest is listed; budgets include this manifest.",
   "releaseStatus": "pending-clinical-review-and-junction-decision",

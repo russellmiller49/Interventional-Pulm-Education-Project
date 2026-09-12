@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
 
 import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdict'
@@ -52,8 +52,8 @@ function capitalized(value: string): string {
 /**
  * The capstone: the eight cases, decided once each, in order.
  *
- * First decisions are immutable; each case states its reasoning as soon as it is decided, and the
- * debrief opens once the last one is. The standard is at least seven of eight held, every critical
+ * First decisions are immutable; reasoning is withheld until all cases are decided. Unsafe
+ * choices receive the shared immediate safety feedback. The standard is at least seven of eight held, every critical
  * decision held, and no unsafe choice committed. The capstone opens only once every section has
  * been worked through; until then the note says how many remain and offers the one door.
  */
@@ -105,11 +105,13 @@ export function BronchCapstone() {
         The set, decided once
       </h2>
       <p className="text-sm text-muted-foreground">
-        Decide each case once. Each one states its reasoning as soon as you commit; the standard is
-        read once the last one is decided.
+        Decide each case once. Review the reasoning after the last decision. An unsafe choice
+        receives immediate feedback.
       </p>
       <ol className="grid gap-4">
         {CAPSTONE_CASES.map((entry, index) => {
+          const alreadyDecided = record.firstAttempts[capstoneAttemptKey(entry.id)]
+          if (!alreadyDecided && entry.id !== standard.notYet[0]) return null
           const stage = capstoneStageItem(entry.id)
           const item = stage.item
           const attempt = record.firstAttempts[capstoneAttemptKey(entry.id)]
@@ -134,7 +136,8 @@ export function BronchCapstone() {
                     item={item}
                     choiceId={attempt.choiceId}
                     outcome="stated"
-                    timing="immediate-after-commit"
+                    timing="debrief-only"
+                    inDebrief={allDecided}
                     theme="dark"
                     explanationHeading="The takeaway"
                   />
@@ -184,21 +187,23 @@ export function BronchCapstone() {
                         })
                       }}
                     >
-                      Commit this decision <ArrowRight aria-hidden="true" />
+                      Submit this decision <ArrowRight aria-hidden="true" />
                     </button>
                   </div>
                 </div>
               )}
-              <p className="text-sm text-muted-foreground">
-                Paired with{' '}
-                <Link
-                  className="font-semibold text-primary"
-                  href={bronchSectionLinkTarget(entry.pairedSectionId)}
-                >
-                  {bronchSection(entry.pairedSectionId).title}
-                </Link>
-                .
-              </p>
+              {allDecided ? (
+                <p className="text-sm text-muted-foreground" data-case-pairing>
+                  Paired with{' '}
+                  <Link
+                    className="font-semibold text-primary"
+                    href={bronchSectionLinkTarget(entry.pairedSectionId)}
+                  >
+                    {bronchSection(entry.pairedSectionId).title}
+                  </Link>
+                  .
+                </p>
+              ) : null}
             </li>
           )
         })}
@@ -267,10 +272,8 @@ function Debrief() {
 }
 
 function DebriefViewed() {
-  const [written, setWritten] = useState(false)
-  if (!written) {
+  useEffect(() => {
     writeBronchRecord(withCapstoneDebriefViewed(readBronchRecord()))
-    setWritten(true)
-  }
+  }, [])
   return null
 }

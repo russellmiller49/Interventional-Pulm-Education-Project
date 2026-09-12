@@ -71,7 +71,7 @@ export interface BronchSource {
 const LIMITATIONS: Readonly<Record<string, string>> = {
   S1: 'Selected foundational chapters of a 2017 textbook; device examples reflect their era and are not a device specification.',
   S2: 'A 2011 training manual; its fixed sedation, fasting and reversal numbers are not carried forward as current rules.',
-  S3: 'A faculty-development manual about teaching and assessment, not a clinical protocol.',
+  S3: 'A faculty-development manual about teaching and evaluating learners, not a clinical protocol.',
   U1: 'A sedation practice guideline; staffing and drug choices remain institutional decisions.',
   U2: 'A national diagnostic-bronchoscopy guideline used for targeted distinctions only, not as a complete protocol.',
   U3: 'Summary infection-prevention recommendations; the reprocessing sequence comes from the device instructions and the local program.',
@@ -79,12 +79,19 @@ const LIMITATIONS: Readonly<Record<string, string>> = {
   U5: 'Radiation-protection guidance used for staff protection and pregnant staff; no dose limits are taken from it.',
   U6: 'A BAL guideline for interstitial lung disease; its volumes and recovery targets are not a universal adequacy rule.',
   U7: 'A pneumonia guideline used for sampling and culture-interpretation context, not as an antibiotic key.',
-  U8: 'Manufacturer documentation for one ventilator family, used only to distinguish time cycling from pressure cycling.',
+  U8: 'Manufacturer documentation for one ventilator family, used to explain how inspiratory time ends a conventional pressure-controlled breath.',
   U9: 'An awake-intubation guideline used for principles of preparation and confirmation.',
   U10: 'A central-airway-obstruction guideline summary; it does not validate any emergency induction plan.',
   U11: 'Manufacturer information for one cryotherapy platform; gas and settings for other devices come from their own instructions.',
   U12: 'Manufacturer information for one blocker; not a complete hemoptysis protocol.',
   U13: 'A randomized trial of inhaled tranexamic acid that excluded massive or unstable bleeding.',
+}
+
+const SOURCE_USE_WORDING: Readonly<Record<string, string>> = {
+  S2: 'Curriculum, procedural instruction, safety, learner evaluation, and supervised practice.',
+  S3: 'Teaching methods, the four-box approach, procedural instruction, and evaluation of learners.',
+  T01: 'Coordination, proximal tracheal landmarks, stable guidance, and review after placement; PEG technique remains outside the introductory course.',
+  T08: 'Capability-based history; sequential preparation, simulation, learner evaluation, and apprenticeship.',
 }
 
 function kindLabel(source: ManifestSource): string {
@@ -115,7 +122,9 @@ export const SOURCES: readonly BronchSource[] = MANIFEST_SOURCES.map((source) =>
       (transcript ? `${transcript.collection} lecture collection` : ''),
     year: source.year,
     url: source.doi ? `https://doi.org/${source.doi}` : source.url,
-    usedFor: transcript ? transcript.adoptedContribution : (source.reviewedScope ?? ''),
+    usedFor:
+      SOURCE_USE_WORDING[id] ??
+      (transcript ? transcript.adoptedContribution : (source.reviewedScope ?? '')),
     limitation: transcript ? TRANSCRIPT_SENTENCE : (LIMITATIONS[source.id] ?? ''),
     manifest: source,
   }

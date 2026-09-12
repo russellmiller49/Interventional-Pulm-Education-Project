@@ -301,7 +301,7 @@ export const section: BronchSectionDefinition = {
       script: 'red-out',
       litAirways: ['TR'],
       boundary:
-        'A teaching model of the adult airway. The red field is scripted: the model does not represent mucosa, force or injury, and its counts of contacts and lost views are feedback, not a measure of trauma or skill.',
+        'A teaching model of the adult airway. The red field is scripted: the surface is illustrative and does not model tissue behavior, force or injury, and its counts of contacts and lost views are feedback, not a measure of trauma or skill.',
     },
     goals: [
       {

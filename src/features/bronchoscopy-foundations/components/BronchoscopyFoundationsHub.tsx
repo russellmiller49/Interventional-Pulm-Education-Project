@@ -113,7 +113,7 @@ export function BronchoscopyFoundationsHub() {
             </dd>
           </div>
           <div>
-            <dt className="font-semibold">The airway spine</dt>
+            <dt className="font-semibold">The airway map</dt>
             <dd className="text-muted-foreground">
               {SPINE_STOPS.map((stop) => stop.title).join(' → ')}. Every airway term is introduced
               at its stop, and the map in the Simulator panel lights one stop at a time.
@@ -148,7 +148,7 @@ export function BronchoscopyFoundationsHub() {
         className="rounded-3xl border bg-card p-6 shadow-sm lg:p-8"
       >
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
-          Sources · reviewed
+          Sources and their scope
         </p>
         <h2 id="bronch-sources-heading" className="mt-2 text-2xl font-bold">
           What each source supports, and where it stops

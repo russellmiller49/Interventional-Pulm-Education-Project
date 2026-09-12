@@ -1,3 +1,4 @@
+import { authoredScopePose } from './scopeAuthoredPose'
 import { enterFreeDrive } from '@/lib/airway-anatomy/drive'
 import {
   createInitialScopeState,
@@ -481,7 +482,11 @@ function finalize(prev: ScopeRuntimeState | null, d: Draft, ctx: ScopeContext): 
   const engine = d.engine
   const onTree =
     (d.place === 'airway' || d.place === 'tube') && engine !== null && scopeCase !== null
-  const pose = onTree ? buildScopePose(engine, d.inputs, view, scopeCase) : null
+  const pose = onTree
+    ? buildScopePose(engine, d.inputs, view, scopeCase)
+    : d.place === 'bench' || d.place === 'larynx'
+      ? authoredScopePose(d.place, d.depthMm, d.inputs)
+      : null
   const ostia =
     onTree && pose?.opticalFrame
       ? upcomingOstia(scopeCase, engine.edgeId, engine.distanceMm, pose.opticalFrame)

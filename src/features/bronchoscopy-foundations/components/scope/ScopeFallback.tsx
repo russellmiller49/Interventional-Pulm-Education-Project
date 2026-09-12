@@ -1,5 +1,7 @@
 'use client'
 
+import { useRef, type ReactNode } from 'react'
+
 import { projectOptical } from '@/lib/bronchoscopy-core/frame'
 import { scopeOpticalFrame } from '@/lib/airway-anatomy/transport-frames'
 
@@ -36,6 +38,7 @@ import {
   type ScopeControlKey,
   type ScopePaneProps,
   type ScopeState,
+  type ScopeInputMode,
 } from './types'
 
 /**
@@ -130,6 +133,18 @@ function opticalFieldName(state: ScopeState, pins: readonly FieldPin[]): string 
 }
 
 export function ScopeFallback(props: ScopePaneProps) {
+  return <ScopePaneFrame {...props} />
+}
+
+/** Shared accessible surface for the optical renderer and the WebGL-free alternative. */
+export function ScopePaneFrame(
+  props: ScopePaneProps & {
+    opticalView?: ReactNode
+    hideMap?: boolean
+    dock?: ReactNode
+    renderState?: 'ready' | 'failed' | 'fallback'
+  },
+) {
   const {
     view,
     state,
@@ -141,7 +156,8 @@ export function ScopeFallback(props: ScopePaneProps) {
     goals,
     spotlightKey,
   } = props
-  const send = (command: ScopeCommand) => onCommand(command, 'pointer')
+  const inputMode = useRef<ScopeInputMode>('pointer')
+  const send = (command: ScopeCommand) => onCommand(command, inputMode.current)
 
   const pins = fieldPins(state)
   const alignOffered = view.assists['align-to-branch'] === true && controlsEnabled
@@ -187,7 +203,7 @@ export function ScopeFallback(props: ScopePaneProps) {
             <input
               id={id}
               type="range"
-              min={-180}
+              min={-179}
               max={180}
               step={1}
               value={state.inputs.rotationDeg}
@@ -339,10 +355,16 @@ export function ScopeFallback(props: ScopePaneProps) {
   return (
     <div
       className={styles.pane}
+      onPointerDownCapture={(event) => {
+        inputMode.current = event.pointerType === 'touch' ? 'touch' : 'pointer'
+      }}
+      onKeyDownCapture={() => {
+        inputMode.current = 'keyboard'
+      }}
       {...{
         [SCOPE_DOM.scene]: '',
         [SCOPE_DOM.mode]: view.mode,
-        [SCOPE_DOM.state]: 'fallback',
+        [SCOPE_DOM.state]: props.renderState ?? 'fallback',
         [SCOPE_DOM.profile]: view.profile,
       }}
     >
@@ -354,79 +376,95 @@ export function ScopeFallback(props: ScopePaneProps) {
         </p>
       ) : null}
 
-      <div className={styles.optical}>
-        <div
-          className={styles.field}
-          role={interactiveField ? 'group' : 'img'}
-          aria-label={opticalFieldName(state, pins)}
-          {...{ [SCOPE_DOM.viewSignal]: state.signals.view }}
-        >
-          <div className={styles.lumen} />
-          {pins.map(({ pin, left, top }) => {
-            const shared = {
-              className: styles.ostium,
-              style: { left, top },
-              'data-ostium-pin': pin.label,
-              'aria-label': state.inputs.branchLabels ? pin.fullLabel : UNLABELED_OPENING,
-            }
-            const text = state.inputs.branchLabels ? pin.label : null
-            return alignOffered ? (
-              <button
-                key={pin.label}
-                type="button"
-                onClick={() =>
-                  send({ type: 'assist', assist: 'align-to-branch', label: pin.label })
-                }
-                {...shared}
+      {props.opticalView ?? (
+        <div className={styles.optical}>
+          <div
+            className={styles.field}
+            role={interactiveField ? 'group' : 'img'}
+            aria-label={opticalFieldName(state, pins)}
+            {...{ [SCOPE_DOM.viewSignal]: state.signals.view }}
+          >
+            <div className={styles.lumen} />
+            {state.place === 'bench' ? (
+              <div
+                className={styles.benchCard}
+                aria-hidden="true"
+                style={{
+                  transform: `translate(-50%, -50%) rotate(${-state.inputs.rotationDeg}deg) translateY(${state.inputs.deflectionDeg * 0.4}px) scale(${1 + state.depthMm / 100})`,
+                }}
               >
-                {text}
-              </button>
-            ) : (
-              <span key={pin.label} {...shared}>
-                {text}
-              </span>
-            )
-          })}
+                <span /> <i /> <b />
+              </div>
+            ) : null}
+            {pins.map(({ pin, left, top }) => {
+              const shared = {
+                className: styles.ostium,
+                style: { left, top },
+                'data-ostium-pin': pin.label,
+                'aria-label': state.inputs.branchLabels ? pin.fullLabel : UNLABELED_OPENING,
+              }
+              const text = state.inputs.branchLabels ? pin.label : null
+              return alignOffered ? (
+                <button
+                  key={pin.label}
+                  type="button"
+                  onClick={() =>
+                    send({ type: 'assist', assist: 'align-to-branch', label: pin.label })
+                  }
+                  {...shared}
+                >
+                  {text}
+                </button>
+              ) : (
+                <span key={pin.label} {...shared}>
+                  {text}
+                </span>
+              )
+            })}
+          </div>
+          {state.place !== 'airway' ? (
+            <p className={styles.place} data-scope-place={state.place}>
+              {PLACE_WORDS[state.place]}
+            </p>
+          ) : null}
+          {state.message ? (
+            <p className={styles.message} role="status" data-scope-message>
+              {state.message}
+            </p>
+          ) : null}
         </div>
-        {state.place !== 'airway' ? (
-          <p className={styles.place} data-scope-place={state.place}>
-            {PLACE_WORDS[state.place]}
-          </p>
-        ) : null}
-        {state.message ? (
-          <p className={styles.message} role="status" data-scope-message>
-            {state.message}
-          </p>
-        ) : null}
-      </div>
+      )}
 
-      <TreeMap
-        map={props.map}
-        lit={view.litAirways ?? []}
-        current={state.location.label}
-        tipLps={state.pose?.tipLps ?? null}
-        treeAnswer={props.treeAnswer}
-      />
-
-      {dockKeys.length > 0 ? (
-        <fieldset
-          className={styles.controls}
-          disabled={!controlsEnabled}
-          data-scope-controls
-          aria-label="The scope controls under the view"
-        >
-          {dockKeys.map((key) => (
-            <div
-              key={key}
-              className={styles.control}
-              data-control={key}
-              data-spotlight={spotlight(key)}
-            >
-              {renderControl(key)}
-            </div>
-          ))}
-        </fieldset>
+      {!props.hideMap ? (
+        <TreeMap
+          map={props.map}
+          lit={view.litAirways ?? []}
+          current={state.location.label}
+          tipLps={state.pose?.tipLps ?? null}
+          treeAnswer={props.treeAnswer}
+        />
       ) : null}
+
+      {props.dock ??
+        (dockKeys.length > 0 ? (
+          <fieldset
+            className={styles.controls}
+            disabled={!controlsEnabled}
+            data-scope-controls
+            aria-label="The scope controls under the view"
+          >
+            {dockKeys.map((key) => (
+              <div
+                key={key}
+                className={styles.control}
+                data-control={key}
+                data-spotlight={spotlight(key)}
+              >
+                {renderControl(key)}
+              </div>
+            ))}
+          </fieldset>
+        ) : null)}
 
       {readouts.length > 0 ? (
         <dl
