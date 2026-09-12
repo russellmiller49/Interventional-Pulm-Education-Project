@@ -1,4 +1,6 @@
 import type { Metadata, Route } from 'next'
+import { SaveDeviceButton } from '@/features/device-intelligence/components/SavedDevicesProvider'
+import { getSaveDeviceLabels } from '@/features/device-intelligence/server/reference-labels.server'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
@@ -51,6 +53,7 @@ export default async function DeviceDetailPage({ params }: PageProps) {
   setRequestLocale(locale)
   const t = await getTranslations('deviceIntelligence.device')
   const tCommon = await getTranslations('deviceIntelligence.common')
+  const tReference = await getTranslations('deviceIntelligence.reference')
   const tVerification = await getTranslations('preferenceCards.catalog.verification')
 
   if (!PRODUCT_ID_PATTERN.test(productId)) notFound()
@@ -206,6 +209,20 @@ export default async function DeviceDetailPage({ params }: PageProps) {
             )}
           </div>
         ) : null}
+        <div className="flex flex-wrap items-center gap-4">
+          <SaveDeviceButton
+            productId={product.product_id}
+            productName={product.product_name}
+            catalogNumber={product.catalog_number}
+            labels={await getSaveDeviceLabels(locale)}
+          />
+          <Link
+            href={`/${locale}/devices/saved` as Route}
+            className="inline-flex min-h-11 items-center text-sm underline underline-offset-2"
+          >
+            {tReference('savedDevices')}
+          </Link>
+        </div>
       </header>
 
       <MarketSafetyPanel
@@ -448,7 +465,11 @@ export default async function DeviceDetailPage({ params }: PageProps) {
         ) : null}
       </section>
 
-      <section className="space-y-3" aria-label={t('sourcesHeading')}>
+      <section
+        id="device-sources"
+        className="scroll-mt-24 space-y-3"
+        aria-label={t('sourcesHeading')}
+      >
         <h2 className="text-2xl font-semibold tracking-tight">{t('sourcesHeading')}</h2>
         {detail.sources.length > 0 ? (
           <Card>

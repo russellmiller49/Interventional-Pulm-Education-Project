@@ -143,6 +143,8 @@ export async function RequirementBrowser({
                   selectable: requirement.withheldSelectableOptionCount,
                 }),
                 optionSafetyNote: t('requirement.optionSafetyNote'),
+                catalogNumber: t('requirement.catalogNumber'),
+                missingIdentifier: t('requirement.missingIdentifier'),
                 selectable: tCommon('badges.authoredSelectable'),
                 nonSelectable: tCommon('badges.authoredNonSelectable'),
                 zoneLabel: t(`setupZones.${requirement.setupZone}` as 'setupZones.unassigned'),
@@ -206,6 +208,8 @@ function RequirementCard({
     noAuthoredOptions: string
     optionsWithheld: string
     optionSafetyNote: string
+    catalogNumber: string
+    missingIdentifier: string
     selectable: string
     nonSelectable: string
     zoneLabel: string
@@ -303,7 +307,10 @@ function RequirementCard({
           {requirement.authoredOptions.length > 0 ? (
             <ul className="mt-1 space-y-1">
               {requirement.authoredOptions.map((option) => (
-                <li key={option.productId} className="flex flex-wrap items-center gap-1.5 text-xs">
+                <li
+                  key={option.productId}
+                  className="flex flex-wrap items-center gap-1.5 rounded-lg border border-border/50 p-2 text-xs"
+                >
                   <Link
                     href={`/${locale}/devices/${option.productId}` as Route}
                     className="font-medium underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -313,6 +320,13 @@ function RequirementCard({
                   {option.manufacturerDisplay ? (
                     <span className="text-muted-foreground">· {option.manufacturerDisplay}</span>
                   ) : null}
+                  <span className="basis-full text-muted-foreground">
+                    {labels.catalogNumber}:{' '}
+                    <span className="font-mono">
+                      {option.catalogNumber ?? labels.missingIdentifier}
+                    </span>
+                    {option.sizeDisplay ? ` · ${option.sizeDisplay}` : ''}
+                  </span>
                   <EvidenceBadge
                     state={option.selectable ? 'authored_selectable' : 'authored_non_selectable'}
                   >

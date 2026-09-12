@@ -1,0 +1,111 @@
+{
+  "format_version": 1,
+  "purpose": "draft_claims_only_no_runtime_publication",
+  "proposals": [
+    {
+      "product_id": "PRD-4A04124FF2",
+      "review_status": "pending_clinical_owner_review",
+      "description_scope": "exact_product",
+      "proposed_summary": "Olympus BF-1TH190 is a therapeutic video bronchoscope for the EVIS EXERA III system, with a 2.8 mm working channel.",
+      "summary_source": {
+        "source_id": "DAILY-WEB-OLY-1TH190",
+        "locator": "Product title, introductory system description and Specs / Channel Width"
+      },
+      "proposed_specifications": [
+        {
+          "key": "working_channel_mm",
+          "value": 2.8,
+          "unit": "mm",
+          "evidence_scope": "exact",
+          "source_id": "DAILY-WEB-OLY-1TH190",
+          "locator": "Product Support / Specs / Channel Width"
+        },
+        {
+          "key": "insertion_diameter_mm",
+          "value": 6,
+          "unit": "mm",
+          "evidence_scope": "exact",
+          "source_id": "DAILY-WEB-OLY-1TH190",
+          "locator": "Product Support / Specs / Outer Diameter Insertion Tube"
+        },
+        {
+          "key": "distal_end_outer_diameter_mm",
+          "value": 6.2,
+          "unit": "mm",
+          "evidence_scope": "exact",
+          "source_id": "DAILY-WEB-OLY-1TH190",
+          "locator": "Product Support / Specs / Outer Diameter"
+        },
+        {
+          "key": "working_length_cm",
+          "value": 60,
+          "unit": "cm",
+          "evidence_scope": "exact",
+          "source_id": "DAILY-WEB-OLY-1TH190",
+          "locator": "Product Support / Specs / Working Length"
+        }
+      ],
+      "review_questions": [
+        "Confirm exact model identity and marketed configuration against current labeling.",
+        "Confirm source scope, each source locator and the separate insertion/distal diameters.",
+        "Review all existing safety notices; this manufacturer page does not refresh or clear them.",
+        "Confirm model-specific platform connections and accessory restrictions from the current IFU.",
+        "The public UDI catalog/model query returned no candidate; reconcile exact DI using source labeling."
+      ]
+    },
+    {
+      "product_id": "PRD-D6F54A6D11",
+      "review_status": "pending_clinical_owner_review",
+      "description_scope": "exact_product",
+      "proposed_summary": "Olympus BF-H190 is a diagnostic video bronchoscope for the EVIS EXERA III system, with a 2.0 mm working channel.",
+      "summary_source": {
+        "source_id": "DAILY-WEB-OLY-H190",
+        "locator": "Product title, introductory system description and Specs / Channel Width"
+      },
+      "proposed_specifications": [
+        {
+          "key": "working_channel_mm",
+          "value": 2,
+          "unit": "mm",
+          "evidence_scope": "exact",
+          "source_id": "DAILY-WEB-OLY-H190",
+          "locator": "Product Support / Specs / Channel Width"
+        },
+        {
+          "key": "insertion_diameter_mm",
+          "value": 5.1,
+          "unit": "mm",
+          "evidence_scope": "exact",
+          "source_id": "DAILY-WEB-OLY-H190",
+          "locator": "Product Support / Specs / Outer Diameter Insertion Tube"
+        },
+        {
+          "key": "distal_end_outer_diameter_mm",
+          "value": 5.5,
+          "unit": "mm",
+          "evidence_scope": "exact",
+          "source_id": "DAILY-WEB-OLY-H190",
+          "locator": "Product Support / Specs / Outer Diameter"
+        },
+        {
+          "key": "working_length_cm",
+          "value": 60.0,
+          "unit": "cm",
+          "evidence_scope": "exact",
+          "source_id": "DAILY-WEB-OLY-H190",
+          "locator": "Product Support / Specs / Working Length",
+          "source_value": 600,
+          "source_unit": "mm",
+          "normalization": "600 mm / 10 = 60 cm"
+        }
+      ],
+      "review_questions": [
+        "Confirm exact model identity and marketed configuration against current labeling.",
+        "Confirm source scope, each source locator and the separate insertion/distal diameters.",
+        "Review all existing safety notices; this manufacturer page does not refresh or clear them.",
+        "Confirm model-specific platform connections and accessory restrictions from the current IFU.",
+        "The public UDI catalog/model query returned no candidate; reconcile exact DI using source labeling."
+      ]
+    }
+  ]
+}

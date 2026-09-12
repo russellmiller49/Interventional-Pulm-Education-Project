@@ -1,0 +1,66 @@
+{
+  "format_version": 1,
+  "purpose": "source_discovery_and_draft_review_only",
+  "sources": [
+    {
+      "id": "DAILY-WEB-OLY-1TH190",
+      "title": "Olympus BF-1TH190 manufacturer product page",
+      "url": "https://medical.olympusamerica.com/products/bronchoscope/therapeutic-bronchoscope-bf-1th190",
+      "products": [
+        "PRD-4A04124FF2"
+      ],
+      "locator": "Product title and Product Support / Specs: channel width, working length, distal-end OD, insertion-tube OD",
+      "retrieved_at": "2026-09-12T01:51:40.006Z",
+      "document_revision_date": null,
+      "http_status": 200,
+      "response_sha256": "6f5b25a6ecf5e47a84b1cd91da52bb3a3ef3727ea694dd7a810b1d2c7dd6babc",
+      "review_status": "pending_clinical_owner_review"
+    },
+    {
+      "id": "DAILY-WEB-OLY-H190",
+      "title": "Olympus BF-H190 manufacturer product page",
+      "url": "https://content.olympusamerica.com/products/bronchoscope/diagnostic-bronchoscope-bf-h190",
+      "products": [
+        "PRD-D6F54A6D11"
+      ],
+      "locator": "Product title and Product Support / Specs: channel width, working length, distal-end OD, insertion-tube OD",
+      "retrieved_at": "2026-09-12T01:51:40.168Z",
+      "document_revision_date": null,
+      "http_status": 200,
+      "response_sha256": "90a0a1a3454dd2d080e948386c3f3f878bec9ad5ce3f0e9b180cf0c9e833ce2b",
+      "review_status": "pending_clinical_owner_review"
+    },
+    {
+      "id": "DAILY-WEB-FDA-ERBE",
+      "title": "FDA flexible cryoprobe recall communication",
+      "url": "https://www.fda.gov/medical-devices/medical-device-recalls-and-early-alerts/cryoprobe-recall-erbe-usa-removes-flexible-cryoprobes",
+      "products": [
+        "PRD-05670F1B5F",
+        "PRD-7DC3645CFA",
+        "PRD-A2C49C9352"
+      ],
+      "locator": "Affected Product table and What to Do; expanded affected lots",
+      "retrieved_at": "2026-09-12T01:51:40.305Z",
+      "document_revision_date": "2026-05-28",
+      "http_status": 200,
+      "response_sha256": "a0ea04734ccecd0944528a2de4a3ec71a72e034f30b4e36a42021cea13f450e4",
+      "review_status": "pending_clinical_owner_review"
+    },
+    {
+      "id": "DAILY-WEB-ERBE",
+      "title": "Erbe urgent medical device recall expansion",
+      "url": "https://us.erbegroup.com/us-en/news-details/voluntary-medical-device-recall/",
+      "products": [
+        "PRD-05670F1B5F",
+        "PRD-7DC3645CFA",
+        "PRD-A2C49C9352"
+      ],
+      "locator": "Recall expansion notice, affected REF/UDI/lot information and customer response instructions",
+      "retrieved_at": "2026-09-12T01:51:41.913Z",
+      "document_revision_date": "2026-05-04",
+      "http_status": 200,
+      "response_sha256": "1fb672de05febb0721d733408e3dacb11ba22e28a6ada3d0dbcbb742fd9a401e",
+      "review_status": "pending_clinical_owner_review"
+    }
+  ]
+}

@@ -215,6 +215,9 @@ describe('deviceIntelligence copy safety', () => {
     'device.taxonomy.discoveryNote',
     'role.membershipNote',
     'readiness.noProcurementNote',
+    'comparison.boundary',
+    // The existing resolver's hold status explicitly prohibits substitution.
+    'setupWorksheet.openHold.do_not_substitute',
   ])
 
   /**

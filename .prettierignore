@@ -10,6 +10,8 @@ scripts/literature/fixtures/post-migration-schema-security-definition-identity.j
 # fresh generation. Prettier collapses single-element arrays, which would make every commit
 # report the artifact as stale.
 data/ip-device-intelligence/generated/
+# The daily-reference batch is SHA-pinned by its immutable acquisition receipt.
+docs/ip-device-intelligence/daily-reference-review/*.json
 *.log
 .env*
 .DS_Store
