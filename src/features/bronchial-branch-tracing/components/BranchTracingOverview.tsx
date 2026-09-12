@@ -27,8 +27,8 @@ export function BranchTracingOverview() {
             <p className={styles.subtitle}>Trace an airway route to a nodule in a named segment.</p>
             <p>
               Find the simulated nodule on real CT. Orient the images using the book’s tracing
-              conventions, follow the named bronchi toward it, and decide what the visible airway
-              supports.
+              conventions, and work through every branch decision from the trachea toward the
+              target.
             </p>
             <Link
               className={styles.primary}
@@ -66,7 +66,7 @@ export function BranchTracingOverview() {
             <h2>What you will learn to do</h2>
             <ul>
               <li>Rotate or reflect standard axial CT while comparing the virtual airway view.</li>
-              <li>Maintain continuity of one airway across axial planes.</li>
+              <li>Choose the continuing daughter at every fork and verify its lumen on CT.</li>
               <li>Relate the four tracing patterns to the parent-airway viewpoint.</li>
               <li>Separate patient direction, camera roll, and screen position.</li>
               <li>
@@ -91,8 +91,9 @@ export function BranchTracingOverview() {
           <p>
             Learn, Practice and Assess use actual CT slices from one teaching scan with simulated
             nodules in ten pulmonary segments. Start in standard axial, then apply the reflection or
-            rotation yourself with virtual bronchoscopy beside the CT. You mark the lumen and record
-            its relationship to the nodule before seeing the source-derived comparison.
+            rotation yourself with virtual bronchoscopy beside the CT. Each route contains 6–9
+            branch decisions followed by a distal nodule inspection. Learn compares each junction
+            after you record it; Practice and Assess show comparisons after you submit the set.
           </p>
           <p>
             Educational spatial reasoning only. This module does not establish device reach,

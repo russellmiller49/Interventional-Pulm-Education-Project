@@ -1090,6 +1090,64 @@
   margin: 0.8rem 0;
   font-size: 0.8rem;
 }
+.branchDecision fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.branchDecision legend {
+  font-size: 0.85rem;
+  font-weight: 650;
+  margin-bottom: 0.5rem;
+}
+.branchDecision label {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  padding: 0.5rem;
+  border: 1px solid #46636e;
+  border-radius: 6px;
+  margin: 0.35rem 0;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.branchDecision label:has(input:checked) {
+  background: #21414b;
+  border-color: #8ad9d7;
+}
+.branchDecision input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+.branchDecision small,
+.junctionTeaching small {
+  display: block;
+  font-size: 0.72rem;
+  color: #b4cbd1;
+  line-height: 1.4;
+}
+.junctionParent {
+  text-align: center;
+  padding: 0.7rem;
+  border: 1px solid #77aaa9;
+  border-radius: 6px;
+  font-weight: 650;
+}
+.junctionDaughters {
+  display: flex;
+  gap: 0.4rem;
+  text-align: center;
+}
+.junctionDaughters > div {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #53727c;
+}
 .courseChoice select {
   width: 100%;
   max-width: 100%;

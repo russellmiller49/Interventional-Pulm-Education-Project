@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useReducer, useState } from 'react'
+import { useEffect, useReducer, useRef, useState } from 'react'
 import { StageLayout } from '@/features/learning-module/stage/StageLayout'
 import { NowCard } from '@/features/learning-module/stage/NowCard'
 import { LookInLine } from '@/features/learning-module/stage/LookInLine'
@@ -27,12 +27,16 @@ import {
 import {
   ctSessionReducer,
   emptyCtSession,
-  marksComplete,
+  traceComplete,
+  junctionReady,
+  lastUnlocked,
   type CtAction,
 } from '../engine/ct-session'
 import { NativeCtViewer } from './NativeCtViewer'
 import {
   CtAirwayGuide,
+  CtBranchDecision,
+  CtJunctionTeaching,
   CtCourseControl,
   CtTraceList,
   CtTargetRelationControl,
@@ -41,6 +45,7 @@ import {
 import { ModuleFrame } from './ModuleFrame'
 import { useDeviceProgress } from './useDeviceProgress'
 import styles from './branch-tracing.module.css'
+import { resetPaneScroll } from './resetPaneScroll'
 
 export function BranchTracingLesson({ requestedId }: { requestedId?: string }) {
   const { ready } = useDeviceProgress()
@@ -63,8 +68,8 @@ function LessonEntry({ requestedId }: { requestedId?: string }) {
 function LessonSession({ lesson }: { lesson: CtLesson }) {
   const prediction = traceById(lesson.prediction),
     transferTrace = traceById(lesson.transfer)
-  const reduce = ctSessionReducer(prediction, transferTrace)
-  const [s, dispatch] = useReducer(reduce, undefined, emptyCtSession)
+  const reduce = ctSessionReducer(prediction, transferTrace, traceById(lesson.example))
+  const [s, dispatch] = useReducer(reduce, prediction, emptyCtSession)
   const [review, setReview] = useState<number | null>(null)
   const [saved, setSaved] = useState(() => browserStorage() !== null)
   const [levelRequest, setLevelRequest] = useState(0)
@@ -79,14 +84,37 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
   const revealed = s.step === 0 || Boolean(response)
   const marking = s.step === 1 || (transfer && !response)
   const orienting = marking && !s.alignment
-  const describing = s.step === 2 || (transfer && !response)
+  const routeDone = traceComplete(trace, s)
+  const stationDone = Boolean(s.recorded[s.active])
+  const taskTop = useRef<HTMLDivElement>(null)
+  const teachingTop = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    resetPaneScroll(taskTop.current)
+    resetPaneScroll(teachingTop.current)
+  }, [s.active, s.step, s.alignment, stationDone])
+  const stationTask = marking && !orienting && !routeDone
+  const maxActive = marking
+    ? orienting
+      ? 0
+      : lastUnlocked(s.recorded)
+    : trace.checkpoints.length - 1
+  const describing = s.step === 2 || (transfer && !response && routeDone)
   const disabled = orienting
     ? sameOrientation(s.orientation, STANDARD_ORIENTATION)
-    : s.step === 1
-      ? !marksComplete(s.marks)
-      : describing
-        ? !marksComplete(s.marks) || !s.course || !s.targetRelation
-        : false
+    : stationTask
+      ? !stationDone && !junctionReady(trace, s.active, s.marks, s.branches)
+      : s.step === 1
+        ? !routeDone
+        : describing
+          ? !routeDone || !s.course || !s.targetRelation
+          : false
+  const stationAction = stationDone
+    ? s.active + 1 === trace.checkpoints.length - 1
+      ? 'Continue to nodule approach'
+      : 'Next junction'
+    : trace.checkpoints[s.active].decision
+      ? 'Check this junction'
+      : 'Record nodule approach'
   const next = nextLesson([...completedLessons(readProgress()), lesson.id])
   function perform(action: CtAction) {
     const nextState = reduce(s, action)
@@ -97,6 +125,8 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
     if (!s.transfer && nextState.transfer)
       setSaved(saveCtAttempt(`learn.${lesson.id}.transfer`, nextState.transfer.hints))
     if (!s.complete && nextState.complete) setSaved(saveVisit(lesson.id, true))
+    if (action.type === 'active' || (action.type === 'check-orientation' && nextState.alignment))
+      setLevelRequest((v) => v + 1)
     if (action.type === 'advance' || action.type === 'restart') {
       setReview(null)
     }
@@ -143,7 +173,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
         </div>
       }
       task={
-        <>
+        <div ref={taskTop}>
           <NowCard
             model={{
               kicker: s.complete ? 'Lesson completed' : `Step ${s.step + 1} of 6 · ${step.phase}`,
@@ -151,12 +181,18 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 ? 'CT trace completed'
                 : orienting
                   ? 'Orient before tracing'
-                  : step.title,
+                  : stationTask
+                    ? trace.checkpoints[s.active].decision
+                      ? `Junction ${s.active + 1} of ${trace.checkpoints.length - 1}`
+                      : 'Distal nodule approach'
+                    : step.title,
               body: s.complete
                 ? 'You recorded two routes toward simulated nodules and compared their CT continuity. Completion records the work, not clinical competence.'
                 : orienting
                   ? 'Start in standard axial. Rotate or reflect the CT to the tracing convention for this region, using the paired airway view and patient direction letters. Then check your orientation.'
-                  : step.instruction,
+                  : stationTask
+                    ? 'Select a daughter in Steps and mark its lumen on Current junction CT. Record this fork before continuing.'
+                    : step.instruction,
               where: s.complete ? undefined : <LookInLine location={step.lookIn!} />,
               primary: s.complete
                 ? {
@@ -166,17 +202,25 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 : {
                     label: orienting
                       ? 'Check orientation'
-                      : transfer && response
-                        ? 'Finish lesson'
-                        : step.actionLabel,
+                      : stationTask
+                        ? stationAction
+                        : transfer && response
+                          ? 'Finish lesson'
+                          : step.actionLabel,
                     onActivate: () =>
-                      perform({ type: orienting ? 'check-orientation' : 'advance' }),
+                      orienting
+                        ? perform({ type: 'check-orientation' })
+                        : stationTask
+                          ? stationDone
+                            ? perform({ type: 'active', index: s.active + 1 })
+                            : perform({ type: 'record-junction' })
+                          : perform({ type: 'advance' }),
                     disabled,
                     disabledReason: orienting
                       ? 'Use the rotate or flip controls in the CT tracing stack first.'
-                      : s.step === 1
-                        ? 'Record a lumen mark or unresolved continuation at all three airway checkpoints.'
-                        : 'Record three airway checkpoints, the airway course and its relationship to the nodule.',
+                      : stationTask
+                        ? 'Select a daughter branch (or uncertainty) and mark its lumen (or unresolved lumen) before recording this junction.'
+                        : 'Record every junction and the distal approach, then describe the course and its relationship to the nodule.',
                   },
             }}
           >
@@ -194,25 +238,35 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 </p>
               </div>
             )}
-            {marking && s.alignment && (
-              <p role="status">
-                Orientation checked. Select the airway checkpoints and record your trace.
-              </p>
-            )}
-            {s.step > 0 && !s.complete && (
-              <CtTraceList
-                trace={trace}
-                marks={s.marks}
-                active={s.active}
-                onActive={(index) => {
-                  perform({ type: 'active', index })
-                  setLevelRequest((v) => v + 1)
-                }}
-              />
+            {marking && !orienting && (
+              <>
+                <CtBranchDecision
+                  trace={trace}
+                  active={s.active}
+                  choice={s.branches[s.active]}
+                  recorded={stationDone}
+                  reveal={stationDone}
+                  onChange={
+                    !stationDone
+                      ? (value) => perform({ type: 'branch', index: s.active, value })
+                      : undefined
+                  }
+                />
+                <p role="status">
+                  {stationDone
+                    ? 'Response recorded. Review this fork, then continue.'
+                    : !s.marks[s.active]
+                      ? 'Lumen mark needed in the CT tracing stack.'
+                      : s.marks[s.active]?.pixel === null
+                        ? 'Lumen recorded as unresolved.'
+                        : 'Lumen marked. Record this junction to compare.'}
+                </p>
+              </>
             )}
             {describing && !orienting && (
               <>
                 <CtCourseControl
+                  from={trace.focusAirway?.code}
                   value={s.course}
                   onChange={(value) => perform({ type: 'course', value })}
                 />
@@ -245,14 +299,24 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 </button>
                 {s.hints > 0 && (
                   <p>
-                    Return to Start, follow the same air column through neighboring planes, then
-                    mark it at each named checkpoint. A nearby vessel does not establish airway
-                    continuity.
+                    Use View parent CT before this fork, follow its walls through neighboring
+                    planes, then mark the daughter lumen on Current junction CT. A nearby vessel
+                    does not establish airway continuity.
                   </p>
                 )}
               </div>
             )}
           </NowCard>
+          {s.step > 0 && !s.complete && (
+            <CtTraceList
+              trace={trace}
+              marks={s.marks}
+              recorded={s.recorded}
+              active={s.active}
+              maxActive={maxActive}
+              onActive={(index) => perform({ type: 'active', index })}
+            />
+          )}
           <StepList
             lesson={{
               sectionId: lesson.id,
@@ -275,10 +339,11 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 : 'Review only. The current trace and the original recorded attempt are preserved.',
             ]}
           />
-        </>
+        </div>
       }
       teaching={
-        <div className={styles.teaching}>
+        <div ref={teachingTop} className={styles.teaching}>
+          {!orienting && s.step !== 0 && <CtJunctionTeaching trace={trace} active={s.active} />}
           {s.step === 0 ? (
             <>
               <CtOrientationTeaching trace={trace} />
@@ -307,9 +372,10 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 <h2>Worked CT example</h2>
                 <p>{lesson.worked}</p>
                 <p>
-                  Use <strong>Show target</strong> to inspect the nodule, then Start to follow the
-                  parent airway. Trace the named bronchi toward the target and inspect the interval
-                  beyond the last visible lumen.
+                  Use <strong>Show target</strong> to inspect the nodule, then Start at the trachea.
+                  Use <strong>Next</strong> beneath the paired views to inspect each worked
+                  junction. Every route includes all modeled branch decisions before the distal
+                  approach.
                 </p>
                 <p className={styles.small}>
                   The gold crosses identify the source-derived trace in this worked example. Your
@@ -332,11 +398,12 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                     ? 'Use the patient direction letters to choose the display orientation before following the air column.'
                     : transfer
                       ? lesson.transferPrompt
-                      : `Use Start to identify the ${trace.anchor.airway.name.toLowerCase()}, then follow the named airway checkpoints.`}
+                      : `Use Start to identify the ${trace.anchor.airway.name.toLowerCase()}, then follow each intervening junction toward the target.`}
                 </p>
                 <p>
-                  Browse the slices between checkpoints. Place your marks on the visible air column,
-                  or record that the continuation is unresolved.
+                  At each fork, inspect all daughter branches. Choose one in Steps and mark the
+                  visible continuation on Current junction CT, or record uncertainty. Check the
+                  junction and compare before selecting Next junction.
                 </p>
                 <p>
                   At the distal checkpoint, scroll toward the nodule. Decide whether you can follow
@@ -376,7 +443,17 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
               )}
             </>
           )}
-          <CtAirwayGuide trace={trace} />
+          {s.step === 0 && <CtJunctionTeaching trace={trace} active={s.active} />}
+          {revealed && (
+            <CtBranchDecision
+              trace={trace}
+              active={s.active}
+              choice={s.step === 0 ? null : s.branches[s.active]}
+              recorded={s.step !== 0}
+              reveal
+            />
+          )}
+          <CtAirwayGuide trace={trace} active={s.active} pending={!revealed} />
         </div>
       }
       simulator={
@@ -384,12 +461,16 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
           <NativeCtViewer
             key={`${trace.id}-${s.step === 0 ? 'example' : transfer ? 'transfer' : 'prediction'}`}
             trace={trace}
-            marks={s.step === 0 ? [null, null, null] : s.marks}
+            marks={s.step === 0 ? trace.checkpoints.map(() => null) : s.marks}
             active={s.active}
             levelRequest={levelRequest}
+            maxActive={maxActive}
+            referenceThrough={
+              marking || s.step === 2 ? lastUnlocked(s.recorded) - (routeDone ? 0 : 1) : -1
+            }
             onActive={(index) => perform({ type: 'active', index })}
             onMark={
-              marking && !orienting
+              marking && !orienting && !stationDone
                 ? (mark) => perform({ type: 'mark', index: s.active, mark })
                 : undefined
             }

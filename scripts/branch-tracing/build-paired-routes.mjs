@@ -4,7 +4,9 @@ import { format } from 'prettier'
 
 const source = readFileSync('public/fluoroview/cases/patient-new/metadata/airway_graph.json')
 const graph = JSON.parse(source)
-const manifest = JSON.parse(readFileSync('public/branch-tracing/targets-v1/manifest.json'))
+const manifest = JSON.parse(
+  readFileSync('src/features/bronchial-branch-tracing/geometry/branch-decisions.json'),
+)
 const sha = createHash('sha256').update(source).digest('hex')
 if (sha !== manifest.sourceGraphSha256)
   throw new Error('Source graph differs from the CT target source')

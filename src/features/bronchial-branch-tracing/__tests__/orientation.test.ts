@@ -70,10 +70,10 @@ test('paired routes retain unchanged source geometry and report actual plane cor
       expect(pose.position.every(Number.isFinite)).toBe(true)
     }
   const trace = traceById('middle-lobe-caudal')
-  const proximal = pairedScope(trace, 307, 0, false),
-    distal = pairedScope(trace, 307, 1, false)
+  const proximal = pairedScope(trace, 299, 5, false),
+    distal = pairedScope(trace, 299, 6, false)
   expect(distal.arc).toBeGreaterThan(proximal.arc)
-  expect(pairedScope(trace, trace.range[1], 0, false).planeGapMm).toBeGreaterThan(1)
+  expect(pairedScope(trace, 0, 0, false).planeGapMm).toBeGreaterThan(1)
 })
 
 test('the reference scope roll matches the book display axes for cranial and caudal viewing', () => {
@@ -112,8 +112,12 @@ test('orientation is required, a wrong first response survives correction, and t
   s = reduce(reduce(s, { type: 'orientation', value: orientationFor(prediction.preset) }), {
     type: 'check-orientation',
   })
-  for (const [i, cp] of prediction.checkpoints.entries())
+  for (const [i, cp] of prediction.checkpoints.entries()) {
+    s = reduce(s, { type: 'active', index: i })
+    if (cp.decision) s = reduce(s, { type: 'branch', index: i, value: 'unresolved' })
     s = reduce(s, { type: 'mark', index: i, mark: { slice: cp.slice, pixel: null } })
+    s = reduce(s, { type: 'record-junction' })
+  }
   s = reduce(s, { type: 'advance' })
   s = reduce(s, { type: 'course', value: 'uncertain' })
   s = reduce(s, { type: 'target-relation', value: 'unresolved' })

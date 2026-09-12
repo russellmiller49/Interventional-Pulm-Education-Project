@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { inflateSync } from 'node:zlib'
 import manifest from '../../../../public/branch-tracing/native-v1/manifest.json'
+import legacy from '../../../../public/branch-tracing/targets-v1/manifest.json'
 import {
   CT_TRACES,
   NATIVE_CT,
@@ -47,7 +48,7 @@ test('native Slicer PNGs match their hashes and source HU window at every compar
     const slice = Number(asset.path.match(/(\d+)\.png/)![1])
     slices.set(slice, pngPixels(bytes))
   }
-  for (const trace of manifest.traces) {
+  for (const trace of [...manifest.traces, ...CT_TRACES]) {
     expect(trace.anchor.slice).toBeGreaterThanOrEqual(trace.range[0])
     expect(trace.anchor.slice).toBeLessThanOrEqual(trace.range[1])
     for (const point of trace.checkpoints) {
@@ -74,11 +75,11 @@ test('book rotations and reflection preserve native pixel identity in full field
   expect(ORIENTATION_LABELS.mirror.right).toBe('R')
   for (const trace of CT_TRACES)
     for (const preset of ['standard', 'mirror', 'rul', 'upper-division'] as const)
-      for (const [center, size] of [
-        [trace.cropCenter, trace.cropSize],
-        [[255.5, 255.5], 512],
-      ] as const)
-        for (const point of trace.checkpoints) {
+      for (const point of trace.checkpoints)
+        for (const [center, size] of [
+          [point.cropCenter ?? trace.cropCenter, point.cropSize ?? trace.cropSize],
+          [[255.5, 255.5], 512],
+        ] as const) {
           const screen = pixelToDisplay(point.pixel, center, size, preset)
           const recovered = displayToPixel(screen, center, size, preset)
           expect(recovered[0]).toBeCloseTo(point.pixel[0], 10)
@@ -100,7 +101,7 @@ test('every lesson has real CT traces, a changed transfer and a visible stage la
     )
   }
 })
-test('named checkpoints distinguish segment identity from CT indices and distal sampling positions', () => {
+test('preserved c3 source checkpoints distinguish segment identity from CT indices and distal sampling positions', () => {
   const codes: Record<string, string[]> = {
     'central-right': ['Trachea', 'RMSB', 'RB5b'],
     'central-left': ['Trachea', 'LMSB', 'LB5'],
@@ -120,13 +121,13 @@ test('named checkpoints distinguish segment identity from CT indices and distal 
     'right-lower-basal': ['RLL', 'R basal', 'RB8'],
     'left-lower-basal': ['L basal', 'L basal', 'LB9'],
   }
-  expect(CT_TRACES.map((t) => t.id).sort()).toEqual(Object.keys(codes).sort())
-  for (const trace of CT_TRACES) {
+  expect(legacy.traces.map((t) => t.id).sort()).toEqual(Object.keys(codes).sort())
+  for (const trace of legacy.traces) {
     expect(trace.checkpoints.map((p) => p.airway.code)).toEqual(codes[trace.id])
     expect(new Set(trace.checkpoints.map((p) => `${p.airway.code}:${p.landmark}`)).size).toBe(3)
     expect(trace.anchor.airway.name).toBeTruthy()
   }
-  const middle = CT_TRACES.find((t) => t.id === 'middle-lobe-caudal')!
+  const middle = legacy.traces.find((t) => t.id === 'middle-lobe-caudal')!
   // Two separate positions in RB5 share an acquisition plane. They are not two segments.
   expect(middle.checkpoints[0].slice).toBe(middle.checkpoints[1].slice)
   expect(middle.checkpoints.slice(0, 2).map((p) => p.landmark)).toEqual(['Proximal', 'Distal'])
@@ -151,9 +152,10 @@ test('anatomical labels use the exact matching case graph and preserve the sourc
   )
   for (const trace of CT_TRACES) {
     const ids = trace.sourceEdgeIds
-    expect(ids.slice(0, specs.traces.find((t) => t.id === trace.id)!.edges.length)).toEqual(
-      specs.traces.find((t) => t.id === trace.id)!.edges,
-    )
+    const originalEdges = specs.traces.find((t) => t.id === trace.id)!.edges
+    const begin = ids.indexOf(originalEdges[0])
+    expect(begin).toBeGreaterThanOrEqual(0)
+    expect(ids.slice(begin, begin + originalEdges.length)).toEqual(originalEdges)
     for (const id of ids) {
       const edge = original.edges.find((e) => e.id === id)!
       const other = labeled.edges.find((e) => e.id === id)!
@@ -203,12 +205,17 @@ test('CT actions reject an unrecorded response and wrong slice while preserving 
   ).toBe(s)
   s = reduce(s, { type: 'orientation', value: orientationFor(prediction.preset) })
   s = reduce(s, { type: 'check-orientation' })
-  for (let i = 0; i < 3; i++)
+  for (let i = 0; i < prediction.checkpoints.length; i++) {
+    s = reduce(s, { type: 'active', index: i })
+    if (prediction.checkpoints[i].decision)
+      s = reduce(s, { type: 'branch', index: i, value: 'unresolved' })
     s = reduce(s, {
       type: 'mark',
       index: i,
       mark: { slice: prediction.checkpoints[i].slice, pixel: [10, 10] },
     })
+    s = reduce(s, { type: 'record-junction' })
+  }
   s = reduce(s, { type: 'advance' })
   expect(reduce(s, { type: 'advance' })).toBe(s)
   s = reduce(s, { type: 'course', value: 'cranial' })
@@ -225,7 +232,7 @@ test('CT actions reject an unrecorded response and wrong slice while preserving 
     }),
   ).toBe(s)
   s = reduce(reduce(s, { type: 'advance' }), { type: 'advance' })
-  expect(s.marks).toEqual([null, null, null])
+  expect(s.marks).toEqual(transfer.checkpoints.map(() => null))
   expect(s.targetRelation).toBe('')
   expect(reduce(s, { type: 'advance' })).toBe(s)
   expect(s.complete).toBe(false)

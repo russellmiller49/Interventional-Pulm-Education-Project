@@ -92,9 +92,17 @@ export function pairedScope(trace: CtTrace, slice: number, active: number, atSta
     return interpolate(points[i - 1], points[i], (arc - arcs[i - 1]) / (arcs[i] - arcs[i - 1]))
   }
   // Keep the selected location ahead of the scope, including at a distal checkpoint.
-  const cameraArc = Math.max(0, station.arc - 4)
+  const decision = !atStart && atSelectedPlane ? trace.checkpoints[active].decision : undefined
+  const forkIndex = decision
+    ? points.findIndex((p) => distance(p, decision.junctionLps) < 0.001)
+    : -1
+  const atJunction = forkIndex >= 0
+  // Present every division from its parent, without pointing the camera into the answer child.
+  const cameraArc = Math.max(0, atJunction ? arcs[forkIndex] - 8 : station.arc - 4)
   const position = sample(cameraArc)
-  const look = sample(Math.min(arcs[arcs.length - 1], cameraArc + 7))
+  const look = atJunction
+    ? points[forkIndex]
+    : sample(Math.min(arcs[arcs.length - 1], cameraArc + 7))
   const norm = distance(position, look)
   const direction = look.map((v, i) => (v - position[i]) / norm) as Vec3
   return {
@@ -104,6 +112,7 @@ export function pairedScope(trace: CtTrace, slice: number, active: number, atSta
     point: station.point,
     planeGapMm: station.gap,
     arc: station.arc,
+    atJunction,
     atDistalLimit: arcs[arcs.length - 1] - station.arc < 10,
   }
 }

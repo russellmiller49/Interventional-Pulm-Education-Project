@@ -7,6 +7,16 @@ export interface AirwayLabel {
   name: string
   shortName: string
 }
+export interface CtBranchOption {
+  sourceEdgeId: number
+  airway: AirwayLabel
+  label: string
+  direction: string
+  slice: number
+  pixel: [number, number]
+  lps: Vec3
+}
+export type CtBranchChoice = number | 'unresolved'
 export interface CtCheckpoint {
   id: string
   slice: number
@@ -16,12 +26,28 @@ export interface CtCheckpoint {
   sourceEdgeId: number
   airway: AirwayLabel
   landmark: string
+  visibilityNote?: string
+  cropCenter?: [number, number]
+  cropSize?: number
+  decision?: {
+    nodeId: number
+    junctionLps: Vec3
+    parent: {
+      sourceEdgeId: number
+      airway: AirwayLabel
+      slice: number
+      pixel: [number, number]
+      lps: Vec3
+    }
+    options: CtBranchOption[]
+  }
 }
 export interface CtTrace {
   id: string
   targetId: string
   sourceEdgeIds: number[]
   region: string
+  focusAirway?: AirwayLabel
   preset: DisplayPreset
   range: [number, number]
   cropCenter: [number, number]
@@ -74,6 +100,8 @@ export interface CtMark {
 export interface CtResponse {
   orientation: { first: CtOrientation; used: CtOrientation }
   marks: CtMark[]
+  /** Actual daughter selections in checkpoint order; null only at the distal approach. */
+  branches: (CtBranchChoice | null)[]
   course: Course
   hints: number
   targetRelation: TargetRelation
