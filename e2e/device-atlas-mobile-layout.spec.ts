@@ -3,28 +3,9 @@ import { join } from 'node:path'
 
 import { expect, test, type Page } from '@playwright/test'
 
-/**
- * Regression for review finding PR107-D2B-UI-001.
- *
- * The D2B atlas puts a market badge — and, when a safety action was matched, a safety badge —
- * in the last column of a `min-w-[900px]` table that is deliberately scrolled horizontally
- * inside its own labelled region. Each badge carries a screen-reader-only prefix so it reads
- * as "Market status: …" rather than as a bare label.
- *
- * `sr-only` is `position: absolute`. While the badge established no local positioning context
- * those hidden 1px boxes resolved their containing block to the initial containing block, so
- * the table's `overflow-x-auto` could not clip them: measured at 390x844 they sat at x≈836 and
- * dragged `documentElement.scrollWidth` from 390 to 837, sideways-scrolling the whole page.
- *
- * jsdom performs no layout and cannot see any of that, so the invariants below are asserted in
- * a browser. They are deliberately split in two, because the cheap ways to stop page overflow
- * (clipping the shell, dropping the table's min width, deleting the prefixes) would all satisfy
- * a root-width assertion on its own:
- *
- *   - the DOCUMENT never scrolls sideways at any of the four sizes;
- *   - the results REGION still does, and is still keyboard reachable and labelled;
- *   - both badge variants still announce their prefix and their status label.
- */
+/** A single semantic table reflows as device cards on narrow screens. Verify both page
+ * containment and visibility of exact identity plus material status without a sideways swipe.
+ * Preserve the screen-reader prefixes that previously caused document overflow. */
 test.setTimeout(180_000)
 
 const VIEWPORTS = [
@@ -143,33 +124,33 @@ for (const viewport of VIEWPORTS) {
   })
 }
 
-test(`the results region keeps its own horizontal scroll at ${MOBILE.name}`, async ({ page }) => {
+test(`identity and material notices stay visible without horizontal scrolling at ${MOBILE.name}`, async ({
+  page,
+}) => {
   await page.setViewportSize({ width: MOBILE.width, height: MOBILE.height })
   const strings = atlasStrings('en')
-  await openAtlas(page, 'en')
-
+  await openAtlas(page, 'en', '?q=20402-411')
   const measured = await geometry(page, strings.region)
   expect(measured.regionFound).toBe(true)
-  // The wide table is still wide: the page was contained by containing the badges, not by
-  // clipping the shell, shrinking the table, or removing the intended internal scroll.
-  expect(measured.regionScrollWidth).toBeGreaterThan(measured.regionClientWidth)
-  expect(measured.regionClientWidth).toBeLessThanOrEqual(MOBILE.width)
-
-  // Still reachable and operable without a mouse (WCAG 2.1.1, owner-review F-32).
-  const region = page.getByRole('region', { name: strings.region })
-  await expect(region).toBeVisible()
+  expect(measured.regionScrollWidth).toBe(measured.regionClientWidth)
   expect(measured.regionTabIndex).toBe(0)
+  const row = page.locator('[data-product-id="PRD-05670F1B5F"]')
+  await expect(row.getByText('Exact identifier match')).toBeVisible()
+  await expect(row.getByText('20402-411', { exact: true })).toBeVisible()
+  await expect(row.locator('[data-safety-display="active_safety_notice"]')).toBeVisible()
+  const bounds = await row.evaluate((node) =>
+    Array.from(node.querySelectorAll('td')).map((cell) => {
+      const box = cell.getBoundingClientRect()
+      return { left: box.left, right: box.right }
+    }),
+  )
+  for (const bound of bounds) {
+    expect(bound.left).toBeGreaterThanOrEqual(0)
+    expect(bound.right).toBeLessThanOrEqual(MOBILE.width)
+  }
+  const region = page.getByRole('region', { name: strings.region })
   await region.focus()
-  expect(
-    await page.evaluate(
-      (label) => document.activeElement?.getAttribute('aria-label') === label,
-      strings.region,
-    ),
-  ).toBe(true)
-  await page.keyboard.press('ArrowRight')
-  await expect
-    .poll(async () => region.evaluate((node) => node.scrollLeft), { timeout: 5_000 })
-    .toBeGreaterThan(0)
+  await expect(region).toBeFocused()
 })
 
 test(`both badge variants keep their screen-reader prefix at ${MOBILE.name}`, async ({ page }) => {
@@ -229,7 +210,7 @@ for (const locale of LOCALES) {
     const measured = await geometry(page, strings.region)
     expect(measured.rootScrollWidth).toBe(measured.rootClientWidth)
     expect(measured.bodyScrollWidth).toBeLessThanOrEqual(measured.rootClientWidth)
-    expect(measured.regionScrollWidth).toBeGreaterThan(measured.regionClientWidth)
+    expect(measured.regionScrollWidth).toBe(measured.regionClientWidth)
 
     const market = await badgeText(page, 'data-market-status')
     expect(market.length).toBeGreaterThan(0)

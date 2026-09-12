@@ -182,24 +182,27 @@ describe('D2D-B reviewed evidence runtime reader', () => {
     expect(storz.udi_identities[0].source_refs[0].locator).toBe('Primary DI 04048551046692')
     expect(storz.sources[0]).toEqual(
       expect.objectContaining({
-        title: 'openFDA device UDI record',
+        title: 'FDA device identity record (AccessGUDID)',
         locators: [
           'Primary DI 04048551046692',
           'Primary DI 04048551046692; commercial-distribution record as of 2026-08-24',
         ],
       }),
     )
-    expect(new URL(storz.sources[0].official_url!).pathname).toBe('/device/udi.json')
+    expect(storz.sources[0].official_url).toBe(
+      'https://accessgudid.nlm.nih.gov/devices/04048551046692',
+    )
     expect(new URL(storz.sources[0].official_url!).search).toBe('')
 
     const narwhal = runtime.getReviewedProductRegulatoryEvidence('PRD-AED3720BF6')!
     expect(narwhal.sources[0]).toEqual(
       expect.objectContaining({
-        title: 'openFDA device 510(k) record',
+        title: 'FDA 510(k) record',
         locators: ['Product code GEH; regulation 878.4350', 'Premarket submission K261068'],
       }),
     )
-    expect(new URL(narwhal.sources[0].official_url!).pathname).toBe('/device/510k.json')
-    expect(new URL(narwhal.sources[0].official_url!).search).toBe('')
+    expect(narwhal.sources[0].official_url).toBe(
+      'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=K261068',
+    )
   })
 })

@@ -79,6 +79,7 @@ function sourceIndexOf(
 function projectReferencedSources(
   references: readonly D2dSourceReference[],
   sourceById: ReadonlyMap<string, D2dSourceProjection>,
+  recordUrlsBySourceId: ReadonlyMap<string, Set<string>> = new Map(),
 ): D2dRuntimeSource[] {
   const locatorsBySourceId = new Map<string, string[]>()
   for (const reference of references) {
@@ -101,7 +102,7 @@ function projectReferencedSources(
       source_kind: source.source_kind,
       title: publicSourceTitle(source),
       organization: source.organization,
-      official_url: publicOfficialUrl(source),
+      official_url: publicOfficialUrl(source, recordUrlsBySourceId.get(sourceId)),
       snapshot_date: source.snapshot_date,
       locators,
     }
@@ -115,23 +116,50 @@ function projectReferencedSources(
  */
 function publicSourceTitle(source: D2dSourceProjection): string {
   if (!/\bD2D-Q-[A-Z0-9-]+\b/.test(source.title)) return source.title
-  if (source.source_kind === 'fda_premarket') return 'openFDA device 510(k) record'
-  if (source.source_kind === 'gudid') return 'openFDA device UDI record'
+  if (source.source_kind === 'fda_premarket') return 'FDA 510(k) record'
+  if (source.source_kind === 'gudid') return 'FDA device identity record (AccessGUDID)'
   return source.title.replace(/\s+query\s+D2D-Q-[A-Z0-9-]+\s*$/i, '').trim()
 }
 
 /**
- * Preserve an official URL when supplied, but never send an acquisition query to the page. The
- * path remains the exact official openFDA dataset endpoint carried by the reviewed overlay.
+ * Acquisition queries are private reproducibility coordinates. Link to the human-readable
+ * record identified by the reviewed evidence instead. An ambiguous or missing record has no
+ * fabricated fallback link to a dataset homepage.
  */
-function publicOfficialUrl(source: D2dSourceProjection): string | null {
+function publicOfficialUrl(
+  source: D2dSourceProjection,
+  recordUrls: ReadonlySet<string> | undefined,
+): string | null {
   if (!source.official_url || !/\bD2D-Q-[A-Z0-9-]+\b/.test(source.title)) {
     return source.official_url
   }
-  const url = new URL(source.official_url)
-  url.search = ''
-  url.hash = ''
-  return url.toString()
+  return recordUrls?.size === 1 ? [...recordUrls][0] : null
+}
+
+function regulatoryRecordUrls(row: RegulatoryOverlayRow): Map<string, Set<string>> {
+  const urls = new Map<string, Set<string>>()
+  const add = (references: D2dSourceReference[], url: string) => {
+    for (const { source_id: sourceId } of references) {
+      const sourceUrls = urls.get(sourceId) ?? new Set<string>()
+      sourceUrls.add(url)
+      urls.set(sourceId, sourceUrls)
+    }
+  }
+  for (const record of row.udi_identities) {
+    add(
+      record.source_refs,
+      `https://accessgudid.nlm.nih.gov/devices/${encodeURIComponent(record.primary_di)}`,
+    )
+  }
+  for (const record of row.pathways) {
+    if (record.submission_number && /^K\d{6}$/.test(record.submission_number)) {
+      add(
+        record.source_refs,
+        `https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID=${record.submission_number}`,
+      )
+    }
+  }
+  return urls
 }
 
 function profileReferences(row: ProfileOverlayRow): D2dSourceReference[] {
@@ -268,7 +296,11 @@ function buildRegulatoryIndex(
     const publicRow = publicRegulatoryRow(row)
     const view = deepFreeze({
       ...publicRow,
-      sources: projectReferencedSources(regulatoryReferences(publicRow), sourceById),
+      sources: projectReferencedSources(
+        regulatoryReferences(publicRow),
+        sourceById,
+        regulatoryRecordUrls(row),
+      ),
     })
     rows.set(row.product_id, view)
   }

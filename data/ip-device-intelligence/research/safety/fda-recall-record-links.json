@@ -1,0 +1,230 @@
+{
+  "format_version": 1,
+  "purpose": "exact_recall_record_links_only",
+  "records": [
+    {
+      "recall_number": "Z-0049-2026",
+      "event_id": "97441",
+      "cfres_id": "216176",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:10.887Z",
+      "response_sha256": "a07c040d6cb2c909493dbc1eb6fdc193e5d177092359168accaf2fb5913d3de2"
+    },
+    {
+      "recall_number": "Z-0053-2026",
+      "event_id": "97441",
+      "cfres_id": "216180",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:11.042Z",
+      "response_sha256": "abc0265be6bc7ba2f57a2ede3e8ba3c0710944afe36387deef239e379cec6c10"
+    },
+    {
+      "recall_number": "Z-0078-2011",
+      "event_id": "55150",
+      "cfres_id": "90135",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:11.522Z",
+      "response_sha256": "2a7be02ea99a3bc5b9ce63ab82c35151147f583d9e207bf19c9b9460e16850b0"
+    },
+    {
+      "recall_number": "Z-0106-2022",
+      "event_id": "88524",
+      "cfres_id": "188906",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:12.067Z",
+      "response_sha256": "7c290ef93b7c2b58ff7bcd1bf772a2ec1af34eaebd14e97ef7f15b777fbdb767"
+    },
+    {
+      "recall_number": "Z-0138-2017",
+      "event_id": "74542",
+      "cfres_id": "147873",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:12.526Z",
+      "response_sha256": "e57d57fdd0d52440f3803d8fbdfc7488dd7d0c99fad9d7d2d7c4b23e6c8f1791"
+    },
+    {
+      "recall_number": "Z-0192-2024",
+      "event_id": "93052",
+      "cfres_id": "203338",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:13.018Z",
+      "response_sha256": "e1cf11986782e9bc2d7c362634e3dc4790f41fc77b3ebb598c6a9269c7dc4ca8"
+    },
+    {
+      "recall_number": "Z-0327-2024",
+      "event_id": "93222",
+      "cfres_id": "203696",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:13.592Z",
+      "response_sha256": "9cb8aba572954a708ab5839912e1a15793627c19383c3d6b6c26775edbd0e640"
+    },
+    {
+      "recall_number": "Z-0355-2024",
+      "event_id": "93232",
+      "cfres_id": "203733",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:14.073Z",
+      "response_sha256": "978c6cb2f7ca2fbf94fbdf43bc638bae86e06d22cd86c4d4600edfff05da75c6"
+    },
+    {
+      "recall_number": "Z-0489-2021",
+      "event_id": "86664",
+      "cfres_id": "184275",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:14.629Z",
+      "response_sha256": "981ec351c5f7066c73bfbe6dcc425ef3a1fc0b3ea9bafe57ae98e75853231b48"
+    },
+    {
+      "recall_number": "Z-0687-2024",
+      "event_id": "93583",
+      "cfres_id": "204911",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:15.051Z",
+      "response_sha256": "ee1cad249243f7b6035ab9b401605477b4c796cc3a02dc44c053e0d6e7c16ed6"
+    },
+    {
+      "recall_number": "Z-0873-2026",
+      "event_id": "97849",
+      "cfres_id": "216764",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:15.529Z",
+      "response_sha256": "78df263055f69e323e985a859d8c88691dae58d9986d43a24bb2eb443256cc44"
+    },
+    {
+      "recall_number": "Z-1298-2018",
+      "event_id": "79294",
+      "cfres_id": "161833",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:16.034Z",
+      "response_sha256": "a80ff9e975d03e7ef5a1df7bcd867b611c5abb73f5e0a63d113898d7b9feda34"
+    },
+    {
+      "recall_number": "Z-1566-2026",
+      "event_id": "98429",
+      "cfres_id": "218707",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:16.529Z",
+      "response_sha256": "3598e608236daad5b7036d3ba12af22b4e02edb70c7c97a4ce110833ff1bfb83"
+    },
+    {
+      "recall_number": "Z-1567-2026",
+      "event_id": "98429",
+      "cfres_id": "218709",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:17.031Z",
+      "response_sha256": "d00c86841cff607ad68a38ea0f5b8b4003dae297b5cee4f3e047e4d25d6e6e24"
+    },
+    {
+      "recall_number": "Z-1568-2026",
+      "event_id": "98429",
+      "cfres_id": "218710",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:17.529Z",
+      "response_sha256": "107b6e667a8f1c7fb19b025d7a405d8f87e7886fe0f293fc16b9c69833e7af1e"
+    },
+    {
+      "recall_number": "Z-1613-2026",
+      "event_id": "98371",
+      "cfres_id": "218482",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:18.033Z",
+      "response_sha256": "cf38b428a514ec9d73eff4d6881dc71d5bd179e4998866d4b0e0ecc6a9483c97"
+    },
+    {
+      "recall_number": "Z-1791-2026",
+      "event_id": "98495",
+      "cfres_id": "218933",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:18.540Z",
+      "response_sha256": "f86b6dcb921277771137e3548c0a793da5c88c76e9fae1b7ce6b8c035a9ffc76"
+    },
+    {
+      "recall_number": "Z-1844-2022",
+      "event_id": "90793",
+      "cfres_id": "195932",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:19.099Z",
+      "response_sha256": "1a4704d07cc0626f3615ae8a947b32623a9a9ce0d83bb943dd9c89a6788da1e1"
+    },
+    {
+      "recall_number": "Z-2017-2023",
+      "event_id": "92362",
+      "cfres_id": "200496",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:19.547Z",
+      "response_sha256": "146df0316c3f7c256a787fba61a057acfcb18c4a8042511a0be86e41c96055e6"
+    },
+    {
+      "recall_number": "Z-2021-2024",
+      "event_id": "94547",
+      "cfres_id": "207644",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:20.056Z",
+      "response_sha256": "03f427fdc505af61c2d4709e33a6d6cb562474247013ff1cb0243ccf36d41648"
+    },
+    {
+      "recall_number": "Z-2342-2023",
+      "event_id": "92633",
+      "cfres_id": "201893",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:20.548Z",
+      "response_sha256": "5dd7675ec811f1a863b4fa1946f4d26f6a38619f11243e0109ca69c2776418b1"
+    },
+    {
+      "recall_number": "Z-2382-2026",
+      "event_id": "98793",
+      "cfres_id": "220262",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:21.061Z",
+      "response_sha256": "a7f4df783fb0148dead0aaa30e64d8e5ca12d33de9152a8ca3465b912c1edf63"
+    },
+    {
+      "recall_number": "Z-2399-2024",
+      "event_id": "94823",
+      "cfres_id": "208435",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:21.632Z",
+      "response_sha256": "b0525f5c043569ed23672af10c95ff4f608aa6907545781c83e7d63611e0764d"
+    },
+    {
+      "recall_number": "Z-2400-2024",
+      "event_id": "94823",
+      "cfres_id": "208436",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:22.054Z",
+      "response_sha256": "c97ce1457019fb83ec08a058b9b56083f13c5af28c86002fc4739f36ea29c379"
+    },
+    {
+      "recall_number": "Z-2401-2024",
+      "event_id": "94823",
+      "cfres_id": "208437",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:22.553Z",
+      "response_sha256": "a1bfa589560968992249243a3a4f17e92fbc09a8625473247828caa269f43a10"
+    },
+    {
+      "recall_number": "Z-2496-2023",
+      "event_id": "92779",
+      "cfres_id": "202557",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:23.062Z",
+      "response_sha256": "a3f59e03f926384d23f295908c8269a3ce44b01d27d4911855bd78bdd8b70542"
+    },
+    {
+      "recall_number": "Z-2497-2023",
+      "event_id": "92779",
+      "cfres_id": "202558",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:23.567Z",
+      "response_sha256": "0f006781bdc955dee2eda0a8c0fa0bfb1d9a7223b884893b1c0caa61135bee82"
+    },
+    {
+      "recall_number": "Z-2500-2023",
+      "event_id": "92779",
+      "cfres_id": "202561",
+      "dataset_as_of": "2026-09-10",
+      "retrieved_at": "2026-09-11T23:51:24.154Z",
+      "response_sha256": "7d9c23ae833520e9741e48f0641b7ee040617a212d9845482565a2a572d894a8"
+    }
+  ]
+}

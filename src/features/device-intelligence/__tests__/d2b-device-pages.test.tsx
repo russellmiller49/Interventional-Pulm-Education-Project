@@ -64,9 +64,11 @@ describe('D2B Device Atlas index', () => {
       DevicesIndexPage({ params: Promise.resolve({ locale: 'en' }) }),
     )
     expect(getByRole('heading', { level: 1 })).toHaveTextContent('Device Atlas')
-    getByText(/Cohort rule: verification_grade = verified_source/)
+    getByText(
+      /Products appear when their catalog identity or specifications have verified source evidence/,
+    )
     getByText(/Current availability is not a condition of inclusion/)
-    getByText(/Candidate-grade and unknown-grade catalog products are not shown here/)
+    getByText(/Products awaiting source verification are excluded from this Atlas/)
     getByText(/do not establish present orderability/)
     expect(await axe(container)).toHaveNoViolations()
   })
@@ -285,7 +287,7 @@ describe('D2B product page — market and safety panel', () => {
       DevicesIndexPage({ params: Promise.resolve({ locale: 'en' }) }),
     )
     const region = container.querySelector('[role="region"]')!
-    expect(region.getAttribute('aria-label')).toBe('Results table (scrolls horizontally)')
+    expect(region.getAttribute('aria-label')).toBe('Device search results')
     expect(region.getAttribute('tabindex')).toBe('0')
     expect(region.className).toContain('overflow-x-auto')
   })

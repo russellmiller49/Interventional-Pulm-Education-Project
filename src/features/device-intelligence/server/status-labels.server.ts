@@ -28,6 +28,40 @@ export async function getProductStatusLabels(locale: string): Promise<ProductSta
     >
 
   return {
+    evidence: {
+      recordedState: fromKeys(
+        ['active', 'historical', 'conflicted', 'unknown'] as const,
+        'evidence.recordedState',
+      ),
+      freshness: fromKeys(
+        ['within_review_interval', 'refresh_due', 'incomplete', 'not_checked'] as const,
+        'evidence.freshness',
+      ),
+      source: fromKeys(['device_recall', 'device_enforcement'] as const, 'evidence.source'),
+      ...fromKeys(
+        [
+          'freshnessNote',
+          'coverageHeading',
+          'datasetDate',
+          'retrievedDate',
+          'dateUnavailable',
+          'partialDates',
+          'sourceLimitations',
+          'sourceLimitationsLink',
+          'earlyAlertsLink',
+          'reason',
+          'identifiers',
+          'classification',
+          'reportedStatus',
+          'initiated',
+          'instructions',
+          'linkUnavailable',
+          'applicability',
+          'sourceTextLanguage',
+        ] as const,
+        'evidence',
+      ),
+    },
     market: fromKeys(MARKET_STATUSES, 'market'),
     marketBadge: fromKeys(MARKET_STATUSES, 'marketBadge'),
     safety: fromKeys(SAFETY_DISPLAYS, 'safety'),

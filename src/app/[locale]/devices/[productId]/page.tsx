@@ -24,6 +24,8 @@ import { getAtlasProductDetail } from '@/features/device-intelligence/server/atl
 import { getD2dEvidenceLabels } from '@/features/device-intelligence/server/d2d-labels.server'
 import { getTaxonomyLabels } from '@/features/device-intelligence/server/product-taxonomy.server'
 import { getProductStatusLabels } from '@/features/device-intelligence/server/status-labels.server'
+import { getSafetyEvidence } from '@/features/device-intelligence/server/safety-evidence.server'
+import { safetyEvidenceFreshness } from '@/features/device-intelligence/domain/evidence-freshness'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,7 +41,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: detail
       ? `${detail.product.product_name} — ${detail.product.manufacturerDisplay}`
       : t('notFound'),
-    description: detail?.product.description ?? t('metadataDescription'),
+    description: detail?.publicDescription?.text ?? t('metadataDescription'),
     robots: { index: false, follow: false, noarchive: true },
   }
 }
@@ -55,6 +57,11 @@ export default async function DeviceDetailPage({ params }: PageProps) {
   const detail = getAtlasProductDetail(productId)
   if (!detail) notFound()
   const { product } = detail
+  const safetyEvidence = getSafetyEvidence(productId)
+  const safetyFreshness = safetyEvidenceFreshness(
+    safetyEvidence,
+    new Date().toISOString().slice(0, 10),
+  )
   const d2dLabels = await getD2dEvidenceLabels(locale)
   const statusLabels = await getProductStatusLabels(locale)
   const taxonomyLabels = getTaxonomyLabels(locale)
@@ -62,7 +69,7 @@ export default async function DeviceDetailPage({ params }: PageProps) {
   const deviceSubtypeLabel = taxonomyLabels.subtypes[detail.taxonomy.deviceSubtypeCode]
 
   const verificationLabels = {
-    verified: tVerification('verified'),
+    verified: tCommon('badges.verifiedSource'),
     candidate: tVerification('candidate'),
     unknown: tVerification('unknown'),
     usPending: tVerification('usPending'),
@@ -123,11 +130,20 @@ export default async function DeviceDetailPage({ params }: PageProps) {
         <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
           {product.product_name}
         </h1>
+        <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          {product.catalog_number ? (
+            <span>
+              {t('fields.catalogNumber')}:{' '}
+              <span className="font-mono text-foreground">{product.catalog_number}</span>
+            </span>
+          ) : null}
+          {product.size_display ? <span>{product.size_display}</span> : null}
+        </p>
         <div className="flex flex-wrap items-center gap-2">
           <VerificationBadge
             tier={product.verificationTier}
-            usStatusPending={product.usStatusPending}
-            distributionStatus={detail.distributionStatus}
+            usStatusPending={product.usStatusPending && !detail.status.researched}
+            distributionStatus={detail.status.researched ? null : detail.distributionStatus}
             catalogLifecycleContext={product.catalogLifecycleContext}
             lifecycleNote={product.lifecycleNote}
             regulatoryStatus={product.regulatoryStatus}
@@ -137,6 +153,14 @@ export default async function DeviceDetailPage({ params }: PageProps) {
           {/* D2B: compact market/safety marks in the header; the full statement, its
               snapshot date, and the required disclaimers live in the panel below. */}
           <ProductStatusBadges status={detail.status} labels={statusLabels} />
+          {detail.status.safetyReferenceCodes.length > 0 ? (
+            <a
+              href="#device-safety"
+              className="text-xs font-semibold text-primary underline underline-offset-2"
+            >
+              {t('reviewSafetyNotices')}
+            </a>
+          ) : null}
           {/* D2C: the normalized physical taxonomy is the primary product-type answer.
               Canonical category fields moved to the labeled provenance area below. */}
           <Badge variant="outline" size="sm" className="normal-case tracking-normal">
@@ -163,10 +187,33 @@ export default async function DeviceDetailPage({ params }: PageProps) {
             ) : null}
           </p>
         ) : null}
-        {product.description && product.description !== product.product_name ? (
-          <p className="text-base leading-7 text-muted-foreground">{product.description}</p>
+        {detail.publicDescription ? (
+          <div className="space-y-1" data-description-origin={detail.publicDescription.origin}>
+            <p lang="en" className="text-base leading-7 text-muted-foreground">
+              {detail.publicDescription.text}
+            </p>
+            {detail.publicDescription.origin === 'reviewed' ? (
+              <a
+                href="#d2d-profile-heading"
+                className="text-xs font-medium text-primary underline underline-offset-2"
+              >
+                {d2dLabels.profile.heading} ·{' '}
+                {d2dLabels.profile.scope[detail.profile!.description_scope]} ·{' '}
+                {detail.profile!.as_of_date}
+              </a>
+            ) : (
+              <p className="text-xs text-muted-foreground">{t('catalogDescriptionLabel')}</p>
+            )}
+          </div>
         ) : null}
       </header>
+
+      <MarketSafetyPanel
+        status={detail.status}
+        labels={statusLabels}
+        evidence={safetyEvidence}
+        freshness={safetyFreshness}
+      />
 
       {detail.profile ? (
         <ProductProfilePanel
@@ -232,8 +279,6 @@ export default async function DeviceDetailPage({ params }: PageProps) {
       {detail.regulatoryEvidence ? (
         <RegulatoryEvidencePanel evidence={detail.regulatoryEvidence} labels={d2dLabels} />
       ) : null}
-
-      <MarketSafetyPanel status={detail.status} labels={statusLabels} />
 
       <section className="space-y-3" aria-label={t('rolesHeading')}>
         <h2 className="text-2xl font-semibold tracking-tight">{t('rolesHeading')}</h2>

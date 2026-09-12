@@ -8568,7 +8568,7 @@
     },
     "common": {
       "notRecorded": "not recorded",
-      "unlistedNote": "Phase D1 preview — this page is public-unlisted and excluded from search indexing. Reference information only; it is not clinical advice and no product recommendation is made.",
+      "unlistedNote": "Reference beta — this page is unlisted and excluded from search indexing. Reference information only; it is not clinical advice and no product recommendation is made.",
       "noEquivalenceNote": "Shared clinical-role membership and manufacturer product-line groupings are catalog-discovery facts. They are never clinical equivalence, procurement substitution, or formulary claims.",
       "compatibilityWithheldNote": "This compatibility statement is withheld from the public atlas because it references a product outside the Device Atlas cohort. Products outside the cohort are not identified on this surface.",
       "draftTitle": "DRAFT PROTOTYPE — NOT APPROVED FOR CLINICAL USE",
@@ -8594,7 +8594,7 @@
       "panelHeading": "Market and safety status",
       "marketHeading": "Market status",
       "safetyHeading": "Safety status",
-      "gateHeading": "Recommendation gate",
+      "gateHeading": "Use in procedure options",
       "gateNote": "This gate reflects market and safety status only. It is not evidence of clinical compatibility, clinical suitability, or availability, and it never affects whether a product is listed.",
       "confidenceLabel": "Research confidence:",
       "snapshotLabel": "U.S. status research snapshot:",
@@ -8647,7 +8647,7 @@
         "unknown": "Reported scope: not stated in the source record."
       },
       "gate": {
-        "clear": "Clear",
+        "clear": "No recorded selection restriction",
         "review_required": "Review required",
         "blocked_active_safety_action": "Blocked — active safety action"
       },
@@ -8655,19 +8655,56 @@
         "clear": "No market or safety flag is recorded against presenting this product as an option.",
         "review_required": "Market or safety status needs review before this product is presented as a default or a recommended option. The product stays listed, searchable, and described in full.",
         "blocked_active_safety_action": "While an active safety action is matched to this product, it must not be presented as a default or a recommended option. The product stays listed, searchable, and described in full."
+      },
+      "evidence": {
+        "freshness": {
+          "within_review_interval": "Safety sources are within the review interval",
+          "refresh_due": "Safety evidence needs a refresh",
+          "incomplete": "Safety source check is incomplete",
+          "not_checked": "Safety sources have not been checked"
+        },
+        "freshnessNote": "This reference uses a 14-day source review interval. It does not provide real-time surveillance. A refresh reminder does not close or remove a recorded notice.",
+        "coverageHeading": "Source coverage and dates",
+        "source": {
+          "device_recall": "FDA device recall record",
+          "device_enforcement": "FDA enforcement report"
+        },
+        "datasetDate": "Dataset date:",
+        "retrievedDate": "Retrieved:",
+        "dateUnavailable": "not recorded",
+        "sourceLimitations": "Coverage here is limited to the two dated openFDA datasets. FDA early alerts, manufacturer communications and local stock have not been systematically checked. Published API statuses may remain unchanged; check the linked FDA record and manufacturer instructions for the current action.",
+        "sourceLimitationsLink": "About FDA data limitations",
+        "earlyAlertsLink": "FDA recalls and early alerts",
+        "reason": "FDA-reported reason",
+        "identifiers": "Identifiers matched in the source:",
+        "classification": "Classification:",
+        "reportedStatus": "Published status:",
+        "initiated": "Recall initiated:",
+        "instructions": "Open FDA action instructions and affected codes",
+        "linkUnavailable": "An exact FDA record link is not available. Use the recall number to confirm the official record.",
+        "applicability": "The match is to a product identifier. Confirm the affected model, lots or serial numbers against the complete FDA record and manufacturer notice before deciding whether a local unit is involved. Follow the action specified there; a correction may concern instructions for use rather than removal.",
+        "sourceTextLanguage": "FDA source wording is shown in English.",
+        "partialDates": "Some responses did not include a dataset date; freshness cannot be fully verified.",
+        "recordedState": {
+          "active": "Recorded as active at the research snapshot",
+          "historical": "Recorded as historical at the research snapshot",
+          "conflicted": "Source statuses disagree — review required",
+          "unknown": "Status unresolved — review required"
+        }
       }
     },
     "devices": {
       "metadataTitle": "Device Atlas",
       "metadataDescription": "Read-only atlas of verified interventional pulmonology devices with source citations.",
       "title": "Device Atlas",
-      "intro": "A read-only reference of interventional pulmonology devices. Every catalog product whose specifications trace to a verified source appears here, whether or not its current U.S. availability has been established. Current market status and FDA safety actions are shown as labels on the product, never as reasons to omit it. Every fact carries its citation.",
-      "cohortBadge": "{count} verified-source products",
-      "cohortRule": "Cohort rule: verification_grade = verified_source, minus explicit reviewed owner exclusions. Current availability is not a condition of inclusion.",
-      "exclusionNote": "Candidate-grade and unknown-grade catalog products are not shown here. They remain reviewable on the existing public-unlisted (direct-link) catalog surfaces.",
+      "intro": "Find an exact device, look up recorded specifications, and open its source documents and FDA safety notices.",
+      "cohortBadge": "{count} products with source evidence",
+      "cohortRule": "Products appear when their catalog identity or specifications have verified source evidence. Current availability is not a condition of inclusion.",
+      "exclusionNote": "Products awaiting source verification are excluded from this Atlas. A source evidence badge does not mean every specification, description, or safety status has been reviewed.",
       "form": {
         "search": "Search",
         "searchPlaceholder": "Name, manufacturer, or catalog number…",
+        "filters": "Filter by manufacturer, type or procedure",
         "manufacturer": "Manufacturer",
         "deviceClass": "器械类别",
         "role": "Clinical role",
@@ -8681,7 +8718,7 @@
       "resultsHeading": "Results",
       "resultCount": "{count, plural, one {# product} other {# products}}",
       "excludedMissingSpec": "{count, plural, one {# product was} other {# products were}} excluded only because the filtered specification is not recorded for it.",
-      "noResults": "No products in the atlas cohort match these filters.",
+      "noResults": "No devices match these filters. Try a catalog number, manufacturer, or broader device name.",
       "table": {
         "product": "Product",
         "manufacturer": "Manufacturer",
@@ -8696,8 +8733,15 @@
         "page": "Page",
         "previous": "Previous"
       },
-      "resultsRegionLabel": "Results table (scrolls horizontally)",
-      "statusNote": "Market-status and safety labels come from a dated U.S. status research snapshot, named on each product page. They describe the evidence at that date; they do not establish present orderability, and an absence of findings is not a clean bill of health."
+      "resultsRegionLabel": "Device search results",
+      "statusNote": "Market and safety labels describe dated research; they do not establish present orderability. Safety searches may be incomplete, and no match at a snapshot does not establish the absence of a safety action.",
+      "navigationLabel": "Device Intelligence",
+      "findDevice": "Find a device",
+      "prepareProcedure": "Prepare a procedure",
+      "coverage": "{researchedCount} of {totalCount} products have dated U.S. status research; {reviewedCount} have reviewed descriptions.",
+      "evidenceGuide": "About the evidence and its limits",
+      "exactIdentifierMatch": "Exact identifier match",
+      "statusAsOf": "Status snapshot:"
     },
     "device": {
       "notFound": "Device not found",
@@ -8753,7 +8797,9 @@
       "roleDiscoveryCaption": "Shared clinical-role mapping is a catalog-discovery fact, not a claim that these products are clinically equivalent or substitutable.",
       "notRecordedFields": "Not recorded in reviewed sources: {fields}.",
       "otherManufacturersSelectionNote": "One product per manufacturer, drawn from {productCount, plural, one {# cohort product} other {# cohort products}} across {manufacturerCount, plural, one {# other manufacturer} other {# other manufacturers}} mapped to this role ({shown} shown). Representatives prefer primary-fit mappings and are otherwise arbitrary — never a matched or comparable set, and sizes are not matched.",
-      "otherManufacturersViewRole": "View every cohort product mapped to this role."
+      "otherManufacturersViewRole": "View every cohort product mapped to this role.",
+      "catalogDescriptionLabel": "Catalog description · see the source documents below.",
+      "reviewSafetyNotices": "Review safety notices"
     },
     "role": {
       "metadataTitle": "Clinical role",

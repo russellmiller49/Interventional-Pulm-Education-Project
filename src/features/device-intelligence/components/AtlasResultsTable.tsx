@@ -9,16 +9,9 @@ import {
 import { EvidenceBadge } from './EvidenceBadge'
 import { ProductStatusBadges, type ProductStatusLabels } from './ProductStatus'
 
-/**
- * Atlas results as an accessible table (card list on narrow screens via horizontal scroll
- * inside the container, never page overflow). Missing values render an explicit label —
- * thin data must not look like an empty shelf.
- *
- * D2B adds one compact market/safety column. It is deliberately the LAST column and made of
- * small badges: under the inclusion-first policy most rows carry an uncertainty label, and
- * uncertainty must not visually outweigh the product's name, manufacturer, device type, or
- * catalog number.
- */
+/** One semantic table becomes a compact card for each product on narrow screens.
+ * Identity and material status stay together without a horizontal swipe. Explicit table
+ * roles preserve semantics in browsers that flatten tables after a CSS display change. */
 export function AtlasResultsTable({
   locale,
   items,
@@ -26,8 +19,10 @@ export function AtlasResultsTable({
   deviceTypeByProductId,
   statusLabels,
   labels,
+  exactIdentifierMatchIds = [],
 }: {
   locale: string
+  exactIdentifierMatchIds?: string[]
   items: CatalogListItem[]
   statusByProductId: Record<string, ProductStatusView>
   /**
@@ -49,6 +44,8 @@ export function AtlasResultsTable({
     verifiedSource: string
     /** Accessible name for the scrollable region wrapping the table. */
     region: string
+    exactMatch: string
+    asOf: string
   }
 }) {
   return (
@@ -59,62 +56,163 @@ export function AtlasResultsTable({
       aria-label={labels.region}
       className="overflow-x-auto rounded-2xl border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <table className="w-full min-w-[900px] border-collapse text-sm">
-        <thead>
-          <tr className="border-b border-border bg-muted/40 text-left">
-            <th scope="col" className="px-3 py-2 font-semibold">
+      <table
+        role="table"
+        className="block w-full border-collapse text-sm lg:table lg:min-w-[900px]"
+      >
+        <thead role="rowgroup" className="sr-only lg:not-sr-only lg:table-header-group">
+          <tr role="row" className="border-b border-border bg-muted/40 text-left">
+            <th
+              id="atlas-column-product"
+              role="columnheader"
+              scope="col"
+              className="px-3 py-2 font-semibold"
+            >
               {labels.product}
             </th>
-            <th scope="col" className="px-3 py-2 font-semibold">
+            <th
+              id="atlas-column-manufacturer"
+              role="columnheader"
+              scope="col"
+              className="px-3 py-2 font-semibold"
+            >
               {labels.manufacturer}
             </th>
-            <th scope="col" className="px-3 py-2 font-semibold">
+            <th
+              id="atlas-column-deviceType"
+              role="columnheader"
+              scope="col"
+              className="px-3 py-2 font-semibold"
+            >
               {labels.deviceType}
             </th>
-            <th scope="col" className="px-3 py-2 font-semibold">
+            <th
+              id="atlas-column-catalogNumber"
+              role="columnheader"
+              scope="col"
+              className="px-3 py-2 font-semibold"
+            >
               {labels.catalogNumber}
             </th>
-            <th scope="col" className="px-3 py-2 font-semibold">
+            <th
+              id="atlas-column-size"
+              role="columnheader"
+              scope="col"
+              className="px-3 py-2 font-semibold"
+            >
               {labels.size}
             </th>
-            <th scope="col" className="px-3 py-2 font-semibold">
+            <th
+              id="atlas-column-evidence"
+              role="columnheader"
+              scope="col"
+              className="px-3 py-2 font-semibold"
+            >
               {labels.evidence}
             </th>
-            <th scope="col" className="px-3 py-2 font-semibold">
+            <th
+              id="atlas-column-status"
+              role="columnheader"
+              scope="col"
+              className="px-3 py-2 font-semibold"
+            >
               {labels.status}
             </th>
           </tr>
         </thead>
-        <tbody>
+        <tbody role="rowgroup" className="block lg:table-row-group">
           {items.map((item) => (
-            <tr key={item.productId} className="border-b border-border/60 last:border-0">
-              <td className="px-3 py-2">
+            <tr
+              role="row"
+              key={item.productId}
+              data-product-id={item.productId}
+              className="grid grid-cols-2 gap-x-4 gap-y-3 border-b border-border/60 p-4 last:border-0 lg:table-row lg:p-0"
+            >
+              <td
+                role="cell"
+                headers="atlas-column-product"
+                className="order-1 col-span-2 min-w-0 break-words [overflow-wrap:anywhere] lg:table-cell lg:px-3 lg:py-3"
+              >
                 <Link
                   href={`/${locale}/devices/${item.productId}` as Route}
                   className="font-medium text-foreground underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {item.productName}
                 </Link>
+                {exactIdentifierMatchIds.includes(item.productId) ? (
+                  <span
+                    data-exact-identifier-match
+                    className="mt-1 block text-xs font-semibold text-primary"
+                  >
+                    {labels.exactMatch}
+                  </span>
+                ) : null}
               </td>
-              <td className="px-3 py-2">{item.manufacturerDisplay}</td>
-              <td className="px-3 py-2">
+              <td
+                role="cell"
+                headers="atlas-column-manufacturer"
+                className="order-2 col-span-2 min-w-0 break-words [overflow-wrap:anywhere] lg:table-cell lg:px-3 lg:py-3"
+              >
+                {item.manufacturerDisplay}
+              </td>
+              <td
+                role="cell"
+                headers="atlas-column-deviceType"
+                className="order-6 col-span-2 min-w-0 break-words [overflow-wrap:anywhere] lg:table-cell lg:px-3 lg:py-3"
+              >
+                <span
+                  aria-hidden="true"
+                  className="mb-1 block text-[11px] font-semibold text-muted-foreground lg:hidden"
+                >
+                  {labels.deviceType}
+                </span>
                 {deviceTypeByProductId[item.productId] ?? (
                   <span className="italic text-muted-foreground">{labels.notRecorded}</span>
                 )}
               </td>
-              <td className="px-3 py-2 font-mono text-xs">
+              <td
+                role="cell"
+                headers="atlas-column-catalogNumber"
+                className="order-4 min-w-0 break-words [overflow-wrap:anywhere] lg:table-cell lg:px-3 lg:py-3"
+              >
+                <span
+                  aria-hidden="true"
+                  className="mb-1 block text-[11px] font-semibold text-muted-foreground lg:hidden"
+                >
+                  {labels.catalogNumber}
+                </span>
                 {item.catalogNumber ?? (
                   <span className="font-sans italic text-muted-foreground">
                     {labels.notRecorded}
                   </span>
                 )}
               </td>
-              <td className="px-3 py-2">
+              <td
+                role="cell"
+                headers="atlas-column-size"
+                className="order-5 min-w-0 break-words [overflow-wrap:anywhere] lg:table-cell lg:px-3 lg:py-3"
+              >
+                <span
+                  aria-hidden="true"
+                  className="mb-1 block text-[11px] font-semibold text-muted-foreground lg:hidden"
+                >
+                  {labels.size}
+                </span>
                 {item.sizeDisplay ?? (
                   <span className="italic text-muted-foreground">{labels.notRecorded}</span>
                 )}
               </td>
-              <td className="px-3 py-2">
+              <td
+                role="cell"
+                headers="atlas-column-evidence"
+                className="order-7 col-span-2 min-w-0 break-words [overflow-wrap:anywhere] lg:table-cell lg:px-3 lg:py-3"
+              >
+                <span
+                  aria-hidden="true"
+                  className="mb-1 block text-[11px] font-semibold text-muted-foreground lg:hidden"
+                >
+                  {labels.evidence}
+                </span>
                 {item.verificationTier === 'verified' ? (
                   <EvidenceBadge state="verified_source_fact">
                     {labels.verifiedSource}
@@ -125,11 +223,20 @@ export function AtlasResultsTable({
                   <EvidenceBadge state="unknown">{item.verificationTier}</EvidenceBadge>
                 )}
               </td>
-              <td className="px-3 py-2">
+              <td
+                role="cell"
+                headers="atlas-column-status"
+                className="order-3 col-span-2 min-w-0 break-words [overflow-wrap:anywhere] lg:table-cell lg:px-3 lg:py-3"
+              >
                 <ProductStatusBadges
                   status={statusByProductId[item.productId] ?? UNRESEARCHED_PRODUCT_STATUS}
                   labels={statusLabels}
                 />
+                {statusByProductId[item.productId]?.researchSnapshotDate ? (
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    {labels.asOf} {statusByProductId[item.productId].researchSnapshotDate}
+                  </p>
+                ) : null}
               </td>
             </tr>
           ))}
