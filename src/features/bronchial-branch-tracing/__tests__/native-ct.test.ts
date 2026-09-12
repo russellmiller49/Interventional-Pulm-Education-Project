@@ -1,3 +1,4 @@
+import { orientationFor } from '../geometry/orientation'
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { inflateSync } from 'node:zlib'
@@ -200,6 +201,8 @@ test('CT actions reject an unrecorded response and wrong slice while preserving 
       mark: { slice: prediction.checkpoints[0].slice, pixel: [NaN, 100] },
     }),
   ).toBe(s)
+  s = reduce(s, { type: 'orientation', value: orientationFor(prediction.preset) })
+  s = reduce(s, { type: 'check-orientation' })
   for (let i = 0; i < 3; i++)
     s = reduce(s, {
       type: 'mark',

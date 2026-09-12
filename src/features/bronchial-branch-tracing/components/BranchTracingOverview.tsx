@@ -65,6 +65,7 @@ export function BranchTracingOverview() {
           <section>
             <h2>What you will learn to do</h2>
             <ul>
+              <li>Rotate or reflect standard axial CT while comparing the virtual airway view.</li>
               <li>Maintain continuity of one airway across axial planes.</li>
               <li>Relate the four tracing patterns to the parent-airway viewpoint.</li>
               <li>Separate patient direction, camera roll, and screen position.</li>
@@ -89,9 +90,9 @@ export function BranchTracingOverview() {
           <h2>What this preview contains</h2>
           <p>
             Learn, Practice and Assess use actual CT slices from one teaching scan with simulated
-            nodules in ten pulmonary segments. Each region uses the appropriate reflection or
-            rotation. You mark the lumen and record its relationship to the nodule before seeing the
-            source-derived comparison.
+            nodules in ten pulmonary segments. Start in standard axial, then apply the reflection or
+            rotation yourself with virtual bronchoscopy beside the CT. You mark the lumen and record
+            its relationship to the nodule before seeing the source-derived comparison.
           </p>
           <p>
             Educational spatial reasoning only. This module does not establish device reach,

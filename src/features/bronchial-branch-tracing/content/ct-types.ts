@@ -1,5 +1,6 @@
 import type { StageStepBase } from '@/features/learning-module/stage/stageModel'
 import type { DisplayPreset, Vec3 } from '../geometry/coordinates'
+import type { CtOrientation } from '../geometry/orientation'
 
 export interface AirwayLabel {
   code: string
@@ -71,6 +72,7 @@ export interface CtMark {
   pixel: [number, number] | null
 }
 export interface CtResponse {
+  orientation: { first: CtOrientation; used: CtOrientation }
   marks: CtMark[]
   course: Course
   hints: number

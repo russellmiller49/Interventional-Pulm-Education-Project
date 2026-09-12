@@ -1,5 +1,12 @@
 import type { Course, CtMark, CtResponse, CtTrace, TargetRelation } from '../content/ct-types'
 import { COURSE_OPTIONS, TARGET_RELATION_OPTIONS } from '../content/ct-types'
+import {
+  STANDARD_ORIENTATION,
+  orientationFor,
+  sameOrientation,
+  validOrientation,
+  type CtOrientation,
+} from '../geometry/orientation'
 
 export interface CtSession {
   step: number
@@ -11,6 +18,9 @@ export interface CtSession {
   prediction: CtResponse | null
   transfer: CtResponse | null
   complete: boolean
+  orientation: CtOrientation
+  orientationAttempts: CtOrientation[]
+  alignment: CtOrientation | null
 }
 export const emptyCtSession = (): CtSession => ({
   step: 0,
@@ -22,8 +32,13 @@ export const emptyCtSession = (): CtSession => ({
   prediction: null,
   transfer: null,
   complete: false,
+  orientation: STANDARD_ORIENTATION,
+  orientationAttempts: [],
+  alignment: null,
 })
 export type CtAction =
+  | { type: 'orientation'; value: CtOrientation }
+  | { type: 'check-orientation' }
   | { type: 'mark'; index: number; mark: CtMark }
   | { type: 'active'; index: number }
   | { type: 'course'; value: Course }
@@ -44,9 +59,8 @@ export function validCtMark(mark: CtMark, trace: CtTrace, index: number) {
 export function ctSessionReducer(prediction: CtTrace, transfer: CtTrace) {
   return (s: CtSession, action: CtAction): CtSession => {
     if (action.type === 'restart') return emptyCtSession()
-    if (s.complete) return s
-    const trace = s.step === 5 ? transfer : prediction
-    const canMark = s.step === 1 || (s.step === 5 && !s.transfer)
+    if (action.type === 'orientation' && validOrientation(action.value))
+      return { ...s, orientation: action.value }
     if (
       action.type === 'active' &&
       Number.isInteger(action.index) &&
@@ -54,7 +68,28 @@ export function ctSessionReducer(prediction: CtTrace, transfer: CtTrace) {
       action.index < 3
     )
       return { ...s, active: action.index }
-    if (action.type === 'mark' && canMark && validCtMark(action.mark, trace, action.index))
+    if (s.complete) return s
+    const trace = s.step === 5 ? transfer : prediction
+    const canMark = s.step === 1 || (s.step === 5 && !s.transfer)
+    if (
+      action.type === 'check-orientation' &&
+      canMark &&
+      !s.alignment &&
+      !sameOrientation(s.orientation, STANDARD_ORIENTATION)
+    )
+      return {
+        ...s,
+        orientationAttempts: [...s.orientationAttempts, { ...s.orientation }],
+        alignment: sameOrientation(s.orientation, orientationFor(trace.preset))
+          ? { ...s.orientation }
+          : null,
+      }
+    if (
+      action.type === 'mark' &&
+      canMark &&
+      s.alignment &&
+      validCtMark(action.mark, trace, action.index)
+    )
       return { ...s, marks: s.marks.map((m, i) => (i === action.index ? action.mark : m)) }
     if (
       action.type === 'course' &&
@@ -70,13 +105,15 @@ export function ctSessionReducer(prediction: CtTrace, transfer: CtTrace) {
     )
       return { ...s, targetRelation: action.value }
     if (action.type !== 'advance') return s
-    if (s.step === 0 || s.step === 3) return { ...s, step: s.step + 1 }
-    if (s.step === 1 && marksComplete(s.marks)) return { ...s, step: 2 }
-    if (s.step === 2 && marksComplete(s.marks) && s.course && s.targetRelation)
+    if (s.step === 0) return { ...s, step: 1, orientation: STANDARD_ORIENTATION }
+    if (s.step === 3) return { ...s, step: 4 }
+    if (s.step === 1 && s.alignment && marksComplete(s.marks)) return { ...s, step: 2 }
+    if (s.step === 2 && s.alignment && marksComplete(s.marks) && s.course && s.targetRelation)
       return {
         ...s,
         step: 3,
         prediction: {
+          orientation: { first: s.orientationAttempts[0], used: s.alignment },
           marks: s.marks as CtMark[],
           course: s.course,
           hints: s.hints,
@@ -92,11 +129,22 @@ export function ctSessionReducer(prediction: CtTrace, transfer: CtTrace) {
         course: '',
         targetRelation: '',
         hints: 0,
+        orientation: STANDARD_ORIENTATION,
+        orientationAttempts: [],
+        alignment: null,
       }
-    if (s.step === 5 && !s.transfer && marksComplete(s.marks) && s.course && s.targetRelation)
+    if (
+      s.step === 5 &&
+      !s.transfer &&
+      s.alignment &&
+      marksComplete(s.marks) &&
+      s.course &&
+      s.targetRelation
+    )
       return {
         ...s,
         transfer: {
+          orientation: { first: s.orientationAttempts[0], used: s.alignment },
           marks: s.marks as CtMark[],
           course: s.course,
           hints: s.hints,

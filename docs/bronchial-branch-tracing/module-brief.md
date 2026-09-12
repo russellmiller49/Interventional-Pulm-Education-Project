@@ -1,6 +1,14 @@
 # Bronchial branch tracing — current teaching brief
 
-September 11, 2026 · reference checkout `7da3886e` · content `c3-target1-r1` · unpublished, anonymous direct URL.
+September 11, 2026 · reference checkout `1ea857d8` · content `c4-orientation1-r1` · unpublished, anonymous direct URL.
+
+## Current revision: orient, then trace
+
+The owner requests a visual explanation, simultaneous CT/bronchoscopic comparison, and learner-operated rotation/reflection starting from standard axial. A feature-owned paired viewer will keep native CT beside virtual bronchoscopy from the same source airway. The scope samples the selected route at the displayed axial plane, looking distally from a short distance proximal to that location. For multiple plane crossings, select the crossing nearest the selected checkpoint along the route. If a plane misses the route, explicitly report the separation instead of claiming registration. The camera is a geometric reconstruction, not recorded bronchoscopy; turning an axial image changes its display convention, not its projection into an endoscopic image.
+
+Worked examples show before/after CT and patient-direction letters with the textbook operation. Every new learner trace starts at the known parent in standard axial. Rotate left/right and flip left–right controls manipulate the actual image, overlays and inverse click coordinates. Within the existing six stages, the initial tracing phase first requires an orientation response: Learn gives feedback after Check orientation, with a manual retry when the book convention differs; Practice/Assess accept the chosen orientation and withhold comparison until debrief. Source reference marks remain absent before trace submission. First orientation choices are retained in the session response and worksheet export. The new participation version preserves earlier history without claiming the new task was previously completed. Free exploration keeps its exterior and intraluminal controls.
+
+Representative pilot: the RB5 subsegment lesson, including a reflected CT, paired lumen view, wrong orientation/retry and fresh transfer. Extend the same viewer to all eight lessons and both independent modes after this slice works. Checks cover all eight rotation/reflection combinations, source-plane correspondence including returning paths, camera movement, orientation gates, delayed answers, error recovery, noindex/anonymous routes, keyboard controls, compact layout and expanded paired viewing. Shared stage and ventilation reference are read-only; no authentication, release, upload or source-volume changes.
 
 The owner first requested actual CT slices rotated according to the supplied **Bronchial Branch Tracing** textbook, then explicitly requested anatomical airway names in place of level numbers using textbook vision and clinical knowledge. The six planning documents inform requirements; their audit-only kickoff is an example, not a restriction on the build request. The owner also requested the structured-medical-modules skill. Its existing Steps → Teaching → Simulator stage remains the host.
 
@@ -14,7 +22,7 @@ Audience: PCCM/IP fellows and bronchoscopists familiar with lobar CT anatomy. Ob
 
 The canonical LESSONS registry retains stable IDs and order: orientation; continuity; vertical; horizontal–horizontal; horizontal–vertical; horizontal–oblique; direction reversal; variants/limits. Each renders a purpose, prerequisite, explanatory concept, worked CT example, a new learner trace, comparison, explanation and changed CT transfer. One source patient supplies these regional variations. Assess is an ungraded independent worksheet with delayed comparison; it is not held-out patient validation.
 
-Six real stages: orient using a worked image → mark three named airway checkpoints → describe the course → compare on the same CT → explain the relationship → trace another airway. Initial responses are empty. A lumen mark or explicit unresolved response is required at each level; recording a course and an airway–nodule relationship is also required before revealing the comparison. Reference points are absent from the learner DOM before submission. Comparison requires a separate manual continuation; completing a lesson requires another trace and manual Finish.
+Six real stages: orient using a worked image → choose the display orientation and mark three named airway checkpoints → describe the course → compare on the same CT → explain the relationship → orient and trace another airway. Initial responses are empty and CT starts standard. A lumen mark or explicit unresolved response is required at each level; recording a course and an airway–nodule relationship is also required before revealing the comparison. Reference points are absent from the learner DOM before submission. Comparison requires a separate manual continuation; completing a lesson requires another orientation response, another trace and manual Finish.
 
 ## Source and preservation
 
@@ -30,7 +38,7 @@ Nomenclature version `nomenclature-v1` adds side-specific bronchial codes, expan
 
 Reuse StageLayout, NowCard, LookInLine, StepList, SectionHeader, StageBlock and ModuleNavV2. Pass pane order Steps/Teaching/Simulator, opening fractions 0.26/0.29 and floors 300/280/340 explicitly. Feature-owned NativeCtViewer implements native pixels, inverse coordinate transforms, slice browsing, full-screen expansion, keyboard marking and recoverable load errors.
 
-The site's existing bounded activity envelope is the only progress store. Version `c3-target1-r1` separates nodule-route participation from earlier regional tracing and synthetic outcomes without deleting history. First-trace participation is written on Record trace, before course/comparison; first hint count is immutable. Completed lessons persist. No scores or mastery are awarded. Incomplete work restarts after reload; source/learner coordinates and camera state are session-only. Independent debrief has an explicit local JSON export.
+The site's existing bounded activity envelope is the only progress store. Version `c4-orientation1-r1` separates orientation-plus-tracing participation from earlier nodule-route, regional tracing and synthetic outcomes without deleting history. First-trace participation is written on Record trace, before course/comparison; first hint count is immutable. Completed lessons persist. No scores or mastery are awarded. Incomplete work restarts after reload; source/learner coordinates, orientation choices and camera state are session-only. Independent debrief has an explicit local JSON export including first and recorded orientation choices.
 
 ## Verification
 

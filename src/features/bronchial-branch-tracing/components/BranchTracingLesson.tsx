@@ -1,6 +1,5 @@
 'use client'
 
-import dynamic from 'next/dynamic'
 import { useEffect, useReducer, useState } from 'react'
 import { StageLayout } from '@/features/learning-module/stage/StageLayout'
 import { NowCard } from '@/features/learning-module/stage/NowCard'
@@ -10,8 +9,14 @@ import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { StageBlock } from '@/features/learning-module/stage/StageBlock'
 import { BASE_PATH, LESSONS, SOURCE, lessonById, nextLesson } from '../content/lessons'
 import { COURSE_OPTIONS, type CtLesson } from '../content/ct-types'
-import { traceById, sliceZ, targetForTrace } from '../geometry/native-ct'
-import { DISPLAY_PRESETS } from '../geometry/coordinates'
+import { traceById, targetForTrace } from '../geometry/native-ct'
+import {
+  STANDARD_ORIENTATION,
+  orientationFor,
+  orientationName,
+  sameOrientation,
+} from '../geometry/orientation'
+import { CtOrientationTeaching, CtOrientationFeedback } from './CtOrientationTeaching'
 import {
   completedLessons,
   readProgress,
@@ -37,10 +42,6 @@ import { ModuleFrame } from './ModuleFrame'
 import { useDeviceProgress } from './useDeviceProgress'
 import styles from './branch-tracing.module.css'
 
-const ClinicalAirwayView = dynamic(
-  () => import('./ClinicalAirwayView').then((m) => m.ClinicalAirwayView),
-  { ssr: false, loading: () => <p>Loading airway comparison…</p> },
-)
 export function BranchTracingLesson({ requestedId }: { requestedId?: string }) {
   const { ready } = useDeviceProgress()
   return (
@@ -66,7 +67,6 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
   const [s, dispatch] = useReducer(reduce, undefined, emptyCtSession)
   const [review, setReview] = useState<number | null>(null)
   const [saved, setSaved] = useState(() => browserStorage() !== null)
-  const [comparison3d, setComparison3d] = useState(false)
   const [levelRequest, setLevelRequest] = useState(0)
   useEffect(() => {
     saveVisit(lesson.id)
@@ -78,9 +78,11 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
   const response = transfer ? s.transfer : s.prediction
   const revealed = s.step === 0 || Boolean(response)
   const marking = s.step === 1 || (transfer && !response)
+  const orienting = marking && !s.alignment
   const describing = s.step === 2 || (transfer && !response)
-  const disabled =
-    s.step === 1
+  const disabled = orienting
+    ? sameOrientation(s.orientation, STANDARD_ORIENTATION)
+    : s.step === 1
       ? !marksComplete(s.marks)
       : describing
         ? !marksComplete(s.marks) || !s.course || !s.targetRelation
@@ -97,7 +99,6 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
     if (!s.complete && nextState.complete) setSaved(saveVisit(lesson.id, true))
     if (action.type === 'advance' || action.type === 'restart') {
       setReview(null)
-      setComparison3d(false)
     }
     dispatch(action)
   }
@@ -137,7 +138,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
           <span>
             Target: {target.segment.code} · {target.segment.name}
           </span>
-          <span>{DISPLAY_PRESETS[trace.preset]}</span>
+          <span>Orient the CT · compare the parent view</span>
           <span>One source CT · ungraded interpretation</span>
         </div>
       }
@@ -146,10 +147,16 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
           <NowCard
             model={{
               kicker: s.complete ? 'Lesson completed' : `Step ${s.step + 1} of 6 · ${step.phase}`,
-              heading: s.complete ? 'CT trace completed' : step.title,
+              heading: s.complete
+                ? 'CT trace completed'
+                : orienting
+                  ? 'Orient before tracing'
+                  : step.title,
               body: s.complete
                 ? 'You recorded two routes toward simulated nodules and compared their CT continuity. Completion records the work, not clinical competence.'
-                : step.instruction,
+                : orienting
+                  ? 'Start in standard axial. Rotate or reflect the CT to the tracing convention for this region, using the paired airway view and patient direction letters. Then check your orientation.'
+                  : step.instruction,
               where: s.complete ? undefined : <LookInLine location={step.lookIn!} />,
               primary: s.complete
                 ? {
@@ -157,16 +164,41 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                     href: next ? `${BASE_PATH}/learn?lesson=${next.id}` : BASE_PATH,
                   }
                 : {
-                    label: transfer && response ? 'Finish lesson' : step.actionLabel,
-                    onActivate: () => perform({ type: 'advance' }),
+                    label: orienting
+                      ? 'Check orientation'
+                      : transfer && response
+                        ? 'Finish lesson'
+                        : step.actionLabel,
+                    onActivate: () =>
+                      perform({ type: orienting ? 'check-orientation' : 'advance' }),
                     disabled,
-                    disabledReason:
-                      s.step === 1
+                    disabledReason: orienting
+                      ? 'Use the rotate or flip controls in the CT tracing stack first.'
+                      : s.step === 1
                         ? 'Record a lumen mark or unresolved continuation at all three airway checkpoints.'
                         : 'Record three airway checkpoints, the airway course and its relationship to the nodule.',
                   },
             }}
           >
+            {orienting && s.orientationAttempts.length > 0 && (
+              <div className={styles.feedback} role="status">
+                <strong>Recheck the direction letters</strong>
+                <p>
+                  You selected{' '}
+                  {orientationName(
+                    s.orientationAttempts[s.orientationAttempts.length - 1],
+                  ).toLowerCase()}
+                  . For this region, the book uses{' '}
+                  {orientationName(orientationFor(trace.preset)).toLowerCase()} from standard axial.
+                  Reset the image, apply that operation, then check again.
+                </p>
+              </div>
+            )}
+            {marking && s.alignment && (
+              <p role="status">
+                Orientation checked. Select the airway checkpoints and record your trace.
+              </p>
+            )}
             {s.step > 0 && !s.complete && (
               <CtTraceList
                 trace={trace}
@@ -178,7 +210,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 }}
               />
             )}
-            {describing && (
+            {describing && !orienting && (
               <>
                 <CtCourseControl
                   value={s.course}
@@ -193,6 +225,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
             {response && (
               <div className={styles.feedback} role="status">
                 <strong>Your interpretation is recorded</strong>
+                <CtOrientationFeedback trace={trace} {...response.orientation} />
                 <p>
                   {COURSE_OPTIONS[response.course]}.{' '}
                   {response.marks.filter((m) => m.pixel === null).length} checkpoints marked
@@ -205,7 +238,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 </p>
               </div>
             )}
-            {marking && (
+            {marking && !orienting && (
               <div className={styles.hints}>
                 <button disabled={s.hints > 0} onClick={() => perform({ type: 'hint' })}>
                   Tracing reminder
@@ -237,7 +270,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
             reviewIndex={review}
             onSelect={(i) => setReview(review === i ? null : i)}
             recapFor={(i) => [
-              i === 0
+              i === 0 && !orienting
                 ? lesson.worked
                 : 'Review only. The current trace and the original recorded attempt are preserved.',
             ]}
@@ -248,6 +281,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
         <div className={styles.teaching}>
           {s.step === 0 ? (
             <>
+              <CtOrientationTeaching trace={trace} />
               <StageBlock kind="question" heading="Clinical purpose" visibility="shown">
                 <h2>Clinical purpose</h2>
                 <p>{lesson.objective}</p>
@@ -294,9 +328,11 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                   Inspect the simulated nodule with Show target before tracing from Start.
                 </p>
                 <p>
-                  {transfer
-                    ? lesson.transferPrompt
-                    : `Use Start to identify the ${trace.anchor.airway.name.toLowerCase()}, then follow the named airway checkpoints.`}
+                  {orienting
+                    ? 'Use the patient direction letters to choose the display orientation before following the air column.'
+                    : transfer
+                      ? lesson.transferPrompt
+                      : `Use Start to identify the ${trace.anchor.airway.name.toLowerCase()}, then follow the named airway checkpoints.`}
                 </p>
                 <p>
                   Browse the slices between checkpoints. Place your marks on the visible air column,
@@ -353,40 +389,17 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
             levelRequest={levelRequest}
             onActive={(index) => perform({ type: 'active', index })}
             onMark={
-              marking ? (mark) => perform({ type: 'mark', index: s.active, mark }) : undefined
+              marking && !orienting
+                ? (mark) => perform({ type: 'mark', index: s.active, mark })
+                : undefined
             }
+            orientation={s.orientation}
+            onOrientation={(value) => perform({ type: 'orientation', value })}
+            orientationPending={orienting}
+            demonstrate={s.step === 0}
             revealed={revealed}
             showAnchor
           />
-          {revealed ? (
-            <div className={styles.optionalComparison}>
-              <button onClick={() => setComparison3d((v) => !v)}>
-                {comparison3d
-                  ? 'Close airway comparison'
-                  : 'Open exterior / virtual airway comparison'}
-              </button>
-              {comparison3d && (
-                <>
-                  <p className={styles.small}>
-                    Airway anatomy comparison. The simulated nodule is shown in the CT stack above.
-                  </p>
-                  <ClinicalAirwayView
-                    position={trace.scopePositionLps}
-                    direction={trace.scopeDirectionLps}
-                    roll={0}
-                    slice={Math.round(
-                      (sliceZ(trace.checkpoints[s.active].slice) + 368.5) / 1.2421875,
-                    )}
-                  />
-                </>
-              )}
-            </div>
-          ) : (
-            <p className={styles.comparisonLock}>
-              CT and airway comparisons become available after you record the trace, its course and
-              its relationship to the nodule.
-            </p>
-          )}
         </div>
       }
       footer={

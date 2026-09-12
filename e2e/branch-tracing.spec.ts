@@ -9,7 +9,34 @@ import {
 } from '../src/features/bronchial-branch-tracing/geometry/native-ct'
 
 const base = '/en/learn/anatomy/branch-tracing'
+async function showPane(page: Page, name: 'Steps' | 'Simulator') {
+  const tab = page.getByRole('tab', { name, exact: true })
+  if (await tab.isVisible()) await tab.click()
+}
+async function orientTrace(page: Page, id: string) {
+  await showPane(page, 'Simulator')
+  await page.getByRole('button', { name: 'Reset to standard', exact: true }).click()
+  const preset = traceById(id).preset
+  await page
+    .getByRole('button', {
+      name:
+        preset === 'mirror'
+          ? /Flip left–right/
+          : preset === 'rul'
+            ? /Rotate 90° left/
+            : /Rotate 90° right/,
+    })
+    .click()
+  await showPane(page, 'Steps')
+  const confirm = page.getByRole('button', { name: /^(Check orientation|Use this orientation)$/ })
+  if (await confirm.count()) await confirm.click()
+  await showPane(page, 'Simulator')
+}
 async function markTrace(page: Page, id: string, wrong = false) {
+  if (
+    await page.getByRole('button', { name: /^(Check orientation|Use this orientation)$/ }).count()
+  )
+    await orientTrace(page, id)
   const trace = traceById(id)
   for (let i = 0; i < 3; i++) {
     if (i === 0) await page.getByRole('button', { name: /^Mark 1:/ }).click()
@@ -63,7 +90,7 @@ test('every lesson supports actual CT marking, withheld comparison, changed tran
     await page.goto(`${base}/learn?lesson=${lesson.id}`)
     await page.getByRole('button', { name: 'Trace this airway' }).click()
     await expect(page.locator('[data-ct-reference]')).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'Record trace' })).toBeDisabled()
+    await expect(page.getByRole('button', { name: 'Check orientation' })).toBeDisabled()
     await markTrace(page, lesson.prediction, true)
     await page.getByRole('button', { name: 'Record trace' }).click()
     await expect(page.locator('[data-ct-reference]')).toHaveCount(0)
@@ -79,7 +106,7 @@ test('every lesson supports actual CT marking, withheld comparison, changed tran
     await page.getByRole('button', { name: 'Review the relationship' }).click()
     await page.getByRole('button', { name: 'Trace another airway' }).click()
     await expect(page.locator('[data-ct-reference]')).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'Compare new trace' })).toBeDisabled()
+    await expect(page.getByRole('button', { name: 'Check orientation' })).toBeDisabled()
     await markTrace(page, lesson.transfer)
     await page.getByRole('combobox', { name: 'Airway course' }).selectOption('uncertain')
     await page
@@ -168,20 +195,23 @@ test('book orientations rotate the actual CT and keep a learner point registered
       trace.cropSize,
       'standard',
     )
-    await page.getByRole('button', { name: 'Standard axial', exact: true }).click()
+    await page.getByRole('button', { name: 'Reset to standard', exact: true }).click()
     const mark = page.getByLabel(/^Your mark 3 for /).locator('circle')
     expect(Number(await mark.getAttribute('cx'))).toBeCloseTo(expected[0], 0)
     expect(Number(await mark.getAttribute('cy'))).toBeCloseTo(expected[1], 0)
-    await page.getByRole('button', { name: 'Book tracing view' }).click()
-    await page.getByRole('button', { name: 'Expand CT', exact: true }).click()
-    await expect(page.getByRole('button', { name: 'Close expanded CT' })).toBeVisible()
+    await orientTrace(page, trace.id)
+    await page.getByRole('button', { name: 'Expand both views', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Close expanded views' })).toBeVisible()
+    await page
+      .getByRole('group', { name: 'Airway checkpoints', exact: true })
+      .scrollIntoViewIfNeeded()
     const levels = await page
       .getByRole('group', { name: 'Airway checkpoints', exact: true })
       .boundingBox()
     expect(levels!.y + levels!.height).toBeLessThanOrEqual(page.viewportSize()!.height)
     await expect(page.getByLabel(/^Your mark 3 for /)).toBeVisible()
     await page.screenshot({ path: `/tmp/branch-tracing-expanded-${trace.preset}.png` })
-    await page.getByRole('button', { name: 'Close expanded CT' }).click()
+    await page.getByRole('button', { name: 'Close expanded views' }).click()
     await page.screenshot({ path: `/tmp/branch-tracing-ct-${trace.preset}.png`, fullPage: true })
   }
 })
@@ -212,9 +242,9 @@ test('named RB5 checkpoints label the correct CT lumen after submission, includi
   })
   await expect(reference.locator('text')).toHaveText('RB5b')
   await page.screenshot({ path: '/tmp/branch-tracing-named-rb5b.png', fullPage: true })
-  await page.getByRole('button', { name: 'Expand CT', exact: true }).click()
+  await page.getByRole('button', { name: 'Expand both views', exact: true }).click()
   await page.screenshot({ path: '/tmp/branch-tracing-named-rb5b-expanded.png' })
-  await page.getByRole('button', { name: 'Close expanded CT' }).click()
+  await page.getByRole('button', { name: 'Close expanded views' }).click()
   await page.getByRole('button', { name: 'Review the relationship' }).click()
   await page.getByRole('button', { name: 'Trace another airway' }).click()
   await expect(
@@ -232,9 +262,9 @@ test('named RB5 checkpoints label the correct CT lumen after submission, includi
       .getByLabel('Reference: Right medial bronchus, subsegment a', { exact: true })
       .locator('text'),
   ).toHaveText('RB5a')
-  await page.getByRole('button', { name: 'Expand CT', exact: true }).click()
+  await page.getByRole('button', { name: 'Expand both views', exact: true }).click()
   await page.screenshot({ path: '/tmp/branch-tracing-named-rb5a-expanded.png' })
-  await page.getByRole('button', { name: 'Close expanded CT' }).click()
+  await page.getByRole('button', { name: 'Close expanded views' }).click()
 })
 test('a missing native slice blocks marking and recovers without losing a recorded mark', async ({
   page,
@@ -379,6 +409,7 @@ test('a selected segment uses a registered 3D nodule overlay and requires the di
   await expect(page.getByRole('heading', { name: 'Trace 1 of 1', exact: true })).toBeVisible()
   await expect(page.getByText('Loading CT slice…', { exact: true })).toHaveCount(0)
   await expect(page.locator('[data-ct-reference]')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Show target', exact: true }).click()
   const overlay = page.locator('[data-ct-nodule]')
   await expect(overlay).toHaveAttribute('data-ct-nodule', target.id)
   const originalUrl = await overlay.getAttribute('href')
@@ -389,9 +420,9 @@ test('a selected segment uses a registered 3D nodule overlay and requires the di
   await expect(overlay).not.toHaveAttribute('href', originalUrl!)
   await page.getByRole('button', { name: 'Show target', exact: true }).click()
   await expect(overlay).toHaveAttribute('href', originalUrl!)
-  await page.getByRole('button', { name: 'Standard axial', exact: true }).click()
-  await expect(overlay.locator('..')).not.toHaveAttribute('transform', /rotate/)
-  await page.getByRole('button', { name: 'Book tracing view' }).click()
+  await page.getByRole('button', { name: 'Reset to standard', exact: true }).click()
+  await expect(overlay.locator('..')).toHaveAttribute('transform', /rotate\(0\)/)
+  await orientTrace(page, trace.id)
   await expect(overlay.locator('..')).toHaveAttribute('transform', /rotate\(90\)/)
   await page.getByText('Image details, orientation and controls', { exact: true }).click()
   await page.getByRole('button', { name: 'View original CT without nodule' }).click()
@@ -403,9 +434,9 @@ test('a selected segment uses a registered 3D nodule overlay and requires the di
   await expect(overlay).toHaveAttribute('href', originalUrl!)
   await page.getByText('Image details, orientation and controls', { exact: true }).click()
   await expect(page.getByRole('button', { name: 'Record CT interpretation' })).toBeDisabled()
-  await page.getByRole('button', { name: 'Expand CT', exact: true }).click()
+  await page.getByRole('button', { name: 'Expand both views', exact: true }).click()
   await page.screenshot({ path: '/tmp/branch-tracing-target-ls3-expanded.png' })
-  await page.getByRole('button', { name: 'Close expanded CT' }).click()
+  await page.getByRole('button', { name: 'Close expanded views' }).click()
   await markTrace(page, trace.id, true)
   await page.getByRole('combobox', { name: 'Airway course' }).selectOption('cranial')
   await expect(page.getByRole('button', { name: 'Record CT interpretation' })).toBeDisabled()
@@ -470,10 +501,12 @@ test('a phone learner can inspect the nodule, mark the airway and submit a chose
   await page.goto(base + '/practice')
   await page.getByRole('combobox', { name: 'Target segment' }).selectOption('left-lingula')
   await page.getByRole('button', { name: 'Start CT practice' }).click()
+  await page.getByRole('button', { name: 'Show target', exact: true }).click()
   await expect(page.locator('[data-ct-nodule]')).toHaveAttribute(
     'data-ct-nodule',
     'l-inferior-lingula',
   )
+  await orientTrace(page, 'left-lingula')
   for (let i = 0; i < 3; i++) {
     await page
       .getByRole('group', { name: 'Airway checkpoints', exact: true })
@@ -498,4 +531,114 @@ test('a phone learner can inspect the nodule, mark the airway and submit a chose
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth - innerWidth),
   ).toBeLessThanOrEqual(1)
+})
+
+test('the paired orientation exercise starts standard, preserves a wrong first choice and synchronizes same-plane RB5 stations', async ({
+  page,
+}) => {
+  await page.goto(`${base}/learn?lesson=horizontal-vertical`)
+  await expect(
+    page.getByRole('heading', { name: 'Turn the CT into the tracing convention' }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Trace this airway' }).click()
+  await expect(page.locator('[data-preset]')).toHaveAttribute('data-preset', 'standard')
+  await expect(page.getByRole('button', { name: 'Check orientation' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Show book convention' })).toHaveCount(0)
+  await expect(page.getByText(/the book uses left–right reflection/i)).toHaveCount(0)
+  await expect(page.locator('[data-ct-reference]')).toHaveCount(0)
+  await page.getByRole('button', { name: /Rotate 90° right/ }).click()
+  await page.getByRole('button', { name: 'Check orientation' }).click()
+  await expect(page.getByText('Recheck the direction letters', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Lumen unresolved here' })).toHaveCount(0)
+  await orientTrace(page, 'middle-lobe-caudal')
+  await page.getByRole('button', { name: /^Mark 1:/ }).click()
+  const canvas = page.getByLabel('CT-derived virtual airway view', { exact: true })
+  await expect(canvas).toBeVisible({ timeout: 30000 })
+  const first = await page.locator('[data-scope-position]').getAttribute('data-scope-position')
+  await page.getByRole('button', { name: /^Mark 2:/ }).click()
+  await expect(page.getByRole('slider', { name: 'CT slice', exact: true })).toHaveValue('307')
+  await expect(page.locator('[data-scope-position]')).not.toHaveAttribute(
+    'data-scope-position',
+    first!,
+  )
+  const ctBox = (await page.locator('[data-preset]').boundingBox())!,
+    scopeBox = (await canvas.boundingBox())!
+  expect(scopeBox.x).toBeGreaterThan(ctBox.x + ctBox.width - 1)
+  expect(Math.abs(scopeBox.y - ctBox.y)).toBeLessThan(2)
+  expect(ctBox.width).toBeGreaterThan(200)
+  await expect
+    .poll(() =>
+      canvas.evaluate((element: HTMLCanvasElement) => {
+        const gl = element.getContext('webgl2')!
+        const pixel = new Uint8Array(4)
+        gl.readPixels(
+          Math.floor(element.width / 2),
+          Math.floor(element.height / 2),
+          1,
+          1,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          pixel,
+        )
+        return pixel[0]
+      }),
+    )
+    .toBeGreaterThan(40)
+  await markTrace(page, 'middle-lobe-caudal')
+  await page.getByRole('button', { name: 'Record trace' }).click()
+  await page.getByRole('combobox', { name: 'Airway course' }).selectOption('caudal')
+  await page
+    .getByRole('combobox', { name: 'Airway–nodule relationship' })
+    .selectOption('unresolved')
+  await page.getByRole('button', { name: 'Reveal CT comparison' }).click()
+  await expect(
+    page.getByText(/first choice 90° clockwise; recorded left–right reflection/),
+  ).toBeVisible()
+  await canvas.dispatchEvent('webglcontextlost', { cancelable: true })
+  await expect(page.getByRole('button', { name: 'Reload 3D view' })).toBeVisible()
+  await expect(page.getByLabel(/^Your mark 3 for/)).toBeVisible()
+  await page.getByRole('button', { name: 'Reload 3D view' }).click()
+  await expect(canvas).toBeVisible({ timeout: 30000 })
+})
+
+test('independent orientation records the actual wrong choice and withholds the book convention until debrief', async ({
+  page,
+}) => {
+  await page.goto(base + '/practice')
+  await page.getByRole('combobox', { name: 'Target segment' }).selectOption('left-upper-anterior')
+  await expect(page.getByRole('img', { name: /on real CT, in standard axial view/ })).toBeVisible()
+  await page.getByRole('button', { name: 'Start CT practice' }).click()
+  await expect(page.locator('[data-preset]')).toHaveAttribute('data-preset', 'standard')
+  await page.getByRole('button', { name: /Flip left–right/ }).click()
+  await page.getByRole('button', { name: 'Use this orientation' }).click()
+  await expect(page.getByRole('button', { name: 'Show book convention' })).toHaveCount(0)
+  await expect(page.getByText(/book convention for this region is/)).toHaveCount(0)
+  for (let i = 0; i < 3; i++) {
+    await page
+      .getByRole('group', { name: 'Airway checkpoints', exact: true })
+      .getByRole('button')
+      .nth(i + 1)
+      .click()
+    await page.getByRole('button', { name: 'Lumen unresolved here' }).click()
+  }
+  await page.getByRole('combobox', { name: 'Airway course' }).selectOption('uncertain')
+  await page
+    .getByRole('combobox', { name: 'Airway–nodule relationship' })
+    .selectOption('unresolved')
+  await page.getByRole('button', { name: 'Record CT interpretation' }).click()
+  await page.getByRole('button', { name: 'Submit all CT interpretations' }).click()
+  await expect(
+    page.getByText(/first choice left–right reflection; recorded left–right reflection/),
+  ).toBeVisible()
+  await expect(page.getByText(/book convention for this region is 90° clockwise/)).toBeVisible()
+  const downloading = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Export your CT worksheet' }).click()
+  const stream = await (await downloading).createReadStream(),
+    chunks: Buffer[] = []
+  for await (const chunk of stream!) chunks.push(chunk)
+  const worksheet = JSON.parse(Buffer.concat(chunks).toString())
+  expect(worksheet.traces[0].interpretation.orientation).toEqual({
+    first: { turns: 0, reflected: true },
+    used: { turns: 0, reflected: true },
+  })
 })

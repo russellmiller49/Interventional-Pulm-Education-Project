@@ -61,7 +61,10 @@ async function loadSurface(signal: AbortSignal) {
   }
 }
 
-class ViewBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+class ViewBoundary extends Component<
+  { children: ReactNode; onRetry: () => void },
+  { failed: boolean }
+> {
   state = { failed: false }
   static getDerivedStateFromError() {
     return { failed: true }
@@ -69,8 +72,15 @@ class ViewBoundary extends Component<{ children: ReactNode }, { failed: boolean 
   render() {
     return this.state.failed ? (
       <p className={styles.notice} role="alert">
-        3D rendering is unavailable. The CT stack and route controls remain usable. Close and reopen
-        this explorer to retry.
+        3D rendering is unavailable. The CT stack and route controls remain usable.{' '}
+        <button
+          onClick={() => {
+            this.setState({ failed: false })
+            this.props.onRetry()
+          }}
+        >
+          Retry 3D rendering
+        </button>
       </p>
     ) : (
       this.props.children
@@ -82,22 +92,28 @@ function ScopeCamera({
   position,
   direction,
   roll,
+  referenceUp,
 }: {
   position: Vec3
   direction: Vec3
   roll: number
+  referenceUp?: Vec3
 }) {
   const { camera, invalidate } = useThree()
   useEffect(() => {
     const forward = new THREE.Vector3(...direction).normalize()
-    const up = Math.abs(forward.z) > 0.9 ? new THREE.Vector3(0, -1, 0) : new THREE.Vector3(0, 0, 1)
+    const up = referenceUp
+      ? new THREE.Vector3(...referenceUp)
+      : Math.abs(forward.z) > 0.9
+        ? new THREE.Vector3(0, -1, 0)
+        : new THREE.Vector3(0, 0, 1)
     up.applyAxisAngle(forward, (-roll * Math.PI) / 180)
     camera.position.set(...position)
     camera.up.copy(up)
     camera.lookAt(new THREE.Vector3(...position).add(forward))
     camera.updateMatrixWorld()
     invalidate()
-  }, [camera, invalidate, position, direction, roll])
+  }, [camera, invalidate, position, direction, roll, referenceUp])
   return null
 }
 function Surface({
@@ -174,15 +190,19 @@ export function ClinicalAirwayView({
   direction,
   roll,
   slice,
+  paired = false,
+  referenceUp,
 }: {
   position: Vec3
   direction: Vec3
   roll: number
   slice: number
+  paired?: boolean
+  referenceUp?: Vec3
 }) {
   const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null)
   const [error, setError] = useState('')
-  const [view, setView] = useState<'exterior' | 'scope'>('exterior')
+  const [view, setView] = useState<'exterior' | 'scope'>(paired ? 'scope' : 'exterior')
   const [opacity, setOpacity] = useState(0.65)
   const [retry, setRetry] = useState(0)
   const [contextLost, setContextLost] = useState(false)
@@ -209,18 +229,22 @@ export function ClinicalAirwayView({
     setRetry((v) => v + 1)
   }
   return (
-    <section className={styles.view}>
-      <h2>
-        {view === 'scope' ? 'CT-derived virtual bronchoscopy' : 'Exterior airway and CT plane'}
-      </h2>
-      <div className={styles.tabs} role="group" aria-label="Clinical airway view">
-        <button aria-pressed={view === 'exterior'} onClick={() => setView('exterior')}>
-          Exterior 3D
-        </button>
-        <button aria-pressed={view === 'scope'} onClick={() => setView('scope')}>
-          Virtual bronchoscopy
-        </button>
-      </div>
+    <section className={paired ? styles.pairedScope : styles.view}>
+      {!paired && (
+        <>
+          <h2>
+            {view === 'scope' ? 'CT-derived virtual bronchoscopy' : 'Exterior airway and CT plane'}
+          </h2>
+          <div className={styles.tabs} role="group" aria-label="Clinical airway view">
+            <button aria-pressed={view === 'exterior'} onClick={() => setView('exterior')}>
+              Exterior 3D
+            </button>
+            <button aria-pressed={view === 'scope'} onClick={() => setView('scope')}>
+              Virtual bronchoscopy
+            </button>
+          </div>
+        </>
+      )}
       {error ? (
         <p role="alert">
           {error} <button onClick={retrySurface}>Retry surface</button>
@@ -232,8 +256,8 @@ export function ClinicalAirwayView({
           3D context was lost. <button onClick={retrySurface}>Reload 3D view</button>
         </p>
       ) : (
-        <ViewBoundary>
-          <div className={styles.clinicalCanvas}>
+        <ViewBoundary onRetry={retrySurface}>
+          <div className={styles.clinicalCanvas} data-scope-position={position.join(',')}>
             <Canvas
               key={view}
               frameloop="demand"
@@ -267,7 +291,12 @@ export function ClinicalAirwayView({
               <directionalLight position={[200, -400, 200]} intensity={2} />
               <Surface geometry={geometry} inside={view === 'scope'} opacity={opacity} />
               {view === 'scope' ? (
-                <ScopeCamera position={position} direction={direction} roll={roll} />
+                <ScopeCamera
+                  position={position}
+                  direction={direction}
+                  roll={roll}
+                  referenceUp={referenceUp}
+                />
               ) : (
                 <>
                   <Plane slice={slice} />
@@ -296,12 +325,14 @@ export function ClinicalAirwayView({
           />
         </label>
       )}
-      <p className={styles.small}>
-        {view === 'scope'
-          ? 'Virtual surface appearance. Camera poses are geometric previews and have not been approved as scored clinical checkpoints. Roll zero uses projected patient superior, or anterior near a vertical airway.'
-          : 'Drag to orbit; scroll to zoom. The plane follows your CT slice; the marker follows your chosen route.'}{' '}
-        No mucosal video or device-passage claim.
-      </p>
+      {!paired && (
+        <p className={styles.small}>
+          {view === 'scope'
+            ? 'Virtual surface appearance. Camera poses are geometric previews and have not been approved as scored clinical checkpoints. Roll zero uses projected patient superior, or anterior near a vertical airway.'
+            : 'Drag to orbit; scroll to zoom. The plane follows your CT slice; the marker follows your chosen route.'}{' '}
+          No mucosal video or device-passage claim.
+        </p>
+      )}
     </section>
   )
 }

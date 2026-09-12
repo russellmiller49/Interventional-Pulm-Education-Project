@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { BranchTracingLesson } from '../components/BranchTracingLesson'
+import { traceById } from '../geometry/native-ct'
 import { LESSONS } from '../content/lessons'
 import { completedLessons, readProgress } from '../engine/progress'
 import { axe } from 'jest-axe'
@@ -35,6 +36,20 @@ function relation(value = 'unresolved') {
     target: { value },
   })
 }
+function orient(id: string) {
+  const preset = traceById(id).preset
+  fireEvent.click(
+    screen.getByRole('button', {
+      name:
+        preset === 'mirror'
+          ? /Flip left–right/
+          : preset === 'rul'
+            ? /Rotate 90° left/
+            : /Rotate 90° right/,
+    }),
+  )
+  fireEvent.click(screen.getByRole('button', { name: 'Check orientation' }))
+}
 function markLevels(wrong = false) {
   for (let i = 0; i < 3; i++) {
     fireEvent.click(
@@ -68,6 +83,8 @@ it('requires a real three-level response, withholds references, preserves a wron
   render(<BranchTracingLesson requestedId={lesson.id} />)
   fireEvent.click(await screen.findByRole('button', { name: 'Trace this airway' }))
   expect(document.querySelector('[data-ct-reference]')).toBeNull()
+  expect(screen.getByRole('button', { name: 'Check orientation' })).toBeDisabled()
+  orient(lesson.prediction)
   expect(screen.getByRole('button', { name: 'Record trace' })).toBeDisabled()
   markLevels(true)
   fireEvent.click(screen.getByRole('button', { name: 'Record trace' }))
@@ -89,6 +106,8 @@ it('requires a real three-level response, withholds references, preserves a wron
   fireEvent.click(screen.getByRole('button', { name: 'Review the relationship' }))
   fireEvent.click(screen.getByRole('button', { name: 'Trace another airway' }))
   expect(document.querySelector('[data-ct-reference]')).toBeNull()
+  expect(screen.getByRole('button', { name: 'Check orientation' })).toBeDisabled()
+  orient(lesson.transfer)
   expect(screen.getByRole('button', { name: 'Compare new trace' })).toBeDisabled()
   expect(completedLessons(readProgress())).toEqual([])
   markLevels()
@@ -113,6 +132,7 @@ it('requires a real three-level response, withholds references, preserves a wron
 it('retains the first recorded trace and hint count across reload before comparison', async () => {
   const view = render(<BranchTracingLesson requestedId={LESSONS[0].id} />)
   fireEvent.click(await screen.findByRole('button', { name: 'Trace this airway' }))
+  orient(LESSONS[0].prediction)
   fireEvent.click(screen.getByRole('button', { name: 'Tracing reminder' }))
   markLevels()
   fireEvent.click(screen.getByRole('button', { name: 'Record trace' }))
@@ -140,6 +160,7 @@ it('teaches named RB5 subsegments while withholding their lumen locations until 
   expect(
     screen.getByRole('button', { name: 'Mark 3: Right medial bronchus, subsegment b' }),
   ).toBeVisible()
+  orient(LESSONS.find((l) => l.id === 'horizontal-vertical')!.prediction)
   expect(screen.queryByText(/^CT level \d/)).not.toBeInTheDocument()
   expect(document.querySelector('[data-ct-reference]')).toBeNull()
   markLevels()

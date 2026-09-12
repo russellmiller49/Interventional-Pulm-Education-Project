@@ -5,7 +5,7 @@ import {
 import type { CtLesson } from './ct-types'
 
 export const BASE_PATH = '/learn/anatomy/branch-tracing'
-export const VERSION = 'c3-target1-r1'
+export const VERSION = 'c4-orientation1-r1'
 export const SOURCE = {
   title: 'Kurimoto & Morita. Bronchial Branch Tracing (2020)',
   url: 'https://doi.org/10.1007/978-981-13-9905-3',
@@ -17,8 +17,8 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     phase: 'recognize',
     title: 'Orient to the CT',
     instruction:
-      'Read the worked example. Use Show target to inspect the simulated nodule, then identify the parent airway before starting your own trace.',
-    lookIn: { pane: 'teaching', landmark: 'Worked CT example' },
+      'Follow the visual explanation of rotation and reflection. Try the controls beside the paired CT and virtual bronchoscopy, then inspect the worked trace toward the nodule.',
+    lookIn: { pane: 'teaching', landmark: 'Turn the CT into the tracing convention' },
     actionLabel: 'Trace this airway',
     interaction: 'read',
     gate: 'open',
@@ -104,7 +104,7 @@ export const LESSONS: CtLesson[] = [
       'For caudal tracing in the middle lobe, lingula and lower lobes, the book reflects the image left-to-right. For the right upper lobe it rotates standard axial images 90° counterclockwise; for the left upper division, 90° clockwise. These change the display, not the patient anatomy.',
     ],
     worked:
-      'This central-airway example is shown in the reflected tracing convention. Toggle Standard axial and Book tracing view: the airway moves across the screen, while its patient-space location and CT level stay the same.',
+      'This central-airway example starts in standard axial. Use Flip left–right, then Reset to standard: the airway moves across the screen, while its patient-space location and CT level stay the same. Compare the parent lumen with the virtual bronchoscopy beside it.',
     interpretation:
       'A left/right reflection changes the displayed branch positions. The R and L labels move with the anatomy. Following the same lumen through adjacent levels is the check that branch identity has been preserved.',
     transferPrompt:
@@ -221,7 +221,7 @@ export const LESSONS: CtLesson[] = [
       'The book emphasizes whether the traced airway approaches or moves away from a neighboring branch. A single fixed clock label does not describe that three-dimensional relationship.',
     ],
     worked:
-      'In this upper-lobe example, the lumen changes level as it advances laterally. The right-upper-lobe display is already rotated 90° counterclockwise, so read the patient labels before interpreting the movement.',
+      'In this upper-lobe example, the lumen changes level as it advances laterally. Start with standard axial and use Rotate 90° left for the right-upper-lobe tracing convention. Read the patient labels before interpreting the movement.',
     interpretation:
       'Follow the marked continuation both laterally and cranially through the stack. Compare it with the neighboring continuation rather than projecting the entire route onto one axial image.',
     transferPrompt:
@@ -244,7 +244,7 @@ export const LESSONS: CtLesson[] = [
       'For the left upper division, the book rotates axial images clockwise by 90°. Its term “left superior segment” in this discussion refers to the upper division, not the lower-lobe superior segment. A lower-lobe returning route still uses the lower-lobe reflection convention.',
     ],
     worked:
-      'Follow the left upper division into the apicoposterior bronchus (LB1+2) in its clockwise view. The direction labels rotate with the image, while cranial and caudal remain defined by the CT level.',
+      'Use Rotate 90° right, then follow the left upper division into the apicoposterior bronchus (LB1+2). The direction labels rotate with the image, while cranial and caudal remain defined by the CT level.',
     interpretation:
       'This lower-lobe route initially descends and then returns toward more cranial levels. A reversed slice order is expected along that path. The book also illustrates a rotated coronal MPR as a supporting check; the axial continuity remains the primary task here.',
     transferPrompt:

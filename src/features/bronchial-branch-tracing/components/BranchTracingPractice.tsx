@@ -16,7 +16,8 @@ import {
   type TargetRelation,
 } from '../content/ct-types'
 import { traceById, targetForTrace } from '../geometry/native-ct'
-import { DISPLAY_PRESETS } from '../geometry/coordinates'
+import { STANDARD_ORIENTATION, sameOrientation, type CtOrientation } from '../geometry/orientation'
+import { CtOrientationFeedback } from './CtOrientationTeaching'
 import { marksComplete, validCtMark } from '../engine/ct-session'
 import { saveCtAttempt } from '../engine/progress'
 import { ModuleFrame } from './ModuleFrame'
@@ -63,15 +64,15 @@ export function BranchTracingPractice({ mode }: { mode: 'practice' | 'assess' })
           {mode === 'practice'
             ? 'Choose a segment or practice a mixed set of four targets.'
             : 'Plan four airway approaches to simulated nodules.'}{' '}
-          Your marks first; comparison after submission.
+          Your marks first; source trace after submission.
         </p>
         <div className={styles.introGrid}>
           <section>
             <h2>Follow the airway toward the target</h2>
             <p>
               Inspect the target nodule, then start in the identified parent airway. At each named
-              checkpoint, mark the lumen that continues from it. Use neighboring slices, the
-              book-oriented view and the standard axial view to check the connection.
+              checkpoint, mark the lumen that continues from it. Start with standard axial CT and
+              turn or reflect it yourself while comparing the paired virtual bronchoscopy.
             </p>
             <p>
               Record the patient-space course and whether the distal airway can be followed toward
@@ -142,15 +143,22 @@ function CtPracticeSession({
   const [course, setCourse] = useState<Course | ''>('')
   const [targetRelation, setTargetRelation] = useState<TargetRelation | ''>('')
   const [hints, setHints] = useState(0)
+  const [orientation, setOrientation] = useState<CtOrientation>(STANDARD_ORIENTATION)
+  const [alignment, setAlignment] = useState<CtResponse['orientation'] | null>(null)
+  const [firstOrientations, setFirstOrientations] = useState<(CtOrientation | null)[]>(
+    ids.map(() => null),
+  )
   const [responses, setResponses] = useState<(CtResponse | null)[]>(ids.map(() => null))
   const [submitted, setSubmitted] = useState(false),
     [saveFailed, setSaveFailed] = useState(false)
   const trace = traceById(ids[index])
   const target = targetForTrace(trace)
-  const ready = marksComplete(marks) && Boolean(course) && Boolean(targetRelation)
+  const ready =
+    Boolean(alignment) && marksComplete(marks) && Boolean(course) && Boolean(targetRelation)
   const recorded = responses.every(Boolean)
   const dirty =
-    JSON.stringify(responses[index]) !== JSON.stringify({ marks, course, hints, targetRelation })
+    JSON.stringify(responses[index]) !==
+    JSON.stringify({ orientation: alignment, marks, course, hints, targetRelation })
   function open(i: number) {
     const response = responses[i]
     setIndex(i)
@@ -159,10 +167,13 @@ function CtPracticeSession({
     setCourse(response?.course ?? '')
     setTargetRelation(response?.targetRelation ?? '')
     setHints(response?.hints ?? 0)
+    setOrientation(response?.orientation.used ?? STANDARD_ORIENTATION)
+    setAlignment(response?.orientation ?? null)
   }
   function record() {
-    if (!ready) return
+    if (!ready || !alignment) return
     const response: CtResponse = {
+      orientation: alignment,
       marks: marks as CtMark[],
       course: course as Course,
       hints,
@@ -179,6 +190,8 @@ function CtPracticeSession({
       setCourse(nextResponse?.course ?? '')
       setTargetRelation(nextResponse?.targetRelation ?? '')
       setHints(nextResponse?.hints ?? 0)
+      setOrientation(nextResponse?.orientation.used ?? STANDARD_ORIENTATION)
+      setAlignment(nextResponse?.orientation ?? null)
     }
   }
   function exportWorksheet() {
@@ -244,6 +257,7 @@ function CtPracticeSession({
                 Target {i + 1} · {targetForTrace(traceById(id)).segment.code}
               </h2>
               <p>{COURSE_OPTIONS[responses[i]!.course]}</p>
+              <CtOrientationFeedback trace={traceById(id)} {...responses[i]!.orientation} />
               <CtTargetFeedback value={responses[i]!.targetRelation} />
               <p>
                 {responses[i]!.marks.filter((m) => m.pixel === null).length} checkpoints marked
@@ -292,9 +306,7 @@ function CtPracticeSession({
       }
       contextStrip={
         <div className={styles.context}>
-          <span>
-            {target.segment.name} · {DISPLAY_PRESETS[trace.preset]}
-          </span>
+          <span>{target.segment.name} · choose the CT orientation</span>
           <span>Native 0.5 mm axial slices</span>
           <span>One source CT · ungraded</span>
         </div>
@@ -304,19 +316,32 @@ function CtPracticeSession({
           <NowCard
             model={{
               kicker: `Interpretation ${index + 1}`,
-              heading: 'Follow and record the airway',
-              body: `Plan an airway approach to the nodule in ${target.segment.code}. Record three airway checkpoints, the course and the airway–nodule relationship.`,
+              heading: alignment ? 'Follow and record the airway' : 'Choose the CT orientation',
+              body: alignment
+                ? `Plan an airway approach to the nodule in ${target.segment.code}. Record three airway checkpoints, the course and the airway–nodule relationship.`
+                : 'Start in standard axial. Rotate or reflect the CT to the tracing convention for this region. Compare it with the virtual airway view, then record the orientation you chose.',
               where: <LookInLine location={{ pane: 'simulator', landmark: 'CT tracing stack' }} />,
               primary: {
-                label:
-                  recorded && !dirty ? 'Submit all CT interpretations' : 'Record CT interpretation',
+                label: !alignment
+                  ? 'Use this orientation'
+                  : recorded && !dirty
+                    ? 'Submit all CT interpretations'
+                    : 'Record CT interpretation',
                 onActivate: () => {
-                  if (recorded && !dirty) setSubmitted(true)
+                  if (!alignment) {
+                    if (sameOrientation(orientation, STANDARD_ORIENTATION)) return
+                    const first = firstOrientations[index] ?? { ...orientation }
+                    setFirstOrientations((current) =>
+                      current.map((v, i) => (i === index ? first : v)),
+                    )
+                    setAlignment({ first, used: { ...orientation } })
+                  } else if (recorded && !dirty) setSubmitted(true)
                   else record()
                 },
-                disabled: !ready,
-                disabledReason:
-                  'Record all three checkpoints, the airway course and its relationship to the nodule.',
+                disabled: !alignment ? sameOrientation(orientation, STANDARD_ORIENTATION) : !ready,
+                disabledReason: !alignment
+                  ? 'Use the rotate or flip controls first.'
+                  : 'Record all three checkpoints, the airway course and its relationship to the nodule.',
               },
             }}
           >
@@ -329,8 +354,14 @@ function CtPracticeSession({
                 setLevelRequest((v) => v + 1)
               }}
             />
-            <CtCourseControl value={course} onChange={setCourse} />
-            <CtTargetRelationControl value={targetRelation} onChange={setTargetRelation} />
+            {alignment && (
+              <>
+                <p role="status">Orientation recorded. Comparison follows submission of the set.</p>
+                <button onClick={() => setAlignment(null)}>Revise orientation</button>
+                <CtCourseControl value={course} onChange={setCourse} />
+                <CtTargetRelationControl value={targetRelation} onChange={setTargetRelation} />
+              </>
+            )}
             {mode === 'practice' && (
               <div className={styles.hints}>
                 <button disabled={hints > 0} onClick={() => setHints(1)}>
@@ -381,8 +412,10 @@ function CtPracticeSession({
             approach.
           </p>
           <p>
-            Book tracing view applies the convention for this region. Standard axial changes only
-            the display; your marks remain attached to the same anatomy.
+            Use Rotate 90° left, Rotate 90° right or Flip left–right. Reset to standard lets you
+            start again. These controls change the display; your marks remain attached to the same
+            anatomy. The virtual camera follows the selected airway location. An axial slice and an
+            endoscopic view have different projections; compare their branch relationships.
           </p>
           <h2>Record uncertainty honestly</h2>
           <p>
@@ -404,10 +437,17 @@ function CtPracticeSession({
           active={active}
           levelRequest={levelRequest}
           onActive={setActive}
-          onMark={(mark) => {
-            if (validCtMark(mark, trace, active))
-              setMarks((current) => current.map((m, i) => (i === active ? mark : m)))
-          }}
+          orientation={orientation}
+          onOrientation={setOrientation}
+          orientationPending={!alignment}
+          onMark={
+            alignment
+              ? (mark) => {
+                  if (validCtMark(mark, trace, active))
+                    setMarks((current) => current.map((m, i) => (i === active ? mark : m)))
+                }
+              : undefined
+          }
           showAnchor
         />
       }
@@ -424,12 +464,15 @@ function CtPracticeSession({
 }
 function DebriefViewer({ id, response }: { id: string; response: CtResponse }) {
   const [active, setActive] = useState(0)
+  const [orientation, setOrientation] = useState(response.orientation.used)
   return (
     <NativeCtViewer
       trace={traceById(id)}
       marks={response.marks}
       active={active}
       onActive={setActive}
+      orientation={orientation}
+      onOrientation={setOrientation}
       revealed
     />
   )

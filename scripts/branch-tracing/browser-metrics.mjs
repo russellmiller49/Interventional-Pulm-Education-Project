@@ -28,6 +28,26 @@ try {
   await page.getByRole('button', { name: 'Trace this airway' }).click()
   await page.getByText('Loading CT slice…', { exact: true }).waitFor({ state: 'hidden' })
   const readyMs = Date.now() - start
+  await page
+    .getByLabel('CT-derived virtual airway view', { exact: true })
+    .waitFor({ timeout: 60000 })
+  await page.waitForFunction(() => {
+    const canvas = document.querySelector('canvas[aria-label="CT-derived virtual airway view"]')
+    const gl = canvas?.getContext('webgl2')
+    if (!gl) return false
+    const pixel = new Uint8Array(4)
+    gl.readPixels(
+      Math.floor(canvas.width / 2),
+      Math.floor(canvas.height / 2),
+      1,
+      1,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      pixel,
+    )
+    return pixel[0] > 40
+  })
+  const pairedReadyMs = Date.now() - start
   const resources = await page.evaluate(() =>
     performance
       .getEntriesByType('resource')
@@ -46,10 +66,10 @@ try {
     downloadThroughput: -1,
     uploadThroughput: -1,
   })
-  await page.getByRole('button', { name: 'Expand CT', exact: true }).click()
-  await page.getByRole('button', { name: 'Close expanded CT' }).waitFor()
+  await page.getByRole('button', { name: 'Expand both views', exact: true }).click()
+  await page.getByRole('button', { name: 'Close expanded views' }).waitFor()
   await page.screenshot({ path: '/tmp/branch-tracing-native-expanded.png' })
-  await page.getByRole('button', { name: 'Close expanded CT' }).click()
+  await page.getByRole('button', { name: 'Close expanded views' }).click()
   await page.setViewportSize({ width: 720, height: 450 })
   await page.getByRole('tab', { name: 'Steps', exact: true }).click()
   const overflow = await page.evaluate(
@@ -58,14 +78,15 @@ try {
   await page.screenshot({ path: '/tmp/branch-tracing-ct-reflow.png', fullPage: true })
   const result = {
     capturedAt: new Date().toISOString(),
-    version: 'c3-target1-r1',
+    version: 'c4-orientation1-r1',
     browser: browser.version(),
     base,
     environment: 'Local macOS, headless Chromium; standalone server when base is port 3112.',
     viewport: '1440x900',
     network: '20 Mbps down / 5 Mbps up / 40 ms emulated latency; fresh browser context',
     nativeCtReadyFromNavigationMs: readyMs,
-    transferBytesAtCtReady: resources.reduce((n, r) => n + r.bytes, 0),
+    pairedViewsReadyFromNavigationMs: pairedReadyMs,
+    transferBytesAtPairedReady: resources.reduce((n, r) => n + r.bytes, 0),
     nativeImageTransferBytes: resources
       .filter((r) => r.path.includes('/native-v1/axial/'))
       .reduce((n, r) => n + r.bytes, 0),
@@ -74,7 +95,7 @@ try {
     nodulePatchTransferBytes: resources
       .filter((r) => r.path.includes('/targets-v1/patches/'))
       .reduce((n, r) => n + r.bytes, 0),
-    optionalModelRequestsAtReady: resources.filter((r) => /\.glb$/.test(r.path)).length,
+    pairedModelRequestsAtReady: resources.filter((r) => /\.glb$/.test(r.path)).length,
     sliceInputToLoadedImageMs: latencies,
     twoTimesEquivalentReflowDocumentOverflowPx: overflow,
     browserErrors: errors,
