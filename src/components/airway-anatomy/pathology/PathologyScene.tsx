@@ -77,12 +77,14 @@ export function PathologyMeshes({
   time,
   elapsed,
   external = false,
+  bloodAmount,
 }: {
   scene: Scene
   bleeding: BleedingLevel
   time: RefObject<number>
   elapsed: number
   external?: boolean
+  bloodAmount?: number
 }) {
   const invalidate = useThree((state) => state.invalidate)
   useEffect(() => {
@@ -133,9 +135,10 @@ export function PathologyMeshes({
     const material = filmRef.current
     if (!material) return
     material.uniforms.uTime.value = time.current
-    material.uniforms.uAmount.value = bleedingAmount(time.current, bleeding)
+    material.uniforms.uAmount.value = bloodAmount ?? bleedingAmount(time.current, bleeding)
     if (tissueRef.current instanceof THREE.ShaderMaterial)
-      tissueRef.current.uniforms.uBlood.value = bleedingAmount(time.current, bleeding)
+      tissueRef.current.uniforms.uBlood.value =
+        bloodAmount ?? bleedingAmount(time.current, bleeding)
   })
   return (
     <group dispose={null}>

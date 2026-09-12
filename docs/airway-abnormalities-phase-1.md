@@ -1,4 +1,6 @@
-# Airway abnormalities — phase 1
+# Airway abnormalities — phase 1 (historical record)
+
+This describes the initial implementation in commit `0993f0b7`. The owner subsequently requested a separate therapeutic module. Its current route, instruments and validation are documented in [therapeutic-bronchoscopy.md](therapeutic-bronchoscopy.md). The anatomy extension described below has been removed; the source anatomy module is restored to its earlier behavior. Historical browser checks here are not current-route evidence. The GLB assets and geometry review remain in use.
 
 ## Scope and preservation
 

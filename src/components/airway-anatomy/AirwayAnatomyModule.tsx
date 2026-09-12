@@ -100,17 +100,6 @@ import {
   loadActiveScopeTrackerProfile,
   subscribeToScopeTrackerProfileChanges,
 } from '@/lib/scope-input/core'
-import {
-  DEFAULT_PATHOLOGY,
-  bleedingAmount,
-  siteFor,
-  type PathologySettings,
-  type BleedingLevel,
-} from '@/lib/airway-anatomy/pathology/model'
-import { placePathology, sourceVisibility } from '@/lib/airway-anatomy/pathology/geometry'
-import { usePathology, useBleedingClock, type PathologyScene } from './pathology/usePathology'
-import { PathologyPanel } from './pathology/PathologyPanel'
-import { PathologyMeshes, BloodVisibilityOverlay } from './pathology/PathologyScene'
 
 const MANIFEST_URL = resolveAdminAirwayAssetPath('/airway-anatomy/case-001/case_manifest.json')
 const ORIENTATION_CALIBRATION_URL = resolveAdminAirwayAssetPath(
@@ -170,11 +159,7 @@ export function AirwayAnatomyModule() {
   const [showBranchLabels, setShowBranchLabels] = useState(true)
   const [ctPlaneOpacity, setCtPlaneOpacity] = useState(0.28)
   const [showXr, setShowXr] = useState(false)
-  const [mode, setMode] = useState<'explore' | 'challenge' | 'abnormalities'>('explore')
-  const [pathologySettings, setPathologySettings] = useState<PathologySettings>(DEFAULT_PATHOLOGY)
-  const [comparingNormal, setComparingNormal] = useState(false)
-  const [bleedingPaused, setBleedingPaused] = useState(false)
-  const [bleedingRestart, setBleedingRestart] = useState(0)
+  const [mode, setMode] = useState<'explore' | 'challenge'>('explore')
   const [calibrationMode, setCalibrationMode] = useState(false)
   const [collider, setCollider] = useState<LumenCollider | null>(null)
   const [geometryError, setGeometryError] = useState<string | null>(null)
@@ -224,8 +209,6 @@ export function AirwayAnatomyModule() {
 
   useEffect(() => {
     setCalibrationMode(isAirwayOrientationCalibrationMode())
-    if (new URLSearchParams(window.location.search).get('airwayMode') === 'abnormalities')
-      setMode('abnormalities')
   }, [])
 
   useEffect(() => {
@@ -296,23 +279,6 @@ export function AirwayAnatomyModule() {
   const graphIndex = useMemo(
     () => (loadedCase ? createGraphIndex(loadedCase.graph) : null),
     [loadedCase],
-  )
-
-  const pathology = usePathology(
-    pathologySettings,
-    mode === 'abnormalities' && !comparingNormal,
-    loadedCase?.graph ?? null,
-    collider,
-  )
-  const navigationCollider =
-    mode === 'abnormalities' && !comparingNormal ? (pathology.collider ?? collider) : collider
-  const bleedingClock = useBleedingClock(
-    mode === 'abnormalities' &&
-      !comparingNormal &&
-      pathology.ready &&
-      pathologySettings.bleeding !== 'off' &&
-      !bleedingPaused,
-    `${mode}:${pathologySettings.site}:${pathologySettings.morphology}:${pathologySettings.size}:${pathologySettings.wallAngleDeg}:${pathologySettings.bleeding}:${bleedingRestart}`,
   )
 
   const rawSnapshot = useMemo(() => {
@@ -395,70 +361,11 @@ export function AirwayAnatomyModule() {
       if (!loadedCase || !frames) return
       setScopeState((state) => {
         if (!state) return state
-        if (mode === 'abnormalities' && (comparingNormal || !pathology.ready))
-          return {
-            ...state,
-            movementMessage: comparingNormal
-              ? 'Restore abnormalities to resume insertion.'
-              : 'Wait for the abnormality model before advancing.',
-          }
         const frame = frameForState(state)
-        const moved = frame
-          ? driveScope(state, delta, loadedCase.graph, frames, frame, navigationCollider)
-          : state
-        if (mode === 'abnormalities' && moved.movementMessage?.startsWith('Wall contact'))
-          return {
-            ...moved,
-            movementMessage:
-              'Scope contact with airway wall or lesion — withdraw or redirect the tip.',
-          }
-        return moved
+        return frame ? driveScope(state, delta, loadedCase.graph, frames, frame, collider) : state
       })
     },
-    [loadedCase, frames, frameForState, navigationCollider, mode, comparingNormal, pathology.ready],
-  )
-
-  const approachPathology = useCallback(
-    (settings: PathologySettings) => {
-      driveQueue.current = 0
-      if (!loadedCase || !pathology.frames || !collider) return
-      const site = siteFor(settings.site)
-      const initial = createInitialScopeState(
-        loadedCase.graph,
-        site.edgeId,
-        Math.max(0, site.distanceMm - 24),
-      )
-      const frame = frameForState(initial)
-      if (!frame) return
-      try {
-        const placement = placePathology(settings, pathology.frames, collider)
-        const target = add(
-          placement.wallPoint,
-          scale(placement.inward, Math.max(0.15, placement.projectionMm * 0.55)),
-        )
-        const aimed = makeFrame(frame.position, unit(minus(target, frame.position)), frame.up)
-        setScopeState(enterFreeDrive(initial, aimed, loadedCase.graph))
-      } catch {
-        setScopeState(initial)
-      }
-    },
-    [loadedCase, pathology.frames, collider, frameForState],
-  )
-
-  const changePathology = useCallback(
-    (settings: PathologySettings) => {
-      setComparingNormal(false)
-      setBleedingPaused(false)
-      setPathologySettings(settings)
-      if (
-        settings.morphology !== pathologySettings.morphology ||
-        settings.site !== pathologySettings.site ||
-        settings.size !== pathologySettings.size ||
-        settings.wallAngleDeg !== pathologySettings.wallAngleDeg
-      )
-        approachPathology(settings)
-    },
-    [pathologySettings, approachPathology],
+    [loadedCase, frames, frameForState, collider],
   )
   // Movement is integrated before publishing the pose. No viewport has its own chase camera.
   useEffect(() => {
@@ -540,7 +447,7 @@ export function AirwayAnatomyModule() {
           frame = frameForState(state)
         if (!edge || !frame) return state
         const target = sampleEdgePose(edge, Math.min(edge.lengthMm * 0.6, 7)).point
-        if (navigationCollider && !navigationCollider.visible(frame.position, target))
+        if (collider && !collider.visible(frame.position, target))
           return {
             ...state,
             movementMessage: 'That opening is occluded. Reposition the scope to see it.',
@@ -557,18 +464,12 @@ export function AirwayAnatomyModule() {
         })
       })
     },
-    [loadedCase, frames, frameForState, navigationCollider],
+    [loadedCase, frames, frameForState, collider],
   )
 
   const handleReset = useCallback(() => {
     driveQueue.current = 0
-    setComparingNormal(false)
-    setBleedingRestart((v) => v + 1)
     if (!loadedCase) return
-    if (mode === 'abnormalities') {
-      approachPathology(pathologySettings)
-      return
-    }
     setScopeState(
       createInitialScopeState(
         loadedCase.graph,
@@ -576,7 +477,7 @@ export function AirwayAnatomyModule() {
         loadedCase.manifest.interaction.initialDistanceMm,
       ),
     )
-  }, [loadedCase, mode, pathologySettings, approachPathology])
+  }, [loadedCase])
 
   const game = useAirwayGame({
     enabled: mode === 'challenge',
@@ -701,11 +602,6 @@ export function AirwayAnatomyModule() {
   }
 
   const opticalFrame = useMemo(() => (snapshot ? scopeOpticalFrame(snapshot) : null), [snapshot])
-  const bloodAmount = bleedingAmount(bleedingClock.elapsed, pathologySettings.bleeding)
-  const bloodVisibility =
-    mode === 'abnormalities' && !comparingNormal && opticalFrame && pathology.placement && collider
-      ? sourceVisibility(opticalFrame, pathology.placement, collider)
-      : 0
   const linkedCt = useLinkedCt(
     loadedCase?.manifest.ct,
     loadedCase?.ctVolume,
@@ -800,7 +696,6 @@ export function AirwayAnatomyModule() {
     <HandoffContent>
       {
         <section
-          id="airway-simulator"
           className="relative overflow-hidden rounded-lg border border-slate-700 bg-slate-950 text-white shadow-sm outline-none"
           tabIndex={0}
           onKeyDown={handleKeyDown}
@@ -848,8 +743,6 @@ export function AirwayAnatomyModule() {
                     type="button"
                     onClick={() => {
                       setMode('explore')
-                      driveQueue.current = 0
-                      setComparingNormal(false)
                       game.actions.stop()
                     }}
                     className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
@@ -864,11 +757,7 @@ export function AirwayAnatomyModule() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      driveQueue.current = 0
-                      setComparingNormal(false)
-                      setMode('challenge')
-                    }}
+                    onClick={() => setMode('challenge')}
                     className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
                       mode === 'challenge'
                         ? 'bg-cyan-500 text-slate-950'
@@ -878,21 +767,6 @@ export function AirwayAnatomyModule() {
                   >
                     <Gamepad2 className="h-4 w-4" />
                     Challenge
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode('abnormalities')
-                      driveQueue.current = 0
-                      setComparingNormal(false)
-                      setShowXr(false)
-                      game.actions.stop()
-                      approachPathology(pathologySettings)
-                    }}
-                    aria-pressed={mode === 'abnormalities'}
-                    className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${mode === 'abnormalities' ? 'bg-rose-300 text-slate-950' : 'text-slate-400 hover:text-slate-200'}`}
-                  >
-                    Abnormalities
                   </button>
                 </div>
                 <Button
@@ -912,12 +786,6 @@ export function AirwayAnatomyModule() {
                   type="button"
                   variant={showXr ? 'default' : 'secondary'}
                   size="sm"
-                  disabled={mode === 'abnormalities'}
-                  title={
-                    mode === 'abnormalities'
-                      ? 'The abnormalities prototype is available in the desktop views.'
-                      : undefined
-                  }
                   onClick={() => setShowXr((value) => !value)}
                 >
                   <Headset className="mr-2 h-4 w-4" />
@@ -932,9 +800,7 @@ export function AirwayAnatomyModule() {
             <p className="mt-3 max-w-4xl text-sm text-slate-300">
               {mode === 'challenge'
                 ? 'Challenge mode: we name a target segment and start the clock — steer to its ostium and drive in. The 3D beacon and proximity meter guide you; clean, fast runs stack a combo bonus. '
-                : mode === 'abnormalities'
-                  ? 'Inspect synthetic endobronchial findings in the synchronized airway. Select a finding and location in Airway abnormalities, then use the scope controls to approach it. '
-                  : 'Drive the scope freely: steer toward an ostium and advance — the scope follows the branch you are pointing at, and the 3D model and CT track the tip in real time. '}
+                : 'Drive the scope freely: steer toward an ostium and advance — the scope follows the branch you are pointing at, and the 3D model and CT track the tip in real time. '}
               {loadedCase.manifest.safetyLabel} For education and anatomy correlation only.
             </p>
           </div>
@@ -942,12 +808,6 @@ export function AirwayAnatomyModule() {
           <div className="flex flex-wrap items-center gap-3 border-b border-slate-800 px-4 py-3 text-xs">
             <div className="flex rounded-md bg-slate-800 p-1" aria-label="Navigation mode">
               <button
-                disabled={mode === 'abnormalities'}
-                title={
-                  mode === 'abnormalities'
-                    ? 'Use realistic navigation to preserve scope-to-lesion contact.'
-                    : undefined
-                }
                 className={`rounded px-3 py-2 ${!scopeState?.freeFrame ? 'bg-cyan-300 text-slate-950' : 'text-slate-300'}`}
                 onClick={() => {
                   driveQueue.current = 0
@@ -968,23 +828,18 @@ export function AirwayAnatomyModule() {
                 Guided anatomy
               </button>
               <button
-                disabled={
-                  !navigationCollider ||
-                  comparingNormal ||
-                  (mode === 'abnormalities' && !pathology.ready)
-                }
+                disabled={!collider}
                 title={!collider ? 'Preparing validated collision geometry' : undefined}
                 className={`rounded px-3 py-2 disabled:opacity-40 ${scopeState?.freeFrame ? 'bg-cyan-300 text-slate-950' : 'text-slate-300'}`}
                 onClick={() => {
                   driveQueue.current = 0
                   setScopeState((s) =>
                     s && opticalFrame
-                      ? navigationCollider!.clearance(opticalFrame.position) <
-                        FLEXIBLE_TIP_RADIUS_MM
+                      ? collider!.clearance(opticalFrame.position) < FLEXIBLE_TIP_RADIUS_MM
                         ? {
                             ...s,
                             movementMessage:
-                              'Insufficient clearance for the 3.8 mm scope. Withdraw before entering realistic mode.',
+                              'This airway is too narrow for the 3.8 mm scope. Withdraw before entering realistic mode.',
                           }
                         : enterFreeDrive(s, opticalFrame, loadedCase.graph)
                       : s,
@@ -1038,41 +893,6 @@ export function AirwayAnatomyModule() {
                 {geometryError ?? scopeState?.movementMessage}
               </p>
             )}
-            {mode === 'abnormalities' && (
-              <div className="flex w-full flex-wrap items-center gap-2 border-t border-slate-800 pt-3">
-                <HoldButton
-                  ariaLabel="Withdraw from abnormality"
-                  disabled={comparingNormal || !pathology.ready}
-                  onTrigger={() => handleMove(-stepMm)}
-                  className="rounded border border-slate-600 px-4 py-2 text-slate-200 disabled:opacity-40"
-                >
-                  ← Withdraw
-                </HoldButton>
-                <HoldButton
-                  ariaLabel="Advance toward abnormality"
-                  disabled={comparingNormal || !pathology.ready}
-                  onTrigger={() => handleMove(stepMm)}
-                  className="rounded border border-cyan-500/40 bg-cyan-400/10 px-4 py-2 text-cyan-100 disabled:opacity-40"
-                >
-                  Advance →
-                </HoldButton>
-                <button
-                  type="button"
-                  onClick={() => handleRollChange(liveRollDeg - 15)}
-                  className="rounded border border-slate-600 px-3 py-2 text-slate-200"
-                >
-                  Rotate left
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRollChange(liveRollDeg + 15)}
-                  className="rounded border border-slate-600 px-3 py-2 text-slate-200"
-                >
-                  Rotate right
-                </button>
-                <span className="text-slate-400">Drag in Virtual bronchoscopy to steer.</span>
-              </div>
-            )}
           </div>
           <div
             className={`grid gap-3 p-3 ${enlarged ? 'xl:grid-cols-[minmax(0,1.65fr)_minmax(340px,.65fr)]' : 'xl:grid-cols-[minmax(0,1.12fr)_minmax(340px,.88fr)]'}`}
@@ -1088,19 +908,7 @@ export function AirwayAnatomyModule() {
                 onAlignBranch={handleAlignBranch}
                 game={mode === 'challenge' ? game : null}
                 fovDeg={BRONCH_FOV_DEG}
-                collider={navigationCollider}
-                pathology={mode === 'abnormalities' && !comparingNormal ? pathology : undefined}
-                bleeding={pathologySettings.bleeding}
-                bloodTime={bleedingClock.time}
-                bloodElapsed={bleedingClock.elapsed}
-                bloodAmount={bloodAmount}
-                bloodVisibility={bloodVisibility}
-                animateBlood={
-                  mode === 'abnormalities' &&
-                  !comparingNormal &&
-                  !bleedingPaused &&
-                  pathologySettings.bleeding !== 'off'
-                }
+                collider={collider}
               />
               <AirwayTreeViewport
                 manifest={loadedCase.manifest}
@@ -1116,43 +924,10 @@ export function AirwayAnatomyModule() {
                 gameTarget={mode === 'challenge' ? game.view.currentTarget : null}
                 hitPulse={game.hitPulse}
                 hitAnchor={game.hitAnchor}
-                pathology={mode === 'abnormalities' && !comparingNormal ? pathology : undefined}
-                bleeding={pathologySettings.bleeding}
-                bloodTime={bleedingClock.time}
-                bloodElapsed={bleedingClock.elapsed}
               />
             </div>
 
             <div className="grid gap-3">
-              {mode === 'abnormalities' && (
-                <PathologyPanel
-                  settings={pathologySettings}
-                  onChange={changePathology}
-                  comparing={comparingNormal}
-                  onCompare={() => {
-                    driveQueue.current = 0
-                    setScopeState((state) =>
-                      state ? { ...state, movementMessage: undefined } : state,
-                    )
-                    setComparingNormal((v) => !v)
-                  }}
-                  paused={bleedingPaused}
-                  onPause={() => setBleedingPaused((v) => !v)}
-                  onRestart={() => {
-                    setBleedingRestart((v) => v + 1)
-                    setBleedingPaused(false)
-                  }}
-                  onApproach={() => {
-                    setComparingNormal(false)
-                    approachPathology(pathologySettings)
-                  }}
-                  ready={pathology.ready}
-                  error={pathology.error}
-                  onRetry={pathology.retry}
-                  projectionMm={pathology.placement?.projectionMm ?? 0}
-                  obscured={bloodAmount * bloodVisibility > 0.5}
-                />
-              )}
               <ControlPanel
                 pose={snapshot}
                 location={currentLocation}
@@ -1180,12 +955,6 @@ export function AirwayAnatomyModule() {
                 onSaveFlexibleOrientation={saveCurrentFlexibleOrientation}
                 onResetFlexibleOrientation={resetCurrentFlexibleOrientation}
               />
-              {mode === 'abnormalities' && (
-                <p className="px-2 text-xs text-amber-100">
-                  CT reference: original anatomy. Added abnormalities are visible in the 3D views
-                  only.
-                </p>
-              )}
               <LinkedCtWorkspace
                 controller={linkedCt}
                 frame={opticalFrame!}
@@ -1526,9 +1295,6 @@ function SteerButton({
           onPointerUp={hold.stop}
           onPointerCancel={hold.stop}
           onLostPointerCapture={hold.stop}
-          onClick={(event) => {
-            if (event.detail === 0) onSteer(dx, dyUp)
-          }}
           onContextMenu={(event) => event.preventDefault()}
         >
           <svg
@@ -1556,14 +1322,12 @@ function HoldButton({
   className,
   ariaLabel,
   children,
-  disabled = false,
 }: {
   onTrigger: () => void
   intervalMs?: number
   className?: string
   ariaLabel: string
   children: React.ReactNode
-  disabled?: boolean
 }) {
   const hold = useHoldRepeat(onTrigger, intervalMs)
   return (
@@ -1571,7 +1335,6 @@ function HoldButton({
       {
         <button
           type="button"
-          disabled={disabled}
           aria-label={ariaLabel}
           className={`touch-none select-none ${className ?? ''}`}
           onPointerDown={(event) => {
@@ -1582,9 +1345,6 @@ function HoldButton({
           onPointerUp={hold.stop}
           onPointerCancel={hold.stop}
           onLostPointerCapture={hold.stop}
-          onClick={(event) => {
-            if (event.detail === 0 && !disabled) onTrigger()
-          }}
           onContextMenu={(event) => event.preventDefault()}
         >
           {children}
@@ -1684,21 +1444,7 @@ function VirtualBronchoscopyViewport({
   game,
   fovDeg,
   collider,
-  pathology,
-  bleeding,
-  bloodTime,
-  bloodElapsed,
-  bloodAmount,
-  bloodVisibility,
-  animateBlood,
 }: {
-  pathology?: PathologyScene
-  bleeding: BleedingLevel
-  bloodTime: React.RefObject<number>
-  bloodElapsed: number
-  bloodAmount: number
-  bloodVisibility: number
-  animateBlood: boolean
   collider: LumenCollider | null
   manifest: AirwayAnatomyCaseManifest
   pose: ScopePoseSnapshot
@@ -1719,9 +1465,6 @@ function VirtualBronchoscopyViewport({
       {
         <div
           ref={containerRef}
-          data-blood-amount={bloodAmount.toFixed(3)}
-          data-source-visibility={bloodVisibility.toFixed(3)}
-          data-scope-position={pose.tipLps.map((v) => v.toFixed(3)).join(',')}
           className="relative aspect-[4/3] touch-none select-none overflow-hidden rounded-lg border border-slate-700 bg-black"
           onPointerDown={(event) => {
             pointerRef.current = { x: event.clientX, y: event.clientY }
@@ -1744,7 +1487,7 @@ function VirtualBronchoscopyViewport({
         >
           <div className="absolute inset-0">
             <Canvas
-              frameloop={game || animateBlood ? 'always' : 'demand'}
+              frameloop={game ? 'always' : 'demand'}
               dpr={[1, 1.75]}
               camera={{
                 fov: BRONCH_FOV_DEG,
@@ -1770,20 +1513,9 @@ function VirtualBronchoscopyViewport({
                   mode="bronch"
                 />
                 <ScopeCamera pose={pose} />
-                {pathology && (
-                  <PathologyMeshes
-                    scene={pathology}
-                    bleeding={bleeding}
-                    time={bloodTime}
-                    elapsed={bloodElapsed}
-                  />
-                )}
               </Suspense>
             </Canvas>
           </div>
-          {pathology && (
-            <BloodVisibilityOverlay amount={bloodAmount} visibility={bloodVisibility} />
-          )}
           <div
             className="pointer-events-none absolute inset-0"
             style={{
@@ -1920,15 +1652,7 @@ function AirwayTreeViewport({
   hitPulse,
   hitAnchor,
   ctImage,
-  pathology,
-  bleeding,
-  bloodTime,
-  bloodElapsed,
 }: {
-  pathology?: PathologyScene
-  bleeding: BleedingLevel
-  bloodTime: React.RefObject<number>
-  bloodElapsed: number
   ctImage?: CtSliceImage
   manifest: AirwayAnatomyCaseManifest
   graph: AirwayGraph
@@ -1986,15 +1710,6 @@ function AirwayTreeViewport({
                 mode="tree"
               />
               <CorrelatedCtPlane image={ctImage} opacity={ctPlaneOpacity} />
-              {pathology && (
-                <PathologyMeshes
-                  scene={pathology}
-                  bleeding={bleeding}
-                  time={bloodTime}
-                  elapsed={bloodElapsed}
-                  external
-                />
-              )}
               <group>
                 {graph.edges.map((edge) => {
                   const isCurrent = edge.id === pose.edgeId
