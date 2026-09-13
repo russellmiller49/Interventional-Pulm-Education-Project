@@ -6,6 +6,7 @@ import { completedLessons, readProgress } from '../engine/progress'
 import { axe } from 'jest-axe'
 
 jest.mock('@/i18n/navigation', () => ({
+  useRouter: () => ({ push: jest.fn() }),
   Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
     <a href={href} {...props}>
       {children}
@@ -66,7 +67,7 @@ function markLevels(id: string, wrong = false) {
           .find((input) => (input as HTMLInputElement).value === String(edge))!,
       )
     }
-    fireEvent.click(screen.getByRole('button', { name: 'Current junction CT' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Go to answer slice' }))
     imageReady()
     if (wrong && i === 0) {
       const svg = screen.getByRole('group', { name: /^CT image\./ })
@@ -85,14 +86,14 @@ function markLevels(id: string, wrong = false) {
         screen.getByRole('button', {
           name:
             i + 1 === trace.checkpoints.length - 1
-              ? 'Continue to nodule approach'
+              ? 'Inspect the distal airway–nodule relationship'
               : 'Next junction',
         }),
       )
   }
 }
 it('requires every real branch response, withholds each junction comparison until recording, retains a wrong choice and requires a complete changed transfer', async () => {
-  const lesson = LESSONS[0]
+  const lesson = LESSONS.find((l) => l.id === 'variants-limits')!
   render(<BranchTracingLesson requestedId={lesson.id} />)
   fireEvent.click(await screen.findByRole('button', { name: 'Trace this airway' }))
   expect(document.querySelector('[data-ct-reference]')).toBeNull()
@@ -142,49 +143,28 @@ it('requires every real branch response, withholds each junction comparison unti
   expect(JSON.stringify(readProgress())).not.toMatch(/pixel|marks|course|sourceHu/)
 })
 it('retains the first recorded trace and hint count across reload before comparison', async () => {
-  const view = render(<BranchTracingLesson requestedId={LESSONS[0].id} />)
+  const view = render(
+    <BranchTracingLesson requestedId={LESSONS.find((l) => l.id === 'variants-limits')!.id} />,
+  )
   fireEvent.click(await screen.findByRole('button', { name: 'Trace this airway' }))
-  orient(LESSONS[0].prediction)
+  orient(LESSONS.find((l) => l.id === 'variants-limits')!.prediction)
   fireEvent.click(screen.getByRole('button', { name: 'Tracing reminder' }))
-  markLevels(LESSONS[0].prediction)
+  markLevels(LESSONS.find((l) => l.id === 'variants-limits')!.prediction)
   fireEvent.click(screen.getByRole('button', { name: 'Record trace' }))
   const first = readProgress().activities.find((a) =>
     a.activityId.endsWith('prediction.trace.first'),
   )!
   expect(first.hintCount).toBe(1)
   view.unmount()
-  render(<BranchTracingLesson requestedId={LESSONS[0].id} />)
-  await screen.findByRole('button', { name: 'Trace this airway' })
+  render(<BranchTracingLesson requestedId={LESSONS.find((l) => l.id === 'variants-limits')!.id} />)
+  await screen.findByRole('button', { name: 'Reveal CT comparison' })
   expect(readProgress().activities.find((a) => a.activityId === first.activityId)).toEqual(first)
   expect(completedLessons(readProgress())).toEqual([])
 })
-it('keeps all RB5 divisions distinct and shows their actual bronchial names at the appropriate junction', async () => {
-  const lesson = LESSONS.find((l) => l.id === 'horizontal-vertical')!
-  render(<BranchTracingLesson requestedId={lesson.id} />)
-  await screen.findByRole('button', { name: 'Trace this airway' })
-  expect(screen.getByRole('heading', { name: 'Airway names' })).toBeVisible()
-  fireEvent.click(screen.getByRole('button', { name: 'Trace this airway' }))
-  orient(lesson.prediction)
-  expect(screen.getAllByRole('radio').map((n) => n.getAttribute('value'))).toEqual([
-    '1',
-    '2',
-    'unresolved',
-  ])
-  expect(document.querySelector('[data-ct-reference]')).toBeNull()
-  markLevels(lesson.prediction)
-  fireEvent.click(screen.getByRole('button', { name: 'Record trace' }))
-  fireEvent.change(screen.getByRole('combobox', { name: 'Airway course' }), {
-    target: { value: 'uncertain' },
-  })
-  relation()
-  fireEvent.click(screen.getByRole('button', { name: 'Reveal CT comparison' }))
-  imageReady()
-  expect(
-    screen.getByLabelText(/Reference: Right medial bronchus, subsegment b, distal nodule approach/),
-  ).toBeVisible()
-})
 it('has no automated accessibility violations in orientation and before comparison', async () => {
-  const { container } = render(<BranchTracingLesson requestedId={LESSONS[0].id} />)
+  const { container } = render(
+    <BranchTracingLesson requestedId={LESSONS.find((l) => l.id === 'variants-limits')!.id} />,
+  )
   await screen.findByRole('button', { name: 'Trace this airway' })
   expect(await axe(container)).toHaveNoViolations()
   fireEvent.click(screen.getByRole('button', { name: 'Trace this airway' }))

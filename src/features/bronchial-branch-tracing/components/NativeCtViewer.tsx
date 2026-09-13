@@ -10,7 +10,13 @@ import {
   type KeyboardEvent,
   type SetStateAction,
 } from 'react'
-import type { CtMark, CtTrace } from '../content/ct-types'
+import type {
+  AnnotationReview,
+  CtMark,
+  CtTrace,
+  CtTeachingFrame,
+  CtViewerState,
+} from '../content/ct-types'
 import {
   STANDARD_ORIENTATION,
   nativePixel,
@@ -50,6 +56,17 @@ interface Props {
   demonstrate?: boolean
   maxActive?: number
   referenceThrough?: number
+  local?: boolean
+  orientationControls?: boolean
+  highlightRegion?: boolean
+  scopeAvailable?: boolean
+  answerSlice?: number
+  sliceRequest?: { slice: number; serial: number }
+  teachingFrame?: CtTeachingFrame
+  annotationReview?: AnnotationReview
+  initialView?: CtViewerState
+  onViewChange?: (view: CtViewerState) => void
+  onReadyChange?: (ready: boolean) => void
 }
 export function NativeCtViewer({
   trace,
@@ -66,6 +83,17 @@ export function NativeCtViewer({
   demonstrate = false,
   maxActive = trace.checkpoints.length - 1,
   referenceThrough = -1,
+  local = false,
+  orientationControls = true,
+  highlightRegion = false,
+  scopeAvailable = true,
+  answerSlice,
+  sliceRequest,
+  teachingFrame,
+  annotationReview,
+  initialView,
+  onViewChange,
+  onReadyChange,
 }: Props) {
   const target = targetForTrace(trace)
   const checkpoint = trace.checkpoints[active]
@@ -76,7 +104,7 @@ export function NativeCtViewer({
   const [sliceState, setSliceState] = useState({
     active,
     levelRequest,
-    slice: trace.anchor.slice,
+    slice: initialView?.slice ?? trace.anchor.slice,
   })
   const slice =
     sliceState.active === active && sliceState.levelRequest === levelRequest
@@ -112,19 +140,19 @@ export function NativeCtViewer({
         : sameOrientation(orientation, orientationFor('upper-division'))
           ? 'upper-division'
           : 'custom'
-  const [full, setFull] = useState(false)
+  const [full, setFull] = useState(initialView?.full ?? false)
   const [targetFocus, setTargetFocus] = useState<{ active: number; levelRequest: number } | null>(
-    null,
+    initialView?.focus === 'target' ? { active, levelRequest } : null,
   )
   const focusedOnTarget =
     targetFocus?.active === active && targetFocus?.levelRequest === levelRequest
-  const [startFocus, setStartFocus] = useState<{ active: number; levelRequest: number } | null>({
-    active,
-    levelRequest,
-  })
+  const [startFocus, setStartFocus] = useState<{ active: number; levelRequest: number } | null>(
+    !initialView || initialView.focus === 'start' ? { active, levelRequest } : null,
+  )
   const focusedOnStart = startFocus?.active === active && startFocus?.levelRequest === levelRequest
-  const [showNodule, setShowNodule] = useState(true)
-  const [magnification, setMagnification] = useState(1)
+  const [showNodule, setShowNodule] = useState(initialView?.showNodule ?? !local)
+  const [showScope, setShowScope] = useState(initialView?.showScope ?? !local)
+  const [magnification, setMagnification] = useState(initialView?.magnification ?? 1)
   const [cursor, setCursor] = useState<[number, number]>([50, 50])
   const [imageStatus, setImageStatus] = useState<{ url: string; failed: boolean } | null>(null)
   const [patchStatus, setPatchStatus] = useState<{ url: string; failed: boolean } | null>(null)
@@ -153,6 +181,9 @@ export function NativeCtViewer({
   const patchUrl = patch ? `${TARGET_CT_BASE}/${patch.path}` : null
   const patchReady = !patchUrl || (patchStatus?.url === patchUrl && !patchStatus.failed)
   const ready = imageStatus?.url === url && !imageStatus.failed && patchReady
+  useEffect(() => {
+    onReadyChange?.(Boolean(ready))
+  }, [ready, onReadyChange])
   const patchFailed = patchUrl && patchStatus?.url === patchUrl && patchStatus.failed
   const failed = (imageStatus?.url === url && imageStatus.failed) || patchFailed
   const center = full
@@ -175,7 +206,33 @@ export function NativeCtViewer({
     () => pairedScope(trace, slice, active, focusedOnStart),
     [trace, slice, active, focusedOnStart],
   )
-  const atCheckpoint = slice === checkpoint.slice
+  const submissionSlice = answerSlice ?? checkpoint.slice
+  const atCheckpoint = slice === submissionSlice
+  useEffect(() => {
+    if (!sliceRequest) return
+    setSlice(sliceRequest.slice)
+    setStartFocus(null)
+    setTargetFocus(null)
+  }, [sliceRequest, setSlice])
+  useEffect(() => {
+    onViewChange?.({
+      slice,
+      focus: focusedOnTarget ? 'target' : focusedOnStart ? 'start' : 'junction',
+      full,
+      magnification,
+      showNodule,
+      showScope,
+    })
+  }, [
+    slice,
+    focusedOnTarget,
+    focusedOnStart,
+    full,
+    magnification,
+    showNodule,
+    showScope,
+    onViewChange,
+  ])
   const canMark = Boolean(onMark) && ready && atCheckpoint
   const clampSlice = (value: number) => Math.max(trace.range[0], Math.min(trace.range[1], value))
   useEffect(() => {
@@ -250,42 +307,84 @@ export function NativeCtViewer({
     setSlice(target.slice)
   }
   return (
-    <section ref={viewer} className={styles.nativeViewer} aria-label="CT tracing viewer">
+    <section
+      ref={viewer}
+      className={`${styles.nativeViewer} ${local ? styles.localViewer : ''}`}
+      aria-label="CT tracing viewer"
+    >
       <div className={styles.nativeHeading}>
         <div>
           <h2>CT tracing stack</h2>
           <span>{trace.region} · 0.5 mm slices</span>
         </div>
         <button className={styles.ctExpand} onClick={toggleExpanded}>
-          {expanded ? 'Close expanded views' : 'Expand both views'}
+          {expanded ? 'Close expanded views' : 'Expand CT views'}
         </button>
       </div>
-      <div className={styles.targetBar}>
-        <div>
-          <strong>Target · {target.segment.code}</strong>
-          <span>{target.segment.name} · simulated nodule</span>
+      {!local && (
+        <div className={styles.targetBar}>
+          <div>
+            <strong>Target · {target.segment.code}</strong>
+            <span>{target.segment.name} · simulated nodule</span>
+          </div>
+          <button onClick={showTarget}>Show target</button>
         </div>
-        <button onClick={showTarget}>Show target</button>
-      </div>
-      <div className={styles.ctViewButtons} role="group" aria-label="CT orientation">
-        <button onClick={() => setOrientation(turnCt(orientation, 'left'))}>
-          ↶ Rotate 90° left
-        </button>
-        <button onClick={() => setOrientation(turnCt(orientation, 'right'))}>
-          ↷ Rotate 90° right
-        </button>
-        <button onClick={() => setOrientation(turnCt(orientation, 'flip'))}>
-          ⇆ Flip left–right
-        </button>
-        <button onClick={() => setOrientation(STANDARD_ORIENTATION)}>Reset to standard</button>
-      </div>
+      )}
+      {orientationControls && (
+        <div className={styles.ctViewButtons} role="group" aria-label="CT orientation">
+          <button onClick={() => setOrientation(turnCt(orientation, 'left'))}>
+            ↶ Rotate 90° left
+          </button>
+          <button onClick={() => setOrientation(turnCt(orientation, 'right'))}>
+            ↷ Rotate 90° right
+          </button>
+          <button onClick={() => setOrientation(turnCt(orientation, 'flip'))}>
+            ⇆ Flip left–right
+          </button>
+          <button onClick={() => setOrientation(STANDARD_ORIENTATION)}>Reset to standard</button>
+        </div>
+      )}
       {expandError && <p role="status">Expanded view is unavailable in this browser.</p>}
-      <div className={styles.pairedViews} aria-label="Paired CT and virtual bronchoscopy">
+      {onMark && (
+        <div className={styles.answerGuidance} role="status">
+          {failed
+            ? 'Image unavailable. Retry this slice before marking.'
+            : !ready
+              ? 'Loading the CT image before marking.'
+              : atCheckpoint
+                ? `Answer slice ${submissionSlice}: mark the lumen, or record uncertainty.`
+                : `Exploring slice ${slice}. Your current task is unchanged; marks are recorded on slice ${submissionSlice}.`}
+          <button
+            onClick={() => {
+              setStartFocus(null)
+              setTargetFocus(null)
+              setSlice(submissionSlice)
+            }}
+          >
+            Go to answer slice
+          </button>
+          {atCheckpoint && (
+            <button disabled={!ready} onClick={() => onMark({ slice, pixel: null })}>
+              Lumen unresolved here
+            </button>
+          )}
+        </div>
+      )}
+      <div
+        className={`${styles.pairedViews} ${!showScope || !scopeAvailable ? styles.ctOnly : ''}`}
+        aria-label="CT and supporting views"
+      >
         <div className={styles.pairedColumn}>
           <h3>
             Axial CT <span>{orientationName(orientation)}</span>
           </h3>
-          <div ref={surface} className={styles.nativeImage} data-preset={preset} data-slice={slice}>
+          <div
+            ref={surface}
+            className={styles.nativeImage}
+            data-preset={preset}
+            data-slice={slice}
+            data-region-highlight={highlightRegion || undefined}
+          >
             <svg
               viewBox="0 0 100 100"
               role="group"
@@ -400,6 +499,52 @@ export function NativeCtViewer({
                   )
                 })()}
               {ready &&
+                teachingFrame?.slice === slice &&
+                teachingFrame.overlays.map((overlay, i) => {
+                  const p = orientedPixel(overlay.pixel, center, size, orientation)
+                  const reviewed = annotationReview?.status === 'faculty-reviewed'
+                  return (
+                    <g
+                      key={i}
+                      data-teaching-overlay
+                      aria-label={`${reviewed ? 'Reviewed annotation' : 'Model locator'}: ${overlay.label}`}
+                    >
+                      {reviewed && overlay.contour && (
+                        <polygon
+                          points={overlay.contour
+                            .map((point) =>
+                              orientedPixel(point, center, size, orientation).join(','),
+                            )
+                            .join(' ')}
+                          fill="none"
+                          stroke="#f6c66c"
+                          strokeWidth=".45"
+                        />
+                      )}
+                      <circle
+                        cx={p[0]}
+                        cy={p[1]}
+                        r="2.5"
+                        fill="none"
+                        stroke="#f6c66c"
+                        strokeWidth=".5"
+                      />
+                      <text
+                        x={p[0]}
+                        y={p[1] - 4}
+                        textAnchor="middle"
+                        fontSize="3.2"
+                        fill="#ffe0a1"
+                        stroke="#07151b"
+                        strokeWidth=".6"
+                        paintOrder="stroke"
+                      >
+                        {overlay.label}
+                      </text>
+                    </g>
+                  )
+                })}
+              {ready &&
                 marks.map((mark, i) => {
                   if (!mark?.pixel || mark.slice !== slice) return null
                   const p = orientedPixel(mark.pixel, center, size, orientation)
@@ -503,38 +648,48 @@ export function NativeCtViewer({
             Slice {slice} · patient directions stay attached to the image.
           </p>
         </div>
-        <div className={styles.pairedColumn}>
-          <h3>
-            Virtual bronchoscopy{' '}
-            <span>
-              {focusedOnStart
-                ? `Looking distally from ${trace.anchor.airway.code}`
-                : atCheckpoint
-                  ? `Parent view · ${stationLabel}`
-                  : 'Following the same target route'}
-            </span>
-          </h3>
-          <ClinicalAirwayView
-            paired
-            position={scope.position}
-            direction={scope.direction}
-            referenceUp={scope.up}
-            roll={0}
-            slice={slice}
-          />
-          <p className={styles.pairCaption}>
-            {scope.atJunction
-              ? 'Looking from the parent toward this fork. CT shows the daughter level; browse back to the division.'
-              : scope.planeGapMm < 0.26
-                ? 'Scope just proximal to this CT level.'
-                : `CT plane is ${scope.planeGapMm.toFixed(1)} mm from the nearest route point; scope remains on the airway.`}
-            {scope.atDistalLimit &&
-              ' Near the distal model limit: a closed surface is not evidence of airway obstruction.'}
-          </p>
-        </div>
+        {showScope && scopeAvailable && (
+          <div className={styles.pairedColumn}>
+            <h3>
+              Virtual bronchoscopy{' '}
+              <span>
+                {focusedOnStart
+                  ? `Looking distally from ${trace.anchor.airway.code}`
+                  : atCheckpoint
+                    ? `Parent view · ${stationLabel}`
+                    : 'Following the same target route'}
+              </span>
+            </h3>
+            <p className={styles.referenceNotice}>
+              Camera follows the model reference route, including after a different branch choice.
+            </p>
+            <ClinicalAirwayView
+              paired
+              position={scope.position}
+              direction={scope.direction}
+              referenceUp={scope.up}
+              roll={0}
+              slice={slice}
+            />
+            <p className={styles.pairCaption}>
+              {scope.atJunction
+                ? 'Looking from the parent toward this fork. CT shows the daughter level; browse back to the division.'
+                : scope.planeGapMm < 0.26
+                  ? 'Scope just proximal to this CT level.'
+                  : `CT plane is ${scope.planeGapMm.toFixed(1)} mm from the nearest route point; scope remains on the airway.`}
+              {scope.atDistalLimit &&
+                ' Near the distal model limit: a closed surface is not evidence of airway obstruction.'}
+            </p>
+          </div>
+        )}
       </div>
       <div className={styles.ctViewButtons}>
-        {(demonstrate || revealed) && (
+        {scopeAvailable && (
+          <button aria-pressed={showScope} onClick={() => setShowScope((v) => !v)}>
+            {showScope ? 'Hide parent airway view' : 'Show parent airway view'}
+          </button>
+        )}
+        {orientationControls && (demonstrate || revealed) && (
           <button onClick={() => setOrientation(orientationFor(trace.preset))}>
             Show book convention
           </button>
@@ -551,7 +706,7 @@ export function NativeCtViewer({
       </div>
       {orientationPending && (
         <p className={styles.orientationPrompt}>
-          Turn or reflect the CT, then check your orientation in Steps before marking the lumen.
+          Turn or reflect the CT, then check your orientation before marking the lumen.
         </p>
       )}
       <p className={styles.pairExplanation}>
@@ -602,47 +757,49 @@ export function NativeCtViewer({
           +
         </button>
       </div>
-      <div className={styles.ctLevels} role="group" aria-label="Airway checkpoints">
-        <button
-          onClick={() => {
-            setTargetFocus(null)
-            setStartFocus({ active, levelRequest })
-            setSlice(trace.anchor.slice)
-          }}
-          aria-label={`Start: ${trace.anchor.airway.name}`}
-        >
-          <strong>Start</strong>
-          <span>{trace.anchor.airway.code}</span>
-        </button>
-        <button disabled={active === 0} onClick={() => selectCheckpoint(active - 1)}>
-          <strong>Previous</strong>
-          <span>Review junction</span>
-        </button>
-        <button
-          aria-pressed={atCheckpoint && !focusedOnStart}
-          onClick={() => selectCheckpoint(active)}
-          aria-label="Current junction CT"
-        >
-          <strong>
-            {checkpoint.decision ? checkpoint.decision.parent.airway.code : 'Approach'}
-          </strong>
-          <span>Marking slice</span>
-        </button>
-        <button
-          disabled={active >= maxActive}
-          onClick={() => selectCheckpoint(active + 1)}
-          aria-label="View next junction"
-        >
-          <strong>Next</strong>
-          <span>
-            {active === trace.checkpoints.length - 1
-              ? 'End of route'
-              : active >= maxActive
-                ? 'Record this junction first'
-                : 'View junction'}
-          </span>
-        </button>
-      </div>
+      {!local && (
+        <div className={styles.ctLevels} role="group" aria-label="Airway checkpoints">
+          <button
+            onClick={() => {
+              setTargetFocus(null)
+              setStartFocus({ active, levelRequest })
+              setSlice(trace.anchor.slice)
+            }}
+            aria-label={`Start: ${trace.anchor.airway.name}`}
+          >
+            <strong>Start</strong>
+            <span>{trace.anchor.airway.code}</span>
+          </button>
+          <button disabled={active === 0} onClick={() => selectCheckpoint(active - 1)}>
+            <strong>Previous junction</strong>
+            <span>Review junction</span>
+          </button>
+          <button
+            aria-pressed={atCheckpoint && !focusedOnStart}
+            onClick={() => selectCheckpoint(active)}
+            aria-label="Current junction CT"
+          >
+            <strong>
+              {checkpoint.decision ? checkpoint.decision.parent.airway.code : 'Approach'}
+            </strong>
+            <span>Marking slice</span>
+          </button>
+          <button
+            disabled={active >= maxActive}
+            onClick={() => selectCheckpoint(active + 1)}
+            aria-label="View next junction"
+          >
+            <strong>Next junction</strong>
+            <span>
+              {active === trace.checkpoints.length - 1
+                ? 'End of route'
+                : active >= maxActive
+                  ? 'Record this junction first'
+                  : 'View junction'}
+            </span>
+          </button>
+        </div>
+      )}
       {checkpoint.decision && (
         <p className={styles.ctInstruction}>
           <button
@@ -657,30 +814,13 @@ export function NativeCtViewer({
           Follow its walls to the marking slice using adjacent CT slices.
         </p>
       )}
-      {onMark && (
-        <p className={styles.ctInstruction}>
-          {!atCheckpoint ? (
-            <button onClick={() => selectCheckpoint(active)}>
-              Return to current junction to mark the lumen
-            </button>
-          ) : (
-            <>
-              Mark the daughter lumen you chose
-              {checkpoint.decision ? ' in Steps' : ' toward the nodule'}.{' '}
-              <button disabled={!ready} onClick={() => onMark({ slice, pixel: null })}>
-                Lumen unresolved here
-              </button>
-            </>
-          )}
-        </p>
-      )}
       {checkpoint.visibilityNote && (
         <p className={styles.ctInstruction}>{checkpoint.visibilityNote}</p>
       )}
       {revealed && (
         <p className={styles.ctLegend}>
           <span>○ Your trace</span>
-          <span>＋ Source-derived comparison</span>
+          <span>＋ Model reference — not yet faculty reviewed</span>
         </p>
       )}
       <details className={styles.options}>
@@ -688,14 +828,16 @@ export function NativeCtViewer({
         <p>
           Standard axial is viewed from the feet: patient right is screen-left. Rotation and
           reflection change only the display. Patient-space marks stay fixed. The scope follows the
-          selected route at the CT plane. At a junction it looks from the parent toward the fork;
-          while browsing it stays approximately 4 mm proximal to the selected level. Its reference
-          orientation is fixed for each region; rotating the CT does not roll the camera. CT-derived
-          surface, not recorded bronchoscopy or a scored camera checkpoint.
+          model reference route at the CT plane. At a junction it looks from the parent toward the
+          fork; while browsing it stays approximately 4 mm proximal to the selected level. Its
+          reference orientation is fixed for each region; rotating the CT does not roll the camera.
+          CT-derived surface, not recorded bronchoscopy or a scored camera checkpoint.
         </p>
-        <button aria-pressed={!showNodule} onClick={() => setShowNodule((value) => !value)}>
-          {showNodule ? 'View original CT without nodule' : 'Restore simulated nodule'}
-        </button>
+        {!local && (
+          <button aria-pressed={!showNodule} onClick={() => setShowNodule((value) => !value)}>
+            {showNodule ? 'View original CT without nodule' : 'Restore simulated nodule'}
+          </button>
+        )}
         <label>
           Image magnification{' '}
           <input
@@ -733,7 +875,7 @@ export function NativeCtViewer({
           route planning does not demonstrate instrument reach or tool-in-lesion.
         </p>
       </details>
-      {!showNodule && (
+      {!local && !showNodule && (
         <p className={styles.ctInstruction} role="status">
           Original CT · simulated nodule hidden
         </p>

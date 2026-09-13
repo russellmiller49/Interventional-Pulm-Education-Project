@@ -17,7 +17,7 @@ export function ModuleFrame({
   const items = [
     { href: BASE_PATH, title: 'Overview', description: 'The course and your progress' },
     { href: `${BASE_PATH}/learn`, title: 'Learn', description: 'Trace real CT' },
-    { href: `${BASE_PATH}/practice`, title: 'Practice', description: 'Trace with less assistance' },
+    { href: `${BASE_PATH}/practice`, title: 'Practice', description: 'Coached CT tracing' },
     { href: `${BASE_PATH}/assess`, title: 'Assess', description: 'Independent interpretation' },
   ]
   return (

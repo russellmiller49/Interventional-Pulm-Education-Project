@@ -2,7 +2,7 @@
 
 import { ArrowRight, GitBranch } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
-import { BASE_PATH, LESSONS, nextLesson, SOURCE } from '../content/lessons'
+import { BASE_PATH, LESSONS, nextLesson, SOURCE, lessonById, VERSION } from '../content/lessons'
 import { completedLessons, progressVersionChanged } from '../engine/progress'
 import { useDeviceProgress } from './useDeviceProgress'
 import { ModuleFrame } from './ModuleFrame'
@@ -13,7 +13,11 @@ export function BranchTracingOverview() {
   const { ready, progress } = useDeviceProgress()
   const completed = completedLessons(progress)
   const changed = progressVersionChanged(progress)
-  const next = nextLesson(completed)
+  const resume =
+    progress.resume?.payloadVersion === VERSION && progress.resume.pathname === `${BASE_PATH}/learn`
+      ? lessonById(progress.resume.query?.lesson)
+      : undefined
+  const next = resume && !completed.includes(resume.id) ? resume : nextLesson(completed)
   return (
     <ModuleFrame section="overview">
       <main className={styles.overview}>
@@ -24,11 +28,13 @@ export function BranchTracingOverview() {
         <header className={styles.hero}>
           <div>
             <h1>Bronchial branch tracing</h1>
-            <p className={styles.subtitle}>Trace an airway route to a nodule in a named segment.</p>
+            <p className={styles.subtitle}>
+              Follow one airway, recognize its division, then build a route.
+            </p>
             <p>
-              Find the simulated nodule on real CT. Orient the images using the book’s tracing
-              conventions, and work through every branch decision from the trachea toward the
-              target.
+              Start with a short CT interval and one visible airway. Compare a demonstration with
+              your own marks, retry the same task, then relate the daughter branches to the view
+              from their parent.
             </p>
             <Link
               className={styles.primary}
@@ -43,7 +49,7 @@ export function BranchTracingOverview() {
                 ? 'Loading progress'
                 : !next
                   ? 'Review the course'
-                  : completed.length
+                  : completed.length || resume
                     ? `Continue: ${next.title}`
                     : 'Start learning'}
               <ArrowRight size={18} aria-hidden />
@@ -81,19 +87,19 @@ export function BranchTracingOverview() {
               is helpful. Start with patient orientation if CT-to-scope correlation is new to you.
             </p>
             <p>
-              Lessons work on a phone. A larger screen helps with side-by-side comparison and real
-              anatomy exploration.
+              Use a laptop for detailed CT and parent-view comparison. On narrow screens the task
+              stays above the workspace; scrolling and touch controls remain available.
             </p>
           </section>
         </div>
         <section className={styles.notice}>
           <h2>What this preview contains</h2>
           <p>
-            Learn, Practice and Assess use actual CT slices from one teaching scan with simulated
-            nodules in ten pulmonary segments. Start in standard axial, then apply the reflection or
-            rotation yourself with virtual bronchoscopy beside the CT. Each route contains 6–9
-            branch decisions followed by a distal nodule inspection. Learn compares each junction
-            after you record it; Practice and Assess show comparisons after you submit the set.
+            Foundations isolate a single lumen or bifurcation. Local pattern exercises follow, then
+            a three-division route and complete nodule approaches. Learn and Practice reveal
+            comparisons after each recorded attempt; Assess keeps comparisons hidden until the set
+            is submitted. All exercises use one teaching scan. Different targets in that scan do not
+            demonstrate transfer to an unfamiliar patient CT.
           </p>
           <p>
             Educational spatial reasoning only. This module does not establish device reach,
@@ -136,9 +142,11 @@ export function BranchTracingOverview() {
             instrument reach or tool-in-lesion.
           </p>
           <p>
-            Progress stays in this browser’s existing education progress store. Completed lessons
-            and first-attempt participation are saved. Reloading restarts an incomplete lesson;
-            image coordinates and camera state are not saved. CT interpretation is ungraded.
+            Versioned drafts save your current exercise, answers, CT slice, orientation and viewing
+            state on this device. Save & exit restores that draft when you reopen the lesson or the
+            same Practice/Assess selection. First-attempt participation remains separate. A changed
+            lesson or annotation version explains why an older draft cannot be resumed. Saving
+            failures are disclosed before you leave. CT interpretation is ungraded.
           </p>
         </section>
       </main>

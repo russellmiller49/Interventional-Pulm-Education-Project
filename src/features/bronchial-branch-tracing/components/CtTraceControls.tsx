@@ -25,7 +25,7 @@ export function CtTraceList({
 }) {
   return (
     <div className={styles.traceList}>
-      <h3>Your branch map</h3>
+      <h3>Route checkpoints</h3>
       <p className={styles.small}>
         {trace.checkpoints.filter((p) => p.decision).length} branch decisions, then the distal
         nodule approach. {recorded.filter(Boolean).length} of {trace.checkpoints.length} stops
@@ -142,18 +142,20 @@ export function CtBranchDecision({
       {reveal && (
         <div className={styles.feedback} role="status" data-branch-comparison={point.id}>
           <strong>{recorded ? 'Junction comparison' : 'Worked junction'}</strong>
+          <p>Model reference — not yet faculty reviewed.</p>
           {recorded && (
             <p>Your recorded choice: {chosen?.label ?? 'Daughter branch unresolved'}.</p>
           )}
           <p>
-            The source route continues through <strong>{reference.label}</strong>.{' '}
+            The model reference route continues through <strong>{reference.label}</strong>.{' '}
             {decision.options.filter((o) => o.airway.code === reference.airway.code).length > 1
               ? 'These daughters share a bronchial name. Follow their separate lumens; sharing a segment name does not make them the same branch.'
               : `The other ${decision.options.length === 2 ? 'daughter leaves' : 'daughters leave'} this route at the same junction. Compare the parent and each opening on the CT and the paired airway view.`}
           </p>
           <p>
-            Compare your lumen mark with the gold cross and browse the intervening slices. Next
-            continues on the source route; your original response stays recorded.
+            Compare your lumen mark with the gold cross and browse the intervening slices. A valid
+            lumen mark need not lie on the centerline; a difference is not an automatic error. The
+            next junction follows the model reference route; your original response stays recorded.
           </p>
         </div>
       )}

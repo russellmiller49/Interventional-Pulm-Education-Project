@@ -1,8 +1,10 @@
-# Bronchial branch tracing — CT nodule route preview
+# Bronchial branch tracing — local CT teaching preview
 
 Entry: `/en/learn/anatomy/branch-tracing`. Anonymous direct access, noindex, no catalog/search/sitemap listing. The module remains unpublished. This branch does not deploy or merge it.
 
-Learn, Practice and Assess now use actual 512×512 CT slices at native 0.5 mm spacing. Eight lessons teach the book's reflection/rotation conventions and four tracing patterns. Learners inspect a simulated nodule, follow the lumen toward its named segment, place marks at three airway checkpoints, and describe the course and distal airway–nodule relationship before comparison. Each lesson requires another CT trace before completion. Practice offers a target-segment selector or a mixed four-target set. Assess has four interpretations with delayed comparison. Thirteen authored targets cover ten segments of one source CT.
+Nine lessons now begin with a single lumen, a local bifurcation and the parent-airway view, then progress through the four patterns, a short route and complete nodule approaches. The native CT teaching loop supports a captioned walkthrough, an attempt, immediate comparison, retries and an independent viewpoint response. Pattern lessons open at their local division. Practice defaults to one coached route with immediate junction comparison; Assess withholds comparison until submission. All examples still use one teaching scan.
+
+See [the instructional update and review boundary](instructional-update.md) for the implementation, lesson alignment, draft contract and outstanding faculty work. All supplied model locators remain provisional; no reviewed wall contours or clinical accuracy grades have been introduced.
 
 The book's conventions are applied to the actual images and their orientation labels:
 
@@ -41,7 +43,7 @@ BRANCH_TRACING_CT_SOURCE='/Users/russellmiller/Projects/navigation_module/data/t
 
 Trace specifications are in `scripts/branch-tracing/authoring/ct-traces.json`. Native assets are in `public/branch-tracing/native-v1`: 236 acquisition planes, levels 240–475, fixed window −1000 to 400 HU, 48,335,710 PNG bytes. The browser loads the current plane and two neighbors, not the full stack. Original NRRD, the full source label spreadsheet, textbook pages and personal metadata are not distributed. Selected anatomical names are included as derived teaching annotations. The existing 6.4 MB whole-volume explorer package remains reproducible with `python3 scripts/branch-tracing/build-preview.py`.
 
-Version `c3-target1-r1` uses the existing bounded activity store. First recorded participation and hint count survive restart/reload, as does lesson completion. Incomplete work restarts; raw CT marks stay in session memory, with explicit local worksheet export available at independent debrief. Earlier synthetic and regional CT records remain historical. No clinical accuracy grade, mastery threshold, faculty-approved answer-key claim or new-patient transfer claim is assigned.
+Version `c6-local-teaching-r1` preserves participation history in the existing activity store and saves compatible drafts separately on this device. Local lessons, full routes, Practice and Assess restore their answers and viewing state. Local attempts and retries remain separate. Incompatible drafts and storage failures produce explicit messages. A completed click sequence does not demonstrate tracing competence.
 
 ## Reproduce anatomical names
 

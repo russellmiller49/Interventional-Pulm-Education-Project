@@ -1,7 +1,14 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from '@/i18n/navigation'
+import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
+import { draftSignature, readCtDraft, writeCtDraft } from '../engine/ct-draft'
+import { parsePracticeDraft, type PracticeDraft } from '../engine/practice-draft'
+import { browserStorage } from '../engine/progress'
+import { CtProgressiveMap } from './CtBranchMap'
+import type { CtViewerState } from '../content/ct-types'
 import { StageLayout } from '@/features/learning-module/stage/StageLayout'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { NowCard } from '@/features/learning-module/stage/NowCard'
@@ -50,9 +57,21 @@ const RealCtExplorer = dynamic(() => import('./RealCtExplorer').then((m) => m.Re
 export function BranchTracingPractice({ mode }: { mode: 'practice' | 'assess' }) {
   const [started, setStarted] = useState(false),
     [explorer, setExplorer] = useState(false)
-  const [selection, setSelection] = useState('mixed')
+  const [selection, setSelection] = useState(SEGMENT_PRACTICE_TRACES[2])
   const ids =
     mode === 'assess' ? ASSESS_TRACES : selection === 'mixed' ? PRACTICE_TRACES : [selection]
+  useEffect(() => {
+    try {
+      const previous = browserStorage()?.getItem('branch-tracing.practice-selection')
+      if (previous && (previous === 'mixed' || SEGMENT_PRACTICE_TRACES.includes(previous))) {
+        // Restore the user's selection from browser storage after hydration.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSelection(previous)
+      }
+    } catch {
+      /* The draft save path explains unavailable storage. */
+    }
+  }, [])
   if (started)
     return (
       <ModuleFrame section={mode} activity>
@@ -73,9 +92,11 @@ export function BranchTracingPractice({ mode }: { mode: 'practice' | 'assess' })
         </h1>
         <p className={styles.subtitle}>
           {mode === 'practice'
-            ? 'Choose a segment or practice a mixed set of four targets.'
+            ? 'Start with one coached route. Compare each junction immediately, or choose a mixed set.'
             : 'Plan four airway approaches to simulated nodules.'}{' '}
-          Your marks first; source trace after submission.
+          {mode === 'practice'
+            ? 'Feedback follows each recorded junction.'
+            : 'Reference comparisons remain hidden until you submit the set.'}
         </p>
         <div className={styles.introGrid}>
           <section>
@@ -110,7 +131,17 @@ export function BranchTracingPractice({ mode }: { mode: 'practice' | 'assess' })
                 </select>
               </label>
             )}
-            <button className={styles.startButton} onClick={() => setStarted(true)}>
+            <button
+              className={styles.startButton}
+              onClick={() => {
+                try {
+                  browserStorage()?.setItem('branch-tracing.practice-selection', selection)
+                } catch {
+                  /* Session displays the save failure. */
+                }
+                setStarted(true)
+              }}
+            >
               {mode === 'practice' ? 'Start CT practice' : 'Start CT interpretation'}
             </button>
           </section>
@@ -148,46 +179,108 @@ function CtPracticeSession({
   ids: string[]
   onExit: () => void
 }) {
-  const [index, setIndex] = useState(0),
-    [active, setActive] = useState(0)
-  const [furthest, setFurthest] = useState(0)
+  const router = useRouter()
+  const draftKey = `${mode}.${ids.join('.')}`
+  const signature = useMemo(() => draftSignature([mode, ids.map(traceById)]), [mode, ids])
+  const [loaded] = useState(() =>
+    readCtDraft(browserStorage(), draftKey, signature, (v) => parsePracticeDraft(v, ids)),
+  )
+  const resume = loaded.value
+  const [attempts, setAttempts] = useState<PracticeDraft['attempts']>(resume?.attempts ?? {})
+  const [help, setHelp] = useState(false)
+  const [exitWarning, setExitWarning] = useState(false)
+  const helpRef = useRef<HTMLButtonElement>(null)
+  const [views, setViews] = useState<Record<string, CtViewerState>>(resume?.views ?? {})
+  const [index, setIndex] = useState(resume?.index ?? 0),
+    [active, setActive] = useState(resume?.active ?? 0)
+  const [furthest, setFurthest] = useState(resume?.furthest ?? 0)
   const [levelRequest, setLevelRequest] = useState(0)
   const [marks, setMarks] = useState<(CtMark | null)[]>(
-    () => emptyTraceWork(traceById(ids[0])).marks,
+    () => resume?.work.marks ?? emptyTraceWork(traceById(ids[0])).marks,
   )
   const [branches, setBranches] = useState<(CtBranchChoice | null)[]>(
-    () => emptyTraceWork(traceById(ids[0])).branches,
+    () => resume?.work.branches ?? emptyTraceWork(traceById(ids[0])).branches,
   )
   const [junctions, setJunctions] = useState<boolean[]>(
-    () => emptyTraceWork(traceById(ids[0])).recorded,
+    () => resume?.work.recorded ?? emptyTraceWork(traceById(ids[0])).recorded,
   )
-  const drafts = useRef<
-    Record<
-      string,
-      {
-        marks: (CtMark | null)[]
-        branches: (CtBranchChoice | null)[]
-        recorded: boolean[]
-        course: Course | ''
-        targetRelation: TargetRelation | ''
-        hints: number
-        orientation: CtOrientation
-        alignment: CtResponse['orientation'] | null
-      }
-    >
-  >({})
-  const [course, setCourse] = useState<Course | ''>('')
-  const [targetRelation, setTargetRelation] = useState<TargetRelation | ''>('')
-  const [hints, setHints] = useState(0)
-  const [orientation, setOrientation] = useState<CtOrientation>(STANDARD_ORIENTATION)
-  const [alignment, setAlignment] = useState<CtResponse['orientation'] | null>(null)
+  const [drafts, setDrafts] = useState<PracticeDraft['drafts']>(resume?.drafts ?? {})
+  const [course, setCourse] = useState<Course | ''>(resume?.work.course ?? '')
+  const [targetRelation, setTargetRelation] = useState<TargetRelation | ''>(
+    resume?.work.targetRelation ?? '',
+  )
+  const [hints, setHints] = useState(resume?.work.hints ?? 0)
+  const [orientation, setOrientation] = useState<CtOrientation>(
+    resume?.work.orientation ?? STANDARD_ORIENTATION,
+  )
+  const [alignment, setAlignment] = useState<CtResponse['orientation'] | null>(
+    resume?.work.alignment ?? null,
+  )
   const [firstOrientations, setFirstOrientations] = useState<(CtOrientation | null)[]>(
-    ids.map(() => null),
+    resume?.firstOrientations ?? ids.map(() => null),
   )
-  const [responses, setResponses] = useState<(CtResponse | null)[]>(ids.map(() => null))
-  const [submitted, setSubmitted] = useState(false),
+  const [responses, setResponses] = useState<(CtResponse | null)[]>(
+    resume?.responses ?? ids.map(() => null),
+  )
+  const [submitted, setSubmitted] = useState(resume?.submitted ?? false),
     [saveFailed, setSaveFailed] = useState(false)
   const trace = traceById(ids[index])
+  const onViewChange = useCallback(
+    (view: CtViewerState) =>
+      setViews((current) =>
+        JSON.stringify(current[trace.id]) === JSON.stringify(view)
+          ? current
+          : { ...current, [trace.id]: view },
+      ),
+    [trace.id],
+  )
+  const snapshot = useMemo(
+    () => ({
+      index,
+      active,
+      furthest,
+      attempts,
+      work: {
+        marks,
+        branches,
+        recorded: junctions,
+        course,
+        targetRelation,
+        hints,
+        orientation,
+        alignment,
+      },
+      drafts: drafts,
+      responses,
+      firstOrientations,
+      submitted,
+      views,
+    }),
+    [
+      index,
+      active,
+      furthest,
+      attempts,
+      drafts,
+      marks,
+      branches,
+      junctions,
+      course,
+      targetRelation,
+      hints,
+      orientation,
+      alignment,
+      responses,
+      firstOrientations,
+      submitted,
+      views,
+    ],
+  )
+  useEffect(() => {
+    // Report whether synchronization with browser storage succeeded.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSaveFailed(!writeCtDraft(browserStorage(), draftKey, signature, snapshot))
+  }, [draftKey, signature, snapshot])
   const target = targetForTrace(trace)
   const routeDone = traceComplete(trace, { marks, branches, recorded: junctions })
   const stationDone = Boolean(junctions[active])
@@ -206,11 +299,21 @@ function CtPracticeSession({
     setLevelRequest((v) => v + 1)
   }
   const recorded = responses.every(Boolean)
+  const recordedResponse = responses[index]
   const dirty =
-    JSON.stringify(responses[index]) !==
-    JSON.stringify({ orientation: alignment, marks, branches, course, hints, targetRelation })
+    !recordedResponse ||
+    !alignment ||
+    !sameOrientation(recordedResponse.orientation.first, alignment.first) ||
+    !sameOrientation(recordedResponse.orientation.used, alignment.used) ||
+    JSON.stringify(recordedResponse.marks.map((m) => [m.slice, m.pixel])) !==
+      JSON.stringify(marks.map((m) => m && [m.slice, m.pixel])) ||
+    JSON.stringify(recordedResponse.branches) !== JSON.stringify(branches) ||
+    recordedResponse.course !== course ||
+    recordedResponse.hints !== hints ||
+    recordedResponse.targetRelation !== targetRelation
+
   function restore(i: number, response: CtResponse | null) {
-    const draft = drafts.current[ids[i]],
+    const draft = drafts[ids[i]],
       empty = emptyTraceWork(traceById(ids[i]))
     setIndex(i)
     setFurthest((current) => Math.max(current, i))
@@ -225,16 +328,20 @@ function CtPracticeSession({
     setAlignment(response?.orientation ?? draft?.alignment ?? null)
   }
   function open(i: number) {
-    drafts.current[trace.id] = {
-      marks,
-      branches,
-      recorded: junctions,
-      course,
-      targetRelation,
-      hints,
-      orientation,
-      alignment,
-    }
+    if (i === index) return
+    setDrafts((current) => ({
+      ...current,
+      [trace.id]: {
+        marks,
+        branches,
+        recorded: junctions,
+        course,
+        targetRelation,
+        hints,
+        orientation,
+        alignment,
+      },
+    }))
     restore(i, responses[i])
   }
   function record() {
@@ -262,6 +369,7 @@ function CtPracticeSession({
       assessment: 'Ungraded CT route planning toward simulated nodules',
       nomenclatureVersion: 'nomenclature-v1',
       branchRouteVersion: 'branch-tracing-decisions/v1',
+      junctionAttempts: attempts,
       traces: ids.map((id, i) => ({
         id,
         target: {
@@ -314,6 +422,9 @@ function CtPracticeSession({
         )}
         <div className={styles.tabs}>
           <button onClick={exportWorksheet}>Export your CT worksheet</button>
+          {mode === 'practice' && (
+            <button onClick={() => setSubmitted(false)}>Review and retry these junctions</button>
+          )}
           <button onClick={onExit}>Return to {mode === 'practice' ? 'Practice' : 'Assess'}</button>
         </div>
         {ids.map((id, i) => (
@@ -359,14 +470,27 @@ function CtPracticeSession({
         <SectionHeader
           kicker={mode === 'practice' ? 'Practice · Real CT' : 'Assess · CT worksheet'}
           title={`Trace ${index + 1} of ${ids.length}`}
-          meta={[`Target: ${target.segment.code}`, 'Feedback after submission']}
-          onRestart={onExit}
-          restartLabel="Exit this set"
-          saveAndExitHref={BASE_PATH}
+          meta={[
+            `Target: ${target.segment.code}`,
+            mode === 'practice' ? 'Feedback after each junction' : 'Feedback after submission',
+          ]}
+          onRestart={() => {
+            if (writeCtDraft(browserStorage(), draftKey, signature, snapshot)) onExit()
+            else setExitWarning(true)
+          }}
+          restartLabel="Return to route selection"
+          helpRef={helpRef}
+          onHelp={() => setHelp(true)}
+          onSaveAndExit={() => {
+            if (writeCtDraft(browserStorage(), draftKey, signature, snapshot))
+              router.push(BASE_PATH)
+            else setExitWarning(true)
+          }}
           resumedNote={
             saveFailed
               ? 'Browser storage is unavailable. Work continues, but progress cannot be saved.'
-              : undefined
+              : loaded.notice ||
+                'Draft saves on this device. Resume by starting this same selection.'
           }
         />
       }
@@ -399,10 +523,12 @@ function CtPracticeSession({
                   : stationTask
                     ? stationDone
                       ? active + 1 === trace.checkpoints.length - 1
-                        ? 'Continue to nodule approach'
+                        ? 'Inspect the distal airway–nodule relationship'
                         : 'Next junction'
                       : trace.checkpoints[active].decision
-                        ? 'Record this junction'
+                        ? mode === 'practice'
+                          ? 'Check this junction'
+                          : 'Record this junction'
                         : 'Record nodule approach'
                     : recorded && !dirty
                       ? 'Submit all CT interpretations'
@@ -418,8 +544,17 @@ function CtPracticeSession({
                     setLevelRequest((v) => v + 1)
                   } else if (stationTask) {
                     if (stationDone) selectActive(active + 1)
-                    else if (junctionReady(trace, active, marks, branches))
+                    else if (junctionReady(trace, active, marks, branches)) {
+                      const key = `${trace.id}.${trace.checkpoints[active].id}`
+                      setAttempts((current) => ({
+                        ...current,
+                        [key]: [
+                          ...(current[key] ?? []),
+                          { mark: marks[active]!, branch: branches[active], hints },
+                        ],
+                      }))
                       setJunctions((values) => values.map((v, i) => (i === active ? true : v)))
+                    }
                   } else if (recorded && !dirty) setSubmitted(true)
                   else record()
                 },
@@ -442,6 +577,7 @@ function CtPracticeSession({
                     active={active}
                     choice={branches[active]}
                     recorded={stationDone}
+                    reveal={mode === 'practice' && stationDone}
                     onChange={
                       !stationDone
                         ? (value) => {
@@ -456,11 +592,32 @@ function CtPracticeSession({
                 )}
                 <p role="status">
                   {stationDone
-                    ? 'Junction response recorded. Comparison follows submission of the set.'
+                    ? mode === 'practice'
+                      ? 'Junction recorded. Compare the model reference with the CT before continuing.'
+                      : 'Junction response recorded. Comparison follows submission of the set.'
                     : marks[active]
                       ? 'Lumen response recorded. Record this junction to continue.'
                       : 'Lumen mark needed in the CT tracing stack.'}
                 </p>
+                {mode === 'practice' && stationDone && (
+                  <>
+                    <button
+                      onClick={() => {
+                        setMarks((values) => values.map((v, i) => (i === active ? null : v)))
+                        setBranches((values) => values.map((v, i) => (i === active ? null : v)))
+                        setJunctions((values) => values.map((v, i) => (i === active ? false : v)))
+                        setResponses((values) => values.map((v, i) => (i === index ? null : v)))
+                      }}
+                    >
+                      Retry this junction
+                    </button>
+                    <p>
+                      First response and retries are retained separately:{' '}
+                      {attempts[`${trace.id}.${trace.checkpoints[active].id}`]?.length ?? 0}{' '}
+                      recorded attempts.
+                    </p>
+                  </>
+                )}
                 <button onClick={() => setAlignment(null)}>Revise orientation</button>
                 {routeDone && (
                   <>
@@ -501,6 +658,11 @@ function CtPracticeSession({
               ))}
             </div>
           </NowCard>
+          <CtProgressiveMap
+            trace={trace}
+            recorded={mode === 'practice' ? junctions : []}
+            branches={branches}
+          />
           <CtTraceList
             trace={trace}
             marks={marks}
@@ -514,7 +676,11 @@ function CtPracticeSession({
       teaching={
         <div ref={teachingTop} className={styles.teaching}>
           {alignment && <CtJunctionTeaching trace={trace} active={active} />}
-          <h2>Trace without the reference</h2>
+          <h2>
+            {mode === 'practice'
+              ? 'Trace with feedback at each junction'
+              : 'Trace without the reference'}
+          </h2>
           <p>
             Use <strong>Show target</strong> to inspect the simulated nodule in the{' '}
             <strong>
@@ -524,8 +690,8 @@ function CtPracticeSession({
           </p>
           <p>
             Use Start to find the trachea, then follow the air column through every fork. At each
-            junction, select a daughter in Steps and mark its lumen on Current junction CT. Record
-            the junction before continuing.
+            junction, select the branch you would follow and mark its lumen on Current junction CT.
+            Record the junction before continuing.
           </p>
           <p>
             After the distal checkpoint, inspect adjacent slices toward the nodule. Record what the
@@ -535,8 +701,9 @@ function CtPracticeSession({
           <p>
             Use Rotate 90° left, Rotate 90° right or Flip left–right. Reset to standard lets you
             start again. These controls change the display; your marks remain attached to the same
-            anatomy. The virtual camera follows the selected airway location. An axial slice and an
-            endoscopic view have different projections; compare their branch relationships.
+            anatomy. The virtual camera follows the model reference route, even after a different
+            branch choice. An axial slice and an endoscopic view have different projections; compare
+            their branch relationships.
           </p>
           <h2>Record uncertainty honestly</h2>
           <p>
@@ -545,8 +712,10 @@ function CtPracticeSession({
           </p>
           <p className={styles.small}>
             Each junction is presented on the source route, even if your preceding choice differs.
-            Your recorded choices remain unchanged; explicit branch comparisons and reference marks
-            are withheld until the whole set is submitted.
+            Your recorded choices remain unchanged.{' '}
+            {mode === 'practice'
+              ? 'Compare each junction after recording it.'
+              : 'Branch comparisons and reference marks are withheld until the whole set is submitted.'}
           </p>
           <CtAirwayGuide trace={trace} active={active} pending />
         </div>
@@ -555,6 +724,11 @@ function CtPracticeSession({
         <NativeCtViewer
           key={trace.id}
           trace={trace}
+          initialView={views[trace.id]}
+          onViewChange={onViewChange}
+          referenceThrough={
+            mode === 'practice' ? lastUnlocked(junctions) - (routeDone ? 0 : 1) : -1
+          }
           marks={marks}
           active={active}
           levelRequest={levelRequest}
@@ -573,6 +747,33 @@ function CtPracticeSession({
           }
           showAnchor
         />
+      }
+      overlay={
+        <>
+          <HelpDialog open={help} onClose={() => setHelp(false)} returnFocusTo={helpRef}>
+            <p>
+              {!alignment
+                ? 'Choose the display orientation, then record it.'
+                : !routeDone
+                  ? 'Select the branch you would follow and mark its lumen. Browse freely; Go to answer slice restores the marking frame.'
+                  : 'Describe the airway course and distal relationship, then record the interpretation.'}
+            </p>
+            <p>
+              {mode === 'practice'
+                ? 'Each recorded junction reveals a model comparison for coaching.'
+                : 'Reference comparisons stay hidden until all interpretations are submitted.'}{' '}
+              Help preserves your answers.
+            </p>
+          </HelpDialog>
+          <HelpDialog
+            open={exitWarning}
+            onClose={() => setExitWarning(false)}
+            title="This draft could not be saved"
+          >
+            <p>Leaving will lose changes since the last successful save.</p>
+            <button onClick={() => router.push(BASE_PATH)}>Leave without saving</button>
+          </HelpDialog>
+        </>
       }
       footer={
         <div className={styles.footer}>

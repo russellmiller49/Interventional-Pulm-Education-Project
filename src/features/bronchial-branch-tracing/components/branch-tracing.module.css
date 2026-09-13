@@ -1239,3 +1239,248 @@
     max-width: 570px;
   }
 }
+
+/* This module's local exercises reuse the lesson shell with a CT-first workspace. */
+.currentTask {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: #15313b;
+  border-bottom: 1px solid #72dcd9;
+}
+.currentTask p {
+  margin: 0.25rem 0;
+  max-width: 75ch;
+}
+.currentTask small {
+  color: #bdcfd7;
+}
+.currentTask button,
+.currentTask a {
+  flex-shrink: 0;
+  margin: 0;
+  max-width: 24rem;
+}
+.localWorkspace {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.32fr) minmax(0, 0.68fr);
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.localInstructions,
+.localImageWorkspace {
+  min-width: 0;
+  overflow: auto;
+  padding: 1rem;
+}
+.localInstructions {
+  border-right: 1px solid #354d58;
+  background: #0b1d26;
+}
+.localInstructions h2 {
+  font-size: 1.1rem;
+  margin: 0 0 0.75rem;
+}
+.localInstructions h3 {
+  font-size: 1rem;
+}
+.localInstructions p {
+  margin: 0.6rem 0;
+}
+.localInstructions details {
+  border-top: 1px solid #354d58;
+  padding: 0.8rem 0;
+}
+.localInstructions button,
+.walkthrough button,
+.answerGuidance button,
+.mapChoices button {
+  color: #effcfc;
+  background: #1c3b47;
+  border: 1px solid #789da9;
+  border-radius: 0.4rem;
+  padding: 0.5rem 0.65rem;
+  min-height: 44px;
+  cursor: pointer;
+  font: inherit;
+}
+.localInstructions button:disabled,
+.walkthrough button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.localInstructions button[aria-pressed='true'] {
+  border-color: #83f0e8;
+  background: #254f59;
+}
+.markSlots {
+  display: grid;
+  gap: 0.5rem;
+  border: 0;
+  padding: 0;
+}
+.markSlots legend {
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+.localOption {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  min-height: 44px;
+}
+.localOption input {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+.walkthrough {
+  padding: 0.65rem 0.8rem;
+  border: 1px solid #47606b;
+  border-radius: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.walkthrough p {
+  margin: 0.6rem 0;
+}
+.walkthroughControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.answerGuidance {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.7rem;
+  background: #173844;
+  color: #e8f8fb;
+}
+.answerGuidance button {
+  margin-left: auto;
+}
+.ctOnly {
+  grid-template-columns: minmax(0, 1fr);
+}
+.localViewer:not(:fullscreen) .pairedViews {
+  max-width: 100%;
+}
+.localViewer:not(:fullscreen) .ctOnly {
+  max-width: min(100%, clamp(240px, calc(100dvh - 550px), 560px));
+  margin: 0 auto;
+}
+.localViewer .nativeImage {
+  max-width: 100%;
+}
+.referenceNotice {
+  padding: 0.5rem 0.7rem;
+  font-size: 0.85rem;
+  color: #e9d9b2;
+  margin: 0;
+}
+.parentMap {
+  margin: 0.75rem 0;
+  padding: 0.6rem;
+  border: 1px solid #4e6874;
+  border-radius: 0.5rem;
+}
+.parentMap svg {
+  width: min(100%, 260px);
+  display: block;
+  margin: auto;
+}
+.parentMap p {
+  margin: 0.35rem 0;
+}
+.mapChoices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.mapChoices p {
+  width: 100%;
+}
+.progressiveMap {
+  padding: 0.75rem;
+}
+@media (max-width: 900px), (max-height: 699px) {
+  .localWorkspace {
+    height: auto;
+    overflow: visible;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .localInstructions,
+  .localImageWorkspace {
+    overflow: visible;
+    padding: 0.75rem;
+  }
+  .localInstructions {
+    border: 0;
+  }
+  .currentTask {
+    flex-wrap: wrap;
+    font-size: 0.875rem;
+    gap: 0.5rem;
+  }
+  .currentTask button,
+  .currentTask a {
+    width: 100%;
+    max-width: none;
+  }
+}
+.localViewer .nativeHeading {
+  padding: 0.4rem 0.6rem;
+}
+.localViewer .nativeHeading span {
+  display: none;
+}
+.localViewer .pairedColumn > h3 {
+  min-height: auto;
+  padding: 0.35rem 0.6rem;
+  margin: 0;
+}
+.localViewer .pairCaption {
+  min-height: auto;
+}
+.localViewer [data-region-highlight] {
+  outline: 3px solid #e9c77e;
+  outline-offset: -3px;
+}
+:global([data-lesson-module='bronchial-branch-tracing']):has(.localWorkspace) > :first-child {
+  padding: 0.4rem 0.9rem;
+  gap: 0.2rem 0.75rem;
+}
+:global([data-lesson-module='bronchial-branch-tracing']):has(.localWorkspace)
+  [data-stage-resumed-note] {
+  margin: 0.15rem 0;
+  font-size: 0.78rem;
+}
+@media (max-width: 900px) {
+  :global([data-lesson-module='bronchial-branch-tracing']):has(.localWorkspace) > :first-child {
+    position: static;
+  }
+  :global([data-lesson-module='bronchial-branch-tracing']):has(.localWorkspace)
+    > :global([data-context-strip]) {
+    position: sticky;
+    top: var(--site-header-height, 4rem);
+    z-index: 5;
+  }
+  .localViewer:not(:fullscreen) .ctOnly {
+    max-width: 100%;
+  }
+}
+.module
+  :global([data-lesson-module='bronchial-branch-tracing']):has(.localWorkspace)
+  > :first-child
+  p {
+  margin: 0;
+}
+.module [data-stage-save-exit] {
+  background: #193640;
+  border-color: #678c94;
+  color: #effcfc;
+}
