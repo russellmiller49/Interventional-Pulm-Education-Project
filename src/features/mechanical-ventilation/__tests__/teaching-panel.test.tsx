@@ -1,3 +1,4 @@
+import { createLabSession } from '../engine/learningLab'
 import { useReducer } from 'react'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 
@@ -256,153 +257,77 @@ describe('mechanical-ventilation teaching panels', () => {
    * differs from a pressure-targeted one.
    */
   describe('waveform anatomy', () => {
-    it('opens the Learn pathway', () => {
-      expect(mechanicalVentilationLessons[0].id).toBe('waveform-anatomy')
-    })
-
-    it('names all three traces and what each is read against', () => {
-      render(
-        <MechanicalVentilationTeachingPanel
-          lessonId="waveform-anatomy"
-          state={stateFor('MV-01', 14)}
-        />,
-      )
-      for (const trace of ['Pressure', 'Flow', 'Volume']) {
+    const reference = () => createLabSession('waveform-anatomy').simulation
+    it('names the axes and offers a real synchronized captured breath', () => {
+      render(<MechanicalVentilationTeachingPanel lessonId="waveform-anatomy" state={reference()} />)
+      for (const trace of ['Pressure', 'Flow', 'Volume'])
         expect(screen.getByRole('button', { name: trace })).toBeInTheDocument()
-      }
       fireEvent.click(screen.getByRole('button', { name: 'Flow' }))
       expect(screen.getByText(/above the line is gas going into the patient/i)).toBeInTheDocument()
-      expect(screen.getAllByText(/Read against zero/i).length).toBeGreaterThan(0)
+      expect(screen.getByRole('slider', { name: 'Captured breath time cursor' })).toBeEnabled()
+      expect(document.querySelectorAll('[data-time-cursor]')).toHaveLength(3)
     })
-
-    it('states the rule that a ventilator sets one of pressure or volume, never both', () => {
-      render(
-        <MechanicalVentilationTeachingPanel
-          lessonId="waveform-anatomy"
-          state={stateFor('MV-01', 14)}
-        />,
+    it('keeps conventional VC/PC out of the mandatory first view and labels its assumptions', () => {
+      render(<MechanicalVentilationTeachingPanel lessonId="waveform-anatomy" state={reference()} />)
+      const comparison = document.querySelector('[data-idealized-comparison]')!
+      expect(comparison.closest('details')).not.toHaveAttribute('open')
+      expect(comparison.textContent).toMatch(/not two runs of the patient engine/)
+      expect(comparison.textContent).toMatch(/different expiratory flows/)
+      expect(screen.queryByText(/It cannot set both/)).toBeNull()
+    })
+    it('keeps targets independent of live measured volume, mode and mechanics', () => {
+      const initial = reference()
+      const { rerender } = render(
+        <MechanicalVentilationTeachingPanel lessonId="waveform-anatomy" state={initial} />,
       )
-      expect(screen.getByText(/It cannot set both/i)).toBeInTheDocument()
-    })
-
-    it('contrasts the two delivery strategies and what varies under each', () => {
-      render(
-        <MechanicalVentilationTeachingPanel
-          lessonId="waveform-anatomy"
-          state={stateFor('MV-01', 14)}
-        />,
-      )
-      // Once as the column heading over the traces, once as the row explaining it.
-      expect(screen.getAllByText('Volume targeted')).toHaveLength(2)
-      expect(screen.getAllByText('Pressure targeted')).toHaveLength(2)
-      expect(screen.getByText('Pressure varies')).toBeInTheDocument()
-      expect(screen.getByText('Volume varies')).toBeInTheDocument()
-      // The consequence, in both directions.
-      expect(
-        screen.getByText(
-          /stiffer lung raises the pressure trace and leaves the breath size alone/i,
-        ),
-      ).toBeInTheDocument()
-      expect(
-        screen.getByText(/stiffer lung shrinks the breath and leaves the pressure trace alone/i),
-      ).toBeInTheDocument()
-      // And what does not change: expiration is passive either way.
-      expect(screen.getByText(/Expiration is passive either way/i)).toBeInTheDocument()
-    })
-
-    it('draws the comparison from this patient’s own mechanics', () => {
-      const state = stateFor('MV-01', 14)
-      render(<MechanicalVentilationTeachingPanel lessonId="waveform-anatomy" state={state} />)
-      const compliance = Math.round(state.patient.mechanics.complianceLPerCmH2O * 1000)
-      // Named twice on purpose: in the figure caption and on the slider that drives it.
-      expect(screen.getAllByText(new RegExp(`${compliance} mL/cmH₂O`)).length).toBeGreaterThan(0)
-      // Both sliders sit at this patient by default.
-      expect(screen.getAllByText(/this patient$/).length).toBe(2)
-    })
-
-    /**
-     * The section's own prediction question asks what happens to each trace when compliance falls.
-     * The slider is how that gets answered by looking rather than by being told, so the two columns
-     * have to move in opposite ways — and each has to hold its own set variable while it does.
-     */
-    it('lets the learner stiffen the lung and shows the two columns diverging', () => {
-      render(<LivePanel initial={stateFor('MV-01', 14)} />)
-      const state = stateFor('MV-01', 14)
-      const slider = screen.getByRole('slider', { name: /compliance/i })
-      const setVt = Math.round(state.measurements.exhaledVtMl)
-
-      /** `[held, moved]` for a column: what it holds, and the quantity the lung then decides. */
-      const columnFor = (label: RegExp): [string, string] => {
-        const values = screen.getByText(label).closest('div')?.querySelectorAll('dd') ?? []
-        return [values[0]?.textContent ?? '', values[1]?.textContent ?? '']
-      }
-      const numeric = (text: string) => Number(text.replace(/[^0-9.]/g, ''))
-
-      const [baseVcHeld, baseVcMoved] = columnFor(/Volume targeted holds/)
-      const [basePcHeld, basePcMoved] = columnFor(/Pressure targeted holds/)
-      expect(numeric(baseVcHeld)).toBe(setVt)
-
-      // The sliders take a log exponent: -1 is half this patient's compliance.
-      fireEvent.change(slider, { target: { value: '-1' } })
-
-      const [stiffVcHeld, stiffVcMoved] = columnFor(/Volume targeted holds/)
-      const [stiffPcHeld, stiffPcMoved] = columnFor(/Pressure targeted holds/)
-
-      // Each column holds its own set variable across the change...
-      expect(stiffVcHeld).toBe(baseVcHeld)
-      expect(stiffPcHeld).toBe(basePcHeld)
-      // ...and the quantity the lung decides moves, in opposite directions.
-      expect(numeric(stiffVcMoved)).toBeGreaterThan(numeric(baseVcMoved))
-      expect(numeric(stiffPcMoved)).toBeLessThan(numeric(basePcMoved))
-
-      expect(screen.getByText(/A stiffer lung\./)).toBeInTheDocument()
-    })
-
-    /**
-     * The sliders change the *patient*, so the console beside the panel has to change with them —
-     * that is the whole reason they dispatch instead of holding local state.
-     */
-    it('drives the engine, so the live console shows the consequence', () => {
-      const initial = stateFor('MV-01', 14)
-      render(<LivePanel initial={initial} />)
-      const baselinePeak = initial.measurements.peakPressureCmH2O
-
-      // Exponent +1 on a base of four: four times this patient's airway resistance.
-      fireEvent.change(screen.getByRole('slider', { name: /resistance/i }), {
-        target: { value: '1' },
+      const fixed = document.querySelector('[data-fixed-inputs]')!.textContent
+      let changed = ventilationSimulationReducer(initial, {
+        type: 'SELECT_MODE',
+        mode: 'pressure-ac',
       })
-
-      // The panel re-renders off the engine's own scaled patient, not off a local copy.
-      expect(screen.getAllByText(/biting or kinking the tube/).length).toBeGreaterThan(0)
-      const shown = Number(
-        screen.getByText(/Airway resistance/).textContent?.match(/([\d.]+) cmH₂O\/L\/s/)?.[1] ??
-          '0',
-      )
-      expect(shown).toBeGreaterThan(initial.patient.mechanics.resistanceCmH2OPerLps)
-      expect(baselinePeak).toBeGreaterThan(0)
+      changed = ventilationSimulationReducer(changed, { type: 'CONFIRM_MODE' })
+      changed = ventilationSimulationReducer(changed, {
+        type: 'SET_TEACHING_MECHANICS',
+        overrides: { complianceScale: 0.5 },
+      })
+      rerender(<MechanicalVentilationTeachingPanel lessonId="waveform-anatomy" state={changed} />)
+      expect(document.querySelector('[data-fixed-inputs]')!.textContent).toBe(fixed)
     })
-
-    it('offers a way back to the patient the case authored', () => {
-      render(<LivePanel initial={stateFor('MV-01', 14)} />)
-      expect(screen.queryByRole('button', { name: /Put the patient back/ })).toBeNull()
-      fireEvent.change(screen.getByRole('slider', { name: /resistance/i }), {
+    it('changes the illustration dependent variables using fixed shared axes', () => {
+      render(<MechanicalVentilationTeachingPanel lessonId="waveform-anatomy" state={reference()} />)
+      fireEvent.click(screen.getByText('Conventional VC and PC: optional idealized reference'))
+      const column = (key: string) => document.querySelector(`[data-ideal-column="${key}"]`)!
+      const baseVc = column('volumeTargeted').textContent
+      const basePc = column('pressureTargeted').textContent
+      const volumePath = () =>
+        document
+          .querySelector('[data-ideal-mode="pressureTargeted"][data-ideal-trace="volume"]')!
+          .getAttribute('d')
+      const beforeVolumePath = volumePath()
+      fireEvent.change(screen.getByLabelText('Illustration compliance'), {
         target: { value: '0.5' },
       })
-      fireEvent.click(screen.getByRole('button', { name: /Put the patient back/ }))
-      expect(screen.getAllByText(/this patient$/).length).toBe(2)
+      expect(column('volumeTargeted').textContent).not.toBe(baseVc)
+      expect(column('pressureTargeted').textContent).not.toBe(basePc)
+      expect(volumePath()).not.toBe(beforeVolumePath)
+      expect(column('volumeTargeted').textContent).toContain('400.0 mL')
     })
-
-    it('disables the sliders where there is no dispatch to drive', () => {
-      // The offline render harness renders panels read-only; they must not look interactive.
-      render(
-        <MechanicalVentilationTeachingPanel
-          lessonId="waveform-anatomy"
-          state={stateFor('MV-01', 14)}
-        />,
-      )
-      for (const slider of screen.getAllByRole('slider')) {
-        expect(slider).toBeDisabled()
-      }
+    it('routes an available patient control through the real engine without diagnostic multiplier labels', () => {
+      render(<LivePanel initial={reference()} />)
+      fireEvent.click(screen.getByText('Explore simulated patient mechanics'))
+      fireEvent.change(screen.getByRole('slider', { name: /Airway resistance/ }), {
+        target: { value: '2' },
+      })
+      expect(screen.getByText(/Airway resistance · 2.00× baseline/)).toBeInTheDocument()
+      expect(screen.queryByText(/biting or kinking the tube/)).toBeNull()
+      fireEvent.click(screen.getByRole('button', { name: 'Restore patient mechanics' }))
+      expect(screen.getByText(/Airway resistance · 1.00× baseline/)).toBeInTheDocument()
+    })
+    it('offers inspection, with no fake patient sliders in a read-only embedding', () => {
+      render(<MechanicalVentilationTeachingPanel lessonId="waveform-anatomy" state={reference()} />)
+      expect(screen.getByText(/Read-only patient view/)).toBeInTheDocument()
+      expect(screen.queryByRole('slider', { name: /Airway resistance/ })).toBeNull()
+      expect(screen.getByRole('slider', { name: 'Captured breath time cursor' })).toBeEnabled()
     })
   })
 

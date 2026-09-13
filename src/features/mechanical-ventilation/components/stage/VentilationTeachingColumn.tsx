@@ -1,5 +1,7 @@
 'use client'
 
+import { isFoundationUnit } from '../../content/foundations'
+import { FoundationTeaching } from './FoundationTeaching'
 import { StageBlock } from '@/features/learning-module/stage/StageBlock'
 import type { StageBlockVisibility } from '@/features/learning-module/stage/StageTeachingScope'
 
@@ -44,6 +46,7 @@ export function VentilationTeachingColumn({
   state,
   predictionCommitted,
   stops,
+  onShowControl,
 }: {
   readonly lesson: VentilationStageLesson
   readonly step: VentilationStageStep
@@ -51,7 +54,18 @@ export function VentilationTeachingColumn({
   readonly predictionCommitted: boolean
   /** The stops the breath map is lighting for this step: the walk's current stop, or the step's. */
   readonly stops: readonly BreathStopId[]
+  readonly onShowControl?: () => void
 }) {
+  if (isFoundationUnit(lesson.unit.id))
+    return (
+      <FoundationTeaching
+        unitId={lesson.unit.id}
+        step={step}
+        state={state}
+        stops={stops}
+        onShowControl={onShowControl}
+      />
+    )
   const { unit, spec } = lesson
   const stage = ventilationStages.find((entry) => entry.id === unit.stage)
   const focus = step.teaching

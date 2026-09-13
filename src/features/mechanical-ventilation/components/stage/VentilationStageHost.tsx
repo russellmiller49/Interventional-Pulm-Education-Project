@@ -37,6 +37,15 @@ import {
 } from '../../content/breathSpine'
 import { getVentilatorDeviceProfile } from '../../content/deviceProfiles'
 import { ventilationExperimentByUnit, type LabGoal } from '../../content/learningExperiments'
+import { isFoundationUnit } from '../../content/foundations'
+import { observationFor } from '../../engine/learningObservation'
+import {
+  completedBreath,
+  breathStopIndex,
+  waveformAxes,
+  inspectionWindow,
+} from '../../engine/teachingBreath'
+import { CapturedBreath } from './CapturedBreath'
 import { ventilationPracticePairing } from '../../content/sectionSpecs'
 import { ventilationChoiceIndex } from '../../content/stageItems'
 import {
@@ -108,6 +117,25 @@ const PREDICTION_VERDICT_FRAMES = {
 } as const
 const PREDICTION_EXPLANATION_HEADING = 'The explanation'
 
+function InspectedBreath({ evidence }: { evidence: LabEvidence }) {
+  if (!evidence.inspection) return null
+  const samples = inspectionWindow(
+    evidence.inspection.waveforms ?? [
+      ...(evidence.baseline?.waveforms ?? []),
+      ...(evidence.response?.waveforms ?? []),
+    ],
+    evidence.inspection,
+  )
+  return (
+    <CapturedBreath
+      label="Your captured interval for interpretation"
+      samples={samples}
+      whole={false}
+      fixedIndex={samples.length - 1}
+    />
+  )
+}
+
 /**
  * One section of the ventilation pathway on the lesson stage.
  *
@@ -167,6 +195,7 @@ function VentilationStageSession({
   const router = useRouter()
   const lesson = useMemo(() => ventilationStageLesson(unitId), [unitId])
   const experiment = ventilationExperimentByUnit.get(unitId)!
+  const foundation = isFoundationUnit(unitId)
   const [device] = useState<VentilatorDeviceId>(() => saved?.device ?? readDevicePreference())
   const { session, engine, lab } = useVentilationLabSession({ unitId, device, saved, save })
   const pathway = criticalCareLearningPathway('mechanical-ventilation')
@@ -178,6 +207,7 @@ function VentilationStageSession({
   const [walkStopIndex, setWalkStopIndex] = useState(0)
   const [walkDone, setWalkDone] = useState(false)
   const [pendingChoice, setPendingChoice] = useState<Record<string, string>>({})
+  const [observationDraft, setObservationDraft] = useState<Record<string, string>>({})
   const [sortDraft, setSortDraft] = useState<Record<string, 'set' | 'reported'>>({})
   const [review, setReview] = useState<number | null>(null)
   const [viewIndex, setViewIndex] = useState<number | null>(null)
@@ -299,6 +329,11 @@ function VentilationStageSession({
     lab({ type: 'SORT', answers: sortDraft })
   }
 
+  function commitObservation() {
+    const choice = observationDraft[activeStep.id]
+    if (choice) lab({ type: 'INTERPRET', choice, now: now() })
+  }
+
   function compare() {
     if (!labReadyToCompare(session)) return
     lab({ type: 'COMPARE' })
@@ -358,6 +393,7 @@ function VentilationStageSession({
     setReadConfirmed(false)
     setPendingChoice({})
     setSortDraft({})
+    setObservationDraft({})
     setSpotlight(null)
     completionRecorded.current = false
   }
@@ -394,7 +430,7 @@ function VentilationStageSession({
   const activeManeuver = activeRound ? roundManeuver(activeRound) : null
   const waitingStatus =
     activeManeuver === 'pause'
-      ? 'Waiting for the pause. Let at least one full breath pass, then press Pause while the flow trace is below its zero line.'
+      ? 'Pause during the requested phase, or use the captured time cursor and Use this captured interval below. No timed click is required.'
       : activeManeuver === 'hold'
         ? 'Waiting for the hold. Use the hold control under the console; it happens at the next breath boundary.'
         : 'Waiting for the change on the ventilator. This step is done once the patient is receiving it.'
@@ -424,7 +460,9 @@ function VentilationStageSession({
     ? 'Commit your prediction first.'
     : lookingBack
       ? 'Paused while you look back.'
-      : 'The same settings as on the console.'
+      : goals.some((g) => g.type === 'mechanics')
+        ? 'Simulated patient properties; keep ventilator settings fixed.'
+        : 'Educational shortcuts to supported ventilator settings.'
   /*
    * Reset patient rebuilds this round's patient and clears the change, the hold, the intervention
    * and the timed observation the lab has recorded — the prediction stays. It is a control, so it
@@ -508,6 +546,12 @@ function VentilationStageSession({
 
   function showWhere() {
     if (!firstUnmetGoalKey) return
+    const tab = Array.from(
+      document.querySelectorAll<HTMLButtonElement>(
+        '[role=tablist][aria-label="Workspace panel views"] [role=tab]',
+      ),
+    ).find((button) => button.textContent === 'Simulator')
+    tab?.click()
     setSpotlight((current) => ({
       stepId: activeStep.id,
       key: firstUnmetGoalKey,
@@ -523,10 +567,30 @@ function VentilationStageSession({
    * too. Without this the compact view opened on the simulator and stayed there, with the answer
    * choices in the pane it could not show.
    */
+  const [teachingVisit, setTeachingVisit] = useState(0)
+  useEffect(() => {
+    if (!foundation || activeStep.lookIn.pane !== 'teaching') return
+    if (teachingVisit > 0) {
+      const tab = Array.from(
+        document.querySelectorAll<HTMLButtonElement>(
+          '[role=tablist][aria-label="Workspace panel views"] [role=tab]',
+        ),
+      ).find((button) => button.textContent === 'Teaching')
+      tab?.click()
+    }
+    const target = document.getElementById('mv-foundation-teaching')
+    target?.scrollIntoView?.({ block: 'start', behavior: 'auto' })
+  }, [foundation, activeStep.id, activeStep.lookIn.pane, teachingVisit])
+  useEffect(() => {
+    if (foundation && lookingBack) engine({ type: 'SET_PAUSED', paused: true })
+  }, [foundation, lookingBack, engine])
+
   const compactPane: StagePaneId =
     lookingBack || (stepPerformed && !finished)
       ? 'steps'
-      : compactPaneForLocation(activeStep.lookIn, 'steps')
+      : foundation && activeStep.phase === 'recognize'
+        ? 'steps'
+        : compactPaneForLocation(activeStep.lookIn, 'steps')
 
   /* ---------------------------------------------------------------- *
    * The Now card
@@ -584,6 +648,14 @@ function VentilationStageSession({
       case 'read':
         return {
           ...base,
+          ...(foundation
+            ? {
+                secondary: {
+                  label: 'Show the worked reference',
+                  onActivate: () => setTeachingVisit((v) => v + 1),
+                },
+              }
+            : {}),
           primary: { label: activeStep.actionLabel, onActivate: continueFromRecognize },
         }
       case 'walk': {
@@ -675,7 +747,7 @@ function VentilationStageSession({
               ...base,
               status:
                 activeManeuver === 'pause'
-                  ? 'Done. The traces are frozen with gas leaving.'
+                  ? 'Done. A breath interval is captured; phase identification is recorded separately.'
                   : activeManeuver === 'hold'
                     ? 'Done. The hold has been performed.'
                     : 'Done. The patient is receiving the change.',
@@ -738,6 +810,20 @@ function VentilationStageSession({
                 }
               : { label: activeStep.actionLabel, onActivate: compare },
         }
+      case 'interpret': {
+        const observed = evidenceFor(activeStep).observation
+        return {
+          ...base,
+          primary: observed
+            ? { label: 'Continue', onActivate: () => confirmThrough(activeIndex) }
+            : {
+                label: activeStep.actionLabel,
+                onActivate: commitObservation,
+                disabled: !observationDraft[activeStep.id],
+                disabledReason: 'Choose the relationship supported by your captured run.',
+              },
+        }
+      }
       case 'explain':
         return {
           ...base,
@@ -800,6 +886,14 @@ function VentilationStageSession({
     }
     switch (interaction.kind) {
       case 'walk': {
+        if (foundation)
+          return (
+            <p data-walk-stop={walkStop ?? 'complete'}>
+              {walkStop
+                ? `Inspect ${walkStop === 'trigger' ? 'the trigger that starts inspiration' : walkStop === 'cycling' ? 'cycling at the end of inspiration' : walkStop} on the captured reference in the Teaching panel. The phase marker and cursor move with this step.`
+                : 'All four parts of the reference breath have been inspected.'}
+            </p>
+          )
         if (walkDone) return null
         const stop = walkStop ? breathStop(walkStop) : null
         if (!stop) return null
@@ -878,28 +972,42 @@ function VentilationStageSession({
           )
         }
         const selected = pendingChoice[activeStep.id] ?? null
+        const questionSamples = stepEvidence.baseline?.waveforms ?? session.simulation.waveforms
+        const questionBreath = completedBreath(questionSamples)
         return (
-          <fieldset className={stageStyles.choiceList} data-prediction-choices>
-            <legend>{interaction.item.stem}</legend>
-            {orderChoices(interaction.item.id, interaction.item.choices).map((choice) => (
-              <label
-                key={choice.id}
-                className={stageStyles.choice}
-                data-selected={selected === choice.id}
-              >
-                <input
-                  type="radio"
-                  name={`mv-prediction-${activeStep.id}`}
-                  value={choice.id}
-                  checked={selected === choice.id}
-                  onChange={() =>
-                    setPendingChoice((current) => ({ ...current, [activeStep.id]: choice.id }))
-                  }
-                />
-                <span>{choice.label}</span>
-              </label>
-            ))}
-          </fieldset>
+          <>
+            {unitId === 'breathing-with-support' ? (
+              <CapturedBreath
+                label={`Captured complete breath · interval ${interaction.round === 0 ? 'A' : 'B'}`}
+                samples={questionSamples}
+                fixedIndex={breathStopIndex(
+                  questionBreath,
+                  interaction.round === 0 ? 'expiration' : 'inspiration',
+                )}
+              />
+            ) : null}
+            <fieldset className={stageStyles.choiceList} data-prediction-choices>
+              <legend>{interaction.item.stem}</legend>
+              {orderChoices(interaction.item.id, interaction.item.choices).map((choice) => (
+                <label
+                  key={choice.id}
+                  className={stageStyles.choice}
+                  data-selected={selected === choice.id}
+                >
+                  <input
+                    type="radio"
+                    name={`mv-prediction-${activeStep.id}`}
+                    value={choice.id}
+                    checked={selected === choice.id}
+                    onChange={() =>
+                      setPendingChoice((current) => ({ ...current, [activeStep.id]: choice.id }))
+                    }
+                  />
+                  <span>{choice.label}</span>
+                </label>
+              ))}
+            </fieldset>
+          </>
         )
       }
       case 'simulator-task':
@@ -910,6 +1018,17 @@ function VentilationStageSession({
           (interaction.kind === 'simulator-task' && interaction.withObservation)
         return (
           <>
+            {unitId === 'breathing-with-support' && showGoals && evidence.baseline ? (
+              <CapturedBreath
+                key={`inspection-${session.round}`}
+                label="Captured baseline · inspect an interval without changing the patient"
+                samples={evidence.baseline.waveforms}
+                onInspect={(sample) => lab({ type: 'INSPECT', sampleTime: sample.time })}
+              />
+            ) : null}
+            {unitId === 'breathing-with-support' && !showGoals ? (
+              <InspectedBreath evidence={evidence} />
+            ) : null}
             {showGoals ? (
               <ul className={stageStyles.taskList} data-step-goals aria-label="What to change">
                 {goals.map((goal, index) => (
@@ -936,6 +1055,100 @@ function VentilationStageSession({
           </>
         )
       }
+      case 'interpret': {
+        const stepEvidence = evidenceFor(activeStep)
+        const item = observationFor({ ...session, round: interaction.round })
+        const observed = stepEvidence.observation
+        const before = stepEvidence.baseline,
+          after = stepEvidence.response
+        const axes = waveformAxes([...(before?.waveforms ?? []), ...(after?.waveforms ?? [])])
+        return (
+          <div data-observation-task>
+            {before && after && unitId !== 'breathing-with-support' ? (
+              <>
+                <BeforeAfter
+                  before={before}
+                  after={after}
+                  metrics={experiment.rounds[interaction.round].watch}
+                  revealDirection={Boolean(observed)}
+                />
+                <details open={unitId === 'waveform-anatomy'}>
+                  <summary>Captured baseline and result waveforms</summary>
+                  <CapturedBreath
+                    label="Captured baseline"
+                    samples={before.waveforms}
+                    axes={axes}
+                  />
+                  <CapturedBreath label="Captured result" samples={after.waveforms} axes={axes} />
+                </details>
+                {after.hold ? (
+                  <CapturedBreath
+                    label="Captured result: acquired inspiratory hold"
+                    samples={after.hold.waveforms}
+                    whole={false}
+                  />
+                ) : null}
+              </>
+            ) : null}
+            {unitId === 'breathing-with-support' ? (
+              <InspectedBreath evidence={stepEvidence} />
+            ) : null}
+            {after?.issues?.length ? (
+              <p role="status">This comparison includes: {after.issues.join('; ')}.</p>
+            ) : null}
+            {!observed ? (
+              <fieldset className={stageStyles.choiceList}>
+                <legend>{item.prompt}</legend>
+                {item.choices.map((choice) => (
+                  <label className={stageStyles.choice} key={choice.id}>
+                    <input
+                      type="radio"
+                      name={`observation-${activeStep.id}`}
+                      checked={observationDraft[activeStep.id] === choice.id}
+                      onChange={() =>
+                        setObservationDraft((current) => ({
+                          ...current,
+                          [activeStep.id]: choice.id,
+                        }))
+                      }
+                    />
+                    {choice.label}
+                  </label>
+                ))}
+              </fieldset>
+            ) : (
+              <p role="status" data-observation-feedback>
+                <strong>
+                  {observed.correct
+                    ? 'Your observation matches this run.'
+                    : 'Recheck the captured result.'}
+                </strong>{' '}
+                {item.feedback}
+              </p>
+            )}
+            {after?.issues?.length || observed?.correct === false ? (
+              <button
+                type="button"
+                className={styles.toolButton}
+                onClick={() => {
+                  lab({ type: 'RESET' })
+                  setViewIndex(null)
+                  setObservationDraft({})
+                  setConfirmed(
+                    lesson.steps.findIndex(
+                      (s) =>
+                        s.interaction.kind === 'simulator-task' &&
+                        s.interaction.round === session.round,
+                    ) - 1,
+                  )
+                }}
+              >
+                Repeat from a clean baseline
+              </button>
+            ) : null}
+          </div>
+        )
+      }
       case 'explain': {
         const stepEvidence = evidenceFor(activeStep)
         const committedId =
@@ -957,6 +1170,12 @@ function VentilationStageSession({
             */}
             {committedId && item?.kind === 'prediction' ? (
               <div data-explain-recap>
+                {foundation ? (
+                  <p>
+                    <strong>Intended mechanism and first prediction</strong> · Read your recorded
+                    observation separately below.
+                  </p>
+                ) : null}
                 <AnswerVerdict
                   item={item.item}
                   choiceId={committedId}
@@ -968,11 +1187,19 @@ function VentilationStageSession({
                 />
               </div>
             ) : null}
+            {foundation && stepEvidence.observation ? (
+              <p data-recorded-observation>
+                {observationFor({ ...session, round: interaction.round }).feedback}
+              </p>
+            ) : null}
             {stepEvidence.response &&
             roundManeuver(experiment.rounds[interaction.round]) === 'pause' ? (
               <FrozenTraceReading
                 response={stepEvidence.response}
-                peep={session.simulation.ventilator.settings.peepCmH2O}
+                peep={Number(
+                  stepEvidence.response.inputs?.peepCmH2O ??
+                    session.simulation.ventilator.settings.peepCmH2O,
+                )}
               />
             ) : stepEvidence.baseline && stepEvidence.response ? (
               <BeforeAfter
@@ -1066,28 +1293,47 @@ function VentilationStageSession({
     : { priority: 'none' as const, text: 'No active alarm' }
 
   const simulator = (
-    <VentilationSimulatorPane
-      session={session}
-      engine={engine}
-      controlsEnabled={controlsEnabled && !lookingBack}
-      lockedReason={lockedReason}
-      pausedReason={pausedReason}
-      controlsNote={controlsNote}
-      onResetPatient={() => lab({ type: 'RESET' })}
-      resetDisabledReason={resetDisabledReason}
-      resetWouldErase={resetWouldErase}
-      onSelectDevice={selectDevice}
-      deviceLocked={predictionCommitted}
-      watch={watch}
-      goals={interaction.kind === 'simulator-task' || interaction.kind === 'observe' ? goals : []}
-      mechanicsVisible={mechanicsVisible}
-      exploring={interaction.kind === 'explain'}
-      spotlightKey={spotlightKey}
-      stops={mapStops}
-      mapCaption={mapCaption}
-      mapAnswer={mapAnswer}
-      bedsideAvailable={interaction.kind !== 'locate' || locationCommitted}
-    />
+    <>
+      {foundation ? (
+        <div className={styles.compactTask}>
+          <strong>{activeStep.title}</strong>
+          <p>{activeStep.instruction}</p>
+          <p>
+            {interaction.kind === 'prediction' && pendingChoice[activeStep.id]
+              ? `Selected answer: ${interaction.item.choices.find((c) => c.id === pendingChoice[activeStep.id])?.label}. `
+              : ''}
+            Return to Steps for your answer and Continue.
+          </p>
+        </div>
+      ) : null}
+      <VentilationSimulatorPane
+        key={foundation ? `${session.device}:${session.round}` : undefined}
+        session={session}
+        engine={engine}
+        controlsEnabled={controlsEnabled && !lookingBack}
+        lockedReason={lockedReason}
+        pausedReason={pausedReason}
+        controlsNote={controlsNote}
+        onResetPatient={() => {
+          lab({ type: 'RESET' })
+          setObservationDraft({})
+        }}
+        resetDisabledReason={resetDisabledReason}
+        resetWouldErase={resetWouldErase}
+        onSelectDevice={selectDevice}
+        deviceLocked={predictionCommitted}
+        watch={watch}
+        goals={interaction.kind === 'simulator-task' || interaction.kind === 'observe' ? goals : []}
+        mechanicsVisible={mechanicsVisible}
+        exploring={interaction.kind === 'explain'}
+        spotlightKey={spotlightKey}
+        stops={mapStops}
+        mapCaption={mapCaption}
+        mapAnswer={mapAnswer}
+        readOnly={foundation && lookingBack}
+        bedsideAvailable={interaction.kind !== 'locate' || locationCommitted}
+      />
+    </>
   )
 
   const teaching = (
@@ -1100,6 +1346,7 @@ function VentilationStageSession({
         state={session.simulation}
         predictionCommitted={predictionCommitted}
         stops={mapStops}
+        onShowControl={firstUnmetGoalKey ? showWhere : undefined}
       />
     </StageTeachingScope>
   )
@@ -1124,6 +1371,29 @@ function VentilationStageSession({
           <p>
             <strong>One new idea:</strong> {lesson.spec.newConcept}
           </p>
+        </details>
+      ) : null}
+      {foundation && session.history?.length ? (
+        <details className={styles.block} data-historical-learning>
+          <summary>Earlier learning records ({session.history.length})</summary>
+          <p>
+            These records are historical. They do not supply observations for the revised tasks.
+          </p>
+          {session.history.map((entry, i) => (
+            <p key={i}>
+              {entry.reason}. Device: {entry.device}; round {entry.round + 1}; predictions{' '}
+              {entry.evidence
+                .map((e) =>
+                  e.prediction === undefined ? 'not submitted' : String(e.prediction + 1),
+                )
+                .join(', ')}
+              {entry.completedAt ? `; completed ${entry.completedAt}` : ''}
+              {entry.holds?.length
+                ? `; ${entry.holds.length} historical hold acquisitions retained`
+                : ''}
+              .
+            </p>
+          ))}
         </details>
       ) : null}
       <StepList
@@ -1329,6 +1599,11 @@ function recapLines(
       return step.interaction.goals.map(goalLabel)
     case 'observe':
       return ['Watched the response interval, then compared before and after.']
+    case 'interpret': {
+      const item = observationFor({ ...session, round })
+      const choice = item.choices.find((c) => c.id === evidence.observation?.choice)
+      return choice ? [`Your recorded observation: ${choice.label}`, item.feedback] : []
+    }
     case 'sort':
       return evidence.sort ? [`${Object.keys(evidence.sort).length} values sorted.`] : ['Sorted.']
     default:
@@ -1428,14 +1703,21 @@ function BeforeAfter({
   before,
   after,
   metrics,
+  revealDirection = true,
 }: {
+  readonly revealDirection?: boolean
   readonly before: NonNullable<LabEvidence['baseline']>
   readonly after: NonNullable<LabEvidence['response']>
   readonly metrics: readonly (keyof typeof labMetricLabels)[]
 }) {
   return (
     <table className={stageStyles.compareTable} data-before-after>
-      <caption className={shellStyles.kicker}>What actually changed</caption>
+      <caption className={shellStyles.kicker}>
+        Captured baseline → captured result
+        {metrics.includes('plateau')
+          ? ` · Baseline plateau: ${before.plateauSource ?? 'modeled'}; result plateau: ${after.plateauSource ?? 'modeled'}`
+          : ''}
+      </caption>
       <thead>
         <tr>
           <th scope="col">Reading</th>
@@ -1458,7 +1740,7 @@ function BeforeAfter({
                 {b.toFixed(digits)}
                 {metric === 'plateau' && !before.plateauValid ? ' *' : ''}
               </td>
-              <td data-direction={direction}>
+              <td data-direction={revealDirection ? direction : undefined}>
                 {a.toFixed(digits)}
                 {metric === 'plateau' && !after.plateauValid ? ' *' : ''}
               </td>

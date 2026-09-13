@@ -1,3 +1,4 @@
+import { isFoundationUnit } from '../content/foundations'
 import { ventilationLearningUnits } from '../content/learningCurriculum'
 import {
   ventilationExperimentByUnit,
@@ -24,7 +25,10 @@ describe('the fourteen stage lessons', () => {
         kind: 'prediction',
         round: 1,
       })
-      expect(lesson.steps.length).toBe(lesson.sectionId === 'controls-and-goals' ? 9 : 8)
+      expect(lesson.steps.length).toBe(
+        (lesson.sectionId === 'controls-and-goals' ? 9 : 8) +
+          (isFoundationUnit(lesson.sectionId) ? 2 : 0),
+      )
       expect(lesson.steps.map((step) => step.ordinal)).toEqual(
         lesson.steps.map((_, index) => index + 1),
       )
@@ -34,13 +38,12 @@ describe('the fourteen stage lessons', () => {
         expect(step.gate).toBe(index <= lesson.predictionStepIndex ? 'open' : 'after-prediction')
       })
       // The phases read Recognize → Predict → Act → Observe → Explain, then the transfer.
-      expect(lesson.steps.slice(0, 5).map((step) => step.phase)).toEqual([
-        'recognize',
-        'predict',
-        'act',
-        'observe',
-        'explain',
-      ])
+      expect(
+        lesson.steps
+          .filter((step) => step.interaction.kind !== 'interpret')
+          .slice(0, 5)
+          .map((step) => step.phase),
+      ).toEqual(['recognize', 'predict', 'act', 'observe', 'explain'])
       expect(lesson.steps.slice(-3).every((step) => step.phase === 'transfer')).toBe(true)
     }
   })

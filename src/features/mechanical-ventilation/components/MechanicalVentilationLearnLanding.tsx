@@ -46,9 +46,10 @@ export function MechanicalVentilationLearnLanding({
         <header className={styles.hero}>
           <h1>Learn</h1>
           <p>
-            {composition.total} sections in one order, on the running ventilator. Each section takes
-            a prediction before its change and opens its explanation after. Work them in order the
-            first time; every section stays one click away afterwards.
+            {composition.total} sections in one order. The first five teach the concept with a
+            worked reference before you apply it, capture a breath or run an experiment, and
+            interpret the result. Later sections build on those skills with clinical cases. Work
+            them in order the first time; every section stays one click away afterwards.
           </p>
           <div className={styles.entryActions}>
             {next ? (

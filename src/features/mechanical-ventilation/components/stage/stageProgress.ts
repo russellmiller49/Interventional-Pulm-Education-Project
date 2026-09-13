@@ -75,6 +75,8 @@ export function deriveStageProgress(
     lesson,
     (s) => s.interaction.kind === 'explain' && s.interaction.round === 1,
   )
+  const interpretation = (round: 0 | 1) =>
+    indexOf(lesson, (s) => s.interaction.kind === 'interpret' && s.interaction.round === round)
   const last = lesson.steps.length - 1
 
   const first = session.evidence[0]
@@ -113,8 +115,8 @@ export function deriveStageProgress(
         break
       }
       default:
-        liveIndex = explain
-        livePerformed = true
+        liveIndex = interpretation(0) >= 0 && !first.observation ? interpretation(0) : explain
+        livePerformed = liveIndex === explain
     }
   } else {
     switch (session.phase) {
@@ -136,8 +138,11 @@ export function deriveStageProgress(
         livePerformed = labReadyToCompare(session)
         break
       default:
-        liveIndex = transferExplain
-        livePerformed = true
+        liveIndex =
+          interpretation(1) >= 0 && !session.evidence[1].observation
+            ? interpretation(1)
+            : transferExplain
+        livePerformed = liveIndex === transferExplain
     }
   }
 

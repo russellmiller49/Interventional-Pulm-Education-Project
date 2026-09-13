@@ -397,6 +397,7 @@
   background: rgba(16, 46, 52, 0.35);
 }
 
+.block h2,
 .block h3 {
   margin: 0;
   font-size: 0.9375rem;
@@ -528,4 +529,130 @@
 
 .example ol {
   padding-left: 1.15rem;
+}
+
+/* Captured teaching traces: real engine samples, independent of transport and live console. */
+.capturedBreath {
+  margin: 0.65rem 0;
+  padding: 0.65rem;
+  border: 1px solid #3b5066;
+  border-radius: 0.5rem;
+  background: #0b1728;
+  min-width: 0;
+}
+.capturedBreath svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.capturedBreath svg text {
+  fill: #d8e7f3;
+  font:
+    13px system-ui,
+    sans-serif;
+}
+.breathTrace {
+  fill: none;
+  stroke: #70e0d0;
+  stroke-width: 1.8;
+}
+.breathGrid {
+  stroke: #304358;
+  stroke-width: 0.6;
+}
+.zeroLine {
+  stroke: #99aabb;
+  stroke-dasharray: 3 3;
+  stroke-width: 1;
+}
+.cursor {
+  stroke: #ffd389;
+  stroke-width: 1.7;
+}
+.phaseBand {
+  fill: #24525c;
+  opacity: 0.6;
+}
+.cursorControl {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+}
+.cursorControl input {
+  width: 100%;
+  min-width: 0;
+}
+.settingMap {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.settingMap th,
+.settingMap td {
+  padding: 0.6rem 0.3rem;
+  border-bottom: 1px solid #3b5066;
+  vertical-align: top;
+  text-align: left;
+}
+.idealReference {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.pressureTrace {
+  fill: none;
+  stroke: #ffbf62;
+  stroke-dasharray: 5 3;
+  stroke-width: 2;
+}
+.idealReadouts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+.idealReadouts p {
+  font-size: 0.875rem;
+}
+.compactTask {
+  display: none;
+}
+@media (max-width: 1100px) {
+  .compactTask {
+    display: block;
+    padding: 0.6rem;
+    border-bottom: 1px solid #3b5066;
+    background: #101e30;
+  }
+  .compactTask p {
+    margin: 0.25rem 0;
+    font-size: 0.85rem;
+  }
+}
+/* Explicit selected-unit marker: compactTask exists only in the five revised lessons.
+ * Keep the shared workspace untouched, including its tab behavior and desktop pane sizing. */
+@media (max-width: 720px) {
+  :global([data-lesson-module='mechanical-ventilation']):has(.compactTask)
+    :global([role='tablist'])
+    > span {
+    color: #a9c3c8;
+    font-size: 0.75rem;
+  }
+  :global([data-lesson-module='mechanical-ventilation']):has(.compactTask)
+    > div:first-child
+    > div:has(> :global([data-stage-help])) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+  :global([data-lesson-module='mechanical-ventilation']):has(.compactTask)
+    > div:first-child
+    > div:has(> :global([data-stage-help]))
+    > :is(button, a) {
+    min-height: 44px;
+    padding: 0.3rem;
+    font-size: 0.75rem;
+    justify-content: center;
+  }
 }

@@ -57,9 +57,9 @@ describe('the walk', () => {
       expect(document.querySelector('[data-walk-stop]')?.getAttribute('data-walk-stop')).toBe(
         stopId,
       )
-      expect(
-        document.querySelector('[data-teaching-block="stop"]')?.getAttribute('data-stop'),
-      ).toBe(stopId)
+      expect(document.querySelector('[data-guided-stop]')?.getAttribute('data-guided-stop')).toBe(
+        stopId,
+      )
       expect(primary()!.textContent).toMatch(index === 3 ? /Finish the walk/ : /Next stop/)
       fireEvent.click(primary()!)
     }
@@ -151,7 +151,10 @@ describe('the settings sort', () => {
     })
     fireEvent.click(primary()!) // → Observe
     simulate(first.seconds + 1)
-    fireEvent.click(primary()!) // Compare → Explain
+    fireEvent.click(primary()!) // Compare → Interpret
+    fireEvent.click(within(nowCard()).getByRole('radio', { name: 'Rose' }))
+    fireEvent.click(primary()!) // submit observation
+    fireEvent.click(primary()!) // → Explain
     fireEvent.click(primary()!) // → Sort
     const sortIndex = lesson.steps.findIndex((step) => step.interaction.kind === 'sort')
     expect(stageId()).toBe(lesson.steps[sortIndex].id)
@@ -187,10 +190,10 @@ describe('a round whose action is a pause', () => {
     const lesson = ventilationStageLesson(unitId)
     const [first] = ventilationExperimentByUnit.get(unitId)!.rounds
     const act = lesson.steps[2]
-    expect(act.title).toBe('Freeze the traces while gas is leaving')
+    expect(act.title).toBe('Pause or inspect expiration')
     expect(act.title).not.toMatch(/change/i)
     expect(act.guide?.maneuver).toBe('pause')
-    expect(lesson.steps[3].title).toBe('Read the frozen traces')
+    expect(lesson.steps[3].title).toBe('Read the captured traces')
 
     render(<VentilationStageHost unitId={unitId} />)
     boot()
@@ -203,7 +206,7 @@ describe('a round whose action is a pause', () => {
     const guide = document.querySelector('[data-teaching-block="guide"]')!
     expect(guide).not.toBeNull()
     expect(guide.getAttribute('data-maneuver')).toBe('pause')
-    expect(guide.textContent).toMatch(/freezing the display, not changing anything/)
+    expect(guide.textContent).toMatch(/Pausing only freezes the display/)
     expect(guide.closest('details')).toBeNull()
     // No readings panel for a pause — nothing is going to move.
     expect(document.querySelector('[data-live-readings]')).toBeNull()
@@ -225,12 +228,15 @@ describe('a round whose action is a pause', () => {
     for (let tick = 0; tick < 60 && flowValue() > -1; tick += 1) simulate(0.1)
     expect(flowValue()).toBeLessThan(-1)
     fireEvent.click(screen.getByRole('button', { name: /^Pause$/ }))
-    expect(
-      within(nowCard()).getByText(/Done\. The traces are frozen with gas leaving/),
-    ).toBeInTheDocument()
+    expect(within(nowCard()).getByText(/Done\. A breath interval is captured/)).toBeInTheDocument()
     fireEvent.click(primary()!) // → Observe
     expect(stageId()).toBe(lesson.steps[3].id)
     expect(primary()!.textContent).toMatch(/Continue to the reading/)
+    fireEvent.click(primary()!) // → Interpret
+    fireEvent.click(
+      within(nowCard()).getByRole('radio', { name: 'Outward flow with falling volume' }),
+    )
+    fireEvent.click(primary()!)
     fireEvent.click(primary()!) // → Explain
     const reading = document.querySelector('[data-frozen-reading]')!
     expect(reading).not.toBeNull()
