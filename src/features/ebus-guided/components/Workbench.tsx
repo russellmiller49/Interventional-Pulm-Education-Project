@@ -36,6 +36,7 @@ export function Workbench({
     () => ({
       sessionId,
       kind: lab.kind,
+      modelPackage: lab.modelPackage,
       presetKey: lab.presetKey,
       controls: lab.controls,
       locked,

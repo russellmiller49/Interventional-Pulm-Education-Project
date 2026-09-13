@@ -1,3 +1,4 @@
+import { MODEL_REVISION, MODEL_STEPS, type ModelPackage } from '@/lib/ebus-model-contract'
 import type { EbusControl, EbusObservation, EbusLinkedLesson } from '@/lib/ebus-guided-bridge'
 export type Topic = 'Prepare' | 'Optimize' | 'Locate' | 'Plan' | 'Sample' | 'Complete'
 export interface Choice {
@@ -14,9 +15,10 @@ export interface Question {
   explanation: string
   imageStation?: string
 }
-export type LabGoal = 'scan' | 'coupling' | 'depth' | 'gain' | 'doppler' | 'capture'
+export type LabGoal = 'scan' | 'coupling' | 'depth' | 'gain' | 'doppler' | 'capture' | 'model'
 export interface Lab {
-  kind: 'simulator' | 'knobology'
+  kind: 'simulator' | 'knobology' | 'model'
+  modelPackage?: ModelPackage
   goal: LabGoal
   presetKey: string
   controls: EbusControl[]
@@ -92,6 +94,16 @@ export function labGoalMet(lab: Lab, state: EbusObservation): boolean {
       return false
   }
   switch (lab.goal) {
+    case 'model':
+      return (
+        !!lab.modelPackage &&
+        state.model?.package === lab.modelPackage &&
+        state.model.revision === MODEL_REVISION &&
+        !!state.model.frameId &&
+        state.model.complete &&
+        !state.model.annotations &&
+        MODEL_STEPS[lab.modelPackage].every((step) => state.model!.steps.includes(step))
+      )
     case 'scan':
       return state.targetVisible && state.contactQuality >= 0.45
     case 'coupling':

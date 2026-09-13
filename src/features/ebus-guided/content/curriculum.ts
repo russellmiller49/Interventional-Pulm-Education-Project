@@ -1,3 +1,4 @@
+import { needleModel, contactModel, measurementModel, routeModel } from './models'
 import type { Lesson, Topic } from './types'
 import { question } from './authoring'
 import { prepareLessons } from './prepare'
@@ -105,10 +106,15 @@ export const coupling: Lesson = {
 export const LESSONS: Lesson[] = [
   ...prepareLessons,
   coupling,
+  contactModel,
   ...optimizeLessons,
+  measurementModel,
   ...locateLessons,
   ...planLessons,
-  ...sampleLessons,
+  routeModel,
+  ...sampleLessons.flatMap((lesson) =>
+    lesson.id === 'needle-safety' ? [lesson, needleModel] : [lesson],
+  ),
   ...completeLessons,
 ]
 export function lessonById(id: string | undefined) {

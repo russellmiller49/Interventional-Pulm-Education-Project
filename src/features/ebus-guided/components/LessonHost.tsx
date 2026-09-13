@@ -349,7 +349,11 @@ function LessonSession({
             </div>
           }
           simulator={
-            lesson.lab && (index === 3 || (lesson.lab.linkedLesson && index >= 4 && index <= 5)) ? (
+            lesson.lab &&
+            (index === 3 ||
+              ((lesson.lab.linkedLesson || lesson.lab.modelPackage) &&
+                index >= 4 &&
+                index <= 5)) ? (
               <div>
                 <div hidden={review !== null}>
                   <Workbench
@@ -362,7 +366,9 @@ function LessonSession({
                 </div>
                 {review !== null && <TeachingDiagram kind={lesson.diagram} />}
               </div>
-            ) : lesson.lab?.linkedLesson && currentIndex === 1 && review === null ? (
+            ) : (lesson.lab?.linkedLesson || lesson.lab?.modelPackage) &&
+              currentIndex === 1 &&
+              review === null ? (
               <Workbench
                 lab={lesson.lab}
                 locked={false}

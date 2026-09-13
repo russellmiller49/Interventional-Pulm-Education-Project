@@ -1,0 +1,296 @@
+{
+  "version": "additional-models-v1",
+  "assets": [
+    {
+      "path": "ebus-needle-assembly.glb",
+      "bytes": 104708,
+      "sha256": "a494942a33fade0afea6db8e71e3fc54ab1b46e74a33c6e516d63ef51ac38b81",
+      "objects": [
+        {
+          "id": "mount_connector",
+          "label": "Mount / connector",
+          "role": "structure"
+        },
+        {
+          "id": "sheath_adjuster",
+          "label": "Sheath adjuster",
+          "role": "structure"
+        },
+        {
+          "id": "sheath_lock",
+          "label": "Sheath lock",
+          "role": "structure"
+        },
+        {
+          "id": "extension_stop",
+          "label": "Needle extension stop",
+          "role": "structure"
+        },
+        {
+          "id": "needle_handle",
+          "label": "Needle handle",
+          "role": "structure"
+        },
+        {
+          "id": "stylet",
+          "label": "Stylet, shown seated",
+          "role": "structure"
+        },
+        {
+          "id": "handle_motion",
+          "label": "handle motion",
+          "role": "pivot"
+        },
+        {
+          "id": "suction_connection",
+          "label": "Optional suction connection",
+          "role": "structure"
+        },
+        {
+          "id": "working_channel_cutaway",
+          "label": "Cutaway working channel",
+          "role": "structure"
+        },
+        {
+          "id": "channel_outlet",
+          "label": "Working-channel outlet",
+          "role": "structure"
+        },
+        {
+          "id": "sheath",
+          "label": "Sheath",
+          "role": "structure"
+        },
+        {
+          "id": "sheath_motion",
+          "label": "sheath motion",
+          "role": "pivot"
+        },
+        {
+          "id": "needle_shaft",
+          "label": "Needle shaft",
+          "role": "structure"
+        },
+        {
+          "id": "protected_needle_in_channel",
+          "label": "Protected proximal needle, cutaway",
+          "role": "structure"
+        },
+        {
+          "id": "needle_tip",
+          "label": "True needle tip (teaching view)",
+          "role": "structure"
+        },
+        {
+          "id": "needle_motion",
+          "label": "needle motion",
+          "role": "pivot"
+        },
+        {
+          "id": "transducer",
+          "label": "Transducer",
+          "role": "structure"
+        },
+        {
+          "id": "airway_wall",
+          "label": "Airway wall",
+          "role": "structure"
+        },
+        {
+          "id": "target_node",
+          "label": "Example node",
+          "role": "structure"
+        },
+        {
+          "id": "adjacent_vessel",
+          "label": "Adjacent vessel",
+          "role": "structure"
+        }
+      ],
+      "triangles": 4536,
+      "units": "m",
+      "notes": "Generic compressed assembly, not device CAD. Distal needle + sheath share an outlet axis. No prescribed extension, force, or puncture safety result.",
+      "reviewStatus": "faculty review pending",
+      "materials": 8,
+      "optimization": "glTF Transform 4.5.0: accessor/material/texture deduplication; no quantization, simplification, hierarchy flattening or decoder"
+    },
+    {
+      "path": "acoustic-contact-cutaway.glb",
+      "bytes": 89668,
+      "sha256": "c0862925e20236cd0187490ae2f12e751bb614ac9136afeea4f454d73edc4e6d",
+      "objects": [
+        {
+          "id": "scope_tip",
+          "label": "Scope tip",
+          "role": "structure"
+        },
+        {
+          "id": "transducer",
+          "label": "Transducer",
+          "role": "structure"
+        },
+        {
+          "id": "fluid_balloon",
+          "label": "Fluid-filled balloon",
+          "role": "structure"
+        },
+        {
+          "id": "air_gap",
+          "label": "Air gap",
+          "role": "structure"
+        },
+        {
+          "id": "air_bubble",
+          "label": "Air bubble in contact window",
+          "role": "structure"
+        },
+        {
+          "id": "airway_wall",
+          "label": "Airway wall",
+          "role": "structure"
+        },
+        {
+          "id": "cartilage",
+          "label": "Cartilage",
+          "role": "structure"
+        },
+        {
+          "id": "target_node",
+          "label": "Example node",
+          "role": "structure"
+        },
+        {
+          "id": "calcified_focus",
+          "label": "Calcified focus",
+          "role": "structure"
+        }
+      ],
+      "triangles": 4924,
+      "units": "m",
+      "notes": "Qualitative local contact/artifact illustration. No inflation volume, contact pressure, or clinically realistic intensity model.",
+      "reviewStatus": "faculty review pending",
+      "materials": 7,
+      "optimization": "glTF Transform 4.5.0: accessor/material/texture deduplication; no quantization, simplification, hierarchy flattening or decoder"
+    },
+    {
+      "path": "measurement-phantoms.glb",
+      "bytes": 125920,
+      "sha256": "23fdb852eb0e8deda0c381951e42b947fa657bd33cb4ad35101f973ad43b9c89",
+      "objects": [
+        {
+          "id": "sphere_0",
+          "label": "Phantom surface",
+          "role": "structure"
+        },
+        {
+          "id": "phantom_sphere",
+          "label": "phantom sphere",
+          "role": "pivot"
+        },
+        {
+          "id": "ellipsoid_0",
+          "label": "Phantom surface",
+          "role": "structure"
+        },
+        {
+          "id": "phantom_ellipsoid",
+          "label": "phantom ellipsoid",
+          "role": "pivot"
+        },
+        {
+          "id": "adjacent_0",
+          "label": "Phantom surface",
+          "role": "structure"
+        },
+        {
+          "id": "adjacent_1",
+          "label": "Phantom surface",
+          "role": "structure"
+        },
+        {
+          "id": "phantom_adjacent",
+          "label": "phantom adjacent",
+          "role": "pivot"
+        },
+        {
+          "id": "lobulated_0",
+          "label": "Phantom surface",
+          "role": "structure"
+        },
+        {
+          "id": "lobulated_1",
+          "label": "Phantom surface",
+          "role": "structure"
+        },
+        {
+          "id": "phantom_lobulated",
+          "label": "phantom lobulated",
+          "role": "pivot"
+        }
+      ],
+      "triangles": 7296,
+      "units": "m",
+      "notes": "Four analytic authored shapes. Lobulated surface is a union of overlapping ellipsoids. Dimensions are phantom mm, not clinical-image calibration. Runtime displays one group at a time.",
+      "reviewStatus": "faculty review pending",
+      "materials": 1,
+      "optimization": "glTF Transform 4.5.0: accessor/material/texture deduplication; no quantization, simplification, hierarchy flattening or decoder"
+    },
+    {
+      "path": "eus-b-route-locators.glb",
+      "bytes": 57872,
+      "sha256": "a74767a51a7cbba7758fdb3cb47e471816cdbd020d940e69123175889cf5a6f6",
+      "objects": [
+        {
+          "id": "airway_window_4L",
+          "label": "Airway orientation locator",
+          "role": "structure"
+        },
+        {
+          "id": "esophageal_window_4L",
+          "label": "Esophageal orientation locator",
+          "role": "structure"
+        },
+        {
+          "id": "airway_window_7",
+          "label": "Airway orientation locator",
+          "role": "structure"
+        },
+        {
+          "id": "esophageal_window_7",
+          "label": "Esophageal orientation locator",
+          "role": "structure"
+        },
+        {
+          "id": "node_station_8_authored",
+          "label": "Authored lower paraesophageal example",
+          "role": "structure"
+        },
+        {
+          "id": "esophageal_window_8",
+          "label": "Lower esophageal orientation locator",
+          "role": "structure"
+        }
+      ],
+      "triangles": 7296,
+      "units": "m",
+      "notes": "Same web-mm anatomy frame as Phase 1. Locators indicate viewing direction, not a safe needle trajectory. Station 9 and interlobar EUS-B windows are explicitly unsupported.",
+      "reviewStatus": "faculty review pending",
+      "materials": 3,
+      "optimization": "glTF Transform 4.5.0: accessor/material/texture deduplication; no quantization, simplification, hierarchy flattening or decoder"
+    }
+  ],
+  "contractSha256": "40f23cec33b6ee1116fa522d82d59d5b2a35dfbdb75453150553ece7c28a6364",
+  "dependencies": [
+    {
+      "path": "models/guided-v1/mediastinum-teaching.glb",
+      "sha256": "d316f2b0fc6bc6a7631b699d51087a528018b55d06974699dcd5055eee072c5d"
+    },
+    {
+      "path": "models/guided-v1/node-examples.glb",
+      "sha256": "1fd48c92f51ec576e31182cceec24adc6f258f2b9a3177033c2e71c2d7770a93"
+    }
+  ],
+  "sourceGeometrySha256": "98dab0cac8fe3a06772a980996742f1b21bb4a2963d262064c221562c91a64fb",
+  "lighting": "runtime neutral lights; no baked textures",
+  "collision": "no navigation/physics collision; geometric plane and boundary tests only"
+}

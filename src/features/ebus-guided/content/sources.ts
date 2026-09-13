@@ -1,5 +1,12 @@
 export const SOURCES = [
   {
+    id: 'combined2015',
+    title:
+      'ESGE/ERS/ESTS combined endobronchial and esophageal endosonography guideline (2015), anatomical access reference',
+    url: 'https://www.thieme-connect.com/products/ejournals/pdf/10.1055/s-0034-1392040.pdf',
+    type: 'Anatomical access reference',
+  },
+  {
     id: 'ers2026',
     title:
       'ERS/ESGE/ESTS clinical practice guideline: endosonography for diagnosis and staging of lung cancer (2026)',

@@ -1,3 +1,9 @@
+import {
+  MODEL_PACKAGES,
+  MODEL_REVISION,
+  MODEL_STEPS,
+  type ModelPackage,
+} from './ebus-model-contract'
 /** Shared by the Next lesson host and the dedicated Vite workbench; no React or storage. */
 export const EBUS_BRIDGE_VERSION = 1 as const
 export const EBUS_LINKED_LESSONS = [
@@ -29,7 +35,8 @@ export type EbusControl =
   | 'save'
 export interface EbusWorkbenchConfig {
   sessionId: string
-  kind: 'simulator' | 'knobology'
+  kind: 'simulator' | 'knobology' | 'model'
+  modelPackage?: ModelPackage
   presetKey: string
   controls: EbusControl[]
   locked: boolean
@@ -59,6 +66,14 @@ export interface EbusObservation {
   frozen: boolean
   measured: boolean
   saved: boolean
+  model?: {
+    package: ModelPackage
+    revision: string
+    frameId: string
+    steps: string[]
+    complete: boolean
+    annotations: boolean
+  }
   linked?: EbusLinkedEvidence
 }
 export const EMPTY_EBUS_OBSERVATION: EbusObservation = {
@@ -105,7 +120,9 @@ export function isEbusConfig(v: unknown): v is EbusWorkbenchConfig {
     typeof v.sessionId === 'string' &&
     v.sessionId.length > 0 &&
     v.sessionId.length < 180 &&
-    (v.kind === 'simulator' || v.kind === 'knobology') &&
+    (v.kind === 'simulator' || v.kind === 'knobology' || v.kind === 'model') &&
+    (v.kind !== 'model' || MODEL_PACKAGES.includes(v.modelPackage as ModelPackage)) &&
+    (v.modelPackage === undefined || MODEL_PACKAGES.includes(v.modelPackage as ModelPackage)) &&
     typeof v.presetKey === 'string' &&
     v.presetKey.length < 120 &&
     Array.isArray(v.controls) &&
@@ -144,6 +161,24 @@ export function isEbusObservation(v: unknown): v is EbusObservation {
     ) &&
     typeof v.lastAction === 'string' &&
     v.lastAction.length < 120 &&
+    (v.model === undefined ||
+      (object(v.model) &&
+        MODEL_PACKAGES.includes(v.model.package as ModelPackage) &&
+        v.model.revision === MODEL_REVISION &&
+        typeof v.model.frameId === 'string' &&
+        (v.frameReady === false || v.model.frameId.length > 0) &&
+        v.model.frameId.length < 160 &&
+        typeof v.model.complete === 'boolean' &&
+        typeof v.model.annotations === 'boolean' &&
+        Array.isArray(v.model.steps) &&
+        v.model.steps.length <= 6 &&
+        v.model.steps.every((step) =>
+          (
+            MODEL_STEPS[
+              (v.model as Record<string, unknown>).package as ModelPackage
+            ] as readonly unknown[]
+          ).includes(step),
+        ))) &&
     (v.linked === undefined ||
       (object(v.linked) &&
         typeof v.linked.assetsReady === 'boolean' &&

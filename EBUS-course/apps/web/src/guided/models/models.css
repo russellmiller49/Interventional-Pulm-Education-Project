@@ -1,0 +1,221 @@
+.additional-models {
+  color: #dbe8f3;
+  background: #0b1521;
+  min-height: 100%;
+  padding: 16px;
+  font:
+    14px/1.5 system-ui,
+    sans-serif;
+  box-sizing: border-box;
+}
+.additional-models * {
+  box-sizing: border-box;
+}
+.additional-models h1 {
+  font-size: 21px;
+  margin: 3px 0 14px;
+  color: #f1f6fc;
+}
+.additional-models h2 {
+  font-size: 15px;
+  margin: 0 0 9px;
+  color: #e6f2ff;
+}
+.additional-models p {
+  margin: 8px 0;
+}
+.model-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.065em;
+  font-size: 10px;
+  color: #73cfbb;
+}
+.model-image,
+.model-3d,
+.model-controls {
+  background: #132232;
+  border: 1px solid #2a4155;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  padding: 12px;
+}
+.model-image svg {
+  display: block;
+  width: 100%;
+  max-height: 340px;
+  aspect-ratio: 60/45;
+  background: #101722;
+  border-radius: 6px;
+}
+.model-image svg.phantom-section {
+  max-height: none;
+  aspect-ratio: 60/46;
+  touch-action: none;
+}
+.model-caption {
+  color: #a6bacd;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.model-viewport {
+  height: 280px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+}
+.model-viewport canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+.model-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.model-tooltip {
+  position: absolute;
+  z-index: 4;
+  max-width: 190px;
+  pointer-events: none;
+  background: #e5fff8;
+  color: #0e3833;
+  border: 1px solid #64c7ae;
+  border-radius: 5px;
+  padding: 7px 9px;
+  font-size: 12px;
+  box-shadow: 0 3px 14px #0008;
+}
+.additional-models button,
+.additional-models input,
+.additional-models select {
+  font: inherit;
+  color: #e5f2fc;
+  border: 1px solid #46627b;
+  border-radius: 5px;
+  background: #1b3146;
+  padding: 9px;
+  min-height: 40px;
+  max-width: 100%;
+}
+.additional-models button {
+  cursor: pointer;
+  text-align: left;
+}
+.additional-models button:hover:not(:disabled) {
+  background: #294b65;
+}
+.additional-models button:disabled,
+.additional-models input:disabled,
+.additional-models select:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.additional-models label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  color: #bfd3e5;
+  margin: 8px 0;
+}
+.additional-models fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.additional-models select {
+  width: 100%;
+}
+.additional-models input[type='range'] {
+  width: 100%;
+  padding: 0;
+  accent-color: #49cfae;
+}
+.model-buttons,
+.model-calipers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.model-calipers label {
+  flex: 1;
+  min-width: 110px;
+}
+.model-calipers input {
+  width: 100%;
+}
+.model-feedback,
+.model-record {
+  background: #173b39;
+  border-left: 3px solid #58c8b0;
+  padding: 10px;
+  color: #d0f8ea;
+}
+.additional-models details {
+  margin: 12px 0;
+}
+.additional-models summary {
+  cursor: pointer;
+}
+.additional-models :focus-visible {
+  outline: 3px solid #7ce2c7;
+  outline-offset: 2px;
+}
+.additional-models .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+@media (min-width: 700px) {
+  .model-viewport {
+    height: 330px;
+  }
+  .additional-models {
+    padding: 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .additional-models * {
+    scroll-behavior: auto !important;
+  }
+}
+.model-image {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  box-shadow: 0 5px 16px #0005;
+}
+.model-image svg,
+.model-image svg.phantom-section {
+  width: min(100%, 360px);
+  height: auto;
+  max-height: none;
+  margin: 0 auto;
+}
+.model-viewport {
+  height: 240px;
+}
+.additional-models[data-model-package='routes'] .model-image {
+  position: static;
+}
+.additional-models[data-model-package='routes'] .model-3d {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.additional-models[data-model-package='needle'] .model-controls fieldset {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.additional-models[data-model-package='needle'] .model-controls fieldset > label,
+.additional-models[data-model-package='needle'] .model-controls fieldset > p {
+  grid-column: 1/-1;
+}

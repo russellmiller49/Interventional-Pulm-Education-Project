@@ -1,0 +1,170 @@
+{
+  "revision": "additional-models-v1",
+  "units": "authored mm; glTF meters converted once",
+  "needle": {
+    "outlet": [
+      -6.0,
+      2.9282031059265137,
+      0.0
+    ],
+    "axis": [
+      0.5,
+      0.8660253882408142,
+      0.0
+    ],
+    "retractedTip": [
+      -6.5,
+      2.0621776580810547,
+      0.0
+    ],
+    "maxTravel": 22,
+    "sliceHalfThickness": 0.6,
+    "note": "Travel and dimensions are illustrative, never a clinical extension recommendation."
+  },
+  "phantoms": {
+    "sphere": [
+      {
+        "center": [
+          0,
+          22,
+          0
+        ],
+        "radii": [
+          10,
+          10,
+          10
+        ]
+      }
+    ],
+    "ellipsoid": [
+      {
+        "center": [
+          0,
+          22,
+          0
+        ],
+        "radii": [
+          16,
+          8,
+          10
+        ]
+      }
+    ],
+    "adjacent": [
+      {
+        "center": [
+          -12,
+          21,
+          0
+        ],
+        "radii": [
+          8,
+          7,
+          8
+        ]
+      },
+      {
+        "center": [
+          10,
+          24,
+          2
+        ],
+        "radii": [
+          7,
+          9,
+          7
+        ]
+      }
+    ],
+    "lobulated": [
+      {
+        "center": [
+          -5,
+          21,
+          0
+        ],
+        "radii": [
+          10,
+          8,
+          8
+        ]
+      },
+      {
+        "center": [
+          6,
+          24,
+          1
+        ],
+        "radii": [
+          9,
+          8,
+          7
+        ]
+      }
+    ]
+  },
+  "routes": [
+    {
+      "id": "4L",
+      "nodeId": "node_station_4l",
+      "target": [
+        5.684440612792969,
+        1216.6312255859375,
+        161.2579345703125
+      ],
+      "airway": [
+        -13.799036026000977,
+        1218.87890625,
+        160.0647430419922
+      ],
+      "esophageal": [
+        -6.723516941070557,
+        1216.5860595703125,
+        145.81488037109375
+      ],
+      "source": "existing same-frame example node; derived orientation locators, not validated sampling windows"
+    },
+    {
+      "id": "7",
+      "nodeId": "node_station_7",
+      "target": [
+        -14.375249862670898,
+        1200.540771484375,
+        153.23121643066406
+      ],
+      "airway": [
+        -13.799036026000977,
+        1218.87890625,
+        160.0647430419922
+      ],
+      "esophageal": [
+        -6.012226104736328,
+        1200.6339111328125,
+        142.27586364746094
+      ],
+      "source": "existing same-frame example node; derived orientation locators, not validated sampling windows"
+    },
+    {
+      "id": "8",
+      "nodeId": "node_station_8_authored",
+      "target": [
+        1.039200782775879,
+        1140.43408203125,
+        143.72189331054688
+      ],
+      "airway": null,
+      "esophageal": [
+        -10.960799217224121,
+        1140.43408203125,
+        143.72189331054688
+      ],
+      "source": "course-authored lower paraesophageal example; station assignment and locator require faculty review"
+    }
+  ],
+  "unsupportedWindows": [
+    "9",
+    "10/11 via EUS-B",
+    "4R via EUS-B"
+  ],
+  "reviewStatus": "development, faculty/clinical review pending"
+}

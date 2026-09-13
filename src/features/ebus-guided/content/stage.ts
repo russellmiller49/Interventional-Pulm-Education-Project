@@ -64,11 +64,14 @@ export function stageLesson(lesson: Lesson): StageLessonBase<StageStepBase<null>
   const steps: StageStepBase<null>[] = descriptions.map(
     ([phase, title, instruction, landmark, panel], i) => {
       const lookIn: StageStepLocation =
-        (i === 3 && lesson.lab) || (i === 1 && lesson.lab?.linkedLesson)
+        (i === 3 && lesson.lab) ||
+        (i === 1 && (lesson.lab?.linkedLesson || lesson.lab?.modelPackage))
           ? { pane: 'simulator', landmark: 'EBUS workbench' }
           : i === 4 && lesson.lab?.linkedLesson
             ? { pane: 'simulator', landmark: 'Retained ultrasound' }
-            : { pane: panel === 'Teaching panel' ? 'teaching' : 'steps', landmark }
+            : i === 4 && lesson.lab?.modelPackage
+              ? { pane: 'simulator', landmark: 'Retained model observation' }
+              : { pane: panel === 'Teaching panel' ? 'teaching' : 'steps', landmark }
       return {
         id: lesson.id + '-step-' + i,
         ordinal: i + 1,
