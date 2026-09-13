@@ -491,11 +491,29 @@ test('desktop, tablet, phone, keyboard, and text zoom retain task and control ac
     }
     await capture(page, info, `projection-${width}.png`)
   }
-  await page.setViewportSize({ width: 900, height: 1000 })
-  await openSection(page, 'projection')
-  await page.addStyleTag({ content: 'html { font-size: 200% !important; }' })
-  await noHorizontalOverflow(page)
-  await page.getByRole('tab', { name: /Steps/ }).click()
-  await expect(page.getByRole('button', { name: 'What do I do now?', exact: true })).toBeVisible()
-  await capture(page, info, 'projection-text-200-percent.png')
+  for (const width of [900, 1440]) {
+    await page.setViewportSize({ width, height: 1000 })
+    await openSection(page, 'projection')
+    if (width === 900) await page.getByRole('tab', { name: /Simulator/ }).click()
+    await expect(page.locator('[data-projection-state]')).toHaveAttribute(
+      'data-projection-state',
+      'ready',
+    )
+    await expect(primary(page)).toBeEnabled({ timeout: 30_000 })
+    await page.addStyleTag({ content: 'html { font-size: 200% !important; }' })
+    await noHorizontalOverflow(page)
+    if (width === 900) await page.getByRole('tab', { name: /Steps/ }).click()
+    if (width === 1440) {
+      expect(
+        await page
+          .getByRole('region', { name: 'Steps panel', exact: true })
+          .evaluate((el) => el.clientHeight),
+      ).toBeGreaterThan(350)
+    }
+    await expect(page.getByRole('button', { name: 'What do I do now?', exact: true })).toBeVisible()
+    await primary(page).scrollIntoViewIfNeeded()
+    await capture(page, info, `projection-text-200-percent-${width}.png`)
+    await primary(page).click()
+    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection-2-act')
+  }
 })

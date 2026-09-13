@@ -96,7 +96,7 @@ export function DesktopNav({ items, activePath }: DesktopNavProps) {
         <nav
           ref={navRef}
           aria-label={t('primary')}
-          className="relative hidden min-w-0 flex-1 items-center justify-start gap-0.5 lg:flex xl:gap-1"
+          className="relative hidden min-w-0 flex-1 flex-wrap items-center justify-start gap-0.5 lg:flex xl:gap-1"
         >
           <button
             type="button"
