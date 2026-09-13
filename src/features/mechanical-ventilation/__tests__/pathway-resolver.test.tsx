@@ -1,3 +1,4 @@
+import { completeLabUnit } from '../test-support/live-learning'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { render, screen, within } from '@testing-library/react'
 
@@ -34,22 +35,7 @@ jest.mock('@/i18n/navigation', () => ({
 }))
 
 function completed(unitId: string): LabCheckpoint {
-  return {
-    version: 1,
-    unitId,
-    round: 1,
-    phase: 'complete',
-    device: 'hamilton-c6',
-    time: 0,
-    events: [],
-    evidence: [
-      { completedAt: '2026-09-05T00:00:00.000Z' },
-      { completedAt: '2026-09-05T00:00:00.000Z' },
-    ],
-    observedHolds: [],
-    readySince: null,
-    completedAt: '2026-09-05T00:00:00.000Z',
-  }
+  return completeLabUnit(unitId)
 }
 
 function progressWith(...unitIds: string[]): LabProgress {

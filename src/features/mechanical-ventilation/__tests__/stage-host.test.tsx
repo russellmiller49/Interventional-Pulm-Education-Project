@@ -84,7 +84,7 @@ describe('the ventilation lesson stage', () => {
     render(<VentilationStageHost unitId={unitId} />)
     boot()
     expect(stageId()).toBe(lesson.steps[0].id)
-    expect(within(nowCard()).getByText(/Step 1 of 8 · Recognize/)).toBeInTheDocument()
+    expect(within(nowCard()).getByText(/Step 1 of 10 · Recognize/)).toBeInTheDocument()
     expect(document.querySelector('[data-ventilation-console]')).not.toBeNull()
     expect(document.querySelector('[data-breath-map]')?.getAttribute('data-lit')).toBe(
       'inspiration',
@@ -92,7 +92,7 @@ describe('the ventilation lesson stage', () => {
     // Post-commitment teaching is not in the document before the prediction.
     for (const rationale of first.rationales) expect(screen.queryByText(rationale)).toBeNull()
     expect(document.querySelector('[data-teaching-block="grammar"]')).toBeNull()
-    expect(document.querySelector('[data-teaching-block="method"]')).toBeNull()
+    expect(document.querySelector('[data-foundation-teaching]')).not.toBeNull()
     // Unreached rows show phase and number only.
     const rows = document.querySelectorAll('[data-step-list] [data-step-state="locked"]')
     expect(rows.length).toBeGreaterThan(0)
@@ -147,19 +147,20 @@ describe('the ventilation lesson stage', () => {
     simulate(first.seconds + 1)
     pressPrimary(/Compare before and after/)
 
+    // Interpretation is required before the explanation; a timer alone cannot complete it.
+    choose('Rose')
+    pressPrimary(/Submit my observation/)
+    pressPrimary(/Continue/)
+
     // Explain: the verdict, the before-and-after, the explanation, the grammar row and the strip.
-    expect(stageId()).toBe(lesson.steps[4].id)
+    expect(stageId()).toBe(lesson.steps[5].id)
     expect(document.querySelector('[data-before-after]')).not.toBeNull()
     expect(screen.getByText(first.explanation)).toBeInTheDocument()
-    expect(
-      document.querySelector('[data-teaching-block="grammar"] tr[data-highlight="true"]'),
-    ).not.toBeNull()
-    expect(document.querySelector('[data-teaching-block="knob-strip"]')).not.toBeNull()
     expect(document.querySelector('[data-teaching-block="method"]')).not.toBeNull()
     pressPrimary(/Continue to a new setup/)
 
     // Transfer: predict again in the new setup, do it and watch, then what changed.
-    expect(stageId()).toBe(lesson.steps[5].id)
+    expect(stageId()).toBe(lesson.steps[6].id)
     expect(
       document.querySelector('[data-ventilation-console]')?.getAttribute('data-controls-locked'),
     ).toBe('true')
@@ -169,14 +170,17 @@ describe('the ventilation lesson stage', () => {
       document.querySelector('[data-answer-verdict]')?.getAttribute('data-verdict-outcome'),
     ).toBe('correct')
     pressPrimary(/Continue/)
-    expect(stageId()).toBe(lesson.steps[6].id)
+    expect(stageId()).toBe(lesson.steps[7].id)
     fireEvent.change(screen.getByRole('slider', { name: /Patient compliance/ }), {
       target: { value: '0.5' },
     })
     fireEvent.click(screen.getByRole('button', { name: /Perform inspiratory hold/ }))
     simulate(6 + second.seconds + 1)
     pressPrimary(/Compare before and after/)
-    expect(stageId()).toBe(lesson.steps[7].id)
+    choose('Rose')
+    pressPrimary(/Submit my observation/)
+    pressPrimary(/Continue/)
+    expect(stageId()).toBe(lesson.steps[9].id)
     expect(screen.getByText(second.explanation)).toBeInTheDocument()
     pressPrimary(/Finish this section/)
 

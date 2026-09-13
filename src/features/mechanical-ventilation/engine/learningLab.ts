@@ -1,4 +1,13 @@
 import { z } from 'zod'
+import { FOUNDATION_EVIDENCE_VERSION, isFoundationUnit } from '../content/foundations'
+import { completedBreath } from './teachingBreath'
+import {
+  measurementInputs,
+  updateHoldAcquisition,
+  type HoldAcquisition,
+  type CapturedHold,
+} from './learningMeasurements'
+import { observationFor } from './learningObservation'
 import {
   ventilationExperimentByUnit,
   type LabGoal,
@@ -43,14 +52,24 @@ export interface LabSnapshot {
   readonly plateauValid: boolean
   readonly waveforms: readonly WaveformSample[]
   readonly at: number
+  readonly inputs?: Record<string, string | number>
+  readonly plateauSource?: 'modeled' | 'captured' | 'historical'
+  readonly hold?: CapturedHold
+  readonly issues?: readonly string[]
 }
-export function labSnapshot(state: VentilationSimulationState): LabSnapshot {
+export function labSnapshot(
+  state: VentilationSimulationState,
+  holds: readonly CapturedHold[] = [],
+  revision = 0,
+): LabSnapshot {
+  const lastHold = holds.filter((h) => h.hold === 'inspiratory').at(-1)
+  const currentHold = lastHold?.revision === revision ? lastHold : undefined
   const m = state.measurements,
     p = state.patient
   return {
     values: {
       peak: m.peakPressureCmH2O,
-      plateau: m.plateauPressureCmH2O,
+      plateau: lastHold?.value ?? m.plateauPressureCmH2O,
       volume: m.exhaledVtMl,
       rate: m.totalRatePerMin,
       minute: m.minuteVentilationLMin,
@@ -66,9 +85,16 @@ export function labSnapshot(state: VentilationSimulationState): LabSnapshot {
       pain: p.human.painScore,
       anxiety: p.human.anxietyScore,
     },
-    plateauValid: plateauReadingValidity(state).interpretable,
+    plateauValid: lastHold
+      ? Boolean(currentHold?.interpretable)
+      : plateauReadingValidity(state).interpretable,
+    plateauSource: currentHold ? 'captured' : lastHold ? 'historical' : 'modeled',
+    hold: lastHold,
+    inputs: measurementInputs(state),
     // Saved reference only. The actual console continues to use all 50 Hz samples.
-    waveforms: state.waveforms.filter((_, index) => index % 4 === 0),
+    waveforms: state.waveforms.filter(
+      (_, index) => index % 4 === 0 || index === state.waveforms.length - 1,
+    ),
     at: state.simulationTime,
   }
 }
@@ -102,7 +128,23 @@ export interface LabEvidence {
   readonly location?: string
   /** The settings sort, committed as a set: row id → the origin chosen. */
   readonly sort?: Readonly<Record<string, 'set' | 'reported'>>
+  readonly observation?: { readonly choice: string; readonly correct: boolean; readonly at: string }
+  readonly inspection?: {
+    readonly sample: WaveformSample
+    readonly previous: WaveformSample
+    /** Manual Pause may select a breath after the initial baseline window. */
+    readonly waveforms?: readonly WaveformSample[]
+  }
   readonly completedAt?: string
+}
+export interface LabHistoricalRun {
+  readonly evidenceVersion: number
+  readonly round: 0 | 1
+  readonly device: VentilatorDeviceId
+  readonly evidence: readonly [LabEvidence, LabEvidence]
+  readonly holds?: readonly CapturedHold[]
+  readonly completedAt?: string
+  readonly reason: string
 }
 export interface LabEvent {
   readonly at: number
@@ -119,6 +161,12 @@ export interface LabCheckpoint {
   readonly evidence: readonly [LabEvidence, LabEvidence]
   readonly observedHolds: readonly ('inspiratory' | 'expiratory')[]
   readonly readySince: number | null
+  readonly evidenceVersion?: 2
+  readonly conditionRevision?: number
+  readonly holds?: readonly CapturedHold[]
+  readonly acquisition?: HoldAcquisition
+  readonly confounds?: readonly string[]
+  readonly history?: readonly LabHistoricalRun[]
   readonly completedAt?: string
 }
 export interface LabSession extends LabCheckpoint {
@@ -180,6 +228,10 @@ export function createLabSession(
   if (!saved)
     return {
       version: 1,
+      evidenceVersion: FOUNDATION_EVIDENCE_VERSION,
+      conditionRevision: 0,
+      holds: [],
+      confounds: [],
       unitId,
       round: 0,
       phase: 'explore',
@@ -191,6 +243,12 @@ export function createLabSession(
       readySince: null,
       simulation: createLabSimulation(unitId, 0, device),
     }
+  if (isFoundationUnit(unitId) && saved.evidenceVersion !== FOUNDATION_EVIDENCE_VERSION) {
+    return {
+      ...createLabSession(unitId, saved.device),
+      history: archiveLabRun(saved, 'Earlier lesson version; retained as historical evidence'),
+    }
+  }
   let simulation = createLabSimulation(unitId, saved.round, saved.device)
   for (const event of saved.events) {
     if (event.at > simulation.simulationTime)
@@ -210,7 +268,21 @@ export function labGoalMet(goal: LabGoal, session: LabSession): boolean {
     return Math.abs(labControlValue(session.simulation, goal.key) - goal.value) < 0.01
   if (goal.type === 'mechanics')
     return Math.abs(session.simulation.teachingMechanics[goal.key] - goal.value) < 0.01
-  if (goal.type === 'hold') return session.observedHolds.includes(goal.hold)
+  if (goal.type === 'hold') {
+    const acquired = session.holds
+      ?.filter((h) => h.hold === goal.hold && h.revision === (session.conditionRevision ?? 0))
+      .at(-1)
+    return Boolean(
+      acquired && (session.unitId !== 'mechanics-load-and-pressure' || acquired.interpretable),
+    )
+  }
+  if (goal.type === 'inspect-inspiration')
+    return session.evidence[session.round].inspection?.sample.phase === 'inspiration'
+  if (
+    goal.type === 'pause-expiration' &&
+    session.evidence[session.round].inspection?.sample.phase === 'expiration'
+  )
+    return true
   if (goal.type === 'intervention')
     return (
       session.events.some(
@@ -262,6 +334,8 @@ export type LabAction =
   | { type: 'PREDICT' }
   | { type: 'COMMIT'; choice: number; confidence: 'sure' | 'unsure' }
   | { type: 'COMPARE' }
+  | { type: 'INSPECT'; sampleTime: number }
+  | { type: 'INTERPRET'; choice: string; now: string }
   | { type: 'REFLECT'; text: string }
   /** Where on the breath the learner placed the problem, committed once per round. */
   | { type: 'LOCATE'; choiceId: string }
@@ -275,11 +349,87 @@ export type LabAction =
 function setEvidence(session: LabSession, value: LabEvidence): readonly [LabEvidence, LabEvidence] {
   return session.round === 0 ? [value, session.evidence[1]] : [session.evidence[0], value]
 }
+function archiveLabRun(session: LabCheckpoint, reason: string): readonly LabHistoricalRun[] {
+  if (!session.evidence.some((e) => e.prediction !== undefined || e.response || e.sort))
+    return session.history ?? []
+  return [
+    ...(session.history ?? []),
+    {
+      evidenceVersion: session.evidenceVersion ?? 1,
+      round: session.round,
+      device: session.device,
+      evidence: session.evidence,
+      holds: session.holds,
+      completedAt: session.completedAt,
+      reason,
+    },
+  ].slice(-20)
+}
+export function labUnitComplete(record?: LabCheckpoint): boolean {
+  return Boolean(
+    record?.completedAt &&
+    (!isFoundationUnit(record.unitId) ||
+      (record.evidenceVersion === FOUNDATION_EVIDENCE_VERSION &&
+        record.evidence.every((e) => e.observation))),
+  )
+}
 export function learningLabReducer(session: LabSession, action: LabAction): LabSession {
   const round = ventilationExperimentByUnit.get(session.unitId)!.rounds[session.round]
   const evidence = session.evidence[session.round]
-  if (action.type === 'DEVICE') return createLabSession(session.unitId, action.device)
-  if (action.type === 'RESTART') return createLabSession(session.unitId, session.device)
+  if (action.type === 'DEVICE' || action.type === 'RESTART')
+    return {
+      ...createLabSession(
+        session.unitId,
+        action.type === 'DEVICE' ? action.device : session.device,
+      ),
+      history: archiveLabRun(
+        session,
+        action.type === 'DEVICE' ? 'Device changed' : 'Section restarted',
+      ),
+    }
+  if (
+    action.type === 'INSPECT' &&
+    session.phase === 'experiment' &&
+    round.goals.some((g) => g.type === 'pause-expiration' || g.type === 'inspect-inspiration')
+  ) {
+    const breath = completedBreath(evidence.baseline?.waveforms ?? [])
+    const index = breath.findIndex((s) => s.time === action.sampleTime)
+    if (index < 1 || index >= breath.length - 1) return session
+    const next = {
+      ...session,
+      evidence: setEvidence(session, {
+        ...evidence,
+        inspection: { sample: breath[index], previous: breath[index - 1] },
+      }),
+    }
+    return {
+      ...next,
+      readySince: round.goals.every((g) => labGoalMet(g, next))
+        ? session.simulation.simulationTime
+        : null,
+    }
+  }
+  if (
+    action.type === 'INTERPRET' &&
+    session.phase === 'compare' &&
+    !evidence.observation &&
+    evidence.response &&
+    isFoundationUnit(session.unitId)
+  ) {
+    const item = observationFor(session)
+    if (!item.choices.some((c) => c.id === action.choice)) return session
+    return {
+      ...session,
+      evidence: setEvidence(session, {
+        ...evidence,
+        observation: {
+          choice: action.choice,
+          correct: item.correct === action.choice,
+          at: action.now,
+        },
+      }),
+    }
+  }
   if (action.type === 'LOCATE' && evidence.location === undefined && action.choiceId.length > 0)
     return {
       ...session,
@@ -307,11 +457,18 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
       simulation,
       events: [],
       observedHolds: [],
+      holds: [],
+      acquisition: undefined,
+      conditionRevision: 0,
+      confounds: [],
+      history: archiveLabRun(session, 'Patient reset; first prediction retained'),
       readySince: null,
       completedAt: undefined,
       evidence: setEvidence(session, {
         prediction: evidence.prediction,
         confidence: evidence.confidence,
+        location: evidence.location,
+        sort: evidence.sort,
         ...(evidence.prediction === undefined ? {} : { baseline: labSnapshot(simulation) }),
       }),
     }
@@ -323,6 +480,13 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
       ...session,
       simulation,
       phase: 'predict',
+      ...(isFoundationUnit(session.unitId)
+        ? { evidence: setEvidence(session, { ...evidence, baseline: labSnapshot(simulation) }) }
+        : {}),
+      holds: [],
+      acquisition: undefined,
+      conditionRevision: 0,
+      confounds: [],
       events: [],
       observedHolds: [],
       readySince: null,
@@ -341,7 +505,9 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
         ...evidence,
         prediction: evidence.prediction ?? action.choice,
         confidence: evidence.confidence ?? action.confidence,
-        baseline: labSnapshot(session.simulation),
+        baseline: isFoundationUnit(session.unitId)
+          ? (evidence.baseline ?? labSnapshot(session.simulation))
+          : labSnapshot(session.simulation),
       }),
     }
   }
@@ -350,17 +516,27 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
       ...session,
       phase: 'compare',
       simulation: { ...session.simulation, paused: true },
-      evidence: setEvidence(session, { ...evidence, response: labSnapshot(session.simulation) }),
+      evidence: setEvidence(session, {
+        ...evidence,
+        response: {
+          ...labSnapshot(session.simulation, session.holds, session.conditionRevision),
+          issues: session.confounds ?? [],
+        },
+      }),
     }
   if (action.type === 'REFLECT' && session.phase === 'compare')
     return {
       ...session,
       evidence: setEvidence(session, { ...evidence, reflection: action.text.slice(0, 1200) }),
     }
-  // Finishing a round needs its reveal to have happened — a response snapshot exists only after
-  // COMPARE — and nothing else. The written reflection this once required was a text-length gate
-  // with no teaching in it, and it is gone.
-  if (action.type === 'CONTINUE' && session.phase === 'compare' && evidence.response) {
+  // Every round needs its captured response. The five revised tasks also require a recorded
+  // observation, regardless of correctness. The retired prose-length gate stays retired.
+  if (
+    action.type === 'CONTINUE' &&
+    session.phase === 'compare' &&
+    evidence.response &&
+    (!isFoundationUnit(session.unitId) || evidence.observation)
+  ) {
     const nextEvidence = setEvidence(session, { ...evidence, completedAt: action.now })
     if (session.round === 1)
       return { ...session, phase: 'complete', evidence: nextEvidence, completedAt: action.now }
@@ -368,6 +544,10 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
       ...session,
       round: 1,
       phase: 'explore',
+      holds: [],
+      acquisition: undefined,
+      conditionRevision: 0,
+      confounds: [],
       simulation: createLabSimulation(session.unitId, 1, session.device),
       time: 0,
       events: [],
@@ -390,6 +570,32 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
   )
     return session
   if (session.events.length >= 512 && !transientActions.has(action.action.type)) return session
+  // Keep the evidence observer at actual maneuver boundaries even when the caller advances
+  // several seconds at once. The underlying physiology reducer and clock remain authoritative.
+  if (
+    action.action.type === 'TICK' &&
+    (action.action.seconds ?? 0.1) > 0.1 &&
+    (session.acquisition ||
+      session.simulation.ventilator.pendingHold ||
+      session.simulation.ventilator.holdType) &&
+    !session.simulation.paused
+  ) {
+    let next = session
+    let remaining = action.action.seconds ?? 0.1
+    while (
+      remaining > 0.10001 &&
+      (next.acquisition ||
+        next.simulation.ventilator.holdType ||
+        next.simulation.ventilator.pendingHold)
+    ) {
+      next = learningLabReducer(next, { type: 'ENGINE', action: { type: 'TICK', seconds: 0.1 } })
+      remaining -= 0.1
+    }
+    return learningLabReducer(next, {
+      type: 'ENGINE',
+      action: { type: 'TICK', seconds: remaining },
+    })
+  }
   const before = session.simulation
   if (action.action.type === 'TICK' && before.simulationTime >= 900)
     return { ...session, simulation: { ...before, paused: true } }
@@ -398,12 +604,68 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
   const events = !transientActions.has(action.action.type)
     ? [...session.events, { at: before.simulationTime, action: action.action }]
     : session.events
-  const observedHolds =
-    simulation.ventilator.holdType &&
-    !session.observedHolds.includes(simulation.ventilator.holdType)
-      ? [...session.observedHolds, simulation.ventilator.holdType]
-      : session.observedHolds
-  const next = { ...session, simulation, events, observedHolds, time: simulation.simulationTime }
+  const oldInputs = measurementInputs(before),
+    newInputs = measurementInputs(simulation)
+  const changed = [...new Set([...Object.keys(oldInputs), ...Object.keys(newInputs)])].filter(
+    (key) => oldInputs[key] !== newInputs[key],
+  )
+  const conditionRevision = (session.conditionRevision ?? 0) + (changed.length ? 1 : 0)
+  const { acquisition, captured } = updateHoldAcquisition(
+    before,
+    simulation,
+    conditionRevision,
+    session.acquisition,
+  )
+  const holds = captured ? [...(session.holds ?? []), captured].slice(-30) : (session.holds ?? [])
+  const observedHolds = [...new Set(holds.map((h) => h.hold))]
+  const allowedKeys = round.goals.flatMap((g) =>
+    g.type === 'control' || g.type === 'mechanics'
+      ? [g.key]
+      : g.type === 'intervention'
+        ? ['interventions']
+        : [],
+  )
+  const issues =
+    session.phase === 'experiment'
+      ? changed.filter((k) => !allowedKeys.includes(k)).map((k) => `Additional input changed: ${k}`)
+      : []
+  if (
+    session.phase === 'experiment' &&
+    simulation.alarms.some(
+      (a) => a.active && ['HIGH_PRESSURE', 'PRESSURE_LIMITATION'].includes(a.code),
+    )
+  )
+    issues.push(
+      'Pressure alarm or limitation occurred; verify delivered volume before attributing the response',
+    )
+  const confounds = [...new Set([...(session.confounds ?? []), ...issues])]
+  const last = simulation.waveforms.at(-1),
+    previous = simulation.waveforms.at(-2)
+  const manualInspection =
+    session.phase === 'experiment' &&
+    action.action.type === 'SET_PAUSED' &&
+    action.action.paused &&
+    simulation.simulationTime >= 4 &&
+    round.goals.some((g) => g.type === 'pause-expiration') &&
+    last?.phase === 'expiration' &&
+    last.flowLMin < -0.1 &&
+    previous
+      ? { sample: last, previous, waveforms: labSnapshot(simulation).waveforms }
+      : undefined
+  const next = {
+    ...session,
+    ...(manualInspection
+      ? { evidence: setEvidence(session, { ...evidence, inspection: manualInspection }) }
+      : {}),
+    simulation,
+    events,
+    observedHolds,
+    holds,
+    acquisition,
+    conditionRevision,
+    confounds,
+    time: simulation.simulationTime,
+  }
   if (session.phase !== 'experiment') return next
   const goalsMet = round.goals.every((goal) => labGoalMet(goal, next))
   return {
@@ -423,6 +685,18 @@ const sampleSchema = z.object({
   triggered: z.boolean(),
   spontaneous: z.boolean(),
 })
+const holdSchema = z.object({
+  hold: z.enum(['inspiratory', 'expiratory']),
+  revision: z.number().int().nonnegative(),
+  inputs: z.record(z.union([finite, z.string()])),
+  startedAt: finite,
+  endsAt: finite,
+  value: finite,
+  interpretable: z.boolean(),
+  reason: z.string().nullable(),
+  waveforms: z.array(sampleSchema).max(160),
+})
+const capturedHoldSchema = holdSchema.extend({ capturedAt: finite })
 const snapshotSchema = z.object({
   values: z.object(
     Object.fromEntries(Object.keys(labMetricLabels).map((key) => [key, finite])) as Record<
@@ -431,6 +705,10 @@ const snapshotSchema = z.object({
     >,
   ),
   plateauValid: z.boolean(),
+  plateauSource: z.enum(['modeled', 'captured', 'historical']).optional(),
+  inputs: z.record(z.union([finite, z.string()])).optional(),
+  hold: capturedHoldSchema.optional(),
+  issues: z.array(z.string()).max(100).optional(),
   waveforms: z.array(sampleSchema).max(160),
   at: finite.min(0).max(1000),
 })
@@ -439,6 +717,16 @@ const evidenceSchema = z.object({
   confidence: z.enum(['sure', 'unsure']).optional(),
   baseline: snapshotSchema.optional(),
   response: snapshotSchema.optional(),
+  observation: z
+    .object({ choice: z.string().max(40), correct: z.boolean(), at: z.string().datetime() })
+    .optional(),
+  inspection: z
+    .object({
+      sample: sampleSchema,
+      previous: sampleSchema,
+      waveforms: z.array(sampleSchema).max(160).optional(),
+    })
+    .optional(),
   reflection: z.string().max(1200).optional(),
   location: z.string().min(1).max(40).optional(),
   sort: z.record(z.string().min(1).max(40), z.enum(['set', 'reported'])).optional(),
@@ -469,6 +757,25 @@ const eventAction = z.discriminatedUnion('type', [
 ])
 const checkpointSchema = z.object({
   version: z.literal(1),
+  evidenceVersion: z.literal(2).optional(),
+  conditionRevision: z.number().int().nonnegative().optional(),
+  holds: z.array(capturedHoldSchema).max(30).optional(),
+  acquisition: holdSchema.optional(),
+  confounds: z.array(z.string()).max(100).optional(),
+  history: z
+    .array(
+      z.object({
+        evidenceVersion: z.number(),
+        round: z.union([z.literal(0), z.literal(1)]),
+        device: z.enum(ventilatorDeviceIds),
+        evidence: z.tuple([evidenceSchema, evidenceSchema]),
+        holds: z.array(capturedHoldSchema).max(30).optional(),
+        completedAt: z.string().datetime().optional(),
+        reason: z.string(),
+      }),
+    )
+    .max(20)
+    .optional(),
   unitId: smallString,
   round: z.union([z.literal(0), z.literal(1)]),
   phase: z.enum(['explore', 'predict', 'experiment', 'compare', 'complete']),
@@ -515,6 +822,13 @@ export function parseLabProgress(raw: string | null): LabProgress {
         !p.evidence.every(
           (e) => e.prediction !== undefined && e.baseline && e.response && e.completedAt,
         )
+      )
+        continue
+      if (
+        isFoundationUnit(id) &&
+        p.evidenceVersion === 2 &&
+        p.phase === 'complete' &&
+        !p.evidence.every((e) => e.observation)
       )
         continue
       units[id] = p

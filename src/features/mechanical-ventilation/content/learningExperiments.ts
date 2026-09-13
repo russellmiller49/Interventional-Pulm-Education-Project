@@ -23,6 +23,7 @@ export type LabGoal =
   | { type: 'hold'; hold: 'inspiratory' | 'expiratory' }
   | { type: 'intervention'; id: string }
   | { type: 'pause-expiration' }
+  | { type: 'inspect-inspiration' }
 export interface LabRound {
   readonly title: string
   readonly caseId: string
@@ -269,39 +270,76 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
     panelId: 'waveform-anatomy',
     rounds: [
       round({
-        title: 'Catch one whole breath',
-        introduction:
-          'The ventilator is already running. Start with gas moving into this passive patient, then watch it leave.',
-        look: 'Watch a few breaths. The flow trace crosses zero twice in every breath, and the volume trace has a rise and a fall; decide which half of each belongs to gas leaving.',
-        prompt: 'When you pause during expiration, which combination identifies gas leaving?',
-        choices: [
-          'Flow below zero with falling volume',
-          'Flow above zero with rising volume',
-          'A flat volume trace while inward flow continues',
-        ],
+        title: 'Identify expiration on a captured breath',
+        introduction: 'Use the marked interval A on the captured complete breath.',
+        look: 'Read the three traces at the same cursor time. Labels are withheld for this independent identification.',
+        prompt: 'Which phase is shown at cursor A?',
+        choices: ['Expiration', 'Inspiration', 'A no-flow occlusion'],
         correct: 0,
         rationales: [
-          'Outward flow is negative on this display; volume falls as gas leaves.',
-          'That combination describes inspiration.',
-          'Continuing inward flow adds volume, so those two signals would not fit.',
+          'The cursor lies in the interval after inspiratory delivery, with negative flow and falling volume.',
+          'In this passive example, inspiration has inward flow and accumulating volume.',
+          'A no-flow occlusion would show zero flow and nearly constant volume; pausing the display does not create one.',
         ],
-        task: 'Let a full breath pass, then press Pause while the flow trace is below its zero line. If you miss it, press Run and try again on the next breath.',
+        task: 'Try Pause and Run on the live display. You can either pause during outward flow after a full breath, or inspect expiration on the captured complete breath and choose Use this captured interval. The captured alternative needs no timed click.',
         goals: [{ type: 'pause-expiration' }],
         seconds: 0,
-        watch: ['volume', 'rate', 'peak'],
+        watch: [],
         explanation:
-          'The three traces are views of the same moving breath. The machine supplies inspiration; this passive system empties through recoil.',
+          'Identifying the phase is a separate answer from operating Pause. Negative flow and falling breath-relative volume identify expiration in this passive example.',
       }),
+      round({
+        title: 'Read another interval of a complete breath',
+        setup: [set('ratePerMin', 12)],
+        introduction:
+          'A new complete breath is shown on a longer respiratory cycle. Inspect interval B.',
+        look: 'Keep the three traces aligned at the marked cursor; do not change a ventilator setting.',
+        prompt: 'Which phase is shown at cursor B?',
+        choices: ['A no-flow occlusion', 'Expiration', 'Inspiration'],
+        correct: 2,
+        rationales: [
+          'Flow is not zero at the marked interval.',
+          'Expiration in this passive breath has negative flow with falling volume.',
+          'Positive flow accompanies accumulating volume during inspiration.',
+        ],
+        task: 'Inspect inspiration on this captured complete breath, then choose Use this captured interval. You can move the cursor with the arrow keys. This changes only the view.',
+        goals: [{ type: 'inspect-inspiration' }],
+        seconds: 0,
+        watch: [],
+        explanation:
+          'The cycle duration changed, but inspiration still shows gas entering and breath-relative volume rising. Timing the Pause button is not the identification skill.',
+      }),
+    ],
+  },
+  {
+    unitId: 'waveform-anatomy',
+    panelId: 'waveform-anatomy',
+    rounds: [
+      flow,
       {
         ...flow,
-        title: 'Change the pace of inspiration',
-        choices: [flow.choices[1], flow.choices[2], flow.choices[0]],
-        rationales: [flow.rationales[1], flow.rationales[2], flow.rationales[0]],
-        correct: 2,
+        title: 'Retrieve flow and volume on a slower inspiration',
+        setup: [set('peakFlowLMin', 60)],
+        introduction:
+          'Retrieve the relationship on a new baseline with inspiratory flow initially 60 L/min; selected tidal volume is unchanged.',
+        prompt:
+          'When flow decreases at the same selected tidal volume, which trace comparison should you expect?',
+        choices: [
+          'A steeper volume rise over less time',
+          'A slower volume rise over more time',
+          'The same inspiratory duration with a larger selected volume',
+        ],
+        correct: 1,
+        rationales: [
+          'A steeper rise represents faster inward flow.',
+          'At lower flow the same volume accumulates over a longer inspiration.',
+          'Flow and selected tidal volume are separate settings.',
+        ],
+        task: 'Reduce inspiratory flow to 30 L/min. Keep selected tidal volume fixed and compare the captured traces.',
+        goals: [c('peakFlowLMin', 30)],
       },
     ],
   },
-  { unitId: 'waveform-anatomy', panelId: 'waveform-anatomy', rounds: [flow, stiffVolume] },
   {
     unitId: 'controls-and-goals',
     panelId: 'modes-and-breath-delivery',
@@ -311,23 +349,23 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         introduction: 'Start from a small set of controls: volume, rate, flow, oxygen, and PEEP.',
         look: 'Distinguish the selected volume from the measured exhaled volume and the pressure needed to deliver it.',
         prompt:
-          'If the volume target rises in this passive model, what is the expected pressure cost?',
+          'After increasing selected tidal volume, which separate value tells you the delivered result?',
         choices: [
-          'Less elastic pressure',
-          'More elastic pressure',
-          'No change in elastic pressure',
+          'The tidal volume selected on the console',
+          'The measured exhaled tidal volume',
+          'The oxygen fraction selected on the console',
         ],
         correct: 1,
         rationales: [
-          'At the same compliance, a larger volume requires more elastic pressure.',
-          'More volume stretches the same respiratory system further. Check delivery and pressure together.',
-          'Compliance and baseline are unchanged; changing volume changes elastic load.',
+          'The selected value is the request, not evidence of delivery.',
+          'Exhaled tidal volume is a separate reported result. Compare it with the requested volume.',
+          'Oxygen fraction describes the gas mixture rather than breath size.',
         ],
         task: 'Increase the volume target to 500 mL, then inspect the measured result.',
         goals: [c('vtMl', 500)],
-        watch: ['volume', 'peak', 'plateau'],
+        watch: ['volume', 'peak'],
         explanation:
-          'A setting is an input, not a guarantee of a safe result. The larger delivered breath has a pressure cost in this model.',
+          'Compare selected tidal volume with measured exhaled tidal volume. Pressure is also worth checking; the mechanics lesson develops that pressure cost.',
       }),
       oxygen,
     ],
@@ -350,7 +388,18 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
   {
     unitId: 'modes-and-breath-delivery',
     panelId: 'modes-and-breath-delivery',
-    rounds: [stiffVolume, stiffPressure],
+    rounds: [
+      {
+        ...stiffVolume,
+        introduction:
+          'Retrieve the stiffness experiment from mechanics, now focusing on what conventional VC holds constant. Selected volume and flow stay fixed.',
+      },
+      {
+        ...stiffPressure,
+        introduction:
+          'The mode has explicitly switched from conventional VC to conventional PC. The same passive baseline patient now receives fixed pressure above PEEP and fixed inspiratory time. Repeat the stiffness change.',
+      },
+    ],
   },
   {
     unitId: 'lung-protection',

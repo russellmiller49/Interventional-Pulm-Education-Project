@@ -145,9 +145,10 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
               {VENTILATION_CONTROL_PANEL.sentence} {VENTILATION_CONTROL_PANEL.monitoringSentence}
             </li>
             <li>
-              <strong>Predict before you see</strong>
-              Each section asks for your prediction before the change is made. The explanation opens
-              only after you commit.
+              <strong>Learn, apply, interpret</strong>
+              The first five sections begin with a worked explanation. Then record your own
+              prediction, inspect or change the patient, and interpret the captured result.
+              Independent answers receive feedback after submission.
             </li>
             <li>
               <strong>Trend, not threshold</strong>

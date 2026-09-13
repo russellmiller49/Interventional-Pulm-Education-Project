@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { VentilationStageHost } from '../components/stage/VentilationStageHost'
-import { BREATH_STOP_CHECKLIST_LABEL, breathStopIds } from '../content/breathSpine'
+import { breathStopIds } from '../content/breathSpine'
 import { ventilationLearningUnits } from '../content/learningCurriculum'
 import { ventilationExperimentByUnit } from '../content/learningExperiments'
 import { ventilationStageLesson, ventilationStageLessonErrors } from '../content/stageLessons'
@@ -144,13 +144,14 @@ describe('every step says where it is worked', () => {
   it('prints the location under the instruction, naming a pane whose caption says the same word', () => {
     const lesson = mount('breathing-with-support')
     expect(whereLine()).toBe(
-      'Where to look: Teaching panel — Why a ventilator exists, and Simulator panel — the live console.',
+      'Where to look: Teaching panel — Read one complete passive breath, and Steps panel — Continue or Next stop, on this card.',
     )
     // The heading it names is on the teaching pane at this step, open.
     expect(
-      within(
-        document.querySelector('[data-teaching-block="orientation"]') as HTMLElement,
-      ).getByRole('heading', { name: 'Why a ventilator exists' }),
+      within(document.querySelector('[data-foundation-teaching]') as HTMLElement).getByRole(
+        'heading',
+        { name: 'Read one complete passive breath' },
+      ),
     ).toBeInTheDocument()
     const printed = captions()
     for (const named of nowCard().querySelectorAll('[data-now-where] strong')) {
@@ -159,7 +160,7 @@ describe('every step says where it is worked', () => {
     fireEvent.click(primary()!)
     expect(stageId()).toBe(lesson.steps[1].id)
     expect(whereLine()).toBe(
-      'Where to look: Steps panel — the answer choices below, and Simulator panel — the live console.',
+      'Where to look: Steps panel — captured complete breath, interval A, and the choices below.',
     )
   })
 
@@ -167,7 +168,7 @@ describe('every step says where it is worked', () => {
     mount('breathing-with-support')
     fireEvent.click(document.querySelector('[data-stage-help]')!)
     expect(document.querySelector('[data-stage-help-dialog]')?.textContent).toMatch(
-      /Where to look: Teaching panel — Why a ventilator exists/,
+      /Where to look: Teaching panel — Read one complete passive breath/,
     )
   })
 
@@ -180,15 +181,15 @@ describe('every step says where it is worked', () => {
       alsoLandmark: 'Commit my answer, on this card',
     })
     const walk = ventilationStageLesson('waveform-anatomy').steps[0]
-    expect(walk.lookIn.pane).toBe('steps')
-    expect(walk.lookIn.alsoPane).toBe('simulator')
-    const explain = ventilationStageLesson('mechanics-load-and-pressure').steps[4]
+    expect(walk.lookIn.pane).toBe('teaching')
+    expect(walk.lookIn.alsoPane).toBe('steps')
+    const explain = ventilationStageLesson('mechanics-load-and-pressure').steps[5]
     expect(explain.phase).toBe('explain')
     expect(explain.lookIn).toEqual({
       pane: 'steps',
       landmark: 'the verdict and what changed, below',
       alsoPane: 'teaching',
-      alsoLandmark: 'The picture and the checklist',
+      alsoLandmark: 'Compare pressure during flow and a passive hold',
     })
     const bedside = ventilationStageLesson('safety-reassessment-and-human-factors').steps[0]
     expect(bedside.lookIn.landmark).toBe('Patient and circuit findings, below the breath map')
@@ -225,12 +226,15 @@ describe('every step says where it is worked', () => {
     fireEvent.click(primary()!)
     expect(stageId()).toBe(lesson.steps[4].id)
     expect(whereLine()).toBe(
-      'Where to look: Steps panel — the verdict and what changed, below, and Teaching panel — The picture and the checklist.',
+      'Where to look: Steps panel — the captured comparison and observation choices below.',
     )
+    fireEvent.click(within(nowCard()).getByRole('radio', { name: 'Rose' }))
+    fireEvent.click(primary()!)
+    fireEvent.click(primary()!)
     expect(
       within(document.querySelector('[data-teaching-block="method"]') as HTMLElement).getByRole(
         'heading',
-        { name: 'The picture and the checklist' },
+        { name: 'Compare pressure during flow and a passive hold' },
       ),
     ).toBeInTheDocument()
   })
@@ -253,7 +257,7 @@ describe('the simulator says when it cannot be operated', () => {
     fireEvent.click(primary()!)
     expect(stageId()).toBe(lesson.steps[2].id)
     expect(document.querySelector('[data-quick-controls-note]')?.textContent).toBe(
-      'The same settings as on the console.',
+      'Simulated patient properties; keep ventilator settings fixed.',
     )
 
     // Meet the goals, move on to Observe, then look back at Act — where the quick controls are.
@@ -277,8 +281,8 @@ describe('the simulator says when it cannot be operated', () => {
     expect(document.querySelector('[data-quick-controls-note]')?.textContent).toBe(
       'Paused while you look back.',
     )
-    // The transport stays live in both states, and neither note claims otherwise.
-    expect(screen.getByRole('button', { name: /Advance one breath/ })).toBeEnabled()
+    // Looking back in a revised unit cannot advance the current experiment.
+    expect(screen.getByRole('button', { name: /Advance one breath/ })).toBeDisabled()
   })
 })
 
@@ -333,27 +337,23 @@ describe('the short list says what kind of list it is', () => {
     'utf8',
   )
 
-  it('labels the walk card checklist and the teaching stop checklist with one label, and marks them', () => {
+  it('keeps the walk on one captured reference, with the map phase and all three cursors aligned', () => {
     mount('waveform-anatomy')
     for (const stopId of breathStopIds) {
-      const card = document.querySelector(`[data-walk-stop="${stopId}"]`) as HTMLElement
-      const label = card.querySelector('[data-walk-checklist-label]')
-      expect(label?.textContent).toBe(BREATH_STOP_CHECKLIST_LABEL)
-      const list = card.querySelector('[data-walk-checklist]')
-      expect(list?.getAttribute('aria-labelledby')).toBe(label?.getAttribute('id'))
-      expect(list?.querySelectorAll('li').length).toBeGreaterThan(0)
-      const teaching = document.querySelector(
-        `[data-teaching-block="stop"][data-stop="${stopId}"]`,
-      ) as HTMLElement
-      const teachingList = teaching.querySelector('[data-stop-checklist]')
-      expect(
-        document.getElementById(teachingList?.getAttribute('aria-labelledby') ?? '')?.textContent,
-      ).toBe(BREATH_STOP_CHECKLIST_LABEL)
+      expect(document.querySelector('[data-walk-stop]')?.getAttribute('data-walk-stop')).toBe(
+        stopId,
+      )
+      expect(document.querySelector('[data-guided-stop]')?.getAttribute('data-guided-stop')).toBe(
+        stopId,
+      )
+      expect(document.querySelector('[data-breath-map]')?.getAttribute('data-lit')).toBe(stopId)
+      const cursors = [...document.querySelectorAll('[data-time-cursor]')].map((e) =>
+        e.getAttribute('data-time-cursor'),
+      )
+      expect(cursors).toHaveLength(3)
+      expect(new Set(cursors).size).toBe(1)
       fireEvent.click(primary()!)
     }
-    // The base stylesheet resets every list's marker; these two put it back.
-    expect(stageStyles).toMatch(/\.walk ul {[^}]*list-style: disc;/)
-    expect(stageStyles).toMatch(/\.block ul {[^}]*list-style: disc;/)
     expect(stageStyles).toMatch(/\.block ol {[^}]*list-style: decimal;/)
   })
 
@@ -385,9 +385,13 @@ describe('the card keeps the promise the step makes', () => {
     simulate(first.seconds + 1)
     fireEvent.click(primary()!)
     expect(stageId()).toBe(lesson.steps[4].id)
-    expect(lesson.steps[4].instruction).toMatch(/^Read the verdict on your prediction/)
+    fireEvent.click(within(nowCard()).getByRole('radio', { name: 'Rose' }))
+    fireEvent.click(primary()!)
+    fireEvent.click(primary()!)
+    expect(stageId()).toBe(lesson.steps[5].id)
+    expect(lesson.steps[5].instruction).toMatch(/^Compare the recorded response/)
     const recap = document.querySelector('[data-explain-recap]')
-    expect(recap?.textContent).toMatch(/^Correct\. That prediction holds/)
+    expect(recap?.textContent).toMatch(/Correct\. That prediction holds/)
     expect(recap?.querySelector('[data-answer-verdict]')).not.toBeNull()
     expect(recap?.querySelector('[data-how-to-distinguish] strong')?.textContent).toBe(
       'The explanation',

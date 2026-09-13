@@ -1,5 +1,7 @@
 'use client'
 
+import { labUnitComplete } from '../engine/learningLab'
+
 import { useRef, useState } from 'react'
 import type { Route } from 'next'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
@@ -47,7 +49,7 @@ export function MechanicalVentilationCourseCheck({
   )
   const top = useRef<HTMLHeadingElement>(null)
   const missing = ventilationLearningUnits.filter(
-    (unit) => !lab.progress.units[unit.id]?.completedAt,
+    (unit) => !labUnitComplete(lab.progress.units[unit.id]),
   )
   const questions =
     kind === 'placement'
@@ -195,9 +197,10 @@ export function MechanicalVentilationCourseCheck({
           <section className={`${styles.card} ${styles.reading}`}>
             <h2>Work through the fourteen sections first.</h2>
             <p className={styles.muted}>
-              Each section asks for a prediction, a change on the running patient and a watched
-              response, twice. This check opens once every section has been worked through; the
-              starting-level check only adjusts how much guidance the sections give.
+              Work through both applications in every section. The first five include a captured
+              observation as well as your first prediction and the requested action. This check
+              opens once every section has been worked through; the starting-level check only
+              adjusts how much guidance the sections give.
             </p>
             <div className={styles.actions}>
               <Link className={styles.primary} href={ventilationUnitHref(missing[0].id) as Route}>

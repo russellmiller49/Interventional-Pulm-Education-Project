@@ -10,6 +10,7 @@ import {
   type StageStepLocation,
 } from '@/features/learning-module/stage/stageModel'
 
+import { isFoundationUnit, foundationTeaching } from './foundations'
 import { breathStopIds, type BreathStopId } from './breathSpine'
 import {
   ventilationLearningUnits,
@@ -78,6 +79,7 @@ export type VentilationStageInteraction =
   | { readonly kind: 'observe'; readonly round: VentilationRoundIndex }
   /** The reveal: verdict, before-and-after, explanation. */
   | { readonly kind: 'explain'; readonly round: VentilationRoundIndex }
+  | { readonly kind: 'interpret'; readonly round: VentilationRoundIndex }
   /** Sort screen values into what you set and what is reported, committed as a set. */
   | { readonly kind: 'sort'; readonly sort: VentilationSettingSort }
 
@@ -142,7 +144,12 @@ function stepId(unitId: string, phase: StagePhase, ordinal: number): string {
 }
 
 export function roundManeuver(round: LabRound): VentilationManeuver {
-  if (round.goals.every((goal) => goal.type === 'pause-expiration')) return 'pause'
+  if (
+    round.goals.every(
+      (goal) => goal.type === 'pause-expiration' || goal.type === 'inspect-inspiration',
+    )
+  )
+    return 'pause'
   if (round.goals.every((goal) => goal.type === 'hold')) return 'hold'
   return 'change'
 }
@@ -173,7 +180,10 @@ function capitalize(text: string): string {
 /** "Narrow the airways, then perform an inspiratory hold" — the action, in the learner's words. */
 export function roundActionTitle(round: LabRound): string {
   const maneuver = roundManeuver(round)
-  if (maneuver === 'pause') return 'Freeze the traces while gas is leaving'
+  if (maneuver === 'pause')
+    return round.goals.some((g) => g.type === 'inspect-inspiration')
+      ? 'Inspect inspiration on the captured breath'
+      : 'Pause or inspect expiration'
   const phrases: string[] = []
   const holds: string[] = []
   for (const goal of round.goals) {
@@ -214,13 +224,16 @@ function maneuverNote(maneuver: VentilationManeuver): string {
   }
 }
 
-function guideFor(round: LabRound): VentilationStepGuide {
+function guideFor(round: LabRound, foundation = false): VentilationStepGuide {
   const maneuver = roundManeuver(round)
   return {
     maneuver,
     look: round.look,
     watch: maneuver === 'pause' ? [] : round.watch,
-    note: maneuverNote(maneuver),
+    note:
+      foundation && round.goals.some((g) => g.type === 'mechanics')
+        ? `These controls simulate changes to the patient’s respiratory-system compliance or airway resistance. Keep ventilator settings fixed.${round.goals.some((g) => g.type === 'hold') ? ' A hold is a separate measurement maneuver; perform it after the requested change.' : ''}`
+        : maneuverNote(maneuver),
   }
 }
 
@@ -352,6 +365,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
   const index = ventilationLearningUnits.findIndex((entry) => entry.id === unitId)
   const location = ventilationLocationItemByUnit.get(unitId)
   const stops = spec.stops
+  const foundation = isFoundationUnit(unitId) ? foundationTeaching[unitId] : undefined
 
   const recognizeInteraction: VentilationStageInteraction =
     unitId === 'waveform-anatomy'
@@ -363,8 +377,10 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
   const steps: Omit<VentilationStageStep, 'ordinal' | 'id'>[] = [
     {
       phase: 'recognize',
-      title: spec.recognizeTitle,
-      instruction: spec.recognizeInstruction,
+      title: foundation?.title ?? spec.recognizeTitle,
+      instruction: foundation
+        ? 'Read the explanation and worked reference in the Teaching panel. Inspect the aligned traces or setting map, then continue to your own application.'
+        : spec.recognizeInstruction,
       rationale: unit.increment,
       actionLabel:
         recognizeInteraction.kind === 'walk'
@@ -373,20 +389,35 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
             ? 'Commit my answer'
             : 'Continue',
       interaction: recognizeInteraction,
-      lookIn: recognizeLookIn(spec, recognizeInteraction),
+      lookIn: foundation
+        ? {
+            pane: 'teaching',
+            landmark: foundation.title,
+            alsoPane: 'steps',
+            alsoLandmark: 'Continue or Next stop, on this card',
+          }
+        : recognizeLookIn(spec, recognizeInteraction),
       gate: 'open',
       stops: recognizeInteraction.kind === 'walk' ? [] : stops,
       teaching: 'framing',
     },
     {
       phase: 'predict',
-      title: 'Predict the response',
+      title:
+        unitId === 'breathing-with-support' ? 'Identify the marked phase' : 'Predict the response',
       instruction: `${first.introduction} ${first.look}`,
-      rationale:
-        'Committing to an answer before the change is made is what turns watching into learning: the response then confirms or corrects something you actually thought.',
+      rationale: foundation
+        ? 'Apply the concept you just studied. Your first answer is retained, and a wrong prediction can be corrected by observing the actual response.'
+        : 'Committing to an answer before the change is made is what turns watching into learning: the response then confirms or corrects something you actually thought.',
       actionLabel: 'Commit my prediction',
       interaction: { kind: 'prediction', round: 0, item: ventilationRoundItem(unitId, 0) },
-      lookIn: predictLookIn,
+      lookIn:
+        unitId === 'breathing-with-support'
+          ? {
+              pane: 'steps',
+              landmark: 'captured complete breath, interval A, and the choices below',
+            }
+          : predictLookIn,
       gate: 'open',
       stops,
       teaching: 'framing',
@@ -394,37 +425,56 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
     {
       phase: 'act',
       title: roundActionTitle(first),
-      instruction: actInstruction(first),
+      instruction: foundation
+        ? `${first.task} ${guideFor(first, true).note}`
+        : actInstruction(first),
       rationale:
-        roundManeuver(first) === 'change'
-          ? 'The change is yours to make, on the console or with the quick controls beneath it. The step is done once the patient is receiving it.'
-          : 'You are taking a measurement, not treating anything. The step is done once the maneuver has happened on the console.',
+        roundManeuver(first) === 'pause'
+          ? 'Playback changes the display and elapsed time; captured inspection changes only the view. Phase identification is recorded separately.'
+          : roundManeuver(first) === 'change'
+            ? 'The change is yours to make, on the console or with the quick controls beneath it. The step is done once the patient is receiving it.'
+            : 'You are taking a measurement, not treating anything. The step is done once the maneuver has happened on the console.',
       actionLabel: 'Continue',
       interaction: { kind: 'simulator-task', round: 0, goals: first.goals, withObservation: false },
-      lookIn: actLookIn(first, false),
+      lookIn:
+        unitId === 'breathing-with-support'
+          ? {
+              pane: 'steps',
+              landmark: 'the captured breath and Use this captured interval, below',
+              alsoPane: 'simulator',
+              alsoLandmark: 'Pause and Run on the playback toolbar',
+            }
+          : actLookIn(first, false),
       gate: 'after-prediction',
       stops,
       teaching: 'task',
-      guide: guideFor(first),
+      guide: guideFor(first, Boolean(foundation)),
     },
     {
       phase: 'observe',
-      title: observeTitle(first),
-      instruction: observeInstruction(first),
+      title: unitId === 'breathing-with-support' ? 'Read the captured traces' : observeTitle(first),
+      instruction:
+        unitId === 'breathing-with-support'
+          ? 'Read the selected interval on your captured breath. The three signals use the same time cursor; the live patient can remain paused while you inspect them.'
+          : observeInstruction(first),
       actionLabel:
         roundManeuver(first) === 'pause' ? 'Continue to the reading' : 'Compare before and after',
       interaction: { kind: 'observe', round: 0 },
-      lookIn: observeLookIn(first),
+      lookIn:
+        unitId === 'breathing-with-support'
+          ? { pane: 'steps', landmark: 'Your captured interval for interpretation, below' }
+          : observeLookIn(first),
       gate: 'after-prediction',
       stops,
       teaching: 'task',
-      guide: guideFor(first),
+      guide: guideFor(first, Boolean(foundation)),
     },
     {
       phase: 'explain',
       title: first.title,
-      instruction:
-        roundManeuver(first) === 'pause'
+      instruction: foundation
+        ? 'Compare the recorded response with your observation, then review the mechanism in the Teaching panel.'
+        : roundManeuver(first) === 'pause'
           ? 'Read the verdict on your prediction and what the frozen traces showed, then the explanation under it. The Teaching panel opens on the picture and the checklist.'
           : 'Read the verdict on your prediction and what actually changed, then the explanation under it. The Teaching panel opens on the picture and the checklist.',
       actionLabel: 'Continue to a new setup',
@@ -432,7 +482,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
       lookIn: {
         ...IN_STEPS.verdictAndChange,
         alsoPane: 'teaching',
-        alsoLandmark: IN_TEACHING.method,
+        alsoLandmark: foundation?.title ?? IN_TEACHING.method,
       },
       gate: 'after-prediction',
       stops,
@@ -466,7 +516,13 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
         'The same principle in a different situation. If the first answer was memorised rather than understood, this is where it shows.',
       actionLabel: 'Commit my prediction',
       interaction: { kind: 'prediction', round: 1, item: ventilationRoundItem(unitId, 1) },
-      lookIn: predictLookIn,
+      lookIn:
+        unitId === 'breathing-with-support'
+          ? {
+              pane: 'steps',
+              landmark: 'captured complete breath, interval B, and the choices below',
+            }
+          : predictLookIn,
       gate: 'after-prediction',
       stops,
       teaching: 'transfer',
@@ -474,15 +530,18 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
     {
       phase: 'transfer',
       title: `${roundActionTitle(second)}, and watch`,
-      instruction: `${second.task}${intervalSentence(second)} ${maneuverNote(roundManeuver(second))}`,
+      instruction: `${second.task}${intervalSentence(second)} ${foundation ? guideFor(second, true).note : maneuverNote(roundManeuver(second))}`,
       actionLabel:
         roundManeuver(second) === 'pause' ? 'Continue to the reading' : 'Compare before and after',
       interaction: { kind: 'simulator-task', round: 1, goals: second.goals, withObservation: true },
-      lookIn: actLookIn(second, true),
+      lookIn:
+        unitId === 'breathing-with-support'
+          ? { pane: 'steps', landmark: 'the captured breath and Use this captured interval, below' }
+          : actLookIn(second, true),
       gate: 'after-prediction',
       stops,
       teaching: 'task',
-      guide: guideFor(second),
+      guide: guideFor(second, Boolean(foundation)),
     },
     {
       phase: 'transfer',
@@ -497,6 +556,31 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
       expectedResponse: [second.explanation],
     },
   )
+
+  if (foundation) {
+    // Same course architecture; an explicit response interpretation separates observing from explaining.
+    for (let index = steps.length - 1; index >= 0; index--) {
+      const step = steps[index]
+      if (step.interaction.kind !== 'explain') continue
+      steps.splice(index, 0, {
+        phase: step.interaction.round === 0 ? 'observe' : 'transfer',
+        title: 'Interpret your recorded result',
+        instruction:
+          unitId === 'breathing-with-support'
+            ? 'Read your captured interval below. Choose the flow–volume relationship supported by these samples; feedback appears after you submit.'
+            : 'Use the captured baseline and result below. Choose the relationship supported by this run; the answer is evaluated after you submit.',
+        actionLabel: 'Submit my observation',
+        interaction: { kind: 'interpret', round: step.interaction.round },
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the captured comparison and observation choices below',
+        },
+        gate: 'after-prediction',
+        stops: [],
+        teaching: 'task',
+      })
+    }
+  }
 
   const built: VentilationStageStep[] = steps.map((step, position) => ({
     ...step,

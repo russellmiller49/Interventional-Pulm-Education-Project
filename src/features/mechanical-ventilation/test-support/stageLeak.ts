@@ -15,7 +15,9 @@ export function ventilationPrecommitDenyPatterns(unitId: string): readonly RegEx
   if (!experiment) throw new Error(`Unknown unit ${unitId}`)
   const patterns: RegExp[] = [...spec.precommitDenyPatterns]
   for (const round of experiment.rounds) {
-    patterns.push(new RegExp(escape(round.choices[round.correct]), 'i'))
+    // A phase name is now prerequisite vocabulary; the independent task tests its location on an unlabeled trace.
+    if (unitId !== 'breathing-with-support')
+      patterns.push(new RegExp(escape(round.choices[round.correct]), 'i'))
     const definition = mechanicalVentilationCaseById.get(round.caseId)
     if (definition) {
       // The diagnosis half of a case title: "COPD: dynamic hyperinflation…" → each clause.

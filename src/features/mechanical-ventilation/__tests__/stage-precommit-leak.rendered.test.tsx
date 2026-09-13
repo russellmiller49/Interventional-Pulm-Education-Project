@@ -1,3 +1,4 @@
+import { isFoundationUnit } from '../content/foundations'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { act, cleanup, fireEvent, render } from '@testing-library/react'
 
@@ -72,7 +73,8 @@ describe('nothing answers a section before its prediction is committed (rendered
       jest.advanceTimersByTime(10)
     })
     const atFirstStep = `${scannableText()} ${attributesText()}`
-    for (const match of ventilationLeakMatches(atFirstStep, deny))
+    // The five revised units intentionally teach a reference before independent application.
+    for (const match of ventilationLeakMatches(atFirstStep, isFoundationUnit(unitId) ? [] : deny))
       findings.push(`${unitId} · first step: /${match}/`)
 
     // Reach the prediction the way a learner does: through the first step's own Continue.
@@ -93,6 +95,11 @@ describe('nothing answers a section before its prediction is committed (rendered
     expect(document.querySelector('[data-stage]')?.getAttribute('data-stage')).toBe(
       lesson.steps[lesson.predictionStepIndex].id,
     )
+    if (isFoundationUnit(unitId)) {
+      expect(document.querySelector('[data-foundation-teaching]')).toBeNull()
+      expect(document.querySelector('[data-worked-hold]')).toBeNull()
+      expect(document.querySelector('[data-phase-band]')).toBeNull()
+    }
     const atPrediction = `${scannableText()} ${attributesText()}`
     // The location verdict (now committed) may name its own stop; only the round's deny set applies.
     const roundDeny = deny.filter((pattern) => !/stop/.test(pattern.source))

@@ -1,8 +1,11 @@
 'use client'
 
-import { useId, type Dispatch } from 'react'
+import { useId, useState, type Dispatch } from 'react'
 import { Pause, Play, RotateCcw, SkipForward } from 'lucide-react'
 
+import { isFoundationUnit } from '../../content/foundations'
+import { holdStatus } from '../../engine/learningMeasurements'
+import { CapturedBreath } from './CapturedBreath'
 import type { BreathStopId } from '../../content/breathSpine'
 import { resolveVentilationSimulationCase } from '../../content/learningPatient'
 import type { LabGoal, LabMetric } from '../../content/learningExperiments'
@@ -63,13 +66,15 @@ export function goalLabel(goal: LabGoal): string {
   if (goal.type === 'mechanics') {
     return `${goal.key === 'complianceScale' ? 'Compliance' : 'Resistance'} at ${goal.value}× baseline`
   }
-  if (goal.type === 'hold') return `An ${goal.hold} hold, performed`
+  if (goal.type === 'hold') return `A current ${goal.hold} hold acquired after the requested change`
+  if (goal.type === 'inspect-inspiration')
+    return 'Inspect inspiration on a captured complete breath'
   if (goal.type === 'intervention') return interventionLabels[goal.id] ?? goal.id
-  return 'Paused during outward flow after a full breath'
+  return 'Pause during outward flow, or inspect expiration on a captured complete breath'
 }
 
 export function formatMetric(session: LabSession, metric: LabMetric): string {
-  const snapshot = labSnapshot(session.simulation)
+  const snapshot = labSnapshot(session.simulation, session.holds, session.conditionRevision)
   const value = snapshot.values[metric].toFixed(labMetricLabels[metric].digits)
   return metric === 'plateau' && !snapshot.plateauValid ? `${value} *` : value
 }
@@ -95,6 +100,7 @@ export function VentilationSimulatorPane({
   mapCaption,
   mapAnswer,
   bedsideAvailable = true,
+  readOnly = false,
 }: {
   readonly session: LabSession
   readonly engine: Dispatch<VentilationAction>
@@ -129,9 +135,12 @@ export function VentilationSimulatorPane({
    * Whether the bedside findings may be opened. False while a section is asking where on the
    * breath the problem lives: the findings name the finding, and the question is the finding.
    */
+  readonly readOnly?: boolean
   readonly bedsideAvailable?: boolean
 }) {
   const state = session.simulation
+  const foundation = isFoundationUnit(session.unitId)
+  const [moreMechanics, setMoreMechanics] = useState(false)
   const controlGoals = goals.filter(
     (goal): goal is Extract<LabGoal, { type: 'control' }> => goal.type === 'control',
   )
@@ -158,6 +167,10 @@ export function VentilationSimulatorPane({
 
   return (
     <>
+      <p className={styles.quickNote}>
+        Playback · Run/Pause, step and speed control the display and simulated time. A hold is a
+        separate measurement maneuver.
+      </p>
       <div className={styles.toolbar} data-ventilation-transport>
         <div className={styles.transport}>
           <span className={styles.live} data-paused={state.paused}>
@@ -167,6 +180,7 @@ export function VentilationSimulatorPane({
           <button
             type="button"
             className={styles.toolButton}
+            disabled={readOnly}
             onClick={() => engine({ type: 'SET_PAUSED', paused: !state.paused })}
             aria-pressed={!state.paused}
           >
@@ -176,6 +190,7 @@ export function VentilationSimulatorPane({
           <button
             type="button"
             className={styles.toolButton}
+            disabled={readOnly}
             onClick={() => engine({ type: 'STEP_BREATH' })}
           >
             <SkipForward aria-hidden="true" />
@@ -184,6 +199,7 @@ export function VentilationSimulatorPane({
           <select
             className={styles.select}
             aria-label="Simulation speed"
+            disabled={readOnly}
             value={state.speed}
             onChange={(event) =>
               engine({ type: 'SET_SPEED', speed: Number(event.target.value) as 1 | 5 })
@@ -309,12 +325,15 @@ export function VentilationSimulatorPane({
             <span data-quick-controls-note>
               {controlsNote ??
                 (controlsEnabled
-                  ? 'The same settings as on the console.'
+                  ? showMechanics
+                    ? 'Simulated patient properties, separate from ventilator settings.'
+                    : 'Educational shortcuts to supported ventilator settings.'
                   : 'Commit your prediction first.')}
             </span>
           </div>
           {controlGoals.length > 0 ? (
             <div className={styles.sliders}>
+              <p className={styles.kicker}>Ventilator settings</p>
               {controlGoals.map((goal) => {
                 const range = quickControlRanges[goal.key]
                 if (!range) return null
@@ -363,46 +382,55 @@ export function VentilationSimulatorPane({
           ) : null}
           {showMechanics ? (
             <div className={styles.sliders}>
-              {(['complianceScale', 'resistanceScale'] as const).map((key) => {
-                const id = quickControlId(key)
-                return (
-                  <div
-                    key={key}
-                    className={`${styles.slider} ${spotlightKey === key ? styles.spotlight : ''}`}
-                  >
-                    <label htmlFor={id}>
-                      {key === 'complianceScale' ? 'Patient compliance' : 'Patient resistance'}
-                      <output>{state.teachingMechanics[key].toFixed(2)}×</output>
-                    </label>
-                    <input
-                      id={id}
-                      className={styles.rangeInput}
-                      type="range"
-                      min={0.25}
-                      max={4}
-                      step={0.05}
-                      value={state.teachingMechanics[key]}
-                      disabled={!controlsEnabled}
-                      onChange={(event) =>
-                        engine({
-                          type: 'SET_TEACHING_MECHANICS',
-                          overrides: { [key]: Number(event.target.value) },
-                        })
-                      }
-                    />
-                    <small>
-                      <span>{key === 'complianceScale' ? 'Stiffer' : 'Less resistance'}</span>
-                      <span>
-                        {key === 'complianceScale' ? 'More compliant' : 'More resistance'}
-                      </span>
-                    </small>
-                  </div>
+              <p className={styles.kicker}>Simulated patient properties</p>
+              {(['complianceScale', 'resistanceScale'] as const)
+                .filter(
+                  (key) =>
+                    !foundation || moreMechanics || mechanicsGoals.some((g) => g.key === key),
                 )
-              })}
+                .map((key) => {
+                  const id = quickControlId(key)
+                  return (
+                    <div
+                      key={key}
+                      className={`${styles.slider} ${spotlightKey === key ? styles.spotlight : ''}`}
+                    >
+                      <label htmlFor={id}>
+                        {key === 'complianceScale' ? 'Patient compliance' : 'Patient resistance'}
+                        <output>{state.teachingMechanics[key].toFixed(2)}×</output>
+                      </label>
+                      <input
+                        id={id}
+                        className={styles.rangeInput}
+                        type="range"
+                        min={0.25}
+                        max={4}
+                        step={0.05}
+                        value={state.teachingMechanics[key]}
+                        disabled={!controlsEnabled}
+                        onChange={(event) =>
+                          engine({
+                            type: 'SET_TEACHING_MECHANICS',
+                            overrides: { [key]: Number(event.target.value) },
+                          })
+                        }
+                      />
+                      <small>
+                        <span>{key === 'complianceScale' ? 'Stiffer' : 'Less resistance'}</span>
+                        <span>
+                          {key === 'complianceScale' ? 'More compliant' : 'More resistance'}
+                        </span>
+                      </small>
+                    </div>
+                  )
+                })}
             </div>
           ) : null}
           {holdGoals.length > 0 || interventionGoals.length > 0 ? (
             <div className={styles.quickButtons}>
+              <p className={styles.kicker}>
+                {holdGoals.length ? 'Measurement maneuvers' : 'Bedside actions'}
+              </p>
               {holdGoals.map((goal) => (
                 <button
                   key={goal.hold}
@@ -448,14 +476,86 @@ export function VentilationSimulatorPane({
             </div>
           ) : null}
           {showMechanics ? (
-            <p className={styles.quickNote}>
-              The patient sliders scale this patient’s baseline mechanics. They are not ventilator
-              settings.
-            </p>
+            <div>
+              {foundation ? (
+                <details onToggle={(e) => setMoreMechanics(e.currentTarget.open)}>
+                  <summary>Explore additional patient properties</summary>
+                  <p>
+                    Changing another input breaks the controlled comparison. Its result will be
+                    marked as confounded. Use Reset patient for a clean repeat; earlier predictions
+                    and results remain in history.
+                  </p>
+                </details>
+              ) : null}
+              <p className={styles.quickNote}>
+                The patient sliders scale this patient’s baseline mechanics. They are not ventilator
+                settings.
+              </p>
+            </div>
           ) : null}
         </section>
       ) : null}
 
+      {holdGoals.length > 0 || (watch.includes('plateau') && foundation) ? (
+        <section className={styles.block} data-hold-provenance>
+          <h3>Measurement status</h3>
+          <p role="status">
+            {holdStatus(
+              state,
+              session.holds ?? [],
+              session.conditionRevision ?? 0,
+              holdGoals[0]?.hold,
+            )}
+          </p>
+          {session.holds?.at(-1) ? (
+            <details>
+              <summary>Inspect the acquired hold</summary>
+              <CapturedBreath
+                label="Captured hold · historical after a relevant input change"
+                samples={session.holds.at(-1)!.waveforms}
+                whole={false}
+              />
+            </details>
+          ) : null}
+        </section>
+      ) : null}
+      {foundation && goals.some((g) => g.type === 'mechanics' || g.type === 'control') ? (
+        <section className={styles.block} data-controlled-inputs>
+          <h3>Inputs held fixed for this comparison</h3>
+          <p>
+            {Object.entries(session.evidence[session.round].baseline?.inputs ?? {})
+              .filter(
+                ([key]) =>
+                  [
+                    'mode',
+                    'vtMl',
+                    'peakFlowLMin',
+                    'ratePerMin',
+                    'peepCmH2O',
+                    'oxygenPercent',
+                    'deltaPControlCmH2O',
+                    'inspiratoryTimeSeconds',
+                    'complianceScale',
+                    'resistanceScale',
+                  ].includes(key) &&
+                  !goals.some(
+                    (g) => (g.type === 'control' || g.type === 'mechanics') && g.key === key,
+                  ),
+              )
+              .map(
+                ([key, value]) =>
+                  `${({ vtMl: 'VT (mL)', peakFlowLMin: 'Inspiratory flow (L/min)', ratePerMin: 'Rate (/min)', peepCmH2O: 'PEEP (cmH₂O)', oxygenPercent: 'Oxygen (%)', deltaPControlCmH2O: 'Pressure above PEEP (cmH₂O)', inspiratoryTimeSeconds: 'Inspiratory time (s)', complianceScale: 'Compliance (×)', resistanceScale: 'Resistance (×)', mode: 'Mode' } as Record<string, string>)[key]}: ${key === 'mode' ? (({ 'volume-ac': 'Volume control (VC)', 'pressure-ac': 'Pressure control (PC)', 'pressure-support': 'Pressure support' } as Record<string, string>)[String(value)] ?? value) : value}`,
+              )
+              .join(' · ')}
+          </p>
+          {session.confounds?.length ? (
+            <p role="status">
+              Comparison no longer isolates one input: {session.confounds.join('; ')}. Reset patient
+              to repeat from the baseline.
+            </p>
+          ) : null}
+        </section>
+      ) : null}
       <BreathMap emphasis={stops} caption={mapCaption} answer={mapAnswer} />
 
       {bedsideAvailable ? (

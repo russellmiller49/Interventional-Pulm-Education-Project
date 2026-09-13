@@ -1,3 +1,6 @@
+import { isFoundationUnit } from '../content/foundations'
+import { observationFor } from '../engine/learningObservation'
+import { completedBreath, breathStopIndex } from '../engine/teachingBreath'
 import { ventilationExperimentByUnit } from '../content/learningExperiments'
 import {
   createLabSession,
@@ -18,6 +21,13 @@ export function performLabRound(initial: LabSession, prediction?: number): LabSe
     confidence: 'sure',
   })
   for (const goal of round.goals) {
+    if (goal.type === 'inspect-inspiration') {
+      const breath = completedBreath(session.evidence[session.round].baseline?.waveforms ?? [])
+      session = learningLabReducer(session, {
+        type: 'INSPECT',
+        sampleTime: breath[breathStopIndex(breath, 'inspiration')].time,
+      })
+    }
     const action = labGoalAction(goal)
     if (action) session = learningLabReducer(session, { type: 'ENGINE', action })
   }
@@ -44,6 +54,12 @@ export function performLabRound(initial: LabSession, prediction?: number): LabSe
   return learningLabReducer(session, { type: 'COMPARE' })
 }
 export function finishLabRound(session: LabSession): LabSession {
+  if (isFoundationUnit(session.unitId))
+    session = learningLabReducer(session, {
+      type: 'INTERPRET',
+      choice: observationFor(session).correct,
+      now: '2026-09-13T01:00:00.000Z',
+    })
   session = learningLabReducer(session, {
     type: 'REFLECT',
     text: 'I connected the control change with the observed patient response.',

@@ -1,4 +1,4 @@
-import type { LabProgress } from '../engine/learningLab'
+import { labUnitComplete, type LabProgress } from '../engine/learningLab'
 import { ventilationCasePresentationTitle } from './casePresentation'
 import {
   ventilationLearningUnits,
@@ -20,7 +20,7 @@ import { ventilationSectionSpec } from './sectionSpecs'
  */
 
 export function isVentilationSectionWorked(progress: LabProgress, unitId: string): boolean {
-  return Boolean(progress.units[unitId]?.completedAt)
+  return labUnitComplete(progress.units[unitId])
 }
 
 export function workedVentilationSectionIds(progress: LabProgress): ReadonlySet<string> {

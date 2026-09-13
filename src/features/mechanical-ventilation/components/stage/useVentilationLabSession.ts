@@ -10,7 +10,11 @@ import {
   type LabCheckpoint,
   type LabSession,
 } from '../../engine/learningLab'
-import type { VentilationAction, VentilatorDeviceId } from '../../engine/types'
+import {
+  ventilatorDeviceIds,
+  type VentilationAction,
+  type VentilatorDeviceId,
+} from '../../engine/types'
 
 export const VENTILATION_DEVICE_PREFERENCE_KEY = 'ventilation-learning-device'
 
@@ -19,7 +23,9 @@ export function readDevicePreference(
 ): VentilatorDeviceId {
   try {
     const value = localStorage.getItem(VENTILATION_DEVICE_PREFERENCE_KEY)
-    return (value as VentilatorDeviceId | null) ?? fallback
+    return ventilatorDeviceIds.includes(value as VentilatorDeviceId)
+      ? (value as VentilatorDeviceId)
+      : fallback
   } catch {
     return fallback
   }
@@ -94,6 +100,8 @@ export function useVentilationLabSession({
       [
         evidence.prediction ?? '',
         evidence.location ?? '',
+        evidence.observation?.choice ?? '',
+        evidence.inspection?.sample.time ?? '',
         evidence.sort ? Object.keys(evidence.sort).length : '',
         evidence.completedAt ?? '',
       ].join(':'),
@@ -109,6 +117,7 @@ export function useVentilationLabSession({
     session.events.length,
     session.device,
     session.readySince,
+    session.holds?.length,
     commitments,
     session.completedAt,
   ])
