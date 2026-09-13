@@ -61,7 +61,6 @@ interface Props {
   highlightRegion?: boolean
   scopeAvailable?: boolean
   answerSlice?: number
-  responseStatus?: string
   sliceRequest?: { slice: number; serial: number }
   teachingFrame?: CtTeachingFrame
   annotationReview?: AnnotationReview
@@ -89,7 +88,6 @@ export function NativeCtViewer({
   highlightRegion = false,
   scopeAvailable = true,
   answerSlice,
-  responseStatus,
   sliceRequest,
   teachingFrame,
   annotationReview,
@@ -210,6 +208,33 @@ export function NativeCtViewer({
   )
   const submissionSlice = answerSlice ?? checkpoint.slice
   const atCheckpoint = slice === submissionSlice
+  const answerControls = onMark && (
+    <div className={styles.answerGuidance} role="status">
+      {failed
+        ? 'Image unavailable. Retry this slice before marking.'
+        : !ready
+          ? 'Loading the CT image before marking.'
+          : atCheckpoint
+            ? local
+              ? null
+              : `Answer slice ${submissionSlice}: mark the lumen, or record uncertainty.`
+            : `Exploring slice ${slice}. Your current task is unchanged; marks are recorded on slice ${submissionSlice}.`}
+      <button
+        onClick={() => {
+          setStartFocus(null)
+          setTargetFocus(null)
+          setSlice(submissionSlice)
+        }}
+      >
+        Go to answer slice
+      </button>
+      {atCheckpoint && (
+        <button disabled={!ready} onClick={() => onMark({ slice, pixel: null })}>
+          Lumen unresolved here
+        </button>
+      )}
+    </div>
+  )
   useEffect(() => {
     if (!sliceRequest) return
     setSlice(sliceRequest.slice)
@@ -308,6 +333,36 @@ export function NativeCtViewer({
     setShowNodule(true)
     setSlice(target.slice)
   }
+  const sliceControls = (
+    <div className={styles.nativeSliceControls}>
+      <button
+        aria-label="More caudal CT slice"
+        onClick={() => setSlice((k) => clampSlice(k - 1))}
+        disabled={slice === trace.range[0]}
+      >
+        −
+      </button>
+      <label>
+        <span>Caudal ← Browse adjacent CT slices → Cranial</span>
+        <input
+          aria-label="CT slice"
+          type="range"
+          min={trace.range[0]}
+          max={trace.range[1]}
+          step="1"
+          value={slice}
+          onChange={(e) => setSlice(Number(e.target.value))}
+        />
+      </label>
+      <button
+        aria-label="More cranial CT slice"
+        onClick={() => setSlice((k) => clampSlice(k + 1))}
+        disabled={slice === trace.range[1]}
+      >
+        +
+      </button>
+    </div>
+  )
   return (
     <section
       ref={viewer}
@@ -316,8 +371,8 @@ export function NativeCtViewer({
     >
       <div className={styles.nativeHeading}>
         <div>
-          <h2>CT tracing stack</h2>
-          <span>{trace.region} · 0.5 mm slices</span>
+          <h2>{local ? 'Axial CT' : 'CT tracing stack'}</h2>
+          <span>{local ? orientationName(orientation) : `${trace.region} · 0.5 mm slices`}</span>
         </div>
         <button className={styles.ctExpand} onClick={toggleExpanded}>
           {expanded ? 'Close expanded views' : 'Expand CT views'}
@@ -347,40 +402,17 @@ export function NativeCtViewer({
         </div>
       )}
       {expandError && <p role="status">Expanded view is unavailable in this browser.</p>}
-      {onMark && (
-        <div className={styles.answerGuidance} role="status">
-          {failed
-            ? 'Image unavailable. Retry this slice before marking.'
-            : !ready
-              ? 'Loading the CT image before marking.'
-              : atCheckpoint
-                ? responseStatus ||
-                  `Answer slice ${submissionSlice}: mark the lumen, or record uncertainty.`
-                : `Exploring slice ${slice}. Your current task is unchanged; marks are recorded on slice ${submissionSlice}.`}
-          <button
-            onClick={() => {
-              setStartFocus(null)
-              setTargetFocus(null)
-              setSlice(submissionSlice)
-            }}
-          >
-            Go to answer slice
-          </button>
-          {atCheckpoint && (
-            <button disabled={!ready} onClick={() => onMark({ slice, pixel: null })}>
-              Lumen unresolved here
-            </button>
-          )}
-        </div>
-      )}
+      {!local && answerControls}
       <div
         className={`${styles.pairedViews} ${!showScope || !scopeAvailable ? styles.ctOnly : ''}`}
         aria-label="CT and supporting views"
       >
         <div className={styles.pairedColumn}>
-          <h3>
-            Axial CT <span>{orientationName(orientation)}</span>
-          </h3>
+          {(!local || (showScope && scopeAvailable)) && (
+            <h3>
+              Axial CT <span>{orientationName(orientation)}</span>
+            </h3>
+          )}
           <div
             ref={surface}
             className={styles.nativeImage}
@@ -686,6 +718,12 @@ export function NativeCtViewer({
           </div>
         )}
       </div>
+      {local && (
+        <div className={styles.localCtControls}>
+          {answerControls}
+          {sliceControls}
+        </div>
+      )}
       <div className={styles.ctViewButtons}>
         {scopeAvailable && (
           <button aria-pressed={showScope} onClick={() => setShowScope((v) => !v)}>
@@ -712,54 +750,31 @@ export function NativeCtViewer({
           Turn or reflect the CT, then check your orientation before marking the lumen.
         </p>
       )}
-      <p className={styles.pairExplanation}>
-        Compare the branch relationships. An axial cross-section and a view down the lumen have
-        different shapes; rotating the CT does not create an endoscopic projection.
-      </p>
-      <div className={styles.ctActiveAirway} aria-live="polite">
-        <strong>
-          {focusedOnTarget
-            ? `Target region · ${target.segment.code}`
-            : focusedOnStart
-              ? `Starting airway · ${trace.anchor.airway.code}`
-              : `${active + 1} of ${trace.checkpoints.length} · ${stationLabel}`}
-        </strong>
-        <span>
-          {focusedOnTarget
-            ? target.segment.name
-            : focusedOnStart
-              ? trace.anchor.airway.name
-              : stationName}
-        </span>
-      </div>
-      <div className={styles.nativeSliceControls}>
-        <button
-          aria-label="More caudal CT slice"
-          onClick={() => setSlice((k) => clampSlice(k - 1))}
-          disabled={slice === trace.range[0]}
-        >
-          −
-        </button>
-        <label>
-          <span>Caudal ← Browse adjacent CT slices → Cranial</span>
-          <input
-            aria-label="CT slice"
-            type="range"
-            min={trace.range[0]}
-            max={trace.range[1]}
-            step="1"
-            value={slice}
-            onChange={(e) => setSlice(Number(e.target.value))}
-          />
-        </label>
-        <button
-          aria-label="More cranial CT slice"
-          onClick={() => setSlice((k) => clampSlice(k + 1))}
-          disabled={slice === trace.range[1]}
-        >
-          +
-        </button>
-      </div>
+      {scopeAvailable && (
+        <p className={styles.pairExplanation}>
+          Compare the branch relationships. An axial cross-section and a view down the lumen have
+          different shapes; rotating the CT does not create an endoscopic projection.
+        </p>
+      )}
+      {!local && (
+        <div className={styles.ctActiveAirway} aria-live="polite">
+          <strong>
+            {focusedOnTarget
+              ? `Target region · ${target.segment.code}`
+              : focusedOnStart
+                ? `Starting airway · ${trace.anchor.airway.code}`
+                : `${active + 1} of ${trace.checkpoints.length} · ${stationLabel}`}
+          </strong>
+          <span>
+            {focusedOnTarget
+              ? target.segment.name
+              : focusedOnStart
+                ? trace.anchor.airway.name
+                : stationName}
+          </span>
+        </div>
+      )}
+      {!local && sliceControls}
       {!local && (
         <div className={styles.ctLevels} role="group" aria-label="Airway checkpoints">
           <button

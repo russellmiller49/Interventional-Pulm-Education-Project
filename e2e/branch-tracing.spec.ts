@@ -214,9 +214,13 @@ test('the warm-up explains its purpose and keeps review beside the instruction a
 }) => {
   const exercise = localExercise(LESSONS[0].exercises![0])
   for (const [width, height] of [
+    [2488, 885],
     [1993, 927],
     [1280, 720],
+    [1024, 768],
+    [900, 800],
     [390, 844],
+    [320, 844],
   ]) {
     const context = await browser.newContext({ viewport: { width, height }, hasTouch: width < 800 })
     const page = await context.newPage()
@@ -236,22 +240,33 @@ test('the warm-up explains its purpose and keeps review beside the instruction a
     const action = page.getByRole('button', { name: 'Review my mark', exact: true })
     await expect(action).toBeInViewport()
     await expect(page.getByRole('button', { name: 'Next demonstration slice' })).toHaveCount(0)
-    if (width >= 800) {
-      const instruction = (await page
-        .locator('[data-current-task] [data-now-card] > p')
-        .nth(1)
-        .boundingBox())!
-      const button = (await action.boundingBox())!
-      expect(button.x - (instruction.x + instruction.width)).toBeLessThanOrEqual(32)
-    }
+    const instruction = (await page
+      .locator('[data-current-task] [data-now-card] > p')
+      .nth(1)
+      .boundingBox())!
+    const button = (await action.boundingBox())!
+    expect(Math.abs(button.x - instruction.x)).toBeLessThanOrEqual(2)
+    expect(button.y - (instruction.y + instruction.height)).toBeLessThanOrEqual(20)
     await page.reload()
     await expect(page.getByRole('heading', { name: 'Mark placed — ready to review' })).toBeVisible()
-    await expect(
-      page.getByText(/Mark placed on slice 412. Select Review my mark above/),
-    ).toBeVisible()
+    await expect(page.getByText(/Your mark on slice 412 is ready/)).toBeVisible()
     await expect(page.getByText(/Answer slice 412: mark the lumen/)).toHaveCount(0)
-    // Allow a subpixel border at the scrollport edge; the whole CT must remain in view.
-    if (width === 1280) await expect(ct).toBeInViewport({ ratio: 0.99 })
+    if (width >= 1024) {
+      const workspace = (await page
+        .getByRole('region', { name: 'CT tracing viewer' })
+        .locator('..')
+        .boundingBox())!
+      const task = (await page.locator('[data-current-task]').boundingBox())!
+      const image = (await ct.boundingBox())!
+      expect(workspace.height / height).toBeGreaterThanOrEqual(0.7)
+      expect(workspace.y / height).toBeLessThanOrEqual(0.25)
+      expect(task.x + task.width).toBeLessThanOrEqual(workspace.x + 1)
+      expect(image.y / height).toBeLessThanOrEqual(0.35)
+      expect(image.width).toBeGreaterThanOrEqual(350)
+      await expect(ct).toBeInViewport({ ratio: 0.99 })
+      await expect(page.getByRole('button', { name: 'Go to answer slice' })).toBeInViewport()
+      await expect(page.getByRole('slider', { name: 'CT slice', exact: true })).toBeInViewport()
+    }
     await page.screenshot({ path: `/tmp/branch-tracing-warmup-marked-${width}.png` })
     await action.click()
     await page

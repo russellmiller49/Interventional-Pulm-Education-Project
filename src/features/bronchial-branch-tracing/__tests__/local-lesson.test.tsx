@@ -58,7 +58,9 @@ it('isolates a local bifurcation, hides the model during attempts, preserves tas
   view.unmount()
   render(<BranchTracingLesson requestedId="continuity" />)
   await screen.findByRole('heading', { name: 'Review the image evidence' })
+  fireEvent.click(screen.getByRole('button', { name: 'What do I do now?' }))
   expect(screen.getByText(/Draft restored on this device/)).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: 'Close' }))
   fireEvent.click(screen.getByRole('button', { name: 'Try this bifurcation again' }))
   expect(document.querySelector('[data-teaching-overlay]')).toBeNull()
   fireEvent.click(screen.getByRole('button', { name: '3. Replay the walkthrough' }))
@@ -121,7 +123,7 @@ it('explains the warm-up, acknowledges a placed mark, restores it and opens bifu
   fireEvent.keyDown(screen.getByRole('group', { name: /^CT image\./ }), { key: 'Enter' })
   expect(screen.getByRole('heading', { name: 'Mark placed — ready to review' })).toBeVisible()
   expect(screen.getByRole('button', { name: 'Review my mark' })).toBeEnabled()
-  expect(screen.getByText(/Mark placed on slice 412. Select Review my mark above/)).toBeVisible()
+  expect(screen.getByText(/Your mark on slice 412 is ready/)).toBeVisible()
   expect(screen.queryByText(/Answer slice 412: mark the lumen/)).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Next demonstration slice' })).not.toBeInTheDocument()
   const key = DRAFT_PREFIX + 'learn.follow-one-airway'

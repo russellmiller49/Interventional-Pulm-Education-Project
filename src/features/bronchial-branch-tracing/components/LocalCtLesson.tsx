@@ -262,7 +262,6 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
         <SectionHeader
           kicker={`Learn · ${LESSONS.indexOf(lesson) + 1} of ${LESSONS.length}`}
           title={lesson.title}
-          meta={[`${lesson.minutes} min`, 'One teaching CT · ungraded']}
           helpRef={helpRef}
           onHelp={() => setHelp(true)}
           onRestart={() => act({ type: 'restart' })}
@@ -271,13 +270,29 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
           resumedNote={
             saveFailed
               ? 'Draft saving failed. Keep this page open; Save & exit will explain how to leave without saving.'
-              : loaded.notice ||
-                'Draft saves on this device, including the CT view and separate attempts.'
+              : !loaded.value && loaded.notice
+                ? loaded.notice
+                : undefined
           }
         />
       }
-      contextStrip={
-        <div className={styles.currentTask} data-current-task data-response-ready={attemptReady}>
+      footer={
+        <div className={styles.footer}>
+          <a href={SOURCE.url} target="_blank" rel="noreferrer">
+            {SOURCE.title}
+          </a>
+          <span>{lesson.sourcePages}</span>
+          <span>{MODEL_REFERENCE_LABEL}</span>
+        </div>
+      }
+    >
+      <div className={styles.localWorkspace}>
+        <div
+          className={styles.currentTask}
+          data-current-task
+          data-response-ready={attemptReady}
+          aria-live="polite"
+        >
           <NowCard
             model={{
               kicker: `${sameLumen ? 'Viewer warm-up · airway' : 'Example'} ${s.exercise + 1} of ${exercises.length} · ${locatingParent ? target.segment.code : exercise.trace.anchor.airway.code}`,
@@ -305,18 +320,6 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
             }}
           />
         </div>
-      }
-      footer={
-        <div className={styles.footer}>
-          <a href={SOURCE.url} target="_blank" rel="noreferrer">
-            {SOURCE.title}
-          </a>
-          <span>{lesson.sourcePages}</span>
-          <span>{MODEL_REFERENCE_LABEL}</span>
-        </div>
-      }
-    >
-      <div className={styles.localWorkspace}>
         <section className={styles.localInstructions} aria-label="Current exercise instructions">
           <h2>
             {complete
@@ -333,22 +336,6 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                 a mark records which lumen you followed. Two short intervals introduce scrolling and
                 marking before the next lesson adds a bifurcation.
               </p>
-            </div>
-          )}
-          {sameLumen && attemptReady && (
-            <div className={styles.feedback} role="status">
-              <h3>
-                {markPlaced
-                  ? `Your mark is placed on slice ${slot.slice}.`
-                  : `You recorded uncertainty on slice ${slot.slice}.`}
-              </h3>
-              <p>
-                Select <strong>Review my mark</strong> above. You will compare the starting slice
-                with this slice, then{' '}
-                {lastExercise ? 'continue to bifurcations.' : 'move to the next airway.'}
-              </p>
-              <p>To change your mark first, click another point in the lumen on the CT.</p>
-              <button onClick={() => goToSlice(slot.slice)}>Return to my marking slice</button>
             </div>
           )}
           {locatingParent && (
@@ -703,11 +690,6 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
               highlightRegion={s.phase === 'attempt' && s.hints > 0}
               showAnchor={showAnchor}
               answerSlice={slot.slice}
-              responseStatus={
-                sameLumen && attemptReady
-                  ? `${markPlaced ? 'Mark placed' : 'Uncertainty recorded'} on slice ${slot.slice}. Select Review my mark above. You can still change your response here.`
-                  : undefined
-              }
               sliceRequest={request}
               teachingFrame={frame}
               annotationReview={exercise.review}
@@ -728,6 +710,11 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
         </div>
       </div>
       <HelpDialog open={help} onClose={() => setHelp(false)} returnFocusTo={helpRef}>
+        <p>{lesson.minutes} min · One teaching CT · ungraded</p>
+        <p>
+          {loaded.notice ||
+            'Draft saves on this device, including the CT view and separate attempts.'}
+        </p>
         <p>
           <strong>{title}</strong> ·{' '}
           {locatingParent ? target.segment.code : exercise.trace.anchor.airway.code}
