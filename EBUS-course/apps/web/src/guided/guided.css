@@ -1,0 +1,180 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #081c22;
+  color: #e6f2f3;
+  font:
+    15px/1.5 system-ui,
+    sans-serif;
+}
+button,
+input {
+  font: inherit;
+}
+button {
+  background: #173a44;
+  color: #e6f2f3;
+  border: 1px solid #42616a;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+button[aria-pressed='true'] {
+  border-color: #75e1de;
+  background: #22565c;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid #79e4e3;
+  outline-offset: 3px;
+}
+h2 {
+  font-size: 18px;
+  margin: 0 0 6px;
+}
+p {
+  margin: 8px 0;
+}
+.guided-workbench {
+  padding: 12px;
+  min-width: 0;
+}
+.guided-label {
+  font-size: 12px;
+  color: #abc3ca;
+}
+.guided-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+.guided-anatomy {
+  height: 310px;
+  min-height: 240px;
+  position: relative;
+  border: 1px solid #36515a;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.guided-workbench fieldset {
+  border: 1px solid #36515a;
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 8px;
+}
+.guided-workbench label {
+  display: block;
+  margin: 8px 0;
+}
+.guided-workbench input[type='range'] {
+  width: 100%;
+  accent-color: #6bd5d6;
+}
+.guided-workbench .simulator-sector-pane {
+  border: 0;
+  min-width: 0;
+}
+.guided-workbench .simulator-continuous-ultrasound {
+  position: relative;
+  min-height: 240px;
+  aspect-ratio: 1;
+  background: #000;
+  overflow: hidden;
+  max-height: 440px;
+}
+.guided-workbench canvas {
+  max-width: 100%;
+}
+.simulator-continuous-ultrasound canvas {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  inset: 0;
+}
+.simulator-ultrasound-readout {
+  position: absolute;
+  bottom: 5px;
+  left: 8px;
+  font-size: 11px;
+  color: #d4e5e9;
+}
+.simulator-ultrasound-coupling,
+.simulator-ultrasound-message {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  font-size: 12px;
+  background: #14262ccc;
+  padding: 6px;
+}
+.simulator-pane-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.simulator-pane-header .eyebrow {
+  display: none;
+}
+.simulator-ultrasound-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.simulator-ultrasound-controls label {
+  font-size: 12px;
+}
+.guided-media {
+  position: relative;
+  background: #000;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 10px;
+}
+.guided-media video,
+.guided-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.guided-media svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.guided-error {
+  border: 1px solid #fa927d;
+  color: #ffd0c3;
+  padding: 12px;
+}
+
+.guided-workbench .simulator-continuous-ultrasound {
+  height: 300px;
+  max-height: 300px;
+  aspect-ratio: auto;
+}
+.guided-workbench .simulator-ultrasound-controls:has(input:disabled):not(:has(input:enabled)) {
+  display: none;
+}
+.guided-workbench figure img {
+  max-width: 100%;
+}
+.guided-workbench .guided-media {
+  max-height: 360px;
+  aspect-ratio: 1;
+}
+.guided-workbench figcaption {
+  font-size: 12px;
+  color: #abc3ca;
+}

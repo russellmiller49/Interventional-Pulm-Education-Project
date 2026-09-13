@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useCourseShellText } from '@/i18n/courseShell';
 import { useLearnerProgress } from '@/lib/progress';
+import { EMPTY_EBUS_OBSERVATION, type EbusControl, type EbusObservation, type EbusWorkbenchConfig } from '../../../../../../src/lib/ebus-guided-bridge';
 
 import { AnatomyScene } from './AnatomyScene';
 import {
@@ -1221,8 +1222,27 @@ export function simulatorBronchOverlayStructures(
 }
 
 export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtualBronchoscopy?: boolean }) {
-  const t = useCourseShellText();
   const { setModuleProgress } = useLearnerProgress();
+  return <SimulatorWorkbench showVirtualBronchoscopy={showVirtualBronchoscopy} setModuleProgress={setModuleProgress} />;
+}
+
+const ignoreCourseProgress = () => undefined;
+
+export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleProgress = ignoreCourseProgress, guided }: {
+  showVirtualBronchoscopy?: boolean;
+  setModuleProgress?: (module: 'simulator', percent: number) => void;
+  guided?: { config: EbusWorkbenchConfig; onObservation: (observation: EbusObservation) => void };
+}) {
+  const t = useCourseShellText();
+  const [guidedFrame, setGuidedFrame] = useState({ ready: false, targetVisible: false, depth: 40, gain: 0, frozen: false, poseKey: '' });
+  const guidedActions = useRef({ count: 0, last: '', used: [] as EbusControl[] });
+  const [guidedView, setGuidedView] = useState<'sector'|'bronch'|'anatomy'>(guided?.config.view ?? 'sector');
+  const onGuidedFrame = useCallback((frame: typeof guidedFrame) => setGuidedFrame(frame), []);
+  const guidedAction = (name: string, apply: () => void) => {
+    if (!guided || guided.config.locked) return;
+    guidedActions.current = { count: guidedActions.current.count + 1, last: name, used: [...new Set([...guidedActions.current.used,name as EbusControl])] };
+    apply();
+  };
   const { assets, caseData, error } = useSimulatorCase();
   const acoustic=useAcousticVolume(caseData);
   const publicTrainingMode = useMemo(() => isPublicTrainingSimulatorMode(), []);
@@ -1260,13 +1280,13 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
   // Physical scope tracker (USB HID). Handlers are assigned below, after the drive
   // helpers they reuse are defined; the hook reads them through the ref per frame.
   const [hardwareScopeEnabled, setHardwareScopeEnabled] = useState(
-    () => window.localStorage.getItem(HARDWARE_SCOPE_STORAGE_KEY) !== 'off',
+    () => !guided && window.localStorage.getItem(HARDWARE_SCOPE_STORAGE_KEY) !== 'off',
   );
   const scopeHandlersRef = useRef<ScopeTrackerFrameHandlers | null>(null);
   const scopeProgressMarkedRef = useRef(false);
   const scopeTracker = useScopeTrackerInput(hardwareScopeEnabled, scopeHandlersRef);
   useEffect(() => {
-    window.localStorage.setItem(HARDWARE_SCOPE_STORAGE_KEY, hardwareScopeEnabled ? 'on' : 'off');
+    if (!guided) window.localStorage.setItem(HARDWARE_SCOPE_STORAGE_KEY, hardwareScopeEnabled ? 'on' : 'off');
   }, [hardwareScopeEnabled]);
 
   const selectedPreset = useMemo(() => {
@@ -1288,6 +1308,20 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
 
     const first = caseData.presets[0];
     const publicStartLineIndex = caseData.navigation.primary_line_index ?? first.line_index;
+
+    if (guided) {
+      const preset = caseData.presets.find(p => p.preset_key === guided.config.presetKey);
+      if (!preset) return;
+      setSelectedKey(guided.config.freeDrive ? '' : preset.preset_key);
+      setLineIndex(preset.line_index);
+      setSMm(preset.centerline_s_mm);
+      setRollTrimDeg(guided.config.initialRoll);
+      setFlexionDeg(0);
+      setTeachingView(false);
+      setLockSceneView(true);
+      setSimulatorStateInitialized(true);
+      return;
+    }
 
     if (publicTrainingMode) {
       setSelectedKey('');
@@ -1340,7 +1374,7 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
   }, [caseData, publicTrainingMode, simulatorStateInitialized]);
 
   useEffect(() => {
-    if (publicTrainingMode || !simulatorStateInitialized) {
+    if (guided || publicTrainingMode || !simulatorStateInitialized) {
       return;
     }
 
@@ -1535,6 +1569,21 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
 
     return contactQualityForPose(pose, channelRaycastMesh);
   }, [channelRaycastMesh, pose]);
+
+  const guidedPoseKey = pose ? JSON.stringify(pose) : '';
+  useEffect(() => {
+    if (!guided) return;
+    guided.onObservation({
+      ...EMPTY_EBUS_OBSERVATION,
+      usedControls: guidedActions.current.used, actionCount: guidedActions.current.count, lastAction: guidedActions.current.last,
+      ready: !!assets && !!pose && !!acoustic.volume,
+      frameReady: guidedFrame.ready && guidedFrame.poseKey === guidedPoseKey,
+      contactQuality: sectorContactQuality,
+      targetVisible: guidedFrame.targetVisible,
+      roll: rollTrimDeg, flexion: flexionDeg, depth: guidedFrame.depth,
+      gain: guidedFrame.gain, frozen: guidedFrame.frozen,
+    });
+  }, [guided, assets, pose, acoustic.volume, guidedFrame, guidedPoseKey, sectorContactQuality, rollTrimDeg, flexionDeg]);
 
   const hasCurrentSnapshot = Boolean(selectedPreset && snapshot?.preset_key === selectedPreset.preset_key);
   const atSnapshotPose = Boolean(
@@ -2008,6 +2057,31 @@ export function SimulatorPage({ showVirtualBronchoscopy = false }: { showVirtual
     });
   };
   const showAllSceneStructures = () => setHiddenSceneStructureIds([]);
+
+  if (guided) {
+    const { config } = guided;
+    const can = (control: typeof config.controls[number]) => !config.locked && config.controls.includes(control);
+    return <div className="guided-workbench">
+      <h2>EBUS workbench</h2>
+      <p className="guided-label">Simulated anatomy and grayscale ultrasound</p>
+      <div className="guided-tabs" role="group" aria-label="Clinical view">
+        {(['sector','bronch','anatomy'] as const).map(view => <button key={view} type="button" aria-pressed={guidedView === view} onClick={() => setGuidedView(view)}>{view === 'sector' ? 'Ultrasound' : view === 'bronch' ? 'Bronchoscopy' : 'Anatomy'}</button>)}
+      </div>
+      {guidedView === 'anatomy' && <div className="guided-anatomy"><AnatomyScene activeStructure={null} assets={assets} cameraPose={cameraPose} caseData={caseData} hiddenStructureIds={hiddenSceneStructureSet} intersectedStructureIds={new Set()} layers={layers} lockView={false} pose={pose} selectedPreset={config.reveal ? selectedPreset : null} teachingView={false} /></div>}
+      {guidedView === 'bronch' && <div className="guided-anatomy"><BronchoscopyView assets={assets} balloonInflated={bronchBalloonInflated} camera={caseData.endoscope_camera} caseData={caseData} focusStationKey={null} pose={pose} seeThroughWall={false} structures={[]} /></div>}
+      <div hidden={guidedView !== 'sector'}>
+        <ContinuousSectorView caseData={caseData} volume={acoustic.volume} error={acoustic.error} pose={pose} contactQuality={sectorContactQuality} compact assessment={!config.reveal} selectedPreset={null} activeStructure={null} setActiveStructure={() => undefined}
+          guided={{ config, targetKey: selectedPreset?.station_key ?? '', poseKey: guidedPoseKey, onFrame: onGuidedFrame, onAction: (name, apply) => guidedAction(name, apply) }} />
+      </div>
+      <p role="status">{config.locked ? 'Controls are paused while you read or answer. They open for the guided activity.' : 'Use the controls below, then return to Steps.'}</p>
+      <fieldset disabled={config.locked}><legend>Scope controls</legend>
+        {config.controls.includes('roll') && <label>Scope rotation <output>{Math.round(rollTrimDeg)}°</output><input aria-label="Scope rotation" type="range" min="-90" max="90" step="1" value={rollTrimDeg} disabled={!can('roll')} onChange={e => guidedAction('roll', () => setRollTrimDeg(Number(e.target.value)))} /></label>}
+        {config.controls.includes('flexion') && <label>Tip flexion <input aria-label="Tip flexion" type="range" min="-30" max="60" value={flexionDeg} disabled={!can('flexion')} onChange={e => guidedAction('flexion', () => setFlexionDeg(Number(e.target.value)))} /></label>}
+        {config.controls.includes('advance') && <div className="guided-tabs"><button disabled={!can('advance')} onClick={() => guidedAction('advance', () => setSMm(v => constrainAdvance(v,v - 1)))}>Withdraw</button><button disabled={!can('advance')} onClick={() => guidedAction('advance', () => setSMm(v => constrainAdvance(v,v + 1)))}>Advance</button></div>}
+      </fieldset>
+      <p className="guided-label">Position assists remain active. This exercise does not reproduce needle passage, tactile feedback, or patient response.</p>
+    </div>;
+  }
 
   return (
     <div className="simulator-page">

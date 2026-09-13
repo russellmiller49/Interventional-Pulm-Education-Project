@@ -45,6 +45,7 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   // The bronchoscopy foundations course is in development alongside the earlier intro course,
   // which keeps `/intro-bronchoscopy` and its enrollment gate until the owner decides on a cutover.
   '/bronchoscopy-foundations',
+  '/ebus-guided',
   '/pleural-procedures/pleural-ultrasound-simulator',
   '/preference-cards',
   '/procedures',
@@ -75,6 +76,7 @@ const PUBLIC_UNLISTED_PATH_PREFIXES = [
   // The bronchoscopy foundations course (hub, Learn, Practice, Assess, Reference) is in development
   // and reachable by direct link, noindex. `/intro-bronchoscopy` is a separate module.
   '/bronchoscopy-foundations',
+  '/ebus-guided',
   // Beta testers reach the card builder and catalog by direct link without an account.
   // Saving a card still needs one — cards are per-user rows under row-level security.
   '/preference-cards',
@@ -438,6 +440,8 @@ export function resolveSiteModuleId(pathname: string) {
   if (first === 'peripheral-imaging') {
     return 'peripheral-imaging'
   }
+
+  if (first === 'ebus-guided') return 'ebus-guided'
 
   if (first === 'bronchoscopy-foundations') {
     return 'bronchoscopy-foundations'

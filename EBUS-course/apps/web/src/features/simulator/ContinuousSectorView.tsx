@@ -1,3 +1,4 @@
+import type { EbusWorkbenchConfig } from '../../../../../../src/lib/ebus-guided-bridge';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_ACOUSTIC_CONTROLS, type AcousticControls, type AcousticFrame, type AcousticVolume } from '@bronchoscopy-core/acoustic';
 import { acousticPoseFromScope } from './acousticAdapter';
@@ -6,9 +7,9 @@ import { useCourseShellText } from '@/i18n/courseShell';
 import type { SimulatorProbePose } from './pose';
 import type { SimulatorCaseManifest, SimulatorPreset } from './types';
 
-export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,compact=false,assessment=false,onEnlarge,onShowAll,selectedPreset,activeStructure,setActiveStructure}:{caseData:SimulatorCaseManifest;volume:AcousticVolume|null;error:string|null;pose:SimulatorProbePose;contactQuality:number;compact?:boolean;assessment?:boolean;onEnlarge?:(()=>void)|null;onShowAll?:(()=>void)|null;selectedPreset:SimulatorPreset|null;activeStructure:string|null;setActiveStructure:(id:string|null)=>void}) {
+export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,compact=false,assessment=false,onEnlarge,onShowAll,selectedPreset,activeStructure,setActiveStructure,guided}:{caseData:SimulatorCaseManifest;volume:AcousticVolume|null;error:string|null;pose:SimulatorProbePose;contactQuality:number;compact?:boolean;assessment?:boolean;onEnlarge?:(()=>void)|null;onShowAll?:(()=>void)|null;selectedPreset:SimulatorPreset|null;activeStructure:string|null;setActiveStructure:(id:string|null)=>void;guided?:{config:EbusWorkbenchConfig;targetKey:string;poseKey:string;onFrame:(frame:{ready:boolean;targetVisible:boolean;depth:number;gain:number;frozen:boolean;poseKey:string})=>void;onAction:(name:string,apply:()=>void)=>void}}) {
   const t=useCourseShellText(),canvas=useRef<HTMLCanvasElement>(null),overlay=useRef<HTMLCanvasElement>(null),worker=useRef<Worker|null>(null),sequence=useRef(0),scheduled=useRef<ReturnType<typeof setTimeout>|null>(null);
-  const [controls,setControls]=useState<AcousticControls>({...DEFAULT_ACOUSTIC_CONTROLS,depthMm:caseData.render_defaults.max_depth_mm,sectorAngleDeg:caseData.render_defaults.sector_angle_deg});
+  const [controls,setControls]=useState<AcousticControls>({...DEFAULT_ACOUSTIC_CONTROLS,gainDb:guided?.config.initialGain ?? DEFAULT_ACOUSTIC_CONTROLS.gainDb,depthMm:guided?.config.initialDepth ?? caseData.render_defaults.max_depth_mm,sectorAngleDeg:caseData.render_defaults.sector_angle_deg});
   const [frozen,setFrozen]=useState(false),[teaching,setTeaching]=useState(false),[frame,setFrame]=useState<AcousticFrame|null>(null),[renderError,setRenderError]=useState<string|null>(null);
   const acousticPose=useMemo(()=>acousticPoseFromScope(pose),[pose]);
   const desired=useRef({pose:acousticPose,controls:{...controls,contactQuality},frozen});
@@ -45,10 +46,21 @@ export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,
     for(let i=0;i<frame.labelImage.length;i++){const id=frame.labelImage[i];if(id<3)continue;const c=colors[id],p=i*4;image.data[p]=c[0];image.data[p+1]=c[1];image.data[p+2]=c[2];image.data[p+3]=volume.metadata.labels[id].key===activeStructure?130:55;}
     ctx.putImageData(image,0,0);
   },[frame,volume,teaching,assessment,activeStructure]);
-  const change=(key:'depthMm'|'gainDb',value:number)=>setControls(c=>({...c,[key]:value}));
+  const frameCallback = useRef(guided?.onFrame);
+  useEffect(() => { frameCallback.current = guided?.onFrame; }, [guided?.onFrame]);
+  const poseKey = guided?.poseKey ?? '';
+  const targetKey = guided?.targetKey ?? '';
+  useEffect(() => {
+    const targetId = volume?.metadata.labels.findIndex(l => l.key === targetKey) ?? -1;
+    const samePose = frame && JSON.stringify(frame.pose) === JSON.stringify(acousticPose);
+    frameCallback.current?.({ ready: !!samePose && frame?.controls.depthMm === controls.depthMm && frame?.controls.gainDb === controls.gainDb && frame?.controls.contactQuality === contactQuality && !error && !renderError, targetVisible: !!frame && frame.structures.some(s => s.id === targetId), depth: controls.depthMm, gain: controls.gainDb, frozen, poseKey });
+  }, [frame, volume, acousticPose, controls.depthMm, controls.gainDb, frozen, poseKey, targetKey, error, renderError, contactQuality]);
+  const allowed = (control:'depth'|'gain'|'freeze') => !guided || (!guided.config.locked && guided.config.controls.includes(control));
+  const act = (control:'depth'|'gain'|'freeze', apply:()=>void) => { if (!allowed(control)) return; if (guided) guided.onAction(control,apply); else apply(); };
+  const change=(key:'depthMm'|'gainDb',value:number)=>act(key === 'depthMm' ? 'depth' : 'gain',()=>setControls(c=>({...c,[key]:value})));
   return <section className={`simulator-sector-pane${compact?' simulator-sector-pane--compact':''}`} aria-label={t('Continuous EBUS ultrasound')} data-sector-source="acoustic-volume" data-acoustic-version={volume?.metadata.assetVersion}>
     <div className="simulator-pane-header"><div><span className="eyebrow">{t('EBUS ultrasound')}</span><h2>{selectedPreset?`${t('Station')} ${formatSimulatorStation(selectedPreset.station)}`:t('Live scan')}</h2></div>
-      <div className="simulator-sector-header-actions">{onEnlarge&&<button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={onEnlarge}>{t('Enlarge')}</button>}{onShowAll&&<button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={onShowAll}>{t('All views')}</button>}<button className="simulator-sector-style-toggle" aria-pressed={frozen} onClick={()=>setFrozen(!frozen)}>{t(frozen?'Resume':'Freeze')}</button></div>
+      <div className="simulator-sector-header-actions">{onEnlarge&&<button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={onEnlarge}>{t('Enlarge')}</button>}{onShowAll&&<button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={onShowAll}>{t('All views')}</button>}<button className="simulator-sector-style-toggle" aria-pressed={frozen} disabled={!allowed('freeze')} onClick={()=>act('freeze',()=>setFrozen(!frozen))}>{t(frozen?'Resume':'Freeze')}</button></div>
     </div>
     <div className="simulator-continuous-ultrasound">
       <canvas ref={canvas} aria-label={t('Grayscale ultrasound image')}/><canvas ref={overlay} aria-hidden="true"/>
@@ -57,9 +69,9 @@ export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,
       {!frozen&&contactQuality<.45&&<div className="simulator-ultrasound-coupling" role="status">{t('Poor coupling — bring the transducer to the airway wall')}</div>}
     </div>
     <div className="simulator-ultrasound-controls">
-      <label>{t('Depth')} {controls.depthMm} mm<input aria-label={t('Ultrasound depth')} disabled={frozen} type="range" min="15" max="70" step="1" value={controls.depthMm} onChange={e=>change('depthMm',Number(e.target.value))}/></label>
-      <label>{t('Gain')} {controls.gainDb} dB<input aria-label={t('Ultrasound gain')} disabled={frozen} type="range" min="-18" max="24" step="1" value={controls.gainDb} onChange={e=>change('gainDb',Number(e.target.value))}/></label>
-      {controls.tgcDb.map((value,index)=><label key={index}>{t(['Near TGC','Mid TGC','Far TGC'][index])}<input aria-label={['Near TGC','Mid TGC','Far TGC'][index]} disabled={frozen} type="range" min="-12" max="36" step="1" value={value} onChange={e=>setControls(c=>({...c,tgcDb:c.tgcDb.map((v,i)=>i===index?Number(e.target.value):v) as [number,number,number]}))}/></label>)}
+      <label>{t('Depth')} {controls.depthMm} mm<input aria-label={t('Ultrasound depth')} disabled={frozen || !allowed('depth')} type="range" min="15" max="70" step="1" value={controls.depthMm} onChange={e=>change('depthMm',Number(e.target.value))}/></label>
+      <label>{t('Gain')} {controls.gainDb} dB<input aria-label={t('Ultrasound gain')} disabled={frozen || !allowed('gain')} type="range" min="-18" max="24" step="1" value={controls.gainDb} onChange={e=>change('gainDb',Number(e.target.value))}/></label>
+      {!guided && controls.tgcDb.map((value,index)=><label key={index}>{t(['Near TGC','Mid TGC','Far TGC'][index])}<input aria-label={['Near TGC','Mid TGC','Far TGC'][index]} disabled={frozen} type="range" min="-12" max="36" step="1" value={value} onChange={e=>setControls(c=>({...c,tgcDb:c.tgcDb.map((v,i)=>i===index?Number(e.target.value):v) as [number,number,number]}))}/></label>)}
       {!assessment&&<label className="simulator-ultrasound-teaching"><input type="checkbox" checked={teaching} onChange={e=>setTeaching(e.target.checked)}/>{t('Teaching color overlay')}</label>}
     </div>
     {!assessment&&!compact&&teaching&&frame&&volume&&<div className="simulator-ultrasound-structures">{frame.structures.map(s=>{const label=volume.metadata.labels[s.id];return <button key={s.id} aria-pressed={activeStructure===label.key} onClick={()=>setActiveStructure(activeStructure===label.key?null:label.key)}>{label.label}</button>;})}</div>}
