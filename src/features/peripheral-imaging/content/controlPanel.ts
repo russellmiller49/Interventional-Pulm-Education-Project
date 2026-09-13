@@ -2,16 +2,7 @@ import { SOURCE_BY_ID } from '../data/sources'
 import type { SourceId } from '../types'
 import { imagingLearnerCopyErrors } from './learnerCopy'
 
-/**
- * The fluoroscopy controls: the five things you control at the C-arm, taught in the `good-image`
- * section and shown as a strip on every Explain step.
- *
- * Naming the five turns every later problem into "which control, if any" — and "if any" matters,
- * because several problems have no control: the anatomy has changed, or the question needs a
- * different acquisition. Exposure factors are deliberately not on the list. Automatic exposure
- * regulation sets them and the dose readout reports them; that is monitoring, and saying so is the
- * lesson.
- */
+/** Control families emphasized by the course; device settings and automatic exposure behavior vary by system and mode. */
 export const imagingControlIds = ['angle', 'field', 'time', 'acquisition', 'display'] as const
 
 export type ImagingControlId = (typeof imagingControlIds)[number]
@@ -91,7 +82,7 @@ export const IMAGING_CONTROL_PANEL: ImagingControlPanel = {
       id: 'exposure',
       plainName: 'exposure factors',
       sentence:
-        'kV, mA and pulse duration are selected by automatic exposure regulation to hold the detector signal. Not a setting you adjust directly; the dose readout reports what the system did.',
+        'Automatic exposure regulation can select kV, mA and pulse duration according to the chosen protocol or image-quality setting. Direct adjustment depends on the system and mode; check the dose readout as well as the image.',
     },
     {
       id: 'dose-readout',
@@ -101,7 +92,7 @@ export const IMAGING_CONTROL_PANEL: ImagingControlPanel = {
     },
   ],
   sentence:
-    'At the C-arm you control five things: the C-arm projection, collimation, pulse rate and pulse width, the acquisition mode, and display zoom and processing. Exposure factors are chosen by automatic exposure regulation; that is monitoring, so check the dose-rate and cumulative dose readouts.',
+    'This course groups the main adjustments into control families: the C-arm projection, collimation, pulse rate and pulse width, the acquisition mode, and display zoom and processing. Available settings and automatic exposure behavior depend on the system and selected mode. Dose readouts support monitoring.',
   sourceIds: ['tg272', 'tg125', 'wabip'],
 }
 
@@ -145,13 +136,13 @@ export function validateImagingControlPanel(
     if (control.controlKeys.length === 0) errors.push(`${where} covers no lab control.`)
   }
   for (const item of panel.monitoring) {
-    if (!/not a setting/i.test(item.sentence)) {
+    if (item.id === 'dose-readout' && !/not a setting/i.test(item.sentence)) {
       errors.push(`Monitoring item ${item.id} must say it is not a setting.`)
     }
     errors.push(...imagingLearnerCopyErrors(`Monitoring ${item.id}`, item.sentence))
   }
   if (!/monitoring/i.test(panel.sentence)) {
-    errors.push('The panel sentence must say that everything else is monitoring.')
+    errors.push('The panel must distinguish monitoring from adjustments.')
   }
   errors.push(...imagingLearnerCopyErrors('The panel sentence', panel.sentence))
   for (const sourceId of panel.sourceIds) {

@@ -3,6 +3,7 @@ import Image from 'next/image'
 
 import { Link } from '@/i18n/navigation'
 
+import { imagingMicroCasesInPathwayOrder } from '../content/microCases'
 import { IMAGING_HUB_HERO } from '../content/hubHero'
 import { CHAIN_STOPS } from '../content/imagingChain'
 import {
@@ -50,11 +51,15 @@ export function PeripheralImagingHub() {
             See the target. Understand the image.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">
-            Every section runs on one imaging suite, in the order a case runs: plan what the imaging
-            must confirm, localize the lesion and optimize the fluoroscopic image, confirm with
-            digital tomosynthesis or CBCT, confirm the biopsy tool within the lesion, and reconfirm
-            after anything changes — with radiation safety throughout. Sections are ordered as a
-            recommendation, not a gate.
+            Learn to optimize fluoroscopy, interpret DTS and CBCT, and assess the biopsy tool’s
+            relationship to a peripheral lung lesion.
+          </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            {imagingMicroCasesInPathwayOrder().length} practice cases are available on the{' '}
+            <Link href={PERIPHERAL_IMAGING_PRACTICE_HREF} className="font-semibold text-primary">
+              Practice page
+            </Link>
+            .
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <ImagingContinueCta />
@@ -215,11 +220,12 @@ export function PeripheralImagingHub() {
         </ul>
       </section>
 
-      <section
+      <details
         id="guide"
         aria-labelledby="imaging-guide-heading"
         className="rounded-3xl border bg-card p-6 shadow-sm lg:p-8"
       >
+        <summary className="cursor-pointer font-semibold">Imaging decisions · reference</summary>
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
           Troubleshooting table
         </p>
@@ -255,13 +261,14 @@ export function PeripheralImagingHub() {
             </tbody>
           </table>
         </div>
-      </section>
+      </details>
 
-      <section
+      <details
         id="reconstruction"
         aria-labelledby="imaging-reconstruction-heading"
         className="rounded-3xl border bg-card p-6 shadow-sm lg:p-8"
       >
+        <summary className="cursor-pointer font-semibold">Reconstruction reference</summary>
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
           How a reconstruction is made
         </p>
@@ -271,9 +278,10 @@ export function PeripheralImagingHub() {
         <div className="mt-5">
           <ReconstructionComparison />
         </div>
-      </section>
+      </details>
 
-      <section id="glossary" aria-labelledby="imaging-glossary-heading">
+      <details id="glossary" aria-labelledby="imaging-glossary-heading">
+        <summary className="cursor-pointer font-semibold">Glossary</summary>
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Glossary</p>
         <h2 id="imaging-glossary-heading" className="mt-2 text-2xl font-bold">
           One term per concept
@@ -286,13 +294,14 @@ export function PeripheralImagingHub() {
             </div>
           ))}
         </dl>
-      </section>
+      </details>
 
-      <section
+      <details
         id="references"
         aria-labelledby="imaging-references-heading"
         className="rounded-3xl border bg-card p-6 shadow-sm lg:p-8"
       >
+        <summary className="cursor-pointer font-semibold">Sources and limitations</summary>
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
           References · checked {REVIEWED_ON}
         </p>
@@ -338,7 +347,8 @@ export function PeripheralImagingHub() {
           . Sources and limits are recorded with the assets.
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Practice cases arrive in a later round; the eight-case capstone waits on the{' '}
+          {imagingMicroCasesInPathwayOrder().length} practice cases are available. The capstone is
+          on the{' '}
           <Link href={PERIPHERAL_IMAGING_ASSESS_HREF} className="font-semibold text-primary">
             Assess page
           </Link>{' '}
@@ -346,9 +356,9 @@ export function PeripheralImagingHub() {
           <Link href={PERIPHERAL_IMAGING_PRACTICE_HREF} className="font-semibold text-primary">
             Practice page
           </Link>{' '}
-          says what it holds today.
+          includes cases and free exploration.
         </p>
-      </section>
+      </details>
     </div>
   )
 }

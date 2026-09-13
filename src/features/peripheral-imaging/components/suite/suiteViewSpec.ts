@@ -66,6 +66,7 @@ export function resolveSuiteInputs(spec: SuiteViewSpec, values: LabValues): Suit
     geometry: DEFAULT_GEOMETRY,
     fieldPercent: n('field', 'field'),
     crop: false,
+    cropWidth: 70,
     zoom: n('field', 'zoom'),
     focalSpotMm: 0.6,
     pulseRate: n('temporal', 'rate'),

@@ -1,6 +1,7 @@
 import type { LabId } from '../types'
 import {
   centeredForTeaching,
+  fieldContextCoverage,
   clamp,
   kapGyCm2,
   kapMicroGyM2,
@@ -57,8 +58,48 @@ function acquisitionKindDefault(lessonId: string): LabValue {
   return lessonId === 'fixed-suite' ? 'fixed' : 'mobile'
 }
 
+const FIELD_CONTROLS: readonly LabControlSpec[] = [
+  {
+    key: 'field',
+    kind: 'range',
+    label: 'Collimated field width',
+    min: 45,
+    max: 100,
+    step: 1,
+    unit: '%',
+    default: 100,
+  },
+  {
+    key: 'crop',
+    kind: 'toggle',
+    label: 'Electronic crop of the stored image',
+    default: false,
+  },
+  {
+    key: 'cropWidth',
+    kind: 'range',
+    label: 'Displayed crop width',
+    min: 45,
+    max: 100,
+    step: 1,
+    unit: '%',
+    default: 70,
+  },
+  {
+    key: 'zoom',
+    kind: 'range',
+    label: 'Display zoom on the stored image',
+    min: 1,
+    max: 2,
+    step: 0.25,
+    unit: '×',
+    default: 1,
+  },
+]
+
 export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = {
   geometry: [
+    ...FIELD_CONTROLS,
     {
       key: 'orbit',
       kind: 'range',
@@ -72,7 +113,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'tilt',
       kind: 'range',
-      label: 'Cranial / caudal angulation',
+      label: 'Beam tilt',
       min: -25,
       max: 25,
       step: 1,
@@ -87,7 +128,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
       max: 30,
       step: 1,
       unit: ' mm',
-      default: 22,
+      default: (lessonId) => (lessonId === 'signal' ? 0 : 22),
     },
     {
       key: 'resetGeometry',
@@ -97,34 +138,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
       patch: { orbit: 0, tilt: 0, depth: 22 },
     },
   ],
-  field: [
-    {
-      key: 'field',
-      kind: 'range',
-      label: 'Collimated field width',
-      min: 45,
-      max: 100,
-      step: 1,
-      unit: '%',
-      default: 100,
-    },
-    {
-      key: 'crop',
-      kind: 'toggle',
-      label: 'Use electronic cropping instead of collimation',
-      default: false,
-    },
-    {
-      key: 'zoom',
-      kind: 'range',
-      label: 'Display zoom on the stored image',
-      min: 1,
-      max: 2,
-      step: 0.25,
-      unit: '×',
-      default: 1,
-    },
-  ],
+  field: FIELD_CONTROLS,
   temporal: [
     {
       key: 'rate',
@@ -211,7 +225,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'acquisitionOrbit',
       kind: 'range',
-      label: 'Authored rotation for the collision check',
+      label: 'Illustrative gantry rotation',
       min: -100,
       max: 100,
       step: 1,
@@ -509,6 +523,7 @@ export type LabMetricId =
   | 'separationMm'
   | 'depthMm'
   | 'irradiatedAreaPct'
+  | 'contextRetained'
   | 'zoomAddsExposure'
   | 'pulseRate'
   | 'masPerSecond'
@@ -543,7 +558,8 @@ export interface LabMetricSpec {
 export const LAB_METRICS: Readonly<Record<LabMetricId, LabMetricSpec>> = {
   separationMm: { label: 'Projected tool–lesion separation', unit: ' mm', digits: 1 },
   depthMm: { label: 'True depth offset along the X-ray path', unit: ' mm', digits: 0 },
-  irradiatedAreaPct: { label: 'Irradiated area vs full field', unit: '%', digits: 0 },
+  contextRetained: { label: 'Modeled target, excursion and landmarks retained' },
+  irradiatedAreaPct: { label: 'Modeled irradiated area vs full field', unit: '%', digits: 0 },
   zoomAddsExposure: { label: 'Extra exposure from display zoom' },
   pulseRate: { label: 'Pulse rate', unit: ' pulses/s', digits: 2 },
   masPerSecond: { label: 'Tube load at fixed 20 mA', unit: ' mAs/s', digits: 2 },
@@ -593,12 +609,18 @@ export function labReadouts(lab: LabId, values: LabValues, lessonId: string): La
       return {
         separationMm: Math.hypot(target[0] - tip[0], target[1] - tip[1]),
         depthMm: depth,
+        irradiatedAreaPct: n('field') ** 2 / 100,
+        zoomAddsExposure: false,
+        contextRetained: fieldContextCoverage(n('field'), orbit, tilt),
       }
     }
     case 'field': {
-      const field = n('field'),
-        crop = f('crop')
-      return { irradiatedAreaPct: crop ? 100 : (field * field) / 100, zoomAddsExposure: false }
+      const field = n('field')
+      return {
+        irradiatedAreaPct: (field * field) / 100,
+        zoomAddsExposure: false,
+        contextRetained: fieldContextCoverage(field),
+      }
     }
     case 'temporal': {
       const rate = n('rate'),

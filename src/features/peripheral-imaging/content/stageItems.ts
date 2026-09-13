@@ -3,6 +3,7 @@ import {
   type ClinicalLearningItem,
 } from '@/features/learning-module/activity'
 
+import { INTERPRETATION_CHECKS } from './interpretationChecks'
 import { QUESTION_BY_ID } from '../data/questions'
 import type { Question } from '../types'
 import {
@@ -15,7 +16,7 @@ import {
 /**
  * The draft's item bank, re-expressed as the shared clinical learning items the stage renders.
  *
- * Every lesson carries two items: the first is its prediction, committed before the suite unlocks;
+ * Every lesson carries two items: the first follows the section’s explanation and guided demonstration;
  * the second is the retrieval item the draft already paired to it, replayed as the transfer.
  * The same question used twice gets two ids — one per section — so the first-attempt keys and the
  * choice rotation differ per use, and a correct answer in an earlier section cannot silently
@@ -149,8 +150,8 @@ function buildSectionItems(sectionId: ImagingSectionId): ImagingSectionItems {
   const [predictionId, transferId] = lesson.checkIds
   const activityId = imagingActivityId(sectionId)
   return {
-    prediction: toClinicalLearningItem(question(predictionId), {
-      id: imagingItemId(sectionId, predictionId),
+    prediction: toClinicalLearningItem(INTERPRETATION_CHECKS[sectionId] ?? question(predictionId), {
+      id: imagingItemId(sectionId, INTERPRETATION_CHECKS[sectionId]?.id ?? predictionId),
       activityId,
       phase: 'predict',
     }),
@@ -208,6 +209,7 @@ export function validateImagingStageItems(): readonly string[] {
     if (questionIdOf(items.prediction.id) === transferQuestion) {
       errors.push(`${where} predicts and transfers the same question.`)
     }
+    predictedEarlier.add(imagingLesson(sectionId).checkIds[0])
     predictedEarlier.add(questionIdOf(items.prediction.id))
   })
   return errors

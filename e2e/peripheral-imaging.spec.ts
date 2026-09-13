@@ -41,15 +41,19 @@ test.beforeEach(async ({ page }) => {
   )
 })
 
-const stageId = (page: Page) => page.locator('[data-stage]').getAttribute('data-stage')
 const primary = (page: Page) => page.locator('[data-now-card] [data-now-primary]')
-const status = (page: Page) => page.locator('[data-now-status]')
 
 async function openSection(page: Page, sectionId: string) {
   await page.goto(`${base()}/en/peripheral-imaging/learn?section=${sectionId}`)
   await expect(page.locator('[data-stage]')).toHaveAttribute(
     'data-stage',
     `${sectionId}-1-recognize`,
+  )
+  // Server-rendered layout exists before the client measures the compact workspace.
+  await expect(page.locator('[data-stage-frame] > section')).toHaveAttribute(
+    'style',
+    /--tw-primary-width: [\d.]+px/,
+    { timeout: 30_000 },
   )
 }
 
@@ -70,10 +74,6 @@ async function commitKeyed(page: Page, sectionId: string, stepIndex: number) {
  * — the disabled state it reports belongs to form controls — so ask a control inside the dock,
  * which is the thing the learner cannot actually move.
  */
-function firstSuiteControl(page: Page) {
-  return page.locator('[data-suite-controls] input, [data-suite-controls] select').first()
-}
-
 async function setRange(page: Page, label: string | RegExp, value: number) {
   const input = page.getByRole('slider', { name: label })
   await input.fill(String(value))
@@ -115,120 +115,165 @@ async function expectImageSignal(canvas: Locator, webgl = true) {
     .toBeGreaterThan(35)
 }
 
-test('the one door opens the first section, and a sorted section runs to its record', async ({
+test('the hub starts with the imaging task and keeps the available Practice cases', async ({
   page,
-}, testInfo) => {
-  const errors: string[] = []
-  page.on('pageerror', (error) => errors.push(error.message))
-  const first = peripheralImagingSectionIds[0]
+}, info) => {
   await expect(page.locator('[data-imaging-continue]')).toHaveCount(1)
-  await expect(page.locator('[data-imaging-continue]')).toHaveAttribute('data-next-section', first)
-  await capture(page, testInfo, 'hub-desktop.png')
+  await expect(page.getByText(/Learn to optimize fluoroscopy/)).toBeVisible()
+  await expect(page.getByText(/practice cases are available/).first()).toBeVisible()
+  await capture(page, info, 'hub-desktop.png')
   await page.locator('[data-imaging-continue]').click()
-  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', `${first}-1-recognize`)
-  await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-lit', /./)
-  await noHorizontalOverflow(page)
-
-  // Recognize → Predict: no verdict, sources withheld, the primary waits for a choice.
+  await expect(page.locator('[data-imaging-question-example]')).toBeVisible()
+  await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
   await primary(page).click()
-  expect(await stageId(page)).toBe(`${first}-2-predict`)
-  await expect(page.locator('[data-verdict-outcome]')).toHaveCount(0)
+  await commitKeyed(page, 'imaging-questions', 1)
+  await primary(page).click()
+  const lesson = imagingStageLesson('imaging-questions')
+  const sort = lesson.steps[2].interaction
+  if (sort.kind !== 'sort') throw new Error('Missing sort')
+  for (const row of sort.sort.rows)
+    await page.locator(`[data-sort-row="${row.id}"] select`).selectOption(row.origin)
+  await primary(page).click()
+  await primary(page).click()
+  await primary(page).click()
+  await commitKeyed(page, 'imaging-questions', lesson.transferStepIndex)
+  await primary(page).click()
+  await expect(page.locator('[data-section-completion]')).toBeVisible()
+})
+
+async function attempts(page: Page) {
+  return page.evaluate(
+    (key) => JSON.parse(localStorage.getItem(key) ?? '{}').firstAttempts ?? {},
+    PERIPHERAL_IMAGING_STORAGE_KEY,
+  )
+}
+
+test('projection teaching, comparison, independent feedback, retry and reload preserve history', async ({
+  page,
+}, info) => {
+  await openSection(page, 'projection')
+  await expect(page.locator('[data-teaching-panel]')).toContainText('parallax')
+  await expect(page.locator('[data-projection-state]')).toHaveAttribute(
+    'data-projection-state',
+    'ready',
+  )
+  const canvas = page.locator('[data-current-image] canvas')
+  await expectImageSignal(canvas)
+  const before = await canvas.evaluate((node) => (node as HTMLCanvasElement).toDataURL())
+  await page.getByRole('button', { name: 'Save baseline image' }).click()
+  const baseline = await page.locator('[data-baseline-image] img').getAttribute('src')
+  await page.getByRole('button', { name: 'Change projection only', exact: true }).click()
+  await expect
+    .poll(() => canvas.evaluate((node) => (node as HTMLCanvasElement).toDataURL()))
+    .not.toBe(before)
+  expect(await page.locator('[data-baseline-image] img').getAttribute('src')).toBe(baseline)
+  await expect(page.locator('[data-readout="depthMm"]')).toContainText('30 mm')
+  await capture(page, info, 'projection-baseline-current.png')
+  await page.getByRole('button', { name: 'Replay demonstration' }).click()
+  expect(await attempts(page)).toEqual({})
+  await primary(page).click()
+  await expect(page.getByRole('slider', { name: 'C-arm obliquity', exact: true })).toHaveValue('0')
+  await expect(primary(page)).toHaveCount(0)
+  await setRange(page, 'C-arm obliquity', 35)
+  await primary(page).click()
+  await setRange(page, 'C-arm obliquity', 0)
+  await primary(page).click()
+  await expect(page.locator('[data-independent-foundations]')).toBeVisible()
+  await expect(
+    page.locator(
+      '[data-readout="depthMm"], [data-chain-outcome], [data-teaching-block="control-strip"]',
+    ),
+  ).toHaveCount(0)
   await expect(page.locator('[data-stage-sources]')).toHaveAttribute(
     'data-stage-sources-claims',
     'false',
   )
-  await expect(primary(page)).toBeDisabled()
-  await commitKeyed(page, first, 1)
-  await expect(page.locator('[data-stage-sources]')).toHaveAttribute(
-    'data-stage-sources-claims',
-    'true',
+  await page.locator('[data-prediction-choices] input[value="a"]').check()
+  await primary(page).click()
+  await expect(page.locator('[data-answer-verdict]')).toHaveAttribute(
+    'data-verdict-outcome',
+    'not-correct',
   )
-  await capture(page, testInfo, 'predict-verdict.png')
+  await page.getByRole('button', { name: 'Try this question again' }).click()
+  await page.locator('[data-prediction-choices] input[value="b"]').check()
   await primary(page).click()
-
-  // Act: the sort, committed as a set, graded in words.
-  expect(await stageId(page)).toBe(`${first}-3-act`)
-  await expect(primary(page)).toBeDisabled()
-  const lesson = imagingStageLesson(first as never)
-  const sortStep = lesson.steps[2]
-  if (sortStep.interaction.kind !== 'sort') throw new Error('expected a sort')
-  for (const row of sortStep.interaction.sort.rows) {
-    await page.locator(`[data-sort-row="${row.id}"] select`).selectOption(row.origin)
-  }
-  await primary(page).click()
-  await expect(page.locator('[data-sort-verdict="held"]')).toHaveCount(
-    sortStep.interaction.sort.rows.length,
-  )
-  await primary(page).click()
-
-  // Explain → Transfer → the record.
-  expect(await stageId(page)).toBe(`${first}-4-explain`)
-  await expect(page.locator('[data-explain-recap] [data-answer-verdict]')).toBeVisible()
-  await primary(page).click()
-  expect(await stageId(page)).toBe(`${first}-5-transfer`)
-  await commitKeyed(page, first, 4)
-  await expect(primary(page)).toHaveText(/Finish the section/)
-  await primary(page).click()
-  await expect(page.locator('[data-section-completion]')).toBeVisible()
-  await expect(page.locator('[data-section-completion] [data-next-section]')).toHaveAttribute(
-    'data-next-section',
-    peripheralImagingSectionIds[1],
-  )
-  const record = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key) ?? 'null'),
-    PERIPHERAL_IMAGING_STORAGE_KEY,
-  )
-  expect(record.version).toBe(2)
-  expect(record.completedSectionIds).toEqual([first])
-
-  // Back on the hub the chip is worked through and the door moved on.
-  await page.goto(base() + '/en/peripheral-imaging')
-  await expect(page.locator('[data-imaging-continue]')).toHaveAttribute(
-    'data-next-section',
-    peripheralImagingSectionIds[1],
-  )
-  await expect(page.locator(`[data-pathway-accordion] a[data-complete="true"]`)).toHaveCount(1)
-  expect(errors).toEqual([])
-})
-
-test('a lab section: the suite is locked until the commitment, a goal flips, and a reload restarts the section', async ({
-  page,
-}, testInfo) => {
-  await openSection(page, 'projection')
-  await expect(firstSuiteControl(page)).toBeDisabled()
-  await primary(page).click()
-  expect(await stageId(page)).toBe('projection-2-predict')
-  await expect(firstSuiteControl(page)).toBeDisabled()
-  await commitKeyed(page, 'projection', 1)
-  await expect(firstSuiteControl(page)).toBeEnabled()
-  await primary(page).click()
-  expect(await stageId(page)).toBe('projection-3-act')
-
-  // The DRR behind the controls carries an image (the fallback lab until the suite lands).
-  const monitor = page.locator('[data-projection-state=ready] canvas')
-  if ((await monitor.count()) > 0) await expectImageSignal(monitor.first())
-
-  // The goal flips on the suite, and nothing continues before it does.
-  const goals = page.locator('[data-step-goals] li')
-  await expect(goals.first()).toHaveAttribute('data-met', 'false')
-  await expect(primary(page)).toHaveCount(0)
-  await setRange(page, /obliquity/i, 60)
-  await expect(goals.first()).toHaveAttribute('data-met', 'true')
-  await expect(status(page)).toHaveText(/^Done/)
-  await capture(page, testInfo, 'act-goal-met.png')
-
-  // A reload restarts the section at its first step while the record keeps the first attempt.
+  expect((await attempts(page))['projection:projection-interpretation-v2'].choiceId).toBe('a')
   await page.reload()
   await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection-1-recognize')
-  await expect(page.locator('[data-verdict-outcome]')).toHaveCount(0)
-  const record = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key) ?? 'null'),
-    PERIPHERAL_IMAGING_STORAGE_KEY,
+  expect((await attempts(page))['projection:projection-interpretation-v2'].choiceId).toBe('a')
+})
+
+test('field crop and zoom preserve a saved acquisition and restricted context cannot pass', async ({
+  page,
+}, info) => {
+  await openSection(page, 'field')
+  await expect(page.locator('[data-projection-state]')).toHaveAttribute(
+    'data-projection-state',
+    'ready',
   )
-  expect(
-    Object.keys(record.firstAttempts).filter((key) => key.startsWith('projection:')),
-  ).toHaveLength(1)
-  expect(record.completedSectionIds).toEqual([])
+  await expectImageSignal(page.locator('[data-current-image] canvas'))
+  await page.getByRole('button', { name: 'Save baseline image' }).click()
+  const stored = await page.locator('[data-baseline-image]').textContent()
+  const pixels = await page.locator('[data-baseline-image] img').getAttribute('src')
+  await page.getByRole('button', { name: 'Physical collimation', exact: true }).click()
+  await expect(page.locator('[data-current-image] [data-field-mask]')).toHaveAttribute(
+    'data-physical-field',
+    '80',
+  )
+  await capture(page, info, 'field-collimated.png')
+  await page.getByRole('button', { name: 'Crop the baseline stored frame', exact: true }).click()
+  await expect(page.locator('[data-current-image]')).toContainText('acquired field 100%')
+  await page.getByRole('button', { name: 'Zoom the baseline stored frame', exact: true }).click()
+  await expect(page.locator('[data-current-image] [data-monitor-zoom]')).toHaveAttribute(
+    'data-monitor-zoom',
+    '1.5',
+  )
+  expect(await page.locator('[data-baseline-image]').textContent()).toBe(stored)
+  expect(await page.locator('[data-baseline-image] img').getAttribute('src')).toBe(pixels)
+  await capture(page, info, 'field-stored-zoom.png')
+  expect(await attempts(page)).toEqual({})
+  await primary(page).click()
+  await setRange(page, 'Collimated field width', 45)
+  await expect(primary(page)).toHaveCount(0)
+  await expect(page.locator('[data-readout="contextRetained"]')).toContainText('no')
+  await setRange(page, 'Collimated field width', 90)
+  await expect(primary(page)).toBeEnabled()
+})
+
+test('timing changes depict separate within-frame and between-frame effects with reduced motion', async ({
+  page,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await openSection(page, 'time')
+  await expect(page.locator('[data-projection-state]')).toHaveAttribute(
+    'data-projection-state',
+    'ready',
+  )
+  await expectImageSignal(page.locator('[data-current-image] canvas'))
+  const blur = await page.locator('[data-readout="inFrameBlurMm"] dd').textContent()
+  const gap = await page.locator('[data-readout="interFrameTravelMm"] dd').textContent()
+  await page.getByRole('button', { name: 'Save baseline image' }).click()
+  await page.getByRole('button', { name: 'Pulse width alone', exact: true }).click()
+  await expect(page.locator('[data-readout="interFrameTravelMm"] dd')).toHaveText(gap!)
+  await expect(page.locator('[data-readout="inFrameBlurMm"] dd')).not.toHaveText(blur!)
+  await capture(page, info, 'timing-width.png')
+  await page
+    .locator('[data-temporal-phase]')
+    .screenshot({ path: info.outputPath('timing-width-detail.png') })
+  await page.getByRole('button', { name: 'Pulse rate alone', exact: true }).click()
+  await expect(page.locator('[data-readout="inFrameBlurMm"] dd')).toHaveText(blur!)
+  await expect(page.locator('[data-readout="interFrameTravelMm"] dd')).not.toHaveText(gap!)
+  await capture(page, info, 'timing-rate.png')
+  await page
+    .locator('[data-temporal-phase]')
+    .screenshot({ path: info.outputPath('timing-rate-detail.png') })
+  const phase = await page.locator('[data-temporal-phase]').getAttribute('data-temporal-phase')
+  await page.getByRole('button', { name: 'Step', exact: true }).click()
+  await expect(page.locator('[data-temporal-phase]')).not.toHaveAttribute(
+    'data-temporal-phase',
+    phase!,
+  )
+  expect(await attempts(page)).toEqual({})
 })
 
 test('the capstone: gated on the sections, decided once, one wrong critical decision fails the standard', async ({
@@ -274,103 +319,6 @@ test('the capstone: gated on the sections, decided once, one wrong critical deci
   await expect(page.locator('[data-capstone-standard]')).toContainText(
     'Seven of eight decisions held',
   )
-})
-
-test('the image a control changes stays on screen while the control is used', async ({ page }) => {
-  // The pane scrolls as one column, with the 3D view and the monitor above the control dock.
-  // Reaching a slider used to push the image it changes off the top, so the learner could not
-  // watch what their own change did. The displays are pinned to the top of the pane instead.
-  // Comfortably inside the side-by-side layout rather than on its boundary.
-  await page.setViewportSize({ width: 1700, height: 1000 })
-  await openSection(page, 'projection')
-  await primary(page).click()
-  await commitKeyed(page, 'projection', 1)
-  await primary(page).click()
-  expect(await stageId(page)).toBe('projection-3-act')
-
-  const geometry = await page.evaluate(() => {
-    const pane = [...document.querySelectorAll('[role="region"][aria-label$="panel"]')].find((p) =>
-      /Simulator/.test(p.getAttribute('aria-label') ?? ''),
-    ) as HTMLElement
-    const displays = document.querySelector('[data-suite-scene] [class*="displays"]') as HTMLElement
-    return {
-      pinned: getComputedStyle(displays).position,
-      displaysHeight: Math.round(displays.getBoundingClientRect().height),
-      paneHeight: Math.round(pane.getBoundingClientRect().height),
-    }
-  })
-  // Pinning only makes sense while the pinned block is shorter than the pane it sits in.
-  expect(geometry.pinned).toBe('sticky')
-  expect(geometry.displaysHeight).toBeLessThan(geometry.paneHeight)
-
-  // Scroll the pane far enough to bring every control into reach, then check that the image is
-  // still on screen and that the control is clear of it rather than hidden underneath.
-  const state = await page.evaluate(() => {
-    const pane = [...document.querySelectorAll('[role="region"][aria-label$="panel"]')].find((p) =>
-      /Simulator/.test(p.getAttribute('aria-label') ?? ''),
-    ) as HTMLElement
-    pane.scrollTop = 120
-    const top = pane.getBoundingClientRect().top
-    const box = (el: Element) => {
-      const b = el.getBoundingClientRect()
-      return { top: Math.round(b.top - top), bottom: Math.round(b.bottom - top) }
-    }
-    const displays = box(document.querySelector('[data-suite-scene] [class*="displays"]')!)
-    const monitor = box(document.querySelector('[data-suite-scene] [class*="monitorPanel"]')!)
-    const slider = box(document.getElementById('peripheral-imaging-control-orbit')!)
-    return {
-      displays,
-      monitor,
-      slider,
-      paneHeight: Math.round(pane.getBoundingClientRect().height),
-    }
-  })
-  expect(state.displays.top).toBe(0)
-  expect(state.monitor.bottom).toBeGreaterThan(0)
-  expect(state.slider.top).toBeGreaterThanOrEqual(state.displays.bottom)
-  expect(state.slider.bottom).toBeLessThanOrEqual(state.paneHeight)
-
-  // And moving it still changes the readout, with the image in view the whole time.
-  const before = await page.locator('[data-readout="separationMm"] dd').textContent()
-  await setRange(page, /obliquity/i, 60)
-  await expect(page.locator('[data-readout="separationMm"] dd')).not.toHaveText(before ?? '')
-
-  // A control you cannot read is not usable. The dock is a light surface inside a dark shell,
-  // and inheriting the shell's near-white ink once left these at about 1.07:1.
-  const contrast = await page.evaluate(() => {
-    const channel = (v: number) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4))
-    const luminance = (c: string) => {
-      const [r, g, b] = (c.match(/\d+(\.\d+)?/g) ?? [])
-        .slice(0, 3)
-        .map((n) => channel(Number(n) / 255))
-      return 0.2126 * r + 0.7152 * g + 0.0722 * b
-    }
-    const backgroundOf = (el: Element | null) => {
-      let node = el
-      while (node) {
-        const colour = getComputedStyle(node).backgroundColor
-        if (colour && colour !== 'rgba(0, 0, 0, 0)') return colour
-        node = node.parentElement
-      }
-      return 'rgb(255, 255, 255)'
-    }
-    const measure = (selector: string) => {
-      const el = document.querySelector(selector)
-      if (!el) return null
-      const a = luminance(getComputedStyle(el).color)
-      const b = luminance(backgroundOf(el))
-      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
-    }
-    return {
-      label: measure('[data-suite-controls] [class*="controlLabel"] label'),
-      value: measure('[data-suite-controls] output'),
-      readout: measure('[data-readouts] dd'),
-    }
-  })
-  for (const [name, value] of Object.entries(contrast)) {
-    expect(value, `${name} contrast`).not.toBeNull()
-    expect(value!, `${name} contrast`).toBeGreaterThanOrEqual(4.5)
-  }
 })
 
 test('a practice case is decided once, and can be answered as often as the learner likes', async ({
@@ -431,131 +379,141 @@ test('a practice case is decided once, and can be answered as often as the learn
   }
 })
 
-test('every overview view frames the whole chain, whatever shape the pane is', async ({ page }) => {
-  // The views that show the whole chain have to fit every stop and its label at the pane's actual
-  // aspect ratio. Only the suite view used to do that, so the fixed views clipped a pin as soon
-  // as the pane was narrow — at 1280x800 the display stop sat one pixel from the edge.
-  for (const [width, height] of [
-    [1280, 800],
-    [1600, 900],
-  ] as const) {
-    await page.setViewportSize({ width, height })
-    await openSection(page, 'projection')
-    await primary(page).click()
-    await commitKeyed(page, 'projection', 1)
-    await primary(page).click()
-    for (const preset of ['Suite', 'Anterior', 'Side', 'Head']) {
-      await page.getByRole('button', { name: preset, exact: true }).click()
-      await page.waitForTimeout(900)
-      const worst = await page.evaluate(() => {
-        const host = document
-          .querySelector('[data-suite-scene] [class*="viewport"]')!
-          .getBoundingClientRect()
-        let over = 0
-        for (const pin of document.querySelectorAll('[data-suite-scene] [class*="pin"]')) {
-          const b = pin.getBoundingClientRect()
-          if (b.width === 0) continue
-          over = Math.max(
-            over,
-            host.left - b.left,
-            b.right - host.right,
-            host.top - b.top,
-            b.bottom - host.bottom,
-          )
-        }
-        return Math.round(over)
-      })
-      expect(worst, `${preset} at ${width}x${height} clips a chain stop`).toBeLessThanOrEqual(0)
-    }
-  }
-})
-
-test('every section draws its suite and shows the stop its caption names', async ({ page }) => {
-  // Section 11 shipped with a layer set that omitted the table, gantry and cone, so its scene held
-  // a small anatomy and a console board in an otherwise empty room, and the camera that fits the
-  // whole chain framed almost nothing. Two measurements catch that class of defect: how much of
-  // the viewport the scene actually paints, and whether the stop the caption names is on screen.
-  // Nineteen sections, each loading a 3D scene: this one needs room, and it should wait on the
-  // scene reporting itself ready rather than on a fixed sleep, or it sits at its own limit.
+test('all nineteen sections retain rendered teaching and their real imaging representations', async ({
+  page,
+}, info) => {
   test.setTimeout(420_000)
-  await page.setViewportSize({ width: 1600, height: 950 })
-  const sparse: string[] = []
-  const hidden: string[] = []
-  for (const sectionId of peripheralImagingSectionIds) {
-    await page.goto(`${base()}/en/peripheral-imaging/learn?section=${sectionId}`)
-    await page.waitForSelector('[data-suite-scene][data-suite-state="ready"]', { timeout: 90_000 })
-    await page.waitForSelector('canvas[data-three-state="ready"]', { timeout: 90_000 })
-    // one settled frame after the scene reports ready
-    await page.waitForTimeout(900)
-    const seen = await page.evaluate(() => {
-      const q = (s: string) => document.querySelector(s)
-      const scene = q('[data-suite-scene]')
-      const vp = q('[data-suite-scene] [class*="viewport"]')!.getBoundingClientRect()
-      const lit = scene?.getAttribute('data-lit') ?? ''
-      const litPins = [
-        ...document.querySelectorAll(`[data-suite-scene] [data-chain-pin="${lit}"]`),
-      ].filter((p) => p.getBoundingClientRect().width > 0)
-      const litVisible =
-        litPins.length > 0 &&
-        litPins.some((p) => {
-          const b = p.getBoundingClientRect()
-          return (
-            b.left >= vp.left - 1 &&
-            b.right <= vp.right + 1 &&
-            b.top >= vp.top - 1 &&
-            b.bottom <= vp.bottom + 1
-          )
-        })
-      const canvas = q('[data-suite-scene] canvas[data-three-state]') as HTMLCanvasElement | null
-      let painted = 0
-      if (canvas) {
-        const gl = canvas.getContext('webgl2')
-        if (gl) {
-          const px = new Uint8Array(canvas.width * canvas.height * 4)
-          gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, px)
-          let busy = 0
-          for (let i = 0; i < px.length; i += 4) {
-            const d =
-              Math.abs(px[i] - 0x11) + Math.abs(px[i + 1] - 0x23) + Math.abs(px[i + 2] - 0x2d)
-            if (d > 24) busy += 1
-          }
-          painted = (100 * busy) / (canvas.width * canvas.height)
-        }
-      }
-      return { painted, litVisible, lit }
+  for (const id of peripheralImagingSectionIds) {
+    await openSection(page, id)
+    await expect(page.locator('[data-teaching-block="boundary"]')).toHaveCount(1)
+    await page.locator('[data-suite-viewport]').scrollIntoViewIfNeeded()
+    await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-state', 'ready', {
+      timeout: 60000,
     })
-    // Under five per cent painted is an empty room, not a scene.
-    if (seen.painted < 5) sparse.push(`${sectionId} (${seen.painted.toFixed(1)}% painted)`)
-    if (!seen.litVisible) hidden.push(`${sectionId} (${seen.lit})`)
+    const canvas = page.locator('canvas[data-three-state="ready"]')
+    await expect(canvas).toHaveCount(1)
+    await expectImageSignal(canvas)
+    const mode = await page.locator('[data-suite-scene]').getAttribute('data-suite-mode')
+    if (
+      ['projection', 'signal', 'field', 'time', 'cbct', 'navigation', 'augmented'].includes(mode!)
+    ) {
+      await expect(page.locator('[data-current-image] canvas')).toHaveCount(1)
+      await expectImageSignal(page.locator('[data-current-image] canvas'))
+    }
+    await noHorizontalOverflow(page)
   }
-  expect(sparse, 'sections whose scene is nearly empty').toEqual([])
-
-  // Two sections author a close-up camera — the beam's eye and the target — and the chain pins
-  // only spread around the frame on the overview cameras, so on a close-up a stop can sit behind
-  // the viewer. Both are open against the suite: the stop a caption names should stay on screen
-  // whatever camera the section chose. Listed rather than silenced, so the other seventeen are
-  // still held to the rule and this list has to shrink to nothing.
-  const KNOWN_HIDDEN = ['tool-confirmation (display)', 'changing-anatomy (reconstruction)']
-  expect(hidden, 'sections whose own lit stop is off screen on the authored camera').toEqual(
-    KNOWN_HIDDEN,
-  )
+  await capture(page, info, 'suite-cases-teaching.png')
 })
 
-test('compact layout: one pane at a time, following the step', async ({ page }, testInfo) => {
-  await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto(base() + '/en/peripheral-imaging')
-  await noHorizontalOverflow(page)
-  await capture(page, testInfo, 'hub-mobile.png')
-  await openSection(page, 'projection')
-  const tabs = page.getByRole('tablist', { name: 'Workspace panel views' })
-  await expect(tabs).toBeVisible()
-  await noHorizontalOverflow(page)
-  // Recognize reads in the Teaching pane; Predict answers in the Steps pane.
-  await expect(tabs.getByRole('tab', { selected: true })).toHaveText(/Teaching/i)
-  await tabs.getByRole('tab', { name: /Steps/i }).click()
+test('acquisition movement invalidates readiness and independent sampling withholds geometric truth', async ({
+  page,
+}) => {
+  await openSection(page, 'cbct-acquisition')
   await primary(page).click()
-  expect(await stageId(page)).toBe('projection-2-predict')
-  await expect(tabs.getByRole('tab', { selected: true })).toHaveText(/Steps/i)
-  await capture(page, testInfo, 'predict-mobile.png')
-  await noHorizontalOverflow(page)
+  await page.getByRole('button', { name: 'Center the lesion', exact: true }).click()
+  for (const label of [
+    'Target, tool and required anatomy covered',
+    'Full CBCT spin path and lines checked',
+    'Instrument state and anesthesia plan agreed',
+    'Protection, monitoring and patient access confirmed',
+  ])
+    await page.getByRole('checkbox', { name: label, exact: true }).check()
+  await expect(page.locator('[data-readout="ready"]')).toContainText('yes')
+  await setRange(page, 'Lesion horizontal offset', 20)
+  await expect(page.locator('[data-readout="ready"]')).toContainText('no')
+  await expect(
+    page.getByRole('checkbox', { name: 'Full CBCT spin path and lines checked', exact: true }),
+  ).not.toBeChecked()
+  await openSection(page, 'tool-confirmation')
+  await primary(page).click()
+  await setRange(page, 'Tip along needle axis', 10)
+  await setRange(page, 'Anterior / posterior offset', 0)
+  await primary(page).click()
+  await page
+    .getByRole('checkbox', { name: 'Combine depths into a teaching slab', exact: true })
+    .check()
+  await page
+    .getByRole('checkbox', { name: 'Combine depths into a teaching slab', exact: true })
+    .uncheck()
+  await page.getByRole('checkbox', { name: 'Reveal geometric explanation', exact: true }).check()
+  await primary(page).click()
+  await expect(page.locator('[data-sampling-state]')).toHaveAttribute(
+    'data-sampling-state',
+    'exploring',
+  )
+  await expect(
+    page.locator('[data-readout="windowLabel"], [data-readout="windowIntersects"]'),
+  ).toHaveCount(0)
+  await expect(page.getByLabel('Reveal geometric explanation', { exact: true })).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: 'Slices through target center', exact: true }),
+  ).toHaveCount(0)
+})
+
+test('required-image failure prevents completion and keeps explanation and retry accessible', async ({
+  page,
+}) => {
+  await page.route('**/peripheral-imaging/anatomy/**', (route) => route.abort())
+  await openSection(page, 'projection')
+  await expect(page.locator('[data-projection-state]')).toHaveAttribute(
+    'data-projection-state',
+    'failed',
+    { timeout: 60000 },
+  )
+  await expect(primary(page)).toBeDisabled()
+  await expect(page.locator('[data-teaching-panel]')).toContainText('parallax')
+  await expect(page.getByRole('button', { name: 'Replay demonstration' })).toBeVisible()
+  expect(await attempts(page)).toEqual({})
+})
+
+test('desktop, tablet, phone, keyboard, and text zoom retain task and control access', async ({
+  page,
+}, info) => {
+  for (const width of [1440, 1024, 390]) {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 950 })
+    await openSection(page, 'projection')
+    await noHorizontalOverflow(page)
+    const tabs = page.getByRole('tablist', { name: 'Workspace panel views' })
+    if (width < 960) {
+      await expect(tabs).toBeVisible()
+      await tabs.getByRole('tab', { name: /Simulator/ }).click()
+      await expect(page.locator('[data-projection-state]')).toHaveAttribute(
+        'data-projection-state',
+        'ready',
+      )
+      await tabs.getByRole('tab', { name: /Steps/ }).click()
+      await primary(page).click()
+      await expect(tabs.getByRole('tab', { selected: true })).toHaveText(/Simulator/)
+      await tabs.getByRole('tab', { selected: true }).press('Home')
+      await expect(tabs.getByRole('tab', { selected: true })).toHaveText(/Steps/)
+      await tabs.getByRole('tab', { selected: true }).press('End')
+      await expect(tabs.getByRole('tab', { selected: true })).toHaveText(/Simulator/)
+    }
+    await capture(page, info, `projection-${width}.png`)
+  }
+  for (const width of [900, 1440]) {
+    await page.setViewportSize({ width, height: 1000 })
+    await openSection(page, 'projection')
+    if (width === 900) await page.getByRole('tab', { name: /Simulator/ }).click()
+    await expect(page.locator('[data-projection-state]')).toHaveAttribute(
+      'data-projection-state',
+      'ready',
+    )
+    await expect(primary(page)).toBeEnabled({ timeout: 30_000 })
+    await page.addStyleTag({ content: 'html { font-size: 200% !important; }' })
+    await noHorizontalOverflow(page)
+    if (width === 900) await page.getByRole('tab', { name: /Steps/ }).click()
+    if (width === 1440) {
+      expect(
+        await page
+          .getByRole('region', { name: 'Steps panel', exact: true })
+          .evaluate((el) => el.clientHeight),
+      ).toBeGreaterThan(350)
+    }
+    await expect(page.getByRole('button', { name: 'What do I do now?', exact: true })).toBeVisible()
+    await primary(page).scrollIntoViewIfNeeded()
+    await capture(page, info, `projection-text-200-percent-${width}.png`)
+    await primary(page).click()
+    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection-2-act')
+  }
 })

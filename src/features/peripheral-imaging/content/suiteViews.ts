@@ -36,10 +36,15 @@ const bindingsFor: Readonly<Record<LabId, readonly SuiteBinding[]>> = {
     { input: 'orbit', control: 'orbit' },
     { input: 'tilt', control: 'tilt' },
     { input: 'toolDepth', control: 'depth' },
+    { input: 'fieldPercent', control: 'field' },
+    { input: 'crop', control: 'crop' },
+    { input: 'cropWidth', control: 'cropWidth' },
+    { input: 'zoom', control: 'zoom' },
   ],
   field: [
     { input: 'fieldPercent', control: 'field' },
     { input: 'crop', control: 'crop' },
+    { input: 'cropWidth', control: 'cropWidth' },
     { input: 'zoom', control: 'zoom' },
   ],
   temporal: [
@@ -142,6 +147,8 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
   }),
   'good-image': view('good-image', {
     mode: 'projection',
+    controls: ['orbit', 'tilt', 'field', 'crop', 'cropWidth', 'zoom'],
+    readouts: ['irradiatedAreaPct', 'contextRetained', 'zoomAddsExposure'],
     litStop: 'beam',
     camera: 'suite',
     layers: [...ANATOMY, ...SUITE, 'monitor'],
@@ -158,6 +165,7 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     litStop: 'beam',
     camera: 'beam',
     layers: [...ANATOMY, ...SUITE, 'ray', 'monitor'],
+    controls: ['orbit', 'tilt'],
     readouts: ['separationMm', 'depthMm'],
   }),
   signal: view('signal', {
@@ -166,7 +174,7 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     camera: 'beam',
     layers: [...ANATOMY, 'Ribs and spine', ...SUITE, 'ray', 'monitor'],
     controls: ['orbit', 'tilt'],
-    readouts: ['separationMm'],
+    readouts: [],
     defaults: { toolDepth: 0 },
   }),
   field: view('field', {
@@ -174,7 +182,7 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     litStop: 'beam',
     camera: 'suite',
     layers: [...ANATOMY, ...SUITE, 'monitor'],
-    readouts: ['irradiatedAreaPct', 'zoomAddsExposure'],
+    readouts: ['irradiatedAreaPct', 'contextRetained', 'zoomAddsExposure'],
     defaults: { orbit: 25, toolDepth: 12 },
   }),
   time: view('time', {
@@ -187,6 +195,8 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
   }),
   'two-dimensional': view('two-dimensional', {
     mode: 'projection',
+    controls: ['orbit', 'tilt', 'field', 'crop', 'cropWidth', 'zoom'],
+    readouts: ['irradiatedAreaPct', 'contextRetained', 'zoomAddsExposure'],
     litStop: 'display',
     camera: 'suite',
     layers: [...ANATOMY, ...SUITE, 'monitor'],

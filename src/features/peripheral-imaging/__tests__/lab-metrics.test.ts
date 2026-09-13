@@ -50,7 +50,7 @@ describe('lab control registry', () => {
   })
 
   it('reproduces the draft lab fallbacks', () => {
-    expect(labDefaults('geometry', 'projection')).toEqual({ orbit: 0, tilt: 0, depth: 22 })
+    expect(labDefaults('geometry', 'projection')).toMatchObject({ orbit: 0, tilt: 0, depth: 22 })
     expect(labDefaults('temporal', 'time')).toEqual({ rate: 7.5, width: 5, speed: 20 })
     expect(labDefaults('acquisition', 'fixed-suite').kind).toBe('fixed')
     expect(labDefaults('acquisition', 'mobile-suite').kind).toBe('mobile')
@@ -100,9 +100,9 @@ describe('lab readouts derive from the physics module', () => {
     expect(oblique.separationMm as number).toBeGreaterThan(5)
   })
 
-  it('field area follows the square of the side unless the crop is a display crop', () => {
+  it('field area follows the square of the side while crop and zoom preserve acquisition', () => {
     expect(labReadouts('field', { field: 70 }, 'field').irradiatedAreaPct).toBeCloseTo(49)
-    expect(labReadouts('field', { field: 70, crop: true }, 'field').irradiatedAreaPct).toBe(100)
+    expect(labReadouts('field', { field: 70, crop: true }, 'field').irradiatedAreaPct).toBe(49)
     expect(labReadouts('field', {}, 'field').zoomAddsExposure).toBe(false)
   })
 

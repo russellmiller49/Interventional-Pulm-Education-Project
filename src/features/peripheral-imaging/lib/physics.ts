@@ -112,3 +112,34 @@ export function dtsShift(objectDepth: number, planeDepth: number, angle: number)
 export function centeredForTeaching(x: number, depth: number) {
   return Math.abs(x) <= 8 && Math.abs(depth) <= 8
 }
+
+/** Authored field context, 2026-09-13. These landmarks/excursion are teaching marks, not a safety envelope. */
+export const FIELD_CONTEXT: readonly { label: string; point: Point3 }[] = [
+  { label: 'Proximal landmark', point: [-40, -20, -30] },
+  { label: 'Distal landmark', point: [155, -20, 30] },
+  { label: 'Planned excursion start', point: [-10, -20, -30] },
+  { label: 'Planned excursion end', point: [130, -20, -30] },
+]
+
+export function fieldContextCoverage(field: number, orbit = 25, tilt = 0) {
+  const center = projectToDetector(LESION_CENTER, orbit, tilt)
+  const half = (DETECTOR_FIELD * field) / 200
+  const left = clamp(center[0] - half, -DETECTOR_FIELD / 2, DETECTOR_FIELD / 2 - 2 * half)
+  const bottom = clamp(center[1] - half, -DETECTOR_FIELD / 2, DETECTOR_FIELD / 2 - 2 * half)
+  const points = [
+    ...FIELD_CONTEXT.map(({ point }) => point),
+    ...([-1, 1] as const).flatMap((sign) => [
+      [LESION_CENTER[0] + sign * LESION_RADIUS, LESION_CENTER[1], LESION_CENTER[2]] as Point3,
+      [LESION_CENTER[0], LESION_CENTER[1], LESION_CENTER[2] + sign * LESION_RADIUS] as Point3,
+    ]),
+  ]
+  return points.every((point) => {
+    const projected = projectToDetector(point, orbit, tilt)
+    return (
+      projected[0] >= left &&
+      projected[0] <= left + 2 * half &&
+      projected[1] >= bottom &&
+      projected[1] <= bottom + 2 * half
+    )
+  })
+}

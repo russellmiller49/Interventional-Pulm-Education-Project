@@ -11,8 +11,8 @@ import type { SuiteViewSpec } from '../components/suite/types'
 import type { LabGoal } from '../engine/labGoalEvaluation'
 import type { LabMetricId } from '../engine/labMetrics'
 import type { LabId, Lesson } from '../types'
-import { imagingChainAnswerTargets, type ChainAnswerTarget } from './chainAnswerTargets'
-import { chainStop, type ChainStopId } from './imagingChain'
+import { type ChainAnswerTarget } from './chainAnswerTargets'
+import { type ChainStopId } from './imagingChain'
 import { imagingLabGoals } from './labGoals'
 import { imagingLearnerCopyErrors } from './learnerCopy'
 import {
@@ -25,7 +25,6 @@ import { imagingSectionSpec, type ImagingSectionSpec } from './sectionSpecs'
 import { imagingSort, type ImagingSort } from './sorts'
 import { imagingSectionItems } from './stageItems'
 import { suiteViewForStep } from './suiteViews'
-import { precommitBlocks } from './teachingBlocks'
 
 /**
  * The adapter: every section of the pathway as one ordered list of steps on the lesson stage.
@@ -83,11 +82,11 @@ export const IN_STEPS = {
   verdictAndChange: 'the verdict and the table of what changed below',
   sortRows: 'the rows to place below',
   walkCard: 'the walk card below',
-  commit: 'Commit this answer, on this card',
+  commit: 'Check your interpretation, on this card',
 } as const
 
 export const ON_SUITE = {
-  scene: 'the image-formation map and its highlighted component',
+  scene: 'Worked demonstration',
   pins: 'the numbered labels on the image-formation map',
   controls: 'The controls, the dock under the scene',
   readouts: 'The readouts, beside the controls',
@@ -99,7 +98,7 @@ export const IN_TEACHING = {
 } as const
 
 const CONTINUE = 'Continue'
-const COMMIT = 'Commit this answer'
+const COMMIT = 'Check your interpretation'
 
 interface StepInput {
   readonly phase: StagePhase
@@ -118,7 +117,7 @@ function prediction(
   item: ClinicalLearningItem,
   round: 0 | 1,
 ): Extract<ImagingStageInteraction, { kind: 'prediction' }> {
-  return { kind: 'prediction', item, round, chainTargets: imagingChainAnswerTargets(item.id) }
+  return { kind: 'prediction', item, round, chainTargets: null }
 }
 
 function firstSentence(text: string): string {
@@ -137,7 +136,7 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
   inputs.push({
     phase: 'recognize',
     title: spec.recognizeTitle,
-    instruction: `Read “${IN_TEACHING.purpose}” in the Teaching panel, then find the highlighted component on the image-formation map in the Simulator panel. ${lesson.recall.prompt}`,
+    instruction: `Read the explanation in the Teaching panel and compare the worked demonstration in the Simulator panel. Try the labeled examples before applying the concept yourself.`,
     lookIn: {
       pane: 'teaching',
       landmark: IN_TEACHING.purpose,
@@ -154,10 +153,10 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
   const chainAnswered = predictionInteraction.chainTargets !== null
   inputs.push({
     phase: 'predict',
-    title: 'Decide before the suite shows it',
+    title: 'Check your interpretation',
     instruction: chainAnswered
       ? 'Choose the component on the image-formation map beneath the scene in the Simulator panel, then commit on this card. The controls unlock once you have.'
-      : 'Choose one answer below, then commit it. The controls unlock once you have.',
+      : 'Use the image and context to choose one answer below. Review the explanation after submitting.',
     lookIn: chainAnswered
       ? {
           pane: 'simulator',
@@ -204,7 +203,7 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
     if (!lesson.lab || !goals) throw new Error(`Section ${sectionId} acts on a lab without goals.`)
     inputs.push({
       phase: 'act',
-      title: 'Do it on the suite',
+      title: 'Try the guided task',
       instruction: `${lesson.labTask ? firstSentence(lesson.labTask) : 'Work the controls under the scene.'} This step is done when every item on this card is met.`,
       lookIn: { pane: 'simulator', landmark: ON_SUITE.controls },
       actionLabel: CONTINUE,
@@ -214,7 +213,7 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
     if (goals.observe.length > 0) {
       inputs.push({
         phase: 'observe',
-        title: 'Read what changed',
+        title: 'Compare the images',
         instruction:
           'Do the next thing this card lists, and read the readouts beside the controls as you do.',
         lookIn: { pane: 'simulator', landmark: ON_SUITE.readouts },
@@ -232,7 +231,7 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
 
   inputs.push({
     phase: 'explain',
-    title: 'Why it holds',
+    title: 'Review your answer',
     instruction: `Read the verdict and the table of what changed on this card, then “${IN_TEACHING.adds}” in the Teaching panel.`,
     lookIn: {
       pane: 'steps',
@@ -250,10 +249,10 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
   const transferOnChain = transferInteraction.chainTargets !== null
   inputs.push({
     phase: 'transfer',
-    title: 'Carry it forward',
+    title: 'Apply it to another situation',
     instruction: transferOnChain
       ? 'The same principle from an earlier section, in a different situation. Choose the component on the image-formation map beneath the scene, then commit on this card.'
-      : 'The same principle from an earlier section, in a different situation. Choose one answer below and commit it.',
+      : 'Use the principle from an earlier section in this different situation. Choose one answer below.',
     lookIn: transferOnChain
       ? {
           pane: 'simulator',
@@ -267,6 +266,14 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
     suite: suiteViewForStep(sectionId, { chainAnswer: transferOnChain }),
   })
 
+  // Guided model work precedes the first independent application. Sort-only foundations
+  // retain a brief check following the worked demonstration rather than inventing device actions.
+  if (spec.act.kind !== 'sort') {
+    const checkIndex = inputs.findIndex((input) => input.interaction.kind === 'prediction')
+    const [check] = inputs.splice(checkIndex, 1)
+    const explanationIndex = inputs.findIndex((input) => input.interaction.kind === 'explain')
+    inputs.splice(explanationIndex, 0, check)
+  }
   return inputs
 }
 
@@ -329,49 +336,16 @@ export function imagingStageLessons(): readonly ImagingStageLesson[] {
   return peripheralImagingSectionIds.map((sectionId) => imagingStageLesson(sectionId))
 }
 
-/** The pre-commit surfaces of a lesson, as authored text: everything at or before the prediction. */
+/** Pending independent surfaces only. Foundational teaching and labeled demonstrations are not answer keys. */
 export function precommitAuthoredSurfaces(
   lesson: ImagingStageLesson,
 ): readonly { readonly where: string; readonly text: string }[] {
-  const surfaces: { where: string; text: string }[] = [
-    { where: 'title', text: lesson.title },
-    { where: 'objective', text: lesson.spec.objective },
-    { where: 'new concept', text: lesson.spec.newConcept },
-    { where: 'increment', text: lesson.spec.incrementSentence },
-    { where: 'why', text: lesson.lesson.why },
-    { where: 'recall prompt', text: lesson.lesson.recall.prompt },
-  ]
-  for (const block of precommitBlocks(lesson.lesson)) {
-    surfaces.push({ where: `block "${block.title}" title`, text: block.title })
-    surfaces.push({ where: `block "${block.title}" body`, text: block.body })
-    for (const point of block.points ?? [])
-      surfaces.push({ where: `block "${block.title}" point`, text: point })
-  }
-  for (const stopId of lesson.spec.stopCardsBeforeCommit === false ? [] : lesson.spec.chainStops) {
-    const stop = chainStop(stopId)
-    surfaces.push(
-      { where: `stop ${stop.id} analogy`, text: stop.analogy },
-      { where: `stop ${stop.id} precise`, text: stop.precise },
-      ...stop.checklist.map((item) => ({ where: `stop ${stop.id} checklist`, text: item })),
-    )
-  }
-  lesson.steps.forEach((step, index) => {
-    if (index > lesson.predictionStepIndex && lesson.predictionStepIndex >= 0) return
-    surfaces.push(
+  return lesson.steps
+    .filter((step) => step.interaction.kind === 'prediction')
+    .flatMap((step) => [
       { where: `step ${step.ordinal} title`, text: step.title },
       { where: `step ${step.ordinal} instruction`, text: step.instruction },
-      { where: `step ${step.ordinal} action`, text: step.actionLabel },
-      { where: `step ${step.ordinal} look-in`, text: step.lookIn.landmark },
-    )
-    if (step.rationale)
-      surfaces.push({ where: `step ${step.ordinal} rationale`, text: step.rationale })
-    if (step.lookIn.alsoLandmark)
-      surfaces.push({ where: `step ${step.ordinal} look-in`, text: step.lookIn.alsoLandmark })
-    if (step.interaction.kind === 'prediction') {
-      surfaces.push({ where: `step ${step.ordinal} stem`, text: step.interaction.item.stem })
-    }
-  })
-  return surfaces
+    ])
 }
 
 export function validateImagingStageLessons(): readonly string[] {

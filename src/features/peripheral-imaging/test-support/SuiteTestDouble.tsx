@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { ChainAnswerFieldset } from '../components/suite/ChainAnswerFieldset'
 import { ChainCaptionStrip } from '../components/suite/ChainCaptionStrip'
 import { controlElementId, SUITE_DOM, type ImagingSuitePaneProps } from '../components/suite/types'
@@ -20,11 +21,15 @@ import {
  * Mount it with `jest.mock('../components/suite/ImagingSuitePane', () => require('../test-support/SuiteTestDouble').suitePaneDouble)`.
  */
 export function SuiteTestDouble(props: ImagingSuitePaneProps) {
-  const { view, lab, onLabChange, controlsEnabled, goals } = props
+  const { view, lab, onLabChange, controlsEnabled, goals, onRepresentationReady } = props
+  useEffect(() => {
+    onRepresentationReady?.(true)
+  }, [onRepresentationReady])
   const lessonId = view.sectionId
   const readouts = view.lab ? labReadouts(view.lab, lab.values, lessonId) : {}
-  const metricIds: readonly LabMetricId[] =
-    view.readouts ?? (Object.keys(readouts) as LabMetricId[])
+  const metricIds: readonly LabMetricId[] = props.independent
+    ? []
+    : (view.readouts ?? (Object.keys(readouts) as LabMetricId[]))
   return (
     <div
       {...{
