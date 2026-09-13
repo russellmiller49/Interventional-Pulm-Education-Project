@@ -34,6 +34,13 @@ export const nonPublicModuleGroups = [
 
 export const nonPublicModules: NonPublicModule[] = [
   {
+    path: '/ebus-guided',
+    title: 'EBUS: Guided Course',
+    group: 'Bronchoscopy',
+    summary:
+      'A guided linear EBUS course with required acquisition labs, station correlation, sampling and specimen decisions, and formative case assessment.',
+  },
+  {
     path: '/preference-cards',
     title: 'IP Preference Card Builder',
     group: 'IP tooling',

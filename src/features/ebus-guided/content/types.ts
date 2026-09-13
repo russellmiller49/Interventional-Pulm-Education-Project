@@ -1,0 +1,92 @@
+import type { EbusControl, EbusObservation } from '@/lib/ebus-guided-bridge'
+export type Topic = 'Prepare' | 'Optimize' | 'Locate' | 'Plan' | 'Sample' | 'Complete'
+export interface Choice {
+  id: string
+  text: string
+  rationale: string
+  correct?: boolean
+  unsafe?: boolean
+}
+export interface Question {
+  id: string
+  prompt: string
+  choices: Choice[]
+  explanation: string
+  imageStation?: string
+}
+export type LabGoal = 'scan' | 'coupling' | 'depth' | 'gain' | 'doppler' | 'capture'
+export interface Lab {
+  kind: 'simulator' | 'knobology'
+  goal: LabGoal
+  presetKey: string
+  controls: EbusControl[]
+  instruction: string
+  freeDrive?: boolean
+  initialRoll?: number
+  initialDepth?: number
+  initialGain?: number
+}
+export interface Sequence {
+  prompt: string
+  steps: { id: string; text: string }[]
+  explanation: string
+}
+export interface Matching {
+  prompt: string
+  pairs: { id: string; cue: string; response: string }[]
+  explanation: string
+}
+export interface Lesson {
+  id: string
+  title: string
+  topic: Topic
+  minutes: number
+  objective: string
+  recall: string
+  concept: string
+  paragraphs: string[]
+  checklist: string[]
+  worked: { context: string; reasoning: string }
+  question: Question
+  transfer: Question
+  observation: Question
+  lab?: Lab
+  sequence?: Sequence
+  matching?: Matching
+  station?: string
+  diagram: 'workflow' | 'ultrasound' | 'stations' | 'needle' | 'specimens'
+  takeaways: string[]
+  sources: string[]
+  boundary: string
+}
+export interface EbusCase {
+  id: string
+  title: string
+  topic: Topic
+  context: string
+  lessonIds: string[]
+  questions: Question[]
+  sources: string[]
+}
+export function labGoalMet(lab: Lab, state: EbusObservation): boolean {
+  if (!state.ready || !state.frameReady || state.actionCount < 1) return false
+  switch (lab.goal) {
+    case 'scan':
+      return state.targetVisible && state.contactQuality >= 0.45
+    case 'coupling':
+      return state.contactQuality >= 0.8 && state.lastAction === 'flexion'
+    case 'depth':
+      return state.depth >= 30 && state.depth <= 45 && state.lastAction === 'depth'
+    case 'gain':
+      return (
+        state.gain >= 35 &&
+        state.gain <= 65 &&
+        state.lastAction === 'gain' &&
+        state.usedControls.includes('contrast')
+      )
+    case 'doppler':
+      return state.doppler
+    case 'capture':
+      return state.frozen && state.measured && state.saved
+  }
+}

@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     base: normalizeViteBase(env.VITE_BASE_URL),
+    build: { rollupOptions: { input: { main: resolve(__dirname, 'index.html'), guided: resolve(__dirname, 'guided.html') } } },
     css: { postcss: { plugins: [] } },
     envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
     plugins: [react()],
