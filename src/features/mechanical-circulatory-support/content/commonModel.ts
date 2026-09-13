@@ -275,7 +275,7 @@ export const mcsFlowAccount: readonly McsFlowAccountLine[] = Object.freeze([
     order: 1,
     label: 'Native cardiac contribution',
     definition:
-      'Blood the patient’s own heart ejects through its own outflow tract, independent of any device.',
+      'Concurrent native forward output through the aortic valve during support. It is affected by loading and pump operation; it is not native output measured before support.',
     valueType: 'inferred',
     valueTypeStatement:
       'In this simulation the native contribution is reasoned from the modelled circulation. At the bedside it is rarely measured directly while a device is running.',
@@ -288,7 +288,7 @@ export const mcsFlowAccount: readonly McsFlowAccountLine[] = Object.freeze([
     order: 2,
     label: 'Displayed device contribution',
     definition:
-      'The number the device reports for the blood it is moving. Some pathways report no flow at all, because they move no blood of their own.',
+      'The number the device reports for the blood it is moving. IABP has no separate pump-flow stream; it can change native output through its loading effects.',
     valueType: 'estimated',
     valueTypeStatement:
       'On the pumps modelled here the displayed flow is an algorithmic estimate derived from pump behaviour and assumed loading, not a flow probe on the outflow. Keep the label visible so an estimate is not read as a direct measurement.',
@@ -309,7 +309,7 @@ export const mcsFlowAccount: readonly McsFlowAccountLine[] = Object.freeze([
     valueTypeStatement:
       'This is a reasoned quantity, not a reading. It is the one the patient experiences, and it is the one no console displays.',
     howItMisleads:
-      'It is the least visible of the three and the only one that matters, so it is the line most often replaced by whichever of the other two is easier to see.',
+      'It describes modeled net blood flow, not oxygen delivery or clinical organ response. Substituting a device estimate for this quantity can obscure native output or recirculation.',
     conceptIds: [
       'cc.device.native-device-effective-flow',
       'cc.perfusion.oxygen-delivery-extraction',
@@ -328,10 +328,10 @@ export const MCS_FLOW_ADDITIVITY_WARNING = Object.freeze({
   id: 'mcs.model.flows-are-not-additive',
   headline: 'Displayed flows are not automatically additive.',
   statement:
-    'Adding a device flow to a native cardiac output, or one pump’s flow to another’s, is an arithmetic operation the circulation has not agreed to. Whether two streams sum, compete, or travel through one another depends on whether the pathways are serial or parallel, on how much the native ventricle is still ejecting, on regurgitation and recirculation, on catheter or cannula position, and on the loading conditions at both ends of the pump.',
+    'Identify the routes and observation time before combining flows. Concurrent native forward output and left-pump forward flow meet in parallel and combine, with represented regurgitant recirculation subtracted. Pre-support native output is a different baseline. Serial right- and left-pump flows must not be added. Device estimates and modeled components are not measured bedside cardiac output.',
   worked: Object.freeze([
-    'Serial pathways — a right-sided pump delivering into the pulmonary circulation and a left-sided pump drawing from the left ventricle handle the *same* blood one after the other. Their displayed flows describe one stream measured twice, so summing them counts that stream twice.',
-    'Parallel pathways — a device returning blood to the aorta while the native ventricle also ejects into the aorta produces two streams meeting in one vessel. They may add, but only to the extent that both are truly moving forward and neither is meeting the other head-on.',
+    'Serial pathways — a right-sided pump delivering into the pulmonary circulation and a left-sided pump drawing from the left ventricle handle the *same* blood one after the other. Their displayed estimates describe the same serial throughput at different sites, so summing them counts that stream twice.',
+    'Parallel pathways — a device returning blood to the aorta while the native ventricle also ejects into the aorta produces two streams meeting in one vessel. Concurrent net forward components combine. Physiological interaction changes each component; it does not make their sum double-counting. Regurgitant or recirculating flow is subtracted once.',
     'A pathway that moves no blood of its own — counterpulsation changes the pressure the ventricle meets and the pressure the coronary bed sees. It contributes no separate stream, so there is nothing to add.',
   ]),
   conceptIds: Object.freeze([

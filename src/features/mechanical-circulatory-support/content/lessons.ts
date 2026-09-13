@@ -96,7 +96,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
         instruction:
           'Select durable continuous flow and inspect flow, speed, power, pulsatility index, and aortic-valve opening as one interdependent set.',
         rationale:
-          'The blood follows the same left-ventricle-to-aorta path as the temporary pump, but the decision is different in kind: candidacy, implantation, and an agreed exit strategy are settled before support begins. The displayed flow is computed from power and speed, so it is least trustworthy in exactly the states that disturb that relationship.',
+          'The blood follows the same left-ventricle-to-aorta path as the temporary pump, but the decision is different in kind: candidacy, implantation, and an agreed exit strategy are settled before support begins. The simulated flow comes from speed and loading; power and PI are derived afterward. Clinical flow estimation methods depend on the device.',
         targetActionId: 'device:select:lvad',
       },
     ],
@@ -116,8 +116,8 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
     summary:
       'Match inflation to aortic-valve closure and complete deflation before the next ejection.',
     objectives: [
-      'Recognize early inflation, late inflation, early deflation, and late deflation.',
-      'Relate timing errors to the assisted waveform.',
+      'Locate the model’s valve-closure, inflation, deflation and ejection references; compare demonstrated timing errors.',
+      'Identify a changed early-inflation example, align inflation, and consider trigger reliability. Clinical contour recognition requires device-specific supervised training.',
     ],
     steps: [
       {

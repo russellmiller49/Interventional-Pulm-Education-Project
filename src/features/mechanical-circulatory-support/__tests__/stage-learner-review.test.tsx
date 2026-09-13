@@ -9,7 +9,7 @@
  * but never rendered. The record beside this module's docs says what each became; this suite says
  * it stays.
  */
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 
 jest.mock('@/i18n/navigation', () =>
   jest
@@ -42,6 +42,8 @@ import {
   continueStep,
   currentStepId,
   mountSection,
+  nowCard,
+  nowPrimary,
   performAction,
   setupMcsStage,
   teardownMcsStage,
@@ -95,7 +97,7 @@ describe('every step says where it is worked', () => {
     mountSection('mcs-foundations-mechanisms')
     const where = document.querySelector('[data-now-card] [data-now-where]')
     expect(where?.textContent).toBe(
-      'Where to look: Steps panel — this card, one stop at a time, and Simulator panel — the Circulation map, where each stop lights.',
+      'Where to look: Steps panel — this guided task and its controls below, and Teaching panel — Follow three support pathways.',
     )
     const captions = [...document.querySelectorAll('[data-pane-label]')].map(
       (label) => label.textContent ?? '',
@@ -114,7 +116,7 @@ describe('every step says where it is worked', () => {
     mountSection('iabp-timing-triggering')
     fireEvent.click(screen.getByRole('button', { name: /What do I do now/ }))
     expect(document.querySelector('dialog')?.textContent).toMatch(
-      /Where to look: Steps panel — the answer choices below, and Simulator panel — the arterial pressure trace on the monitor\./,
+      /Where to look: Steps panel — this guided task and its controls below, and Teaching panel — A normal assisted beat\./,
     )
   })
 
@@ -175,7 +177,7 @@ describe('the card keeps its promises', () => {
     )
   })
 
-  it('prints the authored before-and-after account above the numbers on Observe', () => {
+  it('derives the selected Observe account from captured model readings', () => {
     const sectionId = 'iabp-timing-triggering'
     mountSection(sectionId)
     answerIdentification(sectionId)
@@ -185,24 +187,20 @@ describe('the card keeps its promises', () => {
     performAction(sectionId)
     continueStep()
     expect(currentStepId()).toBe(`${sectionId}-observe`)
-    const contract = mcsSectionLearningContractById.get(sectionId)!
-    const before = [...document.querySelectorAll('[data-before-labels] li')].map(
-      (row) => row.textContent,
+    expect(document.querySelector('[data-captured-results]')?.textContent).toContain(
+      'Observed in this run.',
     )
-    const after = [...document.querySelectorAll('[data-after-labels] li')].map(
-      (row) => row.textContent,
-    )
-    expect(before).toEqual(contract.beforeStateLabels)
-    expect(after).toEqual(contract.afterStateLabels)
-    const labels = document.querySelector('[data-before-after-labels]')!
-    const table = document.querySelector('[data-before-after]')!
-    expect(labels.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(document.querySelector('[data-before-after]')?.textContent).toContain('Observed change')
+    expect(document.querySelector('[data-before-after-labels]')).toBeNull()
+    expect(nowPrimary()?.textContent).toBe('Record observation')
   })
 })
 
 describe('the short list says what kind of list it is', () => {
   it('labels the stop card’s checklist and associates the list with the label', () => {
     mountSection('mcs-foundations-mechanisms')
+    fireEvent.click(within(nowCard()).getByRole('button', { name: /Read the device/ }))
+    continueStep()
     const card = document.querySelector('[data-teaching-block="stop"][data-stop="venous-return"]')
     expect(card).not.toBeNull()
     const label = card?.querySelector('[data-stop-checklist-label]')
@@ -216,7 +214,7 @@ describe('the short list says what kind of list it is', () => {
 })
 
 describe('the dead control says what unlocks it', () => {
-  it('names the pump-speed lock on the authorization box, from the flag that disables the slider', () => {
+  it('offers only the afterload control, with no speed authorization escape', () => {
     const sectionId = 'lvad-parameters-assessment'
     mountSection(sectionId)
     answerIdentification(sectionId)
@@ -224,13 +222,9 @@ describe('the dead control says what unlocks it', () => {
     commitPrediction(sectionId)
     continueFromVerdict()
     expect(currentStepId()).toBe(`${sectionId}-act`)
-    const slider = screen.getByRole('slider', { name: 'Pump speed' })
-    const note = document.querySelector('[data-speed-authorization-note]')
-    expect(slider).toBeDisabled()
-    expect(note?.textContent).toMatch(/tick it to unlock the pump speed below/)
-    fireEvent.click(screen.getByRole('checkbox', { name: /Authorized-personnel order/ }))
-    expect(slider).not.toBeDisabled()
-    expect(note?.textContent).toMatch(/the pump speed below can be changed/)
+    expect(screen.queryByRole('slider', { name: 'Pump speed' })).toBeNull()
+    expect(screen.queryByRole('checkbox', { name: /Authorized-personnel order/ })).toBeNull()
+    expect(screen.getByRole('slider', { name: /SVR/ })).toBeEnabled()
   })
 })
 
@@ -318,6 +312,7 @@ describe('the compact viewport opens on the pane the step is worked in', () => {
  */
 describe('the items ask one kind of question', () => {
   const DRAFT_PREDICTIONS = [
+    'mcs-foundations-signals-predict-1',
     'mcs-foundations-mechanisms-predict-1',
     'mcs-iabp-timing-predict-1',
     'mcs-iabp-limits-predict-1',
@@ -328,6 +323,7 @@ describe('the items ask one kind of question', () => {
     'mcs-integration-predict-1',
   ]
   const DRAFT_TRANSFERS = [
+    'mcs-foundations-mechanisms-transfer-1',
     'mcs-iabp-trigger-transfer-1',
     'mcs-iabp-limits-transfer-1',
     'mcs-impella-afterload-transfer-1',

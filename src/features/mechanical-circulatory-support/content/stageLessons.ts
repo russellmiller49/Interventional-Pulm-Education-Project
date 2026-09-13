@@ -9,7 +9,12 @@ import {
   type StageStepLocation,
 } from '@/features/learning-module/stage/stageModel'
 
-import type { McsDeviceKind, McsSimulationState } from '../engine/types'
+import type { McsAction, McsDeviceKind, McsSimulationState } from '../engine/types'
+import {
+  mcsIntroductions,
+  isMcsIntroductorySection,
+  type McsIntroduction,
+} from './introductorySteps'
 import { mcsPresentationTitle } from './casePresentation'
 import { MCS_CONTROL_PANEL_SORT, type McsControlPanelSort } from './controlPanelSort'
 import { mcsIncrementForSection, type McsDeviceIncrement } from './deviceIncrements'
@@ -52,6 +57,7 @@ export const MCS_STAGE_SURFACE_LABELS: Readonly<Record<McsStageSurfaceId, string
 }
 
 export type McsStageInteraction =
+  | { readonly kind: 'teaching'; readonly introduction: McsIntroduction }
   /** The walk along the loop: one stop at a time, performed when every stop has been visited. */
   | { readonly kind: 'walk' }
   /** The identification: one committed choice with authored feedback per option. */
@@ -94,6 +100,8 @@ export type McsStageInteraction =
   | { readonly kind: 'transfer'; readonly transfer: McsLessonTransferDefinition }
 
 export interface McsStageStep extends StageStepBase<McsStageInteraction> {
+  /** Authored setup, never learner evidence. An empty array still requests a fresh baseline. */
+  readonly setupOnEntry?: readonly McsAction[]
   /** Surfaces opened when the step is entered; the learner may open the rest. */
   readonly surfaces: readonly McsStageSurfaceId[]
   /** The stops lit on the map while this step is current. */
@@ -101,6 +109,7 @@ export interface McsStageStep extends StageStepBase<McsStageInteraction> {
 }
 
 export interface McsStageLesson extends StageLessonBase<McsStageStep> {
+  readonly introductory: boolean
   readonly contract: McsSectionLearningContract
   readonly spec: McsSectionSpec
   readonly transfer: McsLessonTransferDefinition
@@ -211,7 +220,33 @@ export function buildMcsStageLesson(sectionId: string): McsStageLesson {
     })
   }
 
-  if (spec.walksTheLoop) {
+  const introductions = mcsIntroductions[sectionId] ?? []
+  const pushIntroduction = (introduction: McsIntroduction) => {
+    push(
+      'recognize',
+      introduction.id,
+      introduction.title,
+      introduction.instruction,
+      'Continue',
+      { kind: 'teaching', introduction },
+      undefined,
+      {
+        pane: 'steps',
+        landmark: 'this guided task and its controls below',
+        alsoPane: 'teaching',
+        alsoLandmark: introduction.title,
+      },
+    )
+    const position = steps.length - 1
+    steps[position] = {
+      ...steps[position],
+      surfaces: introduction.visual === 'timing' || introduction.visual === 'lvad' ? [] : ['map'],
+      setupOnEntry: introduction.setupActions ?? [],
+    }
+  }
+  if (introductions[0]) pushIntroduction(introductions[0])
+
+  if (spec.walksTheLoop || sectionId === 'mcs-foundations-signals') {
     push(
       'recognize',
       'walk',
@@ -223,6 +258,8 @@ export function buildMcsStageLesson(sectionId: string): McsStageLesson {
       WALK_LOCATION,
     )
   }
+
+  introductions.slice(1).forEach(pushIntroduction)
 
   push(
     'recognize',
@@ -238,6 +275,27 @@ export function buildMcsStageLesson(sectionId: string): McsStageLesson {
     },
     contract.teaching.whatTheTargetRepresents,
   )
+  if (isMcsIntroductorySection(sectionId)) {
+    const position = steps.length - 1
+    steps[position] = {
+      ...steps[position],
+      rationale: undefined,
+      ...(sectionId === 'iabp-timing-triggering'
+        ? {
+            lookIn: {
+              pane: 'steps' as const,
+              landmark: 'the answer choices below',
+              alsoPane: 'simulator' as const,
+              alsoLandmark: 'the Timing example and its text equivalent',
+            },
+          }
+        : {}),
+      setupOnEntry:
+        sectionId === 'iabp-timing-triggering'
+          ? [{ type: 'SET_IABP_CONTROL', control: 'inflationOffsetMs', value: -100 }]
+          : contract.startingActions,
+    }
+  }
 
   push(
     'predict',
@@ -301,6 +359,7 @@ export function buildMcsStageLesson(sectionId: string): McsStageLesson {
     : undefined
 
   return {
+    introductory: isMcsIntroductorySection(sectionId),
     sectionId,
     title: section?.title ?? lesson.title,
     minutes: section?.minutes ?? 12,
@@ -345,9 +404,12 @@ export function mcsStagePhaseLabel(phase: StagePhase): string {
  * the prediction and say which phase is waiting.
  */
 export function mcsMountStepIndex(
-  lesson: Pick<McsStageLesson, 'steps' | 'predictionStepIndex'>,
+  lesson: Pick<McsStageLesson, 'steps' | 'predictionStepIndex'> & {
+    readonly introductory?: boolean
+  },
   requestedPhase: StagePhase,
 ): { readonly index: number; readonly clamped: boolean } {
+  if (lesson.introductory) return { index: 0, clamped: requestedPhase !== 'recognize' }
   if (requestedPhase === 'recognize') return { index: 0, clamped: false }
   if (requestedPhase === 'predict') {
     return { index: Math.max(0, lesson.predictionStepIndex), clamped: false }

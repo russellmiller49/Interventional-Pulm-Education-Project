@@ -36,8 +36,7 @@ import {
  * Section 7 — speed, power, estimated flow, pulsatility, loading, delivery, as one set.
  *
  * The figure is a chain of dependencies rather than a controller face, because the claim being
- * taught is that these values are not independent: the displayed flow is computed from two of the
- * others, and all of them move when the loading at either end of the pump moves. A layout that made
+ * taught is that these values are not independent: the simplified flow model and power/PI calculations share loading inputs, and all of them move when the loading at either end of the pump moves. A layout that made
  * them look like six separate gauges would teach the opposite of the section.
  *
  * The cardiac-power paradox is shown only when the live state actually demonstrates it. The engine
@@ -109,7 +108,10 @@ export function LvadParametersAssessmentPanel({
 
   return (
     <div className={styles.panel} data-teaching-panel={contract.sectionId}>
-      <PanelSection title="One set of values, not six gauges" id="lvad-parameter-set">
+      <PanelSection
+        title="Controller parameters and separate patient measurements"
+        id="lvad-parameter-set"
+      >
         <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
           <LiveValue
             label="Speed"
@@ -133,7 +135,7 @@ export function LvadParametersAssessmentPanel({
             kind="estimated"
             note={
               disclosed
-                ? 'Computed from power and speed against an assumed viscosity. It inherits every assumption in that computation.'
+                ? 'Generated from speed and loading in this model; power and PI are derived afterward. Clinical estimation methods depend on the device.'
                 : 'What this number is made from is the question this section opens with.'
             }
           />
@@ -174,13 +176,13 @@ export function LvadParametersAssessmentPanel({
               can disturb the relationship entirely.
             </li>
             <li>
-              The displayed flow is computed from power and speed, so it moves when they move —
-              which is not the same thing as measuring the blood.
+              In this model flow is generated from speed and loading. Electrical power and PI are
+              derived afterwards; a manufacturer flow estimator is not implemented.
             </li>
             <li>
-              Pulsatility index is the size of the cyclic swing in that estimate. The same value can
-              arise in different clinical states, so it is read with the whole controller trend and
-              the patient rather than on its own.
+              The modeled pulsatility index is an authored function of native flow, pump flow and
+              preload. The same value can arise in different clinical states, so it is read with the
+              whole controller trend and the patient rather than on its own.
             </li>
           </ol>
         ) : null}
@@ -206,8 +208,8 @@ export function LvadParametersAssessmentPanel({
           {reading(metrics.deviceFlowLMin, 1)} L/min, pulsatility index{' '}
           {reading(metrics.pulsatilityIndex, 1)}, gradient across the pump {reading(gradient, 0)} mm
           Hg, effective systemic delivery {reading(metrics.effectiveSystemicFlowLMin, 1)} L/min.
-          These are one interdependent set: the displayed flow is computed from two of the others
-          rather than measured.
+          These are interdependent model values: flow is generated from speed and loading, then
+          electrical power and PI are derived. None is a clinical measurement here.
         </TextEquivalent>
 
         <ModelBoundary>{MCS_ESTIMATED_FLOW_BOUNDARY}</ModelBoundary>

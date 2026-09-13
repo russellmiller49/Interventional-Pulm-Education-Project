@@ -123,7 +123,7 @@ export const mcsMonitorTargets: Readonly<Record<McsMonitorTargetId, McsSurfaceTa
     'monitor:power-pulsatility': monitorTarget(
       'monitor:power-pulsatility',
       'Durable-pump controller readout: power and pulsatility index',
-      'Pump power and pulsatility index sit beside the flow the controller displays. The displayed flow is computed from power and speed, so these three move together only while the assumptions behind that computation hold.',
+      'Pump power and pulsatility index sit beside the flow the controller displays. This teaching model generates flow from speed and loading, then derives power and PI. Clinical estimation methods depend on the device.',
       ['lvad'],
     ),
     'monitor:response-trend': monitorTarget(
@@ -234,9 +234,9 @@ export const mcsSectionPrimarySurfaces: readonly McsSectionPrimarySurface[] = Ob
     primaryTarget: 'monitor:power-pulsatility',
     primaryTargetLabel: mcsMonitorTargets['monitor:power-pulsatility'].label,
     primarySurfaceRationale:
-      'The claim being taught is that the displayed flow is computed from power and speed. Reading the controller values as one interdependent set requires them on screen together, and the pump does not change position while it is happening.',
+      'The simplified model generates flow from speed and loading and derives power and PI afterward. Reading the controller values as one interdependent set requires them on screen together, and the pump does not change position while it is happening.',
     whyThisView:
-      'The monitor leads because the displayed flow is calculated from power and speed, and you can only see that by watching all three at once.',
+      'The monitor leads so the learner can compare speed, estimated flow, power and PI at unchanged speed as modeled loading changes.',
   },
   {
     sectionId: 'lvad-alarms-emergencies',

@@ -672,3 +672,65 @@
 .stage [data-story-run-button]:active:not(:disabled) {
   background: rgba(113, 225, 229, 0.22);
 }
+.tableScroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.tableScroll table {
+  min-width: 28rem;
+}
+.tableScroll th small {
+  display: block;
+  font-weight: normal;
+}
+.definitionList {
+  display: grid;
+  gap: 0.4rem;
+}
+.definitionList dt {
+  font-weight: 650;
+  margin-top: 0.6rem;
+}
+.definitionList dd {
+  margin: 0;
+}
+.block select {
+  display: block;
+  color: inherit;
+  background: var(--background, #16222d);
+  border: 1px solid currentColor;
+  padding: 0.45rem;
+  max-width: 100%;
+}
+.block figure {
+  margin: 0;
+}
+
+/* Keep all compared devices visible within the Steps pane. */
+.tableScroll table[data-device-comparison-table] {
+  min-width: 0;
+  width: 100%;
+  table-layout: fixed;
+}
+.tableScroll table[data-device-comparison-table] th,
+.tableScroll table[data-device-comparison-table] td {
+  padding: 0.45rem 0.2rem;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+.tableScroll table[data-device-comparison-table] th:first-child {
+  width: 31%;
+}
+.tableScroll table[data-device-comparison-table] th {
+  text-transform: none;
+}
+
+/* Pan the teaching map instead of shrinking its text on compact screens. */
+.readableMap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.readableMap [data-circulation-map] > div:first-of-type {
+  min-width: 680px;
+}

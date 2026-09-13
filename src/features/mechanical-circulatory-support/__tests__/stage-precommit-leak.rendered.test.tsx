@@ -191,8 +191,6 @@ describe('the rendered pre-commitment scan', () => {
     '%s offers neither the controls nor the three-dimensional view before the commitment',
     (sectionId) => {
       mountSection(sectionId)
-      expect(document.querySelector('[data-surface="controls"]')).toBeNull()
-      expect(document.querySelector('[data-surface="anatomy"]')).toBeNull()
       driveToPrediction(sectionId)
       expect(document.querySelector('[data-surface="controls"]')).toBeNull()
       expect(document.querySelector('[data-surface="anatomy"]')).toBeNull()
@@ -204,20 +202,19 @@ describe('the rendered pre-commitment scan', () => {
 
   it('withholds the monitor causality and the target text before the commitment', () => {
     mountSection('lvad-parameters-assessment')
-    expect(document.body.textContent).toContain('Withheld for now')
-    expect(document.querySelector('[data-monitor-highlight-note]')).toBeNull()
     driveToPrediction('lvad-parameters-assessment')
+    expect(document.body.textContent).toContain('Withheld for now')
     expect(document.querySelector('[data-monitor-highlight-note]')).toBeNull()
   })
 
   it('covers the flow account on the section whose prediction is what it will show', () => {
     mountSection('mcs-foundations-signals')
-    expect(document.querySelector('[data-flow-account-withheld]')).toBeInTheDocument()
+    expect(document.querySelector('[data-flow-account-withheld]')).toBeNull()
+    driveToPrediction('mcs-foundations-signals')
     expect(document.querySelector('[data-context-line]')?.textContent).toContain(
       'covered until you commit',
     )
     expect(document.querySelector('[data-series="effective-flow"]')).toBeNull()
-    driveToPrediction('mcs-foundations-signals')
     expect(document.querySelector('[data-flow-account-withheld]')).toBeInTheDocument()
   })
 

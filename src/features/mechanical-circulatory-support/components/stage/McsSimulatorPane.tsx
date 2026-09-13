@@ -22,6 +22,8 @@ import {
 import { McsControls } from '../McsControls'
 import { McsMonitor } from '../McsMonitor'
 import styles from './mcs-stage.module.css'
+import { McsTaskControls } from './McsTaskControls'
+import { McsTimingFigure } from './McsTimingFigure'
 
 const McsAnatomy3D = lazy(() =>
   import('../McsAnatomy3D').then((module) => ({ default: module.McsAnatomy3D })),
@@ -47,6 +49,10 @@ export function McsSimulatorPane({
   openSurfaces,
   onToggleSurface,
   mapPreference,
+  teachingAvailable = false,
+  timingIdentification = false,
+  allowedActionIds,
+  focusedControls = false,
 }: {
   readonly lesson: McsStageLesson
   readonly state: McsSimulationState
@@ -60,6 +66,10 @@ export function McsSimulatorPane({
   readonly onToggleSurface: (surface: McsStageSurfaceId, open: boolean) => void
   /** The step id that opened the map on entry, or null; the map scrolls into view once per value. */
   readonly mapPreference: string | null
+  readonly teachingAvailable?: boolean
+  readonly timingIdentification?: boolean
+  readonly allowedActionIds?: readonly string[]
+  readonly focusedControls?: boolean
 }) {
   const baseId = useId()
   const mapRef = useRef<HTMLDivElement>(null)
@@ -86,12 +96,38 @@ export function McsSimulatorPane({
     switch (surface) {
       case 'map':
         return (
-          <div ref={mapRef} data-map-anchor>
+          <div
+            ref={mapRef}
+            data-map-anchor
+            role={lesson.introductory ? 'group' : undefined}
+            aria-label={lesson.introductory ? 'Circulation map scroll area' : undefined}
+            className={lesson.introductory ? styles.readableMap : undefined}
+            tabIndex={lesson.introductory ? 0 : undefined}
+          >
+            {lesson.introductory ? (
+              <p className={styles.footnote}>
+                If the map extends beyond this pane, scroll horizontally to inspect the full path at
+                readable label size.
+              </p>
+            ) : null}
             <CirculationMap state={state} emphasis={emphasis} answer={mapAnswer} />
           </div>
         )
       case 'controls':
-        return <McsControls state={state} dispatch={dispatch} highlightControl={highlightControl} />
+        return focusedControls ? (
+          <McsTaskControls
+            state={state}
+            dispatch={dispatch}
+            allowedActionIds={allowedActionIds ?? []}
+          />
+        ) : (
+          <McsControls
+            state={state}
+            dispatch={dispatch}
+            highlightControl={highlightControl}
+            allowedActionIds={allowedActionIds}
+          />
+        )
       case 'anatomy':
         return (
           <SimulationLaunchGate
@@ -114,19 +150,47 @@ export function McsSimulatorPane({
     }
   }
 
-  const monitor = (
+  const fullMonitor = (
     <McsMonitor
       state={state}
       highlightTarget={monitorTarget}
       highlightNote={predictionCommitted}
-      revealCausality={predictionCommitted}
+      revealCausality={predictionCommitted || teachingAvailable}
       withheldNote="What produced this display appears once you have committed your prediction."
       withholdFlowAccount={flowAccountWithheld}
     />
   )
+  const monitor =
+    teachingAvailable && lesson.introductory ? (
+      <div className={styles.block} data-reference-readings>
+        <h3>Reference readings</h3>
+        <p>
+          Mean arterial pressure {state.metrics.mapMmHg.toFixed(0)} mm Hg · modeled concurrent
+          native flow {state.metrics.nativeFlowLMin.toFixed(1)} L/min.
+        </p>
+        <p>
+          {state.device.kind === 'iabp'
+            ? 'IABP: no separate pump-flow stream.'
+            : `Simulated pump estimate ${state.metrics.deviceFlowLMin.toFixed(1)} L/min.`}{' '}
+          Modeled effective systemic flow {state.metrics.effectiveSystemicFlowLMin.toFixed(1)}{' '}
+          L/min.
+        </p>
+        <details>
+          <summary>Full monitor and derived measurements</summary>
+          {fullMonitor}
+        </details>
+      </div>
+    ) : (
+      fullMonitor
+    )
+  const controlsLead =
+    focusedControls &&
+    allowedActionIds?.some((id) => !id.startsWith('inspect:') && !id.startsWith('device:select:'))
   const surfaceOrder: readonly McsStageSurfaceId[] = mapLeads
     ? ['map', 'controls', 'anatomy']
     : [...MCS_STAGE_SURFACES]
+
+  if (timingIdentification) return <McsTimingFigure state={state} annotated={false} />
 
   return (
     <div
@@ -134,10 +198,21 @@ export function McsSimulatorPane({
       data-simulator-surfaces
       data-map-leads={mapLeads || undefined}
     >
+      {controlsLead ? (
+        <section className={styles.surface} data-surface="controls" data-open="true">
+          <h3 className={styles.surfaceHeading}>Controls for this task</h3>
+          <div className={styles.surfaceBody}>{surfaceBody('controls')}</div>
+        </section>
+      ) : null}
+      {lesson.sectionId === 'iabp-timing-triggering' ? <McsTimingFigure state={state} /> : null}
       {mapLeads ? null : monitor}
       <div className={styles.surfaces}>
         {surfaceOrder
-          .filter((surface) => surface === 'map' || predictionCommitted)
+          .filter(
+            (surface) =>
+              !(controlsLead && surface === 'controls') &&
+              (surface === 'map' || predictionCommitted || teachingAvailable),
+          )
           .map((surface) => {
             const open = openSurfaces.has(surface)
             const panelId = `${baseId}-${surface}`
@@ -161,19 +236,8 @@ export function McsSimulatorPane({
                   </button>
                 </h3>
                 <div id={panelId} className={styles.surfaceBody} hidden={!open}>
-                  {/*
-                  The three-dimensional view is the one surface unmounted while closed: it is heavy
-                  and behind its own launch gate. It and the controls surface are absent altogether
-                  until the prediction is committed, and stay mounted after that so their ids hold
-                  while they are opened and closed. The controls' labels name what sections ask the
-                  learner to predict; the three-dimensional view's pathway summary names where blood
-                  enters and returns — the second and sixth sections' identifications, in the words
-                  of their own deny patterns — and its text equivalent prints the engine's causal
-                  explanation of the state on screen, which for the third section names the
-                  impedance the learner is about to predict. The map is the one surface that may
-                  lead before the commitment, and it withholds its own answers while a place is the
-                  question.
-                */}
+                  {/* References may open anatomy before questioning. Independent tasks gate it;
+                      closed 3D stays unmounted and uses the existing optional launch gate. */}
                   {surface === 'anatomy' && !open ? null : surfaceBody(surface)}
                 </div>
               </section>

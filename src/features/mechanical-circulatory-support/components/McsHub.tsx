@@ -46,8 +46,8 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
           <p>
             One circulation, one monitor, one map. Read the pressure and the flow apart, walk the
             loop every device is drawn on, then meet the balloon, the transvalvular pump and the
-            durable pump one at a time — each on the same patient, each with one thing to predict
-            before anything moves.
+            durable pump one at a time. Start with an explained reference and guided example, then
+            apply the concept to a fresh task and interpret the captured model response.
           </p>
           <p className={styles.hubComposition} data-pathway-composition>
             {composition.sentence}

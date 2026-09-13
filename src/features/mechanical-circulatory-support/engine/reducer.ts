@@ -160,7 +160,9 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
               ? `Filling: RAP ${state.metrics.rapMmHg}, PCWP ${state.metrics.pcwpMmHg} mm Hg · PAPi ${state.metrics.papi}.`
               : state.device.kind === 'impella'
                 ? `Device: left pump ${state.metrics.leftDeviceFlowLMin.toFixed(1)} L/min · RP ${state.metrics.rightDeviceFlowLMin.toFixed(1)} L/min · ${state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min effective systemic flow.`
-                : `Device: ${state.metrics.deviceFlowLMin.toFixed(1)} L/min device flow · ${state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min effective flow.`,
+                : state.device.kind === 'iabp'
+                  ? `IABP: no separate pump-flow stream · ${state.metrics.nativeFlowLMin.toFixed(1)} L/min modeled concurrent native flow.`
+                  : `Device: ${state.metrics.deviceFlowLMin.toFixed(1)} L/min estimated device flow · ${state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min effective flow.`,
       }
     }
     case 'SELECT_PREDICTION':

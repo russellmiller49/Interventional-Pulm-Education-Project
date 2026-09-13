@@ -3,7 +3,8 @@ import {
   type ClinicalLearningItem,
 } from '@/features/learning-module/activity'
 
-import type { McsAction, McsDeviceKind } from '../engine/types'
+import type { McsObservedSignal } from './sectionLearningContracts'
+import type { McsAction, McsDeviceKind, McsSimulationState } from '../engine/types'
 
 export interface McsLessonTransferDefinition {
   readonly lessonId: string
@@ -13,6 +14,8 @@ export interface McsLessonTransferDefinition {
   readonly setupActions: readonly McsAction[]
   readonly requiredActionIds: readonly string[]
   readonly requiredActionLabel: string
+  readonly observation?: McsObservedSignal
+  readonly isWorkSatisfied?: (state: McsSimulationState) => boolean
   readonly item: ClinicalLearningItem
 }
 
@@ -111,6 +114,14 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       },
       { type: 'SET_PATIENT_CONTROL', control: 'preloadPercent', value: 125 },
     ],
+    observation: {
+      key: 'pcwpMmHg',
+      label: 'Modeled wedge pressure',
+      unit: 'mm Hg',
+      digits: 0,
+      level: 'pressure',
+    },
+    isWorkSatisfied: (state) => state.device.kind === 'impella' && state.device.left.enabled,
     requiredActionIds: ['device:select:impella'],
     requiredActionLabel:
       'Select the Impella mechanism in the transfer workspace and compare LV filling, native flow, and pump flow.',
@@ -136,9 +147,9 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
         {
           id: 'sum-device-native',
           label:
-            'Add the displayed pump flow directly to the native flow and use the sum as the cardiac output',
+            'Add native output measured before support to the current pump estimate and label that sum measured cardiac output',
           rationale:
-            'Displayed device flow and native flow are not universally additive; recirculation and serial flow pathways matter.',
+            'Pre-support native output differs from concurrent native forward output. Parallel net components combine in this model, but device estimates and modeled components do not constitute a measured bedside cardiac output.',
           plausibility: 'incorrect-mechanism',
         },
         {
@@ -154,7 +165,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       explanation:
         'The transfer asks whether a different mechanism addresses the dominant LV loading problem, not which displayed number is largest.',
       evidenceIds: bedsideEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
   },
   {
@@ -168,6 +179,15 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
     ],
     setupDevice: 'iabp',
     setupActions: [{ type: 'SET_RHYTHM', rhythm: 'atrial-fibrillation' }],
+    observation: {
+      key: 'timingQualityPercent',
+      label: 'Modeled timing synchrony',
+      unit: '%',
+      digits: 0,
+      level: 'device-display',
+    },
+    isWorkSatisfied: (state) =>
+      state.device.kind === 'iabp' && state.device.running && state.device.triggerSource !== 'ecg',
     requiredActionIds: ['iabp:set-trigger'],
     requiredActionLabel:
       'Change the simulated trigger source and compare assisted-beat timing against the arterial waveform.',
