@@ -22,6 +22,9 @@ const PUBLIC_EXACT_PATHS = new Set([
 ])
 
 const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
+  '/admin/therapeutic-bronchoscopy',
+  '/learn/anatomy/airway',
+  '/intro-bronchoscopy/airway-anatomy',
   '/learn/anatomy/branch-tracing',
   '/baxter-crrt',
   '/cardiohelp-ecmo',
@@ -51,6 +54,9 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
 // Public-unlisted modules whose subroutes (e.g. /cardiohelp-ecmo/learn) share
 // the parent's access and noindex treatment.
 const PUBLIC_UNLISTED_PATH_PREFIXES = [
+  '/learn/anatomy/airway',
+  '/airway-anatomy',
+  '/intro-bronchoscopy/airway-anatomy',
   '/branch-tracing',
   '/learn/anatomy/branch-tracing',
   '/baxter-crrt',
@@ -117,17 +123,6 @@ export function isCtAlignmentSandboxPath(pathname: string) {
   )
 }
 
-export function isDevOnlyAirwayAnatomyPath(pathname: string) {
-  const normalizedPathname = unlocalizedPathname(pathname)
-
-  return (
-    normalizedPathname === '/learn/anatomy/airway' ||
-    normalizedPathname.startsWith('/learn/anatomy/airway/') ||
-    normalizedPathname === '/airway-anatomy' ||
-    normalizedPathname.startsWith('/airway-anatomy/')
-  )
-}
-
 export function isAdminOnlyAirwayStentMechanicsAssetPath(pathname: string) {
   const normalizedPathname = unlocalizedPathname(pathname)
 
@@ -188,6 +183,10 @@ export function isPublicPath(pathname: string) {
   // generic static-file rule below must never turn a future reviewed JSON/TXT export into a public
   // URL before the entitlement check runs.
   if (
+    normalizedPathname === '/development-beta' ||
+    normalizedPathname.startsWith('/development-beta/') ||
+    normalizedPathname === '/admin/module-feedback' ||
+    normalizedPathname.startsWith('/admin/module-feedback/') ||
     normalizedPathname === '/literature' ||
     normalizedPathname.startsWith('/literature/') ||
     normalizedPathname === '/admin/literature' ||
@@ -197,7 +196,6 @@ export function isPublicPath(pathname: string) {
   }
 
   if (
-    isDevOnlyAirwayAnatomyPath(normalizedPathname) ||
     isAdminOnlyAirwayStentMechanicsAssetPath(normalizedPathname) ||
     isAuthenticatedAirwayStentMechanicsAssetPath(normalizedPathname) ||
     isAdminOnlyEbusTrainingAssetPath(normalizedPathname)
@@ -282,12 +280,13 @@ export function getRequiredEntitlement(
   const normalizedPathname = unlocalizedPathname(pathname)
 
   if (
-    isDevOnlyAirwayAnatomyPath(normalizedPathname) ||
     isAdminOnlyAirwayStentMechanicsAssetPath(normalizedPathname) ||
     isAdminOnlyEbusTrainingAssetPath(normalizedPathname)
   ) {
     return 'site_admin'
   }
+
+  if (normalizedPathname === '/admin/therapeutic-bronchoscopy') return null
 
   if (normalizedPathname === '/admin' || normalizedPathname.startsWith('/admin/')) {
     return 'site_admin'

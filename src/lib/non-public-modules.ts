@@ -96,10 +96,28 @@ export const nonPublicModules: NonPublicModule[] = [
   },
   {
     path: '/intro-bronchoscopy/airway-anatomy',
-    title: 'Airway Anatomy — Synchronized Bronchoscopy',
+    title: 'Live Bronchoscopy Anatomy',
     group: 'Bronchoscopy',
     summary:
       'Airway anatomy teaching with a synchronized dendrogram, endoscopic survey, quiz, and clickable 3D tree.',
+  },
+  {
+    path: '/admin/therapeutic-bronchoscopy',
+    title: 'Therapeutic Bronchoscopy Simulator',
+    group: 'Bronchoscopy',
+    summary: 'Interactive therapeutic bronchoscopy simulator.',
+  },
+  {
+    path: '/learn/anatomy/airway',
+    title: 'Airway Anatomy — Synchronized Bronchoscopy',
+    group: 'Bronchoscopy',
+    summary: 'Virtual bronchoscopy with synchronized 3D airway and CT views.',
+  },
+  {
+    path: '/learn/anatomy/branch-tracing',
+    title: 'Bronchial Branch Tracing',
+    group: 'Bronchoscopy',
+    summary: 'Trace bronchial branches through the airway tree.',
   },
   {
     path: '/peripheral-imaging',

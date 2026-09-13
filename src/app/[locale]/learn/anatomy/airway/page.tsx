@@ -7,6 +7,7 @@ import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const handoffMetadata: Metadata = {
   title: 'Airway Anatomy Synchronized Bronchoscopy',
+  robots: { index: false, follow: false, noarchive: true },
   description:
     'Drive a virtual bronchoscope through a centerline airway graph while synchronized 3D and CT views show the same scope-tip position.',
 }

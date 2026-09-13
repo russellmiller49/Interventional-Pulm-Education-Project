@@ -69,6 +69,11 @@ const draftModulePathPrefixes = [
 ] as const
 
 const unlistedModulePathPrefixes = [
+  '/development-beta',
+  '/admin/module-feedback',
+  '/admin/therapeutic-bronchoscopy',
+  '/learn/anatomy/airway',
+  '/intro-bronchoscopy/airway-anatomy',
   '/learn/anatomy/branch-tracing',
   ...baxterCrrtUnlistedPathPrefixes,
   ...icuHemodynamicsUnlistedPathPrefixes,

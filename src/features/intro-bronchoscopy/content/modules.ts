@@ -262,8 +262,8 @@ export const introBronchoscopyModules = [
   {
     id: 'airway-anatomy',
     slug: 'airway-anatomy',
-    title: 'Airway Anatomy & Systematic Inspection',
-    shortTitle: 'Airway Anatomy',
+    title: 'Live Bronchoscopy Anatomy',
+    shortTitle: 'Live Bronchoscopy Anatomy',
     summary:
       'Use the existing bronchoscopy atlas, CT correlations, and 3D airway model to build a reproducible airway survey.',
     estimatedMinutes: 50,

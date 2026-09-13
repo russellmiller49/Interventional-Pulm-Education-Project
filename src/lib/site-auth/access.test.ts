@@ -6,7 +6,6 @@ import {
   canUseLegacyEbusApproval,
   getRequiredEntitlement,
   isCtAlignmentSandboxPath,
-  isDevOnlyAirwayAnatomyPath,
   isLegacyEbusGatewayPath,
   isPccmIntroCourseAdminDashboardPath,
   isPccmIntroCourseSharedModulePath,
@@ -306,21 +305,33 @@ describe('main site auth access helpers', () => {
     expect(isCtAlignmentSandboxPath('/learn/anatomy')).toBe(false)
   })
 
-  it('recognizes dev-only airway anatomy routes and assets', () => {
-    expect(isDevOnlyAirwayAnatomyPath('/learn/anatomy/airway')).toBe(true)
-    expect(isDevOnlyAirwayAnatomyPath('/learn/anatomy/airway/segmental')).toBe(true)
-    expect(isDevOnlyAirwayAnatomyPath('/airway-anatomy/case-001/case_manifest.json')).toBe(true)
-    expect(isDevOnlyAirwayAnatomyPath('/learn/anatomy')).toBe(false)
-    expect(isDevOnlyAirwayAnatomyPath('/bronch-navigation-trainer')).toBe(false)
-  })
-
-  it('requires site admin for synchronized airway anatomy routes and assets', () => {
-    expect(getRequiredEntitlement('/learn/anatomy/airway', params())).toBe('site_admin')
-    expect(getRequiredEntitlement('/zh-CN/learn/anatomy/airway', params())).toBe('site_admin')
-    expect(getRequiredEntitlement('/airway-anatomy/case-001/case_manifest.json', params())).toBe(
+  it('opens the requested development modules while preserving other admin gates', () => {
+    for (const path of [
+      '/learn/anatomy/airway',
+      '/zh-CN/learn/anatomy/airway',
+      '/airway-anatomy/case-001/case_manifest.json',
+      '/admin/therapeutic-bronchoscopy',
+      '/intro-bronchoscopy/airway-anatomy',
+    ]) {
+      expect(getRequiredEntitlement(path, params())).toBeNull()
+      expect(isPublicPath(path)).toBe(true)
+      expect(isPublicUnlistedPath(path)).toBe(true)
+    }
+    expect(isPublicPath('/admin/therapeutic-bronchoscopy/settings')).toBe(false)
+    expect(getRequiredEntitlement('/admin/therapeutic-bronchoscopy/settings', params())).toBe(
       'site_admin',
     )
-    expect(isPublicPath('/airway-anatomy/case-001/case_manifest.json')).toBe(false)
+    for (const path of [
+      '/development-beta',
+      '/development-beta/devices',
+      '/development-beta/export.json',
+      '/admin/module-feedback',
+      '/admin/module-feedback/export.json',
+    ]) {
+      expect(isPublicPath(path)).toBe(false)
+    }
+    expect(getRequiredEntitlement('/development-beta', params())).toBeNull()
+    expect(getRequiredEntitlement('/admin/module-feedback', params())).toBe('site_admin')
   })
 
   it('allows signed-in learners to open the released thermal and peripheral ablation modules', () => {

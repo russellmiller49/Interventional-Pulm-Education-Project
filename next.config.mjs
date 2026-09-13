@@ -80,6 +80,35 @@ const embeddedAppSecurityHeaders = securityHeaders.map((header) => {
   return header
 })
 
+// Only the modules offered by the signed-in beta hub may be framed by this site.
+// Keep the default DENY policy on unrelated pages and all feedback/admin endpoints.
+const betaFramePaths = [
+  '/admin/therapeutic-bronchoscopy',
+  '/learn/anatomy/airway/:path*',
+  '/learn/anatomy/branch-tracing/:path*',
+  '/branch-tracing/:path*',
+  '/intro-bronchoscopy/airway-anatomy/:path*',
+  '/peripheral-imaging/:path*',
+  '/bronchoscopy-foundations/:path*',
+  '/devices/:path*',
+  '/clinical-roles/:path*',
+  '/procedures/:path*',
+  '/cardiohelp-ecmo/:path*',
+  '/baxter-crrt/:path*',
+  '/icu-hemodynamics/:path*',
+  '/mechanical-ventilation/:path*',
+  '/mechanical-circulatory-support/:path*',
+]
+const betaFrameHeaders = ['', '/:locale(en|es|zh-CN)'].flatMap((prefix) =>
+  betaFramePaths.map((source) => ({
+    source: `${prefix}${source}`,
+    headers: [
+      { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+      { key: 'Content-Security-Policy', value: `${csp}; frame-ancestors 'self'` },
+    ],
+  })),
+)
+
 const immutableAssetHeaders = [
   {
     key: 'Cache-Control',
@@ -377,6 +406,7 @@ const nextConfig = {
           },
         ],
       },
+      ...betaFrameHeaders,
     ]
   },
   async rewrites() {
