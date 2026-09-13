@@ -1317,6 +1317,25 @@
 .localInstructions h3 {
   font-size: 1rem;
 }
+.orientationGuide .viewingDirection {
+  padding: 0.65rem;
+  border-left: 3px solid #9ed5d5;
+  background: #16303a;
+}
+.orientationCheck {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.7rem;
+  border: 1px solid #789da9;
+  border-radius: 0.4rem;
+}
+.orientationCheck legend {
+  font-weight: 600;
+}
+.orientationCheck button {
+  text-align: left;
+}
 .warmupPurpose {
   margin-bottom: 1rem;
 }

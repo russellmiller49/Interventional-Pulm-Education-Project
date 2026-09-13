@@ -21,8 +21,17 @@ beforeEach(() => {
 })
 const ready = () => document.querySelectorAll('image').forEach((image) => fireEvent.load(image))
 async function begin() {
+  const focus = await screen.findByRole('button', { name: 'Focus on this airway' })
+  ready()
+  fireEvent.click(focus)
   fireEvent.click(await screen.findByRole('button', { name: /^(Your turn|Start tracing)$/ }))
   ready()
+}
+function learnReflection() {
+  ready()
+  fireEvent.click(screen.getByRole('button', { name: 'Reflect left ↔ right' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Only the CT display orientation' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Continue in tracing view' }))
 }
 function markBoth() {
   for (const name of [/A · RMSB/, /B · LMSB/]) {
@@ -83,6 +92,8 @@ it('gates the matched parent view behind a viewpoint response and gives the seco
   markBoth()
   expect(document.querySelectorAll('[aria-label^="Model direction schematic"]')).toHaveLength(0)
   fireEvent.click(screen.getByRole('button', { name: 'Relate the parent view' }))
+  expect(document.querySelectorAll('[aria-label^="Model direction schematic"]')).toHaveLength(0)
+  learnReflection()
   expect(document.querySelectorAll('[aria-label^="Model direction schematic"]')).toHaveLength(1)
   expect(screen.queryByRole('button', { name: 'Show parent airway view' })).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Opening 2' }))
@@ -91,21 +102,54 @@ it('gates the matched parent view behind a viewpoint response and gives the seco
   expect(document.querySelector('[data-teaching-overlay]')).toBeNull()
   expect(screen.getByRole('button', { name: 'Check my tracing' })).toBeDisabled()
 })
-it('preserves native image/overlay transforms and never renders provisional contours', async () => {
-  render(<BranchTracingLesson requestedId="orientation" />)
-  await screen.findByRole('button', { name: 'Your turn' })
+it('teaches the viewing direction, transforms the same image, checks understanding and resumes safely', async () => {
+  const view = render(<BranchTracingLesson requestedId="orientation" />)
+  const focus = await screen.findByRole('button', { name: 'Focus on this airway' })
   ready()
   const exercise = localExercise(LESSONS.find((l) => l.id === 'orientation')!.exercises![0])
   expect(exercise.review.status).toBe('provisional')
-  fireEvent.click(screen.getByRole('button', { name: /Rotate 90° left/ }))
-  expect(document.querySelector('image')!.parentElement!.getAttribute('transform')).toContain(
-    'rotate(-90)',
+  expect(screen.getByRole('heading', { name: 'Begin with standard axial CT' })).toBeVisible()
+  expect(document.querySelector('[data-preset]')).toHaveAttribute('data-preset', 'standard')
+  fireEvent.click(focus)
+  expect(
+    screen.getByRole('heading', { name: 'CT and bronchoscopy look in different directions' }),
+  ).toBeVisible()
+  const before = document.querySelector('image')!
+  const slice = screen.getByRole('slider', { name: 'CT slice' }).getAttribute('value')
+  const transform = before.parentElement!.getAttribute('transform')!
+  fireEvent.click(screen.getByRole('button', { name: 'Reflect left ↔ right' }))
+  expect(document.querySelector('image')).toBe(before)
+  expect(document.querySelector('image')!.parentElement!.getAttribute('transform')).toBe(
+    transform.replace('scale(1 1)', 'scale(-1 1)'),
   )
+  expect(screen.getByRole('slider', { name: 'CT slice' })).toHaveValue(slice)
+  expect(screen.getByRole('button', { name: 'Continue in tracing view' })).toBeDisabled()
+  fireEvent.click(screen.getByRole('button', { name: 'The CT became a bronchoscopic image' }))
+  expect(screen.getByText(/This remains a CT cross-section/)).toBeVisible()
+  expect(screen.getByRole('button', { name: 'Continue in tracing view' })).toBeDisabled()
+  view.unmount()
+  render(<BranchTracingLesson requestedId="orientation" />)
+  await screen.findByText(/This remains a CT cross-section/)
+  ready()
+  fireEvent.click(screen.getByRole('button', { name: 'Standard axial' }))
+  expect(document.querySelector('[data-preset]')).toHaveAttribute('data-preset', 'standard')
+  fireEvent.click(screen.getByRole('button', { name: 'Show tracing view' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Only the CT display orientation' }))
+  expect(screen.getByText(/Correct. The airway is unchanged/)).toBeVisible()
+  expect(screen.queryByRole('button', { name: 'Your turn' })).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Continue in tracing view' }))
+  expect(screen.getByRole('button', { name: 'Your turn' })).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: 'Reset to standard' }))
+  expect(document.querySelector('[data-preset]')).toHaveAttribute('data-preset', 'standard')
+  expect(
+    readProgress().activities.find((a) => a.activityId.endsWith('.orientation.mirror')),
+  ).toMatchObject({ status: 'completed', competencyEvidenceIds: [] })
+  expect(readProgress().activities.every((a) => a.bestScore === undefined)).toBe(true)
   expect(document.querySelector('[data-teaching-overlay] polygon')).toBeNull()
 })
 it('has no automated accessibility violations in the CT demonstration and attempt', async () => {
   const { container } = render(<BranchTracingLesson requestedId="follow-one-airway" />)
-  await screen.findByRole('button', { name: 'Start tracing' })
+  await screen.findByRole('button', { name: 'Focus on this airway' })
   ready()
   expect(await axe(container)).toHaveNoViolations()
   await begin()

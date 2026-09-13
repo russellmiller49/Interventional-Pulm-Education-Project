@@ -11,6 +11,7 @@ import {
 } from '../engine/local-session'
 import { draftSignature, readCtDraft, writeCtDraft } from '../engine/ct-draft'
 import { parentMap } from '../geometry/parent-map'
+import { orientationFor, STANDARD_ORIENTATION, orientationLabels } from '../geometry/orientation'
 
 const exercises = LESSONS.find((l) => l.id === 'continuity')!.exercises!.map(localExercise)
 const reduce = (
@@ -18,6 +19,7 @@ const reduce = (
   action: Parameters<typeof localSessionReducer>[2],
 ) => localSessionReducer(exercises, s, action)
 function answer(s = emptyLocalSession(exercises)) {
+  s = reduce(s, { type: 'focus-airway' })
   s = reduce(s, { type: 'begin' })
   for (const [i, point] of exercises[s.exercise].answerPoints.entries()) {
     s = reduce(s, { type: 'slot', index: i })
@@ -46,6 +48,8 @@ it('uses existing native CT intervals and leaves source routes unchanged', () =>
 it('gates phase transitions, permits off-center lumen marks without grading, and preserves first attempts through retries and restart', () => {
   let s = emptyLocalSession(exercises)
   expect(reduce(s, { type: 'check' })).toBe(s)
+  expect(reduce(s, { type: 'begin' })).toBe(s)
+  s = reduce(s, { type: 'focus-airway' })
   s = reduce(s, { type: 'begin' })
   const before = s
   s = reduce(s, { type: 'hint', level: 2 })
@@ -70,6 +74,10 @@ it('gates phase transitions, permits off-center lumen marks without grading, and
   expect(reduce(s, { type: 'next' })).toBe(s)
   s = reduce(s, { type: 'parent-view' })
   expect(reduce(s, { type: 'next' })).toBe(s)
+  expect(reduce(s, { type: 'view-answer', value: 'unresolved' })).toBe(s)
+  s = reduce(s, { type: 'demonstrate-orientation' })
+  s = reduce(s, { type: 'orientation-response', value: 'display' })
+  s = reduce(s, { type: 'finish-orientation' })
   s = reduce(s, { type: 'view-answer', value: 'unresolved' })
   s = reduce(s, { type: 'next' })
   expect(s.exercise).toBe(1)
@@ -77,6 +85,91 @@ it('gates phase transitions, permits off-center lumen marks without grading, and
   expect(s.hints).toBe(0)
   s = reduce(s, { type: 'restart' })
   expect(JSON.stringify(s.history[exercises[0].id][0])).toBe(first)
+})
+it('keeps both warm-up intervals and restart standard, even after learning a tracing preset', () => {
+  const warmup = LESSONS[0].exercises!.map(localExercise)
+  const step = (s: ReturnType<typeof emptyLocalSession>, a: Parameters<typeof reduce>[1]) =>
+    localSessionReducer(warmup, s, a)
+  let s = emptyLocalSession(warmup, {}, ['mirror'])
+  expect(s.orientation).toEqual(STANDARD_ORIENTATION)
+  expect(s.views[warmup[0].id].full).toBe(true)
+  s = step(s, { type: 'focus-airway' })
+  s = step(s, { type: 'begin' })
+  expect(step(s, { type: 'orientation', value: orientationFor('mirror') })).toBe(s)
+  s = step(s, { type: 'mark', mark: { slice: warmup[0].answerPoints[0].slice, pixel: [200, 200] } })
+  s = step(s, { type: 'check' })
+  const history = s.history
+  s = step(s, { type: 'next' })
+  expect(s.orientation).toEqual(STANDARD_ORIENTATION)
+  expect(s.orientationGuide).toBeNull()
+  s = step(s, { type: 'restart' })
+  expect(s.orientation).toEqual(STANDARD_ORIENTATION)
+  expect(s.orientationGuide).toBe('context')
+  expect(s.history).toEqual(history)
+})
+it.each(['mirror', 'rul', 'upper-division'] as const)(
+  'teaches %s before tracing, gates comprehension, and preserves the first response',
+  (preset) => {
+    const exercise = LESSONS.flatMap((l) => l.exercises ?? [])
+      .map(localExercise)
+      .find((ex) => ex.trace.preset === preset && ex.spec.kind === 'pattern')!
+    const step = (s: ReturnType<typeof emptyLocalSession>, a: Parameters<typeof reduce>[1]) =>
+      localSessionReducer([exercise], s, a)
+    let s = emptyLocalSession([exercise])
+    expect(s.orientation).toEqual(STANDARD_ORIENTATION)
+    expect(s.orientationGuide).toBe('context')
+    s = step(s, { type: 'focus-airway' })
+    expect(s.orientationGuide).toBe('direction')
+    expect(step(s, { type: 'begin' })).toBe(s)
+    expect(step(s, { type: 'orientation', value: orientationFor(preset) })).toBe(s)
+    s = step(s, { type: 'demonstrate-orientation' })
+    expect(s.orientation).toEqual(orientationFor(preset))
+    expect(orientationLabels(s.orientation)).toEqual(
+      preset === 'mirror'
+        ? { top: 'A', right: 'R', bottom: 'P', left: 'L' }
+        : preset === 'rul'
+          ? { top: 'L', right: 'P', bottom: 'R', left: 'A' }
+          : { top: 'R', right: 'A', bottom: 'L', left: 'P' },
+    )
+    s = step(s, { type: 'orientation-response', value: 'anatomy' })
+    expect(step(s, { type: 'finish-orientation' })).toBe(s)
+    expect(parseLocalSession(s, [exercise])).toEqual(s)
+    s = step(s, { type: 'orientation', value: STANDARD_ORIENTATION })
+    expect(s.orientation).toEqual(STANDARD_ORIENTATION)
+    s = step(s, { type: 'orientation-response', value: 'display' })
+    expect(s.orientationGuide).toBe('compare')
+    s = step(s, { type: 'finish-orientation' })
+    expect(s.orientationGuide).toBeNull()
+    expect(s.orientation).toEqual(orientationFor(preset))
+    expect(s.orientationResponses[preset]).toEqual(['anatomy', 'display'])
+    expect(emptyLocalSession([exercise], {}, s.taughtPresets).orientationGuide).toBeNull()
+    expect(step(s, { type: 'restart' }).orientationResponses).toEqual(s.orientationResponses)
+  },
+)
+it('migrates pre-onboarding drafts without losing marks, branch responses or historical orientations', () => {
+  const current = reduce(answer(), { type: 'check' })
+  const legacy: Record<string, unknown> = { ...current, orientation: orientationFor('mirror') }
+  legacy.history = Object.fromEntries(
+    Object.entries(current.history).map(([id, attempts]) => [
+      id,
+      attempts.map((attempt) => ({ ...attempt, orientation: orientationFor('mirror') })),
+    ]),
+  )
+  delete legacy.orientationGuide
+  delete legacy.taughtPresets
+  delete legacy.orientationResponses
+  const restored = parseLocalSession(legacy, exercises)!
+  expect(restored.phase).toBe('compare')
+  expect(restored.orientationGuide).toBe('context')
+  expect(restored.orientation).toEqual(STANDARD_ORIENTATION)
+  expect(restored.marks).toEqual(current.marks)
+  expect(restored.history).toEqual(legacy.history)
+  expect(restored.branch).toEqual(current.branch)
+  expect(restored.views[exercises[0].id].full).toBe(true)
+  expect(parseLocalSession(restored, exercises)).toEqual(restored)
+  expect(
+    parseLocalSession({ ...restored, orientation: orientationFor('rul') }, exercises),
+  ).toBeNull()
 })
 it('restores only compatible, structurally valid drafts and reports damaged or changed versions', () => {
   const storage = window.localStorage
