@@ -1,4 +1,4 @@
-import type { EbusControl, EbusObservation } from '@/lib/ebus-guided-bridge'
+import type { EbusControl, EbusObservation, EbusLinkedLesson } from '@/lib/ebus-guided-bridge'
 export type Topic = 'Prepare' | 'Optimize' | 'Locate' | 'Plan' | 'Sample' | 'Complete'
 export interface Choice {
   id: string
@@ -25,6 +25,7 @@ export interface Lab {
   initialRoll?: number
   initialDepth?: number
   initialGain?: number
+  linkedLesson?: EbusLinkedLesson
 }
 export interface Sequence {
   prompt: string
@@ -70,6 +71,26 @@ export interface EbusCase {
 }
 export function labGoalMet(lab: Lab, state: EbusObservation): boolean {
   if (!state.ready || !state.frameReady || state.actionCount < 1) return false
+  if (lab.linkedLesson) {
+    const linked = state.linked
+    if (!linked?.assetsReady || !linked.frameId) return false
+    if (lab.linkedLesson === 'scope-orientation' && linked.selectedStructure !== 'transducer_face')
+      return false
+    if (
+      lab.linkedLesson === 'ct-map' &&
+      (linked.selectedStructure !== 'carina' || !linked.modelSectionViewed)
+    )
+      return false
+    if (
+      lab.linkedLesson === 'station-seven' &&
+      (linked.selectedStructure !== 'carina' ||
+        !linked.scannedApproaches.includes('rms') ||
+        !linked.scannedApproaches.includes('lms'))
+    )
+      return false
+    if (lab.linkedLesson === 'right-paratracheal' && linked.selectedStructure !== 'azygous')
+      return false
+  }
   switch (lab.goal) {
     case 'scan':
       return state.targetVisible && state.contactQuality >= 0.45

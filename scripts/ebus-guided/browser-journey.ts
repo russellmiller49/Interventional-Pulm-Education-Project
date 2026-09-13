@@ -40,6 +40,26 @@ async function main() {
           )
           await expect(control).toBeEnabled({ timeout: 60000 })
           await control.fill(lesson.lab.goal === 'coupling' ? '10' : '0')
+          if (lesson.lab.linkedLesson && lesson.id !== 'acoustic-contact') {
+            const selector = frame.getByLabel('Inspect a structure')
+            await expect(selector).toBeVisible({ timeout: 30000 })
+            await selector.selectOption(
+              lesson.id === 'scope-orientation'
+                ? 'transducer_face'
+                : lesson.id === 'right-paratracheal'
+                  ? 'azygous'
+                  : 'carina',
+            )
+            if (lesson.id === 'ct-map')
+              await frame.getByRole('button', { name: 'Model section', exact: true }).click()
+            if (lesson.id === 'station-seven') {
+              await expect(
+                frame.getByRole('button', { name: 'Right main bronchus · scanned', exact: true }),
+              ).toBeVisible({ timeout: 30000 })
+              await frame.getByRole('button', { name: 'Left main bronchus', exact: true }).click()
+              await control.fill('0')
+            }
+          }
         } else {
           if (lesson.lab.goal === 'depth') {
             const input = frame.getByLabel('Image depth', { exact: true })

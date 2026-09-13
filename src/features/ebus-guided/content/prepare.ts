@@ -236,12 +236,13 @@ export const prepareLessons: Lesson[] = [
     ),
     lab: {
       kind: 'simulator',
+      linkedLesson: 'scope-orientation',
       goal: 'scan',
       presetKey: 'station_7_node_a::rms',
       controls: ['roll'],
       initialRoll: 55,
       instruction:
-        'Use Scope rotation to sweep through the rounded target. Compare Ultrasound with Anatomy and Bronchoscopy, then return to Ultrasound. Stop with the target visible in the sector.',
+        'In Scope model, use Inspect a structure to select the active transducer surface. Observe its relationship to the gold optical-direction arrow and cyan sector. Use Scope rotation to bring the rounded target into the ultrasound sector and stop with it visible. Orbit changes only your viewpoint.',
     },
     observation: q(
       'orientation-observe',

@@ -15,7 +15,7 @@ export const locateLessons: Lesson[] = [
     paragraphs: [
       'Read CT in a consistent orientation, then use adjacent planes to establish the craniocaudal level and the relationship to the airway and vessels. An axial slice alone can obscure a station boundary.',
       'The IASLC map names compartments. A node’s station is determined by where it lies, not by its size, PET uptake, or sonographic appearance. Record the station before collecting and labeling a specimen.',
-      'Compare CT, Bronchoscopy, and Ultrasound in the reference panel. Use the CT plane controls to find how a structure’s level relates to the main carina and main bronchi.',
+      'Review the clinical CT reference before the lab. In the linked workbench, Model section samples the same label volume as the simulated ultrasound; it is not CT and is not registered to the separate clinical reference. Use it to relate the main carina to the scope plane.',
     ],
     checklist: [
       'Confirm CT orientation and level.',
@@ -44,15 +44,16 @@ export const locateLessons: Lesson[] = [
         'CT guides the map, but live procedural anatomy still requires confirmation.',
       ],
     ),
-    matching: matching(
-      'Match each source of information with the question it answers best.',
-      [
-        ['Multiplanar CT', 'Where is the target relative to station boundaries?'],
-        ['Bronchoscopic view', 'Which airway landmark is the tip beside?'],
-        ['Live ultrasound', 'What tissue and vascular structures lie in this scan plane?'],
-      ],
-      'These views complement each other. None makes the other checks unnecessary.',
-    ),
+    lab: {
+      kind: 'simulator',
+      linkedLesson: 'ct-map',
+      goal: 'scan',
+      presetKey: 'station_7_node_a::rms',
+      controls: ['roll'],
+      initialRoll: 55,
+      instruction:
+        'In Anatomy model, select the carina with Inspect a structure. Open Model section and compare its axial and coronal level with the 3D marker. The cyan line is the current scan-plane intersection. Use Scope rotation to display the target in ultrasound. The separate clinical CT remains a reference, not a registered view of this model.',
+    },
     observation: q(
       'map-observe',
       'Which finding should determine a node’s station name?',
@@ -100,7 +101,7 @@ export const locateLessons: Lesson[] = [
     paragraphs: [
       'Station 7 begins at the carina and occupies the subcarinal space. Its inferior limits differ by side: the upper border of the left lower-lobe bronchus on the left and the lower border of the bronchus intermedius on the right. Use multiplanar anatomy when a caudal target is near a boundary.',
       'A subcarinal target can be viewed from either main bronchus. The airway approach does not create a “right station 7” or “left station 7.” For lung-cancer nodal classification, station 7 is an N2 station for either lung.',
-      'During the lab, correlate the subcarinal node with Anatomy and Bronchoscopy. Then sweep the ultrasound plane through the target from the assisted right-main-bronchus position.',
+      'During the lab, locate the main carina and sweep through the same modeled subcarinal node from both main bronchi. The approach controls load the two calibrated starts; each approach requires your own rotation sweep.',
     ],
     checklist: [
       'Find the main carina.',
@@ -128,12 +129,13 @@ export const locateLessons: Lesson[] = [
     ),
     lab: {
       kind: 'simulator',
+      linkedLesson: 'station-seven',
       goal: 'scan',
       presetKey: 'station_7_node_a::rms',
       controls: ['roll'],
       initialRoll: 55,
       instruction:
-        'Review the subcarinal relationship in Anatomy and Bronchoscopy. In Ultrasound, use Scope rotation to bring the rounded target into the sector and keep its borders visible.',
+        'Select the carina in Anatomy model. From Right main bronchus, use Scope rotation to bring the target into ultrasound. Then choose Left main bronchus and repeat the sweep. Both approaches must be scanned. Compare the node’s fixed subcarinal location with the changing plane.',
     },
     observation: q(
       'seven-observe',
@@ -215,12 +217,13 @@ export const locateLessons: Lesson[] = [
     ),
     lab: {
       kind: 'simulator',
+      linkedLesson: 'right-paratracheal',
       goal: 'scan',
       presetKey: 'station_4r_node_a::default',
       controls: ['roll'],
       initialRoll: 55,
       instruction:
-        'At the assisted right paratracheal start, compare Anatomy with Ultrasound. Sweep Scope rotation until the target appears. Identify nearby vascular structures in the anatomical view before returning to the ultrasound sector.',
+        'In Anatomy model, select the azygos vein using Inspect a structure. Locate its lower arch margin and compare the example tissue volumes above and below that level. Use Scope rotation to bring the paratracheal target into ultrasound. Relate 4R versus 10R to the venous boundary; the displayed volumes are node examples, not full station compartments.',
     },
     observation: q(
       'right-observe',

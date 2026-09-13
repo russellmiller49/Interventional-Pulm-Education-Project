@@ -37,6 +37,14 @@ jest.mock('../components/Workbench', () => ({
             contactQuality: 1,
             actionCount: 1,
             lastAction: 'flexion',
+            linked: {
+              assetsReady: true,
+              selectedStructure: '',
+              modelSectionViewed: false,
+              approach: 'rms',
+              scannedApproaches: [],
+              frameId: 'test-frame',
+            },
           })
         }
       >
@@ -52,6 +60,14 @@ jest.mock('../components/Workbench', () => ({
             contactQuality: 1,
             actionCount: 1,
             lastAction: 'flexion',
+            linked: {
+              assetsReady: true,
+              selectedStructure: '',
+              modelSectionViewed: false,
+              approach: 'rms',
+              scannedApproaches: [],
+              frameId: 'test-frame',
+            },
           })
         }
       >

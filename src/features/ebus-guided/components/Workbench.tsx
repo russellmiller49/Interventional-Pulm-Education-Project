@@ -14,12 +14,14 @@ export function Workbench({
   reveal,
   sessionId,
   onObservation,
+  demonstration = false,
 }: {
   lab: Lab
   locked: boolean
   reveal: boolean
   sessionId: string
   onObservation: (v: EbusObservation) => void
+  demonstration?: boolean
 }) {
   const frame = useRef<HTMLIFrameElement>(null)
   const callback = useRef(onObservation)
@@ -40,11 +42,13 @@ export function Workbench({
       reveal,
       view: 'sector',
       freeDrive: lab.freeDrive,
+      linkedLesson: lab.linkedLesson,
+      demonstration,
       initialRoll: lab.initialRoll ?? 35,
       initialDepth: lab.initialDepth ?? 40,
       initialGain: lab.initialGain ?? (lab.kind === 'simulator' ? 0 : 43),
     }),
-    [sessionId, lab, locked, reveal],
+    [sessionId, lab, locked, reveal, demonstration],
   )
   const latest = useRef(config)
   useEffect(() => {
@@ -94,7 +98,7 @@ export function Workbench({
           setError('')
           window.clearTimeout(timeout)
         }
-        callback.current(e.data.observation)
+        if (!latest.current.demonstration) callback.current(e.data.observation)
       }
       if (e.data.type === 'error' && e.data.sessionId === latest.current.sessionId) {
         setError(e.data.message)

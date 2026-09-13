@@ -51,13 +51,14 @@ export const coupling: Lesson = {
   ),
   lab: {
     kind: 'simulator',
+    linkedLesson: 'acoustic-contact',
     goal: 'coupling',
     presetKey: 'station_7_node_a::rms',
     controls: ['flexion'],
     freeDrive: true,
     initialRoll: 0,
     instruction:
-      'Start with the transducer in the airway lumen. Gently increase Tip flexion and compare the ultrasound image with the initial poorly coupled sector. Use the Bronchoscopy view to inspect the tip relationship to the airway wall. Return to Ultrasound and stop when tissue echoes appear.',
+      'Start with the transducer in the airway lumen. Compare the Scope model and initial poorly coupled ultrasound. Increase Tip flexion gently; use Anatomy model or Bronchoscopy to inspect the wall relationship. Stop when tissue echoes appear. The balloon envelope is illustrative; the existing contact model determines the ultrasound response.',
   },
   observation: question(
     'contact-observe',

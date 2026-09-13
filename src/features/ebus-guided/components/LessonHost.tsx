@@ -349,19 +349,28 @@ function LessonSession({
             </div>
           }
           simulator={
-            lesson.lab && index === 3 ? (
+            lesson.lab && (index === 3 || (lesson.lab.linkedLesson && index >= 4 && index <= 5)) ? (
               <div>
                 <div hidden={review !== null}>
                   <Workbench
                     lab={lesson.lab}
-                    locked={review !== null}
-                    reveal={false}
+                    locked={review !== null || index !== 3}
+                    reveal={index === 5 && review === null}
                     sessionId={sessionId}
                     onObservation={onObservation}
                   />
                 </div>
                 {review !== null && <TeachingDiagram kind={lesson.diagram} />}
               </div>
+            ) : lesson.lab?.linkedLesson && currentIndex === 1 && review === null ? (
+              <Workbench
+                lab={lesson.lab}
+                locked={false}
+                reveal
+                demonstration
+                sessionId={sessionId + '-demonstration'}
+                onObservation={onObservation}
+              />
             ) : showModel ? (
               lesson.station ? (
                 <StationFigure key={lesson.station} station={lesson.station} allowSelect />

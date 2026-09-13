@@ -1,0 +1,98 @@
+{
+  "schema": "ebus-landmarks/v1",
+  "reviewStatus": "pending",
+  "landmarks": [
+    {
+      "id": "carina",
+      "label": "Main carina",
+      "positionWebMm": [
+        -13.56917953491211,
+        1219.5491943359375,
+        160.02676391601562
+      ],
+      "sourceType": "centerline-derived",
+      "method": "First main-route separation of 2 mm; locator requires anatomical review"
+    },
+    {
+      "id": "right_main_bronchus",
+      "label": "Right main bronchus",
+      "positionWebMm": [
+        -24.010251998901367,
+        1208.102294921875,
+        156.8052520751953
+      ],
+      "sourceType": "centerline-derived"
+    },
+    {
+      "id": "left_main_bronchus",
+      "label": "Left main bronchus",
+      "positionWebMm": [
+        -5.091843605041504,
+        1206.8131103515625,
+        156.5001983642578
+      ],
+      "sourceType": "centerline-derived"
+    },
+    {
+      "id": "azygos_arch",
+      "label": "Azygos arch",
+      "positionWebMm": [
+        -32.78720474243164,
+        1224.6002197265625,
+        172.3648681640625
+      ],
+      "sourceType": "source-mesh-derived",
+      "method": "Inferior vertex among anterior arch vertices; boundary interpretation requires review"
+    },
+    {
+      "id": "superior_vena_cava",
+      "label": "superior vena cava",
+      "positionWebMm": [
+        -33.28700256347656,
+        1211.147216796875,
+        188.34698486328125
+      ],
+      "sourceType": "source-mesh-centroid"
+    },
+    {
+      "id": "left_brachiocephalic_vein",
+      "label": "left brachiocephalic vein",
+      "positionWebMm": [
+        3.004814863204956,
+        1262.3114013671875,
+        202.51573181152344
+      ],
+      "sourceType": "source-mesh-centroid"
+    },
+    {
+      "id": "aorta",
+      "label": "aorta",
+      "positionWebMm": [
+        -0.8081821799278259,
+        1160.9359130859375,
+        170.76730346679688
+      ],
+      "sourceType": "source-mesh-centroid"
+    },
+    {
+      "id": "esophagus",
+      "label": "esophagus",
+      "positionWebMm": [
+        -5.681396484375,
+        1196.3731689453125,
+        157.7360076904297
+      ],
+      "sourceType": "source-mesh-centroid"
+    },
+    {
+      "id": "pulmonary_artery",
+      "label": "pulmonary artery",
+      "positionWebMm": [
+        -2.64145565032959,
+        1188.451904296875,
+        175.532958984375
+      ],
+      "sourceType": "source-mesh-centroid"
+    }
+  ]
+}

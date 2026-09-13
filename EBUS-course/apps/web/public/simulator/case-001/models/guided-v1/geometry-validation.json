@@ -1,0 +1,265 @@
+{
+  "schema": "ebus-model-validation/v1",
+  "sourceGeometrySha256": "98dab0cac8fe3a06772a980996742f1b21bb4a2963d262064c221562c91a64fb",
+  "coordinateToleranceMm": 0.002,
+  "anatomy": [
+    {
+      "source": "Airway",
+      "exportIds": [
+        "trachea",
+        "carina",
+        "right_main_bronchus",
+        "left_main_bronchus",
+        "distal_airway_branches"
+      ],
+      "triangles": 13698,
+      "maxRoundTripErrorMm": 0.00031405666334193846
+    },
+    {
+      "source": "aorta",
+      "exportIds": [
+        "aorta"
+      ],
+      "triangles": 30076,
+      "maxRoundTripErrorMm": 0.0003002243656466931
+    },
+    {
+      "source": "right subclavian artery",
+      "exportIds": [
+        "right_subclavian_artery"
+      ],
+      "triangles": 3364,
+      "maxRoundTripErrorMm": 0.000313234204234419
+    },
+    {
+      "source": "brachiocephalic trunk",
+      "exportIds": [
+        "brachiocephalic_trunk"
+      ],
+      "triangles": 1536,
+      "maxRoundTripErrorMm": 0.0003085018045530203
+    },
+    {
+      "source": "right common carotid artery",
+      "exportIds": [
+        "right_common_carotid_artery"
+      ],
+      "triangles": 1434,
+      "maxRoundTripErrorMm": 0.00031725220996364225
+    },
+    {
+      "source": "left common carotid artery",
+      "exportIds": [
+        "left_common_carotid_artery"
+      ],
+      "triangles": 2256,
+      "maxRoundTripErrorMm": 0.0003166887557367609
+    },
+    {
+      "source": "left subclavian artery",
+      "exportIds": [
+        "left_subclavian_artery"
+      ],
+      "triangles": 3620,
+      "maxRoundTripErrorMm": 0.0003129927711039699
+    },
+    {
+      "source": "Left Atrium",
+      "exportIds": [
+        "left_atrium"
+      ],
+      "triangles": 11894,
+      "maxRoundTripErrorMm": 0.00029010335594110867
+    },
+    {
+      "source": "atrial_appendage_left",
+      "exportIds": [
+        "atrial_appendage_left"
+      ],
+      "triangles": 6102,
+      "maxRoundTripErrorMm": 0.0002882272789043032
+    },
+    {
+      "source": "Left Ventricle",
+      "exportIds": [
+        "left_ventricle"
+      ],
+      "triangles": 18942,
+      "maxRoundTripErrorMm": 0.0002768522136156669
+    },
+    {
+      "source": "pulmonary venous system",
+      "exportIds": [
+        "pulmonary_venous_system"
+      ],
+      "triangles": 8484,
+      "maxRoundTripErrorMm": 0.0002926287045605014
+    },
+    {
+      "source": "esophagus",
+      "exportIds": [
+        "esophagus"
+      ],
+      "triangles": 12348,
+      "maxRoundTripErrorMm": 0.00031435257132065555
+    },
+    {
+      "source": "Right Atrium",
+      "exportIds": [
+        "right_atrium"
+      ],
+      "triangles": 11926,
+      "maxRoundTripErrorMm": 0.0002827193822258149
+    },
+    {
+      "source": "Right Ventricle",
+      "exportIds": [
+        "right_ventricle"
+      ],
+      "triangles": 11996,
+      "maxRoundTripErrorMm": 0.0002778092507185329
+    },
+    {
+      "source": "superior_vena_cava",
+      "exportIds": [
+        "superior_vena_cava"
+      ],
+      "triangles": 5294,
+      "maxRoundTripErrorMm": 0.00029771697320407517
+    },
+    {
+      "source": "left brachiocephalic vein",
+      "exportIds": [
+        "left_brachiocephalic_vein"
+      ],
+      "triangles": 3658,
+      "maxRoundTripErrorMm": 0.00030885637669198185
+    },
+    {
+      "source": "right brachiocephalic vein",
+      "exportIds": [
+        "right_brachiocephalic_vein"
+      ],
+      "triangles": 2050,
+      "maxRoundTripErrorMm": 0.0003089122145120181
+    },
+    {
+      "source": "azygous",
+      "exportIds": [
+        "azygous"
+      ],
+      "triangles": 2308,
+      "maxRoundTripErrorMm": 0.00030014719039546937
+    },
+    {
+      "source": "pulmonary artery",
+      "exportIds": [
+        "pulmonary_artery"
+      ],
+      "triangles": 12430,
+      "maxRoundTripErrorMm": 0.0002949543676085115
+    },
+    {
+      "source": "Station 2L",
+      "exportIds": [
+        "node_station_2l"
+      ],
+      "triangles": 188,
+      "maxRoundTripErrorMm": 0.0002970510638252878
+    },
+    {
+      "source": "Station 2R",
+      "exportIds": [
+        "node_station_2r"
+      ],
+      "triangles": 322,
+      "maxRoundTripErrorMm": 0.0003130755346835503
+    },
+    {
+      "source": "Station 4L",
+      "exportIds": [
+        "node_station_4l"
+      ],
+      "triangles": 700,
+      "maxRoundTripErrorMm": 0.0002938900743972661
+    },
+    {
+      "source": "Station 4R",
+      "exportIds": [
+        "node_station_4r"
+      ],
+      "triangles": 566,
+      "maxRoundTripErrorMm": 0.00029598502475610924
+    },
+    {
+      "source": "Station 7",
+      "exportIds": [
+        "node_station_7"
+      ],
+      "triangles": 700,
+      "maxRoundTripErrorMm": 0.00029323975690895846
+    },
+    {
+      "source": "Station 10L",
+      "exportIds": [
+        "node_station_10l"
+      ],
+      "triangles": 226,
+      "maxRoundTripErrorMm": 0.0002904175518695214
+    },
+    {
+      "source": "Station 10R",
+      "exportIds": [
+        "node_station_10r"
+      ],
+      "triangles": 566,
+      "maxRoundTripErrorMm": 0.0002927569018690642
+    },
+    {
+      "source": "Station 11L",
+      "exportIds": [
+        "node_station_11l"
+      ],
+      "triangles": 194,
+      "maxRoundTripErrorMm": 0.0002894742038508352
+    },
+    {
+      "source": "Station 11Ri",
+      "exportIds": [
+        "node_station_11ri"
+      ],
+      "triangles": 194,
+      "maxRoundTripErrorMm": 0.0002892230631811361
+    },
+    {
+      "source": "Station 11Rs",
+      "exportIds": [
+        "node_station_11rs"
+      ],
+      "triangles": 412,
+      "maxRoundTripErrorMm": 0.00029242651046954373
+    }
+  ],
+  "tipMaxRoundTripErrorMm": 6.558415626623562e-07,
+  "assets": [
+    {
+      "path": "mediastinum-teaching.glb",
+      "sha256": "d316f2b0fc6bc6a7631b699d51087a528018b55d06974699dcd5055eee072c5d"
+    },
+    {
+      "path": "node-examples.glb",
+      "sha256": "1fd48c92f51ec576e31182cceec24adc6f258f2b9a3177033c2e71c2d7770a93"
+    },
+    {
+      "path": "station-regions.review.glb",
+      "sha256": "cbf237eeb956b5fc4bbf5d5f5b7bf2e42b90290536d15dd93ddaa4c3581c3ee3"
+    },
+    {
+      "path": "ebus-scope-teaching.glb",
+      "sha256": "b689afde227fe4ac3806c5c0401fa3bd538b32828cb82dc8f6d29af2d1f76124"
+    }
+  ],
+  "result": "PASS",
+  "clinicalAnatomicalReview": "pending",
+  "sourceCtIncluded": false
+}

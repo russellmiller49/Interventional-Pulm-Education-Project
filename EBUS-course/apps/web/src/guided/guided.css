@@ -13,6 +13,90 @@ button,
 input {
   font: inherit;
 }
+select {
+  font: inherit;
+  max-width: 100%;
+  width: 100%;
+  padding: 8px;
+  color: #e6f2f3;
+  background: #173a44;
+  border: 1px solid #42616a;
+  border-radius: 6px;
+}
+.linked-canvas {
+  height: 270px;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #36515a;
+  border-radius: 10px;
+}
+.linked-models {
+  border-bottom: 1px solid #36515a;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+}
+.linked-models h3 {
+  margin: 8px 0;
+  font-size: 16px;
+}
+.linked-selection {
+  border-left: 3px solid #eec574;
+  padding-left: 8px;
+}
+.linked-section canvas {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin: auto;
+}
+.linked-demo {
+  padding: 10px;
+  border: 1px solid #55717b;
+  border-radius: 8px;
+}
+.linked-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+.linked-pair .linked-canvas {
+  height: 300px;
+}
+.linked-pair .simulator-pane-header {
+  min-height: 40px;
+}
+.linked-pair .simulator-ultrasound-readout {
+  font-size: 10px;
+}
+.linked-pair .simulator-sector-header-actions {
+  display: none;
+}
+.linked-pair .simulator-ultrasound-controls {
+  display: none;
+}
+.linked-pair .linked-section .guided-label {
+  font-size: 11px;
+}
+.linked-pair .linked-section .guided-tabs button {
+  padding: 5px 7px;
+  font-size: 12px;
+}
+.linked-models .guided-label {
+  margin: 6px 0;
+}
+@media (max-width: 480px) {
+  .linked-pair {
+    grid-template-columns: 1fr;
+  }
+  .linked-pair .linked-canvas {
+    height: 210px;
+  }
+  .linked-pair .simulator-continuous-ultrasound {
+    height: 230px;
+    max-height: 230px;
+  }
+}
 button {
   background: #173a44;
   color: #e6f2f3;
