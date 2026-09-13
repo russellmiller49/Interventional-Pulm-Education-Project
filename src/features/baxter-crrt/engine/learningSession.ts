@@ -61,6 +61,7 @@ export type CrrtLearningTimelineEventType =
   | 'prediction-committed'
   | 'intervention-performed'
   | 'device-action'
+  | 'alarm-acknowledged'
   | 'time-advanced'
   | 'hint-used'
   | 'reassessment-committed'
@@ -121,6 +122,7 @@ export type CrrtLearningSessionAction =
   | { readonly type: 'COMMIT_PREDICTION'; readonly prediction: CrrtPredictionCommitment }
   | { readonly type: 'PERFORM_INTERVENTION'; readonly interventionId: string }
   | { readonly type: 'DEVICE_ACTION'; readonly action: PrismaxPilotInterfaceAction }
+  | { readonly type: 'ACKNOWLEDGE_ALARM'; readonly alarmId: string }
   | { readonly type: 'ADVANCE_TIME'; readonly seconds: number }
   | { readonly type: 'USE_HINT' }
   | { readonly type: 'COMMIT_REASSESSMENT'; readonly optionIds: readonly string[] }
@@ -794,6 +796,16 @@ export function crrtLearningSessionReducer(
         reasoningPhase: 'run',
         timeline: appendTimeline(state, 'device-action', action.action.type),
       })
+    }
+    case 'ACKNOWLEDGE_ALARM': {
+      if (!canModifyRun(state)) return state
+      const simulation = crrtSimulationReducer(state.simulation, action)
+      if (simulation === state.simulation) return state
+      return {
+        ...state,
+        simulation,
+        timeline: appendTimeline(state, 'alarm-acknowledged', action.alarmId),
+      }
     }
     case 'ADVANCE_TIME': {
       if (!canModifyRun(state)) return state

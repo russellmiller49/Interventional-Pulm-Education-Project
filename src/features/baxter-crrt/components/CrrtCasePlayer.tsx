@@ -92,6 +92,7 @@ const timelineEventLabels: Readonly<
   'prediction-committed': 'Prediction committed',
   'intervention-performed': 'Intervention performed',
   'device-action': 'Device action',
+  'alarm-acknowledged': 'Alarm acknowledged',
   'time-advanced': 'Time advanced',
   'hint-used': 'Hint used',
   'reassessment-committed': 'Reassessment committed',

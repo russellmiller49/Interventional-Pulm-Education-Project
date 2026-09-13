@@ -53,7 +53,7 @@ interface RevealedPrismaxPilotCaseContext {
   readonly identityMasked?: false
   readonly caseId: string
   readonly title: string
-  readonly pathway: 'practice' | 'mastery'
+  readonly pathway: 'practice' | 'mastery' | 'learn'
 }
 
 interface MaskedPrismaxPilotCaseContext {
@@ -67,6 +67,7 @@ export type PrismaxPilotCaseContext =
   | MaskedPrismaxPilotCaseContext
 
 interface PrismaxPilotInterfaceProps {
+  presentation?: 'full' | 'guided-setup'
   state: PrismaxPilotInterfaceState
   dispatch: Dispatch<PrismaxPilotInterfaceAction>
   controlsEnabled?: boolean
@@ -119,7 +120,11 @@ function formatStepLabel(stepId: PrismaxSetupStepId) {
 }
 
 function caseIdentifier(caseContext: PrismaxPilotCaseContext): string {
-  return caseContext.identityMasked ? 'Masked case' : 'Selected clinical case'
+  return caseContext.identityMasked
+    ? 'Masked case'
+    : caseContext.pathway === 'learn'
+      ? 'Teaching reference'
+      : 'Selected clinical case'
 }
 
 function caseTitle(caseContext: PrismaxPilotCaseContext): string {
@@ -227,7 +232,9 @@ function SetupStepContent({
           type="button"
           onClick={() => dispatch({ type: 'COMPLETE_SETUP_STEP', stepId: 'patient' })}
         >
-          Confirm case-free context
+          {caseContext?.pathway === 'learn'
+            ? 'Confirm teaching reference'
+            : 'Confirm case-free context'}
         </button>
       </div>
     )
@@ -838,16 +845,23 @@ function OperationsScreen({
  * made a fixed illustration look like a display. It is now behind a disclosure,
  * carries no state badge, and says in its own words that nothing on it moves.
  */
-function PrismaxStaticDeviceReference() {
+export function PrismaxStaticDeviceReference({
+  orientation = false,
+  onSelectRegion,
+}: { orientation?: boolean; onSelectRegion?: (id: PrismaxSimulatorHotspotId) => void } = {}) {
   const [selectedHotspotId, setSelectedHotspotId] = useState<PrismaxSimulatorHotspotId>(
     prismaxSimulatorHotspots[0].id,
   )
   const selectedHotspot =
     prismaxSimulatorHotspots.find(({ id }) => id === selectedHotspotId) ??
     prismaxSimulatorHotspots[0]
+  function selectRegion(id: PrismaxSimulatorHotspotId) {
+    setSelectedHotspotId(id)
+    onSelectRegion?.(id)
+  }
 
   return (
-    <details className={styles.hardwarePanel}>
+    <details className={styles.hardwarePanel} open={orientation || undefined}>
       <summary>
         <strong>{prismaxStaticReferenceNotice.title}</strong>
         <span>{prismaxStaticReferenceNotice.summary}</span>
@@ -856,7 +870,9 @@ function PrismaxStaticDeviceReference() {
       <header className={styles.hardwareHeading}>
         <h3 id="prismax-hardware-heading">Where the hardware sits</h3>
         <p className={styles.staticNotice} role="note">
-          {prismaxStaticReferenceNotice.unsynchronisedNotice}
+          {orientation
+            ? 'Static hardware illustration. Selecting a region explains its function; it does not operate the machine or display a patient run. The next tasks introduce setup and live modeled readouts.'
+            : prismaxStaticReferenceNotice.unsynchronisedNotice}
         </p>
       </header>
 
@@ -876,7 +892,7 @@ function PrismaxStaticDeviceReference() {
               aria-label={`Explore ${hotspot.label}`}
               aria-pressed={selectedHotspot.id === hotspot.id}
               style={{ left: `${hotspot.xPercent}%`, top: `${hotspot.yPercent}%` }}
-              onClick={() => setSelectedHotspotId(hotspot.id)}
+              onClick={() => selectRegion(hotspot.id)}
             >
               {hotspot.ordinal}
             </button>
@@ -899,7 +915,7 @@ function PrismaxStaticDeviceReference() {
             key={hotspot.id}
             type="button"
             aria-pressed={selectedHotspot.id === hotspot.id}
-            onClick={() => setSelectedHotspotId(hotspot.id)}
+            onClick={() => selectRegion(hotspot.id)}
           >
             <span>{hotspot.ordinal}</span>
             {hotspot.shortLabel}
@@ -927,6 +943,7 @@ function PrismaxLivePressurePanel({ operations }: { operations: PrismaxPilotOper
 }
 
 export function PrismaxPilotInterface({
+  presentation = 'full',
   state,
   dispatch,
   controlsEnabled = true,
@@ -960,7 +977,7 @@ export function PrismaxPilotInterface({
         {/* The live model leads. It sits outside the control fieldset on
             purpose: reading the pressure profile stays available by keyboard
             even on a read-only run, where the device controls are disabled. */}
-        <PrismaxLivePressurePanel operations={operations} />
+        {presentation === 'full' ? <PrismaxLivePressurePanel operations={operations} /> : null}
 
         <fieldset className={styles.controlFieldset} disabled={!controlsEnabled}>
           <legend className={styles.visuallyHidden}>
@@ -1108,7 +1125,7 @@ export function PrismaxPilotInterface({
         </fieldset>
       </div>
 
-      <PrismaxStaticDeviceReference />
+      {presentation === 'full' ? <PrismaxStaticDeviceReference /> : null}
     </div>
   )
 }

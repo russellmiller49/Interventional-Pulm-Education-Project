@@ -148,6 +148,7 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
       'Reassess delivery, downtime, recurrence, and the patient.',
     ],
     sourceRecordIds: [
+      'DEV-PM-005',
       'DEV-PM-008',
       'DEV-PM-012',
       'DEV-PM-013',

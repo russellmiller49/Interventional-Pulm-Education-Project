@@ -72,7 +72,7 @@ export interface CrrtPilotCircuitProps {
    */
   highlightedSignalId?: CrrtPressureSignalId | null
   /** Focused Learn composition; full device/reference behavior remains the default. */
-  presentation?: 'full' | 'focused'
+  presentation?: 'full' | 'focused' | 'live-focused'
   overlayId?: CrrtCircuitOverlayId
   visiblePathIds?: readonly CrrtCircuitPathId[]
   highlightedNodeId?: CrrtCircuitNodeId | null
@@ -449,7 +449,8 @@ export function CrrtPilotCircuit({
   const [localOverlayId, setOverlayId] = useState<CrrtCircuitOverlayId>(initialOverlayId)
 
   const overlayId = controlledOverlayId ?? localOverlayId
-  const focused = presentation === 'focused'
+  const focused = presentation !== 'full'
+  const staticTeaching = presentation === 'focused'
   const overlay = crrtCircuitOverlay(overlayId)
   const activePathIds = useMemo(
     () => new Set(visiblePathIds ?? overlay.activePathIds),
@@ -487,7 +488,7 @@ export function CrrtPilotCircuit({
     : 'No pressure is currently selected.'
 
   const circuitStateSummary = [
-    focused
+    staticTeaching
       ? 'Static teaching diagram; no live patient run.'
       : `Circuit state: ${running ? 'running' : 'stopped'}.`,
     `Training set ${setReady ? 'ready' : 'not ready'}; fluids ${fluidsReady ? 'ready' : 'not ready'}.`,
@@ -536,7 +537,7 @@ export function CrrtPilotCircuit({
             </div>
             <div
               className={styles.runStatus}
-              data-running={running && !focused}
+              data-running={running && !staticTeaching}
               role="status"
               aria-live="polite"
             >
@@ -619,7 +620,7 @@ export function CrrtPilotCircuit({
           viewBox={CRRT_CIRCUIT_VIEWBOX}
           role="img"
           aria-labelledby={`${titleId} ${descriptionId}`}
-          data-running={running && !focused}
+          data-running={running && !staticTeaching}
           data-overlay={overlayId}
           preserveAspectRatio="xMidYMid meet"
         >
@@ -647,7 +648,7 @@ export function CrrtPilotCircuit({
             ORIGINAL EDUCATIONAL SCHEMATIC · FIXED ORIENTATION · {overlay.label.toUpperCase()}
           </text>
           <text x="1288" y="52" textAnchor="end" className={styles.motionStatus}>
-            {focused
+            {staticTeaching
               ? 'STATIC TEACHING VIEW'
               : running
                 ? 'FLOW MOTION: ACTIVE'

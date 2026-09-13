@@ -31,7 +31,20 @@ export interface CrrtFoundationTask {
   readonly instruction: string
   readonly teaching: readonly string[]
   readonly tool?: CrrtFoundationTool
-  readonly kind: 'read' | 'guided' | 'question' | 'builder'
+  readonly kind: 'read' | 'guided' | 'question' | 'builder' | 'numeric'
+  readonly run?: 'workflow' | 'delivery' | 'access' | 'fluid'
+  readonly operation?:
+    | 'hardware'
+    | 'setup'
+    | 'normal'
+    | 'alarm-arrival'
+    | 'alarm-repair'
+    | 'alarm-verify'
+    | 'delivery-timeline'
+    | 'balance'
+    | 'missing-chart'
+    | 'net-change'
+    | 'net-observe'
   readonly question?: string
   readonly choices?: readonly CrrtFoundationChoice[]
 }

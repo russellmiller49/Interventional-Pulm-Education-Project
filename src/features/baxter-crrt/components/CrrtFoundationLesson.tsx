@@ -6,7 +6,10 @@ import { criticalCareLearningPathway } from '@/features/critical-care/content/le
 import { useCriticalCareActivityAnalytics } from '@/features/learning-module/activity'
 import { baxterCrrtNavBase } from '@/features/learning-module/moduleRoutes'
 import { Link, useRouter } from '@/i18n/navigation'
-import { crrtFoundationTasks, type CrrtFoundationTask } from '../content/foundationLessons'
+import type { CrrtFoundationTask } from '../content/foundationLessons'
+import { crrtLearnTasks } from '../content/learnTasks'
+import { crrtOperationalTaskComplete, crrtOperationalEvidenceInputs } from '../operationalModel'
+import { CrrtOperationalTool, CrrtRecordedBalanceQuestion } from './CrrtOperationalTools'
 import { baxterCrrtLearnLessons, baxterCrrtLearnLessonById } from '../content/learnLessons'
 import type { BaxterCrrtLearnLessonId } from '../content/learnerRegistry'
 import { baxterCrrtLearnerFacingSourceById } from '../content/learnerSourceMap'
@@ -83,8 +86,15 @@ export function CrrtFoundationLesson({
       active.current = false
     }
   }, [lessonId])
-  const tasks = crrtFoundationTasks[lessonId]!
+  const tasks = crrtLearnTasks[lessonId]!
   const task = tasks[attempt.taskIndex]
+  const operationReady = crrtOperationalTaskComplete(attempt.run, task.operation)
+  const readyResponse =
+    task.operation && task.operation !== 'hardware'
+      ? operationReady
+        ? `${task.operation}-observations-reviewed`
+        : null
+      : guidedResponse
   const lesson = baxterCrrtLearnLessonById.get(lessonId)!
   const evidence = attempt.evidence.find((e) => sameCrrtLearnIdentity(e, activeIdentity))
   const analytics = useCriticalCareActivityAnalytics({
@@ -103,6 +113,14 @@ export function CrrtFoundationLesson({
 
   function acceptEvidence(incoming: CrrtLearnEvidence) {
     if (!active.current || !sameCrrtLearnIdentity(identityRef.current, incoming)) return false
+    if (!operationReady) return false
+    if (attempt.run)
+      incoming = {
+        ...incoming,
+        inputs: { ...crrtOperationalEvidenceInputs(attempt.run), ...incoming.inputs },
+      }
+    if (crrtLearnAttemptReducer(attempt, { type: 'evidence', evidence: incoming }) === attempt)
+      return false
     if (
       evidence &&
       evidence.feedbackDisplayed === incoming.feedbackDisplayed &&
@@ -117,8 +135,10 @@ export function CrrtFoundationLesson({
     if (!active.current || !sameCrrtLearnIdentity(identityRef.current, activeIdentity)) return
     if (task.kind !== 'read' && (!incoming || !incoming.reviewed || !incoming.feedbackDisplayed))
       return
+    const action = { type: 'complete' as const, identity: activeIdentity, evidence: incoming }
+    if (crrtLearnAttemptReducer(attempt, action) === attempt) return
     if (incoming && !acceptEvidence(incoming)) return
-    dispatch({ type: 'complete', identity: activeIdentity, evidence: incoming })
+    dispatch(action)
     setGuidedResult(null)
     if (attempt.taskIndex === tasks.length - 1) {
       writeProgress(recordLessonCompletion(readProgress(), lessonId))
@@ -308,21 +328,25 @@ export function CrrtFoundationLesson({
             <div key={`${attempt.attemptId}:${task.id}`}>
               <NowCard
                 model={{
-                  kicker: `Task ${attempt.taskIndex + 1} of ${tasks.length} · ${task.kind === 'question' ? 'Apply' : task.kind === 'read' ? 'Worked explanation' : 'Guided exercise'}`,
+                  kicker: `Task ${attempt.taskIndex + 1} of ${tasks.length} · ${task.kind === 'question' || task.kind === 'numeric' ? 'Apply' : task.kind === 'read' ? 'Worked explanation' : 'Guided exercise'}`,
                   heading: task.title,
                   body: task.instruction,
                   where: (
                     <span>
                       Where to look:{' '}
-                      {task.tool === 'builder'
-                        ? 'Staged Prescription Builder'
-                        : task.tool === 'known-pressure'
-                          ? 'Pressure Localization Lab'
-                          : task.kind === 'question'
-                            ? 'Application check'
-                            : task.tool
-                              ? 'Canonical CRRT circuit'
-                              : task.title}
+                      {task.operation === 'hardware'
+                        ? 'Machine functions and fluid destinations'
+                        : task.operation
+                          ? 'Current run and recorded observations'
+                          : task.tool === 'builder'
+                            ? 'Staged Prescription Builder'
+                            : task.tool === 'known-pressure'
+                              ? 'Pressure Localization Lab'
+                              : task.kind === 'question'
+                                ? 'Application check'
+                                : task.tool
+                                  ? 'Canonical CRRT circuit'
+                                  : task.title}
                       , below.
                     </span>
                   ),
@@ -332,11 +356,21 @@ export function CrrtFoundationLesson({
                       : task.kind === 'guided' && task.tool !== 'known-pressure'
                         ? {
                             label: 'Review observations and continue',
-                            disabled: !guidedResponse,
-                            disabledReason:
-                              'Make each requested selection and compare the displayed explanation.',
+                            disabled: !readyResponse,
+                            disabledReason: task.operation
+                              ? 'Complete the requested actions and read their recorded observations.'
+                              : 'Make each requested selection and compare the displayed explanation.',
                             onActivate: () =>
-                              guidedResponse && finish(guidedEvidence(guidedResponse)),
+                              readyResponse &&
+                              finish(
+                                guidedEvidence(
+                                  readyResponse,
+                                  null,
+                                  attempt.run
+                                    ? crrtOperationalEvidenceInputs(attempt.run)
+                                    : undefined,
+                                ),
+                              ),
                           }
                         : undefined,
                 }}
@@ -350,6 +384,43 @@ export function CrrtFoundationLesson({
                 ) : null}
                 {task.tool && task.tool !== 'known-pressure' && task.tool !== 'builder' ? (
                   <CrrtFoundationToolView tool={task.tool} onReady={ready} />
+                ) : null}
+                {task.operation ? (
+                  <CrrtOperationalTool
+                    task={task}
+                    run={attempt.run}
+                    onReady={ready}
+                    onAction={(action) => {
+                      if (
+                        active.current &&
+                        sameCrrtLearnIdentity(identityRef.current, activeIdentity)
+                      )
+                        dispatch({ type: 'operation', identity: activeIdentity, action })
+                    }}
+                  />
+                ) : null}
+                {task.kind === 'numeric' && attempt.run ? (
+                  <CrrtRecordedBalanceQuestion
+                    run={attempt.run}
+                    evidence={evidence}
+                    onSubmit={(response, correct, inputs) =>
+                      acceptEvidence({
+                        ...activeIdentity,
+                        mode: 'independent',
+                        response,
+                        correct,
+                        inputs,
+                        feedbackDisplayed: false,
+                        reviewed: false,
+                      })
+                    }
+                    onFeedbackDisplayed={() =>
+                      evidence && acceptEvidence({ ...evidence, feedbackDisplayed: true })
+                    }
+                    onContinue={() =>
+                      evidence && finish({ ...evidence, feedbackDisplayed: true, reviewed: true })
+                    }
+                  />
                 ) : null}
                 {task.kind === 'question' ? (
                   <QuestionTask
@@ -426,6 +497,20 @@ export function CrrtFoundationLesson({
                 </p>
               ) : null
             })}
+            {lessonId === 'crrt-fluid-liberation' ? (
+              <p>
+                Clinical reassessment reference:{' '}
+                <a
+                  href="https://kdigo.org/wp-content/uploads/2019/01/KDIGO-2012-AKI-Guideline-English.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  KDIGO 2012 AKI guideline, chapter 5.2
+                </a>
+                . This supplies conceptual stopping/reassessment guidance, not a device procedure or
+                a universal threshold. Clinical review of this teaching remains pending.
+              </p>
+            ) : null}
             <p>
               Printed filtration-fraction and blood-flow expressions remain withheld under
               CONFLICT-001 and CONFLICT-002. Nonzero makeup retains the unresolved attribution gate.

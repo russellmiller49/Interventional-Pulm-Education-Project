@@ -45,7 +45,7 @@ import {
   type BaxterCrrtProgressStation,
   type BaxterCrrtProgressV3,
 } from '../engine/progress'
-import { crrtFoundationTasks } from '../content/foundationLessons'
+import { crrtLearnTasks } from '../content/learnTasks'
 import { CrrtFoundationLesson } from './CrrtFoundationLesson'
 import { BaxterCrrtLearnLanding } from './BaxterCrrtLearnLanding'
 import { BaxterCrrtModuleFrame } from './BaxterCrrtModuleFrame'
@@ -215,7 +215,7 @@ export function BaxterCrrtLearn({
       </BaxterCrrtModuleFrame>
     )
   const key = `${selection.lessonId}:${selection.revision}`
-  if (crrtFoundationTasks[selection.lessonId])
+  if (crrtLearnTasks[selection.lessonId])
     return (
       <BaxterCrrtModuleFrame
         locale={locale}

@@ -20,7 +20,8 @@ export interface CrrtLearnEvidence extends CrrtLearnIdentity {
   readonly correct: boolean | null
   readonly feedbackDisplayed: boolean
   readonly reviewed: boolean
-  /** Entered assumptions, never a device-applied prescription or measured delivery. */
+  /** Structured task context: entered assumptions or recorded engine observations,
+   * identified by the task/example/version. Never bedside measurements. */
   readonly inputs?: Readonly<Record<string, number>>
 }
 
