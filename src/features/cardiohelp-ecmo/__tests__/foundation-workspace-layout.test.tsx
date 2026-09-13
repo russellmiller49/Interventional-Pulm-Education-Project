@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { act, cleanup, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 import { EcmoFoundationLessonActivity } from '../components/EcmoFoundationLessonActivity'
@@ -479,6 +479,45 @@ describe('stage layout', () => {
 /* ------------------------------------------------------------------ *
  * C. Regression
  * ------------------------------------------------------------------ */
+
+/**
+ * A new step starts at the top of its Steps and Teaching panes.
+ *
+ * R6-OD-1 fixed the Steps pane from the hosts with a module-local helper; the layout now runs the
+ * shared stage's function for both panes, so the hosts carry nothing. jsdom lays nothing out, so
+ * each region is given an inline overflow and a scroll extent larger than its height, the way a
+ * pane with more content than room reports them in a browser. The Simulator pane is scrolled too
+ * and must stay where it is: its position is part of the state the learner is working in.
+ */
+describe('stage layout on a step change', () => {
+  function region(name: string): HTMLElement {
+    return screen.getByRole('region', { name })
+  }
+
+  function scrolled(name: string, scrollTop: number): HTMLElement {
+    const pane = region(name)
+    pane.style.overflowY = 'auto'
+    Object.defineProperty(pane, 'scrollHeight', { value: 1600, configurable: true })
+    Object.defineProperty(pane, 'clientHeight', { value: 400, configurable: true })
+    pane.scrollTop = scrollTop
+    return pane
+  }
+
+  it('returns the Steps and Teaching panes to their tops and leaves the Simulator pane alone', () => {
+    mountLesson('why-extracorporeal-support')
+    scrolled('Steps panel', 300)
+    scrolled('Teaching panel', 900)
+    scrolled('Simulator panel', 120)
+    expect(screen.getByText(/Step 1 of \d+/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+
+    expect(screen.getByText(/Step 2 of \d+/)).toBeInTheDocument()
+    expect(region('Steps panel').scrollTop).toBe(0)
+    expect(region('Teaching panel').scrollTop).toBe(0)
+    expect(region('Simulator panel').scrollTop).toBe(120)
+  })
+})
 
 describe('stage layout regression', () => {
   it('still mounts all ten interactive foundation sections on the stage', () => {

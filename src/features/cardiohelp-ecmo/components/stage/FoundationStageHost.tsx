@@ -7,6 +7,7 @@ import { HeldDisagreement } from '@/features/critical-care/components/teaching/E
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import { criticalCareSourceConflictById } from '@/features/critical-care/content/sourceConflicts'
 import { useCriticalCareActivityAnalytics } from '@/features/learning-module/activity'
+import { answerVerdictFrames } from '@/features/learning-module/components/AnswerVerdict'
 import { ChoiceReasoningFeedback } from '@/features/learning-module/components/ChoiceReasoningFeedback'
 import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
 import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
@@ -53,7 +54,6 @@ import { EcmoContextStrip, type EcmoContextStripLine } from '../shell/EcmoContex
 import { EcmoHelpDialog } from '../shell/EcmoHelpDialog'
 import { EcmoNowCard, type NowCardModel } from '../shell/EcmoNowCard'
 import { EcmoLookInLine } from '../shell/EcmoLookInLine'
-import { EcmoOtherAnswers, ECMO_VERDICT_FRAMES } from '../shell/EcmoOtherAnswers'
 import { EcmoSectionHeader } from '../shell/EcmoSectionHeader'
 import { EcmoSimulatorSurfaces } from '../shell/EcmoSimulatorSurfaces'
 import { EcmoTrackToggle } from '../shell/EcmoTrackToggle'
@@ -67,7 +67,6 @@ import {
 import { FoundationStoryProblems } from './FoundationStoryProblems'
 import { SectionsDrawer } from './SectionsDrawer'
 import { StageLayout } from './StageLayout'
-import { scrollTaskPaneToTop } from './scrollTaskPaneToTop'
 import { StageSourcesScope } from './StageSourcesScope'
 import { StageTeachingScope } from './StageTeachingScope'
 import { StepList } from './StepList'
@@ -240,7 +239,6 @@ function FoundationStageSession({
 
   useEffect(() => {
     nowFocusRef.current?.focus({ preventScroll: true })
-    scrollTaskPaneToTop(nowFocusRef.current)
   }, [activeStep.id])
 
   useEffect(() => {
@@ -830,24 +828,25 @@ function FoundationStageSession({
           )}
           {committedChoice ? (
             <div className="grid gap-3" data-verdict>
+              {/*
+                Why the other answers do not fit — `alternatives`.
+
+                Five foundation sections tell the learner, one pane to the left, to "commit a
+                prediction, then read why the other answers do not fit", and the drill half of the
+                same pathway has always offered that disclosure. The R5 round rendered a module-local
+                copy of it beside this card because the shared card had no slot for it; the MCS round
+                gave the shared card one, so the copy is gone and the card folds every choice but the
+                chosen one under the same summary `AnswerVerdict` uses. Passing the choices is what
+                shows them — a per-activity choice, which is why the story problems below do not.
+              */}
               <ChoiceReasoningFeedback
                 choice={committedChoice}
                 outcome="stated"
-                frames={ECMO_VERDICT_FRAMES}
+                frames={answerVerdictFrames}
+                alternatives={item.choices}
                 explanation={item.explanation}
                 evidenceIds={item.evidenceIds}
               />
-              {/*
-                Why the other answers do not fit.
-
-                Five foundation sections tell the learner, one pane to the left, to "commit a
-                prediction, then read why the other answers do not fit" — and this card showed only
-                the chosen option's rationale, so there was nothing to read. The drill half of the
-                same pathway has offered exactly this disclosure all along; the shared card the
-                foundations render does not, and is four other modules' as well. So the foundations
-                render it themselves, in the wording their own instruction already uses.
-              */}
-              <EcmoOtherAnswers item={item} committedChoiceId={committedChoice.id} />
               {interaction.kind === 'prediction' ? (
                 <button type="button" className={shellStyles.nowPrimary} onClick={advance}>
                   Continue

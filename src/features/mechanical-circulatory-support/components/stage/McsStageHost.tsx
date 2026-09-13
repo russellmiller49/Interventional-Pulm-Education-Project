@@ -276,11 +276,8 @@ function McsStageSession({
   }, [lesson.lifecycleActivityId, sectionId])
 
   useEffect(() => {
-    const node = nowFocusRef.current
-    if (!node) return
-    node.focus({ preventScroll: true })
-    // A new step starts at the top of its pane, whatever the previous step left it scrolled to.
-    node.closest<HTMLElement>('[role="region"]')?.scrollTo({ top: 0 })
+    // The panes return to their tops on a step change inside the shared `StageLayout`.
+    nowFocusRef.current?.focus({ preventScroll: true })
   }, [activeStep.id])
 
   useEffect(() => {

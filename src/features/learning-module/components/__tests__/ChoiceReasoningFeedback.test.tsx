@@ -4,6 +4,7 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { flaggedGradingCopyTerms } from '@/features/learning-module/activity/clinicalLearningItem'
 
 import type { ClinicalLearningItem } from '../../activity'
+import { answerVerdictFrames } from '../AnswerVerdict'
 import { ChoiceReasoningFeedback } from '../ChoiceReasoningFeedback'
 
 jest.mock('@/i18n/navigation', () => ({
@@ -198,5 +199,33 @@ describe('ChoiceReasoningFeedback other answers', () => {
       expect(row?.textContent).toContain(other.label)
       expect(row?.textContent).toContain(other.rationale)
     }
+  })
+})
+
+/**
+ * One vocabulary for a learner who meets both cards in one pathway.
+ *
+ * `answerVerdictFrames` is `AnswerVerdict`'s four titles as sentences, derived from the same table
+ * that card renders, so the frame this card prints after the stated outcome can never drift from
+ * the title the drill card prints. ECMO used to carry these four strings by hand.
+ */
+describe('ChoiceReasoningFeedback with AnswerVerdict’s vocabulary', () => {
+  it.each([
+    ['best', 'Correct.', 'That read holds.'],
+    ['reasonable-but-incomplete', 'Partly correct.', 'Defensible, but not the whole picture.'],
+    ['incorrect-mechanism', 'Not correct.', 'That mechanism predicts a different pattern.'],
+    ['unsafe', 'Not correct, and unsafe.', 'Stopping here — this could harm a real patient.'],
+  ] as const)('frames a %s answer with the verdict title', (plausibility, label, frame) => {
+    expect(answerVerdictFrames[plausibility]).toBe(frame)
+    const { container } = render(
+      <ChoiceReasoningFeedback
+        choice={choice(plausibility)}
+        outcome="stated"
+        frames={answerVerdictFrames}
+        explanation="Compare the expected waveform and patient response."
+        evidenceIds={['esc-ers-ph-2022']}
+      />,
+    )
+    expect((container.textContent ?? '').trimStart().startsWith(`${label} ${frame}`)).toBe(true)
   })
 })

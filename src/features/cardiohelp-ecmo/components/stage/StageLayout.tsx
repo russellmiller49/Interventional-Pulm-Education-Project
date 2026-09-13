@@ -1,8 +1,9 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode, type Ref } from 'react'
 
 import { ResizableTeachingWorkspace } from '@/features/learning-module/curriculum/ResizableTeachingWorkspace'
+import { scrollStagePaneToTop } from '@/features/learning-module/stage/scrollStagePaneToTop'
 
 import { EcmoActivityShell } from '../shell/EcmoActivityShell'
 import styles from './EcmoLessonStage.module.css'
@@ -42,14 +43,17 @@ const PANE_MINIMUMS = { primary: 300, secondary: 280, tertiary: 340 } as const
 
 function Pane({
   slot,
+  labelRef,
   children,
 }: {
   readonly slot: keyof typeof PANE_LABELS
+  /** The label is the one element every pane has; the step-change reset walks up from it. */
+  readonly labelRef?: Ref<HTMLParagraphElement>
   readonly children: ReactNode
 }) {
   return (
     <>
-      <p className={styles.paneLabel} data-pane-label={slot} aria-hidden="true">
+      <p ref={labelRef} className={styles.paneLabel} data-pane-label={slot} aria-hidden="true">
         <span>{PANE_LABELS[slot]}</span> panel · {PANE_PURPOSE[slot]}
       </p>
       {children}
@@ -83,6 +87,7 @@ export function StageLayout({
   fixedPathway,
   compactPane,
 }: {
+  /** The step on screen. When it changes, the Steps and Teaching panes return to their tops. */
   readonly stageId: string
   readonly label: string
   /** Stamped on the frame so a test can read which reference circuit is behind the teaching. */
@@ -105,6 +110,21 @@ export function StageLayout({
    */
   readonly compactPane?: 'primary' | 'secondary' | 'tertiary'
 }) {
+  const taskLabelRef = useRef<HTMLParagraphElement>(null)
+  const teachingLabelRef = useRef<HTMLParagraphElement>(null)
+
+  /*
+   * A new step starts at the top of its Steps and Teaching panes — the shared stage's rule
+   * (`learning-module/stage/StageLayout.tsx`), run here by the same function, because this module
+   * still keeps its own copy of the layout. R6-OD-1 fixed the Steps pane from the hosts; the hosts
+   * no longer do it, this does, and the Teaching pane gets the same treatment, which R6 left as an
+   * open question. The Simulator pane is left where the learner put it.
+   */
+  useEffect(() => {
+    scrollStagePaneToTop(taskLabelRef.current)
+    scrollStagePaneToTop(teachingLabelRef.current)
+  }, [stageId])
+
   return (
     <EcmoActivityShell
       section="learn"
@@ -123,13 +143,17 @@ export function StageLayout({
         <ResizableTeachingWorkspace
           className={styles.workspace}
           primary={
-            <Pane slot="primary">
+            <Pane slot="primary" labelRef={taskLabelRef}>
               <div className={styles.taskColumn} data-pane="task">
                 {task}
               </div>
             </Pane>
           }
-          secondary={<Pane slot="secondary">{teaching}</Pane>}
+          secondary={
+            <Pane slot="secondary" labelRef={teachingLabelRef}>
+              {teaching}
+            </Pane>
+          }
           tertiary={
             <Pane slot="tertiary">
               <div className={styles.simulatorPane} data-pane="simulator">

@@ -26,3 +26,4 @@ export {
   type StageBlockVisibility,
 } from './StageTeachingScope'
 export { StageBlock } from './StageBlock'
+export { scrollStagePaneToTop } from './scrollStagePaneToTop'

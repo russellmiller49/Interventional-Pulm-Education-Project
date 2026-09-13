@@ -68,10 +68,18 @@ describe('CriticalCareHub', () => {
         screen.getByRole('link', { name: `Open full lab: ${moduleDefinition.title}` }),
       ).toHaveAttribute('href', moduleDefinition.href)
     }
-    expect(screen.getByRole('link', { name: 'Open full lab: CARDIOHELP ECMO' })).toHaveAttribute(
+    // One name per module: the card says what the module's own page and the pathway say.
+    expect(screen.getByRole('link', { name: 'Open full lab: ECMO Management' })).toHaveAttribute(
       'href',
       '/cardiohelp-ecmo',
     )
+    expect(screen.getByText('CARDIOHELP console lab')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open full lab: CRRT' })).toHaveAttribute(
+      'href',
+      '/baxter-crrt',
+    )
+    expect(screen.queryByText('CARDIOHELP ECMO')).toBeNull()
+    expect(screen.queryByText('Baxter CRRT')).toBeNull()
 
     // The rendered half of the H1.1 contract: the visible "Start here" is the first section of the
     // hemodynamics pathway. `__tests__/hub-pathway-start-alignment.test.ts` pins the two together.

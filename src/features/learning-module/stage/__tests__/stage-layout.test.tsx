@@ -226,3 +226,68 @@ describe('a stage that leads with its steps', () => {
     expect(secondary).toBeGreaterThan(primary)
   })
 })
+
+/**
+ * A new step starts at the top of its Steps and Teaching panes.
+ *
+ * jsdom lays nothing out, so each region is given an inline overflow (what jsdom's
+ * `getComputedStyle` reads) and a scroll extent larger than its height, the way a pane with more
+ * content than room reports them in a browser. The Simulator pane is scrolled too, and must stay
+ * where it is: its position is part of the state the learner is working in.
+ */
+describe('a stage whose step changes', () => {
+  const order = ['steps', 'teaching', 'simulator'] as const
+
+  function region(name: string): HTMLElement {
+    return screen.getByRole('region', { name })
+  }
+
+  function scrolled(name: string, scrollTop: number): HTMLElement {
+    const pane = region(name)
+    pane.style.overflowY = 'auto'
+    Object.defineProperty(pane, 'scrollHeight', { value: 1600, configurable: true })
+    Object.defineProperty(pane, 'clientHeight', { value: 400, configurable: true })
+    pane.scrollTop = scrollTop
+    return pane
+  }
+
+  function stage(stageId: string) {
+    return (
+      <StageLayout
+        stageId={stageId}
+        label="Stage under test"
+        module="module-under-test"
+        workspaceLabel="workspace under test"
+        header={<div data-testid="header">header</div>}
+        simulator={<div data-testid="simulator-content">simulator content</div>}
+        teaching={<div data-testid="teaching-content">teaching content</div>}
+        task={<div data-testid="task-content">task content</div>}
+        paneOrder={order}
+      />
+    )
+  }
+
+  it('returns the Steps and Teaching panes to their tops and leaves the Simulator pane alone', () => {
+    const view = mountStage({ paneOrder: order })
+    scrolled('Steps panel', 300)
+    scrolled('Teaching panel', 900)
+    scrolled('Simulator panel', 120)
+
+    view.rerender(stage('section-1-predict'))
+
+    expect(region('Steps panel').scrollTop).toBe(0)
+    expect(region('Teaching panel').scrollTop).toBe(0)
+    expect(region('Simulator panel').scrollTop).toBe(120)
+  })
+
+  it('does not move a pane while the step is the same', () => {
+    const view = mountStage({ paneOrder: order })
+    scrolled('Steps panel', 300)
+    scrolled('Teaching panel', 900)
+
+    view.rerender(stage('section-1-recognize'))
+
+    expect(region('Steps panel').scrollTop).toBe(300)
+    expect(region('Teaching panel').scrollTop).toBe(900)
+  })
+})

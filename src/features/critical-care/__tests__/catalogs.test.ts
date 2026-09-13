@@ -19,6 +19,7 @@ import { criticalCareCompetencies } from '@/features/critical-care/content/compe
 import {
   criticalCareModuleCatalog,
   criticalCareModules,
+  type CriticalCareCatalogModuleDefinition,
 } from '@/features/critical-care/content/modules'
 import {
   criticalCareIcuScenarioPreparation,
@@ -69,6 +70,17 @@ describe('critical-care catalogs', () => {
       'crrt',
       'icu',
     ])
+  })
+
+  it('names every launcher module exactly as the catalog names it', () => {
+    for (const launcher of criticalCareModules) {
+      const catalogEntry: CriticalCareCatalogModuleDefinition | undefined =
+        criticalCareModuleCatalog.find((module) => module.id === launcher.slug)
+      expect(catalogEntry).toBeDefined()
+      expect(launcher.title).toBe(catalogEntry?.title)
+      expect(launcher.subtitle).toBe(catalogEntry?.subtitle)
+      expect(launcher.href).toBe(catalogEntry?.href)
+    }
   })
 
   it('parses lightweight activity definitions with stable unique IDs', () => {
