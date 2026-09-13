@@ -23,14 +23,22 @@ export function loadScopeModel(path: string): Promise<GLTF> {
   return promise
 }
 
-export async function loadSceneAssets(mode: ScopeMode, profile: AnatomyProfileId) {
+export async function loadSceneAssets(
+  mode: ScopeMode,
+  profile: AnatomyProfileId,
+  detailedControls = false,
+) {
   // The surface and collider share loadAirwayStlGeometry's URL+decoder cache.
   const [scopeCase, lumen, extras] = await Promise.all([
     loadStageScopeCase(profile),
     loadAirwayStlGeometry(TEACHING_LUMEN_URL, { dracoDecoderPath: DRACO_DECODER_PATH }),
     Promise.all(
       (mode === 'controls-isolated'
-        ? ['devices/bench.glb', 'devices/handle.glb', 'devices/scope-tip.glb']
+        ? [
+            'devices/bench.glb',
+            detailedControls ? 'devices/control-head.glb' : 'devices/handle.glb',
+            'devices/scope-tip.glb',
+          ]
         : mode === 'larynx-entry'
           ? ['larynx/larynx-lumen.glb', 'devices/scope-tip.glb']
           : mode === 'accessory'

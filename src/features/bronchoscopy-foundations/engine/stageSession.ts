@@ -93,6 +93,7 @@ export type BronchStageAction =
       readonly scopeCase: ScopeCase | null
     }
   | { readonly type: 'COMMIT_CHOICE'; readonly stepId: string; readonly choiceId: string }
+  | { readonly type: 'RETRY_LEARN_CHOICE'; readonly stepId: string }
   | {
       readonly type: 'COMMIT_SORT'
       readonly stepId: string
@@ -240,6 +241,11 @@ export function bronchStageReducer(lesson: BronchStageLesson) {
         return { ...session, scope: { ...session.scope, [action.stepId]: state } }
       }
       case 'SCOPE_COMMAND': {
+        if (
+          action.inputMode === 'scripted' &&
+          lesson.steps.find((step) => step.id === action.stepId)?.learn
+        )
+          return session
         const current = session.scope[action.stepId]
         if (!current) return session
         const next = reduceScope(current, action.command, action.inputMode, {
@@ -259,6 +265,23 @@ export function bronchStageReducer(lesson: BronchStageLesson) {
             },
             action.stepId,
           ),
+        }
+      }
+      case 'RETRY_LEARN_CHOICE': {
+        const index = lesson.steps.findIndex((step) => step.id === action.stepId)
+        const step = lesson.steps[index]
+        if (!step?.learn || step.interaction.kind !== 'prediction' || commitments.finished)
+          return session
+        const choices = { ...commitments.choices }
+        delete choices[action.stepId]
+        return {
+          ...session,
+          commitments: {
+            ...commitments,
+            choices,
+            performedIds: commitments.performedIds.filter((id) => id !== action.stepId),
+            confirmed: Math.min(commitments.confirmed, index - 1),
+          },
         }
       }
       case 'COMMIT_SORT': {
@@ -386,6 +409,11 @@ export function bronchStageReducer(lesson: BronchStageLesson) {
         return { ...session, commitments: next }
       }
       case 'FINISH':
+        if (
+          lesson.steps[0]?.learn &&
+          !lesson.steps.every((step) => commitments.performedIds.includes(step.id))
+        )
+          return session
         return { ...session, commitments: { ...commitments, finished: true } }
       default:
         return session

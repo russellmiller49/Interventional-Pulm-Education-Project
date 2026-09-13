@@ -182,6 +182,50 @@
       "publication_permitted": null
     },
     {
+      "path": "devices/control-head.glb",
+      "bytes": 216088,
+      "sha256": "a37bd40aa21301455f2571c9ecb7dbc2fcba9491dac791de5180597005b561fa",
+      "provenance": {
+        "class": "authored-for-simulation",
+        "source": ["scope asset brief; authored geometry parameters"],
+        "generatedBy": "scripts/bronchoscopy-foundations/build-control-head.py",
+        "numberClass": "Geometry dimensions, morph states, device values, trimming and review settings are authored for simulation unless explicitly identified as measured build results."
+      },
+      "origin": "Unbranded control-head close-up, authored from owner-supplied visual references; presentation geometry, not a manufacturer device model",
+      "creator_or_rightsholder": "Authored for this educational module; rights holder pending owner confirmation",
+      "license_or_permission": "Supplied for implementation and technical review; publication permission pending owner confirmation",
+      "deidentification_status": "Authored geometry or technical measurements; no patient identifiers added",
+      "clinical_reviewer": null,
+      "review_date": null,
+      "anatomy_profile_id": "adult-teaching-combined-left-basal-v1",
+      "camera_orientation_description": "Control head local Y up, Z toward viewer. Movable lever and suction pivots are in devices/control-head.json. The distal bending close-up uses the existing engine direction frame.",
+      "approved_use": "Development and technical review of educational simulation assets; clinical review and publication decision pending",
+      "clinical_review_status": "pending",
+      "publication_permitted": null
+    },
+    {
+      "path": "devices/control-head.json",
+      "bytes": 512,
+      "sha256": "a3418177405e0f4b2cccf4577f09eb81aca4c315c1ab178fcfdf96353ed47d7a",
+      "provenance": {
+        "class": "authored-for-simulation",
+        "source": ["scope asset brief; authored geometry parameters"],
+        "generatedBy": "scripts/bronchoscopy-foundations/build-control-head.py",
+        "numberClass": "Geometry dimensions, morph states, device values, trimming and review settings are authored for simulation unless explicitly identified as measured build results."
+      },
+      "origin": "Unbranded control-head close-up, authored from owner-supplied visual references; presentation geometry, not a manufacturer device model",
+      "creator_or_rightsholder": "Authored for this educational module; rights holder pending owner confirmation",
+      "license_or_permission": "Supplied for implementation and technical review; publication permission pending owner confirmation",
+      "deidentification_status": "Authored geometry or technical measurements; no patient identifiers added",
+      "clinical_reviewer": null,
+      "review_date": null,
+      "anatomy_profile_id": "adult-teaching-combined-left-basal-v1",
+      "camera_orientation_description": "Control head local Y up, Z toward viewer. Movable lever and suction pivots are in devices/control-head.json. The distal bending close-up uses the existing engine direction frame.",
+      "approved_use": "Development and technical review of educational simulation assets; clinical review and publication decision pending",
+      "clinical_review_status": "pending",
+      "publication_permitted": null
+    },
+    {
       "path": "devices/devices.json",
       "bytes": 3041,
       "sha256": "456aac85ac3b81e57ca5ed9aa0333e336ebe67febda8fcaa9085e7a6d57e2985",
@@ -468,7 +512,7 @@
       "publication_permitted": null
     }
   ],
-  "payloadBytes": 2070772,
+  "payloadBytes": 2287372,
   "totalBudgetBytes": 8000000,
   "manifestHashPolicy": "Every asset except this self-describing manifest is listed; budgets include this manifest.",
   "releaseStatus": "pending-clinical-review-and-junction-decision",

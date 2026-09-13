@@ -23,6 +23,11 @@ import {
 export type PlainScopeEventId = Exclude<ScopeEventId, `${string}:${string}`>
 
 export const PLAIN_SCOPE_EVENTS = [
+  'advanced',
+  'withdrawn',
+  'suction-applied',
+  'suction-released',
+  'bench-advanced-off-target',
   'reached-carina',
   'returned-to-trachea',
   'wall-contact',

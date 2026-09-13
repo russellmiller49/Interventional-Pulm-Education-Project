@@ -322,6 +322,12 @@ export type ScopeEventId =
   | `withdrew-to:${AirwayLabel}`
   | `declared:${AirwayLabel}:${DeclarableStatus}`
   | `control-used:${ScopeControlId}`
+  /** Actual nonzero travel, distinguished from an insertion button being pressed. */
+  | 'advanced'
+  | 'withdrawn'
+  | 'suction-applied'
+  | 'suction-released'
+  | 'bench-advanced-off-target'
   | `accessory:${AccessoryState}`
   | `accessory-moved:${AccessoryPosition}`
   | `assist:${ScopeAssist}`
@@ -387,6 +393,7 @@ export const SCOPE_METRIC_IDS: readonly ScopeMetricId[] = [
 
 /** What a step waits on, as predicates over the state and the events since the step began. */
 export type ScopeGoalTest =
+  | { readonly type: 'bench-target'; readonly point: Vec3; readonly toleranceDeg: number }
   | { readonly type: 'event'; readonly event: ScopeEventId }
   /** The events happened in this order (others may come between them). */
   | { readonly type: 'event-sequence'; readonly events: readonly ScopeEventId[] }
@@ -436,6 +443,10 @@ export interface ScopeViewSpec {
   readonly litAirways?: readonly AirwayLabel[]
   /** The model-boundary sentence printed under the scene. */
   readonly boundary: string
+  /** Learn-only authored target, shared by the scene and optical-frame goal check. */
+  readonly benchTarget?: { readonly point: Vec3; readonly radiusMm: number }
+  /** Physical action descriptions on the pilot's controls; existing callers retain labels. */
+  readonly physicalControlLabels?: boolean
 }
 
 export type ScopeCommand =

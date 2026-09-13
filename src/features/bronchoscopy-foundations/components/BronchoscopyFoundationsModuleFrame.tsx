@@ -93,7 +93,7 @@ export function BronchoscopyFoundationsModuleFrame({
       <ModuleFrameV2
         eyebrow="Interventional pulmonology · Bronchoscopy foundations"
         title="Bronchoscopy Foundations"
-        subtitle="Know where you are. Claim only what you saw."
+        subtitle="Prepare for supervised flexible bronchoscopy: instrument handling, airway inspection and basic procedural decisions."
         releaseLabel={releaseLabel}
         activeHref={activeHref}
         navItems={bronchoscopyFoundationsModuleNavItems}

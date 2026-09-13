@@ -18,7 +18,7 @@ describe('the stage lessons', () => {
     expect(bronchStageLessons()).toHaveLength(BRONCH_SECTION_IDS.length)
   })
 
-  it.each(BRONCH_SECTION_IDS)(
+  it.each(BRONCH_SECTION_IDS.filter((id) => id !== 'five-controls'))(
     '%s opens on Recognize, predicts once, acts, explains and ends on the transfer',
     (sectionId) => {
       const lesson = bronchStageLesson(sectionId)
@@ -41,6 +41,25 @@ describe('the stage lessons', () => {
       expect(observe).toHaveLength(act.kind === 'scope-lab' && act.observe ? 1 : 0)
     },
   )
+
+  it('opts only the pilot into teaching, demonstration and practice before its learning check', () => {
+    const lesson = bronchStageLesson('five-controls')
+    expect(lesson.steps[0].learn?.orientation).toBe(true)
+    expect(
+      lesson.steps
+        .slice(1, lesson.predictionStepIndex)
+        .every((step) => step.interaction.kind === 'scope-task'),
+    ).toBe(true)
+    expect(lesson.steps.filter((step) => step.interaction.kind === 'prediction')).toHaveLength(1)
+    expect(lesson.steps.at(-1)?.learn?.support).toBe('transfer')
+    expect(lesson.steps.at(-1)?.interaction.kind).toBe('scope-task')
+    expect(lesson.steps.every((step) => step.gate === 'open')).toBe(true)
+    for (const step of lesson.steps) {
+      expect(step.learn?.paragraphs.length).toBeGreaterThan(0)
+      const view = scopeViewOfStep(step)
+      if (view) expect(scopeViewErrors(view)).toEqual([])
+    }
+  })
 
   it.each(BRONCH_SECTION_IDS)(
     '%s carries no deny-listed phrase on a pre-commit surface',

@@ -34,23 +34,26 @@ for (const relative of paths) {
   const teachingProp =
     /^devices\/(bench|findings|handle|scope-tip)\.glb$/.test(relative) ||
     relative === 'devices/teaching-props.json'
+  const controlHead = /^devices\/control-head\.(glb|json)$/.test(relative)
   const graph = relative.endsWith('/graph.json')
   const airway = relative.startsWith(profile + '/')
   const larynx = relative.startsWith('larynx/') || relative.includes('larynx-')
   const devices = relative.startsWith('devices/') || relative.endsWith('accessories.png')
   const review = relative.includes('/review/') || relative.startsWith('review/')
   const bytes = await readFile(path.join(anatomy, relative))
-  const origin = teachingProp
-    ? 'Authored scope handle, distal tip, asymmetric bench target and generic practice geometry; not manufacturer or clinical reference assets'
-    : graph
-      ? 'Existing case-001 teaching graph; retained without modification'
-      : airway
-        ? 'Derived from the reviewed case-001 lumen; distal closing caps authored for simulation'
-        : larynx
-          ? 'Authored laryngeal wall and folds registered to the supplied cartilage/ligament model'
-          : devices
-            ? 'Authored teaching device dimensions and accessory geometry'
-            : 'Generated technical review of the authored and derived scope assets'
+  const origin = controlHead
+    ? 'Unbranded control-head close-up, authored from owner-supplied visual references; presentation geometry, not a manufacturer device model'
+    : teachingProp
+      ? 'Authored scope handle, distal tip, asymmetric bench target and generic practice geometry; not manufacturer or clinical reference assets'
+      : graph
+        ? 'Existing case-001 teaching graph; retained without modification'
+        : airway
+          ? 'Derived from the reviewed case-001 lumen; distal closing caps authored for simulation'
+          : larynx
+            ? 'Authored laryngeal wall and folds registered to the supplied cartilage/ligament model'
+            : devices
+              ? 'Authored teaching device dimensions and accessory geometry'
+              : 'Generated technical review of the authored and derived scope assets'
   const landmarks = {
     rul: 'RB1 above RB2 and RB3; edge 3 at 10 mm',
     rml: 'RB5 left of RB4; edge 9 at 6 mm',
@@ -73,13 +76,15 @@ for (const relative of paths) {
           : larynx
             ? ['anatomy_assets/Larynx.glb']
             : ['scope asset brief; authored geometry parameters'],
-      generatedBy: teachingProp
-        ? 'scripts/bronchoscopy-foundations/build-teaching-props.py'
-        : graph
-          ? 'scripts/bronchoscopy-foundations/build-teaching-graph.mts'
-          : review
-            ? 'scripts/bronchoscopy-foundations/review-scope-assets.mjs'
-            : 'scripts/bronchoscopy-foundations/build-scope-assets.py',
+      generatedBy: controlHead
+        ? 'scripts/bronchoscopy-foundations/build-control-head.py'
+        : teachingProp
+          ? 'scripts/bronchoscopy-foundations/build-teaching-props.py'
+          : graph
+            ? 'scripts/bronchoscopy-foundations/build-teaching-graph.mts'
+            : review
+              ? 'scripts/bronchoscopy-foundations/review-scope-assets.mjs'
+              : 'scripts/bronchoscopy-foundations/build-scope-assets.py',
       numberClass:
         'Geometry dimensions, morph states, device values, trimming and review settings are authored for simulation unless explicitly identified as measured build results.',
     },
@@ -99,13 +104,15 @@ for (const relative of paths) {
     anatomy_profile_id: profile,
     camera_orientation_description:
       landmarks[id] ??
-      (teachingProp
-        ? 'Authored local millimetres; +Z forward; placement and movable pivots are recorded in devices/teaching-props.json'
-        : larynx
-          ? 'Patient LPS millimetres; authored forward/left/anterior frame in larynx.json; look along increasing path distance'
-          : devices
-            ? 'Accessory local millimetres; distal tip at origin; +Z forward; scene places along the scope optical frame'
-            : 'Patient LPS millimetres; buildTransportFrames with the graph orientation landmarks; 88 degree nominal field of view across the wider optical axis'),
+      (controlHead
+        ? 'Control head local Y up, Z toward viewer. Movable lever and suction pivots are in devices/control-head.json. The distal bending close-up uses the existing engine direction frame.'
+        : teachingProp
+          ? 'Authored local millimetres; +Z forward; placement and movable pivots are recorded in devices/teaching-props.json'
+          : larynx
+            ? 'Patient LPS millimetres; authored forward/left/anterior frame in larynx.json; look along increasing path distance'
+            : devices
+              ? 'Accessory local millimetres; distal tip at origin; +Z forward; scene places along the scope optical frame'
+              : 'Patient LPS millimetres; buildTransportFrames with the graph orientation landmarks; 88 degree nominal field of view across the wider optical axis'),
     approved_use:
       'Development and technical review of educational simulation assets; clinical review and publication decision pending',
     clinical_review_status: 'pending',

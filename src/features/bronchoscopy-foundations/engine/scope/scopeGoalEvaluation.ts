@@ -6,6 +6,7 @@ import type {
 } from '../../components/scope/types'
 import { ledgerHas, ledgerStatus } from './inspectionLedger'
 import { scopeMetricValue } from './scopeMetrics'
+import { benchTargetObservation } from './scopeBenchTarget'
 
 /**
  * Goals are live predicates over the step's state and its history of events.
@@ -30,6 +31,11 @@ export function hasEventSequence(
 
 export function scopeGoalTestMet(test: ScopeGoalTest, state: ScopeState): boolean {
   switch (test.type) {
+    case 'bench-target':
+      return (
+        state.place === 'bench' &&
+        (benchTargetObservation(state, test.point)?.angleDeg ?? Infinity) <= test.toleranceDeg
+      )
     case 'event':
       return state.events.includes(test.event)
     case 'event-sequence':

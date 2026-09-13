@@ -1,0 +1,13 @@
+{
+  "schema": "bronchoscopy_foundations_control_head/v1",
+  "numberClass": "authored-for-simulation",
+  "authoredDate": "2026-09-13",
+  "clinicalReviewStatus": "pending",
+  "units": "illustrative-mm",
+  "interpretation": "Unbranded control head; separate enlarged views, not a dimensional device model.",
+  "leverPivot": [-7, 29, 18],
+  "leverTravelDeg": 52,
+  "suctionPivot": [29.959999084472656, 46.75199890136719, 1.0],
+  "suctionAxis": [0.6399999856948853, 0.7680000066757202, 0.0],
+  "suctionTravel": 2.4
+}

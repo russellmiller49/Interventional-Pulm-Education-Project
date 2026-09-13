@@ -10,6 +10,73 @@
   min-width: 0;
 }
 
+.instrumentFigure {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.6rem;
+  background: #f7fbfb;
+}
+
+.pilotButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.pilotButtons button {
+  min-height: 44px;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+}
+.pilotButtons button[aria-pressed='true'] {
+  background: var(--panel-2);
+  outline: 2px solid #67cace;
+}
+.pilotTaskContext {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.65rem 0.8rem;
+  margin-bottom: 0.6rem;
+  border-left: 3px solid #67cace;
+  background: var(--panel-2);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.pilotTaskContext p {
+  margin: 0;
+}
+.pilotCompactActions,
+.pilotCompactStatus {
+  display: none;
+}
+.pilotTaskContext[data-model-context='false'] {
+  display: none;
+}
+:global([data-compact='true']) .pilotTaskContext {
+  display: block;
+}
+:global([data-compact='true']) .pilotCompactStatus {
+  display: block;
+}
+:global([data-compact='true']) .pilotCompactActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.pilotCompactActions button,
+.pilotCompactActions a {
+  min-height: 44px;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid #67cace;
+  border-radius: 0.5rem;
+}
+.pilotCompactActions [data-pilot-primary='true'] {
+  color: #06252b;
+  background: #6ee7ea;
+  font-weight: 650;
+}
+
 .teachingCard {
   display: grid;
   gap: 0.5rem;
@@ -23,6 +90,12 @@
 
 .teachingCard p {
   margin: 0;
+}
+.teachingCard h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.4;
 }
 
 .kicker {

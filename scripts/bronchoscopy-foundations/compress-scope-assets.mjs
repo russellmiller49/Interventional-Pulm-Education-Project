@@ -6,6 +6,7 @@ import pipeline from 'gltf-pipeline'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const files = {
+  'control-head': ['control-head.raw.glb', 'devices/control-head.glb'],
   handle: ['handle.raw.glb', 'devices/handle.glb'],
   tip: ['scope-tip.raw.glb', 'devices/scope-tip.glb'],
   bench: ['bench.raw.glb', 'devices/bench.glb'],

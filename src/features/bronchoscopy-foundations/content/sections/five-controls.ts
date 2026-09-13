@@ -60,7 +60,7 @@ export const section: BronchSectionDefinition = {
   id: 'five-controls',
   title: 'The five controls at the scope',
   shortTitle: 'Five controls',
-  minutes: 8,
+  minutes: 12,
   moduleIds: ['M05'],
   objectives: [
     {
@@ -82,8 +82,7 @@ export const section: BronchSectionDefinition = {
   clinicalQuestion:
     'When one control at the bronchoscope moves, what changes at the tip and in the image?',
   recognizeTitle: 'The bronchoscope tip on a bench',
-  objective:
-    'Predict what each control at the scope will change at the tip, in the image and in the working channel, before moving it.',
+  objective: 'Learn how each basic movement changes the bronchoscope tip and the image.',
   why: 'Novices often advance, rotate and bend at once, then cannot tell which movement changed the view. Knowing what each control does on its own is what makes a later movement deliberate.',
   newConcept:
     'Aiming the tip takes two controls working together: shaft rotation turns the camera and the plane the tip bends in, and distal deflection bends the tip within that plane; insertion changes depth, not aim.',
@@ -336,7 +335,7 @@ export const section: BronchSectionDefinition = {
           label: 'Advance the tip, then withdraw it, reading the depth each time',
           test: {
             type: 'event-sequence',
-            events: ['control-used:insertion', 'control-used:insertion'],
+            events: ['advanced', 'withdrawn'],
           },
         },
         {
@@ -344,7 +343,7 @@ export const section: BronchSectionDefinition = {
           label: 'Apply suction, then release it',
           test: {
             type: 'event-sequence',
-            events: ['control-used:suction', 'control-used:suction'],
+            events: ['suction-applied', 'suction-released'],
           },
         },
       ],

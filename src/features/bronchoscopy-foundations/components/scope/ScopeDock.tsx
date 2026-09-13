@@ -68,6 +68,7 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
           <button
             id={id}
             type="button"
+            aria-label={key === 'advance' ? 'Advance' : 'Withdraw'}
             onPointerDown={(event) => start(event, direction)}
             onPointerUp={stop}
             onPointerCancel={stop}
@@ -75,6 +76,9 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
             onClick={() => send({ type: 'advance', mm: direction * state.inputs.stepMm })}
           >
             {key === 'advance' ? 'Advance' : 'Withdraw'}
+            {view.physicalControlLabels ? (
+              <small>{key === 'advance' ? 'Guide the tube forward' : 'Draw the tube back'}</small>
+            ) : null}
           </button>
         )
       }
@@ -86,6 +90,9 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
         return (
           <label htmlFor={id}>
             {rotate ? 'Rotation' : 'Deflection'} <output>{Math.round(value)}°</output>
+            {view.physicalControlLabels ? (
+              <small>{rotate ? 'Turn the control section' : 'Move the angulation lever'}</small>
+            ) : null}
             <input
               id={id}
               type="range"
@@ -93,6 +100,7 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
               max={limit}
               step={1}
               value={value}
+              aria-label={rotate ? 'Rotation' : 'Deflection'}
               onChange={(event) =>
                 send({
                   type: rotate ? 'set-rotation' : 'set-deflection',
@@ -113,6 +121,7 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
               onChange={(event) => send({ type: 'suction', on: event.target.checked })}
             />
             Suction
+            {view.physicalControlLabels ? <small>Apply / release the suction control</small> : null}
           </label>
         )
       case 'accessory':
