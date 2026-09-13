@@ -2,21 +2,26 @@ import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { acousticLabelAt, type AcousticVolume } from '@bronchoscopy-core/acoustic'
 import type { SimulatorProbePose } from '../features/simulator/pose'
+import { ImageDiscovery } from './ImageDiscovery'
+import type { LabelImage } from './imageDiscoveryPixels'
 
 export function ModelSection({
   volume,
   pose,
   selectedPoint,
   onViewed,
+  discover = false,
 }: {
   volume: AcousticVolume
   pose: SimulatorProbePose
   selectedPoint: THREE.Vector3 | null
   onViewed: () => void
+  discover?: boolean
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const [plane, setPlane] = useState<'axial' | 'coronal' | 'sagittal'>('axial')
   const [offset, setOffset] = useState(0)
+  const [image, setImage] = useState<LabelImage | null>(null)
   const point = selectedPoint ?? pose.position
   useEffect(() => {
     const ctx = canvas.current?.getContext('2d')
@@ -24,6 +29,7 @@ export function ModelSection({
     const size = 300,
       span = 150,
       pixels = ctx.createImageData(size, size)
+    const labelImage = new Uint8Array(size * size)
     const origin = point.clone()
     const right = new THREE.Vector3(plane === 'sagittal' ? 0 : 1, 0, plane === 'sagittal' ? 1 : 0)
     const up = new THREE.Vector3(0, plane === 'axial' ? 0 : 1, plane === 'axial' ? 1 : 0)
@@ -47,6 +53,7 @@ export function ModelSection({
           .addScaledVector(right, ((col - size / 2) * span) / size)
           .addScaledVector(up, ((size / 2 - row) * span) / size)
         const id = acousticLabelAt(volume, p.x, -p.z, p.y)
+        labelImage[row * size + col] = id
         const color = palette[id] ?? [0, 0, 0],
           index = (row * size + col) * 4
         pixels.data.set([...color, 255], index)
@@ -93,6 +100,7 @@ export function ModelSection({
     ctx.fillText(plane === 'sagittal' ? 'A' : 'L', size - 18, size / 2)
     ctx.fillText(plane === 'axial' ? 'A' : 'S', size / 2, 15)
     ctx.fillText(plane === 'axial' ? 'P' : 'I', size / 2, size - 8)
+    setImage({ width: size, height: size, labelImage })
     onViewed()
   }, [volume, pose, point, plane, offset, onViewed])
   return (
@@ -109,12 +117,25 @@ export function ModelSection({
           </button>
         ))}
       </div>
-      <canvas
-        ref={canvas}
-        width={300}
-        height={300}
-        aria-label={`${plane} model section with selected position and ultrasound plane`}
-      />
+      <div className="linked-section-image">
+        <canvas
+          ref={canvas}
+          width={300}
+          height={300}
+          aria-label={`${plane} model section with selected position and ultrasound plane`}
+        />
+        <ImageDiscovery
+          canvas={canvas}
+          image={image}
+          labels={volume.metadata.labels}
+          enabled={discover}
+        />
+      </div>
+      {discover && (
+        <p className="guided-label">
+          Hover or tap to name a structure. Focus the image and use arrow keys to explore.
+        </p>
+      )}
       <label>
         Section offset <output>{offset} mm</output>
         <input

@@ -45,6 +45,38 @@ select {
   overflow-wrap: anywhere;
   pointer-events: none;
 }
+.linked-section-image {
+  position: relative;
+  max-width: 300px;
+  margin: auto;
+}
+.linked-image-point {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  transform: translate(-50%, -50%);
+  border: 2px solid #f6c96c;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 0 1px #081c22;
+}
+.linked-image-hint {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.guided-workbench canvas:focus-visible {
+  outline: 2px solid #75e1de;
+  outline-offset: -2px;
+}
+.guided-workbench .simulator-ultrasound-coupling,
+.guided-workbench .simulator-ultrasound-readout {
+  pointer-events: none;
+}
 .linked-models {
   border-bottom: 1px solid #36515a;
   margin-bottom: 12px;

@@ -19,6 +19,7 @@ import {
   type LinkedModels,
 } from './linkedModels'
 import { ModelSection } from './ModelSection'
+import { canDiscoverImage } from './imageDiscoveryPixels'
 
 type Mode = 'scope' | 'anatomy' | 'section'
 type Controller = { update: () => void; orbit: (angle: number) => void; reset: () => void }
@@ -607,6 +608,7 @@ export function LinkedModelView(props: Props) {
               pose={pose}
               selectedPoint={config.locked && !config.reveal ? null : selectedPoint}
               onViewed={viewed}
+              discover={canDiscoverImage(config)}
             />
           )}
         </div>
