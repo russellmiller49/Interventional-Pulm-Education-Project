@@ -54,13 +54,6 @@ const TARGETS: Readonly<Record<string, readonly EcmoMapAnswerTarget[]>> = {
     { choiceId: 'after-membrane', segmentId: 'post-membrane' },
     { choiceId: 'in-the-gas-path', segmentId: 'gas-supply' },
   ]),
-  // "Which part of the circuit does that pattern point to as the problem?" — two pressures rising.
-  'ecmo.foundation.path.transfer': Object.freeze([
-    { choiceId: 'drainage', segmentId: 'drainage' },
-    { choiceId: 'membrane', segmentId: 'membrane' },
-    { choiceId: 'return-side', segmentId: 'return' },
-    { choiceId: 'not-enough', offCircuit: true },
-  ]),
   // "Where does that pattern localise?" — speed raised twice, drainage falling, flow flat.
   'ecmo.foundation.pump.transfer': Object.freeze([
     { choiceId: 'drainage-preload', segmentId: 'drainage' },

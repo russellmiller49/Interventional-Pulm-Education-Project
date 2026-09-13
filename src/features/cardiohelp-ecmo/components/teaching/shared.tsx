@@ -1,3 +1,4 @@
+import stageStyles from '../stage/EcmoLessonStage.module.css'
 import type { ReactNode } from 'react'
 
 import { DerivedValueReadout } from '@/features/critical-care/components/teaching/EvidenceRenderers'
@@ -5,6 +6,7 @@ import type { CriticalCareDerivedValueGuide } from '@/features/critical-care/con
 
 import type { EcmoChannelReadout, EcmoSimulationState } from '../../engine/types'
 import { UNAVAILABLE_INDICATION, formatChannelReadout } from '../channelReadout'
+import { useStageTeachingScope } from '../stage/StageTeachingScope'
 
 /**
  * Primitives shared by the ECMO foundation teaching panels.
@@ -25,6 +27,64 @@ export const styles = {
   heading: 'text-sm font-semibold uppercase tracking-wide text-muted-foreground',
   figureCaption: 'mt-2 text-xs leading-5 text-muted-foreground',
 } as const
+
+/** A small active explanation; other ordinary Learn material remains available on request. */
+export function FoundationTeachingBlock({
+  id,
+  title,
+  children,
+}: {
+  readonly id: string
+  readonly title: string
+  readonly children: ReactNode
+}) {
+  const scope = useStageTeachingScope()
+  if (!scope?.foundationBlock || scope.foundationBlock === id) {
+    return (
+      <div data-active-foundation-block={id}>
+        {scope?.foundationNavigation ? (
+          <p
+            className={stageStyles.compactFoundationNavigation}
+            data-compact-foundation-instruction
+          >
+            {scope.foundationNavigation.instruction}
+          </p>
+        ) : null}
+        {children}
+        {scope?.foundationNavigation ? (
+          <div className={stageStyles.compactFoundationNavigation}>
+            <button
+              type="button"
+              className={stageStyles.compactFoundationContinue}
+              data-compact-foundation-continue
+              aria-label={`Continue to ${scope.foundationNavigation.nextTitle}`}
+              onClick={scope.foundationNavigation.onContinue}
+            >
+              Continue
+            </button>
+          </div>
+        ) : null}
+      </div>
+    )
+  }
+  return (
+    <details className={styles.section} data-foundation-reference>
+      <summary className="cursor-pointer font-semibold">{title}</summary>
+      <div className="mt-3">{children}</div>
+    </details>
+  )
+}
+
+export const PART_MEASUREMENT_IDENTITY =
+  "pArt is pressure in the return-side circuit tubing, not the patient's arterial blood pressure."
+
+export function CircuitPressureIdentity() {
+  return (
+    <p className="mt-2 text-sm leading-6" data-circuit-pressure-identity>
+      {PART_MEASUREMENT_IDENTITY}
+    </p>
+  )
+}
 
 export function round(value: number, places = 0): number {
   const scale = 10 ** places

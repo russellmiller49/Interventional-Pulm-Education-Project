@@ -1,3 +1,5 @@
+import { advanceFoundationOnce, reachFoundationStep } from '../test-support/foundationJourney'
+import { buildFoundationStageLesson } from '../components/stage/adapters/foundationStageAdapter'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
@@ -174,8 +176,8 @@ function currentStepId(): string {
 }
 
 function currentPhase(): Phase {
-  const stage = currentStepId()
-  return stage.slice(stage.lastIndexOf('-') + 1) as Phase
+  currentStepId()
+  return document.querySelector('[data-active-phase]')?.getAttribute('data-active-phase') as Phase
 }
 
 function stepRow(phase: Phase): HTMLLIElement {
@@ -210,7 +212,7 @@ function continueStep() {
  * not a Continue to click, and the keyed component lives only in the registry.
  */
 function answerAttributionIfPresent(): boolean {
-  const commit = screen.queryByRole('button', { name: 'Commit these answers' })
+  const commit = screen.queryByRole('button', { name: 'Submit these answers' })
   if (!commit) return false
   for (const row of Array.from(
     document.querySelectorAll<HTMLElement>('[data-attribution-candidate]'),
@@ -224,15 +226,15 @@ function answerAttributionIfPresent(): boolean {
     if (!keyed) continue
     fireEvent.change(select, { target: { value: keyed.componentId } })
   }
-  fireEvent.click(screen.getByRole('button', { name: 'Commit these answers' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Submit these answers' }))
   return true
 }
 
 function continueTo(phase: Phase) {
   for (let guard = 0; currentPhase() !== phase; guard += 1) {
-    if (guard > 8) throw new Error(`could not reach ${phase}; stuck at ${currentPhase()}`)
+    if (guard > 40) throw new Error(`could not reach ${phase}; stuck at ${currentPhase()}`)
     if (answerAttributionIfPresent()) continue
-    continueStep()
+    advanceFoundationOnce()
   }
 }
 
@@ -255,7 +257,7 @@ function predictionChoice(sectionId: EcmoInteractiveFoundationSectionId): HTMLIn
 function commitPredictionChoice(sectionId: EcmoInteractiveFoundationSectionId) {
   continueTo('predict')
   fireEvent.click(predictionChoice(sectionId))
-  fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
+  fireEvent.click(screen.getByRole('button', { name: /^(Commit this prediction|Submit answer)$/ }))
 }
 
 /** Commit, then follow the explicit Continue into the Act step. */
@@ -687,7 +689,9 @@ describe('bounded actions', () => {
     expect(document.querySelector('[data-other-answers-panel]')).toBeNull()
 
     fireEvent.click(predictionChoice('why-extracorporeal-support'))
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: /^(Commit this prediction|Submit answer)$/ }),
+    )
 
     const chosen = prediction.choices[0]
     const panel = document.querySelector('[data-other-answers-panel]')
@@ -941,7 +945,7 @@ describe('the recognize phase is reading only', () => {
     expect(nowPrimary()).toHaveTextContent('Continue')
     expect(
       screen.getByRole('heading', {
-        name: ecmoFoundationLessonRuntime(sectionId).phases.recognize.objective,
+        name: buildFoundationStageLesson(sectionId, 'vv').steps[0].title,
       }),
     ).toBeInTheDocument()
   })
@@ -965,7 +969,9 @@ describe('every interactive section mounts', () => {
       expect(document.querySelector(`[data-teaching-panel="${sectionId}"]`)).not.toBeNull()
       expect(document.querySelector('[data-device-boundary]')).not.toBeNull()
       // Six steps, one progression, one current row.
-      expect(document.querySelectorAll('[data-step-list] li[data-step-id]')).toHaveLength(6)
+      expect(document.querySelectorAll('[data-step-list] li[data-step-id]')).toHaveLength(
+        buildFoundationStageLesson(sectionId, 'vv').steps.length,
+      )
       expect(currentStepId()).toBe(`${sectionId}-recognize`)
     },
   )
@@ -992,7 +998,7 @@ describe('the stage shell around the section', () => {
     fireEvent.click(screen.getByRole('button', { name: 'What do I do now?' }))
     expect(dialog).toHaveAttribute('open')
     expect(dialog?.textContent).toContain(
-      ecmoFoundationLessonRuntime('circuit-flow-path').phases.recognize.requiredAction,
+      buildFoundationStageLesson('circuit-flow-path', 'vv').steps[0].instruction,
     )
   })
 
@@ -1024,7 +1030,7 @@ describe('the stage shell around the section', () => {
 
     const { transfer } = ecmoFoundationLearningItemsFor('why-extracorporeal-support')
     fireEvent.click(screen.getByRole('radio', { name: transfer.choices[0].label }))
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this answer' }))
+    fireEvent.click(screen.getByRole('button', { name: /^(Commit this answer|Submit answer)$/ }))
 
     expect(document.querySelector('[data-stage-completion]')).not.toBeNull()
     const next = nextPathwaySection(
@@ -1180,95 +1186,40 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     },
   )
 
-  /*
-   * The gate that keeps the walk from answering the question next door.
-   *
-   * `circuit-flow-path` asks the learner to place a named channel, and its own `act` instruction is
-   * to find the channels on the map. So the stop does not name what it reports until the learner
-   * has committed — the one authority every answer-bearing surface reads.
-   */
-  it('withholds the reading names until the prediction is committed', () => {
+  it('teaches locations before a deliberately unlabelled retrieval check', () => {
     mount('circuit-flow-path')
-    // Asserted on the card's whole text, not on the two blocks that carry the names.
-    // The first version of this checked `[data-walk-reported-here]` and `[data-walk-live-signals]`
-    // were absent — and passed while the card's own text equivalent printed "Reported here: …"
-    // four lines below them. The accessible copy was the surface leaking the answer.
-    expect(walkCard().textContent).not.toMatch(/Reported here/i)
-    expect(walkCard().textContent).not.toMatch(/\bpVen\b/)
-    expect(walkCard().querySelector('[data-walk-reported-here]')).toBeNull()
-    expect(walkCard().querySelector('[data-walk-live-signals]')).toBeNull()
-    // The map does not ring them either: ringing exactly the channel the prediction asks a learner
-    // to place would be a sharper pointer than the seven this map flagged before the walk existed.
-    // The map is the simulator pane's pressure-zone map now, which withholds its channel placements
-    // for this section until commitment — so there is no flag to ring, and nothing is rung.
-    expect(circuitMap().getAttribute('data-location-disclosure')).toBe('withheld')
-    expect(circuitMap().getAttribute('data-presentation-kind')).toBe('walk-stop')
-    expect(ringedSensorSites()).toHaveLength(0)
-
-    // Reaching for the Act step uncommitted is the bypass the independent review reproduced; it
-    // reveals nothing now, because the step is not the authority and the row will not move.
-    continueTo('predict')
-    expect(stepRowState('act')).toBe('locked')
-    fireEvent.click(stepRow('act').querySelector('button')!)
-    expect(currentPhase()).toBe('predict')
-    expect(walkCard().textContent).not.toMatch(/Reported here/i)
-    expect(ringedSensorSites()).toHaveLength(0)
-    cleanup()
-
-    mount('circuit-flow-path')
-    commitAndContinue('circuit-flow-path')
-    expect(walkCard().querySelector('[data-walk-reported-here]')?.textContent).toMatch(
-      /drainage pressure \(pVen\)/,
-    )
-    // Committed: the placements are drawn, and the stop's own reading is rung on the map.
-    expect(circuitMap().getAttribute('data-location-disclosure')).toBe('full')
+    expect(walkCard().textContent).toMatch(/Reported here.*drainage pressure/i)
+    expect(circuitMap()).toHaveAttribute('data-location-disclosure', 'full')
     expect(ringedSensorSites()).toEqual(['pVen'])
+    reachFoundationStep('circuit-flow-path', 'pressure-sites')
+    fireEvent.click(screen.getByRole('button', { name: /^pInt$/ }))
+    expect(
+      document.querySelector('[data-active-foundation-block="pressure-sites"]'),
+    ).toHaveTextContent('Between pump and oxygenator')
+    expect(ringedSensorSites()).toEqual(['pInt'])
+    reachFoundationStep('circuit-flow-path', 'predict')
+    expect(circuitMap()).toHaveAttribute('data-location-disclosure', 'withheld')
+    expect(circuitMap()).toHaveAttribute('data-presentation-kind', 'none')
+    expect(document.querySelector('[data-circuit-walk]')).toBeNull()
   })
 
-  it('keeps the walk open when a committed learner reviews an earlier step', () => {
+  it('retains ordinary teaching when Back returns from the retrieval question', () => {
     mount('circuit-flow-path')
-    commitAndContinue('circuit-flow-path')
+    commitPredictionChoice('circuit-flow-path')
+    fireEvent.click(document.querySelector('[data-now-back]')!)
+    expect(currentPhase()).toBe('observe')
+    expect(circuitMap()).toHaveAttribute('data-location-disclosure', 'full')
     expect(walkCard().querySelector('[data-walk-reported-here]')).not.toBeNull()
-
-    // Reviewing recognize is re-reading, not un-committing: the performed row expands its recap in
-    // place, the stage stays where it was, the commitment is preserved for the session, so the
-    // teaching stays open and the later steps stay reachable.
-    expect(stepRowState('recognize')).toBe('done')
-    fireEvent.click(stepRow('recognize').querySelector('button')!)
-    expect(stepRow('recognize').querySelector('[data-step-recap]')).not.toBeNull()
-    expect(currentPhase()).toBe('act')
-    expect(walkCard().querySelector('[data-walk-reported-here]')).not.toBeNull()
-    expect(document.querySelector('[data-phase-lock-note]')).toBeNull()
-    continueTo('observe')
-    expect(walkCard().querySelector('[data-walk-reported-here]')).not.toBeNull()
+    continueStep()
+    expect(document.querySelector('fieldset[data-prediction-choices]')).toBeDisabled()
   })
 
-  /*
-   * The stop whose conclusion is its own section's keyed answer.
-   *
-   * `pump-and-pressure-zones` opens on stop five, so this card is what sits beside the prediction
-   * however the learner arrives. Its takeaway is both halves of the keyed choice — flow follows
-   * speed, and it is bought with suction — and it shipped ungated.
-   */
-  it('withholds a stop conclusion that would answer its own section', () => {
+  it('teaches a speed increase before asking about a different speed change', () => {
     mount('pump-and-pressure-zones')
-    continueTo('predict')
-    expect(walkCard().getAttribute('data-walk-stop')).toBe('walk-pump-under-load')
-
-    // The question is on screen...
-    expect(document.body.textContent).toMatch(/pump speed is about to be raised/i)
-    // ...and the answer is not.
-    expect(walkCard().querySelector('[data-walk-takeaway]')).toBeNull()
-    expect(walkCard().textContent).not.toMatch(/bought with suction/i)
-    expect(walkCard().textContent).not.toMatch(/more negative/i)
-    expect(walkCard().textContent).not.toMatch(/pulls harder|pulling harder/i)
-
-    // The conclusion arrives with the commitment itself, not with a step change.
-    commitPredictionChoice('pump-and-pressure-zones')
-    expect(currentPhase()).toBe('predict')
-    expect(walkCard().querySelector('[data-walk-takeaway]')?.textContent).toMatch(
-      /bought with suction/i,
-    )
+    reachFoundationStep('pump-and-pressure-zones', 'predict')
+    expect(document.querySelector('[data-pane="task"]')).toHaveTextContent(/reduced by 300 rpm/i)
+    expect(document.querySelector('[data-circuit-walk]')).toBeNull()
+    expect(document.querySelector('[data-other-answers-panel]')).toBeNull()
   })
 
   it('leaves a stop conclusion that answers nothing on screen throughout', () => {
@@ -1279,35 +1230,20 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     )
   })
 
-  it('offers no comparison before the section has taken its prediction', () => {
-    // The activity hides its "Bounded actions" block in recognize and predict. These beats load
-    // states through those very actions, so an ungated beat button was a second door into a room
-    // the first door is locked out of.
+  it('offers one required comparison before the independent question', () => {
     mount('pump-and-pressure-zones')
-    continueTo('predict')
-    press('[data-walk-next]')
-    expect(stopId()).toBe('walk-downstream-load')
-    expect(walkCard().querySelector('[data-walk-comparison]')).toBeNull()
+    reachFoundationStep('pump-and-pressure-zones', 'act')
+    expect(nowPrimary()).toHaveTextContent('Increase pump speed by 300 rpm')
+    expect(screen.queryByRole('button', { name: 'Continue' })).toBeNull()
     expect(walkCard().querySelectorAll('[data-walk-beat]')).toHaveLength(0)
+    fireEvent.click(nowPrimary())
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled()
   })
 
-  it('runs a comparison beat through the action the section already declares', () => {
+  it('loads the existing return-resistance comparison only on its own task', () => {
     mount('pump-and-pressure-zones')
-    commitAndContinue('pump-and-pressure-zones')
-    press('[data-walk-next]')
-    expect(stopId()).toBe('walk-downstream-load')
-
-    const beats = [...walkCard().querySelectorAll('[data-walk-beat]')].map((node) =>
-      node.getAttribute('data-walk-beat'),
-    )
-    expect(beats).toEqual([
-      'walk-return-load-baseline',
-      'walk-return-load-obstructed',
-      'walk-return-load-matched-flow',
-    ])
-
-    fireEvent.click(walkCard().querySelector('[data-walk-beat="walk-return-load-obstructed"]')!)
-    // The state on screen is the one the beat named, reached through the lesson's own variant.
+    reachFoundationStep('pump-and-pressure-zones', 'loading')
+    fireEvent.click(nowPrimary())
     expect(loadedVariantId()).toBe('return-resistance-preview')
     expect(loadedStateCard()).toMatch(/Return-side resistance — mechanism preview/i)
   })
@@ -1345,7 +1281,7 @@ describe('assigning proposed changes to the component they act on', () => {
   }
 
   function commitButton(): HTMLElement {
-    return screen.getByRole('button', { name: 'Commit these answers' })
+    return screen.getByRole('button', { name: 'Submit these answers' })
   }
 
   function answer(candidateId: string, componentId: string) {
@@ -1453,12 +1389,12 @@ describe('assigning proposed changes to the component they act on', () => {
     expect(document.querySelector('[data-attribution-components]')).not.toBeNull()
 
     continueStep()
-    expect(currentPhase()).toBe('observe')
+    expect(currentPhase()).toBe('transfer')
   })
 
-  it('leaves the other nine sections on their bounded actions', () => {
-    mount('circuit-flow-path')
-    commitAndContinue('circuit-flow-path')
+  it('leaves track-specific sections on their existing bounded actions', () => {
+    mount('vv-normal-state')
+    commitAndContinue('vv-normal-state')
     expect(currentPhase()).toBe('act')
     expect(rows()).toHaveLength(0)
     expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument()
@@ -1475,72 +1411,39 @@ describe('assigning proposed changes to the component they act on', () => {
  */
 describe('what the teaching pane shows, step by step', () => {
   const SECTION = 'why-extracorporeal-support'
-
-  function openBlocks(): string[] {
-    return Array.from(document.querySelectorAll<HTMLElement>('[data-teaching-panel] > *'))
-      .filter((node) => !(node.tagName === 'DETAILS' && node.hasAttribute('data-phase-collapsed')))
-      .map((node) => node.querySelector('h3,summary')?.textContent?.trim() ?? '')
-      .filter(Boolean)
-  }
-
-  function explorerIsFolded(): boolean {
-    const explorer = document.querySelector('[data-oxygen-delivery-explorer]')
-    if (!explorer) return true
-    return explorer.closest('[data-phase-collapsed]') !== null
-  }
-
-  it('foregrounds the components while the learner is reading and predicting', () => {
+  it('opens the delivery relationship and keeps the advanced explorer optional', () => {
     mount(SECTION)
-    expect(openBlocks().join(' | ')).toMatch(/component by component/i)
-    // Nothing to manipulate yet; the explorer is folded away rather than absent.
-    expect(explorerIsFolded()).toBe(true)
-    expect(document.querySelector('[data-oxygen-delivery-explorer]')).not.toBeNull()
-  })
-
-  it('brings the interactive controls forward on the step that asks the learner to act', () => {
-    mount(SECTION)
-    commitAndContinue(SECTION)
-    expect(currentPhase()).toBe('act')
-    expect(explorerIsFolded()).toBe(false)
-    expect(screen.getByLabelText('Hemoglobin')).toBeInTheDocument()
-    expect(screen.getByLabelText(/^Cardiac output/)).toBeInTheDocument()
-  })
-
-  it('moves the pane on as the steps advance, rather than repeating one view', () => {
-    mount(SECTION)
-    const seen = new Map<string, string>()
-    seen.set('recognize', openBlocks().join(' | '))
-    commitPredictionChoice(SECTION)
-    seen.set('predict', openBlocks().join(' | '))
-    for (const phase of ['act', 'observe', 'explain'] as const) {
-      continueTo(phase)
-      seen.set(phase, openBlocks().join(' | '))
-    }
-
-    /*
-     * Recognize and Predict deliberately share their reference material — the learner reads the
-     * components, then is asked about them, and the question's own stem carries every value it
-     * needs. What the review found was the *whole* section standing still, so what is pinned is
-     * that the pane actually moves: three distinct views across the five steps, with the steps that
-     * ask for something different showing something different.
-     */
-    expect(new Set(seen.values()).size).toBeGreaterThanOrEqual(3)
-    expect(seen.get('act')).not.toBe(seen.get('recognize'))
-    expect(seen.get('observe')).not.toBe(seen.get('predict'))
-    expect(seen.get('explain')).not.toBe(seen.get('act'))
-  })
-
-  it('keeps every folded block reachable, so nothing already read becomes lost', () => {
-    mount(SECTION)
-    commitAndContinue(SECTION)
-    const folded = Array.from(
-      document.querySelectorAll<HTMLDetailsElement>('[data-phase-collapsed]'),
+    expect(document.querySelector('[data-active-foundation-block="delivery"]')).toHaveTextContent(
+      /oxygen content/i,
     )
-    expect(folded.length).toBeGreaterThan(0)
-    for (const node of folded) {
-      // A native disclosure: keyboard-operable, announced, and openable with no script.
-      expect(node.tagName).toBe('DETAILS')
-      expect(node.querySelector('summary')?.textContent?.trim()).toBeTruthy()
+    const explorer = document.querySelector('[data-oxygen-delivery-explorer]')
+    expect(explorer).not.toBeNull()
+    expect(explorer?.closest('details')).not.toHaveAttribute('open')
+  })
+  it('opens the worked example on entry, before asking for an answer', () => {
+    mount(SECTION)
+    continueStep()
+    expect(
+      document.querySelector('[data-active-foundation-block="support-example"]'),
+    ).not.toBeNull()
+    expect(document.querySelector('[data-prediction-choices]')).toBeNull()
+  })
+  it('does not mount case reasoning or the reference explorer beside an independent case', () => {
+    mount(SECTION)
+    reachFoundationStep(SECTION, 'predict')
+    expect(document.querySelector('[data-oxygen-delivery-explorer]')).toBeNull()
+    for (const choice of ecmoFoundationLearningItemsFor(SECTION).prediction.choices) {
+      expect(document.body.textContent).not.toContain(choice.rationale)
+    }
+  })
+  it('keeps ordinary reference blocks in native, initially closed disclosures', () => {
+    mount(SECTION)
+    continueStep()
+    const references = document.querySelectorAll('details[data-foundation-reference]')
+    expect(references.length).toBeGreaterThan(0)
+    for (const reference of references) {
+      expect(reference).not.toHaveAttribute('open')
+      expect(reference.querySelector('summary')?.textContent).toBeTruthy()
     }
   })
 })

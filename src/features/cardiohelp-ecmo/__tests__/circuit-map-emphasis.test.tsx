@@ -1,3 +1,4 @@
+import { reachFoundationStep } from '../test-support/foundationJourney'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
@@ -435,7 +436,7 @@ describe('the circuit walk, marked on the real map', () => {
     )
     expect(markedSegments()).toEqual(['drainage'])
     expect(document.querySelector('[data-map-emphasis-caption]')?.textContent).toBe(
-      'You are here: Patient venous drainage.',
+      'You are here: Patient venous drainage. Ringed on the map: drainage pressure (pVen).',
     )
     // The whole drawing, fitted to the pane, with the stop lit on it.
     const svg = document.querySelector('svg[data-map-frame]')
@@ -465,29 +466,23 @@ describe('the circuit walk, marked on the real map', () => {
     )
   })
 
-  it('rings no reading before the prediction is committed, and the stop’s own reading after', () => {
+  it('rings the teaching site first, and removes all emphasis during unlabelled retrieval', () => {
     mountSection('circuit-flow-path')
-    expect(document.querySelector('[data-map-emphasis-role="sensor-site"]')).toBeNull()
-    expect(
-      document.querySelector('#cardiohelp-circuit-panel')?.getAttribute('data-location-disclosure'),
-    ).toBe('withheld')
-
-    // Commit, the way a learner does: choose, then commit.
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
-    const choice = document.querySelector<HTMLInputElement>('[data-prediction-choices] input')
-    fireEvent.click(choice!)
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
-
-    expect(
-      document.querySelector('#cardiohelp-circuit-panel')?.getAttribute('data-location-disclosure'),
-    ).toBe('full')
-    expect(
-      [...document.querySelectorAll('[data-map-emphasis-role="sensor-site"]')].map((node) =>
-        node.getAttribute('data-map-emphasis-target'),
-      ),
-    ).toEqual(['pVen'])
-    expect(document.querySelector('[data-map-emphasis-caption]')?.textContent).toBe(
-      'You are here: Patient venous drainage. Ringed on the map: drainage pressure (pVen).',
+    expect(document.querySelector('[data-map-emphasis-role="sensor-site"]')).not.toBeNull()
+    expect(document.querySelector('#cardiohelp-circuit-panel')).toHaveAttribute(
+      'data-location-disclosure',
+      'full',
+    )
+    reachFoundationStep('circuit-flow-path', 'predict')
+    expect(document.querySelector('[data-map-emphasis]')).toBeNull()
+    expect(document.querySelector('#cardiohelp-circuit-panel')).toHaveAttribute(
+      'data-location-disclosure',
+      'withheld',
+    )
+    fireEvent.click(document.querySelector('[data-now-back]')!)
+    expect(document.querySelector('#cardiohelp-circuit-panel')).toHaveAttribute(
+      'data-location-disclosure',
+      'full',
     )
   })
 

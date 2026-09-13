@@ -503,12 +503,16 @@ describe('foundation teaching panels', () => {
     const va = render(
       <EcmoFoundationTeachingPanel sectionId="circuit-flow-path" state={settled('va')} />,
     )
-    expect(va.container.textContent).toMatch(/post-oxygenator → arterial return/i)
+    expect(va.container.textContent).toMatch(
+      /returns oxygenated blood into the arterial circulation/i,
+    )
     va.unmount()
     const vv = render(
       <EcmoFoundationTeachingPanel sectionId="circuit-flow-path" state={settled('vv')} />,
     )
-    expect(vv.container.textContent).toMatch(/post-oxygenator → venous return/i)
+    expect(vv.container.textContent).toMatch(
+      /oxygenated return blood enters the venous circulation/i,
+    )
   })
 
   /*

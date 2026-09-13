@@ -1,3 +1,4 @@
+import { reachFoundationStep } from '../test-support/foundationJourney'
 import { fireEvent, render, screen } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
@@ -259,12 +260,12 @@ describe('where the stage puts them', () => {
     expect(details()?.querySelectorAll('[data-citation-title]').length).toBeGreaterThan(0)
 
     // Committing is what unfolds them, so get to the prediction the way a learner does.
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    reachFoundationStep('why-extracorporeal-support', 'predict')
     // The prediction's own radios, not the track chooser's, which also uses the radio role.
     const choice = container.querySelector<HTMLInputElement>('[data-prediction-choices] input')
     expect(choice).not.toBeNull()
     fireEvent.click(choice as HTMLInputElement)
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Submit answer' }))
 
     expect(details()).toHaveAttribute('data-stage-sources-claims', 'true')
     expect(details()?.querySelector('[data-citation-supports]')).not.toBeNull()

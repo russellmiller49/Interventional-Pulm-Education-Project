@@ -10,7 +10,7 @@ import type { EcmoSimulationState } from '../../engine/types'
 import type { EcmoFoundationSnapshot } from '../../session/foundationSession'
 import type { EcmoWalkPanelProps } from './useEcmoCircuitWalk'
 import { BloodFlowVsSweepPanel } from './BloodFlowVsSweepPanel'
-import { CircuitFlowPathPanel } from './CircuitFlowPathPanel'
+import { CircuitFlowPathPanel, type FoundationPressureSite } from './CircuitFlowPathPanel'
 import { PumpPressureZonesPanel } from './PumpPressureZonesPanel'
 import { VaIntegrationCapstonePanel } from './VaIntegrationCapstonePanel'
 import { VaNormalStatePanel } from './VaNormalStatePanel'
@@ -21,6 +21,8 @@ import { VvSeriesPhysiologyPanel } from './VvSeriesPhysiologyPanel'
 import { WhyExtracorporealSupportPanel } from './WhyExtracorporealSupportPanel'
 
 export interface EcmoFoundationTeachingPanelProps {
+  readonly pressureSite?: FoundationPressureSite
+  readonly onPressureSiteChange?: (site: FoundationPressureSite) => void
   readonly state: EcmoSimulationState
   /** A baseline captured in this session, for the panels that compare a circuit with itself. */
   readonly snapshot?: EcmoFoundationSnapshot | null
@@ -136,12 +138,24 @@ export function EcmoFoundationTeachingPanel({
   state,
   snapshot,
   walk,
+  pressureSite,
+  onPressureSiteChange,
 }: {
   readonly sectionId: EcmoInteractiveFoundationSectionId
   readonly state: EcmoSimulationState
   readonly snapshot?: EcmoFoundationSnapshot | null
   readonly walk?: EcmoWalkPanelProps
+  readonly pressureSite?: FoundationPressureSite
+  readonly onPressureSiteChange?: (site: FoundationPressureSite) => void
 }) {
   const Panel = panels[sectionId]
-  return <Panel state={state} snapshot={snapshot} walk={walk} />
+  return (
+    <Panel
+      state={state}
+      snapshot={snapshot}
+      walk={walk}
+      pressureSite={pressureSite}
+      onPressureSiteChange={onPressureSiteChange}
+    />
+  )
 }

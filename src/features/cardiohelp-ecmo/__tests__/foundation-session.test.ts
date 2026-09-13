@@ -183,7 +183,7 @@ describe('the restore-then-act sequence is gone', () => {
     // The VV capstone's transfer step is "load the re-drainage preview and read it", which is
     // impossible if the action list disappears when the transfer item appears.
     expect(hostSource).toMatch(
-      /predictionCommitted && activeStep\.phase !== 'recognize' && activeStep\.phase !== 'predict'/,
+      /predictionCommitted\s+&&\s+activeStep\.phase !== 'recognize'\s+&&\s+activeStep\.phase !== 'predict'/,
     )
     expect(hostSource).not.toMatch(/phase === 'act' \|\| phase === 'observe'\s*\?/)
   })

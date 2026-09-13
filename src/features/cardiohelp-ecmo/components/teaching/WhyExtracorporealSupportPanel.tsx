@@ -9,7 +9,15 @@ import type { EcmoSimulationState } from '../../engine/types'
 import { useStageTeachingScope } from '../stage/StageTeachingScope'
 import type { StagePhase } from '../stage/stageModel'
 import { OxygenDeliveryExplorer } from './OxygenDeliveryExplorer'
-import { GuidedValue, ModelBoundary, TextEquivalent, styles, trackDescription } from './shared'
+import {
+  FoundationTeachingBlock,
+  VaConfigurationLabel,
+  GuidedValue,
+  ModelBoundary,
+  TextEquivalent,
+  styles,
+  trackDescription,
+} from './shared'
 
 /**
  * A block of this panel that knows which steps it belongs to.
@@ -83,11 +91,102 @@ function ComponentBar({
 
 export function WhyExtracorporealSupportPanel({ state }: { readonly state: EcmoSimulationState }) {
   const { circuit, patient, gas } = state
+  const scope = useStageTeachingScope()
   const arterialSaturation = state.supportMode === 'va' ? patient.femoralArterialSpo2 : patient.spo2
   // Content per decilitre. Shown as a term, not as a delivery figure.
   const oxygenContent =
     OXYGEN_CARRIED_PER_GRAM_HEMOGLOBIN * circuit.hemoglobin * (arterialSaturation / 100)
   const consumption = state.modelInputs.oxygenConsumptionMlMin
+
+  if (scope?.foundationBlock)
+    return (
+      <div className={styles.panel} data-teaching-panel="why-extracorporeal-support">
+        {state.supportMode === 'va' ? <VaConfigurationLabel /> : null}
+        <FoundationTeachingBlock id="delivery" title="Review oxygen delivery">
+          <section className={styles.section} aria-labelledby="why-delivery-heading">
+            <h3 id="why-delivery-heading" className={styles.heading}>
+              Oxygen delivery, component by component
+            </h3>
+            <p className="mt-3 text-sm leading-6">
+              Tissues need oxygen delivered in flowing blood. Delivery depends on both how much
+              blood reaches them and how much oxygen that blood carries.
+            </p>
+            <p
+              className="my-4 rounded-xl border p-3 text-base font-semibold"
+              data-delivery-relationship
+            >
+              Blood flow × oxygen content = oxygen delivery
+            </p>
+            <p className="text-sm leading-6">
+              <strong>Oxygen saturation</strong> is the fraction of hemoglobin carrying oxygen.{' '}
+              <strong>Oxygen content</strong> also depends on how much hemoglobin is present. A high
+              saturation alone does not establish adequate delivery.
+            </p>
+            <p className="mt-2 text-sm leading-6">
+              <strong>Oxygen consumption</strong> is the amount the tissues use. It must be
+              considered alongside delivery.
+            </p>
+            <p className="mt-2 text-sm leading-6">
+              ECMO supports gas exchange, and in VA also circulation, while the underlying problem
+              is addressed.
+            </p>
+          </section>
+        </FoundationTeachingBlock>
+        <FoundationTeachingBlock id="support-example" title="Review the worked example">
+          <section className={styles.section} aria-labelledby="support-example-heading">
+            <h3 id="support-example-heading" className={styles.heading}>
+              Support while the cause is treated
+            </h3>
+            <p className="mt-3 text-sm leading-6">
+              <strong>Worked example — authored for teaching.</strong> Oxygen demand rises while
+              blood flow, hemoglobin, and saturation stay unchanged. Oxygen delivery has not
+              increased, but the amount needed has. The unchanged saturation does not settle the
+              balance.
+            </p>
+            <p className="mt-3 text-sm leading-6">
+              {state.supportMode === 'vv'
+                ? 'In the VV circuit beside you, oxygenated blood returns to the venous circulation. ECMO improves gas exchange; the native heart still provides systemic blood flow. VV does not directly support circulation.'
+                : 'The circuit beside you models peripheral femoral VA ECMO, with retrograde arterial return. It provides gas exchange and circulatory support alongside native cardiac output. One arterial saturation does not describe every region.'}
+            </p>
+            <p className="mt-3 text-sm leading-6">
+              Support does not treat the underlying lung injury, cardiac lesion, bleeding, or
+              sepsis. The cause still needs assessment and treatment.
+            </p>
+            <p className="mt-2 text-sm leading-6">
+              This is a conceptual example: oxygen demand remains fixed in the live simulation.
+            </p>
+          </section>
+        </FoundationTeachingBlock>
+        <details className={styles.section}>
+          <summary className="cursor-pointer font-semibold">
+            Explore the delivery arithmetic
+          </summary>
+          <OxygenDeliveryExplorer state={state} sourceIds={OXYGEN_DELIVERY_ARITHMETIC_SOURCE_IDS} />
+        </details>
+        <details className={styles.section}>
+          <summary className="cursor-pointer font-semibold">
+            Current components and model detail
+          </summary>
+          <ComponentBar
+            label="Oxygen content · derived estimate"
+            detail="Hemoglobin-bound oxygen only; not a measured device output."
+            fraction={oxygenContent / 22}
+            value={`${oxygenContent.toFixed(1)} mL/dL`}
+          />
+          <ComponentBar
+            label="Native cardiac output · model value"
+            detail="Kept separate from displayed circuit blood flow."
+            fraction={patient.nativeCardiacOutputLpm / 8}
+            value={`${patient.nativeCardiacOutputLpm.toFixed(1)} L/min`}
+          />
+          <GuidedValue
+            guide={ecmoDerivedValueGuides.oxygenConsumption}
+            value={consumption}
+            headingLevel={3}
+          />
+        </details>
+      </div>
+    )
 
   return (
     <div className={styles.panel} data-teaching-panel="why-extracorporeal-support">

@@ -1,3 +1,4 @@
+import { advanceFoundationOnce } from '../test-support/foundationJourney'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -135,7 +136,9 @@ function currentPhase(): CriticalCareActivityPhase {
   const current = document.querySelectorAll('[data-step-list] [aria-current="step"]')
   expect(current).toHaveLength(1)
   expect(current[0].closest('li')?.getAttribute('data-step-id')).toBe(stage)
-  return stage.slice(stage.lastIndexOf('-') + 1) as CriticalCareActivityPhase
+  return document
+    .querySelector('[data-active-phase]')
+    ?.getAttribute('data-active-phase') as CriticalCareActivityPhase
 }
 
 function stepRow(phase: CriticalCareActivityPhase): HTMLLIElement {
@@ -167,7 +170,7 @@ function predictionChoices(): HTMLInputElement[] {
  * does not carry it before the commitment.
  */
 function answerAttributionIfPresent(): boolean {
-  const commit = screen.queryByRole('button', { name: 'Commit these answers' })
+  const commit = screen.queryByRole('button', { name: 'Submit these answers' })
   if (!commit) return false
   for (const row of Array.from(
     document.querySelectorAll<HTMLElement>('[data-attribution-candidate]'),
@@ -181,15 +184,15 @@ function answerAttributionIfPresent(): boolean {
     if (!keyed) continue
     fireEvent.change(select, { target: { value: keyed.componentId } })
   }
-  fireEvent.click(screen.getByRole('button', { name: 'Commit these answers' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Submit these answers' }))
   return true
 }
 
 function continueTo(phase: CriticalCareActivityPhase) {
   for (let guard = 0; currentPhase() !== phase; guard += 1) {
-    if (guard > 8) throw new Error(`could not reach ${phase}; stuck at ${currentPhase()}`)
+    if (guard > 40) throw new Error(`could not reach ${phase}; stuck at ${currentPhase()}`)
     if (answerAttributionIfPresent()) continue
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    advanceFoundationOnce()
   }
 }
 
@@ -202,7 +205,7 @@ function commitPrediction(sectionId: EcmoInteractiveFoundationSectionId) {
   )
   if (!choice) throw new Error('no prediction choice rendered')
   fireEvent.click(choice)
-  fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
+  fireEvent.click(screen.getByRole('button', { name: /^(Commit this prediction|Submit answer)$/ }))
 }
 
 /** Commit the prediction and follow Continue into Act — the only way past the commitment gate. */
@@ -216,7 +219,7 @@ function commitPredictionAndContinue(sectionId: EcmoInteractiveFoundationSection
 function commitTransfer(sectionId: EcmoInteractiveFoundationSectionId) {
   const { transfer } = ecmoFoundationLearningItemsFor(sectionId)
   fireEvent.click(screen.getByRole('radio', { name: transfer.choices[0].label }))
-  fireEvent.click(screen.getByRole('button', { name: 'Commit this answer' }))
+  fireEvent.click(screen.getByRole('button', { name: /^(Commit this answer|Submit answer)$/ }))
 }
 
 function runModeledSeconds(seconds: number) {
@@ -438,7 +441,9 @@ describe('a transfer URL fails closed at the commitment gate', () => {
         expect(choice).not.toBeChecked()
         expect(choice).not.toBeDisabled()
       }
-      expect(screen.getByRole('button', { name: 'Commit this prediction' })).toBeDisabled()
+      expect(
+        screen.getByRole('button', { name: /^(Commit this prediction|Submit answer)$/ }),
+      ).toBeDisabled()
     },
   )
 
@@ -600,7 +605,9 @@ describe('moving between steps leaves the learner’s own state alone', () => {
       `You chose: ${prediction.choices[0].label}`,
     )
     expect(document.querySelector('[data-phase-lock-note]')).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Commit this prediction' })).toBeNull()
+    expect(
+      screen.queryByRole('button', { name: /^(Commit this prediction|Submit answer)$/ }),
+    ).toBeNull()
     expect(document.querySelectorAll('[data-guided-action]').length).toBeGreaterThan(0)
   })
 })
@@ -831,7 +838,7 @@ describe('phase restoration writes nothing and reconstructs no engine state', ()
       fireEvent.click(screen.getByRole('radio', { name: transfer.choices[0].label }))
       expect(setItem).not.toHaveBeenCalled()
 
-      fireEvent.click(screen.getByRole('button', { name: 'Commit this answer' }))
+      fireEvent.click(screen.getByRole('button', { name: /^(Commit this answer|Submit answer)$/ }))
 
       expect(setItem).toHaveBeenCalledTimes(1)
       const [key, payload] = setItem.mock.calls[0] as [string, string]
@@ -913,7 +920,7 @@ describe('the way back to a step already worked', () => {
 
     continueTo('predict')
     expect(backControl()).not.toBeNull()
-    expect(backControl()?.textContent).toContain('Back to Recognize')
+    expect(backControl()?.textContent).toContain('Back to Follow a worked example')
   })
 
   it('returns to the previous step, keeps the section’s progress, and goes forward again', () => {
@@ -942,7 +949,7 @@ describe('the way back to a step already worked', () => {
   it('says the learner is looking back, rather than leaving them to guess', () => {
     mountAt('why-extracorporeal-support', 'vv', 'recognize')
     commitPredictionAndContinue('why-extracorporeal-support')
-    continueTo('observe')
+    continueTo('transfer')
 
     fireEvent.click(backControl()!)
     expect(currentPhase()).toBe('act')
@@ -954,10 +961,10 @@ describe('the way back to a step already worked', () => {
   it('walks all the way back to the first step one step at a time', () => {
     mountAt('why-extracorporeal-support', 'vv', 'recognize')
     commitPredictionAndContinue('why-extracorporeal-support')
-    continueTo('observe')
-    expect(currentPhase()).toBe('observe')
+    continueTo('transfer')
+    expect(currentPhase()).toBe('transfer')
 
-    for (const expected of ['act', 'predict', 'recognize'] as const) {
+    for (const expected of ['act', 'predict', 'explain', 'recognize'] as const) {
       fireEvent.click(backControl()!)
       expect(currentPhase()).toBe(expected)
     }
@@ -969,7 +976,7 @@ describe('the way back to a step already worked', () => {
     for (const phase of ['recognize', 'predict', 'act'] as const) {
       expect(stepRow(phase).getAttribute('data-step-state')).toBe('done')
     }
-    expect(stepRow('observe').getAttribute('data-step-state')).toBe('next')
+    expect(stepRow('transfer').getAttribute('data-step-state')).toBe('next')
   })
 
   /**
@@ -988,11 +995,11 @@ describe('the way back to a step already worked', () => {
     expect(currentRows()).toHaveLength(1)
     commitPredictionAndContinue('why-extracorporeal-support')
     expect(currentRows()).toHaveLength(1)
-    for (const phase of ['observe', 'explain', 'transfer'] as const) {
+    for (const phase of ['transfer'] as const) {
       continueTo(phase)
       expect(`${phase}: ${currentRows().length}`).toBe(`${phase}: 1`)
     }
-    for (const phase of ['explain', 'observe', 'act', 'predict', 'recognize'] as const) {
+    for (const phase of ['act', 'predict', 'explain', 'recognize'] as const) {
       fireEvent.click(backControl()!)
       expect(`back to ${phase}: ${currentRows().length}`).toBe(`back to ${phase}: 1`)
       expect(currentPhase()).toBe(phase)

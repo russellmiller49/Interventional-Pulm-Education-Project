@@ -1,8 +1,16 @@
-import { ECMO_CONTROL_PANEL } from '../../content/controlPanel'
+import { useStageTeachingScope } from '../stage/StageTeachingScope'
+import { ECMO_CONTROL_PANEL, ecmoControlKnob } from '../../content/controlPanel'
 import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
 import { EcmoSourceList } from '../evidence/EcmoSourceList'
 import type { EcmoSimulationState } from '../../engine/types'
-import { GuidedValue, ModelBoundary, TextEquivalent, styles } from './shared'
+import {
+  FoundationTeachingBlock,
+  GuidedValue,
+  ModelBoundary,
+  TextEquivalent,
+  VaConfigurationLabel,
+  styles,
+} from './shared'
 
 /**
  * Two controls, two paths, two principal effects.
@@ -58,6 +66,115 @@ function PathColumn({
 
 export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulationState }) {
   const { circuit, gas, patient, device } = state
+  const scope = useStageTeachingScope()
+
+  if (scope?.foundationBlock)
+    return (
+      <div className={styles.panel} data-teaching-panel="blood-flow-versus-sweep">
+        {state.supportMode === 'va' ? <VaConfigurationLabel /> : null}
+        <FoundationTeachingBlock id="controls" title="Review the three adjustments">
+          <section
+            className={styles.section}
+            aria-labelledby="three-adjustments-heading"
+            data-control-panel
+          >
+            <h3 id="three-adjustments-heading" className={styles.heading}>
+              Three adjustments, two control locations
+            </h3>
+            <ol className="mt-3 grid list-decimal gap-3 pl-5">
+              {ECMO_CONTROL_PANEL.knobs.map((knob) => (
+                <li key={knob.id} data-control-knob={knob.id}>
+                  <strong>{knob.plainName}</strong>
+                  <p>
+                    {knob.id === 'pump-speed'
+                      ? 'On the pump console.'
+                      : 'On the external gas controls.'}{' '}
+                    {knob.principallyMoves}.
+                  </p>
+                </li>
+              ))}
+            </ol>
+            <p className="mt-3 text-sm leading-6">
+              Sweep-gas oxygen fraction is the oxygen concentration delivered to the membrane lung.
+              It is separate from ventilator FiO₂, which describes gas delivered to the native
+              lungs.
+            </p>
+            <p className="mt-2 text-sm leading-6">
+              The following guided controls reset to the same starting circuit for every comparison.
+              The changes are not cumulative.
+            </p>
+          </section>
+        </FoundationTeachingBlock>
+        <FoundationTeachingBlock id="control-pump" title="Review pump speed">
+          <section className={styles.section} aria-labelledby="control-pump-heading">
+            <h3 id="control-pump-heading" className={styles.heading}>
+              Pump speed
+            </h3>
+            <p className="mt-3 text-sm leading-6">
+              The console sets rotational speed. Flow is the resulting blood movement under the
+              current loading conditions. Its contribution to oxygen delivery depends on hemoglobin,
+              recirculation, native circulation, and patient demand.
+            </p>
+            <p className="mt-2 text-sm leading-6">{ecmoControlKnob('pump-speed').doesNotMove}</p>
+            {state.supportMode === 'va' ? (
+              <p className="mt-2 text-sm leading-6" data-comparison-limitation>
+                The VA reference fixes regional patient saturations for this comparison. A higher
+                flow here does not produce a modeled saturation increase or establish better tissue
+                perfusion.
+              </p>
+            ) : null}
+          </section>
+        </FoundationTeachingBlock>
+        <FoundationTeachingBlock id="control-sweep" title="Review sweep-gas flow">
+          <section className={styles.section} aria-labelledby="control-sweep-heading">
+            <h3 id="control-sweep-heading" className={styles.heading}>
+              Sweep-gas flow
+            </h3>
+            <p className="mt-3 text-sm leading-6">
+              Sweep is gas flow past the membrane, adjusted at the external gas controls. It
+              principally changes CO₂ removal. Read PaCO₂ and pH after the comparison.
+            </p>
+            <p className="mt-2 text-sm leading-6">{ecmoControlKnob('sweep').doesNotMove}</p>
+            <p className="mt-2 text-sm leading-6" data-local-model-boundary="sweep-linearity">
+              The model uses a straight-line sweep response with no plateau. Real clearance also
+              depends on blood flow, membrane function, and gas delivery. Read the direction, not
+              the slope.
+            </p>
+            <p className="mt-2 text-sm font-semibold leading-6">
+              Rapid CO₂ correction can cause harm. The comparison demonstrates a relationship, not a
+              titration rate or treatment instruction.
+            </p>
+          </section>
+        </FoundationTeachingBlock>
+        <FoundationTeachingBlock id="control-oxygen" title="Review sweep-gas oxygen fraction">
+          <section className={styles.section} aria-labelledby="control-oxygen-heading">
+            <h3 id="control-oxygen-heading" className={styles.heading}>
+              Sweep-gas oxygen fraction
+            </h3>
+            <p className="mt-3 text-sm leading-6">
+              This external gas setting changes the oxygen concentration offered to the membrane. It
+              does not change the sweep flow or ventilator FiO₂.
+            </p>
+            <p className="mt-2 text-sm leading-6">
+              The comparison lowers the fraction with blood flow and sweep unchanged. Watch the
+              simulated post-oxygenator sample; it is not a measured CARDIOHELP console channel.
+            </p>
+            <p className="mt-2 text-sm leading-6" data-comparison-limitation>
+              {state.supportMode === 'va'
+                ? 'This model changes post-oxygenator saturation but holds VA regional patient saturations fixed in this preview. Their unchanged values do not show that gas oxygen fraction is clinically unimportant.'
+                : 'The VV model also changes patient saturation. Its response size is an authored teaching curve, not a prediction for a patient.'}
+            </p>
+          </section>
+        </FoundationTeachingBlock>
+        <ModelBoundary>
+          <span data-local-model-boundary="demand-and-native-lung-fixed">
+            Oxygen consumption and native lung contribution remain fixed in these comparisons. Each
+            result is retained at its stated modeled time; neither tissue adequacy nor clinical
+            competence is established.
+          </span>
+        </ModelBoundary>
+      </div>
+    )
 
   return (
     <div className={styles.panel} data-teaching-panel="blood-flow-versus-sweep">
@@ -76,7 +193,7 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
           The control panel: three things you can change
         </h3>
         <p className="mt-2 text-sm leading-6">{ECMO_CONTROL_PANEL.sentence}</p>
-        <ol className="mt-3 grid gap-2 lg:grid-cols-3">
+        <ol className="mt-3 grid gap-2 ">
           {ECMO_CONTROL_PANEL.knobs.map((knob) => (
             <li key={knob.id} className="rounded-xl border p-3" data-control-knob={knob.id}>
               <p className="text-sm font-semibold">{knob.plainName}</p>
@@ -87,7 +204,7 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
                 <span className="font-semibold">Moves:</span> {knob.principallyMoves}
               </p>
               <p className="text-sm leading-5 text-muted-foreground">
-                <span className="font-semibold">Does not move:</span> {knob.doesNotMove}
+                <span className="font-semibold">Limits:</span> {knob.doesNotMove}
               </p>
             </li>
           ))}
@@ -115,7 +232,7 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
           The blood path and the gas path
         </h3>
 
-        <div className="mt-3 grid gap-3 lg:grid-cols-2">
+        <div className="mt-3 grid gap-3 ">
           <PathColumn
             title="Blood path"
             controlLabel="Pump speed"

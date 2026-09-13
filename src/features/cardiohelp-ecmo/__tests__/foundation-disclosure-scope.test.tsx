@@ -1,11 +1,11 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { reachFoundationStep, submitFoundationAnswer } from '../test-support/foundationJourney'
+import { cleanup, render } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 import {
   EcmoFoundationLessonActivity,
   foundationCircuitLocationDisclosure,
 } from '../components/EcmoFoundationLessonActivity'
-import { ecmoFoundationLearningItemsFor } from '../content/foundationLearningItems'
 import {
   ecmoInteractiveFoundationSectionIds,
   isEcmoVaOnlyFoundationSectionId,
@@ -14,22 +14,8 @@ import {
 } from '../content/foundationLessonRuntime'
 import type { SupportMode } from '../engine/types'
 
-/**
- * Which foundation sections the diagnostic map is allowed to withhold its channel placements from.
- *
- * The answer is one: `circuit-flow-path`, whose keyed prediction *is* where pInt is taken. The
- * final independent review found the host passing `predictionCommitted ? 'full' : 'withheld'` for
- * all ten, so every foundation lesson in both tracks opened with no sensor flags, no Δp bracket, no
- * legend row for the flag glyphs, and an SVG description that named no channel — including
- * `pump-and-pressure-zones`, a section that cannot teach a pressure zone whose sensor is not drawn.
- * The gate was correct and its scope was not.
- *
- * Held two ways, because either alone is escapable. The helper is asserted directly, over the whole
- * declared section list, so a second id added to it fails here rather than in a browser. And the
- * composed activity is mounted for real — only `EcmoCircuit3D`, the WebGL leaf jsdom cannot render,
- * is mocked — so the wire from that helper to the rendered map is covered too: a call site that
- * stops using the helper, or a `CircuitAndMonitors` that stops honouring the prop, fails the matrix.
- */
+/** All Learn references show pressure locations. Only the circuit lesson's explicit
+ * uncommitted retrieval task omits them; every other section keeps its existing map. */
 
 const mockPush = jest.fn()
 
@@ -109,15 +95,8 @@ function currentStage(): string {
  * stage stays on the Predict step: the disclosure follows the commitment, not the step.
  */
 function commitPrediction(sectionId: EcmoInteractiveFoundationSectionId) {
-  fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
-  expect(currentStage()).toBe(`${sectionId}-predict`)
-  const { prediction } = ecmoFoundationLearningItemsFor(sectionId)
-  const choice = document.querySelector<HTMLInputElement>(
-    `fieldset[data-prediction-choices] input[value="${prediction.choices[0].id}"]`,
-  )
-  if (!choice) throw new Error('no prediction choice rendered')
-  fireEvent.click(choice)
-  fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
+  reachFoundationStep(sectionId, 'predict')
+  submitFoundationAnswer()
   expect(currentStage()).toBe(`${sectionId}-predict`)
 }
 
@@ -125,18 +104,16 @@ afterEach(cleanup)
 
 describe('foundationCircuitLocationDisclosure', () => {
   it.each(ecmoInteractiveFoundationSectionIds)('%s, uncommitted', (sectionId) => {
-    expect(foundationCircuitLocationDisclosure(sectionId, false)).toBe(
-      sectionId === KEYED_SECTION ? 'withheld' : 'full',
-    )
+    expect(foundationCircuitLocationDisclosure(sectionId, false)).toBe('full')
   })
 
   it.each(ecmoInteractiveFoundationSectionIds)('%s, committed', (sectionId) => {
     expect(foundationCircuitLocationDisclosure(sectionId, true)).toBe('full')
   })
 
-  it('withholds from exactly one of the ten sections', () => {
+  it('only permits withholding on the explicit circuit retrieval task', () => {
     const withheld = ecmoInteractiveFoundationSectionIds.filter(
-      (sectionId) => foundationCircuitLocationDisclosure(sectionId, false) === 'withheld',
+      (sectionId) => foundationCircuitLocationDisclosure(sectionId, false, true) === 'withheld',
     )
     expect(withheld).toEqual([KEYED_SECTION])
   })
@@ -145,13 +122,15 @@ describe('foundationCircuitLocationDisclosure', () => {
 describe('the composed activity renders that scope', () => {
   it.each(MATRIX)('$sectionId / $track, uncommitted', ({ sectionId, track }) => {
     mount(sectionId, track)
-    expect(renderedDisclosure()).toBe(sectionId === KEYED_SECTION ? 'withheld' : 'full')
+    expect(renderedDisclosure()).toBe('full')
   })
 
   it.each(supportedTracks(KEYED_SECTION))(
     'circuit-flow-path / %s discloses in full once the prediction is committed',
     (track) => {
       mount(KEYED_SECTION, track)
+      expect(renderedDisclosure()).toBe('full')
+      reachFoundationStep(KEYED_SECTION, 'predict')
       expect(renderedDisclosure()).toBe('withheld')
       commitPrediction(KEYED_SECTION)
       expect(renderedDisclosure()).toBe('full')

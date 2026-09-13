@@ -173,40 +173,42 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
         itemType: 'transfer-case',
         transferVariantId: 'ecmo.foundation.path.transfer-variant',
         contextRequirement: 'context-independent',
-        stem: 'Over an hour, pInt and pArt have both risen by a similar amount while the gradient between them is little changed and blood flow has drifted down. Which part of the circuit does that pattern point to as the problem?',
+        stem: "A circuit pArt reading has changed, while the patient's independent arterial-pressure trace is unchanged. What can you conclude from the pArt reading alone?",
         choices: [
           {
-            id: 'return-side',
-            label: 'The return side, downstream of the membrane.',
+            id: 'circuit-pressure-only',
+            label:
+              'Pressure changed in the return-side circuit tubing; patient arterial pressure still requires its own measurement.',
             plausibility: 'best',
             rationale:
-              'An obstruction downstream raises the pressure everywhere upstream of it, so the two zones move together and the gradient across the membrane is left largely intact.',
+              'pArt is sampled inside the circuit after the oxygenator. It is not a patient arterial-pressure measurement, even on the VA track.',
           },
           {
-            id: 'membrane',
-            label: 'The membrane lung itself.',
+            id: 'patient-pressure',
+            label: 'The patient arterial pressure has changed by the same amount.',
             plausibility: 'incorrect-mechanism',
             rationale:
-              'A membrane problem separates the two zones, so the gradient rises rather than staying put.',
+              'The two readings come from different locations. A circuit pressure cannot replace the separate patient arterial-pressure trace.',
           },
           {
-            id: 'drainage',
-            label: 'The drainage limb.',
+            id: 'gas-pressure',
+            label: 'The pressure of sweep gas entering the membrane has changed.',
             plausibility: 'incorrect-mechanism',
             rationale:
-              'A drainage limitation shows itself on the negative-pressure side first, not as a rise in both post-pump zones.',
+              'pArt is in the blood path. Sweep gas travels on the separate gas side of the membrane.',
           },
           {
-            id: 'not-enough',
-            label: 'There is not enough information to localise it.',
+            id: 'delivery-proven',
+            label:
+              'The amount of oxygen delivered to the tissues has changed by the same proportion.',
             plausibility: 'reasonable-but-incomplete',
             rationale:
-              'Caution is reasonable, but this particular set does discriminate: two zones moving together with a preserved gradient is the return-side pattern.',
+              'Circuit pressure alone establishes neither oxygen delivery nor perfusion; flow, oxygen content, and the patient must also be assessed.',
           },
         ],
-        correctChoiceIds: ['return-side'],
+        correctChoiceIds: ['circuit-pressure-only'],
         explanation:
-          'Direction and which zones move together carry the localisation. No cut point is needed, and none is offered here — the same reasoning holds whatever the absolute numbers happen to be on a given circuit.',
+          'Identify where the reading comes from before deciding what it means. Use the independent arterial-pressure trace to assess patient blood pressure. Flow, oxygen content, and patient findings are also needed to assess oxygen delivery.',
         evidenceIds: [...coreSources, 'ecmo-book-ch16'],
         reviewStatus: 'draft',
       },
@@ -219,43 +221,40 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
         phase: 'predict',
         itemType: 'response-prediction',
         contextRequirement: 'context-independent',
-        stem: 'From the stable reference circuit, the pump speed is about to be raised by 300 rpm. What should happen to circuit blood flow and to the drainage pressure?',
+        stem: 'On a circuit with blood available at the inlet and unchanged downstream loading, pump speed is reduced by 300 rpm. Which paired response would you expect?',
         choices: [
           {
-            id: 'flow-up-drainage-more-negative',
-            label:
-              'Flow should rise somewhat, and the drainage pressure should become more negative as the pump pulls harder.',
+            id: 'flow-down-drainage-less-negative',
+            label: 'Lower circuit flow with less negative drainage pressure.',
             plausibility: 'best',
             rationale:
-              'A centrifugal pump turning faster generates more flow against the loading it currently has, and generates it by pulling harder on the drainage side.',
+              'Under unchanged loading, reducing speed reduces flow and the suction needed to draw it. The paired direction is the reverse of the earlier speed-increase demonstration.',
           },
           {
             id: 'flow-up-drainage-unchanged',
-            label:
-              'Flow should rise and the drainage pressure should stay where it is, since the extra flow comes from the pump rather than from the drainage side.',
-            plausibility: 'reasonable-but-incomplete',
+            label: 'Higher circuit flow with unchanged drainage pressure.',
+            plausibility: 'incorrect-mechanism',
             rationale:
-              'Flow does rise, but it is produced by increased suction, so the drainage side does not stay unchanged.',
+              'A lower speed does not provide the extra pump energy for higher flow under unchanged loading.',
           },
           {
             id: 'flow-fixed',
-            label: 'Flow is set by the speed, so it should move to exactly the expected value.',
+            label: 'Exactly the same flow because the circuit fixes the flow at all speeds.',
             plausibility: 'incorrect-mechanism',
             rationale:
-              'Speed is selected; flow is the result of that speed under the current loading. The same speed gives different flows under different conditions.',
+              'In the RPM mode used here, speed is the setting. Flow is the result under the loading conditions; it is not a separately fixed value.',
           },
           {
-            id: 'flow-down',
-            label:
-              'Flow should decrease because the circuit resistance rises with speed, and the drainage pressure should ease as less blood is drawn.',
-            plausibility: 'incorrect-mechanism',
+            id: 'flow-down-more-suction',
+            label: 'Lower circuit flow with more negative drainage pressure.',
+            plausibility: 'reasonable-but-incomplete',
             rationale:
-              'In a circuit with drainage available, raising speed raises flow. Flow stops responding when drainage becomes the limit, which this reference circuit is not.',
+              'Lower flow fits, but the reference has unchanged drainage availability. Reducing speed reduces, rather than increases, the suction demand in this comparison.',
           },
         ],
-        correctChoiceIds: ['flow-up-drainage-more-negative'],
+        correctChoiceIds: ['flow-down-drainage-less-negative'],
         explanation:
-          'The distinction the whole section rests on is that speed is a setting and flow is a result. Watching the drainage pressure at the same time is what later separates a circuit that has room from one that has run out of it.',
+          'Speed is a setting and flow is a response. Read the flow together with drainage pressure and the loading conditions; this prediction is about a different direction of change from the initial demonstration.',
         evidenceIds: [...coreSources, 'ecmo-book-ch16', 'ecmo-book-ch17'],
         reviewStatus: 'draft',
       },
@@ -335,7 +334,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
             label: 'The oxygen fraction of the sweep gas.',
             plausibility: 'incorrect-mechanism',
             rationale:
-              'That setting changes the oxygen offered to the membrane, not the gradient that carries carbon dioxide away.',
+              'That setting changes the oxygen concentration offered to the membrane without increasing sweep flow. In this model it does not produce the PaCO₂ response being asked about.',
           },
           {
             id: 'both-equally',
@@ -347,7 +346,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
         ],
         correctChoiceIds: ['sweep'],
         explanation:
-          'The asymmetry between the two gases is why the circuit has two controls rather than one. The comparisons in this section are run from the same starting point, one at a time, so each response can be attributed to the control that produced it.',
+          'The three adjustments have different principal effects: speed acts on blood flow; sweep flow and sweep-gas oxygen fraction act on the gas side. The comparisons in this section are run from the same starting point, one at a time, so each response can be attributed to the control that produced it.',
         evidenceIds: [...coreSources, 'elso-adult-vv-2021'],
         reviewStatus: 'draft',
       },

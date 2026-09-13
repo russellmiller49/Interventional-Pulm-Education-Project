@@ -5,8 +5,10 @@ import { pathwaySectionIndex } from '@/features/learning-module/curriculum/types
 import { ecmoDeliveryAttribution } from '../../../content/deliveryAttribution'
 import { ecmoFoundationLearningItemsFor } from '../../../content/foundationLearningItems'
 import { ecmoFoundationSectionById } from '../../../content/foundationLessons'
+import { ecmoFoundationTeachingTasks } from '../../../content/foundationTeachingTasks'
 import {
   ecmoFoundationLessonRuntime,
+  isEcmoSharedFoundationSectionId,
   type EcmoInteractiveFoundationSectionId,
 } from '../../../content/foundationLessonRuntime'
 import type { SupportMode } from '../../../engine/types'
@@ -14,28 +16,21 @@ import type { CircuitLocationDisclosure } from '../../CircuitAndMonitors'
 import { STAGE_PHASES, type StageLesson, type StagePhase, type StageStep } from '../stageModel'
 
 /**
- * A foundation section, expressed as stage steps.
- *
- * The runtime already authors one block of copy per activity phase — objective, required action,
- * teaching point — and one clean state per phase where the phase's content assumes it. The six
- * phases become six steps in contract order, with the prediction item in the Predict step, the
- * bounded actions in the Act step, and the transfer item in the Transfer step, whose commitment is
- * what records the section as worked. Nothing about the runtime, the items, or the walk changes;
- * the adapter only says which of them each step shows.
- */
-
-/**
- * The one foundation section whose keyed prediction *is* the channel placements.
- *
- * `circuit-flow-path` asks where in the blood path the circuit reports pInt, so the diagnostic map
- * beside that question must not answer it. No other section keys on a placement, and nine of them
- * teach *from* the placements.
+ * The four introductory sections opt into concrete teaching tasks before independent questions.
+ * The other six retain the existing six-phase runtime and its commitment gates.
+ * Normal Learn diagrams show pressure locations; only an explicit unlabelled retrieval task
+ * removes them until its own answer is submitted.
  */
 export function foundationCircuitLocationDisclosure(
   sectionId: EcmoInteractiveFoundationSectionId,
   predictionCommitted: boolean,
+  mapRetrieval = false,
 ): CircuitLocationDisclosure {
-  return sectionId === 'circuit-flow-path' && !predictionCommitted ? 'withheld' : 'full'
+  // Normal Learn diagrams teach locations before questions. Only a deliberately unlabelled
+  // retrieval task removes labels, until its own answer is submitted.
+  return sectionId === 'circuit-flow-path' && mapRetrieval && !predictionCommitted
+    ? 'withheld'
+    : 'full'
 }
 
 const SURFACES_BY_PHASE: Readonly<Record<StagePhase, StageStep['surfaces']>> = {
@@ -76,64 +71,115 @@ export function buildFoundationStageLesson(
    */
   const walksTheCircuit = ecmoCircuitWalkStopsForSection(sectionId).length > 0
 
-  const steps: StageStep[] = STAGE_PHASES.map((phase, index) => {
-    const copy = runtime.phases[phase]
-    const base = {
-      id: `${sectionId}-${phase}`,
-      ordinal: index + 1,
-      phase,
-      title: copy.objective,
-      instruction: copy.requiredAction,
-      lookIn: copy.lookIn,
-      rationale: copy.teachingPoint,
-      focusTarget: null,
-      surfaces: SURFACES_BY_PHASE[phase],
-      ...(walksTheCircuit ? { circuitView: 'diagnostic' as const } : {}),
-      teaching: { prose: PROSE_BY_PHASE[phase], blocks: 'all' } as const,
-      gate: (phase === 'recognize' || phase === 'predict' ? 'open' : 'after-prediction') as
-        | 'open'
-        | 'after-prediction',
-      // Only an authored mapping loads a state on entry; unmapped phases keep the learner's state.
-      entryVariantId: runtime.initialVariantIdByPhase?.[phase],
-    }
-    switch (phase) {
-      case 'predict':
+  const focusedTasks = isEcmoSharedFoundationSectionId(sectionId)
+    ? ecmoFoundationTeachingTasks[sectionId]
+    : undefined
+  const steps: StageStep[] = focusedTasks
+    ? focusedTasks.map((task, index) => {
+        const guided = task.actionId
+          ? runtime.guidedActions.find((action) => action.id === task.actionId)
+          : undefined
+        if (task.actionId && !guided) throw new Error(`Missing guided comparison: ${task.actionId}`)
+        const predictionIndex = focusedTasks.findIndex((entry) => entry.phase === 'predict')
+        const interaction: StageStep['interaction'] =
+          task.phase === 'predict'
+            ? { kind: 'prediction', item: items.prediction, verdict: 'choice-reasoning' }
+            : task.phase === 'transfer'
+              ? { kind: 'transfer-item', item: items.transfer }
+              : task.attribution
+                ? { kind: 'attribution', attribution: ecmoDeliveryAttribution(sectionId)! }
+                : guided
+                  ? { kind: 'bounded-actions', actions: [guided] }
+                  : { kind: 'read' }
         return {
-          ...base,
-          actionLabel: 'Commit this prediction',
-          interaction: { kind: 'prediction', item: items.prediction, verdict: 'choice-reasoning' },
+          id: `${sectionId}-${task.id}`,
+          ordinal: index + 1,
+          phase: task.phase,
+          title: task.title,
+          instruction: task.instruction,
+          lookIn: task.lookIn,
+          foundationTask: task,
+          focusTarget: null,
+          gate: index > predictionIndex ? 'after-prediction' : 'open',
+          actionLabel:
+            task.phase === 'predict' || task.phase === 'transfer'
+              ? 'Submit answer'
+              : task.attribution
+                ? 'Submit these answers'
+                : 'Continue',
+          interaction,
+          teaching: { prose: 'none', blocks: [task.block] },
+          ...(walksTheCircuit ? { circuitView: 'diagnostic' as const } : {}),
+          surfaces:
+            task.block === 'circuit-patient'
+              ? ['circuit', 'monitor']
+              : sectionId === 'blood-flow-versus-sweep'
+                ? ['gas', 'monitor']
+                : ['circuit'],
         }
-      case 'act': {
-        /*
-         * A section that authors an attribution gets a real judgement to make here; the rest keep
-         * the bounded actions. Before this the Act step of every foundation section was the same
-         * Continue button, which is how the first section came to promise a selection it did not
-         * offer.
-         */
-        const attribution = ecmoDeliveryAttribution(sectionId)
-        if (attribution) {
-          return {
-            ...base,
-            actionLabel: 'Commit these answers',
-            interaction: { kind: 'attribution', attribution },
+      })
+    : STAGE_PHASES.map((phase, index) => {
+        const copy = runtime.phases[phase]
+        const base = {
+          id: `${sectionId}-${phase}`,
+          ordinal: index + 1,
+          phase,
+          title: copy.objective,
+          instruction: copy.requiredAction,
+          lookIn: copy.lookIn,
+          rationale: copy.teachingPoint,
+          focusTarget: null,
+          surfaces: SURFACES_BY_PHASE[phase],
+          ...(walksTheCircuit ? { circuitView: 'diagnostic' as const } : {}),
+          teaching: { prose: PROSE_BY_PHASE[phase], blocks: 'all' } as const,
+          gate: (phase === 'recognize' || phase === 'predict' ? 'open' : 'after-prediction') as
+            | 'open'
+            | 'after-prediction',
+          // Only an authored mapping loads a state on entry; unmapped phases keep the learner's state.
+          entryVariantId: runtime.initialVariantIdByPhase?.[phase],
+        }
+        switch (phase) {
+          case 'predict':
+            return {
+              ...base,
+              actionLabel: 'Commit this prediction',
+              interaction: {
+                kind: 'prediction',
+                item: items.prediction,
+                verdict: 'choice-reasoning',
+              },
+            }
+          case 'act': {
+            /*
+             * A section that authors an attribution gets a real judgement to make here; the rest keep
+             * the bounded actions. Before this the Act step of every foundation section was the same
+             * Continue button, which is how the first section came to promise a selection it did not
+             * offer.
+             */
+            const attribution = ecmoDeliveryAttribution(sectionId)
+            if (attribution) {
+              return {
+                ...base,
+                actionLabel: 'Commit these answers',
+                interaction: { kind: 'attribution', attribution },
+              }
+            }
+            return {
+              ...base,
+              actionLabel: 'Continue',
+              interaction: { kind: 'bounded-actions', actions: runtime.guidedActions },
+            }
           }
+          case 'transfer':
+            return {
+              ...base,
+              actionLabel: 'Commit this answer',
+              interaction: { kind: 'transfer-item', item: items.transfer },
+            }
+          default:
+            return { ...base, actionLabel: 'Continue', interaction: { kind: 'read' } }
         }
-        return {
-          ...base,
-          actionLabel: 'Continue',
-          interaction: { kind: 'bounded-actions', actions: runtime.guidedActions },
-        }
-      }
-      case 'transfer':
-        return {
-          ...base,
-          actionLabel: 'Commit this answer',
-          interaction: { kind: 'transfer-item', item: items.transfer },
-        }
-      default:
-        return { ...base, actionLabel: 'Continue', interaction: { kind: 'read' } }
-    }
-  })
+      })
 
   return {
     kind: 'foundation',

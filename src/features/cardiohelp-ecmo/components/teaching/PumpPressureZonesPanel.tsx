@@ -4,9 +4,13 @@ import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
 import { ecmoReferenceProfileForMode } from '../../content/referenceProfiles'
 import type { EcmoSimulationState } from '../../engine/types'
 import { EcmoCircuitWalk } from './EcmoCircuitWalk'
+import { useStageTeachingScope } from '../stage/StageTeachingScope'
 import { EcmoLocalizationCard } from './EcmoLocalizationCard'
 import {
   ChannelValue,
+  CircuitPressureIdentity,
+  FoundationTeachingBlock,
+  VaConfigurationLabel,
   GuidedValue,
   ModelBoundary,
   TextEquivalent,
@@ -43,6 +47,7 @@ export function PumpPressureZonesPanel({
 }) {
   const { circuit, device } = state
   const navigation = useEcmoCircuitWalkNavigation('pump-and-pressure-zones', walk)
+  const scope = useStageTeachingScope()
   const profile = ecmoReferenceProfileForMode(state.supportMode)
   const referenceFlow = (profile.expected.bloodFlow.low + profile.expected.bloodFlow.high) / 2
   const referenceDeltaP = (profile.expected.deltaP.low + profile.expected.deltaP.high) / 2
@@ -56,6 +61,109 @@ export function PumpPressureZonesPanel({
     deltaPReadout.displayed === null
       ? null
       : direction(deltaPReadout.displayed - referenceDeltaP, 2)
+
+  if (scope?.foundationBlock)
+    return (
+      <div className={styles.panel} data-teaching-panel="pump-and-pressure-zones">
+        {state.supportMode === 'va' ? <VaConfigurationLabel /> : null}
+        <FoundationTeachingBlock id="pump-setting" title="Review speed and loading">
+          <section className={styles.section} aria-labelledby="setting-flow-heading">
+            <h3 id="setting-flow-heading" className={styles.heading}>
+              Setting and resulting flow
+            </h3>
+            <div className="mt-3 grid gap-3">
+              <p data-selected-setting>
+                <strong>Pump speed · setting:</strong> {device.rpmSetpoint} rpm
+              </p>
+              <p data-resulting-flow>
+                <strong>Circuit blood flow · measured result:</strong>{' '}
+                {circuit.bloodFlow.toFixed(2)} L/min
+              </p>
+            </div>
+            <p className="mt-3 text-sm leading-6">
+              A centrifugal pump moves the blood reaching its inlet against downstream resistance.
+              The same pump speed can produce different flows when drainage or return-side
+              resistance changes.
+            </p>
+            <p className="mt-2 text-sm leading-6">
+              This reference is settled and has unrestricted drainage. Its values are authored for
+              teaching, not clinical targets.
+            </p>
+          </section>
+        </FoundationTeachingBlock>
+        <FoundationTeachingBlock id="pump-speed" title="Review the speed comparison">
+          <section className={styles.section} aria-labelledby="speed-comparison-heading">
+            <h3 id="speed-comparison-heading" className={styles.heading}>
+              The speed comparison
+            </h3>
+            <p className="mt-3 text-sm leading-6">
+              With loading unchanged and blood available at the inlet, increasing speed can increase
+              circuit flow. Read the drainage pressure at the same time: moving more blood requires
+              more suction.
+            </p>
+            <p className="mt-2 text-sm leading-6">
+              Use the guided control in Steps. The console is an observation display in this lesson.
+            </p>
+            <p className="mt-2 text-sm leading-6">
+              This reference does not model drainage collapse or chatter at the offered speeds. A
+              poor flow response with increasingly negative drainage pressure on another circuit
+              would require assessment of drainage, not an automatic further speed increase.
+            </p>
+          </section>
+        </FoundationTeachingBlock>
+        <FoundationTeachingBlock id="pump-result" title="Review how to read the result">
+          <section className={styles.section} aria-labelledby="pump-result-heading">
+            <h3 id="pump-result-heading" className={styles.heading}>
+              Read the saved comparison
+            </h3>
+            <p className="mt-3 text-sm leading-6">
+              Compare flow and pVen in the retained table in Steps, then read the pressures after
+              the pump. A negative Change for pVen means that drainage pressure became more
+              negative.
+            </p>
+            <p className="mt-2 text-sm leading-6">
+              ΔP also depends on flow through the oxygenator. A change in ΔP after changing speed is
+              not, by itself, evidence of new membrane resistance.
+            </p>
+          </section>
+        </FoundationTeachingBlock>
+        <FoundationTeachingBlock id="pump-load" title="Review the loading comparison">
+          <section className={styles.section} aria-labelledby="load-comparison-heading">
+            <h3 id="load-comparison-heading" className={styles.heading}>
+              The loading comparison
+            </h3>
+            <p className="mt-3 text-sm leading-6">
+              The existing return-resistance preview uses the same pump speed as the reference. Read
+              the resulting flow and both post-pump pressures before interpreting the gradient.
+            </p>
+            <p className="mt-2 text-sm leading-6">
+              The preview changes the downstream loading condition. It does not model its cause or a
+              developing obstruction. No speed increase is used to overcome the resistance.
+            </p>
+          </section>
+        </FoundationTeachingBlock>
+        <CircuitPressureIdentity />
+        <details className={styles.section}>
+          <summary className="cursor-pointer font-semibold">More about pressure patterns</summary>
+          <EcmoCircuitWalk
+            {...navigation}
+            pastPrediction
+            onRunComparison={undefined}
+            state={state}
+          />
+          <EcmoLocalizationCard mode="scaffold-table" supportMode={state.supportMode} />
+          <GuidedValue
+            guide={ecmoDerivedValueGuides.transmembraneDeltaP}
+            value={circuit.readouts.deltaP.displayed}
+            headingLevel={3}
+          />
+        </details>
+        <ModelBoundary>
+          Comparison magnitudes and times belong to this educational model. These results are not
+          clinical response predictions.
+        </ModelBoundary>
+      </div>
+    )
 
   return (
     <div className={styles.panel} data-teaching-panel="pump-and-pressure-zones">

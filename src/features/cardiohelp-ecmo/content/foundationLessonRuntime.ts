@@ -943,6 +943,16 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       // The two story problems (`content/storyProblems.ts`): the colleague's change, reproduced
       // from the same clean reference so the learner reads the axis it moved and the one it did not.
       {
+        id: 'compare-oxygen-fraction',
+        label: 'Run the oxygen-fraction comparison',
+        description:
+          'Lower the sweep-gas oxygen fraction from 1.00 to 0.60 with speed and sweep unchanged. This is an authored comparison, not a clinical setting recommendation.',
+        kind: 'restore-and-apply',
+        variantId: REFERENCE_VARIANT_ID,
+        resolve: () => [{ type: 'SET_GAS_FIO2', fio2: 0.6 } as const],
+        settleSeconds: 20,
+      },
+      {
         id: 'double-sweep',
         label: 'Double the sweep',
         description: 'The story problem’s gas-side move, from the reference state.',
