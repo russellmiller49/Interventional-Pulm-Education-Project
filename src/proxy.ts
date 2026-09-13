@@ -67,7 +67,13 @@ export async function proxy(req: NextRequest) {
     res.headers.set('X-Robots-Tag', 'noindex, nofollow')
   }
 
-  if (isPublicUnlistedPath(pathname)) {
+  if (
+    isPublicUnlistedPath(pathname) ||
+    pathname === '/development-beta' ||
+    pathname.startsWith('/development-beta/') ||
+    pathname === '/admin/module-feedback' ||
+    pathname.startsWith('/admin/module-feedback/')
+  ) {
     res.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive')
   }
 

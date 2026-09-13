@@ -37,3 +37,9 @@ The production build never reads that folder. The folder map, the read-only rule
 resolver helpers (`scripts/local-data-root.mjs`, `scripts/local_data.py`) are in
 `docs/local-authoring-assets.md`. Read from it by absolute path when you need source knowledge
 or an asset to regenerate a derived file; never copy it into a checkout, stage it, or commit it.
+
+Before searching for source assets or following an old authoring path, read
+`docs/local-authoring-assets.md`. Its folder map translates former repository paths to
+Local-Data paths. Only the primary checkout carries the legacy symlink mounts; worktrees
+resolve inputs through the helpers or Local-Data config. Raw inputs stay outside Git;
+commit only regenerated runtime outputs. Never print the contents of `secrets/`.

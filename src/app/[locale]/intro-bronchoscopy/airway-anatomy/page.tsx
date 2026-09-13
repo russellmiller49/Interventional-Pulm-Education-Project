@@ -10,7 +10,8 @@ import { HandoffContent } from '@/i18n/handoff'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const handoffMetadata: Metadata = {
-  title: 'Airway Anatomy — Intro to Bronchoscopy',
+  title: 'Live Bronchoscopy Anatomy',
+  robots: { index: false, follow: false, noarchive: true },
   description:
     'Learn the tracheobronchial tree for bronchoscopy: trachea, carina, lobar and segmental bronchi (RB1–RB10, LB1–LB10) with an animated endoscopic survey, a labeled 3D model, and a self-check.',
 }
@@ -49,7 +50,7 @@ export default function AirwayAnatomyIntroPage() {
                 Intro bronchoscopy · Anatomy
               </Badge>
               <h1 className="max-w-4xl text-4xl font-bold tracking-tight md:text-5xl">
-                Airway anatomy for bronchoscopy
+                Live Bronchoscopy Anatomy
               </h1>
               <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
                 A foundational tour of the tracheobronchial tree for the flexible bronchoscopist:

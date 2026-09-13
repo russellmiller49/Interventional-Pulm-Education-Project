@@ -71,7 +71,7 @@ export default async function AdminModulesPage({ params }: PageProps) {
         <div className="max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Admin</p>
           <h1 className="mt-2 text-4xl font-black tracking-tight text-foreground">
-            Modules in development
+            Modules in development with direct links
           </h1>
           <p className="mt-3 text-base leading-7 text-muted-foreground">
             {`Every module that is not part of the public site yet. ${shareable.length} of ${modules.length} open by direct link, so a beta tester can use them without an account.`}{' '}
@@ -80,6 +80,22 @@ export default async function AdminModulesPage({ params }: PageProps) {
           </p>
         </div>
       </header>
+
+      <section
+        className="flex flex-wrap gap-3 rounded-2xl border bg-card p-5"
+        aria-label="Beta testing"
+      >
+        <Button asChild>
+          <Link href={`/${locale}/development-beta` as Route}>Open beta-testing hub</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href={`/${locale}/admin/module-feedback` as Route}>Review module feedback</Link>
+        </Button>
+        <p className="w-full text-sm text-muted-foreground">
+          The beta hub requires a site account and adds feedback tools. The direct links below open
+          the usual modules.
+        </p>
+      </section>
 
       <section
         aria-label="What the access labels mean"
