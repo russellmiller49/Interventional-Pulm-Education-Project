@@ -2097,8 +2097,8 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
       {config.linkedLesson && scopeControls}
       {config.linkedLesson && acoustic.volume && <LinkedModelView ultrasound={sector} config={config} pose={pose} volume={acoustic.volume} caseData={caseData} contactQuality={sectorContactQuality} flexion={flexionDeg} evidence={linkedEvidence} onEvidence={onLinkedEvidence} onApproach={chooseApproach} onDemo={action => {
         if (!config.demonstration) return;
-        if (action === 'roll') { setRollTrimDeg(v => v === 25 ? 0 : 25); setFlexionDeg(0); }
-        else if (action === 'flexion') { setFlexionDeg(v => v === 15 ? 0 : 15); setRollTrimDeg(0); }
+        if (action === 'roll') setRollTrimDeg(v => v === 25 ? 0 : 25);
+        else if (action === 'flexion') setFlexionDeg(v => v === 15 ? 0 : 15);
         else { setRollTrimDeg(config.initialRoll); setFlexionDeg(0); }
       }} />}
       <div className="guided-tabs" role="group" aria-label="Clinical view">

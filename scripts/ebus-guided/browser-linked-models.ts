@@ -55,10 +55,16 @@ async function main() {
         await frame.locator('.linked-canvas').screenshot({ path: out + '/scope-whole.png' })
         await frame.getByRole('button', { name: 'Show distal tip', exact: true }).click()
         await frame.locator('.linked-canvas').screenshot({ path: out + '/scope-distal.png' })
+        const beforeFlex = await evidence()
         await frame.getByRole('button', { name: 'Demonstrate flexion', exact: true }).click()
+        await expect.poll(async () => (await evidence())?.flexion).toBe(15)
+        expect((await evidence())?.roll).toBe(beforeFlex?.roll)
         await frame.locator('.linked-canvas').screenshot({ path: out + '/scope-flexion.png' })
       }
+      const beforeRotation = await evidence()
       await frame.getByRole('button', { name: 'Demonstrate rotation', exact: true }).click()
+      await expect.poll(async () => (await evidence())?.roll).toBe(25)
+      expect((await evidence())?.flexion).toBe(beforeRotation?.flexion)
       const demo = await page.evaluate(() =>
         window.__ebusEvents.filter((e) => e.sessionId.endsWith('-demonstration')),
       )
