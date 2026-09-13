@@ -47,6 +47,7 @@ const BUDGETS: Record<string, number> = {
   'larynx/larynx-lumen.glb': 1_500_000,
   'devices/accessories.glb': 450_000,
   'devices/handle.glb': 500_000,
+  'devices/control-head.glb': 300_000,
   'devices/scope-tip.glb': 100_000,
   'devices/bench.glb': 100_000,
   'devices/findings.glb': 100_000,

@@ -9,6 +9,8 @@ import type { OstiumLabel } from '@/lib/airway-anatomy/ostia'
 import { OPTICAL_ASPECT } from '../../engine/scope/scopeOstia'
 import { ScopeOpticalView } from './ScopeOpticalView'
 import { ObserverView } from './ObserverView'
+import { ControlHeadCloseup, DistalTipCloseup } from './BronchoscopeCloseup'
+import { useBenchPresentation } from './useBenchPresentation'
 import { loadSceneAssets, type ScopeSceneAssets } from './scopeSceneAssets'
 import { layoutOpticalLabels, projectScenePins, VIEW_DESCRIPTION } from './scopeSceneModel'
 import { treeChoiceInputId, type ScopePaneProps, type AirwayLabel } from './types'
@@ -54,10 +56,12 @@ function RenderLifecycle({ props, onDraw }: { props: SceneProps; onDraw: () => v
   const { invalidate, gl } = useThree()
   const drawn = useRef(false)
   useEffect(() => {
-    invalidate(2)
+    invalidate(8)
   }, [props.state, props.visible, invalidate])
   useEffect(() => {
-    const update = () => invalidate(2)
+    // View updates its offscreen flag in React, then clears its scissor in a layout effect.
+    // Leave frames after that effect to repaint newly revealed close-ups on compact layouts.
+    const update = () => invalidate(8)
     window.addEventListener('scroll', update, true)
     window.addEventListener('resize', update)
     return () => {
@@ -70,7 +74,7 @@ function RenderLifecycle({ props, onDraw }: { props: SceneProps; onDraw: () => v
       drawn.current = true
       queueMicrotask(onDraw)
     }
-  }, 3)
+  }, 4)
   return null
 }
 
@@ -79,6 +83,10 @@ export default function ScopeScene(props: SceneProps) {
   const [status, setStatus] = useState<SceneStatus>('loading')
   const [generation, setGeneration] = useState(0)
   const { onStatus, view, state } = props
+  const detailedBench =
+    view.sectionId === 'five-controls' && !!view.physicalControlLabels && state.place === 'bench'
+  const presentation = useBenchPresentation(state, detailedBench, props.visible)
+  const visualProps = { ...props, state: presentation.state }
   const root = useRef<HTMLDivElement>(null)
   const opticalRoot = useRef<HTMLDivElement>(null)
   const [opticalSize, setOpticalSize] = useState({ width: 320, height: 240 })
@@ -115,7 +123,7 @@ export default function ScopeScene(props: SceneProps) {
   }, [report])
   useEffect(() => {
     let cancelled = false
-    loadSceneAssets(view.mode, view.profile)
+    loadSceneAssets(view.mode, view.profile, detailedBench)
       .then((next) => {
         if (!cancelled) setAssets(next)
       })
@@ -125,7 +133,7 @@ export default function ScopeScene(props: SceneProps) {
     return () => {
       cancelled = true
     }
-  }, [view.mode, view.profile, generation, failed])
+  }, [view.mode, view.profile, detailedBench, generation, failed])
   const observer = ['controls-isolated', 'larynx-entry', 'tube', 'accessory'].includes(view.mode)
   const optical = view.mode !== 'idle'
   useEffect(() => {
@@ -190,7 +198,7 @@ export default function ScopeScene(props: SceneProps) {
             >
               <View.Port />
               <WebGLContextGuard onLost={recover} />
-              <RenderLifecycle props={props} onDraw={drawn} />
+              <RenderLifecycle props={visualProps} onDraw={drawn} />
             </Canvas>
             <div
               className={styles.optical}
@@ -203,7 +211,7 @@ export default function ScopeScene(props: SceneProps) {
               <View className={styles.opticalViewport} index={1}>
                 <PerspectiveCamera makeDefault near={0.05} far={1400} fov={55} />
                 {optical ? (
-                  <ScopeOpticalView assets={assets} props={props} />
+                  <ScopeOpticalView assets={assets} props={visualProps} />
                 ) : (
                   <ObserverView assets={assets} props={props} />
                 )}
@@ -309,15 +317,61 @@ export default function ScopeScene(props: SceneProps) {
               <div
                 className={styles.observer}
                 role="img"
-                aria-label="Outside view of the authored teaching model"
+                aria-label={
+                  detailedBench
+                    ? 'Outside view: bronchoscope control head and enlarged distal bending section'
+                    : 'Outside view of the authored teaching model'
+                }
+                data-control-closeups={detailedBench ? 'true' : undefined}
               >
-                <View className={styles.observerViewport} index={2}>
-                  <PerspectiveCamera makeDefault near={0.05} far={1400} fov={48} />
-                  <ObserverView assets={assets} props={props} />
-                </View>
-                <span className={styles.viewHeading}>
-                  {view.mode === 'tube' ? 'Tube cutaway' : 'Outside view'} · authored model
-                </span>
+                {detailedBench ? (
+                  <>
+                    <div
+                      className={styles.headCloseup}
+                      data-control-head
+                      data-handle-rotation={presentation.state.inputs.rotationDeg.toFixed(2)}
+                      data-lever-deflection={presentation.state.inputs.deflectionDeg.toFixed(2)}
+                      data-suction-travel={presentation.suctionTravel.toFixed(2)}
+                    >
+                      <View className={styles.closeupViewport} index={2}>
+                        <PerspectiveCamera makeDefault near={0.1} far={1400} fov={38} />
+                        <ControlHeadCloseup
+                          assets={assets}
+                          state={presentation.state}
+                          suctionTravel={presentation.suctionTravel}
+                        />
+                      </View>
+                      <span className={styles.closeupHeading}>Outside view · control head</span>
+                      <span className={styles.closeupState}>
+                        {state.inputs.suction
+                          ? 'Suction valve pressed'
+                          : state.inputs.deflectionDeg > 0
+                            ? 'Lever toward U'
+                            : state.inputs.deflectionDeg < 0
+                              ? 'Lever toward D'
+                              : 'Thumb lever · neutral'}
+                      </span>
+                    </div>
+                    <div className={styles.tipCloseup} data-distal-closeup>
+                      <View className={styles.closeupViewport} index={3}>
+                        <PerspectiveCamera makeDefault near={0.1} far={1400} fov={38} />
+                        <DistalTipCloseup state={presentation.state} />
+                      </View>
+                      <span className={styles.closeupHeading}>Distal bending section</span>
+                      <span className={styles.closeupState}>Enlarged · middle tube omitted</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <View className={styles.observerViewport} index={2}>
+                      <PerspectiveCamera makeDefault near={0.05} far={1400} fov={48} />
+                      <ObserverView assets={assets} props={props} />
+                    </View>
+                    <span className={styles.viewHeading}>
+                      {view.mode === 'tube' ? 'Tube cutaway' : 'Outside view'} · authored model
+                    </span>
+                  </>
+                )}
               </div>
             ) : null}
           </SceneBoundary>

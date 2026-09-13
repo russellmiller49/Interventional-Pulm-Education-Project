@@ -204,19 +204,28 @@ export function fiveControlsLearnInputs(): readonly StepInput[] {
         sourceRefs: MOTIONS,
         paragraphs: [
           'Deflection means bending the distal section with the angulation lever. On this teaching scope the lever bends toward the top or bottom of the image. It does not mean left or right in the patient.',
-          'Compare the bending section in the Outside view with the change in viewing direction in the Scope view. Depth stays unchanged.',
+          'In the Outside view, watch the thumb lever move toward U as the tip bends up, or toward D as it bends down. The control head and distal section are shown as separate close-ups. Compare the bend with the Scope view; depth stays unchanged.',
         ],
         cue: 'Move the Deflection slider away from straight, then return it to zero. The arrow keys also move the lever when the scope workspace is focused.',
         success: 'You bent and released the tip while its depth stayed fixed.',
         demonstration: [
           {
-            command: { type: 'set-deflection', deg: 25 },
+            command: { type: 'set-deflection', deg: 60 },
             caption:
-              'The angulation lever bends the tip. The Scope view looks toward the top of the original scene.',
+              'The thumb lever moves down toward U and the distal tip bends up. The Scope view looks toward the top of the original scene.',
           },
           {
             command: { type: 'set-deflection', deg: 0 },
             caption: 'Releasing the lever straightens the tip and restores the view.',
+          },
+          {
+            command: { type: 'set-deflection', deg: -60 },
+            caption:
+              'The thumb lever moves up toward D and the distal tip bends down. In the Scope view, the viewing direction moves down.',
+          },
+          {
+            command: { type: 'set-deflection', deg: 0 },
+            caption: 'Return the thumb lever to neutral. The distal section straightens again.',
           },
         ],
       },

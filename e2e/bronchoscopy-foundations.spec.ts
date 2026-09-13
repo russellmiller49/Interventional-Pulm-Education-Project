@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import sharp from 'sharp'
 import { bronchStageLesson } from '../src/features/bronchoscopy-foundations/content/stageLessons'
 import {
   BRONCH_SECTION_IDS,
@@ -62,14 +63,54 @@ async function setRange(page: Page, key: 'rotate' | 'deflect', value: number) {
   // Native keyboard input exercises React's real change handler and input provenance.
   const slider = control(page, key)
   await slider.focus()
-  const current = Number(await slider.inputValue())
+  let current = Number(await slider.inputValue())
   const step = Number((await slider.getAttribute('step')) ?? 1)
+  const pageStep =
+    (Number(await slider.getAttribute('max')) - Number(await slider.getAttribute('min'))) / 10
+  // Native PageUp/PageDown covers larger movements without hundreds of one-degree renders.
+  // Read the browser's actual value after every page key; rounding varies across range bounds.
+  while (Math.abs(value - current) > pageStep) {
+    const before = current
+    await slider.press(current < value ? 'PageUp' : 'PageDown')
+    current = Number(await slider.inputValue())
+    if (current === before) break
+  }
   const direction = current < value ? 1 : -1
   for (let at = current; direction * at < direction * value; at += direction * step)
     await slider.press(direction === 1 ? 'ArrowRight' : 'ArrowLeft')
 }
 async function record(page: Page) {
   return page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), BRONCH_STORAGE_KEY)
+}
+
+async function expectPaintedControlHead(page: Page) {
+  const head = page.locator('[data-control-head]')
+  await head.scrollIntoViewIfNeeded()
+  // Readiness alone cannot detect a View that was cleared after returning onscreen.
+  // The middle of the close-up must contain both the pale studio and the dark instrument.
+  await expect
+    .poll(
+      async () => {
+        const { data, info } = await sharp(await head.screenshot())
+          .removeAlpha()
+          .raw()
+          .toBuffer({ resolveWithObject: true })
+        let light = 0,
+          dark = 0,
+          count = 0
+        for (let y = Math.floor(info.height * 0.2); y < info.height * 0.82; y++) {
+          for (let x = Math.floor(info.width * 0.1); x < info.width * 0.9; x++) {
+            const at = (y * info.width + x) * info.channels
+            if (data[at] > 175 && data[at + 1] > 175 && data[at + 2] > 175) light++
+            if (data[at] < 115 && data[at + 1] < 115 && data[at + 2] < 115) dark++
+            count++
+          }
+        }
+        return light / count > 0.3 && dark / count > 0.025
+      },
+      { timeout: 10_000 },
+    )
+    .toBe(true)
 }
 
 test('one entry, direct links and incomplete-section resume preserve the first decision', async ({
@@ -174,6 +215,9 @@ for (const viewport of [
     async ({ page }, info) => {
       test.setTimeout(240_000)
       await page.setViewportSize(viewport)
+      await page.emulateMedia({
+        reducedMotion: viewport.width === 1440 ? 'no-preference' : 'reduce',
+      })
       const errors: string[] = []
       page.on('pageerror', (error) => errors.push(error.message))
       const lesson = await openSection(page, 'five-controls')
@@ -217,6 +261,30 @@ for (const viewport of [
           await primary(page).click()
           expect((await record(page)).firstAttempts['five-controls-learn-v2:N03']).toEqual(first)
         } else if (step.interaction.kind === 'scope-task') {
+          if (step.learn?.id === 'bend') {
+            await pilotAction(page, 'Watch the example')
+            for (const [index, angle] of [60, 0, -60, 0].entries()) {
+              if (index) await pilotAction(page, 'Next demonstration movement')
+              await showPanel(page, 'Simulator')
+              await ready(page)
+              await expect(page.locator('[data-control-head]')).toHaveAttribute(
+                'data-lever-deflection',
+                angle.toFixed(2),
+              )
+              await expect(control(page, 'deflect')).toBeDisabled()
+              await page.locator('[data-control-closeups]').scrollIntoViewIfNeeded()
+              await expectPaintedControlHead(page)
+              await page.screenshot({ path: info.outputPath('lever-and-tip-' + index + '.png') })
+              const closeups = await page.locator('[data-control-closeups]').boundingBox()
+              expect(closeups?.width).toBeGreaterThan(140)
+              expect(
+                await page.evaluate(
+                  () => document.documentElement.scrollWidth <= window.innerWidth,
+                ),
+              ).toBe(true)
+            }
+            expect((await record(page)).completedSectionIds).toEqual([])
+          }
           if (step.learn?.id === 'depth') {
             await pilotAction(page, 'Watch the example')
             await showPanel(page, 'Simulator')
@@ -232,6 +300,37 @@ for (const viewport of [
           if (step.learn?.demonstration) await pilotAction(page, 'Try with guidance')
           await showPanel(page, 'Simulator')
           await ready(page)
+          if (step.learn?.id === 'rotation') {
+            await setRange(page, 'deflect', 45)
+            await setRange(page, 'rotate', 90)
+            await expect(page.locator('[data-control-head]')).toHaveAttribute(
+              'data-handle-rotation',
+              '90.00',
+            )
+            await expect(page.locator('[data-control-head]')).toHaveAttribute(
+              'data-lever-deflection',
+              '45.00',
+            )
+            await page.locator('[data-control-closeups]').scrollIntoViewIfNeeded()
+            await expectPaintedControlHead(page)
+            await page.screenshot({ path: info.outputPath('handle-rotation.png') })
+            await control(page, 'reset').click()
+            await expect(page.locator('[data-control-head]')).toHaveAttribute(
+              'data-handle-rotation',
+              '0.00',
+            )
+          }
+          if (step.learn?.id === 'suction') {
+            await control(page, 'suction').check()
+            await expect(page.locator('[data-control-head]')).toHaveAttribute(
+              'data-suction-travel',
+              '1.00',
+            )
+            await page.locator('[data-control-closeups]').scrollIntoViewIfNeeded()
+            await expectPaintedControlHead(page)
+            await page.screenshot({ path: info.outputPath('suction-valve.png') })
+            await control(page, 'reset').click()
+          }
           if (step.learn?.id === 'depth') {
             await control(page, 'advance').press('Enter')
             await control(page, 'advance').press('Enter')

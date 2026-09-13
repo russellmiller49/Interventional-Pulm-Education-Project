@@ -50,8 +50,47 @@
 /* Keep the pilot's two representations together when using the controls on a phone. */
 .views[data-pilot-bench='true'][data-observer='true'] {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 410px;
+}
+.views[data-pilot-bench='true'] .opticalViewport {
+  height: 100%;
+  aspect-ratio: auto;
+}
+.observer[data-control-closeups='true'] {
+  display: grid;
+  grid-template-rows: minmax(270px, 1.9fr) minmax(140px, 1fr);
+}
+.headCloseup,
+.tipCloseup {
+  position: relative;
+  min-width: 0;
   min-height: 0;
+}
+.tipCloseup {
+  border-top: 1px solid #b6c4c9;
+}
+.closeupViewport {
+  position: absolute;
+  inset: 0;
+}
+.closeupHeading,
+.closeupState {
+  position: absolute;
+  left: 0.55rem;
+  right: 0.55rem;
+  color: #23373f;
+  font-size: 0.67rem;
+  line-height: 1.25;
+  pointer-events: none;
+}
+.closeupHeading {
+  top: 0.5rem;
+  font-weight: 650;
+}
+.closeupState {
+  bottom: 0.45rem;
+  color: #3e535a;
 }
 .views[data-pilot-bench='true'][data-observer='true'] .observer {
   border-top: 0;
@@ -369,4 +408,27 @@
   margin: 0 0 0.35rem;
   color: #afc3ca;
   font-size: 0.68rem;
+}
+
+/* The device needs enough space to see the thumb lever. At narrow pane widths put
+   the scope image above two close-ups, instead of shrinking the control head. */
+@container (max-width: 560px) {
+  .views[data-pilot-bench='true'][data-observer='true'] {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+  }
+  .views[data-pilot-bench='true'] .opticalViewport {
+    height: auto;
+    aspect-ratio: 16 / 8;
+  }
+  .views[data-pilot-bench='true'][data-observer='true'] .observer {
+    border-left: 0;
+    border-top: 1px solid #34475c;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: 220px;
+  }
+  .tipCloseup {
+    border-top: 0;
+    border-left: 1px solid #b6c4c9;
+  }
 }

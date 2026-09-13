@@ -4,6 +4,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useRef } from 'react'
 import type * as THREE from 'three'
 import { AirwaySurface, ScopeCamera } from '@/components/airway-anatomy/scope-primitives'
+import { updateScopeCamera } from '@/components/airway-anatomy/scope-primitives/ScopeCamera'
 import { TEACHING_LUMEN_URL } from '../../engine/scope/scopeCase'
 import { OPTICAL_FOV_DEG } from '../../engine/scope/scopeOstia'
 import { DRACO_DECODER_PATH } from '../stage/scopeCaseLoader'
@@ -38,6 +39,20 @@ function Headlight() {
   )
 }
 
+function BenchOpticalCamera({ pose }: { pose: NonNullable<ScopePaneProps['state']['pose']> }) {
+  const { camera } = useThree()
+  useFrame(() => {
+    const aspect = (camera as THREE.PerspectiveCamera).aspect
+    updateScopeCamera(
+      camera,
+      pose,
+      Number.isFinite(aspect) && aspect > 0 ? aspect : 1,
+      OPTICAL_FOV_DEG,
+    )
+  })
+  return null
+}
+
 export function ScopeOpticalView({
   assets,
   props,
@@ -49,7 +64,13 @@ export function ScopeOpticalView({
   return (
     <>
       <color attach="background" args={['#030609']} />
-      {state.pose ? <ScopeCamera pose={state.pose} fovDeg={OPTICAL_FOV_DEG} /> : null}
+      {state.pose ? (
+        state.place === 'bench' && view.physicalControlLabels ? (
+          <BenchOpticalCamera pose={state.pose} />
+        ) : (
+          <ScopeCamera pose={state.pose} fovDeg={OPTICAL_FOV_DEG} />
+        )
+      ) : null}
       <Headlight />
       {state.place === 'bench' ? <BenchTarget view={view} /> : null}
       {state.place === 'bench' ? (
