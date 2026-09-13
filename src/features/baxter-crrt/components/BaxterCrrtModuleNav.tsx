@@ -1,5 +1,6 @@
 'use client'
 
+import { BAXTER_CRRT_LEARN_LESSON_IDS } from '../content/learnerRegistry'
 import { ModuleNavV2 } from '@/features/learning-module/components/ModuleNavV2'
 import { baxterCrrtNavBase } from '@/features/learning-module/moduleRoutes'
 import type { ModuleNavItem } from '@/features/learning-module/types'
@@ -13,7 +14,7 @@ export const baxterCrrtModuleNavItems: readonly ModuleNavItem[] = [
   {
     href: `${baxterCrrtNavBase}/learn`,
     title: 'Learn',
-    description: 'Seven didactic lessons',
+    description: `${BAXTER_CRRT_LEARN_LESSON_IDS.length} lessons`,
   },
   {
     href: `${baxterCrrtNavBase}/practice`,

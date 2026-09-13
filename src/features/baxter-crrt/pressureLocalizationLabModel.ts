@@ -183,7 +183,7 @@ function locationExplanation(site: PressureLocalizationSite): string {
     case 'return-line':
       return 'The obstruction is on the extracorporeal return line. Increased resistance after the filter raises return-side pressure.'
     case 'effluent-line':
-      return 'The obstruction is on the effluent line. The resulting rise in effluent pressure changes the displayed TMP relationship.'
+      return 'This illustrative fixture imposes a higher effluent-pressure input to demonstrate the TMP relationship. Obstruction location relative to the sensor and pump, and pump regulation, are not modeled; no universal obstruction direction follows.'
   }
 }
 

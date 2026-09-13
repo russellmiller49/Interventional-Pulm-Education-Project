@@ -1,7 +1,7 @@
 'use client'
 
 import { BookOpenCheck, Check, FlaskConical, Gauge, Layers3 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { criticalCareActivityById } from '@/features/critical-care/content/activities'
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
@@ -22,7 +22,6 @@ import { ChoiceReasoningFeedback } from '@/features/learning-module/components/C
 import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
 import { PatientContextBar } from '@/features/learning-module/components/PatientContextBar'
 import { ReferenceDrawer } from '@/features/learning-module/components/ReferenceDrawer'
-import { ResumeBanner } from '@/features/learning-module/components/ResumeBanner'
 import { TaskPanel } from '@/features/learning-module/components/TaskPanel'
 import { baxterCrrtNavBase } from '@/features/learning-module/moduleRoutes'
 import { Link, useRouter } from '@/i18n/navigation'
@@ -33,7 +32,6 @@ import { baxterCrrtLessonClinicalAnchors } from '../content/lessonClinicalAnchor
 import { nextRecommendedCrrtActivity } from '../content/curriculum'
 import {
   baxterCrrtLearnLessonById,
-  baxterCrrtLearnLessons,
   baxterCrrtPriorPlatformAdvancedBlock,
 } from '../content/learnLessons'
 import type { BaxterCrrtLearnLessonId } from '../content/learnerRegistry'
@@ -47,6 +45,8 @@ import {
   type BaxterCrrtProgressStation,
   type BaxterCrrtProgressV3,
 } from '../engine/progress'
+import { crrtFoundationTasks } from '../content/foundationLessons'
+import { CrrtFoundationLesson } from './CrrtFoundationLesson'
 import { BaxterCrrtLearnLanding } from './BaxterCrrtLearnLanding'
 import { BaxterCrrtModuleFrame } from './BaxterCrrtModuleFrame'
 import { CrrtCitrateDifferential } from './CrrtCitrateDifferential'
@@ -99,6 +99,7 @@ function ClinicalApplicationCheck({
   onSelect,
   onSubmit,
   onRevise,
+  onReview,
 }: {
   readonly item: ClinicalLearningItem
   readonly selectedChoiceId: string | null
@@ -106,6 +107,7 @@ function ClinicalApplicationCheck({
   readonly onSelect: (choiceId: string) => void
   readonly onSubmit: () => void
   readonly onRevise: () => void
+  readonly onReview: () => void
 }) {
   const submittedChoice = item.choices.find((choice) => choice.id === submittedChoiceId)
   const conceptIds = criticalCareActivityById.get(item.activityId)?.assumedConceptIds ?? []
@@ -140,6 +142,9 @@ function ClinicalApplicationCheck({
             evidenceIds={item.evidenceIds}
             conceptIds={conceptIds}
           />
+          <button type="button" onClick={onReview}>
+            Review feedback
+          </button>
           <button type="button" onClick={onRevise}>
             Try another frame
           </button>
@@ -165,26 +170,89 @@ export function BaxterCrrtLearn({
   readonly locale?: string
   readonly initialLessonId?: string
 }) {
-  if (!validLessonId(initialLessonId)) {
+  const [selection, setSelection] = useState(() => ({
+    lessonId: validLessonId(initialLessonId) ? initialLessonId : null,
+    revision: 0,
+  }))
+  const transition = useCallback((lessonId: BaxterCrrtLearnLessonId | null) => {
+    setSelection((current) => ({ lessonId, revision: current.revision + 1 }))
+    if (lessonId)
+      recordCriticalCareActivitySelection(window.localStorage, {
+        activityId: `crrt:learn:${lessonId}`,
+        mode: 'guided',
+        query: { lesson: lessonId },
+        payloadVersion: 'crrt-selection-v1',
+      })
+  }, [])
+  useEffect(() => {
+    const restore = () => {
+      const id = new URL(window.location.href).searchParams.get('lesson') ?? undefined
+      transition(validLessonId(id) ? id : null)
+    }
+    window.addEventListener('popstate', restore)
+    return () => window.removeEventListener('popstate', restore)
+  }, [transition])
+  const previousProp = useRef(initialLessonId)
+  useEffect(() => {
+    if (previousProp.current === initialLessonId) return
+    previousProp.current = initialLessonId
+    const timer = window.setTimeout(
+      () => transition(validLessonId(initialLessonId) ? initialLessonId : null),
+      0,
+    )
+    return () => window.clearTimeout(timer)
+  }, [initialLessonId, transition])
+  function navigate(lessonId: BaxterCrrtLearnLessonId) {
+    const url = new URL(window.location.href)
+    url.searchParams.set('lesson', lessonId)
+    window.history.pushState({}, '', `${url.pathname}${url.search}`)
+    transition(lessonId)
+  }
+  if (!selection.lessonId)
     return (
       <BaxterCrrtModuleFrame locale={locale} activeHref={`${baxterCrrtNavBase}/learn`}>
         <BaxterCrrtLearnLanding />
       </BaxterCrrtModuleFrame>
     )
-  }
-  return <BaxterCrrtLearnWorkbench locale={locale} initialLessonId={initialLessonId} />
+  const key = `${selection.lessonId}:${selection.revision}`
+  if (crrtFoundationTasks[selection.lessonId])
+    return (
+      <BaxterCrrtModuleFrame
+        locale={locale}
+        activeHref={`${baxterCrrtNavBase}/learn`}
+        activityMode
+        focusedLesson
+      >
+        <CrrtFoundationLesson
+          key={key}
+          lessonId={selection.lessonId}
+          onNavigate={navigate}
+          onRestart={() => transition(selection.lessonId)}
+        />
+      </BaxterCrrtModuleFrame>
+    )
+  return (
+    <BaxterCrrtLearnWorkbench
+      key={key}
+      locale={locale}
+      initialLessonId={selection.lessonId}
+      onNavigate={navigate}
+    />
+  )
 }
 
 function BaxterCrrtLearnWorkbench({
   locale,
   initialLessonId,
+  onNavigate,
 }: {
   readonly locale: string
   readonly initialLessonId: BaxterCrrtLearnLessonId
+  readonly onNavigate: (id: BaxterCrrtLearnLessonId) => void
 }) {
   const router = useRouter()
   const initialId = initialLessonId
-  const [selectedLessonId, setSelectedLessonId] = useState<BaxterCrrtLearnLessonId>(initialId)
+  const selectedLessonId = initialId
   const [progress, setProgress] = useState<BaxterCrrtProgressV3>(createDefaultProgress)
   const [hydrated, setHydrated] = useState(false)
   const [lessonAttempt, setLessonAttempt] = useState(1)
@@ -193,6 +261,7 @@ function BaxterCrrtLearnWorkbench({
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null)
   const [submittedChoiceId, setSubmittedChoiceId] = useState<string | null>(null)
   const [labEvidenceMet, setLabEvidenceMet] = useState(false)
+  const [applicationReviewed, setApplicationReviewed] = useState(false)
   const completionRecorded = useRef(new Set<BaxterCrrtLearnLessonId>())
 
   useEffect(() => {
@@ -210,15 +279,6 @@ function BaxterCrrtLearnWorkbench({
     }, 0)
     return () => window.clearTimeout(hydrationTimer)
   }, [initialId, initialLessonId])
-
-  useEffect(() => {
-    const restoreUrlLesson = () => {
-      const lesson = new URL(window.location.href).searchParams.get('lesson') ?? undefined
-      setSelectedLessonId(validLessonId(lesson) ? lesson : baxterCrrtLearnLessons[0].id)
-    }
-    window.addEventListener('popstate', restoreUrlLesson)
-    return () => window.removeEventListener('popstate', restoreUrlLesson)
-  }, [])
 
   const selectedLesson = requireLesson(selectedLessonId)
   const clinicalAnchor = baxterCrrtLessonClinicalAnchors[selectedLesson.id]
@@ -241,7 +301,7 @@ function BaxterCrrtLearnWorkbench({
   const sourceTitles = [...new Set(evidenceEntries.map((entry) => entry.title))]
   const applicationSubmitted = submittedChoiceId !== null
   const completionEvidenceMet =
-    applicationSubmitted && (selectedLesson.embeddedLabId === undefined || labEvidenceMet)
+    applicationReviewed && (selectedLesson.embeddedLabId === undefined || labEvidenceMet)
   // One recommender, shared with the hub. The pathway supplies the sequence; this supplies the
   // suggestion. They can no longer disagree about lesson order because both read the pathway.
   const recommendation = nextRecommendedCrrtActivity({
@@ -299,40 +359,8 @@ function BaxterCrrtLearnWorkbench({
     lifecycleAnalytics.recordActivityCompleted()
   }
 
-  function persist(next: BaxterCrrtProgressV3) {
-    setProgress(next)
-    if (hydrated) writeProgress(next)
-  }
-
-  function openLesson(lessonId: BaxterCrrtLearnLessonId) {
-    setHelpVisible(false)
-    setLessonPhase('recognize')
-    setSelectedChoiceId(null)
-    setSubmittedChoiceId(null)
-    setLabEvidenceMet(false)
-    setSelectedLessonId(lessonId)
-  }
-
   function selectLesson(lessonId: BaxterCrrtLearnLessonId) {
-    openLesson(lessonId)
-    // Keep the sequence back-button-able: each section is its own history entry.
-    const url = new URL(window.location.href)
-    url.searchParams.set('lesson', lessonId)
-    window.history.pushState({}, '', `${url.pathname}${url.search}${url.hash}`)
-    recordCriticalCareActivitySelection(window.localStorage, {
-      activityId: `crrt:learn:${lessonId}`,
-      mode: 'guided',
-      query: { lesson: lessonId },
-      payloadVersion: 'crrt-selection-v1',
-    })
-    if (!hydrated) return
-    persist(
-      setProgressContext(progress, {
-        device: 'prismax-aw8035-2xx',
-        roleLens: progress.lastRoleLens,
-        station: stationForLesson(lessonId),
-      }),
-    )
+    onNavigate(lessonId)
   }
 
   function showHelp() {
@@ -350,12 +378,11 @@ function BaxterCrrtLearnWorkbench({
     setSubmittedChoiceId(selectedChoiceId)
     advanceLessonPhase('observe')
     lifecycleAnalytics.recordPredictionSubmitted()
-    recordCompletionIfReady(true, labEvidenceMet)
   }
 
   function recordLabCompletionEvidence() {
     setLabEvidenceMet(true)
-    recordCompletionIfReady(applicationSubmitted, true)
+    recordCompletionIfReady(applicationReviewed, true)
   }
 
   function resetLessonWork() {
@@ -364,6 +391,7 @@ function BaxterCrrtLearnWorkbench({
     setSelectedChoiceId(null)
     setSubmittedChoiceId(null)
     setLabEvidenceMet(false)
+    setApplicationReviewed(false)
   }
 
   return (
@@ -412,16 +440,10 @@ function BaxterCrrtLearnWorkbench({
                 'Displayed values and device responses are synthetic teaching examples.',
               ]}
             />
-            {validLessonId(initialLessonId) ? (
-              <ResumeBanner
-                state="ready"
-                title="Lesson selection restored"
-                description={`${selectedLesson.title} is open. Prior answers and embedded-lab state were not replayed.`}
-                onResume={() =>
-                  document.getElementById('crrt-learn-viewport')?.focus({ preventScroll: true })
-                }
-              />
-            ) : null}
+            <p>
+              This visit starts a new exercise. Prior completion is retained; prior answers and lab
+              state are not replayed.
+            </p>
           </>
         }
         currentTask={
@@ -430,8 +452,8 @@ function BaxterCrrtLearnWorkbench({
               objective={clinicalAnchor.immediateGoal}
               requiredAction={
                 clinicalAnchor.labEvidenceLabel
-                  ? `${clinicalAnchor.labEvidenceLabel} Then answer the patient application check. Completion records automatically when both are observed.`
-                  : 'Answer the patient application check. Completion records automatically after the response and feedback are observed.'
+                  ? `${clinicalAnchor.labEvidenceLabel} Then answer the patient application check. Review the application feedback to record worked-through completion.`
+                  : 'Answer the patient application check. Review the feedback to record worked-through completion.'
               }
               targets={selectedLesson.bullets?.slice(0, 4) ?? []}
               hint={selectedLesson.paragraphs?.[0]}
@@ -617,9 +639,14 @@ function BaxterCrrtLearnWorkbench({
                   submittedChoiceId={submittedChoiceId}
                   onSelect={selectApplicationChoice}
                   onSubmit={submitApplication}
+                  onReview={() => {
+                    setApplicationReviewed(true)
+                    recordCompletionIfReady(true, labEvidenceMet)
+                  }}
                   onRevise={() => {
                     setSubmittedChoiceId(null)
                     setSelectedChoiceId(null)
+                    setApplicationReviewed(false)
                   }}
                 />
 

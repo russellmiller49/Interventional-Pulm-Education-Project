@@ -13,16 +13,9 @@ import { CrrtPilotCircuit } from './CrrtPilotCircuit'
 import styles from './crrt-live-pressure-station.module.css'
 
 /**
- * The live pressure profile and the universal circuit, driven by one running
- * model and one selection.
- *
- * The blood-flow control exists to make one point available directly: the same
- * circuit, with nothing obstructed and nothing else changed, reports different
- * pressures at a different pump setting. Both settings come from continuing the
- * same run, so the recorded history carries the change rather than hiding it.
- *
- * Every number on both halves comes from the same adapter view, so the profile
- * and the circuit cannot disagree about the same quantity.
+ * Two engine-generated snapshots from the same recorded run, selected together for the device
+ * profile and canonical circuit. Their different elapsed times are visible; they do not isolate
+ * the blood-flow setting from filter age and recorded delivery.
  */
 const deviceInterfaceState = createInitialPrismaxPilotInterfaceState()
 
@@ -43,14 +36,10 @@ export function CrrtLivePressureStation() {
     <section className={styles.station} aria-labelledby="crrt-live-pressure-station-heading">
       <header className={styles.stationHeader}>
         <div>
-          <span>Live educational model</span>
+          <span>Engine-generated recorded comparison</span>
           <h3 id="crrt-live-pressure-station-heading">Pressure profile and circuit</h3>
         </div>
-        <div
-          className={styles.flowControl}
-          role="group"
-          aria-label="Blood flow setting for this running case"
-        >
+        <div className={styles.flowControl} role="group" aria-label="Recorded blood-flow snapshots">
           {settings.map((candidate) => (
             <button
               key={candidate.id}
@@ -66,8 +55,10 @@ export function CrrtLivePressureStation() {
       </header>
 
       <p className={styles.flowNote}>
-        Nothing is obstructed in either setting and nothing else has been changed. Watch which
-        channels move when the pump setting changes — and which one does not.
+        These are two recorded synthetic snapshots, not a continuously running learner-controlled
+        session: baseline at four hours, then higher blood flow at five hours. Both the setting and
+        elapsed time differ, so filter age and recorded delivery can also differ. This is not an
+        isolated blood-flow effect. Selecting a snapshot does not apply a device prescription.
       </p>
 
       <CrrtLivePressureDevice

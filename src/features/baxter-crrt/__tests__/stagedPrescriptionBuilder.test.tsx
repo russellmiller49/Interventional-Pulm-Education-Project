@@ -77,7 +77,10 @@ describe('staged prescription model', () => {
       (option) => option.id === 'goal-net-fluid-removal',
     )
     expect(netRemoval?.group).toBe('fluid-management')
-    expect(netRemoval?.whatThePrescriptionMustDo).toMatch(/effluent intensity does not/i)
+    expect(netRemoval?.whatThePrescriptionMustDo).toMatch(
+      /net removal attributable to CRRT separately from solute-support flows/i,
+    )
+    expect(netRemoval?.whatThePrescriptionMustDo).toMatch(/External intake and non-CRRT outputs/i)
   })
 
   it('introduces no universal prescription target in the teaching copy', () => {
@@ -385,7 +388,7 @@ describe('staged prescription builder surface', () => {
 
     expect(screen.getByText('30 mL/kg/h')).toBeInTheDocument()
     expect(screen.getByText('22.5 mL/kg/h')).toBeInTheDocument()
-    expect(screen.getByText(/ran for 18 of 24 hours/i)).toBeInTheDocument()
+    expect(screen.getByText(/runs for 18 of 24 hours/i)).toBeInTheDocument()
   })
 
   it('withholds the dependent fluid rows when a makeup flow is entered', () => {
@@ -411,24 +414,37 @@ describe('staged prescription builder surface', () => {
     expect(screen.getAllByText('Cannot be checked')).toHaveLength(4)
   })
 
-  it('emits completion evidence only after an entry changes and step 3 is opened', () => {
+  it('requires a valid controlled downtime comparison, interpretation and review for evidence', () => {
     const onCompletionEvidence = jest.fn()
     render(<CrrtStagedPrescriptionBuilder onCompletionEvidence={onCompletionEvidence} />)
-
     openStage(/Continue to Construction/)
+    const downtime = screen.getByRole('spinbutton', { name: /^Time not running/ })
+    fireEvent.change(downtime, { target: { value: '' } })
     openStage(/Continue to Predicted consequences/)
     expect(onCompletionEvidence).not.toHaveBeenCalled()
-
     openStage(/Back to Construction/)
-    fireEvent.change(screen.getByRole('spinbutton', { name: /^Blood flow/ }), {
-      target: { value: '120' },
+    fireEvent.change(screen.getByRole('spinbutton', { name: /^Time not running/ }), {
+      target: { value: '3' },
+    })
+    fireEvent.change(screen.getByRole('spinbutton', { name: /^Time not running/ }), {
+      target: { value: '0' },
     })
     openStage(/Continue to Predicted consequences/)
-    expect(onCompletionEvidence).toHaveBeenCalledTimes(1)
-
+    expect(screen.getByRole('button', { name: 'Check comparison' })).toBeDisabled()
+    expect(onCompletionEvidence).not.toHaveBeenCalled()
     openStage(/Back to Construction/)
+    fireEvent.change(screen.getByRole('spinbutton', { name: /^Time not running/ }), {
+      target: { value: '3' },
+    })
     openStage(/Continue to Predicted consequences/)
+    fireEvent.click(screen.getByRole('radio', { name: /projected average dose fell/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check comparison' }))
+    expect(onCompletionEvidence).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Review comparison and continue' }))
     expect(onCompletionEvidence).toHaveBeenCalledTimes(1)
+    expect(onCompletionEvidence).toHaveBeenCalledWith(
+      expect.objectContaining({ response: 'lower', correct: true }),
+    )
     expect(window.localStorage).toHaveLength(0)
   })
 

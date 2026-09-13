@@ -679,3 +679,45 @@
     animation: none !important;
   }
 }
+
+/* The guided task already sits in NowCard; keep its controls within one readable column. */
+.builder[data-guided='true'] {
+  padding: 0.75rem;
+}
+.builder[data-guided='true'] .stagePanel {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+.builder[data-guided='true'] .consequenceSection {
+  padding: 0.75rem;
+}
+.builder[data-guided='true'] .stageState {
+  display: none;
+}
+@media (max-width: 600px) {
+  .builder[data-guided='true'] {
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .builder[data-guided='true'] .stageRail ol {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.3rem;
+  }
+  .builder[data-guided='true'] .stageRail button {
+    padding: 0.45rem 0.3rem;
+  }
+  .builder[data-guided='true'] .stageName {
+    font-size: 0.875rem;
+    overflow-wrap: anywhere;
+  }
+  .builder[data-guided='true'] .stageOrdinal {
+    display: none;
+  }
+  .builder[data-guided='true'] .reviewBoundary,
+  .builder[data-guided='true'] .contrastPanel,
+  .builder[data-guided='true'] .consequenceSection {
+    padding: 0.55rem;
+  }
+}

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 import { getCriticalCareResumeTarget } from '@/features/critical-care/progress'
@@ -9,7 +9,7 @@ import { BaxterCrrtLearn } from '../components/BaxterCrrtLearn'
 import { BaxterCrrtPractice } from '../components/BaxterCrrtPractice'
 import { baxterCrrtCoreCaseIds, getBaxterCrrtCase } from '../content'
 import { createCrrtLearningSession } from '../engine'
-import { createDefaultProgress, readProgress, writeProgress } from '../engine/progress'
+import { createDefaultProgress, writeProgress } from '../engine/progress'
 
 const mockRecordLifecycleEvent = jest.fn()
 
@@ -45,115 +45,8 @@ describe('Baxter CRRT Practice curation and open Challenge access', () => {
     mockRecordLifecycleEvent.mockClear()
   })
 
-  it('maps the authored pressure lab through Predict, Act, Observe, and Explain', async () => {
-    render(<BaxterCrrtLearn initialLessonId="crrt-circuit-pressures" />)
-    const phases = screen.getByRole('group', { name: 'CRRT shared activity phases' })
-    await waitFor(() =>
-      expect(
-        mockRecordLifecycleEvent.mock.calls.some(
-          ([event]) =>
-            (event as { interaction?: string }).interaction === 'critical_care_activity_opened',
-        ),
-      ).toBe(true),
-    )
-
-    fireEvent.focus(screen.getByRole('radio', { name: 'Access catheter' }))
-    expect(within(phases).getByText('Predict').closest('li')).toHaveAttribute(
-      'aria-current',
-      'step',
-    )
-
-    for (const signal of [
-      'Access pressure',
-      'Filter pressure',
-      'Return pressure',
-      'Effluent pressure',
-      'TMP',
-      'Filter pressure drop',
-    ]) {
-      fireEvent.click(
-        within(screen.getByRole('group', { name: signal })).getByRole('radio', {
-          name: 'Unchanged',
-        }),
-      )
-    }
-    fireEvent.click(screen.getByRole('button', { name: 'Commit prediction' }))
-    expect(within(phases).getByText('Act').closest('li')).toHaveAttribute('aria-current', 'step')
-
-    fireEvent.click(screen.getByRole('button', { name: 'Reveal pressure pattern' }))
-    await waitFor(() =>
-      expect(within(phases).getByText('Explain').closest('li')).toHaveAttribute(
-        'aria-current',
-        'step',
-      ),
-    )
-
-    const events = mockRecordLifecycleEvent.mock.calls.map(
-      ([event]) => event as { interaction: string; phase?: string },
-    )
-    expect(
-      events.filter((event) => event.interaction === 'critical_care_prediction_submitted'),
-    ).toHaveLength(1)
-    expect(
-      events
-        .filter((event) => event.interaction === 'critical_care_phase_completed')
-        .map((event) => event.phase),
-    ).toEqual(expect.arrayContaining(['recognize', 'predict', 'act', 'observe']))
-  })
-
-  it('advances after any patient-application response while preserving mechanism feedback', async () => {
-    render(<BaxterCrrtLearn initialLessonId="crrt-indications-modality" />)
-    const phases = screen.getByRole('group', { name: 'CRRT shared activity phases' })
-
-    expect(screen.queryByRole('button', { name: 'Mark lesson complete' })).not.toBeInTheDocument()
-    fireEvent.click(
-      screen.getByRole('radio', {
-        name: /choose the modality with the most transport mechanisms/i,
-      }),
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'Check clinical reasoning' }))
-    expect(
-      screen.getByText('That mechanism would produce a different pattern from the one shown here.'),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Try another frame' })).toBeInTheDocument()
-
-    await waitFor(() => expect(screen.getByText('Lesson evidence recorded')).toBeInTheDocument())
-    expect(readProgress().completedLessonIds).toContain('crrt-indications-modality')
-    expect(within(phases).getByText('Explain').closest('li')).toHaveAttribute(
-      'aria-current',
-      'step',
-    )
-    expect(within(phases).getByText('Transfer').closest('li')).not.toHaveAttribute('aria-current')
-    expect(
-      mockRecordLifecycleEvent.mock.calls.map(
-        ([event]) => (event as { interaction: string }).interaction,
-      ),
-    ).not.toContain('critical_care_transfer_completed')
-  })
-
-  it('requires both the staged prescription build and the patient application', async () => {
-    render(<BaxterCrrtLearn initialLessonId="crrt-prescription-dosing" />)
-
-    fireEvent.click(
-      screen.getByRole('radio', {
-        name: /reconcile elapsed treatment time and downtime/i,
-      }),
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'Check clinical reasoning' }))
-    expect(screen.getByText('Evidence in progress')).toBeInTheDocument()
-    expect(readProgress().completedLessonIds).not.toContain('crrt-prescription-dosing')
-
-    // The builder opens on Goals, so the construction entries are reached by moving to step 2 —
-    // evidence now requires walking the three steps rather than editing one dense form.
-    fireEvent.click(screen.getByRole('button', { name: /Continue to Construction/ }))
-    fireEvent.change(screen.getByRole('spinbutton', { name: /^Dialysate flow/ }), {
-      target: { value: '1200' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: /Continue to Predicted consequences/ }))
-
-    await waitFor(() => expect(screen.getByText('Lesson evidence recorded')).toBeInTheDocument())
-    expect(readProgress().completedLessonIds).toContain('crrt-prescription-dosing')
-  })
+  // The revised introductory Learn journey is exercised in foundationLessons.ui.test.tsx.
+  // Practice and Assess regression expectations below remain unchanged.
 
   it('keeps a revealed case debrief at Explain without emitting transfer completion', async () => {
     const definition = getBaxterCrrtCase('CRRT-01')

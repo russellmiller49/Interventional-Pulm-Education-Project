@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useId, useState, type ChangeEvent } from 'react'
 
 import {
   createSyntheticPressureLocalizationResult,
@@ -14,6 +14,8 @@ import {
   type PressureLocalizationSite,
   type QualitativePressureDirection,
 } from '../pressureLocalizationLabModel'
+import { CrrtPilotCircuit } from './CrrtPilotCircuit'
+import type { CrrtCircuitNodeId } from '../content/circuitModel'
 import styles from './crrt-pressure-localization-lab.module.css'
 
 type DraftPrediction = Record<PressureLocalizationSignal, QualitativePressureDirection | null>
@@ -52,141 +54,46 @@ function formatSyntheticPressure(value: number): string {
   return `${value.toLocaleString('en-US', { maximumFractionDigits: 1 })} mmHg`
 }
 
-interface CircuitPlacementDiagramProps {
-  readonly idPrefix: string
-  readonly fault: PressureLocalizationFault
-  readonly site: PressureLocalizationSite
-}
-
-const markerCoordinates: Readonly<
-  Record<PressureLocalizationSite, Readonly<{ x: number; y: number }>>
-> = {
-  'access-catheter': { x: 167, y: 106 },
-  'access-line': { x: 282, y: 106 },
-  filter: { x: 430, y: 106 },
-  'return-line': { x: 580, y: 106 },
-  'effluent-line': { x: 430, y: 224 },
-}
-
-function CircuitPlacementDiagram({ idPrefix, fault, site }: CircuitPlacementDiagramProps) {
-  const marker = markerCoordinates[site]
-  const faultLabel = pressureLocalizationFaults.find((candidate) => candidate.id === fault)?.label
-  const siteLabel = pressureLocalizationSites.find((candidate) => candidate.id === site)?.label
-  const summary = `Selected placement: ${faultLabel?.toLowerCase()} at the ${siteLabel?.toLowerCase()}. Access catheter and access line are separate teaching locations.`
-
-  return (
-    <div className={styles.diagramPanel}>
-      <p className={styles.diagramSummary}>{summary}</p>
-      <div
-        className={styles.diagramViewport}
-        role="img"
-        aria-label={`${summary} Simplified circuit path: patient access, access catheter, access line, filter, return line, then patient return; the effluent line leaves the filter.`}
-        tabIndex={0}
-      >
-        <svg viewBox="0 0 760 290" aria-hidden="true" focusable="false">
-          <defs>
-            <marker
-              id={`${idPrefix}-flow-arrow`}
-              viewBox="0 0 10 10"
-              refX="8"
-              refY="5"
-              markerWidth="7"
-              markerHeight="7"
-              orient="auto-start-reverse"
-            >
-              <path d="M 0 0 L 10 5 L 0 10 z" className={styles.flowArrow} />
-            </marker>
-          </defs>
-
-          <rect x="20" y="70" width="105" height="72" rx="28" className={styles.patient} />
-          <text x="72" y="99" textAnchor="middle" className={styles.diagramLabel}>
-            Patient
-          </text>
-          <text x="72" y="120" textAnchor="middle" className={styles.diagramNote}>
-            access
-          </text>
-
-          <path
-            d="M 125 106 H 386"
-            className={styles.bloodPath}
-            markerEnd={`url(#${idPrefix}-flow-arrow)`}
-          />
-          <rect x="147" y="88" width="40" height="36" rx="8" className={styles.catheter} />
-          <text x="167" y="73" textAnchor="middle" className={styles.diagramNote}>
-            Catheter
-          </text>
-          <text x="282" y="73" textAnchor="middle" className={styles.diagramNote}>
-            Access line
-          </text>
-
-          <rect x="386" y="54" width="88" height="104" rx="12" className={styles.filter} />
-          <path d="M 400 75 L 460 137 M 460 75 L 400 137" className={styles.filterFiber} />
-          <text x="430" y="39" textAnchor="middle" className={styles.diagramNote}>
-            Filter
-          </text>
-
-          <path
-            d="M 474 106 H 684"
-            className={styles.returnPath}
-            markerEnd={`url(#${idPrefix}-flow-arrow)`}
-          />
-          <text x="580" y="73" textAnchor="middle" className={styles.diagramNote}>
-            Return line
-          </text>
-          <rect x="684" y="70" width="56" height="72" rx="25" className={styles.patient} />
-          <text x="712" y="99" textAnchor="middle" className={styles.diagramLabel}>
-            Patient
-          </text>
-          <text x="712" y="120" textAnchor="middle" className={styles.diagramNote}>
-            return
-          </text>
-
-          <path
-            d="M 430 158 V 260"
-            className={styles.effluentPath}
-            markerEnd={`url(#${idPrefix}-flow-arrow)`}
-          />
-          <text x="449" y="244" className={styles.diagramNote}>
-            Effluent line
-          </text>
-
-          <g className={styles.placementMarker} transform={`translate(${marker.x} ${marker.y})`}>
-            <circle r="19" />
-            <text y="5" textAnchor="middle">
-              {fault === 'obstruction' ? 'O' : 'D'}
-            </text>
-          </g>
-        </svg>
-      </div>
-    </div>
-  )
+const nodeForSite: Record<PressureLocalizationSite, CrrtCircuitNodeId> = {
+  'access-catheter': 'access-lumen',
+  'access-line': 'access-pressure',
+  filter: 'filter',
+  'return-line': 'return-pressure',
+  'effluent-line': 'effluent-pressure',
 }
 
 export interface CrrtPressureLocalizationLabProps {
   readonly onPhaseChange?: (phase: 'predict' | 'act' | 'observe' | 'explain') => void
-  readonly onPredictionCommitted?: () => void
-  readonly onCompletionEvidence?: () => void
+  readonly onPredictionCommitted?: (prediction: PressureLocalizationPrediction) => void
+  readonly onFeedbackDisplayed?: (prediction: PressureLocalizationPrediction) => void
+  readonly onCompletionEvidence?: (prediction: PressureLocalizationPrediction) => void
+  readonly initialSite?: PressureLocalizationSite
+  readonly lockedPlacement?: boolean
 }
 
 export function CrrtPressureLocalizationLab({
   onPhaseChange,
   onPredictionCommitted,
+  onFeedbackDisplayed,
   onCompletionEvidence,
+  initialSite = 'access-catheter',
+  lockedPlacement = false,
 }: CrrtPressureLocalizationLabProps = {}) {
   const idPrefix = `crrt-pressure-lab-${useId().replaceAll(':', '')}`
-  const completionReported = useRef(false)
+  const [completionReported, setCompletionReported] = useState(false)
   const [fault, setFault] = useState<PressureLocalizationFault>('obstruction')
-  const [site, setSite] = useState<PressureLocalizationSite>('access-catheter')
+  const [site, setSite] = useState<PressureLocalizationSite>(initialSite)
   const [prediction, setPrediction] = useState<DraftPrediction>(emptyPrediction)
   const [committedPrediction, setCommittedPrediction] =
     useState<PressureLocalizationPrediction | null>(null)
   const [revealed, setRevealed] = useState(false)
 
   const result = createSyntheticPressureLocalizationResult(fault, site)
+  const displayedSnapshot = revealed ? result.revealed : result.baseline
   const predictionComplete = hasCompletePrediction(prediction)
 
   function clearCommit(nextPrediction: DraftPrediction = emptyPrediction()) {
-    completionReported.current = false
+    setCompletionReported(false)
     setPrediction(nextPrediction)
     setCommittedPrediction(null)
     setRevealed(false)
@@ -221,7 +128,7 @@ export function CrrtPressureLocalizationLab({
     if (!hasCompletePrediction(prediction)) return
     setCommittedPrediction({ ...prediction })
     setRevealed(false)
-    onPredictionCommitted?.()
+    onPredictionCommitted?.({ ...prediction })
     onPhaseChange?.('act')
   }
 
@@ -231,18 +138,14 @@ export function CrrtPressureLocalizationLab({
   }
 
   function revisePrediction() {
-    completionReported.current = false
+    setCompletionReported(false)
     setCommittedPrediction(null)
     setRevealed(false)
   }
 
   useEffect(() => {
-    if (!revealed || committedPrediction === null) return
-    onPhaseChange?.('explain')
-    if (completionReported.current) return
-    completionReported.current = true
-    onCompletionEvidence?.()
-  }, [committedPrediction, onCompletionEvidence, onPhaseChange, revealed])
+    if (revealed && committedPrediction) onFeedbackDisplayed?.(committedPrediction)
+  }, [revealed, committedPrediction, onFeedbackDisplayed])
 
   return (
     <section
@@ -265,7 +168,7 @@ export function CrrtPressureLocalizationLab({
       </header>
 
       <div className={styles.reviewBoundary} role="note" aria-label="Educational boundary">
-        <strong>Practice localizing a circuit problem from pressure direction</strong>
+        <strong>Known fault → predict and explain the pressure response</strong>
         <p>
           The values are simplified for education. They are not a patient model, device operating
           range, clinical target, or alarm limit.
@@ -281,73 +184,116 @@ export function CrrtPressureLocalizationLab({
       </div>
 
       <p className={styles.intro}>
-        Choose an obstruction site, predict how each pressure will change, then reveal the pressure
-        pattern. Disconnection is unavailable because a supported disconnection pattern is not
-        included in this exercise. Alarm priority, automatic device response, and troubleshooting
-        steps are outside this lab.
+        {lockedPlacement
+          ? 'For the known return-line obstruction, predict each pressure change, then reveal the pattern.'
+          : 'Choose an obstruction site, predict how each pressure will change, then reveal the pressure pattern.'}{' '}
+        Disconnection is unavailable because a supported disconnection pattern is not included in
+        this exercise. Alarm priority, automatic device response, and troubleshooting steps are
+        outside this lab.
       </p>
 
-      <div className={styles.scenarioGrid}>
-        <fieldset className={styles.choiceFieldset} disabled={committedPrediction !== null}>
-          <legend>1. Choose a circuit problem</legend>
-          <div className={styles.segmentedChoices}>
-            {pressureLocalizationFaults.map((candidate) => {
-              const supported = pressureLocalizationSites.some((candidateSite) =>
-                isPressureLocalizationCombinationSupported(candidate.id, candidateSite.id),
-              )
-              const unavailableId = `${idPrefix}-${candidate.id}-unavailable`
-              return (
-                <label key={candidate.id} data-supported={supported}>
-                  <input
-                    type="radio"
-                    name={`${idPrefix}-fault`}
-                    value={candidate.id}
-                    checked={fault === candidate.id}
-                    disabled={!supported}
-                    aria-label={candidate.label}
-                    aria-describedby={!supported ? unavailableId : undefined}
-                    onChange={changeFault}
-                  />
-                  <span>{candidate.label}</span>
-                  {!supported ? (
-                    <small id={unavailableId}>Pattern unavailable in this version of the lab</small>
-                  ) : null}
-                </label>
-              )
-            })}
-          </div>
-        </fieldset>
+      {!lockedPlacement ? (
+        <div className={styles.scenarioGrid}>
+          <fieldset
+            className={styles.choiceFieldset}
+            disabled={committedPrediction !== null || lockedPlacement}
+          >
+            <legend>1. Choose a circuit problem</legend>
+            <div className={styles.segmentedChoices}>
+              {pressureLocalizationFaults.map((candidate) => {
+                const supported = pressureLocalizationSites.some((candidateSite) =>
+                  isPressureLocalizationCombinationSupported(candidate.id, candidateSite.id),
+                )
+                const unavailableId = `${idPrefix}-${candidate.id}-unavailable`
+                return (
+                  <label key={candidate.id} data-supported={supported}>
+                    <input
+                      type="radio"
+                      name={`${idPrefix}-fault`}
+                      value={candidate.id}
+                      checked={fault === candidate.id}
+                      disabled={!supported}
+                      aria-label={candidate.label}
+                      aria-describedby={!supported ? unavailableId : undefined}
+                      onChange={changeFault}
+                    />
+                    <span>{candidate.label}</span>
+                    {!supported ? (
+                      <small id={unavailableId}>
+                        Pattern unavailable in this version of the lab
+                      </small>
+                    ) : null}
+                  </label>
+                )
+              })}
+            </div>
+          </fieldset>
 
-        <fieldset className={styles.choiceFieldset} disabled={committedPrediction !== null}>
-          <legend>2. Place it on the circuit</legend>
-          <div className={styles.siteChoices}>
-            {pressureLocalizationSites.map((candidate) => {
-              const supported = isPressureLocalizationCombinationSupported(fault, candidate.id)
-              const unavailableId = `${idPrefix}-${candidate.id}-unavailable`
-              return (
-                <label key={candidate.id} data-supported={supported}>
-                  <input
-                    type="radio"
-                    name={`${idPrefix}-site`}
-                    value={candidate.id}
-                    checked={site === candidate.id}
-                    disabled={!supported}
-                    aria-label={candidate.label}
-                    aria-describedby={!supported ? unavailableId : undefined}
-                    onChange={changeSite}
-                  />
-                  <span>{candidate.label}</span>
-                  {!supported ? (
-                    <small id={unavailableId}>Unavailable in this version of the lab</small>
-                  ) : null}
-                </label>
-              )
-            })}
-          </div>
-        </fieldset>
-      </div>
+          <fieldset
+            className={styles.choiceFieldset}
+            disabled={committedPrediction !== null || lockedPlacement}
+          >
+            <legend>2. Place it on the circuit</legend>
+            <div className={styles.siteChoices}>
+              {pressureLocalizationSites.map((candidate) => {
+                const supported = isPressureLocalizationCombinationSupported(fault, candidate.id)
+                const unavailableId = `${idPrefix}-${candidate.id}-unavailable`
+                return (
+                  <label key={candidate.id} data-supported={supported}>
+                    <input
+                      type="radio"
+                      name={`${idPrefix}-site`}
+                      value={candidate.id}
+                      checked={site === candidate.id}
+                      disabled={!supported}
+                      aria-label={candidate.label}
+                      aria-describedby={!supported ? unavailableId : undefined}
+                      onChange={changeSite}
+                    />
+                    <span>{candidate.label}</span>
+                    {!supported ? (
+                      <small id={unavailableId}>Unavailable in this version of the lab</small>
+                    ) : null}
+                  </label>
+                )
+              })}
+            </div>
+          </fieldset>
+        </div>
+      ) : null}
 
-      <CircuitPlacementDiagram idPrefix={idPrefix} fault={fault} site={site} />
+      <p className={styles.diagramSummary}>
+        Selected placement: {result.faultLabel} at the {result.siteLabel.toLowerCase()}. Access
+        catheter and access line are separate teaching locations, but these pressures alone cannot
+        distinguish them.
+      </p>
+      {lockedPlacement ? <p>Return-line obstruction is fixed for this guided comparison.</p> : null}
+      {site === 'effluent-line' ? (
+        <p role="note">
+          This fixture imposes an illustrative effluent-pressure change. It does not specify
+          obstruction position relative to the sensor and pump or model pump regulation, so it
+          cannot establish a universal obstruction direction.
+        </p>
+      ) : null}
+      <CrrtPilotCircuit
+        presentation="focused"
+        overlayId="pressure-profile"
+        running={false}
+        setReady
+        fluidsReady
+        bloodFlowMlMin={100}
+        dialysateFlowMlHour={null}
+        patientFluidRemovalMlHour={null}
+        highlightedNodeId={nodeForSite[site]}
+        pressure={{
+          access: displayedSnapshot.accessPressureMmHg,
+          filter: displayedSnapshot.filterPressureMmHg,
+          return: displayedSnapshot.returnPressureMmHg,
+          effluent: displayedSnapshot.effluentPressureMmHg,
+          TMP: displayedSnapshot.tmpMmHg,
+          filterDrop: displayedSnapshot.filterPressureDropMmHg,
+        }}
+      />
 
       <fieldset className={styles.predictionFieldset} disabled={committedPrediction !== null}>
         <legend>3. Predict each signal before reveal</legend>
@@ -447,6 +393,18 @@ export function CrrtPressureLocalizationLab({
             </table>
           </div>
 
+          <button
+            type="button"
+            disabled={completionReported}
+            onClick={() => {
+              if (!committedPrediction || !revealed || completionReported) return
+              setCompletionReported(true)
+              onPhaseChange?.('explain')
+              onCompletionEvidence?.(committedPrediction)
+            }}
+          >
+            Review pressure comparison and continue
+          </button>
           <p className={styles.resultBoundary}>
             This trace demonstrates pressure direction only. It does not provide a clinical normal,
             alarm limit, automatic device response, troubleshooting sequence, or patient-specific
