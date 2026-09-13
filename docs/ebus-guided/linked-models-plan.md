@@ -18,4 +18,6 @@ Preserve the existing LPS-mm → web mapping `(L, P, S) → (L, S, -P)`, model s
 
 ## Checks
 
+Follow-up: add hover discovery labels to the visible scope/anatomy meshes using their existing semantic names. Reuse the linked viewer and keyboard/touch structure selector. Hover must not change selection, acquisition, or completion; labels follow the existing reveal boundary and clear during dragging, on leaving the model, or with Escape. Verify real pointer movement, label placement, selection preservation, and the unannotated Observe state in the browser.
+
 Validate export hierarchy, axes/units, geometry equivalence, semantic selection, frame/pose identity and source dependencies. Exercise actual linked views and both station 7 approaches through the lesson route. Demonstrations and camera orbit must not complete activities. Test wrong landmark, frozen/read-only Observe, stale messages, reload/restart, reduced motion, compact/device gates and historical first attempts. Run existing EBUS regression suites, root/embedded type checks, lint and production build. Clinical/anatomical review remains explicitly pending for newly authored aids.

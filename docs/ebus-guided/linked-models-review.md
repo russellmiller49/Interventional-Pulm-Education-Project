@@ -89,3 +89,13 @@ The local unauthenticated preview logs the existing optional analytics endpoint'
 Anatomical/IFU review of the new display partitions, landmark levels and illustrative device components, clinical faculty review, and owner media-rights/release review remain pending. This is a development pilot, not a validated station atlas, diagnostic image generator or procedural competency assessment.
 
 Technical source checks: [Slicer coordinate conventions](https://slicer.readthedocs.io/en/latest/user_guide/coordinate_systems.html), [Olympus BF-UC180F nominal optical/device profile](https://medical.olympusamerica.com/products/bf-uc180f-ebus-bronchoscope), [glTF Transform CLI](https://gltf-transform.dev/cli). Clinical boundary wording was preserved from the current source-backed course; no guideline update was undertaken.
+
+## Hover discovery follow-up
+
+The owner's requested hover interaction extends the existing linked viewer from `84f36f7a`. Scope and anatomy meshes show their existing semantic names beside the pointer. Labels stay within the model window, clear during dragging or when leaving the canvas, and can be dismissed with Escape while the workbench has keyboard focus. The existing structure selector and click selection remain available. Hover never writes selection, acquisition, or completion evidence.
+
+Picking excludes hidden meshes and follows the visible example-node overlay order. Node hover and click labels both remain “Example node” until the lesson's reveal phase. Hover is withheld during the unannotated Observe phase. No model geometry, calibration, question wording, progress storage, or release status changed.
+
+Focused verification: embedded type check, ESLint for the modified browser script, the EBUS embed build and standalone preparation passed. Existing guided-course Jest tests passed (5 suites, 36 tests), as did linked-model/simulator Vitest tests (4 files, 116 tests). The updated production-browser pilot checks cover real scope/anatomy hover, bounded labels, Escape, drag/leave clearing, no hover completion, node-name disclosure, and all five existing acquisition/Observe journeys. Screenshots are in the existing ignored artifact directory: `scope-hover.png`, `scope-hover-compact.png`, `anatomy-structure-hover.png`, and `anatomy-hover.png`.
+
+For this focused addition, H5–H8, H10 and H12 pass the rendered interaction checks above; H1–H4, H9 and H11 retain their preceding implementation with no applicable structural changes. The original clinical/asset review limits still apply. No new medical claims or device dimensions were authored.

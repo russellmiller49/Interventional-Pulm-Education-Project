@@ -37,6 +37,35 @@ async function main() {
     await next()
     await next()
   }
+  const discover = async (name?: RegExp) => {
+    const frame = page.frameLocator('iframe[title="EBUS workbench"]')
+    const canvas = frame.locator('.linked-canvas canvas')
+    const tooltip = frame.getByRole('tooltip')
+    await canvas.scrollIntoViewIfNeeded()
+    const box = (await canvas.boundingBox())!
+    const positions = [0.5, 0.4, 0.6, 0.3, 0.7, 0.2, 0.8, 0.1, 0.9]
+    for (const y of positions)
+      for (const x of positions) {
+        const point = { x: box.width * x, y: box.height * y }
+        await canvas.hover({ position: point })
+        await canvas.evaluate(
+          () =>
+            new Promise<void>((resolve) =>
+              requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+            ),
+        )
+        if (!(await tooltip.isVisible())) continue
+        const label = (await tooltip.textContent())!
+        if (name && !name.test(label)) continue
+        const bounds = (await tooltip.boundingBox())!
+        expect(bounds.x).toBeGreaterThanOrEqual(box.x)
+        expect(bounds.y).toBeGreaterThanOrEqual(box.y)
+        expect(bounds.x + bounds.width).toBeLessThanOrEqual(box.x + box.width)
+        expect(bounds.y + bounds.height).toBeLessThanOrEqual(box.y + box.height)
+        return { point, label }
+      }
+    throw new Error('No discoverable model structure matched ' + (name ?? 'any name'))
+  }
   try {
     for (const lesson of LESSONS.filter((l) => l.lab?.linkedLesson)) {
       await page.goto(base + '/en/ebus-guided/learn?section=' + lesson.id)
@@ -51,6 +80,37 @@ async function main() {
         )
         .toBeGreaterThan(1000)
       if (lesson.id === 'scope-orientation') {
+        await frame.getByLabel('Inspect a structure').focus()
+        const discovered = await discover()
+        await frame.locator('.linked-canvas').screenshot({ path: out + '/scope-hover.png' })
+        await expect(frame.getByLabel('Inspect a structure')).toHaveValue('')
+        await page.keyboard.press('Escape')
+        await expect(frame.getByRole('tooltip')).toBeHidden()
+        await page.keyboard.press('Escape')
+        await frame.locator('.linked-canvas canvas').hover({ position: discovered.point })
+        await expect(frame.getByRole('tooltip')).toBeHidden()
+        await frame.getByRole('button', { name: 'Orbit left', exact: true }).hover()
+        await discover()
+        await page.mouse.down()
+        await expect(frame.getByRole('tooltip')).toBeHidden()
+        await page.mouse.move(20, 20, { steps: 5 })
+        await expect(frame.getByRole('tooltip')).toBeHidden()
+        await page.mouse.up()
+        await expect(frame.getByLabel('Inspect a structure')).toHaveValue('')
+        await frame.getByRole('button', { name: 'Reset view', exact: true }).click()
+        await page.setViewportSize({ width: 900, height: 768 })
+        await page.getByRole('tab', { name: 'Simulator', exact: true }).click()
+        await discover()
+        await frame.locator('.linked-canvas').screenshot({ path: out + '/scope-hover-compact.png' })
+        await frame.getByRole('button', { name: 'Anatomy model', exact: true }).click()
+        await expect(frame.getByRole('tooltip')).toBeHidden()
+        await discover(/^(?!Example node).+/)
+        await frame
+          .locator('.linked-canvas')
+          .screenshot({ path: out + '/anatomy-structure-hover.png' })
+        await frame.getByRole('button', { name: 'Scope model', exact: true }).click()
+        await expect(frame.getByRole('tooltip')).toBeHidden()
+        await page.setViewportSize({ width: 1500, height: 1050 })
         await frame.getByRole('button', { name: 'Show whole scope', exact: true }).click()
         await frame.locator('.linked-canvas').screenshot({ path: out + '/scope-whole.png' })
         await frame.getByRole('button', { name: 'Show distal tip', exact: true }).click()
@@ -75,6 +135,22 @@ async function main() {
       await answer(lesson.question)
       await expect(frame.getByLabel('Inspect a structure')).toBeVisible({ timeout: 60000 })
       await expect(primary()).toBeDisabled()
+      if (lesson.id === 'scope-orientation' || lesson.id === 'right-paratracheal') {
+        await discover()
+        await expect(frame.getByLabel('Inspect a structure')).toHaveValue('')
+        await expect(primary()).toBeDisabled()
+        expect((await evidence())?.actionCount).toBe(0)
+        expect((await evidence())?.linked?.selectedStructure).toBe('')
+        if (lesson.id === 'right-paratracheal') {
+          await discover(/^Example node$/)
+          await frame.locator('.linked-canvas').screenshot({ path: out + '/anatomy-hover.png' })
+          await page.mouse.down()
+          await page.mouse.up()
+          await expect(frame.locator('.linked-selection')).toHaveText('Selected: Example node')
+        }
+        await frame.getByRole('button', { name: 'Orbit left', exact: true }).hover()
+        await expect(frame.getByRole('tooltip')).toBeHidden()
+      }
       // The old session cannot supply the action or model-selection evidence for this lab.
       const child = page.frames().find((f) => f.url().includes('guided.html'))!
       await child.evaluate(() =>
@@ -168,6 +244,10 @@ async function main() {
       ).toBeVisible()
       await expect(frame.getByLabel('Inspect a structure')).toHaveCount(0)
       await expect(control).toBeDisabled()
+      if (lesson.id !== 'ct-map') {
+        await frame.locator('.linked-canvas canvas').hover()
+        await expect(frame.getByRole('tooltip')).toBeHidden()
+      }
       expect(
         await frame
           .getByLabel('Grayscale ultrasound image', { exact: true })

@@ -24,11 +24,26 @@ select {
   border-radius: 6px;
 }
 .linked-canvas {
+  position: relative;
   height: 270px;
   width: 100%;
   overflow: hidden;
   border: 1px solid #36515a;
   border-radius: 10px;
+}
+.linked-model-tooltip {
+  position: absolute;
+  z-index: 1;
+  max-width: calc(100% - 12px);
+  padding: 5px 8px;
+  border: 1px solid #75e1de;
+  border-radius: 6px;
+  background: #081c22;
+  color: #e6f2f3;
+  font-size: 13px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  pointer-events: none;
 }
 .linked-models {
   border-bottom: 1px solid #36515a;

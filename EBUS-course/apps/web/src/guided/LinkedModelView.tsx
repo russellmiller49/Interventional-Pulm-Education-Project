@@ -113,6 +113,7 @@ export function LinkedModelView(props: Props) {
     renderer.outputColorSpace = THREE.SRGBColorSpace
     const contextLost = (event: Event) => {
       event.preventDefault()
+      stopHover()
       setError('The 3D context was lost. Retry the teaching models to restart this acquisition.')
       callback.current({ assetsReady: false })
     }
@@ -178,6 +179,81 @@ export function LinkedModelView(props: Props) {
     )
     marker.renderOrder = 10
     scene.add(marker)
+    // Discovery labels are local to the observer view and never supply activity evidence.
+    const tooltip = document.createElement('div')
+    tooltip.className = 'linked-model-tooltip'
+    tooltip.setAttribute('role', 'tooltip')
+    tooltip.hidden = true
+    element.appendChild(tooltip)
+    const raycaster = new THREE.Raycaster()
+    const pointerVector = new THREE.Vector2()
+    let hoverPosition: { x: number; y: number } | null = null
+    let hovered: THREE.Object3D | null = null
+    let dismissed: THREE.Object3D | null = null
+    let hoverFrame = 0
+    const hideHover = () => {
+      tooltip.hidden = true
+      tooltip.textContent = ''
+      hovered = null
+    }
+    const stopHover = () => {
+      hoverPosition = null
+      dismissed = null
+      hideHover()
+    }
+    const pickStructure = (x: number, y: number) => {
+      const rect = renderer.domElement.getBoundingClientRect()
+      if (!rect.width || !rect.height) return undefined
+      raycaster.setFromCamera(
+        pointerVector.set(
+          (2 * (x - rect.left)) / rect.width - 1,
+          1 - (2 * (y - rect.top)) / rect.height,
+        ),
+        camera,
+      )
+      const roots = latest.current.mode === 'scope' ? [scope] : [anatomy, nodes]
+      const visible: THREE.Object3D[] = []
+      roots.forEach((root) =>
+        root.traverseVisible((object) => {
+          if (object instanceof THREE.Mesh && object.userData.semanticId) visible.push(object)
+        }),
+      )
+      // Example nodes render over surrounding anatomy; picking follows that visible order.
+      return raycaster
+        .intersectObjects(visible, false)
+        .sort((a, b) => b.object.renderOrder - a.object.renderOrder || a.distance - b.distance)[0]
+        ?.object
+    }
+    const refreshHover = () => {
+      hoverFrame = 0
+      const state = latest.current
+      if (
+        !hoverPosition ||
+        state.mode === 'section' ||
+        (state.config.locked && !state.config.reveal)
+      ) {
+        hideHover()
+        return
+      }
+      const object = pickStructure(hoverPosition.x, hoverPosition.y)
+      if (!object || object === dismissed) {
+        if (!object) dismissed = null
+        hideHover()
+        return
+      }
+      dismissed = null
+      hovered = object
+      tooltip.textContent = labelFor(object, state.config.reveal)
+      tooltip.hidden = false
+      const rect = element.getBoundingClientRect()
+      const x = hoverPosition.x - rect.left,
+        y = hoverPosition.y - rect.top
+      tooltip.style.left = `${Math.max(6, Math.min(x + 12, element.clientWidth - tooltip.offsetWidth - 6))}px`
+      tooltip.style.top = `${Math.max(6, Math.min(y + 16, element.clientHeight - tooltip.offsetHeight - 6))}px`
+    }
+    const queueHover = () => {
+      if (hoverPosition && !hoverFrame) hoverFrame = requestAnimationFrame(refreshHover)
+    }
     const reset = () => {
       const state = latest.current
       if (state.mode === 'scope') {
@@ -203,6 +279,7 @@ export function LinkedModelView(props: Props) {
     const render = () => {
       renderer.render(scene, camera)
       element.dataset.modelTriangles = String(renderer.info.render.triangles)
+      queueHover()
     }
     const update = () => {
       const state = latest.current,
@@ -376,36 +453,44 @@ export function LinkedModelView(props: Props) {
     let pointer: { x: number; y: number } | null = null
     const down = (e: PointerEvent) => {
       pointer = { x: e.clientX, y: e.clientY }
+      stopHover()
     }
     const up = (e: PointerEvent) => {
+      const start = pointer
+      pointer = null
       if (
-        !pointer ||
-        Math.hypot(e.clientX - pointer.x, e.clientY - pointer.y) > 5 ||
+        !start ||
+        Math.hypot(e.clientX - start.x, e.clientY - start.y) > 5 ||
         latest.current.config.locked
       )
         return
-      const rect = renderer.domElement.getBoundingClientRect(),
-        ray = new THREE.Raycaster()
-      ray.setFromCamera(
-        new THREE.Vector2(
-          (2 * (e.clientX - rect.left)) / rect.width - 1,
-          1 - (2 * (e.clientY - rect.top)) / rect.height,
-        ),
-        camera,
-      )
-      const roots = latest.current.mode === 'scope' ? [scope] : [anatomy, nodes]
-      const hit = ray
-        .intersectObjects(roots, true)
-        .find((h) => h.object.visible && h.object.userData.semanticId)
+      const hit = pickStructure(e.clientX, e.clientY)
       // Use the same structure center for pointer selection, named selection and section marker.
-      if (hit)
-        choose(
-          hit.object.name,
-          new THREE.Box3().setFromObject(hit.object).getCenter(new THREE.Vector3()),
-        )
+      if (hit) choose(hit.name, new THREE.Box3().setFromObject(hit).getCenter(new THREE.Vector3()))
+    }
+    const move = (e: PointerEvent) => {
+      if (e.pointerType === 'touch' || e.buttons) {
+        stopHover()
+        return
+      }
+      hoverPosition = { x: e.clientX, y: e.clientY }
+      queueHover()
+    }
+    const leave = () => {
+      pointer = null
+      stopHover()
+    }
+    const dismiss = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || !hovered) return
+      dismissed = hovered
+      hideHover()
     }
     renderer.domElement.addEventListener('pointerdown', down)
     renderer.domElement.addEventListener('pointerup', up)
+    renderer.domElement.addEventListener('pointermove', move)
+    renderer.domElement.addEventListener('pointerleave', leave)
+    renderer.domElement.addEventListener('pointercancel', leave)
+    window.addEventListener('keydown', dismiss)
     controller.current = {
       update,
       reset,
@@ -418,7 +503,14 @@ export function LinkedModelView(props: Props) {
     reset()
     update()
     return () => {
+      cancelAnimationFrame(hoverFrame)
+      window.removeEventListener('keydown', dismiss)
       renderer.domElement.removeEventListener('webglcontextlost', contextLost)
+      renderer.domElement.removeEventListener('pointerdown', down)
+      renderer.domElement.removeEventListener('pointerup', up)
+      renderer.domElement.removeEventListener('pointermove', move)
+      renderer.domElement.removeEventListener('pointerleave', leave)
+      renderer.domElement.removeEventListener('pointercancel', leave)
       controller.current = null
       resize.disconnect()
       orbit.dispose()
@@ -531,6 +623,7 @@ export function LinkedModelView(props: Props) {
         )}
       </div>
       <p className="guided-label">
+        {(!config.locked || config.reveal) && mode !== 'section' && 'Hover to name a structure. '}
         Drag to orbit; scroll to zoom. Observer controls change your viewpoint only.
       </p>
       {!config.locked && models && (
@@ -554,7 +647,7 @@ export function LinkedModelView(props: Props) {
             <p className="linked-selection" role="status">
               Selected:{' '}
               {labelFor(
-                options.find((o) => o.name === selection) ??
+                roots.map((root) => root.getObjectByName(selection)).find(Boolean) ??
                   ({ name: selection, userData: {} } as THREE.Object3D),
                 config.reveal,
               )}
