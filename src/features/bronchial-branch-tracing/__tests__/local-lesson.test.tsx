@@ -21,7 +21,7 @@ beforeEach(() => {
 })
 const ready = () => document.querySelectorAll('image').forEach((image) => fireEvent.load(image))
 async function begin() {
-  fireEvent.click(await screen.findByRole('button', { name: 'Your turn' }))
+  fireEvent.click(await screen.findByRole('button', { name: /^(Your turn|Start tracing)$/ }))
   ready()
 }
 function markBoth() {
@@ -103,11 +103,59 @@ it('preserves native image/overlay transforms and never renders provisional cont
 })
 it('has no automated accessibility violations in the CT demonstration and attempt', async () => {
   const { container } = render(<BranchTracingLesson requestedId="follow-one-airway" />)
-  await screen.findByRole('button', { name: 'Your turn' })
+  await screen.findByRole('button', { name: 'Start tracing' })
   ready()
   expect(await axe(container)).toHaveNoViolations()
   await begin()
   expect(await axe(container)).toHaveNoViolations()
+})
+it('explains the warm-up, acknowledges a placed mark, restores it and opens bifurcations after both reviews', async () => {
+  const exercises = LESSONS[0].exercises!.map(localExercise)
+  const view = render(<BranchTracingLesson requestedId="follow-one-airway" />)
+  await begin()
+  expect(screen.getByText(/This is a brief viewer warm-up/)).toBeVisible()
+  expect(screen.getByRole('button', { name: 'Review my mark' })).toBeDisabled()
+  fireEvent.click(screen.getByRole('button', { name: '3. Replay the walkthrough' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Go to answer slice' }))
+  ready()
+  fireEvent.keyDown(screen.getByRole('group', { name: /^CT image\./ }), { key: 'Enter' })
+  expect(screen.getByRole('heading', { name: 'Mark placed — ready to review' })).toBeVisible()
+  expect(screen.getByRole('button', { name: 'Review my mark' })).toBeEnabled()
+  expect(screen.getByText(/Mark placed on slice 412. Select Review my mark above/)).toBeVisible()
+  expect(screen.queryByText(/Answer slice 412: mark the lumen/)).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Next demonstration slice' })).not.toBeInTheDocument()
+  const key = DRAFT_PREFIX + 'learn.follow-one-airway'
+  const draft = JSON.parse(window.localStorage.getItem(key)!)
+  view.unmount()
+  render(<BranchTracingLesson requestedId="follow-one-airway" />)
+  await screen.findByRole('heading', { name: 'Mark placed — ready to review' })
+  expect(JSON.parse(window.localStorage.getItem(key)!).value.marks).toEqual(draft.value.marks)
+  fireEvent.click(screen.getByRole('button', { name: 'Review my mark' }))
+  fireEvent.click(
+    screen.getByRole('button', { name: `Starting slice ${exercises[0].trace.anchor.slice}` }),
+  )
+  expect(screen.getByRole('slider', { name: 'CT slice' })).toHaveValue(
+    String(exercises[0].trace.anchor.slice),
+  )
+  fireEvent.click(
+    screen.getByRole('button', {
+      name: `My response · slice ${exercises[0].answerPoints[0].slice}`,
+    }),
+  )
+  expect(screen.getByRole('slider', { name: 'CT slice' })).toHaveValue(
+    String(exercises[0].answerPoints[0].slice),
+  )
+  fireEvent.click(screen.getByRole('button', { name: 'Next airway' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Go to answer slice' }))
+  ready()
+  fireEvent.click(screen.getByRole('button', { name: 'Lumen unresolved here' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Review my mark' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Continue to bifurcations' }))
+  expect(push).toHaveBeenCalledWith('/learn/anatomy/branch-tracing/learn?lesson=continuity')
+  const complete = JSON.parse(window.localStorage.getItem(key)!)
+  expect(complete.value.phase).toBe('complete')
+  expect(complete.signature).toBe(draft.signature)
+  expect(complete.value.history[exercises[0].id][0].marks).toEqual(draft.value.marks)
 })
 it('warns before exiting when browser storage fails', async () => {
   jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {

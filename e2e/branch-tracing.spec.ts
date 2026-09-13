@@ -110,19 +110,26 @@ test('entry routes remain anonymous, unlisted, and lead to the first local skill
 
 for (const lesson of LESSONS.filter((l) => l.exercises)) {
   test(`local teaching loop: ${lesson.id}`, async ({ page }) => {
+    const warmup = lesson.exercises![0].kind === 'same-lumen'
     await page.goto(`${base}/learn?lesson=${lesson.id}`)
     if (lesson.exercises![0].kind === 'integration') {
       await page.getByRole('combobox', { name: 'Starting segmental bronchus' }).selectOption('LB6')
       await page.getByRole('button', { name: 'Use this starting parent' }).click()
     }
-    await page.getByRole('button', { name: 'Your turn', exact: true }).click()
+    await page
+      .getByRole('button', { name: warmup ? 'Start tracing' : 'Your turn', exact: true })
+      .click()
     for (const spec of lesson.exercises!) {
       const exercise = localExercise(spec)
       await expect(page.locator('[data-teaching-overlay]')).toHaveCount(0)
       await expect(page.locator('[data-ct-nodule]')).toHaveCount(0)
-      await expect(page.getByRole('button', { name: 'Check my tracing' })).toBeDisabled()
+      await expect(
+        page.getByRole('button', { name: warmup ? 'Review my mark' : 'Check my tracing' }),
+      ).toBeDisabled()
       await markLocal(page, exercise)
-      await page.getByRole('button', { name: 'Check my tracing', exact: true }).click()
+      await page
+        .getByRole('button', { name: warmup ? 'Review my mark' : 'Check my tracing', exact: true })
+        .click()
       await expect(page.getByRole('heading', { name: 'Review the image evidence' })).toBeVisible()
       if (spec.kind !== 'same-lumen') {
         await page.getByRole('button', { name: 'Relate the parent view', exact: true }).click()
@@ -136,12 +143,26 @@ for (const lesson of LESSONS.filter((l) => l.exercises)) {
         await page.getByText('Your progressive branch map', { exact: true }).click()
       }
       await page
-        .getByRole('button', { name: /^(Try another local example|Finish lesson)$/ })
+        .getByRole('button', {
+          name: /^(Try another local example|Finish lesson|Next airway|Continue to bifurcations)$/,
+        })
         .click()
     }
-    await expect(page.getByRole('heading', { name: 'Local exercises recorded' })).toBeVisible()
+    if (warmup) {
+      await expect(page).toHaveURL(/lesson=continuity/)
+      await page.goto(`${base}/learn?lesson=${lesson.id}`)
+    }
+    await expect(
+      page.getByRole('heading', {
+        name: warmup ? 'Warm-up completed' : 'Local exercises recorded',
+      }),
+    ).toBeVisible()
     await page.reload()
-    await expect(page.getByRole('heading', { name: 'Local exercises recorded' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', {
+        name: warmup ? 'Warm-up completed' : 'Local exercises recorded',
+      }),
+    ).toBeVisible()
   })
 }
 
@@ -187,6 +208,72 @@ test('browsing, help, hints, retry and exit preserve separate attempts and nativ
 function lessonTitle(id: string) {
   return LESSONS.find((l) => l.id === id)!.title
 }
+
+test('the warm-up explains its purpose and keeps review beside the instruction after a mark and reload', async ({
+  browser,
+}) => {
+  const exercise = localExercise(LESSONS[0].exercises![0])
+  for (const [width, height] of [
+    [1993, 927],
+    [1280, 720],
+    [390, 844],
+  ]) {
+    const context = await browser.newContext({ viewport: { width, height }, hasTouch: width < 800 })
+    const page = await context.newPage()
+    await page.goto(`${base}/learn?lesson=follow-one-airway`)
+    await expect(page.getByText(/This is a brief viewer warm-up/)).toBeVisible()
+    await page.getByRole('button', { name: 'Start tracing', exact: true }).click()
+    await page.getByRole('button', { name: '3. Replay the walkthrough' }).click()
+    await page.getByRole('button', { name: 'Go to answer slice' }).click()
+    await expect(page.getByRole('button', { name: 'Lumen unresolved here' })).toBeEnabled()
+    const ct = page.getByRole('group', { name: /^CT image\./ })
+    if (width < 800) await ct.tap()
+    else {
+      await ct.focus()
+      await ct.press('Enter')
+    }
+    await expect(page.getByRole('heading', { name: 'Mark placed — ready to review' })).toBeVisible()
+    const action = page.getByRole('button', { name: 'Review my mark', exact: true })
+    await expect(action).toBeInViewport()
+    await expect(page.getByRole('button', { name: 'Next demonstration slice' })).toHaveCount(0)
+    if (width >= 800) {
+      const instruction = (await page
+        .locator('[data-current-task] [data-now-card] > p')
+        .nth(1)
+        .boundingBox())!
+      const button = (await action.boundingBox())!
+      expect(button.x - (instruction.x + instruction.width)).toBeLessThanOrEqual(32)
+    }
+    await page.reload()
+    await expect(page.getByRole('heading', { name: 'Mark placed — ready to review' })).toBeVisible()
+    await expect(
+      page.getByText(/Mark placed on slice 412. Select Review my mark above/),
+    ).toBeVisible()
+    await expect(page.getByText(/Answer slice 412: mark the lumen/)).toHaveCount(0)
+    // Allow a subpixel border at the scrollport edge; the whole CT must remain in view.
+    if (width === 1280) await expect(ct).toBeInViewport({ ratio: 0.99 })
+    await page.screenshot({ path: `/tmp/branch-tracing-warmup-marked-${width}.png` })
+    await action.click()
+    await page
+      .getByRole('button', { name: `Starting slice ${exercise.trace.anchor.slice}` })
+      .click()
+    await expect(page.getByRole('slider', { name: 'CT slice', exact: true })).toHaveValue(
+      String(exercise.trace.anchor.slice),
+    )
+    await page
+      .getByRole('button', { name: `My response · slice ${exercise.answerPoints[0].slice}` })
+      .click()
+    await expect(page.getByRole('slider', { name: 'CT slice', exact: true })).toHaveValue(
+      String(exercise.answerPoints[0].slice),
+    )
+    await expect(page.getByRole('button', { name: 'Next airway', exact: true })).toBeInViewport()
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth - innerWidth),
+    ).toBeLessThanOrEqual(1)
+    await page.screenshot({ path: `/tmp/branch-tracing-warmup-review-${width}.png` })
+    await context.close()
+  }
+})
 
 test('full-route integration still gates every fork and restores its draft', async ({ page }) => {
   test.setTimeout(180000)
@@ -293,7 +380,7 @@ test('asset failures explain recovery, blocked storage warns before exit, and in
     route.fulfill({ status: 404, body: 'missing' }),
   )
   await page.goto(`${base}/learn?lesson=follow-one-airway`)
-  await page.getByRole('button', { name: 'Your turn', exact: true }).click()
+  await page.getByRole('button', { name: 'Start tracing', exact: true }).click()
   await page.getByRole('button', { name: 'Go to answer slice' }).click()
   await expect(page.getByRole('button', { name: 'Retry slice' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Lumen unresolved here' })).toBeDisabled()

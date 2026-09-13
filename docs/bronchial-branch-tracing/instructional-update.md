@@ -19,7 +19,34 @@ For fellows and bronchoscopists familiar with an air-filled airway on CT. These 
 
 The first exercise includes an explicitly initiated slideshow, pause, adjacent-frame steps, replay, and a caption transcript. Later local examples start at an attempt; a requested level-three hint exposes the walkthrough. There is no autoplay on entry or reload. Hints identify the inspection region, return to the authored parent, and replay the interval without resetting answers. Full-route practice remains linked from local lessons.
 
-Foundation and pattern lessons use the shared `LessonShell` and `SectionHeader` with a module-specific CT-first arrangement. The persistent current-task strip contains the sole task-advancing action. Supporting airway views load on demand after the local viewpoint response. Shared layout APIs and other modules are unchanged.
+Foundation and pattern lessons use the shared `LessonShell`, `SectionHeader` and `NowCard` with a module-specific CT-first arrangement. The persistent current-task strip contains the sole task-advancing action. Supporting airway views load on demand after the local viewpoint response. Shared layout APIs and other modules are unchanged.
+
+## Warm-up progression repair
+
+The September 13 follow-up addressed a learner who placed a mark on slice 412 but could not identify the purpose or next action. The task previously continued to ask for a mark, a requested walkthrough remained open, and the review button was separated from its instruction by most of a wide screen.
+
+The first lesson now explicitly introduces a brief viewer warm-up: keep the same lumen in view across adjacent slices, record the selected lumen, and compare the start and response before moving to bifurcations. The visible sequence is `Start tracing → Review my mark → Next airway → Review my mark → Continue to bifurcations`. Placing a mark or recording uncertainty changes the task heading, stops the walkthrough and exposes a highlighted review action beside the instruction. The CT guidance acknowledges the response too. Review offers direct starting-slice and response-slice controls. The final action saves completion and opens the existing bifurcation lesson.
+
+This repair changes presentation and the final navigation handler. Lesson data, annotation versions, draft signatures and native geometry are unchanged, so an existing slice-412 mark remains compatible. Tests restore the pending mark and preserve the first response through both warm-up intervals. The language edit uses the existing objective and supplied brief; it does not add clinical recommendations or claim transcript calibration or faculty validation.
+
+The scoped acceptance below applies to this repair, not to clinical validation of the whole module:
+
+| Contract                   | Result | Evidence or boundary                                                                                                                                             |
+| -------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| H1: entry and curriculum   | PASS   | Existing Overview/Learn/Practice/Assess routes and registry remain in use; final warm-up action opens `continuity`.                                              |
+| H2: teach before testing   | PASS   | Visible purpose, captioned demonstration, own mark and start/response comparison precede the next airway. This is a viewer warm-up, not a competence assessment. |
+| H3: shared stage           | PASS   | Reuses `LessonShell`, `SectionHeader` and `NowCard`. The brief's CT-first arrangement supersedes the standard three-pane layout for these local exercises.       |
+| H4: visible current task   | PASS   | One task card and primary action; response-ready heading and button stay together at wide and compact widths.                                                    |
+| H5: rendered teaching      | PASS   | Purpose and phase-specific guidance are open in the actual lesson; review controls navigate the real CT.                                                         |
+| H6: real activity          | PASS   | Review requires a real mark or explicit uncertainty; completion follows both attempts and their review actions.                                                  |
+| H7: response and feedback  | PASS   | Actual native marks are retained, review opens only on request, and no automatic accuracy verdict or feedback-driven advance is added.                           |
+| H8: fidelity               | PASS   | Native-coordinate, asset-failure, display-transform and existing viewer regression checks remain covered.                                                        |
+| H9: progress               | PASS   | Mark-ready reload and final saved completion are tested without changing draft compatibility or first-attempt records.                                           |
+| H10: language              | PASS   | Instructions name the current slice and visible next action; the purpose distinguishes a viewer warm-up from later bifurcation work.                             |
+| H11: scope                 | PASS   | Feature components, feature tests and these notes only; the PR remains a draft and the module remains unlisted.                                                  |
+| H12: rendered verification | PASS   | Real keyboard/touch progression and marked/review screenshots at 1993 × 927, 1280 × 720 and 390 × 844. A short desktop layout keeps the CT image in view.        |
+
+The bundled `audit-stage.mjs` returned **BLOCKED (exit 2)** because it requires the standard three-pane `data-stage-frame`; the authorized local CT workspace does not mount that frame. Its result is not counted as a pass. Feature-specific Playwright checks exercise this layout and its real controls instead. Faculty review and a learner pilot remain separate pending work, as detailed below.
 
 ## Annotation and clinical boundary
 
@@ -59,7 +86,7 @@ The focused test suite covers all local lesson transitions, full-route gating, a
 - `npm run build`: passed, including embedded trainers, asset validation and standalone packaging.
 - `npm run type-check`: passed.
 - Scoped ESLint, Prettier and `git diff --check`: passed.
-- `npx --no-install playwright test --config=playwright.branch-tracing.config.ts`: 19 passed. Screenshots were inspected at 1280 × 800, 720 × 900 and 390 × 844.
-- `npx --no-install jest --runInBand src/features/bronchial-branch-tracing`: 35 passed, 1 existing failure described below.
+- `npx --no-install playwright test --config=playwright.branch-tracing.config.ts`: 20 passed. The warm-up repair adds marked/review screenshots at 1993 × 927, 1280 × 720 and 390 × 844 to the existing 1280 × 800, 720 × 900 and 390 × 844 layout coverage.
+- `npx --no-install jest --runInBand src/features/bronchial-branch-tracing`: 36 passed, 1 existing failure described below. All six local lesson tests pass, including automated accessibility, pending-mark restoration and the final navigation handler.
 
 A pre-existing contract assertion expects `/airway-anatomy/case-001/case_manifest.json` to be private, while the current baseline access rule exposes it. This implementation does not alter that rule or its test.

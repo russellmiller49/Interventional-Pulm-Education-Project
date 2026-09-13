@@ -61,6 +61,7 @@ interface Props {
   highlightRegion?: boolean
   scopeAvailable?: boolean
   answerSlice?: number
+  responseStatus?: string
   sliceRequest?: { slice: number; serial: number }
   teachingFrame?: CtTeachingFrame
   annotationReview?: AnnotationReview
@@ -88,6 +89,7 @@ export function NativeCtViewer({
   highlightRegion = false,
   scopeAvailable = true,
   answerSlice,
+  responseStatus,
   sliceRequest,
   teachingFrame,
   annotationReview,
@@ -352,7 +354,8 @@ export function NativeCtViewer({
             : !ready
               ? 'Loading the CT image before marking.'
               : atCheckpoint
-                ? `Answer slice ${submissionSlice}: mark the lumen, or record uncertainty.`
+                ? responseStatus ||
+                  `Answer slice ${submissionSlice}: mark the lumen, or record uncertainty.`
                 : `Exploring slice ${slice}. Your current task is unchanged; marks are recorded on slice ${submissionSlice}.`}
           <button
             onClick={() => {

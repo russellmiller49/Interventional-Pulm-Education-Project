@@ -5,6 +5,7 @@ import { Link, useRouter } from '@/i18n/navigation'
 import { LessonShell } from '@/features/learning-module/stage/LessonShell'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
+import { NowCard } from '@/features/learning-module/stage/NowCard'
 import type { CtLesson, CtViewerState } from '../content/ct-types'
 import { BASE_PATH, LESSONS, SOURCE } from '../content/lessons'
 import { localExercise, MODEL_REFERENCE_LABEL } from '../content/local-exercises'
@@ -49,22 +50,42 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
   const first = attempts[0]
   const nextLesson = LESSONS[LESSONS.indexOf(lesson) + 1]
   const sameLumen = exercise.spec.kind === 'same-lumen'
+  const attemptReady = s.phase === 'attempt' && localReady(s, exercise)
+  const markPlaced = sameLumen && Boolean(s.marks[0]?.pixel)
+  const lastExercise = s.exercise === exercises.length - 1
+  const nextDestination = nextLesson ? `${BASE_PATH}/learn?lesson=${nextLesson.id}` : BASE_PATH
   const showingWalkthrough =
-    s.phase === 'demo' || s.phase === 'compare' || (s.phase === 'attempt' && s.hints === 3)
+    s.phase === 'demo' ||
+    s.phase === 'compare' ||
+    (s.phase === 'attempt' && s.hints === 3 && !attemptReady)
   const complete = s.phase === 'complete'
   const locatingParent = exercise.spec.kind === 'integration' && !s.parentConfirmed
   const target = targetForTrace(exercise.trace)
-  const title = locatingParent
-    ? 'Identify the segmental parent'
-    : s.phase === 'demo'
-      ? 'Watch the CT walkthrough'
+  const title = sameLumen
+    ? s.phase === 'demo'
+      ? '1. Follow the airway'
       : s.phase === 'attempt'
-        ? 'Your turn'
+        ? attemptReady
+          ? markPlaced
+            ? 'Mark placed — ready to review'
+            : 'Uncertainty recorded — ready to review'
+          : '2. Mark the same airway'
         : s.phase === 'compare'
-          ? 'Compare and repair'
-          : s.phase === 'parent-view'
-            ? 'Relate the parent view'
-            : 'Local exercises recorded'
+          ? '3. Compare the two slices'
+          : 'Warm-up completed'
+    : locatingParent
+      ? 'Identify the segmental parent'
+      : s.phase === 'demo'
+        ? 'Watch the CT walkthrough'
+        : s.phase === 'attempt'
+          ? attemptReady
+            ? 'Tracing ready to review'
+            : 'Your turn'
+          : s.phase === 'compare'
+            ? 'Compare and repair'
+            : s.phase === 'parent-view'
+              ? 'Relate the parent view'
+              : 'Local exercises recorded'
   const goToSlice = (slice: number) => setRequest((r) => ({ slice, serial: (r?.serial ?? 0) + 1 }))
   function act(action: LocalAction) {
     const next = localSessionReducer(exercises, s, action)
@@ -82,8 +103,14 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
     if (action.type === 'begin' || action.type === 'retry') goToSlice(exercise.trace.anchor.slice)
     if (action.type === 'check' || action.type === 'parent-view') goToSlice(slot.slice)
     if (next.exercise !== s.exercise || action.type === 'restart') setRequest(undefined)
-    if (next.phase !== s.phase || next.exercise !== s.exercise) setPlaying(false)
+    if (
+      next.phase !== s.phase ||
+      next.exercise !== s.exercise ||
+      (action.type === 'mark' && localReady(next, exercise))
+    )
+      setPlaying(false)
     setSession(next)
+    return next
   }
   const onViewChange = useCallback(
     (view: CtViewerState) =>
@@ -153,16 +180,24 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
   const primaryLabel = locatingParent
     ? 'Use this starting parent'
     : s.phase === 'demo'
-      ? 'Your turn'
+      ? sameLumen
+        ? 'Start tracing'
+        : 'Your turn'
       : s.phase === 'attempt'
-        ? 'Check my tracing'
+        ? sameLumen
+          ? 'Review my mark'
+          : 'Check my tracing'
         : s.phase === 'compare' && !sameLumen
           ? 'Relate the parent view'
-          : s.exercise === exercises.length - 1
-            ? 'Finish lesson'
-            : 'Try another local example'
-  const primaryAction = () =>
-    act({
+          : lastExercise
+            ? sameLumen
+              ? 'Continue to bifurcations'
+              : 'Finish lesson'
+            : sameLumen
+              ? 'Next airway'
+              : 'Try another local example'
+  const primaryAction = () => {
+    const next = act({
       type: locatingParent
         ? 'record-parent'
         : s.phase === 'demo'
@@ -173,6 +208,46 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
               ? 'parent-view'
               : 'next',
     })
+    if (sameLumen && s.phase === 'compare' && lastExercise) {
+      if (writeCtDraft(browserStorage(), draftKey, signature, next)) router.push(nextDestination)
+      else {
+        setSaveFailed(true)
+        setExitWarning(true)
+      }
+    }
+  }
+  const nextActionLabel = complete
+    ? sameLumen
+      ? 'Continue to bifurcations'
+      : nextLesson
+        ? `Next lesson: ${nextLesson.title}`
+        : 'Return to overview'
+    : primaryLabel
+  const taskInstruction = sameLumen
+    ? complete
+      ? 'The next lesson follows a parent airway through its division into daughter branches.'
+      : s.phase === 'demo'
+        ? `Follow ${exercise.trace.anchor.airway.name} from slice ${exercise.trace.anchor.slice} to slice ${slot.slice}. Then select Start tracing to place your own mark.`
+        : s.phase === 'attempt'
+          ? attemptReady
+            ? `Your ${markPlaced ? 'mark' : 'uncertainty response'} on slice ${slot.slice} is ready. Select Review my mark to compare it with the starting slice.`
+            : `Scroll from slice ${exercise.trace.anchor.slice} to ${slot.slice}, keeping the same lumen in view. Click inside it on slice ${slot.slice}, then select Review my mark.`
+          : lastExercise
+            ? 'Compare the starting slice with your marked slice. Then select Continue to bifurcations to begin the next lesson.'
+            : `Compare the starting slice with your marked slice. Then select Next airway to repeat this on ${exercises[s.exercise + 1].trace.anchor.airway.name}.`
+    : locatingParent
+      ? `Inspect the target region in ${target.segment.code}, then select the segmental bronchus you would start from.`
+      : complete
+        ? 'Completion records participation and comparison, not tracing competence.'
+        : s.phase === 'parent-view'
+          ? `Which numbered opening corresponds to CT daughter ${exercise.answerPoints[0].label}? Choose before revealing the matched view.`
+          : s.phase === 'demo'
+            ? 'Follow the captioned CT walkthrough. Step through the interval, then choose Your turn.'
+            : s.phase === 'compare'
+              ? 'Compare your marks with the model locations. Review neighboring slices, then retry or relate the parent view.'
+              : attemptReady
+                ? 'Your responses are ready. Select Check my tracing to review this attempt before continuing.'
+                : exercise.task
   // Model points appear only in the demonstration, requested hint, or committed comparison.
   const viewSlice = s.views[exercise.id]?.slice ?? exercise.trace.anchor.slice
   const frame = showingWalkthrough ? exercise.frames.find((f) => f.slice === viewSlice) : undefined
@@ -202,47 +277,33 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
         />
       }
       contextStrip={
-        <div className={styles.currentTask} data-current-task>
-          <div>
-            <strong>
-              {title} · {locatingParent ? target.segment.code : exercise.trace.anchor.airway.code}
-            </strong>
-            <p>
-              {locatingParent
-                ? `Inspect the target region in ${target.segment.code}, then select the segmental bronchus you would start from.`
-                : complete
-                  ? 'Completion records participation and comparison, not tracing competence.'
-                  : s.phase === 'parent-view'
-                    ? `Which numbered opening corresponds to CT daughter ${exercise.answerPoints[0].label}? Choose before revealing the matched view.`
-                    : s.phase === 'demo'
-                      ? 'Follow the captioned CT walkthrough. Step through the interval, then choose Your turn.'
-                      : s.phase === 'compare'
-                        ? 'Compare your marks with the model locations. Review neighboring slices, then retry or relate the parent view.'
-                        : exercise.task}
-            </p>
-            {!complete && (
-              <small>
-                Example {s.exercise + 1} of {exercises.length} ·{' '}
-                {s.phase === 'attempt'
-                  ? `${s.marks.filter(Boolean).length}/${exercise.answerPoints.length} lumen responses recorded`
-                  : 'Compare continuity in the actual CT'}
-              </small>
-            )}
-          </div>
-          {complete ? (
-            <Link
-              className={styles.primary}
-              href={nextLesson ? `${BASE_PATH}/learn?lesson=${nextLesson.id}` : BASE_PATH}
-            >
-              {nextLesson ? `Next lesson: ${nextLesson.title}` : 'Return to overview'}
-            </Link>
-          ) : s.phase !== 'parent-view' || s.viewAnswer !== null ? (
-            <button className={styles.startButton} disabled={!canAdvance} onClick={primaryAction}>
-              {primaryLabel}
-            </button>
-          ) : (
-            <span>Choose an opening below to continue.</span>
-          )}
+        <div className={styles.currentTask} data-current-task data-response-ready={attemptReady}>
+          <NowCard
+            model={{
+              kicker: `${sameLumen ? 'Viewer warm-up · airway' : 'Example'} ${s.exercise + 1} of ${exercises.length} · ${locatingParent ? target.segment.code : exercise.trace.anchor.airway.code}`,
+              heading: title,
+              body: taskInstruction,
+              status:
+                s.phase === 'parent-view' && s.viewAnswer === null
+                  ? 'Choose an opening below to continue.'
+                  : s.phase === 'attempt' && !sameLumen
+                    ? `${s.marks.filter(Boolean).length} of ${exercise.answerPoints.length} lumen responses placed`
+                    : undefined,
+              primary:
+                s.phase !== 'parent-view' || s.viewAnswer !== null
+                  ? {
+                      label: nextActionLabel,
+                      href: complete ? nextDestination : undefined,
+                      onActivate: primaryAction,
+                      disabled: !canAdvance,
+                      disabledReason:
+                        s.phase === 'attempt'
+                          ? 'Use the CT image to place each mark, or choose Lumen unresolved here.'
+                          : undefined,
+                    }
+                  : undefined,
+            }}
+          />
         </div>
       }
       footer={
@@ -257,7 +318,39 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
     >
       <div className={styles.localWorkspace}>
         <section className={styles.localInstructions} aria-label="Current exercise instructions">
-          <h2>{title}</h2>
+          <h2>
+            {complete
+              ? 'Review your work'
+              : sameLumen
+                ? 'Keep the same airway in view'
+                : 'CT tracing instructions'}
+          </h2>
+          {sameLumen && !complete && (
+            <div className={styles.warmupPurpose}>
+              <h3>Why start here?</h3>
+              <p>
+                This is a brief viewer warm-up. Follow one airway across adjacent CT slices; placing
+                a mark records which lumen you followed. Two short intervals introduce scrolling and
+                marking before the next lesson adds a bifurcation.
+              </p>
+            </div>
+          )}
+          {sameLumen && attemptReady && (
+            <div className={styles.feedback} role="status">
+              <h3>
+                {markPlaced
+                  ? `Your mark is placed on slice ${slot.slice}.`
+                  : `You recorded uncertainty on slice ${slot.slice}.`}
+              </h3>
+              <p>
+                Select <strong>Review my mark</strong> above. You will compare the starting slice
+                with this slice, then{' '}
+                {lastExercise ? 'continue to bifurcations.' : 'move to the next airway.'}
+              </p>
+              <p>To change your mark first, click another point in the lumen on the CT.</p>
+              <button onClick={() => goToSlice(slot.slice)}>Return to my marking slice</button>
+            </div>
+          )}
           {locatingParent && (
             <>
               <p>
@@ -291,7 +384,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
             </p>
           )}
 
-          {showingWalkthrough && !locatingParent && (
+          {showingWalkthrough && !locatingParent && !(sameLumen && s.phase === 'compare') && (
             <section className={styles.walkthrough} aria-label="Captioned CT walkthrough">
               <div className={styles.walkthroughControls}>
                 <button
@@ -347,7 +440,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
               </details>
             </section>
           )}
-          {s.phase === 'demo' && !locatingParent && (
+          {s.phase === 'demo' && !locatingParent && !sameLumen && (
             <>
               <p>{lesson.objective}</p>
               <p>{lesson.concept}</p>
@@ -357,7 +450,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
               </p>
             </>
           )}
-          {s.phase === 'attempt' && (
+          {s.phase === 'attempt' && !(sameLumen && attemptReady) && (
             <>
               <fieldset className={styles.markSlots}>
                 <legend>{sameLumen ? 'Mark the same lumen' : 'Mark each daughter lumen'}</legend>
@@ -372,10 +465,19 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                   </button>
                 ))}
               </fieldset>
-              <p>
-                Browse freely. Select a lumen above, then use <strong>Go to answer slice</strong>{' '}
-                beside the CT to place its mark. Each lumen also allows an unresolved response.
-              </p>
+              {sameLumen ? (
+                <p>
+                  Follow the lumen from slice {exercise.trace.anchor.slice} to {slot.slice} using
+                  the CT slice controls. Place a mark on {slot.slice}. If you lose track, return to
+                  the starting slice or record uncertainty. Then select{' '}
+                  <strong>Review my mark</strong>.
+                </p>
+              ) : (
+                <p>
+                  Browse freely. Select a lumen above, then use <strong>Go to answer slice</strong>{' '}
+                  beside the CT to place its mark. Each lumen also allows an unresolved response.
+                </p>
+              )}
               {exercise.spec.kind === 'pattern' && (
                 <CtCourseControl
                   value={s.course}
@@ -425,7 +527,38 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
           {s.phase === 'compare' && (
             <div className={styles.feedback} role="status">
               <h3>Review the image evidence</h3>
-              <p>{exercise.explanation}</p>
+              {sameLumen ? (
+                <>
+                  <p>
+                    {markPlaced
+                      ? 'Your mark records the lumen you chose'
+                      : 'You recorded that the lumen was unresolved'}{' '}
+                    on slice {slot.slice}. Switch between the two slices below, then browse the
+                    intervening CT slices. Can you keep the same airway in view throughout?
+                  </p>
+                  <div className={styles.walkthroughControls}>
+                    <button
+                      aria-pressed={viewSlice === exercise.trace.anchor.slice}
+                      onClick={() => goToSlice(exercise.trace.anchor.slice)}
+                    >
+                      Starting slice {exercise.trace.anchor.slice}
+                    </button>
+                    <button
+                      aria-pressed={viewSlice === slot.slice}
+                      onClick={() => goToSlice(slot.slice)}
+                    >
+                      My response · slice {slot.slice}
+                    </button>
+                  </div>
+                  <p>
+                    {lastExercise
+                      ? 'You have now used the viewer on two short airway intervals. Continue to bifurcations to follow a parent airway into its daughters.'
+                      : `Next, repeat this on ${exercises[s.exercise + 1].trace.anchor.airway.name}. The lesson after this follows a bifurcation.`}
+                  </p>
+                </>
+              ) : (
+                <p>{exercise.explanation}</p>
+              )}
               {exercise.spec.kind === 'pattern' && s.exercise === 0 && (
                 <>
                   <h3>Reading this pattern</h3>
@@ -439,11 +572,12 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
               <button onClick={() => act({ type: 'retry' })}>
                 {sameLumen ? 'Try this lumen again' : 'Try this bifurcation again'}
               </button>
-              {exercise.answerPoints.map((p, i) => (
-                <button key={i} onClick={() => act({ type: 'slot', index: i })}>
-                  Compare {p.label} · slice {p.slice}
-                </button>
-              ))}
+              {!sameLumen &&
+                exercise.answerPoints.map((p, i) => (
+                  <button key={i} onClick={() => act({ type: 'slot', index: i })}>
+                    Compare {p.label} · slice {p.slice}
+                  </button>
+                ))}
             </div>
           )}
           {s.phase === 'parent-view' && (
@@ -474,8 +608,9 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
           {complete && (
             <>
               <p>
-                You recorded {exercises.length} local exercises and reviewed their comparisons.
-                These examples come from one patient CT.
+                {sameLumen
+                  ? 'You placed or recorded uncertainty for a lumen on two short CT intervals. Continue to bifurcations to follow a parent airway into its daughters.'
+                  : `You recorded ${exercises.length} local exercises and reviewed their comparisons. These examples come from one patient CT.`}
               </p>
               <p>
                 Different regions or repeated bifurcations in this scan do not establish performance
@@ -514,24 +649,26 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
               ))}
             </details>
           )}
-          <details>
-            <summary>Your progressive branch map</summary>
-            <p>
-              A division joins this map after you record its parent-view interpretation. Sibling
-              branches remain visible; a chosen continuation is highlighted.
-            </p>
-            {exercises.map((ex, i) =>
-              s.history[ex.id]?.length &&
-              (i < s.exercise || (i === s.exercise && s.viewAnswer !== null)) ? (
-                <CtParentMap
-                  key={ex.id}
-                  trace={ex.trace}
-                  ctLabels={ex.answerPoints.map((p) => p.label)}
-                  choice={s.history[ex.id].at(-1)!.branch}
-                />
-              ) : null,
-            )}
-          </details>
+          {!sameLumen && (
+            <details>
+              <summary>Your progressive branch map</summary>
+              <p>
+                A division joins this map after you record its parent-view interpretation. Sibling
+                branches remain visible; a chosen continuation is highlighted.
+              </p>
+              {exercises.map((ex, i) =>
+                s.history[ex.id]?.length &&
+                (i < s.exercise || (i === s.exercise && s.viewAnswer !== null)) ? (
+                  <CtParentMap
+                    key={ex.id}
+                    trace={ex.trace}
+                    ctLabels={ex.answerPoints.map((p) => p.label)}
+                    choice={s.history[ex.id].at(-1)!.branch}
+                  />
+                ) : null,
+              )}
+            </details>
+          )}
           <details>
             <summary>Full-route rehearsal and source limits</summary>
             <Link href={`${BASE_PATH}/practice`}>Open coached full-route practice</Link>
@@ -546,7 +683,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
             </p>
           </details>
         </section>
-        <div className={styles.localImageWorkspace}>
+        <div className={styles.localImageWorkspace} data-warmup={sameLumen || undefined}>
           {locatingParent ? (
             <TargetCtPreview traceId={exercise.spec.traceId} />
           ) : (
@@ -566,6 +703,11 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
               highlightRegion={s.phase === 'attempt' && s.hints > 0}
               showAnchor={showAnchor}
               answerSlice={slot.slice}
+              responseStatus={
+                sameLumen && attemptReady
+                  ? `${markPlaced ? 'Mark placed' : 'Uncertainty recorded'} on slice ${slot.slice}. Select Review my mark above. You can still change your response here.`
+                  : undefined
+              }
               sliceRequest={request}
               teachingFrame={frame}
               annotationReview={exercise.review}
@@ -590,16 +732,18 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
           <strong>{title}</strong> ·{' '}
           {locatingParent ? target.segment.code : exercise.trace.anchor.airway.code}
         </p>
+        <p>{taskInstruction}</p>
         <p>
-          {locatingParent
-            ? `Inspect the target region in ${target.segment.code} and choose a starting segmental bronchus.`
-            : exercise.task}
+          Slice controls browse the CT. Go to answer slice restores the marking frame.{' '}
+          {sameLumen ? 'Review my mark' : 'Check my tracing'} records this attempt and opens the
+          comparison; it does not grade anatomical accuracy.
         </p>
         <p>
-          Slice controls browse the CT. Go to answer slice restores the marking frame. Check my
-          tracing records this attempt; it does not grade anatomical accuracy.
+          Help does not reset your answers.
+          {s.phase === 'attempt' &&
+            !attemptReady &&
+            ' Graduated hints are available beside the image.'}
         </p>
-        <p>Help does not reset your answers. Graduated hints are available beside the image.</p>
       </HelpDialog>
       <HelpDialog
         open={exitWarning}
