@@ -10,6 +10,8 @@ import type { ScopeGoal, ScopeMetricId, ScopeViewSpec } from '../components/scop
 import { scopeViewErrors } from '../engine/scope/scopeViewErrors'
 import { STEPS_LANDMARKS, TEACHING_LANDMARKS } from './landmarks'
 import { bronchLearnerCopyErrors } from './learnerCopy'
+import { fiveControlsLearnInputs } from './fiveControlsLearn'
+import type { BronchLearnUnit } from './learnUnit'
 import {
   bronchActivityId,
   bronchSection,
@@ -63,6 +65,7 @@ export interface BronchStageStep extends StageStepBase<BronchStageInteraction> {
   readonly lookIn: StageStepLocation
   /** What the Simulator panel shows while this step is current. */
   readonly workspace: BronchWorkspace
+  readonly learn?: BronchLearnUnit
 }
 
 export interface BronchStageLesson extends StageLessonBase<BronchStageStep> {
@@ -86,7 +89,7 @@ export const ACT_ACTION_LABELS = {
   'scope-lab': CONTINUE,
 } as const
 
-interface StepInput {
+export interface StepInput {
   readonly phase: StagePhase
   readonly title: string
   readonly instruction: string
@@ -95,6 +98,7 @@ interface StepInput {
   readonly actionLabel: string
   readonly interaction: BronchStageInteraction
   readonly workspace: BronchWorkspace
+  readonly learn?: BronchLearnUnit
 }
 
 function predictionInstruction(stage: BronchStageItem, section: BronchSectionDefinition): string {
@@ -153,6 +157,7 @@ function actWorkspace(section: BronchSectionDefinition): BronchWorkspace {
 }
 
 function buildInputs(section: BronchSectionDefinition): readonly StepInput[] {
+  if (section.id === 'five-controls') return fiveControlsLearnInputs()
   const items = bronchSectionItems(section.id)
   const base = section.workspace
   const inputs: StepInput[] = []
@@ -259,8 +264,13 @@ function buildSteps(
     rationale: input.rationale,
     actionLabel: input.actionLabel,
     interaction: input.interaction,
-    gate: predictionIndex >= 0 && index > predictionIndex ? 'after-prediction' : 'open',
+    gate: input.learn
+      ? 'open'
+      : predictionIndex >= 0 && index > predictionIndex
+        ? 'after-prediction'
+        : 'open',
     workspace: input.workspace,
+    learn: input.learn,
   }))
 }
 
@@ -282,9 +292,7 @@ export function bronchStageLesson(sectionId: BronchSectionId): BronchStageLesson
     predictionStepIndex: steps.findIndex(
       (step) => step.interaction.kind === 'prediction' && step.interaction.round === 0,
     ),
-    transferStepIndex: steps.findIndex(
-      (step) => step.interaction.kind === 'prediction' && step.interaction.round === 1,
-    ),
+    transferStepIndex: steps.findIndex((step) => step.phase === 'transfer'),
     section,
     lifecycleActivityId: bronchActivityId(sectionId),
   }
@@ -307,6 +315,16 @@ export function scopeViewOfStep(step: BronchStageStep): ScopeViewSpec | null {
 export function precommitAuthoredSurfaces(
   lesson: BronchStageLesson,
 ): readonly { readonly where: string; readonly text: string }[] {
+  // The pilot teaches before its formative check. Check the pending-item surfaces,
+  // not explanations deliberately taught earlier. Assess keeps its own disclosure policy.
+  if (lesson.steps[0]?.learn) {
+    const step = lesson.steps[lesson.predictionStepIndex]
+    return [
+      { where: 'check title', text: step.title },
+      { where: 'check instruction', text: step.instruction },
+      { where: 'check teaching', text: step.learn?.paragraphs.join(' ') ?? '' },
+    ]
+  }
   const { section } = lesson
   const surfaces: { where: string; text: string }[] = [
     { where: 'title', text: section.title },
@@ -358,6 +376,7 @@ export function validateBronchStageLessons(): readonly string[] {
   const errors: string[] = []
   for (const lesson of bronchStageLessons()) {
     const where = `Lesson ${lesson.sectionId}`
+    const teachingFirst = lesson.steps[0]?.learn !== undefined
     if (lesson.predictionStepIndex < 0) errors.push(`${where} has no prediction step.`)
     if (lesson.transferStepIndex < 0) errors.push(`${where} has no transfer prediction.`)
     if (lesson.transferStepIndex <= lesson.predictionStepIndex)
@@ -368,8 +387,9 @@ export function validateBronchStageLessons(): readonly string[] {
     if (!phases.includes('act')) errors.push(`${where} has nothing to do.`)
     if (!phases.includes('explain')) errors.push(`${where} never explains.`)
     if (
+      !teachingFirst &&
       phases.includes('observe') !==
-      (lesson.section.act.kind === 'scope-lab' && !!lesson.section.act.observe)
+        (lesson.section.act.kind === 'scope-lab' && !!lesson.section.act.observe)
     )
       errors.push(`${where} observes without a scope lab that asks it to, or the reverse.`)
     lesson.steps.forEach((step, index) => {
@@ -382,7 +402,11 @@ export function validateBronchStageLessons(): readonly string[] {
       if (step.rationale)
         errors.push(...bronchLearnerCopyErrors(`${stepWhere} rationale`, step.rationale))
       errors.push(...stageStepLocationErrors(stepWhere, step.lookIn))
-      const expectedGate = index > lesson.predictionStepIndex ? 'after-prediction' : 'open'
+      const expectedGate = teachingFirst
+        ? 'open'
+        : index > lesson.predictionStepIndex
+          ? 'after-prediction'
+          : 'open'
       if (step.gate !== expectedGate) errors.push(`${stepWhere} has the wrong gate.`)
       if (
         step.interaction.kind === 'prediction' &&

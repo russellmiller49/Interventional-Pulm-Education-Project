@@ -3,6 +3,7 @@ import { cleanup, fireEvent, screen } from '@testing-library/react'
 import { BRONCH_SECTION_IDS, type BronchSectionId } from '../content/pathway'
 import type { BronchStageLesson, BronchStageStep } from '../content/stageLessons'
 import { BRONCH_STORAGE_KEY, parseBronchRecord } from '../engine/learnProgress'
+import { performFiveControlsLearn } from '../test-support/fiveControlsLearnHarness'
 import { SCOPE_RECIPES } from '../test-support/scopeRecipes'
 import {
   answerLedger,
@@ -26,7 +27,6 @@ import {
   otherChoiceId,
   placeSortRows,
   scopePilot,
-  setRange,
   settle,
   stepRows,
   verdictOutcome,
@@ -308,65 +308,25 @@ describe('a sort section on the stage', () => {
   })
 })
 
-/**
- * The bench: the scope's controls are locked until the prediction is committed, then one control
- * at a time meets the goals, the Observe step follows, and the completion record says how the
- * scope was driven (A18).
- */
+/** Non-target lessons retain their prediction and safety boundaries. */
 describe('a scope section on the stage', () => {
-  it('locks the dock until the commitment, then drives the bench through its goals', async () => {
-    const { lesson } = await mountSection('five-controls')
-    expect(document.querySelector('[data-scope-scene]')).not.toBeNull()
-    expect(controlsFieldset()?.disabled).toBe(true)
+  it('keeps the non-pilot dock locked until the prediction and feedback are acknowledged', async () => {
+    const { lesson } = await mountSection('branch-entry')
+    expect(controlsFieldset()).toBeDisabled()
     clickPrimary()
     await settle()
-    expect(controlsFieldset()?.disabled).toBe(true)
+    expect(controlsFieldset()).toBeDisabled()
     commitById(keyedChoiceId(lesson.steps[lesson.predictionStepIndex]))
-    expect(controlsFieldset()?.disabled).toBe(true)
+    expect(controlsFieldset()).toBeDisabled()
     clickPrimary()
     await settle()
-
-    const act = stepOfKind(lesson, 'scope-task')
-    expect(currentStepId()).toBe(act.id)
-    expect(controlsFieldset()?.disabled).toBe(false)
-    expect(goalStates().every((state) => state === 'false')).toBe(true)
-    expect(nowPrimary()).toBeNull()
-    expect(nowStatus()).toMatch(/Waiting for the work in the Simulator panel/)
-    // The dock's own controls reach the engine: a rotation set from the range is on the readouts.
-    setRange('rotate', 45)
-    expect(document.querySelector('[data-readout="rotationDeg"] dd')?.textContent).toMatch(/45/)
-    setRange('deflect', 45)
-    setRange('rotate', 90)
-    expect(goalStates().every((state) => state === 'true')).toBe(true)
-    expect(nowStatus()).toMatch(/^Done/)
-    clickPrimary()
-    await settle()
-
-    const observe = stepOfKind(lesson, 'observe')
-    expect(currentStepId()).toBe(observe.id)
-    expect(goalStates().every((state) => state === 'false')).toBe(true)
-    SCOPE_RECIPES['five-controls']!.observe!(scopePilot())
-    expect(goalStates().every((state) => state === 'true')).toBe(true)
-    clickPrimary()
-    await settle()
-
-    expect(currentStepId()).toBe(stepOfKind(lesson, 'explain').id)
-    expect(document.querySelector('[data-scope-performance]')?.textContent).toMatch(
-      /keyboard|pointer/,
-    )
+    expect(controlsFieldset()).not.toBeDisabled()
+    await performAct(lesson)
     await finishSection(lesson)
-    const record = storedRecord()
-    expect(record?.completedSectionIds).toEqual(['five-controls'])
-    expect(record?.sectionPerformance['five-controls']).toEqual({
-      inputModes: expect.arrayContaining(['pointer']),
-      assistsUsed: [],
-      unaided: true,
-    })
-    expect(document.querySelector('[data-completion-performance]')).not.toBeNull()
-    expect(document.querySelector('[data-completion-physical-skill]')).not.toBeNull()
+    expect(storedRecord()?.completedSectionIds).toEqual(['branch-entry'])
   })
 
-  it.each(Object.keys(SCOPE_RECIPES) as BronchSectionId[])(
+  it.each(Object.keys(SCOPE_RECIPES).filter((id) => id !== 'five-controls') as BronchSectionId[])(
     '%s: every authored goal is met through the host with the learner’s controls',
     async (sectionId) => {
       const { lesson } = await mountSection(sectionId)
@@ -515,13 +475,17 @@ describe('the core path', () => {
   it('walks every section in order and records each once', async () => {
     for (const sectionId of BRONCH_SECTION_IDS) {
       const { lesson } = await mountSection(sectionId)
-      await reachAct(lesson)
-      await performAct(lesson)
-      await finishSection(lesson)
+      if (sectionId === 'five-controls') {
+        await performFiveControlsLearn(lesson)
+      } else {
+        await reachAct(lesson)
+        await performAct(lesson)
+        await finishSection(lesson)
+      }
       cleanup()
     }
     const record = storedRecord()
     expect(record?.completedSectionIds).toEqual([...BRONCH_SECTION_IDS])
-    expect(Object.keys(record?.firstAttempts ?? {})).toHaveLength(BRONCH_SECTION_IDS.length * 2)
+    expect(Object.keys(record?.firstAttempts ?? {})).toHaveLength(BRONCH_SECTION_IDS.length * 2 - 1)
   }, 120000)
 })

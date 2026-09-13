@@ -161,6 +161,9 @@ export default function ScopeScene(props: SceneProps) {
         ref={root}
         data-three-state={status}
         data-observer={observer ? 'true' : undefined}
+        data-pilot-bench={
+          view.physicalControlLabels && state.place === 'bench' ? 'true' : undefined
+        }
       >
         {assets && status !== 'failed' ? (
           <SceneBoundary key={generation} onFailure={failed}>
@@ -206,6 +209,11 @@ export default function ScopeScene(props: SceneProps) {
                 )}
               </View>
               <span className={styles.viewHeading}>{optical ? 'Scope view' : 'Airway model'}</span>
+              {view.benchTarget ? (
+                <span className={styles.targetReticle} aria-hidden="true" data-bench-reticle>
+                  +
+                </span>
+              ) : null}
               {optical ? (
                 <div
                   className={styles.lens}
@@ -334,7 +342,7 @@ export default function ScopeScene(props: SceneProps) {
           {state.message}
         </p>
       ) : null}
-      {state.place !== 'airway' ? (
+      {state.place !== 'airway' && !props.view.physicalControlLabels ? (
         <p className={styles.context} data-scope-place={state.place}>
           {state.place === 'bench'
             ? 'The tip is on the bench, outside the model'

@@ -16,6 +16,7 @@ import { BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF } from '../../content/routes'
 import type { BronchRecord } from '../../engine/learnProgress'
 import styles from '../bronchoscopy-foundations-hub.module.css'
 import { useBronchoscopyFoundationsRecord } from '../useBronchoscopyFoundationsRecord'
+import { BRONCH_LEARN_VERSIONS } from '../../content/lessonVersions'
 
 /**
  * One map of the pathway, shared by the hub and the Learn landing.
@@ -76,6 +77,11 @@ export function BronchPathwayAccordion({
                     <GraduationCap aria-hidden="true" />
                     {section.title}
                     {done ? ' ✓ worked through' : ''}
+                    {!done &&
+                    record.completedSectionIds.includes(section.id) &&
+                    BRONCH_LEARN_VERSIONS[section.id] ? (
+                      <em>Updated lesson · earlier record retained</em>
+                    ) : null}
                     {isNext ? <em>Up next</em> : null}
                   </Link>
                 )

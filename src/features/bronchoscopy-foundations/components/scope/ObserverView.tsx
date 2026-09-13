@@ -10,6 +10,7 @@ import type { ScopePaneProps } from './types'
 import type { ScopeSceneAssets } from './scopeSceneAssets'
 import {
   AccessoryTip,
+  BenchTarget,
   AuthoredShaft,
   DistalScope,
   HandleModel,
@@ -73,6 +74,7 @@ export function ObserverView({
       {bench ? (
         <>
           <HandleModel assets={assets} state={state} />
+          <BenchTarget view={view} />
           <group position={[0, 0, 65]}>
             <NamedModel assets={assets} file="devices/bench.glb" />
           </group>

@@ -24,6 +24,7 @@ import { LocationCaptionStrip } from './LocationCaptionStrip'
 import styles from './scope-fallback.module.css'
 import { TreeAnswerFieldset } from './TreeAnswerFieldset'
 import { TreeMap } from './TreeMap'
+import { BenchSchematic } from './BenchSchematic'
 import {
   DECLARABLE_STATUSES,
   SCOPE_CONTROL_KEYS,
@@ -368,72 +369,77 @@ export function ScopePaneFrame(
         [SCOPE_DOM.profile]: view.profile,
       }}
     >
-      <LocationCaptionStrip caption={props.caption} current={state.location.spineStop} />
+      {!view.physicalControlLabels ? (
+        <LocationCaptionStrip caption={props.caption} current={state.location.spineStop} />
+      ) : null}
       {props.treeAnswer ? <TreeAnswerFieldset answer={props.treeAnswer} /> : null}
-      {!controlsEnabled && (lockedReason ?? pausedReason) ? (
+      {!view.physicalControlLabels && !controlsEnabled && (lockedReason ?? pausedReason) ? (
         <p className={styles.reason} role="status">
           {lockedReason ?? pausedReason}
         </p>
       ) : null}
 
-      {props.opticalView ?? (
-        <div className={styles.optical}>
-          <div
-            className={styles.field}
-            role={interactiveField ? 'group' : 'img'}
-            aria-label={opticalFieldName(state, pins)}
-            {...{ [SCOPE_DOM.viewSignal]: state.signals.view }}
-          >
-            <div className={styles.lumen} />
-            {state.place === 'bench' ? (
-              <div
-                className={styles.benchCard}
-                aria-hidden="true"
-                style={{
-                  transform: `translate(-50%, -50%) rotate(${-state.inputs.rotationDeg}deg) translateY(${state.inputs.deflectionDeg * 0.4}px) scale(${1 + state.depthMm / 100})`,
-                }}
-              >
-                <span /> <i /> <b />
-              </div>
-            ) : null}
-            {pins.map(({ pin, left, top }) => {
-              const shared = {
-                className: styles.ostium,
-                style: { left, top },
-                'data-ostium-pin': pin.label,
-                'aria-label': state.inputs.branchLabels ? pin.fullLabel : UNLABELED_OPENING,
-              }
-              const text = state.inputs.branchLabels ? pin.label : null
-              return alignOffered ? (
-                <button
-                  key={pin.label}
-                  type="button"
-                  onClick={() =>
-                    send({ type: 'assist', assist: 'align-to-branch', label: pin.label })
-                  }
-                  {...shared}
+      {props.opticalView ??
+        (state.place === 'bench' && view.physicalControlLabels ? (
+          <BenchSchematic state={state} view={view} />
+        ) : (
+          <div className={styles.optical}>
+            <div
+              className={styles.field}
+              role={interactiveField ? 'group' : 'img'}
+              aria-label={opticalFieldName(state, pins)}
+              {...{ [SCOPE_DOM.viewSignal]: state.signals.view }}
+            >
+              <div className={styles.lumen} />
+              {state.place === 'bench' ? (
+                <div
+                  className={styles.benchCard}
+                  aria-hidden="true"
+                  style={{
+                    transform: `translate(-50%, -50%) rotate(${-state.inputs.rotationDeg}deg) translateY(${state.inputs.deflectionDeg * 0.4}px) scale(${1 + state.depthMm / 100})`,
+                  }}
                 >
-                  {text}
-                </button>
-              ) : (
-                <span key={pin.label} {...shared}>
-                  {text}
-                </span>
-              )
-            })}
+                  <span /> <i /> <b />
+                </div>
+              ) : null}
+              {pins.map(({ pin, left, top }) => {
+                const shared = {
+                  className: styles.ostium,
+                  style: { left, top },
+                  'data-ostium-pin': pin.label,
+                  'aria-label': state.inputs.branchLabels ? pin.fullLabel : UNLABELED_OPENING,
+                }
+                const text = state.inputs.branchLabels ? pin.label : null
+                return alignOffered ? (
+                  <button
+                    key={pin.label}
+                    type="button"
+                    onClick={() =>
+                      send({ type: 'assist', assist: 'align-to-branch', label: pin.label })
+                    }
+                    {...shared}
+                  >
+                    {text}
+                  </button>
+                ) : (
+                  <span key={pin.label} {...shared}>
+                    {text}
+                  </span>
+                )
+              })}
+            </div>
+            {state.place !== 'airway' ? (
+              <p className={styles.place} data-scope-place={state.place}>
+                {PLACE_WORDS[state.place]}
+              </p>
+            ) : null}
+            {state.message ? (
+              <p className={styles.message} role="status" data-scope-message>
+                {state.message}
+              </p>
+            ) : null}
           </div>
-          {state.place !== 'airway' ? (
-            <p className={styles.place} data-scope-place={state.place}>
-              {PLACE_WORDS[state.place]}
-            </p>
-          ) : null}
-          {state.message ? (
-            <p className={styles.message} role="status" data-scope-message>
-              {state.message}
-            </p>
-          ) : null}
-        </div>
-      )}
+        ))}
 
       {!props.hideMap ? (
         <TreeMap
@@ -552,7 +558,11 @@ export function ScopePaneFrame(
           [SCOPE_DOM.assists]: state.assistsUsed.join(','),
         }}
       >
-        {describeScopePerformance(state)}
+        {view.physicalControlLabels
+          ? lastMode === 'scripted'
+            ? 'Demonstration · no learner credit'
+            : `Screen-based learning · ${lastMode ?? 'no input yet'} · not a physical-skills assessment`
+          : describeScopePerformance(state)}
       </p>
 
       {goals.length > 0 ? (

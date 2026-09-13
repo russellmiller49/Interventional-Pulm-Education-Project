@@ -9,12 +9,15 @@ import { capstoneStageItem } from '../src/features/bronchoscopy-foundations/engi
 import {
   BRONCH_STORAGE_KEY,
   createEmptyBronchRecord,
+  withSectionCompleted,
 } from '../src/features/bronchoscopy-foundations/engine/learnProgress'
 import { scopeControlId } from '../src/features/bronchoscopy-foundations/components/scope/types'
 
 // Opt in to the module's isolated local server; never write a test record on a deployed site.
 test.skip(!process.env.BRONCH_FOUNDATIONS_BASE_URL, 'Use the dedicated config and a local server.')
 test.setTimeout(120_000)
+// Enables native taps in the phone journey; desktop controls still use mouse/keyboard.
+test.use({ hasTouch: true })
 const base = '/en/bronchoscopy-foundations'
 const primary = (page: Page) => page.locator('[data-now-card] [data-now-primary]')
 const stage = (page: Page) => page.locator('[data-stage]')
@@ -81,12 +84,12 @@ test('one entry, direct links and incomplete-section resume preserve the first d
     'data-stage',
     bronchStageLesson('shared-airway').steps[0].id,
   )
-  const { lesson, choice, item } = await reachAct(page, 'five-controls', true)
+  const { lesson, choice, item } = await reachAct(page, 'branch-entry', true)
   await ready(page)
   const saved = await record(page)
   const first = Object.values(saved.firstAttempts) as { choiceId: string; correct: boolean }[]
   expect(first).toEqual([expect.objectContaining({ choiceId: choice, correct: false })])
-  expect(saved.completedSectionIds).not.toContain('five-controls')
+  expect(saved.completedSectionIds).not.toContain('branch-entry')
   await page.reload()
   await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[0].id)
   await primary(page).click()
@@ -97,35 +100,222 @@ test('one entry, direct links and incomplete-section resume preserve the first d
   expect((await record(page)).firstAttempts).toEqual(saved.firstAttempts)
 })
 
-test('the real bench requires movement, preserves locks, and supports reset and observation', async ({
-  page,
-}) => {
-  const lesson = await openSection(page, 'five-controls')
-  await ready(page)
-  await expect(control(page, 'rotate')).toBeDisabled()
-  await reachAct(page, 'five-controls')
-  await ready(page)
-  await expect(primary(page)).toHaveCount(0)
-  await setRange(page, 'rotate', 45)
-  await setRange(page, 'deflect', 45)
-  await setRange(page, 'rotate', 90)
-  await expect(primary(page)).toBeEnabled()
-  await expect(page.locator('[data-input-mode]')).toHaveAttribute('data-input-mode', /keyboard/)
-  await control(page, 'reset').click()
-  await expect(primary(page)).toHaveCount(0)
-  await setRange(page, 'rotate', 45)
-  await setRange(page, 'deflect', 45)
-  await setRange(page, 'rotate', 90)
+async function showPanel(page: Page, name: 'Steps' | 'Teaching' | 'Simulator') {
+  const tab = page.getByRole('tab', { name, exact: true })
+  if (await tab.isVisible()) await tab.click()
+}
+async function pilotAction(page: Page, name: string) {
+  await showPanel(page, 'Steps')
+  await page.locator('[data-now-card]').getByRole('button', { name, exact: true }).click()
+}
+async function pilotContinue(page: Page) {
+  await showPanel(page, 'Steps')
   await primary(page).click()
-  const observe = lesson.steps.find((step) => step.interaction.kind === 'observe')!
-  await expect(stage(page)).toHaveAttribute('data-stage', observe.id)
-  await ready(page)
+}
+async function pilotMovement(page: Page, id: string) {
+  await showPanel(page, 'Simulator')
+  const depth = async (direction: 'advance' | 'withdraw') => {
+    if ((page.viewportSize()?.width ?? 1440) <= 390) await control(page, direction).tap()
+    else await control(page, direction).click()
+  }
+  switch (id) {
+    case 'depth':
+    case 'depth-repeat':
+      await depth('advance')
+      await depth('withdraw')
+      break
+    case 'bend':
+    case 'bend-repeat':
+      await setRange(page, 'deflect', 25)
+      await setRange(page, 'deflect', 0)
+      break
+    case 'rotation':
+      await setRange(page, 'rotate', 45)
+      await setRange(page, 'deflect', 25)
+      await setRange(page, 'rotate', 0)
+      break
+    case 'rotation-repeat':
+      await setRange(page, 'rotate', 30)
+      break
+    case 'combine':
+      await setRange(page, 'rotate', 45)
+      await setRange(page, 'deflect', 27)
+      await depth('advance')
+      await depth('advance')
+      await setRange(page, 'deflect', 31)
+      await depth('advance')
+      await setRange(page, 'deflect', 33)
+      await depth('advance')
+      break
+    case 'suction':
+    case 'suction-repeat':
+      await control(page, 'suction').check()
+      await control(page, 'suction').uncheck()
+      break
+    case 'transfer':
+      await setRange(page, 'deflect', -20)
+      await depth('advance')
+      await depth('advance')
+      await setRange(page, 'deflect', -24)
+      await depth('advance')
+      await setRange(page, 'deflect', -25)
+      await depth('advance')
+      await expect(control(page, 'rotate')).toHaveValue('0')
+      break
+  }
+}
+
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 390, height: 844 },
+]) {
+  test(
+    'teaching-first pilot completes with real controls and honest records at ' + viewport.width,
+    async ({ page }, info) => {
+      test.setTimeout(240_000)
+      await page.setViewportSize(viewport)
+      const errors: string[] = []
+      page.on('pageerror', (error) => errors.push(error.message))
+      const lesson = await openSection(page, 'five-controls')
+      await showPanel(page, 'Teaching')
+      await expect(page.getByRole('heading', { name: 'What each hand does' })).toBeVisible()
+      await expect(page.locator('[data-prediction-choices]')).toHaveCount(0)
+      await page.screenshot({ path: info.outputPath('01-before-answer-teaching.png') })
+      await showPanel(page, 'Simulator')
+      await expect(page.locator('[data-instrument-orientation]')).toBeVisible()
+      await page.getByRole('button', { name: 'Steering and suction', exact: true }).click()
+      await page.screenshot({ path: info.outputPath('02-instrument.png') })
+      await pilotContinue(page)
+      let first: unknown
+      for (const step of lesson.steps.slice(1)) {
+        await expect(stage(page)).toHaveAttribute('data-stage', step.id)
+        if (step.interaction.kind === 'prediction') {
+          await showPanel(page, 'Steps')
+          const item = step.interaction.stage.item
+          // Current teaching has no example-specific answer; key/rationales are not rendered.
+          const teachingText = await page.locator('[data-pilot-teaching]').textContent()
+          for (const denied of lesson.section.precommitDenyPatterns)
+            expect(teachingText).not.toMatch(denied)
+          const wrong = item.choices.find(
+            (choice) => !item.correctChoiceIds.includes(choice.id),
+          )!.id
+          await page.locator('[data-prediction-choices] input[value="' + wrong + '"]').check()
+          await primary(page).click()
+          await expect(page.locator('[data-answer-verdict]')).toHaveAttribute(
+            'data-verdict-outcome',
+            'not-correct',
+          )
+          await expect(stage(page)).toHaveAttribute('data-stage', step.id)
+          await page.screenshot({ path: info.outputPath('05-wrong-answer-feedback.png') })
+          first = (await record(page)).firstAttempts['five-controls-learn-v2:N03']
+          await pilotAction(page, 'Try this check again')
+          await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+          await page.screenshot({ path: info.outputPath('06-check-retry.png') })
+          await page
+            .locator('[data-prediction-choices] input[value="' + item.correctChoiceIds[0] + '"]')
+            .check()
+          await primary(page).click()
+          expect((await record(page)).firstAttempts['five-controls-learn-v2:N03']).toEqual(first)
+        } else if (step.interaction.kind === 'scope-task') {
+          if (step.learn?.id === 'depth') {
+            await pilotAction(page, 'Watch the example')
+            await showPanel(page, 'Simulator')
+            await ready(page)
+            await expect(page.locator('[data-readout="depthMm"] dd')).toContainText('12 mm')
+            await expect(control(page, 'advance')).toBeDisabled()
+            await page.locator('[data-three-state]').scrollIntoViewIfNeeded()
+            await page.screenshot({ path: info.outputPath('03-real-engine-demonstration.png') })
+            await pilotAction(page, 'Next demonstration movement')
+            expect((await record(page)).firstAttempts).toEqual({})
+            expect((await record(page)).completedSectionIds).toEqual([])
+          }
+          if (step.learn?.demonstration) await pilotAction(page, 'Try with guidance')
+          await showPanel(page, 'Simulator')
+          await ready(page)
+          if (step.learn?.id === 'depth') {
+            await control(page, 'advance').press('Enter')
+            await control(page, 'advance').press('Enter')
+            await expect(primary(page)).toHaveCount(0)
+            await control(page, 'reset').click()
+            await expect(page.locator('[data-readout="depthMm"] dd')).toContainText('0 mm')
+          }
+          if (step.learn?.id === 'transfer') {
+            await expect(page.locator('[data-pilot-cue]')).toHaveCount(0)
+            await expect(page.locator('[data-demonstration-caption]')).toHaveCount(0)
+            const centers = await page.locator('[data-bench-reticle]').evaluate((reticle) => {
+              const cross = reticle.getBoundingClientRect()
+              const viewport = reticle.parentElement!.firstElementChild!.getBoundingClientRect()
+              return { crossY: cross.y + cross.height / 2, viewY: viewport.y + viewport.height / 2 }
+            })
+            expect(Math.abs(centers.crossY - centers.viewY)).toBeLessThan(1)
+            await page.locator('[data-three-state]').scrollIntoViewIfNeeded()
+            await page.screenshot({ path: info.outputPath('07-changed-target.png') })
+            await control(page, 'advance').click()
+            await showPanel(page, 'Steps')
+            await expect(page.locator('[data-now-status]')).toContainText(
+              'advanced before centering',
+            )
+            await page.screenshot({ path: info.outputPath('08-target-error-feedback.png') })
+            await pilotAction(page, 'Reset this attempt')
+            await expect(primary(page)).toHaveCount(0)
+          }
+          await pilotMovement(page, step.learn!.id)
+          if (step.learn?.id === 'depth')
+            await page.screenshot({ path: info.outputPath('04-learner-depth-return.png') })
+          if (step.learn?.id === 'transfer') {
+            await page.locator('[data-three-state]').scrollIntoViewIfNeeded()
+            await page.screenshot({ path: info.outputPath('09-target-retry-success.png') })
+          }
+        }
+        await pilotContinue(page)
+      }
+      await expect(page.locator('[data-section-completion]')).toBeVisible()
+      await page.screenshot({ path: info.outputPath('10-completion.png') })
+      const saved = await record(page)
+      expect(saved.sectionVersions['five-controls']).toBe(2)
+      expect(saved.sectionPerformance['five-controls-learn-v2']).toMatchObject({
+        unaided: false,
+        assistsUsed: ['guided-practice'],
+      })
+      expect(saved.sectionPerformance['five-controls-learn-v2'].inputModes).not.toContain(
+        'scripted',
+      )
+      await expect(page.locator('[data-section-completion] [data-next-section]')).toHaveAttribute(
+        'data-next-section',
+        'branch-entry',
+      )
+      await page.reload()
+      await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[0].id)
+      expect((await record(page)).firstAttempts['five-controls-learn-v2:N03']).toEqual(first)
+      expect(errors).toEqual([])
+    },
+  )
+}
+
+test('the pilot retains working controls and a text equivalent when WebGL is unavailable', async ({
+  page,
+}, info) => {
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext
+    Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+      value: function (kind: string, ...args: unknown[]) {
+        return kind.includes('webgl') ? null : Reflect.apply(original, this, [kind, ...args])
+      },
+    })
+  })
+  await openSection(page, 'five-controls')
+  await pilotContinue(page)
+  await pilotAction(page, 'Try with guidance')
+  await page.getByRole('button', { name: 'Use the schematic view', exact: true }).click()
+  const schematic = page.getByRole('img', { name: /^Schematic scope view/ })
+  await expect(schematic).toBeVisible()
   await control(page, 'advance').click()
+  await expect(schematic).toHaveAttribute('aria-label', /Depth 3 mm/)
   await control(page, 'withdraw').click()
-  await control(page, 'suction').check()
-  await control(page, 'suction').uncheck()
+  await expect(schematic).toHaveAttribute('aria-label', /Depth 0 mm/)
   await expect(primary(page)).toBeEnabled()
-  await expect(page.locator('canvas')).toHaveCount(1)
+  await page.screenshot({ path: info.outputPath('fallback-depth.png') })
+  expect((await record(page)).completedSectionIds).toEqual([])
 })
 
 test('the survey distinguishes entering from inspecting and refuses an unseen-airway claim', async ({
@@ -197,9 +387,14 @@ test('capstone with one unsafe critical decision does not meet the standard', as
   await page.goto(base + '/assess')
   await expect(page.locator('[data-capstone="locked"]')).toBeVisible()
   await page.evaluate(
-    ({ key, empty, ids }) =>
-      localStorage.setItem(key, JSON.stringify({ ...empty, completedSectionIds: ids })),
-    { key: BRONCH_STORAGE_KEY, empty: createEmptyBronchRecord(), ids: BRONCH_SECTION_IDS },
+    ({ key, completed }) => localStorage.setItem(key, JSON.stringify(completed)),
+    {
+      key: BRONCH_STORAGE_KEY,
+      completed: BRONCH_SECTION_IDS.reduce(
+        (record, id) => withSectionCompleted(record, id),
+        createEmptyBronchRecord(),
+      ),
+    },
   )
   await page.reload()
   await expect(page.locator('[data-capstone="deciding"]')).toBeVisible()
@@ -256,6 +451,16 @@ for (const viewport of [
     ] as const) {
       const lesson = await openSection(page, id)
       const stepsTab = page.getByRole('tab', { name: 'Steps', exact: true })
+      // Wait for responsive hydration; SSR markup alone is not a compact-layout result.
+      if (viewport.width < 960) {
+        await expect(stepsTab).toBeVisible()
+        await stepsTab.click()
+        await stepsTab.press('ArrowRight')
+        await expect(page.getByRole('tab', { name: 'Teaching', exact: true })).toHaveAttribute(
+          'aria-selected',
+          'true',
+        )
+      }
       if (await stepsTab.isVisible()) await stepsTab.click()
       await expect(primary(page)).toBeVisible()
       expect(
@@ -266,7 +471,7 @@ for (const viewport of [
         await page.screenshot({ path: info.outputPath(id + '-' + viewport.width + '-steps.png') })
         await simTab.click()
       }
-      if (lesson.section.workspace.kind === 'scope') {
+      if (lesson.section.workspace.kind === 'scope' && id !== 'five-controls') {
         await page.locator('[data-three-state]').scrollIntoViewIfNeeded()
         await ready(page)
         await expect
@@ -298,6 +503,32 @@ for (const viewport of [
         await map.scrollIntoViewIfNeeded()
       }
       if (await simTab.isVisible()) await expect(simTab).toHaveAttribute('aria-selected', 'true')
+      const shown = await page
+        .locator('[data-stage-frame] [role="region"]')
+        .evaluateAll((elements) =>
+          elements
+            .filter(
+              (element) =>
+                /^(Steps|Teaching|Simulator) panel$/.test(
+                  element.getAttribute('aria-label') ?? '',
+                ) && !element.hasAttribute('hidden'),
+            )
+            .map((element) => ({
+              name: element.getAttribute('aria-label'),
+              width: element.getBoundingClientRect().width,
+              left: element.getBoundingClientRect().left,
+            })),
+        )
+      expect(shown).toHaveLength(viewport.width < 960 ? 1 : 3)
+      if (shown.length === 3) {
+        expect([...shown].sort((a, b) => a.left - b.left).map((pane) => pane.name)).toEqual([
+          'Steps panel',
+          'Teaching panel',
+          'Simulator panel',
+        ])
+        expect(shown[2].width).toBeGreaterThan(shown[0].width)
+        expect(shown[2].width).toBeGreaterThan(shown[1].width)
+      }
       await page.screenshot({ path: info.outputPath(id + '-' + viewport.width + '.png') })
     }
     expect(errors).toEqual([])

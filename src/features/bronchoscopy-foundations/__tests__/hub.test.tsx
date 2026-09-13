@@ -74,14 +74,21 @@ describe('the hub', () => {
     expect(await axe(container)).toHaveNoViolations()
   })
 
-  it('draws no hero, and says the nine phases in one sentence between the door and the map', () => {
+  it('states the novice purpose, safety preparation and pilot boundary before the pathway', () => {
     render(<BronchoscopyFoundationsHub />)
     expect(document.querySelector('[data-hub-hero]')).toBeNull()
-    const lede = screen.getByText(/in the order a procedure runs/)
-    for (const phase of BRONCH_PHASES) {
-      expect(lede.textContent).toContain(phase.title.toLowerCase())
-    }
-    expect(lede.textContent).toMatch(/a recommendation, not a gate/)
+    expect(
+      screen.getByRole('heading', { name: 'Learn the basics of flexible bronchoscopy' }),
+    ).toBeVisible()
+    expect(
+      screen.getByText(/Prepare for supervised adult flexible bronchoscopy/),
+    ).toHaveTextContent('prior bronchoscopy experience is not')
+    expect(screen.getByText(/Begin with shared-airway safety/)).toHaveTextContent(
+      'does not establish clinical competence',
+    )
+    expect(screen.getByText(/Teaching pilot: Five controls/)).toHaveTextContent(
+      'remaining lessons retain their current format',
+    )
   })
 
   it('lists every source once, by id', () => {

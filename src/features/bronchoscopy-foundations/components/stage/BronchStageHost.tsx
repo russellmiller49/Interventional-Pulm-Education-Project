@@ -39,7 +39,14 @@ import {
 } from '../scope/types'
 import { LOCAL_POLICY_BY_ID, LOCAL_POLICY_NOT_CONFIGURED } from '../../content/localPolicies'
 import { microCasesForSection } from '../../content/microCases'
-import { bronchoscopyFoundationsPathway } from '../../content/pathway'
+import { bronchLearnRecordId } from '../../content/lessonVersions'
+import { isBronchSectionId } from '../../content/sectionIds'
+import { benchTargetObservation } from '../../engine/scope/scopeBenchTarget'
+import {
+  bronchSection,
+  bronchoscopyFoundationsPathway,
+  type BronchSectionId,
+} from '../../content/pathway'
 import { bronchSectionLinkTarget } from '../../content/pathwayResolver'
 import {
   BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF,
@@ -87,6 +94,9 @@ import { BronchSequenceControl, initialSequenceOrder } from './BronchSequenceCon
 import { BronchSortControl } from './BronchSortControl'
 import { BronchSourceList } from './BronchSourceList'
 import { BronchTeachingColumn } from './BronchTeachingColumn'
+import { BronchPilotTeaching } from './BronchPilotTeaching'
+import { InstrumentOrientation } from './InstrumentOrientation'
+import { useScopeDemonstration } from './useScopeDemonstration'
 import { MapWorkspace } from './MapWorkspace'
 import { MediaWorkspace } from './MediaWorkspace'
 import { MonitorPanel } from './MonitorPanel'
@@ -246,6 +256,8 @@ function BronchStageSessionView({
   const [scopeCase, setScopeCase] = useState<ScopeCase | null>(null)
   const [caseFailed, setCaseFailed] = useState(false)
   const [caseLoadGeneration, setCaseLoadGeneration] = useState(0)
+  const [pilotAttempts, setPilotAttempts] = useState<Record<string, boolean>>({})
+  const [pilotHints, setPilotHints] = useState<Record<string, boolean>>({})
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const nowFocusRef = useRef<HTMLDivElement>(null)
 
@@ -262,6 +274,10 @@ function BronchStageSessionView({
   const finished = commitments.finished
   const interaction = activeStep.interaction
   const workDone = stepWorkDone(lesson, activeStep, activeIndex, session)
+  const teachingFirst = lesson.steps[0]?.learn !== undefined
+  const demonstration = useScopeDemonstration(activeStep, scopeCase)
+  const hasDemonstration = !!activeStep.learn?.demonstration?.length
+  const practicing = !hasDemonstration || pilotAttempts[activeStep.id] === true
 
   /* ---------------------------------------------------------------- *
    * The case and the scope states
@@ -296,6 +312,7 @@ function BronchStageSessionView({
   /* The pane's step: an Act or Observe keeps its own state; a reading step shows the most recent
      scope work, or its own workspace view when none has happened yet. */
   const paneStepIndex = (() => {
+    if (teachingFirst) return activeIndex
     for (let index = activeIndex; index >= 0; index -= 1) {
       const step = lesson.steps[index]
       const kind = step.interaction.kind
@@ -315,7 +332,17 @@ function BronchStageSessionView({
 
   useEffect(() => {
     nowFocusRef.current?.focus({ preventScroll: true })
-  }, [activeStep.id])
+    if (teachingFirst) {
+      // A new short unit starts at its heading; leave the chosen compact tab unchanged.
+      nowFocusRef.current
+        ?.closest('[data-stage]')
+        ?.querySelectorAll('[data-pane]')
+        .forEach((pane) => {
+          const scrollPane = pane.closest<HTMLElement>('[role="region"]')
+          if (scrollPane) scrollPane.scrollTop = 0
+        })
+    }
+  }, [activeStep.id, teachingFirst])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -329,6 +356,19 @@ function BronchStageSessionView({
   }, [lesson.sectionId])
 
   const performance = useMemo((): BronchSectionPerformance | null => {
+    if (teachingFirst) {
+      const states = lesson.steps
+        .filter((step) => step.interaction.kind === 'scope-task')
+        .flatMap((step) => (session.scope[step.id] ? [session.scope[step.id]] : []))
+      return {
+        inputModes: [...new Set(states.flatMap((state) => state.inputModes))],
+        assistsUsed: [
+          'guided-practice',
+          ...(Object.values(pilotHints).some(Boolean) ? ['requested-hint'] : []),
+        ],
+        unaided: false,
+      }
+    }
     const actStep = lesson.steps.find((step) => step.interaction.kind === 'scope-task')
     const state = actStep ? session.scope[actStep.id] : undefined
     if (!state) return null
@@ -337,7 +377,7 @@ function BronchStageSessionView({
       assistsUsed: [...state.assistsUsed],
       unaided: scopePerformanceUnaided(state),
     }
-  }, [lesson.steps, session.scope])
+  }, [lesson.steps, session.scope, teachingFirst, pilotHints])
 
   const completionRecorded = useRef(false)
   useEffect(() => {
@@ -364,7 +404,9 @@ function BronchStageSessionView({
     const choiceId = pendingChoice[step.id]
     if (!choiceId) return
     dispatch({ type: 'COMMIT_CHOICE', stepId: step.id, choiceId })
-    const key = sectionAttemptKey(lesson.sectionId, step.interaction.stage.item.id)
+    const key = teachingFirst
+      ? `${bronchLearnRecordId(lesson.sectionId)}:${step.interaction.stage.item.id}`
+      : sectionAttemptKey(lesson.sectionId, step.interaction.stage.item.id)
     writeBronchRecord(withFirstAttempt(readBronchRecord(), key, choiceId))
     setViewIndex(null)
   }
@@ -418,6 +460,18 @@ function BronchStageSessionView({
     dispatch({ type: 'FINISH' })
   }
 
+  function beginPilotAttempt() {
+    if (!paneView) return
+    demonstration.stop()
+    dispatch({ type: 'SCOPE_RESET', stepId: activeStep.id, view: paneView, scopeCase })
+    setPilotAttempts((current) => ({ ...current, [activeStep.id]: true }))
+  }
+
+  function retryPilotChoice() {
+    dispatch({ type: 'RETRY_LEARN_CHOICE', stepId: activeStep.id })
+    setPendingChoice((current) => ({ ...current, [activeStep.id]: '' }))
+  }
+
   /* ---------------------------------------------------------------- *
    * The answer on the map, the goals, the spotlight
    * ---------------------------------------------------------------- */
@@ -459,7 +513,7 @@ function BronchStageSessionView({
   const goalsMetNow = goalStatuses.map((status) => status.met)
   const firstUnmetKey = (() => {
     const index = goalsMetNow.findIndex((met) => !met)
-    if (index < 0 || !goalInteraction) return null
+    if (index < 0 || !goalInteraction || activeStep.learn) return null
     const key = goalControlKey(goals[index].test)
     return key && goalInteraction.view.controls.includes(key) ? key : null
   })()
@@ -550,11 +604,18 @@ function BronchStageSessionView({
         }
       case 'prediction': {
         const committed = commitments.choices[activeStep.id] !== undefined
-        if (committed) return { ...base, primary: isLastStep ? finishAction : continueAction }
+        if (committed)
+          return {
+            ...base,
+            primary: isLastStep ? finishAction : continueAction,
+            ...(activeStep.learn
+              ? { secondary: { label: 'Try this check again', onActivate: retryPilotChoice } }
+              : {}),
+          }
         return {
           ...base,
           status:
-            interaction.round === 0
+            interaction.round === 0 && !teachingFirst
               ? 'The Simulator panel keeps its view while you decide. Its controls unlock once you submit your prediction.'
               : undefined,
           primary: {
@@ -628,6 +689,35 @@ function BronchStageSessionView({
           return { ...base, status: 'Done. Every frame decided.', primary: continueAction }
         return { ...base, status: 'Waiting for the decision on this card.' }
       case 'scope-task':
+        if (activeStep.learn) {
+          if (demonstration.state || !practicing)
+            return {
+              ...base,
+              status: demonstration.state
+                ? 'Demonstration only. These movements do not count toward your goals or record.'
+                : 'The example is available before any answer. You can also start your own attempt.',
+              primary: demonstration.state
+                ? demonstration.finished
+                  ? { label: 'Try with guidance', onActivate: beginPilotAttempt }
+                  : { label: 'Next demonstration movement', onActivate: demonstration.next }
+                : { label: 'Watch the example', onActivate: demonstration.start },
+              secondary: demonstration.finished
+                ? { label: 'Replay the example', onActivate: demonstration.start }
+                : { label: 'Try with guidance', onActivate: beginPilotAttempt },
+            }
+          return {
+            ...base,
+            status: workDone
+              ? activeStep.learn.success
+              : activeScopeState?.events.includes('bench-advanced-off-target')
+                ? 'You advanced before centering the target. Reset this attempt, establish the aim, and keep it centered as you advance.'
+                : 'Use the controls beside the views. The goal checks the resulting movement or view; reset starts a fresh attempt.',
+            primary: workDone ? (isLastStep ? finishAction : continueAction) : undefined,
+            secondary: hasDemonstration
+              ? { label: 'Replay the example', onActivate: demonstration.start }
+              : { label: 'Reset this attempt', onActivate: beginPilotAttempt },
+          }
+        }
         if (workDone)
           return {
             ...base,
@@ -835,7 +925,26 @@ function BronchStageSessionView({
         )
       case 'scope-task':
       case 'observe':
-        return goalList
+        return (
+          <>
+            {demonstration.state ? (
+              <p role="status" data-demonstration-caption>
+                {demonstration.caption}
+              </p>
+            ) : (
+              goalList
+            )}
+            {activeStep.learn?.support === 'transfer' && !workDone ? (
+              <button
+                type="button"
+                className={shellStyles.nowSecondary}
+                onClick={() => setPilotHints((current) => ({ ...current, [activeStep.id]: true }))}
+              >
+                Show a hint
+              </button>
+            ) : null}
+          </>
+        )
       case 'explain': {
         const predictionStep = lesson.steps[lesson.predictionStepIndex]
         const stage =
@@ -867,16 +976,30 @@ function BronchStageSessionView({
     interaction.kind === 'prediction' && commitments.choices[activeStep.id] === undefined
   // The scope's controls open only once the prediction is committed: not on the read before it,
   // not while it is open. Driving the scope first would show the mechanism the prediction asks about.
-  const beforePrediction = !predictionCommitted && activeIndex <= lesson.predictionStepIndex
+  const beforePrediction =
+    !teachingFirst && !predictionCommitted && activeIndex <= lesson.predictionStepIndex
   const scopeLive = interaction.kind === 'scope-task' || interaction.kind === 'observe'
-  const controlsEnabled = !deciding && !beforePrediction && !lookingBack && scopeLive
-  const lockedReason = deciding
-    ? 'The controls are locked while you decide. Commit your answer to take them.'
-    : beforePrediction
-      ? 'The controls open once you have submitted the prediction.'
-      : !scopeLive && !lookingBack
-        ? 'The scope rests on this step. Its controls open on the next hands-on step.'
-        : undefined
+  const controlsEnabled =
+    !deciding &&
+    !beforePrediction &&
+    !lookingBack &&
+    !finished &&
+    scopeLive &&
+    !demonstration.state &&
+    practicing
+  const lockedReason = demonstration.state
+    ? 'Demonstration. Select Try with guidance to start with a fresh scope.'
+    : !practicing
+      ? 'Watch the example or select Try with guidance to use the controls.'
+      : finished
+        ? 'Lesson completed. Restart the section for new practice.'
+        : deciding
+          ? 'The controls are locked while you decide. Commit your answer to take them.'
+          : beforePrediction
+            ? 'The controls open once you have submitted the prediction.'
+            : !scopeLive && !lookingBack
+              ? 'The scope rests on this step. Its controls open on the next hands-on step.'
+              : undefined
   const pausedReason =
     !deciding && !beforePrediction && lookingBack
       ? 'The controls are paused while you look back at an earlier step. Return to the live step to take them.'
@@ -898,7 +1021,39 @@ function BronchStageSessionView({
       ? scopeLocationCaption(paneState)
       : NEUTRAL_LOCATION_CAPTION
 
+  const compactPilotActions = (
+    <div className={styles.pilotCompactActions}>
+      {[nowModel.primary, nowModel.secondary].filter(Boolean).map((action) => (
+        <button
+          key={action!.label}
+          type="button"
+          onClick={action!.onActivate}
+          disabled={action!.disabled}
+          data-pilot-primary={action === nowModel.primary ? 'true' : undefined}
+        >
+          {action!.label}
+        </button>
+      ))}
+      {finished && nextSection ? (
+        <Link href={bronchSectionLinkTarget(nextSection.id)}>Next lesson: {nextSection.title}</Link>
+      ) : null}
+    </div>
+  )
+
   const simulator: ReactNode = (() => {
+    if (activeStep.learn?.orientation)
+      return (
+        <>
+          <div className={styles.pilotCompactStatus}>
+            <p>
+              Learn how each movement changes the tip and image. Read{' '}
+              <strong>What each hand does</strong> in Teaching, then return to Simulator to begin.
+            </p>
+          </div>
+          <InstrumentOrientation />
+          {compactPilotActions}
+        </>
+      )
     const workspace = activeStep.workspace
     if (scenarioFrame) {
       return (
@@ -948,34 +1103,66 @@ function BronchStageSessionView({
           )
         }
         const liveView: ScopeViewSpec = treeItem ? { ...view, litAirways: [] } : view
+        const displayedState = demonstration.state ?? paneState
+        const target = view.benchTarget
+          ? benchTargetObservation(displayedState, view.benchTarget.point)
+          : null
         return (
-          <ScopePane
-            view={liveView}
-            state={paneState}
-            map={scopeCase?.map ?? null}
-            onCommand={(command, inputMode) =>
-              dispatch({
-                type: 'SCOPE_COMMAND',
-                stepId: paneStep.id,
-                command,
-                inputMode,
-                view: liveView,
-                scopeCase,
-              })
-            }
-            onReset={() =>
-              dispatch({ type: 'SCOPE_RESET', stepId: paneStep.id, view: liveView, scopeCase })
-            }
-            controlsEnabled={controlsEnabled}
-            lockedReason={lockedReason}
-            pausedReason={pausedReason}
-            goals={activeStep.id === paneStep.id ? goalStatuses : []}
-            caption={locationCaption}
-            treeAnswer={treeAnswer}
-            spotlightKey={
-              spotlight?.stepId === activeStep.id ? (spotlight.key as ScopeControlKey) : undefined
-            }
-          />
+          <>
+            {activeStep.learn ? (
+              <div
+                className={styles.pilotTaskContext}
+                data-current-scope-task
+                data-model-context={!!(target || demonstration.state)}
+              >
+                <strong className={styles.pilotCompactStatus}>{activeStep.title}</strong>
+                <p className={demonstration.state ? undefined : styles.pilotCompactStatus}>
+                  {demonstration.state ? demonstration.caption : activeStep.instruction}
+                </p>
+                {target ? (
+                  <p role="status" data-target-status>
+                    Gold target: {target.position}. Practice depth:{' '}
+                    {Math.round(displayedState.depthMm)} mm; band 12–16 mm. Authored exercise
+                    values.
+                  </p>
+                ) : null}
+                {nowModel.status ? (
+                  <p className={styles.pilotCompactStatus} role="status">
+                    {nowModel.status}
+                  </p>
+                ) : null}
+                {compactPilotActions}
+              </div>
+            ) : null}
+            <ScopePane
+              view={liveView}
+              state={displayedState}
+              map={scopeCase?.map ?? null}
+              onCommand={(command, inputMode) => {
+                if (!controlsEnabled) return
+                dispatch({
+                  type: 'SCOPE_COMMAND',
+                  stepId: paneStep.id,
+                  command,
+                  inputMode,
+                  view: liveView,
+                  scopeCase,
+                })
+              }}
+              onReset={() =>
+                dispatch({ type: 'SCOPE_RESET', stepId: paneStep.id, view: liveView, scopeCase })
+              }
+              controlsEnabled={controlsEnabled}
+              lockedReason={lockedReason}
+              pausedReason={pausedReason}
+              goals={!demonstration.state && activeStep.id === paneStep.id ? goalStatuses : []}
+              caption={locationCaption}
+              treeAnswer={treeAnswer}
+              spotlightKey={
+                spotlight?.stepId === activeStep.id ? (spotlight.key as ScopeControlKey) : undefined
+              }
+            />
+          </>
         )
       }
       default:
@@ -991,43 +1178,72 @@ function BronchStageSessionView({
     <StageTeachingScope
       value={{ phase: activeStep.phase, predictionCommitted, stepId: activeStep.id }}
     >
-      <BronchTeachingColumn lesson={lesson} />
+      {activeStep.learn ? (
+        <BronchPilotTeaching
+          unit={activeStep.learn}
+          section={lesson.section}
+          hintShown={pilotHints[activeStep.id] === true}
+        />
+      ) : (
+        <>
+          {lesson.sectionId === 'pre-use-check' && activeIndex === 0 ? (
+            <details className={styles.teachingCard} open>
+              <summary>First look: name the instrument parts</summary>
+              <InstrumentOrientation />
+            </details>
+          ) : null}
+          <BronchTeachingColumn lesson={lesson} />
+        </>
+      )}
     </StageTeachingScope>
   )
 
-  const contextItems: readonly ContextStripItem[] = [
-    { label: 'Airway', value: paneState ? locationCaption : 'not named on this step' },
-    {
-      label: 'Simulator',
-      value: paneView
-        ? MODE_WORDS[paneView.mode]
-        : activeStep.workspace.kind === 'monitor'
-          ? 'the monitor, scripted'
-          : activeStep.workspace.kind === 'media'
-            ? 'teaching images'
-            : 'the airway map',
-    },
-    {
-      label: 'Controls',
-      value: !paneView
-        ? 'none on this step'
-        : controlsEnabled
-          ? 'open'
-          : deciding
-            ? 'locked while you decide'
-            : beforePrediction
-              ? 'locked until you submit the prediction'
-              : lookingBack
-                ? 'paused'
-                : 'resting',
-    },
-  ]
+  const contextItems: readonly ContextStripItem[] = teachingFirst
+    ? [
+        {
+          label: 'Bench practice',
+          value: demonstration.state
+            ? 'Demonstration · no learner credit'
+            : activeStep.learn?.orientation
+              ? 'Instrument orientation'
+              : 'Outside the airway · screen-based learning',
+        },
+      ]
+    : [
+        { label: 'Airway', value: paneState ? locationCaption : 'not named on this step' },
+        {
+          label: 'Simulator',
+          value: paneView
+            ? MODE_WORDS[paneView.mode]
+            : activeStep.workspace.kind === 'monitor'
+              ? 'the monitor, scripted'
+              : activeStep.workspace.kind === 'media'
+                ? 'teaching images'
+                : 'the airway map',
+        },
+        {
+          label: 'Controls',
+          value: !paneView
+            ? 'none on this step'
+            : controlsEnabled
+              ? 'open'
+              : demonstration.state
+                ? 'demonstration'
+                : deciding
+                  ? 'locked while you decide'
+                  : beforePrediction
+                    ? 'locked until you submit the prediction'
+                    : lookingBack
+                      ? 'paused'
+                      : 'resting',
+        },
+      ]
 
   const completion =
     finished && isLastStep ? (
       <CompletionCard
         lesson={lesson}
-        nextSectionId={nextSection?.id ?? null}
+        nextSectionId={nextSection && isBronchSectionId(nextSection.id) ? nextSection.id : null}
         performance={performance}
       />
     ) : null
@@ -1113,7 +1329,11 @@ function BronchStageSessionView({
           teaching={teaching}
           task={task}
           paneOrder={PANE_ORDER}
-          paneCaptions={PANE_CAPTIONS}
+          paneCaptions={
+            teachingFirst
+              ? { ...PANE_CAPTIONS, simulator: 'scope image and outside view' }
+              : PANE_CAPTIONS
+          }
           defaultWidthFractions={PANE_WIDTH_FRACTIONS}
           paneMinimums={PANE_MINIMUMS}
           compactPane={compactPane}
@@ -1155,6 +1375,8 @@ function MediaWorkspaceInline({ stage }: { readonly stage: BronchStageItem }) {
 }
 
 function describeScopePerformanceWords(performance: BronchSectionPerformance): string {
+  if (performance.assistsUsed.includes('guided-practice'))
+    return `${performance.inputModes.join(', ') || 'on-screen controls'} during guided screen-based learning${performance.assistsUsed.includes('requested-hint') ? ', with a requested hint' : ''}`
   return describeScopePerformance({
     inputModes: performance.inputModes as ScopeRuntimeState['inputModes'],
     assistsUsed: performance.assistsUsed as ScopeRuntimeState['assistsUsed'],
@@ -1262,7 +1484,7 @@ function CompletionCard({
   performance,
 }: {
   readonly lesson: BronchStageLesson
-  readonly nextSectionId: string | null
+  readonly nextSectionId: BronchSectionId | null
   readonly performance: BronchSectionPerformance | null
 }) {
   const capstoneCase = CAPSTONE_CASES.find((entry) => entry.pairedSectionId === lesson.sectionId)
@@ -1314,7 +1536,9 @@ function CompletionCard({
             href={bronchSectionLinkTarget(nextSectionId)}
             data-next-section={nextSectionId}
           >
-            Continue to the next section
+            {lesson.steps[0]?.learn
+              ? `Next lesson: ${bronchSection(nextSectionId).title}`
+              : 'Continue to the next section'}
           </Link>
         ) : (
           <Link

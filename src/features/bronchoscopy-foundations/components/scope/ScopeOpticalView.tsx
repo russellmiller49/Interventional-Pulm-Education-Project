@@ -9,7 +9,14 @@ import { OPTICAL_FOV_DEG } from '../../engine/scope/scopeOstia'
 import { DRACO_DECODER_PATH } from '../stage/scopeCaseLoader'
 import type { ScopePaneProps } from './types'
 import type { ScopeSceneAssets } from './scopeSceneAssets'
-import { AccessoryTip, LarynxLumen, NamedModel, PracticeTarget, TubeModel } from './ScopeModels'
+import {
+  AccessoryTip,
+  BenchTarget,
+  LarynxLumen,
+  NamedModel,
+  PracticeTarget,
+  TubeModel,
+} from './ScopeModels'
 
 const identity = {
   sceneScale: 1,
@@ -44,6 +51,7 @@ export function ScopeOpticalView({
       <color attach="background" args={['#030609']} />
       {state.pose ? <ScopeCamera pose={state.pose} fovDeg={OPTICAL_FOV_DEG} /> : null}
       <Headlight />
+      {state.place === 'bench' ? <BenchTarget view={view} /> : null}
       {state.place === 'bench' ? (
         <group position={[0, 0, 65]}>
           <NamedModel assets={assets} file="devices/bench.glb" />

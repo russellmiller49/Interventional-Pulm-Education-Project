@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { bronchItem } from '../content/stageItems'
+import { BRONCH_LEARN_VERSIONS, bronchLearnRecordId } from '../content/lessonVersions'
 
 /**
  * The module's own record: which sections have been worked through on this device, where the
@@ -44,6 +45,7 @@ const recordSchema = z
     lastSectionId: z.string().min(1).max(160).nullable(),
     firstAttempts: z.record(attemptKey, firstAttemptSchema).default({}),
     sectionPerformance: z.record(z.string().min(1).max(160), performanceSchema).default({}),
+    sectionVersions: z.record(z.string().min(1).max(160), z.number().int().positive()).default({}),
     capstoneDebriefViewedAt: z.string().min(1).max(64).nullable().default(null),
     updatedAt: z.string().min(1).max(64),
   })
@@ -60,6 +62,7 @@ export function createEmptyBronchRecord(): BronchRecord {
     lastSectionId: null,
     firstAttempts: {},
     sectionPerformance: {},
+    sectionVersions: {},
     capstoneDebriefViewedAt: null,
     updatedAt: '1970-01-01T00:00:00.000Z',
   }
@@ -160,6 +163,7 @@ export function withSectionCompleted(
   performance: BronchSectionPerformance | null = null,
   now = new Date().toISOString(),
 ): BronchRecord {
+  const performanceKey = bronchLearnRecordId(sectionId)
   return {
     ...record,
     completedSectionIds: record.completedSectionIds.includes(sectionId)
@@ -167,9 +171,12 @@ export function withSectionCompleted(
       : [...record.completedSectionIds, sectionId],
     lastSectionId: sectionId,
     sectionPerformance:
-      performance && !record.sectionPerformance[sectionId]
-        ? { ...record.sectionPerformance, [sectionId]: performance }
+      performance && !record.sectionPerformance[performanceKey]
+        ? { ...record.sectionPerformance, [performanceKey]: performance }
         : record.sectionPerformance,
+    sectionVersions: BRONCH_LEARN_VERSIONS[sectionId]
+      ? { ...record.sectionVersions, [sectionId]: BRONCH_LEARN_VERSIONS[sectionId] }
+      : record.sectionVersions,
     updatedAt: now,
   }
 }
@@ -204,7 +211,11 @@ export function withCapstoneDebriefViewed(
 }
 
 export function isSectionCompleted(record: BronchRecord, sectionId: string): boolean {
-  return record.completedSectionIds.includes(sectionId)
+  return (
+    record.completedSectionIds.includes(sectionId) &&
+    (!BRONCH_LEARN_VERSIONS[sectionId] ||
+      record.sectionVersions[sectionId] === BRONCH_LEARN_VERSIONS[sectionId])
+  )
 }
 
 export function firstAttempt(record: BronchRecord, key: string): BronchFirstAttempt | undefined {

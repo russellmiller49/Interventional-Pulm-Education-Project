@@ -65,7 +65,8 @@ afterEach(() => {
  * labels is told which section and which phrase.
  */
 describe('nothing answers a section before its prediction is committed (rendered)', () => {
-  it.each(BRONCH_SECTION_IDS)('%s', async (sectionId) => {
+  // The pilot's post-teaching check has its own rendered disclosure test in five-controls-learn.
+  it.each(BRONCH_SECTION_IDS.filter((id) => id !== 'five-controls'))('%s', async (sectionId) => {
     const lesson = bronchStageLesson(sectionId)
     const deny = lesson.section.precommitDenyPatterns
     await mountSection(sectionId)

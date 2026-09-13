@@ -11,7 +11,6 @@ import {
 } from '../content/pathway'
 import { bronchCompositionLine, bronchPathwayComposition } from '../content/pathwayResolver'
 import { BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF } from '../content/routes'
-import { BRONCH_PHASES } from '../content/sectionIds'
 import { SPINE_STOPS } from '../content/spine'
 import { SOURCES } from '../data/sources'
 import { BronchContinueCta, BronchStoredPathwayAccordion } from './hub/BronchPathwayAccordion'
@@ -34,7 +33,6 @@ const facts = (): readonly { icon: LucideIcon; value: string; label: string }[] 
 }
 
 export function BronchoscopyFoundationsHub() {
-  const phaseTitles = BRONCH_PHASES.map((phase) => phase.title.toLowerCase())
   const firstSection = bronchPathwaySections[0]
   return (
     <div className="mx-auto grid w-full max-w-6xl grid-cols-[minmax(0,1fr)] gap-8 px-4 py-10 sm:px-6 lg:px-8">
@@ -44,11 +42,13 @@ export function BronchoscopyFoundationsHub() {
             A guided course in flexible bronchoscopy
           </p>
           <h1 className="mt-3 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">
-            Know where you are. Claim only what you saw.
+            Learn the basics of flexible bronchoscopy
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">
-            Every section runs on one airway model, in the order a procedure runs —{' '}
-            {phaseTitles.join(', ')}. Sections are ordered as a recommendation, not a gate.
+            Prepare for supervised adult flexible bronchoscopy: learn the instrument controls,
+            recognize normal airways, plan a systematic inspection, and explain basic sampling and
+            responses to deterioration. General clinical knowledge is assumed; prior bronchoscopy
+            experience is not.
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <BronchContinueCta />
@@ -56,11 +56,21 @@ export function BronchoscopyFoundationsHub() {
               href={BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF}
               className="inline-flex min-h-11 items-center rounded-xl border px-5 py-3 text-sm font-semibold"
             >
-              The capstone
+              View the assessment
             </Link>
           </div>
           <p className={`${styles.composition} mt-4`} data-pathway-composition>
             {bronchCompositionLine()}
+          </p>
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">
+            Begin with shared-airway safety, the clinical question, equipment checks, and
+            monitoring. Then practice scope control. You can browse any lesson; completing these
+            activities does not establish clinical competence.
+          </p>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            Teaching pilot: Five controls now includes instrument orientation, demonstrations,
+            guided attempts, and a changed target. The remaining lessons retain their current
+            format.
           </p>
         </div>
         <dl className="grid content-start gap-3">

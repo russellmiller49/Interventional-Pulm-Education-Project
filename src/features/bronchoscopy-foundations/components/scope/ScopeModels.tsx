@@ -45,6 +45,23 @@ export function NamedModel({
   return <primitive object={object} dispose={null} />
 }
 
+/** Fixed authored practice object, observed by both cameras from the same world coordinates. */
+export function BenchTarget({ view }: Pick<ScopePaneProps, 'view'>) {
+  if (!view.benchTarget) return null
+  return (
+    <group position={view.benchTarget.point}>
+      <mesh>
+        <ringGeometry args={[view.benchTarget.radiusMm * 0.65, view.benchTarget.radiusMm, 48]} />
+        <meshBasicMaterial color="#ffce57" side={THREE.DoubleSide} />
+      </mesh>
+      <mesh>
+        <circleGeometry args={[view.benchTarget.radiusMm * 0.25, 24]} />
+        <meshBasicMaterial color="#fff0b0" side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  )
+}
+
 export function LarynxLumen({
   assets,
   state,

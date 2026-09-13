@@ -4,7 +4,11 @@ import { BronchCapstone } from '../components/BronchCapstone'
 import { CAPSTONE_CASES } from '../content/capstone'
 import { BRONCH_SECTION_IDS } from '../content/pathway'
 import { capstoneStageItem } from '../engine/caseStandard'
-import { BRONCH_STORAGE_KEY, createEmptyBronchRecord } from '../engine/learnProgress'
+import {
+  BRONCH_STORAGE_KEY,
+  createEmptyBronchRecord,
+  withSectionCompleted,
+} from '../engine/learnProgress'
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({ children }: { children: ReactNode }) => <span>{children}</span>,
@@ -13,7 +17,12 @@ beforeEach(() => localStorage.clear())
 const begin = () => {
   localStorage.setItem(
     BRONCH_STORAGE_KEY,
-    JSON.stringify({ ...createEmptyBronchRecord(), completedSectionIds: BRONCH_SECTION_IDS }),
+    JSON.stringify(
+      BRONCH_SECTION_IDS.reduce(
+        (record, id) => withSectionCompleted(record, id),
+        createEmptyBronchRecord(),
+      ),
+    ),
   )
   return render(<BronchCapstone />)
 }

@@ -1,4 +1,5 @@
 import { authoredScopePose } from './scopeAuthoredPose'
+import { benchTargetObservation } from './scopeBenchTarget'
 import { enterFreeDrive } from '@/lib/airway-anatomy/drive'
 import {
   createInitialScopeState,
@@ -294,6 +295,15 @@ export function reduceScope(
       d.place = moved.place
       d.engine = moved.engine
       d.depthMm = moved.depthMm
+      if (moved.travelledMm > 0 && command.mm !== 0)
+        d.events.push(command.mm > 0 ? 'advanced' : 'withdrawn')
+      if (
+        command.mm > 0 &&
+        moved.travelledMm > 0 &&
+        view.benchTarget &&
+        (benchTargetObservation(state, view.benchTarget.point)?.angleDeg ?? Infinity) > 5
+      )
+        d.events.push('bench-advanced-off-target')
       d.events.push(...moved.events)
       d.message = moved.message
       if (moved.contact) d.signals.contactCount += 1
@@ -336,6 +346,7 @@ export function reduceScope(
       if (command.on !== d.inputs.suction) {
         d.inputs = { ...d.inputs, suction: command.on }
         d.events.push(controlUsedEvent('suction'))
+        d.events.push(command.on ? 'suction-applied' : 'suction-released')
         if (command.on && state.signals.view === 'red-out') {
           d.events.push('suction-in-red-out')
           d.message = SCOPE_MESSAGES.suctionInRedOut
