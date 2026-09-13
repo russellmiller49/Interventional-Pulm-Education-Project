@@ -189,7 +189,7 @@ export const IMAGING_SORTS: readonly ImagingSort[] = Object.freeze([
         statement: 'The kV shown on the console.',
         origin: 'monitoring',
         rationale:
-          'Automatic exposure regulation selects it. You read it; you do not set it directly.',
+          'In this example automatic exposure regulation selects it. Other systems or modes may provide direct settings; protocol and image-quality selections affect exposure behavior.',
       },
       {
         id: 'stored-zoom',
@@ -353,7 +353,7 @@ export const IMAGING_SORTS: readonly ImagingSort[] = Object.freeze([
           'The lesion visible a minute ago cannot be found, and the overlay no longer matches.',
         origin: 'reassess',
         rationale:
-          'No control restores an atelectatic segment or a displaced lesion. Reconfirm what has changed.',
+          'Imaging shows the current lesion location; it does not reverse atelectasis. Coordinate the physiological problem with anesthesia and reassess localization when needed.',
       },
       {
         id: 'overlap-depth',

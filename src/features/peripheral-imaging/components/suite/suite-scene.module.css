@@ -536,3 +536,72 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Interpretation surfaces take precedence over the explanatory room view. */
+.displays[data-image-first='true'] {
+  grid-template-columns: minmax(0, 1fr);
+  position: static;
+}
+.displays[data-image-first='true'] .monitorPanel {
+  order: -1;
+  width: 100%;
+  max-width: 560px;
+}
+.displays[data-image-first='true'] .scenePanel {
+  --suite-display-height: 180px;
+}
+.displays[data-independent='true'] .scenePanel {
+  display: none;
+}
+.comparison {
+  display: grid;
+  gap: 10px;
+}
+.comparison[data-has-baseline='true'] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+}
+.comparison > .toolbar {
+  grid-column: 1 / -1;
+}
+.comparison figure,
+.monitorPanel figure {
+  margin: 0;
+  min-width: 0;
+}
+.comparison figcaption {
+  font-size: 12px;
+  padding: 4px 0;
+}
+.comparison [data-baseline-image] .monitor {
+  --suite-display-height: 160px;
+}
+.monitor img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  inset: 0;
+}
+.displays[data-image-first='true'] .monitor {
+  height: auto;
+  width: min(100%, 420px);
+}
+.displays[data-image-first='true'] .comparison[data-has-baseline='true'] .monitor {
+  width: 100%;
+}
+.monitorPanel {
+  min-width: 0;
+}
+.controlGroup {
+  display: contents;
+}
+.controlGroup > legend {
+  font-weight: 650;
+}
+
+.displays[data-image-first='true'] .nearImageControls {
+  order: 0;
+}
+.displays[data-image-first='true'] .scenePanel {
+  order: 1;
+}

@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 import { Line } from '@react-three/drei'
 import { fieldGeometry, type SuiteFrame } from '../suiteModel'
 import { Quad } from '../SceneGeometry'
+import { FIELD_CONTEXT, projectToDetector } from '../../../lib/physics'
 
 export function FieldView({
   frame,
@@ -62,6 +63,39 @@ export function FieldMask({
         strokeWidth="1.5"
         strokeDasharray={crop ? '5 4' : undefined}
       />
+    </svg>
+  )
+}
+
+export function FieldContextOverlay({ orbit, tilt }: { orbit: number; tilt: number }) {
+  const points = FIELD_CONTEXT.map(({ point }) => {
+    const [u, v] = projectToDetector(point, orbit, tilt)
+    return [256 + (u * 512) / 640, 256 - (v * 512) / 640]
+  })
+  return (
+    <svg
+      viewBox="0 0 512 512"
+      role="img"
+      aria-label="Two modeled context landmarks and the dashed planned tool excursion"
+      data-field-context
+    >
+      <line
+        x1={points[2][0]}
+        y1={points[2][1]}
+        x2={points[3][0]}
+        y2={points[3][1]}
+        stroke="#77dccf"
+        strokeWidth="3"
+        strokeDasharray="6 4"
+      />
+      {points.slice(0, 2).map(([x, y], i) => (
+        <g key={i}>
+          <path d={`M${x - 6} ${y}h12M${x} ${y - 6}v12`} stroke="#aeeae3" strokeWidth="2" />
+          <text x={x - 4} y={y - 10} fill="#d8fffa" fontSize="13">
+            {i + 1}
+          </text>
+        </g>
+      ))}
     </svg>
   )
 }

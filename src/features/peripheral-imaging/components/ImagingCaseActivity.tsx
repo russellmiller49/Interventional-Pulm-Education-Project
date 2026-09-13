@@ -18,6 +18,7 @@ import { imagingLesson } from '../content/pathway'
 import { imagingSectionLinkTarget } from '../content/pathwayResolver'
 import { imagingCaseLinkTarget, PERIPHERAL_IMAGING_PRACTICE_HREF } from '../content/routes'
 import { readImagingRecord, withFirstAttempt, writeImagingRecord } from '../engine/learnProgress'
+import { SignalImage } from './stage/TeachingPanels'
 import { usePeripheralImagingRecord } from './usePeripheralImagingRecord'
 import styles from './stage/imaging-stage.module.css'
 
@@ -75,6 +76,21 @@ export function ImagingCaseActivity({ caseId }: { readonly caseId: string }) {
         <p>{microCase.situation}</p>
       </section>
 
+      {(caseId === 'signal-practice-1' ||
+        caseId === 'signal-practice-2' ||
+        caseId === 'field-practice-1') && (
+        <section className={styles.teachingCard} data-case-image>
+          <SignalImage
+            factor="contrast"
+            label="Conceptual illustration of the described appearance"
+          />
+          <p>
+            Draft synthetic teaching illustration, not a device capture or a calibrated scatter
+            model. Use the clinical context supplied with the image; appearance alone does not
+            identify its cause.
+          </p>
+        </section>
+      )}
       {hydrated && firstAttempt && !committed ? (
         <p className="text-sm text-muted-foreground" data-first-decision>
           Your first decision here was <strong>{firstChoiceLabel}</strong>. It stays on your record
@@ -148,7 +164,7 @@ export function ImagingCaseActivity({ caseId }: { readonly caseId: string }) {
               disabled={!selected}
               onClick={commit}
             >
-              Commit this answer <ArrowRight aria-hidden="true" />
+              Check your interpretation <ArrowRight aria-hidden="true" />
             </button>
           </div>
         </div>

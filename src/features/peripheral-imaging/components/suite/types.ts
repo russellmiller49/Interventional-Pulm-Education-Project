@@ -85,6 +85,7 @@ export interface SuiteInputs {
   readonly geometry: { readonly sod: number; readonly sid: number; readonly field: number }
   readonly fieldPercent: number
   readonly crop: boolean
+  readonly cropWidth: number
   readonly zoom: number
   readonly focalSpotMm: number
   readonly pulseRate: number
@@ -204,6 +205,9 @@ export interface ImagingSuitePaneProps {
   readonly chainAnswer?: ChainAnswer
   /** A control key to spotlight ("Show me where"). */
   readonly spotlightKey?: string
+  /** Learn keeps independent geometry/answer cues separate from foundational teaching. */
+  readonly independent?: boolean
+  readonly onRepresentationReady?: (ready: boolean) => void
   readonly children?: ReactNode
 }
 

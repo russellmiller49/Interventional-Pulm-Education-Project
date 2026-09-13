@@ -3,14 +3,9 @@ import type { StageBlockKind } from '@/features/learning-module/stage/StageTeach
 import type { Lesson, TeachingBlock } from '../types'
 
 /**
- * Which phase of a section may show each teaching block.
- *
- * The draft showed every block before its check. On the stage the teaching pane is scoped to the
- * step: the framing and the signals stay visible before the prediction, the mechanism waits for
- * the commitment, and the boundary opens at Explain. An authored `kind` on a block wins; otherwise
- * the first block frames the question, a block with a labelled list is signals, and the last block
- * — where the draft put the mechanism — waits for the commitment. The rendered pre-commit leak scan
- * is what forces a block to `after-commitment` when it names the answer.
+ * Legacy block kinds organize the teaching column and source registry. The Learn renderer
+ * explicitly exposes explanations before independent application; pending questions use their
+ * own disclosure boundary rather than inferring it from these kinds.
  */
 export interface ClassifiedBlock {
   readonly block: TeachingBlock
@@ -37,7 +32,7 @@ export function blocksOfKind(
     .map((entry) => entry.block)
 }
 
-/** The blocks a learner may read before committing: everything not held for the commitment. */
+/** Historical classification helper; independent Learn disclosure is owned by ImagingTeachingColumn. */
 export function precommitBlocks(lesson: Lesson): readonly TeachingBlock[] {
   return blocksOfKind(lesson, 'question', 'signals', 'pattern', 'discriminators')
 }

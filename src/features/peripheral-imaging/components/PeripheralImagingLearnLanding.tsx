@@ -24,6 +24,14 @@ export function PeripheralImagingLearnLanding({
       ) : null}
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Learn</p>
       <h1 className="text-3xl font-bold tracking-tight">{peripheralImagingPathway.arcSentence}</h1>
+      <p>
+        Learn to optimize fluoroscopy, interpret DTS and CBCT, and assess the biopsy tool’s
+        relationship to a peripheral lung lesion.
+      </p>
+      <p>
+        Completed sections and first answers are saved on this device. Returning restarts the
+        current incomplete section.
+      </p>
       <div className="flex flex-wrap items-center gap-3">
         <ImagingContinueCta />
       </div>

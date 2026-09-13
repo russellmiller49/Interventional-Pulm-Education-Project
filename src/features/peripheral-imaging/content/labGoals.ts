@@ -97,103 +97,102 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
   projection: {
     act: [
       {
-        type: 'metric',
-        metric: 'separationMm',
-        op: 'gte',
-        value: 10,
-        label: 'Rotate until the projected separation reaches ten millimetres',
-      },
-      {
-        type: 'value',
-        key: 'depth',
-        op: 'abs-gte',
-        value: 15,
-        label: 'Keep the tool fifteen millimetres or more from the lesion along the X-ray path',
+        type: 'event',
+        id: 'touched-orbit',
+        label: 'Change the projection with tool and lesion held fixed',
       },
     ],
-    // A state goal, not an event: the overlap event fires on the first tick of the orbit slider
-    // during the Act, so an event goal here would be met before this step began. The Act leaves
-    // the separation at ten millimetres or more, so this reads false on entry and flips only
-    // when the learner brings the beam back.
     observe: [
       {
-        type: 'metric',
-        metric: 'separationMm',
-        op: 'lte',
-        value: 0.5,
-        label: 'Return to a projection where the tool and lesion overlap again',
+        type: 'value',
+        key: 'orbit',
+        op: 'eq',
+        value: 0,
+        label: 'Return to the baseline projection and compare the overlap',
       },
     ],
     watch: ['separationMm', 'depthMm'],
   },
   signal: {
     act: [
-      { type: 'event', id: 'touched-orbit', label: 'Change the C-arm projection' },
       {
-        type: 'value',
-        key: 'orbit',
-        op: 'abs-gte',
-        value: 20,
-        label: 'Reach twenty degrees of obliquity or more',
+        type: 'event',
+        id: 'touched-orbit',
+        label: 'Compare a different CT projection with the baseline',
       },
     ],
-    observe: [{ type: 'event', id: 'touched-tilt', label: 'Add cranial or caudal angulation' }],
-    watch: ['separationMm'],
+    observe: [],
+    watch: [],
   },
   field: {
     act: [
       {
-        type: 'flag',
-        key: 'crop',
-        value: false,
-        label: 'Use collimation, not electronic cropping',
+        type: 'event',
+        id: 'touched-field',
+        label: 'Adjust physical collimation around the target',
       },
       {
-        type: 'value',
-        key: 'field',
-        op: 'lte',
-        value: 70,
-        label: 'Collimate to seven tenths of the full field width or less',
+        type: 'metric',
+        metric: 'contextRetained',
+        op: 'eq',
+        value: true,
+        label: 'Retain the modeled target, planned excursion and both landmarks',
       },
     ],
     observe: [
       {
-        type: 'flag',
-        key: 'crop',
-        value: true,
-        label: 'Switch to electronic cropping and compare the irradiated area',
+        type: 'event',
+        id: 'touched-crop',
+        label: 'Compare electronic cropping with the acquired field',
       },
       {
-        type: 'value',
-        key: 'zoom',
-        op: 'gte',
-        value: 1.5,
-        label: 'Apply display zoom of one and a half times or more to the stored image',
+        type: 'event',
+        id: 'touched-zoom',
+        label: 'Enlarge the stored image and inspect its acquisition metadata',
       },
     ],
-    watch: ['irradiatedAreaPct', 'zoomAddsExposure'],
+    watch: ['irradiatedAreaPct', 'contextRetained', 'zoomAddsExposure'],
   },
   time: {
     act: [
       {
-        type: 'value',
-        key: 'rate',
-        op: 'eq',
-        value: 3.75,
-        label: 'Halve the pulse rate to the lowest setting',
+        type: 'event',
+        id: 'width-isolated',
+        label: 'Change pulse width alone with rate and speed fixed',
       },
-      { type: 'value', key: 'width', op: 'eq', value: 10, label: 'Double the pulse width' },
     ],
     observe: [
       {
-        type: 'metric',
-        metric: 'interFrameTravelMm',
-        op: 'gte',
-        value: 4,
-        label: 'Raise the speed until the tool travels four millimetres or more between frames',
+        type: 'event',
+        id: 'rate-isolated',
+        label: 'Restore the baseline width, then change rate alone at fixed speed',
       },
     ],
     watch: ['masPerSecond', 'inFrameBlurMm', 'interFrameTravelMm', 'intervalMs'],
+  },
+  'two-dimensional': {
+    act: [
+      {
+        type: 'event',
+        id: 'touched-orbit',
+        label: 'Choose another projection to inspect the relationship',
+      },
+      {
+        type: 'event',
+        id: 'touched-field',
+        label: 'Adjust the acquisition field around the target',
+      },
+      {
+        type: 'metric',
+        metric: 'contextRetained',
+        op: 'eq',
+        value: true,
+        label: 'Keep the modeled excursion and required landmarks in the field',
+      },
+      { type: 'event', id: 'touched-zoom', label: 'Inspect the stored image with display zoom' },
+    ],
+    observe: [],
+    watch: ['separationMm', 'irradiatedAreaPct', 'contextRetained', 'zoomAddsExposure'],
   },
   'dts-acquisition': {
     act: [
@@ -210,11 +209,9 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
     ],
     observe: [
       {
-        type: 'value',
-        key: 'sweep',
-        op: 'gte',
-        value: 50,
-        label: 'Widen the DTS arc to fifty degrees or more',
+        type: 'event',
+        id: 'touched-sweep',
+        label: 'Change the authored DTS arc and compare its depth uncertainty',
       },
     ],
     watch: ['sweepDeg', 'planeMm'],
@@ -227,40 +224,30 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
   'fixed-suite': {
     act: [
       {
-        type: 'value',
-        key: 'kind',
-        op: 'eq',
-        value: 'fixed',
-        label: 'Choose the fixed C-arm workflow',
+        type: 'event',
+        id: 'touched-acquisitionOrbit',
+        label: 'Inspect another gantry position for the fixed-room workflow',
       },
-      centeredGoal,
-      capturedGoal,
+      {
+        type: 'event',
+        id: 'touched-offsetX',
+        label: 'Model a setup move and inspect the changed scout',
+      },
     ],
-    observe: [movedAfterCapture],
-    watch: ['centered', 'ready', 'captured'],
+    observe: [],
+    watch: ['centered', 'ready'],
   },
   'mobile-suite': {
     act: [
-      {
-        type: 'value',
-        key: 'kind',
-        op: 'eq',
-        value: 'mobile',
-        label: 'Choose the mobile CBCT workflow',
-      },
       centeredGoal,
-      capturedGoal,
-    ],
-    observe: [
       {
-        type: 'value',
-        key: 'acquisitionOrbit',
-        op: 'abs-gte',
-        value: 90,
-        label: 'Rotate the C-arm ninety degrees or more to inspect the spin path',
+        type: 'event',
+        id: 'touched-acquisitionOrbit',
+        label: 'Inspect the mobile gantry path with the setup centered',
       },
     ],
-    watch: ['centered', 'ready', 'captured'],
+    observe: [],
+    watch: ['centered', 'ready'],
   },
   'tool-confirmation': {
     act: [
@@ -308,21 +295,17 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
   'staff-protection': {
     act: [
       {
-        type: 'value',
-        key: 'distance',
-        op: 'gte',
-        value: 2.5,
-        label: 'Step back to two and a half metres or more',
+        type: 'event',
+        id: 'touched-distance',
+        label: 'Change staff distance and compare the idealized exposure path',
       },
     ],
     observe: [
       { type: 'flag', key: 'shield', value: true, label: 'Position the shielding barrier' },
       {
-        type: 'value',
-        key: 'orbit',
-        op: 'abs-gte',
-        value: 60,
-        label: 'Rotate the C-arm sixty degrees or more',
+        type: 'event',
+        id: 'touched-orbit',
+        label: 'Change the projection and inspect source, patient and barrier',
       },
     ],
     watch: ['inverseSquareRatio'],
@@ -330,29 +313,12 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
   'dose-reporting': {
     act: [
       {
-        type: 'value',
-        key: 'area',
-        op: 'lte',
-        value: 100,
-        label: 'Collimate the beam area to one hundred square centimetres or less',
-      },
-      {
-        type: 'value',
-        key: 'kerma',
-        op: 'gte',
-        value: 12,
-        label: 'Raise the air kerma to twelve milligray or more',
+        type: 'event',
+        id: 'touched-area',
+        label: 'Change the fictional area input at fixed kerma',
       },
     ],
-    observe: [
-      {
-        type: 'metric',
-        metric: 'kapGyCm2',
-        op: 'lte',
-        value: 1.5,
-        label: 'Bring the kerma–area product to one and a half gray-square-centimetres or less',
-      },
-    ],
+    observe: [],
     watch: ['kapGyCm2', 'kapMicroGyM2'],
   },
 }

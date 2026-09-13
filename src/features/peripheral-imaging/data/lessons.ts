@@ -166,10 +166,10 @@ export const LESSONS: Lesson[] = [
     minutes: 6,
     objective: 'optimize',
     outcome:
-      'Distinguish the five fluoroscopy controls from the settings the system chooses for you and from operations that change only the display.',
-    concept: 'Five fluoroscopy controls; automatic exposure regulation sets the exposure',
+      'Distinguish the main fluoroscopy control families from the settings the system chooses for you and from operations that change only the display.',
+    concept: 'Control families and system-dependent automatic exposure behavior',
     prerequisites: ['chain-walk'],
-    why: 'A C-arm console offers dozens of buttons. Knowing which five change the acquisition turns every later problem into one question: which control, if any.',
+    why: 'Identify the imaging question, then choose the control family that can address its limitation. Available settings depend on the system and selected mode.',
     recall: {
       prompt:
         'At which component of image formation do two objects at different depths come to overlap?',
@@ -184,9 +184,9 @@ export const LESSONS: Lesson[] = [
         sources: ['wabip', 'setser'],
       },
       {
-        title: 'The five fluoroscopy controls',
+        title: 'Main fluoroscopy control families',
         kind: 'after-commitment',
-        body: 'At the C-arm you control five things: the C-arm projection (obliquity and cranial or caudal angulation), collimation, pulse rate and pulse width, the acquisition mode (a single projection, a DTS acquisition or a CBCT spin), and the display (display zoom, window/level, overlays). Everything else is monitoring.',
+        body: 'This course groups the main adjustments into control families: projection and positioning, collimation, temporal acquisition, acquisition/image-quality mode, and stored-image display. Available settings and automatic exposure behavior depend on the system and selected mode. Pulse width is not independently selectable on every device.',
         points: [
           'Projection: obliquity and cranial or caudal angulation.',
           'Collimation: the irradiated field.',
@@ -199,7 +199,7 @@ export const LESSONS: Lesson[] = [
       {
         title: 'Automatic exposure regulation sets the exposure',
         kind: 'after-commitment',
-        body: 'kV, mA and filtration are selected by automatic exposure regulation to hold the detector signal. You do not set them directly, and a brighter image does not mean less output. What the system did appears on the dose readout, which is why the dose-rate and cumulative dose readouts, not image brightness, are where radiation output is judged.',
+        body: 'Automatic exposure regulation may select kV, mA, pulse duration and filtration according to the chosen protocol or image-quality mode. Direct controls vary by system; a brighter displayed image does not mean less output. What the system did appears on the dose readout, which is why the dose-rate and cumulative dose readouts, not image brightness, are where radiation output is judged.',
         sources: ['tg125', 'aapm12'],
       },
     ],
@@ -211,9 +211,10 @@ export const LESSONS: Lesson[] = [
     },
     labTask:
       'Assign each console control to the fluoroscopy control it belongs to — projection, collimation, pulse rate and width, acquisition mode or display — or to monitoring, when it does not change the acquisition.',
+    lab: 'geometry',
     takeaway: [
-      'Five controls change the acquisition or the display.',
-      'Automatic exposure regulation chooses the exposure; the dose readout reports it.',
+      'Control families organize the main acquisition and display adjustments.',
+      'Exposure behavior depends on the system and mode; dose readouts report quantities distinct from display brightness.',
       'Display changes are not acquisition changes.',
     ],
     checkIds: ['good-1', 'walk-1'],
@@ -509,7 +510,7 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'temporal',
     labTask:
-      'Halve the pulse rate, then double the pulse width. Compare the spacing of acquired positions, within-frame blur and tube loading.',
+      'Change pulse width alone at fixed rate and speed; restore the baseline and change pulse rate alone. Compare acquired positions and within-frame blur before the combined example.',
     takeaway: [
       'Pulse width, pulse rate and display refresh rate are different.',
       'Judge temporal resolution during the actual task.',
@@ -565,6 +566,7 @@ export const LESSONS: Lesson[] = [
       reasoning:
         'Refining the needle image further does not establish lesion identity. 2D fluoroscopy is no longer resolving the depth uncertainty; a DTS acquisition or a CBCT spin may answer what the projection cannot.',
     },
+    lab: 'geometry',
     takeaway: [
       'Fix the limiting factor before increasing exposure.',
       'Treat radial EBUS and fluoroscopy as complementary evidence.',

@@ -146,3 +146,101 @@ export function installDom() {
     Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true })
   }
 }
+
+/** Coached work through real controls; used before the independent boundary assertions. */
+export function performGuidedStep(lesson: ImagingStageLesson) {
+  const step = lesson.steps.find((s) => s.id === currentStepId())!
+  const observe = step.interaction.kind === 'observe'
+  const clickControl = (key: string) => fireEvent.click(control(key))
+  switch (lesson.sectionId) {
+    case 'chain-walk':
+      setRange('orbit', 25)
+      for (let i = 0; i < 6; i++) clickPrimary()
+      break
+    case 'projection':
+      setRange('orbit', observe ? 0 : 35)
+      break
+    case 'signal':
+      setRange('orbit', -35)
+      break
+    case 'field':
+      if (observe) {
+        setToggle('crop', true)
+        setRange('zoom', 1.5)
+      } else setRange('field', 90)
+      break
+    case 'time':
+      if (observe) {
+        setRange('width', 5)
+        setSelect('rate', '3.75')
+      } else setRange('width', 10)
+      break
+    case 'two-dimensional':
+      setRange('orbit', 35)
+      setRange('field', 90)
+      setRange('zoom', 1.5)
+      break
+    case 'current-anatomy':
+      if (observe) clickControl('capture')
+      else setRange('shift', 20)
+      break
+    case 'changing-anatomy':
+      if (observe) setToggle('overlay', false)
+      else {
+        clickControl('capture')
+        setRange('shift', 20)
+      }
+      break
+    case 'dts-acquisition':
+      if (observe) setRange('sweep', 50)
+      else {
+        setRange('plane', -18)
+        setRange('plane', 0)
+      }
+      break
+    case 'cbct-acquisition':
+      if (observe) setRange('offsetX', 20)
+      else {
+        clickControl('center')
+        ;['target', 'clearance', 'state', 'protection'].forEach((k) => setToggle(k, true))
+        clickControl('captured')
+      }
+      break
+    case 'fixed-suite':
+      setRange('acquisitionOrbit', 35)
+      setRange('offsetX', 5)
+      break
+    case 'mobile-suite':
+      clickControl('center')
+      setRange('acquisitionOrbit', 35)
+      break
+    case 'tool-confirmation':
+      if (observe) {
+        setToggle('slab', true)
+        setToggle('slab', false)
+        setToggle('revealed', true)
+      } else {
+        setRange('tipX', 10)
+        setRange('tipY', 0)
+        setRange('tipZ', 0)
+      }
+      break
+    case 'staff-protection':
+      if (observe) {
+        setToggle('shield', true)
+        setRange('orbit', 60)
+      } else setRange('distance', 2.5)
+      break
+    case 'dose-reporting':
+      setRange('area', 100)
+      break
+    default:
+      throw new Error(`No guided action authored in harness for ${lesson.sectionId}`)
+  }
+  clickPrimary()
+}
+
+export function reachIndependent(lesson: ImagingStageLesson) {
+  clickPrimary()
+  for (let i = 1; i < lesson.predictionStepIndex; i++) performGuidedStep(lesson)
+}

@@ -83,14 +83,14 @@ describe('items, chain answers and cases validate clean at import', () => {
       'suite-cases:capstone-1',
     ])
     const projection = imagingStageItems.projection
-    expect(projection.prediction.id).toBe('projection:geometry-1')
+    expect(projection.prediction.id).toBe('projection:projection-interpretation-v2')
     expect(projection.transfer).toMatchObject({
       id: 'projection:anatomy-1',
       phase: 'transfer',
       itemType: 'transfer-case',
     })
     expect(projection.prediction.choices.find((c) => c.id === 'c')?.plausibility).toBe(
-      'reasonable-but-incomplete',
+      'incorrect-mechanism',
     )
     expect(imagingStageItems['suite-cases'].prediction.id).toBe('suite-cases:capstone-1')
   })

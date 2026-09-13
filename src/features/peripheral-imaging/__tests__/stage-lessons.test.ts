@@ -24,9 +24,13 @@ describe('the stage lessons', () => {
           (s) => s.interaction.kind === 'prediction' && s.interaction.round === 0,
         ),
       ).toHaveLength(1)
-      expect(lesson.predictionStepIndex).toBe(1)
+      expect(lesson.predictionStepIndex).toBeGreaterThan(0)
       expect(lesson.steps.every((step) => !/\d/.test(step.title))).toBe(true)
-      expect(lesson.steps.slice(2).every((step) => step.gate === 'after-prediction')).toBe(true)
+      expect(
+        lesson.steps
+          .slice(lesson.predictionStepIndex + 1)
+          .every((step) => step.gate === 'after-prediction'),
+      ).toBe(true)
       expect(lesson.steps.every((step) => step.lookIn.landmark.length > 0)).toBe(true)
     }
   })
@@ -34,8 +38,8 @@ describe('the stage lessons', () => {
   it('gives the walk section a walk, the sort sections a sort, the lab sections a task', () => {
     expect(imagingStageLesson('chain-walk').steps.map((s) => s.interaction.kind)).toEqual([
       'read',
-      'prediction',
       'walk',
+      'prediction',
       'explain',
       'prediction',
     ])
@@ -48,22 +52,19 @@ describe('the stage lessons', () => {
     ])
     expect(imagingStageLesson('projection').steps.map((s) => s.interaction.kind)).toEqual([
       'read',
-      'prediction',
       'lab-task',
       'observe',
+      'prediction',
       'explain',
       'prediction',
     ])
   })
 
-  it('answers the chain-walk prediction on the chain map with the stop hidden', () => {
-    const predict = imagingStageLesson('chain-walk').steps[1]
-    expect(
-      predict.interaction.kind === 'prediction' && predict.interaction.chainTargets?.length,
-    ).toBe(3)
-    expect(predict.suite.chainAnswer).toBe(true)
-    expect(predict.suite.litStop).toBeNull()
-    expect(predict.lookIn.pane).toBe('simulator')
+  it('puts direct answer controls beside the clinical task after the chain walk', () => {
+    const lesson = imagingStageLesson('chain-walk')
+    const predict = lesson.steps[lesson.predictionStepIndex]
+    expect(predict.interaction.kind === 'prediction' && predict.interaction.chainTargets).toBeNull()
+    expect(predict.lookIn.pane).toBe('steps')
   })
 
   it('keeps the keyed answer off the first slot and off the longest option often enough', () => {

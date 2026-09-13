@@ -336,3 +336,52 @@
   color: var(--cyan-bright, #71e1e5);
   font-weight: 650;
 }
+
+.demonstration {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.demoButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.demoButtons button {
+  border: 1px solid #8ca8b1;
+  border-radius: 6px;
+  background: #f0f7f7;
+  color: #183542;
+  padding: 9px;
+  font: inherit;
+}
+.demoButtons button[aria-pressed='true'] {
+  background: #1c5263;
+  color: white;
+}
+.lookFor {
+  padding: 10px 12px;
+  background: #edf6f5;
+  border-left: 3px solid #367e83;
+  color: #163f48;
+  margin: 0;
+}
+.exampleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
+  gap: 10px;
+}
+.teachingFigure {
+  margin: 0;
+  min-width: 0;
+}
+.teachingFigure svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.teachingFigure figcaption {
+  font-size: 13px;
+  line-height: 1.5;
+  margin-block: 6px;
+}

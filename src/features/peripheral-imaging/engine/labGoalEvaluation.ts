@@ -205,6 +205,25 @@ export function labStateAfterChange(
     }
   }
 
+  if (lab === 'temporal') {
+    if (
+      touched.includes('width') &&
+      !touched.includes('rate') &&
+      !touched.includes('speed') &&
+      values.rate === 7.5 &&
+      values.speed === 20
+    )
+      events = withEvent(events, 'width-isolated')
+    if (
+      touched.includes('rate') &&
+      !touched.includes('width') &&
+      !touched.includes('speed') &&
+      values.width === 5 &&
+      values.speed === 20
+    )
+      events = withEvent(events, 'rate-isolated')
+  }
+
   if (lab === 'registration' && touched.includes('capture')) {
     events = withEvent(
       events,

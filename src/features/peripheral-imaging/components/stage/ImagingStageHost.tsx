@@ -73,6 +73,9 @@ import {
 import { ChainWalkCard, walkPositionWords } from './ChainWalkCard'
 import { ImagingSortControl } from './ImagingSortControl'
 import { ImagingSourceList } from './ImagingSourceList'
+import { LessonDemonstration } from './LessonDemonstration'
+import { IndependentImagePanels, hasIndependentImagePanel } from './TeachingPanels'
+import { independentValues, teachingDemonstration } from '../../content/teachingExamples'
 import { ImagingTeachingColumn } from './ImagingTeachingColumn'
 import { useImagingStageSession } from './useImagingStageSession'
 import styles from './imaging-stage.module.css'
@@ -224,6 +227,9 @@ function ImagingStageSession({
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const nowFocusRef = useRef<HTMLDivElement>(null)
 
+  const [representation, setRepresentation] = useState<{ stepId: string; ready: boolean } | null>(
+    null,
+  )
   const { commitments } = session
   const progress = deriveStageProgress(lesson, session)
   const liveIndex = progress.liveIndex
@@ -236,7 +242,22 @@ function ImagingStageSession({
   const predictionCommitted = progress.predictionCommitted
   const finished = commitments.finished
   const interaction = activeStep.interaction
-  const workDone = stepWorkDone(lesson, activeStep, activeIndex, session)
+  const imageReady = representation?.stepId === activeStep.id && representation.ready
+  const onRepresentationReady = useCallback(
+    (ready: boolean) =>
+      setRepresentation((previous) =>
+        previous?.stepId === activeStep.id && previous.ready === ready
+          ? previous
+          : { stepId: activeStep.id, ready },
+      ),
+    [activeStep.id],
+  )
+  const independentPending =
+    interaction.kind === 'prediction' && commitments.choices[activeStep.id] === undefined
+  const needsImage =
+    interaction.kind === 'lab-task' || interaction.kind === 'observe' || interaction.kind === 'walk'
+  const workDone =
+    stepWorkDone(lesson, activeStep, activeIndex, session) && (!needsImage || !!imageReady)
 
   useEffect(() => {
     nowFocusRef.current?.focus({ preventScroll: true })
@@ -362,14 +383,18 @@ function ImagingStageSession({
     return keyed && !isOffChainTarget(keyed) ? keyed.stopId : null
   })()
 
-  const litStop: ChainStopId | null = walkStop ?? (chainItem ? keyedStop : activeStep.suite.litStop)
-  const litStops: readonly ChainStopId[] = walkStop
-    ? [walkStop]
-    : chainItem
-      ? keyedStop
-        ? [keyedStop]
-        : []
-      : activeStep.stops
+  const litStop: ChainStopId | null = independentPending
+    ? null
+    : (walkStop ?? (chainItem ? keyedStop : activeStep.suite.litStop))
+  const litStops: readonly ChainStopId[] = independentPending
+    ? []
+    : walkStop
+      ? [walkStop]
+      : chainItem
+        ? keyedStop
+          ? [keyedStop]
+          : []
+        : activeStep.stops
 
   const chainAnswer: ChainAnswer | undefined = chainItem
     ? {
@@ -511,7 +536,13 @@ function ImagingStageSession({
       case 'read':
         return {
           ...base,
-          primary: { label: activeStep.actionLabel, onActivate: () => confirmThrough(activeIndex) },
+          primary: {
+            label: activeStep.actionLabel,
+            onActivate: () => confirmThrough(activeIndex),
+            disabled: !!teachingDemonstration(lesson.sectionId) && !imageReady,
+            disabledReason:
+              'The demonstration image must load. Teaching text remains available; retry the view.',
+          },
         }
       case 'walk': {
         if (commitments.walkDone) {
@@ -540,17 +571,30 @@ function ImagingStageSession({
       }
       case 'prediction': {
         const committed = commitments.choices[activeStep.id] !== undefined
-        if (committed) return { ...base, primary: isLastStep ? finishAction : continueAction }
+        if (committed)
+          return {
+            ...base,
+            primary: isLastStep ? finishAction : continueAction,
+            secondary: {
+              label: 'Try this question again',
+              onActivate: () => {
+                dispatch({ type: 'RETRY_CHOICE', stepId: activeStep.id })
+                setPendingChoice((current) => ({ ...current, [activeStep.id]: '' }))
+              },
+            },
+          }
         return {
           ...base,
           status:
             interaction.round === 0
-              ? 'The suite keeps its scene while you decide. The controls unlock once you commit.'
+              ? 'Inspect this example, then select your interpretation. The worked demonstration does not count as an answer.'
               : undefined,
           primary: {
             label: activeStep.actionLabel,
             onActivate: () => commitChoice(activeStep),
-            disabled: !pendingChoice[activeStep.id],
+            disabled:
+              !pendingChoice[activeStep.id] ||
+              (interaction.round === 0 && !!lesson.lesson.lab && !imageReady),
             disabledReason: interaction.chainTargets
               ? 'Choose a component on the image-formation map to enable this.'
               : 'Choose one option to enable this.',
@@ -575,8 +619,9 @@ function ImagingStageSession({
           return { ...base, status: 'Done. The change is on the suite.', primary: continueAction }
         return {
           ...base,
-          status:
-            'Waiting for the work on the suite. This step is done when every item below is met.',
+          status: !imageReady
+            ? 'The required image is unavailable or loading. Retry the view; text explanations remain available.'
+            : 'Compare the image as you make the changes listed below.',
           secondary: showWhereAction,
         }
       case 'observe':
@@ -736,15 +781,13 @@ function ImagingStageSession({
    * ---------------------------------------------------------------- */
   const deciding =
     interaction.kind === 'prediction' && commitments.choices[activeStep.id] === undefined
-  // The suite's controls open only once the prediction is committed: not on the read before it,
-  // not while it is open. Playing with the lab first would show the mechanism the prediction asks
-  // about.
-  const beforePrediction = !predictionCommitted && activeIndex <= lesson.predictionStepIndex
+  // Demonstrations own their state; guided work uses the session. Independent images stay fixed.
+  const beforePrediction = interaction.kind === 'read'
   const controlsEnabled = !deciding && !beforePrediction && !lookingBack
   const lockedReason = deciding
-    ? 'The controls are locked while you decide. Commit your answer to take them.'
+    ? 'Independent interpretation: the image state is held while you answer.'
     : beforePrediction
-      ? 'The controls open once you have committed the prediction on the next step.'
+      ? 'The worked demonstration uses separate state. The guided task starts from its own baseline.'
       : undefined
   const pausedReason =
     !deciding && !beforePrediction && lookingBack
@@ -768,32 +811,64 @@ function ImagingStageSession({
           : deciding
             ? 'locked while you decide'
             : beforePrediction
-              ? 'locked until you commit'
+              ? 'demonstration'
               : 'paused',
     },
   ]
 
-  const simulator = (
-    <ImagingSuitePane
-      view={suiteView}
-      lab={session.lab ?? EMPTY_LAB}
-      onLabChange={(patch) => dispatch({ type: 'LAB_CHANGE', patch })}
-      onLabReset={() => dispatch({ type: 'LAB_RESET' })}
-      controlsEnabled={controlsEnabled}
-      lockedReason={lockedReason}
-      pausedReason={pausedReason}
-      goals={goals.map((goal, index) => ({ goal, met: goalsMetNow[index] }))}
-      chainCaption={suiteView.stopSentence}
-      chainAnswer={chainAnswer}
-      spotlightKey={spotlight?.stepId === activeStep.id ? spotlight.key : undefined}
-    />
-  )
+  const exampleValues =
+    interaction.kind === 'prediction' && interaction.round === 0
+      ? independentValues(lesson.sectionId, 0)
+      : null
+  const panelQuestion =
+    interaction.kind === 'prediction' &&
+    interaction.round === 0 &&
+    hasIndependentImagePanel(lesson.sectionId)
+  const simulator =
+    interaction.kind === 'read' ? (
+      <LessonDemonstration
+        sectionId={lesson.sectionId}
+        onRepresentationReady={onRepresentationReady}
+      />
+    ) : (
+      <div className={styles.demonstration}>
+        <p className={styles.lookFor}>
+          <strong>Look for…</strong>{' '}
+          {interaction.kind === 'prediction'
+            ? 'the visible relationship and what remains unconfirmed in this example.'
+            : (lesson.lesson.labTask ?? 'the image question and the evidence available.')}
+        </p>
+        {panelQuestion ? (
+          <IndependentImagePanels
+            sectionId={lesson.sectionId}
+            onRepresentationReady={onRepresentationReady}
+          />
+        ) : (
+          <ImagingSuitePane
+            key={`${activeStep.id}:${independentPending ? 'question' : 'review'}`}
+            independent={independentPending}
+            onRepresentationReady={onRepresentationReady}
+            view={suiteView}
+            lab={exampleValues ? { values: exampleValues, events: [] } : (session.lab ?? EMPTY_LAB)}
+            onLabChange={(patch) => dispatch({ type: 'LAB_CHANGE', patch })}
+            onLabReset={() => dispatch({ type: 'LAB_RESET' })}
+            controlsEnabled={controlsEnabled}
+            lockedReason={lockedReason}
+            pausedReason={pausedReason}
+            goals={goals.map((goal, index) => ({ goal, met: goalsMetNow[index] }))}
+            chainCaption={suiteView.stopSentence}
+            chainAnswer={chainAnswer}
+            spotlightKey={spotlight?.stepId === activeStep.id ? spotlight.key : undefined}
+          />
+        )}
+      </div>
+    )
 
   const teaching = (
     <StageTeachingScope
       value={{ phase: activeStep.phase, predictionCommitted, stepId: activeStep.id }}
     >
-      <ImagingTeachingColumn lesson={lesson} stops={litStops} />
+      <ImagingTeachingColumn lesson={lesson} stops={litStops} independent={independentPending} />
     </StageTeachingScope>
   )
 
@@ -848,6 +923,11 @@ function ImagingStageSession({
       <p>
         <strong>{activeStep.title}.</strong> {activeStep.instruction}
       </p>
+      <p>
+        Completed sections and first answers are saved on this device. Leaving or reloading restarts
+        the current incomplete section; demonstration settings and in-section position are not
+        saved.
+      </p>
       {lookInLine}
       {activeStep.rationale ? <p>{activeStep.rationale}</p> : null}
       {firstUnmetKey && !workDone ? (
@@ -890,18 +970,19 @@ function ImagingStageSession({
           footer={
             <>
               <p className={shellStyles.footerLine}>
-                Professional education only. Not a clinical device or a patient-specific guide;
-                every image, target, tool and number is an authored teaching model. Follow current
-                device instructions, local protocols and medical-physics judgment.
+                Progress: completed sections and first answers are saved; reloading restarts this
+                section. Professional education only. Not a clinical device or a patient-specific
+                guide; every image, target, tool and number is an authored teaching model. Follow
+                current device instructions, local protocols and medical-physics judgment.
               </p>
               <StageSourcesFooter
                 count={stageSources.evidenceIds.length}
                 label="Sources for this section"
-                claimsVisible={predictionCommitted}
+                claimsVisible={!independentPending}
               >
                 <ImagingSourceList
                   records={stageSources.records}
-                  claimsVisible={predictionCommitted}
+                  claimsVisible={!independentPending}
                 />
               </StageSourcesFooter>
             </>

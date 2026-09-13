@@ -38,6 +38,7 @@ export interface ImagingStageSession {
 export type ImagingStageAction =
   | { readonly type: 'LAB_CHANGE'; readonly patch: LabValues }
   | { readonly type: 'LAB_RESET' }
+  | { readonly type: 'RETRY_CHOICE'; readonly stepId: string }
   | { readonly type: 'COMMIT_CHOICE'; readonly stepId: string; readonly choiceId: string }
   | {
       readonly type: 'COMMIT_SORT'
@@ -118,6 +119,21 @@ export function imagingStageReducer(lesson: ImagingStageLesson) {
       }
       case 'LAB_RESET':
         return labId ? { ...session, lab: emptyLabState(labId, lesson.sectionId) } : session
+      case 'RETRY_CHOICE': {
+        const index = lesson.steps.findIndex((step) => step.id === action.stepId)
+        if (index < 0 || session.commitments.finished || session.commitments.confirmed >= index)
+          return session
+        const choices = { ...session.commitments.choices }
+        delete choices[action.stepId]
+        return {
+          ...session,
+          commitments: {
+            ...session.commitments,
+            choices,
+            performedIds: session.commitments.performedIds.filter((id) => id !== action.stepId),
+          },
+        }
+      }
       case 'COMMIT_CHOICE': {
         if (session.commitments.choices[action.stepId] !== undefined) return session
         const commitments = withPerformed(

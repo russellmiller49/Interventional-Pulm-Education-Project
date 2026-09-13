@@ -86,7 +86,15 @@ export function TimeOverlay({ frame, model }: { frame: SuiteFrame; model: Tempor
   )
 }
 
-export function TimeSamples({ model, phase }: { model: TemporalModel; phase: number }) {
+export function TimeSamples({
+  model,
+  phase,
+  comparison = false,
+}: {
+  model: TemporalModel
+  phase: number
+  comparison?: boolean
+}) {
   return (
     <section
       className={styles.signalProfile}
@@ -94,10 +102,12 @@ export function TimeSamples({ model, phase }: { model: TemporalModel; phase: num
       data-pulse-on={model.pulseIsOn}
       aria-label="Temporal sampling"
     >
-      <p>
-        Slowed authored time · the DRR stays fixed. Pause holds the moving tool and the sampled
-        image.
-      </p>
+      {!comparison && (
+        <p>
+          Slowed authored time · the DRR stays fixed. Pause holds the moving tool and the sampled
+          image.
+        </p>
+      )}
       <svg
         viewBox="0 0 440 115"
         role="img"
@@ -124,6 +134,28 @@ export function TimeSamples({ model, phase }: { model: TemporalModel; phase: num
         })}
         <text x="16" y="110" fill="#183542" fontSize="12">
           Amber: within-frame blur · spacing: inter-frame travel
+        </text>
+      </svg>
+      <svg
+        viewBox="0 0 440 82"
+        className={styles.sampleDiagram}
+        role="img"
+        aria-label={`Enlarged within-frame motion travel: ${model.inFrameBlur.toFixed(2)} millimetres during one pulse.`}
+        data-blur-detail
+      >
+        <text x="16" y="19" fill="#183542" fontSize="12">
+          Within one pulse · enlarged detail (separate scale)
+        </text>
+        <line x1="20" y1="30" x2="20" y2="58" stroke="#3b7c7b" />
+        <rect
+          x="20"
+          y="35"
+          width={Math.max(0.5, Math.min(395, model.inFrameBlur * 120))}
+          height="18"
+          fill="#98652b"
+        />
+        <text x="16" y="76" fill="#183542" fontSize="12">
+          Motion travel = {model.inFrameBlur.toFixed(2)} mm · fixed-speed arithmetic, not image lag
         </text>
       </svg>
     </section>

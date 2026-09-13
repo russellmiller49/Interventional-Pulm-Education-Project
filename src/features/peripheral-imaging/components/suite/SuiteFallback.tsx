@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect } from 'react'
+
 import { formatReadout, LAB_METRICS, labReadouts, type LabMetricId } from '../../engine/labMetrics'
 import { ImagingLab } from '../ImagingLab'
 import { ChainAnswerFieldset } from './ChainAnswerFieldset'
@@ -18,10 +20,15 @@ import { SUITE_DOM, type ImagingSuitePaneProps } from './types'
  * a mode ready, `ImagingSuitePane` stops routing that mode here.
  */
 export function SuiteFallback(props: ImagingSuitePaneProps) {
-  const { view, lab, onLabChange, controlsEnabled, lockedReason, pausedReason, goals } = props
+  const { view, lab, onLabChange, lockedReason, pausedReason, goals, onRepresentationReady } = props
+  const controlsEnabled = false
+  useEffect(() => {
+    onRepresentationReady?.(false)
+  }, [onRepresentationReady])
   const readouts = view.lab ? labReadouts(view.lab, lab.values, view.sectionId) : {}
-  const metricIds: readonly LabMetricId[] =
-    view.readouts ?? (Object.keys(readouts) as LabMetricId[])
+  const metricIds: readonly LabMetricId[] = props.independent
+    ? []
+    : (view.readouts ?? (Object.keys(readouts) as LabMetricId[]))
   return (
     <div
       className={styles.pane}
@@ -32,6 +39,10 @@ export function SuiteFallback(props: ImagingSuitePaneProps) {
         [SUITE_DOM.lit]: view.litStop ?? '',
       }}
     >
+      <p role="status">
+        The required imaging view is unavailable. Image-based tasks cannot be completed. Reload to
+        retry; teaching and source references remain accessible.
+      </p>
       <ChainCaptionStrip lit={view.litStop} caption={props.chainCaption} />
       {props.chainAnswer ? <ChainAnswerFieldset answer={props.chainAnswer} /> : null}
       {!controlsEnabled && (lockedReason ?? pausedReason) ? (
@@ -39,7 +50,7 @@ export function SuiteFallback(props: ImagingSuitePaneProps) {
           {lockedReason ?? pausedReason}
         </p>
       ) : null}
-      {view.lab ? (
+      {view.lab && !props.independent ? (
         <fieldset className={styles.controls} disabled={!controlsEnabled} data-suite-controls>
           <ImagingLab
             lab={view.lab}

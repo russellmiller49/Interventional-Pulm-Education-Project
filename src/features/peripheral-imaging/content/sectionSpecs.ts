@@ -42,8 +42,8 @@ export interface ImagingSectionSpec {
   /** Phrases that name this section's keyed answer. No pre-commit surface may carry one. */
   readonly precommitDenyPatterns: readonly RegExp[]
   /**
-   * Whether the lit stops' cards may show before the prediction. The walk section hides them: its
-   * prediction is answered by the very cards the walk then reveals.
+   * Historical stop-card flag retained for authored-data compatibility. Teaching visibility is
+   * controlled separately from pending independent items.
    */
   readonly stopCardsBeforeCommit?: boolean
   /** What the model does not represent, said to the learner under the scene and at Explain. */
@@ -155,9 +155,9 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     newConcept:
       'Five controls change the acquisition or the display; automatic exposure regulation sets the exposure, and the rest is monitoring.',
     objective:
-      'Distinguish the five fluoroscopy controls from the settings the system chooses and from operations that change only the display.',
+      'Distinguish the main fluoroscopy control families from the settings the system chooses and from operations that change only the display.',
     incrementSentence:
-      'This section adds one idea: of everything on the console, five controls change the image, and the rest is monitoring.',
+      'This section adds one idea: grouping the main adjustments into control families; settings and automatic exposure behavior depend on the system and selected mode.',
     prerequisiteSectionIds: ['chain-walk'],
     chainStops: ['source', 'beam', 'detector', 'display'],
     grammarRowIds: ['hidden-by-anatomy', 'small-on-screen'],
@@ -171,7 +171,8 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
         acquisition: 'this-one',
         display: 'this-one',
       },
-      sentence: 'All five are yours. Everything else on the console is monitoring.',
+      sentence:
+        'These are the control families emphasized here. Available protocols, image-quality settings and direct exposure controls vary by system and mode.',
     },
     precommitDenyPatterns: [/acquisition field/i, /adds no exposure/i],
     modelBoundary:
@@ -197,7 +198,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'no-control-change-the-measurement',
       states: noneOf(),
       sentence:
-        'No C-arm control restores an atelectatic segment. Intraprocedural imaging of the current anatomy does.',
+        'Imaging can show the current lesion location; it does not reverse atelectasis. Address the physiological problem with anesthesia and reassess localization when needed.',
     },
     precommitDenyPatterns: [/assess for atelectasis/i, /re-?locali[sz]e the lesion/i],
     modelBoundary:
@@ -223,13 +224,9 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'this-control',
       states: oneOf('angle', { display: 'harmful-reflex' }),
       sentence:
-        'This control: the C-arm projection. The harmful reflex: display zoom, which shows the same superimposition larger.',
+        'Changing projection can reveal parallax. Display zoom enlarges this image but does not resolve the depth uncertainty.',
     },
-    precommitDenyPatterns: [
-      /parallax/i,
-      /only superimposed/i,
-      /projection change (did|does) not move/i,
-    ],
+    precommitDenyPatterns: [/only superimposed/i, /projection change (did|does) not move/i],
     modelBoundary:
       'The volume renderer sums through a quantised CT to produce a projection; this is not acquired fluoroscopy. The tool moves along the initial source–lesion X-ray path so that frontal overlap can hide depth. Model axes are patient left, anterior and superior; verify real console orientation conventions. ' +
       SHARED_BOUNDARY,
@@ -282,7 +279,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       verdict: 'this-control',
       states: oneOf('field', { display: 'harmful-reflex' }),
       sentence:
-        'This control: collimation. The harmful reflex: electronically cropping the display and assuming the beam followed.',
+        'Collimation changes the beam. Electronic cropping changes the display without changing an earlier exposure.',
     },
     precommitDenyPatterns: [/cropping acts only/i, /acts only on the displayed/i],
     modelBoundary:
@@ -320,7 +317,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     id: 'two-dimensional',
     recognizeTitle: 'The lesion is still not seen',
     newConcept:
-      'The adjustments follow a fixed order — projection, collimation, then timing — and some questions no adjustment can answer.',
+      'The imaging question and limiting factor determine the next useful adjustment; some uncertainties need additional imaging.',
     objective:
       'Select the next useful adjustment when fluoroscopy does not answer the procedural question.',
     incrementSentence:
@@ -328,7 +325,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     prerequisiteSectionIds: ['current-anatomy', 'projection', 'signal', 'field', 'time'],
     chainStops: ['beam', 'patient', 'detector', 'display'],
     grammarRowIds: ['probe-pattern'],
-    act: { kind: 'sort', sortId: 'next-adjustment' },
+    act: { kind: 'lab' },
     controlStrip: {
       verdict: 'no-control-change-the-measurement',
       states: noneOf(),

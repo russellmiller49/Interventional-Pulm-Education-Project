@@ -1,3 +1,4 @@
+import { INTERPRETATION_CHECKS } from '../content/interpretationChecks'
 import type { ObjectiveId, Question, SourceId } from '../types'
 
 function item(
@@ -1030,5 +1031,8 @@ export const QUESTIONS: Question[] = [
 ]
 
 export const QUESTION_BY_ID = Object.fromEntries(
-  QUESTIONS.map((question) => [question.id, question]),
+  [...QUESTIONS, ...Object.values(INTERPRETATION_CHECKS)].map((question) => [
+    question.id,
+    question,
+  ]),
 ) as Record<string, Question>

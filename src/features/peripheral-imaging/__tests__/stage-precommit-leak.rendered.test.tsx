@@ -1,17 +1,12 @@
-import { act, cleanup } from '@testing-library/react'
-
+import { cleanup } from '@testing-library/react'
 import { peripheralImagingSectionIds } from '../content/pathway'
-import { imagingSectionSpec } from '../content/sectionSpecs'
 import { imagingStageLesson } from '../content/stageLessons'
+import { hasIndependentImagePanel } from '../components/stage/TeachingPanels'
 import {
-  attributesText,
-  clickPrimary,
-  currentStepId,
   installDom,
-  leakMatches,
   mountSection,
-  scannableText,
-  setRange,
+  reachIndependent,
+  currentStepId,
 } from '../test-support/stageHarness'
 
 jest.mock(
@@ -48,67 +43,47 @@ afterEach(() => {
   jest.useRealTimers()
 })
 
-/**
- * The composed document, at the two moments that matter: the first step on mount, and the
- * prediction step reached the way a learner reaches it. Hidden nodes and attributes count; the
- * two answer fieldsets are the one excused surface. The deny set is the section's own, from its
- * spec, so an author who moves an answer into a step title, a teaching card, the context strip
- * or the suite's own labels is told which section and which phrase.
- */
-describe('nothing answers a section before its prediction is committed (rendered)', () => {
-  const findings: string[] = []
-
-  it.each(peripheralImagingSectionIds)('%s', (sectionId) => {
-    const lesson = imagingStageLesson(sectionId)
-    const deny = imagingSectionSpec(sectionId).precommitDenyPatterns
-    mountSection(sectionId)
-    const atFirstStep = `${scannableText()} ${attributesText()}`
-    for (const match of leakMatches(atFirstStep, deny))
-      findings.push(`${sectionId} · first step: /${match}/`)
-
-    // Reach the prediction the way a learner does.
-    const first = lesson.steps[0]
-    if (first.interaction.kind === 'walk') {
-      // The walk asks for one control moved at the beam stop before it counts as done.
-      setRange('orbit', 20)
-      for (let stop = 0; stop < first.interaction.stops.length; stop += 1) clickPrimary()
-      clickPrimary()
-    } else if (first.interaction.kind === 'read') {
-      clickPrimary()
-    }
-    act(() => {
-      jest.advanceTimersByTime(10)
-    })
-    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex].id)
-    const atPrediction = `${scannableText()} ${attributesText()}`
-    for (const match of leakMatches(atPrediction, deny))
-      findings.push(`${sectionId} · prediction step: /${match}/`)
-    expect(document.querySelector('[data-answer-verdict][data-verdict-outcome]')).toBeNull()
-    expect(document.querySelector('[data-verdict-outcome]')).toBeNull()
-    expect(document.querySelector('[data-chain-outcome]')).toBeNull()
-    expect(
-      document.querySelector('[data-stage-sources]')?.getAttribute('data-stage-sources-claims'),
-    ).toBe('false')
-    // The controls are locked while the learner decides.
-    const controls = document.querySelector<HTMLFieldSetElement>('[data-suite-controls]')
-    if (controls) expect(controls.disabled).toBe(true)
-    // A section answered on the chain lights nothing while it is the question; every other
-    // section keeps its "you are here".
-    const prediction = lesson.steps[lesson.predictionStepIndex].interaction
-    const lit = document.querySelector('[data-suite-scene]')?.getAttribute('data-lit') ?? ''
-    if (prediction.kind === 'prediction' && prediction.chainTargets) {
-      expect(lit).toBe('')
-      expect(document.querySelector('[data-chain-answer]')).not.toBeNull()
-    } else {
-      expect(lit).not.toBe('')
-    }
-    // Locked rows show their ordinal and phase, never a title.
-    for (const row of document.querySelectorAll('[data-step-list] li[data-step-state="locked"]')) {
-      expect(row.textContent).toMatch(/Step \d+$/)
-    }
-  })
-
-  it('found nothing', () => {
-    expect(findings).toEqual([])
-  })
+describe('teaching and independent disclosure have separate boundaries', () => {
+  it.each(peripheralImagingSectionIds)(
+    '%s teaches before asking and protects its pending item',
+    (sectionId) => {
+      const lesson = imagingStageLesson(sectionId)
+      mountSection(sectionId)
+      expect(document.querySelector('[data-lesson-demonstration]')).not.toBeNull()
+      expect(
+        document.querySelector('[data-teaching-block="mechanism"], [data-teaching-block="adds"]'),
+      ).not.toBeNull()
+      expect(document.querySelector('[data-teaching-block="boundary"]')).not.toBeNull()
+      expect(document.querySelector('[data-answer-verdict]')).toBeNull()
+      reachIndependent(lesson)
+      expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex].id)
+      expect(document.querySelector('[data-prediction-choices]')).not.toBeNull()
+      expect(document.querySelector('[data-chain-answer]')).toBeNull()
+      expect(document.querySelector('[data-answer-verdict], [data-chain-outcome]')).toBeNull()
+      expect(document.querySelector('[data-independent-foundations]')).not.toBeNull()
+      expect(
+        document.querySelector(
+          '[data-teaching-block="control-strip"], [data-teaching-block="grammar"], [data-recall-answer]',
+        ),
+      ).toBeNull()
+      expect(document.querySelector('[data-stage-sources]')).toHaveAttribute(
+        'data-stage-sources-claims',
+        'false',
+      )
+      if (hasIndependentImagePanel(sectionId)) {
+        expect(document.querySelector('[data-independent-image-panels]')).not.toBeNull()
+        expect(document.querySelector('[data-suite-scene]')).toBeNull()
+      } else expect(document.querySelector('[data-suite-scene]')).toHaveAttribute('data-lit', '')
+      expect(
+        document.querySelector('[data-readout="depthMm"], [data-readout="windowLabel"]'),
+      ).toBeNull()
+      const prediction = lesson.steps[lesson.predictionStepIndex].interaction
+      if (prediction.kind !== 'prediction') throw new Error('Missing interpretation')
+      const outsideChoices = document.body.cloneNode(true) as HTMLElement
+      outsideChoices.querySelector('[data-prediction-choices]')?.remove()
+      expect(outsideChoices.textContent).not.toContain(prediction.item.explanation)
+      for (const choice of prediction.item.choices)
+        expect(outsideChoices.textContent).not.toContain(choice.rationale)
+    },
+  )
 })

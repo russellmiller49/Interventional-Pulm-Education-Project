@@ -24,9 +24,13 @@ function readyAndCaptured(lesson: string) {
 
 describe('capturing the acquisition state', () => {
   it.each(SECTIONS)('lets %s reach every goal its Act step is waiting on', (lesson) => {
-    const state = readyAndCaptured(lesson)
+    let state = readyAndCaptured(lesson)
     const goals = imagingLabGoals(lesson)?.act ?? []
     expect(goals.length).toBeGreaterThan(0)
+    if (lesson !== 'cbct-acquisition')
+      state = labStateAfterChange('acquisition', state, { acquisitionOrbit: 30 }, lesson)
+    if (lesson === 'fixed-suite')
+      state = labStateAfterChange('acquisition', state, { offsetX: 5 }, lesson)
     const unmet = goals
       .filter((goal) => !labGoalMet(goal, state, 'acquisition', lesson))
       .map((goal) => goal.label)

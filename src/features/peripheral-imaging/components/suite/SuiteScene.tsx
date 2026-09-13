@@ -40,7 +40,8 @@ import { DoseView, DosePanels } from './views/DoseView'
 import { dosePlanes } from './doseModel'
 import { TimeView, TimeOverlay, TimeSamples } from './views/TimeView'
 import { useSuitePlayback, SuiteClock } from './useSuitePlayback'
-import { FieldView, FieldMask } from './views/FieldView'
+import { ProjectionOverlays } from './ProjectionOverlays'
+import { FieldView, FieldMask, FieldContextOverlay } from './views/FieldView'
 import { ProjectionView3D } from './views/ProjectionView3D'
 import { RayTrace, SignalReadout } from './views/SignalView'
 import { loadAnatomyVolume } from '../../lib/anatomy'
@@ -87,11 +88,19 @@ function FrameReady({ ready }: { ready: () => void }) {
 }
 
 export default function SuiteScene(props: ImagingSuitePaneProps) {
-  const { view } = props
+  const { view, onRepresentationReady } = props
   const isRoom = view.mode === 'room'
-  const showChain = !isRoom || view.layers.includes('labels') || Boolean(props.chainAnswer)
+  const showChain =
+    !props.independent && (!isRoom || view.layers.includes('labels') || Boolean(props.chainAnswer))
+  const [projectionReady, setProjectionReady] = useState(false)
   const [source, setSource] = useState<DrrTextureSource | null>(null)
   const [visible, setVisible] = useState(true)
+  useEffect(() => {
+    if (!source) return
+    const update = () => setProjectionReady(source.state === 'ready')
+    update()
+    return source.subscribe(update)
+  }, [source])
   const reducedMotion = useSyncExternalStore(motionSubscribe, motionSnapshot, () => true)
   const [steppedOrbit, setSteppedOrbit] = useState(0)
   const [registeredSensor, setRegisteredSensor] = useState<Point3 | null>(null)
@@ -242,7 +251,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
     setContextLost(true)
   }, [])
   useEffect(() => {
-    const node = viewport.current
+    const node = displays.current
     if (!node) return
     let intersecting = true
     const update = () => setVisible(intersecting && !document.hidden)
@@ -272,6 +281,42 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
     'augmented',
   ].includes(view.mode)
   const running = isCbct ? cbct.busy : dts.active ? dts.running : playback.running
+  const representationReady =
+    (props.independent || (ready && !contextLost)) &&
+    (drrMode
+      ? projectionReady
+      : view.mode === 'sampling'
+        ? !!volume
+        : dts.active
+          ? !!dts.images && !dts.failed && dts.count > 0
+          : true)
+  useEffect(() => {
+    onRepresentationReady?.(representationReady)
+  }, [onRepresentationReady, representationReady])
+  const imageFirst =
+    ['projection', 'signal', 'field', 'time', 'sampling', 'dts', 'dts-prior'].includes(view.mode) &&
+    view.sectionId !== 'chain-walk'
+  const fieldVisible =
+    view.mode === 'field' || view.sectionId === 'two-dimensional' || view.sectionId === 'good-image'
+  const controlDock = (
+    <LabDock
+      {...props}
+      controlsEnabled={props.controlsEnabled && representationReady}
+      disabledControls={
+        isCbct && (cbct.sourceState !== 'ready' || cbct.busy) ? new Set(['captured']) : undefined
+      }
+      onLabChange={(patch) =>
+        isCbct && patch.captured === true ? void cbct.run(true) : props.onLabChange(patch)
+      }
+      onLabReset={() => {
+        setSteppedOrbit(0)
+        playback.reset()
+        cbct.reset()
+        dts.reset()
+        props.onLabReset()
+      }}
+    />
+  )
   return (
     <SceneBoundary fallback={fallback}>
       <div
@@ -300,9 +345,11 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         <div
           ref={displays}
           className={styles.displays}
+          data-image-first={imageFirst ? 'true' : undefined}
+          data-independent={props.independent ? 'true' : undefined}
           data-monitor-layout={isRoom ? 'hidden' : view.monitor}
         >
-          <div className={styles.scenePanel}>
+          <div className={styles.scenePanel} hidden={props.independent}>
             <div className={styles.sceneHeader}>
               <span>
                 {isRoom ? 'The imaging suite at rest' : 'CT-derived anatomy · image formation'}
@@ -335,7 +382,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 >
                   <Canvas
                     key={epoch}
-                    frameloop={visible ? (running ? 'always' : 'demand') : 'never'}
+                    frameloop={
+                      !ready || visible ? (running && visible ? 'always' : 'demand') : 'never'
+                    }
                     dpr={[1, 1.5]}
                     camera={{ fov: 42, near: 1, far: 12000 }}
                     gl={{ antialias: true, preserveDrawingBuffer: true }}
@@ -385,9 +434,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       {view.layers.includes('cone') && (
                         <BeamCone
                           frame={frame}
-                          fieldPercent={
-                            dose ? dose.fieldPercent : inputs.crop ? 100 : inputs.fieldPercent
-                          }
+                          fieldPercent={dose ? dose.fieldPercent : inputs.fieldPercent}
                           target={dose ? frame.iso : undefined}
                           opacity={isRoom ? 0.14 : undefined}
                         />
@@ -421,7 +468,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                           prior={view.mode === 'dts-prior'}
                         />
                       )}
-                      {view.mode === 'sampling' && (
+                      {view.mode === 'sampling' && !props.independent && (
                         <SamplingView
                           inputs={inputs}
                           volume={volume}
@@ -443,12 +490,8 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       {view.mode === 'dose' && view.layers.includes('planes') && (
                         <DoseView inputs={inputs} profile={profile} />
                       )}
-                      {view.mode === 'field' && (
-                        <FieldView
-                          frame={frame}
-                          fieldPercent={inputs.fieldPercent}
-                          crop={inputs.crop}
-                        />
+                      {fieldVisible && (
+                        <FieldView frame={frame} fieldPercent={inputs.fieldPercent} crop={false} />
                       )}
                       {view.mode === 'signal' && view.layers.includes('ray') && (
                         <RayTrace profile={profile} />
@@ -591,6 +634,13 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
               <Monitor
                 pose={pose}
                 depth={inputs.toolDepth}
+                comparison={!props.independent}
+                acquisitionField={inputs.fieldPercent}
+                displayMask={
+                  fieldVisible && inputs.crop ? (
+                    <FieldMask frame={frame} fieldPercent={inputs.cropWidth} crop />
+                  ) : undefined
+                }
                 overlay={
                   view.mode === 'time' ? (
                     <TimeOverlay frame={frame} model={timeModel} />
@@ -599,24 +649,34 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       inputs={inputs}
                       sensor={view.mode === 'navigation' ? registeredSensor : undefined}
                     />
+                  ) : fieldVisible ? (
+                    <>
+                      <ProjectionOverlays
+                        orbit={pose.orbit}
+                        tilt={pose.tilt}
+                        depth={inputs.toolDepth}
+                        geometry={pose.geometry}
+                      />
+                      <FieldContextOverlay orbit={pose.orbit} tilt={pose.tilt} />
+                    </>
                   ) : undefined
                 }
                 showCurrent={inputs.showCurrent}
                 offset={translation}
                 targetFill={view.mode !== 'signal'}
-                zoom={view.mode === 'field' ? inputs.zoom : 1}
+                zoom={fieldVisible ? inputs.zoom : 1}
                 mask={
-                  view.mode === 'field' ? (
-                    <FieldMask
-                      frame={frame}
-                      fieldPercent={inputs.fieldPercent}
-                      crop={inputs.crop}
-                    />
+                  fieldVisible ? (
+                    <FieldMask frame={frame} fieldPercent={inputs.fieldPercent} crop={false} />
                   ) : undefined
                 }
                 onSource={setSource}
                 hidden={view.monitor === 'hidden'}
               />
+              <p className={styles.monitorCaption}>
+                At frontal: screen right = patient left; top = superior. Zero-angle beam travels
+                posterior to anterior. Orbit and tilt use the model’s signed angles.
+              </p>
               <p className={styles.monitorCaption}>
                 {view.mode === 'time'
                   ? timeModel.sampleIndex < 0
@@ -642,6 +702,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
               </p>
             </section>
           )}
+          {imageFirst && <div className={styles.nearImageControls}>{controlDock}</div>}
         </div>
         {props.chainAnswer && (
           <div className={styles.answer}>
@@ -651,7 +712,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         {isCbct && (
           <ConeBeamPanels acquisition={cbct} inputs={inputs} enabled={props.controlsEnabled} />
         )}
-        {dts.active && (
+        {dts.active && !props.independent && (
           <TomosynthesisPanels
             model={dts}
             inputs={inputs}
@@ -660,7 +721,10 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
           />
         )}
         {view.mode === 'sampling' && (
-          <SamplingPanels inputs={inputs} revealed={props.lab.values.revealed === true} />
+          <SamplingPanels
+            inputs={inputs}
+            revealed={!props.independent && props.lab.values.revealed === true}
+          />
         )}
         {isRegistration && <RegistrationPanels augmented={view.mode === 'augmented'} />}
         {view.mode === 'staff' && <StaffPanels inputs={inputs} />}
@@ -669,27 +733,12 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         )}
         {view.mode === 'time' && <TimeSamples model={timeModel} phase={playback.phase} />}
         {view.mode === 'signal' && <SignalReadout profile={profile} failed={profileFailed} />}
-        {isRoom ? (
-          <LabGoals goals={props.goals} />
-        ) : (
-          <LabDock
-            {...props}
-            disabledControls={
-              isCbct && (cbct.sourceState !== 'ready' || cbct.busy)
-                ? new Set(['captured'])
-                : undefined
-            }
-            onLabChange={(patch) =>
-              isCbct && patch.captured === true ? void cbct.run(true) : props.onLabChange(patch)
-            }
-            onLabReset={() => {
-              setSteppedOrbit(0)
-              playback.reset()
-              cbct.reset()
-              dts.reset()
-              props.onLabReset()
-            }}
-          />
+        {isRoom ? <LabGoals goals={props.goals} /> : !imageFirst ? controlDock : null}
+        {!representationReady && !isRoom && (
+          <p role="status">
+            The required image is loading or unavailable. Image-based work is paused; use the
+            teaching explanation and retry the view.
+          </p>
         )}
         <p className={styles.boundary} data-model-boundary>
           {view.boundary}

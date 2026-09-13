@@ -17,6 +17,9 @@ export function Monitor({
   mask,
   overlay,
   offset,
+  comparison = false,
+  acquisitionField = 100,
+  displayMask,
 }: {
   pose: DrrPose
   depth: number
@@ -28,10 +31,44 @@ export function Monitor({
   mask?: ReactNode
   overlay?: ReactNode
   offset?: Point3
+  comparison?: boolean
+  acquisitionField?: number
+  displayMask?: ReactNode
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const engine = useRef<DrrTextureSource | null>(null)
   const [state, setState] = useState<ProjectionState>('loading')
+  const [baseline, setBaseline] = useState<{
+    image: string
+    overlay: ReactNode
+    mask: ReactNode
+    displayMask: ReactNode
+    zoom: number
+    label: string
+  } | null>(null)
+  const label = `Orbit ${pose.orbit}° · tilt ${pose.tilt}° · acquired field ${acquisitionField}% · exposure: not modeled`
+  const currentOverlay = overlay ?? (
+    <ProjectionOverlays
+      orbit={pose.orbit}
+      tilt={pose.tilt}
+      depth={depth}
+      geometry={pose.geometry}
+      offset={offset}
+      showCurrent={showCurrent}
+      targetFill={targetFill}
+    />
+  )
+  function captureBaseline() {
+    if (engine.current?.state !== 'ready') return
+    setBaseline({
+      image: engine.current.snapshot().toDataURL(),
+      overlay: currentOverlay,
+      mask,
+      displayMask,
+      zoom,
+      label,
+    })
+  }
   useEffect(() => {
     const source = new DrrTextureSource(canvas.current!)
     engine.current = source
@@ -50,38 +87,61 @@ export function Monitor({
   }, [pose])
   return (
     <div
-      className={styles.monitor}
-      data-projection-state={state}
-      hidden={hidden}
-      role="img"
-      aria-label="CT-derived teaching projection with authored target and tool"
+      className={comparison ? styles.comparison : undefined}
+      data-image-comparison={comparison ? 'available' : undefined}
+      data-has-baseline={comparison && baseline ? 'true' : undefined}
     >
-      <div
-        className={styles.monitorImage}
-        style={{ transform: `scale(${zoom})` }}
-        data-monitor-zoom={zoom}
-      >
-        <canvas ref={canvas} aria-hidden="true" />
-        {overlay ?? (
-          <ProjectionOverlays
-            orbit={pose.orbit}
-            tilt={pose.tilt}
-            depth={depth}
-            geometry={pose.geometry}
-            offset={offset}
-            showCurrent={showCurrent}
-            targetFill={targetFill}
-          />
-        )}
-      </div>
-      {mask}
-      {state !== 'ready' && (
-        <p className={styles.imageStatus} role="status">
-          {state === 'failed'
-            ? 'CT rendering unavailable. Use the scene and text readouts.'
-            : 'Preparing the CT projection…'}
-        </p>
+      {comparison && (
+        <div className={styles.toolbar}>
+          <button type="button" disabled={state !== 'ready'} onClick={captureBaseline}>
+            Save baseline image
+          </button>
+          <span>Freeze this image, then change one control.</span>
+        </div>
       )}
+      {comparison && baseline && (
+        <figure data-baseline-image>
+          <figcaption>Baseline · {baseline.label}</figcaption>
+          <div className={styles.monitor} role="img" aria-label="Saved baseline projection">
+            <div className={styles.monitorImage} style={{ transform: `scale(${baseline.zoom})` }}>
+              {/* A local canvas capture, retained with its own overlay and acquisition state. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={baseline.image} alt="" />
+              {baseline.overlay}
+              {baseline.mask}
+            </div>
+            {baseline.displayMask}
+          </div>
+        </figure>
+      )}
+      <figure data-current-image>
+        {comparison && <figcaption>Current · {label}</figcaption>}
+        <div
+          className={styles.monitor}
+          data-projection-state={state}
+          hidden={hidden}
+          role="img"
+          aria-label="CT-derived teaching projection with authored target and tool"
+        >
+          <div
+            className={styles.monitorImage}
+            style={{ transform: `scale(${zoom})` }}
+            data-monitor-zoom={zoom}
+          >
+            <canvas ref={canvas} aria-hidden="true" />
+            {currentOverlay}
+            {mask}
+          </div>
+          {displayMask}
+          {state !== 'ready' && (
+            <p className={styles.imageStatus} role="status">
+              {state === 'failed'
+                ? 'CT rendering unavailable. Image-based work cannot be completed. Reload to retry; teaching text remains available.'
+                : 'Preparing the CT projection…'}
+            </p>
+          )}
+        </div>
+      </figure>
     </div>
   )
 }
