@@ -1,13 +1,19 @@
 'use client'
 
-import { useEffect, useReducer, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { useRouter } from '@/i18n/navigation'
+import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
+import { draftSignature, readCtDraft, writeCtDraft } from '../engine/ct-draft'
+import { parseRouteDraft } from '../engine/route-draft'
+import type { CtViewerState } from '../content/ct-types'
+import { CtProgressiveMap } from './CtBranchMap'
 import { StageLayout } from '@/features/learning-module/stage/StageLayout'
 import { NowCard } from '@/features/learning-module/stage/NowCard'
 import { LookInLine } from '@/features/learning-module/stage/LookInLine'
 import { StepList } from '@/features/learning-module/stage/StepList'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { StageBlock } from '@/features/learning-module/stage/StageBlock'
-import { BASE_PATH, LESSONS, SOURCE, lessonById, nextLesson } from '../content/lessons'
+import { BASE_PATH, LESSONS, SOURCE, VERSION, lessonById, nextLesson } from '../content/lessons'
 import { COURSE_OPTIONS, type CtLesson } from '../content/ct-types'
 import { traceById, targetForTrace } from '../geometry/native-ct'
 import {
@@ -42,6 +48,7 @@ import {
   CtTargetRelationControl,
   CtTargetFeedback,
 } from './CtTraceControls'
+import { LocalCtLesson } from './LocalCtLesson'
 import { ModuleFrame } from './ModuleFrame'
 import { useDeviceProgress } from './useDeviceProgress'
 import styles from './branch-tracing.module.css'
@@ -60,18 +67,50 @@ export function BranchTracingLesson({ requestedId }: { requestedId?: string }) {
   )
 }
 function LessonEntry({ requestedId }: { requestedId?: string }) {
-  const [lesson] = useState(
-    () => lessonById(requestedId) ?? nextLesson(completedLessons(readProgress())) ?? LESSONS[0],
-  )
-  return <LessonSession lesson={lesson} />
+  const [lesson] = useState(() => {
+    const progress = readProgress(),
+      completed = completedLessons(progress)
+    const resume =
+      progress.resume?.payloadVersion === VERSION &&
+      progress.resume.pathname === `${BASE_PATH}/learn`
+        ? lessonById(progress.resume.query?.lesson)
+        : undefined
+    return (
+      lessonById(requestedId) ??
+      (resume && !completed.includes(resume.id) ? resume : nextLesson(completed)) ??
+      LESSONS[0]
+    )
+  })
+  return lesson.exercises ? <LocalCtLesson lesson={lesson} /> : <LessonSession lesson={lesson} />
 }
 function LessonSession({ lesson }: { lesson: CtLesson }) {
+  const router = useRouter()
+  const [help, setHelp] = useState(false)
+  const [exitWarning, setExitWarning] = useState(false)
+  const helpRef = useRef<HTMLButtonElement>(null)
   const prediction = traceById(lesson.prediction),
     transferTrace = traceById(lesson.transfer)
   const reduce = ctSessionReducer(prediction, transferTrace, traceById(lesson.example))
-  const [s, dispatch] = useReducer(reduce, prediction, emptyCtSession)
-  const [review, setReview] = useState<number | null>(null)
+  const signature = useMemo(
+    () => draftSignature([lesson, prediction, transferTrace, traceById(lesson.example)]),
+    [lesson, prediction, transferTrace],
+  )
+  const draftKey = `learn.${lesson.id}`
+  const [loaded] = useState(() =>
+    readCtDraft(browserStorage(), draftKey, signature, (v) =>
+      parseRouteDraft(v, prediction, transferTrace, traceById(lesson.example)),
+    ),
+  )
+  const [s, dispatch] = useReducer(reduce, loaded.value?.session ?? emptyCtSession(prediction))
   const [saved, setSaved] = useState(() => browserStorage() !== null)
+  const [viewerEpoch, setViewerEpoch] = useState(0)
+  const [views, setViews] = useState<Record<string, CtViewerState>>(loaded.value?.views ?? {})
+  useEffect(() => {
+    // Report whether synchronization with browser storage succeeded.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSaved(writeCtDraft(browserStorage(), draftKey, signature, { session: s, views }))
+  }, [draftKey, signature, s, views])
+  const [review, setReview] = useState<number | null>(null)
   const [levelRequest, setLevelRequest] = useState(0)
   useEffect(() => {
     saveVisit(lesson.id)
@@ -79,6 +118,16 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
   const step = lesson.steps[s.step],
     transfer = s.step === 5
   const trace = s.step === 0 ? traceById(lesson.example) : transfer ? transferTrace : prediction
+  const viewKey = `${trace.id}.${s.step === 0 ? 'demo' : 'work'}`
+  const onViewChange = useCallback(
+    (view: CtViewerState) =>
+      setViews((current) =>
+        JSON.stringify(current[viewKey]) === JSON.stringify(view)
+          ? current
+          : { ...current, [viewKey]: view },
+      ),
+    [viewKey],
+  )
   const target = targetForTrace(trace)
   const response = transfer ? s.transfer : s.prediction
   const revealed = s.step === 0 || Boolean(response)
@@ -110,7 +159,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
           : false
   const stationAction = stationDone
     ? s.active + 1 === trace.checkpoints.length - 1
-      ? 'Continue to nodule approach'
+      ? 'Inspect the distal airway–nodule relationship'
       : 'Next junction'
     : trace.checkpoints[s.active].decision
       ? 'Check this junction'
@@ -127,6 +176,10 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
     if (!s.complete && nextState.complete) setSaved(saveVisit(lesson.id, true))
     if (action.type === 'active' || (action.type === 'check-orientation' && nextState.alignment))
       setLevelRequest((v) => v + 1)
+    if (action.type === 'restart') {
+      setViews({})
+      setViewerEpoch((v) => v + 1)
+    }
     if (action.type === 'advance' || action.type === 'restart') {
       setReview(null)
     }
@@ -155,11 +208,17 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
           meta={['Real CT · 0.5 mm slices', `${lesson.minutes} min`]}
           onRestart={() => perform({ type: 'restart' })}
           restartLabel="Restart lesson"
-          saveAndExitHref={BASE_PATH}
+          helpRef={helpRef}
+          onHelp={() => setHelp(true)}
+          onSaveAndExit={() => {
+            if (writeCtDraft(browserStorage(), draftKey, signature, { session: s, views }))
+              router.push(BASE_PATH)
+            else setExitWarning(true)
+          }}
           resumedNote={
             !saved
               ? 'Browser storage is unavailable. Work continues, but progress cannot be saved.'
-              : undefined
+              : loaded.notice || 'Draft saves on this device, including the CT view and answers.'
           }
         />
       }
@@ -191,7 +250,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 : orienting
                   ? 'Start in standard axial. Rotate or reflect the CT to the tracing convention for this region, using the paired airway view and patient direction letters. Then check your orientation.'
                   : stationTask
-                    ? 'Select a daughter in Steps and mark its lumen on Current junction CT. Record this fork before continuing.'
+                    ? 'Select the branch you would follow, then mark its lumen on the answer slice. Record this fork before continuing.'
                     : step.instruction,
               where: s.complete ? undefined : <LookInLine location={step.lookIn!} />,
               primary: s.complete
@@ -317,6 +376,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
               onActive={(index) => perform({ type: 'active', index })}
             />
           )}
+          <CtProgressiveMap trace={trace} recorded={s.recorded} branches={s.branches} />
           <StepList
             lesson={{
               sectionId: lesson.id,
@@ -373,7 +433,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 <p>{lesson.worked}</p>
                 <p>
                   Use <strong>Show target</strong> to inspect the nodule, then Start at the trachea.
-                  Use <strong>Next</strong> beneath the paired views to inspect each worked
+                  Use <strong>Next junction</strong> beneath the paired views to inspect each worked
                   junction. Every route includes all modeled branch decisions before the distal
                   approach.
                 </p>
@@ -401,9 +461,9 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                       : `Use Start to identify the ${trace.anchor.airway.name.toLowerCase()}, then follow each intervening junction toward the target.`}
                 </p>
                 <p>
-                  At each fork, inspect all daughter branches. Choose one in Steps and mark the
-                  visible continuation on Current junction CT, or record uncertainty. Check the
-                  junction and compare before selecting Next junction.
+                  At each fork, inspect all daughter branches. Choose the branch you would follow
+                  and mark the visible continuation on Current junction CT, or record uncertainty.
+                  Check the junction and compare before selecting Next junction.
                 </p>
                 <p>
                   At the distal checkpoint, scroll toward the nodule. Decide whether you can follow
@@ -459,8 +519,10 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
       simulator={
         <div className={styles.viewStack}>
           <NativeCtViewer
-            key={`${trace.id}-${s.step === 0 ? 'example' : transfer ? 'transfer' : 'prediction'}`}
+            key={`${trace.id}-${s.step === 0 ? 'example' : transfer ? 'transfer' : 'prediction'}.${viewerEpoch}`}
             trace={trace}
+            initialView={views[viewKey]}
+            onViewChange={onViewChange}
             marks={s.step === 0 ? trace.checkpoints.map(() => null) : s.marks}
             active={s.active}
             levelRequest={levelRequest}
@@ -482,6 +544,31 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
             showAnchor
           />
         </div>
+      }
+      overlay={
+        <>
+          <HelpDialog open={help} onClose={() => setHelp(false)} returnFocusTo={helpRef}>
+            <p>
+              {orienting
+                ? 'Use the rotate or flip controls, then check your orientation.'
+                : stationTask
+                  ? 'Select the branch you would follow. Browse neighboring CT slices, then use Go to answer slice to mark its lumen or record uncertainty.'
+                  : step.instruction}
+            </p>
+            <p>
+              Slice controls browse the CT; Next junction changes the active fork. Help preserves
+              your current responses.
+            </p>
+          </HelpDialog>
+          <HelpDialog
+            open={exitWarning}
+            onClose={() => setExitWarning(false)}
+            title="This draft could not be saved"
+          >
+            <p>Leaving will lose changes since the last successful save.</p>
+            <button onClick={() => router.push(BASE_PATH)}>Leave without saving</button>
+          </HelpDialog>
+        </>
       }
       footer={
         <div className={styles.footer}>

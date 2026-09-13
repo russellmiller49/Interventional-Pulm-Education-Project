@@ -122,4 +122,47 @@ export interface CtLesson {
   prediction: string
   transfer: string
   steps: StageStepBase<string>[]
+  /** Local exercises precede full routes. IDs resolve against unchanged source geometry. */
+  exercises?: LocalExerciseSpec[]
+}
+
+export type AnnotationReview =
+  | { status: 'provisional'; reason: string }
+  | { status: 'faculty-reviewed'; reviewer: string; date: string; geometryVersion: string }
+
+export interface CtTeachingOverlay {
+  label: string
+  pixel: [number, number]
+  /** Native CT pixels, authored from image review; never inferred from a centerline. */
+  contour?: [number, number][]
+}
+export interface CtTeachingFrame {
+  slice: number
+  caption: string
+  overlays: CtTeachingOverlay[]
+}
+export interface LocalExerciseSpec {
+  traceId: string
+  checkpointId: string
+  kind: 'same-lumen' | 'bifurcation' | 'pattern' | 'integration' | 'parent-view'
+}
+export interface LocalCtExercise {
+  id: string
+  spec: LocalExerciseSpec
+  trace: CtTrace
+  review: AnnotationReview
+  frames: CtTeachingFrame[]
+  answerPoints: { label: string; slice: number; pixel: [number, number] }[]
+  task: string
+  explanation: string
+  hints: [string, string, string]
+}
+
+export interface CtViewerState {
+  slice: number
+  focus: 'start' | 'target' | 'junction'
+  full: boolean
+  magnification: number
+  showNodule: boolean
+  showScope: boolean
 }

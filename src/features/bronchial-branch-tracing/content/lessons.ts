@@ -2,10 +2,10 @@ import {
   stageStepLocationErrors,
   type StageStepBase,
 } from '@/features/learning-module/stage/stageModel'
-import type { CtLesson } from './ct-types'
+import type { CtLesson, LocalExerciseSpec } from './ct-types'
 
 export const BASE_PATH = '/learn/anatomy/branch-tracing'
-export const VERSION = 'c5-all-branches-r1'
+export const VERSION = 'c6-local-teaching-r1'
 export const SOURCE = {
   title: 'Kurimoto & Morita. Bronchial Branch Tracing (2020)',
   url: 'https://doi.org/10.1007/978-981-13-9905-3',
@@ -42,7 +42,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     title: 'Describe its course',
     instruction:
       'Review your marked airway points, describe the course, then inspect the distal airway–nodule relationship using Show target and adjacent slices.',
-    lookIn: { pane: 'steps', landmark: 'Your branch map' },
+    lookIn: { pane: 'steps', landmark: 'Route checkpoints' },
     actionLabel: 'Reveal CT comparison',
     interaction: 'map',
     gate: 'after-prediction',
@@ -53,7 +53,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     phase: 'observe',
     title: 'Compare on the CT',
     instruction:
-      'Compare your marks with the source-derived trace. Use adjacent slices to resolve a difference rather than following a point in isolation.',
+      'Compare your marks with the model reference trace. Use adjacent slices to resolve a difference rather than following a point in isolation.',
     lookIn: { pane: 'simulator', landmark: 'CT tracing stack' },
     actionLabel: 'Review the relationship',
     interaction: 'observe',
@@ -82,7 +82,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
       pane: 'simulator',
       landmark: 'CT tracing stack',
       alsoPane: 'steps',
-      alsoLandmark: 'Your branch map',
+      alsoLandmark: 'Route checkpoints',
     },
     actionLabel: 'Compare new trace',
     interaction: 'transfer',
@@ -90,7 +90,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
   },
 ]
 
-export const LESSONS: CtLesson[] = [
+const ROUTE_LESSONS: CtLesson[] = [
   {
     id: 'orientation',
     title: 'Orient the CT for branch tracing',
@@ -177,7 +177,7 @@ export const LESSONS: CtLesson[] = [
     worked:
       'The middle-lobe example extends anteriorly while changing CT level only slightly. Several trace points may lie on the same acquisition plane because the airway is almost horizontal.',
     interpretation:
-      'Look at the in-plane distance between your marked lumens and their small difference in CT level. The source-derived trace is a comparison aid; inspect the actual air column before accepting its path.',
+      'Look at the in-plane distance between your marked lumens and their small difference in CT level. The model reference trace is a comparison aid; inspect the actual air column before accepting its path.',
     transferPrompt:
       'Trace an upper-lobe branch in the counterclockwise view. Separate the display rotation from the airway’s local course.',
     sourcePages: 'Chapter 1, pp. 8–10; Figs. 1.14–1.16',
@@ -279,6 +279,142 @@ export const LESSONS: CtLesson[] = [
     transfer: 'left-lingula',
     steps: LESSON_STEPS,
   },
+]
+const local = (
+  traceId: string,
+  checkpointId: string,
+  kind: LocalExerciseSpec['kind'],
+): LocalExerciseSpec => ({ traceId, checkpointId, kind })
+const LOCAL_PLANS: Record<string, LocalExerciseSpec[]> = {
+  continuity: [
+    local('central-right', 'junction-1', 'bifurcation'),
+    local('left-lower-returning', 'junction-6', 'bifurcation'),
+  ],
+  orientation: [
+    local('central-right', 'junction-1', 'parent-view'),
+    local('right-upper-entry', 'junction-4', 'parent-view'),
+  ],
+  vertical: [
+    local('right-upper-apical', 'junction-14', 'pattern'),
+    local('right-lower-basal', 'junction-9', 'pattern'),
+  ],
+  'horizontal-horizontal': [
+    local('middle-lobe-lateral', 'junction-10', 'pattern'),
+    local('middle-lobe-lateral', 'junction-19', 'pattern'),
+  ],
+  'horizontal-vertical': [
+    local('middle-lobe-caudal', 'junction-20', 'pattern'),
+    local('middle-lobe-cranial', 'junction-20', 'pattern'),
+  ],
+  'horizontal-oblique': [
+    local('upper-oblique-lateral', 'junction-16', 'pattern'),
+    local('left-upper-anterior', 'junction-23', 'pattern'),
+  ],
+  'orientation-changes': [
+    local('left-lower-returning', 'junction-11', 'integration'),
+    local('left-lower-returning', 'junction-25', 'integration'),
+    local('left-lower-returning', 'junction-52', 'integration'),
+  ],
+}
+const LOCAL_STEPS: StageStepBase<string>[] = [
+  {
+    id: 'demo',
+    ordinal: 1,
+    phase: 'recognize',
+    title: 'Watch the CT walkthrough',
+    instruction: 'Inspect the short interval and its caption transcript.',
+    actionLabel: 'Your turn',
+    interaction: 'read',
+    gate: 'open',
+    lookIn: { pane: 'simulator', landmark: 'CT tracing stack' },
+  },
+  {
+    id: 'attempt',
+    ordinal: 2,
+    phase: 'predict',
+    title: 'Follow the lumen',
+    instruction: 'Browse adjacent slices, then mark the lumen on the answer slice.',
+    actionLabel: 'Check my tracing',
+    interaction: 'choose',
+    gate: 'open',
+    lookIn: { pane: 'simulator', landmark: 'CT tracing stack' },
+  },
+  {
+    id: 'compare',
+    ordinal: 3,
+    phase: 'observe',
+    title: 'Compare and retry',
+    instruction:
+      'Review the image evidence. Keep uncertainty where continuity cannot be established.',
+    actionLabel: 'Relate the parent view',
+    interaction: 'observe',
+    gate: 'after-prediction',
+    lookIn: { pane: 'simulator', landmark: 'CT tracing stack' },
+  },
+  {
+    id: 'parent-view',
+    ordinal: 4,
+    phase: 'explain',
+    title: 'Relate the parent view',
+    instruction: 'Choose the opening before revealing its label and the paired airway view.',
+    actionLabel: 'Try another local example',
+    interaction: 'explain',
+    gate: 'after-prediction',
+    lookIn: { pane: 'simulator', landmark: 'Fixed parent view' },
+  },
+]
+const continuity = ROUTE_LESSONS.find((lesson) => lesson.id === 'continuity')!
+export const LESSONS: CtLesson[] = [
+  {
+    ...continuity,
+    id: 'follow-one-airway',
+    title: 'Follow one airway',
+    minutes: 4,
+    objective: 'Maintain the identity of one air-filled lumen across neighboring CT slices.',
+    prerequisite: 'Recognize an air-filled airway on CT.',
+    concept: 'Follow the same lumen before interpreting a division.',
+    exercises: [
+      local('central-right', 'junction-1', 'same-lumen'),
+      local('central-left', 'junction-3', 'same-lumen'),
+    ],
+    steps: LOCAL_STEPS.slice(0, 3),
+  },
+  ...[
+    'continuity',
+    'orientation',
+    'vertical',
+    'horizontal-horizontal',
+    'horizontal-vertical',
+    'horizontal-oblique',
+    'orientation-changes',
+    'variants-limits',
+  ].map((id) => {
+    const lesson = ROUTE_LESSONS.find((item) => item.id === id)!
+    return {
+      ...lesson,
+      title:
+        id === 'continuity'
+          ? 'Follow the airway through a bifurcation'
+          : id === 'orientation'
+            ? 'Relate CT to the parent airway view'
+            : id === 'orientation-changes'
+              ? 'Build a short route map'
+              : lesson.title,
+      objective:
+        id === 'continuity'
+          ? 'Maintain parent-airway identity through a division and identify both daughter lumens using adjacent slices.'
+          : id === 'orientation'
+            ? 'Separate patient direction, CT display transformation and the view down the parent airway.'
+            : id === 'orientation-changes'
+              ? 'Verify three successive divisions from a segmental parent, retaining sibling branches and uncertainty.'
+              : lesson.objective,
+      prerequisite:
+        id === 'continuity' ? 'Follow one airway across neighboring slices.' : lesson.prerequisite,
+      minutes: LOCAL_PLANS[id] ? (id === 'orientation-changes' ? 8 : 6) : lesson.minutes,
+      exercises: LOCAL_PLANS[id],
+      steps: LOCAL_PLANS[id] ? LOCAL_STEPS : LESSON_STEPS,
+    }
+  }),
 ]
 export const lessonById = (id?: string) => LESSONS.find((l) => l.id === id)
 export const nextLesson = (completed: string[]) =>
