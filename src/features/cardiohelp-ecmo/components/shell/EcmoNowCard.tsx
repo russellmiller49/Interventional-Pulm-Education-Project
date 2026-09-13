@@ -25,6 +25,8 @@ export interface NowCardModel {
   /** Where on the stage this step is worked. Rendered directly under the instruction. */
   readonly where?: ReactNode
   readonly primary?: NowCardAction
+  /** A foundation comparison puts its enabled action before the retained baseline table. */
+  readonly primaryBeforeContent?: boolean
   readonly secondary?: NowCardAction
   /** A single line of state the learner is waiting on ("12 s since your last action"). */
   readonly status?: string
@@ -91,15 +93,25 @@ export function EcmoNowCard({
           {model.where}
         </p>
       ) : null}
+      {model.primaryBeforeContent && model.primary ? (
+        <div className={styles.nowActions}>
+          <NowActionControl
+            action={model.primary}
+            className={styles.nowPrimary}
+            reasonId={reasonId}
+            primary
+          />
+        </div>
+      ) : null}
       {children}
       {model.status ? (
         <p className={styles.nowStatus} data-now-status>
           {model.status}
         </p>
       ) : null}
-      {model.primary || model.secondary ? (
+      {(model.primary && !model.primaryBeforeContent) || model.secondary ? (
         <div className={styles.nowActions}>
-          {model.primary ? (
+          {model.primary && !model.primaryBeforeContent ? (
             <NowActionControl
               action={model.primary}
               className={styles.nowPrimary}

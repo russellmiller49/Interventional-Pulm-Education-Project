@@ -1,3 +1,4 @@
+import { reachFoundationStep } from '../test-support/foundationJourney'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
@@ -6,27 +7,8 @@ import { ecmoFoundationLearningItemsFor } from '../content/foundationLearningIte
 import type { SupportMode } from '../engine/types'
 import { answerLeakMatch, ANSWER_LEAK_MATCHERS } from '../test-support/answerLeakMatchers'
 
-/**
- * The composed-DOM answer-leak contract for the flow-path section.
- *
- * The independent review's finding A was not in the walk card: `EcmoCircuitWalk` withheld its
- * reading names correctly while the sibling `CircuitFlowPathPanel`, three sections below it in the
- * same pane, printed "pInt between pump and membrane". The re-review then found the same defect one
- * pane over again: this suite's first version mocked `CircuitAndMonitors` wholesale, and the real
- * component's diagnostic map placed pInt on pump outflow — visibly, in its SVG description, and in
- * hidden mounted DOM one tab-click from exposure. A leak test earns nothing by scanning a mock, so
- * the only module mocked here is `EcmoCircuit3D`, the WebGL leaf jsdom genuinely cannot render;
- * everything else is the real learner activity, now rendered on the lesson stage — the step list,
- * the Now card and its folded "why", the Sections drawer and the four surface disclosures are all
- * part of the scanned document.
- *
- * The keyed prediction is "Where in the blood path does the circuit report pInt?", and the leak is
- * any content that locates pInt after the pump and before the membrane — not one exact sentence,
- * which is why the detector matches semantic equivalents. Scanning is done at two granularities:
- * per text node (SVG labels and descriptions are single nodes, and concatenating the whole page
- * would let unrelated labels form false adjacencies) and per sentence within prose containers.
- * There is no negation exception: a unit that matches fails, full stop.
- */
+/** Ordinary Learn teaching is available first. Only the explicitly unlabelled retrieval
+ * task withholds locations in all DOM layers. Drill disclosure tests remain separate. */
 
 const mockPush = jest.fn()
 
@@ -128,8 +110,7 @@ function currentStage(): string {
 
 /** From the opening step, the Now card's one action leads to the Predict step. */
 function goToPredict() {
-  fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
-  expect(currentStage()).toBe('circuit-flow-path-predict')
+  reachFoundationStep('circuit-flow-path', 'predict')
 }
 
 /**
@@ -144,7 +125,7 @@ function commitPrediction() {
   )
   if (!choice) throw new Error('no prediction choice rendered')
   fireEvent.click(choice)
-  fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Submit answer' }))
   expect(document.querySelector('[data-verdict]')).not.toBeNull()
 }
 
@@ -160,15 +141,25 @@ function mountLesson(track: SupportMode, initialPhase?: 'act') {
 
 afterEach(cleanup)
 
-describe('before commitment, nothing in the composed activity locates pInt', () => {
+describe('ordinary teaching precedes the independent retrieval check', () => {
   it.each(TRACKS)(
-    '%s: the recognize phase discloses no equivalent of the keyed answer',
+    '%s: locations are visible and accessible before an answer is requested',
     (track) => {
       mountLesson(track)
       expect(currentStage()).toBe('circuit-flow-path-recognize')
-      expectNoLeak()
-      // The precommit surface is not silent about the withholding: it says when the locations come.
-      expect(document.body.textContent).toMatch(/once you have committed/i)
+      expect(diagnosticPintFlag()).not.toBeNull()
+      const identity = document.querySelector('[data-circuit-measurement-note]')!
+      expect(identity.closest('details')).toBeNull()
+      expect(identity).toHaveTextContent(
+        "pArt is pressure in the return-side circuit tubing, not the patient's arterial blood pressure.",
+      )
+      expect(diagnosticSvg().querySelector('desc')?.textContent).toMatch(/Pump outflow passes pInt/)
+      reachFoundationStep('circuit-flow-path', 'pressure-sites')
+      fireEvent.click(screen.getByRole('button', { name: /^pInt$/ }))
+      const block = document.querySelector('[data-active-foundation-block="pressure-sites"]')!
+      expect(block).toHaveTextContent('Between pump and oxygenator')
+      expect(block.closest('details')).toBeNull()
+      expect(document.querySelector('[data-prediction-choices]')).toBeNull()
     },
   )
 
@@ -182,20 +173,19 @@ describe('before commitment, nothing in the composed activity locates pInt', () 
     },
   )
 
-  it('a direct URL into a later phase discloses nothing either', () => {
+  it('a direct URL begins with teaching and reconstructs no answer', () => {
     mountLesson('vv', 'act')
-    // Clamped to the prediction: the step the URL asked for stays locked, and its title with it.
-    expect(currentStage()).toBe('circuit-flow-path-predict')
-    expect(
-      document.querySelector('[data-step-list] li[data-step-id="circuit-flow-path-act"]'),
-    ).toHaveAttribute('data-step-state', 'locked')
-    expectNoLeak()
+    expect(currentStage()).toBe('circuit-flow-path-recognize')
+    expect(document.querySelector('[data-verdict]')).toBeNull()
+    expect(document.querySelector('[data-map-answer-flag]')).toBeNull()
+    expect(diagnosticPintFlag()).not.toBeNull()
   })
 
   it.each(TRACKS)(
     '%s: the diagnostic map withholds the channel placements, in every layer',
     (track) => {
       mountLesson(track)
+      goToPredict()
 
       // The hidden-but-mounted tabpanel is part of the disclosure surface: expectNoLeak() above
       // already scanned it, and these are the structural halves of the same claim.
@@ -220,6 +210,7 @@ describe('before commitment, nothing in the composed activity locates pInt', () 
 
   it('selecting the Pressure-zone map tab before committing exposes nothing', () => {
     mountLesson('vv')
+    goToPredict()
 
     fireEvent.click(screen.getByRole('tab', { name: 'Pressure-zone map' }))
     const panel = document.querySelector('#cardiohelp-diagnostic-view')
@@ -234,15 +225,17 @@ describe('before commitment, nothing in the composed activity locates pInt', () 
 describe('after commitment, the full location teaching returns', () => {
   // The counterpart that keeps the leak test itself honest: if the detector were matching nothing
   // renderable, this would fail. The committed page must say the very things the gate withheld.
-  it.each(TRACKS)('%s: the text equivalent places pInt between pump and membrane', (track) => {
+  it.each(TRACKS)('%s: Back restores the location teaching without erasing the answer', (track) => {
     mountLesson(track)
     commitPrediction()
-
-    const teaching = document.querySelector('[data-pane="teaching"]')
-    expect(teaching?.textContent).toMatch(/pInt between pump and membrane/i)
-    // And the pInt guide, withheld before, renders its full location teaching.
-    expect(teaching?.textContent).toMatch(/pre-membrane, internal pressure/i)
-    expect(teaching?.textContent).toMatch(/after the pump and before the membrane/i)
+    fireEvent.click(document.querySelector('[data-now-back]')!)
+    fireEvent.click(document.querySelector('[data-now-back]')!)
+    expect(document.querySelector('[data-active-foundation-block="pressure-sites"]')).not.toBeNull()
+    expect(document.querySelector('[data-pane="teaching"]')).toHaveTextContent(
+      'Between pump and oxygenator',
+    )
+    goToPredict()
+    expect(document.querySelector('fieldset[data-prediction-choices]')).toBeDisabled()
   })
 
   it.each(TRACKS)('%s: the diagnostic map places the channels again, in every layer', (track) => {

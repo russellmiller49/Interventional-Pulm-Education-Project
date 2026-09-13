@@ -148,14 +148,12 @@ describe('A3.2: CARDIOHELP channel names are named as this manufacturer’s', ()
     expect(vocabulary?.textContent).toMatch(
       /pVen, pInt and pArt are CARDIOHELP\/Getinge channel labels/i,
     )
-    expect(vocabulary?.textContent).toMatch(/pArt is not the patient’s arterial blood pressure/i)
-    expect(vocabulary?.textContent).toMatch(
-      /return cannula enters the venous circulation even though the returned blood is oxygenated/i,
+    expect(container.querySelector('[data-circuit-pressure-identity]')).toHaveTextContent(
+      "pArt is pressure in the return-side circuit tubing, not the patient's arterial blood pressure.",
     )
-    // Flow is named as the general concept it is, on the same surface.
-    expect(vocabulary?.textContent).toMatch(/Circuit blood flow is different in kind/i)
-    expect(vocabulary?.textContent).toMatch(/general ECMO vocabulary/i)
-    expect(vocabulary?.textContent).toMatch(/Ask for them/i)
+    expect(container.textContent).toMatch(/oxygenated return blood enters the venous circulation/i)
+    expect(vocabulary?.textContent).toMatch(/Circuit blood flow is a general ECMO quantity/i)
+    expect(container.textContent).toMatch(/Ask for them/i)
   })
 })
 

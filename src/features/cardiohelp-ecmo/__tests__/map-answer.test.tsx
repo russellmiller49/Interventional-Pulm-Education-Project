@@ -1,3 +1,4 @@
+import { reachFoundationStep } from '../test-support/foundationJourney'
 import { fireEvent, render, screen } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
@@ -87,7 +88,7 @@ describe('the items answered on the circuit', () => {
     }
   })
 
-  it('maps the three items whose answers are all expressible on the circuit, and no others', () => {
+  it('maps the two location items whose answers are all expressible on the circuit, and no others', () => {
     /*
      * The rule that decides, stated as the list it produces. An item qualifies when every one of
      * its answers can be given on the drawing — as a place, or as the explicit statement that the
@@ -101,13 +102,12 @@ describe('the items answered on the circuit', () => {
      */
     expect([...ecmoMapAnsweredItemIds].sort()).toEqual([
       'ecmo.foundation.path.prediction',
-      'ecmo.foundation.path.transfer',
       'ecmo.foundation.pump.transfer',
     ])
   })
 
   it('expresses a “not enough information” answer as an option with no place', () => {
-    for (const itemId of ['ecmo.foundation.path.transfer', 'ecmo.foundation.pump.transfer']) {
+    for (const itemId of ['ecmo.foundation.pump.transfer']) {
       const targets = ecmoMapAnswerTargets(itemId) ?? []
       const offCircuit = targets.filter(isOffCircuitTarget)
       expect(offCircuit).toHaveLength(1)
@@ -180,7 +180,7 @@ describe('answering on the circuit', () => {
         initialPhase="recognize"
       />,
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    reachFoundationStep('circuit-flow-path', 'predict')
     return view
   }
 
@@ -201,9 +201,11 @@ describe('answering on the circuit', () => {
     expect(fieldset?.closest('[data-pane="task"]')).toBeNull()
     expect(container.querySelector('[data-pane="task"] [data-prediction-choices]')).toBeNull()
     // The question is still asked where the learner is working, and it says where to answer.
-    const prompt = container.querySelector('[data-map-answer-prompt]')
+    const prompt = container.querySelector('[data-map-question]')
     expect(prompt?.textContent).toContain(item().stem)
-    expect(prompt?.textContent).toMatch(/Choose the place on the circuit map/)
+    expect(prompt?.closest('#cardiohelp-circuit-panel')).toContainElement(
+      screen.getByRole('button', { name: 'Submit answer' }),
+    )
   })
 
   it('is a real radio group, so the browser supplies the behaviour', () => {
@@ -267,7 +269,7 @@ describe('answering on the circuit', () => {
       'After the membrane lung, on the return limb.',
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Submit answer' }))
     // The learner's own answer went to the engine, wrong one included.
     expect(container.querySelector('[data-verdict-outcome-label]')?.textContent).toBe(
       'Not correct.',
@@ -286,7 +288,7 @@ describe('answering on the circuit', () => {
   it('marks the answer and the keyed place in words once committed, and locks the group', () => {
     const { container } = mountAtPredict()
     fireEvent.click(radio('drainage-side'))
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Submit answer' }))
 
     expect(container.querySelector('[data-map-answer]')).toBeDisabled()
     expect(pin('drainage-side')?.getAttribute('data-map-answer-state')).toBe('chosen')
@@ -302,7 +304,7 @@ describe('answering on the circuit', () => {
   it('marks one pin when the learner was right', () => {
     mountAtPredict()
     fireEvent.click(radio('between-pump-and-membrane'))
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Submit answer' }))
     expect(pin('between-pump-and-membrane')?.getAttribute('data-map-answer-state')).toBe(
       'chosen-correct',
     )
@@ -326,14 +328,13 @@ describe('answering on the circuit', () => {
 
     // Once the answer is in, the note has nothing left to say.
     fireEvent.click(radio('between-pump-and-membrane'))
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Submit answer' }))
     fireEvent.click(screen.getByRole('tab', { name: 'Bedside 3D circuit' }))
     expect(container.querySelector('[data-answer-elsewhere]')).toBeNull()
   })
 
-  it('answers both “where does this localise” transfers on the circuit as well', () => {
+  it('keeps the pump localisation transfer on the circuit', () => {
     for (const [sectionId, itemId] of [
-      ['circuit-flow-path', 'ecmo.foundation.path.transfer'],
       ['pump-and-pressure-zones', 'ecmo.foundation.pump.transfer'],
     ] as const) {
       const view = render(
@@ -343,27 +344,7 @@ describe('answering on the circuit', () => {
           initialPhase="recognize"
         />,
       )
-      // Commit the prediction, then walk to the transfer step: the later steps are gated on it.
-      fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
-      const first = document.querySelector<HTMLInputElement>('[data-prediction-choices] input')
-      fireEvent.click(first as HTMLInputElement)
-      fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
-      /*
-       * Skip the bounded actions when looking for the way forward.
-       *
-       * They sit inside the Now card on the Act step now, and one of them is labelled "Read the
-       * same speed against a resisted return" — which this matcher reached before the card's own
-       * Continue, leaving the walk parked on the Act step.
-       */
-      for (let step = 0; step < 4; step += 1) {
-        const next = [...document.querySelectorAll<HTMLButtonElement>('button')].find(
-          (button) =>
-            !button.hasAttribute('data-guided-action') &&
-            /^(Continue|I have read|Read )/i.test(button.textContent ?? ''),
-        )
-        if (!next || next.disabled) break
-        fireEvent.click(next)
-      }
+      reachFoundationStep(sectionId, 'transfer')
 
       const fieldset = document.querySelector('[data-map-answer]')
       expect(`${itemId}: ${fieldset ? 'on the map' : 'still a list'}`).toBe(`${itemId}: on the map`)
@@ -382,47 +363,32 @@ describe('answering on the circuit', () => {
   })
 
   it('lets the learner answer that the pattern does not point anywhere', () => {
-    render(
-      <EcmoFoundationLessonActivity
-        sectionId="circuit-flow-path"
-        supportMode="vv"
-        initialPhase="recognize"
-      />,
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
-    fireEvent.click(radio('between-pump-and-membrane'))
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
-    for (let step = 0; step < 4; step += 1) {
-      const next = [...document.querySelectorAll<HTMLButtonElement>('button')].find(
-        (button) =>
-          !button.hasAttribute('data-guided-action') &&
-          /^(Continue|I have read|Read )/i.test(button.textContent ?? ''),
-      )
-      if (!next || next.disabled) break
-      fireEvent.click(next)
-    }
+    render(<EcmoFoundationLessonActivity sectionId="pump-and-pressure-zones" supportMode="vv" />)
+    reachFoundationStep('pump-and-pressure-zones', 'transfer')
     // The off-circuit option is answerable, and answering it is answering the item.
     const offCircuit = document.querySelector<HTMLInputElement>(
-      '[data-map-answer] input[value="not-enough"]',
+      '[data-map-answer] input[value="insufficient-information"]',
     )
     expect(offCircuit).not.toBeNull()
     fireEvent.click(offCircuit as HTMLInputElement)
     expect(
-      document.querySelector('[data-map-answer-row="not-enough"]')?.getAttribute('data-selected'),
+      document
+        .querySelector('[data-map-answer-row="insufficient-information"]')
+        ?.getAttribute('data-selected'),
     ).toBe('true')
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this answer' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Submit answer' }))
     expect(document.querySelector('[data-verdict-outcome-label]')?.textContent).toBe(
       'Partly correct.',
     )
     // The keyed place is marked on the drawing, and the row the learner took says which it was.
     expect(
       document
-        .querySelector('[data-map-answer-choice="return-side"]')
+        .querySelector('[data-map-answer-choice="drainage-preload"]')
         ?.getAttribute('data-map-answer-state'),
     ).toBe('correct')
-    expect(document.querySelector('[data-map-answer-row="not-enough"]')?.textContent).toContain(
-      'Your answer',
-    )
+    expect(
+      document.querySelector('[data-map-answer-row="insufficient-information"]')?.textContent,
+    ).toContain('Your answer')
   })
 
   it('leaves the sections whose answers are not places on their lists', () => {
@@ -433,7 +399,7 @@ describe('answering on the circuit', () => {
         initialPhase="recognize"
       />,
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    reachFoundationStep('why-extracorporeal-support', 'predict')
     expect(view.container.querySelector('[data-map-answer]')).toBeNull()
     expect(
       view.container.querySelector('[data-pane="task"] [data-prediction-choices] input'),

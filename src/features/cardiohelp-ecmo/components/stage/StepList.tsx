@@ -70,13 +70,15 @@ export function StepList({
                 {performed ? <Check aria-hidden="true" /> : step.ordinal}
               </span>
               <span className={styles.stepText}>
-                <span className={styles.stepPhase}>{STAGE_PHASE_LABELS[step.phase]}</span>
+                <span className={styles.stepPhase}>
+                  {step.foundationTask ? `Step ${step.ordinal}` : STAGE_PHASE_LABELS[step.phase]}
+                </span>
                 {/*
                   A step the learner has not reached shows its phase and ordinal only. Reached
                   steps show their title; unreached ones would otherwise paint the fitting action
                   beside the question that asks for it.
                 */}
-                {rowState === 'locked' ? (
+                {rowState === 'locked' && !step.foundationTask ? (
                   <span className={styles.stepTitle}>Step {step.ordinal}</span>
                 ) : (
                   <span className={styles.stepTitle}>{step.title}</span>

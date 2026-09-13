@@ -7,6 +7,7 @@ import type {
   EcmoPhaseLocation,
 } from '../../content/foundationLessonRuntime'
 import type { EcmoLearnPredictionCommitment } from '../../content/learnPredictionItems'
+import type { EcmoFoundationTeachingTask } from '../../content/foundationTeachingTasks'
 import type {
   CircuitViewPreference,
   GuidedTarget,
@@ -107,6 +108,8 @@ export type StageInteraction =
     }
 
 export interface StageStep {
+  /** Explicit local opt-in; absent from the six track-specific foundations and every drill. */
+  readonly foundationTask?: EcmoFoundationTeachingTask
   readonly id: string
   /** One-based position in the lesson. */
   readonly ordinal: number

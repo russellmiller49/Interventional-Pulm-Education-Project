@@ -34,12 +34,17 @@ import type { EcmoSimulationState, SimulationAction } from '../engine/types'
 export interface EcmoFoundationSnapshot {
   readonly simulationTime: number
   readonly bloodFlow: number
+  readonly displayedBloodFlow: number | null
   readonly rpmSetpoint: number
   readonly pVen: number | null
   readonly pInt: number | null
   readonly pArt: number | null
   readonly deltaP: number | null
   readonly sweepLpm: number
+  readonly gasOxygenFraction: number
+  readonly postOxygenatorSaturation: number
+  readonly rightRadialSpo2: number
+  readonly femoralArterialSpo2: number
   readonly spo2: number
   readonly paCO2: number
   readonly pH: number
@@ -54,12 +59,17 @@ export function ecmoFoundationSnapshot(state: EcmoSimulationState): EcmoFoundati
   return {
     simulationTime: state.simulationTime,
     bloodFlow: circuit.bloodFlow,
+    displayedBloodFlow: circuit.flowSensorConnected ? circuit.bloodFlow : null,
     rpmSetpoint: device.rpmSetpoint,
     pVen: circuit.readouts.pVen.displayed,
     pInt: circuit.readouts.pInt.displayed,
     pArt: circuit.readouts.pArt.displayed,
     deltaP: circuit.readouts.deltaP.displayed,
     sweepLpm: gas.sweepLpm,
+    gasOxygenFraction: gas.fio2,
+    postOxygenatorSaturation: circuit.postOxygenatorSaturation,
+    rightRadialSpo2: patient.rightRadialSpo2,
+    femoralArterialSpo2: patient.femoralArterialSpo2,
     spo2: patient.spo2,
     paCO2: patient.paCO2,
     pH: patient.pH,
@@ -68,6 +78,27 @@ export function ecmoFoundationSnapshot(state: EcmoSimulationState): EcmoFoundati
     nativeCardiacOutputLpm: patient.nativeCardiacOutputLpm,
     recirculationAdjustedCircuitFlowLpm: circuit.recirculationAdjustedCircuitFlowLpm,
   }
+}
+
+/** Session-only demonstration evidence, separate from independent attempts and progress. */
+export interface EcmoFoundationComparison {
+  readonly taskId: string
+  readonly actionId: string
+  readonly before: EcmoFoundationSnapshot
+  readonly after: EcmoFoundationSnapshot
+  readonly beforeLabel: string
+  readonly afterLabel: string
+  /** Retained so Back can show the actual circuit without rerunning an intervention. */
+  readonly result: EcmoSimulationState
+  readonly resultVariantId: string
+  readonly resultSource: EcmoLearnStateSource
+}
+
+export interface EcmoFoundationComparisonPlan {
+  readonly taskId: string
+  readonly baselineVariant: EcmoFoundationStateVariant
+  readonly resultVariant: EcmoFoundationStateVariant
+  readonly guided: EcmoFoundationGuidedAction
 }
 
 export interface EcmoFoundationSessionState {
@@ -88,9 +119,16 @@ export interface EcmoFoundationSessionState {
    * something a caller has to remember.
    */
   readonly clockRunning: boolean
+  readonly comparisons: Readonly<Record<string, EcmoFoundationComparison>>
 }
 
 export type EcmoFoundationSessionAction =
+  | { readonly type: 'RUN_COMPARISON'; readonly plan: EcmoFoundationComparisonPlan }
+  | {
+      readonly type: 'OPEN_COMPARISON'
+      readonly plan: EcmoFoundationComparisonPlan
+      readonly reset?: boolean
+    }
   | { readonly type: 'SIMULATION'; readonly action: SimulationAction }
   | { readonly type: 'RECORD_INTERACTION'; readonly id: string }
   | { readonly type: 'CAPTURE_SNAPSHOT'; readonly id: string }
@@ -173,6 +211,7 @@ export function createEcmoFoundationSessionState(
     interactionsSinceRestore: [],
     snapshot: null,
     clockRunning: variant.holdsClock !== true,
+    comparisons: {},
   }
 }
 
@@ -181,6 +220,53 @@ export function ecmoFoundationSessionReducer(
   action: EcmoFoundationSessionAction,
 ): EcmoFoundationSessionState {
   switch (action.type) {
+    case 'RUN_COMPARISON': {
+      const { taskId, baselineVariant, resultVariant, guided } = action.plan
+      const before = ecmoFoundationSnapshot(createFoundationVariantState(baselineVariant))
+      const restored = ecmoFoundationSessionReducer(
+        state,
+        ecmoFoundationRestoreAction(resultVariant, guided),
+      )
+      const comparison: EcmoFoundationComparison = {
+        taskId,
+        actionId: guided.id,
+        before,
+        after: ecmoFoundationSnapshot(restored.simulation),
+        beforeLabel: baselineVariant.label,
+        afterLabel: resultVariant.label,
+        result: restored.simulation,
+        resultVariantId: resultVariant.id,
+        resultSource: resultVariant.source,
+      }
+      return {
+        ...restored,
+        clockRunning: false,
+        comparisons: { ...state.comparisons, [taskId]: comparison },
+      }
+    }
+    case 'OPEN_COMPARISON': {
+      const { taskId, baselineVariant } = action.plan
+      const comparisons = { ...state.comparisons }
+      if (action.reset) delete comparisons[taskId]
+      const saved = comparisons[taskId]
+      if (saved) {
+        return {
+          ...state,
+          simulation: saved.result,
+          variantId: saved.resultVariantId,
+          source: saved.resultSource,
+          snapshot: null,
+          clockRunning: false,
+          interactionsSinceRestore: [saved.actionId],
+          comparisons,
+        }
+      }
+      return {
+        ...ecmoFoundationSessionReducer(state, ecmoFoundationRestoreAction(baselineVariant)),
+        clockRunning: false,
+        comparisons,
+      }
+    }
     case 'SIMULATION':
       return { ...state, simulation: ecmoSimulationReducer(state.simulation, action.action) }
 
@@ -234,6 +320,7 @@ export function ecmoFoundationSessionReducer(
         // Re-held on every reload, so a state that must be read before it changes cannot be walked
         // past it by a clock the previous state left running.
         clockRunning: action.holdsClock !== true,
+        comparisons: state.comparisons,
       }
 
     default:

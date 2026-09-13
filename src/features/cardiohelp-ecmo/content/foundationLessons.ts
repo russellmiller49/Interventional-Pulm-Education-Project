@@ -41,9 +41,9 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
       'Start from what the tissues need and the three things that decide whether they get it, then name the one a circuit can stand in for.',
     minutes: 8,
     paragraphs: [
-      'Extracorporeal support is not a treatment for a diagnosis; it is a way of substituting for a failing step in oxygen delivery or carbon dioxide clearance while something else is given time to recover or to be corrected. Before any console appears, the useful question is which step has failed.',
-      'Oxygen delivery to the tissues is the product of blood flow and the oxygen content that blood carries. Oxygen content is dominated by hemoglobin and its saturation, with a small dissolved contribution. Oxygen consumption sits on the other side of the balance. A patient can therefore arrive at impaired delivery through a blood-flow problem, an oxygen-content problem, or a consumption problem — and those are not interchangeable, because support that raises one does not necessarily raise the others.',
-      'Carbon dioxide behaves differently. It is far more diffusible than oxygen and its removal across a membrane is governed mostly by the gradient maintained on the gas side, not by how much blood is passing the membrane. That asymmetry is the reason the two controls on an extracorporeal circuit are not interchangeable, and it is developed in the blood-flow-versus-sweep section.',
+      'Extracorporeal support is not a treatment for a diagnosis; it is a way of substituting for a failing step in oxygen delivery or carbon dioxide clearance while something else is given time to recover or to be corrected. The first task is to understand what delivery requires before attributing a problem to one component.',
+      'Oxygen delivery to the tissues is the product of blood flow and the oxygen content that blood carries. Oxygen content is dominated by hemoglobin and its saturation, with a small dissolved contribution. Oxygen consumption sits on the other side of the balance. A patient can therefore develop inadequate delivery relative to need through a blood-flow problem, an oxygen-content problem, or a rise in demand that delivery does not meet — and those are not interchangeable, because support that raises one does not necessarily raise the others.',
+      'Carbon dioxide behaves differently. Its removal depends strongly on the gas-side gradient maintained by sweep; blood flow, membrane function, and actual gas delivery also constrain clearance. That asymmetry is the reason pump speed, sweep flow, and sweep-gas oxygen fraction are not interchangeable, and it is developed in the blood-flow-versus-sweep section.',
       'Naming the failing step also names the limits. Extracorporeal support does not treat the underlying lung injury, the cardiac lesion, the sepsis, or the bleeding; it holds that component while the treatable problem is treated. Every section that follows assumes this framing.',
     ],
     bullets: [
@@ -115,14 +115,14 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
       'You can change three things on this circuit; everything else is monitoring. Find out which problem each one reaches, and when none of them does.',
     minutes: 10,
     paragraphs: [
-      'Oxygen transfer across the membrane is limited mainly by how much desaturated blood is presented to it. Raising blood flow through the circuit presents more blood for oxygenation and is therefore the control that principally affects oxygenation — subject to the drainage limits from the previous section.',
-      'Carbon dioxide clearance is limited mainly by the gradient maintained on the gas side. Sweep gas flowing past the membrane carries CO₂ away and keeps that gradient wide. Increasing sweep increases CO₂ removal with comparatively little effect on oxygenation; increasing blood flow increases oxygenation with comparatively little effect on CO₂.',
-      'The clinical consequence is that a patient who is hypercapnic with adequate oxygenation has a sweep-side problem, and a patient who is hypoxemic with adequate CO₂ clearance has a blood-flow-side or an effective-flow problem. Reaching for the wrong control produces either no response or an unwanted one, and — more damaging for learning — makes the next observation uninterpretable.',
+      'Pump speed changes blood flow under the current loading conditions. Blood flow contributes to oxygen transfer, but the effect on patient oxygen delivery also depends on hemoglobin, recirculation, native circulation, membrane performance, and demand. The two external gas adjustments are sweep-gas flow and sweep-gas oxygen fraction; neither is the ventilator FiO₂.',
+      'Sweep gas carries CO₂ away from the membrane and principally affects CO₂ removal. The oxygen fraction of that gas changes the oxygen concentration offered to the membrane. These principal effects are distinct, but gas exchange is not fully independent of blood flow, membrane function, or the patient.',
+      'Hypercapnia or hypoxemia does not identify a single failed component by itself. Assess the patient, actual gas delivery, circuit flow, and membrane function before interpreting a response to a setting. The guided comparisons isolate one adjustment at a time so its modeled effect can be observed.',
       'A silent corollary: because sweep controls CO₂ so effectively, an interruption of the gas supply can produce rapid hypercapnia while the pump continues to run and the flow display stays entirely reassuring. Several of the failure sections later in this track are built on exactly that dissociation.',
     ],
     bullets: [
-      'Blood flow is the oxygenation control; sweep is the CO₂ control.',
-      'Predict which variable should move before changing either one.',
+      'Pump speed, sweep-gas flow, and sweep-gas oxygen fraction have different principal effects and constraints.',
+      'Name the adjustment, compare with its own baseline, and assess the patient response.',
       'A normal flow display says nothing about whether sweep gas is reaching the membrane.',
       'Rapid CO₂ correction has its own hazards; rate of change is part of the decision.',
     ],

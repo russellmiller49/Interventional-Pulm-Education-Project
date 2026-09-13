@@ -694,6 +694,64 @@
   display: none;
 }
 
+/* Task-scoped comparisons use the pane width, never the viewport's card-column breakpoint. */
+.comparison {
+  min-width: 0;
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.comparison h3 {
+  font-weight: 700;
+}
+.comparison table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+.comparison th,
+.comparison td {
+  padding: 0.55rem 0.15rem;
+  border-bottom: 1px solid var(--ecmo-line, #335159);
+  vertical-align: top;
+}
+.comparison th {
+  text-align: left;
+  width: 36%;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.comparison thead th:not(:first-child) {
+  width: 21.333%;
+  text-align: right;
+  white-space: nowrap;
+}
+.comparison td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.comparisonUnit {
+  display: block;
+  color: var(--ecmo-muted, #a7bcc0);
+}
+.comparisonTiming {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.comparisonControls,
+.mapQuestionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+.mapQuestionActions p {
+  flex-basis: 100%;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
 /* ------------------------------------------------------------------ *
  * Attribution: assign each proposed change to the thing it acts on
  * ------------------------------------------------------------------ */
@@ -765,4 +823,26 @@
   font-size: var(--ecmo-type-floor, 0.875rem);
   line-height: 1.55;
   color: var(--muted, #9fb4b7);
+}
+
+.compactFoundationNavigation {
+  display: none;
+}
+.workspaceFrame [data-compact='true'] .compactFoundationNavigation {
+  display: block;
+  margin-block: 0.75rem;
+  line-height: 1.6;
+}
+.compactFoundationContinue {
+  min-height: 44px;
+  width: 100%;
+  border-radius: 0.75rem;
+  padding: 0.7rem 1rem;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: 700;
+}
+
+.workspaceFrame [data-map-question] {
+  scroll-margin-top: 5rem;
 }

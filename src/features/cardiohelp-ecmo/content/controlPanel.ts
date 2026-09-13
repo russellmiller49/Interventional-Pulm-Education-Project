@@ -58,24 +58,27 @@ export const ECMO_CONTROL_PANEL = {
       plainName: 'Pump speed',
       consoleLabel: 'rpm',
       axis: 'blood path',
-      principallyMoves: 'oxygen transfer and the support delivered',
-      doesNotMove: 'CO₂ clearance, except a little',
+      principallyMoves: 'Circuit blood flow and its contribution to oxygen transfer',
+      doesNotMove:
+        'Blood flow can also limit CO₂ removal; the principal effects are not fully independent.',
     },
     {
       id: 'sweep',
       plainName: 'Sweep',
       consoleLabel: 'external blender',
       axis: 'gas path',
-      principallyMoves: 'CO₂ clearance',
-      doesNotMove: 'oxygenation, except a little',
+      principallyMoves: 'Principally CO₂ clearance',
+      doesNotMove:
+        'Oxygenation also depends on blood flow, gas delivery, and membrane performance; sweep is not an isolated clinical variable.',
     },
     {
       id: 'oxygen-fraction',
       plainName: 'Oxygen fraction of the sweep gas',
       consoleLabel: 'FiO₂ on the blender',
       axis: 'gas path',
-      principallyMoves: 'the oxygen offered to the membrane',
-      doesNotMove: 'the gradient that carries CO₂ away',
+      principallyMoves: 'The oxygen concentration offered to the membrane',
+      doesNotMove:
+        'Changing oxygen fraction does not increase sweep flow; the CO₂ gradient still depends on gas delivery and blood-side conditions.',
     },
   ],
   emergencyOnly: [

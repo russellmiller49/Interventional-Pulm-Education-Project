@@ -1,6 +1,6 @@
 'use client'
 
-import { useId } from 'react'
+import { useId, type ReactNode } from 'react'
 
 import { isOffCircuitTarget, type EcmoMapAnswerTarget } from '../../content/mapAnswerTargets'
 import styles from '../cardiohelp-ecmo.module.css'
@@ -46,6 +46,8 @@ export interface CircuitMapAnswerProps {
   readonly correctChoiceIds: readonly string[]
   readonly name: string
   readonly onSelect: (choiceId: string) => void
+  /** Local foundation opt-in: visible question and submit/feedback beside the map. */
+  readonly inlineActions?: ReactNode
 }
 
 interface Option {
@@ -114,91 +116,98 @@ export function CircuitMapAnswerFieldset(props: CircuitMapAnswerProps) {
           : null
 
   return (
-    <fieldset
-      className={styles.mapAnswer}
-      disabled={committed}
-      aria-labelledby={legendId}
-      data-prediction-choices
-      data-map-answer
-    >
-      <legend id={legendId} className="sr-only">
-        {item.stem}
-      </legend>
+    <>
+      <fieldset
+        className={styles.mapAnswer}
+        disabled={committed}
+        aria-labelledby={legendId}
+        data-prediction-choices
+        data-map-answer
+      >
+        <legend
+          id={legendId}
+          className={props.inlineActions ? styles.mapAnswerStem : 'sr-only'}
+          data-map-question={props.inlineActions ? true : undefined}
+        >
+          {item.stem}
+        </legend>
 
-      {/* The pins: a second label each, over the place they stand on. */}
-      <div className={styles.mapAnswerPins}>
-        {options.map((option) =>
-          option.rect ? (
-            <label
-              key={option.choiceId}
-              className={styles.mapAnswerPin}
-              htmlFor={inputId(option.choiceId)}
-              style={circuitMapHotspotPercent(option.rect)}
-              data-map-answer-choice={option.choiceId}
-              data-map-answer-state={stateOf(option.choiceId)}
-              data-selected={selectedChoiceId === option.choiceId}
-            >
-              <span className={styles.mapAnswerPinBody}>{option.ordinal}</span>
-              {flagFor(stateOf(option.choiceId)) ? (
-                <span
-                  className={styles.mapAnswerFlag}
-                  data-map-answer-flag={stateOf(option.choiceId)}
-                >
-                  {flagFor(stateOf(option.choiceId))}
-                </span>
-              ) : null}
-            </label>
-          ) : null,
-        )}
-      </div>
-
-      {/* The options: one row each, whether or not it has a pin. */}
-      <ol className={styles.mapAnswerLegend} data-map-answer-legend>
-        {options.map((option) => {
-          const state = stateOf(option.choiceId)
-          return (
-            <li key={option.choiceId} data-map-answer-legend-item={option.choiceId}>
-              <input
-                type="radio"
-                id={inputId(option.choiceId)}
-                className="sr-only"
-                name={name}
-                value={option.choiceId}
-                checked={selectedChoiceId === option.choiceId}
-                onChange={() => onSelect(option.choiceId)}
-              />
+        {/* The pins: a second label each, over the place they stand on. */}
+        <div className={styles.mapAnswerPins}>
+          {options.map((option) =>
+            option.rect ? (
               <label
-                className={styles.mapAnswerRow}
+                key={option.choiceId}
+                className={styles.mapAnswerPin}
                 htmlFor={inputId(option.choiceId)}
-                data-map-answer-row={option.choiceId}
-                data-map-answer-state={state}
+                style={circuitMapHotspotPercent(option.rect)}
+                data-map-answer-choice={option.choiceId}
+                data-map-answer-state={stateOf(option.choiceId)}
                 data-selected={selectedChoiceId === option.choiceId}
               >
-                {/*
+                <span className={styles.mapAnswerPinBody}>{option.ordinal}</span>
+                {flagFor(stateOf(option.choiceId)) ? (
+                  <span
+                    className={styles.mapAnswerFlag}
+                    data-map-answer-flag={stateOf(option.choiceId)}
+                  >
+                    {flagFor(stateOf(option.choiceId))}
+                  </span>
+                ) : null}
+              </label>
+            ) : null,
+          )}
+        </div>
+
+        {/* The options: one row each, whether or not it has a pin. */}
+        <ol className={styles.mapAnswerLegend} data-map-answer-legend>
+          {options.map((option) => {
+            const state = stateOf(option.choiceId)
+            return (
+              <li key={option.choiceId} data-map-answer-legend-item={option.choiceId}>
+                <input
+                  type="radio"
+                  id={inputId(option.choiceId)}
+                  className="sr-only"
+                  name={name}
+                  value={option.choiceId}
+                  checked={selectedChoiceId === option.choiceId}
+                  onChange={() => onSelect(option.choiceId)}
+                />
+                <label
+                  className={styles.mapAnswerRow}
+                  htmlFor={inputId(option.choiceId)}
+                  data-map-answer-row={option.choiceId}
+                  data-map-answer-state={state}
+                  data-selected={selectedChoiceId === option.choiceId}
+                >
+                  {/*
                   The pin already announces the number; here it is a visual tie between the row and
                   the drawing, so it stays out of the accessible name and the name reads
                   "2. Between the pump outlet and the membrane lung" rather than "22Between…".
                 */}
-                <span
-                  className={styles.mapAnswerLegendOrdinal}
-                  data-map-answer-ordinal
-                  aria-hidden="true"
-                >
-                  {option.ordinal ?? '—'}
-                </span>
-                <span>
-                  {option.label}
-                  {flagFor(state) ? (
-                    <span className={styles.mapAnswerRowFlag} data-map-answer-row-flag={state}>
-                      {flagFor(state)}
-                    </span>
-                  ) : null}
-                </span>
-              </label>
-            </li>
-          )
-        })}
-      </ol>
-    </fieldset>
+                  <span
+                    className={styles.mapAnswerLegendOrdinal}
+                    data-map-answer-ordinal
+                    aria-hidden="true"
+                  >
+                    {option.ordinal ?? '—'}
+                  </span>
+                  <span>
+                    {option.label}
+                    {flagFor(state) ? (
+                      <span className={styles.mapAnswerRowFlag} data-map-answer-row-flag={state}>
+                        {flagFor(state)}
+                      </span>
+                    ) : null}
+                  </span>
+                </label>
+              </li>
+            )
+          })}
+        </ol>
+      </fieldset>
+      {props.inlineActions}
+    </>
   )
 }

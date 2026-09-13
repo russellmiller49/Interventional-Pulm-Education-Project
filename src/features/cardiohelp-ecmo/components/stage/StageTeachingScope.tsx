@@ -10,13 +10,20 @@ import type { StagePhase } from './stageModel'
  * The stage publishes the current step's phase and whether the prediction has been committed;
  * teaching blocks consult it to decide whether they are the focus, a collapsed earlier block, or
  * not yet due. With no provider — the render harness, a panel test, the offline preview — the scope
- * is null and every block renders as it always has. The scope only ever narrows what is shown; the
- * commitment gate inside the panels is independent of it and decides what may be said at all.
+ * is null and every block renders as it always has. The four introductory foundations select an ordinary teaching block explicitly; their independent
+ * case reasoning is mounted separately after commitment. Drill disclosure remains phase-gated.
  */
 export interface StageTeachingScopeValue {
   readonly phase: StagePhase
   readonly predictionCommitted: boolean
   readonly stepId: string
+  readonly foundationBlock?: string
+  /** Context and the existing Continue action, repeated beside reading in a single-pane view. */
+  readonly foundationNavigation?: {
+    readonly instruction: string
+    readonly nextTitle: string
+    readonly onContinue: () => void
+  }
 }
 
 const StageTeachingScopeContext = createContext<StageTeachingScopeValue | null>(null)

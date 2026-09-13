@@ -76,6 +76,8 @@ export interface SimulationPanelProps {
   guidedControlId?: GuidedControlId | null
   /** See {@link CircuitLocationDisclosure}. Defaults to `full`. */
   locationDisclosure?: CircuitLocationDisclosure
+  /** Essential measurement identity supplied by introductory Learn tasks. */
+  circuitMeasurementNote?: string
   /**
    * The circuit surface the active guided step is read on, tagged with that step's id.
    *
@@ -168,6 +170,7 @@ export function CircuitSchematic({
   mapAnswer = null,
   onSaveForLater,
   locationDisclosure = 'full',
+  circuitMeasurementNote,
 }: SimulationPanelProps) {
   const locationsDisclosed = locationDisclosure === 'full'
   const diagramScrollRef = useRef<HTMLDivElement>(null)
@@ -382,6 +385,11 @@ export function CircuitSchematic({
         <span className={styles.simulatedBadge}>BOUNDED MODEL</span>
       </div>
 
+      {circuitMeasurementNote ? (
+        <p className="mb-3 text-sm leading-6" data-circuit-measurement-note>
+          {circuitMeasurementNote}
+        </p>
+      ) : null}
       <div
         className={styles.circuitModeSummary}
         role="group"
