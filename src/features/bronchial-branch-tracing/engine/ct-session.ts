@@ -7,15 +7,20 @@ import type {
   TargetRelation,
 } from '../content/ct-types'
 import { COURSE_OPTIONS, TARGET_RELATION_OPTIONS } from '../content/ct-types'
-import {
-  STANDARD_ORIENTATION,
-  orientationFor,
-  sameOrientation,
-  validOrientation,
-  type CtOrientation,
-} from '../geometry/orientation'
+import { STANDARD_ORIENTATION, validOrientation, type CtOrientation } from '../geometry/orientation'
 
 export interface CtSession {
+  junctionHistory: Record<
+    string,
+    {
+      mark: CtMark
+      branch: CtBranchChoice | null
+      hints: number
+      orientation?: CtOrientation
+      support: 'coached' | 'after-comparison'
+    }[]
+  >
+  targetViewed: Record<string, boolean>
   step: number
   active: number
   marks: (CtMark | null)[]
@@ -37,6 +42,8 @@ export const emptyTraceWork = (trace?: CtTrace) => ({
   recorded: (trace?.checkpoints ?? []).map(() => false),
 })
 export const emptyCtSession = (trace?: CtTrace): CtSession => ({
+  junctionHistory: {},
+  targetViewed: {},
   step: 0,
   active: 0,
   ...emptyTraceWork(trace),
@@ -56,6 +63,8 @@ export type CtAction =
   | { type: 'mark'; index: number; mark: CtMark }
   | { type: 'branch'; index: number; value: CtBranchChoice }
   | { type: 'record-junction' }
+  | { type: 'retry-junction' }
+  | { type: 'target-inspected' }
   | { type: 'active'; index: number }
   | { type: 'course'; value: Course }
   | { type: 'target-relation'; value: TargetRelation }
@@ -108,7 +117,8 @@ export function traceComplete(
 }
 export function ctSessionReducer(prediction: CtTrace, transfer: CtTrace, example = prediction) {
   return (s: CtSession, action: CtAction): CtSession => {
-    if (action.type === 'restart') return emptyCtSession(prediction)
+    if (action.type === 'restart')
+      return { ...emptyCtSession(prediction), junctionHistory: s.junctionHistory }
     if (action.type === 'orientation' && validOrientation(action.value))
       return { ...s, orientation: action.value }
     const trace = s.step === 0 ? example : s.step === 5 ? transfer : prediction
@@ -121,19 +131,23 @@ export function ctSessionReducer(prediction: CtTrace, transfer: CtTrace, example
       (!canMark || (s.alignment && action.index <= lastUnlocked(s.recorded)))
     )
       return { ...s, active: action.index }
+    if (action.type === 'target-inspected')
+      return s.targetViewed[trace.id]
+        ? s
+        : { ...s, targetViewed: { ...s.targetViewed, [trace.id]: true } }
     if (s.complete) return s
-    if (
-      action.type === 'check-orientation' &&
-      canMark &&
-      !s.alignment &&
-      !sameOrientation(s.orientation, STANDARD_ORIENTATION)
-    )
+    if (action.type === 'check-orientation' && canMark && !s.alignment)
       return {
         ...s,
         orientationAttempts: [...s.orientationAttempts, { ...s.orientation }],
-        alignment: sameOrientation(s.orientation, orientationFor(trace.preset))
-          ? { ...s.orientation }
-          : null,
+        alignment: { ...s.orientation },
+      }
+    if (action.type === 'retry-junction' && canMark && s.recorded[s.active])
+      return {
+        ...s,
+        marks: s.marks.map((v, i) => (i === s.active ? null : v)),
+        branches: s.branches.map((v, i) => (i === s.active ? null : v)),
+        recorded: s.recorded.map((v, i) => (i === s.active ? false : v)),
       }
     const editable =
       canMark && s.alignment && !s.recorded[s.active] && s.active === lastUnlocked(s.recorded)
@@ -156,8 +170,29 @@ export function ctSessionReducer(prediction: CtTrace, transfer: CtTrace, example
       action.type === 'record-junction' &&
       editable &&
       junctionReady(trace, s.active, s.marks, s.branches)
-    )
-      return { ...s, recorded: s.recorded.map((v, i) => (i === s.active ? true : v)) }
+    ) {
+      const key = `${trace.id}.${trace.checkpoints[s.active].id}`
+      return {
+        ...s,
+        recorded: s.recorded.map((v, i) => (i === s.active ? true : v)),
+        junctionHistory: {
+          ...s.junctionHistory,
+          [key]: [
+            ...(s.junctionHistory[key] ?? []),
+            {
+              mark: {
+                ...s.marks[s.active]!,
+                pixel: s.marks[s.active]!.pixel ? [...s.marks[s.active]!.pixel!] : null,
+              },
+              branch: s.branches[s.active],
+              hints: s.hints,
+              orientation: { ...s.orientation },
+              support: s.junctionHistory[key]?.length ? 'after-comparison' : 'coached',
+            },
+          ],
+        },
+      }
+    }
     if (
       action.type === 'course' &&
       (s.step === 2 || (s.step === 5 && !s.transfer)) &&
@@ -183,14 +218,21 @@ export function ctSessionReducer(prediction: CtTrace, transfer: CtTrace, example
     if (s.step === 3) return { ...s, step: 4 }
     if (s.step === 1 && s.alignment && traceComplete(trace, s)) return { ...s, step: 2 }
     const response = (): CtResponse => ({
-      orientation: { first: s.orientationAttempts[0], used: s.alignment! },
+      orientation: { first: s.orientationAttempts[0], used: { ...s.orientation } },
       marks: s.marks as CtMark[],
       branches: [...s.branches],
       course: s.course as Course,
       hints: s.hints,
       targetRelation: s.targetRelation as TargetRelation,
     })
-    if (s.step === 2 && s.alignment && traceComplete(trace, s) && s.course && s.targetRelation)
+    if (
+      s.step === 2 &&
+      s.alignment &&
+      traceComplete(trace, s) &&
+      s.course &&
+      s.targetRelation &&
+      s.targetViewed[trace.id]
+    )
       return { ...s, step: 3, prediction: response() }
     if (s.step === 4)
       return {
@@ -211,7 +253,8 @@ export function ctSessionReducer(prediction: CtTrace, transfer: CtTrace, example
       s.alignment &&
       traceComplete(trace, s) &&
       s.course &&
-      s.targetRelation
+      s.targetRelation &&
+      s.targetViewed[trace.id]
     )
       return { ...s, transfer: response() }
     if (s.step === 5 && s.transfer) return { ...s, complete: true }

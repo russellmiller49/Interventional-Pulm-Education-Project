@@ -67,6 +67,7 @@ interface Props {
   initialView?: CtViewerState
   onViewChange?: (view: CtViewerState) => void
   onReadyChange?: (ready: boolean) => void
+  onTargetReady?: () => void
 }
 export function NativeCtViewer({
   trace,
@@ -94,6 +95,7 @@ export function NativeCtViewer({
   initialView,
   onViewChange,
   onReadyChange,
+  onTargetReady,
 }: Props) {
   const target = targetForTrace(trace)
   const checkpoint = trace.checkpoints[active]
@@ -184,6 +186,9 @@ export function NativeCtViewer({
   useEffect(() => {
     onReadyChange?.(Boolean(ready))
   }, [ready, onReadyChange])
+  useEffect(() => {
+    if (ready && showNodule && slice === target.slice) onTargetReady?.()
+  }, [ready, showNodule, slice, target.slice, onTargetReady])
   const patchFailed = patchUrl && patchStatus?.url === patchUrl && patchStatus.failed
   const failed = (imageStatus?.url === url && imageStatus.failed) || patchFailed
   const center = full
@@ -226,7 +231,7 @@ export function NativeCtViewer({
           setSlice(submissionSlice)
         }}
       >
-        Go to answer slice
+        Go to response slice
       </button>
       {atCheckpoint && (
         <button disabled={!ready} onClick={() => onMark({ slice, pixel: null })}>
@@ -400,7 +405,7 @@ export function NativeCtViewer({
           <button onClick={showTarget}>Show target</button>
         </div>
       )}
-      {orientationControls && (
+      {(orientationControls || !sameOrientation(orientation, STANDARD_ORIENTATION)) && (
         <div className={styles.ctViewButtons} role="group" aria-label="CT orientation">
           {local ? (
             <>
@@ -408,7 +413,7 @@ export function NativeCtViewer({
                 aria-pressed={sameOrientation(orientation, STANDARD_ORIENTATION)}
                 onClick={() => setOrientation(STANDARD_ORIENTATION)}
               >
-                Reset to standard
+                Return to standard axial
               </button>
               <button
                 aria-pressed={sameOrientation(orientation, orientationFor(trace.preset))}
@@ -425,7 +430,7 @@ export function NativeCtViewer({
             <>
               {manualOrientationControls}
               <button onClick={() => setOrientation(STANDARD_ORIENTATION)}>
-                Reset to standard
+                Return to standard axial
               </button>
             </>
           )}
@@ -448,6 +453,7 @@ export function NativeCtViewer({
             className={styles.nativeImage}
             data-preset={preset}
             data-slice={slice}
+            data-ct-ready={Boolean(ready)}
             data-region-highlight={highlightRegion || undefined}
           >
             <svg
@@ -626,7 +632,7 @@ export function NativeCtViewer({
                       {i === active && (
                         <text
                           x={p[0] + (p[0] > 60 ? -4 : 4)}
-                          y={p[1] - 2}
+                          y={p[1] > 88 ? p[1] - 12 : p[1] + 7}
                           textAnchor={p[0] > 60 ? 'end' : 'start'}
                           fill="#a8fffa"
                           stroke="#07151b"
@@ -777,7 +783,8 @@ export function NativeCtViewer({
       </div>
       {orientationPending && (
         <p className={styles.orientationPrompt}>
-          Turn or reflect the CT, then check your orientation before marking the lumen.
+          Record the display you choose before marking. Standard axial is valid; a display change
+          never changes the source coordinates.
         </p>
       )}
       {scopeAvailable && (

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { markSchema, orientationSchema, viewerSchema } from './ct-draft'
-import { responseSchema } from './route-draft'
+import { responseSchema, validJunctionHistory } from './route-draft'
 import { traceById } from '../geometry/native-ct'
 import { traceComplete, validBranch, validCtMark } from './ct-session'
 
@@ -15,12 +15,17 @@ const workSchema = responseSchema
     alignment: responseSchema.shape.orientation.nullable(),
   })
 const schema = z.object({
+  targetViewed: z.record(z.boolean()).default({}),
   attempts: z.record(
     z.array(
       z.object({
+        support: z
+          .enum(['coached', 'independent', 'after-comparison', 'legacy-unknown'])
+          .default('legacy-unknown'),
         mark: markSchema,
         branch: responseSchema.shape.branches.element,
         hints: z.number().int().nonnegative(),
+        orientation: orientationSchema.optional(),
       }),
     ),
   ),
@@ -39,6 +44,11 @@ export function parsePracticeDraft(value: unknown, ids: string[]): PracticeDraft
   const parsed = schema.safeParse(value)
   if (!parsed.success) return null
   const s = parsed.data
+  if (
+    !validJunctionHistory(s.attempts, ids.map(traceById)) ||
+    Object.keys(s.targetViewed).some((id) => !ids.includes(id))
+  )
+    return null
   if (
     s.index >= ids.length ||
     s.furthest >= ids.length ||

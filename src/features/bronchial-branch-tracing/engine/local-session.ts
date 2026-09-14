@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import type { CtMark } from '../content/ct-types'
 import type { LocalCtExercise, CtBranchChoice } from '../content/ct-types'
+import { parentViewTask } from '../content/local-teaching'
 import { CT_TARGETS } from '../geometry/native-ct'
 import {
   orientationFor,
@@ -15,6 +16,9 @@ export const TRACING_PRESETS = ['mirror', 'rul', 'upper-division'] as const
 export type TaughtPreset = (typeof TRACING_PRESETS)[number]
 const orientationResponseSchema = z.enum(['display', 'anatomy', 'bronchoscopy'])
 const attemptSchema = z.object({
+  support: z
+    .enum(['guided', 'independent', 'after-comparison', 'legacy-unknown'])
+    .default('legacy-unknown'),
   marks: z.array(markSchema),
   branch: branchSchema,
   hints: z.number().int().min(0).max(3),
@@ -46,6 +50,8 @@ export type LocalSession = z.infer<typeof stateSchema>
 export type LocalAttempt = z.infer<typeof attemptSchema>
 export type LocalAction =
   | { type: 'focus-airway' }
+  | { type: 'explain-orientation' }
+  | { type: 'reset-attempt' }
   | { type: 'demonstrate-orientation' }
   | { type: 'orientation-response'; value: z.infer<typeof orientationResponseSchema> }
   | { type: 'finish-orientation' }
@@ -71,9 +77,7 @@ export function emptyLocalSession(
   taughtPresets: TaughtPreset[] = [],
 ): LocalSession {
   const first = exercises[0]
-  const standardFirst = ['same-lumen', 'bifurcation'].includes(first.spec.kind)
-  const needsIntroduction = !taughtPresets.some((preset) => preset === first.trace.preset)
-  const context = first.spec.kind !== 'integration' && (standardFirst || needsIntroduction)
+  const context = ['same-lumen', 'viewpoint', 'bifurcation'].includes(first.spec.kind)
   return {
     exercise: 0,
     slot: 0,
@@ -84,14 +88,11 @@ export function emptyLocalSession(
     course: '',
     hints: 0,
     viewAnswer: null,
-    orientation:
-      context || first.spec.kind === 'integration'
-        ? { ...STANDARD_ORIENTATION }
-        : orientationFor(first.trace.preset),
+    orientation: { ...STANDARD_ORIENTATION },
     history,
     viewAnswers: {},
     parentChoice: null,
-    parentConfirmed: false,
+    parentConfirmed: first.spec.kind === 'integration',
     parentSelections: [],
     views: context ? { [first.id]: contextView(first) } : {},
     orientationGuide: context ? 'context' : null,
@@ -110,8 +111,7 @@ function contextView(exercise: LocalCtExercise) {
   }
 }
 const usesTracingView = (s: LocalSession, exercise: LocalCtExercise) =>
-  exercise.spec.kind !== 'same-lumen' &&
-  (exercise.spec.kind !== 'bifurcation' || s.phase === 'parent-view')
+  exercise.spec.kind === 'viewpoint' || s.phase === 'parent-view'
 const hasLearnedPreset = (s: LocalSession, exercise: LocalCtExercise) =>
   exercise.trace.preset === 'standard' || s.taughtPresets.some((p) => p === exercise.trace.preset)
 const validChoice = (exercise: LocalCtExercise, choice: CtBranchChoice | null) =>
@@ -122,7 +122,10 @@ export function localReady(s: LocalSession, exercise: LocalCtExercise) {
     s.marks.length === exercise.answerPoints.length &&
     s.marks.every((m, i) => m && m.slice === exercise.answerPoints[i].slice) &&
     (exercise.spec.kind !== 'integration' || validChoice(exercise, s.branch)) &&
-    (exercise.spec.kind !== 'pattern' || Boolean(s.course))
+    (!['pattern', 'integration'].includes(exercise.spec.kind) ||
+      Boolean(s.course) ||
+      (exercise.spec.kind === 'integration' &&
+        s.history[exercise.id]?.at(-1)?.support === 'legacy-unknown'))
   )
 }
 export function parseLocalSession(
@@ -176,15 +179,10 @@ export function parseLocalSession(
     if (!ex || view.slice < ex.trace.range[0] || view.slice > ex.trace.range[1] || view.showNodule)
       return null
   }
+  if (exercise.spec.kind === 'integration') s.parentConfirmed = true
   s.taughtPresets = [...new Set([...s.taughtPresets, ...taughtPresets])]
-  // Older drafts have native marks but no record of orientation teaching. Keep all
-  // attempts; establish a standard reference before resuming the unfinished task.
-  if (!Object.prototype.hasOwnProperty.call(value, 'orientationGuide') && s.phase !== 'complete') {
-    s.orientation = { ...STANDARD_ORIENTATION }
-    s.orientationGuide =
-      exercise.spec.kind === 'integration' && !s.parentConfirmed ? null : 'context'
-    if (s.orientationGuide) s.views[exercise.id] = contextView(exercise)
-  }
+  // Compatible drafts retain their chosen display and native coordinates. Teaching
+  // completion is a separate versioned record, never inferred from a transform.
   if (
     s.orientationGuide &&
     (s.phase === 'complete' || (exercise.spec.kind === 'integration' && !s.parentConfirmed))
@@ -197,13 +195,6 @@ export function parseLocalSession(
     s.orientationGuide === 'compare' &&
     !sameOrientation(s.orientation, STANDARD_ORIENTATION) &&
     !sameOrientation(s.orientation, orientationFor(exercise.trace.preset))
-  )
-    return null
-  if (
-    !s.orientationGuide &&
-    s.phase !== 'complete' &&
-    !hasLearnedPreset(s, exercise) &&
-    !sameOrientation(s.orientation, STANDARD_ORIENTATION)
   )
     return null
   return s
@@ -223,26 +214,27 @@ export function localSessionReducer(
       orientationResponses: s.orientationResponses,
     }
   if (action.type === 'orientation' && orientationSchema.safeParse(action.value).success) {
+    if (sameOrientation(action.value, STANDARD_ORIENTATION))
+      return { ...s, orientation: { ...action.value } }
     const allowed =
       s.orientationGuide === 'compare'
         ? sameOrientation(action.value, STANDARD_ORIENTATION) ||
           sameOrientation(action.value, orientationFor(exercise.trace.preset))
-        : !s.orientationGuide &&
-          exercise.spec.kind !== 'same-lumen' &&
-          hasLearnedPreset(s, exercise)
+        : !s.orientationGuide && exercise.spec.kind !== 'same-lumen'
     return allowed ? { ...s, orientation: { ...action.value } } : s
   }
+  if (action.type === 'explain-orientation' && !s.orientationGuide && s.phase !== 'complete')
+    return { ...s, orientationGuide: 'direction', orientation: { ...STANDARD_ORIENTATION } }
   if (s.orientationGuide) {
     if (action.type === 'focus-airway' && s.orientationGuide === 'context') {
       const needsTransform = usesTracingView(s, exercise)
-      const teach = needsTransform && !hasLearnedPreset(s, exercise)
+      const teach =
+        needsTransform && (exercise.spec.kind === 'viewpoint' || !hasLearnedPreset(s, exercise))
       return {
         ...s,
         orientationGuide: teach ? 'direction' : null,
-        orientation:
-          needsTransform && !teach
-            ? orientationFor(exercise.trace.preset)
-            : { ...STANDARD_ORIENTATION },
+        orientation: { ...STANDARD_ORIENTATION },
+        views: { ...s.views, [exercise.id]: { ...contextView(exercise), full: false } },
       }
     }
     if (action.type === 'demonstrate-orientation' && s.orientationGuide === 'direction')
@@ -274,7 +266,6 @@ export function localSessionReducer(
       return {
         ...s,
         orientationGuide: null,
-        orientation: orientationFor(exercise.trace.preset),
         taughtPresets: [...new Set([...s.taughtPresets, exercise.trace.preset as TaughtPreset])],
       }
     return s
@@ -290,13 +281,8 @@ export function localSessionReducer(
         ...s,
         parentConfirmed: true,
         parentSelections: [...s.parentSelections, s.parentChoice],
-        orientationGuide: hasLearnedPreset(s, exercise) ? null : 'context',
-        orientation: hasLearnedPreset(s, exercise)
-          ? orientationFor(exercise.trace.preset)
-          : { ...STANDARD_ORIENTATION },
-        views: hasLearnedPreset(s, exercise)
-          ? s.views
-          : { ...s.views, [exercise.id]: contextView(exercise) },
+        orientationGuide: null,
+        orientation: { ...STANDARD_ORIENTATION },
       }
     if (action.type === 'begin') return s
   }
@@ -305,7 +291,10 @@ export function localSessionReducer(
   if (action.type === 'hint' && action.level >= 1 && action.level <= 3 && s.phase === 'attempt')
     return { ...s, hints: Math.max(s.hints, action.level) }
   if (action.type === 'begin' && s.phase === 'demo') return { ...s, phase: 'attempt', frame: 0 }
-  if (action.type === 'retry' && s.phase === 'compare')
+  if (
+    (action.type === 'retry' && s.phase === 'compare') ||
+    (action.type === 'reset-attempt' && s.phase === 'attempt')
+  )
     return {
       ...s,
       phase: 'attempt',
@@ -314,7 +303,8 @@ export function localSessionReducer(
       branch: null,
       course: '',
       viewAnswer: null,
-      hints: 0,
+      hints: s.hints,
+      orientation: { ...STANDARD_ORIENTATION },
     }
   if (action.type === 'slot' && action.index >= 0 && action.index < exercise.answerPoints.length)
     return { ...s, slot: action.index }
@@ -331,6 +321,15 @@ export function localSessionReducer(
       return { ...s, course: action.value }
     if (action.type === 'check' && localReady(s, exercise)) {
       const attempt: LocalAttempt = {
+        support: s.history[exercise.id]?.length
+          ? 'after-comparison'
+          : s.exercise === 0 ||
+              s.hints > 0 ||
+              exercises
+                .slice(0, s.exercise)
+                .some((e) => e.spec.checkpointId === exercise.spec.checkpointId)
+            ? 'guided'
+            : 'independent',
         marks: s.marks.map((m) => ({ ...m!, pixel: m!.pixel ? [...m!.pixel] : null })),
         branch: s.branch,
         course: s.course,
@@ -344,14 +343,16 @@ export function localSessionReducer(
       }
     }
   }
-  if (action.type === 'parent-view' && s.phase === 'compare')
+  if (
+    action.type === 'parent-view' &&
+    s.phase === 'compare' &&
+    parentViewTask(exercise.spec, s.exercise) !== 'none'
+  )
     return {
       ...s,
       phase: 'parent-view',
       orientationGuide: hasLearnedPreset(s, exercise) ? null : 'direction',
-      orientation: hasLearnedPreset(s, exercise)
-        ? orientationFor(exercise.trace.preset)
-        : { ...STANDARD_ORIENTATION },
+      orientation: hasLearnedPreset(s, exercise) ? s.orientation : { ...STANDARD_ORIENTATION },
     }
   if (
     action.type === 'view-answer' &&
@@ -369,8 +370,9 @@ export function localSessionReducer(
     }
   if (
     action.type === 'next' &&
-    ((s.phase === 'parent-view' && s.viewAnswer !== null) ||
-      (s.phase === 'compare' && exercise.spec.kind === 'same-lumen'))
+    ((s.phase === 'parent-view' &&
+      (s.viewAnswer !== null || parentViewTask(exercise.spec, s.exercise) === 'guided')) ||
+      (s.phase === 'compare' && parentViewTask(exercise.spec, s.exercise) === 'none'))
   ) {
     if (s.exercise === exercises.length - 1) return { ...s, phase: 'complete' }
     const next = exercises[s.exercise + 1]
@@ -385,20 +387,8 @@ export function localSessionReducer(
       course: '',
       hints: 0,
       viewAnswer: null,
-      orientation:
-        next.spec.kind === 'same-lumen' ||
-        next.spec.kind === 'bifurcation' ||
-        !hasLearnedPreset(s, next)
-          ? { ...STANDARD_ORIENTATION }
-          : orientationFor(next.trace.preset),
-      orientationGuide:
-        !['same-lumen', 'bifurcation'].includes(next.spec.kind) && !hasLearnedPreset(s, next)
-          ? 'context'
-          : null,
-      views:
-        !['same-lumen', 'bifurcation'].includes(next.spec.kind) && !hasLearnedPreset(s, next)
-          ? { ...s.views, [next.id]: contextView(next) }
-          : s.views,
+      orientation: { ...STANDARD_ORIENTATION },
+      orientationGuide: null,
     }
   }
   return s

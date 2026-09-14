@@ -1,25 +1,35 @@
 import type { LocalCtExercise, LocalExerciseSpec, CtTeachingFrame, CtCheckpoint } from './ct-types'
 import { NATIVE_CT, sliceZ, traceById } from '../geometry/native-ct'
 import routes from '../geometry/paired-routes.json'
+import manifest from '../../../../public/branch-tracing/native-v1/manifest.json'
+import { localTeaching } from './local-teaching'
 
 export const ANNOTATION_VERSION = 'local-ct-model-locators-v1'
 export const MODEL_REFERENCE_LABEL = 'Model reference — not yet faculty reviewed'
 
 /** A model locator on a native plane. This is not an inferred lumen boundary. */
-function modelPoint(edgeId: number, slice: number): [number, number] {
+export function modelPoint(
+  edgeId: number,
+  slice: number,
+  near: readonly number[],
+): [number, number] {
   const edge = routes.edges.find((e) => e.id === edgeId)!
   const z = sliceZ(slice)
+  const candidates: { pixel: [number, number]; distance: number }[] = []
   for (let i = 1; i < edge.points.length; i++) {
     const a = edge.points[i - 1],
       b = edge.points[i]
     if ((z - a[2]) * (z - b[2]) <= 0 && a[2] !== b[2]) {
       const f = (z - a[2]) / (b[2] - a[2])
-      return [0, 1].map(
+      const pixel = [0, 1].map(
         (axis) =>
           (a[axis] + f * (b[axis] - a[axis]) - NATIVE_CT.origin[axis]) / NATIVE_CT.spacing[axis],
       ) as [number, number]
+      const world = a.map((v, axis) => v + f * (b[axis] - v))
+      candidates.push({ pixel, distance: Math.hypot(...world.map((v, axis) => v - near[axis])) })
     }
   }
+  if (candidates.length) return candidates.sort((a, b) => a.distance - b.distance)[0].pixel
   throw new Error(`No model point on edge ${edgeId}, slice ${slice}`)
 }
 
@@ -28,7 +38,7 @@ export function localExercise(spec: LocalExerciseSpec): LocalCtExercise {
   const checkpoint = source.checkpoints.find((p) => p.id === spec.checkpointId)
   if (!checkpoint?.decision) throw new Error(`Missing local bifurcation: ${spec.checkpointId}`)
   const parent = checkpoint.decision.parent
-  const sameLumen = spec.kind === 'same-lumen'
+  const sameLumen = ['same-lumen', 'viewpoint'].includes(spec.kind)
   // The introductory interval stays proximal to the authored parent point.
   const start = sameLumen ? parent.slice + 8 : parent.slice
   const answerPoints = sameLumen
@@ -36,7 +46,7 @@ export function localExercise(spec: LocalExerciseSpec): LocalCtExercise {
         {
           label: parent.airway.code,
           slice: parent.slice + 4,
-          pixel: modelPoint(parent.sourceEdgeId, parent.slice + 4),
+          pixel: modelPoint(parent.sourceEdgeId, parent.slice + 4, parent.lps),
         },
       ]
     : checkpoint.decision.options.map((o, i) => ({
@@ -44,8 +54,9 @@ export function localExercise(spec: LocalExerciseSpec): LocalCtExercise {
         slice: o.slice,
         pixel: o.pixel,
       }))
-  const anchorPixel = sameLumen ? modelPoint(parent.sourceEdgeId, start) : parent.pixel
+  const anchorPixel = sameLumen ? modelPoint(parent.sourceEdgeId, start, parent.lps) : parent.pixel
   const end = answerPoints[0].slice
+  const teaching = localTeaching(spec, checkpoint)
   const frames: CtTeachingFrame[] = []
   const appendInterval = (from: number, to: number) => {
     const direction = to >= from ? 1 : -1
@@ -59,12 +70,12 @@ export function localExercise(spec: LocalExerciseSpec): LocalCtExercise {
         slice,
         caption:
           slice === start
-            ? `Start at ${parent.airway.code}. The ring is a model locator. Inspect the air-filled lumen and its bounding walls on CT.`
+            ? `Start at ${parent.airway.code}, slice ${slice}. ${teaching.finding} The ring is a model locator, not a wall boundary.`
             : sameLumen
-              ? 'Keep the same air-filled lumen in view across the neighboring slices. If its identity becomes uncertain, return to the last definite lumen.'
+              ? `Slice ${slice}: ${slice === end ? 'Compare the same lumen here with the supplied starting airway.' : 'Inspect the air column and its bounding walls on this neighboring plane.'} If uncertain, backtrack to slice ${start}.`
               : overlays.length
-                ? 'Compare these model daughter locations with the visible lumens. Return through the intervening slices to check each connection to the parent.'
-                : 'Follow the parent lumen through this interval. Look for a division and the separating carina where visible; a change in wall appearance alone does not prove a branch origin.',
+                ? `Slice ${slice}: model locations for ${overlays.map((o) => o.label).join(' and ')}. ${teaching.comparison}`
+                : `Slice ${slice}, ${sliceZ(slice) > sliceZ(start) ? 'cranial' : 'caudal'} to the parent reference: inspect the lumen and any separating wall where resolved. ${teaching.interval}`,
         overlays,
       })
       if (slice === to) break
@@ -78,12 +89,46 @@ export function localExercise(spec: LocalExerciseSpec): LocalCtExercise {
       appendInterval(start, point.slice)
     }
   }
+  // The three mapped LB6 divisions are cranially directed. Show the preceding
+  // caudal LLL approach as a declared, unscored lead-in rather than inventing a
+  // reversal within the segmental interval or crediting a skipped proximal fork.
+  if (spec.kind === 'integration' && spec.checkpointId === 'junction-11') {
+    const entry = source.checkpoints.find((p) => p.id === 'junction-6')!.decision!
+    const originSlice = Math.round(
+      (entry.junctionLps[2] - NATIVE_CT.origin[2]) / NATIVE_CT.spacing[2],
+    )
+    const leadIn: CtTeachingFrame[] = []
+    for (let slice = entry.parent.slice; slice >= originSlice; slice--)
+      leadIn.push({
+        slice,
+        overlays:
+          slice === entry.parent.slice
+            ? [{ label: 'LLL · approach context', pixel: entry.parent.pixel }]
+            : [],
+        caption: `Approach context, slice ${slice}: the source LLL course descends toward the LB6 origin. This proximal division is demonstrated; the recorded map begins at LB6.`,
+      })
+    for (let slice = originSlice + 1; slice < start; slice++)
+      leadIn.push({
+        slice,
+        overlays: [],
+        caption: `LB6 entry, slice ${slice}: distal travel now moves toward more cranial CT levels. Re-establish this same source airway before its first mapped division.`,
+      })
+    frames.unshift(...leadIn)
+  }
   const levels = [...frames.map((f) => f.slice), ...answerPoints.map((p) => p.slice)]
   const id = `${spec.traceId}.${spec.checkpointId}.${spec.kind}`
   const localCheckpoint: CtCheckpoint = sameLumen
     ? {
         ...checkpoint,
         decision: undefined,
+        // This new local plane has no source-HU sample; do not inherit the fork's value.
+        sourceHu: undefined,
+        sourceEdgeId: parent.sourceEdgeId,
+        lps: [
+          NATIVE_CT.origin[0] + answerPoints[0].pixel[0] * NATIVE_CT.spacing[0],
+          NATIVE_CT.origin[1] + answerPoints[0].pixel[1] * NATIVE_CT.spacing[1],
+          sliceZ(end),
+        ],
         slice: end,
         pixel: answerPoints[0].pixel,
         airway: parent.airway,
@@ -112,6 +157,19 @@ export function localExercise(spec: LocalExerciseSpec): LocalCtExercise {
     trace,
     frames,
     answerPoints,
+    teaching: {
+      ...teaching,
+      sourceCase: 'case-001 / native-v1 axial',
+      sourceSha256: manifest.sourceSha256,
+      graphSha256: manifest.sourceGraphSha256,
+      parentEdge: parent.sourceEdgeId,
+      daughterEdges: sameLumen ? [] : checkpoint.decision.options.map((o) => o.sourceEdgeId),
+      responseReason:
+        'These source planes locate the supplied parent or daughter response. Browsing remains unrestricted within the local interval; a point is a selection, not a wall trace.',
+      overlayKind: 'model-locator',
+      referenceFrame:
+        'Native axial LPS; parent schematic uses the independently declared parent camera basis.',
+    },
     review: {
       status: 'provisional',
       reason:

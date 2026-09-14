@@ -1296,6 +1296,18 @@
   min-height: 0;
   overflow: hidden;
 }
+.localWorkspace[data-route-map] {
+  grid-template-rows: auto minmax(0, 1fr) minmax(190px, 0.85fr);
+  grid-template-areas: 'task ct' 'instructions ct' 'map ct';
+}
+.localRouteMap {
+  grid-area: map;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+}
 .localInstructions,
 .localImageWorkspace {
   min-width: 0;
@@ -1475,7 +1487,14 @@
     scroll-margin-top: var(--site-header-height, 4rem);
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto auto;
-    grid-template-areas: 'task' 'instructions' 'ct';
+    grid-template-areas: 'task' 'ct' 'instructions';
+  }
+  .localWorkspace[data-route-map] {
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas: 'task' 'ct' 'map' 'instructions';
+  }
+  .localRouteMap {
+    overflow: visible;
   }
   .localInstructions,
   .localImageWorkspace {
@@ -1536,42 +1555,47 @@
   outline-offset: -3px;
 }
 /* Local lessons give the task its own column instead of another full-width header. */
-.module:has(.localWorkspace) > nav {
+.module:has(:is(.localWorkspace, .routeWorkspace)) > nav {
   padding: 0 0.75rem;
 }
-.module:has(.localWorkspace) > nav ol {
+.module:has(:is(.localWorkspace, .routeWorkspace)) > nav ol {
   display: flex;
   gap: 0.25rem;
 }
-.module:has(.localWorkspace) > nav a {
+.module:has(:is(.localWorkspace, .routeWorkspace)) > nav a {
   min-height: 44px;
   padding: 0.25rem 0.5rem;
 }
-.module:has(.localWorkspace) > nav a > span[aria-hidden],
-.module:has(.localWorkspace) > nav small {
+.module:has(:is(.localWorkspace, .routeWorkspace)) > nav a > span[aria-hidden],
+.module:has(:is(.localWorkspace, .routeWorkspace)) > nav small {
   display: none;
 }
-.module :global([data-lesson-shell]):has(.localWorkspace) {
+.module :global([data-lesson-shell]):has(:is(.localWorkspace, .routeWorkspace)) {
   grid-template-rows: auto minmax(0, 1fr) auto;
 }
-.module :global([data-lesson-shell]):has(.localWorkspace) > :global([data-context-strip]) {
+.module
+  :global([data-lesson-shell]):has(:is(.localWorkspace, .routeWorkspace))
+  > :global([data-context-strip]) {
   display: none;
 }
-.module :global([data-lesson-shell]):has(.localWorkspace) > :first-child {
+.module :global([data-lesson-shell]):has(:is(.localWorkspace, .routeWorkspace)) > :first-child {
   position: static;
   padding: 0.25rem 0.75rem;
   gap: 0.25rem 0.75rem;
 }
-.module :global([data-lesson-shell]):has(.localWorkspace) > :first-child > :first-child {
+.module
+  :global([data-lesson-shell]):has(:is(.localWorkspace, .routeWorkspace))
+  > :first-child
+  > :first-child {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.25rem 0.75rem;
 }
-.module :global([data-lesson-shell]):has(.localWorkspace) > :first-child p {
+.module :global([data-lesson-shell]):has(:is(.localWorkspace, .routeWorkspace)) > :first-child p {
   margin: 0;
 }
-.module :global([data-lesson-shell]):has(.localWorkspace) > :last-child {
+.module :global([data-lesson-shell]):has(:is(.localWorkspace, .routeWorkspace)) > :last-child {
   padding: 0.2rem 0.75rem;
 }
 @media (max-width: 1023px), (max-height: 699px) {
@@ -1583,4 +1607,237 @@
   background: #193640;
   border-color: #678c94;
   color: #effcfc;
+}
+
+.observerReference {
+  margin: 0.75rem 0;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+}
+.observerReference svg {
+  width: 100%;
+  display: block;
+}
+.observerReference figcaption {
+  font-size: 0.85rem;
+}
+.observerDirections {
+  display: grid;
+  grid-template-columns: 1fr 0.65fr 1fr;
+  gap: 0.25rem;
+  align-items: center;
+  text-align: center;
+  font-size: 0.875rem;
+}
+.observerDirections p {
+  margin: 0;
+}
+.observerDirections strong {
+  color: #81f1ed;
+  font-size: 1.5rem;
+}
+.viewpointComparison {
+  padding: 0.75rem;
+}
+.comparisonImages {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.comparisonImages figure {
+  min-width: 0;
+  margin: 0;
+}
+.comparisonImages figcaption {
+  min-height: 3.6rem;
+}
+.comparisonImages svg {
+  width: min(100%, max(280px, calc(100dvh - 335px)));
+  margin-inline: auto;
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+}
+.connectedRoute {
+  border-left: 2px solid #668e9c;
+  padding-left: 1rem;
+}
+.connectedRoute > li {
+  padding: 0.5rem;
+  margin-left: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+}
+.connectedRoute > li[aria-current='step'] {
+  border-color: #81f1ed;
+}
+.connectedRoute ul {
+  list-style: disc;
+}
+.connectedRoute p {
+  margin-bottom: 0.25rem;
+}
+.progressiveMap h3 {
+  margin-top: 0;
+}
+.localRouteMap .progressiveMap > h3,
+.routeMap .progressiveMap > h3 {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding-block: 0.25rem;
+  background: #091920;
+}
+.connectedRoute > li > strong {
+  display: inline-block;
+}
+.connectedRoute button {
+  margin-left: 0.5rem;
+  font-size: 0.85rem;
+}
+.routeWorkspace {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.72fr) minmax(0, 1.6fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas: 'decision evidence' 'map evidence';
+  min-height: 0;
+  height: 100%;
+}
+.routeTask {
+  grid-area: decision;
+}
+.routeEvidence {
+  grid-area: evidence;
+}
+.routeMap {
+  grid-area: map;
+  max-height: 190px;
+  overflow: auto;
+  border-top: 1px solid var(--line);
+}
+.routeTask,
+.routeEvidence {
+  min-width: 0;
+  overflow: auto;
+  padding: 0.75rem;
+}
+.routeTask {
+  background: #0b1d26;
+  border-right: 1px solid var(--line);
+}
+.routeEvidence .ctOnly {
+  max-width: min(100%, 540px);
+  margin: auto;
+}
+.routeTask > details {
+  margin-top: 1rem;
+}
+.routeTask :global([data-now-primary]) {
+  min-height: 44px;
+}
+.module:has(.routeWorkspace) > nav small,
+.module:has(.routeWorkspace) > nav a > span[aria-hidden] {
+  display: none;
+}
+.module:has(.routeWorkspace) > nav ol {
+  display: flex;
+  gap: 0.5rem;
+}
+
+@media (max-width: 1023px), (max-height: 699px) {
+  .routeWorkspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    grid-template-areas: 'decision' 'evidence' 'map';
+    height: auto;
+  }
+  .routeMap {
+    max-height: none;
+    overflow: visible;
+  }
+  .routeTask,
+  .routeEvidence {
+    overflow: visible;
+  }
+  .routeTask {
+    border: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .localWorkspace {
+    grid-template-areas: 'task' 'ct' 'instructions';
+  }
+  .comparisonImages {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .comparisonImages svg {
+    max-width: 420px;
+    margin: auto;
+  }
+  .currentTask {
+    position: static;
+  }
+}
+
+.routeResponses {
+  padding-block: 0.75rem;
+}
+
+/* Text-only enlargement does not trigger width breakpoints. Leave the fixed
+ * activity viewport and let this module and its site header scroll normally. */
+.typeMeasure {
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  visibility: hidden;
+  pointer-events: none;
+}
+:global(body):has(.module[data-enlarged-text='true']) :global(header:has(+ #main-content)) {
+  position: static;
+}
+.module[data-enlarged-text='true'] {
+  height: auto;
+  overflow: visible;
+}
+.module[data-enlarged-text='true'] :global([data-lesson-shell]) {
+  height: auto;
+}
+.module[data-enlarged-text='true'] .localWorkspace,
+.module[data-enlarged-text='true'] .routeWorkspace {
+  height: auto;
+  overflow: visible;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+}
+.module[data-enlarged-text='true'] .localWorkspace {
+  grid-template-areas: 'task' 'ct' 'instructions';
+}
+.module[data-enlarged-text='true'] .localWorkspace[data-route-map] {
+  grid-template-areas: 'task' 'ct' 'map' 'instructions';
+}
+.module[data-enlarged-text='true'] .routeWorkspace {
+  grid-template-areas: 'decision' 'evidence' 'map';
+}
+.module[data-enlarged-text='true'] .localInstructions,
+.module[data-enlarged-text='true'] .localImageWorkspace,
+.module[data-enlarged-text='true'] .localRouteMap,
+.module[data-enlarged-text='true'] .routeTask,
+.module[data-enlarged-text='true'] .routeEvidence,
+.module[data-enlarged-text='true'] .routeMap {
+  overflow: visible;
+  max-height: none;
+}
+.module[data-enlarged-text='true'] .currentTask,
+.module[data-enlarged-text='true'] :global([data-now-card]) {
+  position: static;
+}
+.module[data-enlarged-text='true'] .localViewer:not(:fullscreen) .ctOnly {
+  max-width: min(100%, 560px);
+}
+@media (max-width: 1023px), (max-height: 699px) {
+  .routeTask :global([data-now-card]) {
+    position: static;
+  }
 }

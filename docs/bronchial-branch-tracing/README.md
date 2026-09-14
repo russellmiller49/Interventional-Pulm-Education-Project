@@ -1,12 +1,12 @@
-# Bronchial branch tracing — local CT teaching preview
+# Bronchial branch tracing — CT-first course preview
 
 Entry: `/en/learn/anatomy/branch-tracing`. Anonymous direct access, noindex, no catalog/search/sitemap listing. The module remains unpublished. This branch does not deploy or merge it.
 
-Nine lessons now begin with a single lumen, a local bifurcation and the parent-airway view, then progress through the four patterns, a short route and complete nodule approaches. The native CT teaching loop supports a captioned walkthrough, an attempt, immediate comparison, retries and an independent viewpoint response. Pattern lessons open at their local division. Practice defaults to one coached route with immediate junction comparison; Assess withholds comparison until submission. All examples still use one teaching scan.
+Nine stable lessons now progress from a same-lumen warm-up to the explicit CT/parent-view orientation bridge, then local bifurcations, the four patterns, a short connected map and complete route interpretation. The native CT task includes captioned walkthroughs, comparison and separate retries. The first parent relationship is guided before an independent local application; a repeated opening quiz is not required for every pattern. Practice defaults to one coached route with immediate junction comparison; Assess withholds reference comparison until submission. All examples still use one teaching scan.
 
-See [the instructional update and review boundary](instructional-update.md) for the implementation, lesson alignment, draft contract and outstanding faculty work. All supplied model locators remain provisional; no reviewed wall contours or clinical accuracy grades have been introduced.
+See [the current flow and nine-lesson preservation matrix](flow-redesign.md), [executed validation and instructor-review routes](flow-redesign-validation.md), and [generated coverage/annotation manifest](flow-coverage.json). The [earlier instructional update](instructional-update.md) retains historical evidence. All supplied model locators remain provisional; no reviewed wall contours or clinical accuracy grades have been introduced.
 
-The book's conventions are applied to the actual images and their orientation labels:
+Fresh tasks start standard axial. The book's optional regional conventions transform the actual images and their orientation labels after learner initiation:
 
 - Middle lobe, lingula and lower lobes: left/right reflection of standard axial.
 - Right upper lobe: 90° counterclockwise.
@@ -16,7 +16,7 @@ Standard axial, airway detail, full field, image magnification, slice scrolling,
 
 ## Review
 
-- [Teaching brief](module-brief.md)
+- [Historical c5 teaching brief](module-brief.md)
 - [Source and coordinate audit](audit.md)
 - [Architecture and progress](architecture-decision.md)
 - [QA and H1–H12](qa-report.md)
@@ -43,7 +43,7 @@ BRANCH_TRACING_CT_SOURCE='/Users/russellmiller/Projects/navigation_module/data/t
 
 Trace specifications are in `scripts/branch-tracing/authoring/ct-traces.json`. Native assets are in `public/branch-tracing/native-v1`: 236 acquisition planes, levels 240–475, fixed window −1000 to 400 HU, 48,335,710 PNG bytes. The browser loads the current plane and two neighbors, not the full stack. Original NRRD, the full source label spreadsheet, textbook pages and personal metadata are not distributed. Selected anatomical names are included as derived teaching annotations. The existing 6.4 MB whole-volume explorer package remains reproducible with `python3 scripts/branch-tracing/build-preview.py`.
 
-Version `c6-local-teaching-r1` preserves participation history in the existing activity store and saves compatible drafts separately on this device. Local lessons, full routes, Practice and Assess restore their answers and viewing state. Local attempts and retries remain separate. Incompatible drafts and storage failures produce explicit messages. A completed click sequence does not demonstrate tracing competence.
+Version `c6-local-teaching-r1` preserves participation history in the existing activity store and saves compatible drafts separately on this device. The new orientation bridge has its own `observer-comparison-r2` completion contract; older orientation participation and unrelated lesson completion remain. Local lessons, full routes, Practice and Assess restore their answers and viewing state, including disclosed transformed displays. First responses and supported retries remain separate. Incompatible or damaged drafts are preserved before replacement; storage failures offer honest recovery. A completed worksheet does not demonstrate tracing competence.
 
 ## Reproduce anatomical names
 

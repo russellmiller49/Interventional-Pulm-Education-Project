@@ -1,5 +1,7 @@
 # Local CT teaching and draft restoration
 
+> Historical implementation and follow-up evidence through PR #192. See [flow-redesign.md](flow-redesign.md) for the current nine-lesson sequence and [flow-redesign-validation.md](flow-redesign-validation.md) for this redesign's executed checks. The new bridge precedes continuity, the warm-up's next link now resolves to orientation, parent-view tasks vary by objective, and complete routes use a CT/map workspace. Older screenshots, dimensions, task labels and assertions below describe their dated repairs and are retained as history.
+
 Implementation of the September 12, 2026 branch-tracing improvement brief. The existing native CT, source graphs, named branches, coordinate transforms, paired airway engine and navigation simulator are unchanged. This is an unpublished educational preview.
 
 ## Learner sequence and alignment

@@ -22,7 +22,8 @@ export interface CtCheckpoint {
   slice: number
   pixel: [number, number]
   lps: Vec3
-  sourceHu: number
+  /** Present only when the source exporter sampled this exact location. */
+  sourceHu?: number
   sourceEdgeId: number
   airway: AirwayLabel
   landmark: string
@@ -97,6 +98,13 @@ export interface CtMark {
   slice: number
   pixel: [number, number] | null
 }
+export interface CtJunctionAttempt {
+  mark: CtMark
+  branch: CtBranchChoice | null
+  hints: number
+  support: 'coached' | 'independent' | 'after-comparison' | 'legacy-unknown'
+  orientation?: CtOrientation
+}
 export interface CtResponse {
   orientation: { first: CtOrientation; used: CtOrientation }
   marks: CtMark[]
@@ -144,7 +152,7 @@ export interface CtTeachingFrame {
 export interface LocalExerciseSpec {
   traceId: string
   checkpointId: string
-  kind: 'same-lumen' | 'bifurcation' | 'pattern' | 'integration' | 'parent-view'
+  kind: 'same-lumen' | 'viewpoint' | 'bifurcation' | 'pattern' | 'integration' | 'parent-view'
 }
 export interface LocalCtExercise {
   id: string
@@ -156,6 +164,18 @@ export interface LocalCtExercise {
   task: string
   explanation: string
   hints: [string, string, string]
+  teaching: {
+    sourceCase: string
+    sourceSha256: string
+    graphSha256: string
+    parentEdge: number
+    daughterEdges: number[]
+    responseReason: string
+    finding: string
+    comparison: string
+    overlayKind: 'model-locator'
+    referenceFrame: string
+  }
 }
 
 export interface CtViewerState {

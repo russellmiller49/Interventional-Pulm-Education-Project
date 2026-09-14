@@ -4,7 +4,7 @@ import {
   upsertCriticalCareActivityProgress,
 } from '@/features/learning-module/activity/progress'
 import type { CriticalCareProgressEnvelope } from '@/features/learning-module/activity/types'
-import { BASE_PATH, LESSONS, VERSION } from '../content/lessons'
+import { BASE_PATH, LESSONS, VERSION, ORIENTATION_CONTRACT } from '../content/lessons'
 import type { Exercise } from '../content/types'
 import { scoreResponse, type Response } from './session'
 import { TRACING_PRESETS, type TaughtPreset } from './local-session'
@@ -48,7 +48,10 @@ export function saveOrientationUnderstanding(preset: TaughtPreset) {
 export function completedLessons(envelope: CriticalCareProgressEnvelope) {
   return LESSONS.filter((l) =>
     envelope.activities.some(
-      (a) => a.activityId === `${PREFIX}.learn.${l.id}` && a.status === 'completed',
+      (a) =>
+        a.activityId ===
+          `${PREFIX}.learn.${l.id}${l.id === 'orientation' ? `.${ORIENTATION_CONTRACT}` : ''}` &&
+        a.status === 'completed',
     ),
   ).map((l) => l.id)
 }
@@ -107,7 +110,7 @@ export function saveBranchFirst(
 }
 export function saveVisit(id: string, complete = false) {
   const now = new Date().toISOString(),
-    activityId = `${PREFIX}.learn.${id}`
+    activityId = `${PREFIX}.learn.${id}${id === 'orientation' ? `.${ORIENTATION_CONTRACT}` : ''}`
   return writeCriticalCareProgress(
     browserStorage(),
     upsertCriticalCareActivityProgress(
@@ -152,5 +155,11 @@ export function saveCtAttempt(key: string, hints: number) {
       competencyEvidenceIds: [],
       updatedAt: new Date().toISOString(),
     }),
+  )
+}
+
+export function hasHistoricalOrientation(envelope: CriticalCareProgressEnvelope) {
+  return envelope.activities.some(
+    (a) => a.activityId === `${PREFIX}.learn.orientation` && a.status === 'completed',
   )
 }
