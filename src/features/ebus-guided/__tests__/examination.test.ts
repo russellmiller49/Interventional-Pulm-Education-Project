@@ -66,20 +66,30 @@ it('restores only compatible drafts and explicitly distinguishes changed version
   expect(localStorage.getItem(examinationKey(EXAMINATION_CASE.id))).toContain('station-count')
   expect(loadExamination(DESCRIPTION_CASE).state).toBe('new')
 })
-it('retains the first erroneous submission and requires a corrected interpretation', () => {
+it('records no first submission, requires a corrected interpretation before acceptance, and leaves an earlier session’s entry alone', () => {
   const initial = newExamination(DESCRIPTION_CASE)
   initial.decisions = { description: 'benign', measurement: 'not-supplied' }
   const wrong = submitRecordTask(initial, DESCRIPTION_CASE, 'node-description')
   expect(wrong.accepted).toBe(false)
   expect(wrong.draft.completedTasks).toEqual([])
+  expect(wrong.draft.firstSubmissions).toEqual({})
   const correct = submitRecordTask(
     { ...wrong.draft, decisions: { description: 'appearance-only', measurement: 'not-supplied' } },
     DESCRIPTION_CASE,
     'node-description',
   )
   expect(correct.accepted).toBe(true)
-  expect(correct.draft.firstSubmissions['node-description:v1'].answers.description).toBe('benign')
-  expect(correct.draft.firstSubmissions['node-description:v1'].accepted).toBe(false)
+  expect(correct.draft.completedTasks).toEqual(['node-description:v1'])
+  expect(correct.draft.firstSubmissions).toEqual({})
+  const earlier = {
+    ...initial,
+    firstSubmissions: {
+      'node-description:v1': { at: 'earlier', answers: { description: 'benign' }, accepted: false },
+    },
+  }
+  expect(
+    submitRecordTask(earlier, DESCRIPTION_CASE, 'node-description').draft.firstSubmissions,
+  ).toEqual(earlier.firstSubmissions)
 })
 it('accepts inadequate imaging and not-sampled reasons without inventing a negative survey', () => {
   const draft = newExamination(EXAMINATION_CASE)

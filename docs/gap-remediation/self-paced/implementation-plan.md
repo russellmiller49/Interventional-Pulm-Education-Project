@@ -2,7 +2,7 @@
 
 G00 establishes the [active policy](README.md), current [conversion map](conversion-map.md), [question sample](question-ledger.md), [test migrations](test-contracts.md), and [technical checklist](developer-checklist.md). It changes no teaching runtime. Each later prompt remains a separate bounded PR, starting from the then-current checkout without resetting newer work.
 
-**MV-01 implementation update (September 14, 2026):** the [handoff](MV-01-handoff.md) records the matched causal investigation and public self-paced conversion. The live MV-03 example is excluded pending faculty/RT modeling review; no physiology equation was changed. The next MV implementation slice is MV-02. The original experiment specification below remains as the task's historical acceptance contract.
+**MV implementation updates (September 14, 2026):** [MV-01](MV-01-handoff.md) records the causal investigation and public self-paced conversion. [MV-02](MV-02-handoff.md) adds matched, replayable PEEP comparisons and distinguishes model-assigned compliance from effort-affected pressure estimates. The case MV-03 live example remains excluded pending faculty/RT modeling review; no physiology equation was changed. The next MV slice is **prompt MV-03**, explanatory ventilation feedback. The original experiment specification below remains as the task's historical acceptance contract.
 
 ## First two independent workstreams
 

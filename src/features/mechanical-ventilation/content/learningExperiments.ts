@@ -499,10 +499,10 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
     panelId: 'oxygenation-response',
     rounds: [
       round({
-        title: 'Test a pressure change in the original patient',
+        title: 'Compare oxygenation with pressure and circulation',
         caseId: 'MV-01',
         introduction:
-          'This patient is hypoxemic on a lung-protective volume breath. Make one small change and watch more than the saturation.',
+          'The worked comparison keeps case, time, volume, flow and FiO₂ matched. Your separate patient below can also be used for an optional PEEP experiment.',
         look: 'Keep SpO₂, airway pressure, and MAP together.',
         prompt:
           'Which response would make an oxygenation improvement incomplete evidence of benefit?',
@@ -517,12 +517,12 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
           'Stable circulation is reassuring context; worsening circulation is the concern.',
           'An oxygenation gain can coexist with a circulatory cost. Check the actual response rather than assuming benefit.',
         ],
-        task: 'Change PEEP from 5 to 8 cmH₂O and watch 45 simulated seconds. Use 5× time if helpful.',
-        goals: [c('peepCmH2O', 8)],
+        task: 'On your separate patient, change PEEP from 5 to 10 cmH₂O and watch 45 simulated seconds. This is an authored example, not a clinical setting recommendation.',
+        goals: [c('peepCmH2O', 10)],
         seconds: 45,
         watch: ['spo2', 'map', 'peak', 'volume'],
         explanation:
-          'This patient has aerated lung to gain. Compare the actual benefit and the pressure and circulatory cost, then carry that tradeoff to the next patient.',
+          'Compare your response with the matched worked example. Waiting alone changes oxygenation in this case. The model assigns a different compliance at this PEEP; the effort-affected plateau estimate does not establish measured static compliance. Review oxygenation, delivery, pressure and MAP together.',
       }),
       oxygen,
     ],

@@ -443,6 +443,66 @@
   color: #aec5c8;
 }
 
+.peepTable {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-block: 1rem;
+}
+.peepTable table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: normal;
+}
+.peepTable table:has(thead th:nth-child(4)) {
+  min-width: 36rem;
+}
+.peepTable :is(th, td) {
+  padding: 0.65rem;
+  border-bottom: 1px solid #345158;
+  text-align: left;
+  vertical-align: top;
+}
+.peepTable td {
+  white-space: nowrap;
+}
+.peepTable caption {
+  text-align: left;
+  padding-bottom: 0.5rem;
+}
+.peepCompactReadings {
+  display: none;
+}
+@media (max-width: 600px) {
+  .peepTable {
+    display: none;
+  }
+  .peepCompactReadings {
+    display: block;
+  }
+  .peepCompactReadings dl > div {
+    padding-block: 0.8rem;
+    border-bottom: 1px solid #345158;
+  }
+  .peepCompactReadings dt {
+    font-weight: 700;
+  }
+  .peepValues {
+    margin: 0.5rem 0 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+  .peepValues span,
+  .peepValues strong {
+    display: block;
+    font-variant-numeric: tabular-nums;
+  }
+  .peepValues span {
+    color: #aec5c8;
+  }
+}
+
 .flow [data-native-monitor] :is(span, small) {
   font-size: 0.75rem;
 }

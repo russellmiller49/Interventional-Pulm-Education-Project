@@ -42,9 +42,10 @@ The extension notation `test.ts[x]` means inspect the actual existing `.test.ts`
 
 ## Executed migrations
 
-| Prompt | Where the changed assertions, replacements, commands and holds are recorded         |
-| ------ | ----------------------------------------------------------------------------------- |
-| PI-01  | [PI-01 handoff — test-contract migration](PI-01-handoff.md#test-contract-migration) |
+| Prompt  | Where the changed assertions, replacements, commands and holds are recorded             |
+| ------- | --------------------------------------------------------------------------------------- |
+| PI-01   | [PI-01 handoff — test-contract migration](PI-01-handoff.md#test-contract-migration)     |
+| EBUS-01 | [EBUS-01 handoff — test-contract migration](EBUS-01-handoff.md#test-contract-migration) |
 
 ## Record format for each implementation PR
 

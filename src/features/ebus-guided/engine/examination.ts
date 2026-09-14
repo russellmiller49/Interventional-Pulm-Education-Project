@@ -360,23 +360,11 @@ export function submitRecordTask(
   const errors = taskErrors(task, draft, caseData),
     key = recordTaskKey(task)
   const accepted = Object.keys(errors).length === 0
-  const answers = {
-    ...draft.decisions,
-    ...draft.allocations,
-    ...Object.fromEntries(
-      Object.entries(draft.nodes).map(([id, entry]) => ['node:' + id, JSON.stringify(entry)]),
-    ),
-    ...Object.fromEntries(
-      Object.entries(draft.plans).map(([id, entry]) => ['plan:' + id, JSON.stringify(entry)]),
-    ),
-    report: JSON.stringify(draft.reportStatementIds),
-  }
+  // Since EBUS-01 a check records no first submission: the draft keeps the learner's current
+  // entries and, once accepted, the task key. Entries already stored by earlier sessions in
+  // `firstSubmissions` are left as they are and never read for progress.
   const updated = {
     ...draft,
-    firstSubmissions: {
-      ...draft.firstSubmissions,
-      [key]: draft.firstSubmissions[key] ?? { at: new Date().toISOString(), answers, accepted },
-    },
     completedTasks: accepted ? [...new Set([...draft.completedTasks, key])] : draft.completedTasks,
   }
   return { draft: updated, errors, accepted }

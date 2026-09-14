@@ -10,24 +10,29 @@ import { ventilationLeakMatches, ventilationPrecommitDenyPatterns } from '../tes
 import { breathStop } from '../content/breathSpine'
 
 describe('the fourteen stage lessons', () => {
-  it('builds one lesson per unit, in canonical order, with one first prediction and one transfer prediction', () => {
+  it('builds canonical lessons, with one optional interpretation for the matched PEEP comparison', () => {
     expect(ventilationStageLessons.map((lesson) => lesson.sectionId)).toEqual(
       ventilationLearningUnits.map((unit) => unit.id),
     )
     for (const lesson of ventilationStageLessons) {
       const predictions = lesson.steps.filter((step) => step.interaction.kind === 'prediction')
-      expect(predictions).toHaveLength(2)
+      const matchedPeep = lesson.sectionId === 'oxygenation-response'
+      expect(predictions).toHaveLength(matchedPeep ? 1 : 2)
       expect(lesson.steps[lesson.predictionStepIndex].interaction).toMatchObject({
         kind: 'prediction',
         round: 0,
       })
-      expect(lesson.steps[lesson.transferPredictionStepIndex].interaction).toMatchObject({
-        kind: 'prediction',
-        round: 1,
-      })
+      if (matchedPeep) expect(lesson.transferPredictionStepIndex).toBe(-1)
+      else
+        expect(lesson.steps[lesson.transferPredictionStepIndex].interaction).toMatchObject({
+          kind: 'prediction',
+          round: 1,
+        })
       expect(lesson.steps.length).toBe(
-        (lesson.sectionId === 'controls-and-goals' ? 9 : 8) +
-          (isFoundationUnit(lesson.sectionId) ? 2 : 0),
+        matchedPeep
+          ? 4
+          : (lesson.sectionId === 'controls-and-goals' ? 9 : 8) +
+              (isFoundationUnit(lesson.sectionId) ? 2 : 0),
       )
       expect(lesson.steps.map((step) => step.ordinal)).toEqual(
         lesson.steps.map((_, index) => index + 1),
@@ -35,7 +40,9 @@ describe('the fourteen stage lessons', () => {
       expect(new Set(lesson.steps.map((step) => step.id)).size).toBe(lesson.steps.length)
       // Everything after the first prediction waits for it.
       lesson.steps.forEach((step, index) => {
-        expect(step.gate).toBe(index <= lesson.predictionStepIndex ? 'open' : 'after-prediction')
+        expect(step.gate).toBe(
+          matchedPeep || index <= lesson.predictionStepIndex ? 'open' : 'after-prediction',
+        )
       })
       // The phases read Recognize → Predict → Act → Observe → Explain, then the transfer.
       expect(
@@ -43,8 +50,13 @@ describe('the fourteen stage lessons', () => {
           .filter((step) => step.interaction.kind !== 'interpret')
           .slice(0, 5)
           .map((step) => step.phase),
-      ).toEqual(['recognize', 'predict', 'act', 'observe', 'explain'])
-      expect(lesson.steps.slice(-3).every((step) => step.phase === 'transfer')).toBe(true)
+      ).toEqual(
+        matchedPeep
+          ? ['recognize', 'predict', 'act', 'explain']
+          : ['recognize', 'predict', 'act', 'observe', 'explain'],
+      )
+      if (!matchedPeep)
+        expect(lesson.steps.slice(-3).every((step) => step.phase === 'transfer')).toBe(true)
     }
   })
 
@@ -68,6 +80,13 @@ describe('the fourteen stage lessons', () => {
   it('keeps every pre-commit surface clear of the answer, the direction and the diagnosis', () => {
     const findings: string[] = []
     for (const lesson of ventilationStageLessons) {
+      // MV-02 is an openly disclosed worked comparison, not an answer-concealment contract.
+      // Rendered tests require explanation access with no answer or acquired hold.
+      if (lesson.sectionId === 'oxygenation-response') {
+        expect(lesson.steps[0].title).toBe('Compare matched PEEP examples')
+        expect(lesson.steps.every((step) => step.gate === 'open')).toBe(true)
+        continue
+      }
       const deny = ventilationPrecommitDenyPatterns(lesson.sectionId)
       const spec = ventilationSectionSpec(lesson.sectionId)
       const surfaces: { where: string; text: string }[] = [

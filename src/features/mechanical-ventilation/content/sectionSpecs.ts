@@ -273,7 +273,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
         'The setting this section changes. Read the saturation, the pressures and the blood pressure together.',
       ),
       oxygen: thisKnob(
-        'Changed in the second setup. It reaches the saturation and nothing on the breath.',
+        'Held constant in the matched PEEP comparison. Oxygen concentration and end-expiratory pressure act through different parts of this model.',
       ),
       rate: {
         state: 'not-this',

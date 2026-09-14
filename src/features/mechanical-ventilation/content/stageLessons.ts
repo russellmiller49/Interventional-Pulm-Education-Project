@@ -44,6 +44,8 @@ import { ventilationTaskPresentation, type VentilationTaskPresentation } from '.
  *
  * Titles visible before the prediction name the presentation, never the response: an experiment
  * round's own title ("Give expiration time back") is used only on its Explain step.
+ * MV-02 supersedes that legacy sequence for oxygenation-response: four freely available steps
+ * around a worked comparison, one optional interpretation and a separate actual patient.
  */
 
 export type VentilationRoundIndex = 0 | 1
@@ -126,7 +128,7 @@ export interface VentilationStageLesson extends StageLessonBase<VentilationStage
   readonly spec: VentilationSectionSpec
   readonly panelId: string
   readonly lifecycleActivityId: string
-  /** The step that commits round 2's prediction. */
+  /** Round 2's prediction step, or -1 when the public lesson replaces that question. */
   readonly transferPredictionStepIndex: number
 }
 
@@ -584,7 +586,28 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
     }
   }
 
-  const built: VentilationStageStep[] = steps.map((step, position) => ({
+  // MV-02 replaces the two-question sequence with one replay and one optional interpretation.
+  // Preserve the existing host, real experiment and stable unit ID; every reading step is open.
+  const publicSteps =
+    unitId === 'oxygenation-response'
+      ? [
+          {
+            ...steps[0],
+            title: 'Compare matched PEEP examples',
+            instruction:
+              'Run the worked comparison or open its explanation. Compare both arms at the same elapsed time.',
+            lookIn: {
+              pane: 'teaching' as const,
+              landmark: 'One PEEP change, the same elapsed time',
+            },
+          },
+          { ...steps[1], title: 'Optional: interpret the tradeoff', gate: 'open' as const },
+          { ...steps[2], title: 'Try a separate patient', gate: 'open' as const },
+          { ...steps[4], title: 'Review the response and its limits', gate: 'open' as const },
+        ]
+      : steps
+
+  const built: VentilationStageStep[] = publicSteps.map((step, position) => ({
     ...step,
     presentation: ventilationTaskPresentation(unitId, step.interaction),
     ordinal: position + 1,
