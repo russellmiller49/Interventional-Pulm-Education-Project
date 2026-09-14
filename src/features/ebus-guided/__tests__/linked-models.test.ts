@@ -1,11 +1,8 @@
+import { acquired } from '../testing/linked-fixture'
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import {
-  EMPTY_EBUS_OBSERVATION,
-  isEbusObservation,
-  type EbusObservation,
-} from '@/lib/ebus-guided-bridge'
+import { isEbusObservation, type EbusObservation } from '@/lib/ebus-guided-bridge'
 import { LESSONS } from '../content/curriculum'
 import { labGoalMet } from '../content/types'
 
@@ -43,32 +40,15 @@ it('ships the exact assets, case dependencies and Slicer round-trip proof used b
   expect(proof.clinicalAnatomicalReview).toBe('pending')
 })
 
-const scan: EbusObservation = {
-  ...EMPTY_EBUS_OBSERVATION,
-  ready: true,
-  frameReady: true,
-  actionCount: 1,
-  lastAction: 'roll',
-  usedControls: ['roll'],
-  contactQuality: 1,
-  targetVisible: true,
-  linked: {
-    assetsReady: true,
-    selectedStructure: 'carina',
-    modelSectionViewed: true,
-    approach: 'lms',
-    scannedApproaches: ['rms', 'lms'],
-    frameId: 'actual-frame',
-  },
-}
+const scan = acquired('station-seven')
 it('requires the relevant landmark and independently acquired station 7 views', () => {
   const lab = LESSONS.find((l) => l.id === 'station-seven')!.lab!
   expect(labGoalMet(lab, scan)).toBe(true)
   for (const patch of [
-    { selectedStructure: 'aorta' },
+    { identifiedStructures: ['aorta'] },
     { assetsReady: false },
-    { scannedApproaches: ['rms'] as const },
-    { scannedApproaches: [] },
+    { sweeps: { rms: scan.linked!.sweeps!.rms } },
+    { sweeps: {} },
     { frameId: '' },
   ]) {
     expect(
@@ -83,29 +63,47 @@ it('requires the relevant landmark and independently acquired station 7 views', 
   expect(labGoalMet(lab, { ...scan, targetVisible: false })).toBe(false)
   expect(labGoalMet(lab, { ...scan, contactQuality: 0.2 })).toBe(false)
 })
-it('requires section review, device identification and the azygos landmark in their respective lessons', () => {
+it('requires the actual task identity, checked landmarks and baseline where applicable', () => {
   const lab = (id: string) => LESSONS.find((l) => l.id === id)!.lab!
   expect(
-    labGoalMet(lab('ct-map'), { ...scan, linked: { ...scan.linked!, modelSectionViewed: false } }),
-  ).toBe(false)
-  expect(labGoalMet(lab('scope-orientation'), scan)).toBe(false)
-  expect(
-    labGoalMet(lab('scope-orientation'), {
-      ...scan,
-      linked: { ...scan.linked!, selectedStructure: 'transducer_face' },
+    labGoalMet(lab('ct-map'), {
+      ...acquired('ct-map'),
+      linked: { ...acquired('ct-map').linked!, modelSectionViewed: false },
     }),
-  ).toBe(true)
-  expect(labGoalMet(lab('right-paratracheal'), scan)).toBe(false)
+  ).toBe(false)
+  for (const id of [
+    'ct-map',
+    'scope-orientation',
+    'right-paratracheal',
+    'acoustic-contact',
+  ] as const) {
+    const state = acquired(id)
+    expect(labGoalMet(lab(id), state)).toBe(true)
+    expect(labGoalMet(lab(id), scan)).toBe(false)
+    expect(labGoalMet(lab(id), { ...state, linked: { ...state.linked!, source: undefined } })).toBe(
+      false,
+    )
+  }
   expect(
     labGoalMet(lab('right-paratracheal'), {
-      ...scan,
-      linked: { ...scan.linked!, selectedStructure: 'azygous' },
+      ...acquired('right-paratracheal'),
+      linked: { ...acquired('right-paratracheal').linked!, identifiedStructures: ['azygous'] },
     }),
-  ).toBe(true)
+  ).toBe(false)
   expect(
     isEbusObservation({
       ...scan,
       linked: { ...scan.linked, scannedApproaches: ['unsupported-route'] },
     }),
   ).toBe(false)
+  expect(
+    isEbusObservation({
+      ...scan,
+      linked: { ...scan.linked, source: { ...scan.linked!.source, taskVersion: 1 } },
+    }),
+  ).toBe(false)
+  expect(labGoalMet(lab('station-seven'), { ...scan, roll: 10 })).toBe(false)
+  const transfer = LESSONS.find((l) => l.id === 'station-seven')!.transferLab!
+  expect(labGoalMet(transfer, scan)).toBe(false)
+  expect(labGoalMet(transfer, acquired('station-seven', 'changed-window'))).toBe(true)
 })

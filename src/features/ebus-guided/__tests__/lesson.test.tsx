@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { LessonHost } from '../components/LessonHost'
-import { coupling } from '../content/curriculum'
+import { acquired } from '../testing/linked-fixture'
+import { coupling, LESSONS } from '../content/curriculum'
 import { EMPTY_EBUS_OBSERVATION, type EbusObservation } from '@/lib/ebus-guided-bridge'
 import { readRecord } from '../engine/progress'
 
@@ -12,7 +13,15 @@ jest.mock('@/i18n/navigation', () => ({
   ),
 }))
 jest.mock('../components/Workbench', () => ({
-  Workbench: ({ onObservation }: { onObservation: (s: EbusObservation) => void }) => (
+  Workbench: ({
+    onObservation,
+    lab,
+    sessionId,
+  }: {
+    onObservation: (s: EbusObservation) => void
+    lab: import('../content/types').Lab
+    sessionId: string
+  }) => (
     <section>
       <button
         onClick={() =>
@@ -53,20 +62,13 @@ jest.mock('../components/Workbench', () => ({
       <button
         onClick={() =>
           onObservation({
-            ...EMPTY_EBUS_OBSERVATION,
-            ready: true,
-            frameReady: true,
-            targetVisible: true,
-            contactQuality: 1,
-            actionCount: 1,
-            lastAction: 'flexion',
+            ...acquired(lab.linkedLesson!, lab.linkedVariant),
             linked: {
-              assetsReady: true,
-              selectedStructure: '',
-              modelSectionViewed: false,
-              approach: 'rms',
-              scannedApproaches: [],
-              frameId: 'test-frame',
+              ...acquired(lab.linkedLesson!, lab.linkedVariant).linked!,
+              source: {
+                ...acquired(lab.linkedLesson!, lab.linkedVariant).linked!.source!,
+                sessionId,
+              },
             },
           })
         }
@@ -145,4 +147,39 @@ it('restart and reload preserve first decisions but restart the incomplete lesso
   cleanup()
   render(<LessonHost lesson={coupling} />)
   expect(screen.getByRole('heading', { name: 'Orientation' })).toBeInTheDocument()
+})
+it('blocks an image-dependent response if its retained acquisition becomes unavailable', () => {
+  startLab()
+  fireEvent.click(screen.getByText('Render changed scan'))
+  next()
+  fireEvent.click(screen.getByText('Move before frame'))
+  answer(coupling.observation.choices.find((c) => c.correct)!.text)
+  expect(primary()).toBeDisabled()
+  expect(readRecord().firstAttempts['acoustic-contact:contact-observe']).toBeUndefined()
+  expect(readRecord().firstAttempts['acoustic-contact:contact-predict']).toBeDefined()
+})
+it('requires a fresh changed-window acquisition before the station transfer response', () => {
+  const lesson = LESSONS.find((l) => l.id === 'station-seven')!
+  render(<LessonHost lesson={lesson} />)
+  next()
+  next()
+  answer(lesson.question.choices.find((c) => c.correct)!.text)
+  next()
+  fireEvent.click(screen.getByText('Render changed scan'))
+  next()
+  answer(lesson.observation.choices.find((c) => c.correct)!.text)
+  next()
+  next()
+  expect(primary()).toHaveTextContent('Hold this acquisition')
+  expect(primary()).toBeDisabled()
+  expect(screen.queryByText(lesson.transfer.prompt)).not.toBeInTheDocument()
+  fireEvent.click(screen.getByText('Load preset only'))
+  expect(primary()).toBeDisabled()
+  fireEvent.click(screen.getByText('Render changed scan'))
+  next()
+  expect(screen.getByText(lesson.transfer.prompt)).toBeVisible()
+  answer(lesson.transfer.choices.find((c) => c.correct)!.text)
+  next()
+  expect(Object.keys(readRecord().skillObservations)).toHaveLength(2)
+  expect(readRecord().completed).toContain(lesson.id)
 })

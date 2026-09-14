@@ -1,3 +1,5 @@
+import type { LinkedRenderedFrame } from '../../../../../../src/lib/ebus-linked-contract';
+import { ContactComparison } from '../../guided/ContactComparison';
 import type { EbusWorkbenchConfig } from '../../../../../../src/lib/ebus-guided-bridge';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_ACOUSTIC_CONTROLS, type AcousticControls, type AcousticFrame, type AcousticVolume } from '@bronchoscopy-core/acoustic';
@@ -9,10 +11,12 @@ import type { SimulatorCaseManifest, SimulatorPreset } from './types';
 import { ImageDiscovery } from '../../guided/ImageDiscovery';
 import { canDiscoverImage } from '../../guided/imageDiscoveryPixels';
 
-export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,compact=false,assessment=false,onEnlarge,onShowAll,selectedPreset,activeStructure,setActiveStructure,guided}:{caseData:SimulatorCaseManifest;volume:AcousticVolume|null;error:string|null;pose:SimulatorProbePose;contactQuality:number;compact?:boolean;assessment?:boolean;onEnlarge?:(()=>void)|null;onShowAll?:(()=>void)|null;selectedPreset:SimulatorPreset|null;activeStructure:string|null;setActiveStructure:(id:string|null)=>void;guided?:{config:EbusWorkbenchConfig;targetKey:string;poseKey:string;onFrame:(frame:{ready:boolean;targetVisible:boolean;depth:number;gain:number;frozen:boolean;poseKey:string;frameId:string})=>void;onAction:(name:string,apply:()=>void)=>void}}) {
+export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,compact=false,assessment=false,onEnlarge,onShowAll,selectedPreset,activeStructure,setActiveStructure,guided}:{caseData:SimulatorCaseManifest;volume:AcousticVolume|null;error:string|null;pose:SimulatorProbePose;contactQuality:number;compact?:boolean;assessment?:boolean;onEnlarge?:(()=>void)|null;onShowAll?:(()=>void)|null;selectedPreset:SimulatorPreset|null;activeStructure:string|null;setActiveStructure:(id:string|null)=>void;guided?:{config:EbusWorkbenchConfig;targetKey:string;poseKey:string;onFrame:(frame:LinkedRenderedFrame)=>void;onAction:(name:string,apply:()=>void)=>void}}) {
   const t=useCourseShellText(),canvas=useRef<HTMLCanvasElement>(null),overlay=useRef<HTMLCanvasElement>(null),worker=useRef<Worker|null>(null),sequence=useRef(0),scheduled=useRef<ReturnType<typeof setTimeout>|null>(null);
   const [controls,setControls]=useState<AcousticControls>({...DEFAULT_ACOUSTIC_CONTROLS,gainDb:guided?.config.initialGain ?? DEFAULT_ACOUSTIC_CONTROLS.gainDb,depthMm:guided?.config.initialDepth ?? caseData.render_defaults.max_depth_mm,sectorAngleDeg:caseData.render_defaults.sector_angle_deg});
   const [frozen,setFrozen]=useState(false),[teaching,setTeaching]=useState(false),[frame,setFrame]=useState<AcousticFrame|null>(null),[renderError,setRenderError]=useState<string|null>(null);
+  const [baseline,setBaseline]=useState<{frame:AcousticFrame;id:string}|null>(null);
+  const renderedSequence=useRef(0);
   const held = frozen || !!(guided?.config.linkedLesson && guided.config.locked);
   const acousticPose=useMemo(()=>acousticPoseFromScope(pose),[pose]);
   const desired=useRef({pose:acousticPose,controls:{...controls,contactQuality},frozen:held});
@@ -21,7 +25,7 @@ export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,
     if(!volume)return;
     const instance=new Worker(new URL('../../../../../../src/lib/bronchoscopy-core/acoustic.worker.ts',import.meta.url),{type:'module'});
     worker.current=instance;
-    instance.onmessage=event=>{if(event.data.id===sequence.current&&!desired.current.frozen)setFrame(event.data.frame);};
+    instance.onmessage=event=>{if(event.data.id===sequence.current&&!desired.current.frozen){renderedSequence.current=event.data.id;setFrame(event.data.frame);}};
     instance.onerror=()=>setRenderError('Ultrasound rendering could not start. Reload to retry.');
     const data=volume.data.slice();instance.postMessage({type:'init',volume:{...volume,data}},[data.buffer]);
     instance.postMessage({type:'render',id:++sequence.current,...desired.current,width:384,height:384});
@@ -64,8 +68,9 @@ export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,
   useEffect(() => {
     const targetId = volume?.metadata.labels.findIndex(l => l.key === targetKey) ?? -1;
     const samePose = frame && JSON.stringify(frame.pose) === JSON.stringify(acousticPose);
-    frameCallback.current?.({ ready: !!samePose && frame?.controls.depthMm === controls.depthMm && frame?.controls.gainDb === controls.gainDb && frame?.controls.contactQuality === contactQuality && !error && !renderError, targetVisible: !!frame && frame.structures.some(s => s.id === targetId), depth: controls.depthMm, gain: controls.gainDb, frozen:held, poseKey, frameId });
-  }, [frame, volume, acousticPose, controls.depthMm, controls.gainDb, frozen, poseKey, targetKey, error, renderError, contactQuality, held, frameId]);
+    if (samePose && !baseline && guided?.config.linkedLesson === 'acoustic-contact' && frame) setBaseline({frame,id:frameId});
+    frameCallback.current?.({ renderSequence: renderedSequence.current, pose:frame?.pose, settings:frame?.controls, baselineFrameId:baseline?.id, ready: !!samePose && frame?.controls.depthMm === controls.depthMm && frame?.controls.gainDb === controls.gainDb && frame?.controls.contactQuality === contactQuality && !error && !renderError, targetVisible: !!frame && frame.structures.some(s => s.id === targetId), depth: controls.depthMm, gain: controls.gainDb, frozen:held, poseKey, frameId });
+  }, [frame, volume, acousticPose, controls.depthMm, controls.gainDb, frozen, poseKey, targetKey, error, renderError, contactQuality, held, frameId, baseline, guided?.config.linkedLesson]);
   const allowed = (control:'depth'|'gain'|'freeze') => !guided || (!guided.config.locked && guided.config.controls.includes(control));
   const act = (control:'depth'|'gain'|'freeze', apply:()=>void) => { if (!allowed(control)) return; if (guided) guided.onAction(control,apply); else apply(); };
   const change=(key:'depthMm'|'gainDb',value:number)=>act(key === 'depthMm' ? 'depth' : 'gain',()=>setControls(c=>({...c,[key]:value})));
@@ -88,6 +93,7 @@ export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,
       {!guided && controls.tgcDb.map((value,index)=><label key={index}>{t(['Near TGC','Mid TGC','Far TGC'][index])}<input aria-label={['Near TGC','Mid TGC','Far TGC'][index]} disabled={frozen} type="range" min="-12" max="36" step="1" value={value} onChange={e=>setControls(c=>({...c,tgcDb:c.tgcDb.map((v,i)=>i===index?Number(e.target.value):v) as [number,number,number]}))}/></label>)}
       {!assessment&&<label className="simulator-ultrasound-teaching"><input type="checkbox" checked={teaching} onChange={e=>setTeaching(e.target.checked)}/>{t('Teaching color overlay')}</label>}
     </div>
+    {baseline && frame && volume && <ContactComparison baseline={baseline.frame} current={frame} volume={volume} />}
     {!assessment&&!compact&&teaching&&frame&&volume&&<div className="simulator-ultrasound-structures">{frame.structures.map(s=>{const label=volume.metadata.labels[s.id];return <button key={s.id} aria-pressed={activeStructure===label.key} onClick={()=>setActiveStructure(activeStructure===label.key?null:label.key)}>{label.label}</button>;})}</div>}
   </section>;
 }

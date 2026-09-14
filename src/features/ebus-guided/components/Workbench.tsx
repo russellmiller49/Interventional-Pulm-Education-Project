@@ -7,6 +7,7 @@ import {
   type EbusWorkbenchConfig,
 } from '@/lib/ebus-guided-bridge'
 import type { Lab } from '../content/types'
+import { LINKED_TASK_VERSION, linkedTaskId } from '@/lib/ebus-linked-contract'
 import styles from './course.module.css'
 export function Workbench({
   lab,
@@ -24,6 +25,7 @@ export function Workbench({
   demonstration?: boolean
 }) {
   const frame = useRef<HTMLIFrameElement>(null)
+  const booted = useRef(false)
   const callback = useRef(onObservation)
   useEffect(() => {
     callback.current = onObservation
@@ -32,9 +34,10 @@ export function Workbench({
   const [retry, setRetry] = useState(0)
   const [supported, setSupported] = useState<boolean | null>(null)
   const [ready, setReady] = useState(false)
+  const [generation, setGeneration] = useState('initial')
   const config = useMemo<EbusWorkbenchConfig>(
     () => ({
-      sessionId,
+      sessionId: sessionId + '-' + generation,
       kind: lab.kind,
       modelPackage: lab.modelPackage,
       presetKey: lab.presetKey,
@@ -44,12 +47,14 @@ export function Workbench({
       view: 'sector',
       freeDrive: lab.freeDrive,
       linkedLesson: lab.linkedLesson,
+      linkedVariant: lab.linkedVariant ?? 'guided',
+      linkedTaskVersion: lab.linkedLesson ? LINKED_TASK_VERSION : undefined,
       demonstration,
       initialRoll: lab.initialRoll ?? 35,
       initialDepth: lab.initialDepth ?? 40,
       initialGain: lab.initialGain ?? (lab.kind === 'simulator' ? 0 : 43),
     }),
-    [sessionId, lab, locked, reveal, demonstration],
+    [sessionId, generation, lab, locked, reveal, demonstration],
   )
   const latest = useRef(config)
   useEffect(() => {
@@ -63,7 +68,9 @@ export function Workbench({
       }
       const canvas = document.createElement('canvas')
       const gl = canvas.getContext('webgl2')
-      setSupported(window.innerWidth >= 768 && !!gl)
+      const canRender = window.innerWidth >= 768 && !!gl
+      setSupported(canRender)
+      if (!canRender) callback.current(EMPTY_EBUS_OBSERVATION)
       gl?.getExtension('WEBGL_lose_context')?.loseContext()
     }
     assess()
@@ -87,6 +94,12 @@ export function Workbench({
       )
         return
       if (e.data.type === 'ready') {
+        booted.current = true
+        if (!latest.current.demonstration) callback.current(EMPTY_EBUS_OBSERVATION)
+        // Every iframe boot (including in-frame reset) invalidates the previous acquisition session.
+        const nextGeneration = Math.random().toString(36).slice(2)
+        latest.current = { ...latest.current, sessionId: sessionId + '-' + nextGeneration }
+        setGeneration(nextGeneration)
         setReady(true)
         setError('')
         frame.current?.contentWindow?.postMessage(
@@ -95,6 +108,15 @@ export function Workbench({
         )
       }
       if (e.data.type === 'observation' && e.data.sessionId === latest.current.sessionId) {
+        if (!booted.current) return
+        const source = e.data.observation.linked?.source
+        if (
+          source &&
+          (source.sessionId !== latest.current.sessionId ||
+            source.taskId !==
+              linkedTaskId(latest.current.linkedLesson!, latest.current.linkedVariant ?? 'guided'))
+        )
+          return
         if (e.data.observation.frameReady) {
           setError('')
           window.clearTimeout(timeout)
@@ -139,6 +161,7 @@ export function Workbench({
             className={styles.secondary}
             onClick={() => {
               callback.current(EMPTY_EBUS_OBSERVATION)
+              booted.current = false
               setReady(false)
               setError('')
               setRetry((v) => v + 1)

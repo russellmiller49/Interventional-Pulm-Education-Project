@@ -1,3 +1,4 @@
+import { LINKED_TASK_VERSION, linkedSetup, linkedTaskId, emptyLinkedSweep, sampleLinkedSweep, type LinkedRenderedFrame } from '../../../../../../src/lib/ebus-linked-contract';
 import { LinkedModelView } from '../../guided/LinkedModelView';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -1235,18 +1236,19 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
   guided?: { config: EbusWorkbenchConfig; onObservation: (observation: EbusObservation) => void };
 }) {
   const t = useCourseShellText();
-  const [guidedFrame, setGuidedFrame] = useState({ ready: false, targetVisible: false, depth: 40, gain: 0, frozen: false, poseKey: '', frameId: '' });
-  const [linkedEvidence, setLinkedEvidence] = useState<EbusLinkedEvidence>({ assetsReady: false, selectedStructure: '', modelSectionViewed: false, approach: guided?.config.presetKey.endsWith('::rms') ? 'rms' : 'default', scannedApproaches: [], frameId: '' });
+  const [guidedFrame, setGuidedFrame] = useState<LinkedRenderedFrame>({ ready: false, targetVisible: false, depth: 40, gain: 0, frozen: false, poseKey: '', frameId: '', renderSequence: 0 });
+  const [linkedEvidence, setLinkedEvidence] = useState<EbusLinkedEvidence>({ assetsReady: false, selectedStructure: '', modelSectionViewed: false, approach: guided?.config.presetKey.endsWith('::rms') ? 'rms' : guided?.config.presetKey.endsWith('::lms') ? 'lms' : 'default', scannedApproaches: [], frameId: '', identifiedStructures: [], sweeps: {} });
   const onLinkedEvidence = useCallback((value: Partial<EbusLinkedEvidence>) => setLinkedEvidence(previous => {
     const next = { ...previous, ...value };
     return JSON.stringify(previous) === JSON.stringify(next) ? previous : next;
   }), []);
   const rollAcquisition = useRef<{ approach: EbusLinkedEvidence['approach']; count: number } | null>(null);
+  const processedRollAction = useRef(0);
   const guidedActions = useRef({ count: 0, last: '', used: [] as EbusControl[] });
   const [guidedView, setGuidedView] = useState<'sector'|'bronch'|'anatomy'>(guided?.config.view ?? 'sector');
   const onGuidedFrame = useCallback((frame: typeof guidedFrame) => setGuidedFrame(frame), []);
   const guidedAction = (name: string, apply: () => void) => {
-    if (!guided || guided.config.locked) return;
+    if (!guided || guided.config.locked || !guided.config.controls.includes(name as EbusControl)) return;
     if (!guided.config.demonstration) guidedActions.current = { count: guidedActions.current.count + 1, last: name, used: [...new Set([...guidedActions.current.used,name as EbusControl])] };
     if (name === 'roll' && !guided.config.demonstration) rollAcquisition.current = { approach: linkedEvidence.approach, count: guidedActions.current.count };
     apply();
@@ -1322,7 +1324,7 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
       if (!preset) return;
       setSelectedKey(guided.config.freeDrive ? '' : preset.preset_key);
       setLineIndex(preset.line_index);
-      setSMm(preset.centerline_s_mm);
+      setSMm(preset.centerline_s_mm + (guided.config.linkedLesson ? linkedSetup(guided.config.linkedLesson, guided.config.linkedVariant ?? 'guided').offsetMm : 0));
       setRollTrimDeg(guided.config.initialRoll);
       setFlexionDeg(0);
       setTeachingView(false);
@@ -1580,25 +1582,41 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
 
   const guidedPoseKey = pose ? JSON.stringify(pose) : '';
   useEffect(() => {
-    if (!guided?.config.linkedLesson || guided.config.demonstration || guided.config.locked || !guidedFrame.ready || guidedFrame.poseKey !== guidedPoseKey || !guidedFrame.targetVisible || sectorContactQuality < .45 || !rollAcquisition.current) return;
+    if (!guided?.config.linkedLesson || guided.config.demonstration || guided.config.locked || !guidedFrame.ready || guidedFrame.poseKey !== guidedPoseKey || guidedFrame.frozen || !rollAcquisition.current) return;
     const acquisition = rollAcquisition.current;
-    if (acquisition.approach !== linkedEvidence.approach) return;
-    setLinkedEvidence(previous => previous.scannedApproaches.includes(acquisition.approach) ? previous : { ...previous, scannedApproaches: [...previous.scannedApproaches, acquisition.approach] });
-  }, [guided, guidedFrame, guidedPoseKey, sectorContactQuality, linkedEvidence.approach]);
+    if (acquisition.approach !== linkedEvidence.approach || acquisition.count <= processedRollAction.current) return;
+    processedRollAction.current = acquisition.count;
+    setLinkedEvidence(previous => {
+      const sweep = sampleLinkedSweep(previous.sweeps?.[acquisition.approach] ?? emptyLinkedSweep(), { roll: rollTrimDeg, frameId: guidedFrame.frameId, visible: guidedFrame.targetVisible, contact: sectorContactQuality });
+      return { ...previous, sweeps: { ...previous.sweeps, [acquisition.approach]: sweep }, scannedApproaches: sweep.phase === 'complete' ? [...new Set([...previous.scannedApproaches, acquisition.approach])] : previous.scannedApproaches };
+    });
+  }, [guided, guidedFrame, guidedPoseKey, sectorContactQuality, linkedEvidence.approach, rollTrimDeg]);
   useEffect(() => {
     if (!guided) return;
+    const matching = guidedFrame.ready && guidedFrame.poseKey === guidedPoseKey;
+    const linkedLesson = guided.config.linkedLesson, variant = guided.config.linkedVariant ?? 'guided';
     guided.onObservation({
       ...EMPTY_EBUS_OBSERVATION,
       usedControls: guidedActions.current.used, actionCount: guidedActions.current.count, lastAction: guidedActions.current.last,
       ready: !!assets && !!pose && !!acoustic.volume && !guided.config.demonstration,
-      frameReady: guidedFrame.ready && guidedFrame.poseKey === guidedPoseKey,
+      frameReady: matching,
       contactQuality: sectorContactQuality,
       targetVisible: guidedFrame.targetVisible,
       roll: rollTrimDeg, flexion: flexionDeg, depth: guidedFrame.depth,
       gain: guidedFrame.gain, frozen: guidedFrame.frozen,
-      linked: guided.config.linkedLesson ? { ...linkedEvidence, frameId: guidedFrame.frameId } : undefined,
+      linked: linkedLesson ? {
+        ...linkedEvidence, frameId: guidedFrame.frameId, baselineFrameId: guidedFrame.baselineFrameId,
+        source: matching && guidedFrame.pose && guidedFrame.settings && acoustic.volume && linkedEvidence.modelRevision ? {
+          sessionId: guided.config.sessionId, taskId: linkedTaskId(linkedLesson, variant), taskVersion: LINKED_TASK_VERSION, variant,
+          caseId: 'case-001', modelRevision: linkedEvidence.modelRevision,
+          geometrySha256: acoustic.volume.metadata.sourceGeometrySha256, acousticSha256: acoustic.volume.metadata.dataSha256,
+          presetKey: guided.config.freeDrive ? 'free-drive' : selectedPreset?.preset_key ?? '',
+          frameId: guidedFrame.frameId, renderSequence: guidedFrame.renderSequence, pose: guidedFrame.pose, settings: guidedFrame.settings,
+          scope: { roll: rollTrimDeg, flexion: flexionDeg, advanceMm: sMm, approach: linkedEvidence.approach },
+        } : undefined,
+      } : undefined,
     });
-  }, [guided, assets, pose, acoustic.volume, guidedFrame, guidedPoseKey, sectorContactQuality, rollTrimDeg, flexionDeg, linkedEvidence]);
+  }, [guided, assets, pose, acoustic.volume, guidedFrame, guidedPoseKey, sectorContactQuality, rollTrimDeg, flexionDeg, linkedEvidence, sMm, selectedPreset]);
 
   const hasCurrentSnapshot = Boolean(selectedPreset && snapshot?.preset_key === selectedPreset.preset_key);
   const atSnapshotPose = Boolean(
@@ -2084,7 +2102,7 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
     const sector = <ContinuousSectorView caseData={caseData} volume={acoustic.volume} error={acoustic.error} pose={pose} contactQuality={sectorContactQuality} compact assessment={!config.reveal} selectedPreset={null} activeStructure={null} setActiveStructure={() => undefined}
       guided={{ config, targetKey: selectedPreset?.station_key ?? '', poseKey: guidedPoseKey, onFrame: onGuidedFrame, onAction: (name, apply) => guidedAction(name, apply) }} />;
     const chooseApproach = (approach: 'rms'|'lms') => {
-      if (config.locked || config.linkedLesson !== 'station-seven') return;
+      if (config.locked || config.linkedLesson !== 'station-seven' || config.linkedVariant === 'changed-window') return;
       const preset = caseData.presets.find(p => p.preset_key === 'station_7_node_a::' + approach);
       if (!preset) return;
       rollAcquisition.current = null;
@@ -2094,6 +2112,7 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
     return <div className="guided-workbench">
       <h2>EBUS workbench</h2>
       <p className="guided-label">Simulated anatomy and grayscale ultrasound</p>
+      {config.linkedLesson && <p className="guided-label">{config.linkedVariant === 'changed-window' ? 'Changed-position check: a different assisted start in the same anatomy model. Acquire new planes; the prior sweep does not count.' : 'Assisted start: airway position is supplied. Your scope movements acquire the ultrasound planes.'}</p>}
       {config.linkedLesson && scopeControls}
       {config.linkedLesson && acoustic.volume && <LinkedModelView ultrasound={sector} config={config} pose={pose} volume={acoustic.volume} caseData={caseData} contactQuality={sectorContactQuality} flexion={flexionDeg} evidence={linkedEvidence} onEvidence={onLinkedEvidence} onApproach={chooseApproach} onDemo={action => {
         if (!config.demonstration) return;
@@ -2101,14 +2120,16 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
         else if (action === 'flexion') setFlexionDeg(v => v === 15 ? 0 : 15);
         else { setRollTrimDeg(config.initialRoll); setFlexionDeg(0); }
       }} />}
-      <div className="guided-tabs" role="group" aria-label="Clinical view">
+      <div hidden={config.locked && !config.reveal}><div className="guided-tabs" role="group" aria-label="Clinical view">
         {(config.linkedLesson ? ['sector','bronch'] as const : ['sector','bronch','anatomy'] as const).map(view => <button key={view} type="button" aria-pressed={guidedView === view} onClick={() => setGuidedView(view)}>{view === 'sector' ? 'Ultrasound' : view === 'bronch' ? 'Bronchoscopy' : 'Anatomy'}</button>)}
       </div>
       {guidedView === 'anatomy' && <div className="guided-anatomy"><AnatomyScene activeStructure={null} assets={assets} cameraPose={cameraPose} caseData={caseData} hiddenStructureIds={hiddenSceneStructureSet} intersectedStructureIds={new Set()} layers={layers} lockView={false} pose={pose} selectedPreset={config.reveal ? selectedPreset : null} teachingView={false} /></div>}
       {guidedView === 'bronch' && <div className="guided-anatomy"><BronchoscopyView assets={assets} balloonInflated={bronchBalloonInflated} camera={caseData.endoscope_camera} caseData={caseData} focusStationKey={null} pose={pose} seeThroughWall={false} structures={[]} /></div>}
+      </div>
       {!config.linkedLesson && <div hidden={guidedView !== 'sector'}>{sector}</div>}
-      <p role="status">{config.locked ? (config.linkedLesson ? 'Acquisition held for observation. This is your last unannotated ultrasound frame; observer orbit remains available.' : 'Controls are paused while you read or answer. They open for the guided activity.') : (config.linkedLesson ? 'Use Scope controls above the images, then return to Steps.' : 'Use the controls below, then return to Steps.')}</p>
+      <p role="status">{config.locked ? (config.linkedLesson ? 'Acquisition held for observation. This is your last unannotated ultrasound frame.' : 'Controls are paused while you read or answer. They open for the guided activity.') : (config.linkedLesson ? 'Use Scope controls above the images, then return to Steps.' : 'Use the controls below, then return to Steps.')}</p>
       {!config.linkedLesson && scopeControls}
+      {config.linkedLesson && !config.locked && !config.demonstration && <button onClick={() => { guided.onObservation(EMPTY_EBUS_OBSERVATION); window.location.reload(); }}>Reset acquisition</button>}
       <p className="guided-label">Position assists remain active. This exercise does not reproduce needle passage, tactile feedback, or patient response.</p>
     </div>;
   }

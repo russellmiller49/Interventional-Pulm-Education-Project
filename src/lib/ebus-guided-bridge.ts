@@ -4,6 +4,14 @@ import {
   MODEL_STEPS,
   type ModelPackage,
 } from './ebus-model-contract'
+import {
+  LINKED_TASK_VERSION,
+  LINKED_VARIANTS,
+  isLinkedFrameSource,
+  type LinkedFrameSource,
+  type LinkedVariant,
+  type LinkedSweep,
+} from './ebus-linked-contract'
 /** Shared by the Next lesson host and the dedicated Vite workbench; no React or storage. */
 export const EBUS_BRIDGE_VERSION = 1 as const
 export const EBUS_LINKED_LESSONS = [
@@ -21,6 +29,11 @@ export interface EbusLinkedEvidence {
   approach: 'rms' | 'lms' | 'default'
   scannedApproaches: ('rms' | 'lms' | 'default')[]
   frameId: string
+  modelRevision?: string
+  identifiedStructures?: string[]
+  sweeps?: Partial<Record<'rms' | 'lms' | 'default', LinkedSweep>>
+  source?: LinkedFrameSource
+  baselineFrameId?: string
 }
 export type EbusControl =
   | 'roll'
@@ -44,6 +57,8 @@ export interface EbusWorkbenchConfig {
   view: 'sector' | 'bronch' | 'anatomy'
   freeDrive?: boolean
   linkedLesson?: EbusLinkedLesson
+  linkedVariant?: LinkedVariant
+  linkedTaskVersion?: typeof LINKED_TASK_VERSION
   demonstration?: boolean
   initialRoll: number
   initialDepth: number
@@ -134,6 +149,8 @@ export function isEbusConfig(v: unknown): v is EbusWorkbenchConfig {
     (v.linkedLesson === undefined ||
       EBUS_LINKED_LESSONS.includes(v.linkedLesson as EbusLinkedLesson)) &&
     (v.demonstration === undefined || typeof v.demonstration === 'boolean') &&
+    (v.linkedVariant === undefined || LINKED_VARIANTS.includes(v.linkedVariant as LinkedVariant)) &&
+    (v.linkedTaskVersion === undefined || v.linkedTaskVersion === LINKED_TASK_VERSION) &&
     finite(v.initialRoll) &&
     Math.abs(Number(v.initialRoll)) <= 180 &&
     finite(v.initialDepth) &&
@@ -190,7 +207,37 @@ export function isEbusObservation(v: unknown): v is EbusObservation {
         v.linked.scannedApproaches.length <= 3 &&
         v.linked.scannedApproaches.every((a) => ['rms', 'lms', 'default'].includes(String(a))) &&
         typeof v.linked.frameId === 'string' &&
-        v.linked.frameId.length < 160))
+        v.linked.frameId.length < 160 &&
+        (v.linked.modelRevision === undefined ||
+          (typeof v.linked.modelRevision === 'string' && v.linked.modelRevision.length < 100)) &&
+        (v.linked.baselineFrameId === undefined ||
+          (typeof v.linked.baselineFrameId === 'string' &&
+            v.linked.baselineFrameId.length < 160)) &&
+        (v.linked.source === undefined || isLinkedFrameSource(v.linked.source)) &&
+        (v.linked.identifiedStructures === undefined ||
+          (Array.isArray(v.linked.identifiedStructures) &&
+            v.linked.identifiedStructures.length <= 8 &&
+            v.linked.identifiedStructures.every((s) => typeof s === 'string' && s.length < 100))) &&
+        (v.linked.sweeps === undefined ||
+          (object(v.linked.sweeps) &&
+            Object.entries(v.linked.sweeps).every(
+              ([key, s]) =>
+                ['rms', 'lms', 'default'].includes(key) &&
+                object(s) &&
+                ['find-edge', 'crossing', 'complete'].includes(String(s.phase)) &&
+                (s.lastRoll === null || finite(s.lastRoll)) &&
+                typeof s.lastFrameId === 'string' &&
+                s.lastFrameId.length < 160 &&
+                [-1, 0, 1].includes(Number(s.direction)) &&
+                typeof s.outside === 'boolean' &&
+                Number.isInteger(s.samples) &&
+                Number(s.samples) >= 0 &&
+                Number(s.samples) <= 200 &&
+                finite(s.span) &&
+                Number(s.span) >= 0 &&
+                Number(s.span) <= 360 &&
+                finite(s.startRoll),
+            )))))
   )
 }
 export function isEbusMessage(v: unknown): v is EbusBridgeMessage {

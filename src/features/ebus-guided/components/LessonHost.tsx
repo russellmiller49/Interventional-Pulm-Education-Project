@@ -12,7 +12,13 @@ import { EMPTY_EBUS_OBSERVATION, type EbusObservation } from '@/lib/ebus-guided-
 import { BASE, LESSONS, lessonHref, nextLesson } from '../content/curriculum'
 import { stageLesson } from '../content/stage'
 import { labGoalMet, type Lesson } from '../content/types'
-import { completeLesson, firstAttempt, updateRecord } from '../engine/progress'
+import {
+  completeLesson,
+  firstAttempt,
+  recordLinkedObservation,
+  updateRecord,
+} from '../engine/progress'
+import { linkedTaskKey } from '@/lib/ebus-linked-contract'
 import { EbusModuleFrame } from './ModuleFrame'
 import { SourceList } from './SourceList'
 import { TeachingDiagram } from './Diagram'
@@ -51,6 +57,8 @@ function LessonSession({
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [actionDone, setActionDone] = useState(false)
   const [observation, setObservation] = useState<EbusObservation>(EMPTY_EBUS_OBSERVATION)
+  const [retained, setRetained] = useState<EbusObservation | null>(null)
+  const [transferAcquired, setTransferAcquired] = useState(false)
   const [finished, setFinished] = useState(false)
   const [storageFailed, setStorageFailed] = useState(false)
   const [sessionId] = useState(() => lesson.id + '-' + Math.random().toString(36).slice(2))
@@ -62,12 +70,14 @@ function LessonSession({
   }, [lesson.id])
   const currentIndex = review ?? index
   const current = stage.steps[currentIndex]
+  const transferActivity = currentIndex === 6 && !!lesson.transferLab && !transferAcquired
+  const activeLab = index === 6 && lesson.transferLab ? lesson.transferLab : lesson.lab
   const question =
     currentIndex === 2
       ? lesson.question
       : currentIndex === 4
         ? lesson.observation
-        : currentIndex === 6
+        : currentIndex === 6 && !transferActivity
           ? lesson.transfer
           : null
   const committed = question ? answers[question.id] : undefined
@@ -75,8 +85,17 @@ function LessonSession({
   const unsafe = !!choice?.unsafe
   const predictionCommitted = !!answers[lesson.question.id]
   const pendingQuestion = !!question && !committed
+  const missingRetainedImage = !!(
+    pendingQuestion &&
+    question?.imagePolicy === 'retained-acquisition' &&
+    activeLab?.linkedLesson &&
+    (!retained ||
+      !observation.frameReady ||
+      observation.linked?.frameId !== retained.linked?.frameId ||
+      observation.linked?.source?.sessionId !== retained.linked?.source?.sessionId)
+  )
   const onObservation = useCallback((v: EbusObservation) => setObservation(v), [])
-  const labDone = lesson.lab ? labGoalMet(lesson.lab, observation) : actionDone
+  const labDone = activeLab ? labGoalMet(activeLab, observation) : actionDone
   const performed = new Set(stage.steps.slice(0, index).map((s) => s.id))
   if (finished) stage.steps.forEach((s) => performed.add(s.id))
   function advance() {
@@ -84,12 +103,24 @@ function LessonSession({
       setReview(null)
       return
     }
+    if (transferActivity) {
+      if (!labDone) return
+      setRetained(observation)
+      setTransferAcquired(true)
+      return
+    }
     if (question && !committed) {
+      if (missingRetainedImage) return
       const id = selected[question.id]
       if (!question.choices.some((c) => c.id === id)) return
       setAnswers((a) => ({ ...a, [question.id]: id }))
       setStorageFailed(
-        !updateRecord((r) => firstAttempt(r, lesson.id + ':' + question.id, question, id)),
+        !updateRecord((r) => {
+          const first = firstAttempt(r, lesson.id + ':' + question.id, question, id)
+          return retained && activeLab && (index === 4 || index === 6)
+            ? recordLinkedObservation(first, activeLab, retained, question, id)
+            : first
+        }),
       )
       return
     }
@@ -108,16 +139,28 @@ function LessonSession({
       setFinished(true)
       return
     }
-    if (index === 3) setActionDone(true)
+    if (index === 3) {
+      setActionDone(true)
+      setRetained(observation)
+    }
+    if (index === 5 && lesson.transferLab) {
+      setObservation(EMPTY_EBUS_OBSERVATION)
+      setRetained(null)
+    }
     setIndex((v) => v + 1)
   }
   const next = nextLesson(record.completed)
   const instruction =
     review !== null
       ? 'Review of a completed step. Returning to this step does not repeat its actions.'
-      : current.instruction
+      : transferActivity
+        ? lesson.transferLab!.instruction
+        : current.instruction
   const disabled =
-    review === null && ((pendingQuestion && !selected[question!.id]) || (index === 3 && !labDone))
+    review === null &&
+    ((pendingQuestion && !selected[question!.id]) ||
+      missingRetainedImage ||
+      ((index === 3 || transferActivity) && !labDone))
   const primary = finished
     ? {
         label: next ? 'Continue to ' + next.title : 'Open final assessment',
@@ -131,15 +174,19 @@ function LessonSession({
               ? 'Revise this response'
               : pendingQuestion
                 ? 'Submit response'
-                : index === 6
-                  ? 'Finish lesson'
-                  : 'Continue',
+                : transferActivity
+                  ? 'Hold this acquisition'
+                  : index === 6
+                    ? 'Finish lesson'
+                    : 'Continue',
         onActivate: advance,
         disabled,
         disabledReason: disabled
-          ? index === 3
-            ? 'Complete the guided activity and wait for its image before continuing.'
-            : 'Select a response first.'
+          ? missingRetainedImage
+            ? 'The retained acquisition is unavailable. Restart the lesson to acquire a new image; earlier responses are retained.'
+            : index === 3 || transferActivity
+              ? 'Complete the guided activity and wait for its image before continuing.'
+              : 'Select a response first.'
           : undefined,
       }
   const showModel = !pendingQuestion && !unsafe && currentIndex !== 6
@@ -198,6 +245,14 @@ function LessonSession({
               <span>{lesson.topic}</span>
               <span>In development · First responses are retained</span>
               <span>An unfinished lesson restarts from its first step.</span>
+              {lesson.lab?.linkedLesson &&
+                record.completed.includes(lesson.id) &&
+                !record.skillObservations[linkedTaskKey(lesson.lab.linkedLesson, 'guided')] && (
+                  <span>
+                    Earlier lesson completion retained · Updated acquisition task has no observation
+                    yet.
+                  </span>
+                )}
             </div>
           }
           task={
@@ -241,9 +296,9 @@ function LessonSession({
                   />
                 )}
                 {!finished &&
-                  currentIndex === 3 &&
+                  (currentIndex === 3 || transferActivity) &&
                   review === null &&
-                  (lesson.lab ? (
+                  (activeLab ? (
                     <p role="status">
                       {labDone
                         ? 'The acquisition goal is met. Return to the Steps panel to continue.'
@@ -309,7 +364,9 @@ function LessonSession({
                   </p>
                 </StageBlock>
               )}
-              {(currentIndex === 2 || currentIndex === 4 || currentIndex === 6) && (
+              {(currentIndex === 2 ||
+                currentIndex === 4 ||
+                (currentIndex === 6 && !transferActivity)) && (
                 <>
                   <h2>{current.title}</h2>
                   <p>
@@ -321,11 +378,11 @@ function LessonSession({
                   )}
                 </>
               )}
-              {currentIndex === 3 && (
+              {(currentIndex === 3 || transferActivity) && (
                 <>
                   <h2>Guided activity</h2>
                   <p>
-                    {lesson.lab?.instruction ?? lesson.sequence?.prompt ?? lesson.matching?.prompt}
+                    {activeLab?.instruction ?? lesson.sequence?.prompt ?? lesson.matching?.prompt}
                   </p>
                   <p>{lesson.boundary}</p>
                 </>
@@ -349,21 +406,29 @@ function LessonSession({
             </div>
           }
           simulator={
-            lesson.lab &&
+            activeLab &&
             (index === 3 ||
-              ((lesson.lab.linkedLesson || lesson.lab.modelPackage) &&
+              (index === 6 && lesson.transferLab) ||
+              ((lesson.lab?.linkedLesson || lesson.lab?.modelPackage) &&
                 index >= 4 &&
                 index <= 5)) ? (
               <div>
-                <div hidden={review !== null}>
+                <div hidden={review !== null || question?.imagePolicy === 'none'}>
                   <Workbench
-                    lab={lesson.lab}
-                    locked={review !== null || index !== 3}
+                    key={index === 6 ? 'transfer' : 'acquisition'}
+                    lab={activeLab}
+                    locked={review !== null || (index !== 3 && !transferActivity)}
                     reveal={index === 5 && review === null}
-                    sessionId={sessionId}
+                    sessionId={index === 6 ? sessionId + '-transfer' : sessionId}
                     onObservation={onObservation}
                   />
                 </div>
+                {review === null && question?.imagePolicy === 'none' && (
+                  <p className={styles.figure}>
+                    Use the stated situation for this knowledge question. No acquisition image is
+                    required.
+                  </p>
+                )}
                 {review !== null && <TeachingDiagram kind={lesson.diagram} />}
               </div>
             ) : (lesson.lab?.linkedLesson || lesson.lab?.modelPackage) &&

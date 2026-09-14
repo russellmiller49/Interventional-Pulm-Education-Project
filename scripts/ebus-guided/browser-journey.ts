@@ -1,3 +1,4 @@
+import { observeLinked, performLinked } from './browser-linked-actions'
 import { performModel } from './browser-model-actions'
 /** Run against an already-started development server; does not seed learner progress. */
 import { chromium, expect } from '@playwright/test'
@@ -13,6 +14,7 @@ async function main() {
     args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
   })
   const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } })
+  await observeLinked(page)
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
   const next = () => page.locator('[data-now-primary]').click()
@@ -36,6 +38,8 @@ async function main() {
         await expect(page.locator('[data-now-primary]')).toBeDisabled()
         if (lesson.lab.modelPackage) {
           await performModel(frame, lesson.lab.modelPackage)
+        } else if (lesson.lab.linkedLesson) {
+          await performLinked(page, lesson.lab.linkedLesson)
         } else if (lesson.lab.kind === 'simulator') {
           const control = frame.getByLabel(
             lesson.lab.goal === 'coupling' ? 'Tip flexion' : 'Scope rotation',
@@ -43,26 +47,6 @@ async function main() {
           )
           await expect(control).toBeEnabled({ timeout: 60000 })
           await control.fill(lesson.lab.goal === 'coupling' ? '10' : '0')
-          if (lesson.lab.linkedLesson && lesson.id !== 'acoustic-contact') {
-            const selector = frame.getByLabel('Inspect a structure')
-            await expect(selector).toBeVisible({ timeout: 30000 })
-            await selector.selectOption(
-              lesson.id === 'scope-orientation'
-                ? 'transducer_face'
-                : lesson.id === 'right-paratracheal'
-                  ? 'azygous'
-                  : 'carina',
-            )
-            if (lesson.id === 'ct-map')
-              await frame.getByRole('button', { name: 'Model section', exact: true }).click()
-            if (lesson.id === 'station-seven') {
-              await expect(
-                frame.getByRole('button', { name: 'Right main bronchus · scanned', exact: true }),
-              ).toBeVisible({ timeout: 30000 })
-              await frame.getByRole('button', { name: 'Left main bronchus', exact: true }).click()
-              await control.fill('0')
-            }
-          }
         } else {
           if (lesson.lab.goal === 'depth') {
             const input = frame.getByLabel('Image depth', { exact: true })
@@ -115,6 +99,10 @@ async function main() {
       await next()
       await choose(lesson.observation)
       await next()
+      if (lesson.transferLab?.linkedLesson) {
+        await performLinked(page, lesson.transferLab.linkedLesson, true)
+        await next()
+      }
       await choose(lesson.transfer)
       await expect(
         page.getByRole('heading', { name: 'Lesson completed', exact: true }),

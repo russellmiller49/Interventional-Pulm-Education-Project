@@ -34,22 +34,25 @@ export const coupling: Lesson = {
     reasoning:
       'Return toward the prior window and reassess contact. Once tissue echoes return, optimize the image. A brighter blank sector would still lack an acoustic window.',
   },
-  question: question(
-    'contact-predict',
-    'Tissue echoes disappear during rotation although gain is unchanged. Which explanation should you check first?',
-    [
-      'Loss of contact with the airway wall',
-      'A change with scope position suggests loss of the acoustic window. Reassess contact before amplifying the received signal.',
-    ],
-    [
-      'A sudden change in lymph-node echogenicity',
-      'The immediate link to scope rotation favors acquisition rather than a change in tissue.',
-    ],
-    [
-      'An incorrect caliper position',
-      'Calipers measure a displayed image; they do not establish acoustic contact.',
-    ],
-  ),
+  question: {
+    ...question(
+      'contact-predict',
+      'Tissue echoes disappear during rotation although gain is unchanged. Which explanation should you check first?',
+      [
+        'Loss of contact with the airway wall',
+        'A change with scope position suggests loss of the acoustic window. Reassess contact before amplifying the received signal.',
+      ],
+      [
+        'A sudden change in lymph-node echogenicity',
+        'The immediate link to scope rotation favors acquisition rather than a change in tissue.',
+      ],
+      [
+        'An incorrect caliper position',
+        'Calipers measure a displayed image; they do not establish acoustic contact.',
+      ],
+    ),
+    imagePolicy: 'none',
+  },
   lab: {
     kind: 'simulator',
     linkedLesson: 'acoustic-contact',
@@ -59,41 +62,47 @@ export const coupling: Lesson = {
     freeDrive: true,
     initialRoll: 0,
     instruction:
-      'Start with the transducer in the airway lumen. Compare the Scope model and initial poorly coupled ultrasound. Increase Tip flexion gently; use Anatomy model or Bronchoscopy to inspect the wall relationship. Stop when tissue echoes appear. The balloon envelope is illustrative; the existing contact model determines the ultrasound response.',
+      'Compare the initial tip/wall close-up and ultrasound with the current acquisition. Use small Tip flexion changes in this authored setup and stop when tissue echoes return. Seeing the airway wall optically does not establish transducer contact. The comparison uses actual model acquisitions; the contact index is not pressure, force or balloon volume.',
   },
-  observation: question(
-    'contact-observe',
-    'What changed when the scan window returned?',
-    [
-      'Tissue echoes returned in the model',
-      'The acoustic renderer now samples tissue through a coupled window. This is a simulated response, not a measurement in a patient.',
-    ],
-    [
-      'The node became histologically benign',
-      'An acquisition change supplies no histologic diagnosis.',
-    ],
-    [
-      'The gain setting automatically increased',
-      'Tip flexion changed the transducer-to-wall relationship; gain remained unchanged.',
-    ],
-  ),
-  transfer: question(
-    'contact-transfer',
-    'At another station the airway wall remains in view, but the ultrasound sector becomes dark after withdrawing slightly. What is the next acquisition check?',
-    [
-      'Reassess transducer-to-wall contact',
-      'An endoscopic view of the wall does not prove transducer contact. Re-establish the window, then optimize the ultrasound image.',
-    ],
-    [
-      'Advance the needle to find tissue',
-      'Needle passage without a reliable image removes essential guidance and risks injury.',
-    ],
-    [
-      'Label the station free of lymph nodes',
-      'Failure to display tissue is not evidence that the station contains no node.',
-    ],
-    true,
-  ),
+  observation: {
+    ...question(
+      'contact-observe',
+      'What changed when the scan window returned?',
+      [
+        'Tissue echoes returned in the model',
+        'The acoustic renderer now samples tissue through a coupled window. This is a simulated response, not a measurement in a patient.',
+      ],
+      [
+        'The node became histologically benign',
+        'An acquisition change supplies no histologic diagnosis.',
+      ],
+      [
+        'The gain setting automatically increased',
+        'Tip flexion changed the transducer-to-wall relationship; gain remained unchanged.',
+      ],
+    ),
+    imagePolicy: 'retained-acquisition',
+  },
+  transfer: {
+    ...question(
+      'contact-transfer',
+      'At another station the airway wall remains in view, but the ultrasound sector becomes dark after withdrawing slightly. What is the next acquisition check?',
+      [
+        'Reassess transducer-to-wall contact',
+        'An endoscopic view of the wall does not prove transducer contact. Re-establish the window, then optimize the ultrasound image.',
+      ],
+      [
+        'Advance the needle to find tissue',
+        'Needle passage without a reliable image removes essential guidance and risks injury.',
+      ],
+      [
+        'Label the station free of lymph nodes',
+        'Failure to display tissue is not evidence that the station contains no node.',
+      ],
+      true,
+    ),
+    imagePolicy: 'none',
+  },
   diagram: 'ultrasound',
   takeaways: [
     'Contact precedes image optimization.',

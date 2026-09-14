@@ -1,5 +1,7 @@
 # Phase 1 linked EBUS models
 
+Historical pilot report. The current five-lesson behavior, versioned acquisition checks and review status are documented in [the Phase 1 follow-up review](phase-1-followup-review.md); that follow-up removes the draft learner boundary controls and unreviewed 4R/10R contrast described below.
+
 Scope: the five-lesson anatomy/scope pilot selected by the owner, based on `7206e287` and the supplied EBUS guided review/build plan. The document was used as a design reference; its later phases and its references to an unattached handbook/transcript collection were not treated as additional work or independently reviewed sources.
 
 ## Delivered
