@@ -1,20 +1,21 @@
 import type { SourceReference } from './schema'
 
-/** Claim passages read 2026-09-13. Publication support is not faculty/protocol approval. */
+/**
+ * Publication support is not faculty/protocol approval. Source type, publication year and the
+ * 2026-09-13 passage-reading date are kept apart in `sourceReviewMetadata.ts`.
+ */
 const pending = 'pending' as const
 const context =
   'Critically ill adults receiving RRT with regional citrate anticoagulation. Conceptual physiology only; no device behavior, dosing, schedule or local protocol authorization.'
 const pistolesi = {
   sourceTitle: 'Regional citrate anticoagulation: SIAARTI-SIN joint commission expert opinion',
   sourceType: 'peer-reviewed' as const,
-  documentVersion:
-    'Pistolesi et al. J Anesth Analg Crit Care. 2023;3:7 · PMID 37386664 · full relevant passages read 2026-09-13',
+  documentVersion: 'Pistolesi et al. J Anesth Analg Crit Care. 2023;3:7 · PMID 37386664',
 }
 const schneider = {
   sourceTitle: 'Complications of regional citrate anticoagulation: accumulation or overload?',
   sourceType: 'peer-reviewed' as const,
-  documentVersion:
-    'Schneider, Journois and Rimmelé. Critical Care. 2017;21:281 · expert viewpoint · passages read 2026-09-13',
+  documentVersion: 'Schneider, Journois and Rimmelé. Critical Care. 2017;21:281',
 }
 export const crrtCitrateSourceReferences: readonly SourceReference[] = [
   {
@@ -56,7 +57,7 @@ export const crrtCitrateSourceReferences: readonly SourceReference[] = [
     sourceTitle:
       'Multidisciplinary guidelines on renal replacement therapy in intensive care medicine',
     sourceType: 'guideline' as const,
-    documentVersion: 'Critical Care. 2026;30:46 · PMID 41535952 · passages read 2026-09-13',
+    documentVersion: 'Critical Care. 2026;30:46 · PMID 41535952',
     pageOrSection:
       'Section 4 recommendations 4.4–4.6; Adverse events in RCA; RCA in liver failure · https://doi.org/10.1186/s13054-025-05817-6',
   },

@@ -38,6 +38,14 @@ component drops the offset; re-applying the offset to the stored value doubles i
 fails if the surface imports `pressureModel`, `clinicalMath`, `fluidModel`, `circuitFluidLedger`, or
 the calculation adapter.
 
+> **G01 source check, 2026-09-14.** The AW8035 manual prints the −18 mmHg term inside the displayed
+> TMP expression (PDF p218). For filter pressure drop it prints `ΔPfil = Pfil − Pret` and says the
+> filter and return _readings_ are corrected for a −25 mmHg sensor-height bias (PDF p203); it prints
+> no −25 mmHg term in the drop itself. Where that correction belongs in the model is held for device
+> review as `G01-CRRT-02` in
+> [the G01 queue](../gap-remediation/self-paced/G01-crrt-source-review-queue.json). The calculation
+> above is unchanged; only learner wording that attributed it to the manual was corrected.
+
 ### What the adapter added
 
 `PrismaxPilotOperationsDisplay` gained two sibling fields. The existing `pressures` block is

@@ -46,11 +46,13 @@ describe('Baxter CRRT module scaffold', () => {
     ).toBeInTheDocument()
   })
 
-  it('uses reviewed English fallback on non-English routes', () => {
+  it('uses the English fallback on non-English routes without calling it reviewed', () => {
     render(<BaxterCrrtHub locale="es" />)
 
     expect(screen.getByRole('main')).toHaveAttribute('data-no-handoff-translate', 'true')
-    expect(screen.getByText('Reviewed-English fallback')).toBeInTheDocument()
+    // G01-CRRT-10: no review of the English content is recorded, so the label does not claim one.
+    expect(screen.getByText('English fallback')).toBeInTheDocument()
+    expect(screen.queryByText(/Reviewed-English/)).not.toBeInTheDocument()
     expect(screen.getByText(/English remains authoritative/i)).toBeInTheDocument()
   })
 })

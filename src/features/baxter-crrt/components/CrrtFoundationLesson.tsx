@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useReducer, useRef, useState } from 'react'
+import { Fragment, useEffect, useReducer, useRef, useState } from 'react'
 import { LessonShell, NowCard } from '@/features/learning-module/stage'
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import { useCriticalCareActivityAnalytics } from '@/features/learning-module/activity'
@@ -16,6 +16,7 @@ import {
 import { CrrtOperationalTool, CrrtRecordedBalanceQuestion } from './CrrtOperationalTools'
 import { CrrtIntegrationTool } from './CrrtIntegrationTool'
 import { CrrtCitrateDifferential } from './CrrtCitrateDifferential'
+import { CrrtSourceDating } from './CrrtSourceDating'
 import { baxterCrrtLearnLessons, baxterCrrtLearnLessonById } from '../content/learnLessons'
 import type { BaxterCrrtLearnLessonId } from '../content/learnerRegistry'
 import { baxterCrrtLearnerFacingSourceById } from '../content/learnerSourceMap'
@@ -510,10 +511,13 @@ export function CrrtFoundationLesson({
             {lesson.sourceRecordIds.map((id) => {
               const source = baxterCrrtLearnerFacingSourceById.get(id)
               return source ? (
-                <p key={id}>
-                  <strong>{source.sourceTitle}</strong> · {source.documentVersion} ·{' '}
-                  {source.pageOrSection}
-                </p>
+                <Fragment key={id}>
+                  <p>
+                    <strong>{source.sourceTitle}</strong> · {source.documentVersion} ·{' '}
+                    {source.pageOrSection}
+                  </p>
+                  <CrrtSourceDating sourceId={id} />
+                </Fragment>
               ) : null
             })}
             {lessonId === 'crrt-fluid-liberation' ? (

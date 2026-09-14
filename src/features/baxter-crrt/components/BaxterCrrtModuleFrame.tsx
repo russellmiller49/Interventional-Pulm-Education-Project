@@ -66,7 +66,7 @@ export function BaxterCrrtModuleFrame({
             <div className={styles.languageFallback} role="note" data-no-handoff-translate="true">
               <Languages aria-hidden="true" />
               <div>
-                <strong>Reviewed-English fallback</strong>
+                <strong>English fallback</strong>
                 <p>English remains authoritative while localized CRRT content is unavailable.</p>
               </div>
             </div>

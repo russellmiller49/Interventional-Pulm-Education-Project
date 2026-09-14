@@ -290,6 +290,11 @@
   line-height: 1.55;
 }
 
+.sourceClaim ul {
+  color: #c2d3d1;
+  font-size: 0.82rem;
+}
+
 .sourceIdentity {
   color: var(--crrt-amber) !important;
   font-weight: 700;
