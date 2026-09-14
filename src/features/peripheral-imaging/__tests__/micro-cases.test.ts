@@ -9,11 +9,6 @@ import {
   validateImagingMicroCases,
 } from '../content/microCases'
 import { QUESTION_BY_ID } from '../data/questions'
-import {
-  createEmptyImagingRecord,
-  questionIdOfAttemptKey,
-  withFirstAttempt,
-} from '../engine/learnProgress'
 
 /** The sections the plan pairs a practice case to: every mechanism and application section. */
 const PAIRED_STAGES = new Set(['mechanism', 'application'])
@@ -52,32 +47,18 @@ describe('the practice case registry', () => {
     expect(imagingMicroCasesInPathwayOrder()).toHaveLength(imagingMicroCases.length)
   })
 
-  it('gives every case a question in the bank, so a decision can be recorded', () => {
+  it('gives every case a question in the bank, with its explanation and a rationale per option', () => {
     for (const microCase of imagingMicroCases) {
-      const key = practiceItemId(microCase.id)
-      expect(QUESTION_BY_ID[questionIdOfAttemptKey(key)]).toBeDefined()
-      const written = withFirstAttempt(
-        createEmptyImagingRecord(),
-        key,
-        microCase.item.choices[0].id,
-      )
-      expect(written.firstAttempts[key]).toBeDefined()
+      const question = QUESTION_BY_ID[microCase.id]
+      expect(question).toBeDefined()
+      expect(microCase.item.explanation).toBe(question.takeaway)
+      for (const choice of microCase.item.choices)
+        expect(choice.rationale.length).toBeGreaterThan(0)
     }
   })
 
-  it('keeps the first decision on a case and never rewrites it', () => {
-    const microCase = imagingMicroCases[0]
-    const key = practiceItemId(microCase.id)
-    const keyed = microCase.item.correctChoiceIds[0]
-    const other = microCase.item.choices.find((choice) => choice.id !== keyed)!.id
-    const first = withFirstAttempt(createEmptyImagingRecord(), key, other)
-    const second = withFirstAttempt(first, key, keyed)
-    expect(second.firstAttempts[key].choiceId).toBe(other)
-    expect(second.firstAttempts[key].correct).toBe(false)
-  })
-
-  it('separates a practice decision from the same sectionated Learn decision', () => {
-    // Practice and Learn keys must not collide, or answering one would mark the other.
+  it('keeps practice item ids apart from Learn item ids', () => {
+    // Stable ids: practice and Learn items must not collide, whatever a later version stores.
     const microCase = imagingMicroCases[0]
     expect(practiceItemId(microCase.id)).toMatch(/^practice:/)
     expect(practiceActivityId(microCase.sectionId)).toMatch(/:practice:/)

@@ -79,6 +79,20 @@
 .course button:hover:not(:disabled) {
   border-color: var(--cyan-bright);
 }
+.headerTools button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.headerTools button svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+}
+.headerTools button[aria-pressed='true'] {
+  border-color: var(--cyan-bright);
+  color: var(--cyan-bright);
+}
 .outline {
   position: relative;
 }

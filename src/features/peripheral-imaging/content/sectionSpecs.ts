@@ -616,7 +616,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       /anatomy in the X-ray path or/i,
     ],
     modelBoundary:
-      'The findings in this section are the troubleshooting table’s rows, authored for teaching; the eight case decisions that follow on the Assess page are authored scenarios, not patient records. ' +
+      'The findings in this section are the troubleshooting table’s rows, authored for teaching; the eight integrated cases on their own page are authored scenarios, not patient records. ' +
       SHARED_BOUNDARY,
     capstoneCaseId: null,
     sourceIds: ['setser', 'wabip', 'aapm12'],

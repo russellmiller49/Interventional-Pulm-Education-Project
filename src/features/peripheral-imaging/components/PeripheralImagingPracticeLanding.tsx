@@ -5,33 +5,26 @@ import { ArrowRight, Check } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 
 import { imagingCases } from '../content/cases'
-import {
-  imagingMicroCasesInPathwayOrder,
-  microCasesForSection,
-  practiceItemId,
-} from '../content/microCases'
+import { imagingMicroCasesInPathwayOrder, microCasesForSection } from '../content/microCases'
 import { imagingLesson, peripheralImagingSectionIds } from '../content/pathway'
 import { imagingSectionLinkTarget } from '../content/pathwayResolver'
-import { imagingCaseLinkTarget, PERIPHERAL_IMAGING_ASSESS_HREF } from '../content/routes'
+import { imagingCaseLinkTarget, PERIPHERAL_IMAGING_INTEGRATED_CASES_HREF } from '../content/routes'
 import { ImagingContinueCta } from './hub/ImagingPathwayAccordion'
-import { usePeripheralImagingRecord } from './usePeripheralImagingRecord'
+import { useImagingProgress } from './useImagingProgress'
 
 /**
  * The Practice landing: every short case, in the order the course teaches its mechanisms.
  *
- * One door here too — the first case with no decision on it yet. A case already decided still
- * opens, because answering again is the point of this layer; the list says which ones have a
- * first decision on the record rather than marking anything complete.
+ * One door here too — the first case not yet opened on this device. Every case is open, in any
+ * order, as often as the learner likes; the list says which cases have been opened, never which
+ * were answered or how (PI-01).
  */
 export function PeripheralImagingPracticeLanding() {
-  const { record, hydrated } = usePeripheralImagingRecord()
+  const { progress, hydrated } = useImagingProgress()
   const cases = imagingMicroCasesInPathwayOrder()
-  const decided = new Set(
-    cases
-      .filter((entry) => record.firstAttempts[practiceItemId(entry.id)])
-      .map((entry) => entry.id),
-  )
-  const next = cases.find((entry) => !decided.has(entry.id)) ?? null
+  const opened = new Set(progress.openedPracticeCaseIds)
+  const openedCount = cases.filter((entry) => opened.has(entry.id)).length
+  const next = cases.find((entry) => !opened.has(entry.id)) ?? null
   const sections = peripheralImagingSectionIds.filter(
     (sectionId) => microCasesForSection(sectionId).length > 0,
   )
@@ -46,8 +39,8 @@ export function PeripheralImagingPracticeLanding() {
         <h1 className="text-3xl font-bold tracking-tight">Short cases, one decision each</h1>
         <p className="max-w-2xl text-base leading-7 text-muted-foreground">
           Practice cases are being authored and reviewed. Until they land, each section carries its
-          own retrieval item, and the {imagingCases.length} capstone decisions wait on the Assess
-          page once every section has been worked through.
+          own interpretation check, and the {imagingCases.length} integrated cases are open on their
+          own page.
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <ImagingContinueCta />
@@ -66,8 +59,8 @@ export function PeripheralImagingPracticeLanding() {
         <h1 className="text-3xl font-bold tracking-tight">Short cases, one decision each</h1>
         <p className="max-w-2xl text-base leading-7 text-muted-foreground">
           A procedural situation, one decision, and the reasoning behind it. Each case is paired to
-          the section whose principle it uses. Answer a case as often as you like — only the first
-          decision goes on your record, and it is kept as you made it.
+          the section whose principle it uses. Check an answer, show the explanation first, try
+          again or move on — answers are not saved.
         </p>
         <div className="flex flex-wrap items-center gap-3">
           {next ? (
@@ -78,7 +71,7 @@ export function PeripheralImagingPracticeLanding() {
               data-next-case={next.id}
             >
               <span>
-                {decided.size === 0 ? 'Start' : 'Continue'} — {next.presentationTitle}
+                {openedCount === 0 ? 'Start' : 'Continue'} — {next.presentationTitle}
                 <small className="block font-medium opacity-85">
                   Case {cases.indexOf(next) + 1} of {cases.length}
                 </small>
@@ -88,10 +81,10 @@ export function PeripheralImagingPracticeLanding() {
           ) : (
             <Link
               className="inline-flex min-h-11 items-center gap-3 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground"
-              href={PERIPHERAL_IMAGING_ASSESS_HREF}
+              href={PERIPHERAL_IMAGING_INTEGRATED_CASES_HREF}
               data-practice-continue="complete"
             >
-              <span>Every case decided once — open the capstone</span>
+              <span>Every case opened — try the integrated cases</span>
               <ArrowRight aria-hidden="true" />
             </Link>
           )}
@@ -110,21 +103,20 @@ export function PeripheralImagingPracticeLanding() {
               </h2>
               <ul className="grid gap-2">
                 {microCasesForSection(sectionId).map((microCase) => {
-                  const answered = decided.has(microCase.id)
+                  const isOpened = opened.has(microCase.id)
                   return (
                     <li key={microCase.id}>
                       <Link
                         className="flex min-h-11 items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 text-sm"
                         href={imagingCaseLinkTarget(microCase.id)}
                         data-practice-case-link={microCase.id}
-                        data-decided={answered}
+                        data-opened={isOpened}
                       >
                         <span className="font-semibold">{microCase.presentationTitle}</span>
                         <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {answered ? (
+                          {isOpened ? (
                             <>
-                              <Check aria-hidden="true" className="size-4" /> first decision on your
-                              record
+                              <Check aria-hidden="true" className="size-4" /> opened
                             </>
                           ) : (
                             <ArrowRight aria-hidden="true" className="size-4" />
@@ -141,11 +133,15 @@ export function PeripheralImagingPracticeLanding() {
       </ol>
 
       <p className="text-sm text-muted-foreground">
-        The {imagingCases.length} capstone decisions are a separate sitting on the{' '}
-        <Link className="font-semibold text-primary" href={PERIPHERAL_IMAGING_ASSESS_HREF}>
-          Assess page
+        The {imagingCases.length} integrated cases combine several sections and are open at any time
+        on the{' '}
+        <Link
+          className="font-semibold text-primary"
+          href={PERIPHERAL_IMAGING_INTEGRATED_CASES_HREF}
+        >
+          Integrated cases page
         </Link>
-        , made once, after every section has been worked through.
+        .
       </p>
     </div>
   )

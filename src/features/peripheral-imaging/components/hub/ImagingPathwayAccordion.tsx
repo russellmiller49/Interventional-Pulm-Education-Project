@@ -8,34 +8,38 @@ import { peripheralImagingPathwaySections } from '../../content/pathway'
 import {
   imagingPathwayGroups,
   imagingSectionLinkTarget,
-  nextIncompleteImagingSection,
-  workedImagingSectionIds,
+  recommendedImagingSection,
+  reviewedImagingSectionIds,
+  reviewLaterImagingSections,
+  visitedImagingSectionIds,
   type ImagingPathwayGroup,
 } from '../../content/pathwayResolver'
-import { PERIPHERAL_IMAGING_ASSESS_HREF } from '../../content/routes'
-import type { ImagingRecord } from '../../engine/learnProgress'
+import { PERIPHERAL_IMAGING_INTEGRATED_CASES_HREF } from '../../content/routes'
+import type { ImagingProgress } from '../../engine/selfPacedProgress'
 import styles from '../peripheral-imaging-hub.module.css'
-import { usePeripheralImagingRecord } from '../usePeripheralImagingRecord'
+import { useImagingProgress } from '../useImagingProgress'
 
 /**
  * One map of the pathway, shared by the hub and the Learn landing.
  *
- * The clinical phases as native `<details>`, one per contiguous run of the canonical order; only the group
- * holding the learner's next section opens on load. Every count in a summary is derived from the
- * registry. Section chips carry the worked state in words as well as in state. Flattening the
- * groups reproduces the canonical order, and the "Up next" chip is the same section the Continue
- * call to action resolves to.
+ * The clinical phases as native `<details>`, one per contiguous run of the canonical order; only the
+ * group holding the recommended section opens on load. Every section is always a link. Chips say in
+ * words what this device knows — opened, reviewed, saved for review — and never anything about
+ * answers (PI-01). Flattening the groups reproduces the canonical order, and the "Up next" chip is
+ * the section the Start, Resume or Continue call to action resolves to.
  */
 export function ImagingPathwayAccordion({
-  record,
+  progress,
   id,
 }: {
-  readonly record: ImagingRecord
+  readonly progress: ImagingProgress
   readonly id?: string
 }) {
   const groups = imagingPathwayGroups()
-  const worked = workedImagingSectionIds(record)
-  const next = nextIncompleteImagingSection(record)
+  const visited = visitedImagingSectionIds(progress)
+  const reviewed = reviewedImagingSectionIds(progress)
+  const saved = new Set(progress.reviewLaterSectionIds)
+  const next = recommendedImagingSection(progress)
   const nextId = next?.section.id ?? null
   const openIndex = Math.max(
     0,
@@ -62,20 +66,25 @@ export function ImagingPathwayAccordion({
             <p className={styles.groupBody}>{group.description}</p>
             <div className={styles.chipRow}>
               {group.sections.map((section) => {
-                const done = worked.has(section.id)
+                const isReviewed = reviewed.has(section.id)
+                const isVisited = visited.has(section.id)
+                const isSaved = saved.has(section.id)
                 const isNext = section.id === nextId
                 return (
                   <Link
                     key={section.id}
                     className={styles.chip}
                     data-kind="section"
-                    data-complete={done}
+                    data-visited={isVisited}
+                    data-reviewed={isReviewed}
+                    data-review-later={isSaved}
                     data-recommended={isNext}
                     href={imagingSectionLinkTarget(section.id)}
                   >
                     <GraduationCap aria-hidden="true" />
                     {section.title}
-                    {done ? ' ✓ worked through' : ''}
+                    {isReviewed ? ' · reviewed' : isVisited ? ' · opened' : ''}
+                    {isSaved ? ' · saved for review' : ''}
                     {isNext ? <em>Up next</em> : null}
                   </Link>
                 )
@@ -101,42 +110,44 @@ export function summaryLine(group: ImagingPathwayGroup): string {
   return [span, sectionCount, `${minutes} min`].join(' · ')
 }
 
-/** The accordion over the stored record, for surfaces that hold none of their own. */
+/** The accordion over the stored progress, for surfaces that hold none of their own. */
 export function ImagingStoredPathwayAccordion({ id }: { readonly id?: string }) {
-  const { record } = usePeripheralImagingRecord()
-  return <ImagingPathwayAccordion record={record} id={id} />
+  const { progress } = useImagingProgress()
+  return <ImagingPathwayAccordion progress={progress} id={id} />
 }
 
 /**
  * The one door: the primary call to action on every entry surface.
  *
- * Resolves through `nextIncompleteImagingSection` and nothing else. A fresh learner is sent to
- * section one; a learner part-way through, to the first section they have not worked through,
- * whether or not it is the one they opened last; a learner who has finished, to the capstone.
+ * Resolves through `recommendedImagingSection` and nothing else. A fresh learner is sent to section
+ * one; a learner who left a section unfinished, back to it; otherwise the first section not yet
+ * marked reviewed; a learner who has marked every section reviewed, to the integrated cases. It
+ * recommends; it never locks anything.
  */
 export function ImagingContinueCta({ className }: { readonly className?: string }) {
-  const { record, hydrated } = usePeripheralImagingRecord()
-  const next = nextIncompleteImagingSection(record)
+  const { progress, hydrated } = useImagingProgress()
+  const next = recommendedImagingSection(progress)
   if (!next) {
     return (
       <Link
-        href={PERIPHERAL_IMAGING_ASSESS_HREF}
+        href={PERIPHERAL_IMAGING_INTEGRATED_CASES_HREF}
         className={className ?? styles.continue}
         data-imaging-continue="complete"
       >
-        <span>Every section worked through — open the capstone</span>
+        <span>Every section marked reviewed — open the integrated cases</span>
         <ArrowRight aria-hidden="true" />
       </Link>
     )
   }
-  const fresh = record.completedSectionIds.length === 0 && !next.resumed
-  const verb = fresh ? 'Start' : 'Continue'
+  const fresh = progress.visitedSectionIds.length === 0 && progress.reviewedSectionIds.length === 0
+  const verb = next.resumed ? 'Resume' : fresh ? 'Start' : 'Continue'
   return (
     <Link
       href={imagingSectionLinkTarget(next.section.id)}
       className={className ?? styles.continue}
       data-imaging-continue={hydrated ? 'resolved' : 'pending'}
       data-next-section={next.section.id}
+      data-resumed={next.resumed}
     >
       <span>
         {verb} — {next.section.title}
@@ -146,5 +157,46 @@ export function ImagingContinueCta({ className }: { readonly className?: string 
       </span>
       <ArrowRight aria-hidden="true" />
     </Link>
+  )
+}
+
+/**
+ * Sections saved to review later, and an honest note when this browser is not saving the learner's
+ * place. Renders nothing until hydrated, and nothing when there is nothing to say.
+ */
+export function ImagingProgressNotes({ className }: { readonly className?: string }) {
+  const { progress, status, hydrated } = useImagingProgress()
+  if (!hydrated) return null
+  const saved = reviewLaterImagingSections(progress)
+  const notSaving = status === 'unavailable' || status === 'unreadable'
+  if (!notSaving && saved.length === 0) return null
+  return (
+    <div className={className} data-progress-notes>
+      {notSaving ? (
+        <p className="rounded-2xl border p-4 text-sm" role="note" data-progress-status={status}>
+          {status === 'unavailable'
+            ? 'This browser is not saving your place in the course. Every section and case stays open.'
+            : 'Saved places on this device could not be read. They are left as they are, and this visit is not being saved. Every section and case stays open.'}
+        </p>
+      ) : null}
+      {saved.length > 0 ? (
+        <nav aria-label="Saved for review" data-review-later-list>
+          <p className="text-sm font-semibold">Saved for review</p>
+          <ul className="mt-2 flex flex-wrap gap-2 text-sm">
+            {saved.map((section) => (
+              <li key={section.id}>
+                <Link
+                  className={styles.chip}
+                  data-kind="saved-section"
+                  href={imagingSectionLinkTarget(section.id)}
+                >
+                  {section.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ) : null}
+    </div>
   )
 }

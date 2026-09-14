@@ -15,11 +15,25 @@ export const PERIPHERAL_IMAGING_NAV_BASE = '/peripheral-imaging'
 
 export const PERIPHERAL_IMAGING_LEARN_HREF = `${PERIPHERAL_IMAGING_NAV_BASE}/learn`
 export const PERIPHERAL_IMAGING_PRACTICE_HREF = `${PERIPHERAL_IMAGING_NAV_BASE}/practice`
+
+/**
+ * The address the Assess tab used. The owner's self-paced decision (PI-01, 2026-09-14) retired the
+ * capstone standard, not the address: old links and bookmarks keep working and open the integrated
+ * cases, every one available at any time. Course code links through the integrated-cases name.
+ */
 export const PERIPHERAL_IMAGING_ASSESS_HREF = `${PERIPHERAL_IMAGING_NAV_BASE}/assess`
+export const PERIPHERAL_IMAGING_INTEGRATED_CASES_HREF = PERIPHERAL_IMAGING_ASSESS_HREF
 
 export function imagingCaseLinkTarget(caseId: string): {
   readonly pathname: string
   readonly query: Record<string, string>
 } {
   return { pathname: PERIPHERAL_IMAGING_PRACTICE_HREF, query: { case: caseId } }
+}
+
+export function integratedCaseLinkTarget(caseId: string): {
+  readonly pathname: string
+  readonly query: Record<string, string>
+} {
+  return { pathname: PERIPHERAL_IMAGING_INTEGRATED_CASES_HREF, query: { case: caseId } }
 }

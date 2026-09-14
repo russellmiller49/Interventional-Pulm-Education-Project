@@ -8,7 +8,7 @@ import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdi
 import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
 import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
-import { type NowCardModel } from '@/features/learning-module/stage/NowCard'
+import type { NowCardAction } from '@/features/learning-module/stage/NowCard'
 import { STAGE_PHASE_LABELS } from '@/features/learning-module/stage/stageModel'
 import { StageSourcesFooter } from '@/features/learning-module/stage/StageSourcesFooter'
 import { StageSourcesScope } from '@/features/learning-module/stage/StageSourcesScope'
@@ -24,17 +24,18 @@ import { chainCaption, type ChainStopId } from '../../content/imagingChain'
 import { peripheralImagingPathway } from '../../content/pathway'
 import { imagingSectionLinkTarget } from '../../content/pathwayResolver'
 import {
-  PERIPHERAL_IMAGING_ASSESS_HREF,
+  PERIPHERAL_IMAGING_INTEGRATED_CASES_HREF,
   PERIPHERAL_IMAGING_LEARN_HREF,
   imagingCaseLinkTarget,
+  integratedCaseLinkTarget,
 } from '../../content/routes'
 import {
   imagingStageLesson,
   type ImagingStageLesson,
   type ImagingStageStep,
 } from '../../content/stageLessons'
-import { questionIdOf } from '../../content/stageItems'
 import { imagingStageSources } from '../../content/stageSources'
+import { independentValues } from '../../content/teachingExamples'
 import { labGoalMet, type LabGoal } from '../../engine/labGoalEvaluation'
 import {
   formatReadout,
@@ -44,37 +45,46 @@ import {
   type LabState,
 } from '../../engine/labMetrics'
 import {
-  readImagingRecord,
-  withFirstAttempt,
-  withSectionCompleted,
-  withSectionVisited,
-  writeImagingRecord,
-} from '../../engine/learnProgress'
+  markImagingSectionReviewed,
+  recordImagingLocation,
+  setImagingSectionReviewLater,
+} from '../../engine/selfPacedProgress'
 import { deriveStageProgress, stepWorkDone } from '../../engine/stageSession'
+import { ImagingExplanation } from '../ImagingExplanation'
 import { PeripheralImagingModuleFrame } from '../PeripheralImagingModuleFrame'
 import { ImagingSuitePane } from '../suite/ImagingSuitePane'
-import { controlElementId, type ChainAnswer, type SuiteViewSpec } from '../suite/types'
+import {
+  controlElementId,
+  type ChainAnswer,
+  type SuiteViewMemory,
+  type SuiteViewSpec,
+} from '../suite/types'
+import { useImagingProgress } from '../useImagingProgress'
 import { ChainWalkCard, walkPositionWords } from './ChainWalkCard'
+import { ImagingActivityShell, type ImagingNowModel } from './ImagingActivityShell'
 import { ImagingSortControl } from './ImagingSortControl'
 import { ImagingSourceList } from './ImagingSourceList'
-import { ImagingActivityShell } from './ImagingActivityShell'
+import { ImagingTeachingColumn } from './ImagingTeachingColumn'
 import { LessonDemonstration } from './LessonDemonstration'
 import { IndependentImagePanels, hasIndependentImagePanel } from './TeachingPanels'
-import { independentValues } from '../../content/teachingExamples'
-import { ImagingTeachingColumn } from './ImagingTeachingColumn'
 import { useImagingStageSession } from './useImagingStageSession'
 import styles from './imaging-stage.module.css'
 
 /**
- * One section of the peripheral-imaging pathway on the lesson stage.
+ * One section of the peripheral-imaging pathway on the lesson stage, at the learner's pace.
  *
  * The lab is the authority on the hands-on work: a step's goals are predicates over its values and
- * history. The host owns the commitments — which choice was committed, which set was placed,
- * which stop of the walk is current — and the view around them: the step the learner is looking
- * at when it is not the live one, the choice not yet committed, whether help is open, and the Now
- * card that makes every step one thing. Nothing about a commitment is persisted; a reload starts
- * the section at its first step, and the only things written are the first attempts and the
- * completion record.
+ * history. The host owns the commitments — which answer was checked, which set was placed, which
+ * stop of the walk is current — and the view around them: the step the learner is looking back at,
+ * the choice not yet checked, which explanations are open, whether help is open, and the Now card
+ * that makes every step one thing.
+ *
+ * Self-paced (PI-01). Every step can be left: Continue when its work is done, or skip it, which
+ * moves the learner on without performing it, answering it, capturing anything or taking a readout.
+ * Every check can show its explanation before an answer. Real model constraints stay: a lab step
+ * counts as done only when its goals are met on a loaded image, and a check's example image stays
+ * fixed while it is being read. Nothing about an answer is saved. The section writes only that it
+ * was opened and, when the learner finishes it, that they marked it reviewed.
  */
 export function ImagingStageHost({
   sectionId,
@@ -152,6 +162,14 @@ function goalControlKey(goal: LabGoal): string | null {
 
 const EMPTY_LAB: LabState = { values: {}, events: [] }
 
+function isLabStep(step: ImagingStageStep): boolean {
+  return (
+    step.interaction.kind === 'lab-task' ||
+    step.interaction.kind === 'observe' ||
+    step.interaction.kind === 'walk'
+  )
+}
+
 function ImagingStageSession({
   sectionId,
   locale,
@@ -168,9 +186,12 @@ function ImagingStageSession({
   const { session, dispatch } = useImagingStageSession(lesson)
   const nextSection = nextPathwaySection(peripheralImagingPathway, sectionId)
   const stageSources = useMemo(() => imagingStageSources(lesson.sectionId), [lesson.sectionId])
+  const { progress: courseProgress } = useImagingProgress()
+  const savedForReview = courseProgress.reviewLaterSectionIds.includes(lesson.sectionId)
 
   const [pendingChoice, setPendingChoice] = useState<Record<string, string>>({})
   const [sortDraft, setSortDraft] = useState<Record<string, string>>({})
+  const [explanationsOpen, setExplanationsOpen] = useState<Record<string, boolean>>({})
   const [viewIndex, setViewIndex] = useState<number | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const [spotlight, setSpotlight] = useState<{ stepId: string; key: string; count: number } | null>(
@@ -182,17 +203,14 @@ function ImagingStageSession({
   const [independentDisplay, setIndependentDisplay] = useState<
     Record<string, Record<string, number | boolean | string>>
   >({})
-  const demonstrationMemories = useRef<
-    Record<string, { current: import('../suite/types').SuiteViewMemory }>
-  >({})
-  const learnerViewMemory = useRef<import('../suite/types').SuiteViewMemory>({})
+  const demonstrationMemories = useRef<Record<string, { current: SuiteViewMemory }>>({})
+  const learnerViewMemory = useRef<SuiteViewMemory>({})
   const [representation, setRepresentation] = useState<{ stepId: string; ready: boolean } | null>(
     null,
   )
   const { commitments } = session
   const progress = deriveStageProgress(lesson, session)
-  const liveIndex = progress.liveIndex
-  const heldIndex = Math.min(liveIndex, commitments.confirmed + 1)
+  const heldIndex = progress.liveIndex
   const activeIndex = Math.max(0, Math.min(viewIndex ?? heldIndex, lesson.steps.length - 1))
   const activeStep = lesson.steps[activeIndex]
   const activity = activeStep.activity
@@ -212,8 +230,10 @@ function ImagingStageSession({
       ),
     [activeStep.id],
   )
-  const independentPending =
+  /** A check with no answer yet. Its example image is held fixed; its explanation opens on request. */
+  const checkPending =
     interaction.kind === 'prediction' && commitments.choices[activeStep.id] === undefined
+  const explanationOpen = explanationsOpen[activeStep.id] === true
   const needsImage =
     interaction.kind === 'lab-task' || interaction.kind === 'observe' || interaction.kind === 'walk'
   const workDone =
@@ -234,15 +254,17 @@ function ImagingStageSession({
     window.history.replaceState(window.history.state, '', url)
   }, [activeStep.phase])
 
+  // A location fact, not a completion: the learner opened this section.
   useEffect(() => {
-    writeImagingRecord(withSectionVisited(readImagingRecord(), lesson.sectionId))
+    recordImagingLocation({ kind: 'section', id: lesson.sectionId })
   }, [lesson.sectionId])
 
-  const completionRecorded = useRef(false)
+  // Finishing is the learner's own "reviewed" mark. It says nothing about answers or skipped steps.
+  const reviewRecorded = useRef(false)
   useEffect(() => {
-    if (!finished || completionRecorded.current) return
-    completionRecorded.current = true
-    writeImagingRecord(withSectionCompleted(readImagingRecord(), lesson.sectionId))
+    if (!finished || reviewRecorded.current) return
+    reviewRecorded.current = true
+    markImagingSectionReviewed(lesson.sectionId)
   }, [finished, lesson.sectionId])
 
   /* The readouts before the hands-on work, for the "what changed" table. */
@@ -250,47 +272,47 @@ function ImagingStageSession({
     step.interaction.kind === 'observe' ? 'observe' : 'act'
   useEffect(() => {
     if (lookingBack) return
-    const step = lesson.steps[liveIndex]
-    if (!step || !session.lab) return
-    if (
-      step.interaction.kind !== 'lab-task' &&
-      step.interaction.kind !== 'observe' &&
-      step.interaction.kind !== 'walk'
-    )
-      return
+    const step = lesson.steps[heldIndex]
+    if (!step || !session.lab || !isLabStep(step)) return
     const key = `before:${snapshotKey(step)}`
     if (session.snapshots[key]) return
     dispatch({ type: 'SNAPSHOT', key })
-  }, [dispatch, lesson.steps, liveIndex, lookingBack, session.lab, session.snapshots])
+  }, [dispatch, heldIndex, lesson.steps, lookingBack, session.lab, session.snapshots])
 
   /* ---------------------------------------------------------------- *
    * Progression
    * ---------------------------------------------------------------- */
-  const confirmThrough = useCallback(
+  /** Continue past a step whose work is done: the "after" readouts are real, so take them. */
+  const continuePast = useCallback(
     (index: number) => {
       const step = lesson.steps[index]
-      if (
-        step &&
-        (step.interaction.kind === 'lab-task' ||
-          step.interaction.kind === 'observe' ||
-          step.interaction.kind === 'walk')
-      ) {
-        dispatch({ type: 'SNAPSHOT', key: `after:${snapshotKey(step)}` })
-      }
-      dispatch({ type: 'CONFIRM_THROUGH', index })
+      if (step && isLabStep(step)) dispatch({ type: 'SNAPSHOT', key: `after:${snapshotKey(step)}` })
+      dispatch({ type: 'CONTINUE_PAST', index })
       setViewIndex(null)
       setSpotlight(null)
     },
     [dispatch, lesson.steps],
   )
 
+  /** Move past a step without its work: no readouts, no answer, nothing performed. */
+  const skipPast = useCallback(
+    (index: number) => {
+      dispatch({ type: 'SKIP_PAST', index })
+      setViewIndex(null)
+      setSpotlight(null)
+    },
+    [dispatch],
+  )
+
+  function toggleExplanation(stepId: string) {
+    setExplanationsOpen((current) => ({ ...current, [stepId]: !current[stepId] }))
+  }
+
   function commitChoice(step: ImagingStageStep) {
     if (step.interaction.kind !== 'prediction') return
     const choiceId = pendingChoice[step.id]
     if (!choiceId) return
     dispatch({ type: 'COMMIT_CHOICE', stepId: step.id, choiceId })
-    const key = `${lesson.sectionId}:${questionIdOf(step.interaction.item.id)}`
-    writeImagingRecord(withFirstAttempt(readImagingRecord(), key, choiceId))
     setViewIndex(null)
   }
 
@@ -302,7 +324,7 @@ function ImagingStageSession({
 
   function goBack() {
     const target = activeIndex - 1
-    if (target < 0 || !performedIds.has(lesson.steps[target].id)) return
+    if (target < 0) return
     setViewIndex(target)
   }
 
@@ -311,12 +333,17 @@ function ImagingStageSession({
   }
 
   function selectStepRow(index: number) {
-    if (!performedIds.has(lesson.steps[index].id)) return
+    if (index < 0 || index >= heldIndex) return
     setViewIndex(index)
   }
 
   function finish() {
-    dispatch({ type: 'CONFIRM_THROUGH', index: activeIndex })
+    dispatch({ type: 'CONTINUE_PAST', index: activeIndex })
+    dispatch({ type: 'FINISH' })
+  }
+
+  function finishWithoutAnswer() {
+    dispatch({ type: 'SKIP_PAST', index: activeIndex })
     dispatch({ type: 'FINISH' })
   }
 
@@ -339,10 +366,10 @@ function ImagingStageSession({
     return keyed && !isOffChainTarget(keyed) ? keyed.stopId : null
   })()
 
-  const litStop: ChainStopId | null = independentPending
+  const litStop: ChainStopId | null = checkPending
     ? null
     : (walkStop ?? (chainItem ? keyedStop : activeStep.suite.litStop))
-  const litStops: readonly ChainStopId[] = independentPending
+  const litStops: readonly ChainStopId[] = checkPending
     ? []
     : walkStop
       ? [walkStop]
@@ -432,7 +459,7 @@ function ImagingStageSession({
    * ---------------------------------------------------------------- */
   const stepPosition = `Step ${activeStep.ordinal} of ${lesson.steps.length} · ${STAGE_PHASE_LABELS[activeStep.phase]}`
   const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
-  const canGoBack = previousStep !== undefined && performedIds.has(previousStep.id) && !finished
+  const canGoBack = previousStep !== undefined && !finished
   const showWhereAction =
     firstUnmetKey && !workDone && !lookingBack
       ? {
@@ -448,7 +475,7 @@ function ImagingStageSession({
         : lesson.steps[activeIndex + 1]?.activity.task === 'observe'
           ? 'Compare the images'
           : 'Continue',
-    onActivate: () => confirmThrough(activeIndex),
+    onActivate: () => continuePast(activeIndex),
     icon: <ArrowRight aria-hidden="true" />,
   }
   const finishAction = {
@@ -456,14 +483,18 @@ function ImagingStageSession({
     onActivate: finish,
     icon: <ArrowRight aria-hidden="true" />,
   }
+  const skipStep = (label: string): NowCardAction => ({
+    label,
+    onActivate: () => skipPast(activeIndex),
+  })
 
-  const nowModel: NowCardModel = (() => {
-    const base: NowCardModel = {
+  const nowModel: ImagingNowModel = (() => {
+    const base: ImagingNowModel = {
       kicker: stepPosition,
       heading: activeStep.title,
       body: activeStep.instruction,
       why: activeStep.rationale,
-      ...(canGoBack && previousStep
+      ...(canGoBack
         ? {
             back: {
               label: 'Back',
@@ -475,8 +506,9 @@ function ImagingStageSession({
     if (lookingBack) {
       return {
         ...base,
-        status:
-          'Done. You are looking back at an earlier step. The suite is where you left it, and nothing you have worked through is lost.',
+        status: performedIds.has(activeStep.id)
+          ? 'Done. You are looking back at an earlier step. The suite is where you left it, and nothing you have worked through is lost.'
+          : 'You moved past this step without completing it. You are looking back; the suite is where you left it.',
         primary: {
           label: `Return to step ${heldIndex + 1}`,
           onActivate: returnToLive,
@@ -485,20 +517,23 @@ function ImagingStageSession({
       }
     }
     if (finished && isLastStep) {
-      return { ...base, status: 'Done. This section has been worked through.' }
+      return { ...base, status: 'Done. You marked this section reviewed.' }
     }
     switch (interaction.kind) {
-      case 'read':
+      case 'read': {
+        const waitingForImage = activity.visual === 'suite' && !imageReady
         return {
           ...base,
           primary: {
             label: activeStep.actionLabel,
-            onActivate: () => confirmThrough(activeIndex),
-            disabled: activity.visual === 'suite' && !imageReady,
+            onActivate: () => continuePast(activeIndex),
+            disabled: waitingForImage,
             disabledReason:
-              'The demonstration image must load. Teaching text remains available; retry the view.',
+              'The demonstration image must load. Teaching text remains available; retry the view, or continue without the image.',
           },
+          ...(waitingForImage ? { skip: skipStep('Continue without the image') } : {}),
         }
+      }
       case 'walk': {
         if (commitments.walkDone) {
           return workDone
@@ -509,8 +544,10 @@ function ImagingStageSession({
               }
             : {
                 ...base,
-                status: 'Every component visited. This step is done when every item below is met.',
+                status:
+                  'Every component visited. This step is done when every item below is met, or you can skip it.',
                 secondary: showWhereAction,
+                skip: skipStep('Skip this step'),
               }
         }
         const last = commitments.walkStop >= interaction.stops.length - 1
@@ -522,6 +559,7 @@ function ImagingStageSession({
             onActivate: () => dispatch({ type: 'WALK_NEXT', stopCount: interaction.stops.length }),
             icon: <ArrowRight aria-hidden="true" />,
           },
+          skip: skipStep('Skip the walk'),
         }
       }
       case 'prediction': {
@@ -540,10 +578,9 @@ function ImagingStageSession({
           }
         return {
           ...base,
-          status:
-            interaction.round === 0
-              ? 'Inspect this example, then select your interpretation. The worked demonstration does not count as an answer.'
-              : undefined,
+          status: explanationOpen
+            ? 'The explanation is open. You can still choose an interpretation and check it, or continue without answering.'
+            : 'Choose an interpretation and check it, show the explanation first, or continue without answering.',
           primary: {
             label: activeStep.actionLabel,
             onActivate: () => commitChoice(activeStep),
@@ -557,6 +594,14 @@ function ImagingStageSession({
               ? 'Choose a component on the image-formation map to enable this.'
               : 'Choose one option to enable this.',
           },
+          secondary: {
+            label: explanationOpen ? 'Hide the explanation' : 'Show the explanation',
+            onActivate: () => toggleExplanation(activeStep.id),
+            expanded: explanationOpen,
+          },
+          skip: isLastStep
+            ? { label: 'Finish without answering', onActivate: finishWithoutAnswer }
+            : skipStep('Continue without answering'),
         }
       }
       case 'sort': {
@@ -564,12 +609,22 @@ function ImagingStageSession({
         const remaining = interaction.sort.rows.filter((row) => !sortDraft[row.id]).length
         return {
           ...base,
+          status:
+            remaining > 0
+              ? `${remaining} of ${interaction.sort.rows.length} still to place. You can show the matches, or continue without matching.`
+              : 'Every statement is placed. Check the matches, or continue without checking.',
           primary: {
             label: activeStep.actionLabel,
             onActivate: () => commitSort(activeStep),
             disabled: remaining > 0,
             disabledReason: `${remaining} of ${interaction.sort.rows.length} still to place.`,
           },
+          secondary: {
+            label: explanationOpen ? 'Hide the matches' : 'Show the matches',
+            onActivate: () => toggleExplanation(activeStep.id),
+            expanded: explanationOpen,
+          },
+          skip: skipStep('Continue without matching'),
         }
       }
       case 'lab-task':
@@ -582,17 +637,25 @@ function ImagingStageSession({
         return {
           ...base,
           status: !imageReady
-            ? 'The required image is unavailable or loading. Retry the view; text explanations remain available.'
-            : 'Compare the image as you make the changes listed below.',
+            ? 'The required image is unavailable or loading. Retry the view; text explanations remain available, and you can skip this step.'
+            : 'Compare the image as you make the changes listed below, or skip this step.',
           secondary: showWhereAction,
+          skip: skipStep('Skip this step'),
         }
-      case 'observe':
+      case 'observe': {
         if (workDone) return { ...base, status: 'Done.', primary: continueAction }
+        // Every listed item can read as met by the untouched starting state; the comparison still
+        // needs a change to compare.
+        const nothingChangedYet = !!imageReady && goals.length > 0 && goalsMetNow.every(Boolean)
         return {
           ...base,
-          status: 'Complete the listed comparison before continuing.',
+          status: nothingChangedYet
+            ? 'This comparison starts from the change in the step before. Go back to make it, change the view here, or skip this step.'
+            : 'Complete the listed comparison to continue, or skip this step.',
           secondary: showWhereAction,
+          skip: skipStep('Skip this step'),
         }
+      }
       case 'explain':
         return { ...base, primary: isLastStep ? finishAction : continueAction }
       default:
@@ -616,21 +679,38 @@ function ImagingStageSession({
 
   const nowBody: ReactNode = (() => {
     if (lookingBack) {
-      const committedId =
-        interaction.kind === 'prediction' ? commitments.choices[activeStep.id] : undefined
-      if (interaction.kind === 'prediction' && committedId) {
+      if (interaction.kind === 'prediction') {
+        const committedId = commitments.choices[activeStep.id]
+        if (committedId) {
+          return (
+            <AnswerVerdict
+              item={interaction.item}
+              choiceId={committedId}
+              outcome="stated"
+              timing="immediate-after-commit"
+              theme="dark"
+              frames={verdictFrames(interaction.item)}
+            />
+          )
+        }
         return (
-          <AnswerVerdict
+          <UnansweredCheck
             item={interaction.item}
-            choiceId={committedId}
-            outcome="stated"
-            timing="immediate-after-commit"
-            theme="dark"
-            frames={verdictFrames(interaction.item)}
+            open={explanationOpen}
+            onToggle={() => toggleExplanation(activeStep.id)}
+            message="You moved past this check without answering it."
           />
         )
       }
-      return <StepRecap lesson={lesson} step={activeStep} index={activeIndex} session={session} />
+      return (
+        <StepRecap
+          lesson={lesson}
+          step={activeStep}
+          index={activeIndex}
+          session={session}
+          performed={performedIds.has(activeStep.id)}
+        />
+      )
     }
     switch (interaction.kind) {
       case 'walk':
@@ -650,40 +730,52 @@ function ImagingStageSession({
             />
           )
         }
+        const explanation = explanationOpen ? (
+          <ImagingExplanation
+            item={interaction.item}
+            note="Shown without an answer. You can still choose an interpretation and check it."
+          />
+        ) : null
         if (interaction.chainTargets) {
           const chosen = interaction.item.choices.find(
             (choice) => choice.id === pendingChoice[activeStep.id],
           )
           return (
-            <p className={stageStyles.taskInstruction} data-chain-answer-note>
-              Answer on the image-formation map beneath the scene: choose the stop.
-              {chosen ? ` Chosen: ${chosen.label}.` : ''}
-            </p>
+            <>
+              <p className={stageStyles.taskInstruction} data-chain-answer-note>
+                Answer on the image-formation map beneath the scene: choose the stop.
+                {chosen ? ` Chosen: ${chosen.label}.` : ''}
+              </p>
+              {explanation}
+            </>
           )
         }
         const selected = pendingChoice[activeStep.id] ?? null
         return (
-          <fieldset className={stageStyles.choiceList} data-prediction-choices>
-            <legend>{interaction.item.stem}</legend>
-            {orderChoices(interaction.item.id, interaction.item.choices).map((choice) => (
-              <label
-                key={choice.id}
-                className={stageStyles.choice}
-                data-selected={selected === choice.id}
-              >
-                <input
-                  type="radio"
-                  name={`imaging-prediction-${activeStep.id}`}
-                  value={choice.id}
-                  checked={selected === choice.id}
-                  onChange={() =>
-                    setPendingChoice((current) => ({ ...current, [activeStep.id]: choice.id }))
-                  }
-                />
-                <span>{choice.label}</span>
-              </label>
-            ))}
-          </fieldset>
+          <>
+            <fieldset className={stageStyles.choiceList} data-prediction-choices>
+              <legend>{interaction.item.stem}</legend>
+              {orderChoices(interaction.item.id, interaction.item.choices).map((choice) => (
+                <label
+                  key={choice.id}
+                  className={stageStyles.choice}
+                  data-selected={selected === choice.id}
+                >
+                  <input
+                    type="radio"
+                    name={`imaging-prediction-${activeStep.id}`}
+                    value={choice.id}
+                    checked={selected === choice.id}
+                    onChange={() =>
+                      setPendingChoice((current) => ({ ...current, [activeStep.id]: choice.id }))
+                    }
+                  />
+                  <span>{choice.label}</span>
+                </label>
+              ))}
+            </fieldset>
+            {explanation}
+          </>
         )
       }
       case 'sort':
@@ -692,6 +784,7 @@ function ImagingStageSession({
             sort={interaction.sort}
             draft={sortDraft}
             committed={commitments.sorts[activeStep.id] ?? null}
+            revealed={explanationOpen}
             onChange={(rowId, originId) =>
               setSortDraft((current) => ({ ...current, [rowId]: originId }))
             }
@@ -725,6 +818,15 @@ function ImagingStageSession({
                   frames={verdictFrames(predictionItem)}
                 />
               </div>
+            ) : predictionItem && predictionStep ? (
+              <div data-explain-recap data-explain-unanswered>
+                <UnansweredCheck
+                  item={predictionItem}
+                  open={explanationsOpen[predictionStep.id] === true}
+                  onToggle={() => toggleExplanation(predictionStep.id)}
+                  message="You continued past the interpretation check without answering it."
+                />
+              </div>
             ) : null}
             {before && after && watch.length > 0 ? (
               <BeforeAfter
@@ -745,22 +847,21 @@ function ImagingStageSession({
   /* ---------------------------------------------------------------- *
    * Panes
    * ---------------------------------------------------------------- */
-  const deciding =
-    interaction.kind === 'prediction' && commitments.choices[activeStep.id] === undefined
-  // Demonstrations own their state; guided work uses the session. Independent images stay fixed.
+  // Demonstrations own their state; guided work uses the session. Check examples stay fixed.
   const beforePrediction = interaction.kind === 'read'
   const browsingIndependent =
     interaction.kind === 'prediction' &&
     interaction.round === 0 &&
     ['sampling', 'dts', 'dts-prior'].includes(suiteView.mode)
-  const controlsEnabled = (!deciding || browsingIndependent) && !beforePrediction && !lookingBack
-  const lockedReason = deciding
-    ? 'Independent interpretation: the image state is held while you answer.'
+  const controlsEnabled =
+    (!checkPending || browsingIndependent) && !beforePrediction && !lookingBack
+  const lockedReason = checkPending
+    ? 'This example stays fixed so the question and the image match.'
     : beforePrediction
       ? 'The worked demonstration uses separate state. The guided task starts from its own baseline.'
       : undefined
   const pausedReason =
-    !deciding && !beforePrediction && lookingBack
+    !checkPending && !beforePrediction && lookingBack
       ? 'The controls are paused while you look back at an earlier step. Return to the live step to take them.'
       : undefined
 
@@ -860,7 +961,7 @@ function ImagingStageSession({
         lesson={lesson}
         activity={activity}
         stops={litStops}
-        independent={independentPending}
+        checking={checkPending}
       />
     </StageTeachingScope>
   )
@@ -873,9 +974,13 @@ function ImagingStageSession({
         <strong>{activeStep.title}.</strong> {activeStep.instruction}
       </p>
       <p>
-        Completed sections and first answers are saved on this device. Leaving or reloading restarts
-        the current incomplete section; demonstration settings and in-section position are not
-        saved.
+        Any step can be skipped, and any check can show its explanation before you answer. Answers
+        are not saved; they only change the feedback on this page.
+      </p>
+      <p>
+        This device keeps the sections you open, where you were, and the sections you mark reviewed
+        or save for later. Leaving or reloading starts a section from its first step; demonstration
+        settings are not saved.
       </p>
       {activeStep.rationale ? <p>{activeStep.rationale}</p> : null}
       {firstUnmetKey && !workDone ? (
@@ -903,6 +1008,7 @@ function ImagingStageSession({
         <ImagingActivityShell
           lesson={lesson}
           index={activeIndex}
+          liveIndex={heldIndex}
           model={nowModel}
           headingRef={nowFocusRef}
           visual={simulator}
@@ -913,21 +1019,26 @@ function ImagingStageSession({
           onHelp={() => setHelpOpen(true)}
           helpRef={helpButtonRef}
           onRestart={onRestart}
+          reviewLater={savedForReview}
+          onToggleReviewLater={() =>
+            setImagingSectionReviewLater(lesson.sectionId, !savedForReview)
+          }
           finished={finished && isLastStep}
           nextHref={
-            nextSection ? imagingSectionLinkTarget(nextSection.id) : PERIPHERAL_IMAGING_ASSESS_HREF
+            nextSection
+              ? imagingSectionLinkTarget(nextSection.id)
+              : PERIPHERAL_IMAGING_INTEGRATED_CASES_HREF
           }
-          nextTitle={nextSection ? `Continue to ${nextSection.title}` : 'Go to the capstone'}
+          nextTitle={
+            nextSection ? `Continue to ${nextSection.title}` : 'Go to the integrated cases'
+          }
           references={
             <StageSourcesFooter
               count={stageSources.evidenceIds.length}
               label="Sources for this section"
-              claimsVisible={!independentPending}
+              claimsVisible
             >
-              <ImagingSourceList
-                records={stageSources.records}
-                claimsVisible={!independentPending}
-              />
+              <ImagingSourceList records={stageSources.records} claimsVisible />
             </StageSourcesFooter>
           }
         >
@@ -950,10 +1061,46 @@ function watchFor(lesson: ImagingStageLesson): readonly LabMetricId[] {
 }
 
 /**
+ * A check the learner has not answered: says so, and offers the explanation. Opening it answers
+ * nothing and records nothing.
+ */
+function UnansweredCheck({
+  item,
+  open,
+  onToggle,
+  message,
+}: {
+  readonly item: ClinicalLearningItem
+  readonly open: boolean
+  readonly onToggle: () => void
+  readonly message: string
+}) {
+  return (
+    <div className="grid gap-3" data-unanswered-check>
+      <p className={stageStyles.taskInstruction}>{message}</p>
+      <div>
+        <button
+          type="button"
+          className={shellStyles.nowSecondary}
+          aria-expanded={open}
+          onClick={onToggle}
+          data-show-explanation
+        >
+          {open ? 'Hide the explanation' : 'Show the explanation'}
+        </button>
+      </div>
+      {open ? <ImagingExplanation item={item} note="Shown without an answer." /> : null}
+    </div>
+  )
+}
+
+/**
  * What changed: the readouts at the start of the Act, after the change the Act asked for, and —
  * when the section had an Observe step — after the reading. Three columns, because an Observe
  * step often brings the suite back to where it started (the projection section returns to the
- * overlap), and a two-column table would then say nothing had changed.
+ * overlap), and a two-column table would then say nothing had changed. The "after" readouts are
+ * taken only when the learner continued with the step's work done, so a skipped step leaves the
+ * table out rather than showing an unchanged state as the result of a change.
  */
 function BeforeAfter({
   before,
@@ -1002,14 +1149,10 @@ function recapLines(
     case 'prediction': {
       const chosen = commitments.choices[step.id]
       const label = step.interaction.item.choices.find((choice) => choice.id === chosen)?.label
-      return label ? [`Committed: ${label}`] : []
+      return label ? [`Your answer: ${label}`] : []
     }
-    case 'sort': {
-      const answers = commitments.sorts[step.id]
-      if (!answers) return []
-      const held = step.interaction.sort.rows.filter((row) => answers[row.id] === row.origin).length
-      return [`Placed the set: ${held} of ${step.interaction.sort.rows.length} held.`]
-    }
+    case 'sort':
+      return commitments.sorts[step.id] ? ['Placed every statement and checked the matches.'] : []
     case 'walk':
       return commitments.walkDone ? ['Every component visited.'] : []
     case 'lab-task':
@@ -1034,12 +1177,24 @@ function StepRecap({
   step,
   index,
   session,
+  performed,
 }: {
   readonly lesson: ImagingStageLesson
   readonly step: ImagingStageStep
   readonly index: number
   readonly session: ReturnType<typeof useImagingStageSession>['session']
+  readonly performed: boolean
 }) {
+  if (!performed) {
+    return (
+      <ul className={stageStyles.taskList} data-step-review data-step-skipped>
+        <li data-met="false">
+          <Circle aria-hidden="true" />
+          <span>You moved past this step without completing it.</span>
+        </li>
+      </ul>
+    )
+  }
   const lines = recapLines(lesson, step, index, session)
   if (lines.length === 0) return null
   return (
@@ -1055,26 +1210,30 @@ function StepRecap({
 }
 
 function CompletionCard({ lesson }: { readonly lesson: ImagingStageLesson }) {
-  const capstoneCase = lesson.spec.capstoneCaseId
+  const integratedCase = lesson.spec.capstoneCaseId
     ? imagingCaseById.get(lesson.spec.capstoneCaseId)
     : undefined
   // The plan's pairing rule: a section's completion card points at its own practice case, so the
   // next thing to do after a mechanism is to use it somewhere else.
   const practiceCase = microCasesForSection(lesson.sectionId)[0]
   return (
-    <section
-      className={styles.completion}
-      data-section-completion
-      aria-label="Section worked through"
-    >
-      <p className={styles.kicker}>Worked through</p>
+    <section className={styles.completion} data-section-completion aria-label="Section reviewed">
+      <p className={styles.kicker}>Section reviewed</p>
       <p>
-        This section is on your record. Nothing here is a mark; the first decisions you made are
-        kept as you made them.
+        You marked this section reviewed on this device. It is a note for finding your place, not a
+        mark: answers and skipped steps are not recorded, and every section stays open.
       </p>
-      {capstoneCase ? (
+      {integratedCase ? (
         <p>
-          This idea returns in the capstone as <strong>{capstoneCase.presentationTitle}</strong>.
+          This idea returns in the integrated case{' '}
+          <Link
+            className={styles.completionLink}
+            href={integratedCaseLinkTarget(integratedCase.id)}
+            data-paired-integrated-case={integratedCase.id}
+          >
+            {integratedCase.presentationTitle}
+          </Link>
+          .
         </p>
       ) : null}
       {practiceCase ? (

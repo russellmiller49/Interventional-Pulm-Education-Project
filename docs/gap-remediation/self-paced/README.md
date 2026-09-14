@@ -58,3 +58,7 @@ No dependency, learning platform, publication, deployment, release-state change,
 - [Reusable technical checklist](developer-checklist.md)
 - [Bounded implementation sequence](implementation-plan.md)
 - [Baseline evidence, holds, and handoff](G00-handoff.md)
+
+## Module conversions
+
+- [PI-01 — Peripheral Imaging self-paced pilot](PI-01-handoff.md): Learn, Practice, the former capstone (now integrated cases on the same address), hub and progress storage converted; changed test contracts, evidence, holds and next slice.

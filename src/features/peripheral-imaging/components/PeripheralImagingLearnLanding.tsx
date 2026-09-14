@@ -2,10 +2,14 @@
 
 import { peripheralImagingPathway } from '../content/pathway'
 import { imagingCompositionLine } from '../content/pathwayResolver'
-import { ImagingContinueCta, ImagingStoredPathwayAccordion } from './hub/ImagingPathwayAccordion'
+import {
+  ImagingContinueCta,
+  ImagingProgressNotes,
+  ImagingStoredPathwayAccordion,
+} from './hub/ImagingPathwayAccordion'
 import styles from './peripheral-imaging-hub.module.css'
 
-/** The Learn landing: the arc sentence, the one door, the one map. */
+/** The Learn landing: the arc sentence, the one door, the one map. Every section is open. */
 export function PeripheralImagingLearnLanding({
   unknownSection,
 }: {
@@ -29,12 +33,14 @@ export function PeripheralImagingLearnLanding({
         relationship to a peripheral lung lesion.
       </p>
       <p>
-        Completed sections and first answers are saved on this device. Returning restarts the
-        current incomplete section.
+        Every section is open, in any order. This device keeps where you were, the sections you have
+        opened, and the sections you mark reviewed or save for later — never your answers. A section
+        you return to starts from its first step.
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <ImagingContinueCta />
       </div>
+      <ImagingProgressNotes className="grid gap-3" />
       <p className={styles.composition} data-pathway-composition>
         {imagingCompositionLine()}
       </p>

@@ -40,6 +40,12 @@ All paths below are inside `src/features/` unless otherwise stated. This is a na
 
 The extension notation `test.ts[x]` means inspect the actual existing `.test.ts` or `.test.tsx` path; it is not a runnable glob. Use explicit test paths with a nonzero discovered count.
 
+## Executed migrations
+
+| Prompt | Where the changed assertions, replacements, commands and holds are recorded         |
+| ------ | ----------------------------------------------------------------------------------- |
+| PI-01  | [PI-01 handoff — test-contract migration](PI-01-handoff.md#test-contract-migration) |
+
 ## Record format for each implementation PR
 
 | Changed file and assertion | Old behavior / why superseded        | New behavior                                                 | Preserved simulation/data checks         | Executed command, count, result   | Remaining hold                         |

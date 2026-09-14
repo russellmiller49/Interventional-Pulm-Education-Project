@@ -4,6 +4,12 @@ import { ImagingStageHost } from '../components/stage/ImagingStageHost'
 import { controlElementId } from '../components/suite/types'
 import { imagingStageLesson, type ImagingStageLesson } from '../content/stageLessons'
 import type { ImagingSectionId } from '../content/pathway'
+import {
+  createEmptyImagingProgress,
+  IMAGING_PROGRESS_STORAGE_KEY,
+  parseImagingProgress,
+  type ImagingProgress,
+} from '../engine/selfPacedProgress'
 
 /**
  * Drives a section on the real lesson stage over the real engine, the way a learner does: the
@@ -34,6 +40,29 @@ export function nowPrimary(): HTMLButtonElement | null {
 
 export function nowStatus(): string {
   return document.querySelector('[data-now-status]')?.textContent?.trim() ?? ''
+}
+
+export function nowSecondary(): HTMLButtonElement | null {
+  return document.querySelector<HTMLButtonElement>('[data-now-card] [data-now-secondary]')
+}
+
+export function nowSkip(): HTMLButtonElement | null {
+  return document.querySelector<HTMLButtonElement>('[data-now-card] [data-now-skip]')
+}
+
+/** Move past the current step without its work, the way a learner does. */
+export function clickSkip() {
+  const button = nowSkip()
+  if (!button) throw new Error(`No way past step ${currentStepId()} without its work`)
+  fireEvent.click(button)
+}
+
+/** The self-paced record as stored, or the empty record when nothing is stored. */
+export function storedProgress(): ImagingProgress {
+  return (
+    parseImagingProgress(localStorage.getItem(IMAGING_PROGRESS_STORAGE_KEY)) ??
+    createEmptyImagingProgress()
+  )
 }
 
 export function clickPrimary() {

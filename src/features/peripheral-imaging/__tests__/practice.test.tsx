@@ -5,12 +5,13 @@ import { axe } from 'jest-axe'
 import { ImagingCaseActivity } from '../components/ImagingCaseActivity'
 import { PeripheralImagingPracticeLanding } from '../components/PeripheralImagingPracticeLanding'
 import { imagingMicroCasesInPathwayOrder, practiceItemId } from '../content/microCases'
+import { LEGACY_IMAGING_RECORD_KEY_V2 } from '../engine/learnProgress'
 import {
-  createEmptyImagingRecord,
-  parseImagingRecord,
-  PERIPHERAL_IMAGING_STORAGE_KEY,
-  withFirstAttempt,
-} from '../engine/learnProgress'
+  createEmptyImagingProgress,
+  IMAGING_PROGRESS_STORAGE_KEY,
+  parseImagingProgress,
+  withLocation,
+} from '../engine/selfPacedProgress'
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -42,96 +43,108 @@ beforeEach(() => localStorage.clear())
 afterEach(cleanup)
 
 const cases = () => imagingMicroCasesInPathwayOrder()
-const stored = () => parseImagingRecord(localStorage.getItem(PERIPHERAL_IMAGING_STORAGE_KEY))
+const stored = () => parseImagingProgress(localStorage.getItem(IMAGING_PROGRESS_STORAGE_KEY))
+const RESPONSE_SHAPED = /choice|correct|attempt|answer/i
 
-function commitChoice(choiceId: string) {
+function checkChoice(choiceId: string) {
   fireEvent.click(document.querySelector(`[data-prediction-choices] input[value="${choiceId}"]`)!)
   fireEvent.click(document.querySelector('[data-now-primary]')!)
 }
 
+/*
+ * Contract change (PI-01). Old contract: the reasoning and the section link were withheld until a
+ * decision, and the first decision was written once to the record and shown on return. New
+ * contract: the explanation and the section link are there before any answer, answers are local
+ * feedback only, and the only thing stored is that the case was opened.
+ */
 describe('a practice case', () => {
-  it('shows the situation, withholds the reasoning until a decision, then states it', () => {
+  it('shows the situation, the concept link and, on request, the explanation before any answer', async () => {
     const microCase = cases()[0]
-    render(<ImagingCaseActivity caseId={microCase.id} />)
+    const { container } = render(<ImagingCaseActivity caseId={microCase.id} />)
 
     expect(document.querySelector('[data-case-situation]')?.textContent).toContain(
       microCase.situation,
     )
+    expect(document.querySelector('[data-case-pairing] a')).toHaveAttribute(
+      'href',
+      `/peripheral-imaging/learn?section=${microCase.sectionId}`,
+    )
     expect(document.querySelector('[data-case-verdict]')).toBeNull()
     expect(document.querySelector<HTMLButtonElement>('[data-now-primary]')?.disabled).toBe(true)
 
-    commitChoice(microCase.item.correctChoiceIds[0])
-    expect(document.querySelector('[data-case-verdict]')).not.toBeNull()
-    expect(document.querySelector('[data-answer-verdict]')).toHaveAttribute(
-      'data-verdict-outcome',
-      'correct',
-    )
+    fireEvent.click(screen.getByRole('button', { name: 'Show the explanation' }))
+    const panel = document.querySelector('[data-explanation-reveal]')!
+    expect(panel).toHaveTextContent(microCase.item.explanation)
+    expect(
+      panel.querySelector(`[data-explanation-best="${microCase.item.correctChoiceIds[0]}"]`),
+    ).not.toBeNull()
+    expect(document.querySelector('[data-answer-verdict]')).toBeNull()
+    expect(document.querySelectorAll('[data-prediction-choices] input:checked')).toHaveLength(0)
+    expect(await axe(container)).toHaveNoViolations()
   })
 
-  it('records the first decision once, and lets the learner answer again without rewriting it', () => {
+  it('gives a wrong answer its reasoning, lets the learner try again, and saves no answer', () => {
     const microCase = cases()[0]
-    const key = practiceItemId(microCase.id)
     const keyed = microCase.item.correctChoiceIds[0]
     const other = microCase.item.choices.find((choice) => choice.id !== keyed)!.id
     render(<ImagingCaseActivity caseId={microCase.id} />)
 
-    commitChoice(other)
-    expect(stored()?.firstAttempts[key].choiceId).toBe(other)
-    expect(stored()?.firstAttempts[key].correct).toBe(false)
+    checkChoice(other)
+    const wrong = document.querySelector('[data-answer-verdict]')!
+    expect(wrong).toHaveAttribute('data-verdict-outcome', 'not-correct')
+    expect(wrong).toHaveTextContent(
+      microCase.item.choices.find((choice) => choice.id === other)!.rationale,
+    )
 
-    // Answering again is the point of this layer; the record is not.
     fireEvent.click(document.querySelector('[data-answer-again]')!)
     expect(document.querySelector('[data-case-verdict]')).toBeNull()
-    commitChoice(keyed)
+    checkChoice(keyed)
     expect(document.querySelector('[data-answer-verdict]')).toHaveAttribute(
       'data-verdict-outcome',
       'correct',
     )
-    expect(stored()?.firstAttempts[key].choiceId).toBe(other)
-    expect(stored()?.firstAttempts[key].correct).toBe(false)
+
+    expect(stored()).toMatchObject({
+      lastLocation: { kind: 'practice-case', id: microCase.id },
+      openedPracticeCaseIds: [microCase.id],
+    })
+    expect(JSON.stringify(stored())).not.toMatch(RESPONSE_SHAPED)
+    expect(localStorage.getItem(LEGACY_IMAGING_RECORD_KEY_V2)).toBeNull()
   })
 
-  it('tells a returning learner what they decided the first time', () => {
-    const microCase = cases()[0]
-    const keyed = microCase.item.correctChoiceIds[0]
-    localStorage.setItem(
-      PERIPHERAL_IMAGING_STORAGE_KEY,
-      JSON.stringify(
-        withFirstAttempt(createEmptyImagingRecord(), practiceItemId(microCase.id), keyed),
-      ),
-    )
+  it('names an unsafe option as unsafe, in the explanation and in the feedback', () => {
+    const microCase = cases().find((entry) =>
+      entry.item.choices.some((choice) => choice.plausibility === 'unsafe'),
+    )!
+    const unsafe = microCase.item.choices.find((choice) => choice.plausibility === 'unsafe')!
     render(<ImagingCaseActivity caseId={microCase.id} />)
-    expect(document.querySelector('[data-first-decision]')?.textContent).toContain(
-      microCase.item.choices.find((choice) => choice.id === keyed)!.label,
+    fireEvent.click(screen.getByRole('button', { name: 'Show the explanation' }))
+    expect(
+      document.querySelector(`[data-explanation-option="${unsafe.id}"][data-unsafe="true"]`),
+    ).not.toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Hide the explanation' }))
+    checkChoice(unsafe.id)
+    expect(document.querySelector('[data-answer-verdict]')).toHaveAttribute(
+      'data-verdict-outcome',
+      'unsafe',
     )
   })
 
-  it('walks to the next case, and says so plainly on the last one', () => {
+  it('offers the next case without an answer, and the case list on the last one', () => {
     const all = cases()
     render(<ImagingCaseActivity caseId={all[0].id} />)
-    commitChoice(all[0].item.choices[0].id)
     expect(document.querySelector('[data-next-case]')).toHaveAttribute('data-next-case', all[1].id)
     cleanup()
 
     render(<ImagingCaseActivity caseId={all[all.length - 1].id} />)
-    commitChoice(all[all.length - 1].item.choices[0].id)
     expect(document.querySelector('[data-next-case]')).toBeNull()
-    expect(screen.getByText(/Back to the case list/)).toBeInTheDocument()
-  })
-
-  it('does not name the section, and so the mechanism, until the decision is made', () => {
-    // A section title names the mechanism the case is about. Above the choices it is a free hint;
-    // after the decision it is the link a learner wants.
-    const microCase = cases()[0]
-    render(<ImagingCaseActivity caseId={microCase.id} />)
-    expect(document.querySelector('[data-case-pairing]')).toBeNull()
-    commitChoice(microCase.item.choices[0].id)
-    expect(document.querySelector('[data-case-pairing]')).not.toBeNull()
+    expect(document.querySelector('[data-back-to-list]')).toHaveTextContent(/Back to the case list/)
   })
 
   it('says so rather than breaking when the case is not in the module', () => {
     render(<ImagingCaseActivity caseId="not-a-case" />)
     expect(document.querySelector('[data-unknown-case]')).not.toBeNull()
+    expect(localStorage.getItem(IMAGING_PROGRESS_STORAGE_KEY)).toBeNull()
   })
 })
 
@@ -150,11 +163,13 @@ describe('the practice landing', () => {
     expect(await axe(container)).toHaveNoViolations()
   })
 
-  it('moves the door past the cases already decided and marks them', () => {
+  it('moves the door past the cases already opened and marks them opened', () => {
     const all = cases()
-    let record = createEmptyImagingRecord()
-    record = withFirstAttempt(record, practiceItemId(all[0].id), all[0].item.choices[0].id)
-    localStorage.setItem(PERIPHERAL_IMAGING_STORAGE_KEY, JSON.stringify(record))
+    const progress = withLocation(createEmptyImagingProgress(), {
+      kind: 'practice-case',
+      id: all[0].id,
+    })
+    localStorage.setItem(IMAGING_PROGRESS_STORAGE_KEY, JSON.stringify(progress))
 
     render(<PeripheralImagingPracticeLanding />)
     expect(document.querySelector('[data-practice-continue]')).toHaveAttribute(
@@ -162,25 +177,52 @@ describe('the practice landing', () => {
       all[1].id,
     )
     expect(document.querySelector(`[data-practice-case-link="${all[0].id}"]`)).toHaveAttribute(
-      'data-decided',
+      'data-opened',
       'true',
     )
     expect(document.querySelector(`[data-practice-case-link="${all[1].id}"]`)).toHaveAttribute(
-      'data-decided',
+      'data-opened',
       'false',
     )
   })
 
-  it('sends a learner who has decided every case to the capstone', () => {
-    let record = createEmptyImagingRecord()
-    for (const microCase of cases()) {
-      record = withFirstAttempt(record, practiceItemId(microCase.id), microCase.item.choices[0].id)
-    }
-    localStorage.setItem(PERIPHERAL_IMAGING_STORAGE_KEY, JSON.stringify(record))
+  it('does not treat a legacy first decision as progress', () => {
+    const all = cases()
+    const legacy = JSON.stringify({
+      version: 2,
+      completedSectionIds: [],
+      lastSectionId: null,
+      firstAttempts: {
+        [practiceItemId(all[0].id)]: {
+          choiceId: all[0].item.choices[0].id,
+          correct: false,
+          at: '2026-09-10T00:00:00.000Z',
+        },
+      },
+      capstoneDebriefViewedAt: null,
+      updatedAt: '2026-09-10T00:00:00.000Z',
+    })
+    localStorage.setItem(LEGACY_IMAGING_RECORD_KEY_V2, legacy)
     render(<PeripheralImagingPracticeLanding />)
     expect(document.querySelector('[data-practice-continue]')).toHaveAttribute(
-      'data-practice-continue',
-      'complete',
+      'data-next-case',
+      all[0].id,
     )
+    expect(document.querySelectorAll('[data-practice-case-link][data-opened="true"]')).toHaveLength(
+      0,
+    )
+    expect(localStorage.getItem(LEGACY_IMAGING_RECORD_KEY_V2)).toBe(legacy)
+  })
+
+  it('sends a learner who has opened every case to the integrated cases', () => {
+    let progress = createEmptyImagingProgress()
+    for (const microCase of cases()) {
+      progress = withLocation(progress, { kind: 'practice-case', id: microCase.id })
+    }
+    localStorage.setItem(IMAGING_PROGRESS_STORAGE_KEY, JSON.stringify(progress))
+    render(<PeripheralImagingPracticeLanding />)
+    const door = document.querySelector('[data-practice-continue]')
+    expect(door).toHaveAttribute('data-practice-continue', 'complete')
+    expect(door).toHaveAttribute('href', '/peripheral-imaging/assess')
   })
 })

@@ -31,7 +31,7 @@ export const QUESTIONS: Question[] = [
   item(
     'choose-1',
     'choose',
-    'Navigation places the catheter at the virtual target. The needle is visible on fluoroscopy, but the lesion is not. What does the imaging confirm?',
+    'Navigation places the catheter at the virtual target. The needle is visible on fluoroscopy, but the lesion is not. What does this evidence confirm?',
     'b',
     [
       [
