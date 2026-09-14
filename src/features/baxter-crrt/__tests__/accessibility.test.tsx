@@ -354,11 +354,7 @@ describe('Baxter CRRT staged builder and citrate accessibility contract', () => 
     )
     expect(heldOpenCount).toBeGreaterThan(0)
     // Every one of them is written out in the always-available text equivalent.
-    const textEquivalent = screen.getByText(/Four questions about citrate, kept apart/)
-    expect(
-      textEquivalent.textContent?.match(
-        /open question, not answered by the sources registered for this module/g,
-      ),
-    ).toHaveLength(heldOpenCount)
+    const textEquivalent = screen.getByText('Read the whole comparison as text').closest('details')!
+    expect(textEquivalent.textContent?.match(/\(Open question\)/g)).toHaveLength(heldOpenCount)
   })
 })

@@ -311,7 +311,7 @@ function AlarmRecord({ run }: { run: CrrtOperationalRun }) {
   )
 }
 
-function DeliveryTimeline({ run }: { run: CrrtOperationalRun }) {
+export function DeliveryTimeline({ run }: { run: CrrtOperationalRun }) {
   const intervals = crrtRecordedDeliveryIntervals(run)
   return (
     <section aria-label="Recorded delivery timeline">
@@ -367,7 +367,7 @@ function DeliveryTimeline({ run }: { run: CrrtOperationalRun }) {
   )
 }
 
-function FluidChart({
+export function FluidChart({
   run,
   missingUrine = false,
 }: {
@@ -522,12 +522,10 @@ export function CrrtRecordedBalanceQuestion({
             {number(chart.externalInputMl)} − {number(chart.urineMl)} −{' '}
             {number(chart.otherOutputMl)} − {number(chart.removalMl)} +{' '}
             {number(chart.additionalDeviceGainMl)} = {number(expected)} mL. Positive means gain.
-            These are recorded interval totals; the stopped hour remains part of the patient ledger.
+            These are recorded interval totals. Recorded interruptions remain part of the patient
+            ledger.
           </p>
-          <p>
-            Your first response is retained. Review the explanation before the changed chart
-            example.
-          </p>
+          <p>Your first response is retained. Review the explanation before continuing.</p>
           <button type="button" onClick={onContinue}>
             Review feedback and continue
           </button>

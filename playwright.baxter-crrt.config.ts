@@ -2,7 +2,11 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './e2e',
-  testMatch: ['baxter-crrt-foundations.spec.ts', 'baxter-crrt-operations.spec.ts'],
+  testMatch: [
+    'baxter-crrt-foundations.spec.ts',
+    'baxter-crrt-operations.spec.ts',
+    'baxter-crrt-advanced.spec.ts',
+  ],
   workers: 1,
   retries: 0,
   timeout: 180000,
@@ -13,7 +17,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
-  outputDir: '/tmp/crrt-batch-b-playwright',
+  outputDir: '/tmp/crrt-batch-c-playwright',
   webServer: {
     command: 'node node_modules/next/dist/bin/next dev --webpack -p 3113',
     url: 'http://127.0.0.1:3113/en/baxter-crrt',

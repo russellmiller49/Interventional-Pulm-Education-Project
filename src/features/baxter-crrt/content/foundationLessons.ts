@@ -31,8 +31,9 @@ export interface CrrtFoundationTask {
   readonly instruction: string
   readonly teaching: readonly string[]
   readonly tool?: CrrtFoundationTool
+  readonly advancedTool?: 'citrate-path' | 'citrate-comparison'
   readonly kind: 'read' | 'guided' | 'question' | 'builder' | 'numeric'
-  readonly run?: 'workflow' | 'delivery' | 'access' | 'fluid'
+  readonly run?: 'workflow' | 'delivery' | 'access' | 'fluid' | 'integration'
   readonly operation?:
     | 'hardware'
     | 'setup'
@@ -45,6 +46,13 @@ export interface CrrtFoundationTask {
     | 'missing-chart'
     | 'net-change'
     | 'net-observe'
+    | 'integration-entry'
+    | 'integration-profile'
+    | 'integration-inspect'
+    | 'integration-decision'
+    | 'integration-action'
+    | 'integration-balance'
+    | 'integration-reassess'
   readonly question?: string
   readonly choices?: readonly CrrtFoundationChoice[]
 }

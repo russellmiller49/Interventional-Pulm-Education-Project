@@ -72,6 +72,18 @@ export function crrtLearnAttemptReducer(
     return run === state.run ? state : { ...state, run }
   }
   if (!crrtOperationalTaskComplete(state.run, task.operation)) return state
+  if (task.kind === 'question') {
+    const evidence = action.evidence
+    const selected = task.choices?.find((choice) => choice.id === evidence?.response)
+    const first = state.evidence.find((item) => sameCrrtLearnIdentity(identity, item))
+    if (
+      !evidence ||
+      !selected ||
+      selected.correct !== evidence.correct ||
+      (first && (first.response !== evidence.response || first.correct !== evidence.correct))
+    )
+      return state
+  }
   if (task.kind === 'numeric') {
     const evidence = action.evidence
     const answer = evidence?.inputs?.answerMl
@@ -97,6 +109,14 @@ export function crrtLearnAttemptReducer(
       !action.evidence.feedbackDisplayed)
   )
     return state
+  const continuedRun =
+    task.operation === 'integration-decision' && state.run
+      ? {
+          ...state.run,
+          integrationPlan:
+            action.evidence?.response === 'defer' ? ('defer' as const) : ('correct' as const),
+        }
+      : state.run
   return {
     ...state,
     evidence: action.evidence
@@ -107,7 +127,7 @@ export function crrtLearnAttemptReducer(
     finished: state.taskIndex === tasks.length - 1,
     run: tasks[state.taskIndex + 1]?.run
       ? tasks[state.taskIndex + 1].run === state.run?.id
-        ? state.run
+        ? continuedRun
         : createCrrtOperationalRun(tasks[state.taskIndex + 1].run!)
       : undefined,
   }

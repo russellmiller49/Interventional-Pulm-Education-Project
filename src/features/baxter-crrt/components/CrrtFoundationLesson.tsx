@@ -8,8 +8,14 @@ import { baxterCrrtNavBase } from '@/features/learning-module/moduleRoutes'
 import { Link, useRouter } from '@/i18n/navigation'
 import type { CrrtFoundationTask } from '../content/foundationLessons'
 import { crrtLearnTasks } from '../content/learnTasks'
-import { crrtOperationalTaskComplete, crrtOperationalEvidenceInputs } from '../operationalModel'
+import {
+  crrtOperationalTaskComplete,
+  crrtOperationalEvidenceInputs,
+  type CrrtOperationalAction,
+} from '../operationalModel'
 import { CrrtOperationalTool, CrrtRecordedBalanceQuestion } from './CrrtOperationalTools'
+import { CrrtIntegrationTool } from './CrrtIntegrationTool'
+import { CrrtCitrateDifferential } from './CrrtCitrateDifferential'
 import { baxterCrrtLearnLessons, baxterCrrtLearnLessonById } from '../content/learnLessons'
 import type { BaxterCrrtLearnLessonId } from '../content/learnerRegistry'
 import { baxterCrrtLearnerFacingSourceById } from '../content/learnerSourceMap'
@@ -130,6 +136,10 @@ export function CrrtFoundationLesson({
     dispatch({ type: 'evidence', evidence: incoming })
     writeProgress(recordLearnTaskEvidence(readProgress(), incoming))
     return true
+  }
+  function applyOperation(action: CrrtOperationalAction) {
+    if (active.current && sameCrrtLearnIdentity(identityRef.current, activeIdentity))
+      dispatch({ type: 'operation', identity: activeIdentity, action })
   }
   function finish(incoming?: CrrtLearnEvidence) {
     if (!active.current || !sameCrrtLearnIdentity(identityRef.current, activeIdentity)) return
@@ -334,19 +344,23 @@ export function CrrtFoundationLesson({
                   where: (
                     <span>
                       Where to look:{' '}
-                      {task.operation === 'hardware'
-                        ? 'Machine functions and fluid destinations'
-                        : task.operation
-                          ? 'Current run and recorded observations'
-                          : task.tool === 'builder'
-                            ? 'Staged Prescription Builder'
-                            : task.tool === 'known-pressure'
-                              ? 'Pressure Localization Lab'
-                              : task.kind === 'question'
-                                ? 'Application check'
-                                : task.tool
-                                  ? 'Canonical CRRT circuit'
-                                  : task.title}
+                      {task.advancedTool
+                        ? task.advancedTool === 'citrate-path'
+                          ? 'Citrate path and sampling points'
+                          : 'Four citrate patterns'
+                        : task.operation === 'hardware'
+                          ? 'Machine functions and fluid destinations'
+                          : task.operation
+                            ? 'Current run and recorded observations'
+                            : task.tool === 'builder'
+                              ? 'Staged Prescription Builder'
+                              : task.tool === 'known-pressure'
+                                ? 'Pressure Localization Lab'
+                                : task.kind === 'question'
+                                  ? 'Application check'
+                                  : task.tool
+                                    ? 'Canonical CRRT circuit'
+                                    : task.title}
                       , below.
                     </span>
                   ),
@@ -385,19 +399,23 @@ export function CrrtFoundationLesson({
                 {task.tool && task.tool !== 'known-pressure' && task.tool !== 'builder' ? (
                   <CrrtFoundationToolView tool={task.tool} onReady={ready} />
                 ) : null}
-                {task.operation ? (
-                  <CrrtOperationalTool
-                    task={task}
-                    run={attempt.run}
-                    onReady={ready}
-                    onAction={(action) => {
-                      if (
-                        active.current &&
-                        sameCrrtLearnIdentity(identityRef.current, activeIdentity)
-                      )
-                        dispatch({ type: 'operation', identity: activeIdentity, action })
-                    }}
+                {task.advancedTool ? (
+                  <CrrtCitrateDifferential
+                    presentation={task.advancedTool === 'citrate-path' ? 'mechanism' : 'comparison'}
+                    onReviewed={ready}
                   />
+                ) : null}
+                {task.operation ? (
+                  attempt.run?.id === 'integration' ? (
+                    <CrrtIntegrationTool task={task} run={attempt.run} onAction={applyOperation} />
+                  ) : (
+                    <CrrtOperationalTool
+                      task={task}
+                      run={attempt.run}
+                      onReady={ready}
+                      onAction={applyOperation}
+                    />
+                  )
                 ) : null}
                 {task.kind === 'numeric' && attempt.run ? (
                   <CrrtRecordedBalanceQuestion
@@ -425,6 +443,7 @@ export function CrrtFoundationLesson({
                 {task.kind === 'question' ? (
                   <QuestionTask
                     task={task}
+                    ready={operationReady}
                     evidence={evidence}
                     onSubmit={(response) => {
                       const choice = task.choices!.find((c) => c.id === response)!
@@ -533,11 +552,13 @@ export function CrrtFoundationLesson({
 function QuestionTask({
   task,
   evidence,
+  ready = true,
   onSubmit,
   onFeedbackDisplayed,
   onContinue,
 }: {
   task: CrrtFoundationTask
+  ready?: boolean
   evidence?: CrrtLearnEvidence
   onSubmit: (response: string) => void
   onFeedbackDisplayed: () => void
@@ -578,7 +599,11 @@ function QuestionTask({
           </button>
         </div>
       ) : (
-        <button type="button" disabled={!choiceId} onClick={() => choiceId && onSubmit(choiceId)}>
+        <button
+          type="button"
+          disabled={!choiceId || !ready}
+          onClick={() => choiceId && ready && onSubmit(choiceId)}
+        >
           Check reasoning
         </button>
       )}

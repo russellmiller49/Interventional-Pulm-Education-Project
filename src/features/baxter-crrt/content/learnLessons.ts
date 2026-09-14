@@ -164,7 +164,7 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
       'Follow citrate into the circuit and calcium back to the patient, and keep the two sampling domains answering different questions.',
     paragraphs: [
       'Anticoagulation strategy is shaped by bleeding risk, circuit behavior, treatment goals, monitoring capability, and the authorized local protocol. The circuit and the patient must be reassessed together.',
-      'Citrate is the case where that pairing becomes concrete. It joins the blood path before the pump and therefore before the filter, so its intended effect is on blood that is outside the patient; the blood it acted on then returns through the return lumen, and calcium replacement supports the patient on its own separate line. A sample drawn from the circuit and a sample drawn from the patient describe two different compartments, and neither substitutes for the other.',
+      'Citrate makes that pairing concrete: it binds ionized calcium in the circuit, and some citrate–calcium complexes leave in effluent. Remaining citrate returns to the patient for metabolism. In this schematic, citrate enters before the blood pump and calcium replacement uses a separate patient line; actual infusion sites depend on the approved configuration. Circuit and systemic ionized calcium samples answer different questions, and neither substitutes for the other.',
       'For citrate-based therapy, trend recognition matters: verify sampling and timing, review circuit delivery, compare linked calcium and acid-base information, and escalate discordant patterns. This module intentionally does not provide medication quantities or a dosing protocol.',
     ],
     bullets: [
@@ -179,6 +179,11 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
       'REVIEW-CKRT-CORE-2025',
       'GUID-RRT-ICU-2026',
       'SYNTH-LAB-CITRATE-001',
+      'CITRATE-SIAARTI-2023-MECHANISM',
+      'CITRATE-SIAARTI-2023-SAMPLING',
+      'CITRATE-SCHNEIDER-2017-METABOLISM',
+      'CITRATE-SCHNEIDER-2017-PATTERNS',
+      'CITRATE-ICU-GUIDE-2026-SAFETY',
     ],
   }),
   lesson({

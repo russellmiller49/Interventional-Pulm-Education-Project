@@ -13,6 +13,7 @@
  */
 import {
   crrtCitrateCalciumTerms,
+  crrtCitrateClinicalSupport,
   crrtCitrateSourceGapTermIds,
   unresolvedCrrtCircuitSourceIds,
   unsupportedCrrtCitrateTermCitations,
@@ -82,13 +83,15 @@ describe('an evidence ID that resolves is not thereby a supporting ID', () => {
     expect(unsupported.map((citation) => citation.sourceId)).toEqual(['REVIEW-CKRT-CORE-2025'])
   })
 
-  it('leaves citrate pharmacology unmapped, so no record can be pressed into supporting it', () => {
+  it('supports pharmacology only through the newly registered claim-specific publication', () => {
     expect(CRRT_CLAIM_TOPICS).toContain('citrate-pharmacology')
-    expect(crrtSourcesSupportingClaim('citrate-pharmacology')).toEqual([])
+    expect(crrtSourcesSupportingClaim('citrate-pharmacology')).toEqual([
+      'CITRATE-SIAARTI-2023-MECHANISM',
+    ])
   })
 })
 
-describe('the seven citrate first-use terms', () => {
+describe('the citrate first-use terms', () => {
   it('presents none of the three clinical-context records as support for any definition', () => {
     for (const term of crrtCitrateCalciumTerms) {
       for (const id of CLINICAL_CONTEXT_IDS) {
@@ -97,27 +100,24 @@ describe('the seven citrate first-use terms', () => {
     }
   })
 
-  it('classifies every term as authored topology or a declared source gap', () => {
-    expect(crrtCitrateCalciumTerms).toHaveLength(7)
-
-    const byKind = crrtCitrateCalciumTerms.reduce<Record<string, string[]>>((acc, term) => {
-      ;(acc[term.claimSupport.kind] ??= []).push(term.id)
-      return acc
-    }, {})
-
-    expect(byKind['module-authored-topology']).toEqual([
-      'citrate-entry-point',
-      'circuit-sample',
-      'systemic-sample',
-      'calcium-replacement',
-      'blood-returns-to-patient',
-    ])
-    // The two statements that need a pharmacology claim the registered set does not carry.
-    expect(byKind['registered-source-gap']).toEqual([
-      'circuit-anticoagulation',
-      'citrate-calcium-in-effluent',
-    ])
-    expect(crrtCitrateSourceGapTermIds()).toEqual(byKind['registered-source-gap'])
+  it('classifies topology separately from publication-supported physiology', () => {
+    expect(crrtCitrateCalciumTerms).toHaveLength(8)
+    expect(crrtCitrateSourceGapTermIds()).toEqual([])
+    for (const term of crrtCitrateCalciumTerms) {
+      expect(['module-authored-topology', 'clinical-publication']).toContain(term.claimSupport.kind)
+      if (term.claimSupport.kind === 'clinical-publication') {
+        expect(term.claimSupport.supportingSourceIds.length).toBeGreaterThan(0)
+        for (const id of term.claimSupport.supportingSourceIds) {
+          expect(crrtSourceSupportsClaim(id, term.claimSupport.requiredTopic)).toBe(true)
+          expect(resolveCrrtLearnerFacingSource(id).reviewStatus).toBe('pending')
+          expect(resolveCrrtLearnerFacingSource(id).reviewer).toBeNull()
+        }
+      }
+    }
+    expect(
+      crrtSourceSupportsClaim('CITRATE-SIAARTI-2023-MECHANISM', 'citrate-metabolic-patterns'),
+    ).toBe(false)
+    expect(crrtSourceSupportsClaim('SYNTH-LAB-CITRATE-001', 'citrate-metabolism')).toBe(false)
   })
 
   it('grounds every topology term on circuit parts a reviewer can actually find', () => {
@@ -132,17 +132,11 @@ describe('the seven citrate first-use terms', () => {
     }
   })
 
-  it('names no supporting record for a gap term, and says why in words', () => {
-    for (const term of crrtCitrateCalciumTerms) {
-      if (term.claimSupport.kind !== 'registered-source-gap') continue
-      expect(term.claimSupport.requiredTopic).toBe('citrate-pharmacology')
-      expect(term.claimSupport.supportingSourceIds).toEqual([])
-      expect(term.claimSupport.readOffNodeIds).toEqual([])
-      expect(term.claimSupport.readOffPathIds).toEqual([])
-      expect(term.claimSupport.basis).toMatch(/No source registered for this module supports/i)
-      // The gap is declared, not closed: nothing here invents the missing mechanism.
-      expect(term.claimSupport.basis).toMatch(/needs a source an expert adds/i)
-    }
+  it('fails closed when a requested topic has no registered support', () => {
+    const support = crrtCitrateClinicalSupport('not-a-registered-topic' as never)
+    expect(support.kind).toBe('registered-source-gap')
+    expect(support.supportingSourceIds).toEqual([])
+    expect(support.basis).toMatch(/unavailable/)
   })
 
   it('keeps both closures green, and keeps them different checks', () => {

@@ -1,17 +1,5 @@
-/**
- * The citrate overlay's own prose is learner-facing, and it was making the two claims the term
- * panel now labels "Awaiting a source".
- *
- * `CrrtPilotCircuit` renders `overlay.summary` and `overlay.teachingPoint` straight to the learner,
- * and `crrtCircuitTextEquivalent` appends the teaching point. So while the seven first-use terms
- * were corrected, the same screen went on saying — as settled fact, under three records that
- * support none of it — that citrate acts inside the circuit by binding calcium and that
- * citrate-calcium complexes leave in the effluent.
- *
- * This suite holds the overlay to the same rule as the terms: the settled prose carries module
- * topology only, and anything needing `citrate-pharmacology` is named as awaiting a source rather
- * than asserted.
- */
+/** The original topology stays scoped to the drawing. Physiology needs claim-specific
+ * publication support; source resolution alone still cannot authorize a claim or protocol. */
 import {
   crrtCircuitOverlay,
   crrtCircuitTextEquivalent,
@@ -68,34 +56,34 @@ describe('the citrate overlay is held to the same rule as the citrate terms', ()
     expect(unsupportedCrrtCitrateTermCitations()).toEqual([])
   })
 
-  it('classifies every citrate-overlay statement as topology or a declared source gap', () => {
+  it('classifies every citrate-overlay statement by topology or publication support', () => {
     expect(crrtCitrateOverlayStatements.length).toBeGreaterThan(0)
     for (const statement of crrtCitrateOverlayStatements) {
-      expect(['module-authored-topology', 'registered-source-gap']).toContain(
+      expect(['clinical-publication', 'module-authored-topology']).toContain(
         statement.claimSupport.kind,
       )
       expect(statement.text.trim().length).toBeGreaterThan(0)
     }
-    // Both halves are represented: the view is neither all-settled nor all-gap.
+    // Topology and clinical-publication support remain distinct.
     const kinds = new Set(crrtCitrateOverlayStatements.map((s) => s.claimSupport.kind))
-    expect([...kinds].sort()).toEqual(['module-authored-topology', 'registered-source-gap'])
+    expect([...kinds].sort()).toEqual(['clinical-publication', 'module-authored-topology'])
   })
 
-  it('names exactly the two pharmacology claims as awaiting a source', () => {
-    const gaps = crrtCitrateOverlayStatements.filter(
-      (statement) => statement.claimSupport.kind === 'registered-source-gap',
+  it('ties the two pharmacology statements to read publication claims, without promoting review status', () => {
+    const sourced = crrtCitrateOverlayStatements.filter(
+      (s) => s.claimSupport.kind === 'clinical-publication',
     )
-    expect(gaps.map((statement) => statement.id)).toEqual([
+    expect(sourced.map((s) => s.id)).toEqual([
       'citrate-slows-clotting-mechanism',
       'citrate-calcium-leaves-in-effluent',
     ])
-    for (const gap of gaps) {
-      expect(gap.claimSupport.requiredTopic).toBe('citrate-pharmacology')
-      expect(gap.claimSupport.supportingSourceIds).toEqual([])
+    for (const statement of sourced) {
+      expect(statement.claimSupport.supportingSourceIds).toEqual(['CITRATE-SIAARTI-2023-MECHANISM'])
+      expect(statement.claimSupport.basis).toMatch(/review is pending/i)
     }
   })
 
-  it('states no pharmacology as settled fact in any of the three learner-facing forms', () => {
+  it('keeps the overlay summary and teaching point scoped to topology', () => {
     const settledForms = [
       { name: 'overlay.summary', text: overlay.summary },
       { name: 'overlay.teachingPoint', text: overlay.teachingPoint },
@@ -124,13 +112,11 @@ describe('the citrate overlay is held to the same rule as the citrate terms', ()
     }
   })
 
-  it('keeps both source gaps visible in the text equivalent', () => {
-    for (const gap of crrtCitrateOverlayStatements.filter(
-      (statement) => statement.claimSupport.kind === 'registered-source-gap',
-    )) {
-      expect(textEquivalent).toContain(gap.text)
-    }
-    expect(textEquivalent).toMatch(/awaiting a claim-specific source/i)
+  it('does not invent unresolved physiology now that claim-specific sources exist', () => {
+    expect(
+      crrtCitrateOverlayStatements.filter((s) => s.claimSupport.kind === 'registered-source-gap'),
+    ).toEqual([])
+    expect(textEquivalent).not.toMatch(/awaiting a claim-specific source/i)
   })
 
   it('keeps the settled topology in all three forms', () => {
@@ -138,7 +124,9 @@ describe('the citrate overlay is held to the same rule as the citrate terms', ()
     expect(overlay.summary).toMatch(/before the (blood )?pump/i)
     expect(overlay.teachingPoint).toMatch(/before the (blood )?pump/i)
     expect(overlay.teachingPoint).toMatch(/return lumen/i)
-    expect(overlay.teachingPoint).toMatch(/separate line|its own line/i)
+    expect(overlay.teachingPoint).toMatch(/separate line|its own line|line runs separately/i)
+    expect(overlay.teachingPoint).toMatch(/In this schematic/)
+    expect(overlay.teachingPoint).toMatch(/does not establish the infusion site for other/)
     for (const form of LEARNER_FACING_FORMS) {
       expect(form.text).toMatch(/circuit|patient/i)
     }

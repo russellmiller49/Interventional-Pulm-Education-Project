@@ -1015,8 +1015,7 @@ export function CrrtPilotCircuit({
                   </div>
                   <p className={styles.panelNote}>
                     Where citrate acts and which sample answers which question. This view carries no
-                    dose, ratio, target, or timing — those belong to the citrate lesson, not to the
-                    circuit.
+                    dose, target, or timing. Those require a reviewed local citrate protocol.
                   </p>
 
                   {/*
@@ -1030,6 +1029,11 @@ export function CrrtPilotCircuit({
                     aria-label="Not settled by this view"
                   >
                     <strong>What this view does not settle</strong>
+                    <p>
+                      Medication quantities, monitoring schedules and operating sequences require an
+                      approved local protocol. Clinical-publication support below is not faculty
+                      approval.
+                    </p>
                     <ul>
                       {crrtCitrateOverlayHeldOpenStatements().map((statement) => (
                         <li key={statement.id} data-statement={statement.id}>
@@ -1061,7 +1065,11 @@ export function CrrtPilotCircuit({
                           <dt>
                             {term.term}
                             <span className={styles.supportTag}>
-                              {isGap ? 'Awaiting a source' : 'Read off this circuit'}
+                              {isGap
+                                ? 'Awaiting a source'
+                                : support.kind === 'clinical-publication'
+                                  ? 'Clinical-publication support · review pending'
+                                  : 'Read off this circuit'}
                             </span>
                           </dt>
                           <dd>

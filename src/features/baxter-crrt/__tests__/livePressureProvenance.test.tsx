@@ -111,12 +111,11 @@ describe('live pressure profile — provenance', () => {
     }
   })
 
-  it('leaves the citrate source gaps exactly as they were', () => {
-    expect(crrtSourcesSupportingClaim('citrate-pharmacology')).toEqual([])
-    expect(crrtCitrateSourceGapTermIds()).toEqual([
-      'circuit-anticoagulation',
-      'citrate-calcium-in-effluent',
+  it('keeps citrate publication support separate from device pressure provenance', () => {
+    expect(crrtSourcesSupportingClaim('citrate-pharmacology')).toEqual([
+      'CITRATE-SIAARTI-2023-MECHANISM',
     ])
+    expect(crrtCitrateSourceGapTermIds()).toEqual([])
   })
 
   /**

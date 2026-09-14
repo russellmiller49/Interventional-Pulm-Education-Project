@@ -12,6 +12,7 @@ import {
   type PrismaxPilotInterfaceAction,
 } from './engine/deviceAdapters/prismax'
 import { calculateWholePatientNetBalanceMl } from './engine/fluidModel'
+import { crrtIntegrationTaskComplete, nextCrrtIntegrationCommand } from './integrationModel'
 
 export type CrrtLearnRunId = NonNullable<CrrtFoundationTask['run']>
 export type CrrtLearnOperation = NonNullable<CrrtFoundationTask['operation']>
@@ -20,12 +21,14 @@ export interface CrrtOperationalRun {
   readonly session: CrrtLearningSessionState
   /** Immutable engine sessions at real events; these never drive a second simulation. */
   readonly snapshots: readonly CrrtLearningSessionState[]
+  readonly integrationPlan?: 'correct' | 'defer'
 }
 export const crrtLearnRunLabels: Record<CrrtLearnRunId, string> = {
   workflow: 'CVVHD setup reference · CRRT-04',
   delivery: 'Delivery and fluid record · CRRT-04',
   access: 'Access interruption case · CRRT-13',
   fluid: 'Net-removal case · CRRT-10',
+  integration: 'Integrated case · synthetic engine run',
 }
 /** CRRT-04's immutable idle fixture has structural zero flows. A blank setup draft
  * must use the native setup projection until a reviewed prescription is applied. */
@@ -54,7 +57,14 @@ export const crrtReferenceSetupActions: readonly PrismaxPilotInterfaceAction[] =
   { type: 'START_TREATMENT' },
 ]
 export function createCrrtOperationalRun(id: CrrtLearnRunId): CrrtOperationalRun {
-  const caseId = id === 'access' ? 'CRRT-13' : id === 'fluid' ? 'CRRT-10' : 'CRRT-04'
+  const caseId =
+    id === 'integration'
+      ? 'CRRT-14'
+      : id === 'access'
+        ? 'CRRT-13'
+        : id === 'fluid'
+          ? 'CRRT-10'
+          : 'CRRT-04'
   let session = createCrrtLearningSession({
     caseDefinition: baxterCrrtLearnerCases.find((c) => c.id === caseId)!,
     experience: 'practice',
@@ -80,7 +90,7 @@ export function crrtBoundedObservationSeconds(
     .reduce((at, event) => Math.min(at, event.scheduledAtSeconds), Infinity)
   return Math.min(requested, next - now)
 }
-interface OperationalCommand {
+export interface OperationalCommand {
   readonly id: string
   readonly label: string
   readonly explanation: string
@@ -91,6 +101,7 @@ export function nextCrrtOperationalCommand(
   run: CrrtOperationalRun,
   operation?: CrrtLearnOperation,
 ): OperationalCommand | null {
+  if (run.id === 'integration') return nextCrrtIntegrationCommand(run, operation)
   const s = run.session
   const now = s.simulation.simulationTimeSeconds
   const done = (id: string) => s.performedInterventionIds.includes(id)
@@ -230,6 +241,7 @@ export function crrtOperationalTaskComplete(
 ): boolean {
   if (!operation || operation === 'hardware' || operation === 'missing-chart') return true
   if (!run) return false
+  if (run.id === 'integration') return crrtIntegrationTaskComplete(run, operation)
   const s = run.session
   const now = s.simulation.simulationTimeSeconds
   const done = (id: string) => s.performedInterventionIds.includes(id)
@@ -268,6 +280,8 @@ export function crrtOperationalTaskComplete(
       return run.id === 'fluid' && done('crrt10-cautious-pfr-adjustment')
     case 'net-observe':
       return run.id === 'fluid' && now >= 1800
+    default:
+      return false
   }
 }
 export type CrrtOperationalAction =
@@ -367,6 +381,12 @@ export function crrtOperationalEvidenceInputs(
   const chart = crrtRecordedFluidChart(run.session)
   return {
     eventSequence: run.session.timeline.length,
+    ...(run.id === 'integration'
+      ? {
+          sourceCaseNumber: 14,
+          planCode: run.integrationPlan === 'defer' ? 2 : run.integrationPlan === 'correct' ? 1 : 0,
+        }
+      : {}),
     simulationSeconds: s.simulationTimeSeconds,
     chartingWindowSeconds: s.deliveredTherapy.chartingWindowSeconds,
     downtimeSeconds: s.deliveredTherapy.cumulativeDowntimeSeconds,

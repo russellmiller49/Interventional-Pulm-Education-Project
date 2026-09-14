@@ -412,9 +412,13 @@ describe('CRRT universal educational circuit', () => {
     for (const id of ['REVIEW-CKRT-CORE-2025', 'TEXT-CRRT-NEYRA-2026', 'GUID-RRT-ICU-2026']) {
       expect(terms.innerHTML).not.toContain(id)
     }
+    expect(
+      within(terms).getAllByText('Clinical-publication support · review pending').length,
+    ).toBeGreaterThan(0)
+    expect(terms).toHaveTextContent(/approved local protocol/)
     // A gap is stated in words, not only by a border colour — in the vocabulary list…
     const termList = terms.querySelector('dl') as HTMLElement
-    expect(within(termList).getAllByText('Awaiting a source').length).toBe(
+    expect(within(termList).queryAllByText('Awaiting a source').length).toBe(
       crrtCitrateCalciumTerms.filter((term) => term.claimSupport.kind === 'registered-source-gap')
         .length,
     )
@@ -423,7 +427,7 @@ describe('CRRT universal educational circuit', () => {
     // and teaching point used to assert both of these as fact.
     const heldOpen = within(terms).getByRole('note', { name: 'Not settled by this view' })
     expect(heldOpen).toHaveTextContent(/What this view does not settle/i)
-    expect(within(heldOpen).getAllByRole('listitem')).toHaveLength(
+    expect(within(heldOpen).queryAllByRole('listitem')).toHaveLength(
       crrtCitrateOverlayHeldOpenStatements().length,
     )
     for (const statement of crrtCitrateOverlayHeldOpenStatements()) {
