@@ -354,7 +354,7 @@ const interventionCoachingProfiles: Readonly<
       'the numbers that moved did so on the patient’s own trajectory, not because the traces were read',
     whenTargetHeld: 'reading the traces changes nothing about the patient, and nothing changed',
     reassess:
-      'Name the one feature on the trace that separates the mechanism you committed to from the next most likely one.',
+      'Compare the trace feature that separates this mechanism from the next most likely one.',
     notDemonstratedWhenMoved:
       'A pattern on the trace is consistent with a mechanism; it does not establish one. Two mechanisms can draw the same breath.',
     notDemonstratedWhenHeld:
@@ -1263,12 +1263,12 @@ function stabilizationAnswer(state: VentilationSimulationState): {
  *
  * Returns `null` — and therefore renders nothing at all — unless every one of these holds:
  *
- * 1. this is the independent Practice workflow (Learn shows its own answer; Assess shows none);
- * 2. the learner's frame has been committed, so nothing here can precede the commitment;
- * 3. an action has been performed and the supplied baseline is that action's;
- * 4. the observation interval has closed: the later of the action's `effectiveAt` and its authored
+ * 1. this is the case simulation workflow (all current public case routes use Practice internally);
+ * 2. an action has been performed and the supplied baseline is that action's;
+ * 3. the observation interval has closed: the later of the action's `effectiveAt` and its authored
  *    latency, plus the settle term — one of this patient's breaths, or one length of the displayed
  *    trace where the targeted reading is computed from that trace.
+ * Optional questions do not control physiological feedback or create the required action.
  */
 export function ventilationPostActionCoaching(
   state: VentilationSimulationState,
@@ -1277,7 +1277,6 @@ export function ventilationPostActionCoaching(
 ): PostActionCoaching | null {
   if (baseline === null) return null
   if (state.experience !== 'practice') return null
-  if (!state.prediction.committed) return null
   const record = state.interventions.at(-1)
   if (!record || record.id !== baseline.recordId) return null
   if (!postActionObservation(state, baseline).complete) return null

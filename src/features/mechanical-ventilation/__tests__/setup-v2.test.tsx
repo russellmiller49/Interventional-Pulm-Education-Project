@@ -1,7 +1,7 @@
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 
-import { readProgress } from '../engine'
+import { readDevicePreference } from '../components/stage/useVentilationLabSession'
 import { MechanicalVentilationAssessSetupV2 } from '../components/MechanicalVentilationAssessSetupV2'
 
 const push = jest.fn()
@@ -31,11 +31,11 @@ describe('mechanical ventilation sequential setup', () => {
 
     await waitFor(() => expect(screen.getByRole('button', { name: /Dräger Evita/i })).toBeVisible())
     fireEvent.click(screen.getByRole('button', { name: /Dräger Evita/i }))
-    expect(screen.queryByRole('button', { name: /Open challenge/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Open case/i })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /Keep this console/i }))
-    fireEvent.click(screen.getByRole('button', { name: /Open challenge/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Open case/i }))
 
-    expect(readProgress().lastDeviceId).toBe('drager-evita-v800-v600')
+    expect(readDevicePreference()).toBe('drager-evita-v800-v600')
     expect(push).toHaveBeenCalledWith(
       expect.stringMatching(
         /^\/mechanical-ventilation\/assess\?case=masked-seeded&seed=[a-z0-9-]+&device=drager-evita-v800-v600$/,

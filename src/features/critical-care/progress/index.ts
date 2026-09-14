@@ -131,7 +131,10 @@ export function mergeCriticalCareProgress(
     ...(normalized?.resume ? [normalized.resume] : []),
     ...legacy.flatMap((result) => (result.resume ? [result.resume] : [])),
   ]
-  const resolvedResume = newestValidCriticalCareResume(resumeCandidates, activities)
+  const resolvedResume = newestValidCriticalCareResume(
+    resumeCandidates.filter((pointer) => !pointer.activityId.startsWith('ventilation:')),
+    activities,
+  )
   const timestamps = [
     normalized?.updatedAt,
     ...mergedActivities.map((activity) => activity.updatedAt),

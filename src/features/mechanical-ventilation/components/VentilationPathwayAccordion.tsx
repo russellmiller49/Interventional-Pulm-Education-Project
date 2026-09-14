@@ -7,15 +7,13 @@ import { Link } from '@/i18n/navigation'
 
 import { ventilationLearningUnits } from '../content/learningCurriculum'
 import {
-  nextIncompleteVentilationSection,
+  nextSelfPacedVentilationSection,
   ventilationPathwayGroups,
-  workedVentilationSectionIds,
   type VentilationPathwayGroup,
 } from '../content/pathwayResolver'
-import type { LabProgress } from '../engine/learningLab'
-import { readProgress as readCaseProgress } from '../engine/progress'
+import type { VentilationSelfPacedProgress } from '../engine/selfPacedProgress'
 import styles from './mechanical-ventilation-hub.module.css'
-import { useVentilationLabProgress } from './useVentilationLabProgress'
+import { useVentilationSelfPacedProgress } from './useVentilationSelfPacedProgress'
 
 /**
  * One map of the pathway, shared by the hub and the Learn landing.
@@ -28,16 +26,16 @@ import { useVentilationLabProgress } from './useVentilationLabProgress'
  */
 export function VentilationPathwayAccordion({
   progress,
-  completedCaseIds,
+  visitedCaseIds,
   id,
 }: {
-  readonly progress: LabProgress
-  readonly completedCaseIds: ReadonlySet<string>
+  readonly progress: VentilationSelfPacedProgress
+  readonly visitedCaseIds: ReadonlySet<string>
   readonly id?: string
 }) {
   const groups = ventilationPathwayGroups()
-  const worked = workedVentilationSectionIds(progress)
-  const next = nextIncompleteVentilationSection(progress)
+  const worked = new Set(progress.visited)
+  const next = nextSelfPacedVentilationSection(progress)
   const nextId = next?.unit.id ?? null
   const openStage =
     groups.find((group) => group.units.some((unit) => unit.id === nextId))?.stage ??
@@ -71,7 +69,7 @@ export function VentilationPathwayAccordion({
                     key={unit.id}
                     className={styles.chip}
                     data-kind="section"
-                    data-complete={done}
+                    data-visited={done}
                     data-recommended={isNext}
                     href={{
                       pathname: `${mechanicalVentilationNavBase}/learn`,
@@ -80,19 +78,19 @@ export function VentilationPathwayAccordion({
                   >
                     <GraduationCap aria-hidden="true" />
                     {unit.title}
-                    {done ? ' ✓ worked through' : ''}
+                    {done ? ' · visited' : ''}
                     {isNext ? <em>Up next</em> : null}
                   </Link>
                 )
               })}
               {dedupeCases(group.cases).map((entry) => {
-                const done = completedCaseIds.has(entry.caseId)
+                const done = visitedCaseIds.has(entry.caseId)
                 return (
                   <Link
                     key={entry.caseId}
                     className={styles.chip}
                     data-kind="case"
-                    data-complete={done}
+                    data-visited={done}
                     href={{
                       pathname: `${mechanicalVentilationNavBase}/practice`,
                       query: { case: entry.caseId },
@@ -100,7 +98,7 @@ export function VentilationPathwayAccordion({
                   >
                     <BookOpenCheck aria-hidden="true" />
                     Case · {entry.title}
-                    {done ? ' ✓ worked through' : ''}
+                    {done ? ' · visited' : ''}
                   </Link>
                 )
               })}
@@ -138,11 +136,11 @@ export function summaryLine(group: VentilationPathwayGroup): string {
 
 /** The accordion over stored progress, for surfaces that hold none of their own. */
 export function VentilationStoredPathwayAccordion({ id }: { readonly id?: string }) {
-  const { progress, ready } = useVentilationLabProgress()
-  const completedCases = ready ? new Set(readCaseProgress().completedCases) : new Set<string>()
+  const { progress, ready } = useVentilationSelfPacedProgress()
+  const visitedCases = new Set(progress.visited)
   return (
     <div data-hydrated={ready}>
-      <VentilationPathwayAccordion progress={progress} completedCaseIds={completedCases} id={id} />
+      <VentilationPathwayAccordion progress={progress} visitedCaseIds={visitedCases} id={id} />
     </div>
   )
 }

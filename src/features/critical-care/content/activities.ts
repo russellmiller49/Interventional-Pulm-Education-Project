@@ -188,19 +188,23 @@ function defineActivities(
       title: seed.title,
       description,
       kind:
-        section === 'learn'
-          ? seed.sourceId === 'pac-signal-validation'
-            ? 'interactive-lab'
-            : 'micro-lesson'
-          : section === 'assess'
-            ? 'assessment'
-            : 'practice-case',
-      supportedModes: activityModes(section),
+        moduleId === 'mechanical-ventilation' && section === 'assess'
+          ? 'practice-case'
+          : section === 'learn'
+            ? seed.sourceId === 'pac-signal-validation'
+              ? 'interactive-lab'
+              : 'micro-lesson'
+            : section === 'assess'
+              ? 'assessment'
+              : 'practice-case',
+      supportedModes:
+        moduleId === 'mechanical-ventilation' ? ['guided', 'practice'] : activityModes(section),
       pathname: `${moduleDefinition.href}/${section}`,
       query: activityQuery(moduleId, section, seed),
       pathwayIds: seed.pathwayIds,
       competencyIds: seed.competencyIds,
-      prerequisiteActivityIds: seed.prerequisiteActivityIds ?? [],
+      prerequisiteActivityIds:
+        moduleId === 'mechanical-ventilation' ? [] : (seed.prerequisiteActivityIds ?? []),
       teachesConceptIds: seed.teachesConceptIds ?? conceptMetadata.teachesConceptIds,
       assumedConceptIds: seed.assumedConceptIds ?? conceptMetadata.assumedConceptIds,
       estimatedMinutes:
@@ -209,7 +213,7 @@ function defineActivities(
       curriculumStage: seed.curriculumStage,
       stageOrder: seed.stageOrder,
       completionRuleId: `${moduleDefinition.activityIdPrefix}:completion:${section}-existing`,
-      ...(section === 'assess'
+      ...(section === 'assess' && moduleId !== 'mechanical-ventilation'
         ? {
             masteryRuleId: `${moduleDefinition.activityIdPrefix}:mastery:existing-assessment`,
           }
@@ -221,8 +225,9 @@ function defineActivities(
       reviewStatus: governance.reviewStatus,
       evidenceIds: seed.evidenceIds,
       contentVersion: contentVersionByModule[moduleId],
-      creditPolicy: governance.creditPolicy,
-      completionEvidenceAuthority: governance.completionEvidenceAuthority,
+      creditPolicy: moduleId === 'mechanical-ventilation' ? 'non-credit' : governance.creditPolicy,
+      completionEvidenceAuthority:
+        moduleId === 'mechanical-ventilation' ? 'none' : governance.completionEvidenceAuthority,
     }) as CriticalCareActivityDefinition
   })
 }
@@ -606,9 +611,9 @@ const ventilationLearnSeeds: readonly ActivitySeed[] = ventilationLearningUnits.
 const ventilationAssessSeeds: readonly ActivitySeed[] = [
   {
     sourceId: VENTILATION_FINAL_CHECK_ID,
-    title: 'Final mixed knowledge check',
+    title: 'Worked ventilation applications',
     description:
-      'Bring the learning path together in new short cases. Commit every answer before explanations and targeted review appear.',
+      'Bring the learning path together in optional short cases. Explanations and all lessons are available from the start.',
     competencyIds: [
       'ventilator-setup',
       'ventilator-mechanics',
@@ -629,9 +634,9 @@ const ventilationAssessSeeds: readonly ActivitySeed[] = [
   },
   {
     sourceId: 'masked-seeded',
-    title: 'Seeded ventilation challenge',
+    title: 'Explore a varied ventilation case',
     description:
-      'A harder locally varied ventilation case with less help. Teaching feedback comes at the end so you can work through it uninterrupted.',
+      'A locally varied ventilation case with optional predictions and explanations. Simulated time describes the patient response.',
     competencyIds: [
       'ventilator-setup',
       'ventilator-mechanics',

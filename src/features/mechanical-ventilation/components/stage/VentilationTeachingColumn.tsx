@@ -31,27 +31,18 @@ const KNOB_STATE_LABEL = {
   'no-knob': 'No control',
 } as const
 
-/**
- * The teaching pane, one block at a time.
- *
- * Before the prediction the pane frames the section — what it is for, which stop of the breath it
- * stands at, what to look at — and says nothing about the mechanism. The analogy, the precise
- * statement, the checklist, the grammar row, the knob strip, the live teaching panel and the
- * boundary open on the Explain step, fold to their headings on the transfer, and are never in the
- * document before the commitment.
- */
+/** Existing teaching grouped into openable blocks, available before any optional prediction. */
 export function VentilationTeachingColumn({
   lesson,
   step,
   state,
-  predictionCommitted,
   stops,
   onShowControl,
 }: {
   readonly lesson: VentilationStageLesson
   readonly step: VentilationStageStep
   readonly state: VentilationSimulationState
-  readonly predictionCommitted: boolean
+  readonly predictionCommitted?: boolean
   /** The stops the breath map is lighting for this step: the walk's current stop, or the step's. */
   readonly stops: readonly BreathStopId[]
   readonly onShowControl?: () => void
@@ -69,22 +60,12 @@ export function VentilationTeachingColumn({
   const { unit, spec } = lesson
   const stage = ventilationStages.find((entry) => entry.id === unit.stage)
   const focus = step.teaching
-  const revealed =
-    predictionCommitted && (focus === 'reveal' || focus === 'transfer' || focus === 'task')
-
+  const revealed = true
   const framingVisibility: StageBlockVisibility = focus === 'framing' ? 'shown' : 'collapsed'
   const stopVisibility: StageBlockVisibility =
     focus === 'framing' || focus === 'task' ? 'shown' : 'collapsed'
-  const revealVisibility: StageBlockVisibility = !revealed
-    ? 'hidden'
-    : focus === 'reveal'
-      ? 'shown'
-      : 'collapsed'
-  const methodVisibility: StageBlockVisibility = !predictionCommitted
-    ? 'hidden'
-    : focus === 'reveal'
-      ? 'shown'
-      : 'collapsed'
+  const revealVisibility: StageBlockVisibility = focus === 'reveal' ? 'shown' : 'collapsed'
+  const methodVisibility: StageBlockVisibility = focus === 'reveal' ? 'shown' : 'collapsed'
 
   const rows = breathGrammarRowsFor(unit.id)
   const highlighted = new Set(rows.map((row) => row.id))
