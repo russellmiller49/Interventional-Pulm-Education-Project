@@ -30,6 +30,8 @@ export interface CrrtLivePressureDeviceProps {
   readonly onSelectSignal: (id: CrrtPressureSignalId) => void
   /** Optional slot rendered under the profile, used for the linked circuit. */
   readonly children?: React.ReactNode
+  /** Keep normal reference teaching available by default; unseen Learn checks withhold it. */
+  readonly showInterpretation?: boolean
 }
 
 const KIND_LABEL = {
@@ -138,6 +140,7 @@ export function CrrtLivePressureDevice({
   selectedSignalId,
   onSelectSignal,
   children,
+  showInterpretation = true,
 }: CrrtLivePressureDeviceProps) {
   const idPrefix = `crrt-live-pressure-${useId().replaceAll(':', '')}`
   const headingId = `${idPrefix}-heading`
@@ -293,18 +296,22 @@ export function CrrtLivePressureDevice({
             <dt>Where it comes from</dt>
             <dd>{detail.physicalLocation}</dd>
           </div>
-          <div>
-            <dt>What produces it</dt>
-            <dd>{detail.whatProducesTheValue}</dd>
-          </div>
-          <div>
-            <dt>What blood flow does to it</dt>
-            <dd>{detail.bloodFlowEffect}</dd>
-          </div>
-          <div>
-            <dt>When it is not telling you much</dt>
-            <dd>{detail.whenUnreliable}</dd>
-          </div>
+          {showInterpretation ? (
+            <>
+              <div>
+                <dt>What produces it</dt>
+                <dd>{detail.whatProducesTheValue}</dd>
+              </div>
+              <div>
+                <dt>What blood flow does to it</dt>
+                <dd>{detail.bloodFlowEffect}</dd>
+              </div>
+              <div>
+                <dt>When it is not telling you much</dt>
+                <dd>{detail.whenUnreliable}</dd>
+              </div>
+            </>
+          ) : null}
         </dl>
 
         {selected.kind === 'calculated-relationship' ? (
@@ -346,7 +353,9 @@ export function CrrtLivePressureDevice({
           )}
         </div>
 
-        <p className={styles.boundaryNote}>{detail.firstInspectionBoundary}</p>
+        {showInterpretation ? (
+          <p className={styles.boundaryNote}>{detail.firstInspectionBoundary}</p>
+        ) : null}
       </section>
 
       {children}

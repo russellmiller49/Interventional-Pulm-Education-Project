@@ -932,16 +932,8 @@ export const crrtCircuitOverlays: readonly CrrtCircuitOverlay[] = Object.freeze(
     id: 'citrate-calcium',
     label: 'Citrate and calcium path',
     modality: null,
-    /**
-     * Summary and teaching point carry module-authored topology only.
-     *
-     * They used to say "where the calcium it binds leaves", "citrate … acts inside the circuit",
-     * and "citrate-calcium complexes can leave in the effluent", under the same three
-     * clinical-context records that support none of it. `CrrtPilotCircuit` renders both strings
-     * straight to the learner and `crrtCircuitTextEquivalent` appends the teaching point, so this
-     * view was still asserting as settled the two claims the term panel labels "Awaiting a
-     * source". Those two claims now live in `crrtCitrateOverlayStatements` as declared gaps.
-     */
+    // Topology is scoped to this drawing. Clinical mechanisms have separate publication
+    // support in the term panel and overlay statements; no source grants protocol approval.
     summary:
       'The pre-blood-pump and citrate line drawn entering before the pump and the filter, the calcium line drawn straight to the patient, and the two sampling domains that describe different compartments.',
     activePathIds: [
@@ -955,7 +947,7 @@ export const crrtCircuitOverlays: readonly CrrtCircuitOverlay[] = Object.freeze(
     showsFluidLedger: false,
     showsSamplingDomains: true,
     teachingPoint:
-      'Citrate joins the blood path at the pre-blood-pump entry, before the pump and before the filter, so everything downstream of that entry is inside the circuit. Blood leaves the filter, travels the return line, and re-enters the patient through the return lumen. Calcium replacement runs to the patient on its own separate line and never passes through the circuit. A circuit sample describes the circuit and a systemic sample describes the patient; neither substitutes for the other.',
+      'In this schematic, citrate joins the blood path at the pre-blood-pump entry, before the pump and filter. Blood leaves the filter, travels the return line, and re-enters the patient through the return lumen. The drawn calcium-support line runs separately to the patient; this does not establish the infusion site for other configurations. The circuit and systemic sampling markers identify different compartments; neither domain substitutes for the other.',
     sourceIds: ['SYNTH-LAB-CITRATE-001'],
   },
   {
@@ -1071,14 +1063,8 @@ export function crrtCircuitTextEquivalent(overlayId: CrrtCircuitOverlayId): stri
 
   lines.push(overlay.teachingPoint)
 
-  /*
-   * The citrate view holds two claims open, and the text equivalent has to say so. Otherwise a
-   * reader on the text-only path gets the topology and never learns that the pharmacology behind
-   * it is unsourced — which is the one thing the rendered panel is careful to show.
-   *
-   * `crrtCitrateOverlayHeldOpenStatements` is a `const` further down the file; this function is
-   * only ever called after module initialisation, never at module scope.
-   */
+  // Preserve a text equivalent for any unsupported statement added in the future.
+  // The current mechanism statements have claim-specific publication support.
   if (overlayId === 'citrate-calcium') {
     const heldOpen = crrtCitrateOverlayHeldOpenStatements()
     if (heldOpen.length > 0) {
@@ -1100,39 +1086,21 @@ export function crrtCircuitTextEquivalent(overlayId: CrrtCircuitOverlayId): stri
 /**
  * The vocabulary the citrate view needs, and nothing beyond it.
  *
- * This is a bounded topology-and-first-use layer, approved as such. It names
+ * This is a bounded topology-and-first-use layer, pending clinical review. It names
  * where citrate enters, what it does inside the circuit, where the calcium it
  * binds can leave, where calcium replacement is given, and which sample
  * describes which compartment. It deliberately carries no dose, no ratio, no
  * numeric goal, no titration or timing instruction, and no accumulation
- * differential — those belong to a later package, and `ConceptualCitrateState`
- * in the engine draws the same boundary in code.
+ * differential here. The comparison is separate conceptual teaching;
+ * `ConceptualCitrateState` in the engine still generates no metabolic response.
  *
- * ## What each term rests on, and what it does not
- *
- * Every term is a learner-facing string, so every term carries its own
- * provenance. All seven used to carry the same three clinical-context records —
- * `REVIEW-CKRT-CORE-2025`, `TEXT-CRRT-NEYRA-2026`, `GUID-RRT-ICU-2026` — and the
- * circuit printed them under each definition as "Sources:". All three ids
- * resolve, so the syntactic closure check passed. It was still wrong: those
- * records' registered claims are about transport mechanisms, modality concepts,
- * treatment goals, delivered therapy, access, fluid-removal tolerance, and the
- * prescribed-versus-delivered gap. Not one of them says anything about where
- * citrate enters a circuit, what it binds, or which sample describes which
- * compartment. A resolving id is not a supporting id.
- *
- * So each term now declares the topic its statement actually needs, and
- * `crrtSourceSupportsClaim` decides whether any registered record covers it:
- *
- * - `module-authored-topology` — the statement is read off this module's own
- *   circuit schematic, and names the nodes and paths it is read off, so a
- *   reviewer can check it against the drawing rather than against a citation.
- * - `registered-source-gap` — the statement needs `citrate-pharmacology`, which
- *   no record in the registered set carries. The term is preserved and the gap
- *   is rendered explicitly; nothing is invented to close it, and no clinical
- *   claim is expanded. Closing these is an SME source-expansion task.
+ * Topology remains tied to this original schematic. Clinical-publication claims
+ * carry a specific audited topic and locator; neither kind authorizes a local protocol.
  */
-export type CrrtCitrateClaimSupportKind = 'module-authored-topology' | 'registered-source-gap'
+export type CrrtCitrateClaimSupportKind =
+  | 'module-authored-topology'
+  | 'clinical-publication'
+  | 'registered-source-gap'
 
 export interface CrrtCitrateClaimSupport {
   readonly kind: CrrtCitrateClaimSupportKind
@@ -1162,9 +1130,6 @@ export interface CrrtCitrateCalciumTerm {
 const TOPOLOGY_BASIS =
   'Read off this module’s own circuit drawing, which you can trace above. It is an original educational schematic, not a claim taken from a published source.'
 
-const GAP_BASIS =
-  'No source registered for this module supports this particular statement. The records this module carries describe transport mechanisms, modality choice, treatment goals, and delivered therapy; none of them describes what citrate binds or what becomes of it. The wording is left as it stands rather than being filled in from elsewhere, and closing this needs a source an expert adds, not a change to this page.'
-
 function topologySupport(
   readOffNodeIds: readonly CrrtCircuitNodeId[],
   readOffPathIds: readonly CrrtCircuitPathId[],
@@ -1179,12 +1144,15 @@ function topologySupport(
   })
 }
 
-function sourceGapSupport(): CrrtCitrateClaimSupport {
+export function crrtCitrateClinicalSupport(topic: CrrtClaimTopic): CrrtCitrateClaimSupport {
+  const sources = crrtSourcesSupportingClaim(topic)
   return Object.freeze({
-    kind: 'registered-source-gap' as const,
-    requiredTopic: 'citrate-pharmacology' as const,
-    supportingSourceIds: Object.freeze(crrtSourcesSupportingClaim('citrate-pharmacology')),
-    basis: GAP_BASIS,
+    kind: sources.length ? 'clinical-publication' : 'registered-source-gap',
+    requiredTopic: topic,
+    supportingSourceIds: Object.freeze(sources),
+    basis: sources.length
+      ? 'Clinical-publication support; claim passages read September 2026. Faculty review is pending. This is not a device instruction or local protocol.'
+      : 'No registered clinical publication supports this claim; the explanation remains unavailable.',
     readOffNodeIds: Object.freeze([]),
     readOffPathIds: Object.freeze([]),
   })
@@ -1195,24 +1163,23 @@ export const crrtCitrateCalciumTerms: readonly CrrtCitrateCalciumTerm[] = Object
     id: 'citrate-entry-point',
     term: 'Citrate enters before the filter',
     definition:
-      'Citrate joins the blood path at the pre-blood-pump entry, upstream of both the pump and the membrane.',
+      'In this schematic, citrate joins at the pre-blood-pump entry, upstream of the pump and filter.',
     whyItMatters:
-      'Entering before the filter is what lets it act on the blood while that blood is outside the patient. Where a fluid joins the circuit decides which compartment it acts in.',
+      'The entry is drawn on the blood side, before the filter; it is separate from the dialysate path.',
     claimSupport: topologySupport(
       ['pbp-citrate-source', 'pbp-citrate-entry', 'blood-pump', 'filter'],
       ['pbp-citrate-infusion', 'access-line', 'pump-to-filter'],
     ),
   },
   {
-    // Source gap: the circuit says where citrate acts, but no registered record says what it binds
-    // or how that slows clotting. The wording is preserved and the gap is shown.
+    // Clinical physiology requires publication support, not merely the drawing.
     id: 'circuit-anticoagulation',
     term: 'Anticoagulation inside the circuit',
     definition:
-      'Citrate binds calcium in the blood travelling through the circuit, which is how clotting is slowed there.',
+      'Citrate binds ionized calcium, reducing the calcium available for coagulation in the extracorporeal blood.',
     whyItMatters:
       'The intended effect is local to the extracorporeal blood. That is the whole reason the circuit and the patient have to be thought about as two separate compartments.',
-    claimSupport: sourceGapSupport(),
+    claimSupport: crrtCitrateClinicalSupport('citrate-calcium-binding'),
   },
   {
     id: 'circuit-sample',
@@ -1221,7 +1188,7 @@ export const crrtCitrateCalciumTerms: readonly CrrtCitrateCalciumTerm[] = Object
       'A sample drawn from the circuit after the filter. It describes conditions inside the circuit.',
     whyItMatters:
       'It answers a question about the circuit, not about the patient. Reading it as if it described the patient swaps one compartment for the other.',
-    claimSupport: topologySupport(['circuit-sampling-domain', 'filter'], ['filter-to-return']),
+    claimSupport: crrtCitrateClinicalSupport('citrate-sampling'),
   },
   {
     id: 'systemic-sample',
@@ -1229,27 +1196,26 @@ export const crrtCitrateCalciumTerms: readonly CrrtCitrateCalciumTerm[] = Object
     definition: 'A sample drawn from the patient. It describes the patient.',
     whyItMatters:
       'A circuit sample and a systemic sample are not interchangeable, and neither one substitutes for the other.',
-    claimSupport: topologySupport(['systemic-sampling-domain', 'patient'], []),
+    claimSupport: crrtCitrateClinicalSupport('citrate-sampling'),
   },
   {
-    // Source gap: the effluent line is drawn, but no registered record says that what citrate
-    // binds is among the things that cross the membrane.
+    // Membrane transport is a published mechanism; the diagram alone cannot establish it.
     id: 'citrate-calcium-in-effluent',
     term: 'Citrate-calcium complexes can leave in the effluent',
     definition:
-      'Some of what citrate binds crosses the membrane and leaves with everything else on the fluid side.',
+      'Some citrate-calcium complexes cross the membrane and leave in effluent; the remainder returns with the blood.',
     whyItMatters:
       'It explains why calcium has to be given back somewhere, and why the effluent is a route out of the circuit for more than water.',
-    claimSupport: sourceGapSupport(),
+    claimSupport: crrtCitrateClinicalSupport('citrate-effluent-removal'),
   },
   {
     id: 'calcium-replacement',
     term: 'Calcium replacement',
     definition:
-      'A separate infusion running to the patient. It is not part of the extracorporeal circuit and does not pass through the filter.',
+      'In this schematic, a separate infusion runs to the patient without passing through the filter. Other protocols use an approved return-line site; this drawing does not prescribe the connection.',
     whyItMatters:
       'It supports the patient rather than the circuit, which is why it is drawn on its own line and why it is judged against a systemic sample.',
-    claimSupport: topologySupport(['calcium-source', 'patient'], ['calcium-infusion']),
+    claimSupport: crrtCitrateClinicalSupport('citrate-calcium-replacement'),
   },
   {
     id: 'blood-returns-to-patient',
@@ -1263,6 +1229,15 @@ export const crrtCitrateCalciumTerms: readonly CrrtCitrateCalciumTerm[] = Object
       ['filter-to-return', 'return-line', 'return-lumen'],
     ),
   },
+  {
+    id: 'systemic-metabolism',
+    term: 'Systemic citrate metabolism',
+    definition:
+      'Returned citrate is metabolized in liver, muscle and kidney, releasing bound calcium. With intact metabolism, the overall solution balance can provide an alkali load.',
+    whyItMatters:
+      'Patient metabolism and fluid composition matter alongside the circuit. This schematic does not calculate citrate clearance, calcium balance or a laboratory response.',
+    claimSupport: crrtCitrateClinicalSupport('citrate-metabolism'),
+  },
 ])
 
 export const crrtCitrateCalciumTermById: ReadonlyMap<string, CrrtCitrateCalciumTerm> = new Map(
@@ -1273,17 +1248,7 @@ export const crrtCitrateCalciumTermById: ReadonlyMap<string, CrrtCitrateCalciumT
  * The citrate overlay's own statements
  * ------------------------------------------------------------------ */
 
-/**
- * What the citrate view claims, split the same way the terms are.
- *
- * This reuses `CrrtCitrateClaimSupport` rather than inventing a second provenance rule: a
- * statement is either read off this module's own drawing, or it needs `citrate-pharmacology` and
- * is therefore a declared gap. The two gaps are the same two the term panel already holds open —
- * `circuit-anticoagulation` and `citrate-calcium-in-effluent` — restated here as the questions
- * they are, so this view names them without settling them.
- *
- * The landed term wording in `crrtCitrateCalciumTerms` is untouched.
- */
+/** The overlay uses the same claim support as the corresponding terms. */
 export interface CrrtCitrateOverlayStatement {
   readonly id: string
   /** The learner-facing sentence. */
@@ -1323,16 +1288,16 @@ export const crrtCitrateOverlayStatements: readonly CrrtCitrateOverlayStatement[
     text: 'Neither sampling domain substitutes for the other.',
     claimSupport: topologySupport(['circuit-sampling-domain', 'systemic-sampling-domain'], []),
   }),
-  /* The two the registered set does not carry. Named, not asserted. */
+  /* Publication-backed mechanisms; local protocol approval is still absent. */
   Object.freeze({
     id: 'citrate-slows-clotting-mechanism',
-    text: 'How citrate slows clotting inside the circuit — awaiting a claim-specific source.',
-    claimSupport: sourceGapSupport(),
+    text: 'Citrate binds ionized calcium and reduces coagulation within the extracorporeal blood.',
+    claimSupport: crrtCitrateClinicalSupport('citrate-calcium-binding'),
   }),
   Object.freeze({
     id: 'citrate-calcium-leaves-in-effluent',
-    text: 'Whether citrate-bound calcium leaves in the effluent — awaiting a claim-specific source.',
-    claimSupport: sourceGapSupport(),
+    text: 'Some citrate-calcium complexes leave in effluent; the remainder returns to the patient.',
+    claimSupport: crrtCitrateClinicalSupport('citrate-effluent-removal'),
   }),
 ])
 

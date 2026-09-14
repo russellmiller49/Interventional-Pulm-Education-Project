@@ -1,0 +1,297 @@
+.foundation {
+  color: #e9f5f5;
+  min-width: 0;
+}
+.foundation :global([data-lesson-shell]) {
+  height: auto;
+}
+.foundation :global([data-lesson-shell]) > div:first-child {
+  top: var(--site-header-height, 4rem);
+}
+.readingSurface {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 1rem clamp(0.6rem, 2vw, 1.5rem) 2rem;
+  scroll-margin-top: 9rem;
+  min-width: 0;
+}
+.header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  width: 100%;
+}
+.header > div {
+  flex: 1 1 24rem;
+}
+.header h1 {
+  font-size: clamp(1.15rem, 2vw, 1.6rem);
+  margin: 0.15rem 0;
+}
+.header label {
+  display: grid;
+  gap: 0.25rem;
+  max-width: 100%;
+  font-size: 0.8rem;
+}
+.foundation select {
+  width: min(100%, 22rem);
+  min-width: 0;
+}
+.foundation button,
+.foundation select {
+  min-height: 44px;
+  border: 1px solid #49676e;
+  border-radius: 8px;
+  background: #13373e;
+  color: #e9f5f5;
+  padding: 0.55rem 0.8rem;
+  font: inherit;
+}
+.foundation button {
+  cursor: pointer;
+}
+.foundation button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.foundation button[aria-pressed='true'] {
+  background: #275765;
+  border-color: #91ecee;
+}
+.foundation button:focus-visible,
+.foundation select:focus-visible,
+.foundation summary:focus-visible,
+.foundation input:focus-visible {
+  outline: 3px solid #ffce80;
+  outline-offset: 3px;
+}
+.context,
+.footer {
+  margin: 0;
+  padding: 0.5rem 1rem;
+  color: #b9cdd0;
+  font-size: 0.875rem;
+}
+.teaching {
+  font-size: 1rem;
+  line-height: 1.65;
+}
+.teaching p {
+  margin: 0.7rem 0;
+  max-width: 88ch;
+}
+.map {
+  margin-bottom: 0.75rem;
+}
+.map ol {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.7rem 0;
+  padding-left: 1.5rem;
+}
+.sources {
+  margin-top: 1.25rem;
+  padding: 0.8rem;
+  border: 1px solid #35525c;
+  border-radius: 8px;
+}
+.sources p {
+  margin: 0.6rem 0;
+}
+.foundation summary {
+  min-height: 44px;
+  cursor: pointer;
+  padding: 0.5rem 0;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.7rem 0;
+}
+.observation {
+  border-left: 3px solid #75dce3;
+  background: #102f37;
+  padding: 0.8rem;
+  min-height: 4rem;
+  line-height: 1.55;
+}
+.caption {
+  color: #b9cdd0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.75rem;
+  margin: 0.8rem 0;
+}
+.metrics > div {
+  padding: 0.7rem;
+  border: 1px solid #49616a;
+  border-radius: 8px;
+  background: #102b32;
+}
+.metrics dt {
+  font-size: 0.875rem;
+  color: #c8dce0;
+}
+.metrics dd {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0.4rem 0 0;
+}
+.question {
+  margin-top: 0.8rem;
+}
+.question fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0 0 1rem;
+  min-width: 0;
+}
+.question legend {
+  font-size: 1.05rem;
+  line-height: 1.5;
+  margin-bottom: 0.8rem;
+  font-weight: 600;
+}
+.question label {
+  display: flex;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.85rem;
+  border: 1px solid #4f6b72;
+  border-radius: 8px;
+  margin-bottom: 0.55rem;
+  cursor: pointer;
+  line-height: 1.55;
+}
+.question input {
+  margin-top: 0.3rem;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: #8eedee;
+}
+.feedback,
+.review {
+  padding: 1rem;
+  background: #15343c;
+  border: 1px solid #5f929d;
+  border-radius: 10px;
+}
+.feedback h3 {
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem;
+}
+.feedback p {
+  margin: 0.5rem 0;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.8rem 0;
+  font-size: 0.95rem;
+}
+.table caption {
+  text-align: left;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+}
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.7rem;
+  border-bottom: 1px solid #45616a;
+}
+.inset {
+  border: 1px solid #4e6972;
+  border-radius: 12px;
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #0f2830;
+}
+.inset svg {
+  width: 100%;
+  max-width: 700px;
+  display: block;
+}
+.inset p {
+  margin: 0.6rem 0;
+}
+.operational {
+  min-width: 0;
+  margin-top: 1rem;
+}
+.operational h3 {
+  margin: 1rem 0 0.6rem;
+  font-size: 1.1rem;
+}
+.operational p {
+  margin: 0.7rem 0;
+  line-height: 1.6;
+}
+.tableScroll {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid #49616a;
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+.tableScroll:focus-visible {
+  outline: 3px solid #ffce80;
+  outline-offset: 2px;
+}
+.tableScroll table {
+  min-width: 680px;
+}
+.numericQuestion {
+  margin-top: 1rem;
+}
+.numericQuestion form {
+  display: grid;
+  gap: 0.75rem;
+}
+.numericQuestion input {
+  width: min(100%, 20rem);
+  background: #102b32;
+  color: #e9f5f5;
+  border: 1px solid #91ecee;
+  border-radius: 8px;
+  min-height: 44px;
+  padding: 0.6rem;
+  font: inherit;
+}
+@media (max-width: 600px) {
+  .foundation :global([data-lesson-shell]) > div:first-child {
+    position: static;
+  }
+  .readingSurface {
+    scroll-margin-top: 5rem;
+  }
+  .header {
+    align-items: stretch;
+  }
+  .header label {
+    width: 100%;
+  }
+  .foundation select {
+    width: 100%;
+  }
+  .table th,
+  .table td {
+    padding: 0.5rem 0.25rem;
+  }
+  .inset {
+    padding: 0.5rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .foundation * {
+    scroll-behavior: auto !important;
+  }
+}

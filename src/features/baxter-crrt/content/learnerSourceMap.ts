@@ -19,6 +19,7 @@
  */
 
 import { baxterCrrtSupplementalSourceReferences } from './phase7ReviewSources'
+import { crrtCitrateSourceReferences } from './citrateSources'
 import {
   baxterCrrtEngineSourceRecords,
   baxterCrrtPilotSourceReferences,
@@ -60,6 +61,7 @@ function asSourceReference(record: BaxterCrrtSourceRecord): SourceReference {
 export const baxterCrrtLearnerFacingSourceReferences: readonly SourceReference[] = Object.freeze([
   ...baxterCrrtPilotSourceReferences,
   ...baxterCrrtSupplementalSourceReferences,
+  ...crrtCitrateSourceReferences,
   ...baxterCrrtEngineSourceRecords,
   ...baxterCrrtSourceRecords.map(asSourceReference),
 ])
@@ -143,12 +145,15 @@ export const CRRT_CLAIM_TOPICS = [
   /* Topics this module's own authored artefacts cover. */
   'circuit-topology',
   'authored-citrate-teaching-structure',
-  /**
-   * Deliberately unmapped. No record in this module's registered set carries a claim about what
-   * citrate binds, what becomes of it, or how it moves across a membrane. A statement needing this
-   * topic is a source gap by construction, and stays one until an SME expands the source set.
-   */
+  /** Publication support is separate from device/protocol approval. */
   'citrate-pharmacology',
+  'citrate-calcium-binding',
+  'citrate-effluent-removal',
+  'citrate-sampling',
+  'citrate-calcium-replacement',
+  'citrate-metabolism',
+  'citrate-metabolic-patterns',
+  'citrate-protocol-safety',
 ] as const
 
 export type CrrtClaimTopic = (typeof CRRT_CLAIM_TOPICS)[number]
@@ -191,6 +196,20 @@ const claimTopicsBySourceId: ReadonlyMap<string, readonly CrrtClaimTopic[]> = ne
   // The module's own authored citrate-teaching record, whose claim covers the authored structure
   // and the circuit schematic those statements are read off.
   ['SYNTH-LAB-CITRATE-001', ['authored-citrate-teaching-structure', 'circuit-topology'] as const],
+  [
+    'CITRATE-SIAARTI-2023-MECHANISM',
+    ['citrate-pharmacology', 'citrate-calcium-binding', 'citrate-effluent-removal'] as const,
+  ],
+  ['CITRATE-SIAARTI-2023-SAMPLING', ['citrate-sampling'] as const],
+  [
+    'CITRATE-SCHNEIDER-2017-METABOLISM',
+    ['citrate-metabolism', 'citrate-calcium-replacement'] as const,
+  ],
+  ['CITRATE-SCHNEIDER-2017-PATTERNS', ['citrate-metabolic-patterns'] as const],
+  [
+    'CITRATE-ICU-GUIDE-2026-SAFETY',
+    ['citrate-metabolic-patterns', 'citrate-protocol-safety'] as const,
+  ],
 ])
 
 /**

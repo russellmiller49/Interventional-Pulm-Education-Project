@@ -27,6 +27,10 @@ import {
   type CrrtCircuitPathKind,
   type CrrtPressureSignalId,
 } from '../content/circuitModel'
+import {
+  PRISMAX_TMP_HYDROSTATIC_OFFSET_MMHG,
+  PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG,
+} from '../engine/pressureModel'
 import type { CrrtFlowRates } from '../engine/types'
 import styles from './crrt-pilot-circuit.module.css'
 
@@ -67,6 +71,11 @@ export interface CrrtPilotCircuitProps {
    * node of its own, so it highlights the sites it is computed from.
    */
   highlightedSignalId?: CrrtPressureSignalId | null
+  /** Focused Learn composition; full device/reference behavior remains the default. */
+  presentation?: 'full' | 'focused' | 'live-focused'
+  overlayId?: CrrtCircuitOverlayId
+  visiblePathIds?: readonly CrrtCircuitPathId[]
+  highlightedNodeId?: CrrtCircuitNodeId | null
 }
 
 /** Maps a pressure signal onto the prop that carries its value. */
@@ -426,6 +435,10 @@ export function CrrtPilotCircuit({
   flows = null,
   initialOverlayId = 'blood-path',
   highlightedSignalId = null,
+  presentation = 'full',
+  overlayId: controlledOverlayId,
+  visiblePathIds,
+  highlightedNodeId = null,
 }: CrrtPilotCircuitProps) {
   const idPrefix = `crrt-pilot-${useId().replaceAll(':', '')}`
   const titleId = `${idPrefix}-title`
@@ -433,12 +446,24 @@ export function CrrtPilotCircuit({
   const summaryId = `${idPrefix}-summary`
   const stateSummaryId = `${idPrefix}-state-summary`
   const viewportRef = useRef<HTMLDivElement>(null)
-  const [overlayId, setOverlayId] = useState<CrrtCircuitOverlayId>(initialOverlayId)
+  const [localOverlayId, setOverlayId] = useState<CrrtCircuitOverlayId>(initialOverlayId)
 
+  const overlayId = controlledOverlayId ?? localOverlayId
+  const focused = presentation !== 'full'
+  const staticTeaching = presentation === 'focused'
   const overlay = crrtCircuitOverlay(overlayId)
-  const activePathIds = useMemo(() => new Set(overlay.activePathIds), [overlay])
+  const activePathIds = useMemo(
+    () => new Set(visiblePathIds ?? overlay.activePathIds),
+    [overlay, visiblePathIds],
+  )
   const destinations = useMemo(() => crrtOverlayFluidDestinations(overlay), [overlay])
-  const textEquivalent = useMemo(() => crrtCircuitTextEquivalent(overlayId), [overlayId])
+  const textEquivalent = useMemo(
+    () =>
+      visiblePathIds
+        ? `Displayed paths: ${visiblePathIds.map((id) => crrtCircuitPath(id).textEquivalent).join(' ')}`
+        : crrtCircuitTextEquivalent(overlayId),
+    [overlayId, visiblePathIds],
+  )
 
   const ledgerFlows = flows ?? crrtWorkedLedgerExample.flows
   const ledgerIsLive = flows !== null
@@ -463,7 +488,9 @@ export function CrrtPilotCircuit({
     : 'No pressure is currently selected.'
 
   const circuitStateSummary = [
-    `Circuit state: ${running ? 'running' : 'stopped'}.`,
+    staticTeaching
+      ? 'Static teaching diagram; no live patient run.'
+      : `Circuit state: ${running ? 'running' : 'stopped'}.`,
     `Training set ${setReady ? 'ready' : 'not ready'}; fluids ${fluidsReady ? 'ready' : 'not ready'}.`,
     `Blood flow ${accessibleSignal(bloodFlowMlMin, 'milliliters per minute')}; dialysate flow ${accessibleSignal(dialysateFlowMlHour, 'milliliters per hour')}; patient fluid removal ${accessibleSignal(patientFluidRemovalMlHour, 'milliliters per hour')}.`,
     `Pressure state: access ${accessibleSignal(pressure.access, 'millimeters of mercury')}; filter ${accessibleSignal(pressure.filter, 'millimeters of mercury')}; return ${accessibleSignal(pressure.return, 'millimeters of mercury')}; effluent ${accessibleSignal(pressure.effluent, 'millimeters of mercury')}; transmembrane pressure ${accessibleSignal(pressure.TMP, 'millimeters of mercury')}; filter pressure drop ${accessibleSignal(pressure.filterDrop, 'millimeters of mercury')}.`,
@@ -494,71 +521,85 @@ export function CrrtPilotCircuit({
   const arrowMarkerId = (kind: CrrtCircuitPathKind) => `${idPrefix}-arrow-${kind}`
 
   return (
-    <section className={styles.panel} aria-labelledby={`${idPrefix}-heading`}>
-      <header className={styles.header}>
-        <div>
-          <span className={styles.eyebrow}>Functional educational surface</span>
-          <h2 id={`${idPrefix}-heading`}>One CRRT circuit, every therapy</h2>
-        </div>
-        <div className={styles.runStatus} data-running={running} role="status" aria-live="polite">
-          <span aria-hidden="true" />
-          <strong>{running ? 'Circuit running' : 'Circuit stopped'}</strong>
-        </div>
-      </header>
+    <section
+      className={styles.panel}
+      data-presentation={presentation}
+      aria-label={focused ? 'Canonical CRRT circuit' : undefined}
+      aria-labelledby={focused ? undefined : `${idPrefix}-heading`}
+    >
+      {focused ? <h3 className={styles.focusedHeading}>Canonical CRRT circuit</h3> : null}
+      {!focused ? (
+        <>
+          <header className={styles.header}>
+            <div>
+              <span className={styles.eyebrow}>Functional educational surface</span>
+              <h2 id={`${idPrefix}-heading`}>One CRRT circuit, every therapy</h2>
+            </div>
+            <div
+              className={styles.runStatus}
+              data-running={running && !staticTeaching}
+              role="status"
+              aria-live="polite"
+            >
+              <span aria-hidden="true" />
+              <strong>{running ? 'Circuit running' : 'Circuit stopped'}</strong>
+            </div>
+          </header>
 
-      <div className={styles.overlayBar}>
-        <div className={styles.subheading}>
-          <span>Views</span>
-          <h3 id={`${idPrefix}-overlay-heading`}>Same circuit, different fluids</h3>
-        </div>
-        {/* Deliberately a plain group of toggle buttons, not a radiogroup: the
+          <div className={styles.overlayBar}>
+            <div className={styles.subheading}>
+              <span>Views</span>
+              <h3 id={`${idPrefix}-overlay-heading`}>Same circuit, different fluids</h3>
+            </div>
+            {/* Deliberately a plain group of toggle buttons, not a radiogroup: the
             pressure-localization lab renders radios inside groups named after
             the same six pressure signals, and a second radio population in the
             same lesson tree makes those queries ambiguous. */}
-        <div className={styles.overlayButtons} role="group" aria-label="Circuit overlay layers">
-          {crrtCircuitOverlays.map((candidate) => (
-            <button
-              key={candidate.id}
-              type="button"
-              aria-pressed={candidate.id === overlayId}
-              data-selected={candidate.id === overlayId}
-              onClick={() => setOverlayId(candidate.id)}
-            >
-              {candidate.label}
-            </button>
-          ))}
-        </div>
-        <p className={styles.overlaySummary}>{overlay.summary}</p>
-        <p className={styles.overlayNote}>
-          Nothing moves between views. Only the fluids change, so the picture you learned once keeps
-          working.
-        </p>
-      </div>
+            <div className={styles.overlayButtons} role="group" aria-label="Circuit overlay layers">
+              {crrtCircuitOverlays.map((candidate) => (
+                <button
+                  key={candidate.id}
+                  type="button"
+                  aria-pressed={candidate.id === overlayId}
+                  data-selected={candidate.id === overlayId}
+                  onClick={() => setOverlayId(candidate.id)}
+                >
+                  {candidate.label}
+                </button>
+              ))}
+            </div>
+            <p className={styles.overlaySummary}>{overlay.summary}</p>
+            <p className={styles.overlayNote}>
+              Nothing moves between views. Only the fluids change, so the picture you learned once
+              keeps working.
+            </p>
+          </div>
 
-      <div className={styles.readinessGrid} aria-label="Circuit readiness status">
-        <div data-ready={setReady}>
-          <span>Set</span>
-          <strong>{setReady ? 'Ready' : 'Not ready'}</strong>
-        </div>
-        <div data-ready={fluidsReady}>
-          <span>Fluids</span>
-          <strong>{fluidsReady ? 'Ready' : 'Not ready'}</strong>
-        </div>
-        <div>
-          <span>Blood flow</span>
-          <SignalValue value={bloodFlowMlMin} unit="mL/min" />
-        </div>
-        <div>
-          <span>Dialysate flow</span>
-          <SignalValue value={dialysateFlowMlHour} unit="mL/h" />
-        </div>
-        <div>
-          <span>Patient fluid removal</span>
-          <SignalValue value={patientFluidRemovalMlHour} unit="mL/h" />
-        </div>
-      </div>
-
-      <p className={styles.textSummary} id={summaryId}>
+          <div className={styles.readinessGrid} aria-label="Circuit readiness status">
+            <div data-ready={setReady}>
+              <span>Set</span>
+              <strong>{setReady ? 'Ready' : 'Not ready'}</strong>
+            </div>
+            <div data-ready={fluidsReady}>
+              <span>Fluids</span>
+              <strong>{fluidsReady ? 'Ready' : 'Not ready'}</strong>
+            </div>
+            <div>
+              <span>Blood flow</span>
+              <SignalValue value={bloodFlowMlMin} unit="mL/min" />
+            </div>
+            <div>
+              <span>Dialysate flow</span>
+              <SignalValue value={dialysateFlowMlHour} unit="mL/h" />
+            </div>
+            <div>
+              <span>Patient fluid removal</span>
+              <SignalValue value={patientFluidRemovalMlHour} unit="mL/h" />
+            </div>
+          </div>
+        </>
+      ) : null}
+      <p className={focused ? styles.visuallyHidden : styles.textSummary} id={summaryId}>
         {textEquivalent}
       </p>
       <p id={stateSummaryId} className={styles.visuallyHidden}>
@@ -579,7 +620,7 @@ export function CrrtPilotCircuit({
           viewBox={CRRT_CIRCUIT_VIEWBOX}
           role="img"
           aria-labelledby={`${titleId} ${descriptionId}`}
-          data-running={running}
+          data-running={running && !staticTeaching}
           data-overlay={overlayId}
           preserveAspectRatio="xMidYMid meet"
         >
@@ -607,7 +648,11 @@ export function CrrtPilotCircuit({
             ORIGINAL EDUCATIONAL SCHEMATIC · FIXED ORIENTATION · {overlay.label.toUpperCase()}
           </text>
           <text x="1288" y="52" textAnchor="end" className={styles.motionStatus}>
-            {running ? 'FLOW MOTION: ACTIVE' : 'FLOW MOTION: STOPPED'}
+            {staticTeaching
+              ? 'STATIC TEACHING VIEW'
+              : running
+                ? 'FLOW MOTION: ACTIVE'
+                : 'FLOW MOTION: STOPPED'}
           </text>
 
           {/* Every path is drawn in every view. Only its active state changes. */}
@@ -644,7 +689,7 @@ export function CrrtPilotCircuit({
                   key={nodeId}
                   id={nodeId}
                   active={nodeIsActive(nodeId)}
-                  highlighted={highlightedNodeIds.has(nodeId)}
+                  highlighted={highlightedNodeIds.has(nodeId) || highlightedNodeId === nodeId}
                 />
               )
             })}
@@ -654,33 +699,33 @@ export function CrrtPilotCircuit({
             <g className={styles.pressureLayer}>
               {/* Calculated values get a stated relationship, not a site marker:
                   there is no transducer on the circuit to point at. */}
-              <text x="495" y="336" textAnchor="middle" className={styles.derivationCaption}>
-                NO TRANSDUCER — NOTHING TO INSPECT
+              <text x="495" y="383" textAnchor="middle" className={styles.derivationCaption}>
+                CALCULATED FROM MONITORED SITES
               </text>
               <rect
                 x="350"
-                y="352"
+                y="400"
                 width="290"
                 height="30"
                 rx="8"
                 className={styles.derivationChip}
               />
-              <text x="495" y="372" textAnchor="middle" className={styles.derivationLabel}>
-                TMP = (FILTER + RETURN)/2 − EFFLUENT · CALCULATED
+              <text x="495" y="420" textAnchor="middle" className={styles.derivationLabel}>
+                TMP = (FILTER + RETURN)/2 − EFFLUENT {PRISMAX_TMP_HYDROSTATIC_OFFSET_MMHG} mmHg
               </text>
               <rect
                 x="350"
-                y="396"
+                y="444"
                 width="290"
                 height="30"
                 rx="8"
                 className={styles.derivationChip}
               />
-              <text x="495" y="416" textAnchor="middle" className={styles.derivationLabel}>
-                FILTER DROP = FILTER − RETURN · CALCULATED
+              <text x="495" y="464" textAnchor="middle" className={styles.derivationLabel}>
+                FILTER DROP = FILTER − RETURN {PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG} mmHg
               </text>
-              <path d="M 628 352 V 268" className={styles.derivationBracket} />
-              <path d="M 440 426 V 516" className={styles.derivationBracket} />
+              <path d="M 628 400 V 268" className={styles.derivationBracket} />
+              <path d="M 440 474 V 516" className={styles.derivationBracket} />
             </g>
           ) : null}
         </svg>
@@ -689,337 +734,371 @@ export function CrrtPilotCircuit({
         On a narrow screen, swipe the schematic or focus it and use the left and right arrow keys.
       </p>
 
-      <div className={styles.legend} aria-label="Line pattern legend">
-        {[...crrtCircuitPathKindStyleByKind.values()].map((style) => (
-          <span key={style.kind} data-kind={style.kind}>
-            <i aria-hidden="true" data-kind={style.kind} />
-            <strong>{style.label}</strong>
-            <small>{style.patternDescription}</small>
-          </span>
-        ))}
-      </div>
-
-      <div className={styles.dataGrid}>
-        <section className={styles.pressurePanel} aria-labelledby={`${idPrefix}-pressures-heading`}>
-          <div className={styles.subheading}>
-            <span>Device signals</span>
-            <h3 id={`${idPrefix}-pressures-heading`}>Pressure nodes</h3>
-          </div>
-          <p className={styles.panelNote}>
-            Four of these have a place you can walk to. Two are arithmetic over the other four and
-            have no location of their own.
-          </p>
-          <div className={styles.pressureGrid} role="list" aria-label="Circuit pressure signals">
-            {crrtPressureSignalDetails.map((detail) => (
-              <div key={detail.id} role="listitem" data-kind={detail.kind}>
-                <span>{detail.label}</span>
-                <SignalValue value={pressure[pressureValueKeyBySignalId[detail.id]]} unit="mmHg" />
-                <em data-kind={detail.kind}>
-                  {detail.kind === 'directly-modelled-site'
-                    ? 'Directly modelled site'
-                    : 'Calculated relationship'}
-                </em>
-              </div>
+      {!focused ? (
+        <>
+          <div className={styles.legend} aria-label="Line pattern legend">
+            {[...crrtCircuitPathKindStyleByKind.values()].map((style) => (
+              <span key={style.kind} data-kind={style.kind}>
+                <i aria-hidden="true" data-kind={style.kind} />
+                <strong>{style.label}</strong>
+                <small>{style.patternDescription}</small>
+              </span>
             ))}
           </div>
 
-          <div className={styles.pressureDetails}>
-            {crrtPressureSignalDetails.map((detail) => (
-              <details key={detail.id} data-signal={detail.id}>
-                <summary>
-                  {detail.label}
-                  <i data-kind={detail.kind}>
-                    {detail.kind === 'directly-modelled-site' ? 'Modelled site' : 'Calculated'}
-                  </i>
-                </summary>
-                <dl>
-                  <div>
-                    <dt>Where it is</dt>
-                    <dd>{detail.physicalLocation}</dd>
-                  </div>
-                  <div>
-                    <dt>What produces the value</dt>
-                    <dd>{detail.whatProducesTheValue}</dd>
-                  </div>
-                  <div>
-                    <dt>What blood flow alone does to it</dt>
-                    <dd>{detail.bloodFlowEffect}</dd>
-                  </div>
-                  <div>
-                    <dt>Patient and access causes</dt>
-                    <dd>
-                      <ul>
-                        {detail.patientOrAccessCauses.map((cause) => (
-                          <li key={cause}>{cause}</li>
-                        ))}
-                      </ul>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Circuit causes</dt>
-                    <dd>
-                      <ul>
-                        {detail.circuitCauses.map((cause) => (
-                          <li key={cause}>{cause}</li>
-                        ))}
-                      </ul>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>When the signal may be unreliable</dt>
-                    <dd>{detail.whenUnreliable}</dd>
-                  </div>
-                  <div>
-                    <dt>How far to go on your own</dt>
-                    <dd>{detail.firstInspectionBoundary}</dd>
-                  </div>
-                </dl>
-              </details>
-            ))}
-          </div>
-        </section>
-
-        <div className={styles.sideColumn}>
-          <section className={styles.scalePanel} aria-labelledby={`${idPrefix}-scales-heading`}>
-            <div className={styles.subheading}>
-              <span>Device scales</span>
-              <h3 id={`${idPrefix}-scales-heading`}>Four fluid-scale positions</h3>
-            </div>
-            <div className={styles.scaleGrid} role="list" aria-label="CRRT scale positions">
-              {scalePositions.map((scale) => {
-                const active = scale.pathIds.some((pathId) => activePathIds.has(pathId))
-                return (
-                  <div key={scale.id} role="listitem" data-active={active}>
-                    <i className={styles.scaleMarker} data-scale={scale.id} aria-hidden="true" />
-                    <span>
-                      <strong>{scale.label}</strong>
-                      <small>{scale.marker}</small>
-                    </span>
-                    <em>
-                      {active ? `Active in ${overlay.label}` : `Inactive in ${overlay.label}`}
-                    </em>
-                  </div>
-                )
-              })}
-            </div>
-          </section>
-
-          <section className={styles.ledgerPanel} aria-labelledby={`${idPrefix}-ledger-heading`}>
-            <div className={styles.subheading}>
-              <span>Fluid conservation</span>
-              <h3 id={`${idPrefix}-ledger-heading`}>Where every millilitre goes</h3>
-            </div>
-            <p className={styles.panelNote}>
-              {ledgerIsLive
-                ? 'Computed from the flows currently set on this circuit.'
-                : `Authored worked example: ${crrtWorkedLedgerExample.title}`}
-            </p>
-            <dl className={styles.ledgerGrid}>
-              <div>
-                <dt>Enters the blood path</dt>
-                <dd>
-                  {formatMlHour(ledger.enteringBloodPathMlHour)}
-                  <small>
-                    Pre-blood-pump, replacement, and syringe fluid. This reaches the patient.
-                  </small>
-                </dd>
-              </div>
-              <div>
-                <dt>Never enters the patient</dt>
-                <dd>
-                  {formatMlHour(ledger.neverEnteringPatientMlHour)}
-                  <small>
-                    Dialysate, which runs along the far side of the membrane and leaves in the
-                    effluent.
-                  </small>
-                </dd>
-              </div>
-              <div>
-                <dt>Crosses the membrane</dt>
-                <LedgerValue
-                  value={ledger.crossingMembraneMlHour}
-                  caption="Pulled from the blood side to the fluid side."
-                />
-              </div>
-              <div>
-                <dt>Net fluid returned to the patient</dt>
-                <LedgerValue
-                  value={ledger.netFluidToPatientMlHour}
-                  caption="Negative means the patient is losing fluid to the machine."
-                />
-              </div>
-              <div data-emphasis="true">
-                <dt>Total effluent</dt>
-                <dd>
-                  {formatMlHour(ledger.totalEffluentMlHour)}
-                  <small>Everything the effluent pump carries to the bag.</small>
-                </dd>
-              </div>
-              <div data-emphasis="true">
-                <dt>Machine patient-fluid-removal term</dt>
-                <LedgerValue
-                  value={ledger.machinePatientFluidRemovalMlHour}
-                  caption="What the patient actually lost to the machine."
-                />
-              </div>
-            </dl>
-            {ledger.resolution === 'unresolved-makeup-attribution' ? (
-              <p className={styles.ledgerUnresolved} role="note">
-                <strong>This ledger cannot be closed.</strong> {ledger.unresolvedReason}
-              </p>
-            ) : ledger.effluentPerMillilitreRemoved !== null ? (
-              <p className={styles.ledgerHeadline}>
-                The effluent bag fills{' '}
-                <strong>
-                  {Math.round(ledger.effluentPerMillilitreRemoved).toLocaleString('en-US')} times
-                </strong>{' '}
-                faster than the patient loses fluid. Effluent volume is not patient loss.
-              </p>
-            ) : (
-              <p className={styles.ledgerHeadline}>
-                No net fluid is being removed, so every millilitre in the effluent bag came from
-                somewhere other than the patient’s own volume.
-              </p>
-            )}
-            <ul className={styles.conservationList} aria-label="Fluid conservation checks">
-              {conservation.map((check) => (
-                <li key={check.id} data-status={check.status}>
-                  <strong>
-                    {check.status === 'balanced'
-                      ? 'Balances'
-                      : check.status === 'unbalanced'
-                        ? 'Does not balance'
-                        : 'Cannot be checked'}
-                  </strong>
-                  <span>{check.label}</span>
-                  {check.status === 'balanced' ? null : (
-                    <em>
-                      {check.residualMlHour === null
-                        ? ''
-                        : `Residual ${formatMlHour(check.residualMlHour)}. `}
-                      {check.explanation}
-                    </em>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section className={styles.destinationPanel} aria-labelledby={`${idPrefix}-dest-heading`}>
-            <div className={styles.subheading}>
-              <span>Trace it yourself</span>
-              <h3 id={`${idPrefix}-dest-heading`}>Which fluids reach the patient?</h3>
-            </div>
-            <div className={styles.destinationLists}>
-              <div>
-                <h4>Enters the patient</h4>
-                {destinations.entersPatient.length > 0 ? (
-                  <ul>
-                    {destinations.entersPatient.map((id) => (
-                      <li key={id}>{crrtCircuitPath(id).label}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No added fluid enters the patient in this view.</p>
-                )}
-              </div>
-              <div>
-                <h4>Never enters the patient</h4>
-                {destinations.neverEntersPatient.length > 0 ? (
-                  <ul>
-                    {destinations.neverEntersPatient.map((id) => (
-                      <li key={id}>{crrtCircuitPath(id).label}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No fluid side is running in this view.</p>
-                )}
-              </div>
-            </div>
-            <p className={styles.teachingPoint}>{overlay.teachingPoint}</p>
-          </section>
-
-          {overlay.showsSamplingDomains ? (
-            <section className={styles.termPanel} aria-labelledby={`${idPrefix}-terms-heading`}>
+          <div className={styles.dataGrid}>
+            <section
+              className={styles.pressurePanel}
+              aria-labelledby={`${idPrefix}-pressures-heading`}
+            >
               <div className={styles.subheading}>
-                <span>First use</span>
-                <h3 id={`${idPrefix}-terms-heading`}>Words this view introduces</h3>
+                <span>Device signals</span>
+                <h3 id={`${idPrefix}-pressures-heading`}>Pressure nodes</h3>
               </div>
               <p className={styles.panelNote}>
-                Where citrate acts and which sample answers which question. This view carries no
-                dose, ratio, target, or timing — those belong to the citrate lesson, not to the
-                circuit.
+                Four of these have a place you can walk to. Two are arithmetic over the other four
+                and have no location of their own.
               </p>
+              <div
+                className={styles.pressureGrid}
+                role="list"
+                aria-label="Circuit pressure signals"
+              >
+                {crrtPressureSignalDetails.map((detail) => (
+                  <div key={detail.id} role="listitem" data-kind={detail.kind}>
+                    <span>{detail.label}</span>
+                    <SignalValue
+                      value={pressure[pressureValueKeyBySignalId[detail.id]]}
+                      unit="mmHg"
+                    />
+                    <em data-kind={detail.kind}>
+                      {detail.kind === 'directly-modelled-site'
+                        ? 'Directly modelled site'
+                        : 'Calculated relationship'}
+                    </em>
+                  </div>
+                ))}
+              </div>
 
-              {/*
+              <div className={styles.pressureDetails}>
+                {crrtPressureSignalDetails.map((detail) => (
+                  <details key={detail.id} data-signal={detail.id}>
+                    <summary>
+                      {detail.label}
+                      <i data-kind={detail.kind}>
+                        {detail.kind === 'directly-modelled-site' ? 'Modelled site' : 'Calculated'}
+                      </i>
+                    </summary>
+                    <dl>
+                      <div>
+                        <dt>Where it is</dt>
+                        <dd>{detail.physicalLocation}</dd>
+                      </div>
+                      <div>
+                        <dt>What produces the value</dt>
+                        <dd>{detail.whatProducesTheValue}</dd>
+                      </div>
+                      <div>
+                        <dt>What blood flow alone does to it</dt>
+                        <dd>{detail.bloodFlowEffect}</dd>
+                      </div>
+                      <div>
+                        <dt>Patient and access causes</dt>
+                        <dd>
+                          <ul>
+                            {detail.patientOrAccessCauses.map((cause) => (
+                              <li key={cause}>{cause}</li>
+                            ))}
+                          </ul>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Circuit causes</dt>
+                        <dd>
+                          <ul>
+                            {detail.circuitCauses.map((cause) => (
+                              <li key={cause}>{cause}</li>
+                            ))}
+                          </ul>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>When the signal may be unreliable</dt>
+                        <dd>{detail.whenUnreliable}</dd>
+                      </div>
+                      <div>
+                        <dt>How far to go on your own</dt>
+                        <dd>{detail.firstInspectionBoundary}</dd>
+                      </div>
+                    </dl>
+                  </details>
+                ))}
+              </div>
+            </section>
+
+            <div className={styles.sideColumn}>
+              <section className={styles.scalePanel} aria-labelledby={`${idPrefix}-scales-heading`}>
+                <div className={styles.subheading}>
+                  <span>Device scales</span>
+                  <h3 id={`${idPrefix}-scales-heading`}>Four fluid-scale positions</h3>
+                </div>
+                <div className={styles.scaleGrid} role="list" aria-label="CRRT scale positions">
+                  {scalePositions.map((scale) => {
+                    const active = scale.pathIds.some((pathId) => activePathIds.has(pathId))
+                    return (
+                      <div key={scale.id} role="listitem" data-active={active}>
+                        <i
+                          className={styles.scaleMarker}
+                          data-scale={scale.id}
+                          aria-hidden="true"
+                        />
+                        <span>
+                          <strong>{scale.label}</strong>
+                          <small>{scale.marker}</small>
+                        </span>
+                        <em>
+                          {active ? `Active in ${overlay.label}` : `Inactive in ${overlay.label}`}
+                        </em>
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+
+              <section
+                className={styles.ledgerPanel}
+                aria-labelledby={`${idPrefix}-ledger-heading`}
+              >
+                <div className={styles.subheading}>
+                  <span>Fluid conservation</span>
+                  <h3 id={`${idPrefix}-ledger-heading`}>Where every millilitre goes</h3>
+                </div>
+                <p className={styles.panelNote}>
+                  {ledgerIsLive
+                    ? 'Computed from the flows currently set on this circuit.'
+                    : `Authored worked example: ${crrtWorkedLedgerExample.title}`}
+                </p>
+                <dl className={styles.ledgerGrid}>
+                  <div>
+                    <dt>Enters the blood path</dt>
+                    <dd>
+                      {formatMlHour(ledger.enteringBloodPathMlHour)}
+                      <small>
+                        Pre-blood-pump, replacement, and syringe fluid. This reaches the patient.
+                      </small>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Never enters the patient</dt>
+                    <dd>
+                      {formatMlHour(ledger.neverEnteringPatientMlHour)}
+                      <small>
+                        Dialysate, which runs along the far side of the membrane and leaves in the
+                        effluent.
+                      </small>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Crosses the membrane</dt>
+                    <LedgerValue
+                      value={ledger.crossingMembraneMlHour}
+                      caption="Pulled from the blood side to the fluid side."
+                    />
+                  </div>
+                  <div>
+                    <dt>Net fluid returned to the patient</dt>
+                    <LedgerValue
+                      value={ledger.netFluidToPatientMlHour}
+                      caption="Negative means the patient is losing fluid to the machine."
+                    />
+                  </div>
+                  <div data-emphasis="true">
+                    <dt>Total effluent</dt>
+                    <dd>
+                      {formatMlHour(ledger.totalEffluentMlHour)}
+                      <small>Everything the effluent pump carries to the bag.</small>
+                    </dd>
+                  </div>
+                  <div data-emphasis="true">
+                    <dt>Machine patient-fluid-removal term</dt>
+                    <LedgerValue
+                      value={ledger.machinePatientFluidRemovalMlHour}
+                      caption="What the patient actually lost to the machine."
+                    />
+                  </div>
+                </dl>
+                {ledger.resolution === 'unresolved-makeup-attribution' ? (
+                  <p className={styles.ledgerUnresolved} role="note">
+                    <strong>This ledger cannot be closed.</strong> {ledger.unresolvedReason}
+                  </p>
+                ) : ledger.effluentPerMillilitreRemoved !== null ? (
+                  <p className={styles.ledgerHeadline}>
+                    The effluent bag fills{' '}
+                    <strong>
+                      {Math.round(ledger.effluentPerMillilitreRemoved).toLocaleString('en-US')}{' '}
+                      times
+                    </strong>{' '}
+                    faster than the patient loses fluid. Effluent volume is not patient loss.
+                  </p>
+                ) : (
+                  <p className={styles.ledgerHeadline}>
+                    No net fluid is being removed, so every millilitre in the effluent bag came from
+                    somewhere other than the patient’s own volume.
+                  </p>
+                )}
+                <ul className={styles.conservationList} aria-label="Fluid conservation checks">
+                  {conservation.map((check) => (
+                    <li key={check.id} data-status={check.status}>
+                      <strong>
+                        {check.status === 'balanced'
+                          ? 'Balances'
+                          : check.status === 'unbalanced'
+                            ? 'Does not balance'
+                            : 'Cannot be checked'}
+                      </strong>
+                      <span>{check.label}</span>
+                      {check.status === 'balanced' ? null : (
+                        <em>
+                          {check.residualMlHour === null
+                            ? ''
+                            : `Residual ${formatMlHour(check.residualMlHour)}. `}
+                          {check.explanation}
+                        </em>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              <section
+                className={styles.destinationPanel}
+                aria-labelledby={`${idPrefix}-dest-heading`}
+              >
+                <div className={styles.subheading}>
+                  <span>Trace it yourself</span>
+                  <h3 id={`${idPrefix}-dest-heading`}>Which fluids reach the patient?</h3>
+                </div>
+                <div className={styles.destinationLists}>
+                  <div>
+                    <h4>Enters the patient</h4>
+                    {destinations.entersPatient.length > 0 ? (
+                      <ul>
+                        {destinations.entersPatient.map((id) => (
+                          <li key={id}>{crrtCircuitPath(id).label}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>No added fluid enters the patient in this view.</p>
+                    )}
+                  </div>
+                  <div>
+                    <h4>Never enters the patient</h4>
+                    {destinations.neverEntersPatient.length > 0 ? (
+                      <ul>
+                        {destinations.neverEntersPatient.map((id) => (
+                          <li key={id}>{crrtCircuitPath(id).label}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>No fluid side is running in this view.</p>
+                    )}
+                  </div>
+                </div>
+                <p className={styles.teachingPoint}>{overlay.teachingPoint}</p>
+              </section>
+
+              {overlay.showsSamplingDomains ? (
+                <section className={styles.termPanel} aria-labelledby={`${idPrefix}-terms-heading`}>
+                  <div className={styles.subheading}>
+                    <span>First use</span>
+                    <h3 id={`${idPrefix}-terms-heading`}>Words this view introduces</h3>
+                  </div>
+                  <p className={styles.panelNote}>
+                    Where citrate acts and which sample answers which question. This view carries no
+                    dose, target, or timing. Those require a reviewed local citrate protocol.
+                  </p>
+
+                  {/*
                 What this view does not settle, said before the vocabulary rather than after it.
                 The summary and teaching point above carry topology only; these two claims are the
                 ones the registered source set does not reach.
               */}
-              <div
-                className={styles.heldOpenPanel}
-                role="note"
-                aria-label="Not settled by this view"
-              >
-                <strong>What this view does not settle</strong>
-                <ul>
-                  {crrtCitrateOverlayHeldOpenStatements().map((statement) => (
-                    <li key={statement.id} data-statement={statement.id}>
-                      <span className={styles.supportTag}>Awaiting a source</span> {statement.text}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                  <div
+                    className={styles.heldOpenPanel}
+                    role="note"
+                    aria-label="Not settled by this view"
+                  >
+                    <strong>What this view does not settle</strong>
+                    <p>
+                      Medication quantities, monitoring schedules and operating sequences require an
+                      approved local protocol. Clinical-publication support below is not faculty
+                      approval.
+                    </p>
+                    <ul>
+                      {crrtCitrateOverlayHeldOpenStatements().map((statement) => (
+                        <li key={statement.id} data-statement={statement.id}>
+                          <span className={styles.supportTag}>Awaiting a source</span>{' '}
+                          {statement.text}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
-              <dl className={styles.termList}>
-                {crrtCitrateCalciumTerms.map((term) => {
-                  const support = term.claimSupport
-                  const isGap = support.kind === 'registered-source-gap'
-                  // Deduplicated: the PBP source node and its entry node share one label, so a
-                  // naive join printed "pbp / citrate, pbp / citrate".
-                  const readOff = [
-                    ...new Set([
-                      ...support.readOffNodeIds.map((id) =>
-                        crrtCircuitNode(id).label.toLowerCase(),
-                      ),
-                      ...support.readOffPathIds.map((id) =>
-                        crrtCircuitPath(id).label.toLowerCase(),
-                      ),
-                    ]),
-                  ]
-                  return (
-                    <div key={term.id} data-term={term.id} data-support={support.kind}>
-                      <dt>
-                        {term.term}
-                        <span className={styles.supportTag}>
-                          {isGap ? 'Awaiting a source' : 'Read off this circuit'}
-                        </span>
-                      </dt>
-                      <dd>
-                        {term.definition}
-                        <em>{term.whyItMatters}</em>
-                        {/*
+                  <dl className={styles.termList}>
+                    {crrtCitrateCalciumTerms.map((term) => {
+                      const support = term.claimSupport
+                      const isGap = support.kind === 'registered-source-gap'
+                      // Deduplicated: the PBP source node and its entry node share one label, so a
+                      // naive join printed "pbp / citrate, pbp / citrate".
+                      const readOff = [
+                        ...new Set([
+                          ...support.readOffNodeIds.map((id) =>
+                            crrtCircuitNode(id).label.toLowerCase(),
+                          ),
+                          ...support.readOffPathIds.map((id) =>
+                            crrtCircuitPath(id).label.toLowerCase(),
+                          ),
+                        ]),
+                      ]
+                      return (
+                        <div key={term.id} data-term={term.id} data-support={support.kind}>
+                          <dt>
+                            {term.term}
+                            <span className={styles.supportTag}>
+                              {isGap
+                                ? 'Awaiting a source'
+                                : support.kind === 'clinical-publication'
+                                  ? 'Clinical-publication support · review pending'
+                                  : 'Read off this circuit'}
+                            </span>
+                          </dt>
+                          <dd>
+                            {term.definition}
+                            <em>{term.whyItMatters}</em>
+                            {/*
                           The ids stay in a data attribute for the provenance checks, and out of the
                           learner's reading. Printing "Sources: REVIEW-CKRT-CORE-2025, …" under each
                           definition was both unreadable and untrue: all three resolved, none of them
                           said anything about citrate.
                         */}
-                        <small
-                          data-evidence-ids={support.supportingSourceIds.join(' ')}
-                          data-required-topic={support.requiredTopic}
-                        >
-                          {support.basis}
-                          {readOff.length > 0 ? ` Trace it at: ${readOff.join(', ')}.` : ''}
-                        </small>
-                      </dd>
-                    </div>
-                  )
-                })}
-              </dl>
-            </section>
-          ) : null}
-        </div>
-      </div>
+                            <small
+                              data-evidence-ids={support.supportingSourceIds.join(' ')}
+                              data-required-topic={support.requiredTopic}
+                            >
+                              {support.basis}
+                              {readOff.length > 0 ? ` Trace it at: ${readOff.join(', ')}.` : ''}
+                            </small>
+                          </dd>
+                        </div>
+                      )
+                    })}
+                  </dl>
+                </section>
+              ) : null}
+            </div>
+          </div>
+        </>
+      ) : null}
     </section>
   )
 }

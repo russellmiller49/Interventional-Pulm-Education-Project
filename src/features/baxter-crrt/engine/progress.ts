@@ -1,4 +1,9 @@
 import {
+  mergeCrrtLearnEvidence,
+  parseCrrtLearnEvidence,
+  type CrrtLearnEvidence,
+} from '../learnEvidence'
+import {
   BAXTER_CRRT_DEVICE_IDS,
   initialBaxterCrrtDeviceId,
   type BaxterCrrtDeviceId,
@@ -30,6 +35,7 @@ export type BaxterCrrtProgressPathway = 'learn' | 'practice' | 'mastery'
 
 export interface BaxterCrrtProgressV3 {
   readonly version: 3
+  readonly learnTaskHistory?: readonly CrrtLearnEvidence[]
   readonly lastDevice: BaxterCrrtDeviceId
   readonly lastRoleLens: BaxterCrrtRoleLens
   readonly completedLessonIds: readonly string[]
@@ -251,6 +257,14 @@ export function canonicalizeProgress(value: unknown): BaxterCrrtProgressV3 | nul
     version: BAXTER_CRRT_PROGRESS_VERSION,
     lastDevice: value.lastDevice,
     lastRoleLens: value.lastRoleLens,
+    ...(Array.isArray(value.learnTaskHistory)
+      ? {
+          learnTaskHistory: value.learnTaskHistory.flatMap((entry: unknown) => {
+            const parsed = parseCrrtLearnEvidence(entry)
+            return parsed ? [parsed] : []
+          }),
+        }
+      : {}),
     completedLessonIds,
     completedPracticeCaseIds,
     completedMasteryCapstoneIds,
@@ -494,5 +508,16 @@ export function writeProgress(
     return true
   } catch {
     return false
+  }
+}
+
+/** Add Learn evidence to the existing store without changing any case scores or historical IDs. */
+export function recordLearnTaskEvidence(
+  progress: BaxterCrrtProgressV3,
+  evidence: CrrtLearnEvidence,
+): BaxterCrrtProgressV3 {
+  return {
+    ...progress,
+    learnTaskHistory: mergeCrrtLearnEvidence(progress.learnTaskHistory ?? [], evidence),
   }
 }

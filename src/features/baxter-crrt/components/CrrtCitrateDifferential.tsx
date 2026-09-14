@@ -1,9 +1,7 @@
 'use client'
 
 import { useId, useState } from 'react'
-
 import {
-  CRRT_CITRATE_DIFFERENTIAL_IDS,
   CRRT_CITRATE_HELD_OPEN_NOTICE,
   CRRT_CITRATE_MECHANISM_HEADLINE,
   CRRT_CITRATE_SCOPE_NOTICE,
@@ -11,254 +9,233 @@ import {
   crrtCitrateDifferentialById,
   crrtCitrateDifferentialCategories,
   crrtCitrateMechanismWalk,
-  type CrrtCitrateDifferentialCategory,
   type CrrtCitrateDifferentialId,
   type CrrtSamplingDomain,
 } from '../content/citrateDifferential'
+import { crrtCircuitNode } from '../content/circuitModel'
+import { baxterCrrtLearnerFacingSourceById } from '../content/learnerSourceMap'
+import { CrrtPilotCircuit } from './CrrtPilotCircuit'
 import styles from './crrt-citrate-differential.module.css'
 
-const DOMAIN_LABELS: Readonly<Record<CrrtSamplingDomain, string>> = Object.freeze({
+const DOMAIN_LABELS: Record<CrrtSamplingDomain, string> = {
   circuit: 'Circuit sample',
   systemic: 'Patient sample',
-  'both-compared': 'Both samples, compared',
-})
+  'both-compared': 'Both domains, different questions',
+}
+const basisLabel = (kind: string) =>
+  kind === 'registered-source-gap' || kind === 'held-open'
+    ? 'Open question'
+    : kind === 'clinical-publication'
+      ? 'Clinical-publication support · review pending'
+      : 'Read off this circuit'
 
-/**
- * The complete text equivalent for the comparison.
- *
- * The rendered table distinguishes an open question from a stated one with a border, a background,
- * and a written tag; this string carries the same distinction in words, so a reader who never sees
- * the styling loses nothing. It is exposed in a disclosure rather than a tooltip, because a
- * consequence that is only available on hover is not available.
- */
 export function crrtCitrateComparisonTextEquivalent(): string {
-  const lines: string[] = [
-    'Four questions about citrate, kept apart.',
+  return [
     CRRT_CITRATE_MECHANISM_HEADLINE,
-  ]
-
-  for (const step of crrtCitrateMechanismWalk()) {
-    lines.push(
-      `Mechanism step ${step.ordinal}. ${step.term.term} (${
-        step.term.claimSupport.kind === 'registered-source-gap'
-          ? 'awaiting a source'
-          : 'read off this circuit'
-      }). ${step.term.definition} ${step.term.whyItMatters} On the circuit: ${step.traceOnTheCircuit} What it rests on: ${step.term.claimSupport.basis}`,
-    )
-  }
-
-  for (const category of crrtCitrateDifferentialCategories) {
-    lines.push(
-      `Category ${category.ordinal} of ${crrtCitrateDifferentialCategories.length}: ${category.name}. ${category.notToBeConfusedWith} The question it asks: ${category.clinicalQuestion} Sampling domain: ${DOMAIN_LABELS[category.samplingDomain]}, because ${category.samplingDomainWhy}`,
-    )
-    for (const row of crrtCitrateComparisonRows) {
-      const field = row.read(category)
-      lines.push(
-        `${category.name} — ${row.label} (${
-          field.support === 'held-open'
-            ? 'open question, not answered by the sources registered for this module'
-            : 'follows from the circuit'
-        }): ${field.statement}`,
-      )
-    }
-    lines.push(
-      `${category.name} — what one finding cannot establish: ${category.whatOneFindingCannotEstablish}`,
-    )
-    lines.push(`${category.name} — first safe step: ${category.firstVerificationBoundary}`)
-  }
-
-  lines.push(CRRT_CITRATE_HELD_OPEN_NOTICE)
-  lines.push(CRRT_CITRATE_SCOPE_NOTICE)
-  return lines.join('\n')
+    ...crrtCitrateMechanismWalk().map(
+      ({ term, traceOnTheCircuit }) =>
+        `${term.term} (${basisLabel(term.claimSupport.kind)}). ${term.definition} ${term.whyItMatters} ${traceOnTheCircuit}`,
+    ),
+    ...crrtCitrateDifferentialCategories.map((c) =>
+      [
+        c.name,
+        c.clinicalQuestion,
+        c.notToBeConfusedWith,
+        c.samplingDomainWhy,
+        ...crrtCitrateComparisonRows.map(
+          (r) => `${r.label} (${basisLabel(r.read(c).support)}): ${r.read(c).statement}`,
+        ),
+        c.whatOneFindingCannotEstablish,
+        c.firstVerificationBoundary,
+      ].join(' '),
+    ),
+    CRRT_CITRATE_HELD_OPEN_NOTICE,
+    CRRT_CITRATE_SCOPE_NOTICE,
+  ].join('\n')
 }
 
 export interface CrrtCitrateDifferentialProps {
   readonly initialCategoryId?: CrrtCitrateDifferentialId
+  readonly presentation?: 'full' | 'mechanism' | 'comparison'
+  /** Guided exposure only; independent application is a separate task. */
+  readonly onReviewed?: (response: string) => void
 }
 
-function CategoryDetail({
-  category,
-  headingId,
-}: {
-  readonly category: CrrtCitrateDifferentialCategory
-  readonly headingId: string
-}) {
-  return (
-    <div className={styles.categoryDetail} data-category={category.id}>
-      <h5 id={headingId}>
-        {category.ordinal}. {category.name}
-      </h5>
-      <p>
-        <span className={styles.domainBadge}>{DOMAIN_LABELS[category.samplingDomain]}</span>
-      </p>
-      <p className={styles.categoryQuestion}>
-        <strong>The question it asks:</strong> {category.clinicalQuestion}
-      </p>
-      <p className={styles.notConfused}>{category.notToBeConfusedWith}</p>
-      <p className={styles.heldOpenNotice}>
-        <strong>Why that sample:</strong> {category.samplingDomainWhy}
-      </p>
-
-      <dl className={styles.fieldList}>
-        {crrtCitrateComparisonRows.map((row) => {
-          const field = row.read(category)
-          return (
-            <div key={row.id} data-support={field.support} data-row={row.id}>
-              <dt>
-                {row.label}
-                <span className={styles.supportTag}>
-                  {field.support === 'held-open' ? 'Open question' : 'Follows from the circuit'}
-                </span>
-              </dt>
-              <dd>{field.statement}</dd>
-            </div>
-          )
-        })}
-      </dl>
-
-      <div className={styles.limitBlock}>
-        <strong>What one finding cannot establish</strong>
-        <p>{category.whatOneFindingCannotEstablish}</p>
-      </div>
-      <div className={styles.limitBlock}>
-        <strong>First safe step</strong>
-        <p>{category.firstVerificationBoundary}</p>
-      </div>
-    </div>
-  )
-}
-
-/**
- * C3 — the citrate mechanism walk and the four-way comparison.
- *
- * The mechanism walk reuses the citrate terms authored during C0/C1 rather than defining them a
- * second time, and the circuit those terms describe is the same circuit in the same orientation
- * shown everywhere else in the module.
- */
 export function CrrtCitrateDifferential({
   initialCategoryId = 'insufficient-citrate-effect',
+  presentation = 'full',
+  onReviewed,
 }: CrrtCitrateDifferentialProps) {
-  const idPrefix = useId()
-  const [openCategoryId, setOpenCategoryId] = useState<CrrtCitrateDifferentialId>(initialCategoryId)
+  const prefix = useId()
+  const [termIndex, setTermIndex] = useState(0)
+  const [visitedTerms, setVisitedTerms] = useState<readonly number[]>([])
+  const [openCategoryId, setCategory] = useState(initialCategoryId)
+  const [visitedCategories, setVisitedCategories] = useState<readonly string[]>([])
   const walk = crrtCitrateMechanismWalk()
-  const openCategory = crrtCitrateDifferentialById.get(openCategoryId)!
-  const detailHeadingId = `${idPrefix}-category-heading`
-
+  const step = walk[termIndex]
+  const category = crrtCitrateDifferentialById.get(openCategoryId)!
+  const sourceIds =
+    presentation === 'mechanism' ? step.term.claimSupport.supportingSourceIds : category.sourceIds
+  function selectTerm(index: number) {
+    setTermIndex(index)
+    const visited = [...new Set([...visitedTerms, index])]
+    setVisitedTerms(visited)
+    if (visited.length === walk.length) onReviewed?.('citrate-path-and-samples-reviewed')
+  }
+  function selectCategory(id: CrrtCitrateDifferentialId) {
+    setCategory(id)
+    const visited = [...new Set([...visitedCategories, id])]
+    setVisitedCategories(visited)
+    if (visited.length === crrtCitrateDifferentialCategories.length)
+      onReviewed?.('four-citrate-patterns-reviewed')
+  }
   return (
-    <section
-      className={styles.citrate}
-      aria-labelledby={`${idPrefix}-heading`}
-      data-open-category={openCategoryId}
-      data-category-count={CRRT_CITRATE_DIFFERENTIAL_IDS.length}
-    >
+    <section className={styles.citrate} aria-labelledby={`${prefix}-title`}>
       <header className={styles.header}>
-        <div>
-          <span className={styles.kicker}>Mechanism you can carry to any protocol</span>
-          <h3 id={`${idPrefix}-heading`}>
-            Citrate: where it acts, and four questions to keep apart
-          </h3>
-        </div>
-        <span className={styles.pendingBadge}>Teaching section</span>
+        <h3 id={`${prefix}-title`}>
+          {presentation === 'comparison'
+            ? 'Four citrate patterns'
+            : 'Citrate path and sampling points'}
+        </h3>
+        <span className={styles.pendingBadge}>Clinical review pending</span>
       </header>
-
-      <p className={styles.headline}>{CRRT_CITRATE_MECHANISM_HEADLINE}</p>
-
-      <section className={styles.mechanism} aria-labelledby={`${idPrefix}-mechanism-heading`}>
-        <h4 id={`${idPrefix}-mechanism-heading`}>Follow it once around the circuit</h4>
-        <ol>
-          {walk.map((step) => {
-            const isGap = step.term.claimSupport.kind === 'registered-source-gap'
-            return (
-              <li
-                key={step.termId}
-                className={styles.mechanismStep}
-                data-term={step.termId}
-                data-support={step.term.claimSupport.kind}
+      <p>{CRRT_CITRATE_MECHANISM_HEADLINE}</p>
+      {presentation !== 'comparison' ? (
+        <section className={styles.mechanism} aria-label="Citrate mechanism walk">
+          <div
+            className={styles.categoryPicker}
+            role="group"
+            aria-label="Citrate path and sampling selection"
+          >
+            {walk.map((item, index) => (
+              <button
+                key={item.termId}
+                type="button"
+                aria-pressed={index === termIndex}
+                aria-controls={`${prefix}-term`}
+                onClick={() => selectTerm(index)}
               >
-                <span className={styles.stepOrdinal}>
-                  Step {step.ordinal} of {walk.length}
-                </span>
-                <strong>{step.term.term}</strong>
-                <span className={styles.supportTag}>
-                  {isGap ? 'Awaiting a source' : 'Read off this circuit'}
-                </span>
-                <p>{step.term.definition}</p>
-                <em>{step.term.whyItMatters}</em>
-                <span className={styles.traceLine}>
-                  <strong>Trace it:</strong> {step.traceOnTheCircuit}
-                </span>
-                {/*
-                  The same distinction the comparison below makes, applied to the walk. Two of these
-                  seven steps state something no registered source in this module carries; saying so
-                  here keeps the walk from reading as seven equally settled facts.
-                */}
-                <span
-                  className={styles.stepBasis}
-                  data-required-topic={step.term.claimSupport.requiredTopic}
-                >
-                  {step.term.claimSupport.basis}
-                </span>
-              </li>
-            )
-          })}
-        </ol>
-      </section>
-
-      <section className={styles.comparison} aria-labelledby={`${idPrefix}-comparison-heading`}>
-        <h4 id={`${idPrefix}-comparison-heading`}>
-          Four questions, four different answers to &ldquo;which sample?&rdquo;
-        </h4>
-        <p className={styles.heldOpenNotice}>
-          These are four separate questions, not four names for one problem. Open each in turn; the
-          summary underneath keeps all four visible at once.
-        </p>
-
-        <div
-          className={styles.categoryPicker}
-          role="group"
-          aria-label="Citrate comparison categories"
-        >
-          {crrtCitrateDifferentialCategories.map((category) => (
-            <button
-              key={category.id}
-              type="button"
-              aria-pressed={category.id === openCategoryId}
-              aria-controls={detailHeadingId}
-              onClick={() => setOpenCategoryId(category.id)}
-            >
-              <span className={styles.categoryOrdinal}>
-                Question {category.ordinal} of {crrtCitrateDifferentialCategories.length}
-              </span>
-              <span className={styles.categoryName}>{category.name}</span>
-              <span className={styles.categoryDomain}>
-                {DOMAIN_LABELS[category.samplingDomain]}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        <CategoryDetail category={openCategory} headingId={detailHeadingId} />
-
-        <p className={styles.heldOpenNotice}>{CRRT_CITRATE_HELD_OPEN_NOTICE}</p>
-
-        <ul className={styles.allCategories} aria-label="All four questions side by side">
-          {crrtCitrateDifferentialCategories.map((category) => (
-            <li key={category.id} data-summary-for={category.id}>
-              <strong>
-                {category.ordinal}. {category.name}
-              </strong>{' '}
-              — {DOMAIN_LABELS[category.samplingDomain]}. {category.clinicalQuestion}{' '}
-              {category.notToBeConfusedWith}
-            </li>
-          ))}
-        </ul>
-
+                {item.ordinal}. {item.term.term}
+              </button>
+            ))}
+          </div>
+          <p>
+            {visitedTerms.length} of {walk.length} locations selected. Select both sampling domains
+            to compare what each measures.
+          </p>
+          <div
+            id={`${prefix}-term`}
+            className={styles.mechanismStep}
+            data-support={step.term.claimSupport.kind}
+          >
+            <h4>{step.term.term}</h4>
+            <p>{step.term.definition}</p>
+            <p>{step.term.whyItMatters}</p>
+            <p>
+              <strong>On this circuit:</strong> {crrtCircuitNode(step.nodeId).label}.{' '}
+              {step.traceOnTheCircuit}
+            </p>
+            <span className={styles.supportTag}>{basisLabel(step.term.claimSupport.kind)}</span>
+          </div>
+          <CrrtPilotCircuit
+            presentation="focused"
+            overlayId="citrate-calcium"
+            highlightedNodeId={step.nodeId}
+            running={false}
+            setReady={false}
+            fluidsReady={false}
+            bloodFlowMlMin={null}
+            dialysateFlowMlHour={null}
+            patientFluidRemovalMlHour={null}
+            pressure={{
+              access: null,
+              filter: null,
+              return: null,
+              effluent: null,
+              TMP: null,
+              filterDrop: null,
+            }}
+          />
+          <p>
+            Conceptual path only. This diagram does not apply citrate, operate a pump or generate
+            calcium measurements.
+          </p>
+        </section>
+      ) : null}
+      {presentation !== 'mechanism' ? (
+        <section className={styles.comparison} aria-label="Citrate comparison">
+          <div
+            className={styles.categoryPicker}
+            role="group"
+            aria-label="Citrate comparison categories"
+          >
+            {crrtCitrateDifferentialCategories.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                aria-pressed={c.id === openCategoryId}
+                aria-controls={`${prefix}-category`}
+                onClick={() => selectCategory(c.id)}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+          <p>
+            {visitedCategories.length} of 4 patterns selected. These are conceptual contrasts, not
+            diagnostic criteria.
+          </p>
+          <div
+            id={`${prefix}-category`}
+            className={styles.categoryDetail}
+            data-category={category.id}
+          >
+            <h4>{category.name}</h4>
+            <p>{category.clinicalQuestion}</p>
+            <p>
+              {DOMAIN_LABELS[category.samplingDomain]} · {category.samplingDomainWhy}
+            </p>
+            <p>{category.notToBeConfusedWith}</p>
+            <dl className={styles.fieldList}>
+              {crrtCitrateComparisonRows.map((r) => {
+                const field = r.read(category)
+                return (
+                  <div key={r.id} data-support={field.support}>
+                    <dt>
+                      {r.label}{' '}
+                      <span className={styles.supportTag}>{basisLabel(field.support)}</span>
+                    </dt>
+                    <dd>{field.statement}</dd>
+                  </div>
+                )
+              })}
+            </dl>
+            <p>
+              <strong>Limit:</strong> {category.whatOneFindingCannotEstablish}
+            </p>
+            <p>{category.firstVerificationBoundary}</p>
+          </div>
+          <p>{CRRT_CITRATE_HELD_OPEN_NOTICE}</p>
+        </section>
+      ) : null}
+      <details className={styles.textEquivalent}>
+        <summary>Sources for this explanation</summary>
+        {sourceIds.map((id) => {
+          const source = baxterCrrtLearnerFacingSourceById.get(id)!
+          return (
+            <p key={id}>
+              <strong>{source.sourceTitle}</strong> · {source.documentVersion}.{' '}
+              {source.pageOrSection}. Review: {source.reviewStatus}.
+            </p>
+          )
+        })}
+      </details>
+      {presentation === 'full' ? (
         <details className={styles.textEquivalent}>
           <summary>Read the whole comparison as text</summary>
           <pre>{crrtCitrateComparisonTextEquivalent()}</pre>
         </details>
-      </section>
-
+      ) : null}
       <p className={styles.scopeNotice} role="note">
         {CRRT_CITRATE_SCOPE_NOTICE}
       </p>

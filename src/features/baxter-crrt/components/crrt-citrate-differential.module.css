@@ -13,6 +13,21 @@
   font: inherit;
 }
 
+.citrate p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.citrate h4 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.citrate .mechanismStep p,
+.citrate .fieldList dd {
+  font-size: 0.95rem;
+}
+
 .citrate button:focus-visible,
 .citrate [tabindex]:focus-visible {
   outline: 3px solid #f5bb65;

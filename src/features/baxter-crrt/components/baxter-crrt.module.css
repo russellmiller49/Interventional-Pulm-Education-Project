@@ -1416,3 +1416,21 @@
     border-bottom: 0;
   }
 }
+
+/* Focused introductory lessons reuse the shared compact chrome in normal document flow. */
+.moduleShell[data-focused-lesson='true'] {
+  height: auto;
+  min-height: 100vh;
+  overflow: visible;
+  padding: 0;
+}
+.moduleShell[data-focused-lesson='true'] :global([data-activity-frame='true']) {
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+.moduleShell[data-focused-lesson='true'] :global([data-activity-frame='true']) > div:last-child {
+  display: block;
+  height: auto;
+  overflow: visible;
+}

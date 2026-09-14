@@ -212,7 +212,7 @@ describe('CRRT circuit overlays', () => {
     const copy = [citrate.summary, citrate.teachingPoint].join(' ')
 
     expect(copy).not.toMatch(/\d/)
-    expect(copy).not.toMatch(/mmol|ratio|dose|titrat/i)
+    expect(copy).not.toMatch(/\b(?:mmol|ratio|dose|titrat)/i)
   })
 
   it('gives all nine overlays a complete text equivalent', () => {

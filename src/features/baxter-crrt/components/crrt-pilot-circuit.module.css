@@ -1329,3 +1329,25 @@
   font-size: 0.64rem;
   letter-spacing: 0.02em;
 }
+
+/* Lesson tasks share the actual schematic, with reference controls supplied by the task. */
+.panel[data-presentation='focused'],
+.panel[data-presentation='live-focused'] {
+  padding: 0.5rem;
+  border-radius: 12px;
+  box-shadow: none;
+}
+.panel[data-presentation='focused'] .circuitSvg,
+.panel[data-presentation='live-focused'] .circuitSvg {
+  min-width: 800px;
+}
+.panel[data-presentation='focused'] .panHint,
+.panel[data-presentation='live-focused'] .panHint {
+  margin: 0.4rem;
+}
+
+.focusedHeading {
+  font-size: 0.95rem;
+  margin: 0.4rem;
+  color: var(--circuit-muted);
+}

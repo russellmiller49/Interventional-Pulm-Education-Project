@@ -32,7 +32,7 @@ describe('learner Pressure Localization Lab UI', () => {
     expect(lab).toHaveAttribute('data-progress-write', 'learner-mode-only')
     expect(lab).toHaveAttribute('data-persistence', 'learner-mode-only')
     expect(within(lab).getByRole('note', { name: 'Educational boundary' })).toHaveTextContent(
-      'Practice localizing a circuit problem from pressure direction',
+      'Known fault → predict and explain the pressure response',
     )
     expect(within(lab).getByText(/alarm priority, automatic device response/i)).toBeInTheDocument()
     expect(within(lab).getByLabelText('Lab scope')).toHaveTextContent('Scope of this lab')
@@ -41,24 +41,15 @@ describe('learner Pressure Localization Lab UI', () => {
     expect(window.localStorage).toHaveLength(0)
   })
 
-  it('keeps catheter and line as separate placement controls with an accessible diagram summary', () => {
-    render(<CrrtPressureLocalizationLab />)
-
+  it('keeps placement controls and uses the canonical circuit with its blood pump and sites', () => {
+    const { container } = render(<CrrtPressureLocalizationLab />)
     expect(screen.getByRole('radio', { name: 'Access catheter' })).toBeChecked()
-    expect(
-      screen.getByRole('img', {
-        name: /obstruction at the access catheter.*separate teaching locations/i,
-      }),
-    ).toBeInTheDocument()
-
+    expect(screen.getByRole('region', { name: 'Canonical CRRT circuit' })).toBeVisible()
+    expect(container.querySelector('[data-node="blood-pump"]')).toBeInTheDocument()
+    expect(container.querySelector('[data-node="access-pressure"]')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('radio', { name: 'Access line' }))
-
-    expect(screen.getByRole('radio', { name: 'Access line' })).toBeChecked()
-    expect(
-      screen.getByRole('img', {
-        name: /obstruction at the access line.*separate teaching locations/i,
-      }),
-    ).toBeInTheDocument()
+    expect(screen.getByText(/Selected placement: Obstruction at the access line/)).toBeVisible()
+    expect(screen.getByText(/these pressures alone cannot distinguish them/)).toBeVisible()
   })
 
   it('keeps disconnection visible but fails the entire unsupported model closed', () => {
@@ -108,7 +99,7 @@ describe('learner Pressure Localization Lab UI', () => {
     expect(window.localStorage).toHaveLength(0)
   })
 
-  it('emits completion evidence only after prediction commit and result reveal', async () => {
+  it('emits completion evidence only after prediction, reveal and explicit feedback review', async () => {
     const onCompletionEvidence = jest.fn()
     render(<CrrtPressureLocalizationLab onCompletionEvidence={onCompletionEvidence} />)
 
@@ -117,6 +108,8 @@ describe('learner Pressure Localization Lab UI', () => {
     expect(onCompletionEvidence).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByRole('button', { name: 'Reveal pressure pattern' }))
+    expect(onCompletionEvidence).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Review pressure comparison and continue' }))
     await waitFor(() => expect(onCompletionEvidence).toHaveBeenCalledTimes(1))
   })
 

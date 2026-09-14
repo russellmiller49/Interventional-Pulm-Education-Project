@@ -14,6 +14,7 @@ interface BaxterCrrtModuleFrameProps {
   readonly locale: string
   readonly activeHref: string
   readonly activityMode?: boolean
+  readonly focusedLesson?: boolean
   readonly children: ReactNode
 }
 
@@ -21,12 +22,14 @@ export function BaxterCrrtModuleFrame({
   locale,
   activeHref,
   activityMode = false,
+  focusedLesson = false,
   children,
 }: BaxterCrrtModuleFrameProps) {
   return (
     <HandoffContent>
       <main
         className={styles.moduleShell}
+        data-focused-lesson={focusedLesson || undefined}
         data-release-stage={baxterCrrtReleaseStage}
         data-publication-status={baxterCrrtPublicationStatus}
         data-analytics="allowlisted"

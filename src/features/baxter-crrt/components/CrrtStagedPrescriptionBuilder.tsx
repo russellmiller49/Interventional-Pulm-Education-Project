@@ -1,6 +1,14 @@
 'use client'
 
-import { useId, useRef, useState, type ChangeEvent, type CSSProperties } from 'react'
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type CSSProperties,
+  type ReactNode,
+} from 'react'
 
 import {
   CRRT_CLEARANCE_VERSUS_REMOVAL_CONTRAST,
@@ -19,6 +27,11 @@ import {
   type CrrtPrescriptionConstruction,
   type CrrtPrescriptionStageId,
 } from '../stagedPrescriptionModel'
+import {
+  projectFoundationFluidBalance,
+  validDowntimeComparison,
+  type CrrtPrescriptionComparison,
+} from '../foundationModel'
 import type {
   QualitativeComparisonLevel,
   QualitativePrePostDilutionResult,
@@ -90,7 +103,7 @@ const NUMERIC_FIELDS: Readonly<Record<NumericFieldId, NumericFieldSpec>> = Objec
     label: 'Dialysate flow',
     unit: 'mL/h',
     description:
-      'Runs along the far side of the membrane. It never joins the blood path and never enters the patient.',
+      'Flows on the fluid side of the membrane, rather than being infused into blood. Solutes can exchange across the membrane.',
     min: 0,
     step: 10,
   }),
@@ -112,7 +125,7 @@ const NUMERIC_FIELDS: Readonly<Record<NumericFieldId, NumericFieldSpec>> = Objec
     label: 'Patient fluid removal',
     unit: 'mL/h',
     description:
-      'The only entry that decides what the patient loses. It is never the same as total effluent.',
+      'Net removal attributable to CRRT. This differs from total effluent and whole-patient balance; in simplified SCUF, effluent and net CRRT removal can be numerically equal.',
     min: 0,
     step: 10,
   }),
@@ -466,7 +479,10 @@ export function QualitativePrePostDilutionExperiment({
 
 export interface CrrtStagedPrescriptionBuilderProps {
   readonly onPhaseChange?: (phase: 'predict' | 'act' | 'observe') => void
-  readonly onCompletionEvidence?: () => void
+  readonly onCompletionEvidence?: (comparison: CrrtPrescriptionComparison) => void
+  readonly guided?: boolean
+  readonly onComparisonSubmitted?: (comparison: CrrtPrescriptionComparison) => void
+  readonly onComparisonFeedbackDisplayed?: (comparison: CrrtPrescriptionComparison) => void
   /**
    * Which step opens first. A learner always starts at Goals; this exists so the offline review
    * harness can render each step as its own mount, and so a test can address one step directly.
@@ -482,13 +498,22 @@ export interface CrrtStagedPrescriptionBuilderProps {
 export function CrrtStagedPrescriptionBuilder({
   onPhaseChange,
   onCompletionEvidence,
+  onComparisonSubmitted,
+  onComparisonFeedbackDisplayed,
+  guided = false,
   initialStageId = 'goals',
   initialConstruction = CRRT_STARTING_CONSTRUCTION,
 }: CrrtStagedPrescriptionBuilderProps) {
   const idPrefix = useId()
   const panelRef = useRef<HTMLDivElement>(null)
-  const constructionChanged = useRef(false)
-  const completionReported = useRef(false)
+  const feedbackReported = useRef(false)
+  const [completionReported, setCompletionReported] = useState(false)
+  const [interpretation, setInterpretation] = useState<
+    CrrtPrescriptionComparison['response'] | null
+  >(null)
+  const [submittedInterpretation, setSubmittedInterpretation] = useState<
+    CrrtPrescriptionComparison['response'] | null
+  >(null)
 
   const [stageId, setStageId] = useState<CrrtPrescriptionStageId>(initialStageId)
   const [selectedGoalIds, setSelectedGoalIds] = useState<readonly string[]>([])
@@ -504,13 +529,42 @@ export function CrrtStagedPrescriptionBuilder({
   const validation = validateEntries(entries, modalityViewId)
   const attempt = validation.construction ? attemptConsequences(validation.construction) : null
   const consequences = attempt?.consequences ?? null
+  const comparisonValid = validDowntimeComparison(initialConstruction, validation.construction)
+  const patientProjection =
+    validation.construction && consequences
+      ? projectFoundationFluidBalance(validation.construction)
+      : null
+  const baselineConsequences = attemptConsequences(initialConstruction).consequences
+
+  useEffect(() => {
+    if (
+      !submittedInterpretation ||
+      !comparisonValid ||
+      !validation.construction ||
+      feedbackReported.current
+    )
+      return
+    feedbackReported.current = true
+    onComparisonFeedbackDisplayed?.({
+      baseline: initialConstruction,
+      changed: validation.construction,
+      response: submittedInterpretation,
+      correct: submittedInterpretation === 'lower',
+    })
+  }, [
+    submittedInterpretation,
+    comparisonValid,
+    validation.construction,
+    initialConstruction,
+    onComparisonFeedbackDisplayed,
+  ])
 
   const stage = crrtPrescriptionStages.find((candidate) => candidate.id === stageId)!
   const previousStageId = previousCrrtPrescriptionStageId(stageId)
   const nextStageId = nextCrrtPrescriptionStageId(stageId)
 
   const updateStatus = consequences
-    ? `Predictions updated for step ${stage.ordinal} of ${CRRT_PRESCRIPTION_STAGE_IDS.length}, ${stage.shortTitle}. Total effluent ${formatNumber(consequences.ledger.totalEffluentMlHour)} millilitres per hour; prescribed intensity ${formatNumber(consequences.intensity.prescribedDoseMlPerKgHour, 2)} and delivered intensity ${formatNumber(consequences.intensity.deliveredDoseMlPerKgHour, 2)} millilitres per kilogram per hour; fluid results ${consequences.resolution === 'resolved' ? 'available' : 'withheld while the makeup attribution is unresolved'}.`
+    ? `Predictions updated for step ${stage.ordinal} of ${CRRT_PRESCRIPTION_STAGE_IDS.length}, ${stage.shortTitle}. Total effluent ${formatNumber(consequences.ledger.totalEffluentMlHour)} millilitres per hour; prescribed intensity ${formatNumber(consequences.intensity.prescribedDoseMlPerKgHour, 2)} and projected time-averaged intensity ${formatNumber(consequences.intensity.deliveredDoseMlPerKgHour, 2)} millilitres per kilogram per hour; fluid results ${consequences.resolution === 'resolved' ? 'available' : 'withheld while the makeup attribution is unresolved'}.`
     : (attempt?.errorMessage ??
       `Every predicted consequence is unavailable. Revise: ${validation.invalidLabels.join(', ')}.`)
 
@@ -519,22 +573,22 @@ export function CrrtStagedPrescriptionBuilder({
   }
 
   function goToStage(next: CrrtPrescriptionStageId) {
+    if (guided && submittedInterpretation) return
     setStageId(next)
     if (next === 'goals') onPhaseChange?.('predict')
     if (next === 'construction') onPhaseChange?.('act')
     if (next === 'predicted-consequences') {
       onPhaseChange?.('observe')
-      if (constructionChanged.current && !completionReported.current) {
-        completionReported.current = true
-        onCompletionEvidence?.()
-      }
     }
     // Focus follows the stage so keyboard order restarts inside the panel that just appeared.
     window.setTimeout(focusStagePanel, 0)
   }
 
   function updateEntry(fieldId: NumericFieldId, value: string) {
-    constructionChanged.current = true
+    feedbackReported.current = false
+    setInterpretation(null)
+    setSubmittedInterpretation(null)
+    setCompletionReported(false)
     setEntries((current) => ({ ...current, [fieldId]: value }))
   }
 
@@ -557,6 +611,7 @@ export function CrrtStagedPrescriptionBuilder({
       data-analytics="allowlisted"
       data-progress-write="learner-mode-only"
       data-persistence="learner-mode-only"
+      data-guided={guided || undefined}
       data-stage={stageId}
       data-makeup-resolution={consequences?.resolution ?? 'unavailable-invalid-entry'}
     >
@@ -575,13 +630,19 @@ export function CrrtStagedPrescriptionBuilder({
       >
         <strong>Calculation practice — not for patient care.</strong>
         <p>
-          Build the prescription in three steps and watch what each step changes. This builder
-          provides no clinical target, no recommended set of flows, no patient prediction, and no
-          device-control instruction. You can move between steps in either direction and nothing is
-          lost.
+          {guided
+            ? 'Compare entered assumptions. These calculations do not apply a device prescription.'
+            : 'Build the prescription in three steps and watch what each step changes. This builder provides no clinical target, no recommended set of flows, no patient prediction, and no device-control instruction. You can move between steps in either direction and nothing is lost.'}
         </p>
       </div>
 
+      {guided ? (
+        <p className={styles.stageSummary}>
+          Synthetic 80 kg example · 24-hour window · CVVHD · blood flow 120 mL/min = 7,200 mL/h;
+          fluid rates below are mL/h. These entries are a calculation preview, not an applied device
+          prescription.
+        </p>
+      ) : null}
       <nav className={styles.stageRail} aria-label="Prescription building steps">
         <ol>
           {crrtPrescriptionStages.map((candidate) => {
@@ -591,6 +652,7 @@ export function CrrtStagedPrescriptionBuilder({
                 <button
                   type="button"
                   aria-current={isCurrent ? 'step' : undefined}
+                  disabled={guided && submittedInterpretation !== null}
                   onClick={() => goToStage(candidate.id)}
                 >
                   <span className={styles.stageOrdinal}>
@@ -599,9 +661,11 @@ export function CrrtStagedPrescriptionBuilder({
                   <span className={styles.stageName}>{candidate.shortTitle}</span>
                   <span className={styles.stageState}>
                     {candidate.id === 'goals'
-                      ? selectedGoals.length === 0
-                        ? 'No job named yet'
-                        : `${selectedGoals.length} named`
+                      ? guided
+                        ? 'Worked goal'
+                        : selectedGoals.length === 0
+                          ? 'No job named yet'
+                          : `${selectedGoals.length} named`
                       : candidate.id === 'construction'
                         ? validation.construction
                           ? 'Entries accepted'
@@ -641,7 +705,15 @@ export function CrrtStagedPrescriptionBuilder({
 
         {stageId === 'goals' ? (
           <>
-            {crrtPrescriptionGoalGroups.map((group) => (
+            {guided ? (
+              <p>
+                Worked goal: provide solute support with a separate net CRRT fluid-removal
+                assumption. Patient tolerance and the whole-patient balance still require
+                reassessment. In Construction, keep the flows fixed and increase downtime from 3 to
+                6 hours.
+              </p>
+            ) : null}
+            {(guided ? [] : crrtPrescriptionGoalGroups).map((group) => (
               <fieldset key={group.id} className={styles.goalGroup}>
                 <legend>{group.title}</legend>
                 <p className={styles.goalGroupQuestion}>{group.question}</p>
@@ -673,7 +745,7 @@ export function CrrtStagedPrescriptionBuilder({
               <h4>{CRRT_CLEARANCE_VERSUS_REMOVAL_CONTRAST.title}</h4>
               <dl>
                 <div>
-                  <dt>Clearance intensity</dt>
+                  <dt>Effluent-based intensity</dt>
                   <dd>{CRRT_CLEARANCE_VERSUS_REMOVAL_CONTRAST.clearanceSide}</dd>
                 </div>
                 <div>
@@ -688,7 +760,29 @@ export function CrrtStagedPrescriptionBuilder({
 
         {stageId === 'construction' ? (
           <>
-            {crrtConstructionGroups.map((group) => (
+            {guided ? (
+              <>
+                <h4>One change: downtime</h4>
+                <p>
+                  Weight {initialConstruction.simulatedWeightKg} kg; dialysate{' '}
+                  {initialConstruction.dialysateMlPerHour} mL/h; net CRRT removal{' '}
+                  {initialConstruction.patientFluidRemovalMlPerHour} mL/h; replacement, PBP and
+                  makeup 0 mL/h. These stay fixed for this comparison.
+                </p>
+                <NumberControl
+                  id={`${idPrefix}-downtimeHours`}
+                  spec={NUMERIC_FIELDS.downtimeHours}
+                  value={entries.downtimeHours}
+                  error={validation.errors.downtimeHours ?? null}
+                  onChange={(value) => updateEntry('downtimeHours', value)}
+                />
+                <p>
+                  Enter 6 hours, then compare the projected dose. Other fields remain fixed so the
+                  change can be attributed to downtime.
+                </p>
+              </>
+            ) : null}
+            {(guided ? [] : crrtConstructionGroups).map((group) => (
               <fieldset key={group.id} className={styles.constructionGroup}>
                 <legend>
                   {group.ordinal}. {group.title}
@@ -705,7 +799,10 @@ export function CrrtStagedPrescriptionBuilder({
                             value={modalityViewId}
                             aria-describedby={`${idPrefix}-modality-description`}
                             onChange={(event) => {
-                              constructionChanged.current = true
+                              feedbackReported.current = false
+                              setInterpretation(null)
+                              setSubmittedInterpretation(null)
+                              setCompletionReported(false)
                               setModalityViewId(
                                 event.currentTarget
                                   .value as CrrtPrescriptionConstruction['modalityViewId'],
@@ -780,24 +877,26 @@ export function CrrtStagedPrescriptionBuilder({
             </p>
           ) : (
             <>
-              <div className={styles.goalEcho}>
-                <h4>What you said this prescription had to do</h4>
-                {selectedGoals.length === 0 ? (
-                  <p>
-                    No job was named in step 1. The predictions below are still true of these
-                    entries, but nothing here can tell you whether they serve the patient in front
-                    of you.
-                  </p>
-                ) : (
-                  <ul>
-                    {selectedGoals.map((goal) => (
-                      <li key={goal.id}>
-                        {goal.label} — {goal.whatThePrescriptionMustDo}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+              {!guided ? (
+                <div className={styles.goalEcho}>
+                  <h4>What you said this prescription had to do</h4>
+                  {selectedGoals.length === 0 ? (
+                    <p>
+                      No job was named in step 1. The predictions below are still true of these
+                      entries, but nothing here can tell you whether they serve the patient in front
+                      of you.
+                    </p>
+                  ) : (
+                    <ul>
+                      {selectedGoals.map((goal) => (
+                        <li key={goal.id}>
+                          {goal.label} — {goal.whatThePrescriptionMustDo}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ) : null}
 
               {consequences.withheldNotice ? (
                 <div className={styles.withheldNotice} role="note" aria-label="Withheld results">
@@ -806,7 +905,7 @@ export function CrrtStagedPrescriptionBuilder({
                 </div>
               ) : null}
 
-              <section className={styles.consequenceSection}>
+              <ConstructionCircuitReview guided={guided}>
                 <h4>The circuit these entries describe</h4>
                 <p>
                   The same circuit as every other section, in the view you chose. The ledger below
@@ -831,6 +930,8 @@ export function CrrtStagedPrescriptionBuilder({
                     patientFluidRemovalMlHour={consequences.flows.patientFluidRemovalMlHour}
                     flows={consequences.flows}
                     initialOverlayId={consequences.circuitView.overlayId}
+                    overlayId={guided ? consequences.circuitView.overlayId : undefined}
+                    presentation={guided ? 'focused' : 'full'}
                     pressure={{
                       access: null,
                       filter: null,
@@ -841,10 +942,10 @@ export function CrrtStagedPrescriptionBuilder({
                     }}
                   />
                 </div>
-              </section>
+              </ConstructionCircuitReview>
 
               <section className={styles.consequenceSection}>
-                <h4>Prescribed intensity is not delivered intensity</h4>
+                <h4>Prescribed dose and projected time-averaged dose</h4>
                 <dl className={styles.intensityGrid}>
                   <div>
                     <dt>Total effluent</dt>
@@ -853,8 +954,8 @@ export function CrrtStagedPrescriptionBuilder({
                         {formatNumber(consequences.intensity.prescribedEffluentRateMlPerHour)} mL/h
                       </strong>
                       <small>
-                        What the effluent pump is asked to carry. This is not fluid the patient
-                        loses.
+                        Waste-stream flow; this includes spent dialysate and ultrafiltrate. Compare
+                        the separate net CRRT removal term below.
                       </small>
                     </dd>
                   </div>
@@ -871,16 +972,16 @@ export function CrrtStagedPrescriptionBuilder({
                     </dd>
                   </div>
                   <div>
-                    <dt>Delivered intensity</dt>
+                    <dt>Projected time-averaged dose</dt>
                     <dd>
                       <strong>
                         {formatNumber(consequences.intensity.deliveredDoseMlPerKgHour, 2)} mL/kg/h
                       </strong>
                       <small>
-                        The same expression over what the window actually produced:{' '}
+                        Projected from entered assumptions:{' '}
                         {formatNumber(consequences.intensity.deliveredHours, 1)} of{' '}
-                        {formatNumber(consequences.intensity.treatmentWindowHours, 1)} hours
-                        running.
+                        {formatNumber(consequences.intensity.treatmentWindowHours, 1)} hours assumed
+                        running. This is not recorded delivery or measured solute clearance.
                       </small>
                     </dd>
                   </div>
@@ -888,62 +989,195 @@ export function CrrtStagedPrescriptionBuilder({
                 <p className={styles.separationNote}>{consequences.intensity.statement}</p>
               </section>
 
-              <QualitativePrePostDilutionExperiment
-                result={consequences.filtrationBurden.qualitative}
-              />
-
-              <section className={styles.consequenceSection}>
-                <h4>Filtration burden</h4>
+              <section className={styles.consequenceSection} aria-label="Patient fluid projection">
+                <h4>Machine effluent, net CRRT removal, whole-patient balance</h4>
                 <p>
-                  Printed total-predilution relationship:{' '}
-                  <strong>
-                    {consequences.filtrationBurden.printedTotalPredilutionFraction === null
-                      ? 'unavailable — no entered pre-flow denominator'
-                      : `${(consequences.filtrationBurden.printedTotalPredilutionFraction * 100).toFixed(1)}%`}
-                  </strong>
-                  . This is a dimensionless relationship, not the quantitative filtration fraction.
+                  Projected from entered assumptions over{' '}
+                  {consequences.intensity.treatmentWindowHours} hours. External intake 150 mL/h and
+                  non-CRRT output 50 mL/h continue during downtime. Positive balance means gain;
+                  negative means loss.
                 </p>
-                <p>{consequences.filtrationBurden.quantitativeReason}</p>
-              </section>
-
-              <section className={styles.consequenceSection}>
-                <h4>What the blood flow you set does to every pressure</h4>
+                {patientProjection ? (
+                  <dl className={styles.intensityGrid}>
+                    <div>
+                      <dt>Machine effluent rate while running</dt>
+                      <dd>{formatNumber(consequences.ledger.totalEffluentMlHour)} mL/h</dd>
+                    </div>
+                    <div>
+                      <dt>Net CRRT removal over the window</dt>
+                      <dd>
+                        {formatNumber(patientProjection.totals.machinePatientFluidRemovalMl)} mL
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Whole-patient balance over the window</dt>
+                      <dd>{formatNumber(patientProjection.netBalanceMl)} mL</dd>
+                    </div>
+                  </dl>
+                ) : (
+                  <p>Unavailable while makeup attribution is unresolved; this is not zero.</p>
+                )}
                 <p>
-                  Blood flow moves these readings whether or not anything is obstructed. Four of
-                  them are places you can walk to and inspect; two are arithmetic over the first
-                  four and have no location at all.
+                  Replacement and PBP are already accounted for in net CRRT removal; do not subtract
+                  them again. Zero net CRRT removal with unequal external inputs and outputs does
+                  not make the patient fluid-neutral.
                 </p>
-                <ul className={styles.implicationList} aria-label="Pressure implications">
-                  {consequences.pressureImplications.map((implication) => (
-                    <li key={implication.signalId}>
-                      <strong>{implication.label}</strong>{' '}
-                      <span className={styles.implicationKind}>
-                        {implication.hasALocation
-                          ? 'has a location'
-                          : 'no location — calculated from the others'}
-                      </span>
-                      <br />
-                      {implication.bloodFlowEffect}
-                    </li>
-                  ))}
-                </ul>
               </section>
 
-              <section className={styles.consequenceSection}>
-                <h4>What these entries still do not tell you</h4>
-                <ul className={styles.unavailableList} aria-label="Calculations not supported">
-                  {consequences.unavailableOutputs.map((output) => (
-                    <li key={output.id}>
-                      <strong>{output.label}</strong> — {output.reason}
-                    </li>
-                  ))}
-                </ul>
-                <ul className={styles.boundaryList} aria-label="Model boundaries">
-                  {consequences.modelBoundaries.map((boundary) => (
-                    <li key={boundary}>{boundary}</li>
-                  ))}
-                </ul>
-              </section>
+              {onCompletionEvidence || guided ? (
+                <section className={styles.consequenceSection} aria-label="Downtime comparison">
+                  <h4>Interpret your downtime comparison</h4>
+                  <p>
+                    Baseline: {initialConstruction.downtimeHours} hours downtime, projected{' '}
+                    {baselineConsequences?.intensity.deliveredDoseMlPerKgHour.toFixed(3)} mL/kg/h.
+                    Current: {entries.downtimeHours} hours downtime.
+                  </p>
+                  {!comparisonValid ? (
+                    <p role="alert">
+                      A comparison requires valid entries, increased downtime, and every other
+                      baseline input unchanged. Opening results, clearing an entry, or reverting the
+                      change does not complete this task.
+                    </p>
+                  ) : null}
+                  <fieldset disabled={!comparisonValid || submittedInterpretation !== null}>
+                    <legend>What changed, and what stayed the same?</legend>
+                    {(
+                      [
+                        [
+                          'same',
+                          'The prescribed rate proves that the full 24-hour dose was delivered.',
+                        ],
+                        [
+                          'lower',
+                          'The projected average dose fell; the prescribed running flows and dose stayed the same.',
+                        ],
+                        [
+                          'removal',
+                          'Only net CRRT removal changed; solute-support time was unaffected.',
+                        ],
+                      ] as const
+                    ).map(([id, label]) => (
+                      <label key={id} className={styles.goalOption}>
+                        <input
+                          type="radio"
+                          name={`${idPrefix}-interpretation`}
+                          checked={interpretation === id}
+                          onChange={() => setInterpretation(id)}
+                        />
+                        {label}
+                      </label>
+                    ))}
+                  </fieldset>
+                  {submittedInterpretation ? (
+                    <div role="status">
+                      <p>
+                        {submittedInterpretation === 'lower'
+                          ? 'That comparison is supported.'
+                          : 'Review the common time window.'}{' '}
+                        Increased downtime reduces the time-averaged effluent proxy without changing
+                        the prescribed running flows. Less CRRT time also reduces projected net
+                        removal; external intake and urine continue.
+                      </p>
+                      <button
+                        type="button"
+                        disabled={!comparisonValid || completionReported}
+                        onClick={() => {
+                          if (!comparisonValid || !validation.construction || completionReported)
+                            return
+                          setCompletionReported(true)
+                          onCompletionEvidence?.({
+                            baseline: initialConstruction,
+                            changed: validation.construction,
+                            response: submittedInterpretation,
+                            correct: submittedInterpretation === 'lower',
+                          })
+                        }}
+                      >
+                        Review comparison and continue
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={!comparisonValid || !interpretation}
+                      onClick={() => {
+                        if (comparisonValid && interpretation && validation.construction) {
+                          setSubmittedInterpretation(interpretation)
+                          onComparisonSubmitted?.({
+                            baseline: initialConstruction,
+                            changed: validation.construction,
+                            response: interpretation,
+                            correct: interpretation === 'lower',
+                          })
+                        }
+                      }}
+                    >
+                      Check comparison
+                    </button>
+                  )}
+                </section>
+              ) : null}
+
+              <details className={styles.sourcePanel}>
+                <summary>Advanced calculations and limits</summary>
+                <QualitativePrePostDilutionExperiment
+                  result={consequences.filtrationBurden.qualitative}
+                />
+
+                <section className={styles.consequenceSection}>
+                  <h4>Filtration burden</h4>
+                  <p>
+                    Printed total-predilution relationship:{' '}
+                    <strong>
+                      {consequences.filtrationBurden.printedTotalPredilutionFraction === null
+                        ? 'unavailable — no entered pre-flow denominator'
+                        : `${(consequences.filtrationBurden.printedTotalPredilutionFraction * 100).toFixed(1)}%`}
+                    </strong>
+                    . This is a dimensionless relationship, not the quantitative filtration
+                    fraction.
+                  </p>
+                  <p>{consequences.filtrationBurden.quantitativeReason}</p>
+                </section>
+
+                <section className={styles.consequenceSection}>
+                  <h4>What the blood flow you set does to every pressure</h4>
+                  <p>
+                    Blood flow moves these readings whether or not anything is obstructed. Four of
+                    them are places you can walk to and inspect; two are arithmetic over the first
+                    four and have no location at all.
+                  </p>
+                  <ul className={styles.implicationList} aria-label="Pressure implications">
+                    {consequences.pressureImplications.map((implication) => (
+                      <li key={implication.signalId}>
+                        <strong>{implication.label}</strong>{' '}
+                        <span className={styles.implicationKind}>
+                          {implication.hasALocation
+                            ? 'has a location'
+                            : 'no location — calculated from the others'}
+                        </span>
+                        <br />
+                        {implication.bloodFlowEffect}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+
+                <section className={styles.consequenceSection}>
+                  <h4>What these entries still do not tell you</h4>
+                  <ul className={styles.unavailableList} aria-label="Calculations not supported">
+                    {consequences.unavailableOutputs.map((output) => (
+                      <li key={output.id}>
+                        <strong>{output.label}</strong> — {output.reason}
+                      </li>
+                    ))}
+                  </ul>
+                  <ul className={styles.boundaryList} aria-label="Model boundaries">
+                    {consequences.modelBoundaries.map((boundary) => (
+                      <li key={boundary}>{boundary}</li>
+                    ))}
+                  </ul>
+                </section>
+              </details>
             </>
           )
         ) : null}
@@ -953,22 +1187,24 @@ export function CrrtStagedPrescriptionBuilder({
         <button
           type="button"
           className={styles.secondary}
-          disabled={previousStageId === null}
+          disabled={previousStageId === null || (guided && submittedInterpretation !== null)}
           onClick={() => previousStageId && goToStage(previousStageId)}
         >
           {previousStageId
             ? `Back to ${crrtPrescriptionStages.find((item) => item.id === previousStageId)?.shortTitle}`
             : 'Back'}
         </button>
-        <button
-          type="button"
-          disabled={nextStageId === null}
-          onClick={() => nextStageId && goToStage(nextStageId)}
-        >
-          {nextStageId
-            ? `Continue to ${crrtPrescriptionStages.find((item) => item.id === nextStageId)?.shortTitle}`
-            : 'End of the three steps'}
-        </button>
+        {guided && nextStageId === null ? null : (
+          <button
+            type="button"
+            disabled={nextStageId === null || (guided && submittedInterpretation !== null)}
+            onClick={() => nextStageId && goToStage(nextStageId)}
+          >
+            {nextStageId
+              ? `Continue to ${crrtPrescriptionStages.find((item) => item.id === nextStageId)?.shortTitle}`
+              : 'End of the three steps'}
+          </button>
+        )}
       </div>
 
       <details className={styles.sourcePanel}>
@@ -998,5 +1234,17 @@ export function CrrtStagedPrescriptionBuilder({
         </p>
       </details>
     </section>
+  )
+}
+
+/** Keep the worked circuit available near the calculations without repeating its full height. */
+function ConstructionCircuitReview({ guided, children }: { guided: boolean; children: ReactNode }) {
+  return guided ? (
+    <details className={styles.consequenceSection}>
+      <summary>Review the circuit for these entries</summary>
+      {children}
+    </details>
+  ) : (
+    <section className={styles.consequenceSection}>{children}</section>
   )
 }

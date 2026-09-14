@@ -251,15 +251,15 @@ export const crrtPrescriptionGoalOptions: readonly CrrtPrescriptionGoalOption[] 
     group: 'fluid-management' as const,
     label: 'Take net fluid off the patient at a rate the circulation tolerates',
     whatThePrescriptionMustDo:
-      'Set the machine patient-fluid-removal term. This is the only entry that decides what the patient loses; effluent intensity does not.',
+      'Set the net removal attributable to CRRT separately from solute-support flows. External intake and non-CRRT outputs determine the rest of the whole-patient balance.',
     sourceIds: GOAL_FRAMING_SOURCE_IDS,
   }),
   Object.freeze({
     id: 'goal-fluid-neutral',
     group: 'fluid-management' as const,
-    label: 'Hold the patient fluid-neutral while still clearing solute',
+    label: 'Set zero net CRRT fluid removal while still supporting solute control',
     whatThePrescriptionMustDo:
-      'Set patient fluid removal at nothing while dialysate or replacement keeps running. A large effluent volume alongside no patient loss is the normal case, not an error.',
+      'Set net CRRT fluid removal to zero while dialysate or replacement supports solute transport. Whole-patient balance still depends on external intake and non-CRRT output.',
     sourceIds: GOAL_FRAMING_SOURCE_IDS,
   }),
   Object.freeze({
@@ -292,11 +292,11 @@ export const CRRT_CLEARANCE_VERSUS_REMOVAL_CONTRAST = Object.freeze({
   id: 'clearance-is-not-net-removal' as const,
   title: 'A clearance goal and a fluid-removal goal are two different goals',
   clearanceSide:
-    'Clearance intensity is carried by total effluent — the dialysate, the replacement fluid, and everything pulled across the membrane. It is set mostly by dialysate and replacement flow.',
+    'The effluent-based intensity is a prescription proxy, not measured solute clearance. Total effluent combines dialysate and membrane water flow, including the water used to replace infused replacement/PBP fluid.',
   removalSide:
-    'Net patient fluid removal is one entry of its own. It is what the patient actually loses, and it can be nothing at all while effluent runs at litres an hour.',
+    'Net patient fluid removal is one entry of its own. It is net removal attributable to CRRT, and it can be nothing at all while effluent runs at litres an hour.',
   consequence:
-    'Changing dialysate flow changes what is cleared without changing what the patient loses. Changing the patient-fluid-removal entry changes what the patient loses without changing much of what is cleared.',
+    'Changing dialysate flow changes the effluent proxy while net CRRT removal stays fixed. Changing net CRRT removal changes both the machine-removal term and total effluent. Neither calculation alone establishes whole-patient balance or measured clearance.',
   sourceIds: Object.freeze(['MATH-PM-001', 'FLUID-PM-002', 'DOSE-PM-001', 'SYNTH-LAB-FLUID-001']),
 })
 
@@ -761,7 +761,7 @@ function fluidValues(ledger: CrrtMachineFluidLedger): readonly CrrtPredictedValu
       valueMlPerHour: ledger.crossingMembraneMlHour,
       unit: 'mL/h',
       meaning:
-        'Everything pulled from the blood side to the fluid side. It is larger than the patient’s loss because replacement and pre-blood-pump fluid are pulled off again alongside it.',
+        'Water crossing from the blood side to the fluid side. It includes net CRRT removal plus replacement/PBP contributions. With those contributions zero, membrane water flow and net CRRT removal can have the same rate.',
       withheldReason,
       sourceIds: ledger.sourceIds,
     }),
@@ -778,7 +778,7 @@ function fluidValues(ledger: CrrtMachineFluidLedger): readonly CrrtPredictedValu
     }),
     Object.freeze({
       id: 'machine-recorded-removal',
-      label: 'What the machine records as removed',
+      label: 'Projected machine removal term',
       status: withheld ? ('withheld' as const) : ('available' as const),
       valueMlPerHour: ledger.machinePatientFluidRemovalMlHour,
       unit: 'mL/h',
@@ -847,8 +847,8 @@ function predictedIntensity(
     separationIsVisible: downtimeHours > 0,
     statement:
       downtimeHours > 0
-        ? `The circuit ran for ${deliveredHours} of ${windowHours} hours. The prescription was unchanged throughout, so the prescribed intensity is unchanged too — what fell is the intensity the window actually produced.`
-        : `The circuit ran for the whole ${windowHours}-hour window, so prescribed and delivered intensity are the same number here. They stop being the same number as soon as any hour is lost.`,
+        ? `Assuming the circuit runs for ${deliveredHours} of ${windowHours} hours. the running prescription stays fixed. This time-averaged effluent proxy is projected from entered assumptions, not recorded delivery or measured clearance.`
+        : `Assuming uninterrupted running for ${windowHours} hours, the prescribed and projected time-averaged intensities coincide. This is a calculation preview, not recorded delivery.`,
     sourceIds: Object.freeze(['MATH-PM-001', 'DOSE-PM-001', 'GUID-RRT-ICU-2026']),
   })
 }
