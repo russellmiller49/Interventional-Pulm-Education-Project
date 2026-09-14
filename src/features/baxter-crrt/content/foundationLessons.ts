@@ -204,7 +204,7 @@ export const crrtFoundationTasks: Partial<
         'Select all six readouts. Find the actual sites used by TMP and filter pressure drop, then compare the isolated return-side change.',
       teaching: [
         'Access pressure is measured before the blood pump. Filter pressure is measured upstream of the filter; return pressure describes the return segment; effluent pressure is measured on the fluid path.',
-        `TMP and filter pressure drop are calculated from the raw monitored readings. For the pinned PrisMax AW8035 profile, displayed TMP = (filter + return) / 2 − effluent ${PRISMAX_TMP_HYDROSTATIC_OFFSET_MMHG} mmHg; displayed filter drop = filter − return ${PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG} mmHg. These fixed device display offsets are not alarm thresholds. Neither calculated value has its own sensor.`,
+        `TMP and filter pressure drop are calculated from the monitored readings; neither has its own sensor. The PrisMax AW8035 manual prints TMP = (filter + return) / 2 − effluent ${PRISMAX_TMP_HYDROSTATIC_OFFSET_MMHG} mmHg. For filter drop it prints filter − return and says the filter and return readings are corrected for a ${PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG} mmHg sensor-height bias. This simulation applies that ${PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG} mmHg to the drop itself; whether a console's displayed values follow that arithmetic awaits device review. Neither constant is an alarm threshold.`,
         'These are synthetic normal operating points, not clinical normal ranges or alarm thresholds. Compare patterns and context rather than diagnosing from a single pressure.',
       ],
     },

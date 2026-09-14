@@ -739,8 +739,8 @@ export const crrtPressureSignalDetails: readonly CrrtPressureSignalDetail[] = Ob
     nodeId: null,
     derivedFromNodeIds: ['filter-pressure', 'return-pressure'],
     physicalLocation:
-      'Nowhere. Filter pressure drop has no transducer of its own. It is the difference between the filter and return readings, plus a fixed device display offset.',
-    whatProducesTheValue: `The device subtracts the return pressure from the filter pressure and applies a fixed display offset of ${PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG} mmHg. It describes how hard it is to push blood through the filter and the return limb.`,
+      'Nowhere. Filter pressure drop has no transducer of its own. It is calculated from the filter and return readings.',
+    whatProducesTheValue: `Filter pressure minus return pressure. The PrisMax AW8035 manual says those two readings are corrected for a ${PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG} mmHg sensor-height bias; this simulation applies the ${PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG} mmHg to the drop itself, which awaits device review. It describes how hard it is to push blood through the filter and the return limb.`,
     bloodFlowEffect:
       'Raising blood flow widens the drop across unchanged resistance. A rising pressure drop after a blood-flow increase is expected arithmetic, not new information about the filter.',
     patientOrAccessCauses: ['Only through the two readings it is made of.'],

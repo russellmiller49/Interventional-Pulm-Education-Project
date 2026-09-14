@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { Fragment, useId, useState } from 'react'
 import {
   CRRT_CITRATE_HELD_OPEN_NOTICE,
   CRRT_CITRATE_MECHANISM_HEADLINE,
@@ -14,7 +14,9 @@ import {
 } from '../content/citrateDifferential'
 import { crrtCircuitNode } from '../content/circuitModel'
 import { baxterCrrtLearnerFacingSourceById } from '../content/learnerSourceMap'
+import { crrtSourceDating } from '../content/sourceReviewMetadata'
 import { CrrtPilotCircuit } from './CrrtPilotCircuit'
+import { CrrtSourceDating } from './CrrtSourceDating'
 import styles from './crrt-citrate-differential.module.css'
 
 const DOMAIN_LABELS: Record<CrrtSamplingDomain, string> = {
@@ -222,11 +224,15 @@ export function CrrtCitrateDifferential({
         <summary>Sources for this explanation</summary>
         {sourceIds.map((id) => {
           const source = baxterCrrtLearnerFacingSourceById.get(id)!
+          const dated = crrtSourceDating(id) !== undefined
           return (
-            <p key={id}>
-              <strong>{source.sourceTitle}</strong> · {source.documentVersion}.{' '}
-              {source.pageOrSection}. Review: {source.reviewStatus}.
-            </p>
+            <Fragment key={id}>
+              <p>
+                <strong>{source.sourceTitle}</strong> · {source.documentVersion}.{' '}
+                {source.pageOrSection}.{dated ? null : ` Review: ${source.reviewStatus}.`}
+              </p>
+              <CrrtSourceDating sourceId={id} />
+            </Fragment>
           )
         })}
       </details>

@@ -3,9 +3,13 @@ import { assertFiniteNumber, assertNonNegativeNumber } from './units'
 export const PRISMAX_TMP_SOURCE_ID = 'MATH-PM-002'
 export const PRISMAX_FILTER_PRESSURE_DROP_SOURCE_ID = 'DEV-PM-010'
 
-/** Exact AW8035 device-display offset; not an alarm or clinical threshold. */
+/** Printed in the AW8035 displayed-TMP expression (PDF p218); not an alarm or clinical threshold. */
 export const PRISMAX_TMP_HYDROSTATIC_OFFSET_MMHG = -18
-/** Exact AW8035 device-display offset; not an alarm or clinical threshold. */
+/**
+ * AW8035 (PDF p203) says the filter and return readings are corrected for this sensor-height bias
+ * and prints no such term in the drop expression. Applying it to the drop is this model's reading
+ * of that sentence and awaits device review (G01-CRRT-02). Not an alarm or clinical threshold.
+ */
 export const PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG = -25
 
 export interface PrismaxTmpInput {

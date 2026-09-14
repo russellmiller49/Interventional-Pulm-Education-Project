@@ -363,15 +363,17 @@ export const baxterCrrtEngineSourceDetails: readonly BaxterCrrtEngineSourceDetai
     {
       id: 'DEV-PM-010',
       claim:
-        'PrisMax filter pressure drop uses filter minus return pressure with one display offset.',
-      formulaOrBehavior: 'raw delta P = Pfil - Pret; displayed delta P = raw delta P - 25',
+        'PrisMax calculates filter pressure drop as filter minus return pressure and states that the filter and return readings are corrected for a sensor-height bias.',
+      formulaOrBehavior:
+        'Model: raw delta P = Pfil - Pret; displayed delta P = raw delta P - 25. The manual prints delta P = Pfil - Pret; where the -25 correction belongs awaits device review.',
       unit: 'mmHg',
       sourceDocumentId: 'PRISMAX-AW8035-RB',
       pageOrSection: 'Manual pp201–202 · PDF pp202–203',
       implementationLocation: 'engine/pressureModel.ts',
       reviewer: null,
       reviewStatus: 'pending',
-      limitation: 'Raw and displayed values remain separate to prevent double correction.',
+      limitation:
+        'Raw and displayed values remain separate to prevent double correction. The manual applies the −25 mmHg correction to the filter and return readings; applying it to the drop is held for device review (G01-CRRT-02).',
     },
     {
       id: 'MATH-PM-003',

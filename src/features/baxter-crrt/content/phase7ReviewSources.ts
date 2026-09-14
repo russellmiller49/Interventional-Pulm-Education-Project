@@ -182,7 +182,7 @@ const phase7DeviceSources = [
   {
     id: 'DEV-PM-010',
     claim:
-      'PrisMax presents filter pressure drop as a filter-to-return pressure relationship with a documented display correction.',
+      'PrisMax presents filter pressure drop as filter minus return pressure and documents a sensor-height correction of the filter and return readings.',
     value:
       'Trend-localization provenance only; no alarm threshold, diagnosis, filter-life estimate, or corrective sequence is supplied.',
     sourceTitle: "PrisMax Operator's Manual",
@@ -209,7 +209,7 @@ const syntheticReviewerCaseSources = phase7ReviewerRuntimeCaseNumbers.map(
         'Not a clinical target, normal range, alarm threshold, device limit, or patient-specific recommendation.',
       sourceTitle: 'Baxter CRRT v1 synthetic calibration record',
       sourceType: 'synthetic-calibration' as const,
-      documentVersion: 'v1 SME-review build',
+      documentVersion: 'v1 authored teaching calibration · no clinical review recorded',
       pageOrSection: `CRRT-${caseNumber} authored reviewer fixture`,
       implementationLocation: `content/phase7ReviewCases.ts · CRRT-${caseNumber}`,
       reviewer: null,
@@ -226,7 +226,7 @@ const reservedManifestCaseSources = phase7ManifestOnlyCaseNumbers.map(
         'Manifest-only placeholder. It supplies no clinical target, normal range, alarm threshold, device limit, simulator behavior, or patient-specific recommendation.',
       sourceTitle: 'Baxter CRRT v1 synthetic calibration record',
       sourceType: 'synthetic-calibration' as const,
-      documentVersion: 'v1 SME-review build',
+      documentVersion: 'v1 authored teaching calibration · no clinical review recorded',
       pageOrSection: `CRRT-${caseNumber} manifest-only reserved record`,
       implementationLocation: `content/curriculum.ts · CRRT-${caseNumber} manifest`,
       reviewer: null,
@@ -273,7 +273,7 @@ const syntheticRapidDrillSources = [
       ...record,
       sourceTitle: 'Baxter CRRT v1 rapid-drill synthetic calibration record',
       sourceType: 'synthetic-calibration' as const,
-      documentVersion: 'v1 SME-review build',
+      documentVersion: 'v1 authored teaching calibration · no clinical review recorded',
       implementationLocation: 'content/rapidDrills.ts and components/CrrtRapidDrillReview.tsx',
       reviewer: null,
       reviewStatus: PENDING,
@@ -289,7 +289,7 @@ const candidateToolCalibrationSources = [
       'Not a clearance estimate, membrane performance specification, clinical target, device output, or patient prediction.',
     sourceTitle: 'Baxter CRRT v1 instructional-tool synthetic calibration record',
     sourceType: 'synthetic-calibration' as const,
-    documentVersion: 'v1 SME-review build',
+    documentVersion: 'v1 authored teaching calibration · no clinical review recorded',
     pageOrSection: 'Solute and water transport lesson',
     implementationLocation: 'content/learnLessons.ts',
     reviewer: null,
@@ -303,7 +303,7 @@ const candidateToolCalibrationSources = [
       'Not a prescribed removal rate, patient fluid goal, device accuracy claim, or recommendation.',
     sourceTitle: 'Baxter CRRT v1 instructional-tool synthetic calibration record',
     sourceType: 'synthetic-calibration' as const,
-    documentVersion: 'v1 SME-review build',
+    documentVersion: 'v1 authored teaching calibration · no clinical review recorded',
     pageOrSection: 'Fluid management and liberation lesson',
     implementationLocation: 'content/learnLessons.ts',
     reviewer: null,
@@ -317,7 +317,7 @@ const candidateToolCalibrationSources = [
       'Not an alarm threshold, expected patient value, device limit, diagnostic rule, correction sequence, or disconnection model.',
     sourceTitle: 'Baxter CRRT v1 instructional-tool synthetic calibration record',
     sourceType: 'synthetic-calibration' as const,
-    documentVersion: 'v1 SME-review build',
+    documentVersion: 'v1 authored teaching calibration · no clinical review recorded',
     pageOrSection: 'LAB-PRESSURE-LOCALIZATION reviewer prototype',
     implementationLocation:
       'pressureLocalizationLabModel.ts and components/CrrtPressureLocalizationLab.tsx',
@@ -332,7 +332,7 @@ const candidateToolCalibrationSources = [
       'Not a prescription default, target, device limit, delivered-clearance estimate, or patient recommendation.',
     sourceTitle: 'Baxter CRRT v1 instructional-tool synthetic calibration record',
     sourceType: 'synthetic-calibration' as const,
-    documentVersion: 'v1 SME-review build',
+    documentVersion: 'v1 authored teaching calibration · no clinical review recorded',
     pageOrSection: 'LAB-PRESCRIPTION reviewer prototype',
     implementationLocation:
       'prescriptionWorkbenchModel.ts, stagedPrescriptionModel.ts, and components/CrrtStagedPrescriptionBuilder.tsx',
@@ -347,7 +347,7 @@ const candidateToolCalibrationSources = [
       'Not quantitative filtration fraction, effective clearance, clotting risk, filter-life prediction, or a preferred clinical split.',
     sourceTitle: 'Baxter CRRT v1 instructional-tool synthetic calibration record',
     sourceType: 'synthetic-calibration' as const,
-    documentVersion: 'v1 SME-review build',
+    documentVersion: 'v1 authored teaching calibration · no clinical review recorded',
     pageOrSection: 'LAB-PREPOST-DILUTION reviewer prototype',
     implementationLocation:
       'prescriptionWorkbenchModel.ts and components/CrrtStagedPrescriptionBuilder.tsx',
@@ -364,7 +364,7 @@ const candidateToolCalibrationSources = [
       'Not a dose, ratio, target, titration schedule, sampling frequency, alarm limit, diagnostic rule, or local management protocol. This record supports circuit topology and the authored teaching structure only. It supports no physiological mechanism, sampling interpretation, universal infusion site or management instruction. Missing clinical support must still fail closed.',
     sourceTitle: 'Baxter CRRT v1 instructional-tool synthetic calibration record',
     sourceType: 'synthetic-calibration' as const,
-    documentVersion: 'v1 SME-review build',
+    documentVersion: 'v1 authored teaching calibration · no clinical review recorded',
     pageOrSection:
       'Citrate first-use terms, mechanism walk, and four-way comparison · authored schematic boundary',
     implementationLocation:

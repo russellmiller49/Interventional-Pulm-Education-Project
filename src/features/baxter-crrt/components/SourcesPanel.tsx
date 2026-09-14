@@ -1,12 +1,15 @@
 import { BookOpenCheck, FileWarning, LockKeyhole, ShieldCheck } from 'lucide-react'
 
 import { prismaxDeviceProfile } from '../content/deviceProfiles'
+import { baxterCrrtLearnerFacingSourceById } from '../content/learnerSourceMap'
 import {
   baxterCrrtPilotSourceReferences,
   baxterCrrtSourceDocuments,
   baxterCrrtSourceRecords,
 } from '../content/provenance'
+import { CRRT_SOURCE_DATING } from '../content/sourceReviewMetadata'
 import styles from './baxter-crrt.module.css'
+import { CrrtSourceDating } from './CrrtSourceDating'
 
 function learnerEvidenceText(value: string): string {
   return value
@@ -34,6 +37,13 @@ export function SourcesPanel() {
     (source) =>
       source.sourceType === 'peer-reviewed' || source.sourceType === 'synthetic-calibration',
   )
+
+  // The dated batch is shown here, on the hub, so it never waits on a lesson, answer or case.
+  const datedSources = [...CRRT_SOURCE_DATING.keys()].map((id) => {
+    const source = baxterCrrtLearnerFacingSourceById.get(id)
+    if (!source) throw new Error(`Dated CRRT source ${id} does not resolve to a learner citation.`)
+    return source
+  })
 
   if (!primarySource) throw new Error('Baxter CRRT primary source is not configured.')
 
@@ -147,6 +157,30 @@ export function SourcesPanel() {
               </article>
             )
           })}
+        </div>
+      </details>
+
+      <details className={styles.inactiveSources} data-source-batch="g01-crrt">
+        <summary>
+          <BookOpenCheck aria-hidden="true" /> Pressure calculations and citrate sources: dates,
+          source type and checks ({datedSources.length})
+        </summary>
+        <p>
+          Each check compared the module with the document it cites. None is a clinical or device
+          review, and no reviewer decision is recorded for these sources yet.
+        </p>
+        <div className={styles.sourceClaimGrid}>
+          {datedSources.map((source) => (
+            <article key={source.id} className={styles.sourceClaim}>
+              <h3>{source.sourceTitle}</h3>
+              <p className={styles.sourceIdentity}>{source.documentVersion}</p>
+              <p>
+                <strong>Relevant section:</strong> {source.pageOrSection}
+              </p>
+              <p>{learnerEvidenceText(source.claim)}</p>
+              <CrrtSourceDating sourceId={source.id} />
+            </article>
+          ))}
         </div>
       </details>
 

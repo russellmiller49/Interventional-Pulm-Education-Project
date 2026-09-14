@@ -1,0 +1,472 @@
+{
+  "queue": "G01-CRRT-B1",
+  "title": "CRRT sources and clinical review: first G01 batch",
+  "status": "NOT REVIEWED. No reviewer decision is recorded. An empty decision is not approval.",
+  "preparedOn": "2026-09-14",
+  "preparedBy": "AI authoring assistant (Claude), at the owner's request, for prompt G01 of the v2 self-paced action pack. The assistant prepared the items and checked source identity and locations only. It is not a reviewer.",
+  "module": "baxter-crrt",
+  "moduleContentVersion": "1.1.0-sme-review.1",
+  "baseCommit": "dea4e80d",
+  "decisionValues": ["NOT REVIEWED", "APPROVE AS SCOPED", "REVISE", "REJECT", "UNCERTAIN"],
+  "howToRecordADecision": "Replace NOT REVIEWED only with your own decision, name, role, the actual review date and the commit or content version you reviewed. A decision covers that item's scope only: the accuracy of the explanation and of the simulated consequence, not a learner and not the module. Record required changes and disagreement in their fields. A later wording change re-opens the item.",
+  "sourceDocumentChecked": {
+    "id": "PRISMAX-AW8035-RB",
+    "localCopy": "Interventional-Pulm-Local-Data/device-manuals/critical-care/708933961-Prismax-Operator-s-Manual (1).pdf",
+    "sha256": "204543b8c205e535cb9d45c970b8231362839177f3795b6164edcef3b834f1ff",
+    "matchesRegisteredHash": true,
+    "pages": 353,
+    "footerOnCheckedPages": "AW8035 Rev B JUN2019 · Program version: 2.XX",
+    "checkedOn": "2026-09-14",
+    "checkedBy": "AI authoring assistant (Claude)",
+    "scope": "File identity and the pages cited by MATH-PM-002 and DEV-PM-010 (PDF pp202, 203, 218). Not a device or clinical review. Later PrisMax software and manuals were not available."
+  },
+  "notAvailableForChecking": [
+    "Prismaflex Operator's Manual G5036003 Revision 05.2011 (no local copy found by filename)",
+    "PrisMax specifications sheet NOR-AT21-230020",
+    "The three citrate publications (SIAARTI-SIN 2023, Schneider 2017, 2026 ICU RRT guideline)",
+    "KDIGO 2012 AKI guideline"
+  ],
+  "items": [
+    {
+      "id": "G01-CRRT-01",
+      "gapIds": ["CRRT-04"],
+      "topic": "Displayed TMP expression",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/baxter-crrt/content/circuitModel.ts",
+          "locator": "TMP pressure detail, 'What produces it' (live pressure view and circuit pressure tools)",
+          "excerpt": "subtracts the effluent pressure, and applies a fixed display offset of"
+        },
+        {
+          "file": "src/features/baxter-crrt/components/CrrtPilotCircuit.tsx",
+          "locator": "Pressure-profile overlay: derivation label on the circuit diagram",
+          "excerpt": "TMP = (FILTER + RETURN)/2 − EFFLUENT {PRISMAX_TMP_HYDROSTATIC_OFFSET_MMHG} mmHg"
+        }
+      ],
+      "learnerWording": "What produces it: “The device averages the filter and return pressures, subtracts the effluent pressure, and applies a fixed display offset of -18 mmHg. It describes the pressure difference across the membrane, not a place you can inspect.” Diagram label: “TMP = (FILTER + RETURN)/2 − EFFLUENT -18 mmHg”.",
+      "visual": "Derivation label beside the filter on the simulated circuit, bracketed to the filter, return and effluent readouts.",
+      "intendedTeachingPoint": "TMP has no sensor. It is calculated from three readings, and the fixed −18 mmHg term in the displayed expression is not an alarm limit.",
+      "sourceRecordIds": ["MATH-PM-002"],
+      "sourceDocumentIds": ["PRISMAX-AW8035-RB"],
+      "supportingLocation": "PrisMax Operator's Manual AW8035 Rev B JUN2019, program version 2.XX; manual p217 / PDF p218, section 'Transmembrane pressure and filter drop'. The printed expression is TMP = [(Pfil + Pret) / 2] − Peff − 18 mmHg.",
+      "sourceCheck": {
+        "on": "2026-09-14",
+        "by": "AI authoring assistant (Claude)",
+        "result": "The expression is on PDF p218 exactly as registered and as implemented in engine/pressureModel.ts.",
+        "notChecked": "Whether later PrisMax software uses the same expression, and how the console labels the term."
+      },
+      "limitation": "Program version 2.XX only. The manual prints the −18 mmHg term without naming it; “fixed display offset” is the module's own wording.",
+      "clinicalDecisionNeeded": "PrisMax device educator or operator: confirm the expression and the wording “fixed display offset”, and whether current software and manuals still display TMP this way (see G01-CRRT-04).",
+      "hold": "No hold on the expression itself. Currency is held under G01-CRRT-04.",
+      "changeInThisBatch": "Source type, publication date, revision and both document checks now appear in the hub evidence panel. Learner wording and the calculation are unchanged.",
+      "contentVersion": "baxter-crrt 1.1.0-sme-review.1 · branch claude/g01-source-review from dea4e80d",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChange": null,
+        "unresolvedDisagreement": null
+      }
+    },
+    {
+      "id": "G01-CRRT-02",
+      "gapIds": ["CRRT-04"],
+      "topic": "Filter pressure drop and the −25 mmHg correction",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/baxter-crrt/content/circuitModel.ts",
+          "locator": "Filter pressure drop detail, 'Where it comes from' and 'What produces it'",
+          "excerpt": "Filter pressure minus return pressure. The PrisMax AW8035 manual says those two readings are corrected for a"
+        },
+        {
+          "file": "src/features/baxter-crrt/components/CrrtPilotCircuit.tsx",
+          "locator": "Pressure-profile overlay: derivation label on the circuit diagram (unchanged)",
+          "excerpt": "FILTER DROP = FILTER − RETURN {PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG} mmHg"
+        },
+        {
+          "file": "src/features/baxter-crrt/content/phase7ReviewSources.ts",
+          "locator": "DEV-PM-010 record that learner citations resolve to (lesson source lists, evidence drawer, hub panel)",
+          "excerpt": "PrisMax presents filter pressure drop as filter minus return pressure and documents a sensor-height correction of the filter and return readings."
+        },
+        {
+          "file": "src/features/baxter-crrt/engine/pressureModel.ts",
+          "locator": "Constant applied to the simulated drop (calculation unchanged)",
+          "excerpt": "export const PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG = -25"
+        }
+      ],
+      "learnerWording": "Where it comes from: “Nowhere. Filter pressure drop has no transducer of its own. It is calculated from the filter and return readings.” What produces it: “Filter pressure minus return pressure. The PrisMax AW8035 manual says those two readings are corrected for a -25 mmHg sensor-height bias; this simulation applies the -25 mmHg to the drop itself, which awaits device review. It describes how hard it is to push blood through the filter and the return limb.” Diagram label (unchanged): “FILTER DROP = FILTER − RETURN -25 mmHg”. Citation claim: “PrisMax presents filter pressure drop as filter minus return pressure and documents a sensor-height correction of the filter and return readings.”",
+      "previousWording": "Where it comes from: “… the difference between the filter and return readings, plus a fixed device display offset.” What produces it: “The device subtracts the return pressure from the filter pressure and applies a fixed display offset of -25 mmHg. …” Citation claim: “… a filter-to-return pressure relationship with a documented display correction.”",
+      "visual": "Derivation label on the simulated circuit. The simulated drop readout is (raw filter − raw return) − 25 mmHg.",
+      "intendedTeachingPoint": "Filter pressure drop has no sensor. It is calculated from the filter and return readings, rises with blood flow across unchanged resistance, and is watched for clotting or fouling.",
+      "sourceRecordIds": ["DEV-PM-010"],
+      "sourceDocumentIds": ["PRISMAX-AW8035-RB"],
+      "supportingLocation": "AW8035 manual pp201–202 / PDF pp202–203, section 'Filter pressure drop'. The printed expression is ∆Pfil = Pfil − Pret. The next paragraph states that the filter and return pressure readings are automatically corrected for a −25 mmHg hydrostatic bias caused by the sensors' different heights.",
+      "sourceCheck": {
+        "on": "2026-09-14",
+        "by": "AI authoring assistant (Claude)",
+        "result": "The drop expression is printed with no −25 mmHg term, and the −25 mmHg correction is stated for the filter and return readings. The model instead applies −25 mmHg to the drop (engine/pressureModel.ts), taking inputs it names raw filter and return pressures.",
+        "notChecked": "Console behaviour. The Prismaflex manual (not available): record DEV-PF-005 describes a displayed, hydrostatically corrected drop there, which may be where the model's placement came from."
+      },
+      "limitation": "Program version 2.XX. Where the correction belongs is an interpretation until a device reviewer decides.",
+      "clinicalDecisionNeeded": "PrisMax device educator, with manufacturer documentation if needed: on the console, does the displayed filter pressure drop equal displayed filter pressure minus displayed return pressure, or differ from it by 25 mmHg? Then keep the model, or change engine/pressureModel.ts, the derivation label and the pressure-profile numbers to match.",
+      "hold": "Narrow hold on where the −25 mmHg correction is applied. Learner wording no longer attributes the model's placement to the manual. The simulated numbers, the diagram label and the tests that pin them are unchanged until the decision.",
+      "changeInThisBatch": "Learner wording corrected in content/circuitModel.ts and content/foundationLessons.ts (G01-CRRT-03). Record text corrected in content/provenance.ts and content/phase7ReviewSources.ts. Engine comment corrected. Dated in the hub evidence panel. Calculation unchanged.",
+      "contentVersion": "baxter-crrt 1.1.0-sme-review.1 · branch claude/g01-source-review from dea4e80d",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChange": null,
+        "unresolvedDisagreement": null
+      }
+    },
+    {
+      "id": "G01-CRRT-03",
+      "gapIds": ["CRRT-04"],
+      "topic": "Foundation teaching sentence stating both expressions",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/baxter-crrt/content/foundationLessons.ts",
+          "locator": "Foundation guided task on the pressure-sites tool (example normal-circuit-100), second teaching paragraph",
+          "excerpt": "For filter drop it prints filter − return and says the filter and return readings are corrected for a"
+        }
+      ],
+      "learnerWording": "“TMP and filter pressure drop are calculated from the monitored readings; neither has its own sensor. The PrisMax AW8035 manual prints TMP = (filter + return) / 2 − effluent -18 mmHg. For filter drop it prints filter − return and says the filter and return readings are corrected for a -25 mmHg sensor-height bias. This simulation applies that -25 mmHg to the drop itself; whether a console's displayed values follow that arithmetic awaits device review. Neither constant is an alarm threshold.”",
+      "previousWording": "“TMP and filter pressure drop are calculated from the raw monitored readings. For the pinned PrisMax AW8035 profile, displayed TMP = (filter + return) / 2 − effluent -18 mmHg; displayed filter drop = filter − return -25 mmHg. These fixed device display offsets are not alarm thresholds. Neither calculated value has its own sensor.”",
+      "visual": "Text beside the six pressure readouts in the guided task.",
+      "intendedTeachingPoint": "Neither calculated pressure has its own sensor, and neither constant is an alarm threshold.",
+      "sourceRecordIds": ["MATH-PM-002", "DEV-PM-010"],
+      "sourceDocumentIds": ["PRISMAX-AW8035-RB"],
+      "supportingLocation": "As G01-CRRT-01 (PDF p218) and G01-CRRT-02 (PDF pp202–203).",
+      "sourceCheck": {
+        "on": "2026-09-14",
+        "by": "AI authoring assistant (Claude)",
+        "result": "The previous sentence stated the filter-drop arithmetic as the manual's; the manual does not print it. The TMP part matched.",
+        "notChecked": "Console behaviour."
+      },
+      "limitation": "Program version 2.XX; the filter-drop sentence shares G01-CRRT-02's hold.",
+      "clinicalDecisionNeeded": "As G01-CRRT-01 and -02, plus whether the added sentence about the simulation is clear enough for a novice.",
+      "hold": "Shares G01-CRRT-02's hold.",
+      "changeInThisBatch": "Wording corrected as shown. Constants and calculation unchanged.",
+      "contentVersion": "baxter-crrt 1.1.0-sme-review.1 · branch claude/g01-source-review from dea4e80d",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChange": null,
+        "unresolvedDisagreement": null
+      }
+    },
+    {
+      "id": "G01-CRRT-04",
+      "gapIds": ["CRRT-04"],
+      "topic": "Identity and currency of the PrisMax manual behind every device display claim",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/baxter-crrt/components/SourcesPanel.tsx",
+          "locator": "Hub evidence panel, source profile list",
+          "excerpt": "<dt>Document identity</dt>"
+        },
+        {
+          "file": "src/features/baxter-crrt/content/provenance.ts",
+          "locator": "PRISMAX-AW8035-RB source document",
+          "excerpt": "documentIdentity: 'AW8035 Rev B JUN2019 · program 2.XX',"
+        }
+      ],
+      "learnerWording": "Hub evidence panel: “Primary device source: PrisMax Operator's Manual” and “Document identity: AW8035 Rev B JUN2019 · program 2.XX”. Safety notice: “Use current manufacturer instructions, authorized local protocols, supervision, and clinical judgment for patient care.”",
+      "visual": "Definition list at the top of the hub evidence panel.",
+      "intendedTeachingPoint": "Device facts come from one identified manual revision, which a learner should compare with the instructions for their own console.",
+      "sourceRecordIds": [],
+      "sourceDocumentIds": ["PRISMAX-AW8035-RB"],
+      "supportingLocation": "Page footer on every checked page: “AW8035 Rev B JUN2019” and “Program version: 2.XX”.",
+      "sourceCheck": {
+        "on": "2026-09-14",
+        "by": "AI authoring assistant (Claude)",
+        "result": "The local file's SHA-256 matches the registered hash; 353 pages; footer as above. An earlier identity check on 2026-07-27 is recorded without a checker in docs/critical-care/source-manifest.json, together with its finding that the document is not a supposed later 'D0.3' release.",
+        "notChecked": "Any later PrisMax manual or software version."
+      },
+      "limitation": "The manifest's currency note says PrisMax software has advanced since program version 2.XX and that a newer operator's manual would supersede this one for display claims. No newer manual is available to the module.",
+      "clinicalDecisionNeeded": "Owner or device educator: supply the operator's manual revision for the software the module should describe, or confirm that display claims stay scoped to program 2.XX.",
+      "hold": "Display claims stay scoped to program 2.XX. The module makes no claim about current consoles.",
+      "changeInThisBatch": "Publication date, revision and checks now shown separately in the hub evidence panel for MATH-PM-002 and DEV-PM-010.",
+      "contentVersion": "baxter-crrt 1.1.0-sme-review.1 · branch claude/g01-source-review from dea4e80d",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChange": null,
+        "unresolvedDisagreement": null
+      }
+    },
+    {
+      "id": "G01-CRRT-05",
+      "gapIds": ["CRRT-07"],
+      "topic": "SIAARTI-SIN citrate expert opinion: source type and dates",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/baxter-crrt/content/citrateSources.ts",
+          "locator": "Citrate source records CITRATE-SIAARTI-2023-MECHANISM and -SAMPLING",
+          "excerpt": "Pistolesi et al. J Anesth Analg Crit Care. 2023;3:7 · PMID 37386664"
+        },
+        {
+          "file": "src/features/baxter-crrt/components/CrrtCitrateDifferential.tsx",
+          "locator": "Citrate comparison, 'Sources for this explanation' (also the lesson source list and the hub panel)",
+          "excerpt": "<summary>Sources for this explanation</summary>"
+        }
+      ],
+      "learnerWording": "“Regional citrate anticoagulation: SIAARTI-SIN joint commission expert opinion · Pistolesi et al. J Anesth Analg Crit Care. 2023;3:7 · PMID 37386664.” then the record's section locator, then: “Source type: Expert opinion, not a guideline recommendation or a trial” · “Published: 2023” · “Checked against the document on 2026-09-13 (checker not recorded): The cited passages were read while the citrate comparison was written. The reader is not recorded.” · “Limit: Classed as expert opinion from its own title (joint-commission expert opinion). It was not re-read for this batch.” · “Clinical and device review: none recorded yet.”",
+      "previousWording": "“… · PMID 37386664 · full relevant passages read 2026-09-13. <section locator>. Review: pending.”",
+      "visual": "Collapsed source list under the citrate comparison.",
+      "intendedTeachingPoint": "Show which publication, and what kind of publication, supports the citrate mechanism and sampling statements.",
+      "sourceRecordIds": ["CITRATE-SIAARTI-2023-MECHANISM", "CITRATE-SIAARTI-2023-SAMPLING"],
+      "sourceDocumentIds": [],
+      "supportingLocation": "MECHANISM: Section 1, Rationale, paragraph beginning “During RCA”; Section 2 modality context. SAMPLING: Section 4, Rationale, monitoring discussion after the accumulation triad; Section 5, Rationale, calcium mass balance. DOI 10.1186/s44158-023-00091-w.",
+      "sourceCheck": {
+        "on": null,
+        "by": null,
+        "result": "Not re-read in G01; no local copy. The earlier reading date (2026-09-13, reader not recorded, commit f545f03e) was moved out of the citation text into a dated check.",
+        "notChecked": "Whether each passage supports the statement it is attached to."
+      },
+      "limitation": "Expert opinion. The registry schema has no expert-opinion class, so its sourceType stays 'peer-reviewed'; the learner-facing type comes from content/sourceReviewMetadata.ts.",
+      "clinicalDecisionNeeded": "Critical-care or nephrology faculty: confirm each located passage supports the statement it is cited for (the crrtSourceSupportsClaim topics), and whether expert opinion is adequate support for those statements.",
+      "hold": "Statements unchanged and labelled as expert opinion. No stronger support is implied.",
+      "changeInThisBatch": "Reading date moved into a dated check. Source type and publication year shown on separate lines in the citrate comparison, the lesson source list and the hub panel.",
+      "contentVersion": "baxter-crrt 1.1.0-sme-review.1 · branch claude/g01-source-review from dea4e80d",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChange": null,
+        "unresolvedDisagreement": null
+      }
+    },
+    {
+      "id": "G01-CRRT-06",
+      "gapIds": ["CRRT-07"],
+      "topic": "Schneider 2017 citrate viewpoint: source type and dates",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/baxter-crrt/content/citrateSources.ts",
+          "locator": "Citrate source records CITRATE-SCHNEIDER-2017-METABOLISM and -PATTERNS",
+          "excerpt": "Schneider, Journois and Rimmelé. Critical Care. 2017;21:281"
+        },
+        {
+          "file": "src/features/baxter-crrt/components/CrrtCitrateDifferential.tsx",
+          "locator": "Citrate comparison, 'Sources for this explanation' (also the lesson source list and the hub panel)",
+          "excerpt": "<summary>Sources for this explanation</summary>"
+        }
+      ],
+      "learnerWording": "“Complications of regional citrate anticoagulation: accumulation or overload? · Schneider, Journois and Rimmelé. Critical Care. 2017;21:281.” then the record's section locator, then: “Source type: Expert opinion, not a guideline recommendation or a trial” · “Published: 2017” · “Checked against the document on 2026-09-13 (checker not recorded): …” · “Limit: Classed as expert opinion from the article type recorded when it was added (expert viewpoint). It was not re-read for this batch.” · “Clinical and device review: none recorded yet.”",
+      "previousWording": "“… 2017;21:281 · expert viewpoint · passages read 2026-09-13. <section locator>. Review: pending.”",
+      "visual": "Collapsed source list under the citrate comparison.",
+      "intendedTeachingPoint": "Show which publication, and what kind of publication, supports the citrate metabolism and accumulation-pattern statements.",
+      "sourceRecordIds": ["CITRATE-SCHNEIDER-2017-METABOLISM", "CITRATE-SCHNEIDER-2017-PATTERNS"],
+      "sourceDocumentIds": [],
+      "supportingLocation": "METABOLISM: General principles (principles of citrate anticoagulation, calcium infusion sites); Citrate clearance and metabolism; Citrate and acid-base balance. PATTERNS: Citrate accumulation and alternative diagnoses (citrate accumulation, net citrate overload, insufficient trisodium-citrate delivery); Table 1. DOI 10.1186/s13054-017-1880-1.",
+      "sourceCheck": {
+        "on": null,
+        "by": null,
+        "result": "Not re-read in G01; no local copy. The earlier reading date (2026-09-13, reader not recorded, commit f545f03e) was moved out of the citation text into a dated check.",
+        "notChecked": "Whether each passage supports the statement it is attached to."
+      },
+      "limitation": "Expert viewpoint article. The registry schema keeps sourceType 'peer-reviewed'; the learner-facing type comes from content/sourceReviewMetadata.ts.",
+      "clinicalDecisionNeeded": "Critical-care or nephrology faculty: confirm each located passage supports the statement it is cited for, and whether an expert viewpoint is adequate support for those statements.",
+      "hold": "Statements unchanged and labelled as expert opinion.",
+      "changeInThisBatch": "Reading date and article type moved out of the citation text. Source type and publication year shown on separate lines.",
+      "contentVersion": "baxter-crrt 1.1.0-sme-review.1 · branch claude/g01-source-review from dea4e80d",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChange": null,
+        "unresolvedDisagreement": null
+      }
+    },
+    {
+      "id": "G01-CRRT-07",
+      "gapIds": ["CRRT-07"],
+      "topic": "2026 ICU RRT guideline cited for citrate monitoring: dates and recommendation strength",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/baxter-crrt/content/citrateSources.ts",
+          "locator": "Citrate source record CITRATE-ICU-GUIDE-2026-SAFETY",
+          "excerpt": "Critical Care. 2026;30:46 · PMID 41535952"
+        },
+        {
+          "file": "src/features/baxter-crrt/content/citrateSources.ts",
+          "locator": "Same record, title",
+          "excerpt": "Multidisciplinary guidelines on renal replacement therapy in intensive care medicine"
+        }
+      ],
+      "learnerWording": "“Multidisciplinary guidelines on renal replacement therapy in intensive care medicine · Critical Care. 2026;30:46 · PMID 41535952.” then the section locator, then: “Source type: Clinical practice guideline” · “Published: 2026” · “Checked against the document on 2026-09-13 (checker not recorded): …” · “Limit: Recommendation strength and certainty are not recorded in the module and were not checked for this batch.” · “Clinical and device review: none recorded yet.”",
+      "previousWording": "“… · PMID 41535952 · passages read 2026-09-13. <section locator>. Review: pending.”",
+      "visual": "Collapsed source list under the citrate comparison.",
+      "intendedTeachingPoint": "Show that the monitoring statement is supported by a clinical guideline, and what the module does not yet record about it.",
+      "sourceRecordIds": ["CITRATE-ICU-GUIDE-2026-SAFETY"],
+      "sourceDocumentIds": [],
+      "supportingLocation": "Section 4 recommendations 4.4–4.6; Adverse events in RCA; RCA in liver failure. DOI 10.1186/s13054-025-05817-6.",
+      "sourceCheck": {
+        "on": null,
+        "by": null,
+        "result": "Not re-read in G01; no local copy. The earlier reading date (2026-09-13, reader not recorded) was moved into a dated check.",
+        "notChecked": "Recommendation strength and certainty; whether recommendations 4.4–4.6 support the monitoring statement."
+      },
+      "limitation": "The same publication is also registered as GUID-RRT-ICU-2026 with a different set of recommendations as locators.",
+      "clinicalDecisionNeeded": "Faculty: record the strength and certainty of recommendations 4.4–4.6 from the guideline, and confirm they support the monitoring statement they are cited for.",
+      "hold": "No strength or certainty is shown until a reviewer supplies it from the guideline.",
+      "changeInThisBatch": "Reading date moved into a dated check. Source type and publication year shown on separate lines.",
+      "contentVersion": "baxter-crrt 1.1.0-sme-review.1 · branch claude/g01-source-review from dea4e80d",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChange": null,
+        "unresolvedDisagreement": null
+      }
+    },
+    {
+      "id": "G01-CRRT-08",
+      "gapIds": [],
+      "topic": "Unregistered KDIGO link in the fluid-liberation lesson",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/baxter-crrt/components/CrrtFoundationLesson.tsx",
+          "locator": "Fluid-liberation lesson, 'Explanation, sources and limits'",
+          "excerpt": "KDIGO 2012 AKI guideline, chapter 5.2"
+        },
+        {
+          "file": "src/features/baxter-crrt/components/CrrtFoundationLesson.tsx",
+          "locator": "Same paragraph, hard-coded link",
+          "excerpt": "https://kdigo.org/wp-content/uploads/2019/01/KDIGO-2012-AKI-Guideline-English.pdf"
+        }
+      ],
+      "learnerWording": "“Clinical reassessment reference: KDIGO 2012 AKI guideline, chapter 5.2. This supplies conceptual stopping/reassessment guidance, not a device procedure or a universal threshold. Clinical review of this teaching remains pending.”",
+      "visual": "Linked paragraph in the collapsed lesson source list.",
+      "intendedTeachingPoint": "Stopping or reassessing CRRT is a clinical decision framed by guidance, not a device procedure or a universal threshold.",
+      "sourceRecordIds": ["GUID-KDIGO-AKI-2012"],
+      "sourceDocumentIds": [],
+      "supportingLocation": "The link text cites “chapter 5.2”. The registered record GUID-KDIGO-AKI-2012 lists sections 5.1.1, 5.1.2, 5.6.2, 5.8.1, 5.8.2 and 5.8.4 at a different URL path (/2016/10/). The lesson's own source list does not include GUID-KDIGO-AKI-2012.",
+      "sourceCheck": {
+        "on": null,
+        "by": null,
+        "result": "Not checked: no local copy, and neither URL was fetched.",
+        "notChecked": "Which section supports the wording; which URL is the canonical document."
+      },
+      "limitation": "The citation is hard-coded in the component instead of resolving from the registry, so its locator and URL can drift from the record.",
+      "clinicalDecisionNeeded": "Faculty: name the KDIGO section that supports the reassessment wording and the canonical URL, so the lesson can cite it through the registry.",
+      "hold": "Link and wording unchanged.",
+      "changeInThisBatch": "None.",
+      "contentVersion": "baxter-crrt 1.1.0-sme-review.1 · branch claude/g01-source-review from dea4e80d",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChange": null,
+        "unresolvedDisagreement": null
+      }
+    },
+    {
+      "id": "G01-CRRT-09",
+      "gapIds": [],
+      "topic": "Prismaflex-to-PrisMax transfer note cites no source",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/baxter-crrt/content/learnLessons.ts",
+          "locator": "Advanced block 'If you previously trained on Prismaflex'",
+          "excerpt": "Carry over the clinical verification domains—not memorized screen sequences."
+        }
+      ],
+      "learnerWording": "“If you previously trained on Prismaflex. Carry over the clinical verification domains—not memorized screen sequences. PrisMax uses its own procedure workflow, terminology, scale topology, calculation displays, alarm presentation, and stop/end controls. Confirm every workflow against the current PrisMax instructions and local configuration.”",
+      "visual": "Optional advanced text block.",
+      "intendedTeachingPoint": "Clinical verification habits carry over between device generations; screen sequences do not.",
+      "sourceRecordIds": [],
+      "sourceDocumentIds": ["PRISMAFLEX-G5036003-R05", "PRISMAX-AW8035-RB"],
+      "supportingLocation": "None cited. The registered Prismaflex records (DEV-PF-001 to DEV-PF-008, CONFLICT-010) appear in the hub panel but are not linked to this note.",
+      "sourceCheck": {
+        "on": null,
+        "by": null,
+        "result": "Not checked: no local copy of Prismaflex manual G5036003 Revision 05.2011 was found by filename.",
+        "notChecked": "Each named difference between the two devices."
+      },
+      "limitation": "Two device generations. The listed differences are unsourced as presented.",
+      "clinicalDecisionNeeded": "Device educator: confirm the named differences against both manuals and cite them, or shorten the note to the verification advice.",
+      "hold": "Unchanged.",
+      "changeInThisBatch": "None.",
+      "contentVersion": "baxter-crrt 1.1.0-sme-review.1 · branch claude/g01-source-review from dea4e80d",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChange": null,
+        "unresolvedDisagreement": null
+      }
+    },
+    {
+      "id": "G01-CRRT-10",
+      "gapIds": [],
+      "topic": "Labels that could be read as a completed review",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/baxter-crrt/components/BaxterCrrtModuleFrame.tsx",
+          "locator": "Language note on non-English routes",
+          "excerpt": "<strong>English fallback</strong>"
+        },
+        {
+          "file": "src/features/baxter-crrt/content/phase7ReviewSources.ts",
+          "locator": "Version text of the nine simulated-value source records (evidence drawer, lesson source lists)",
+          "excerpt": "v1 authored teaching calibration · no clinical review recorded"
+        },
+        {
+          "file": "src/features/baxter-crrt/components/BaxterCrrtModuleFrame.tsx",
+          "locator": "Release label (not shown while the release stage is unlisted-preview)",
+          "excerpt": "baxterCrrtReleaseStage === 'published' ? 'Reviewed release' : 'Unlisted preview'"
+        }
+      ],
+      "learnerWording": "Now: “English fallback” on non-English routes, and “v1 authored teaching calibration · no clinical review recorded” as the version text of simulated-value sources. Unchanged and not shown today: “Reviewed release”, displayed only if the release stage becomes 'published'.",
+      "previousWording": "“Reviewed-English fallback”; “v1 SME-review build”.",
+      "visual": "Small note and source-list text.",
+      "intendedTeachingPoint": "A status label must not imply a review that no record documents.",
+      "sourceRecordIds": [],
+      "sourceDocumentIds": [],
+      "supportingLocation": "No review record: every CRRT source record has reviewer null and status pending, and docs/baxter-crrt/final-sme-checklist.md is a blank checklist.",
+      "sourceCheck": {
+        "on": "2026-09-14",
+        "by": "AI authoring assistant (Claude)",
+        "result": "Searched the module's TypeScript and TSX for review wording shown to learners.",
+        "notChecked": "Rendered wording in other shared critical-care surfaces (hub and pathway 'Preview · clinical review' labels)."
+      },
+      "limitation": "The module content version (1.1.0-sme-review.1) keeps its name: changing it would invalidate saved progress.",
+      "clinicalDecisionNeeded": "Owner: before any publication, name the review record that a 'Reviewed release' label would stand for, or relabel it.",
+      "hold": "“Reviewed release” unchanged; the release stage stays unlisted-preview.",
+      "changeInThisBatch": "Two labels renamed; the scaffold test assertion updated.",
+      "contentVersion": "baxter-crrt 1.1.0-sme-review.1 · branch claude/g01-source-review from dea4e80d",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChange": null,
+        "unresolvedDisagreement": null
+      }
+    }
+  ]
+}
