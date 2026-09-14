@@ -1,10 +1,12 @@
-import { cleanup } from '@testing-library/react'
+import { cleanup, fireEvent } from '@testing-library/react'
 import { peripheralImagingSectionIds } from '../content/pathway'
 import { imagingStageLesson } from '../content/stageLessons'
 import { hasIndependentImagePanel } from '../components/stage/TeachingPanels'
 import {
   installDom,
   mountSection,
+  nowSecondary,
+  nowSkip,
   reachIndependent,
   currentStepId,
 } from '../test-support/stageHarness'
@@ -43,9 +45,18 @@ afterEach(() => {
   jest.useRealTimers()
 })
 
-describe('teaching and independent disclosure have separate boundaries', () => {
+/*
+ * Contract change (PI-01, owner decision 2026-09-14). This file used to hold blanket pre-answer
+ * secrecy: at a pending check the teaching column was replaced by one sentence, source claims
+ * were withheld, and no explanation could be reached without committing an answer. The self-paced
+ * contract keeps two things from it — teaching comes first, and a check's example image stays fixed
+ * while it is read — and replaces the rest: everything the section taught stays one disclosure away,
+ * sources say what they are cited for, and the check's own explanation is the one thing that waits,
+ * for the learner to open it before or instead of answering. Opening it answers nothing.
+ */
+describe('a check keeps its explanation for the learner to open, and hides no teaching', () => {
   it.each(peripheralImagingSectionIds)(
-    '%s teaches before asking and protects its pending item',
+    '%s teaches first, keeps its teaching reachable at the check, and explains on request',
     (sectionId) => {
       const lesson = imagingStageLesson(sectionId)
       mountSection(sectionId)
@@ -55,21 +66,42 @@ describe('teaching and independent disclosure have separate boundaries', () => {
       ).not.toBeNull()
       expect(document.querySelector('[data-teaching-block="boundary"]')).not.toBeNull()
       expect(document.querySelector('[data-answer-verdict]')).toBeNull()
+
       reachIndependent(lesson)
       expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex].id)
+      const check = lesson.steps[lesson.predictionStepIndex].interaction
+      if (check.kind !== 'prediction') throw new Error('Missing interpretation')
       expect(document.querySelector('[data-prediction-choices]')).not.toBeNull()
       expect(document.querySelector('[data-chain-answer]')).toBeNull()
       expect(document.querySelector('[data-answer-verdict], [data-chain-outcome]')).toBeNull()
-      expect(document.querySelector('[data-independent-foundations]')).not.toBeNull()
-      expect(
-        document.querySelector(
-          '[data-teaching-block="control-strip"], [data-teaching-block="grammar"], [data-recall-answer]',
-        ),
-      ).toBeNull()
+
+      // Nothing the section taught is withheld: every block is one disclosure away.
+      expect(document.querySelector('[data-check-teaching] [data-teaching-review]')).not.toBeNull()
+      for (const block of lesson.lesson.blocks) {
+        const nodes = [...document.querySelectorAll('[data-review-ref]')].filter(
+          (node) => node.getAttribute('data-review-ref') === block.title,
+        )
+        expect(nodes).toHaveLength(1)
+        expect(nodes[0]).toHaveTextContent(block.body)
+      }
       expect(document.querySelector('[data-stage-sources]')).toHaveAttribute(
         'data-stage-sources-claims',
-        'false',
+        'true',
       )
+
+      // The check's own explanation waits for the learner, not for an answer.
+      expect(document.querySelector('[data-explanation-reveal]')).toBeNull()
+      expect(nowSkip()).not.toBeNull()
+      const show = nowSecondary()!
+      expect(show).toHaveTextContent('Show the explanation')
+      fireEvent.click(show)
+      const panel = document.querySelector('[data-explanation-reveal]')!
+      expect(panel).toHaveTextContent(check.item.explanation)
+      for (const choice of check.item.choices) expect(panel).toHaveTextContent(choice.rationale)
+      expect(document.querySelector('[data-answer-verdict]')).toBeNull()
+      expect(document.querySelectorAll('[data-prediction-choices] input:checked')).toHaveLength(0)
+
+      // The example image stays fixed while it is read.
       if (hasIndependentImagePanel(sectionId)) {
         expect(document.querySelector('[data-independent-image-panels]')).not.toBeNull()
         expect(document.querySelector('[data-suite-scene]')).toBeNull()
@@ -79,13 +111,6 @@ describe('teaching and independent disclosure have separate boundaries', () => {
       expect(
         document.querySelector('[data-readout="depthMm"], [data-readout="windowLabel"]'),
       ).toBeNull()
-      const prediction = lesson.steps[lesson.predictionStepIndex].interaction
-      if (prediction.kind !== 'prediction') throw new Error('Missing interpretation')
-      const outsideChoices = document.body.cloneNode(true) as HTMLElement
-      outsideChoices.querySelector('[data-prediction-choices]')?.remove()
-      expect(outsideChoices.textContent).not.toContain(prediction.item.explanation)
-      for (const choice of prediction.item.choices)
-        expect(outsideChoices.textContent).not.toContain(choice.rationale)
     },
   )
 })

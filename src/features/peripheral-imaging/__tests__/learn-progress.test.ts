@@ -1,20 +1,28 @@
 /**
  * @jest-environment node
  */
-import { QUESTION_BY_ID } from '../data/questions'
 import {
-  createEmptyImagingRecord,
+  LEGACY_IMAGING_RECORD_KEY_V1,
+  LEGACY_IMAGING_RECORD_KEY_V2,
   migrateImagingRecordFromV1,
   parseImagingRecord,
   parseLegacyImagingRecord,
-  withFirstAttempt,
-  withSectionCompleted,
-  withSectionVisited,
 } from '../engine/learnProgress'
 
 const NOW = '2026-09-08T12:00:00.000Z'
 
-describe('the module record', () => {
+/*
+ * Contract change (PI-01). The course no longer writes these records — the tests for writing a
+ * first attempt once, and for recording visits and completions into the v2 record, were retired
+ * with the writers. What stays is that historical bytes remain interpretable exactly as before;
+ * `self-paced-progress.test.tsx` holds that nothing current reads or writes them.
+ */
+describe('the legacy records, read-only', () => {
+  it('keeps the historical storage keys', () => {
+    expect(LEGACY_IMAGING_RECORD_KEY_V2).toBe('ip-peripheral-imaging-v2')
+    expect(LEGACY_IMAGING_RECORD_KEY_V1).toBe('ip-peripheral-imaging-v1')
+  })
+
   it('refuses malformed storage and recomputes correctness from the item bank', () => {
     expect(parseImagingRecord('{')).toBeNull()
     expect(parseImagingRecord(JSON.stringify({ version: 1 }))).toBeNull()
@@ -38,33 +46,7 @@ describe('the module record', () => {
     expect(parsed?.firstAttempts['capstone:case-1']).toBeUndefined()
   })
 
-  it('writes a first attempt once and keeps the first decision', () => {
-    const empty = createEmptyImagingRecord()
-    const first = withFirstAttempt(empty, 'projection:geometry-1', 'b', NOW)
-    expect(first.firstAttempts['projection:geometry-1']).toEqual({
-      choiceId: 'b',
-      correct: false,
-      at: NOW,
-    })
-    const again = withFirstAttempt(
-      first,
-      'projection:geometry-1',
-      QUESTION_BY_ID['geometry-1'].correct,
-      NOW,
-    )
-    expect(again).toBe(first)
-    expect(withFirstAttempt(empty, 'projection:nope', 'a', NOW)).toBe(empty)
-  })
-
-  it('records visits and completions without duplicates', () => {
-    let record = withSectionVisited(createEmptyImagingRecord(), 'projection', NOW)
-    expect(record.lastSectionId).toBe('projection')
-    record = withSectionCompleted(record, 'projection', NOW)
-    record = withSectionCompleted(record, 'projection', NOW)
-    expect(record.completedSectionIds).toEqual(['projection'])
-  })
-
-  it('migrates the draft record: answers keep their keys, the cases move under the capstone, credit survives', () => {
+  it('interprets a draft record the way the pre-conversion course did', () => {
     const v1 = parseLegacyImagingRecord(
       JSON.stringify({
         version: 1,

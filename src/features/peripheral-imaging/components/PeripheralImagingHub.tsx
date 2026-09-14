@@ -3,6 +3,7 @@ import Image from 'next/image'
 
 import { Link } from '@/i18n/navigation'
 
+import { imagingCases } from '../content/cases'
 import { imagingMicroCasesInPathwayOrder } from '../content/microCases'
 import { IMAGING_HUB_HERO } from '../content/hubHero'
 import { CHAIN_STOPS } from '../content/imagingChain'
@@ -12,11 +13,18 @@ import {
   imagingSectionLinkTarget,
 } from '../content/pathwayResolver'
 import { peripheralImagingPathway, peripheralImagingPathwaySections } from '../content/pathway'
-import { PERIPHERAL_IMAGING_ASSESS_HREF, PERIPHERAL_IMAGING_PRACTICE_HREF } from '../content/routes'
+import {
+  PERIPHERAL_IMAGING_INTEGRATED_CASES_HREF,
+  PERIPHERAL_IMAGING_PRACTICE_HREF,
+} from '../content/routes'
 import { LESSONS, OBJECTIVES } from '../data/lessons'
 import { DECISION_GUIDE, GLOSSARY, MODALITIES } from '../data/resources'
 import { REVIEWED_ON, SOURCES } from '../data/sources'
-import { ImagingContinueCta, ImagingStoredPathwayAccordion } from './hub/ImagingPathwayAccordion'
+import {
+  ImagingContinueCta,
+  ImagingProgressNotes,
+  ImagingStoredPathwayAccordion,
+} from './hub/ImagingPathwayAccordion'
 import { ReconstructionComparison } from './stage/ReconstructionComparison'
 import styles from './peripheral-imaging-hub.module.css'
 
@@ -61,9 +69,21 @@ export function PeripheralImagingHub() {
             </Link>
             .
           </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            The {imagingCases.length} integrated cases bring several sections together and are open
+            at any time on the{' '}
+            <Link
+              href={PERIPHERAL_IMAGING_INTEGRATED_CASES_HREF}
+              className="font-semibold text-primary"
+            >
+              Integrated cases page
+            </Link>
+            .
+          </p>
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <ImagingContinueCta />
           </div>
+          <ImagingProgressNotes className="mt-4 grid gap-3" />
           <p className={`${styles.composition} mt-4`} data-pathway-composition>
             {imagingCompositionLine()}
           </p>
@@ -149,12 +169,12 @@ export function PeripheralImagingHub() {
             </dd>
           </div>
           <div>
-            <dt className="font-semibold">What finishing a section means</dt>
+            <dt className="font-semibold">What this device keeps</dt>
             <dd className="text-muted-foreground">
-              It records on this device that you worked through the material, with your first
-              decisions kept as you made them. It makes no claim about clinical readiness, and it
-              does not stand in for supervised C-arm operation, radiation credentialing or biopsy
-              training.
+              Where you were, the sections and cases you have opened, and the sections you mark
+              reviewed or save for later — nothing about your answers. Every section and case is
+              open in any order. None of it is a claim about clinical readiness, and it does not
+              stand in for supervised C-arm operation, radiation credentialing or biopsy training.
             </dd>
           </div>
           <div>
@@ -342,12 +362,15 @@ export function PeripheralImagingHub() {
           . Sources and limits are recorded with the assets.
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          {imagingMicroCasesInPathwayOrder().length} practice cases are available. The capstone is
-          on the{' '}
-          <Link href={PERIPHERAL_IMAGING_ASSESS_HREF} className="font-semibold text-primary">
-            Assess page
-          </Link>{' '}
-          once every section is worked through, and the{' '}
+          {imagingMicroCasesInPathwayOrder().length} practice cases are available. The{' '}
+          {imagingCases.length} integrated cases are on the{' '}
+          <Link
+            href={PERIPHERAL_IMAGING_INTEGRATED_CASES_HREF}
+            className="font-semibold text-primary"
+          >
+            Integrated cases page
+          </Link>
+          , open at any time, and the{' '}
           <Link href={PERIPHERAL_IMAGING_PRACTICE_HREF} className="font-semibold text-primary">
             Practice page
           </Link>{' '}

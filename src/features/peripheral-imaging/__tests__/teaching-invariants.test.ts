@@ -12,11 +12,7 @@ import {
   beamDirection,
 } from '../lib/physics'
 import { temporal, suiteFrame } from '../components/suite/suiteModel'
-import {
-  createEmptyImagingRecord,
-  withFirstAttempt,
-  parseImagingRecord,
-} from '../engine/learnProgress'
+import { createEmptyImagingRecord, parseImagingRecord } from '../engine/learnProgress'
 import { INTERPRETATION_CHECKS } from '../content/interpretationChecks'
 
 it('authored demonstration settings fit the actual control ranges without silent clamping', () => {
@@ -97,14 +93,17 @@ it('timing examples hold the intended variables fixed; combined changes cannot s
   expect(combined.events).not.toContain('rate-isolated')
 })
 
-it('changed keys and historical keys both survive round trips without overwriting first attempts', () => {
-  let record = withFirstAttempt(createEmptyImagingRecord(), 'projection:geometry-1', 'a')
-  for (const [section, item] of Object.entries(INTERPRETATION_CHECKS)) {
-    const key = `${section}:${item.id}`
-    record = withFirstAttempt(record, key, 'a')
-    record = withFirstAttempt(record, key, item.correct)
+it('a stored legacy record keeps both historical and changed item keys readable', () => {
+  // The self-paced course writes no first attempts (PI-01); records written before it keep their
+  // keys, including the pre-v2 question ids, and still parse.
+  const at = '2026-09-10T00:00:00.000Z'
+  const firstAttempts: Record<string, { choiceId: string; correct: boolean; at: string }> = {
+    'projection:geometry-1': { choiceId: 'a', correct: true, at },
   }
-  const read = parseImagingRecord(JSON.stringify(record))!
+  for (const [section, item] of Object.entries(INTERPRETATION_CHECKS))
+    firstAttempts[`${section}:${item.id}`] = { choiceId: 'a', correct: true, at }
+  const stored = JSON.stringify({ ...createEmptyImagingRecord(), firstAttempts })
+  const read = parseImagingRecord(stored)!
   expect(read.firstAttempts['projection:geometry-1'].choiceId).toBe('a')
   for (const [section, item] of Object.entries(INTERPRETATION_CHECKS)) {
     expect(read.firstAttempts[`${section}:${item.id}`].choiceId).toBe('a')

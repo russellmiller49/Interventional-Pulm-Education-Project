@@ -12,7 +12,7 @@ import {
 import { imagingStageItems } from '../content/stageItems'
 
 describe('the stage lessons', () => {
-  it('validate every activity and preserve the existing response contracts', () => {
+  it('validate every activity, keep the step structure, and gate no step on an answer', () => {
     expect(validateImagingStageLessons()).toEqual([])
     const lessons = imagingStageLessons()
     expect(lessons).toHaveLength(peripheralImagingSectionIds.length)
@@ -26,11 +26,8 @@ describe('the stage lessons', () => {
       ).toHaveLength(1)
       expect(lesson.predictionStepIndex).toBeGreaterThan(0)
       expect(lesson.steps.every((step) => !/\d/.test(step.title))).toBe(true)
-      expect(
-        lesson.steps
-          .slice(lesson.predictionStepIndex + 1)
-          .every((step) => step.gate === 'after-prediction'),
-      ).toBe(true)
+      // Self-paced (PI-01): the steps after a check used to wait on its answer.
+      expect(lesson.steps.every((step) => step.gate === 'open')).toBe(true)
       expect(lesson.steps.every((step) => step.lookIn.landmark.length > 0)).toBe(true)
     }
   })

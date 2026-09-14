@@ -2,6 +2,8 @@
 
 Authoring date: 2026-09-08. Replaces the learner-facing FluoroView route at /fluoroview.
 
+> **Superseded for learner progression (2026-09-14, PI-01).** The owner's self-paced decision in [the active contract](../gap-remediation/self-paced/README.md) replaces this plan's completion, first-attempt, capstone-standard and answer-before-feedback rules, and its "checks occupy a separate screen" disclosure rule. What changed and why is recorded in the [PI-01 handoff](../gap-remediation/self-paced/PI-01-handoff.md). The curriculum, model, numbers, source and evaluation sections below remain the design record; the superseded rules are kept as historical evidence.
+
 ## Scope and instructional design
 
 Learners: pulmonary and IP fellows with basic CT anatomy and bronchoscopy knowledge; technologists and suite staff can use the same fundamentals. Desktop or tablet for labs, phone for review; short resumable units. Intended level: Miller knows how (Bloom apply/analyze), not procedural competence. Supervised C-arm operation, anesthesia, radiation credentialing and biopsy training remain necessary.

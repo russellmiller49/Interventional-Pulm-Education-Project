@@ -3,26 +3,31 @@ import { emptyLabState, labGoalsMet, labStateAfterChange } from './labGoalEvalua
 import { labReadouts, type LabReadouts, type LabState, type LabValues } from './labMetrics'
 
 /**
- * Everything a learner has committed or done on a section.
+ * Everything a learner has checked, placed or done on a section, and how far they have moved.
  *
- * Nothing here is persisted. A reload starts the section at its first step; the completion
- * record and the first attempts are the only things written, and they are written by the host.
- * The step the learner is on is derived from these commitments every render (`deriveStageProgress`),
- * never stored, so the step list, the Now card and the record cannot disagree.
+ * Nothing here is persisted. A reload starts the section at its first step. The step the learner
+ * is on is derived from these commitments every render (`deriveStageProgress`), never stored, so
+ * the step list, the Now card and the footer cannot disagree.
+ *
+ * Self-paced (PI-01): moving on and doing a step's work are separate facts. `confirmed` is how far
+ * the learner has moved, by Continue or by skipping. `performedIds` holds only the steps whose work
+ * was actually done — an answer checked, a set placed, the lab goals met as the learner continued
+ * past the step. Skipping moves `confirmed` and nothing else, so it can never stand in for an
+ * answer, a performed control change or a captured image.
  */
 export interface StageCommitments {
-  /** Step id → the committed choice id, for prediction steps. */
+  /** Step id → the checked choice id, for check steps. */
   readonly choices: Readonly<Record<string, string>>
-  /** Step id → row id → origin id, once a sort is committed. */
+  /** Step id → row id → origin id, once a sort is checked. */
   readonly sorts: Readonly<Record<string, Readonly<Record<string, string>>>>
   /** Zero-based stop the walk is on, and whether it reached the end. */
   readonly walkStop: number
   readonly walkDone: boolean
-  /** The highest step the learner has explicitly moved past. */
+  /** The furthest step the learner has moved past, whether they did its work or skipped it. */
   readonly confirmed: number
   /**
-   * The steps whose work was done when the learner moved past them. Sticky on purpose: a later
-   * change to the lab cannot un-perform an earlier step.
+   * The steps whose work was done. Sticky on purpose: a later change to the lab cannot un-perform
+   * an earlier step, and skipping never adds one.
    */
   readonly performedIds: readonly string[]
   readonly finished: boolean
@@ -46,7 +51,10 @@ export type ImagingStageAction =
       readonly answers: Readonly<Record<string, string>>
     }
   | { readonly type: 'WALK_NEXT'; readonly stopCount: number }
-  | { readonly type: 'CONFIRM_THROUGH'; readonly index: number }
+  /** Continue past a step: performs it only if its work is done at that moment. */
+  | { readonly type: 'CONTINUE_PAST'; readonly index: number }
+  /** Move past a step without its work. Performs, answers and snapshots nothing. */
+  | { readonly type: 'SKIP_PAST'; readonly index: number }
   | { readonly type: 'SNAPSHOT'; readonly key: string }
   | { readonly type: 'FINISH' }
 
@@ -96,8 +104,16 @@ export function stepWorkDone(
     case 'sort':
       return commitments.sorts[step.id] !== undefined
     case 'lab-task':
-    case 'observe':
       return lab ? labGoalsMet(interaction.goals, lab, interaction.lab, lesson.sectionId) : false
+    case 'observe':
+      // An observation compares a change with where the lab started. Its goals can describe the
+      // starting state (projection's is the frontal view again), so once the change step before it
+      // can be skipped (PI-01) the goals alone would count an observation nobody made. The lab's
+      // own history has to show a change as well.
+      return lab
+        ? lab.events.length > emptyLabState(interaction.lab, lesson.sectionId).events.length &&
+            labGoalsMet(interaction.goals, lab, interaction.lab, lesson.sectionId)
+        : false
     default:
       return false
   }
@@ -166,18 +182,23 @@ export function imagingStageReducer(lesson: ImagingStageLesson) {
         }
         return { ...session, commitments: { ...session.commitments, walkStop: next } }
       }
-      case 'CONFIRM_THROUGH': {
+      case 'CONTINUE_PAST': {
+        const step = lesson.steps[action.index]
+        if (!step) return session
         let commitments: StageCommitments = {
           ...session.commitments,
           confirmed: Math.max(session.commitments.confirmed, action.index),
         }
-        const probe: ImagingStageSession = { ...session, commitments }
-        for (let index = 0; index <= action.index && index < lesson.steps.length; index += 1) {
-          const step = lesson.steps[index]
-          if (stepWorkDone(lesson, step, index, probe))
-            commitments = withPerformed(commitments, step.id)
-        }
+        // Only the step being continued past can become performed, and only if its work is done
+        // now. An earlier step the learner skipped stays unperformed.
+        if (stepWorkDone(lesson, step, action.index, { ...session, commitments }))
+          commitments = withPerformed(commitments, step.id)
         return { ...session, commitments }
+      }
+      case 'SKIP_PAST': {
+        if (!lesson.steps[action.index] || session.commitments.confirmed >= action.index)
+          return session
+        return { ...session, commitments: { ...session.commitments, confirmed: action.index } }
       }
       case 'SNAPSHOT': {
         if (!session.lab || !labId) return session
@@ -198,19 +219,21 @@ export function imagingStageReducer(lesson: ImagingStageLesson) {
 }
 
 export interface StageProgress {
+  /** The last step, in lesson order, whose work was done; -1 when none has been. */
   readonly furthestPerformedIndex: number
   readonly performedIds: ReadonlySet<string>
-  /** The step the learner should be on: the first not yet performed, held back by Continue. */
+  /** The step the learner is on: the one after the furthest step they have moved past. */
   readonly liveIndex: number
   readonly predictionCommitted: boolean
   readonly transferCommitted: boolean
 }
 
 /**
- * Where the learner is, from the commitments. A step counts as performed once its work was done
- * and the learner pressed Continue on it (or committed, for a prediction); the reducer records
- * that moment, so a later change to the lab cannot un-perform it. The live step is the first not
- * yet performed. The prediction gate is a property of the commitments, not of the index.
+ * Where the learner is, from the commitments.
+ *
+ * The live step follows how far the learner has moved — by Continue or by skipping — never whether
+ * they answered or completed anything, so no step can hold the section back (PI-01). Performed
+ * steps are reported separately and exactly: a skipped step is simply absent from them.
  */
 export function deriveStageProgress(
   lesson: ImagingStageLesson,
@@ -218,18 +241,17 @@ export function deriveStageProgress(
 ): StageProgress {
   const performedIds = new Set<string>()
   let furthest = -1
-  for (let index = 0; index < lesson.steps.length; index += 1) {
-    const step = lesson.steps[index]
-    if (!session.commitments.performedIds.includes(step.id)) break
+  lesson.steps.forEach((step, index) => {
+    if (!session.commitments.performedIds.includes(step.id)) return
     performedIds.add(step.id)
     furthest = index
-  }
+  })
   const predictionStep = lesson.steps[lesson.predictionStepIndex]
   const transferStep = lesson.steps[lesson.transferStepIndex]
   return {
     furthestPerformedIndex: furthest,
     performedIds,
-    liveIndex: Math.min(furthest + 1, lesson.steps.length - 1),
+    liveIndex: Math.max(0, Math.min(session.commitments.confirmed + 1, lesson.steps.length - 1)),
     predictionCommitted: predictionStep
       ? session.commitments.choices[predictionStep.id] !== undefined
       : false,

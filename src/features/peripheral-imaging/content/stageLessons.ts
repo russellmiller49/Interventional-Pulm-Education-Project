@@ -216,7 +216,7 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
           ...base,
           phase: 'explain',
           instruction:
-            'Review your interpretation and the evidence from your work. Then apply the principle to another situation.',
+            'Review the explanation and the evidence from the image work. Then apply the principle to another situation.',
           interaction: { kind: 'explain', round: 0 },
           lookIn: { pane: 'steps', landmark: IN_STEPS.verdictAndChange },
         }
@@ -229,9 +229,6 @@ function buildSteps(
   inputs: readonly StepInput[],
   defaultStops: readonly ChainStopId[],
 ): readonly ImagingStageStep[] {
-  const predictionIndex = inputs.findIndex(
-    (input) => input.interaction.kind === 'prediction' && input.interaction.round === 0,
-  )
   return inputs.map((input, index) => ({
     id: input.activity.id,
     activity: input.activity,
@@ -243,7 +240,9 @@ function buildSteps(
     rationale: input.rationale,
     actionLabel: input.actionLabel,
     interaction: input.interaction,
-    gate: predictionIndex >= 0 && index > predictionIndex ? 'after-prediction' : 'open',
+    // Self-paced (PI-01): no step waits on an answer. A learner can move past any step, so the
+    // shared stage's `after-prediction` gate is never set here.
+    gate: 'open',
     suite: input.suite,
     stops: input.stops ?? defaultStops,
     expectedResponse: input.expectedResponse,
@@ -309,7 +308,7 @@ export function validateImagingStageLessons(): readonly string[] {
     if (phases.at(-1) !== 'transfer') errors.push(`${where} does not end on a transfer step.`)
     if (!phases.includes('act')) errors.push(`${where} has nothing to do.`)
     if (!phases.includes('explain')) errors.push(`${where} never explains.`)
-    lesson.steps.forEach((step, index) => {
+    lesson.steps.forEach((step) => {
       const stepWhere = `${where} step ${step.ordinal}`
       errors.push(
         ...imagingLearnerCopyErrors(`${stepWhere} title`, step.title, { allowDigits: false }),
@@ -322,8 +321,7 @@ export function validateImagingStageLessons(): readonly string[] {
       errors.push(...imagingLearnerCopyErrors(`${stepWhere} look-in`, step.lookIn.landmark))
       if (step.lookIn.alsoLandmark)
         errors.push(...imagingLearnerCopyErrors(`${stepWhere} look-in`, step.lookIn.alsoLandmark))
-      const expectedGate = index > lesson.predictionStepIndex ? 'after-prediction' : 'open'
-      if (step.gate !== expectedGate) errors.push(`${stepWhere} has the wrong gate.`)
+      if (step.gate !== 'open') errors.push(`${stepWhere} waits on an answer.`)
       if (
         step.interaction.kind === 'prediction' &&
         step.interaction.round === 1 &&

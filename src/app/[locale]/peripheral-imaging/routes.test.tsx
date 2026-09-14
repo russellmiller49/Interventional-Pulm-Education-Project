@@ -49,12 +49,24 @@ jest.mock('@/features/peripheral-imaging/components/ImagingCaseActivity', () => 
     <div data-testid="imaging-practice-case" data-id={caseId} />
   ),
 }))
-jest.mock('@/features/peripheral-imaging/components/PeripheralImagingAssessLanding', () => ({
-  PeripheralImagingAssessLanding: () => <div data-testid="imaging-assess-landing" />,
+jest.mock(
+  '@/features/peripheral-imaging/components/PeripheralImagingIntegratedCasesLanding',
+  () => ({
+    PeripheralImagingIntegratedCasesLanding: ({ unknownCase }: { unknownCase?: string }) => (
+      <div data-testid="imaging-integrated-landing" data-unknown={unknownCase ?? ''} />
+    ),
+  }),
+)
+jest.mock('@/features/peripheral-imaging/components/ImagingIntegratedCaseActivity', () => ({
+  ImagingIntegratedCaseActivity: ({ caseId }: { caseId: string }) => (
+    <div data-testid="imaging-integrated-case" data-id={caseId} />
+  ),
 }))
 
 import PeripheralImagingPage, { generateMetadata as overviewMetadata } from './page'
-import PeripheralImagingAssessPage, { generateMetadata as assessMetadata } from './assess/page'
+import PeripheralImagingIntegratedCasesPage, {
+  generateMetadata as integratedMetadata,
+} from './assess/page'
 import PeripheralImagingLearnPage, { generateMetadata as learnMetadata } from './learn/page'
 import PeripheralImagingPracticePage, {
   generateMetadata as practiceMetadata,
@@ -67,12 +79,21 @@ describe('peripheral imaging route family', () => {
 
   beforeEach(() => localeMock.mockClear())
 
-  it('keeps Overview, Learn, Practice, and Assess noindexed', async () => {
-    for (const generate of [overviewMetadata, learnMetadata, practiceMetadata, assessMetadata]) {
+  it('keeps Overview, Learn, Practice, and the integrated cases noindexed', async () => {
+    for (const generate of [
+      overviewMetadata,
+      learnMetadata,
+      practiceMetadata,
+      integratedMetadata,
+    ]) {
       const metadata = await generate({ params: params('en') })
       expect(metadata.robots).toEqual({ index: false, follow: false, noarchive: true })
       expect(metadata.title).toMatch(/Peripheral Bronchoscopy Imaging/)
     }
+    // The old Assess address no longer describes an examination.
+    const integrated = await integratedMetadata({ params: params('en') })
+    expect(integrated.title).toBe('Integrated cases · Peripheral Bronchoscopy Imaging')
+    expect(String(integrated.description)).not.toMatch(/made once|verdict/i)
   })
 
   it.each(['en', 'es', 'zh-CN'])('renders the hub inside the frame for %s', async (locale) => {
@@ -159,21 +180,45 @@ describe('peripheral imaging route family', () => {
     expect(screen.queryByTestId('imaging-practice-case')).not.toBeInTheDocument()
   })
 
-  it('renders Practice and Assess landings inside the frame with their nav hrefs', async () => {
-    const practice = render(await PeripheralImagingPracticePage({ params: params('en') }))
-    expect(screen.getByTestId('imaging-practice-landing')).toBeInTheDocument()
-    expect(screen.getByTestId('imaging-frame')).toHaveAttribute(
-      'data-active',
-      '/peripheral-imaging/practice',
-    )
-    practice.unmount()
-
-    render(await PeripheralImagingAssessPage({ params: params('zh-CN') }))
-    expect(screen.getByTestId('imaging-assess-landing')).toBeInTheDocument()
+  it('opens an integrated case from the old Assess address, with no prerequisite, and falls back to the list', async () => {
+    const fresh = render(await PeripheralImagingIntegratedCasesPage({ params: params('zh-CN') }))
+    expect(screen.getByTestId('imaging-integrated-landing')).toHaveAttribute('data-unknown', '')
     expect(screen.getByTestId('imaging-frame')).toHaveAttribute(
       'data-active',
       '/peripheral-imaging/assess',
     )
     expect(screen.getByTestId('imaging-frame')).toHaveAttribute('data-locale', 'zh-CN')
+    fresh.unmount()
+
+    const known = render(
+      await PeripheralImagingIntegratedCasesPage({
+        params: params('en'),
+        searchParams: Promise.resolve({ case: ['case-6', 'case-1'] }),
+      }),
+    )
+    expect(screen.getByTestId('imaging-integrated-case')).toHaveAttribute('data-id', 'case-6')
+    expect(screen.queryByTestId('imaging-integrated-landing')).not.toBeInTheDocument()
+    known.unmount()
+
+    render(
+      await PeripheralImagingIntegratedCasesPage({
+        params: params('en'),
+        searchParams: Promise.resolve({ case: 'not-a-case' }),
+      }),
+    )
+    expect(screen.getByTestId('imaging-integrated-landing')).toHaveAttribute(
+      'data-unknown',
+      'not-a-case',
+    )
+    expect(screen.queryByTestId('imaging-integrated-case')).not.toBeInTheDocument()
+  })
+
+  it('renders the Practice landing inside the frame with its nav href', async () => {
+    render(await PeripheralImagingPracticePage({ params: params('en') }))
+    expect(screen.getByTestId('imaging-practice-landing')).toBeInTheDocument()
+    expect(screen.getByTestId('imaging-frame')).toHaveAttribute(
+      'data-active',
+      '/peripheral-imaging/practice',
+    )
   })
 })

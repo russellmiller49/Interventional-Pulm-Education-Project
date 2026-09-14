@@ -3,19 +3,21 @@ import { z } from 'zod'
 import { QUESTION_BY_ID } from '../data/questions'
 
 /**
- * The module's own record: which sections have been worked through on this device, where the
- * learner was last, and the first decision recorded on every item they have committed.
+ * The module's legacy learner records — read-only.
  *
- * Nothing about a section in progress is stored. A reload starts a section at its first step and
- * asks its prediction again; what survives is the record of the outcome — the ECMO rule, kept
- * because the labs are pure functions of their sliders and a checkpoint would only carry a solved
- * Act past a reload. First decisions are write-once and their correctness is recomputed from the
- * item bank at read time, never trusted from storage. The draft's v1 record is read once and
- * migrated; its key is left in place so the draft still runs against it.
+ * Before the self-paced conversion (PI-01, 2026-09-14) the course wrote `ip-peripheral-imaging-v2`:
+ * the sections worked through, the last section, a write-once first attempt on every committed
+ * item, and when the capstone debrief was first viewed. The draft before it wrote
+ * `ip-peripheral-imaging-v1`. Those records stay on learners' devices exactly as they were stored.
+ *
+ * No current surface reads them, writes them, migrates them or turns them into self-paced progress:
+ * new sessions keep only `selfPacedProgress.ts`, and `self-paced-progress.test.ts` holds that
+ * boundary. The pure parsers below remain so the stored bytes stay interpretable — they recompute
+ * correctness from the item bank at read time, as they always did — but nothing in the course calls
+ * them, so they cannot open, recommend or claim anything.
  */
-export const PERIPHERAL_IMAGING_STORAGE_KEY = 'ip-peripheral-imaging-v2'
-export const PERIPHERAL_IMAGING_STORAGE_KEY_V1 = 'ip-peripheral-imaging-v1'
-export const PERIPHERAL_IMAGING_RECORD_CHANGED_EVENT = 'peripheral-imaging-record-changed'
+export const LEGACY_IMAGING_RECORD_KEY_V2 = 'ip-peripheral-imaging-v2'
+export const LEGACY_IMAGING_RECORD_KEY_V1 = 'ip-peripheral-imaging-v1'
 
 const attemptKey = z.string().regex(/^[a-z0-9-]+:[a-z0-9-]+$/)
 
@@ -88,9 +90,8 @@ export function parseImagingRecord(serialized: string | null | undefined): Imagi
 }
 
 /**
- * The draft's record, read leniently: only the shapes the migration needs, never the draft's own
- * parser, whose "reviewed" filter re-checks a lesson's items against today's item list and would
- * strip credit earned under yesterday's.
+ * The draft's record, read leniently: only the shapes a reader needs, never the draft's own
+ * parser, whose "reviewed" filter re-checks a lesson's items against today's item list.
  */
 interface LegacyRecord {
   readonly lessonId: string | null
@@ -131,10 +132,9 @@ export function parseLegacyImagingRecord(
 }
 
 /**
- * The draft's record, carried forward: every committed answer becomes a first attempt under the
- * same key (the draft keyed answers `lesson:question` too), the eight case answers move under the
- * capstone, and every lesson the draft marked reviewed keeps its credit. Pending feedback, lab
- * values and the phase are dropped; they were the draft's checkpoint.
+ * How the pre-conversion course interpreted a draft record: every committed answer under the same
+ * key, the eight case answers under the capstone, and every lesson the draft marked reviewed as
+ * worked through. Pure and kept only to interpret legacy bytes; nothing stores its result.
  */
 export function migrateImagingRecordFromV1(
   legacy: LegacyRecord,
@@ -155,100 +155,4 @@ export function migrateImagingRecordFromV1(
     capstoneDebriefViewedAt: null,
     updatedAt: now,
   }
-}
-
-function storage(): Storage | null {
-  if (typeof window === 'undefined') return null
-  try {
-    return window.localStorage
-  } catch {
-    return null
-  }
-}
-
-export function readImagingRecord(): ImagingRecord {
-  const store = storage()
-  if (!store) return createEmptyImagingRecord()
-  try {
-    const current = parseImagingRecord(store.getItem(PERIPHERAL_IMAGING_STORAGE_KEY))
-    if (current) return current
-    const legacy = store.getItem(PERIPHERAL_IMAGING_STORAGE_KEY_V1)
-    const parsedLegacy = parseLegacyImagingRecord(legacy)
-    if (parsedLegacy) return migrateImagingRecordFromV1(parsedLegacy)
-    return createEmptyImagingRecord()
-  } catch {
-    return createEmptyImagingRecord()
-  }
-}
-
-export function writeImagingRecord(record: ImagingRecord): boolean {
-  const store = storage()
-  if (!store) return false
-  try {
-    store.setItem(PERIPHERAL_IMAGING_STORAGE_KEY, JSON.stringify(recordSchema.parse(record)))
-    window.dispatchEvent(new Event(PERIPHERAL_IMAGING_RECORD_CHANGED_EVENT))
-    return true
-  } catch {
-    return false
-  }
-}
-
-export function withSectionVisited(
-  record: ImagingRecord,
-  sectionId: string,
-  now = new Date().toISOString(),
-): ImagingRecord {
-  if (record.lastSectionId === sectionId) return record
-  return { ...record, lastSectionId: sectionId, updatedAt: now }
-}
-
-export function withSectionCompleted(
-  record: ImagingRecord,
-  sectionId: string,
-  now = new Date().toISOString(),
-): ImagingRecord {
-  return {
-    ...record,
-    completedSectionIds: record.completedSectionIds.includes(sectionId)
-      ? record.completedSectionIds
-      : [...record.completedSectionIds, sectionId],
-    lastSectionId: sectionId,
-    updatedAt: now,
-  }
-}
-
-/** Write-once: a key that already holds a decision keeps it. */
-export function withFirstAttempt(
-  record: ImagingRecord,
-  key: string,
-  choiceId: string,
-  now = new Date().toISOString(),
-): ImagingRecord {
-  if (record.firstAttempts[key]) return record
-  const question = QUESTION_BY_ID[questionIdOfAttemptKey(key)]
-  if (!question) return record
-  return {
-    ...record,
-    firstAttempts: {
-      ...record.firstAttempts,
-      [key]: { choiceId, correct: choiceId === question.correct, at: now },
-    },
-    updatedAt: now,
-  }
-}
-
-export function withCapstoneDebriefViewed(
-  record: ImagingRecord,
-  now = new Date().toISOString(),
-): ImagingRecord {
-  if (record.capstoneDebriefViewedAt) return record
-  return { ...record, capstoneDebriefViewedAt: now, updatedAt: now }
-}
-
-export function isSectionCompleted(record: ImagingRecord, sectionId: string): boolean {
-  return record.completedSectionIds.includes(sectionId)
-}
-
-export function firstAttempt(record: ImagingRecord, key: string): ImagingFirstAttempt | undefined {
-  return record.firstAttempts[key]
 }

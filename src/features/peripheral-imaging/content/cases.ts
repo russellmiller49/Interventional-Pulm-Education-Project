@@ -6,23 +6,25 @@ import { isImagingSectionId, PERIPHERAL_IMAGING_MODULE_ID, type ImagingSectionId
 import { toClinicalLearningItem } from './stageItems'
 
 /**
- * The capstone: the draft's eight suite cases, decided once, in one sitting, on the Assess page.
+ * The eight integrated cases: suite situations that draw on several sections, on the page the
+ * course's old Assess address still opens.
  *
- * The draft's contract is kept whole: first decisions are immutable, the standard is at least
- * seven of eight held and every safety-critical decision held, and the set's debrief is shown only
- * after every case is decided. Presentation titles name the situation, never the answer. Each case
- * pairs to the section whose mechanism it examines, so a section's completion card can say where
- * its idea returns.
+ * They began as the draft's capstone — decided once, in one sitting, after every section, against
+ * a seven-of-eight and every-safety-decision standard. The owner's self-paced decision (PI-01,
+ * 2026-09-14) retired that standard, the all-sections lock and the first-decision record. The
+ * cases, their items, their stable ids and the item bank's safety flag stay: each case is open at
+ * any time, can show its explanation before an answer, and links to the section whose mechanism
+ * it applies. Presentation titles name the situation, never the answer.
  */
-export const CAPSTONE_MIN_HELD = 7
 
+/** Stable item identity. The name predates the conversion and is kept so item ids do not move. */
 export const CAPSTONE_ACTIVITY_ID = `${PERIPHERAL_IMAGING_MODULE_ID}:assess:capstone`
 
 export interface ImagingCase {
   readonly id: string
   readonly presentationTitle: string
   readonly item: ClinicalLearningItem
-  /** A wrong decision here is a safety error; the standard cannot be met with one. */
+  /** The item bank marks this situation as a safety decision; the case says so above its choices. */
   readonly critical: boolean
   readonly pairedSectionId: ImagingSectionId
 }
@@ -70,6 +72,7 @@ const CASE_DEFINITIONS: readonly {
   },
 ]
 
+/** Stable item id for a case, `capstone:<case id>`, unchanged by the conversion. */
 export function capstoneItemId(caseId: string): string {
   return `capstone:${caseId}`
 }
@@ -100,7 +103,7 @@ export function imagingCasesPairedTo(sectionId: ImagingSectionId): readonly Imag
 
 export function validateImagingCases(): readonly string[] {
   const errors: string[] = []
-  if (imagingCases.length !== 8) errors.push('The capstone must hold eight cases.')
+  if (imagingCases.length !== 8) errors.push('The integrated case set must hold eight cases.')
   const ids = new Set<string>()
   for (const imagingCase of imagingCases) {
     const where = `Case ${imagingCase.id}`
@@ -121,13 +124,10 @@ export function validateImagingCases(): readonly string[] {
       errors.push(`${where} title repeats its keyed answer.`)
     }
   }
-  if (!imagingCases.some((imagingCase) => imagingCase.critical)) {
-    errors.push('No case is safety-critical; the standard would be accuracy alone.')
-  }
   return errors
 }
 
 const caseErrors = validateImagingCases()
 if (caseErrors.length > 0) {
-  throw new Error(`The imaging capstone cases are invalid:\n${caseErrors.join('\n')}`)
+  throw new Error(`The integrated imaging cases are invalid:\n${caseErrors.join('\n')}`)
 }

@@ -7,7 +7,7 @@ import { ModuleFrameV2 } from '@/features/learning-module/components/ModuleFrame
 import type { ModuleNavItem } from '@/features/learning-module/types'
 
 import {
-  PERIPHERAL_IMAGING_ASSESS_HREF,
+  PERIPHERAL_IMAGING_INTEGRATED_CASES_HREF,
   PERIPHERAL_IMAGING_LEARN_HREF,
   PERIPHERAL_IMAGING_NAV_BASE,
   PERIPHERAL_IMAGING_PRACTICE_HREF,
@@ -16,9 +16,17 @@ import { PERIPHERAL_IMAGING_RELEASE_STAGE } from '../content/release'
 import { REVIEWED_ON } from '../data/sources'
 import styles from './peripheral-imaging-module.module.css'
 
-/** Overview | Learn | Practice | Assess — the navigation grammar the critical-care modules share. */
+/**
+ * Overview | Learn | Practice | Integrated cases. The fourth tab was Assess, the eight-case
+ * capstone; the owner's self-paced decision (PI-01) retired the capstone standard, and the same
+ * address now opens the integrated cases.
+ */
 export const peripheralImagingModuleNavItems: readonly ModuleNavItem[] = [
-  { title: 'Overview', href: PERIPHERAL_IMAGING_NAV_BASE, description: 'Pathway map and progress' },
+  {
+    title: 'Overview',
+    href: PERIPHERAL_IMAGING_NAV_BASE,
+    description: 'Pathway map and where you left off',
+  },
   {
     title: 'Learn',
     href: PERIPHERAL_IMAGING_LEARN_HREF,
@@ -29,7 +37,11 @@ export const peripheralImagingModuleNavItems: readonly ModuleNavItem[] = [
     href: PERIPHERAL_IMAGING_PRACTICE_HREF,
     description: 'Short cases, one decision each',
   },
-  { title: 'Assess', href: PERIPHERAL_IMAGING_ASSESS_HREF, description: 'The eight-case capstone' },
+  {
+    title: 'Integrated cases',
+    href: PERIPHERAL_IMAGING_INTEGRATED_CASES_HREF,
+    description: 'Eight cases that combine the sections',
+  },
 ]
 
 export const PERIPHERAL_IMAGING_SAFETY_NOTICE = (

@@ -16,12 +16,12 @@ import { imagingStageItems, toClinicalLearningItem } from './stageItems'
  * A section's own two items are retrieval on the material just worked. These are the layer after
  * that: a bedside situation the learner has not seen, asking them to use the same mechanism
  * somewhere else. Static signals, one decision, a short debrief — deliberately not a multi-step
- * case, which is what the capstone is for.
+ * case, which is what the integrated cases are for.
  *
- * Unlike the capstone, a micro-case can be answered again as often as the learner likes. Only the
- * first decision is recorded, under `practice:<id>`, and it is never rewritten — the same
- * write-once rule the rest of the module uses, so a record always says what the learner did the
- * first time they met the situation.
+ * Self-paced (PI-01): a micro-case can be opened, explained and answered as often as the learner
+ * likes, and no answer is stored. Its stable item id, `practice:<id>`, stays distinct from the Learn
+ * item ids; first decisions written under it before the conversion stay in the legacy record,
+ * unread and unchanged.
  */
 export const PRACTICE_ACTIVITY_ID = `${PERIPHERAL_IMAGING_MODULE_ID}:practice`
 

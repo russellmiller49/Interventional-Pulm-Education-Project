@@ -1,6 +1,6 @@
 import type { LearningPathwaySection } from '@/features/learning-module/curriculum/types'
 
-import { isSectionCompleted, type ImagingRecord } from '../engine/learnProgress'
+import type { ImagingProgress } from '../engine/selfPacedProgress'
 import { imagingLearnerCopyErrors } from './learnerCopy'
 import {
   peripheralImagingPathwaySections,
@@ -12,11 +12,12 @@ import { PERIPHERAL_IMAGING_NAV_BASE } from './routes'
 /**
  * The one door.
  *
- * Every primary "Continue" on every entry surface — the hub hero, the Learn landing, the pathway
- * accordion's "Up next" — resolves through `nextIncompleteImagingSection`, which walks the
- * canonical order and returns the first section without a completed record. A fresh learner lands
- * on section one, never on a mid-ladder section that happens to be the flagship interactive.
- * Counts come from the registry at render; nothing here is written down.
+ * Every primary Start, Resume or Continue on every entry surface — the hub hero, the Learn landing,
+ * the pathway map's "Up next" — resolves through `recommendedImagingSection`. It is a
+ * recommendation, never a lock: every section is always open from the outline. A learner who left
+ * a section before finishing it is offered it back; otherwise the recommendation is the first
+ * section, in the canonical order, not yet marked reviewed. Answers, use of help and simulation
+ * work never enter it (PI-01). Counts come from the registry at render; nothing here is written.
  */
 export function imagingSectionHref(sectionId: string): string {
   return `${PERIPHERAL_IMAGING_NAV_BASE}/learn?section=${sectionId}`
@@ -35,14 +36,21 @@ export interface ImagingNextSection {
   readonly index: number
   readonly total: number
   readonly href: string
-  /** Whether this is the section the learner was in most recently. */
+  /** Whether this is the section the learner was in most recently, not yet marked reviewed. */
   readonly resumed: boolean
 }
 
-export function nextIncompleteImagingSection(record: ImagingRecord): ImagingNextSection | null {
-  const index = peripheralImagingPathwaySections.findIndex(
-    (section) => !isSectionCompleted(record, section.id),
-  )
+export function recommendedImagingSection(progress: ImagingProgress): ImagingNextSection | null {
+  const reviewed = new Set(progress.reviewedSectionIds)
+  const lastId = progress.lastLocation?.kind === 'section' ? progress.lastLocation.id : null
+  const lastIndex =
+    lastId === null
+      ? -1
+      : peripheralImagingPathwaySections.findIndex((section) => section.id === lastId)
+  const resumed = lastIndex >= 0 && lastId !== null && !reviewed.has(lastId)
+  const index = resumed
+    ? lastIndex
+    : peripheralImagingPathwaySections.findIndex((section) => !reviewed.has(section.id))
   if (index < 0) return null
   const section = peripheralImagingPathwaySections[index]
   return {
@@ -50,16 +58,31 @@ export function nextIncompleteImagingSection(record: ImagingRecord): ImagingNext
     index,
     total: peripheralImagingPathwaySections.length,
     href: imagingSectionHref(section.id),
-    resumed: record.lastSectionId === section.id,
+    resumed,
   }
 }
 
-export function workedImagingSectionIds(record: ImagingRecord): ReadonlySet<string> {
-  return new Set(
-    peripheralImagingPathwaySections
-      .filter((section) => isSectionCompleted(record, section.id))
-      .map((section) => section.id),
-  )
+function knownSectionIds(ids: readonly string[]): ReadonlySet<string> {
+  const listed = new Set(ids)
+  return new Set(peripheralImagingSectionIds.filter((id) => listed.has(id)))
+}
+
+/** Sections opened on this device. Opening a section is not doing its work. */
+export function visitedImagingSectionIds(progress: ImagingProgress): ReadonlySet<string> {
+  return knownSectionIds(progress.visitedSectionIds)
+}
+
+/** Sections the learner finished and so marked reviewed. */
+export function reviewedImagingSectionIds(progress: ImagingProgress): ReadonlySet<string> {
+  return knownSectionIds(progress.reviewedSectionIds)
+}
+
+/** Sections saved to review later, in the canonical order. */
+export function reviewLaterImagingSections(
+  progress: ImagingProgress,
+): readonly LearningPathwaySection[] {
+  const saved = knownSectionIds(progress.reviewLaterSectionIds)
+  return peripheralImagingPathwaySections.filter((section) => saved.has(section.id))
 }
 
 /**
@@ -137,7 +160,8 @@ export const IMAGING_PHASES: readonly ImagingPhase[] = Object.freeze([
   {
     id: 'integrate',
     title: 'Integrate the decisions',
-    description: 'Follow the evidence through a case before independent Practice and Assess.',
+    description:
+      'Follow the evidence through a worked case, then apply it in the practice and integrated cases.',
     sectionIds: ['suite-cases'],
   },
 ])

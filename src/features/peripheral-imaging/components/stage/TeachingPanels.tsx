@@ -412,7 +412,7 @@ export function TeachingPanels({
         <p>
           Review the actual sampling component against the current intended lesion. A previously
           updated target does not confirm the exchanged tool, and an image does not establish the
-          tissue result. Apply this reasoning to the separate cases in Practice and Assess.
+          tissue result. Apply this reasoning to the practice cases and the integrated cases.
         </p>
       </section>
     )

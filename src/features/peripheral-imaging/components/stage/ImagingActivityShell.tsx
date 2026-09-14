@@ -1,20 +1,40 @@
 'use client'
 
 import type { ReactNode, RefObject } from 'react'
-import type { NowCardModel } from '@/features/learning-module/stage/NowCard'
+import { Bookmark, BookmarkCheck } from 'lucide-react'
+
+import type { NowCardAction, NowCardModel } from '@/features/learning-module/stage/NowCard'
+import { Link } from '@/i18n/navigation'
+
 import type { ImagingStageLesson } from '../../content/stageLessons'
 import {
   imagingPathwayGroups,
   imagingPhaseOf,
   imagingSectionLinkTarget,
 } from '../../content/pathwayResolver'
+import { PERIPHERAL_IMAGING_NAV_BASE } from '../../content/routes'
 import { peripheralImagingModuleNavItems } from '../PeripheralImagingModuleFrame'
-import { Link } from '@/i18n/navigation'
 import styles from './imaging-flow.module.css'
+
+export interface ImagingNowAction extends NowCardAction {
+  /** For a disclosure toggle, such as Show the explanation: whether what it opens is open. */
+  readonly expanded?: boolean
+}
+
+/**
+ * The shared Now-card model with what a self-paced step adds (PI-01): a secondary action that can
+ * be a disclosure toggle, and a way past the step without doing its work.
+ */
+export type ImagingNowModel = Omit<NowCardModel, 'secondary'> & {
+  readonly secondary?: ImagingNowAction
+  /** Move on without this step's work. It never answers, performs, captures or snapshots. */
+  readonly skip?: NowCardAction
+}
 
 export function ImagingActivityShell({
   lesson,
   index,
+  liveIndex,
   model,
   headingRef,
   visual,
@@ -27,13 +47,17 @@ export function ImagingActivityShell({
   onHelp,
   helpRef,
   onRestart,
+  reviewLater,
+  onToggleReviewLater,
   finished,
   nextHref,
   nextTitle,
 }: {
   lesson: ImagingStageLesson
   index: number
-  model: NowCardModel
+  /** The step the learner has moved up to; every earlier step can be reviewed. */
+  liveIndex: number
+  model: ImagingNowModel
   headingRef: RefObject<HTMLDivElement | null>
   visual: ReactNode
   teaching: ReactNode
@@ -45,11 +69,14 @@ export function ImagingActivityShell({
   onHelp: () => void
   helpRef: RefObject<HTMLButtonElement | null>
   onRestart: () => void
+  reviewLater: boolean
+  onToggleReviewLater: () => void
   finished: boolean
   nextHref: string | ReturnType<typeof imagingSectionLinkTarget>
   nextTitle: string
 }) {
   const activity = lesson.steps[index].activity
+  const earlierSteps = lesson.steps.slice(0, liveIndex)
   return (
     <section
       className={styles.course}
@@ -62,7 +89,7 @@ export function ImagingActivityShell({
     >
       <header className={styles.header}>
         <div>
-          <Link href="/peripheral-imaging" className={styles.eyebrow}>
+          <Link href={PERIPHERAL_IMAGING_NAV_BASE} className={styles.eyebrow}>
             Peripheral bronchoscopy imaging
           </Link>
           <p>
@@ -107,6 +134,15 @@ export function ImagingActivityShell({
           <button type="button" ref={helpRef} onClick={onHelp}>
             Help
           </button>
+          <button
+            type="button"
+            aria-pressed={reviewLater}
+            onClick={onToggleReviewLater}
+            data-review-later-toggle
+          >
+            {reviewLater ? <BookmarkCheck aria-hidden="true" /> : <Bookmark aria-hidden="true" />}
+            Save for review
+          </button>
           <button type="button" onClick={onRestart}>
             Restart section
           </button>
@@ -124,16 +160,22 @@ export function ImagingActivityShell({
         <details>
           <summary>Review earlier activities</summary>
           <ol>
-            {lesson.steps
-              .slice(0, index)
-              .filter((step) => performedIds.has(step.id))
-              .map((step) => (
+            {earlierSteps.map((step) => {
+              const performed = performedIds.has(step.id)
+              return (
                 <li key={step.id}>
-                  <button type="button" onClick={() => onReview(step.ordinal - 1)}>
+                  <button
+                    type="button"
+                    onClick={() => onReview(step.ordinal - 1)}
+                    data-review-step={step.id}
+                    data-performed={performed}
+                  >
                     {step.title}
+                    {performed ? '' : ' (skipped)'}
                   </button>
                 </li>
-              ))}
+              )
+            })}
           </ol>
         </details>
       </div>
@@ -174,15 +216,25 @@ export function ImagingActivityShell({
             </button>
           )}
           {model.secondary && (
-            <button type="button" data-now-secondary onClick={model.secondary.onActivate}>
+            <button
+              type="button"
+              data-now-secondary
+              aria-expanded={model.secondary.expanded}
+              onClick={model.secondary.onActivate}
+            >
               {model.secondary.label}
             </button>
           )}
+          {!finished && model.skip ? (
+            <button type="button" data-now-skip onClick={model.skip.onActivate}>
+              {model.skip.label}
+            </button>
+          ) : null}
           {finished ? (
             <Link
               href={nextHref}
               data-now-primary
-              data-next-section={lesson.index + 1 < lesson.total ? nextTitle : 'assess'}
+              data-next-section={lesson.index + 1 < lesson.total ? nextTitle : 'integrated-cases'}
             >
               {nextTitle}
             </Link>

@@ -5,14 +5,15 @@ import { imagingMicroCasesInPathwayOrder } from '../src/features/peripheral-imag
 import { peripheralImagingSectionIds } from '../src/features/peripheral-imaging/content/pathway'
 import { imagingStageLesson } from '../src/features/peripheral-imaging/content/stageLessons'
 import {
-  createEmptyImagingRecord,
-  PERIPHERAL_IMAGING_STORAGE_KEY,
-  withSectionCompleted,
+  LEGACY_IMAGING_RECORD_KEY_V1,
+  LEGACY_IMAGING_RECORD_KEY_V2,
 } from '../src/features/peripheral-imaging/engine/learnProgress'
+import { IMAGING_PROGRESS_STORAGE_KEY } from '../src/features/peripheral-imaging/engine/selfPacedProgress'
 
 /*
- * The peripheral-imaging course: actual lesson transitions, rendered image evidence,
- * disclosure boundaries, persistent first answers, assessment and responsive layouts.
+ * The peripheral-imaging course: actual lesson transitions, rendered image evidence, self-paced
+ * navigation (skip, explanation before an answer, retry, reload, deep links, outline jumps),
+ * truthful progress, the integrated cases on the old Assess address, and responsive layouts.
  */
 
 // Explicit opt-in keeps this suite independent of the default port-3001 E2E server.
@@ -40,6 +41,8 @@ test.beforeEach(async ({ page }) => {
 })
 
 const primary = (page: Page) => page.locator('[data-now-card] [data-now-primary]')
+const secondary = (page: Page) => page.locator('[data-now-card] [data-now-secondary]')
+const skip = (page: Page) => page.locator('[data-now-card] [data-now-skip]')
 
 async function openSection(page: Page, sectionId: string) {
   await page.goto(`${base()}/en/peripheral-imaging/learn?section=${sectionId}`)
@@ -144,16 +147,38 @@ test('the hub starts with the imaging task and keeps the available Practice case
   await commitKeyed(page, 'imaging-questions', lesson.transferStepIndex)
   await primary(page).click()
   await expect(page.locator('[data-section-completion]')).toBeVisible()
+  expect((await storedProgress(page)).reviewedSectionIds).toContain('imaging-questions')
+  await expectNoStoredResponses(page)
 })
 
-async function attempts(page: Page) {
-  return page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key) ?? '{}').firstAttempts ?? {},
-    PERIPHERAL_IMAGING_STORAGE_KEY,
+/** Every stored value, so a test can show what the course did and did not write. */
+async function storedValues(page: Page): Promise<Record<string, string | null>> {
+  return page.evaluate(() =>
+    Object.fromEntries(
+      Array.from({ length: localStorage.length }, (_, index) => {
+        const key = localStorage.key(index)!
+        return [key, localStorage.getItem(key)]
+      }),
+    ),
   )
 }
 
-test('projection teaching, comparison, independent feedback, retry and reload preserve history', async ({
+/** A self-paced session writes no answer, no correctness and no legacy graded record. */
+async function expectNoStoredResponses(page: Page) {
+  const values = await storedValues(page)
+  expect(values[LEGACY_IMAGING_RECORD_KEY_V2] ?? null).toBeNull()
+  expect(values[LEGACY_IMAGING_RECORD_KEY_V1] ?? null).toBeNull()
+  expect(values[IMAGING_PROGRESS_STORAGE_KEY] ?? '').not.toMatch(/choice|correct|attempt|answer/i)
+}
+
+async function storedProgress(page: Page) {
+  return page.evaluate(
+    (key) => JSON.parse(localStorage.getItem(key) ?? 'null'),
+    IMAGING_PROGRESS_STORAGE_KEY,
+  )
+}
+
+test('projection teaching, comparison, explanation before an answer, retry and reload store no answer', async ({
   page,
 }, info) => {
   await openSection(page, 'projection')
@@ -175,15 +200,18 @@ test('projection teaching, comparison, independent feedback, retry and reload pr
   await expect(page.locator('[data-readout="depthMm"]')).toContainText('30 mm')
   await capture(page, info, 'projection-baseline-current.png')
   await page.getByRole('button', { name: 'Replay demonstration' }).click()
-  expect(await attempts(page)).toEqual({})
+  await expectNoStoredResponses(page)
   await advanceReading(page, 'projection')
   await expect(page.getByRole('slider', { name: 'C-arm obliquity', exact: true })).toHaveValue('0')
+  // The demonstration did not do the learner's work: no Continue, but a way on without it.
   await expect(primary(page)).toHaveCount(0)
+  await expect(skip(page)).toHaveText('Skip this step')
   await setRange(page, 'C-arm obliquity', 35)
   await primary(page).click()
   await setRange(page, 'C-arm obliquity', 0)
   await primary(page).click()
-  await expect(page.locator('[data-independent-foundations]')).toBeVisible()
+  await expect(page.locator('[data-check-teaching]')).toBeVisible()
+  await expect(page.locator('[data-check-teaching] [data-teaching-review]')).toHaveCount(1)
   await expect(
     page.locator(
       '[data-readout="depthMm"], [data-chain-outcome], [data-teaching-block="control-strip"]',
@@ -191,8 +219,18 @@ test('projection teaching, comparison, independent feedback, retry and reload pr
   ).toHaveCount(0)
   await expect(page.locator('[data-stage-sources]')).toHaveAttribute(
     'data-stage-sources-claims',
-    'false',
+    'true',
   )
+  // The explanation opens before any answer, and opening it chooses nothing.
+  await expect(primary(page)).toBeDisabled()
+  await expect(secondary(page)).toHaveText('Show the explanation')
+  await secondary(page).click()
+  await expect(page.locator('[data-explanation-reveal]')).toBeVisible()
+  await expect(page.locator('[data-prediction-choices] input:checked')).toHaveCount(0)
+  await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+  await capture(page, info, 'projection-explanation-before-answer.png')
+  await secondary(page).click()
+  await expect(page.locator('[data-explanation-reveal]')).toHaveCount(0)
   await page.locator('[data-prediction-choices] input[value="a"]').check()
   await primary(page).click()
   await expect(page.locator('[data-answer-verdict]')).toHaveAttribute(
@@ -202,10 +240,15 @@ test('projection teaching, comparison, independent feedback, retry and reload pr
   await page.getByRole('button', { name: 'Try this question again' }).click()
   await page.locator('[data-prediction-choices] input[value="b"]').check()
   await primary(page).click()
-  expect((await attempts(page))['projection:projection-interpretation-v2'].choiceId).toBe('a')
+  await expectNoStoredResponses(page)
   await page.reload()
   await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:parallax')
-  expect((await attempts(page))['projection:projection-interpretation-v2'].choiceId).toBe('a')
+  await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+  expect(await storedProgress(page)).toMatchObject({
+    lastLocation: { kind: 'section', id: 'projection' },
+    visitedSectionIds: ['projection'],
+  })
+  await expectNoStoredResponses(page)
 })
 
 test('field crop and zoom preserve a saved acquisition and restricted context cannot pass', async ({
@@ -238,10 +281,11 @@ test('field crop and zoom preserve a saved acquisition and restricted context ca
   expect(await page.locator('[data-baseline-image]').textContent()).toBe(stored)
   expect(await page.locator('[data-baseline-image] img').getAttribute('src')).toBe(pixels)
   await capture(page, info, 'field-stored-zoom.png')
-  expect(await attempts(page)).toEqual({})
+  await expectNoStoredResponses(page)
   await primary(page).click()
   await setRange(page, 'Collimated field width', 45)
   await expect(primary(page)).toHaveCount(0)
+  await expect(skip(page)).toBeVisible()
   await expect(page.locator('[data-readout="contextRetained"]')).toContainText('no')
   await setRange(page, 'Collimated field width', 90)
   await expect(primary(page)).toBeEnabled()
@@ -282,60 +326,124 @@ test('timing changes depict separate within-frame and between-frame effects with
     'data-temporal-phase',
     phase!,
   )
-  expect(await attempts(page)).toEqual({})
+  await expectNoStoredResponses(page)
 })
 
-test('the capstone: gated on the sections, decided once, one wrong critical decision fails the standard', async ({
+test('the old Assess address opens every integrated case with no prerequisite: explanation, safety feedback, retry, moving on, deep link and reload', async ({
   page,
-}) => {
+}, info) => {
+  // Contract change (PI-01): this was the capstone — locked until every section was worked
+  // through, decided once, held to seven of eight with every safety decision correct.
   await page.goto(base() + '/en/peripheral-imaging/assess')
-  await expect(page.locator('[data-capstone]')).toHaveAttribute('data-capstone', 'locked')
-  await expect(page.locator('[data-capstone="locked"] a')).toHaveCount(
-    peripheralImagingSectionIds.length,
+  await expect(page.locator('[data-capstone]')).toHaveCount(0)
+  await expect(page.locator('[data-integrated-case-link]')).toHaveCount(imagingCases.length)
+  await expect(page.locator('[data-integrated-continue]')).toHaveAttribute(
+    'data-next-case',
+    imagingCases[0].id,
+  )
+  // The site layout and the module frame are both <main>; scope to the landing itself.
+  await expect(page.locator('[data-integrated-cases-landing]')).not.toContainText(
+    /capstone|decisions held|standard/i,
   )
 
-  let record = createEmptyImagingRecord()
-  for (const id of peripheralImagingSectionIds) record = withSectionCompleted(record, id)
-  await page.evaluate(([key, json]) => localStorage.setItem(key, json), [
-    PERIPHERAL_IMAGING_STORAGE_KEY,
-    JSON.stringify(record),
-  ] as const)
-  await page.goto(base() + '/en/peripheral-imaging/assess')
-  await expect(page.locator('[data-capstone]')).toHaveAttribute('data-capstone', 'deciding')
-  for (const imagingCase of imagingCases) {
-    await expect(page.locator('[data-capstone="deciding"]')).toHaveAttribute(
-      'data-case',
-      imagingCase.id,
-    )
-    // No verdict of any kind while the set is being decided.
-    await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
-    const keyed = imagingCase.item.choices.find((choice) => choice.plausibility === 'best')!
-    const wrong = imagingCase.item.choices.find((choice) => choice.plausibility !== 'best')!
-    const chosen = imagingCase.id === 'case-6' ? wrong : keyed
-    await page.locator(`[data-prediction-choices] input[value="${chosen.id}"]`).check()
-    await page.locator('[data-now-primary]').click()
-  }
-  await expect(page.locator('[data-capstone]')).toHaveAttribute('data-capstone', 'debrief')
-  await expect(page.locator('[data-capstone]')).toHaveAttribute('data-standard-met', 'false')
-  await expect(page.locator('[data-capstone-standard]')).toContainText(
-    'Seven of eight decisions held',
+  const safetyCase = imagingCases.find((imagingCase) => imagingCase.id === 'case-6')!
+  await page.locator('[data-integrated-case-link="case-6"]').click()
+  await expect(page).toHaveURL(/\/en\/peripheral-imaging\/assess\?case=case-6$/)
+  await expect(page.locator('[data-integrated-case="case-6"]')).toBeVisible()
+  await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Show the explanation' }).click()
+  await expect(page.locator('[data-explanation-reveal]')).toContainText(safetyCase.item.explanation)
+  await expect(page.locator('[data-prediction-choices] input:checked')).toHaveCount(0)
+  await capture(page, info, 'integrated-case-explanation.png')
+  await page.getByRole('button', { name: 'Hide the explanation' }).click()
+
+  const unsafe = safetyCase.item.choices.find((choice) => choice.plausibility === 'unsafe')!
+  await page.locator(`[data-prediction-choices] input[value="${unsafe.id}"]`).check()
+  await page.locator('[data-now-primary]').click()
+  await expect(page.locator('[data-answer-verdict]')).toHaveAttribute(
+    'data-verdict-outcome',
+    'unsafe',
   )
-  await expect(page.locator('[data-capstone-standard]')).toContainText('not yet met')
-  await expect(page.locator('[data-answer-verdict]')).toHaveCount(imagingCases.length)
-  // First decisions are immutable: the record keeps them across a reload.
+  await capture(page, info, 'integrated-case-unsafe-feedback.png')
+  await page.locator('[data-answer-again]').click()
+  await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+
+  // Moving on needs no answer.
+  await page.locator('[data-next-case]').click()
+  await expect(page.locator('[data-integrated-case="case-7"]')).toBeVisible()
+
+  // A deep link, and a reload that restores no answer.
+  await page.goto(base() + '/en/peripheral-imaging/assess?case=case-1')
+  await expect(page.locator('[data-integrated-case="case-1"]')).toBeVisible()
   await page.reload()
-  await expect(page.locator('[data-capstone]')).toHaveAttribute('data-capstone', 'debrief')
-  await expect(page.locator('[data-capstone-standard]')).toContainText(
-    'Seven of eight decisions held',
+  await expect(page.locator('[data-integrated-case="case-1"]')).toBeVisible()
+  await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+
+  await page.goto(base() + '/en/peripheral-imaging/assess')
+  await expect(page.locator('[data-integrated-case-link="case-6"]')).toHaveAttribute(
+    'data-opened',
+    'true',
+  )
+  await expectNoStoredResponses(page)
+})
+
+test('imaging-questions: past the evidence sort and both checks without an answer, then an outline jump', async ({
+  page,
+}, info) => {
+  // Contract change (PI-01): G00 found this sort blocked Continue with "6 of 6 still to place".
+  const lesson = imagingStageLesson('imaging-questions')
+  await openSection(page, 'imaging-questions')
+  await advanceReading(page, 'imaging-questions')
+  const sortStep = lesson.steps.find((step) => step.interaction.kind === 'sort')!
+  if (sortStep.interaction.kind !== 'sort') throw new Error('Missing sort')
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', sortStep.id)
+  await expect(primary(page)).toBeDisabled()
+  await secondary(page).click()
+  await expect(page.locator('[data-sort-reveal]')).toHaveCount(
+    sortStep.interaction.sort.rows.length,
+  )
+  await expect(page.locator('[data-sort-verdict]')).toHaveCount(0)
+  await capture(page, info, 'imaging-questions-matches-shown.png')
+  await skip(page).click()
+
+  await expect(page.locator('[data-stage]')).toHaveAttribute(
+    'data-stage',
+    lesson.steps[lesson.predictionStepIndex].id,
+  )
+  await secondary(page).click()
+  await expect(page.locator('[data-explanation-reveal]')).toBeVisible()
+  await skip(page).click()
+  await expect(page.locator('[data-explain-unanswered]')).toBeVisible()
+  await primary(page).click()
+  await expect(skip(page)).toHaveText('Finish without answering')
+  await skip(page).click()
+  await expect(page.locator('[data-section-completion]')).toBeVisible()
+  await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+  expect((await storedProgress(page)).reviewedSectionIds).toEqual(['imaging-questions'])
+  await expectNoStoredResponses(page)
+
+  // The outline opens any section; no answer is asked for first.
+  await page.getByText('Course outline', { exact: true }).click()
+  await page.locator('[data-course-outline] a[href*="section=projection"]').click()
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:parallax')
+
+  // The hub now recommends the next section, from the learner's own reviewed mark.
+  await page.goto(base() + '/en/peripheral-imaging')
+  await expect(page.locator('[data-imaging-continue]')).toHaveAttribute(
+    'data-next-section',
+    'projection',
   )
 })
 
-test('a practice case is decided once, and can be answered as often as the learner likes', async ({
+test('a practice case explains itself before an answer, repeats freely, moves on unanswered and stores no answer', async ({
   page,
 }) => {
+  // Contract change (PI-01): the first decision used to be written once and shown on return, and
+  // the reasoning and section link were withheld until a decision.
   const cases = imagingMicroCasesInPathwayOrder()
-  test.skip(cases.length === 0, 'No practice cases are authored yet.')
-  const first = cases[0]
+  test.skip(cases.length < 2, 'Needs at least two practice cases.')
+  const [first, second] = cases
   const keyed = first.item.correctChoiceIds[0]
   const other = first.item.choices.find((choice) => choice.id !== keyed)!.id
 
@@ -345,16 +453,21 @@ test('a practice case is decided once, and can be answered as often as the learn
   await expect(page.locator('[data-practice-continue]')).toHaveAttribute('data-next-case', first.id)
   await page.locator('[data-practice-continue]').click()
 
-  // The situation is shown; the reasoning is not, until a decision is made.
   await expect(page.locator(`[data-practice-case="${first.id}"]`)).toBeVisible()
   await expect(page.locator('[data-case-situation]')).toBeVisible()
+  await expect(page.locator('[data-case-pairing] a')).toBeVisible()
   await expect(page.locator('[data-case-verdict]')).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Show the explanation' }).click()
+  await expect(page.locator('[data-explanation-reveal]')).toContainText(first.item.explanation)
+  await expect(page.locator('[data-prediction-choices] input:checked')).toHaveCount(0)
 
   await page.locator(`[data-prediction-choices] input[value="${other}"]`).check()
   await page.locator('[data-now-primary]').click()
-  await expect(page.locator('[data-case-verdict]')).toBeVisible()
-
-  // Answering again is allowed, and does not rewrite the first decision.
+  await expect(page.locator('[data-answer-verdict]')).toHaveAttribute(
+    'data-verdict-outcome',
+    'not-correct',
+  )
   await page.locator('[data-answer-again]').click()
   await expect(page.locator('[data-case-verdict]')).toHaveCount(0)
   await page.locator(`[data-prediction-choices] input[value="${keyed}"]`).check()
@@ -364,26 +477,22 @@ test('a practice case is decided once, and can be answered as often as the learn
     'correct',
   )
 
-  const attempt = await page.evaluate(
-    ([key, caseId]) => {
-      const record = JSON.parse(localStorage.getItem(key) ?? 'null')
-      return record?.firstAttempts?.[`practice:${caseId}`] ?? null
-    },
-    [PERIPHERAL_IMAGING_STORAGE_KEY, first.id] as const,
-  )
-  expect(attempt?.choiceId).toBe(other)
-  expect(attempt?.correct).toBe(false)
+  // The next case never waits on an answer.
+  await page.locator('[data-next-case]').click()
+  await expect(page.locator(`[data-practice-case="${second.id}"]`)).toBeVisible()
+  await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+  await expectNoStoredResponses(page)
 
-  // The list remembers, and the door moves on.
+  // The list says which cases were opened, and the door moves past them.
   await page.goto(base() + '/en/peripheral-imaging/practice')
   await expect(page.locator(`[data-practice-case-link="${first.id}"]`)).toHaveAttribute(
-    'data-decided',
+    'data-opened',
     'true',
   )
-  if (cases.length > 1) {
+  if (cases.length > 2) {
     await expect(page.locator('[data-practice-continue]')).toHaveAttribute(
       'data-next-case',
-      cases[1].id,
+      cases[2].id,
     )
   }
 })
@@ -432,7 +541,7 @@ test('all nineteen sections render their authored explanation and visual, withou
   await capture(page, info, 'suite-cases-teaching.png')
 })
 
-test('acquisition movement invalidates readiness and independent sampling withholds geometric truth', async ({
+test('acquisition movement invalidates readiness and the sampling check example shows no geometric overlay', async ({
   page,
 }) => {
   await openSection(page, 'cbct-acquisition')
@@ -477,7 +586,7 @@ test('acquisition movement invalidates readiness and independent sampling withho
   ).toHaveCount(0)
 })
 
-test('required-image failure prevents completion and keeps explanation and retry accessible', async ({
+test('required-image failure counts nothing as seen, keeps explanation and retry, and still lets the learner move on', async ({
   page,
 }) => {
   await page.route('**/peripheral-imaging/anatomy/**', (route) => route.abort())
@@ -490,7 +599,13 @@ test('required-image failure prevents completion and keeps explanation and retry
   await expect(primary(page)).toBeDisabled()
   await expect(page.locator('[data-teaching-panel]')).toContainText('parallax')
   await expect(page.getByRole('button', { name: 'Replay demonstration' })).toBeVisible()
-  expect(await attempts(page)).toEqual({})
+  // Contract change (PI-01): the failed image no longer holds the learner on this step.
+  await expect(skip(page)).toHaveText('Continue without the image')
+  await skip(page).click()
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:alignment')
+  await page.getByRole('button', { name: 'Back', exact: true }).click()
+  await expect(page.locator('[data-now-status]')).toContainText('without completing it')
+  await expectNoStoredResponses(page)
 })
 
 test('laptop, tablet, small phone, keyboard and text zoom keep a single task flow', async ({
@@ -558,12 +673,8 @@ async function finishResponses(page: Page, id: string) {
   await commitKeyed(page, id, lesson.transferStepIndex)
   await primary(page).click()
   await expect(page.locator('[data-section-completion]')).toBeVisible()
-  expect(
-    await page.evaluate(
-      ([key, id]) => JSON.parse(localStorage.getItem(key)!).completedSectionIds.includes(id),
-      [PERIPHERAL_IMAGING_STORAGE_KEY, id],
-    ),
-  ).toBe(true)
+  expect((await storedProgress(page)).reviewedSectionIds).toContain(id)
+  await expectNoStoredResponses(page)
 }
 
 for (const id of [
@@ -739,7 +850,7 @@ test('frozen learner images survive resizing, outline, demonstration replay and 
     })
     .click()
   await page.getByRole('button', { name: 'Replay demonstration' }).click()
-  expect(await attempts(page)).toEqual({})
+  await expectNoStoredResponses(page)
   await page.getByRole('button', { name: /Return to step/ }).click()
   expect((await fingerprint()) === baseline).toBe(true)
   await capture(page, info, 'frozen-learner-comparison.png')

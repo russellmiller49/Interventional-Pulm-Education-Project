@@ -141,7 +141,7 @@
   border-color: var(--lm-v2-accent, #0369a1);
 }
 
-.chip[data-complete='true'] {
+.chip[data-reviewed='true'] {
   border-color: #16a34a;
 }
 
