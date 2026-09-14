@@ -169,9 +169,7 @@ function buildSteps(
   inputs: readonly StepInput[],
   defaultStops: readonly RouteStopId[],
 ): readonly HemodynamicsStageStep[] {
-  const predictionIndex = inputs.findIndex(
-    (input) => input.interaction.kind === 'prediction' && input.interaction.round === 0,
-  )
+  // HD-01: every step is open. The prediction is optional, so nothing after it waits for an answer.
   return inputs.map((input, index) => ({
     id: `${sectionId}-${index + 1}-${input.phase}`,
     ordinal: index + 1,
@@ -182,7 +180,7 @@ function buildSteps(
     rationale: input.rationale,
     actionLabel: input.actionLabel,
     interaction: input.interaction,
-    gate: predictionIndex >= 0 && index > predictionIndex ? 'after-prediction' : 'open',
+    gate: 'open',
     surface: input.surface ?? 'none',
     stops: input.stops ?? defaultStops,
     entryState: input.entryState,
@@ -308,7 +306,7 @@ function whyMeasureSteps(): readonly StepInput[] {
       phase: 'transfer',
       title: 'The same question, on the catheter',
       instruction:
-        'A different situation: the catheter is in and its tracings are trustworthy. Commit to what it measures rather than calculates or infers.',
+        'A different situation: the catheter is in and its tracings are trustworthy. Decide what it measures rather than calculates or infers, then check your answer or open the explanation.',
       lookIn: IN_STEPS.choices,
       actionLabel: COMMIT,
       interaction: prediction(items.transfer, 1),
@@ -376,7 +374,7 @@ function pressureSystemSteps(runtime: SectionRuntime): readonly StepInput[] {
       phase: 'predict',
       title: 'What is this number carrying?',
       instruction:
-        'The line has changed. Read the situation and commit to the interpretation that best accounts for it before touching anything.',
+        'The line has changed. Read the situation and decide which interpretation best accounts for it, then check your answer or open the explanation.',
       lookIn: IN_STEPS.choices,
       actionLabel: COMMIT,
       interaction: prediction(items.prediction, 0),
@@ -428,7 +426,7 @@ function pressureSystemSteps(runtime: SectionRuntime): readonly StepInput[] {
       phase: 'transfer',
       title: 'A different patient, a different fault',
       instruction:
-        'A new line after a position change. Read the situation and commit before you touch it.',
+        'A new line after a position change. Read the situation and decide what needs correcting before you touch it.',
       lookIn: IN_STEPS.choices,
       actionLabel: COMMIT,
       interaction: prediction(items.transfer, 1),
@@ -511,9 +509,9 @@ function waveformInterpretationSteps(runtime: SectionRuntime): readonly StepInpu
     },
     {
       phase: 'act',
-      title: 'Identify five tracings correctly',
+      title: 'Name tracings from their shape',
       instruction:
-        'Identify the question tracing from its shape. Work toward five correct responses in total; errors do not reset the count. Repeated examples are labeled as repeated practice.',
+        'Name the question tracing from its shape. Check an answer, show the labels, or move to another tracing for as long as the practice is useful. Repeated examples are labeled as repeated practice.',
       lookIn: { pane: 'simulator', landmark: 'Name the tracing' },
       actionLabel: CONTINUE,
       interaction: { kind: 'simulator-task', goals: runtime.actGoals, round: 0 },
@@ -576,7 +574,7 @@ function waveformComponentsSteps(): readonly StepInput[] {
       phase: 'act',
       title: 'Guided component identification',
       instruction:
-        'For each named component, select the numbered region on the frozen tracing. The region choices also describe timing against the ECG. Feedback follows each selection; a retry after feedback is assisted.',
+        'For each named component, select the numbered region on the frozen tracing. The region choices also describe timing against the ECG. Check a region, show the component, or move to another component, in any order.',
       lookIn: { pane: 'simulator', landmark: 'Identify the atrial component' },
       actionLabel: CONTINUE,
       interaction: { kind: 'component-identification', mode: 'guided' },
@@ -587,7 +585,7 @@ function waveformComponentsSteps(): readonly StepInput[] {
       phase: 'act',
       title: 'Practice with renumbered components',
       instruction:
-        'Repeat identification with a changed mean pressure and renumbered regions, using the same normal atrial morphology. This is additional practice, not an independent transfer specimen. Identify all five components. First answers and assisted retries are recorded separately in this session.',
+        'Repeat identification with a changed mean pressure and renumbered regions, using the same normal atrial morphology. This is additional practice, not an independent transfer specimen. Work through as many components as are useful.',
       lookIn: { pane: 'simulator', landmark: 'Identify the atrial component' },
       actionLabel: CONTINUE,
       interaction: { kind: 'component-identification', mode: 'independent' },
@@ -673,7 +671,7 @@ function catheterAdvancementSteps(runtime: SectionRuntime): readonly StepInput[]
       phase: 'predict',
       title: 'A confirmed atrium. What next?',
       instruction:
-        'The tip has reached the right atrium and its tracing is confirmed. Read the observables and commit.',
+        'The tip has reached the right atrium and its tracing is confirmed. Read the observables and decide what comes next.',
       lookIn: IN_STEPS.choices,
       actionLabel: COMMIT,
       interaction: prediction(items.prediction, 0),
@@ -729,7 +727,7 @@ function catheterAdvancementSteps(runtime: SectionRuntime): readonly StepInput[]
       phase: 'transfer',
       title: 'The signal stops being trustworthy',
       instruction:
-        'A confirmed atrium on a line that has started to ring. Read the observables and commit.',
+        'A confirmed atrium on a line that has started to ring. Read the observables and decide what comes next.',
       lookIn: IN_STEPS.choices,
       actionLabel: COMMIT,
       interaction: prediction(items.transfer, 1),
@@ -790,7 +788,7 @@ function pawpCaptureSteps(runtime: SectionRuntime): readonly StepInput[] {
     {
       phase: 'predict',
       title: 'Which sequence?',
-      instruction: 'Read the situation and commit to the sequence before the balloon goes up.',
+      instruction: 'Read the situation and decide on the sequence before the balloon goes up.',
       lookIn: IN_STEPS.choices,
       actionLabel: COMMIT,
       interaction: prediction(items.prediction, 0),
@@ -812,7 +810,7 @@ function pawpCaptureSteps(runtime: SectionRuntime): readonly StepInput[] {
       phase: 'observe',
       title: 'Is it plausible, and is it over?',
       instruction:
-        'Two questions about what you stored: does the value sit where a wedge must sit, and has the pulmonary-artery tracing come back? Commit to each.',
+        'Two questions about what you stored: does the value sit where a wedge must sit, and has the pulmonary-artery tracing come back? Answer either question, open its explanation, or move on.',
       lookIn: {
         pane: 'steps',
         landmark: 'the two questions below',
@@ -849,7 +847,7 @@ function pawpCaptureSteps(runtime: SectionRuntime): readonly StepInput[] {
       phase: 'transfer',
       title: 'Under more positive pressure',
       instruction:
-        'The same patient, ventilated harder and breathing faster, so the tracing swings more with each breath. Commit to the sample and the next action.',
+        'The same patient, ventilated harder and breathing faster, so the tracing swings more with each breath. Decide on the sample and the next action.',
       lookIn: IN_STEPS.choices,
       actionLabel: COMMIT,
       interaction: prediction(items.transfer, 1),
@@ -912,7 +910,7 @@ function thermodilutionSteps(runtime: SectionRuntime): readonly StepInput[] {
       phase: 'predict',
       title: 'Which curves belong in the series?',
       instruction:
-        'Three curves are already on the record. Read the situation and commit before you open any of them.',
+        'Three curves are already on the record. Read the situation and decide which belong in the series before you open any of them.',
       lookIn: IN_STEPS.choices,
       actionLabel: COMMIT,
       interaction: prediction(items.prediction, 0),
@@ -935,7 +933,7 @@ function thermodilutionSteps(runtime: SectionRuntime): readonly StepInput[] {
       phase: 'observe',
       title: 'Which result was measured?',
       instruction:
-        'Two Fick results are on record for the same hour. Read how each was obtained and commit to which of them can be called direct.',
+        'Two Fick results are on record for the same hour. Read how each was obtained and decide which of them can be called direct.',
       lookIn: { pane: 'steps', landmark: 'the question below: which result was measured?' },
       actionLabel: CONTINUE,
       interaction: { kind: 'observe', goals: [], commitments: [], provenance: true },
@@ -957,7 +955,7 @@ function thermodilutionSteps(runtime: SectionRuntime): readonly StepInput[] {
     {
       phase: 'transfer',
       title: 'A low-flow patient, a poor third curve',
-      instruction: 'A different patient and a different series. Commit to the next step.',
+      instruction: 'A different patient and a different series. Decide on the next step.',
       lookIn: IN_STEPS.choices,
       actionLabel: COMMIT,
       interaction: prediction(items.transfer, 1),
@@ -996,7 +994,7 @@ function derivedSteps(): readonly StepInput[] {
       phase: 'recognize',
       title: 'Which of these is a measurement?',
       instruction:
-        'Six quantities from one flowsheet, printed alike. Say how each one reached the record — measured, sampled, entered, assumed, or calculated — and commit the set.',
+        'Six quantities from one flowsheet, printed alike. Say how each one reached the record — measured, sampled, entered, assumed, or calculated — then check the set or show the classifications.',
       lookIn: {
         pane: 'simulator',
         landmark: 'Which of these is actually a measurement?, under the monitor',
@@ -1011,7 +1009,7 @@ function derivedSteps(): readonly StepInput[] {
       phase: 'predict',
       title: 'Can this resistance be read?',
       instruction:
-        'A calculated value on a line whose reference is not yet set. Read the situation and commit.',
+        'A calculated value on a line whose reference is not yet set. Read the situation and decide how the value can be read.',
       lookIn: IN_STEPS.choices,
       actionLabel: COMMIT,
       interaction: prediction(items.prediction, 0),
@@ -1050,7 +1048,7 @@ function derivedSteps(): readonly StepInput[] {
       phase: 'transfer',
       title: 'A number the monitor can show',
       instruction:
-        'A different patient and a different calculated value. Commit to whether the result is interpretable.',
+        'A different patient and a different calculated value. Decide whether the result is interpretable.',
       lookIn: IN_STEPS.choices,
       actionLabel: COMMIT,
       interaction: prediction(items.transfer, 1),
@@ -1106,7 +1104,7 @@ function capstoneSteps(runtime: SectionRuntime): readonly StepInput[] {
       phase: 'predict',
       title: 'What comes first?',
       instruction:
-        'Read the situation and commit to the first move before anything on the screen is touched.',
+        'Read the situation and decide on the first move before anything on the screen is touched.',
       lookIn: IN_STEPS.choices,
       actionLabel: COMMIT,
       interaction: prediction(items.prediction, 0),
@@ -1165,7 +1163,7 @@ function capstoneSteps(runtime: SectionRuntime): readonly StepInput[] {
       phase: 'transfer',
       title: 'A different line, a different patient',
       instruction:
-        'A systemic arterial line whose tracing has changed shape while its mean has not. A colleague reaches for a drug. Commit to what comes first.',
+        'A systemic arterial line whose tracing has changed shape while its mean has not. A colleague reaches for a drug. Decide what comes first.',
       lookIn: IN_STEPS.choices,
       actionLabel: COMMIT,
       interaction: prediction(items.transfer, 1),
@@ -1301,20 +1299,11 @@ export function validateHemodynamicsStageLessons(): readonly string[] {
     const phases = lesson.steps.map((step) => step.phase)
     if (phases[0] !== 'recognize') errors.push(`${where} does not open on Recognize.`)
     if (phases.at(-1) !== 'transfer') errors.push(`${where} does not end on a transfer step.`)
-    lesson.steps.forEach((step, index) => {
+    lesson.steps.forEach((step) => {
       const stepWhere = `${where} step ${step.ordinal}`
       errors.push(
         ...hemodynamicsLearnerCopyErrors(`${stepWhere} title`, step.title),
-        ...hemodynamicsLearnerCopyErrors(
-          `${stepWhere} instruction`,
-          step.instruction,
-          step.surface === 'recognition'
-            ? {
-                learnerCopyOverrideReason:
-                  'Correct describes the existing cumulative correct-response rule; it is not a clinical competence claim.',
-              }
-            : {},
-        ),
+        ...hemodynamicsLearnerCopyErrors(`${stepWhere} instruction`, step.instruction),
         ...hemodynamicsLearnerCopyErrors(`${stepWhere} action`, step.actionLabel),
       )
       if (step.rationale) {
@@ -1333,8 +1322,8 @@ export function validateHemodynamicsStageLessons(): readonly string[] {
           )
         }
       }
-      const expectedGate = index > lesson.predictionStepIndex ? 'after-prediction' : 'open'
-      if (step.gate !== expectedGate) errors.push(`${stepWhere} has the wrong gate.`)
+      // HD-01: no step waits for the prediction; a gated step would be a quiz lock.
+      if (step.gate !== 'open') errors.push(`${stepWhere} is gated on the prediction.`)
       if (
         step.interaction.kind === 'prediction' &&
         step.interaction.round === 1 &&

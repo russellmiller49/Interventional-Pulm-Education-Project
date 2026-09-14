@@ -2,12 +2,9 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { AtrialComponentActivity } from '../components/stage/AtrialComponentActivity'
 import { WaveformRecognitionDrill } from '../components/WaveformRecognitionDrill'
-import {
-  componentIdentificationComplete,
-  type ComponentSelection,
-} from '../content/introductoryTeaching'
+import type { ComponentSelection } from '../content/introductoryTeaching'
 import { hemodynamicsStageLesson } from '../content/stageLessons'
-import { emptyCommitments, stepWorkDone } from '../components/stage/stageProgress'
+import { emptyCommitments, simulationWorkPerformed } from '../components/stage/stageProgress'
 import { icuHemodynamicsReducer } from '../engine/reducer'
 import {
   cleanState,
@@ -15,7 +12,10 @@ import {
   CURRENT_RESPONSE_RECHECKED,
   stageGoalMet,
 } from '../engine/stageRuntime'
-import { ICU_HEMODYNAMICS_LEARN_STORAGE_KEY } from '../engine/learnProgress'
+import {
+  ICU_HEMODYNAMICS_SELF_PACED_STORAGE_KEY,
+  parseSelfPacedRecord,
+} from '../engine/selfPacedProgress'
 import {
   advanceToPrediction,
   clickPrimary,
@@ -71,7 +71,7 @@ it('shows the orientation and worked example before the vignette, then teaches s
   expect(document.querySelector('[data-answer-verdict]')).toBeNull()
   commitChoice(/circulation is under-filled/)
   expect(document.querySelector('[data-answer-verdict]')?.textContent).toMatch(
-    /Volume is one cause/,
+    /Low circulating volume is one cause/,
   )
   clickPrimary()
   expect(
@@ -80,7 +80,8 @@ it('shows the orientation and worked example before the vignette, then teaches s
   expect(document.querySelectorAll('[data-sort-row]')).toHaveLength(0)
   clickPrimary()
   expect(document.querySelectorAll('[data-sort-row]')).toHaveLength(7)
-  expect(nowPrimary()).toBeDisabled()
+  expect(nowPrimary()).toHaveTextContent('Continue without sorting')
+  expect(document.querySelector('[data-now-card] [data-question-check]')).toBeDisabled()
 })
 
 it('starts each pressure demonstration from its stated baseline and keeps level, zero and scale distinct', () => {
@@ -131,10 +132,11 @@ it('requires a new observation after simulated correction and rejects stale clas
   expect(document.querySelector('[data-flush-stale]')).toHaveTextContent('Before correction')
   expect(document.querySelector('[data-flush-classification]')).toBeDisabled()
   expect(goalStates()).toEqual(['true', 'true', 'true', 'false'])
-  expect(nowPrimary()).toBeNull()
+  // The step is not performed until the corrected line is observed again; moving on stays open.
+  expect(nowPrimary()).toHaveTextContent('Continue without these actions')
   fireEvent.click(control('flush'))
   expect(document.querySelector('[data-flush-stale]')).toBeNull()
-  expect(nowPrimary()).toBeNull()
+  expect(nowPrimary()).toHaveTextContent('Continue without these actions')
   act(() => {
     jest.advanceTimersByTime(3500)
   })
@@ -176,25 +178,34 @@ it('enforces the flush safety guard in the reducer, including spontaneous wedge 
   }
 })
 
-it('freezing and revealing the normal demonstration never complete the selection task', () => {
+it('viewing the demonstration or showing a component records no selection and performs nothing', () => {
   const lesson = hemodynamicsStageLesson('waveform-components')
   const index = lesson.steps.findIndex(
     (step) => step.interaction.kind === 'component-identification',
   )
   const frozen = lesson.runtime.initial()
   expect(frozen.frozen).toBe(true)
-  expect(stepWorkDone(lesson.steps[index], index, frozen, emptyCommitments())).toBe(false)
+  expect(simulationWorkPerformed(lesson.steps[index], frozen, emptyCommitments(), frozen)).toBe(
+    false,
+  )
   mountSection('waveform-components')
   fireEvent.click(screen.getByRole('button', { name: /^v wave$/ }))
   clickPrimary()
-  expect(nowPrimary()).toBeNull()
-  expect(screen.getByText(/0 of 5 components identified/)).toBeInTheDocument()
-  expect(localStorage.getItem(ICU_HEMODYNAMICS_LEARN_STORAGE_KEY)).not.toMatch(
-    /completedSectionIds":\["waveform-components"/,
+  expect(nowPrimary()).toHaveTextContent('Continue')
+  fireEvent.click(screen.getByRole('button', { name: 'Show this component' }))
+  expect(document.querySelector('[data-component-reveal="shown"]')).not.toBeNull()
+  clickPrimary()
+  const rows = [...document.querySelectorAll('[data-step-list] li')].map((row) =>
+    row.getAttribute('data-step-state'),
   )
+  expect(rows[index]).toBe('passed')
+  expect(
+    parseSelfPacedRecord(localStorage.getItem(ICU_HEMODYNAMICS_SELF_PACED_STORAGE_KEY))
+      ?.reviewedSectionIds,
+  ).toEqual([])
 })
 
-it('retains an incorrect first component selection, marks the retry as assisted, and resets separately', () => {
+it('lets a retry replace the checked region, and counts neither first responses nor retries', () => {
   let observed: readonly ComponentSelection[] = []
   function Harness() {
     const [selections, setSelections] = useState<readonly ComponentSelection[]>([])
@@ -213,30 +224,20 @@ it('retains an incorrect first component selection, marks the retry as assisted,
   render(<Harness />)
   fireEvent.click(screen.getByRole('radio', { name: /^Region 1/ })) // v, while asked for a
   fireEvent.click(screen.getByRole('button', { name: 'Check component' }))
-  expect(observed[0]).toMatchObject({
-    firstRegion: 1,
-    selectedRegion: 1,
-    attempts: 1,
-    assisted: false,
-  })
-  expect(componentIdentificationComplete(observed, 'independent')).toBe(false)
-  fireEvent.click(screen.getByRole('button', { name: 'Retry with feedback' }))
+  expect(observed).toEqual([{ component: 'a', selectedRegion: 1 }])
+  expect(screen.getByText('Compare the timing.')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
   fireEvent.click(screen.getByRole('radio', { name: /^Region 2/ }))
   fireEvent.click(screen.getByRole('button', { name: 'Check component' }))
-  expect(observed[0]).toMatchObject({
-    firstRegion: 1,
-    selectedRegion: 2,
-    attempts: 2,
-    assisted: true,
-  })
-  expect(
-    screen.getByText(/0 correct on first response without feedback; 1 assisted/),
-  ).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: 'Reset this exercise' }))
-  expect(observed).toEqual([
-    expect.objectContaining({ firstRegion: 1, selectedRegion: null, attempts: 2, assisted: true }),
-  ])
-  expect(screen.getByText(/0 of 5 components identified/)).toBeInTheDocument()
+  expect(observed).toEqual([{ component: 'a', selectedRegion: 2 }])
+  expect(screen.getByText('Component identified.')).toBeInTheDocument()
+  expect(document.body.textContent).not.toMatch(/first response|assisted|components identified/i)
+  fireEvent.click(screen.getByRole('button', { name: 'Next component' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Show this component' }))
+  expect(observed).toEqual([{ component: 'a', selectedRegion: 2 }])
+  expect(screen.getByText('Shown without an answer.')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Clear this exercise' }))
+  expect(observed).toEqual([])
 })
 
 it('uses the abnormal question trace, protects its solution, and restores identifying feedback after a wrong answer', () => {
@@ -254,38 +255,28 @@ it('uses the abnormal question trace, protects its solution, and restores identi
   ).toBeInTheDocument()
 })
 
-it('keeps five correct cumulative after an error and emits completion only once', () => {
+it('moves between tracings freely, never counts correct answers, and marks practice only on a checked answer', () => {
   const dispatch = jest.fn()
-  const view = render(<WaveformRecognitionDrill questionSet="places" dispatch={dispatch} />)
-  const labels = [
-    'Right atrium',
-    'Pulmonary artery',
-    'Pulmonary capillary wedge',
-    'Right atrium',
-    'Pulmonary artery',
-    'Right ventricle',
-  ]
-  for (const [index, pattern] of labels.entries()) {
-    const options = [...document.querySelectorAll<HTMLLabelElement>('fieldset label')]
-    const option = options.find((label) => new RegExp(pattern, 'i').test(label.textContent ?? ''))
-    expect(option).toBeDefined()
-    expect(attributesText()).not.toMatch(/This is the right ventricle/)
-    fireEvent.click(option!.querySelector('input')!)
-    fireEvent.click(screen.getByRole('button', { name: 'Check answer' }))
-    expect(
-      screen.getByText(new RegExp(`${Math.max(0, index)} of 5 correct · ${index + 1} attempted`)),
-    ).toBeInTheDocument()
-    if (index < labels.length - 1)
-      fireEvent.click(screen.getByRole('button', { name: 'Next tracing' }))
-  }
-  expect(dispatch).toHaveBeenCalledTimes(1)
+  render(<WaveformRecognitionDrill questionSet="places" dispatch={dispatch} />)
+  // Move on without answering, then show the labels without answering.
+  fireEvent.click(screen.getByRole('button', { name: 'Next tracing' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Show the labels' }))
+  expect(document.querySelector('[data-recognition-reveal="shown"]')).not.toBeNull()
+  expect(dispatch).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole('button', { name: 'Next tracing' }))
+  // A wrong answer gets feedback, not a count.
+  const wrong = [...document.querySelectorAll<HTMLLabelElement>('fieldset label')].find((label) =>
+    /Right atrium/i.test(label.textContent ?? ''),
+  )!
+  fireEvent.click(wrong.querySelector('input')!)
+  fireEvent.click(screen.getByRole('button', { name: 'Check answer' }))
+  expect(document.querySelector('[data-recognition-reveal="checked"]')).not.toBeNull()
   expect(dispatch).toHaveBeenCalledWith({ type: 'VALIDATE_SIGNAL', check: 'waveform-recognition' })
-  view.rerender(<WaveformRecognitionDrill questionSet="places" dispatch={dispatch} />)
-  expect(screen.queryByRole('button', { name: 'Next tracing' })).toBeNull()
-  expect(dispatch).toHaveBeenCalledTimes(1)
+  expect(document.body.textContent).not.toMatch(/of 5 correct|attempted|five correct/i)
+  expect(screen.getByRole('button', { name: 'Next tracing' })).toBeEnabled()
 })
 
-it('retains recognition responses through Back and Return and offers no nonexistent monitor control', () => {
+it('keeps a checked tracing through Back and Return and offers no nonexistent monitor control', () => {
   mountSection('waveform-interpretation')
   advanceToPrediction('waveform-interpretation')
   commitChoice(/The right ventricle/)
@@ -293,11 +284,11 @@ it('retains recognition responses through Back and Return and offers no nonexist
   expect(screen.queryByRole('button', { name: 'Show me where' })).toBeNull()
   fireEvent.click(screen.getByRole('radio', { name: /^Right ventricle$/ }))
   fireEvent.click(screen.getByRole('button', { name: 'Check answer' }))
-  expect(screen.getByText(/1 of 5 correct · 1 attempted/)).toBeInTheDocument()
+  expect(document.querySelector('[data-recognition-reveal="checked"]')).not.toBeNull()
   fireEvent.click(document.querySelector('[data-now-back]')!)
   expect(document.querySelector('[data-now-status]')).toHaveTextContent('current live state')
   clickPrimary()
-  expect(screen.getByText(/1 of 5 correct · 1 attempted/)).toBeInTheDocument()
+  expect(document.querySelector('[data-recognition-reveal="checked"]')).not.toBeNull()
   expect(screen.getByRole('button', { name: 'Next tracing' })).toBeEnabled()
 })
 

@@ -576,7 +576,8 @@ export function icuHemodynamicsReducer(
       })
     }
     case 'APPLY_INTERVENTION': {
-      if (state.mode === 'practice' && !state.predictionCommitted) return state
+      // HD-01: a working frame (mechanism and priority) is optional. Practice actions no longer wait
+      // for it; the bundled-credit refusal, repeat rules and safety-critical flags below still apply.
       if (state.caseId === 'HD-08' && HD08_PROCEDURE_MILESTONES.has(action.intervention.id)) {
         return {
           ...state,

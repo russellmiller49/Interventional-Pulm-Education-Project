@@ -1,7 +1,13 @@
 import { act, cleanup, fireEvent, screen } from '@testing-library/react'
 
-import { ICU_HEMODYNAMICS_LEARN_STORAGE_KEY, parseLearnRecord } from '../engine/learnProgress'
+import { hemodynamicsSectionSpec } from '../content/sectionSpecs'
+import { ICU_HEMODYNAMICS_LEARN_STORAGE_KEY } from '../engine/learnProgress'
 import {
+  ICU_HEMODYNAMICS_SELF_PACED_STORAGE_KEY,
+  parseSelfPacedRecord,
+} from '../engine/selfPacedProgress'
+import {
+  checkAnswer,
   clickPrimary,
   advanceToPrediction,
   commitChoice,
@@ -58,33 +64,52 @@ function stepRows(): readonly string[] {
 
 function verdictOutcome(): string | null {
   return (
-    document.querySelector('[data-answer-verdict]')?.getAttribute('data-verdict-outcome') ?? null
+    document
+      .querySelector('[data-now-card] [data-answer-verdict]')
+      ?.getAttribute('data-verdict-outcome') ?? null
   )
 }
 
+function storedRecord() {
+  return parseSelfPacedRecord(localStorage.getItem(ICU_HEMODYNAMICS_SELF_PACED_STORAGE_KEY))
+}
+
+function questionAction(name: 'check' | 'hint-toggle' | 'explanation-toggle' | 'try-again') {
+  return document.querySelector<HTMLButtonElement>(`[data-now-card] [data-question-${name}]`)
+}
+
+function openTask(index: number) {
+  fireEvent.click(document.querySelectorAll<HTMLButtonElement>('[data-step-list] button')[index])
+}
+
 /**
- * The whole of the pressure-system section, the way a learner walks it: the walk, a locked
- * prediction with a stated verdict, the reference set on the line, the flush read and repaired,
- * the explanation with what changed and two stories, the transfer on a new patient, and the
- * completion record written once. Then looking back, and starting again from nothing.
+ * The pressure-system section on the stage, the self-paced way (HD-01): the walk, an optional
+ * question with a stated verdict, the reference set on the line, the flush read and repaired, the
+ * explanation with what changed and two stories, the transfer on a new patient, and a reviewed mark
+ * the learner can undo. Then the same section left step by step without an answer or an action, a
+ * task opened straight from the list, and the question's hint, explanation and Try again.
  */
 describe('a section on the stage', () => {
-  it('walks the pressure-system section from the walk to the record', () => {
+  it('walks the pressure-system section, answering and acting, to a reviewed mark', () => {
     const { lesson } = mountSection('pressure-system')
+    const p = lesson.predictionStepIndex
     expect(currentStepId()).toBe(lesson.steps[0].id)
     expect(screen.getByRole('heading', { name: 'A line that can be trusted' })).toBeInTheDocument()
+    expect(storedRecord()?.visitedSectionIds).toEqual(['pressure-system'])
 
     // The walk: one stop, the line.
     clickPrimary()
     expect(nowStatus()).toMatch(/Every stop visited/)
     clickPrimary()
     advanceToPrediction('pressure-system')
-    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 0].id)
+    expect(currentStepId()).toBe(lesson.steps[p].id)
 
-    // The prediction: the faulty line is loaded, the controls are locked, the verdict is stated.
-    // The new question view exposes evidence and withholds action controls entirely.
+    // The question: the faulty line is loaded and the question view shows no docks. Nothing waits on
+    // an answer — Continue is live and Check waits only for a choice.
     expect(document.querySelector('[data-dock="line"]')).toBeNull()
-    expect(nowPrimary()?.disabled).toBe(true)
+    expect(nowPrimary()?.disabled).toBe(false)
+    expect(nowPrimary()?.textContent).toMatch(/Continue without answering/)
+    expect(questionAction('check')?.disabled).toBe(true)
     expect(verdictOutcome()).toBeNull()
     commitChoice(/off level, not zeroed, and underdamped/)
     expect(verdictOutcome()).toBe('correct')
@@ -94,10 +119,10 @@ describe('a section on the stage', () => {
     ).toBe('true')
     clickPrimary()
 
-    // Act: the reference. Continue only appears once both goals are met.
-    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 1].id)
+    // Act: the reference. The actions are optional; doing them performs the step.
+    expect(currentStepId()).toBe(lesson.steps[p + 1].id)
     expect(goalStates()).toEqual(['false', 'false'])
-    expect(nowPrimary()).toBeNull()
+    expect(nowPrimary()?.textContent).toMatch(/Continue without these actions/)
     setLevel(0)
     fireEvent.click(control('zero'))
     expect(goalStates()).toEqual(['true', 'true'])
@@ -105,7 +130,7 @@ describe('a section on the stage', () => {
     clickPrimary()
 
     // Observe: the flush, said and repaired.
-    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 2].id)
+    expect(currentStepId()).toBe(lesson.steps[p + 2].id)
     expect(goalStates()).toEqual(['false', 'false', 'false', 'false'])
     readAndRepairFlush('underdamped')
     expect(document.querySelector('[data-flush-outcome]')?.getAttribute('data-flush-outcome')).toBe(
@@ -115,7 +140,7 @@ describe('a section on the stage', () => {
     clickPrimary()
 
     // Explain: the recap, what changed, the rows, the strip, the stories.
-    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 3].id)
+    expect(currentStepId()).toBe(lesson.steps[p + 3].id)
     expect(document.querySelector('[data-explain-recap]')?.textContent).toMatch(/^Correct\./)
     expect(document.querySelectorAll('[data-before-after] tbody tr')).toHaveLength(4)
     expect(
@@ -128,55 +153,149 @@ describe('a section on the stage', () => {
     clickPrimary()
 
     // Transfer: a new patient, transducer low and the line damped.
-    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 4].id)
+    expect(currentStepId()).toBe(lesson.steps[p + 4].id)
     expect(document.querySelector('[data-dock]')).toBeNull()
     commitChoice(/Re-level the transducer and restore/)
     expect(verdictOutcome()).toBe('correct')
     clickPrimary()
-    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 5].id)
+    expect(currentStepId()).toBe(lesson.steps[p + 5].id)
     setLevel(0)
     readAndRepairFlush('overdamped')
     expect(goalStates()).toEqual(['true', 'true', 'true', 'true', 'true'])
     clickPrimary()
-    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 6].id)
-    expect(localStorage.getItem(ICU_HEMODYNAMICS_LEARN_STORAGE_KEY)).not.toMatch(
-      /"pressure-system"\]/,
-    )
+    expect(currentStepId()).toBe(lesson.steps[p + 6].id)
+    expect(storedRecord()?.reviewedSectionIds).toEqual([])
     clickPrimary()
 
-    // Done: the record, once; the completion card; the pairing by mechanism.
-    expect(screen.getByRole('heading', { name: 'Section worked through' })).toBeInTheDocument()
-    const record = parseLearnRecord(localStorage.getItem(ICU_HEMODYNAMICS_LEARN_STORAGE_KEY))
-    expect(record?.completedSectionIds).toEqual(['pressure-system'])
+    // Finished: marked reviewed, with an undo. The legacy Learn record is never written.
+    expect(screen.getByRole('heading', { name: 'Section finished' })).toBeInTheDocument()
+    expect(storedRecord()?.reviewedSectionIds).toEqual(['pressure-system'])
+    expect(localStorage.getItem(ICU_HEMODYNAMICS_LEARN_STORAGE_KEY)).toBeNull()
     expect(
       document.querySelector('[data-practice-pairing]')?.getAttribute('data-practice-pairing'),
     ).toBe('mechanism-match')
-    expect(stepRows()).toEqual(lesson.steps.map(() => 'done'))
+    const rows = stepRows()
+    expect(rows[0]).toBe('done')
+    expect(rows.slice(1, p).every((row) => row === 'passed')).toBe(true)
+    expect(rows[p]).toBe('answered')
+    expect(rows[p + 1]).toBe('done')
+    expect(rows[p + 2]).toBe('done')
+    expect(rows[p + 4]).toBe('answered')
+    expect(rows[p + 5]).toBe('done')
+    expect(rows.at(-1)).toBe('current')
     expect(document.querySelectorAll('[data-step-list] [aria-current="step"]')).toHaveLength(1)
+    fireEvent.click(document.querySelector('[data-reviewed-toggle]')!)
+    expect(storedRecord()?.reviewedSectionIds).toEqual([])
+    expect(
+      document.querySelector('[data-reviewed-state]')?.getAttribute('data-reviewed-state'),
+    ).toBe('not-reviewed')
   })
 
-  it('offers Back on the Now card and walks home without losing a commitment', () => {
+  it('can be left step by step without an answer or an action, and records neither', () => {
     const { lesson } = mountSection('pressure-system')
+    const p = lesson.predictionStepIndex
+    let guard = 60
+    while (!document.querySelector('[data-stage-completion]') && guard-- > 0) {
+      const step = lesson.steps.find((candidate) => candidate.id === currentStepId())!
+      if (step.interaction.kind === 'prediction') expect(verdictOutcome()).toBeNull()
+      if (step.id === lesson.steps[p + 3].id) {
+        // Nothing was changed, so there is no before-and-after table to misread as a result, and
+        // the question's reasoning is there without an answer.
+        expect(document.querySelector('[data-before-after]')).toBeNull()
+        expect(document.querySelector('[data-before-after-absent]')).not.toBeNull()
+        expect(
+          document.querySelector('[data-explain-recap]')?.getAttribute('data-explain-recap'),
+        ).toBe('not-answered')
+      }
+      const skip = document.querySelector<HTMLButtonElement>('[data-skip-task]')
+      if (skip) fireEvent.click(skip)
+      else clickPrimary()
+    }
+    expect(document.querySelector('[data-stage-completion]')).not.toBeNull()
+    const rows = stepRows()
+    expect(rows).not.toContain('done')
+    expect(rows).not.toContain('answered')
+    expect(rows.slice(0, -1).every((row) => row === 'passed')).toBe(true)
+    expect(rows.at(-1)).toBe('current')
+  })
+
+  it('opens any task from the task list with its authored state, performing nothing on the way', () => {
+    const { lesson } = mountSection('pressure-system')
+    const p = lesson.predictionStepIndex
+    openTask(p + 1)
+    expect(currentStepId()).toBe(lesson.steps[p + 1].id)
+    // The faulty line the question describes, not the clean one the section opened on.
+    expect(goalStates()).toEqual(['false', 'false'])
+    expect(
+      stepRows()
+        .slice(0, p + 1)
+        .every((row) => row === 'passed'),
+    ).toBe(true)
+    // Opening an earlier task from there is a look back; it answers nothing.
+    openTask(p)
+    expect(nowStatus()).toMatch(/Reviewing an earlier step/)
+    expect(verdictOutcome()).toBeNull()
+    expect(document.querySelector('[data-now-card] [data-question-check]')).not.toBeNull()
+  })
+
+  it('offers a hint and the explanation before any answer, and Try again clears a checked answer', () => {
+    const { lesson } = mountSection('pressure-system')
+    const p = lesson.predictionStepIndex
+    advanceToPrediction('pressure-system')
+    fireEvent.click(questionAction('hint-toggle')!)
+    expect(document.querySelector('[data-question-hint]')?.textContent).toContain(
+      hemodynamicsSectionSpec('pressure-system').newConcept,
+    )
+    expect(
+      document.querySelector('[data-stage-sources]')?.getAttribute('data-stage-sources-claims'),
+    ).toBe('false')
+
+    fireEvent.click(questionAction('explanation-toggle')!)
+    expect(document.querySelector('[data-explanation-reveal]')).not.toBeNull()
+    expect(document.querySelector('[data-explanation-best]')?.textContent).toMatch(
+      /off level, not zeroed, and underdamped/,
+    )
+    expect(verdictOutcome()).toBeNull()
+    expect(stepRows()[p]).toBe('current')
+    expect(
+      document.querySelector('[data-stage-sources]')?.getAttribute('data-stage-sources-claims'),
+    ).toBe('true')
+
+    commitChoice(/Atmospheric zero alone/)
+    expect(verdictOutcome()).toBe('not-correct')
+    fireEvent.click(questionAction('try-again')!)
+    expect(verdictOutcome()).toBeNull()
+    expect(document.querySelector('[data-prediction-choices] input:checked')).toBeNull()
+    commitChoice(/off level, not zeroed, and underdamped/)
+    expect(verdictOutcome()).toBe('correct')
+    clickPrimary()
+    expect(stepRows()[p]).toBe('answered')
+  })
+
+  it('offers Back on the Now card and returns to the live step without losing an answer', () => {
+    const { lesson } = mountSection('pressure-system')
+    const p = lesson.predictionStepIndex
     advanceToPrediction('pressure-system')
     commitChoice(/off level, not zeroed, and underdamped/)
     clickPrimary()
-    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 1].id)
+    expect(currentStepId()).toBe(lesson.steps[p + 1].id)
     fireEvent.click(document.querySelector('[data-now-back]')!)
-    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 0].id)
+    expect(currentStepId()).toBe(lesson.steps[p].id)
     expect(nowStatus()).toMatch(/Reviewing an earlier step/)
     expect(document.querySelector('[data-controls-locked]')).toBeNull()
     expect(document.querySelector('[data-dock="line"]')).toBeNull()
+    expect(verdictOutcome()).toBe('correct')
     while (document.querySelector('[data-now-back]'))
       fireEvent.click(document.querySelector('[data-now-back]')!)
     expect(currentStepId()).toBe(lesson.steps[0].id)
     expect(document.querySelector('[data-now-back]')).toBeNull()
     clickPrimary()
-    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 1].id)
+    expect(currentStepId()).toBe(lesson.steps[p + 1].id)
     expect(verdictOutcome()).toBeNull()
-    expect(stepRows().slice(0, lesson.predictionStepIndex + 2)).toEqual([
-      ...Array(lesson.predictionStepIndex + 1).fill('done'),
-      'current',
-    ])
+    const rows = stepRows()
+    expect(rows[0]).toBe('done')
+    expect(rows[p]).toBe('answered')
+    expect(rows[p + 1]).toBe('current')
   })
 
   it('restarts from nothing', () => {
@@ -201,15 +320,22 @@ describe('a section on the stage', () => {
 })
 
 describe('the orientation section', () => {
-  it('commits the question sort as a set and says each row in words', () => {
+  it('checks the question sort row by row in words, opens the worked sort first, and never requires it', () => {
     const { lesson } = mountSection('why-measure')
     clickPrimary()
     commitChoice(/arterial pressure is low at the measurement site/)
     clickPrimary()
     expect(currentStepId()).toBe(lesson.steps[2].id)
     expect(document.querySelector('[data-sort-row]')).toBeNull()
-    clickPrimary() // read the worked classification before the independent sort
-    expect(nowPrimary()?.disabled).toBe(true)
+    clickPrimary() // read the worked classification before the sort
+    expect(nowPrimary()?.textContent).toMatch(/Continue without sorting/)
+    expect(questionAction('check')?.disabled).toBe(true)
+
+    // The worked sort opens without placing a row and records no outcome.
+    fireEvent.click(questionAction('explanation-toggle')!)
+    expect(document.querySelectorAll('[data-sort-shown]')).toHaveLength(7)
+    expect(document.querySelector('[data-sort-verdict]')).toBeNull()
+
     const answers: Record<string, string> = {
       'pa-pressure': 'measured',
       'wedge-pressure': 'measured',
@@ -224,8 +350,7 @@ describe('the orientation section', () => {
         target: { value: answers[row.getAttribute('data-sort-row')!] },
       })
     }
-    expect(document.querySelector('[data-sort-verdict]')).toBeNull()
-    clickPrimary()
+    checkAnswer()
     const verdicts = [...document.querySelectorAll('[data-sort-verdict]')].map((p) =>
       p.getAttribute('data-sort-verdict'),
     )
@@ -244,16 +369,30 @@ describe('the orientation section', () => {
     clickPrimary()
     clickPrimary()
     commitChoice(/Transduced pressures/)
+    expect(nowPrimary()?.textContent).toMatch(/Finish the section/)
     clickPrimary()
-    expect(
-      parseLearnRecord(localStorage.getItem(ICU_HEMODYNAMICS_LEARN_STORAGE_KEY))
-        ?.completedSectionIds,
-    ).toEqual(['why-measure'])
+    expect(storedRecord()?.reviewedSectionIds).toEqual(['why-measure'])
+  })
+
+  it('checks a partial sort, giving the origin of every row left unplaced', () => {
+    mountSection('why-measure')
+    clickPrimary()
+    clickPrimary()
+    clickPrimary()
+    fireEvent.change(document.querySelector('[data-sort-row="cause"] select')!, {
+      target: { value: 'beyond' },
+    })
+    checkAnswer()
+    const verdicts = [...document.querySelectorAll('[data-sort-verdict]')].map((p) =>
+      p.getAttribute('data-sort-verdict'),
+    )
+    expect(verdicts.filter((verdict) => verdict === 'correct')).toHaveLength(1)
+    expect(verdicts.filter((verdict) => verdict === 'not-placed')).toHaveLength(6)
   })
 })
 
 describe('answering on the catheter map', () => {
-  it('is one radio group of numbered pins, silent until committed, marked in words after', () => {
+  it('is one radio group of numbered pins, silent until checked, marked in words after', () => {
     const { lesson } = mountSection('waveform-interpretation')
     // The walk moves the tip to each place and the monitor names it.
     expect(document.querySelector('[data-catheter-map]')?.getAttribute('data-tip')).toBe('ra')
@@ -263,7 +402,7 @@ describe('answering on the catheter map', () => {
     expect(currentStepId()).toBe(lesson.steps[1].id)
 
     advanceToPrediction('waveform-interpretation')
-    // The question: nothing names the place.
+    // The question: nothing names the place until an answer is checked or the explanation opened.
     expect(document.querySelector('[data-catheter-map]')?.getAttribute('data-tip')).toBe('withheld')
     expect(document.querySelector('[data-map-emphasis-target]')).toBeNull()
     expect(document.body.textContent).not.toMatch(/PAC · RV/)
@@ -281,14 +420,15 @@ describe('answering on the catheter map', () => {
     expect(
       document.querySelector('[data-prediction-choices]:not([data-catheter-map-answer])'),
     ).toBeNull()
-    expect(nowPrimary()?.disabled).toBe(true)
+    expect(questionAction('check')?.disabled).toBe(true)
+    expect(nowPrimary()?.disabled).toBe(false)
 
-    // Choose from a pin, commit from the Now card.
+    // Choose from a pin, check from the card.
     fireEvent.click(document.querySelector('[data-map-pin="rv"]')!)
     expect(document.querySelector('[data-map-answer-note]')?.textContent).toMatch(
       /Chosen: The right ventricle/,
     )
-    clickPrimary()
+    checkAnswer()
     expect(document.querySelector('[data-map-emphasis-target="rv"]')).not.toBeNull()
     expect(
       [...document.querySelectorAll('[data-catheter-map-outcome]')].map((o) => o.textContent),
@@ -299,6 +439,19 @@ describe('answering on the catheter map', () => {
     expect(verdictOutcome()).toBe('correct')
   })
 
+  it('names the place when the explanation is opened, recording no answer', () => {
+    mountSection('waveform-interpretation')
+    advanceToPrediction('waveform-interpretation')
+    fireEvent.click(questionAction('explanation-toggle')!)
+    expect(document.querySelector('[data-catheter-map]')?.getAttribute('data-tip')).toBe('rv')
+    expect(document.querySelector('[data-map-emphasis-target="rv"]')).not.toBeNull()
+    expect(document.querySelector('[data-catheter-map-outcome]')).toBeNull()
+    expect(verdictOutcome()).toBeNull()
+    expect(
+      document.querySelector<HTMLFieldSetElement>('[data-catheter-map-answer]')?.disabled,
+    ).toBe(false)
+  })
+
   it('keeps the off-map option as a row with no pin, never keyed', () => {
     mountSection('waveform-interpretation')
     advanceToPrediction('waveform-interpretation')
@@ -306,7 +459,7 @@ describe('answering on the catheter map', () => {
     expect(offMap?.textContent).toMatch(/cannot be named/)
     expect(document.querySelector('[data-map-pin="line"]')).toBeNull()
     fireEvent.click(offMap!.querySelector('input')!)
-    clickPrimary()
+    checkAnswer()
     expect(verdictOutcome()).toBe('partly-correct')
   })
 })
@@ -315,7 +468,7 @@ describe('the tip section', () => {
   it('confirms a place only when the tracing has settled there', () => {
     const { lesson } = mountSection('catheter-advancement')
     clickPrimary()
-    commitChoice(/Advance, expecting the ventricular shape/)
+    commitChoice(/Advance, expecting a rapid systolic rise/)
     clickPrimary()
     expect(currentStepId()).toBe(lesson.steps[2].id)
     const rv = () =>
@@ -348,13 +501,21 @@ describe('the tip section', () => {
 })
 
 describe('the wedge section', () => {
-  it('needs the learner to store at end expiration, deflate, and say the artery is back', () => {
+  it('stores at end expiration, deflates and says the artery is back; the questions stay optional', () => {
     const { lesson } = mountSection('pawp-capture')
     clickPrimary()
     commitChoice(/Place the cursor at end expiration/)
     clickPrimary()
     expect(currentStepId()).toBe(lesson.steps[2].id)
     fireEvent.click(control('inflate'))
+    // While the balloon is up, nothing lets the learner leave the step.
+    expect(nowPrimary()).toBeDisabled()
+    expect(document.querySelector('[data-now-back]')).toBeNull()
+    expect(
+      [...document.querySelectorAll<HTMLButtonElement>('[data-step-list] button')].every(
+        (button) => button.disabled,
+      ),
+    ).toBe(true)
     expect((control('cursor') as HTMLButtonElement).disabled).toBe(true)
     tick(6)
     expect((control('cursor') as HTMLButtonElement).disabled).toBe(false)
@@ -363,12 +524,17 @@ describe('the wedge section', () => {
     expect(goalStates()).toEqual(['true', 'false'])
     fireEvent.click(control('deflate'))
     expect(goalStates()).toEqual(['true', 'true'])
+    expect(nowPrimary()).not.toBeDisabled()
     clickPrimary()
     expect(currentStepId()).toBe(lesson.steps[3].id)
-    expect(nowPrimary()).toBeNull()
+    expect(nowPrimary()?.textContent).toMatch(/Continue without these actions/)
     fireEvent.click(document.querySelector('[data-return-check] button')!)
     expect(goalStates()).toEqual(['true'])
-    expect(nowPrimary()).toBeNull()
+    expect(nowPrimary()?.textContent).not.toMatch(/without/)
+    // Both wedge questions are optional, and each opens its explanation without an answer.
+    expect(
+      document.querySelectorAll('[data-commitment] [data-question-explanation-toggle]'),
+    ).toHaveLength(2)
   })
 
   it('does not count the simulation releasing the balloon itself as a deflation', () => {
@@ -432,7 +598,7 @@ describe('the capstone', () => {
 
     // Observe: reassess is a control, not a reading.
     expect(currentStepId()).toBe(lesson.steps[3].id)
-    expect(nowPrimary()).toBeNull()
+    expect(nowPrimary()?.textContent).toMatch(/Continue without these actions/)
     fireEvent.click(document.querySelector('[data-reassess] button')!)
     expect(goalStates()).toEqual(['true'])
     clickPrimary()
@@ -449,10 +615,7 @@ describe('the capstone', () => {
     expect(goalStates()).toEqual(['true', 'true', 'true'])
     clickPrimary()
     clickPrimary()
-    expect(
-      parseLearnRecord(localStorage.getItem(ICU_HEMODYNAMICS_LEARN_STORAGE_KEY))
-        ?.completedSectionIds,
-    ).toEqual(['pac-signal-validation'])
+    expect(storedRecord()?.reviewedSectionIds).toEqual(['pac-signal-validation'])
   })
 })
 

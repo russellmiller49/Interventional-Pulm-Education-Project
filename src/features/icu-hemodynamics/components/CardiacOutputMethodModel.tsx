@@ -230,10 +230,10 @@ function MethodDetail({ method }: { readonly method: CardiacOutputMethod }) {
 }
 
 /**
- * The learner's commitment that a measured oxygen uptake and a substituted one are two methods.
+ * An optional question: is a measured oxygen uptake and a substituted one the same method?
  *
- * Committing reveals the reasoning for whichever position was taken and advances nothing; continuing
- * stays a separate deliberate action elsewhere on the station.
+ * Checking an answer or opening the reasoning shows it; neither advances anything, and the reasoning
+ * is available before any answer (HD-01). Try again clears a checked answer.
  */
 function ProvenanceCommitment({
   resolved,
@@ -246,7 +246,9 @@ function ProvenanceCommitment({
   const groupName = useId()
   const [choiceId, setChoiceId] = useState<string | null>(null)
   const [committed, setCommitted] = useState(false)
+  const [shown, setShown] = useState(false)
   const choice = CARDIAC_OUTPUT_PROVENANCE_CHOICES.find((candidate) => candidate.id === choiceId)
+  const best = CARDIAC_OUTPUT_PROVENANCE_CHOICES[0]
 
   return (
     <fieldset className={styles.methodCommitment} aria-labelledby={legendId}>
@@ -272,11 +274,33 @@ function ProvenanceCommitment({
         disabled={choiceId === null || committed}
         onClick={() => {
           setCommitted(true)
-          if (choice?.isDefensible) onResolved()
+          onResolved()
         }}
       >
-        Commit this reading
+        Check this reading
       </button>
+      {committed ? (
+        <button
+          type="button"
+          onClick={() => {
+            setCommitted(false)
+            setChoiceId(null)
+          }}
+        >
+          Try again
+        </button>
+      ) : (
+        <button
+          type="button"
+          aria-expanded={shown}
+          onClick={() => {
+            setShown((current) => !current)
+            onResolved()
+          }}
+        >
+          {shown ? 'Hide the reasoning' : 'Show the reasoning'}
+        </button>
+      )}
       {committed && choice ? (
         <p
           className={styles.methodVerdict}
@@ -287,12 +311,13 @@ function ProvenanceCommitment({
             {choice.isDefensible ? 'Best-supported reading. ' : 'Not the best-supported reading. '}
           </strong>
           {choice.why}
-          {choice.isDefensible ? '' : ` ${CARDIAC_OUTPUT_PROVENANCE_CHOICES[0].why}`}
+          {choice.isDefensible ? '' : ` ${best.why}`}
         </p>
       ) : null}
-      {resolved && !committed ? (
-        <p className={styles.methodVerdict}>
-          You have already separated the two Fick methods on this station.
+      {!committed && (shown || resolved) ? (
+        <p className={styles.methodVerdict} data-verdict="shown" role="status">
+          <strong>The best-supported reading. </strong>
+          {best.label} {best.why}
         </p>
       ) : null}
     </fieldset>

@@ -106,19 +106,6 @@ const PROVENANCE_CHOICES: readonly CardiacOutputInputStatus[] = [
   'calculated',
 ]
 
-function FirstAnswerRecord({ answers }: { readonly answers: readonly string[] | null }) {
-  return answers ? (
-    <details data-first-attempt-record>
-      <summary>First answer · retained when you revise</summary>
-      <ul>
-        {answers.map((answer) => (
-          <li key={answer}>{answer}</li>
-        ))}
-      </ul>
-    </details>
-  ) : null
-}
-
 export function DerivedProvenanceDrill({
   separated,
   onSeparated,
@@ -137,10 +124,7 @@ export function DerivedProvenanceDrill({
 
   const allAnswered = PROVENANCE_DRILL_ROWS.every((row) => answers[row.id])
   const allCorrect = PROVENANCE_DRILL_ROWS.every((row) => answers[row.id] === row.correct)
-  const [firstAnswers, setFirstAnswers] = useHemodynamicsTaskDraft<readonly string[] | null>(
-    'DerivedProvenanceDrill:first',
-    null,
-  )
+  const [shown, setShown] = useHemodynamicsTaskDraft('DerivedProvenanceDrill:shown', false)
 
   return (
     <section className={styles.measurementTeachingPanel} aria-labelledby={headingId}>
@@ -149,7 +133,7 @@ export function DerivedProvenanceDrill({
         <h2 id={headingId}>Which of these is actually a measurement?</h2>
         <p>
           Six quantities from one flowsheet, printed in the same typeface. Say how each one reached
-          the record. Committing reveals the reasoning; it does not advance the station.
+          the record and check the set, or show the classifications. Neither is needed to continue.
         </p>
       </header>
       <div className={styles.measurementTeachingCard}>
@@ -192,8 +176,15 @@ export function DerivedProvenanceDrill({
                   </strong>
                   {row.why}
                   {wasWrong
-                    ? ' Change the answer and commit again; the distinction is the point of this drill.'
+                    ? ' Change the answer and check again; the distinction is the point of this drill.'
                     : ''}
+                </p>
+              ) : shown ? (
+                <p className={styles.methodVerdict} data-verdict="shown">
+                  <strong>
+                    {`This value is ${cardiacOutputInputStatusLabels[row.correct].label.toLowerCase()}. `}
+                  </strong>
+                  {row.why}
                 </p>
               ) : null}
             </div>
@@ -204,25 +195,24 @@ export function DerivedProvenanceDrill({
           className={styles.derivedCommitButton}
           disabled={!allAnswered || committed}
           onClick={() => {
-            setFirstAnswers(
-              (first) =>
-                first ??
-                PROVENANCE_DRILL_ROWS.map(
-                  (row) =>
-                    `${row.label}: ${cardiacOutputInputStatusLabels[answers[row.id] as CardiacOutputInputStatus].label}`,
-                ),
-            )
             setCommitted(true)
             if (allCorrect) onSeparated()
           }}
         >
-          Commit these classifications
+          Check these classifications
         </button>
-        <FirstAnswerRecord answers={firstAnswers} />
+        <button
+          type="button"
+          className={styles.derivedCommitButton}
+          aria-expanded={shown}
+          onClick={() => setShown((current) => !current)}
+        >
+          {shown ? 'Hide the classifications' : 'Show the classifications'}
+        </button>
         {separated ? (
           <p className={styles.methodVerdict} role="status">
-            Measured and calculated are separated on this station. The workbench episodes now hold
-            you to that distinction.
+            Measured and calculated are separated in these classifications. The workbench episodes
+            use the same distinction.
           </p>
         ) : null}
       </div>
@@ -356,9 +346,10 @@ function MetricResultCard({ evaluation }: { readonly evaluation: DerivedMetricEv
  * about revising a reading when the evidence does not support it; refusing the learner that same
  * revision taught the opposite lesson.
  *
- * A wrong answer is therefore recoverable, but never silently: the first attempt and its feedback
- * stay on screen until the learner explicitly asks to reconsider. A defensible answer stays locked,
- * because there is nothing to recover from.
+ * A wrong answer is therefore recoverable, but never silently: the answer and its feedback stay on
+ * screen until the learner asks to try again. A defensible answer stays, because there is nothing to
+ * recover from. The reasoning for every option can also be opened before answering (HD-01); opening
+ * it awards nothing.
  */
 function DecisionFieldset({
   prompt,
@@ -366,6 +357,7 @@ function DecisionFieldset({
   committedOptionId,
   onCommit,
   onReconsider,
+  onShowReasoning,
   disabled,
 }: {
   readonly prompt: string
@@ -374,6 +366,8 @@ function DecisionFieldset({
   readonly onCommit: (option: DerivedDecisionOption) => void
   /** Clears whatever the parent recorded, so the fieldset can be answered again. */
   readonly onReconsider?: () => void
+  /** Called when the learner opens the reasoning without answering; it must not award anything. */
+  readonly onShowReasoning?: () => void
   readonly disabled?: boolean
 }) {
   const groupName = useId()
@@ -382,10 +376,7 @@ function DecisionFieldset({
     null,
   )
   const committed = committedOptionId !== null
-  const [firstOptionId, setFirstOptionId] = useHemodynamicsTaskDraft<string | null>(
-    `DecisionFieldset:${prompt}:first`,
-    null,
-  )
+  const [shown, setShown] = useHemodynamicsTaskDraft(`DecisionFieldset:${prompt}:shown`, false)
   const chosen = options.find((option) => option.id === (committedOptionId ?? choiceId))
   const recoverable = committed && chosen !== undefined && chosen.verdict !== 'defensible'
 
@@ -426,19 +417,43 @@ function DecisionFieldset({
         disabled={choiceId === null || committed || disabled}
         onClick={() => {
           const option = options.find((candidate) => candidate.id === choiceId)
-          if (option) {
-            setFirstOptionId((first) => first ?? option.id)
-            onCommit(option)
-          }
+          if (option) onCommit(option)
         }}
       >
-        Commit this position
+        Check this position
       </button>
-      {firstOptionId && firstOptionId !== committedOptionId ? (
-        <p data-first-commitment>
-          First answer: {options.find((option) => option.id === firstOptionId)?.label}. Further
-          attempts follow feedback.
-        </p>
+      {!committed ? (
+        <button
+          type="button"
+          aria-expanded={shown}
+          onClick={() => {
+            setShown(!shown)
+            onShowReasoning?.()
+          }}
+        >
+          {shown ? 'Hide the reasoning' : 'Show the reasoning'}
+        </button>
+      ) : null}
+      {!committed && shown ? (
+        <div className={styles.methodVerdict} data-verdict="shown" role="status">
+          <p>
+            <strong>Shown without an answer.</strong>
+          </p>
+          <ul>
+            {options.map((option) => (
+              <li key={option.id} data-option-verdict={option.verdict}>
+                <strong>
+                  {option.verdict === 'defensible'
+                    ? 'Defensible for this episode: '
+                    : option.verdict === 'averages-methods'
+                      ? 'Averages or blends unlike quantities: '
+                      : 'Not defensible here: '}
+                </strong>
+                {option.label} — {option.why}
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
       {committed && chosen ? (
         <p className={styles.methodVerdict} data-verdict={chosen.verdict} role="status">
@@ -457,7 +472,7 @@ function DecisionFieldset({
       ) : null}
       {recoverable && onReconsider ? (
         <button type="button" onClick={reconsider}>
-          Reconsider and commit again
+          Try again
         </button>
       ) : null}
     </fieldset>
@@ -578,10 +593,7 @@ function DependencyChainChallenge({
   )
   const correct =
     selected.size === requiredIds.size && [...requiredIds].every((id) => selected.has(id))
-  const [firstAnswers, setFirstAnswers] = useHemodynamicsTaskDraft<readonly string[] | null>(
-    'DependencyChainChallenge:first',
-    null,
-  )
+  const [shown, setShown] = useHemodynamicsTaskDraft('DependencyChainChallenge:shown', false)
 
   return (
     <fieldset className={styles.methodCommitment}>
@@ -615,28 +627,37 @@ function DependencyChainChallenge({
         type="button"
         disabled={selected.size === 0 || earned || committed}
         onClick={() => {
-          setFirstAnswers(
-            (first) => first ?? [...selected].map((id) => requireDerivedInputDefinition(id).label),
-          )
           setCommitted(true)
           if (correct) onEarned()
         }}
       >
-        Commit the dependency chain
+        Check the dependency chain
       </button>
-      <FirstAnswerRecord answers={firstAnswers} />
-      {committed || earned ? (
+      {!committed && !earned ? (
+        <button type="button" aria-expanded={shown} onClick={() => setShown(!shown)}>
+          {shown ? 'Hide the chain' : 'Show the chain'}
+        </button>
+      ) : null}
+      {committed || earned || shown ? (
         <p
           className={styles.methodVerdict}
-          data-verdict={correct || earned ? 'defensible' : 'not-defensible'}
+          data-verdict={
+            committed || earned ? (correct || earned ? 'defensible' : 'not-defensible') : 'shown'
+          }
           role="status"
         >
-          <strong>{correct || earned ? 'Chain validated. ' : 'Not the chain. '}</strong>
+          <strong>
+            {committed || earned
+              ? correct || earned
+                ? 'Chain validated. '
+                : 'Not the chain. '
+              : 'Shown without an answer. '}
+          </strong>
           {metric.shortLabel} consumes the mean PA pressure and the mean PAWP as its gradient and a
           cardiac output as its denominator — nothing else, and nothing less. MAP, RAP, and the PA
           systolic and diastolic pressures belong to other equations, and body size only enters the
           indexed form.
-          {!correct && !earned ? ' Adjust the selection and commit again.' : ''}
+          {committed && !correct && !earned ? ' Adjust the selection and check again.' : ''}
         </p>
       ) : null}
     </fieldset>
@@ -668,10 +689,7 @@ function FlowMethodChallenge({
     { id: 'method-unknown', label: 'No method is established for this flow' },
   ]
   const correct = choiceId === correctId
-  const [firstAnswers, setFirstAnswers] = useHemodynamicsTaskDraft<readonly string[] | null>(
-    'FlowMethodChallenge:first',
-    null,
-  )
+  const [shown, setShown] = useHemodynamicsTaskDraft('FlowMethodChallenge:shown', false)
 
   return (
     <fieldset className={styles.methodCommitment}>
@@ -695,23 +713,32 @@ function FlowMethodChallenge({
         type="button"
         disabled={choiceId === null || earned || committed}
         onClick={() => {
-          setFirstAnswers(
-            (first) => first ?? [options.find((option) => option.id === choiceId)!.label],
-          )
           setCommitted(true)
           if (correct) onEarned()
         }}
       >
-        Commit the method
+        Check the method
       </button>
-      <FirstAnswerRecord answers={firstAnswers} />
-      {committed || earned ? (
+      {!committed && !earned ? (
+        <button type="button" aria-expanded={shown} onClick={() => setShown(!shown)}>
+          {shown ? 'Hide the method' : 'Show the method'}
+        </button>
+      ) : null}
+      {committed || earned || shown ? (
         <p
           className={styles.methodVerdict}
-          data-verdict={correct || earned ? 'defensible' : 'not-defensible'}
+          data-verdict={
+            committed || earned ? (correct || earned ? 'defensible' : 'not-defensible') : 'shown'
+          }
           role="status"
         >
-          <strong>{correct || earned ? 'Traced. ' : 'Not this one. '}</strong>
+          <strong>
+            {committed || earned
+              ? correct || earned
+                ? 'Traced. '
+                : 'Not this one. '
+              : 'Shown without an answer. '}
+          </strong>
           {accepted
             ? `${episode.title} carries its flow from ${
                 cardiacOutputMethodById.get(
@@ -725,7 +752,7 @@ function FlowMethodChallenge({
       ) : null}
       {committed && !correct && !earned ? (
         <button type="button" onClick={() => setCommitted(false)}>
-          Reconsider and commit again
+          Try again
         </button>
       ) : null}
     </fieldset>
@@ -740,6 +767,7 @@ function SelectiveInvalidationChallenge({
   onWithheldEarned,
   onPreservedEarned,
   onCommitted,
+  onShown,
 }: {
   readonly episode: DerivedMeasurementEpisode
   readonly withheldEarned: boolean
@@ -747,6 +775,8 @@ function SelectiveInvalidationChallenge({
   readonly onWithheldEarned: () => void
   readonly onPreservedEarned: () => void
   readonly onCommitted: () => void
+  /** The learner opened the decisions without answering; nothing is earned. */
+  readonly onShown: () => void
 }) {
   const flow = episode.flowResults.find((candidate) => candidate.status === 'accepted') ?? null
   const [decisions, setDecisions] = useHemodynamicsTaskDraft<
@@ -761,10 +791,7 @@ function SelectiveInvalidationChallenge({
     false,
   )
   const alreadyEarned = withheldEarned && preservedEarned
-  const [firstAnswers, setFirstAnswers] = useHemodynamicsTaskDraft<readonly string[] | null>(
-    'SelectiveInvalidationChallenge:first',
-    null,
-  )
+  const [shown, setShown] = useHemodynamicsTaskDraft('SelectiveInvalidationChallenge:shown', false)
 
   const evaluations = useMemo(
     () =>
@@ -807,6 +834,13 @@ function SelectiveInvalidationChallenge({
           ? `${evaluation.shortLabel} survives: its own inputs are valid, so the invalid wedge does not touch it.`
           : `${evaluation.shortLabel} should remain available — none of its inputs is the invalid wedge. Withholding it would be a global "hemodynamics invalid" switch, which this station refuses.`,
     }
+  }
+
+  function expectedFor(metricId: DerivedMetricId): string {
+    const evaluation = evaluations.get(metricId)!
+    return evaluation.status === 'withheld'
+      ? `${evaluation.shortLabel} is withheld for the invalid wedge: ${evaluation.clinicalValidityReasons.join(' ')}`
+      : `${evaluation.shortLabel} survives: its own inputs are valid, so the invalid wedge does not touch it.`
   }
 
   return (
@@ -863,6 +897,10 @@ function SelectiveInvalidationChallenge({
               >
                 {verdictFor(metricId).explanation}
               </p>
+            ) : shown ? (
+              <p className={styles.methodVerdict} data-verdict="shown">
+                {expectedFor(metricId)}
+              </p>
             ) : null}
           </div>
         )
@@ -871,14 +909,6 @@ function SelectiveInvalidationChallenge({
         type="button"
         disabled={!allDecided || committed || alreadyEarned}
         onClick={() => {
-          setFirstAnswers(
-            (first) =>
-              first ??
-              derivedSelectiveDecision.metricIds.map(
-                (id) =>
-                  `${requireDerivedMetric(id).shortLabel}: ${decisions[id] === 'calculate' ? 'Calculate' : `Withhold — ${derivedSelectiveDecision.withholdReasonOptions.find((reason) => reason.id === reasons[id])?.label}`}`,
-              ),
-          )
           setCommitted(true)
           onCommitted()
           const withheldCorrect = derivedSelectiveDecision.metricIds
@@ -891,12 +921,23 @@ function SelectiveInvalidationChallenge({
           if (preservedCorrect) onPreservedEarned()
         }}
       >
-        Commit these decisions
+        Check these decisions
       </button>
-      <FirstAnswerRecord answers={firstAnswers} />
+      {!committed && !alreadyEarned ? (
+        <button
+          type="button"
+          aria-expanded={shown}
+          onClick={() => {
+            setShown(!shown)
+            onShown()
+          }}
+        >
+          {shown ? 'Hide the decisions' : 'Show the decisions'}
+        </button>
+      ) : null}
       {committed && !alreadyEarned ? (
         <button type="button" onClick={() => setCommitted(false)}>
-          Revise the decisions and commit again
+          Try again
         </button>
       ) : null}
       {alreadyEarned ? (
@@ -950,9 +991,9 @@ export function DerivedEpisodeWorkbench({
   )
 
   /**
-   * Commitment gates the reveal, not correctness: an episode with a graded interaction keeps its
-   * evaluated results hidden until a position has been taken. Earned checks reopen the reveal after
-   * a phase change, because the commitment they record has already happened.
+   * An episode with a question keeps its evaluated results folded until the learner checks a position
+   * or asks to see them (HD-01: the results never wait on a defensible answer). Earned checks reopen
+   * the reveal after a phase change.
    */
   const revealed = (() => {
     if (episode.id === 'ep-coherent-complete') {
@@ -962,7 +1003,9 @@ export function DerivedEpisodeWorkbench({
       return (withheldEarned && preservedEarned) || Boolean(revealCommitted[episode.id])
     }
     if (episode.id === 'ep-method-disagreement') {
-      return disagreementPreserved || disagreementChoice !== null
+      return (
+        disagreementPreserved || disagreementChoice !== null || Boolean(revealCommitted[episode.id])
+      )
     }
     return true
   })()
@@ -972,8 +1015,8 @@ export function DerivedEpisodeWorkbench({
       <h2 id={headingId}>Measurement episodes</h2>
       <p>
         Eight authored episodes, each a validity exercise rather than a treatment case. Read the
-        recorded inputs and the cardiac-output acquisition first; where an episode asks for a
-        commitment, the evaluated results appear after you take a position.
+        recorded inputs and the cardiac-output acquisition first. Where an episode asks a question,
+        answer it and check, or open the reasoning and the evaluated results directly.
       </p>
       <div className={styles.methodTabs} role="tablist" aria-label="Measurement episodes">
         {derivedWorkbenchEpisodes.map((candidate) => (
@@ -1014,14 +1057,11 @@ export function DerivedEpisodeWorkbench({
               <button
                 type="button"
                 className={styles.derivedCommitButton}
-                disabled={!(chainEarned && methodEarned)}
                 onClick={() =>
                   setRevealCommitted((current) => ({ ...current, [episode.id]: true }))
                 }
               >
-                {chainEarned && methodEarned
-                  ? 'Reveal the evaluated results'
-                  : 'Validate the chain and trace the method to reveal the results'}
+                Show the evaluated results
               </button>
             ) : null}
           </>
@@ -1047,6 +1087,7 @@ export function DerivedEpisodeWorkbench({
             onCommitted={() =>
               setRevealCommitted((current) => ({ ...current, [episode.id]: true }))
             }
+            onShown={() => setRevealCommitted((current) => ({ ...current, [episode.id]: true }))}
           />
         ) : null}
 
@@ -1064,6 +1105,9 @@ export function DerivedEpisodeWorkbench({
               if (option.verdict === 'defensible') onDisagreementPreserved()
             }}
             onReconsider={() => setDisagreementChoice(null)}
+            onShowReasoning={() =>
+              setRevealCommitted((current) => ({ ...current, [episode.id]: true }))
+            }
           />
         ) : null}
 
@@ -1175,7 +1219,7 @@ export function DerivedTransferComparison() {
     'DerivedTransferComparison:committedOptionId',
     null,
   )
-  // Latched: the comparison was earned by committing once, and reconsidering does not take it back.
+  // Latched: once opened — by an answer or on request — trying again does not close it.
   const [comparisonRevealed, setComparisonRevealed] = useHemodynamicsTaskDraft(
     'DerivedTransferComparison:comparisonRevealed',
     false,
@@ -1189,8 +1233,8 @@ export function DerivedTransferComparison() {
       <h2 id={headingId}>Two apparently complete episodes</h2>
       <p>
         Both flowsheets print tidy numbers. Read each episode’s acquisition evidence — not how
-        ordinary its results look — and commit to the defensible position. The evaluated results
-        appear after you commit.
+        ordinary its results look — and decide which position is defensible. Check it, or open the
+        reasoning and the evaluated results directly.
       </p>
       <div className={styles.scenarioSideBySide}>
         {[plausible, coherent].map((episode) => (
@@ -1220,6 +1264,7 @@ export function DerivedTransferComparison() {
           setComparisonRevealed(true)
         }}
         onReconsider={() => setCommittedOptionId(null)}
+        onShowReasoning={() => setComparisonRevealed(true)}
       />
 
       {comparisonRevealed ? (

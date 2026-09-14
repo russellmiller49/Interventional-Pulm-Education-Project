@@ -6,24 +6,36 @@ import type { QuestionSort } from '../../content/questionSort'
 import styles from './hemodynamics-stage.module.css'
 
 /**
- * The question sort: seven bedside questions, each attributed to one of three origins, committed
- * as a set and graded row by row in words. Before the commitment nothing says which origin is
- * keyed; after it, each row says whether the attribution held and why.
+ * The question sort: seven bedside questions, each attributed to one of three origins.
+ *
+ * Optional (HD-01). A learner can place any rows and check them, or open the worked sort without
+ * placing anything. After a check, each placed row says in words whether the attribution held and
+ * why, and each unplaced row gives its origin and reasoning; the worked sort gives every row's origin
+ * and reasoning with no outcome, because nothing was answered.
  */
 export function QuestionSortControl({
   sort,
   draft,
   committed,
+  shown = false,
   onChange,
 }: {
   readonly sort: QuestionSort
   readonly draft: Readonly<Record<string, string>>
   readonly committed: Readonly<Record<string, string>> | null
+  readonly shown?: boolean
   readonly onChange: (rowId: string, originId: string) => void
 }) {
   const base = useId()
+  const originLabel = (originId: string) =>
+    sort.origins.find((origin) => origin.id === originId)?.label ?? originId
   return (
-    <div className={styles.sort} data-question-sort data-committed={committed !== null}>
+    <div
+      className={styles.sort}
+      data-question-sort
+      data-committed={committed !== null}
+      data-shown={shown}
+    >
       <p className={styles.sortPrompt}>{sort.prompt}</p>
       <dl className={styles.sortOrigins}>
         {sort.origins.map((origin) => (
@@ -34,11 +46,14 @@ export function QuestionSortControl({
         ))}
       </dl>
       {sort.rows.map((row) => {
-        const answer = committed?.[row.id] ?? draft[row.id] ?? ''
+        const placed = committed?.[row.id]
+        const answer = placed ?? draft[row.id] ?? ''
         const outcome = committed
-          ? committed[row.id] === row.origin
-            ? 'correct'
-            : 'not-correct'
+          ? placed === undefined
+            ? 'not-placed'
+            : placed === row.origin
+              ? 'correct'
+              : 'not-correct'
           : undefined
         const selectId = `${base}-${row.id}`
         return (
@@ -65,10 +80,20 @@ export function QuestionSortControl({
                 </option>
               ))}
             </select>
-            {committed ? (
+            {outcome ? (
               <p className={styles.sortVerdict} data-sort-verdict={outcome}>
-                <strong>{outcome === 'correct' ? 'Correct.' : 'Not correct.'}</strong>{' '}
+                <strong>
+                  {outcome === 'correct'
+                    ? 'Correct.'
+                    : outcome === 'not-correct'
+                      ? 'Not correct.'
+                      : `Not placed. This one is: ${originLabel(row.origin)}.`}
+                </strong>{' '}
                 {row.rationale}
+              </p>
+            ) : shown ? (
+              <p className={styles.sortVerdict} data-sort-shown>
+                <strong>{originLabel(row.origin)}.</strong> {row.rationale}
               </p>
             ) : null}
           </div>

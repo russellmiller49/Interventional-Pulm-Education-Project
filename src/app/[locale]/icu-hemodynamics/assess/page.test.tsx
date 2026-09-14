@@ -21,7 +21,7 @@ jest.mock('@/features/icu-hemodynamics/components/IcuHemodynamicsModuleFrameV2',
 import IcuHemodynamicsAssessPage, { metadata } from './page'
 
 describe('ICU hemodynamics assess route', () => {
-  it('does not award or launch assessment on a page visit', async () => {
+  it('opens the applied-case landing on a page visit, launching nothing', async () => {
     render(
       await IcuHemodynamicsAssessPage({
         params: Promise.resolve({ locale: 'en' }),
@@ -32,7 +32,7 @@ describe('ICU hemodynamics assess route', () => {
     expect(screen.getByTestId('assess-landing')).toBeInTheDocument()
   })
 
-  it('launches the seeded masked capstone only after an explicit start', async () => {
+  it('opens the seeded applied case (HD-07) only after an explicit start', async () => {
     render(
       await IcuHemodynamicsAssessPage({
         params: Promise.resolve({ locale: 'en' }),

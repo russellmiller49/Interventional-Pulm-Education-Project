@@ -5,6 +5,7 @@ import { routeStop, routeStopNumber } from '../content/routeSpine'
 import { hemodynamicsSectionIds } from '../content/sectionSpecs'
 import { hemodynamicsStageLesson } from '../content/stageLessons'
 import {
+  checkAnswer,
   clickPrimary,
   advanceToPrediction,
   commitChoice,
@@ -82,7 +83,7 @@ describe('activity-specific presentation replaces permanent panes', () => {
     expect(document.querySelector('[data-stage-help-dialog]')).not.toHaveTextContent('Steps panel')
   })
 
-  it('omits action controls while deciding and preserves the explanation during review', () => {
+  it('keeps action docks off the question view and preserves the explanation during review', () => {
     mountSection('pressure-system')
     advanceToPrediction('pressure-system')
     expect(document.querySelector('[data-dock]')).toBeNull()
@@ -130,7 +131,7 @@ describe('the card keeps the promise the step makes', () => {
         target: { value: answers[row.getAttribute('data-sort-row')!] },
       })
     }
-    clickPrimary()
+    checkAnswer()
     clickPrimary()
     expect(currentStepId()).toBe(lesson.steps[4].id)
     expect(lesson.steps[4].phase).toBe('explain')
@@ -258,7 +259,8 @@ describe('one coherent compact task', () => {
     mountSection('waveform-interpretation')
     advanceToPrediction('waveform-interpretation')
     expect(document.querySelector('[data-now-card] [data-catheter-map-answer]')).not.toBeNull()
-    expect(document.querySelector('[data-now-card] [data-now-primary]')).toBeDisabled()
+    expect(document.querySelector('[data-now-card] [data-question-check]')).toBeDisabled()
+    expect(document.querySelector('[data-now-card] [data-now-primary]')).toBeEnabled()
     expect(document.querySelectorAll('[data-now-primary]')).toHaveLength(1)
   })
 })

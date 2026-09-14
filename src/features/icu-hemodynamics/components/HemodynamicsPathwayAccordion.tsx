@@ -9,33 +9,34 @@ import {
   hemodynamicsPathwayGroups,
   hemodynamicsPathwaySections,
   hemodynamicsSectionLinkTarget,
-  nextIncompleteHemodynamicsSection,
-  workedHemodynamicsSectionIds,
+  reviewedHemodynamicsSectionIds,
+  suggestedHemodynamicsSection,
   type HemodynamicsPathwayGroup,
 } from '../content/pathwayResolver'
-import type { IcuHemodynamicsLearnRecord } from '../engine/learnProgress'
+import { isSectionVisited, type IcuHemodynamicsSelfPacedRecord } from '../engine/selfPacedProgress'
 import styles from './hemodynamics-hub.module.css'
-import { useHemodynamicsLearnRecord } from './useHemodynamicsLearnRecord'
+import { useHemodynamicsSelfPacedRecord } from './useHemodynamicsSelfPacedRecord'
 
 /**
  * One map of the pathway, shared by the Overview and the Learn landing.
  *
  * The stages as native `<details>`, one per contiguous run of the canonical order; only the group
- * holding the learner's next section opens on load. Every count in a summary is derived from the
- * registry. Section chips carry the worked state in words as well as in state, and case chips name
- * the presentation, never the diagnosis. Flattening the groups reproduces the canonical order, and
- * the "Up next" chip is the same section the Continue call to action resolves to.
+ * holding the suggested section opens on load. Every count in a summary is derived from the
+ * registry. Section chips say in words whether the learner opened a section or marked it reviewed —
+ * nothing about answers — and case chips name the presentation, never the diagnosis. Flattening the
+ * groups reproduces the canonical order, and the "Up next" chip is the same section the call to
+ * action resolves to. Every chip links out whatever the record says.
  */
 export function HemodynamicsPathwayAccordion({
   record,
   id,
 }: {
-  readonly record: IcuHemodynamicsLearnRecord
+  readonly record: IcuHemodynamicsSelfPacedRecord
   readonly id?: string
 }) {
   const groups = hemodynamicsPathwayGroups()
-  const worked = workedHemodynamicsSectionIds(record)
-  const next = nextIncompleteHemodynamicsSection(record)
+  const reviewed = reviewedHemodynamicsSectionIds(record)
+  const next = suggestedHemodynamicsSection(record)
   const nextId = next?.section.id ?? null
   const openIndex = Math.max(
     0,
@@ -62,20 +63,22 @@ export function HemodynamicsPathwayAccordion({
             <p className={styles.groupBody}>{group.description}</p>
             <div className={styles.chipRow}>
               {group.sections.map((section) => {
-                const done = worked.has(section.id)
+                const isReviewed = reviewed.has(section.id)
+                const visited = isSectionVisited(record, section.id)
                 const isNext = section.id === nextId
                 return (
                   <Link
                     key={section.id}
                     className={styles.chip}
                     data-kind="section"
-                    data-complete={done}
+                    data-reviewed={isReviewed}
+                    data-visited={visited}
                     data-recommended={isNext}
                     href={hemodynamicsSectionLinkTarget(section.id)}
                   >
                     <GraduationCap aria-hidden="true" />
                     {section.title}
-                    {done ? ' ✓ worked through' : ''}
+                    {isReviewed ? ' ✓ reviewed' : visited ? ' · opened' : ''}
                     {isNext ? <em>Up next</em> : null}
                   </Link>
                 )
@@ -128,20 +131,21 @@ export function summaryLine(group: HemodynamicsPathwayGroup): string {
 
 /** The accordion over the stored record, for surfaces that hold none of their own. */
 export function HemodynamicsStoredPathwayAccordion({ id }: { readonly id?: string }) {
-  const { record } = useHemodynamicsLearnRecord()
+  const { record } = useHemodynamicsSelfPacedRecord()
   return <HemodynamicsPathwayAccordion record={record} id={id} />
 }
 
 /**
  * The one door: the primary call to action on every entry surface.
  *
- * Resolves through `nextIncompleteHemodynamicsSection` and nothing else. A fresh learner is sent
- * to section one; a learner part-way through, to the first section they have not worked through,
- * whether or not it is the one they opened last; a learner who has finished, to Practice.
+ * Resolves through `suggestedHemodynamicsSection` and nothing else. A fresh learner is sent to
+ * section one; a learner who left a section they have not marked reviewed, back to it; otherwise
+ * the first section not marked reviewed; a learner who has marked every section reviewed, to the
+ * cases. None of it depends on an answer.
  */
 export function HemodynamicsContinueCta({ className }: { readonly className?: string }) {
-  const { record, hydrated } = useHemodynamicsLearnRecord()
-  const next = nextIncompleteHemodynamicsSection(record)
+  const { record, hydrated } = useHemodynamicsSelfPacedRecord()
+  const next = suggestedHemodynamicsSection(record)
   if (!next) {
     return (
       <Link
@@ -149,12 +153,12 @@ export function HemodynamicsContinueCta({ className }: { readonly className?: st
         className={className ?? styles.continue}
         data-hemodynamics-continue="complete"
       >
-        <span>Every section worked through — open the cases</span>
+        <span>Every section marked reviewed — open the cases</span>
         <ArrowRight aria-hidden="true" />
       </Link>
     )
   }
-  const fresh = record.completedSectionIds.length === 0 && !next.resumed
+  const fresh = record.visitedSectionIds.length === 0 && record.reviewedSectionIds.length === 0
   const verb = fresh ? 'Start' : next.resumed ? 'Resume' : 'Continue'
   return (
     <Link

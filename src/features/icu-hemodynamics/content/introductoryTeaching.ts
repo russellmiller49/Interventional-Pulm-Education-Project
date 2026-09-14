@@ -73,30 +73,20 @@ export function componentExample(mode: ComponentMode): WaveformAtlasEntry {
   }
 }
 
+/**
+ * The region a learner checked for a component, in this session. HD-01 dropped the first-region,
+ * attempt count and "assisted" flag: the activity no longer keeps an account of first responses
+ * versus retries, and a retry simply replaces the checked region.
+ */
 export interface ComponentSelection {
   readonly component: AtrialComponentId
-  readonly firstRegion: number
   readonly selectedRegion: number | null
-  readonly attempts: number
-  readonly assisted: boolean
 }
 
 export function componentSelectionCorrect(selection: ComponentSelection, mode: ComponentMode) {
   return (
     componentRegions(mode).find((region) => region.number === selection.selectedRegion)
       ?.component === selection.component
-  )
-}
-
-export function componentIdentificationComplete(
-  selections: readonly ComponentSelection[],
-  mode: ComponentMode,
-) {
-  return componentOrder.every((component) =>
-    selections.some(
-      (selection) =>
-        selection.component === component && componentSelectionCorrect(selection, mode),
-    ),
   )
 }
 

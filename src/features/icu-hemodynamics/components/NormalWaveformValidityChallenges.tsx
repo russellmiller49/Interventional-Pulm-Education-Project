@@ -14,15 +14,16 @@ import {
   type NormalWaveformValidityChallenge,
 } from '../content'
 import styles from './icu-hemodynamics.module.css'
+import { HemodynamicsExplanation } from './stage/HemodynamicsQuestion'
 import { WaveformAtlasFigure } from './WaveformAtlasFigure'
 
 /**
  * The interaction that stops the reference from producing confident misreaders (H2 §5).
  *
- * Each card draws one of the four normal tracings through one authored display fault, asks the
- * learner to commit, and only then shows the reasoning. The chamber readout never names a chamber:
- * before the commitment it says the reading has not been made yet, and afterwards it says plainly
- * that this display cannot support one. That is the whole lesson — a recognizable shape on an
+ * Each card draws one of the four normal tracings through one authored display fault and asks for a
+ * reading. The reasoning appears when the learner checks one or asks to see it — it never waits on
+ * an answer (HD-01). The chamber readout never names a chamber: before a reading or a reveal it says
+ * none has been made, and afterwards it says plainly that this display cannot support one. That is the whole lesson — a recognizable shape on an
  * untrustworthy display is not a recognized chamber.
  *
  * Nothing here gates. Skipping every card leaves the rest of the section, and every other station,
@@ -32,20 +33,25 @@ import { WaveformAtlasFigure } from './WaveformAtlasFigure'
 interface ChallengeProgress {
   readonly choiceId: string | null
   readonly committed: boolean
+  readonly shown: boolean
 }
 
-const EMPTY_PROGRESS: ChallengeProgress = { choiceId: null, committed: false }
+const EMPTY_PROGRESS: ChallengeProgress = { choiceId: null, committed: false, shown: false }
 
 function ChallengeCard({
   challenge,
   progress,
   onChoiceChange,
   onCommit,
+  onShow,
+  onTryAgain,
 }: {
   readonly challenge: NormalWaveformValidityChallenge
   readonly progress: ChallengeProgress
   readonly onChoiceChange: (choiceId: string) => void
   readonly onCommit: () => void
+  readonly onShow: () => void
+  readonly onTryAgain: () => void
 }) {
   const entry = normalWaveformReferenceEntry(challenge.position)
   const atlasEntry = normalWaveformAtlasEntry(entry)
@@ -98,9 +104,9 @@ function ChallengeCard({
       >
         <span>Chamber readout</span>
         <strong>
-          {progress.committed
+          {progress.committed || progress.shown
             ? NORMAL_WAVEFORM_INTERPRETATION_WITHHELD
-            : 'Not established yet — commit your reading first'}
+            : 'Not established yet — check a reading or show the reasoning'}
         </strong>
       </p>
 
@@ -121,14 +127,18 @@ function ChallengeCard({
         ))}
       </fieldset>
 
-      {progress.committed && progress.choiceId ? (
+      {(progress.committed && progress.choiceId) || progress.shown ? (
         <div className={styles.validityChallengeReveal}>
-          <AnswerVerdict
-            item={challenge.commitment}
-            choiceId={progress.choiceId}
-            timing="immediate-after-commit"
-            theme="dark"
-          />
+          {progress.committed && progress.choiceId ? (
+            <AnswerVerdict
+              item={challenge.commitment}
+              choiceId={progress.choiceId}
+              timing="immediate-after-commit"
+              theme="dark"
+            />
+          ) : (
+            <HemodynamicsExplanation item={challenge.commitment} />
+          )}
           <dl>
             <div>
               <dt>What you see</dt>
@@ -152,16 +162,33 @@ function ChallengeCard({
             <p>{challenge.figureTextEquivalent}</p>
           </details>
         </div>
-      ) : (
-        <button
-          type="button"
-          className={styles.paneButton}
-          disabled={progress.choiceId === null}
-          onClick={onCommit}
-        >
-          Commit this reading
-        </button>
-      )}
+      ) : null}
+      <div role="group" aria-label="Reading actions" data-validity-actions>
+        {progress.committed ? (
+          <button type="button" className={styles.paneButton} onClick={onTryAgain}>
+            Try again
+          </button>
+        ) : (
+          <>
+            <button
+              type="button"
+              className={styles.paneButton}
+              disabled={progress.choiceId === null}
+              onClick={onCommit}
+            >
+              Check this reading
+            </button>
+            <button
+              type="button"
+              className={styles.paneButton}
+              aria-expanded={progress.shown}
+              onClick={onShow}
+            >
+              {progress.shown ? 'Hide the reasoning' : 'Show the reasoning'}
+            </button>
+          </>
+        )}
+      </div>
     </article>
   )
 }
@@ -174,9 +201,6 @@ export function NormalWaveformValidityChallenges() {
   const challenge = normalWaveformValidityChallenges[index]
   if (!challenge) return null
   const progress = progressById[challenge.id] ?? EMPTY_PROGRESS
-  const committedCount = normalWaveformValidityChallenges.filter(
-    (candidate) => progressById[candidate.id]?.committed,
-  ).length
 
   function update(next: ChallengeProgress) {
     setProgressById((current) => ({ ...current, [challenge!.id]: next }))
@@ -189,12 +213,11 @@ export function NormalWaveformValidityChallenges() {
         <h3 id={headingId}>Can you name the chamber from this display?</h3>
         <p className={styles.paneIntro}>
           Each of these draws one of the four normal tracings through a display problem. The
-          physiology underneath is normal every time. Commit to a reading before the reasoning
-          appears.
+          physiology underneath is normal every time. Check a reading, or open the reasoning
+          directly.
         </p>
         <p className={styles.validityChallengeCount} role="status" aria-live="polite">
-          Display problem {index + 1} of {normalWaveformValidityChallenges.length} ·{' '}
-          {committedCount} worked through
+          Display problem {index + 1} of {normalWaveformValidityChallenges.length}
         </p>
       </header>
 
@@ -208,12 +231,11 @@ export function NormalWaveformValidityChallenges() {
             key={candidate.id}
             type="button"
             aria-current={candidateIndex === index ? 'true' : undefined}
-            aria-label={`${candidate.label}${progressById[candidate.id]?.committed ? ' — worked through' : ''}`}
+            aria-label={candidate.label}
             onClick={() => setIndex(candidateIndex)}
           >
             <span aria-hidden="true">{candidateIndex + 1}</span>
             {candidate.label}
-            {progressById[candidate.id]?.committed ? <em aria-hidden="true">✓</em> : null}
           </button>
         ))}
       </div>
@@ -224,6 +246,8 @@ export function NormalWaveformValidityChallenges() {
         progress={progress}
         onChoiceChange={(choiceId) => update({ ...progress, choiceId })}
         onCommit={() => update({ ...progress, committed: true })}
+        onShow={() => update({ ...progress, shown: !progress.shown })}
+        onTryAgain={() => update({ ...progress, committed: false, choiceId: null })}
       />
 
       <p className={styles.atlasBoundary} role="note">

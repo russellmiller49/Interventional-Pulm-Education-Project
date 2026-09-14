@@ -1,5 +1,15 @@
-import type { HemodynamicScoreBreakdown, HemodynamicWorkspace } from './types'
+import type { HemodynamicWorkspace } from './types'
 
+/**
+ * The legacy case ledger — read-only.
+ *
+ * Before HD-01 every finished case wrote attempts, a best score and a mastery flag here, and reading
+ * a version-one record silently rewrote it as version two. The module is self-paced now (September
+ * 2026 owner decision): nothing in it writes this key any more, and nothing in it reads it either.
+ * The parsers stay because the shared critical-care progress adapter still classifies what an older
+ * session left on a device; whatever is stored is left byte-for-byte as it was. What a learner opens
+ * now lives in `selfPacedProgress.ts`.
+ */
 export const ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY = 'icu-hemodynamics-progress-v2'
 export const ICU_HEMODYNAMICS_LEGACY_PROGRESS_STORAGE_KEY = 'icu-hemodynamics-progress-v1'
 export const ICU_HEMODYNAMICS_PROGRESS_VERSION = 2 as const
@@ -83,6 +93,10 @@ export function parseIcuHemodynamicsProgress(
   }
 }
 
+/**
+ * How a version-one record reads as version two — in memory only. The result is never written back;
+ * a caller that needs the migrated view asks for it each time.
+ */
 export function migrateIcuHemodynamicsProgressV1(
   serialized: string | null | undefined,
 ): IcuHemodynamicsProgressV2 | null {
@@ -106,69 +120,4 @@ export function migrateIcuHemodynamicsProgressV1(
   } catch {
     return null
   }
-}
-
-export function readIcuHemodynamicsProgress(): IcuHemodynamicsProgressV2 {
-  if (typeof window === 'undefined') return createDefaultIcuHemodynamicsProgress()
-  try {
-    const current = parseIcuHemodynamicsProgress(
-      window.localStorage.getItem(ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY),
-    )
-    if (current) return current
-    const migrated = migrateIcuHemodynamicsProgressV1(
-      window.localStorage.getItem(ICU_HEMODYNAMICS_LEGACY_PROGRESS_STORAGE_KEY),
-    )
-    if (!migrated) return createDefaultIcuHemodynamicsProgress()
-    window.localStorage.setItem(ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY, JSON.stringify(migrated))
-    return migrated
-  } catch {
-    return createDefaultIcuHemodynamicsProgress()
-  }
-}
-
-export function writeIcuHemodynamicsProgress(progress: IcuHemodynamicsProgressV2): void {
-  if (typeof window === 'undefined') return
-  try {
-    window.localStorage.setItem(ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY, JSON.stringify(progress))
-  } catch {
-    // Optional browser progress must never interrupt the lab.
-  }
-}
-
-export function updateIcuHemodynamicsLocation(
-  progress: IcuHemodynamicsProgressV2,
-  lastStation: string,
-  lastWorkspace: HemodynamicWorkspace,
-): IcuHemodynamicsProgressV2 {
-  return { ...progress, lastStation, lastWorkspace }
-}
-
-export function recordIcuHemodynamicsResult(
-  progress: IcuHemodynamicsProgressV2,
-  result: { caseId: string; score: HemodynamicScoreBreakdown; criticalErrorCount: number },
-): IcuHemodynamicsProgressV2 {
-  const score = Math.round(Math.min(100, Math.max(0, result.score.total)))
-  const mastered = score >= 80 && result.criticalErrorCount === 0
-  return {
-    ...progress,
-    attempts: {
-      ...progress.attempts,
-      [result.caseId]: (progress.attempts[result.caseId] ?? 0) + 1,
-    },
-    completedCaseIds: [...new Set([...progress.completedCaseIds, result.caseId])],
-    bestScores: {
-      ...progress.bestScores,
-      [result.caseId]: Math.max(progress.bestScores[result.caseId] ?? 0, score),
-    },
-    masteredCaseIds: mastered
-      ? [...new Set([...progress.masteredCaseIds, result.caseId])]
-      : progress.masteredCaseIds,
-  }
-}
-
-export function hasIcuHemodynamicsMastery(
-  progress: IcuHemodynamicsProgressV2,
-  caseId: string,
-): boolean {
-  return progress.masteredCaseIds.includes(caseId) && (progress.bestScores[caseId] ?? 0) >= 80
 }

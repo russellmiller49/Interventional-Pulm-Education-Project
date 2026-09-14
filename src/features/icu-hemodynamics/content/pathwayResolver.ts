@@ -3,17 +3,26 @@ import type { CriticalCareCurriculumStage } from '@/features/learning-module/act
 import { icuHemodynamicsNavBase } from '@/features/learning-module/moduleRoutes'
 import type { LearningPathwaySection } from '@/features/learning-module/curriculum/types'
 
-import { isSectionCompleted, type IcuHemodynamicsLearnRecord } from '../engine/learnProgress'
+import {
+  isSectionReviewed,
+  lastSectionId,
+  type IcuHemodynamicsSelfPacedRecord,
+} from '../engine/selfPacedProgress'
 import { hemodynamicsPracticePairing } from './sectionSpecs'
 
 /**
  * The one door.
  *
- * Every primary "Continue" on every entry surface — the Overview hero, the Learn landing, the
- * pathway accordion's "Up next" — resolves through `nextIncompleteHemodynamicsSection`, which
- * walks the canonical order and returns the first section without a completed record. A fresh
- * learner lands on section one, never on a mid-ladder section that happens to be the flagship
- * interactive. Counts come from the registry at render; nothing here is written down.
+ * Every primary call to action on every entry surface — the Overview hero, the Learn landing, the
+ * pathway accordion's "Up next" — resolves through `suggestedHemodynamicsSection`. It is a
+ * suggestion and never a gate: every section opens from the map whatever the record says.
+ *
+ * Self-paced (HD-01): the suggestion is built from where the learner was and which sections they
+ * marked reviewed — never from answers, simulated actions or old scores. A learner who left a
+ * section they have not marked reviewed is offered it again; otherwise the first section in the
+ * canonical order not yet marked reviewed. A fresh learner lands on section one, never on a
+ * mid-ladder section that happens to be the flagship interactive. Counts come from the registry
+ * at render; nothing here is written down.
  */
 export const hemodynamicsPathway = criticalCareLearningPathway('icu-hemodynamics')
 
@@ -41,12 +50,15 @@ export interface HemodynamicsNextSection {
   readonly resumed: boolean
 }
 
-export function nextIncompleteHemodynamicsSection(
-  record: IcuHemodynamicsLearnRecord,
+export function suggestedHemodynamicsSection(
+  record: IcuHemodynamicsSelfPacedRecord,
 ): HemodynamicsNextSection | null {
-  const index = hemodynamicsPathwaySections.findIndex(
-    (section) => !isSectionCompleted(record, section.id),
-  )
+  const last = lastSectionId(record)
+  const lastIndex = hemodynamicsPathwaySections.findIndex((section) => section.id === last)
+  const index =
+    lastIndex >= 0 && !isSectionReviewed(record, hemodynamicsPathwaySections[lastIndex].id)
+      ? lastIndex
+      : hemodynamicsPathwaySections.findIndex((section) => !isSectionReviewed(record, section.id))
   if (index < 0) return null
   const section = hemodynamicsPathwaySections[index]
   return {
@@ -54,16 +66,16 @@ export function nextIncompleteHemodynamicsSection(
     index,
     total: hemodynamicsPathwaySections.length,
     href: hemodynamicsSectionHref(section.id),
-    resumed: record.lastSectionId === section.id,
+    resumed: last === section.id,
   }
 }
 
-export function workedHemodynamicsSectionIds(
-  record: IcuHemodynamicsLearnRecord,
+export function reviewedHemodynamicsSectionIds(
+  record: IcuHemodynamicsSelfPacedRecord,
 ): ReadonlySet<string> {
   return new Set(
     hemodynamicsPathwaySections
-      .filter((section) => isSectionCompleted(record, section.id))
+      .filter((section) => isSectionReviewed(record, section.id))
       .map((section) => section.id),
   )
 }

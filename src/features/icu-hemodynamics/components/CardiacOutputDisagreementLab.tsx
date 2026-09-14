@@ -75,6 +75,8 @@ function ScenarioCard({
     `ScenarioCard:${scenario.id}:committed`,
     false,
   )
+  const [shown, setShown] = useHemodynamicsTaskDraft(`ScenarioCard:${scenario.id}:shown`, false)
+  const defensible = scenario.options.find((option) => option.id === scenario.defensibleOptionId)
 
   const trials = useMemo(() => buildTrials(scenario), [scenario])
   const fick = useMemo(() => fickCardiacOutput(scenario.fick), [scenario])
@@ -205,8 +207,23 @@ function ScenarioCard({
             if (chosen?.verdict === 'defensible') onResolved()
           }}
         >
-          Commit this position
+          Check this position
         </button>
+        {committed ? (
+          <button
+            type="button"
+            onClick={() => {
+              setCommitted(false)
+              setChoiceId(null)
+            }}
+          >
+            Try again
+          </button>
+        ) : (
+          <button type="button" aria-expanded={shown} onClick={() => setShown(!shown)}>
+            {shown ? 'Hide the reasoning' : 'Show the reasoning'}
+          </button>
+        )}
         {committed && chosen ? (
           <p className={styles.methodVerdict} data-verdict={chosen.verdict} role="status">
             <strong>
@@ -219,9 +236,15 @@ function ScenarioCard({
             {chosen.why}
           </p>
         ) : null}
+        {!committed && shown && defensible ? (
+          <p className={styles.methodVerdict} data-verdict="shown" role="status">
+            <strong>Shown without an answer. The defensible position: </strong>
+            {defensible.label} {defensible.why}
+          </p>
+        ) : null}
       </fieldset>
 
-      {committed ? (
+      {committed || shown ? (
         <>
           <p className={styles.measurementTeachingCallout}>
             <strong>Why not simply average them.</strong> {scenario.whyNotAverage}
@@ -258,8 +281,9 @@ export function CardiacOutputDisagreementLab({
       <p>
         Four measurement episodes, each with both acquisitions laid out in full. Name the method,
         read where each value came from, judge the thermodilution curves and the Fick sampling, and
-        then say which result can be defended — which may be neither. Nothing here ranks the two
-        methods in general; each episode is decided on its own acquisition evidence.
+        then decide which result can be defended — which may be neither — or open the reasoning
+        directly. Nothing here ranks the two methods in general; each episode is decided on its own
+        acquisition evidence.
       </p>
       {progressive ? (
         <label>

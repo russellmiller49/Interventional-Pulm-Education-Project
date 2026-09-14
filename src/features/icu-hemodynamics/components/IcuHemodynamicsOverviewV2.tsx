@@ -138,9 +138,10 @@ export function IcuHemodynamicsOverviewV2() {
           <div>
             <dt className="font-semibold">What finishing a section means</dt>
             <dd className="text-muted-foreground">
-              It records on this device that you worked through the material. It does not make a
-              claim about clinical readiness, and it does not qualify anyone to place or interpret a
-              pulmonary-artery catheter without supervision and local protocol.
+              Finishing a section marks it reviewed on this device, and you can undo that. It
+              records nothing about your answers, it does not make a claim about clinical readiness,
+              and it does not qualify anyone to place or interpret a pulmonary-artery catheter
+              without supervision and local protocol. Every question in the module is optional.
             </dd>
           </div>
         </dl>
