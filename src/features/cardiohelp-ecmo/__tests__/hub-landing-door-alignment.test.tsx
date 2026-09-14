@@ -141,7 +141,7 @@ describe('the hub and the Learn landing resolve the same next section', () => {
     const { container } = render(<CardiohelpHub />)
     const cta = primaryCta(container)
 
-    expect(cta.textContent).toContain('Continue')
+    expect(cta.textContent).toContain('Start')
     expect(cta.textContent).toContain(sections('vv')[0]!.title)
   })
 

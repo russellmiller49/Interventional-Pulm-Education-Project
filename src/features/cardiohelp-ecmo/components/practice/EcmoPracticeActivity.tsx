@@ -302,7 +302,6 @@ export function EcmoPracticeCaseView({
   function showStage(stage: EcmoPracticeStage) {
     if (!stageReachable(stages, currentStage, stage)) return
     updateView({ expanded: stage === currentStage ? null : { whenCurrent: currentStage, stage } })
-    window.requestAnimationFrame(() => focusElementById(CASE_COLUMN_ID, 'start'))
   }
 
   function beginCase() {
@@ -449,7 +448,9 @@ export function EcmoPracticeCaseView({
     .sort((a, b) => alarmRank(b.priority) - alarmRank(a.priority))[0]
   const contextLine: EcmoContextStripLine = {
     mode: `${supportMode.toUpperCase()} ${section === 'assess' ? 'challenge' : 'practice'}`,
-    flow: `${state.circuit.bloodFlow.toFixed(2)} L/min`,
+    flow: state.circuit.flowSensorConnected
+      ? `${state.circuit.bloodFlow.toFixed(2)} L/min`
+      : '-- · flow sensor disconnected',
     rpm: `${state.device.rpmSetpoint} rpm`,
     sweep: `${state.gas.sweepLpm.toFixed(1)} L/min`,
     alarm: activeAlarm
@@ -577,7 +578,7 @@ export function EcmoPracticeCaseView({
    * The one live simulator, built once
    * ------------------------------------------------------------------ */
   const consoleNode = (
-    <FitWidthSurface label="CARDIOHELP console, scaled to fit the width of this panel">
+    <FitWidthSurface mode="actual" label="CARDIOHELP console">
       <CardiohelpConsole
         state={state}
         dispatch={dispatch}
@@ -603,13 +604,21 @@ export function EcmoPracticeCaseView({
     )
   } else if (activeStage === 'plan') {
     stagePanel = (
-      <PredictionPanel
-        key={`prediction-${attemptKey}`}
-        state={state}
-        dispatch={dispatch}
-        stageNumber={stageNumber('plan')}
-        onCommitted={() => focusElementById(CASE_COLUMN_ID, 'start')}
-      />
+      <>
+        {clinicalCase ? (
+          <ClinicalCaseBrief state={state} scenario={scenario} />
+        ) : scenario.challengeBrief ? (
+          <section aria-label="Case brief" className={playerStyles.clinicalCaseBrief}>
+            <p>{scenario.challengeBrief.presentation}</p>
+          </section>
+        ) : null}
+        <PredictionPanel
+          key={`prediction-${attemptKey}`}
+          state={state}
+          dispatch={dispatch}
+          stageNumber={stageNumber('plan')}
+        />
+      </>
     )
   } else if (activeStage === 'manage') {
     stagePanel = (
@@ -669,9 +678,20 @@ export function EcmoPracticeCaseView({
         onReveal={onReveal}
         stageNumber={stageNumber('reassess')}
         onShowStage={showStage}
+        showRevealControl={!facts.reassessmentSubmitted}
       />
     )
   }
+
+  useEffect(() => {
+    const column = document.getElementById(CASE_COLUMN_ID)
+    const destination =
+      facts.reassessmentSubmitted && !debriefRevealed
+        ? column?.querySelector<HTMLButtonElement>('[data-now-primary]')
+        : column
+    destination?.focus({ preventScroll: true })
+    column?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+  }, [activeStage, attemptKey, facts.reassessmentSubmitted, debriefRevealed])
 
   const currentIndex = stages.findIndex((stage) => stage.id === currentStage)
 
@@ -740,6 +760,7 @@ export function EcmoPracticeCaseView({
       activityMode
     >
       <EcmoActivityShell
+        flowing
         section={section}
         stage={activeStage}
         label={`CARDIOHELP ${section === 'assess' ? 'challenge' : 'practice'} case`}
@@ -753,7 +774,11 @@ export function EcmoPracticeCaseView({
               'Follow current manufacturer instructions, ELSO guidance, and local policy.',
             ]}
             badge="Simulated values"
-            onOpenConsole={() => focusControl('cardiohelp-console')}
+            onOpenConsole={
+              activeStage === 'manage' || activeStage === 'reassess'
+                ? () => focusControl('cardiohelp-console')
+                : undefined
+            }
           >
             {clinicalCase && (briefAcknowledged || facts.planComplete) ? (
               <dl className={styles.caseData} aria-label="Case data">
@@ -774,7 +799,13 @@ export function EcmoPracticeCaseView({
           </p>
         }
       >
-        <div className={styles.body} data-hydrated={hydrated} data-activity-mode={activityMode}>
+        <div
+          className={`${styles.body} ${styles.flowBody}`}
+          data-presentation="clinical-case"
+          data-case-stage={activeStage}
+          data-hydrated={hydrated}
+          data-activity-mode={activityMode}
+        >
           <div
             id={CASE_COLUMN_ID}
             className={styles.caseColumn}
@@ -784,40 +815,64 @@ export function EcmoPracticeCaseView({
             data-case-column
           >
             <div className={styles.nowCardHolder}>
-              <EcmoNowCard model={nowModel} />
+              <EcmoNowCard
+                model={
+                  activeStage === 'debrief' && debriefRevealed
+                    ? { ...nowModel, primary: undefined, secondary: undefined }
+                    : nowModel
+                }
+              >
+                {clinicalCase?.initiationTargets &&
+                (activeStage === 'brief' || activeStage === 'plan') ? (
+                  <aside aria-label="Written simulation order" className="rounded-xl border p-3">
+                    <p>Simulated case order</p>
+                    <p>
+                      {clinicalCase.initiationTargets.rpm} RPM · Sweep{' '}
+                      {clinicalCase.initiationTargets.sweepLpm} L/min · Sweep-gas oxygen fraction{' '}
+                      {clinicalCase.initiationTargets.fio2.toFixed(2)}
+                    </p>
+                  </aside>
+                ) : null}
+                <div className={styles.stagePanel} data-stage-panel={activeStage}>
+                  {stagePanel}
+                </div>
+              </EcmoNowCard>
             </div>
-            <nav aria-label="Practice workflow steps">
-              <ol className={styles.stageNav} data-stages={stages.length}>
-                {stages.map((stage, index) => {
-                  const reached = index <= currentIndex
-                  const stateLabel = stage.complete
-                    ? 'complete'
-                    : stage.id === currentStage
-                      ? 'current'
-                      : reached
-                        ? 'started'
-                        : 'pending'
-                  return (
-                    <li key={stage.id}>
-                      <button
-                        type="button"
-                        className={styles.stageButton}
-                        data-state={stateLabel}
-                        data-expanded={stage.id === activeStage}
-                        aria-current={stage.id === currentStage ? 'step' : undefined}
-                        aria-disabled={reached ? undefined : true}
-                        disabled={!reached}
-                        onClick={() => showStage(stage.id)}
-                      >
-                        <span>{stage.complete ? '✓' : stage.number}</span>
-                        <strong>{stage.label}</strong>
-                        {reached ? <small>{stage.summary ?? stateLabel}</small> : null}
-                      </button>
-                    </li>
-                  )
-                })}
-              </ol>
-            </nav>
+            <details className={styles.workflowMap}>
+              <summary>Case workflow</summary>
+              <nav aria-label="Practice workflow steps">
+                <ol className={styles.stageNav} data-stages={stages.length}>
+                  {stages.map((stage, index) => {
+                    const reached = index <= currentIndex
+                    const stateLabel = stage.complete
+                      ? 'complete'
+                      : stage.id === currentStage
+                        ? 'current'
+                        : reached
+                          ? 'started'
+                          : 'pending'
+                    return (
+                      <li key={stage.id}>
+                        <button
+                          type="button"
+                          className={styles.stageButton}
+                          data-state={stateLabel}
+                          data-expanded={stage.id === activeStage}
+                          aria-current={stage.id === currentStage ? 'step' : undefined}
+                          aria-disabled={reached ? undefined : true}
+                          disabled={!reached}
+                          onClick={() => showStage(stage.id)}
+                        >
+                          <span>{stage.complete ? '✓' : stage.number}</span>
+                          <strong>{stage.label}</strong>
+                          {reached ? <small>{stage.summary ?? stateLabel}</small> : null}
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ol>
+              </nav>
+            </details>
             {reviewing ? (
               <p className={styles.reviewNote} role="note" data-reviewing-stage>
                 Reviewing an earlier stage.{' '}
@@ -826,9 +881,7 @@ export function EcmoPracticeCaseView({
                 </button>
               </p>
             ) : null}
-            <div className={styles.stagePanel} data-stage-panel={activeStage}>
-              {stagePanel}
-            </div>
+
             <div className={styles.clockStrip} aria-label="Simulation clock" role="group">
               <Clock3 aria-hidden="true" />
               <span>
@@ -850,27 +903,29 @@ export function EcmoPracticeCaseView({
               </button>
             </div>
           </div>
-          <div
-            className={styles.simulatorColumn}
-            role="region"
-            aria-label="Simulator"
-            tabIndex={-1}
-            data-simulator-column
-          >
-            <EcmoSimulatorSurfaces
-              console={consoleNode}
-              openSurfaces={openSurfaces}
-              onToggleSurface={toggleSurface}
-              state={state}
-              dispatch={dispatch}
-              controlsEnabled
-              guidedTarget={activeGuidedTarget}
-              guidedControlId={activeGuidedControlId}
-              circuitViewPreference={null}
-              initiationTargets={clinicalCase?.initiationTargets ?? null}
-              onSaveForLater={() => onNavigate?.({ pathname: cardiohelpEcmoNavBase })}
-            />
-          </div>
+          {activeStage === 'manage' || activeStage === 'reassess' ? (
+            <div
+              className={styles.simulatorColumn}
+              role="region"
+              aria-label="Simulator"
+              tabIndex={-1}
+              data-simulator-column
+            >
+              <EcmoSimulatorSurfaces
+                console={consoleNode}
+                openSurfaces={openSurfaces}
+                onToggleSurface={toggleSurface}
+                state={state}
+                dispatch={dispatch}
+                controlsEnabled
+                guidedTarget={activeGuidedTarget}
+                guidedControlId={activeGuidedControlId}
+                circuitViewPreference={null}
+                initiationTargets={clinicalCase?.initiationTargets ?? null}
+                onSaveForLater={() => onNavigate?.({ pathname: cardiohelpEcmoNavBase })}
+              />
+            </div>
+          ) : null}
         </div>
       </EcmoActivityShell>
       {helpDialog}

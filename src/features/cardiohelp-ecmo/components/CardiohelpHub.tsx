@@ -199,7 +199,15 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
               >
                 <ArrowRight aria-hidden="true" />
                 <span>
-                  <strong>Continue — {next.section.title}</strong>
+                  <strong>
+                    {progress.lastVisited ||
+                    progress.completedFoundationSectionIds?.length ||
+                    progress.completedLabs.length ||
+                    progress.completedLearnLessonIds.length
+                      ? 'Continue'
+                      : 'Start'}{' '}
+                    — {next.section.title}
+                  </strong>
                   <small>
                     Section {next.index + 1} of {next.total} · {next.section.minutes} minutes
                   </small>

@@ -122,7 +122,10 @@ describe('foundationCircuitLocationDisclosure', () => {
 describe('the composed activity renders that scope', () => {
   it.each(MATRIX)('$sectionId / $track, uncommitted', ({ sectionId, track }) => {
     mount(sectionId, track)
-    expect(renderedDisclosure()).toBe('full')
+    const panel = document.querySelector('#cardiohelp-circuit-panel')
+    // A concept task has no map. Every mounted orientation map must still disclose its locations.
+    if (panel) expect(panel).toHaveAttribute('data-location-disclosure', 'full')
+    else expect(document.querySelector('[data-ecmo-flow]')).not.toBeNull()
   })
 
   it.each(supportedTracks(KEYED_SECTION))(

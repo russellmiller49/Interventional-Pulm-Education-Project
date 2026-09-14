@@ -67,6 +67,7 @@ export function FoundationTeachingBlock({
       </div>
     )
   }
+  if (scope.focusedPresentation) return null
   return (
     <details className={styles.section} data-foundation-reference>
       <summary className="cursor-pointer font-semibold">{title}</summary>

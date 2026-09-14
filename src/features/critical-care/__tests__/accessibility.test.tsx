@@ -422,7 +422,7 @@ describe('critical-care accessibility surfaces', () => {
     expect(await axe(committed.container)).toHaveNoViolations()
   })
 
-  it('labels every pane of the ECMO lesson stage and keeps its chrome accessible', async () => {
+  it('keeps the ECMO task and its selected surfaces in one accessible reading flow', async () => {
     window.history.replaceState(
       null,
       '',
@@ -433,9 +433,12 @@ describe('critical-care accessibility surfaces', () => {
       expect(view.container.querySelector('[data-now-card]')).not.toBeNull()
     })
 
-    for (const label of ['Simulator', 'Teaching', 'Steps']) {
-      expect(screen.getByRole('region', { name: `${label} panel` })).toBeInTheDocument()
-    }
+    expect(view.container.querySelector('[data-ecmo-flow]')).not.toBeNull()
+    expect(view.container.querySelectorAll('[data-now-card]')).toHaveLength(1)
+    expect(screen.queryByRole('tablist', { name: 'Workspace panel views' })).toBeNull()
+    expect(
+      screen.getByRole('heading', { name: 'Read the pattern before touching a control' }),
+    ).toBeInTheDocument()
     expect(view.container.querySelectorAll('[data-step-list] [aria-current="step"]')).toHaveLength(
       1,
     )
@@ -472,7 +475,7 @@ describe('critical-care accessibility surfaces', () => {
     // Exactly one primary call to action, so nothing competes with it at a compact width.
     expect(view.container.querySelectorAll('[data-ecmo-continue]')).toHaveLength(1)
 
-    const primary = screen.getByRole('link', { name: /^Continue —/ })
+    const primary = screen.getByRole('link', { name: /^Start —/ })
     // A real link, so it is in the tab order and operable by keyboard without a handler.
     expect(primary.tagName).toBe('A')
     expect(primary).toHaveAttribute('href')
@@ -506,7 +509,7 @@ describe('critical-care accessibility surfaces', () => {
   it('keeps the ECMO Learn landing call to action accessible before and after hydration', async () => {
     const view = render(<EcmoContinueCta supportMode="vv" />)
 
-    const cta = screen.getByRole('link', { name: /^Continue —/ })
+    const cta = screen.getByRole('link', { name: /^Start —/ })
     expect(cta).toHaveAttribute(
       'href',
       '/cardiohelp-ecmo/learn?lesson=why-extracorporeal-support&track=vv',

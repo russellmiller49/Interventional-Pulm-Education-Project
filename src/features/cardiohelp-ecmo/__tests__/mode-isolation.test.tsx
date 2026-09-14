@@ -79,7 +79,10 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
       screen.getByRole('img', { name: /VA ECMO femoral-femoral circuit schematic/i }),
     ).toBeInTheDocument()
     expect(screen.getByText('Femoral artery return')).toBeInTheDocument()
-    expect(screen.getAllByText('Right-arm SpO₂').length).toBeGreaterThan(0)
+    expect(document.querySelector('[data-ecmo-stage-frame]')).toHaveAttribute(
+      'data-support-mode',
+      'va',
+    )
 
     fireEvent.keyDown(vaTrack, { key: 'Home' })
     expect(vvTrack).toHaveAttribute('aria-checked', 'true')

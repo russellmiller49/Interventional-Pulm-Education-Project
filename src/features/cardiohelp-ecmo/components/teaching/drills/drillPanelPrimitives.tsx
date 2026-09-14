@@ -208,13 +208,21 @@ export function SignalRegister({
                   <th scope="row" className="pr-3 pt-3 align-top font-semibold">
                     {row.label}
                   </th>
-                  <td className="pr-3 pt-3 align-top" data-signal-site>
+                  <td
+                    className="pr-3 pt-3 align-top"
+                    data-signal-site
+                    data-column-label="Measured at"
+                  >
                     {row.measuredAt}
                   </td>
-                  <td className="pr-3 pt-3 align-top font-semibold" data-signal-value>
+                  <td
+                    className="pr-3 pt-3 align-top font-semibold"
+                    data-signal-value
+                    data-column-label="Now"
+                  >
                     {row.value}
                   </td>
-                  <td className="pt-3 align-top">
+                  <td className="pt-3 align-top" data-column-label="What it is worth">
                     <span className="inline-block" data-signal-kind-label>
                       {SIGNAL_KIND_LABEL[row.kind]}
                     </span>

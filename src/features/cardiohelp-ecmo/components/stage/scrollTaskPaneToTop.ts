@@ -17,6 +17,19 @@
  */
 export function scrollTaskPaneToTop(node: HTMLElement | null): void {
   if (!node || typeof window === 'undefined') return
+  if (node.closest('[data-ecmo-flow]')) {
+    const strip = node
+      .closest('[data-ecmo-shell]')
+      ?.querySelector<HTMLElement>('[data-ecmo-context-strip]')
+    if (strip?.querySelector('[data-operational-status="true"]')) {
+      const top = Number.parseFloat(window.getComputedStyle(strip).top) || 0
+      node.style.scrollMarginTop = `${top + strip.getBoundingClientRect().height + 16}px`
+    } else {
+      node.style.removeProperty('scroll-margin-top')
+    }
+    node.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+    return
+  }
   for (let element = node.parentElement; element; element = element.parentElement) {
     const overflowY = window.getComputedStyle(element).overflowY
     if (overflowY !== 'auto' && overflowY !== 'scroll') continue

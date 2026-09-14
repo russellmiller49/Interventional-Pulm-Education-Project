@@ -19,12 +19,15 @@ export interface EcmoSimulatorSurfacesProps extends SimulationPanelProps {
   readonly onToggleSurface: (surface: StageSurfaceId, open: boolean) => void
   /** Rendered between the console and the surfaces: the safety indicators that never hide. */
   readonly safety?: ReactNode
+  /** Focused lessons mount only the selected views, with no hidden answer-bearing panels. */
+  readonly surfaceIds?: readonly StageSurfaceId[]
 }
 
 /**
- * The console, always present, and the four monitor surfaces behind disclosures.
+ * The host's console and selected monitor surfaces.
  *
- * Each surface stays mounted whether open or closed — closed is `hidden`, not gone — so every
+ * Focused lessons mount only `surfaceIds` in document flow. Without that selection, the original
+ * disclosures remain: each surface stays mounted whether open or closed so every
  * `cardiohelp-*` control id remains unique and present in the document, a step's focus jump can
  * open the surface and then find the control, and a closed trend panel keeps its selected channel.
  * Which surfaces open is the caller's decision, declared per step or stage and applied on entry.
@@ -34,6 +37,7 @@ export function EcmoSimulatorSurfaces({
   openSurfaces,
   onToggleSurface,
   safety,
+  surfaceIds,
   ...panelProps
 }: EcmoSimulatorSurfacesProps) {
   const baseId = useId()
@@ -60,7 +64,13 @@ export function EcmoSimulatorSurfaces({
     <div className={styles.surfaces} data-simulator-surfaces>
       {consoleNode}
       {safety}
-      {STAGE_SURFACES.map((surface) => {
+      {(surfaceIds ?? STAGE_SURFACES).map((surface) => {
+        if (surfaceIds)
+          return (
+            <div key={surface} data-surface={surface} data-open="true">
+              {panels[surface]}
+            </div>
+          )
         const open = openSurfaces.has(surface)
         const panelId = `${baseId}-${surface}`
         return (

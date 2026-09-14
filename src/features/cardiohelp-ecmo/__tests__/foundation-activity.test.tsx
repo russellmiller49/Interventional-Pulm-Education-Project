@@ -563,7 +563,8 @@ describe('a shared section keeps both tracks', () => {
 
     expect(stageFrame().getAttribute('data-support-mode')).toBe('va')
     expect(screen.getByRole('radio', { name: 'VA track' })).toHaveAttribute('aria-checked', 'true')
-    expect(loadedStateCard()).toContain('VA reference circuit')
+    expect(stageFrame()).toHaveAttribute('data-support-mode', 'va')
+    expect(document.querySelector('[data-simulator-surfaces]')).toBeNull()
   })
 })
 
@@ -940,9 +941,9 @@ describe('the recognize phase is reading only', () => {
     expect(task).not.toBeNull()
     expect(currentPhase()).toBe('recognize')
     expect(task!.querySelectorAll('[data-guided-action]')).toHaveLength(0)
-    expect(task!.querySelectorAll('input, textarea, select')).toHaveLength(0)
+    expect(task!.querySelectorAll('[data-prediction-choices], [data-attribution]')).toHaveLength(0)
     // The one thing to do is read and continue; the Now card says as much.
-    expect(nowPrimary()).toHaveTextContent('Continue')
+    expect(nowPrimary()).toHaveTextContent(/Continue|Follow blood/i)
     expect(
       screen.getByRole('heading', {
         name: buildFoundationStageLesson(sectionId, 'vv').steps[0].title,
@@ -964,7 +965,9 @@ describe('every interactive section mounts', () => {
       mount(sectionId)
 
       expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
-      expect(loadedVariantId()).toBe(ecmoFoundationLessonRuntime(sectionId).primaryVariantId)
+      if (sectionId === 'why-extracorporeal-support')
+        expect(document.querySelector('[data-simulator-surfaces]')).toBeNull()
+      else expect(loadedVariantId()).toBe(ecmoFoundationLessonRuntime(sectionId).primaryVariantId)
       expect(document.querySelector('[data-pane="teaching"]')).not.toBeNull()
       expect(document.querySelector(`[data-teaching-panel="${sectionId}"]`)).not.toBeNull()
       expect(document.querySelector('[data-device-boundary]')).not.toBeNull()
@@ -1045,36 +1048,20 @@ describe('the stage shell around the section', () => {
     })
   })
 
-  it('keeps the circuit surface open on every step and the others mounted behind disclosures', () => {
+  it('reads baseline signal groups before mounting the combined stable-run view', () => {
     mount('vv-normal-state')
-    const surfaces = document.querySelector('[data-pane="simulator"] [data-simulator-surfaces]')
-    expect(surfaces).not.toBeNull()
-    expect(surfaces!.querySelectorAll('section[data-surface]')).toHaveLength(4)
-    expect(surfaces!.querySelector('[data-testid="cardiohelp-console"]')).not.toBeNull()
-
-    const phases: readonly Phase[] = [
-      'recognize',
-      'predict',
-      'act',
-      'observe',
-      'explain',
-      'transfer',
-    ]
-    for (const phase of phases) {
-      if (phase === 'act') commitAndContinue('vv-normal-state')
-      else continueTo(phase)
-      const circuit = surfaces!.querySelector('section[data-surface="circuit"]')
-      expect(circuit?.getAttribute('data-open')).toBe('true')
-      expect(circuit?.querySelector('[data-testid="circuit-schematic"]')).not.toBeNull()
-      // A closed surface is hidden, not gone: its control ids stay in the document.
-      for (const other of ['gas', 'trends'] as const) {
-        const section = surfaces!.querySelector(`section[data-surface="${other}"]`)
-        expect(section?.getAttribute('data-open')).toBe('false')
-        const body = section?.querySelector('[hidden]')
-        expect(body).not.toBeNull()
-        expect(body?.children.length).toBeGreaterThan(0)
-      }
+    for (const group of ['drainage-and-load', 'membrane-and-return', 'gas-side', 'patient']) {
+      expect(document.querySelectorAll('[data-baseline-group]')).toHaveLength(1)
+      expect(document.querySelector('[data-baseline-group]')).toHaveAttribute(
+        'data-baseline-group',
+        group,
+      )
+      expect(document.querySelector('[data-testid="cardiohelp-console"]')).toBeNull()
+      fireEvent.click(nowPrimary())
     }
+    expect(document.querySelectorAll('[data-baseline-group]')).toHaveLength(4)
+    expect(document.querySelectorAll('[data-testid="cardiohelp-console"]')).toHaveLength(1)
+    expect(currentPhase()).toBe('recognize')
   })
 })
 
@@ -1090,7 +1077,13 @@ describe('the circuit walk, driven the way a learner drives it', () => {
   }
 
   function press(selector: string) {
-    const button = walkCard().querySelector<HTMLButtonElement>(selector)
+    const button = document.querySelector<HTMLButtonElement>(
+      selector === '[data-walk-next]'
+        ? '[data-now-primary]'
+        : selector === '[data-walk-back]'
+          ? '[data-now-back]'
+          : selector,
+    )
     if (!button) throw new Error(`no ${selector} button`)
     fireEvent.click(button)
   }
@@ -1106,8 +1099,11 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     press('[data-walk-next]')
     expect(stopId()).toBe('walk-return')
 
-    // The last stop of this section: there is nowhere further to go inside it.
-    expect(walkCard().querySelector<HTMLButtonElement>('[data-walk-next]')?.disabled).toBe(true)
+    // One progression covers the last blood stop and the next authored gas-path task.
+    expect(walkCard().querySelector('[data-walk-next]')).toBeNull()
+    expect(document.querySelector('[data-now-primary]')).toHaveTextContent(
+      'Continue to the gas path',
+    )
 
     press('[data-walk-back]')
     expect(stopId()).toBe('walk-membrane')
@@ -1115,7 +1111,7 @@ describe('the circuit walk, driven the way a learner drives it', () => {
 
   it('offers no way back from the first stop, and says so rather than dead-ending', () => {
     mount('circuit-flow-path')
-    expect(walkCard().querySelector<HTMLButtonElement>('[data-walk-back]')?.disabled).toBe(true)
+    expect(document.querySelector('[data-now-back]')).toBeNull()
     expect(walkCard().textContent).toMatch(/first stop in this section/i)
   })
 
@@ -1161,7 +1157,7 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     mount('pump-and-pressure-zones')
     expect(walkCard().textContent).toMatch(/stop 1 of 2/i)
     expect(walkCard().textContent).toMatch(/began in the previous section/i)
-    press('[data-walk-next]')
+    reachFoundationStep('pump-and-pressure-zones', 'loading')
     expect(walkCard().textContent).toMatch(/stop 2 of 2/i)
   })
 
@@ -1209,7 +1205,7 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     fireEvent.click(document.querySelector('[data-now-back]')!)
     expect(currentPhase()).toBe('observe')
     expect(circuitMap()).toHaveAttribute('data-location-disclosure', 'full')
-    expect(walkCard().querySelector('[data-walk-reported-here]')).not.toBeNull()
+    expect(document.querySelector('[data-circuit-pressure-identity]')).not.toBeNull()
     continueStep()
     expect(document.querySelector('fieldset[data-prediction-choices]')).toBeDisabled()
   })
@@ -1255,7 +1251,7 @@ describe('the circuit walk, driven the way a learner drives it', () => {
   })
 
   it('leaves the loaded state alone when the learner only changes stop', () => {
-    mount('pump-and-pressure-zones')
+    mount('circuit-flow-path')
     const before = loadedVariantId()
     press('[data-walk-next]')
     expect(loadedVariantId()).toBe(before)
@@ -1436,14 +1432,14 @@ describe('what the teaching pane shows, step by step', () => {
       expect(document.body.textContent).not.toContain(choice.rationale)
     }
   })
-  it('keeps ordinary reference blocks in native, initially closed disclosures', () => {
+  it('mounts only the active explanation and restores earlier teaching through Back', () => {
     mount(SECTION)
     continueStep()
-    const references = document.querySelectorAll('details[data-foundation-reference]')
-    expect(references.length).toBeGreaterThan(0)
-    for (const reference of references) {
-      expect(reference).not.toHaveAttribute('open')
-      expect(reference.querySelector('summary')?.textContent).toBeTruthy()
-    }
+    expect(document.querySelectorAll('details[data-foundation-reference]')).toHaveLength(0)
+    expect(
+      document.querySelector('[data-active-foundation-block="support-example"]'),
+    ).not.toBeNull()
+    fireEvent.click(document.querySelector('[data-now-back]')!)
+    expect(document.querySelector('[data-active-foundation-block="delivery"]')).not.toBeNull()
   })
 })

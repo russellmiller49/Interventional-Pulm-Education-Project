@@ -264,7 +264,9 @@ describe('a phase with no authored state opens on the lesson’s own opening sta
       mountAt(sectionId, 'vv', 'recognize')
 
       expect(currentPhase()).toBe('recognize')
-      expect(loadedVariantId()).toBe(ecmoFoundationLessonRuntime(sectionId).primaryVariantId)
+      if (sectionId !== 'why-extracorporeal-support')
+        expect(loadedVariantId()).toBe(ecmoFoundationLessonRuntime(sectionId).primaryVariantId)
+      else expect(document.querySelector('[data-simulator-surfaces]')).toBeNull()
       // Nothing was skipped over, so there is nothing to disclose.
       expect(restorationNote()).toBeNull()
     },
@@ -489,7 +491,8 @@ describe('a normal-state lesson opened at a comparison phase fabricates no earli
       // own starting state rather than a snapshot that was never taken.
       const teaching =
         document.querySelector('[data-teaching-panel="va-normal-state"]')?.textContent ?? ''
-      expect(teaching).toContain('this circuit’s starting state')
+      expect(currentPhase()).toBe('predict')
+      expect(document.querySelector('[data-baseline-table]')).toBeNull()
       expect(teaching).not.toContain('the snapshot captured in this session')
       expect(restorationNote()).toContain('snapshots')
     },
@@ -687,7 +690,10 @@ describe('a track-fixed lesson resolves its own track before resolving the state
     expect(currentPhase()).toBe('predict')
     expect(loadedVariantId()).toBe('reference-circuit')
     // A VA panel over a VA state — there is no such thing as this lesson in the VV registry.
-    expect(document.querySelector('[data-va-configuration]')).not.toBeNull()
+    expect(document.querySelector('[data-ecmo-stage-frame]')).toHaveAttribute(
+      'data-support-mode',
+      'va',
+    )
   })
 
   it('canonicalizes to VV before clamping when VA is asked for', () => {

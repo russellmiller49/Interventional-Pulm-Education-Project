@@ -1,3 +1,4 @@
+import { FocusedFoundationSections } from './FocusedFoundationSections'
 import {
   ECMO_BASELINE_DISPLAY_DEADBANDS,
   ecmoDerivedValueGuides,
@@ -491,7 +492,7 @@ export function VaParallelPhysiologyPanel({
     .map((row) => row.label)
 
   return (
-    <div className={styles.panel} data-teaching-panel="va-parallel-physiology">
+    <FocusedFoundationSections className={styles.panel} panelId="va-parallel-physiology">
       <VaConfigurationLabel />
       <ModelBoundary>{VA_CONFIGURATION_BOUNDARY}</ModelBoundary>
       <section className={styles.section} aria-labelledby="parallel-path-heading">
@@ -813,28 +814,38 @@ export function VaParallelPhysiologyPanel({
         configurations that put the streams somewhere else. Placed any earlier it would read as a
         list of rescue procedures offered before the physiology that makes any of them meaningful.
       */}
-      <VaConfigurationStrategyCard detail="full" headingLevel={3} />
+      <div data-presentation-section="configuration-strategy">
+        <VaConfigurationStrategyCard detail="full" headingLevel={3} />
+      </div>
 
-      <GuidedValue
-        guide={ecmoDerivedValueGuides.recirculationFraction}
-        value={round(circuit.recirculationFraction, 3)}
-        headingLevel={3}
-      />
-      <GuidedValue
-        guide={ecmoDerivedValueGuides.recirculationAdjustedCircuitFlow}
-        value={round(circuit.recirculationAdjustedCircuitFlowLpm, 2)}
-        headingLevel={3}
-      />
-      <GuidedValue
-        guide={ecmoDerivedValueGuides.venousLineSaturation}
-        value={circuit.readouts.venousLineSaturation.displayed}
-        headingLevel={3}
-      />
-      <GuidedValue
-        guide={ecmoDerivedValueGuides.systemicVenousSaturationEstimate}
-        value={round(patient.systemicVenousSaturationEstimate, 1)}
-        headingLevel={3}
-      />
-    </div>
+      <div data-presentation-section="derived-values">
+        <GuidedValue
+          guide={ecmoDerivedValueGuides.recirculationFraction}
+          value={round(circuit.recirculationFraction, 3)}
+          headingLevel={3}
+        />
+      </div>
+      <div data-presentation-section="derived-values">
+        <GuidedValue
+          guide={ecmoDerivedValueGuides.recirculationAdjustedCircuitFlow}
+          value={round(circuit.recirculationAdjustedCircuitFlowLpm, 2)}
+          headingLevel={3}
+        />
+      </div>
+      <div data-presentation-section="derived-values">
+        <GuidedValue
+          guide={ecmoDerivedValueGuides.venousLineSaturation}
+          value={circuit.readouts.venousLineSaturation.displayed}
+          headingLevel={3}
+        />
+      </div>
+      <div data-presentation-section="derived-values">
+        <GuidedValue
+          guide={ecmoDerivedValueGuides.systemicVenousSaturationEstimate}
+          value={round(patient.systemicVenousSaturationEstimate, 1)}
+          headingLevel={3}
+        />
+      </div>
+    </FocusedFoundationSections>
   )
 }

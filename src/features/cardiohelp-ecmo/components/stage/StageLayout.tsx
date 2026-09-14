@@ -6,6 +6,8 @@ import { ResizableTeachingWorkspace } from '@/features/learning-module/curriculu
 
 import { EcmoActivityShell } from '../shell/EcmoActivityShell'
 import styles from './EcmoLessonStage.module.css'
+import flowStyles from './ActivityFlow.module.css'
+import type { EcmoTaskPresentation } from './activityPresentation'
 
 const PANE_LABELS = {
   primary: 'Steps',
@@ -82,9 +84,11 @@ export function StageLayout({
   supportMode,
   fixedPathway,
   compactPane,
+  presentation,
 }: {
   readonly stageId: string
   readonly label: string
+  readonly presentation?: EcmoTaskPresentation
   /** Stamped on the frame so a test can read which reference circuit is behind the teaching. */
   readonly supportMode?: string
   /** Present when the section runs on one track regardless of the requested one. */
@@ -113,37 +117,52 @@ export function StageLayout({
       header={header}
       contextStrip={contextStrip}
       footer={footer}
+      flowing={Boolean(presentation)}
     >
-      <div
-        className={styles.workspaceFrame}
-        data-ecmo-stage-frame
-        data-support-mode={supportMode}
-        data-fixed-pathway={fixedPathway}
-      >
-        <ResizableTeachingWorkspace
-          className={styles.workspace}
-          primary={
-            <Pane slot="primary">
-              <div className={styles.taskColumn} data-pane="task">
-                {task}
-              </div>
-            </Pane>
-          }
-          secondary={<Pane slot="secondary">{teaching}</Pane>}
-          tertiary={
-            <Pane slot="tertiary">
-              <div className={styles.simulatorPane} data-pane="simulator">
-                {simulator}
-              </div>
-            </Pane>
-          }
-          paneLabels={PANE_LABELS}
-          preferredCompactPane={compactPane}
-          defaultWidthFractions={PANE_WIDTH_FRACTIONS}
-          paneMinimums={PANE_MINIMUMS}
-          workspaceLabel="ECMO lesson workspace: steps, teaching, and simulator"
-        />
-      </div>
+      {presentation ? (
+        <div
+          className={`${styles.workspace} ${flowStyles.flow}`}
+          data-ecmo-stage-frame
+          data-ecmo-flow
+          data-pane="task"
+          data-presentation={presentation.kind}
+          data-support-mode={supportMode}
+          data-fixed-pathway={fixedPathway}
+        >
+          {task}
+        </div>
+      ) : (
+        <div
+          className={styles.workspaceFrame}
+          data-ecmo-stage-frame
+          data-support-mode={supportMode}
+          data-fixed-pathway={fixedPathway}
+        >
+          <ResizableTeachingWorkspace
+            className={styles.workspace}
+            primary={
+              <Pane slot="primary">
+                <div className={styles.taskColumn} data-pane="task">
+                  {task}
+                </div>
+              </Pane>
+            }
+            secondary={<Pane slot="secondary">{teaching}</Pane>}
+            tertiary={
+              <Pane slot="tertiary">
+                <div className={styles.simulatorPane} data-pane="simulator">
+                  {simulator}
+                </div>
+              </Pane>
+            }
+            paneLabels={PANE_LABELS}
+            preferredCompactPane={compactPane}
+            defaultWidthFractions={PANE_WIDTH_FRACTIONS}
+            paneMinimums={PANE_MINIMUMS}
+            workspaceLabel="ECMO lesson workspace: steps, teaching, and simulator"
+          />
+        </div>
+      )}
       {overlay}
     </EcmoActivityShell>
   )

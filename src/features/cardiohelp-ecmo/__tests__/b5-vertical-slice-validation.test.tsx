@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
@@ -18,8 +18,9 @@ import { cardiohelpScenarioById } from '../content/scenarios'
  *
  * This file holds the guarantees that belong to the slice as a whole rather than to one component:
  * that the pilot registry is still exactly six panels and the other fourteen still say so plainly,
- * that every prediction can still be answered wrongly, and that the console the Learn route puts in
- * a pane is scaled to fit that pane instead of being cut off by it.
+ * that every prediction can still be answered wrongly, and that the active Learn task keeps one readable console.
+ * The September 2026 activity flow supersedes route-level pane scaling; native console size and
+ * stage-appropriate mounting replace that assertion, while standalone fit math remains tested.
  *
  * The per-component behaviour — pane tabs, scroll restoration, cross-pane help targeting — is
  * asserted in `learn-workspace.test.tsx`, and the learner-facing copy contracts in
@@ -124,15 +125,12 @@ describe('B5: every prediction can still be answered wrongly', () => {
   })
 })
 
-describe('B5: the Learn route scales the console to the pane it lives in', () => {
+describe('B5: the active route keeps a readable, unique console when the task needs it', () => {
   /**
-   * The console's device grid has a `min-content` width of about 840px, measured in a browser. The
-   * primary pane is roughly 650px at 1600 × 900 and less below that, and the pane is
-   * `overflow-x: hidden`, so an unscaled console loses its right-hand column outright — including
-   * the badge that marks the readings as simulated. `FitWidthSurface` is the same answer the
-   * foundation lesson route already uses.
+   * Preserve the device's readable intrinsic size. A bounded, keyboard-scrollable viewport keeps
+   * every control available even when the task is narrower than the console.
    */
-  it('wraps the guided-drill console in a fit-to-width surface', async () => {
+  it('keeps the guided-drill console at its readable native size in a bounded viewport', async () => {
     render(<CardiohelpWorkbench section="learn" />)
     await waitFor(() => {
       expect(document.querySelector('[data-now-card]')).not.toBeNull()
@@ -142,35 +140,35 @@ describe('B5: the Learn route scales the console to the pane it lives in', () =>
     expect(console_).not.toBeNull()
     const surface = console_?.closest('[data-fit-width-surface]')
     expect(surface).not.toBeNull()
-    expect(surface).toHaveAttribute('data-fit-mode', 'fit')
+    expect(surface).toHaveAttribute('data-fit-mode', 'actual')
 
-    // Only the console is scaled: the circuit view and monitors lay out in any of these panes, and
-    // shrinking their prose would cost readability for a constraint they do not have.
+    // Circuit views and monitors reflow naturally; only the hardware needs a bounded viewport.
     const circuit = document.getElementById('cardiohelp-circuit-panel')
     expect(circuit).not.toBeNull()
     expect(circuit?.closest('[data-fit-width-surface]')).toBeNull()
   })
 
   /*
-   * R4 put Practice and Challenge on the same lean shell as Learn, so the console is fit-scaled
-   * there too (the B5 pin that Practice kept an unscaled console is superseded). What has to stay
-   * true on every route is that the one console and one circuit render once, so every guided
-   * control id resolves to exactly one element.
+   * Practice/Challenge use the existing case stages. The initial decision has no unrelated
+   * console; management still renders each physical control exactly once.
    */
   it.each(['practice', 'assess'] as const)(
-    'fit-scales the console on the %s route and keeps every guided control id unique',
+    'opens the %s decision without an unrelated console and keeps control ids unique',
     async (section) => {
       render(<CardiohelpWorkbench section={section} />)
       await waitFor(() => {
-        expect(document.getElementById('cardiohelp-console')).not.toBeNull()
+        expect(document.querySelector('[data-presentation="clinical-case"]')).not.toBeNull()
       })
-      const surface = document
-        .getElementById('cardiohelp-console')
-        ?.closest('[data-fit-width-surface]')
-      expect(surface).not.toBeNull()
-      expect(surface).toHaveAttribute('data-fit-mode', 'fit')
-      expect(document.querySelectorAll('#cardiohelp-console')).toHaveLength(1)
-      expect(document.querySelectorAll('#cardiohelp-circuit-panel')).toHaveLength(1)
+      // The clinical brief precedes management; the console must not be mounted behind it.
+      expect(document.querySelectorAll('#cardiohelp-console')).toHaveLength(0)
+      expect(document.querySelectorAll('#cardiohelp-circuit-panel')).toHaveLength(0)
+      if (section === 'practice') {
+        expect(screen.getByRole('button', { name: 'Begin case' })).toBeEnabled()
+      } else {
+        // Challenge's existing initial stage is Plan; no extra briefing gate is introduced.
+        expect(screen.getByRole('button', { name: 'Commit before action' })).toBeDisabled()
+        expect(screen.getByRole('combobox', { name: 'Goal' })).toBeEnabled()
+      }
       const ids = Array.from(document.querySelectorAll('[id^="cardiohelp-"]')).map((el) => el.id)
       expect(new Set(ids).size).toBe(ids.length)
     },

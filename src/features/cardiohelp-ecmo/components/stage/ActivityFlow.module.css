@@ -1,0 +1,132 @@
+.flow {
+  min-width: 0;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.flow[data-presentation='concept'],
+.flow[data-presentation='comparison-lab'] {
+  max-width: 980px;
+}
+
+.flow [data-now-card] {
+  position: static;
+  padding: clamp(1rem, 2vw, 1.75rem);
+}
+
+.flow [data-now-focus]:focus-visible {
+  outline: 2px solid var(--ecmo-shell-accent);
+  outline-offset: 3px;
+}
+
+.content {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+  margin-block: 1rem;
+}
+
+.explanation,
+.visual,
+.response {
+  min-width: 0;
+}
+
+.response:empty {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .content[data-activity-content='circuit-walk'],
+  .content[data-activity-content='guided-device'] {
+    grid-template-columns: minmax(280px, 0.7fr) minmax(0, 1.3fr);
+    align-items: start;
+  }
+  .content[data-activity-content='circuit-walk'] > .response,
+  .content[data-activity-content='guided-device'] > .response {
+    grid-column: 1 / -1;
+  }
+  .content[data-visual-first='true'] {
+    grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+  }
+}
+
+.flow [data-pane='teaching'] {
+  overflow: visible;
+  grid-template-columns: minmax(0, 1fr);
+}
+.flow [data-teaching-panel],
+.flow [data-stage-block] {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.flow details > summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: 0.6rem;
+}
+.flow button:focus-visible,
+.flow summary:focus-visible,
+.flow input:focus-visible,
+.flow select:focus-visible {
+  outline: 3px solid var(--ecmo-shell-accent);
+  outline-offset: 3px;
+}
+.flow [data-now-primary] {
+  min-height: 44px;
+}
+
+@media (max-width: 600px) {
+  .flow {
+    padding: 0.5rem;
+  }
+  .flow [data-now-card] {
+    padding: 0.75rem;
+  }
+  .flow [data-signal-register-scroller] {
+    overflow: visible;
+  }
+  .flow [data-signal-register] thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .flow [data-signal-register] tbody,
+  .flow [data-signal-register] tr,
+  .flow [data-signal-register] th,
+  .flow [data-signal-register] td {
+    display: block;
+    width: auto;
+    text-align: left;
+    padding: 0;
+  }
+  .flow [data-signal-register] tbody tr {
+    padding-block: 1rem;
+    border-bottom: 1px solid var(--ecmo-shell-line);
+  }
+  .flow [data-signal-register] td {
+    margin-top: 0.6rem;
+  }
+  .flow [data-signal-register] td::before {
+    content: attr(data-column-label);
+    display: block;
+    color: var(--ecmo-shell-muted);
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+}
+
+.flow [data-now-focus] {
+  scroll-margin-top: calc(var(--site-header-height, 5rem) + 1rem);
+}
+.flow button[data-now-primary] {
+  color: #04211f;
+  font-weight: 750;
+}
+.flow [data-fit-mode='actual'] {
+  border: 1px solid var(--ecmo-shell-line);
+  border-radius: 0.5rem;
+}

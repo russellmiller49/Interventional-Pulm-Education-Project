@@ -96,7 +96,7 @@ export function PredictionPanel({
   onCommitted,
   stageNumber,
 }: Pick<CasePanelProps, 'state' | 'dispatch'> & {
-  onCommitted: () => void
+  onCommitted?: () => void
   stageNumber: number
 }) {
   const [goalId, setGoalId] = useState(state.scenario.prediction.goalId ?? '')
@@ -185,7 +185,7 @@ export function PredictionPanel({
         onClick={() => {
           if (control && direction) {
             dispatch({ type: 'COMMIT_PREDICTION', goalId, control, direction })
-            window.requestAnimationFrame(onCommitted)
+            if (onCommitted) window.requestAnimationFrame(onCommitted)
           }
         }}
       >
@@ -761,9 +761,11 @@ export function ReassessmentPanel({
   onReveal,
   stageNumber,
   onShowStage,
+  showRevealControl = true,
 }: CasePanelProps & {
   onReveal: () => void
   stageNumber: number
+  showRevealControl?: boolean
   onShowStage: (stage: EcmoPracticeStage) => void
 }) {
   const reassessment = useMemo(() => resolveScenarioReassessment(scenario), [scenario])
@@ -943,9 +945,11 @@ export function ReassessmentPanel({
         >
           <CheckCircle2 aria-hidden="true" /> {commitLabel}
         </button>
-        <button ref={revealButtonRef} type="button" disabled={revealed} onClick={onReveal}>
-          <ArrowRight aria-hidden="true" /> Reveal causal debrief
-        </button>
+        {showRevealControl ? (
+          <button ref={revealButtonRef} type="button" disabled={revealed} onClick={onReveal}>
+            <ArrowRight aria-hidden="true" /> Reveal causal debrief
+          </button>
+        ) : null}
       </div>
 
       {submitted && !revealed ? (

@@ -43,6 +43,7 @@ import {
 import { drainageChatterActive } from './ecmo-circuit/chatter'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoCircuit3D } from './EcmoCircuit3D'
+import { EcmoCircuitControls } from './EcmoCircuitControls'
 
 /**
  * Whether the diagnostic map may say where the pressure channels are taken.
@@ -110,6 +111,8 @@ export interface SimulationPanelProps {
    * keeps the poster.
    */
   circuitFit?: 'poster' | 'pane'
+  /** The flowing task host owns scroll/focus on task entry. */
+  circuitAutoScroll?: boolean
   /**
    * A prediction the learner answers by pointing at the circuit rather than by reading a list.
    *
@@ -167,6 +170,7 @@ export function CircuitSchematic({
   circuitPresentation = null,
   circuitFrame = 'whole',
   circuitFit = 'poster',
+  circuitAutoScroll = true,
   mapAnswer = null,
   onSaveForLater,
   locationDisclosure = 'full',
@@ -198,7 +202,7 @@ export function CircuitSchematic({
    */
   const panelRef = useRef<HTMLElement>(null)
   useEffect(() => {
-    if (circuitViewPreference?.view !== 'diagnostic') return
+    if (!circuitAutoScroll || circuitViewPreference?.view !== 'diagnostic') return
     const panel = panelRef.current
     if (!panel) return
     /*
@@ -239,7 +243,7 @@ export function CircuitSchematic({
     return () => window.clearTimeout(timer)
     // Once per applied preference; the view itself is read from the preference, not tracked.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preferenceKey])
+  }, [preferenceKey, circuitAutoScroll])
 
   const clampGuidedHelpActive =
     guidedControlId === 'cardiohelp-clamp-drainage' ||
@@ -491,6 +495,7 @@ export function CircuitSchematic({
           theme="dark"
         >
           <EcmoCircuit3D
+            showControls={false}
             state={state}
             dispatch={dispatch}
             controlsEnabled={controlsEnabled}
@@ -1061,6 +1066,14 @@ export function CircuitSchematic({
         </div>
       </details>
 
+      {controlsEnabled ? (
+        <EcmoCircuitControls
+          state={state}
+          dispatch={dispatch}
+          controlsEnabled={controlsEnabled}
+          guidedControlId={guidedControlId}
+        />
+      ) : null}
       {/*
         Outside both tabpanels, and outside the launch gate, on purpose.
 

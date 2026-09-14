@@ -341,10 +341,6 @@ function shell(): HTMLElement {
   return element
 }
 
-function panes(): HTMLElement[] {
-  return Array.from(document.querySelectorAll<HTMLElement>('[data-pane]'))
-}
-
 describe('stage layout', () => {
   it('renders the shell root inside the module frame’s activity mode', () => {
     mountLesson()
@@ -405,27 +401,12 @@ describe('stage layout', () => {
    * what decides which pane a compact viewport opens on, and because the simulator has to stay the
    * widest pane whatever position it sits in — see the width assertions below.
    */
-  it('renders exactly three panes, each in its own labelled region of the shared workspace', () => {
+  it('renders a single task flow without compact pane tabs', () => {
     mountLesson()
-
-    expect(panes().map((pane) => pane.getAttribute('data-pane'))).toEqual([
-      'task',
-      'teaching',
-      'simulator',
-    ])
-    const workspace = screen.getByRole('region', {
-      name: 'ECMO lesson workspace: steps, teaching, and simulator',
-    })
-    expect(workspace.className).toContain('workspace')
-    expect(shell().querySelector('[data-ecmo-stage-frame]')).toContainElement(workspace)
-    for (const [pane, label] of [
-      ['task', 'Steps panel'],
-      ['teaching', 'Teaching panel'],
-      ['simulator', 'Simulator panel'],
-    ] as const) {
-      const region = screen.getByRole('region', { name: label })
-      expect(region.querySelector(`[data-pane="${pane}"]`)).not.toBeNull()
-    }
+    expect(document.querySelector('[data-ecmo-flow]')).not.toBeNull()
+    expect(document.querySelectorAll('[data-now-card]')).toHaveLength(1)
+    expect(screen.queryByRole('region', { name: 'Steps panel' })).toBeNull()
+    expect(screen.queryByRole('tablist', { name: 'Workspace panel views' })).toBeNull()
   })
 
   /*
@@ -435,29 +416,18 @@ describe('stage layout', () => {
    * walk"), which is only findable if the pane says the same word on screen. The two halves are
    * asserted together so neither can be removed on its own.
    */
-  it("prints each pane's own name on it, in the words the step copy uses", () => {
+  it('keeps the current instruction with its teaching without pane-hunting directions', () => {
     mountLesson()
-
-    expect(
-      Array.from(document.querySelectorAll('[data-pane-label]')).map((label) => label.textContent),
-    ).toEqual([
-      'Steps panel · what to do',
-      'Teaching panel · what to read',
-      'Simulator panel · what to look at',
-    ])
+    expect(document.querySelectorAll('[data-pane-label]')).toHaveLength(0)
+    expect(document.querySelector('[data-now-where]')).toBeNull()
+    expect(document.querySelector('[data-now-card] [data-pane="teaching"]')).not.toBeNull()
   })
 
-  it('mounts the console once, scaled to fit the simulator pane', () => {
-    mountLesson()
-
-    const simulator = document.querySelector('[data-pane="simulator"]')
-    const fit = simulator?.querySelector('[data-fit-width-surface]')
-    expect(fit).not.toBeNull()
-    expect(fit?.getAttribute('data-fit-mode')).toBe('fit')
-    expect(fit?.querySelector('[data-testid="cardiohelp-console"]')).not.toBeNull()
-    expect(screen.getAllByTestId('cardiohelp-console')).toHaveLength(1)
+  it('does not mount a console for the circuit walk; mounts the circuit once', () => {
+    mountLesson('circuit-flow-path')
+    expect(screen.queryByTestId('cardiohelp-console')).toBeNull()
     expect(screen.getAllByTestId('circuit-schematic')).toHaveLength(1)
-    expect(consoleMounts.count).toBe(1)
+    expect(consoleMounts.count).toBe(0)
     expect(circuitMounts.count).toBe(1)
   })
 
@@ -488,8 +458,9 @@ describe('stage layout regression', () => {
       const supportMode = sectionId.startsWith('va-') ? 'va' : 'vv'
       const view = mountLesson(sectionId, supportMode)
       expect(shell().getAttribute('data-stage')).toBe(`${sectionId}-recognize`)
-      expect(panes()).toHaveLength(3)
-      expect(screen.getAllByTestId('cardiohelp-console')).toHaveLength(1)
+      expect(document.querySelector('[data-ecmo-flow]')).not.toBeNull()
+      expect(document.querySelectorAll('[data-now-card]')).toHaveLength(1)
+      expect(screen.queryAllByTestId('cardiohelp-console').length).toBeLessThanOrEqual(1)
       view.unmount()
     }
   })

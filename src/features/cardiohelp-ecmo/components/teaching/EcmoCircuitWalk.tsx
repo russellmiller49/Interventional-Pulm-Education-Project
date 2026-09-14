@@ -80,6 +80,8 @@ export interface EcmoCircuitWalkProps {
    */
   readonly pastPrediction: boolean
   readonly onRunComparison?: (beat: EcmoWalkComparisonBeat) => void
+  /** The flowing host supplies the walk's single Next/Back progression. */
+  readonly navigationInTask?: boolean
   /** Which beat produced the state on screen, so the card can say which one is being read. */
   readonly activeComparisonId?: string | null
 }
@@ -93,6 +95,7 @@ export function EcmoCircuitWalk({
   pastPrediction,
   onRunComparison,
   activeComparisonId = null,
+  navigationInTask = false,
 }: EcmoCircuitWalkProps) {
   const sourcesCollectedElsewhere = useStageSourcesCollected()
   const headingId = useId()
@@ -328,26 +331,34 @@ export function EcmoCircuitWalk({
         </div>
       )}
 
-      <nav className="mt-4 flex flex-wrap items-center gap-2" aria-label="Circuit walk">
-        <button
-          type="button"
-          className="inline-flex min-h-11 items-center rounded-xl border px-4 text-sm font-semibold disabled:opacity-50"
-          data-walk-back
-          disabled={!previous}
-          onClick={() => previous && onStopChange(previous.id)}
-        >
-          Back
-        </button>
-        <button
-          type="button"
-          className="inline-flex min-h-11 items-center rounded-xl border px-4 text-sm font-semibold disabled:opacity-50"
-          data-walk-next
-          disabled={!next}
-          onClick={() => next && onStopChange(next.id)}
-        >
-          Next
-        </button>
-        {/*
+      {navigationInTask ? (
+        <p className="text-sm">
+          {index === 0 ? 'This is the first stop in this section. ' : ''}
+          {stop.ordinal > 1 && index === 0 ? 'This walk began in the previous section. ' : ''}
+          {!next && stop.ordinal < walkLength ? 'The walk carries on in the next section.' : ''}
+        </p>
+      ) : null}
+      {!navigationInTask ? (
+        <nav className="mt-4 flex flex-wrap items-center gap-2" aria-label="Circuit walk">
+          <button
+            type="button"
+            className="inline-flex min-h-11 items-center rounded-xl border px-4 text-sm font-semibold disabled:opacity-50"
+            data-walk-back
+            disabled={!previous}
+            onClick={() => previous && onStopChange(previous.id)}
+          >
+            Back
+          </button>
+          <button
+            type="button"
+            className="inline-flex min-h-11 items-center rounded-xl border px-4 text-sm font-semibold disabled:opacity-50"
+            data-walk-next
+            disabled={!next}
+            onClick={() => next && onStopChange(next.id)}
+          >
+            Next
+          </button>
+          {/*
           Where this section sits in a walk that is longer than it.
 
           The six stops run continuously across two sections — four here, two in the next — which is
@@ -357,17 +368,18 @@ export function EcmoCircuitWalk({
           next section on a card headed "stop 5 of 6" beside a step list reading "Step 1 of 6" and
           reported it as out of order.
         */}
-        <span className="text-xs text-muted-foreground">
-          {previous
-            ? `Back: ${resolveEcmoModeText(previous.title, supportMode)}`
-            : stop.ordinal === 1
-              ? 'This is the first stop in this section.'
-              : 'This walk began in the previous section of the lesson and carries on here.'}
-          {!next && stop.ordinal < walkLength
-            ? ' This is the last stop in this section; the walk carries on in the next section of the lesson.'
-            : ''}
-        </span>
-      </nav>
+          <span className="text-xs text-muted-foreground">
+            {previous
+              ? `Back: ${resolveEcmoModeText(previous.title, supportMode)}`
+              : stop.ordinal === 1
+                ? 'This is the first stop in this section.'
+                : 'This walk began in the previous section of the lesson and carries on here.'}
+            {!next && stop.ordinal < walkLength
+              ? ' This is the last stop in this section; the walk carries on in the next section of the lesson.'
+              : ''}
+          </span>
+        </nav>
+      ) : null}
 
       {/*
         One live region, and it announces the stop only.

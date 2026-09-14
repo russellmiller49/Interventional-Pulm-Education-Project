@@ -42,12 +42,13 @@ import { DrillTeachingColumn } from './DrillTeachingColumn'
 import { panelControlIds, resolveGuidedSimulatorTask, targetLabels } from './drillControlResolver'
 import { SectionsDrawer } from './SectionsDrawer'
 import { StageLayout } from './StageLayout'
+import { ActivityContent } from './ActivityContent'
+import { ecmoTaskPresentation } from './activityPresentation'
 import { scrollTaskPaneToTop } from './scrollTaskPaneToTop'
 import { StageSourcesScope } from './StageSourcesScope'
 import { StepList } from './StepList'
 import {
   STAGE_PHASES,
-  STAGE_PHASE_LABELS,
   canEnterStep,
   type StageLesson,
   type StagePhase,
@@ -187,6 +188,7 @@ export function DrillStageHost({
 
   const activeIndex = Math.min(progression.index, lesson.steps.length - 1)
   const activeStep = lesson.steps[activeIndex]
+  const presentation = ecmoTaskPresentation(lesson, activeStep)
   const isLastStep = activeIndex === lesson.steps.length - 1
 
   const simulatorTask =
@@ -462,7 +464,7 @@ export function DrillStageHost({
    * ---------------------------------------------------------------- */
 
   const selectedChoiceId = progression.choiceByStepId[activeStep.id] ?? null
-  const stepPosition = `Step ${activeStep.ordinal} of ${lesson.steps.length} · ${STAGE_PHASE_LABELS[activeStep.phase]}`
+  const stepPosition = `Step ${activeStep.ordinal} of ${lesson.steps.length}`
   const showWhereAction =
     helpControlId && !stepPerformed
       ? {
@@ -499,7 +501,7 @@ export function DrillStageHost({
       ...(canGoBack && previousStep
         ? {
             back: {
-              label: `Back to ${STAGE_PHASE_LABELS[previousStep.phase]}`,
+              label: `Back to ${previousStep.title}`,
               onActivate: () => goToStep(activeIndex - 1),
             },
           }
@@ -517,7 +519,11 @@ export function DrillStageHost({
           : 'Done.',
         primary: isLastStep
           ? undefined
-          : { label: 'Next step', onActivate: advance, icon: <ArrowRight aria-hidden="true" /> },
+          : {
+              label: activeStep.interaction.kind === 'prediction' ? 'Continue' : 'Next step',
+              onActivate: advance,
+              icon: <ArrowRight aria-hidden="true" />,
+            },
       }
     }
     switch (activeStep.interaction.kind) {
@@ -587,7 +593,7 @@ export function DrillStageHost({
               outcome="stated"
               timing="immediate-after-commit"
               theme="dark"
-              onContinue={isLastStep ? undefined : advance}
+              onContinue={undefined}
             />
             {/*
               The item's sources used to sit under the verdict. They are in the footer now, with
@@ -641,7 +647,9 @@ export function DrillStageHost({
   const activeAlarm = state.alarms.find((alarm) => alarm.active && alarm.source === 'device')
   const contextLine: EcmoContextStripLine = {
     mode: supportMode.toUpperCase(),
-    flow: `${state.circuit.bloodFlow.toFixed(2)} L/min`,
+    flow: state.circuit.flowSensorConnected
+      ? `${state.circuit.bloodFlow.toFixed(2)} L/min`
+      : '-- · flow sensor disconnected',
     rpm: `${state.device.rpmSetpoint} RPM`,
     sweep: `${state.gas.sweepLpm.toFixed(1)} L/min`,
     alarm: activeAlarm
@@ -650,7 +658,7 @@ export function DrillStageHost({
   }
 
   const consoleNode = (
-    <FitWidthSurface label="CARDIOHELP console, scaled to fit the width of this panel">
+    <FitWidthSurface mode="actual" label="CARDIOHELP console">
       <CardiohelpConsole
         state={state}
         dispatch={dispatch}
@@ -671,7 +679,8 @@ export function DrillStageHost({
 
   const simulator = (
     <EcmoSimulatorSurfaces
-      console={consoleNode}
+      console={presentation?.console ? consoleNode : null}
+      surfaceIds={[...new Set([...(presentation?.surfaces ?? []), ...openSurfaces])]}
       state={state}
       dispatch={dispatch}
       controlsEnabled
@@ -679,6 +688,7 @@ export function DrillStageHost({
       guidedControlId={guidedControlId}
       circuitViewPreference={circuitViewPreference}
       circuitPresentation={circuitPresentation}
+      circuitAutoScroll={false}
       circuitFit="pane"
       openSurfaces={openSurfaces}
       onToggleSurface={toggleSurface}
@@ -710,7 +720,20 @@ export function DrillStageHost({
   const task = (
     <>
       <div ref={nowHeadingRef} tabIndex={-1} data-now-focus>
-        <EcmoNowCard model={nowModel}>{nowBody}</EcmoNowCard>
+        <EcmoNowCard model={nowModel}>
+          <ActivityContent
+            presentation={presentation}
+            teaching={teaching}
+            visual={simulator}
+            visualFirst={
+              activeStep.phase === 'act' ||
+              activeStep.phase === 'observe' ||
+              activeStep.phase === 'transfer'
+            }
+          >
+            {nowBody}
+          </ActivityContent>
+        </EcmoNowCard>
       </div>
       {activeIndex === 0 && sectionSpec ? (
         <details className={styles.objectives} data-stage-objectives>
@@ -721,25 +744,28 @@ export function DrillStageHost({
           </p>
         </details>
       ) : null}
-      <StepList
-        lesson={lesson}
-        currentIndex={activeIndex}
-        furthestPerformedIndex={furthestPerformed}
-        performedStepIds={performedIds}
-        predictionCommitted={predictionCommitted}
-        reviewIndex={progression.review}
-        recapFor={(index) => {
-          const step = lesson.steps[index]
-          if (!step) return []
-          if (step.interaction.kind === 'prediction') {
-            const choiceId = progression.choiceByStepId[step.id]
-            const choice = step.interaction.item.choices.find((item) => item.id === choiceId)
-            return choice ? [`You chose: ${choice.label}`] : ['Prediction recorded.']
-          }
-          return step.expectedResponse ?? []
-        }}
-        onSelect={selectStepRow}
-      />
+      <details data-task-history>
+        <summary>Tasks in this section</summary>
+        <StepList
+          lesson={lesson}
+          currentIndex={activeIndex}
+          furthestPerformedIndex={furthestPerformed}
+          performedStepIds={performedIds}
+          predictionCommitted={predictionCommitted}
+          reviewIndex={progression.review}
+          recapFor={(index) => {
+            const step = lesson.steps[index]
+            if (!step) return []
+            if (step.interaction.kind === 'prediction') {
+              const choiceId = progression.choiceByStepId[step.id]
+              const choice = step.interaction.item.choices.find((item) => item.id === choiceId)
+              return choice ? [`You chose: ${choice.label}`] : ['Prediction recorded.']
+            }
+            return step.expectedResponse ?? []
+          }}
+          onSelect={selectStepRow}
+        />
+      </details>
       {finished ? (
         <section
           className={styles.completion}
@@ -849,11 +875,19 @@ export function DrillStageHost({
     >
       <StageSourcesScope>
         <StageLayout
+          presentation={presentation}
           stageId={activeStep.id}
           label={`Guided CARDIOHELP ${supportMode.toUpperCase()} lesson`}
           supportMode={supportMode}
           header={header}
-          contextStrip={<EcmoContextStrip line={contextLine} badge="Simulated values" />}
+          contextStrip={
+            <div data-operational-status={presentation?.operational || undefined}>
+              <EcmoContextStrip line={contextLine} badge="Simulated values" />
+              <p className="px-4 py-1">
+                Modeled time {state.simulationTime} s · {state.paused ? 'paused' : 'running'}
+              </p>
+            </div>
+          }
           simulator={simulator}
           teaching={teaching}
           compactPane={compactPane}
