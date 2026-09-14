@@ -61,5 +61,6 @@ No dependency, learning platform, publication, deployment, release-state change,
 
 ## Implementation handoffs
 
+- [MV-02 — matched, replayable PEEP comparisons](MV-02-handoff.md): reproduced the reported pressure/compliance observations, separated model-assigned compliance from effort-affected estimates, and added an optional worked comparison with a matched wait arm. Quantitative clinical interpretation remains pending faculty/RT review.
 - [MV-01 — causal investigation and self-paced entry paths](MV-01-handoff.md): all MV public entry/progress paths converted; the MV-03 live case is excluded pending faculty/RT modeling review. Includes the complete question ledger, preserved legacy-data contract and executed technical evidence. This does not change publication status or constitute clinical approval.
 - [PI-01 — Peripheral Imaging self-paced pilot](PI-01-handoff.md): Learn, Practice, the former capstone (now integrated cases on the same address), hub and progress storage converted; changed test contracts, evidence, holds and next slice. This does not change publication status or constitute clinical approval.

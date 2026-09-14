@@ -20,6 +20,7 @@ import { VentilationPrerequisite } from './VentilationPrerequisite'
 import { VentilationSourceList } from './VentilationSourceList'
 import { CapturedBreath } from './CapturedBreath'
 import { RecordedBreathComparison } from './RecordedBreathComparison'
+import { VentilationPeepComparison } from './VentilationPeepComparison'
 import { breathStop, type BreathStopId } from '../../content/breathSpine'
 import {
   readDevicePreference,
@@ -85,6 +86,8 @@ function VentilationStageSession({
   const nextUnit = ventilationLearningUnits[lesson.index + 1]
   const ready = labReadyToCompare(session)
   const [explanationOpen, setExplanationOpen] = useState(false)
+  const [restartCount, setRestartCount] = useState(0)
+  const peepLesson = unitId === 'oxygenation-response'
   const [walkStop, setWalkStop] = useState<BreathStopId>('trigger')
   useEffect(() => {
     visit({ section: 'learn', id: unitId, step: index })
@@ -99,6 +102,7 @@ function VentilationStageSession({
     setExplanationOpen(false)
   }
   function restart() {
+    setRestartCount((count) => count + 1)
     lab({ type: 'RESTART' })
     engine({ type: 'SET_PAUSED', paused: true })
     setIndex(0)
@@ -199,7 +203,9 @@ function VentilationStageSession({
                   ? round.task
                   : question
                     ? 'Consider this optional question, or open its explanation and continue.'
-                    : round.introduction}
+                    : peepLesson
+                      ? step.instruction
+                      : round.introduction}
               </p>
               <p>{step.guide?.look ?? round.look}</p>
               <nav className={styles.tools} aria-label="Step navigation">
@@ -227,6 +233,9 @@ function VentilationStageSession({
                 </button>
               </nav>
             </section>
+            {peepLesson ? (
+              <VentilationPeepComparison key={restartCount} explanationOpen={showExplanation} />
+            ) : null}
             {interaction.kind === 'read' || interaction.kind === 'walk' ? (
               <VentilationPrerequisite lesson={lesson} device={session.device} />
             ) : null}
@@ -303,6 +312,15 @@ function VentilationStageSession({
                     ))}
                   </tbody>
                 </table>
+              </section>
+            ) : null}
+            {peepLesson ? (
+              <section className={styles.block}>
+                <h2>Your separate simulated patient</h2>
+                <p>
+                  The controls below act on your patient. The worked comparison above does not
+                  change this patient or create a captured response.
+                </p>
               </section>
             ) : null}
             <VentilationTaskWorkbench
