@@ -12,6 +12,7 @@
 | Repository instructions  | Root `AGENTS.md` and `CLAUDE.md`; `docs/local-authoring-assets.md`; the v2 pack read in place under `Interventional-Pulm-Local-Data/roadmaps/IP-Education-Self-Paced-Action-Pack-v2/` (`LEARNING_DESIGN_BRIEF.md`, `prompts/EBUS-01.md`, `prompts/G00.md`)                                     |
 | Concurrent-worktree rule | Module-local. The only files outside `src/features/ebus-guided` and its four routes are documentation: this handoff, the question ledger, one appended bullet in `README.md`, one appended row in `test-contracts.md`, and a supersession note at the top of `docs/ebus-guided/module-plan.md` |
 | Not changed on purpose   | `src/lib/non-public-modules.ts` still summarises the module as having “formative case assessment”. It is a shared listing file; the one-line summary is left for a serialized shared edit (see Next slice)                                                                                     |
+| Pull request             | [#205](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/205) from `claude/track-b-9-14`; commit `afb23669`                                                                                                                                                        |
 
 ## Changed files
 
