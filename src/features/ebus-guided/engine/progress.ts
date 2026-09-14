@@ -1,16 +1,46 @@
 import { z } from 'zod'
 import { FINAL_CASES } from '../content/cases'
 import { LESSONS } from '../content/curriculum'
-import type { Question } from '../content/types'
+import { labGoalMet, type Lab, type Question } from '../content/types'
+import type { EbusObservation } from '@/lib/ebus-guided-bridge'
+import {
+  isLinkedFrameSource,
+  linkedTaskKey,
+  type LinkedFrameSource,
+} from '@/lib/ebus-linked-contract'
 export const STORAGE_KEY = 'ip-ebus-guided-v1'
 export const RECORD_EVENT = 'ebus-guided-record'
 const attempt = z.object({ choiceId: z.string().max(80), at: z.string().max(80) }).strict()
+const skillObservation = z
+  .object({
+    source: z.custom<LinkedFrameSource>(isLinkedFrameSource),
+    landmarks: z.array(z.string().max(100)).max(8),
+    sweeps: z
+      .array(
+        z
+          .object({
+            approach: z.enum(['rms', 'lms', 'default']),
+            samples: z.number().int().min(5).max(200),
+            span: z.number().min(20).max(360),
+            frameId: z.string().max(160),
+          })
+          .strict(),
+      )
+      .max(3),
+    baselineFrameId: z.string().max(160).optional(),
+    questionId: z.string().max(100),
+    choiceId: z.string().max(80),
+    correct: z.boolean(),
+    at: z.string().max(80),
+  })
+  .strict()
 const schema = z
   .object({
     version: z.literal(1),
     completed: z.array(z.string().max(100)).max(100),
     lastLesson: z.string().max(100).nullable(),
     firstAttempts: z.record(attempt),
+    skillObservations: z.record(skillObservation).default({}).catch({}),
     completedCases: z.array(z.string().max(100)).max(100).default([]),
     assessmentComplete: z.boolean(),
     updatedAt: z.string().max(80),
@@ -22,6 +52,7 @@ export const emptyRecord = (): CourseRecord => ({
   completed: [],
   lastLesson: null,
   firstAttempts: {},
+  skillObservations: {},
   completedCases: [],
   assessmentComplete: false,
   updatedAt: '',
@@ -36,6 +67,11 @@ export function parseRecord(raw: string | null): CourseRecord {
       completed: [...new Set(parsed.data.completed.filter((id) => ids.has(id)))],
     }
     if (cleaned.lastLesson && !ids.has(cleaned.lastLesson)) cleaned.lastLesson = null
+    cleaned.skillObservations = Object.fromEntries(
+      Object.entries(cleaned.skillObservations).filter(
+        ([key, item]) => key === `${item.source.taskId}:v${item.source.taskVersion}`,
+      ),
+    )
     cleaned.completedCases = [
       ...new Set(cleaned.completedCases.filter((id) => FINAL_CASES.some((c) => c.id === id))),
     ]
@@ -84,6 +120,50 @@ export function firstAttempt(
 export function completeLesson(record: CourseRecord, id: string): CourseRecord {
   if (!LESSONS.some((l) => l.id === id) || record.completed.includes(id)) return record
   return { ...record, completed: [...record.completed, id] }
+}
+
+/** Store the actual acquisition paired with this response; never derive it from old completion. */
+export function recordLinkedObservation(
+  record: CourseRecord,
+  lab: Lab,
+  observation: EbusObservation,
+  question: Question,
+  choiceId: string,
+): CourseRecord {
+  const source = observation.linked?.source,
+    choice = question.choices.find((c) => c.id === choiceId)
+  if (
+    !lab.linkedLesson ||
+    !source ||
+    !isLinkedFrameSource(source) ||
+    !choice ||
+    !labGoalMet(lab, observation)
+  )
+    return record
+  const key = linkedTaskKey(lab.linkedLesson, lab.linkedVariant ?? 'guided')
+  return {
+    ...record,
+    skillObservations: {
+      ...record.skillObservations,
+      [key]: {
+        source,
+        landmarks: observation.linked!.identifiedStructures ?? [],
+        sweeps: Object.entries(observation.linked!.sweeps ?? {})
+          .filter(([, s]) => s.phase === 'complete')
+          .map(([approach, s]) => ({
+            approach: approach as 'rms' | 'lms' | 'default',
+            samples: s.samples,
+            span: s.span,
+            frameId: s.lastFrameId,
+          })),
+        baselineFrameId: observation.linked?.baselineFrameId,
+        questionId: question.id,
+        choiceId,
+        correct: !!choice.correct,
+        at: new Date().toISOString(),
+      },
+    },
+  }
 }
 
 export function assessmentReady(record: CourseRecord): boolean {

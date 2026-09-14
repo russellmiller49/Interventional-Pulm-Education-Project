@@ -1,0 +1,454 @@
+{
+  "schema": "ebus-teaching-assets/v1",
+  "version": "guided-models-1",
+  "caseId": "case-001",
+  "sourceGeometrySha256": "98dab0cac8fe3a06772a980996742f1b21bb4a2963d262064c221562c91a64fb",
+  "acousticVersion": "simplified-v2",
+  "acousticDataSha256": "efa3bdc9bb372564c9de7847ea0bf64d8716f0202f26375385adf66f116e31b3",
+  "centerlineSha256": "63e408f399beec99b2223bd873a024f32282b105013d6106b36dce036dc81d5c",
+  "presetManifestSha256": "dc029276320bf315f8ad50e8fb66c3a81e1a6990a2afbdccff62a2dca1506acc",
+  "lessons": [
+    "scope-orientation",
+    "acoustic-contact",
+    "ct-map",
+    "station-seven",
+    "right-paratracheal"
+  ],
+  "reviewStatus": "pending",
+  "assets": [
+    {
+      "id": "mediastinum-teaching",
+      "path": "mediastinum-teaching.glb",
+      "version": 1,
+      "sourceType": "derived-display",
+      "bytes": 4385756,
+      "sha256": "d316f2b0fc6bc6a7631b699d51087a528018b55d06974699dcd5055eee072c5d",
+      "triangles": 163416,
+      "materials": 4,
+      "objects": [
+        {
+          "id": "mediastinum_root",
+          "role": null,
+          "label": null
+        },
+        {
+          "id": "distal_airway_branches",
+          "role": "airway",
+          "label": "distal airway branches"
+        },
+        {
+          "id": "left_main_bronchus",
+          "role": "airway",
+          "label": "left main bronchus"
+        },
+        {
+          "id": "right_main_bronchus",
+          "role": "airway",
+          "label": "right main bronchus"
+        },
+        {
+          "id": "carina",
+          "role": "airway",
+          "label": "carina"
+        },
+        {
+          "id": "trachea",
+          "role": "airway",
+          "label": "trachea"
+        },
+        {
+          "id": "aorta",
+          "role": "vessel",
+          "label": "aorta"
+        },
+        {
+          "id": "right_subclavian_artery",
+          "role": "vessel",
+          "label": "right subclavian artery"
+        },
+        {
+          "id": "brachiocephalic_trunk",
+          "role": "vessel",
+          "label": "brachiocephalic trunk"
+        },
+        {
+          "id": "right_common_carotid_artery",
+          "role": "vessel",
+          "label": "right common carotid artery"
+        },
+        {
+          "id": "left_common_carotid_artery",
+          "role": "vessel",
+          "label": "left common carotid artery"
+        },
+        {
+          "id": "left_subclavian_artery",
+          "role": "vessel",
+          "label": "left subclavian artery"
+        },
+        {
+          "id": "left_atrium",
+          "role": "heart",
+          "label": "Left Atrium"
+        },
+        {
+          "id": "atrial_appendage_left",
+          "role": "heart",
+          "label": "atrial appendage left"
+        },
+        {
+          "id": "left_ventricle",
+          "role": "heart",
+          "label": "Left Ventricle"
+        },
+        {
+          "id": "pulmonary_venous_system",
+          "role": "vessel",
+          "label": "pulmonary venous system"
+        },
+        {
+          "id": "esophagus",
+          "role": "esophagus",
+          "label": "esophagus"
+        },
+        {
+          "id": "right_atrium",
+          "role": "heart",
+          "label": "Right Atrium"
+        },
+        {
+          "id": "right_ventricle",
+          "role": "heart",
+          "label": "Right Ventricle"
+        },
+        {
+          "id": "superior_vena_cava",
+          "role": "vessel",
+          "label": "superior vena cava"
+        },
+        {
+          "id": "left_brachiocephalic_vein",
+          "role": "vessel",
+          "label": "left brachiocephalic vein"
+        },
+        {
+          "id": "right_brachiocephalic_vein",
+          "role": "vessel",
+          "label": "right brachiocephalic vein"
+        },
+        {
+          "id": "azygous",
+          "role": "vessel",
+          "label": "azygous"
+        },
+        {
+          "id": "pulmonary_artery",
+          "role": "vessel",
+          "label": "pulmonary artery"
+        }
+      ],
+      "units": "m",
+      "gltfToWebMm": "multiply scene coordinates by 1000",
+      "compression": "none; no extra decoder",
+      "reviewStatus": "pending",
+      "rightsStatus": "existing project assets or course-authored geometry; owner release review pending",
+      "notes": "Every source anatomy triangle retained. Airway semantic partitions are display aids, not new segmentation authority.",
+      "optimization": "glTF Transform 4.5.0: accessor/material/texture deduplication; no quantization, simplification, hierarchy flattening or decoder"
+    },
+    {
+      "id": "node-examples",
+      "path": "node-examples.glb",
+      "version": 1,
+      "sourceType": "derived-display",
+      "bytes": 90200,
+      "sha256": "1fd48c92f51ec576e31182cceec24adc6f258f2b9a3177033c2e71c2d7770a93",
+      "triangles": 4068,
+      "materials": 1,
+      "objects": [
+        {
+          "id": "node_examples_root",
+          "role": "example nodes; not anatomical station compartments",
+          "label": null
+        },
+        {
+          "id": "node_station_2l",
+          "role": "node",
+          "label": "Example node 2L"
+        },
+        {
+          "id": "node_station_2r",
+          "role": "node",
+          "label": "Example node 2R"
+        },
+        {
+          "id": "node_station_4l",
+          "role": "node",
+          "label": "Example node 4L"
+        },
+        {
+          "id": "node_station_4r",
+          "role": "node",
+          "label": "Example node 4R"
+        },
+        {
+          "id": "node_station_7",
+          "role": "node",
+          "label": "Example node 7"
+        },
+        {
+          "id": "node_station_10l",
+          "role": "node",
+          "label": "Example node 10L"
+        },
+        {
+          "id": "node_station_10r",
+          "role": "node",
+          "label": "Example node 10R"
+        },
+        {
+          "id": "node_station_11l",
+          "role": "node",
+          "label": "Example node 11L"
+        },
+        {
+          "id": "node_station_11ri",
+          "role": "node",
+          "label": "Example node 11RI"
+        },
+        {
+          "id": "node_station_11rs",
+          "role": "node",
+          "label": "Example node 11RS"
+        }
+      ],
+      "units": "m",
+      "gltfToWebMm": "multiply scene coordinates by 1000",
+      "compression": "none; no extra decoder",
+      "reviewStatus": "pending",
+      "rightsStatus": "existing project assets or course-authored geometry; owner release review pending",
+      "notes": "Existing modeled tissue volumes. Node instance and station identity remain separate.",
+      "optimization": "glTF Transform 4.5.0: accessor/material/texture deduplication; no quantization, simplification, hierarchy flattening or decoder"
+    },
+    {
+      "id": "station-regions.review",
+      "path": "station-regions.review.glb",
+      "version": 1,
+      "sourceType": "authored-review-aid",
+      "bytes": 16268,
+      "sha256": "cbf237eeb956b5fc4bbf5d5f5b7bf2e42b90290536d15dd93ddaa4c3581c3ee3",
+      "triangles": 736,
+      "materials": 1,
+      "objects": [
+        {
+          "id": "draft_boundary_aids_root",
+          "role": null,
+          "label": null
+        },
+        {
+          "id": "carina_level_0",
+          "role": "draft-boundary",
+          "label": "carina level"
+        },
+        {
+          "id": "carina_level_1",
+          "role": "draft-boundary",
+          "label": "carina level"
+        },
+        {
+          "id": "carina_level_2",
+          "role": "draft-boundary",
+          "label": "carina level"
+        },
+        {
+          "id": "carina_level_3",
+          "role": "draft-boundary",
+          "label": "carina level"
+        },
+        {
+          "id": "azygos_lower_level_0",
+          "role": "draft-boundary",
+          "label": "azygos lower level"
+        },
+        {
+          "id": "azygos_lower_level_1",
+          "role": "draft-boundary",
+          "label": "azygos lower level"
+        },
+        {
+          "id": "azygos_lower_level_2",
+          "role": "draft-boundary",
+          "label": "azygos lower level"
+        },
+        {
+          "id": "azygos_lower_level_3",
+          "role": "draft-boundary",
+          "label": "azygos lower level"
+        }
+      ],
+      "units": "m",
+      "gltfToWebMm": "multiply scene coordinates by 1000",
+      "compression": "none; no extra decoder",
+      "reviewStatus": "pending",
+      "rightsStatus": "existing project assets or course-authored geometry; owner release review pending",
+      "notes": "Open boundary-level frames only; not validated IASLC compartment surfaces. Default off and excluded from task answer overlays.",
+      "optimization": "glTF Transform 4.5.0: accessor/material/texture deduplication; no quantization, simplification, hierarchy flattening or decoder"
+    },
+    {
+      "id": "ebus-scope-teaching",
+      "path": "ebus-scope-teaching.glb",
+      "version": 1,
+      "sourceType": "derived-and-authored",
+      "bytes": 1475052,
+      "sha256": "b689afde227fe4ac3806c5c0401fa3bd538b32828cb82dc8f6d29af2d1f76124",
+      "triangles": 5346,
+      "materials": 6,
+      "objects": [
+        {
+          "id": "scope_root",
+          "role": null,
+          "label": null
+        },
+        {
+          "id": "distal_frame",
+          "role": null,
+          "label": null
+        },
+        {
+          "id": "legacy_distal_body",
+          "role": "distal-body",
+          "label": "Existing calibrated distal body"
+        },
+        {
+          "id": "optical_lens",
+          "role": "optical",
+          "label": "Optical lens locator"
+        },
+        {
+          "id": "transducer_face",
+          "role": "transducer",
+          "label": "Active transducer surface locator"
+        },
+        {
+          "id": "balloon",
+          "role": "balloon",
+          "label": "Illustrative balloon envelope"
+        },
+        {
+          "id": "channel_outlet",
+          "role": "channel",
+          "label": "Working-channel outlet, illustrative"
+        },
+        {
+          "id": "retracted_needle",
+          "role": "retracted-needle",
+          "label": "Retracted needle, illustrative"
+        },
+        {
+          "id": "bending_pivot",
+          "role": null,
+          "label": null
+        },
+        {
+          "id": "bending_ring_0",
+          "role": "bending",
+          "label": "Bending section"
+        },
+        {
+          "id": "bending_ring_1",
+          "role": "bending",
+          "label": "Bending section"
+        },
+        {
+          "id": "bending_ring_2",
+          "role": "bending",
+          "label": "Bending section"
+        },
+        {
+          "id": "bending_ring_3",
+          "role": "bending",
+          "label": "Bending section"
+        },
+        {
+          "id": "bending_ring_4",
+          "role": "bending",
+          "label": "Bending section"
+        },
+        {
+          "id": "bending_ring_5",
+          "role": "bending",
+          "label": "Bending section"
+        },
+        {
+          "id": "bending_ring_6",
+          "role": "bending",
+          "label": "Bending section"
+        },
+        {
+          "id": "bending_ring_7",
+          "role": "bending",
+          "label": "Bending section"
+        },
+        {
+          "id": "proximal_frame",
+          "role": null,
+          "label": null
+        },
+        {
+          "id": "insertion_shaft",
+          "role": "shaft",
+          "label": "Illustrative shortened insertion shaft"
+        },
+        {
+          "id": "handle_frame",
+          "role": null,
+          "label": null
+        },
+        {
+          "id": "control_body",
+          "role": "handle",
+          "label": "Conceptual control body"
+        },
+        {
+          "id": "angulation_lever_pivot",
+          "role": null,
+          "label": null
+        },
+        {
+          "id": "angulation_lever",
+          "role": "lever",
+          "label": "Angulation lever"
+        },
+        {
+          "id": "instrument_port",
+          "role": "port",
+          "label": "Instrument port"
+        },
+        {
+          "id": "transducer_origin",
+          "role": "coordinate-anchor",
+          "label": null
+        },
+        {
+          "id": "optical_origin",
+          "role": "coordinate-anchor",
+          "label": null
+        },
+        {
+          "id": "needle_outlet_origin",
+          "role": "coordinate-anchor",
+          "label": null
+        }
+      ],
+      "units": "m",
+      "gltfToWebMm": "multiply scene coordinates by 1000",
+      "compression": "none; no extra decoder",
+      "reviewStatus": "pending",
+      "rightsStatus": "existing project assets or course-authored geometry; owner release review pending",
+      "notes": "Legacy distal geometry and fan anchor preserved. Lens/port locators, balloon, shortened shaft and control body are illustrative; not device CAD or a needle simulator.",
+      "optimization": "glTF Transform 4.5.0: accessor/material/texture deduplication; no quantization, simplification, hierarchy flattening or decoder"
+    }
+  ],
+  "localizer": "section of the same acoustic label volume; not CT or predicted echogenicity",
+  "nativeSources": "Local-Data/raw-assets/ebus-guided-models/phase-1",
+  "blenderVersion": "5.1.0"
+}

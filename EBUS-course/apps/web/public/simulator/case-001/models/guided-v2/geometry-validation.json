@@ -1,0 +1,86 @@
+{
+  "revision": "additional-models-v1",
+  "assets": [
+    {
+      "path": "ebus-needle-assembly.glb",
+      "sha256": "a494942a33fade0afea6db8e71e3fc54ab1b46e74a33c6e516d63ef51ac38b81",
+      "vertices": 3489,
+      "boundsWebMm": [
+        [
+          -90.00000357627869,
+          -14.500000514090061,
+          -12.000000104308128
+        ],
+        [
+          32.00000151991844,
+          30.99999949336052,
+          12.000000104308128
+        ]
+      ],
+      "tipAnchorErrorMm": 0
+    },
+    {
+      "path": "acoustic-contact-cutaway.glb",
+      "sha256": "c0862925e20236cd0187490ae2f12e751bb614ac9136afeea4f454d73edc4e6d",
+      "vertices": 2884,
+      "boundsWebMm": [
+        [
+          -23.000000044703484,
+          -9.499999694526196,
+          -10.999999940395355
+        ],
+        [
+          23.000000044703484,
+          30.99999949336052,
+          10.999999940395355
+        ]
+      ]
+    },
+    {
+      "path": "measurement-phantoms.glb",
+      "sha256": "23fdb852eb0e8deda0c381951e42b947fa657bd33cb4ad35101f973ad43b9c89",
+      "vertices": 4146,
+      "boundsWebMm": [
+        [
+          -19.999992102384567,
+          12.000000104308128,
+          -9.999987669289112
+        ],
+        [
+          16.999997198581696,
+          32.999999821186066,
+          9.99999325722456
+        ]
+      ],
+      "maxEllipsoidEquationResidual": 0.0000025114881750942786
+    },
+    {
+      "path": "eus-b-route-locators.glb",
+      "sha256": "a74767a51a7cbba7758fdb3cb47e471816cdbd020d940e69123175889cf5a6f6",
+      "vertices": 4146,
+      "boundsWebMm": [
+        [
+          -16.299033537507057,
+          1132.4340105056763,
+          137.72189617156982
+        ],
+        [
+          8.039198815822601,
+          1221.3789224624634,
+          162.5647395849228
+        ]
+      ]
+    }
+  ],
+  "totalBytes": 378168,
+  "semanticHierarchy": "preserved through optimization",
+  "coordinates": "Blender (L,P,S) meters -> glTF (L,S,-P) meters -> browser mm once",
+  "dependencies": "Phase 1 anatomy and nodes unchanged; same target coordinates for both route views",
+  "clinicalAnatomicalReview": "pending",
+  "deviceValidation": "generic conceptual model, no device-specific claims",
+  "runtimeNeedle": {
+    "poses": 12,
+    "maxEndpointErrorMm": 0.0000010390405549287607,
+    "check": "Actual GLB vertices, pivot, cylinder axis and rendered shaft scaling compared with fixed entry and true tip."
+  }
+}

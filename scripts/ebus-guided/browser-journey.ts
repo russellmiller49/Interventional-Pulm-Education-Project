@@ -1,3 +1,5 @@
+import { observeLinked, performLinked } from './browser-linked-actions'
+import { performModel } from './browser-model-actions'
 /** Run against an already-started development server; does not seed learner progress. */
 import { chromium, expect } from '@playwright/test'
 import { mkdir, writeFile } from 'node:fs/promises'
@@ -12,6 +14,7 @@ async function main() {
     args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
   })
   const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } })
+  await observeLinked(page)
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
   const next = () => page.locator('[data-now-primary]').click()
@@ -33,7 +36,11 @@ async function main() {
       if (lesson.lab) {
         const frame = page.frameLocator('iframe[title="EBUS workbench"]')
         await expect(page.locator('[data-now-primary]')).toBeDisabled()
-        if (lesson.lab.kind === 'simulator') {
+        if (lesson.lab.modelPackage) {
+          await performModel(frame, lesson.lab.modelPackage)
+        } else if (lesson.lab.linkedLesson) {
+          await performLinked(page, lesson.lab.linkedLesson)
+        } else if (lesson.lab.kind === 'simulator') {
           const control = frame.getByLabel(
             lesson.lab.goal === 'coupling' ? 'Tip flexion' : 'Scope rotation',
             { exact: true },
@@ -92,6 +99,10 @@ async function main() {
       await next()
       await choose(lesson.observation)
       await next()
+      if (lesson.transferLab?.linkedLesson) {
+        await performLinked(page, lesson.transferLab.linkedLesson, true)
+        await next()
+      }
       await choose(lesson.transfer)
       await expect(
         page.getByRole('heading', { name: 'Lesson completed', exact: true }),

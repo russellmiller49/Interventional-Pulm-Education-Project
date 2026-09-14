@@ -1,0 +1,100 @@
+{
+  "schema": "ebus-device-geometry/v1",
+  "profile": "bf_uc180f optical profile with illustrative teaching parts",
+  "optics": {
+    "model": "bf_uc180f",
+    "optical_axis_offset_deg": 35,
+    "obliquity_axis": "depth_axis",
+    "fov_deg": 80,
+    "near_mm": 0.4,
+    "far_mm": 4000,
+    "eye_offset_mm": {
+      "shaft": -6,
+      "depth": 0,
+      "lateral": 0
+    },
+    "circular_aperture": true,
+    "lens_distortion": true,
+    "scope_tip_occlusion": false,
+    "contact_cap": true,
+    "headlight_falloff": true,
+    "contact_min_distance_mm": 1.5,
+    "nominal_profile": {
+      "id": "olympus-bf-uc180f",
+      "source": "https://medical.olympusamerica.com/products/bf-uc180f-ebus-bronchoscope",
+      "optical_axis_offset_deg": 35,
+      "fov_deg": 80
+    },
+    "case_calibration": {
+      "version": "simplified-v2",
+      "eye_offset_mm": {
+        "shaft": -6,
+        "depth": 0,
+        "lateral": 0
+      },
+      "obliquity_axis": "depth_axis",
+      "migration": {
+        "prior_optical_axis_offset_deg": 30,
+        "prior_fov_deg": 85,
+        "retained": "Eye offset, scan-side axis, near clearance and contact geometry retained. Optical angles use manufacturer nominal values."
+      }
+    }
+  },
+  "fan": {
+    "sector_angle_deg": 60,
+    "displayed_range_mm": 40,
+    "optical_axis_offset_deg": 35
+  },
+  "originalTipSha256": "506198133f21422ebc9bfae321fb3f46ffe8a4db97d3e0f38cc3c5598c05af08",
+  "originalAnchor": [
+    -0.33399999141693115,
+    -0.054999999701976776,
+    0.0
+  ],
+  "originalScaleMmPerUnit": 44,
+  "localFrame": "+X cephalicImageAxis; +Y depthAxis; +Z cross(cephalicImageAxis,depthAxis)",
+  "gltfUnits": "m",
+  "localOrigin": "existing virtual fan apex; illustrative physical surface locator offset +5.5 mm along local depth",
+  "pivotsWebLocalMm": {
+    "bendingStart": [
+      7.2,
+      1.2,
+      0
+    ],
+    "proximalStart": [
+      25.6,
+      1.2,
+      0
+    ],
+    "angulationLever": [
+      177,
+      10,
+      0
+    ]
+  },
+  "rigAnchors": {
+    "transducer": [
+      0,
+      0,
+      0
+    ],
+    "optical": [
+      6,
+      0,
+      0
+    ],
+    "needleOutlet": [
+      5,
+      2.4,
+      0
+    ]
+  },
+  "surfaceLocators": "Illustrative external colored surfaces; calibrated optical and sector origins remain unchanged inside the source housing.",
+  "opticalPlacement": "Runtime optical ray uses resolveScopeFrame / resolveCalibratedOpticalAxis and the original manifest offsets.",
+  "limits": [
+    "Added mechanical dimensions are authored illustrations, not IFU tolerances.",
+    "Original insertion channel/contact mechanics are unchanged.",
+    "Needle is retracted and noninteractive in Phase 1."
+  ],
+  "reviewStatus": "pending"
+}

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { HashRouter } from 'react-router-dom'
 import { LocaleProvider } from '@/i18n/locale'
 import { SimulatorWorkbench } from '@/features/simulator/SimulatorPage'
+import { ModelWorkbench } from './models/ModelWorkbench'
 import { GuidedKnobology } from './GuidedKnobology'
 import {
   isEbusMessage,
@@ -64,7 +65,9 @@ function GuidedApp() {
   if (!config) return <p role="status">Waiting for the guided lesson…</p>
   return (
     <WorkbenchBoundary key={config.sessionId} sessionId={config.sessionId}>
-      {config.kind === 'simulator' ? (
+      {config.kind === 'model' ? (
+        <ModelWorkbench config={config} onObservation={onObservation} />
+      ) : config.kind === 'simulator' ? (
         <SimulatorWorkbench showVirtualBronchoscopy guided={{ config, onObservation }} />
       ) : (
         <GuidedKnobology config={config} onObservation={onObservation} />

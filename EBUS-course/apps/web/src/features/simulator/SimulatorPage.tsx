@@ -1,8 +1,10 @@
+import { LINKED_TASK_VERSION, linkedSetup, linkedTaskId, emptyLinkedSweep, sampleLinkedSweep, type LinkedRenderedFrame } from '../../../../../../src/lib/ebus-linked-contract';
+import { LinkedModelView } from '../../guided/LinkedModelView';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useCourseShellText } from '@/i18n/courseShell';
 import { useLearnerProgress } from '@/lib/progress';
-import { EMPTY_EBUS_OBSERVATION, type EbusControl, type EbusObservation, type EbusWorkbenchConfig } from '../../../../../../src/lib/ebus-guided-bridge';
+import { EMPTY_EBUS_OBSERVATION, type EbusLinkedEvidence, type EbusControl, type EbusObservation, type EbusWorkbenchConfig } from '../../../../../../src/lib/ebus-guided-bridge';
 
 import { AnatomyScene } from './AnatomyScene';
 import {
@@ -1234,13 +1236,21 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
   guided?: { config: EbusWorkbenchConfig; onObservation: (observation: EbusObservation) => void };
 }) {
   const t = useCourseShellText();
-  const [guidedFrame, setGuidedFrame] = useState({ ready: false, targetVisible: false, depth: 40, gain: 0, frozen: false, poseKey: '' });
+  const [guidedFrame, setGuidedFrame] = useState<LinkedRenderedFrame>({ ready: false, targetVisible: false, depth: 40, gain: 0, frozen: false, poseKey: '', frameId: '', renderSequence: 0 });
+  const [linkedEvidence, setLinkedEvidence] = useState<EbusLinkedEvidence>({ assetsReady: false, selectedStructure: '', modelSectionViewed: false, approach: guided?.config.presetKey.endsWith('::rms') ? 'rms' : guided?.config.presetKey.endsWith('::lms') ? 'lms' : 'default', scannedApproaches: [], frameId: '', identifiedStructures: [], sweeps: {} });
+  const onLinkedEvidence = useCallback((value: Partial<EbusLinkedEvidence>) => setLinkedEvidence(previous => {
+    const next = { ...previous, ...value };
+    return JSON.stringify(previous) === JSON.stringify(next) ? previous : next;
+  }), []);
+  const rollAcquisition = useRef<{ approach: EbusLinkedEvidence['approach']; count: number } | null>(null);
+  const processedRollAction = useRef(0);
   const guidedActions = useRef({ count: 0, last: '', used: [] as EbusControl[] });
   const [guidedView, setGuidedView] = useState<'sector'|'bronch'|'anatomy'>(guided?.config.view ?? 'sector');
   const onGuidedFrame = useCallback((frame: typeof guidedFrame) => setGuidedFrame(frame), []);
   const guidedAction = (name: string, apply: () => void) => {
-    if (!guided || guided.config.locked) return;
-    guidedActions.current = { count: guidedActions.current.count + 1, last: name, used: [...new Set([...guidedActions.current.used,name as EbusControl])] };
+    if (!guided || guided.config.locked || !guided.config.controls.includes(name as EbusControl)) return;
+    if (!guided.config.demonstration) guidedActions.current = { count: guidedActions.current.count + 1, last: name, used: [...new Set([...guidedActions.current.used,name as EbusControl])] };
+    if (name === 'roll' && !guided.config.demonstration) rollAcquisition.current = { approach: linkedEvidence.approach, count: guidedActions.current.count };
     apply();
   };
   const { assets, caseData, error } = useSimulatorCase();
@@ -1314,7 +1324,7 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
       if (!preset) return;
       setSelectedKey(guided.config.freeDrive ? '' : preset.preset_key);
       setLineIndex(preset.line_index);
-      setSMm(preset.centerline_s_mm);
+      setSMm(preset.centerline_s_mm + (guided.config.linkedLesson ? linkedSetup(guided.config.linkedLesson, guided.config.linkedVariant ?? 'guided').offsetMm : 0));
       setRollTrimDeg(guided.config.initialRoll);
       setFlexionDeg(0);
       setTeachingView(false);
@@ -1572,18 +1582,41 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
 
   const guidedPoseKey = pose ? JSON.stringify(pose) : '';
   useEffect(() => {
+    if (!guided?.config.linkedLesson || guided.config.demonstration || guided.config.locked || !guidedFrame.ready || guidedFrame.poseKey !== guidedPoseKey || guidedFrame.frozen || !rollAcquisition.current) return;
+    const acquisition = rollAcquisition.current;
+    if (acquisition.approach !== linkedEvidence.approach || acquisition.count <= processedRollAction.current) return;
+    processedRollAction.current = acquisition.count;
+    setLinkedEvidence(previous => {
+      const sweep = sampleLinkedSweep(previous.sweeps?.[acquisition.approach] ?? emptyLinkedSweep(), { roll: rollTrimDeg, frameId: guidedFrame.frameId, visible: guidedFrame.targetVisible, contact: sectorContactQuality });
+      return { ...previous, sweeps: { ...previous.sweeps, [acquisition.approach]: sweep }, scannedApproaches: sweep.phase === 'complete' ? [...new Set([...previous.scannedApproaches, acquisition.approach])] : previous.scannedApproaches };
+    });
+  }, [guided, guidedFrame, guidedPoseKey, sectorContactQuality, linkedEvidence.approach, rollTrimDeg]);
+  useEffect(() => {
     if (!guided) return;
+    const matching = guidedFrame.ready && guidedFrame.poseKey === guidedPoseKey;
+    const linkedLesson = guided.config.linkedLesson, variant = guided.config.linkedVariant ?? 'guided';
     guided.onObservation({
       ...EMPTY_EBUS_OBSERVATION,
       usedControls: guidedActions.current.used, actionCount: guidedActions.current.count, lastAction: guidedActions.current.last,
-      ready: !!assets && !!pose && !!acoustic.volume,
-      frameReady: guidedFrame.ready && guidedFrame.poseKey === guidedPoseKey,
+      ready: !!assets && !!pose && !!acoustic.volume && !guided.config.demonstration,
+      frameReady: matching,
       contactQuality: sectorContactQuality,
       targetVisible: guidedFrame.targetVisible,
       roll: rollTrimDeg, flexion: flexionDeg, depth: guidedFrame.depth,
       gain: guidedFrame.gain, frozen: guidedFrame.frozen,
+      linked: linkedLesson ? {
+        ...linkedEvidence, frameId: guidedFrame.frameId, baselineFrameId: guidedFrame.baselineFrameId,
+        source: matching && guidedFrame.pose && guidedFrame.settings && acoustic.volume && linkedEvidence.modelRevision ? {
+          sessionId: guided.config.sessionId, taskId: linkedTaskId(linkedLesson, variant), taskVersion: LINKED_TASK_VERSION, variant,
+          caseId: 'case-001', modelRevision: linkedEvidence.modelRevision,
+          geometrySha256: acoustic.volume.metadata.sourceGeometrySha256, acousticSha256: acoustic.volume.metadata.dataSha256,
+          presetKey: guided.config.freeDrive ? 'free-drive' : selectedPreset?.preset_key ?? '',
+          frameId: guidedFrame.frameId, renderSequence: guidedFrame.renderSequence, pose: guidedFrame.pose, settings: guidedFrame.settings,
+          scope: { roll: rollTrimDeg, flexion: flexionDeg, advanceMm: sMm, approach: linkedEvidence.approach },
+        } : undefined,
+      } : undefined,
     });
-  }, [guided, assets, pose, acoustic.volume, guidedFrame, guidedPoseKey, sectorContactQuality, rollTrimDeg, flexionDeg]);
+  }, [guided, assets, pose, acoustic.volume, guidedFrame, guidedPoseKey, sectorContactQuality, rollTrimDeg, flexionDeg, linkedEvidence, sMm, selectedPreset]);
 
   const hasCurrentSnapshot = Boolean(selectedPreset && snapshot?.preset_key === selectedPreset.preset_key);
   const atSnapshotPose = Boolean(
@@ -2061,24 +2094,42 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
   if (guided) {
     const { config } = guided;
     const can = (control: typeof config.controls[number]) => !config.locked && config.controls.includes(control);
+    const scopeControls = <fieldset disabled={config.locked}><legend>Scope controls</legend>
+        {config.controls.includes('roll') && <label>Scope rotation <output>{Math.round(rollTrimDeg)}°</output><input aria-label="Scope rotation" type="range" min="-90" max="90" step="1" value={rollTrimDeg} disabled={!can('roll')} onChange={e => guidedAction('roll', () => setRollTrimDeg(Number(e.target.value)))} /></label>}
+        {config.controls.includes('flexion') && <label>Tip flexion <output>{Math.round(flexionDeg)}°</output><input aria-label="Tip flexion" type="range" min="-30" max="60" value={flexionDeg} disabled={!can('flexion')} onChange={e => guidedAction('flexion', () => setFlexionDeg(Number(e.target.value)))} /></label>}
+        {config.controls.includes('advance') && <div className="guided-tabs"><button disabled={!can('advance')} onClick={() => guidedAction('advance', () => setSMm(v => constrainAdvance(v,v - 1)))}>Withdraw</button><button disabled={!can('advance')} onClick={() => guidedAction('advance', () => setSMm(v => constrainAdvance(v,v + 1)))}>Advance</button></div>}
+      </fieldset>;
+    const sector = <ContinuousSectorView caseData={caseData} volume={acoustic.volume} error={acoustic.error} pose={pose} contactQuality={sectorContactQuality} compact assessment={!config.reveal} selectedPreset={null} activeStructure={null} setActiveStructure={() => undefined}
+      guided={{ config, targetKey: selectedPreset?.station_key ?? '', poseKey: guidedPoseKey, onFrame: onGuidedFrame, onAction: (name, apply) => guidedAction(name, apply) }} />;
+    const chooseApproach = (approach: 'rms'|'lms') => {
+      if (config.locked || config.linkedLesson !== 'station-seven' || config.linkedVariant === 'changed-window') return;
+      const preset = caseData.presets.find(p => p.preset_key === 'station_7_node_a::' + approach);
+      if (!preset) return;
+      rollAcquisition.current = null;
+      setSelectedKey(preset.preset_key); setLineIndex(preset.line_index); setSMm(preset.centerline_s_mm); setRollTrimDeg(config.initialRoll); setFlexionDeg(0);
+      onLinkedEvidence({ approach });
+    };
     return <div className="guided-workbench">
       <h2>EBUS workbench</h2>
       <p className="guided-label">Simulated anatomy and grayscale ultrasound</p>
-      <div className="guided-tabs" role="group" aria-label="Clinical view">
-        {(['sector','bronch','anatomy'] as const).map(view => <button key={view} type="button" aria-pressed={guidedView === view} onClick={() => setGuidedView(view)}>{view === 'sector' ? 'Ultrasound' : view === 'bronch' ? 'Bronchoscopy' : 'Anatomy'}</button>)}
+      {config.linkedLesson && <p className="guided-label">{config.linkedVariant === 'changed-window' ? 'Changed-position check: a different assisted start in the same anatomy model. Acquire new planes; the prior sweep does not count.' : 'Assisted start: airway position is supplied. Your scope movements acquire the ultrasound planes.'}</p>}
+      {config.linkedLesson && scopeControls}
+      {config.linkedLesson && acoustic.volume && <LinkedModelView ultrasound={sector} config={config} pose={pose} volume={acoustic.volume} caseData={caseData} contactQuality={sectorContactQuality} flexion={flexionDeg} evidence={linkedEvidence} onEvidence={onLinkedEvidence} onApproach={chooseApproach} onDemo={action => {
+        if (!config.demonstration) return;
+        if (action === 'roll') setRollTrimDeg(v => v === 25 ? 0 : 25);
+        else if (action === 'flexion') setFlexionDeg(v => v === 15 ? 0 : 15);
+        else { setRollTrimDeg(config.initialRoll); setFlexionDeg(0); }
+      }} />}
+      <div hidden={config.locked && !config.reveal}><div className="guided-tabs" role="group" aria-label="Clinical view">
+        {(config.linkedLesson ? ['sector','bronch'] as const : ['sector','bronch','anatomy'] as const).map(view => <button key={view} type="button" aria-pressed={guidedView === view} onClick={() => setGuidedView(view)}>{view === 'sector' ? 'Ultrasound' : view === 'bronch' ? 'Bronchoscopy' : 'Anatomy'}</button>)}
       </div>
       {guidedView === 'anatomy' && <div className="guided-anatomy"><AnatomyScene activeStructure={null} assets={assets} cameraPose={cameraPose} caseData={caseData} hiddenStructureIds={hiddenSceneStructureSet} intersectedStructureIds={new Set()} layers={layers} lockView={false} pose={pose} selectedPreset={config.reveal ? selectedPreset : null} teachingView={false} /></div>}
       {guidedView === 'bronch' && <div className="guided-anatomy"><BronchoscopyView assets={assets} balloonInflated={bronchBalloonInflated} camera={caseData.endoscope_camera} caseData={caseData} focusStationKey={null} pose={pose} seeThroughWall={false} structures={[]} /></div>}
-      <div hidden={guidedView !== 'sector'}>
-        <ContinuousSectorView caseData={caseData} volume={acoustic.volume} error={acoustic.error} pose={pose} contactQuality={sectorContactQuality} compact assessment={!config.reveal} selectedPreset={null} activeStructure={null} setActiveStructure={() => undefined}
-          guided={{ config, targetKey: selectedPreset?.station_key ?? '', poseKey: guidedPoseKey, onFrame: onGuidedFrame, onAction: (name, apply) => guidedAction(name, apply) }} />
       </div>
-      <p role="status">{config.locked ? 'Controls are paused while you read or answer. They open for the guided activity.' : 'Use the controls below, then return to Steps.'}</p>
-      <fieldset disabled={config.locked}><legend>Scope controls</legend>
-        {config.controls.includes('roll') && <label>Scope rotation <output>{Math.round(rollTrimDeg)}°</output><input aria-label="Scope rotation" type="range" min="-90" max="90" step="1" value={rollTrimDeg} disabled={!can('roll')} onChange={e => guidedAction('roll', () => setRollTrimDeg(Number(e.target.value)))} /></label>}
-        {config.controls.includes('flexion') && <label>Tip flexion <input aria-label="Tip flexion" type="range" min="-30" max="60" value={flexionDeg} disabled={!can('flexion')} onChange={e => guidedAction('flexion', () => setFlexionDeg(Number(e.target.value)))} /></label>}
-        {config.controls.includes('advance') && <div className="guided-tabs"><button disabled={!can('advance')} onClick={() => guidedAction('advance', () => setSMm(v => constrainAdvance(v,v - 1)))}>Withdraw</button><button disabled={!can('advance')} onClick={() => guidedAction('advance', () => setSMm(v => constrainAdvance(v,v + 1)))}>Advance</button></div>}
-      </fieldset>
+      {!config.linkedLesson && <div hidden={guidedView !== 'sector'}>{sector}</div>}
+      <p role="status">{config.locked ? (config.linkedLesson ? 'Acquisition held for observation. This is your last unannotated ultrasound frame.' : 'Controls are paused while you read or answer. They open for the guided activity.') : (config.linkedLesson ? 'Use Scope controls above the images, then return to Steps.' : 'Use the controls below, then return to Steps.')}</p>
+      {!config.linkedLesson && scopeControls}
+      {config.linkedLesson && !config.locked && !config.demonstration && <button onClick={() => { guided.onObservation(EMPTY_EBUS_OBSERVATION); window.location.reload(); }}>Reset acquisition</button>}
       <p className="guided-label">Position assists remain active. This exercise does not reproduce needle passage, tactile feedback, or patient response.</p>
     </div>;
   }

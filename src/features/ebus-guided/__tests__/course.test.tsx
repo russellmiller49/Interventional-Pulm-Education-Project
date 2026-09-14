@@ -45,7 +45,7 @@ afterEach(cleanup)
 const primary = () => document.querySelector('[data-now-primary]') as HTMLButtonElement
 const next = () => fireEvent.click(primary())
 it('defines the full curriculum, unique decisions, sources, meaningful activities and current preset keys', () => {
-  expect(LESSONS).toHaveLength(22)
+  expect(LESSONS).toHaveLength(26)
   expect(FINAL_CASES).toHaveLength(8)
   const ids = LESSONS.map((l) => l.id)
   expect(new Set(ids).size).toBe(ids.length)

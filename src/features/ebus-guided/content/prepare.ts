@@ -218,60 +218,70 @@ export const prepareLessons: Lesson[] = [
       reasoning:
         'The structure has not moved between stations. A different plane now intersects it. Reconcile the plane with the airway and vascular landmarks.',
     },
-    question: q(
-      'orientation-predict',
-      'At a stable airway position, the node disappears during rotation and reappears when rotation is reversed. What best explains this?',
-      [
-        'The imaging plane moved through and away from the node',
-        'A two-dimensional sector samples different tissue as the scope rotates.',
-      ],
-      [
-        'The node changed histology during the sweep',
-        'An immediate reversible image change reflects acquisition, not tissue diagnosis.',
-      ],
-      [
-        'The processor measured a new node size automatically',
-        'No measurement was performed. Apparent dimensions may vary with the plane.',
-      ],
-    ),
+    question: {
+      ...q(
+        'orientation-predict',
+        'At a stable airway position, the node disappears during rotation and reappears when rotation is reversed. What best explains this?',
+        [
+          'The imaging plane moved through and away from the node',
+          'A two-dimensional sector samples different tissue as the scope rotates.',
+        ],
+        [
+          'The node changed histology during the sweep',
+          'An immediate reversible image change reflects acquisition, not tissue diagnosis.',
+        ],
+        [
+          'The processor measured a new node size automatically',
+          'No measurement was performed. Apparent dimensions may vary with the plane.',
+        ],
+      ),
+      imagePolicy: 'none',
+    },
     lab: {
       kind: 'simulator',
+      linkedLesson: 'scope-orientation',
       goal: 'scan',
       presetKey: 'station_7_node_a::rms',
       controls: ['roll'],
-      initialRoll: 55,
+      initialRoll: 85,
       instruction:
-        'Use Scope rotation to sweep through the rounded target. Compare Ultrasound with Anatomy and Bronchoscopy, then return to Ultrasound. Stop with the target visible in the sector.',
+        'Identify the transducer surface in Scope model and check your selection. Sweep slowly from a plane without the target, through several sections of it, until it leaves on the far side; then return to a visible section. Pause for each ultrasound image. Orbit changes only your viewpoint.',
     },
-    observation: q(
-      'orientation-observe',
-      'The target becomes visible after your rotation. Which statement is justified?',
-      [
-        'The rendered sector now intersects the target',
-        'Visibility confirms this modeled plane intersects the structure. It does not confirm a diagnosis.',
-      ],
-      [
-        'The bronchoscope advanced into a different lobe',
-        'Rotation alone did not command advancement.',
-      ],
-      [
-        'The displayed structure is suitable for puncture without further checks',
-        'Station identity, vascular relationships, and a safe path still need assessment.',
-      ],
-    ),
-    transfer: q(
-      'orientation-transfer',
-      'A target looks smaller after a slight sweep while the depth setting is unchanged. What should you check before recording its size?',
-      [
-        'Whether the section through the node changed',
-        'Size assessment depends on the selected imaging plane and visible borders.',
-      ],
-      ['Whether its stage has decreased', 'A scan-plane change does not change tumor stage.'],
-      [
-        'Whether the gain control can recover the prior diameter',
-        'Gain changes received-signal brightness, not the geometric plane.',
-      ],
-    ),
+    observation: {
+      ...q(
+        'orientation-observe',
+        'The target becomes visible after your rotation. Which statement is justified?',
+        [
+          'The rendered sector now intersects the target',
+          'Visibility confirms this modeled plane intersects the structure. It does not confirm a diagnosis.',
+        ],
+        [
+          'The bronchoscope advanced into a different lobe',
+          'Rotation alone did not command advancement.',
+        ],
+        [
+          'The displayed structure is suitable for puncture without further checks',
+          'Station identity, vascular relationships, and a safe path still need assessment.',
+        ],
+      ),
+      imagePolicy: 'retained-acquisition',
+    },
+    transfer: {
+      ...q(
+        'orientation-transfer',
+        'A target looks smaller after a slight sweep while the depth setting is unchanged. What should you check before recording its size?',
+        [
+          'Whether the section through the node changed',
+          'Size assessment depends on the selected imaging plane and visible borders.',
+        ],
+        ['Whether its stage has decreased', 'A scan-plane change does not change tumor stage.'],
+        [
+          'Whether the gain control can recover the prior diameter',
+          'Gain changes received-signal brightness, not the geometric plane.',
+        ],
+      ),
+      imagePolicy: 'none',
+    },
     diagram: 'stations',
     takeaways: [
       'A sector is a slice through anatomy.',

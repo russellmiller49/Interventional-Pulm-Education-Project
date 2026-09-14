@@ -18,10 +18,23 @@ it('accepts observations only from the current iframe, origin, version and sessi
     />,
   )
   const frame = document.querySelector('iframe')!
+  const posted = jest.spyOn(frame.contentWindow!, 'postMessage')
+  act(() =>
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: { version: 1, type: 'ready' },
+        origin: location.origin,
+        source: frame.contentWindow,
+      }),
+    ),
+  )
+  const currentSession = (posted.mock.calls.at(-1)![0] as { config: { sessionId: string } }).config
+    .sessionId
+  received.mockClear()
   const good = {
     version: 1,
     type: 'observation',
-    sessionId: 'current',
+    sessionId: currentSession,
     observation: { ...EMPTY_EBUS_OBSERVATION, ready: true, frameReady: true },
   }
   const send = (
@@ -36,6 +49,10 @@ it('accepts observations only from the current iframe, origin, version and sessi
   expect(received).not.toHaveBeenCalled()
   send(good)
   expect(received).toHaveBeenCalledWith(good.observation)
-  send({ version: 1, type: 'error', sessionId: 'current', message: 'Render failed' })
+  send({ version: 1, type: 'error', sessionId: currentSession, message: 'Render failed' })
   expect(received).toHaveBeenLastCalledWith(EMPTY_EBUS_OBSERVATION)
+  send({ version: 1, type: 'ready' })
+  received.mockClear()
+  send(good)
+  expect(received).not.toHaveBeenCalled()
 })
