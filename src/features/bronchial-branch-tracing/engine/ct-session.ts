@@ -15,14 +15,17 @@ export interface CtSession {
     {
       mark: CtMark
       branch: CtBranchChoice | null
-      hints: number
+      /** Legacy drafts only; self-paced responses record neither hints nor support. */
+      hints?: number
       orientation?: CtOrientation
-      support: 'coached' | 'after-comparison'
+      support?: 'coached' | 'after-comparison'
     }[]
   >
   targetViewed: Record<string, boolean>
   step: number
   active: number
+  /** Furthest junction opened on the marking trace, recorded or not. */
+  reached: number
   marks: (CtMark | null)[]
   branches: (CtBranchChoice | null)[]
   recorded: boolean[]
@@ -46,6 +49,7 @@ export const emptyCtSession = (trace?: CtTrace): CtSession => ({
   targetViewed: {},
   step: 0,
   active: 0,
+  reached: 0,
   ...emptyTraceWork(trace),
   course: '',
   targetRelation: '',
@@ -71,11 +75,26 @@ export type CtAction =
   | { type: 'hint' }
   | { type: 'advance' }
   | { type: 'restart' }
+  /** Open the next junction without recording this one. */
+  | { type: 'skip-junction' }
+  /** Leave the current trace or description step without recording an interpretation. */
+  | { type: 'continue-without-recording' }
 export const marksComplete = (marks: (CtMark | null)[], trace: CtTrace) =>
   marks.length === trace.checkpoints.length && marks.every(Boolean)
 export const lastUnlocked = (recorded: boolean[]) => {
   const next = recorded.findIndex((value) => !value)
   return next < 0 ? recorded.length - 1 : next
+}
+/** Junctions the learner can open: recorded ones, the next unrecorded one, and any reached by continuing. */
+export const reachableThrough = (recorded: boolean[], reached: number) =>
+  Math.min(Math.max(lastUnlocked(recorded), reached), Math.max(recorded.length - 1, 0))
+/** Reference marks shown on the CT: every junction recorded or explicitly revealed, and those before it. */
+export function referenceIndex(recorded: boolean[], shown: ReadonlySet<number>) {
+  let through = -1
+  recorded.forEach((value, i) => {
+    if (value || shown.has(i)) through = i
+  })
+  return through
 }
 export function validCtMark(mark: CtMark, trace: CtTrace, index: number) {
   return (
@@ -128,7 +147,7 @@ export function ctSessionReducer(prediction: CtTrace, transfer: CtTrace, example
       Number.isInteger(action.index) &&
       action.index >= 0 &&
       action.index < trace.checkpoints.length &&
-      (!canMark || (s.alignment && action.index <= lastUnlocked(s.recorded)))
+      (!canMark || (s.alignment && action.index <= reachableThrough(s.recorded, s.reached)))
     )
       return { ...s, active: action.index }
     if (action.type === 'target-inspected')
@@ -149,8 +168,25 @@ export function ctSessionReducer(prediction: CtTrace, transfer: CtTrace, example
         branches: s.branches.map((v, i) => (i === s.active ? null : v)),
         recorded: s.recorded.map((v, i) => (i === s.active ? false : v)),
       }
+    if (
+      action.type === 'skip-junction' &&
+      canMark &&
+      s.alignment &&
+      s.active < trace.checkpoints.length - 1 &&
+      s.active <= reachableThrough(s.recorded, s.reached)
+    )
+      return { ...s, active: s.active + 1, reached: Math.max(s.reached, s.active + 1) }
+    if (action.type === 'continue-without-recording') {
+      if (s.step === 1) return { ...s, step: 2 }
+      if (s.step === 2 && !s.prediction) return { ...s, step: 3 }
+      if (s.step === 5 && !s.transfer) return { ...s, complete: true }
+      return s
+    }
     const editable =
-      canMark && s.alignment && !s.recorded[s.active] && s.active === lastUnlocked(s.recorded)
+      canMark &&
+      s.alignment &&
+      !s.recorded[s.active] &&
+      s.active <= reachableThrough(s.recorded, s.reached)
     if (
       action.type === 'mark' &&
       editable &&
@@ -185,9 +221,7 @@ export function ctSessionReducer(prediction: CtTrace, transfer: CtTrace, example
                 pixel: s.marks[s.active]!.pixel ? [...s.marks[s.active]!.pixel!] : null,
               },
               branch: s.branches[s.active],
-              hints: s.hints,
               orientation: { ...s.orientation },
-              support: s.junctionHistory[key]?.length ? 'after-comparison' : 'coached',
             },
           ],
         },
@@ -212,6 +246,7 @@ export function ctSessionReducer(prediction: CtTrace, transfer: CtTrace, example
         ...s,
         step: 1,
         active: 0,
+        reached: 0,
         ...emptyTraceWork(prediction),
         orientation: STANDARD_ORIENTATION,
       }
@@ -222,7 +257,6 @@ export function ctSessionReducer(prediction: CtTrace, transfer: CtTrace, example
       marks: s.marks as CtMark[],
       branches: [...s.branches],
       course: s.course as Course,
-      hints: s.hints,
       targetRelation: s.targetRelation as TargetRelation,
     })
     if (
@@ -239,6 +273,7 @@ export function ctSessionReducer(prediction: CtTrace, transfer: CtTrace, example
         ...s,
         step: 5,
         active: 0,
+        reached: 0,
         ...emptyTraceWork(transfer),
         course: '',
         targetRelation: '',

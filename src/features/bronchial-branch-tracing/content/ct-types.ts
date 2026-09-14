@@ -101,8 +101,9 @@ export interface CtMark {
 export interface CtJunctionAttempt {
   mark: CtMark
   branch: CtBranchChoice | null
-  hints: number
-  support: 'coached' | 'independent' | 'after-comparison' | 'legacy-unknown'
+  /** Legacy drafts only. Self-paced responses record neither hint use nor a support label. */
+  hints?: number
+  support?: 'coached' | 'independent' | 'after-comparison' | 'legacy-unknown'
   orientation?: CtOrientation
 }
 export interface CtResponse {
@@ -111,7 +112,8 @@ export interface CtResponse {
   /** Actual daughter selections in checkpoint order; null only at the distal approach. */
   branches: (CtBranchChoice | null)[]
   course: Course
-  hints: number
+  /** Legacy drafts only. */
+  hints?: number
   targetRelation: TargetRelation
 }
 export interface CtLesson {
@@ -121,6 +123,10 @@ export interface CtLesson {
   objective: string
   prerequisite: string
   concept: string
+  /** Why the skill matters at the bronchoscope, in a sentence or two. */
+  purpose?: string
+  /** A visible tracing aid shown beside the task, never withheld until a response. */
+  checklist?: string[]
   teaching: string[]
   worked: string
   interpretation: string

@@ -40,7 +40,6 @@ async function learnDisplayChange(page: Page) {
     'data-comparison-ready',
     'true',
   )
-  await button(page, 'Only the CT display orientation').click()
   await button(page, 'Apply this to the same airway').click()
   await ctReady(page)
 }
@@ -71,6 +70,12 @@ async function markLocal(
       page,
       new RegExp(`^${point.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} · slice`),
     ).click()
+    // Harness fix (BBT-01): the slot button reaches the viewer one render later, and Enter pressed
+    // while the previous slice was still shown placed no mark. The race also fails on baseline
+    // 5d21844f. Wait for the requested slice before marking.
+    await expect(
+      page.getByText(`Slice ${point.slice} · patient directions`, { exact: false }).first(),
+    ).toBeVisible()
     await ctReady(page)
     if (firstMark && i === 0) await page.getByRole('group', { name: /^CT image\./ }).press('Enter')
     else await button(page, 'Lumen unresolved here').click()
@@ -94,7 +99,7 @@ async function orient(page: Page) {
   await button(page, 'Use this orientation').click()
   await ctReady(page)
 }
-async function markRoute(page: Page, id: string, mode: 'learn' | 'practice' | 'assess') {
+async function markRoute(page: Page, id: string) {
   const trace = traceById(id)
   await orient(page)
   for (const [i, point] of trace.checkpoints.entries()) {
@@ -103,19 +108,8 @@ async function markRoute(page: Page, id: string, mode: 'learn' | 'practice' | 'a
     await ctReady(page)
     await expect(page.locator(`[data-ct-reference="${i + 1}"]`)).toHaveCount(0)
     await button(page, 'Lumen unresolved here').click()
-    await button(
-      page,
-      point.decision
-        ? mode === 'assess'
-          ? 'Record this junction'
-          : 'Check this junction'
-        : 'Record nodule approach',
-    ).click()
-    if (mode === 'assess') {
-      await expect(page.locator('[data-ct-reference]')).toHaveCount(0)
-      await expect(page.getByText('model continuation', { exact: false })).toHaveCount(0)
-      await expect(button(page, 'Show parent airway view')).toHaveCount(0)
-    } else await expect(page.locator(`[data-ct-reference="${i + 1}"]`)).toBeVisible()
+    await button(page, point.decision ? 'Check this junction' : 'Record nodule approach').click()
+    await expect(page.locator(`[data-ct-reference="${i + 1}"]`)).toBeVisible()
     if (i < trace.checkpoints.length - 1)
       await button(
         page,
@@ -150,11 +144,14 @@ test('canonical routes retain anonymous access and noindex boundaries', async ({
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
   }
   await page.goto(base)
-  await page.getByRole('link', { name: /^(Start learning|Continue: Follow one airway)$/ }).click()
+  await page
+    .getByRole('link', { name: /^(Start learning|(Continue|Resume): Follow one airway)$/ })
+    .click()
   await expect(page).toHaveURL(/lesson=follow-one-airway/)
 })
 
-test('opening journey: familiar CT, two same-lumen intervals, observer comparison, negative answer, restored display and coached bifurcation', async ({
+// BBT-01: the "negative answer" leg of this journey became a direct comparison with no answer.
+test('opening journey: familiar CT, two same-lumen intervals, explanation before reflection, direct comparison, restored display and coached bifurcation', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 720 })
@@ -200,16 +197,17 @@ test('opening journey: familiar CT, two same-lumen intervals, observer compariso
   expect(after[0]).toEqual(before[0])
   expect(after[1].url).toBe(before[1].url)
   expect(after[1].transform).not.toBe(before[1].transform)
-  await button(page, 'The CT became a bronchoscopic image').click()
-  await expect(button(page, 'Apply this to the same airway')).toBeDisabled()
-  await capture(page, '04-negative-comprehension')
+  await expect(page.getByText('The patient has not moved.', { exact: false })).toBeVisible()
+  await expect(page.locator('[data-orientation-comparison]')).toBeVisible()
+  await expect(button(page, 'Only the CT display orientation')).toHaveCount(0)
+  await expect(button(page, 'Apply this to the same airway')).toBeEnabled()
+  await capture(page, '04-direct-comparison')
   await page.reload()
   await expect(page.getByText(/Restored display:/)).toBeVisible()
   await capture(page, '05-restored-transform')
   await button(page, 'Return to standard axial').click()
   await button(page, 'Replay comparison').click()
   expect(Object.keys((await draft(page, 'orientation')).history)).toHaveLength(0)
-  await button(page, 'Only the CT display orientation').click()
   await button(page, 'Apply this to the same airway').click()
   await button(page, 'Start tracing').click()
   await markLocal(page, localExercise(LESSONS[1].exercises![0]))
@@ -249,8 +247,54 @@ for (const id of ['vertical', 'horizontal-horizontal', 'horizontal-vertical', 'h
     await markLocal(page, localExercise(lesson.exercises![1]))
     await expect(button(page, 'Opening 1')).toHaveCount(0)
     await button(page, 'Finish lesson').click()
-    await expect(page.getByRole('heading', { name: 'Lesson completed' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Lesson finished' })).toBeVisible()
   })
+
+test('self-paced journey: reference without a mark, continue without marking, outline jump, reload and return', async ({
+  page,
+}) => {
+  await page.goto(`${base}/learn?lesson=follow-one-airway`)
+  await ctReady(page)
+  await focusAirway(page)
+  await expect(page.locator('[data-lesson-teaching]')).toContainText('Why this matters')
+  await expect(page.locator('[data-lesson-teaching]')).toContainText('trachea above the carina')
+  await button(page, 'Start tracing').click()
+  await ctReady(page)
+  await button(page, 'Show reference').click()
+  await ctReady(page)
+  await expect(page.locator('[data-teaching-overlay]').first()).toBeVisible()
+  await expect(page.getByLabel('Your mark 1', { exact: true })).toHaveCount(0)
+  await capture(page, 'self-paced-reference-without-mark')
+  await button(page, 'Continue without marking').click()
+  await button(page, 'Continue without marking').click()
+  await expect(
+    page.getByText('You moved through the examples without checking marks', { exact: false }),
+  ).toBeVisible()
+  expect((await draft(page, 'follow-one-airway')).history).toEqual({})
+  await button(page, 'Course outline').click()
+  await page
+    .getByRole('dialog')
+    .getByRole('link', { name: 'Build and check a complete CT trace' })
+    .click()
+  await expect(page).toHaveURL(/lesson=variants-limits/)
+  await ctReady(page)
+  await page.reload()
+  await ctReady(page)
+  await page.goto(base)
+  await expect(
+    page.getByRole('link', { name: 'Resume: Build and check a complete CT trace' }),
+  ).toBeVisible()
+  const record = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem('branch-tracing.self-paced-v1')!),
+  )
+  expect(record).toMatchObject({
+    lastLessonId: 'variants-limits',
+    reviewedLessonIds: ['follow-one-airway'],
+  })
+  expect(
+    await page.evaluate(() => localStorage.getItem('critical-care-activity-progress-v1')),
+  ).toBeNull()
+})
 
 test('short route: declared approach reversal, all connected divisions, map growth, uncertainty and prior review', async ({
   page,
@@ -275,7 +319,7 @@ test('short route: declared approach reversal, all connected divisions, map grow
   await button(page, 'Close').click()
   expect((await draft(page, lesson.id)).history).toEqual(before.history)
   await button(page, 'Finish lesson').click()
-  await expect(page.getByRole('heading', { name: 'Lesson completed' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Lesson finished' })).toBeVisible()
 })
 
 test('complete Learn route covers every fork, target inspection, review and second interpretation', async ({
@@ -285,21 +329,23 @@ test('complete Learn route covers every fork, target inspection, review and seco
   await page.goto(`${base}/learn?lesson=${lesson.id}`)
   await ctReady(page)
   await button(page, 'Trace this airway').click()
-  await markRoute(page, lesson.prediction, 'learn')
+  await markRoute(page, lesson.prediction)
   await button(page, 'Record trace').click()
   await describe(page)
   await button(page, 'Reveal CT comparison').click()
   await capture(page, 'complete-route-comparison')
   await button(page, 'Review the relationship').click()
   await button(page, 'Trace another airway').click()
-  await markRoute(page, lesson.transfer, 'learn')
+  await markRoute(page, lesson.transfer)
   await describe(page)
   await button(page, 'Compare new trace').click()
   await button(page, 'Finish lesson').click()
-  await expect(page.getByRole('heading', { name: 'CT trace completed' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Lesson finished' })).toBeVisible()
 })
 
-test('coached Practice preserves retries and first responses, gates target inspection and exports a debrief', async ({
+// BBT-01 superseded "preserves … first responses": responses stay as placed for review and retry,
+// with no hint use or support label; target inspection is needed only to record the distal part.
+test('Practice keeps each junction response as placed, needs target inspection only to record, and exports a comparison', async ({
   page,
 }) => {
   const id = SEGMENT_PRACTICE_TRACES[2]
@@ -307,23 +353,28 @@ test('coached Practice preserves retries and first responses, gates target inspe
   await button(page, 'Start CT practice').click()
   await ctReady(page)
   await expect(button(page, 'Use this orientation')).toBeEnabled()
-  await markRoute(page, id, 'practice')
+  await markRoute(page, id)
   await page.getByRole('combobox', { name: 'Airway course' }).selectOption('uncertain')
   await page
     .getByRole('combobox', { name: 'Airway–nodule relationship' })
     .selectOption('unresolved')
   await expect(button(page, 'Record CT interpretation')).toBeDisabled()
+  await expect(button(page, 'Compare all routes')).toBeEnabled()
   await describe(page)
   await button(page, 'Record CT interpretation').click()
-  await button(page, 'Submit all CT interpretations').click()
-  await expect(page.getByRole('heading', { name: 'CT interpretation debrief' })).toBeVisible()
-  await capture(page, 'practice-debrief')
+  await button(page, 'Compare all routes').click()
+  await expect(
+    page.getByRole('heading', { name: 'Compare your routes with the reference' }),
+  ).toBeVisible()
+  await capture(page, 'practice-comparison')
   const download = page.waitForEvent('download')
   await button(page, 'Export your CT worksheet').click()
   const file = await download
   await file.saveAs(`${evidence}/practice-worksheet.json`)
   const worksheet = JSON.parse(fs.readFileSync(`${evidence}/practice-worksheet.json`, 'utf8'))
   expect(worksheet.sourceCaseCount).toBe(1)
+  expect(worksheet.activity).toMatch(/not scored/)
+  expect(worksheet.assessment).toBeUndefined()
   await button(page, 'Review and retry these junctions').click()
   await button(page, 'Review division 1').click()
   await button(page, 'Retry this junction').click()
@@ -337,12 +388,9 @@ test('coached Practice preserves retries and first responses, gates target inspe
       .filter(([k]) => k.startsWith('branch-tracing.draft.practice.'))
       .map(([, v]) => JSON.parse(v).value.attempts),
   )
-  expect(
-    Object.values(attempts[0]).some(
-      (a) => (a as { support: string }[]).at(-1)?.support === 'after-comparison',
-    ),
-  ).toBe(true)
-  await page.getByText('First response and retries · 2 recorded', { exact: true }).click()
+  expect(Object.values(attempts[0]).some((a) => (a as unknown[]).length === 2)).toBe(true)
+  expect(JSON.stringify(attempts[0])).not.toMatch(/support|hints/)
+  await page.getByText('Your responses at this junction · 2', { exact: true }).click()
   await button(page, 'Inspect response 1').click()
   await expect(page.getByRole('dialog', { name: 'Recorded response · review only' })).toBeVisible()
   await button(page, 'Close').click()
@@ -354,31 +402,56 @@ test('coached Practice preserves retries and first responses, gates target inspe
   expect(afterReview).toEqual(attempts)
 })
 
-test('Assess withholds marks, model choices and camera cues through reload until independent set submission', async ({
+// BBT-01 superseded "Assess withholds marks, model choices and camera cues … until independent set
+// submission": the old address opens four more routes with the same reference and help as Practice.
+test('the former Assess address opens four more routes: reference on request, open traces, reload and comparison without recording', async ({
   page,
 }) => {
   await page.goto(`${base}/assess`)
-  await button(page, 'Start CT interpretation').click()
-  for (const [i, id] of ASSESS_TRACES.entries()) {
-    await markRoute(page, id, 'assess')
-    await describe(page)
-    if (i === 0) {
-      await page.reload()
-      await button(page, 'Start CT interpretation').click()
-      await ctReady(page)
-      await expect(page.locator('[data-ct-reference]')).toHaveCount(0)
-    }
-    await button(page, 'Record CT interpretation').click()
-  }
-  await button(page, 'Submit all CT interpretations').click()
-  await expect(page.getByRole('heading', { name: 'CT interpretation debrief' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Trace four more routes to simulated nodules' }),
+  ).toBeVisible()
+  await button(page, 'Start the route set').click()
+  await orient(page)
+  await button(page, 'Go to response slice').click()
+  await ctReady(page)
+  await expect(page.locator('[data-ct-reference="1"]')).toHaveCount(0)
+  await button(page, 'Show reference for this junction').click()
+  await expect(page.locator('[data-ct-reference="1"]')).toBeVisible()
+  await expect(page.getByLabel('Your mark 1', { exact: true })).toHaveCount(0)
+  await capture(page, 'more-routes-reference-without-mark')
+  await button(page, 'Continue without recording').click()
+  await expect(button(page, `Trace ${ASSESS_TRACES.length}`)).toBeEnabled()
+  await button(page, 'Trace 3').click()
+  await ctReady(page)
+  await page.reload()
+  await button(page, 'Start the route set').click()
+  await ctReady(page)
+  await expect(button(page, 'Use this orientation')).toBeVisible()
+  await button(page, 'Compare all routes with the reference').click()
+  await expect(
+    page.getByRole('heading', { name: 'Compare your routes with the reference' }),
+  ).toBeVisible()
+  await expect(
+    page.getByText('No interpretation recorded for this route.', { exact: false }),
+  ).toHaveCount(ASSESS_TRACES.length)
   await page
     .getByRole('region', { name: 'CT tracing viewer' })
     .first()
     .getByRole('button', { name: 'Current junction CT' })
     .click()
   await expect(page.locator('[data-ct-reference]').first()).toBeVisible()
-  await capture(page, 'independent-debrief')
+  await capture(page, 'more-routes-comparison')
+  const drafts = await page.evaluate(() =>
+    Object.entries(localStorage)
+      .filter(([k]) => k.startsWith('branch-tracing.draft.assess.'))
+      .map(([, v]) => JSON.parse(v).value),
+  )
+  expect(drafts[0].attempts).toEqual({})
+  expect(drafts[0].responses).toEqual(ASSESS_TRACES.map(() => null))
+  expect(
+    await page.evaluate(() => localStorage.getItem('critical-care-activity-progress-v1')),
+  ).toBeNull()
 })
 
 test('failed CT and denied storage retain honest recovery and cannot complete image tasks', async ({

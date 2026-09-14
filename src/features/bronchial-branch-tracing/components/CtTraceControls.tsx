@@ -101,6 +101,11 @@ export function CtBranchDecision({
     )
   const chosen = decision.options.find((o) => o.sourceEdgeId === choice)
   const reference = decision.options.find((o) => o.sourceEdgeId === point.sourceEdgeId)!
+  // A learner may move past a junction without choosing; never present that as a recorded choice.
+  const recordedChoice =
+    choice === null
+      ? 'No branch choice was recorded at this junction.'
+      : `Your recorded choice: ${chosen?.label ?? 'Daughter branch unresolved'}.`
   return (
     <div className={styles.branchDecision}>
       <p>
@@ -136,16 +141,12 @@ export function CtBranchDecision({
           </label>
         </fieldset>
       )}
-      {recorded && !reveal && (
-        <p>Your recorded choice: {chosen?.label ?? 'Daughter branch unresolved'}.</p>
-      )}
+      {recorded && !reveal && <p>{recordedChoice}</p>}
       {reveal && (
         <div className={styles.feedback} role="status" data-branch-comparison={point.id}>
           <strong>{recorded ? 'Junction comparison' : 'Worked junction'}</strong>
           <p>Model reference — not yet faculty reviewed.</p>
-          {recorded && (
-            <p>Your recorded choice: {chosen?.label ?? 'Daughter branch unresolved'}.</p>
-          )}
+          {recorded && <p>{recordedChoice}</p>}
           <p>
             The model reference route continues through <strong>{reference.label}</strong>.{' '}
             {decision.options.filter((o) => o.airway.code === reference.airway.code).length > 1
@@ -153,9 +154,10 @@ export function CtBranchDecision({
               : `The other ${decision.options.length === 2 ? 'daughter leaves' : 'daughters leave'} this route at the same junction. Compare the parent and each opening on the CT and the paired airway view.`}
           </p>
           <p>
-            Compare your lumen mark with the gold cross and browse the intervening slices. A valid
+            Compare any lumen mark with the gold cross and browse the intervening slices. A valid
             lumen mark need not lie on the centerline; a difference is not an automatic error. The
-            next junction follows the model reference route; your original response stays recorded.
+            next junction follows the model reference route; your own responses stay as you left
+            them.
           </p>
         </div>
       )}

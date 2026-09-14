@@ -1334,19 +1334,37 @@
   border-left: 3px solid #9ed5d5;
   background: #16303a;
 }
-.orientationCheck {
+.orientationComparison {
   display: grid;
-  gap: 0.5rem;
-  margin-top: 1rem;
+  gap: 0.45rem;
+  margin: 1rem 0 0;
   padding: 0.7rem;
   border: 1px solid #789da9;
   border-radius: 0.4rem;
 }
-.orientationCheck legend {
+.orientationComparison div {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, auto) minmax(0, 1fr);
+  gap: 0.6rem;
+}
+.orientationComparison dt {
   font-weight: 600;
 }
-.orientationCheck button {
-  text-align: left;
+.orientationComparison dd {
+  margin: 0;
+}
+@media (max-width: 480px) {
+  .orientationComparison div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.1rem;
+  }
+}
+.tracingChecklist {
+  margin: 0.4rem 0 0.8rem;
+  padding-left: 1.3rem;
+}
+.tracingChecklist li {
+  margin: 0.3rem 0;
 }
 .warmupPurpose {
   margin-bottom: 1rem;

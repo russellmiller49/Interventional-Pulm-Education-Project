@@ -13,18 +13,21 @@ const workSchema = responseSchema
     targetRelation: z.union([responseSchema.shape.targetRelation, z.literal('')]),
     orientation: orientationSchema,
     alignment: responseSchema.shape.orientation.nullable(),
+    /** Furthest junction opened on this trace, recorded or not. */
+    reached: z.number().int().nonnegative().default(0),
   })
 const schema = z.object({
   targetViewed: z.record(z.boolean()).default({}),
   attempts: z.record(
     z.array(
       z.object({
+        /** Legacy drafts only. Self-paced responses record neither a support label nor hints. */
         support: z
           .enum(['coached', 'independent', 'after-comparison', 'legacy-unknown'])
-          .default('legacy-unknown'),
+          .optional(),
         mark: markSchema,
         branch: responseSchema.shape.branches.element,
-        hints: z.number().int().nonnegative(),
+        hints: z.number().int().nonnegative().optional(),
         orientation: orientationSchema.optional(),
       }),
     ),
@@ -63,6 +66,7 @@ export function parsePracticeDraft(value: unknown, ids: string[]): PracticeDraft
     const trace = traceById(id)
     if (
       work.marks.length !== trace.checkpoints.length ||
+      work.reached >= trace.checkpoints.length ||
       work.branches.length !== work.marks.length ||
       work.recorded.length !== work.marks.length ||
       work.marks.some((m, i) => m && !validCtMark(m, trace, i)) ||
@@ -73,11 +77,11 @@ export function parsePracticeDraft(value: unknown, ids: string[]): PracticeDraft
     )
       return null
   }
+  // The comparison of all routes opens with or without recorded interpretations.
   if (
     s.responses.some(
       (r, i) => r && !traceComplete(traceById(ids[i]), { ...r, recorded: r.marks.map(() => true) }),
-    ) ||
-    (s.submitted && !s.responses.every(Boolean))
+    )
   )
     return null
   for (const [id, view] of Object.entries(s.views)) {

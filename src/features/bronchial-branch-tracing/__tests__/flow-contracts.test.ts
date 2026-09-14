@@ -5,11 +5,17 @@ import { NATIVE_CT, traceById } from '../geometry/native-ct'
 import { validJunctionHistory } from '../engine/route-draft'
 import { pairedScope } from '../geometry/paired-scope'
 import {
+  CRITICAL_CARE_PROGRESS_STORAGE_KEY,
+  createEmptyCriticalCareProgress,
+  upsertCriticalCareActivityProgress,
+  writeCriticalCareProgress,
+} from '@/features/learning-module/activity/progress'
+import * as legacyProgress from '../engine/progress'
+import {
   completedLessons,
   hasHistoricalOrientation,
   PREFIX,
-  readProgress,
-  saveVisit,
+  readLegacyProgress,
 } from '../engine/progress'
 import { DRAFT_PREFIX, readCtDraft, writeCtDraft } from '../engine/ct-draft'
 import { emptyLocalSession, localSessionReducer, parseLocalSession } from '../engine/local-session'
@@ -26,27 +32,29 @@ it('retains all nine identities and resolves the opening dependency from the reg
   expect(lessonAfter('follow-one-airway')?.id).toBe('orientation')
   expect(new Set(LESSONS.map((l) => l.id)).size).toBe(9)
 })
-it('versions only the new orientation completion, retaining earlier participation and unrelated completion', () => {
-  saveVisit('continuity', true)
-  const prior = readProgress()
-  const progress: typeof prior = {
-    ...prior,
-    activities: [
-      ...prior.activities,
-      {
-        activityId: `${PREFIX}.learn.orientation`,
-        status: 'completed',
-        attempts: 1,
-        competencyEvidenceIds: [],
-        updatedAt: new Date().toISOString(),
-      },
-    ],
-  }
+// BBT-01 superseded "versions only the new orientation completion" (which exercised the removed
+// `saveVisit` writer): legacy records stay interpretable, and the course has no writer for them.
+it('reads legacy orientation and lesson completion read-only, and exposes no writer for the shared activity envelope', () => {
+  const at = '2026-09-01T00:00:00.000Z'
+  let legacy = createEmptyCriticalCareProgress(at)
+  for (const activityId of [`${PREFIX}.learn.continuity`, `${PREFIX}.learn.orientation`])
+    legacy = upsertCriticalCareActivityProgress(legacy, {
+      activityId,
+      status: 'completed',
+      attempts: 1,
+      competencyEvidenceIds: [],
+      updatedAt: at,
+    })
+  expect(writeCriticalCareProgress(localStorage, legacy)).toBe(true)
+  const bytes = localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)
+  const progress = readLegacyProgress()
   expect(hasHistoricalOrientation(progress)).toBe(true)
   expect(completedLessons(progress)).toEqual(['continuity'])
   expect(progress.activities.some((a) => a.activityId.endsWith(ORIENTATION_CONTRACT))).toBe(false)
-  saveVisit('orientation', true)
-  expect(completedLessons(readProgress())).toEqual(['orientation', 'continuity'])
+  expect(Object.keys(legacyProgress).filter((name) => /^(save|record|write)/.test(name))).toEqual(
+    [],
+  )
+  expect(localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)).toBe(bytes)
 })
 it('all local source examples carry exact source provenance and provisional overlay semantics', () => {
   for (const lesson of LESSONS)

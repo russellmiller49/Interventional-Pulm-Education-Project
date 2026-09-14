@@ -11,7 +11,8 @@ export const responseSchema = z.object({
   branches: z.array(branch),
   course,
   targetRelation,
-  hints: z.number().int().nonnegative(),
+  /** Legacy drafts only; self-paced responses do not record hint use. */
+  hints: z.number().int().nonnegative().optional(),
   orientation: z.object({ first: orientationSchema, used: orientationSchema }),
 })
 const sessionSchema = z.object({
@@ -22,15 +23,17 @@ const sessionSchema = z.object({
         z.object({
           mark: markSchema,
           branch,
-          hints: z.number().int().nonnegative(),
+          hints: z.number().int().nonnegative().optional(),
           orientation: orientationSchema.optional(),
-          support: z.enum(['coached', 'after-comparison']),
+          support: z.enum(['coached', 'after-comparison']).optional(),
         }),
       ),
     )
     .default({}),
   step: z.number().int().min(0).max(5),
   active: z.number().int().nonnegative(),
+  /** Furthest junction opened on the marking trace, recorded or not. */
+  reached: z.number().int().nonnegative().default(0),
   marks: z.array(markSchema.nullable()),
   branches: z.array(branch),
   recorded: z.array(z.boolean()),
@@ -82,6 +85,7 @@ export function parseRouteDraft(
   const trace = s.step === 5 ? transfer : prediction
   if (
     s.active >= (s.step === 0 ? example : trace).checkpoints.length ||
+    s.reached >= trace.checkpoints.length ||
     s.marks.length !== trace.checkpoints.length ||
     s.branches.length !== s.marks.length ||
     s.recorded.length !== s.marks.length
@@ -97,7 +101,8 @@ export function parseRouteDraft(
     (s.alignment && !s.orientationAttempts.length)
   )
     return null
-  if ((s.step >= 3 && !s.prediction) || (s.complete && !s.transfer)) return null
+  // A learner may continue past a trace without recording it, so a later step or a finished
+  // lesson no longer implies a recorded interpretation. A recorded one must still be complete.
   for (const [response, source] of [
     [s.prediction, prediction],
     [s.transfer, transfer],
