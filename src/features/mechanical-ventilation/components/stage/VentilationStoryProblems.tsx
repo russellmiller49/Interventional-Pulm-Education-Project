@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from 'react'
 
-import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdict'
-import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
+import { VentilationReinforcement } from '../VentilationReinforcement'
 import shellStyles from '@/features/learning-module/stage/lesson-shell.module.css'
 import stageStyles from '@/features/learning-module/stage/lesson-stage.module.css'
 
@@ -15,13 +14,7 @@ import {
 } from '../../content/storyProblems'
 import styles from './ventilation-stage.module.css'
 
-/**
- * The story problems, on a section's Explain step.
- *
- * Each is a sixty-second scenario in which the tempting control visibly fails: the learner commits
- * an answer, and the verdict is followed by the readings an engine run of that very story produced —
- * before and after — so the axis lesson is shown, not asserted.
- */
+/** Optional stories and explicitly separate worked runs; revealing does not act on the live patient. */
 export function VentilationStoryProblems({ unitId }: { readonly unitId: string }) {
   const stories = ventilationStoryProblemsFor(unitId)
   if (stories.length === 0) return null
@@ -30,7 +23,8 @@ export function VentilationStoryProblems({ unitId }: { readonly unitId: string }
       <p className={styles.kicker}>Two story problems</p>
       <h3>Which control is this a job for?</h3>
       <p>
-        Each is a scenario with one tempting control. Decide what happens before the run shows you.
+        Each scenario contrasts a tempting control with the problem it can actually address.
+        Predict, reveal, or compare the separate worked run.
       </p>
       {stories.map((story) => (
         <StoryProblem key={story.id} story={story} />
@@ -40,30 +34,31 @@ export function VentilationStoryProblems({ unitId }: { readonly unitId: string }
 }
 
 function StoryProblem({ story }: { readonly story: VentilationStoryProblem }) {
-  const [selected, setSelected] = useState<string | null>(null)
-  const [committed, setCommitted] = useState<string | null>(null)
-  const run = useMemo(() => (committed ? runVentilationStory(story) : null), [committed, story])
+  const [revealed, setRevealed] = useState(false)
+  const run = useMemo(() => (revealed ? runVentilationStory(story) : null), [revealed, story])
 
   return (
-    <article
-      className={styles.walk}
-      data-story={story.id}
-      data-story-committed={committed !== null}
-    >
+    <article className={styles.walk} data-story={story.id} data-story-revealed={revealed}>
       <h4 style={{ margin: 0 }}>{story.title}</h4>
       <p>{story.scenario}</p>
-      {committed ? (
+      <VentilationReinforcement
+        id={story.id}
+        purpose="Separate the effect of this control from the clinical problem in the scenario."
+        prompt={story.item.stem}
+        choices={story.item.choices}
+        explanation={story.item.explanation}
+        hint={story.scenario}
+      />
+      <button type="button" className={shellStyles.nowSecondary} onClick={() => setRevealed(true)}>
+        Compare a worked run
+      </button>
+      {revealed ? (
         <>
-          <AnswerVerdict
-            item={story.item}
-            choiceId={committed}
-            outcome="stated"
-            timing="immediate-after-commit"
-            theme="dark"
-          />
           {run ? (
             <table className={stageStyles.compareTable} data-story-run>
-              <caption className={shellStyles.kicker}>What the run showed</caption>
+              <caption className={shellStyles.kicker}>
+                Worked example · separate simulated run
+              </caption>
               <thead>
                 <tr>
                   <th scope="col">Reading</th>
@@ -99,38 +94,7 @@ function StoryProblem({ story }: { readonly story: VentilationStoryProblem }) {
             <strong>{story.axisVerdict}</strong>
           </p>
         </>
-      ) : (
-        <>
-          <fieldset className={stageStyles.choiceList} data-story-choices>
-            <legend>{story.item.stem}</legend>
-            {orderChoices(story.item.id, story.item.choices).map((choice) => (
-              <label
-                key={choice.id}
-                className={stageStyles.choice}
-                data-selected={selected === choice.id}
-              >
-                <input
-                  type="radio"
-                  name={`mv-story-${story.id}`}
-                  value={choice.id}
-                  checked={selected === choice.id}
-                  onChange={() => setSelected(choice.id)}
-                />
-                <span>{choice.label}</span>
-              </label>
-            ))}
-          </fieldset>
-          <button
-            type="button"
-            className={shellStyles.nowSecondary}
-            disabled={selected === null}
-            onClick={() => setCommitted(selected)}
-            data-story-commit
-          >
-            Commit and run it
-          </button>
-        </>
-      )}
+      ) : null}
     </article>
   )
 }

@@ -6,15 +6,14 @@ import { mechanicalVentilationNavBase } from '@/features/learning-module/moduleR
 import { Link } from '@/i18n/navigation'
 
 import {
-  nextIncompleteVentilationSection,
+  nextSelfPacedVentilationSection,
   ventilationCompositionLine,
   ventilationPathwayComposition,
 } from '../content/pathwayResolver'
-import { readProgress as readCaseProgress } from '../engine/progress'
 import { MechanicalVentilationModuleFrame } from './MechanicalVentilationModuleFrame'
 import { VentilationPathwayAccordion } from './VentilationPathwayAccordion'
 import styles from './mechanical-ventilation-hub.module.css'
-import { useVentilationLabProgress } from './useVentilationLabProgress'
+import { useVentilationSelfPacedProgress } from './useVentilationSelfPacedProgress'
 
 /**
  * The Learn landing: the same door and the same map as the hub, without the rest of the hub.
@@ -27,10 +26,10 @@ export function MechanicalVentilationLearnLanding({
   readonly locale?: string
   readonly unknownActivity?: string
 }) {
-  const { progress, ready } = useVentilationLabProgress()
-  const next = nextIncompleteVentilationSection(progress)
+  const { progress, ready } = useVentilationSelfPacedProgress()
+  const next = nextSelfPacedVentilationSection(progress)
   const composition = ventilationPathwayComposition()
-  const completedCases = ready ? new Set(readCaseProgress().completedCases) : new Set<string>()
+  const visitedCases = new Set(progress.visited)
 
   return (
     <MechanicalVentilationModuleFrame
@@ -48,8 +47,8 @@ export function MechanicalVentilationLearnLanding({
           <p>
             {composition.total} sections in one order. The first five teach the concept with a
             worked reference before you apply it, capture a breath or run an experiment, and
-            interpret the result. Later sections build on those skills with clinical cases. Work
-            them in order the first time; every section stays one click away afterwards.
+            interpret the result. Later sections build on those skills with clinical cases. The
+            order is a recommendation; every section is available from the start.
           </p>
           <div className={styles.entryActions}>
             {next ? (
@@ -70,7 +69,7 @@ export function MechanicalVentilationLearnLanding({
               </Link>
             ) : (
               <p className={styles.done} data-ventilation-continue="complete">
-                Every section is worked through. Revisit any of them below.
+                Revisit any section below.
               </p>
             )}
           </div>
@@ -81,7 +80,7 @@ export function MechanicalVentilationLearnLanding({
             <h2 id="mv-learn-pathway">All {composition.total} sections</h2>
             <span>Grouped by stage · one order</span>
           </div>
-          <VentilationPathwayAccordion progress={progress} completedCaseIds={completedCases} />
+          <VentilationPathwayAccordion progress={progress} visitedCaseIds={visitedCases} />
         </section>
       </div>
     </MechanicalVentilationModuleFrame>

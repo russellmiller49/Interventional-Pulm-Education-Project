@@ -206,6 +206,7 @@ export function createLabSimulation(
   return {
     ...simulation,
     simulationTime: 0,
+    prediction: { ...simulation.prediction, committed: false },
     waveforms: simulation.waveforms.map((sample) => ({ ...sample, time: sample.time - warmup })),
     trends: [],
     risk: {
@@ -311,16 +312,6 @@ export function labReadyToCompare(session: LabSession): boolean {
     session.simulation.simulationTime - session.readySince >= round.seconds
   )
 }
-const viewActions = new Set([
-  'TICK',
-  'STEP_BREATH',
-  'SET_PAUSED',
-  'SET_SPEED',
-  'SET_SCREEN',
-  'TOGGLE_FREEZE',
-  'ACK_ALARM',
-  'TOGGLE_ALARM_AUDIO',
-])
 const transientActions = new Set([
   'TICK',
   'STEP_BREATH',
@@ -331,8 +322,10 @@ const transientActions = new Set([
 ])
 export type LabAction =
   | { type: 'ENGINE'; action: VentilationAction }
+  | { type: 'OPEN_ROUND'; round: 0 | 1 }
+  | { type: 'START_EXPERIMENT' }
   | { type: 'PREDICT' }
-  | { type: 'COMMIT'; choice: number; confidence: 'sure' | 'unsure' }
+  | { type: 'COMMIT'; choice: number; confidence?: 'sure' | 'unsure' }
   | { type: 'COMPARE' }
   | { type: 'INSPECT'; sampleTime: number }
   | { type: 'INTERPRET'; choice: string; now: string }
@@ -376,6 +369,45 @@ export function labUnitComplete(record?: LabCheckpoint): boolean {
 export function learningLabReducer(session: LabSession, action: LabAction): LabSession {
   const round = ventilationExperimentByUnit.get(session.unitId)!.rounds[session.round]
   const evidence = session.evidence[session.round]
+  if (action.type === 'OPEN_ROUND') {
+    if (action.round === session.round) return session
+    const fresh = createLabSession(session.unitId, session.device)
+    return {
+      ...fresh,
+      round: action.round,
+      simulation: {
+        ...createLabSimulation(session.unitId, action.round, session.device),
+        paused: true,
+      },
+    }
+  }
+  if (action.type === 'START_EXPERIMENT') {
+    if (session.phase === 'experiment' || session.phase === 'compare') return session
+    const simulation = {
+      ...createLabSimulation(session.unitId, session.round, session.device),
+      paused: true,
+    }
+    return {
+      ...session,
+      phase: 'experiment',
+      simulation,
+      time: 0,
+      events: [],
+      holds: [],
+      acquisition: undefined,
+      observedHolds: [],
+      readySince: null,
+      conditionRevision: 0,
+      confounds: [],
+      completedAt: undefined,
+      evidence: setEvidence(session, {
+        prediction: evidence.prediction,
+        confidence: evidence.confidence,
+        location: evidence.location,
+        baseline: labSnapshot(simulation),
+      }),
+    }
+  }
   if (action.type === 'DEVICE' || action.type === 'RESTART')
     return {
       ...createLabSession(
@@ -495,7 +527,7 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
   }
   if (
     action.type === 'COMMIT' &&
-    session.phase === 'predict' &&
+    ['explore', 'predict', 'experiment'].includes(session.phase) &&
     [0, 1, 2].includes(action.choice)
   ) {
     return {
@@ -503,11 +535,9 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
       phase: 'experiment',
       evidence: setEvidence(session, {
         ...evidence,
-        prediction: evidence.prediction ?? action.choice,
-        confidence: evidence.confidence ?? action.confidence,
-        baseline: isFoundationUnit(session.unitId)
-          ? (evidence.baseline ?? labSnapshot(session.simulation))
-          : labSnapshot(session.simulation),
+        prediction: action.choice,
+        confidence: action.confidence,
+        baseline: evidence.baseline ?? labSnapshot(session.simulation),
       }),
     }
   }
@@ -557,7 +587,6 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
     }
   }
   if (action.type !== 'ENGINE') return session
-  if (session.phase === 'predict' && !viewActions.has(action.action.type)) return session
   if (
     [
       'LOAD_CASE',

@@ -5,6 +5,38 @@
   --line: #345158;
   color: var(--ink);
   min-width: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.flow h1 {
+  font-size: clamp(1.65rem, 3vw, 2.4rem);
+  font-weight: 750;
+  line-height: 1.2;
+}
+.flow h2 {
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  font-weight: 700;
+  line-height: 1.3;
+}
+.sectionHeader {
+  max-width: 1280px;
+  margin: 1rem auto 0;
+  padding: clamp(0.85rem, 2vw, 1.5rem);
+}
+.flow [data-reinforcement] {
+  color-scheme: light;
+  --ink: #17343c;
+  --muted: #536b71;
+  --accent: #086f70;
+  --pale: #eaf5f1;
+  color: var(--ink);
+  background: #f7f9f7;
+  padding: clamp(0.85rem, 2vw, 1.5rem);
+  border-radius: 0.75rem;
+}
+.flow [data-reinforcement] button:disabled {
+  opacity: 0.5;
 }
 
 .flow [data-lesson-shell] {
@@ -71,9 +103,6 @@
   border: 0;
   padding: 0;
   background: transparent;
-}
-.flow [data-foundation-teaching] > h2 {
-  display: none;
 }
 .flow [data-foundation-teaching] > p:first-child {
   margin-top: 0;
@@ -160,6 +189,72 @@
 .tools p {
   flex: 1 1 20rem;
 }
+.tools > :is(button, a),
+.block > button {
+  min-height: 44px;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid #648a91;
+  border-radius: 0.5rem;
+  background: #193239;
+  color: #eaf4f4;
+  font-size: 0.9rem;
+  font-weight: 650;
+  line-height: 1.4;
+  text-decoration: none;
+  cursor: pointer;
+}
+.tools > :is(button, a):hover,
+.block > button:hover {
+  background: #25454c;
+}
+.tools > button[aria-pressed='true'] {
+  border-color: #71e1e5;
+}
+.tools > button:disabled,
+.block > button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.tools label {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1 1 15rem;
+  font-size: 0.85rem;
+}
+.tools select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  max-width: 100%;
+  border: 1px solid #648a91;
+  border-radius: 0.5rem;
+  background: #193239;
+  color: #eaf4f4;
+  padding: 0.4rem;
+}
+.tools:has(label) {
+  align-items: end;
+}
+.tools > select {
+  width: auto;
+}
+.flow [data-source-list],
+.flow [data-source-list] li,
+.flow [data-source-list] span,
+.flow [data-source-claims] {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.flow [data-source-list] {
+  display: block;
+}
+.flow [data-source-list] > li + li {
+  margin-top: 1rem;
+}
+.flow [data-source-claims] li {
+  display: list-item;
+}
 .note {
   color: #aec5c8;
   font-size: 0.875rem;
@@ -181,6 +276,18 @@
 }
 .block h3 {
   font-weight: 700;
+}
+.block table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.block :is(th, td) {
+  padding: 0.6rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid #345158;
+  overflow-wrap: anywhere;
 }
 .block ol {
   padding-left: 1.3rem;

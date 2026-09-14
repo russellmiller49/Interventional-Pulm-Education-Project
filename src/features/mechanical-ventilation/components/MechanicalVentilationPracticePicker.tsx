@@ -17,12 +17,8 @@ import {
 import { ventilationPathwayGroups } from '../content/pathwayResolver'
 import { ventilationSectionSpecs } from '../content/sectionSpecs'
 import { mechanicalVentilationCaseById } from '../content/runtimeCases'
-import {
-  createDefaultProgress,
-  readProgress,
-  setLastDevice,
-  writeProgress,
-} from '../engine/progress'
+import { useVentilationSelfPacedProgress } from './useVentilationSelfPacedProgress'
+import { readDevicePreference, saveDevicePreference } from './stage/useVentilationLabSession'
 import type { VentilatorDeviceId } from '../engine/types'
 import { MechanicalVentilationModuleFrame } from './MechanicalVentilationModuleFrame'
 import styles from './mechanical-ventilation-hub.module.css'
@@ -46,19 +42,15 @@ export function MechanicalVentilationPracticePicker({
   readonly focusUnitId?: string
   readonly compatibilityNotice?: string
 }) {
-  const [history, setHistory] = useState(createDefaultProgress)
+  const { progress: history, ready } = useVentilationSelfPacedProgress()
   const [device, setDevice] = useState<VentilatorDeviceId>('hamilton-c6')
   const [support, setSupport] = useState<'guided' | 'practice'>('guided')
-  const [ready, setReady] = useState(false)
   const deviceSelectId = useId()
   const supportSelectId = useId()
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const stored = readProgress()
-      setHistory(stored)
-      setDevice(stored.lastDeviceId)
-      setReady(true)
+      setDevice(readDevicePreference())
     }, 0)
     return () => window.clearTimeout(timer)
   }, [])
@@ -69,13 +61,12 @@ export function MechanicalVentilationPracticePicker({
     requestedCaseId && mechanicalVentilationCaseById.has(requestedCaseId)
       ? requestedCaseId
       : undefined
-  const recommendedId =
-    requested ?? order.find((id) => !history.completedCases.includes(id)) ?? order[0]
+  const recommendedId = requested ?? order.find((id) => !history.visited.includes(id)) ?? order[0]
   const groups = ventilationPathwayGroups()
   const href = (id: string) =>
     `${mechanicalVentilationNavBase}/practice?case=${id}&device=${device}&mode=${support}` as Route
   function remember() {
-    writeProgress(setLastDevice(readProgress(), device))
+    saveDevicePreference(device)
   }
   // The section whose mechanism this case applies: the one that pairs it, else the first that lists it.
   const teachingUnitFor = (caseId: string) =>
@@ -106,9 +97,10 @@ export function MechanicalVentilationPracticePicker({
         <header className={styles.hero}>
           <h1>Practice</h1>
           <p>
-            One patient at a time, with the reasoning the sections built: commit a mechanism, act,
-            reassess, and read the causal debrief. Guided practice coaches each step; practice mode
-            leaves the prompting out.
+            One patient at a time, with the reasoning the sections built: inspect the breath, try a
+            change, reassess, and open the explanation. Every case supports optional questions and
+            direct access to teaching. MV-03 is a worked explanation while its live measurement
+            display is under review.
           </p>
           <div className={styles.entryActions}>
             <Link
@@ -156,8 +148,8 @@ export function MechanicalVentilationPracticePicker({
               value={support}
               onChange={(event) => setSupport(event.target.value as 'guided' | 'practice')}
             >
-              <option value="guided">Guided practice — coached at each step</option>
-              <option value="practice">Practice — full controls, debrief at the end</option>
+              <option value="guided">Guided practice — suggested sequence</option>
+              <option value="practice">Practice — full controls and explanations</option>
             </select>
           </div>
         </header>
@@ -180,7 +172,7 @@ export function MechanicalVentilationPracticePicker({
                 </div>
                 <div className={styles.chipRow}>
                   {caseIds.map((caseId) => {
-                    const done = history.completedCases.includes(caseId)
+                    const done = history.visited.includes(caseId)
                     const unit = teachingUnitFor(caseId)
                     return (
                       <Link
@@ -188,14 +180,14 @@ export function MechanicalVentilationPracticePicker({
                         className={styles.chip}
                         data-kind="case"
                         data-case={caseId}
-                        data-complete={done}
+                        data-visited={done}
                         data-recommended={caseId === recommendedId}
                         href={href(caseId)}
                         onClick={remember}
                       >
                         <BookOpenCheck aria-hidden="true" />
                         {ventilationCasePresentationTitle(caseId)}
-                        {done ? ' ✓ worked through' : ''}
+                        {done ? ' · visited' : ''}
                         {caseId === recommendedId ? <em>Up next</em> : null}
                         {unit ? (
                           <small style={{ opacity: 0.8 }}> · builds on {unit.shortTitle}</small>
@@ -212,20 +204,20 @@ export function MechanicalVentilationPracticePicker({
           <h2 id="mv-practice-all">Every case, in the mechanism-alternating order</h2>
           <div className={styles.chipRow}>
             {ventilationPracticeOrder.map((caseId) => {
-              const done = history.completedCases.includes(caseId)
+              const done = history.visited.includes(caseId)
               const unit = teachingUnitFor(caseId)
               return (
                 <Link
                   key={caseId}
                   className={styles.chip}
                   data-kind="case"
-                  data-complete={done}
+                  data-visited={done}
                   href={href(caseId)}
                   onClick={remember}
                 >
                   <BookOpenCheck aria-hidden="true" />
                   {ventilationCasePresentationTitle(caseId)}
-                  {done ? ' ✓ worked through' : ''}
+                  {done ? ' · visited' : ''}
                   {unit ? (
                     <small style={{ opacity: 0.8 }}> · builds on {unit.shortTitle}</small>
                   ) : null}

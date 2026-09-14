@@ -227,9 +227,8 @@ describe('critical-care catalogs', () => {
       pathname: '/mechanical-ventilation/assess',
       creditPolicy: 'non-credit',
       completionEvidenceAuthority: 'none',
-      prerequisiteActivityIds: ventilationLearningUnits.map(
-        (unit) => `ventilation:learn:${unit.id}`,
-      ),
+      prerequisiteActivityIds: [],
+      kind: 'practice-case',
     })
     expect(finalCheck?.query).toBeUndefined()
   })

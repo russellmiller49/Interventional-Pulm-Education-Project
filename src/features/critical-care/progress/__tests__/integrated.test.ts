@@ -83,21 +83,21 @@ describe('integrated ICU capstone progress boundary', () => {
     ).toBe('hemorrhagic')
   })
 
-  it('uses explainable any-of groups for assessment eligibility and direct refreshers', () => {
+  it('keeps preparation advisory and does not treat historical MV grades as current completion', () => {
     const partial = getCriticalCareIcuScenarioReadiness(
       'septic-ards-aki',
       envelope(['ventilation:practice:MV-14']),
     )
     expect(partial).toMatchObject({
-      completedRequirementCount: 1,
+      completedRequirementCount: 0,
       totalRequirementCount: 3,
-      percentReady: 33,
+      percentReady: 0,
       approvedGateRequirementCount: 0,
       gateStatus: 'preview-open',
       eligibleForAssess: true,
     })
     expect(partial.requirements.find((item) => item.id === 'septic-ventilation')).toMatchObject({
-      completed: true,
+      completed: false,
       countsForAssessGate: false,
       assessGateSatisfied: true,
       rationale: expect.any(String),

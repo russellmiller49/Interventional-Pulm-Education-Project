@@ -103,7 +103,7 @@ function authoritativeProgressMap(
   return new Map(
     progress.flatMap((item) => {
       const activity = activityById.get(item.activityId)
-      return activity
+      return activity && activity.moduleId !== 'mechanical-ventilation'
         ? [[item.activityId, enforceCriticalCareProgressAuthority(activity, item)] as const]
         : []
     }),
@@ -219,6 +219,7 @@ function recentActivities(
       const activity = criticalCareActivityById.get(item.activityId)
       if (!activity || !isCriticalCareActivityPubliclyCataloged(activity)) return []
       const presentation = presentCriticalCareActivityPublicly(activity)
+      if (activity.moduleId === 'mechanical-ventilation') return []
       const authoritativeProgress = enforceCriticalCareProgressAuthority(activity, item)
       return activity
         ? [

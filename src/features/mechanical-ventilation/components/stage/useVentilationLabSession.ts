@@ -1,15 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useReducer, useRef } from 'react'
+import { useCallback, useEffect, useReducer } from 'react'
 
-import {
-  createLabSession,
-  labCheckpoint,
-  learningLabReducer,
-  type LabAction,
-  type LabCheckpoint,
-  type LabSession,
-} from '../../engine/learningLab'
+import { createLabSession, learningLabReducer, type LabAction } from '../../engine/learningLab'
 import {
   ventilatorDeviceIds,
   type VentilationAction,
@@ -39,46 +32,26 @@ export function saveDevicePreference(device: VentilatorDeviceId) {
   }
 }
 
-/**
- * The lab session behind a section: the event-sourced reducer, its clock, and its checkpointing.
- *
- * The clock ticks a tenth of a simulated second every hundred milliseconds while the tab is
- * visible, pauses the patient when the tab is hidden, and opens paused for a learner who prefers
- * reduced motion. The checkpoint is saved every five simulated seconds and on every change of
- * round, phase, event count or device, plus on page hide and unmount, so a reload reconstructs the
- * same patient, paused, with every commitment intact.
- */
+/** Transient patient session. Only the host's topic/step location is persisted. */
 export function useVentilationLabSession({
   unitId,
   device,
-  saved,
-  save,
+  round = 0,
 }: {
   readonly unitId: string
   readonly device: VentilatorDeviceId
-  readonly saved?: LabCheckpoint
-  readonly save: (record: LabCheckpoint) => void
+  readonly round?: 0 | 1
 }) {
-  const [session, dispatch] = useReducer(learningLabReducer, saved, (record) =>
-    createLabSession(unitId, record?.device ?? device, record),
-  )
-  const sessionRef = useRef<LabSession>(session)
-  useEffect(() => {
-    sessionRef.current = session
-  }, [session])
-
+  const [session, dispatch] = useReducer(learningLabReducer, undefined, () => {
+    const initial = createLabSession(unitId, device)
+    const opened = learningLabReducer(initial, { type: 'OPEN_ROUND', round })
+    return { ...opened, simulation: { ...opened.simulation, paused: true } }
+  })
   const engine = useCallback(
     (action: VentilationAction) => dispatch({ type: 'ENGINE', action }),
     [],
   )
   const lab = useCallback((action: LabAction) => dispatch(action), [])
-
-  useEffect(() => {
-    if (!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
-    const timer = window.setTimeout(() => engine({ type: 'SET_PAUSED', paused: true }), 0)
-    return () => window.clearTimeout(timer)
-  }, [engine, session.round, session.phase])
-
   useEffect(() => {
     const timer = window.setInterval(() => {
       if (document.visibilityState === 'visible') engine({ type: 'TICK', seconds: 0.1 })
@@ -92,43 +65,5 @@ export function useVentilationLabSession({
       document.removeEventListener('visibilitychange', hide)
     }
   }, [engine])
-
-  const saveBucket = Math.floor(session.simulation.simulationTime / 5)
-  // Every commitment in either round, as one key, so a change to any of them saves at once.
-  const commitments = session.evidence
-    .map((evidence) =>
-      [
-        evidence.prediction ?? '',
-        evidence.location ?? '',
-        evidence.observation?.choice ?? '',
-        evidence.inspection?.sample.time ?? '',
-        evidence.sort ? Object.keys(evidence.sort).length : '',
-        evidence.completedAt ?? '',
-      ].join(':'),
-    )
-    .join('|')
-  useEffect(() => {
-    save(labCheckpoint(sessionRef.current))
-  }, [
-    save,
-    saveBucket,
-    session.round,
-    session.phase,
-    session.events.length,
-    session.device,
-    session.readySince,
-    session.holds?.length,
-    commitments,
-    session.completedAt,
-  ])
-  useEffect(() => {
-    const persist = () => save(labCheckpoint(sessionRef.current))
-    window.addEventListener('pagehide', persist)
-    return () => {
-      window.removeEventListener('pagehide', persist)
-      persist()
-    }
-  }, [save])
-
   return { session, engine, lab }
 }

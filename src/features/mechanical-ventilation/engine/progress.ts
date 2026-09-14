@@ -175,10 +175,6 @@ export function readProgress(): MechanicalVentilationProgressV2 {
     )
     if (!legacy) return createDefaultProgress()
     const migrated = migrateLegacyProgress(legacy)
-    window.localStorage.setItem(
-      MECHANICAL_VENTILATION_PROGRESS_STORAGE_KEY,
-      JSON.stringify(migrated),
-    )
     return migrated
   } catch {
     return createDefaultProgress()

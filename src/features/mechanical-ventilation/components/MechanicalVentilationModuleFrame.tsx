@@ -30,9 +30,9 @@ export const mechanicalVentilationModuleNavItems: readonly ModuleNavItem[] = [
     description: 'Clinical cases',
   },
   {
-    title: 'Assess',
+    title: 'Applications',
     href: `${MECHANICAL_VENTILATION_NAV_BASE}/assess`,
-    description: 'Knowledge check and challenge cases',
+    description: 'Optional worked questions and cases',
   },
 ]
 

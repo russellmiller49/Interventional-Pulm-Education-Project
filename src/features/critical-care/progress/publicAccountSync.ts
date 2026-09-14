@@ -77,7 +77,12 @@ function isComplete(status: string): boolean {
 function allowedModuleIds(
   activities: readonly CriticalCareActivityDefinition[],
 ): ReadonlySet<string> {
-  return new Set(activities.map((activity) => activity.moduleId))
+  // MV retains old account records without hydrating or publishing new completion claims.
+  return new Set(
+    activities
+      .filter((activity) => activity.moduleId !== 'mechanical-ventilation')
+      .map((activity) => activity.moduleId),
+  )
 }
 
 export function claimPublicCriticalCareAccountSyncOwnership(
