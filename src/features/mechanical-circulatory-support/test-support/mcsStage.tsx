@@ -60,7 +60,22 @@ export function mountSection(
   sectionId: string,
   initialPhase: 'recognize' | 'predict' | 'act' | 'observe' | 'explain' | 'transfer' = 'recognize',
 ): RenderResult {
-  return render(<McsStageHost sectionId={sectionId} initialPhase={initialPhase} />)
+  const result = render(<McsStageHost sectionId={sectionId} initialPhase={initialPhase} />)
+  readPrerequisiteReference()
+  return result
+}
+
+/** Read the unscored prerequisite before driving the original task IDs. */
+export function readPrerequisiteReference() {
+  for (
+    let guard = 0;
+    guard < 5 && document.querySelector('[data-prerequisite-reference]');
+    guard++
+  ) {
+    fireEvent.click(
+      screen.getByRole('button', { name: /Next reference|Begin the patient example/ }),
+    )
+  }
 }
 
 /* ------------------------------------------------------------------ readers */

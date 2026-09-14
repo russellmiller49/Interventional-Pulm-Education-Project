@@ -1,0 +1,209 @@
+.flow {
+  --stage-muted: #b8cccf;
+  --stage-ink: #eaf4f4;
+  --stage-line: rgba(163, 206, 209, 0.22);
+  --stage-panel: #10262b;
+  --stage-accent: #71e1e5;
+  position: relative;
+  width: 100%;
+  max-width: 1440px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  background: #061519;
+  color: #eaf4f4;
+  overflow-wrap: anywhere;
+}
+.flow [data-now-card] {
+  position: static;
+  max-width: none;
+  padding: clamp(1rem, 2vw, 1.5rem);
+}
+.flow [data-now-card] > h2 {
+  font-size: clamp(1.25rem, 2vw, 1.8rem);
+}
+.flow [data-now-card] > p {
+  max-width: 85ch;
+}
+.flow [data-now-primary],
+.flow [data-now-secondary] {
+  min-height: 44px;
+}
+.flow button:focus-visible,
+.flow summary:focus-visible,
+.flow [tabindex]:focus-visible {
+  outline: 3px solid #71e1e5;
+  outline-offset: 3px;
+}
+.flow details > summary {
+  cursor: pointer;
+  padding: 0.7rem 0;
+}
+.flow table {
+  width: 100%;
+}
+.flow footer {
+  margin-top: 1rem;
+}
+.presentation {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+  min-width: 0;
+}
+.presentation p {
+  line-height: 1.6;
+}
+.reader {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+.loading {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+.timingDiscussion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+}
+.explanation,
+.observation,
+.decision {
+  min-width: 0;
+  position: relative;
+}
+.observation [data-timing-figure] {
+  max-width: 1000px;
+  margin: auto;
+}
+.observation [data-timing-figure] svg {
+  display: block;
+  width: 100%;
+  max-height: 330px;
+}
+.presentation[data-presentation='mechanism-comparison'] .observation {
+  max-width: 1000px;
+  width: 100%;
+  margin: auto;
+}
+.presentation[data-presentation='patient-case'] .observation {
+  border-top: 1px solid var(--stage-line);
+  padding-top: 1rem;
+}
+.taskMap {
+  border-top: 1px solid var(--stage-line);
+  margin-top: 1rem;
+}
+.readings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+  gap: 0.75rem;
+}
+.readings div {
+  border-left: 2px solid #36c3ca;
+  padding: 0.5rem 0.75rem;
+}
+.readings dt {
+  font-size: 0.85rem;
+  color: #b8cccf;
+}
+.readings dd {
+  font-size: 1.15rem;
+  margin: 0.25rem 0;
+}
+.readings small {
+  display: block;
+  font-size: 0.75rem;
+}
+.tour {
+  display: grid;
+  gap: 0.75rem;
+}
+.tour nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.tour nav button {
+  border: 1px solid var(--stage-line);
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.5rem;
+}
+.tour nav button[aria-pressed='true'] {
+  background: #1f4249;
+  border-color: #71e1e5;
+}
+.cutaway {
+  width: 100%;
+  max-height: 300px;
+}
+@media (max-width: 900px) {
+  .reader,
+  .loading,
+  .timingDiscussion {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .flow {
+    padding: 0.5rem;
+  }
+  .flow [data-now-card] {
+    padding: 0.8rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flow *,
+  .flow *::before,
+  .flow *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.flow [data-circulation-map] svg {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: 340px;
+  margin: 0 auto;
+}
+.flow [data-annotated-pathway-comparison] .cutaway {
+  max-height: 210px;
+}
+.flow [data-annotated-pathway-comparison] .readings dd {
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+.flow [data-now-card] {
+  scroll-margin-top: 5rem;
+}
+@media (max-width: 600px) {
+  .flow [data-circulation-map] svg {
+    height: auto;
+    width: 570px;
+    max-width: none;
+  }
+  .flow [data-pump-cutaway] {
+    overflow-x: auto;
+  }
+  .flow [data-pump-cutaway] svg {
+    min-width: 500px;
+  }
+}
+
+/* Grid children must be able to shrink around the independently pannable map. */
+.presentation > *,
+.observation > *,
+.flow [data-map-anchor],
+.flow [data-surface] {
+  min-width: 0;
+  max-width: 100%;
+}
+.flow [data-map-anchor] [data-circulation-map] > div:first-of-type {
+  min-width: 570px;
+}

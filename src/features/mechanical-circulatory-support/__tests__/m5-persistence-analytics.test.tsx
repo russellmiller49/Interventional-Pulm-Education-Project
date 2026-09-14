@@ -423,11 +423,7 @@ describe('MCS M5 — every lifecycle event is emitted once', () => {
     expect(progressWriteCount()).toBe(writes)
 
     advanceSimulation(5_000)
-    fireEvent.click(
-      screen
-        .getByRole('group', { name: 'Choose mobile workspace surface' })
-        .querySelector('button')!,
-    )
+    fireEvent.click(screen.getByRole('button', { name: 'Optional three-dimensional view' }))
 
     expect(progressWriteCount()).toBe(writes)
   })

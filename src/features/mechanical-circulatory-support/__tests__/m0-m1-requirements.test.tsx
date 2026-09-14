@@ -137,7 +137,7 @@ describe('M0/M1 §5 — the module front door', () => {
 
     // The order is said to be a recommendation, and the map says so beside it.
     const pathway = screen
-      .getByRole('heading', { name: /Nine sections, in one order/i })
+      .getByRole('heading', { name: /9 sections, in one order/i })
       .closest('section')
     expect(pathway).not.toBeNull()
     expect(within(pathway!).getByText(/not a lock/i)).toBeInTheDocument()

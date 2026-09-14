@@ -24,6 +24,8 @@ import { McsMonitor } from '../McsMonitor'
 import styles from './mcs-stage.module.css'
 import { McsTaskControls } from './McsTaskControls'
 import { McsTimingFigure } from './McsTimingFigure'
+import { McsTaskReadings } from './McsTaskReadings'
+import type { McsPresentationKind } from '../../content/taskPresentation'
 
 const McsAnatomy3D = lazy(() =>
   import('../McsAnatomy3D').then((module) => ({ default: module.McsAnatomy3D })),
@@ -39,6 +41,7 @@ const McsAnatomy3D = lazy(() =>
  */
 export function McsSimulatorPane({
   lesson,
+  presentation,
   state,
   dispatch,
   predictionCommitted,
@@ -54,6 +57,7 @@ export function McsSimulatorPane({
   allowedActionIds,
   focusedControls = false,
 }: {
+  readonly presentation?: McsPresentationKind
   readonly lesson: McsStageLesson
   readonly state: McsSimulationState
   readonly dispatch: Dispatch<McsAction>
@@ -99,14 +103,16 @@ export function McsSimulatorPane({
           <div
             ref={mapRef}
             data-map-anchor
-            role={lesson.introductory ? 'group' : undefined}
-            aria-label={lesson.introductory ? 'Circulation map scroll area' : undefined}
-            className={lesson.introductory ? styles.readableMap : undefined}
-            tabIndex={lesson.introductory ? 0 : undefined}
+            role={presentation || lesson.introductory ? 'group' : undefined}
+            aria-label={
+              presentation || lesson.introductory ? 'Circulation map scroll area' : undefined
+            }
+            className={presentation || lesson.introductory ? styles.readableMap : undefined}
+            tabIndex={presentation || lesson.introductory ? 0 : undefined}
           >
             {lesson.introductory ? (
               <p className={styles.footnote}>
-                If the map extends beyond this pane, scroll horizontally to inspect the full path at
+                If the map extends beyond this view, scroll horizontally to inspect the full path at
                 readable label size.
               </p>
             ) : null}
@@ -191,6 +197,71 @@ export function McsSimulatorPane({
     : [...MCS_STAGE_SURFACES]
 
   if (timingIdentification) return <McsTimingFigure state={state} annotated={false} />
+
+  if (presentation) {
+    const showMap =
+      presentation === 'circulation-reader' ||
+      (presentation === 'mechanism-comparison' && !teachingAvailable) ||
+      presentation === 'pump-loading-lab' ||
+      mapAnswer !== null
+    const controls = allowedActionIds?.some(
+      (id) =>
+        !id.startsWith('inspect:') && !id.startsWith('device:select:') && id !== 'team:escalate',
+    )
+    return (
+      <div
+        className={styles.simulator}
+        data-simulator-surfaces
+        data-map-leads={showMap || undefined}
+      >
+        {presentation === 'timing-lab' ? <McsTimingFigure state={state} /> : null}
+        {showMap ? (
+          <section data-surface="map">
+            <h3>Circulation map</h3>
+            {surfaceBody('map')}
+          </section>
+        ) : null}
+        {controls ? (
+          <section data-surface="controls">
+            <h3>Controls for this task</h3>
+            {surfaceBody('controls')}
+          </section>
+        ) : null}
+        {!(
+          teachingAvailable &&
+          (presentation === 'circulation-reader' || presentation === 'mechanism-comparison')
+        ) ? (
+          <McsTaskReadings state={state} kind={presentation} withholdFlow={flowAccountWithheld} />
+        ) : null}
+        <details>
+          <summary>Full monitor and derived measurements</summary>
+          {fullMonitor}
+        </details>
+        {!showMap ? (
+          <details>
+            <summary>Circulation map</summary>
+            {surfaceBody('map')}
+          </details>
+        ) : null}
+        {predictionCommitted || teachingAvailable ? (
+          <section data-surface="anatomy">
+            <button
+              type="button"
+              aria-expanded={openSurfaces.has('anatomy')}
+              onClick={() => onToggleSurface('anatomy', !openSurfaces.has('anatomy'))}
+            >
+              Optional three-dimensional view
+            </button>
+            {openSurfaces.has('anatomy') ? surfaceBody('anatomy') : null}
+          </section>
+        ) : null}
+        <p className={styles.boundaryNote} data-device-boundary>
+          Generic educational representation. No product display or manufacturer alarm limit is
+          reproduced.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div

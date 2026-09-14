@@ -142,7 +142,9 @@ function ImpellaPumpControls({
   disabled,
   dispatch,
   highlightControl,
+  hideUnavailable = false,
 }: {
+  hideUnavailable?: boolean
   side: ImpellaSide
   device: ImpellaDeviceState
   disabled: (actionId: string) => boolean
@@ -174,84 +176,92 @@ function ImpellaPumpControls({
     <fieldset className={styles.impellaPumpControls}>
       <legend>{sideLabel}</legend>
       <div className={styles.controlGrid}>
-        <label className={styles.checkControl}>
-          <input
-            type="checkbox"
-            checked={pump.running}
-            disabled={disabled(actionId('running'))}
-            onChange={(event) =>
-              dispatch({
-                type: 'SET_IMPELLA_CONTROL',
-                side,
-                control: 'running',
-                value: event.target.checked,
-              })
+        {!hideUnavailable || !disabled(actionId('running')) ? (
+          <label className={styles.checkControl}>
+            <input
+              type="checkbox"
+              checked={pump.running}
+              disabled={disabled(actionId('running'))}
+              onChange={(event) =>
+                dispatch({
+                  type: 'SET_IMPELLA_CONTROL',
+                  side,
+                  control: 'running',
+                  value: event.target.checked,
+                })
+              }
+            />
+            <span>
+              <strong>Pump support</strong>
+              <small>{pump.running ? 'Running' : 'Paused'}</small>
+            </span>
+          </label>
+        ) : null}
+        {!hideUnavailable || !disabled(actionId('performanceLevel')) ? (
+          <RangeControl
+            label="Performance level"
+            value={pump.performanceLevel}
+            minimum={0}
+            maximum={9}
+            step={1}
+            unit="P-level"
+            disabled={disabled(actionId('performanceLevel'))}
+            controlId={side === 'left' ? 'control:impella-left-level' : undefined}
+            highlightControl={highlightControl}
+            onChange={(value) =>
+              dispatch({ type: 'SET_IMPELLA_CONTROL', side, control: 'performanceLevel', value })
             }
           />
-          <span>
-            <strong>Pump support</strong>
-            <small>{pump.running ? 'Running' : 'Paused'}</small>
-          </span>
-        </label>
-        <RangeControl
-          label="Performance level"
-          value={pump.performanceLevel}
-          minimum={0}
-          maximum={9}
-          step={1}
-          unit="P-level"
-          disabled={disabled(actionId('performanceLevel'))}
-          controlId={side === 'left' ? 'control:impella-left-level' : undefined}
-          highlightControl={highlightControl}
-          onChange={(value) =>
-            dispatch({ type: 'SET_IMPELLA_CONTROL', side, control: 'performanceLevel', value })
-          }
-        />
-        <label
-          className={styles.selectControl}
-          {...(side === 'left'
-            ? controlProps('control:impella-left-position', highlightControl)
-            : {})}
-        >
-          <span>Placement state</span>
-          <select
-            value={pump.position}
-            disabled={disabled(actionId('position'))}
-            onChange={(event) =>
-              dispatch({
-                type: 'SET_IMPELLA_CONTROL',
-                side,
-                control: 'position',
-                value: event.target.value,
-              })
-            }
+        ) : null}
+        {!hideUnavailable || !disabled(actionId('position')) ? (
+          <label
+            className={styles.selectControl}
+            {...(side === 'left'
+              ? controlProps('control:impella-left-position', highlightControl)
+              : {})}
           >
-            {positionOptions.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className={styles.selectControl}>
-          <span>Purge-system state</span>
-          <select
-            value={pump.purgeState}
-            disabled={disabled(actionId('purgeState'))}
-            onChange={(event) =>
-              dispatch({
-                type: 'SET_IMPELLA_CONTROL',
-                side,
-                control: 'purgeState',
-                value: event.target.value,
-              })
-            }
-          >
-            <option value="normal">Normal</option>
-            <option value="high-pressure">High pressure</option>
-            <option value="low-pressure">Low pressure</option>
-          </select>
-        </label>
+            <span>Placement state</span>
+            <select
+              value={pump.position}
+              disabled={disabled(actionId('position'))}
+              onChange={(event) =>
+                dispatch({
+                  type: 'SET_IMPELLA_CONTROL',
+                  side,
+                  control: 'position',
+                  value: event.target.value,
+                })
+              }
+            >
+              {positionOptions.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+        {!hideUnavailable || !disabled(actionId('purgeState')) ? (
+          <label className={styles.selectControl}>
+            <span>Purge-system state</span>
+            <select
+              value={pump.purgeState}
+              disabled={disabled(actionId('purgeState'))}
+              onChange={(event) =>
+                dispatch({
+                  type: 'SET_IMPELLA_CONTROL',
+                  side,
+                  control: 'purgeState',
+                  value: event.target.value,
+                })
+              }
+            >
+              <option value="normal">Normal</option>
+              <option value="high-pressure">High pressure</option>
+              <option value="low-pressure">Low pressure</option>
+            </select>
+          </label>
+        ) : null}
       </div>
     </fieldset>
   )
@@ -262,7 +272,9 @@ export function McsControls({
   dispatch,
   highlightControl,
   allowedActionIds,
+  hideUnavailable = false,
 }: {
+  hideUnavailable?: boolean
   state: McsSimulationState
   dispatch: Dispatch<McsAction>
   /** The one control the current Learn phase is asking for, if any. */
@@ -294,54 +306,60 @@ export function McsControls({
       <details open className={styles.controlGroup}>
         <summary>Patient conditions</summary>
         <div className={styles.controlGrid}>
-          {patientControls.map((control) => (
-            <RangeControl
-              key={control.id}
-              label={control.label}
-              value={state.patient[control.id]}
-              minimum={control.minimum}
-              maximum={control.maximum}
-              step={control.step}
-              unit={control.unit}
-              disabled={unavailable(patientActionId(control.id))}
-              controlId={patientControlIds[control.id]}
-              highlightControl={highlightControl}
-              onChange={(value) =>
-                dispatch({ type: 'SET_PATIENT_CONTROL', control: control.id, value })
-              }
-            />
-          ))}
-          <label className={styles.selectControl}>
-            <span>Rhythm</span>
-            <select
-              value={state.patient.rhythm}
-              disabled={unavailable('patient:set-rhythm')}
-              onChange={(event) =>
-                dispatch({
-                  type: 'SET_RHYTHM',
-                  rhythm: event.target.value as typeof state.patient.rhythm,
-                })
-              }
-            >
-              <option value="sinus">Sinus</option>
-              <option value="atrial-fibrillation">Atrial fibrillation</option>
-              <option value="paced">Paced</option>
-            </select>
-          </label>
-          <label className={styles.checkControl}>
-            <input
-              type="checkbox"
-              checked={state.patient.tamponade}
-              disabled={unavailable('patient:set-tamponade')}
-              onChange={(event) =>
-                dispatch({ type: 'SET_TAMPONADE', active: event.target.checked })
-              }
-            />
-            <span>
-              <strong>Pericardial constraint</strong>
-              <small>Selected obstruction fault</small>
-            </span>
-          </label>
+          {patientControls.map((control) =>
+            !hideUnavailable || !unavailable(patientActionId(control.id)) ? (
+              <RangeControl
+                key={control.id}
+                label={control.label}
+                value={state.patient[control.id]}
+                minimum={control.minimum}
+                maximum={control.maximum}
+                step={control.step}
+                unit={control.unit}
+                disabled={unavailable(patientActionId(control.id))}
+                controlId={patientControlIds[control.id]}
+                highlightControl={highlightControl}
+                onChange={(value) =>
+                  dispatch({ type: 'SET_PATIENT_CONTROL', control: control.id, value })
+                }
+              />
+            ) : null,
+          )}
+          {!hideUnavailable || !unavailable('patient:set-rhythm') ? (
+            <label className={styles.selectControl}>
+              <span>Rhythm</span>
+              <select
+                value={state.patient.rhythm}
+                disabled={unavailable('patient:set-rhythm')}
+                onChange={(event) =>
+                  dispatch({
+                    type: 'SET_RHYTHM',
+                    rhythm: event.target.value as typeof state.patient.rhythm,
+                  })
+                }
+              >
+                <option value="sinus">Sinus</option>
+                <option value="atrial-fibrillation">Atrial fibrillation</option>
+                <option value="paced">Paced</option>
+              </select>
+            </label>
+          ) : null}
+          {!hideUnavailable || !unavailable('patient:set-tamponade') ? (
+            <label className={styles.checkControl}>
+              <input
+                type="checkbox"
+                checked={state.patient.tamponade}
+                disabled={unavailable('patient:set-tamponade')}
+                onChange={(event) =>
+                  dispatch({ type: 'SET_TAMPONADE', active: event.target.checked })
+                }
+              />
+              <span>
+                <strong>Pericardial constraint</strong>
+                <small>Selected obstruction fault</small>
+              </span>
+            </label>
+          ) : null}
         </div>
       </details>
 
@@ -355,143 +373,158 @@ export function McsControls({
         </summary>
         {state.device.kind === 'iabp' ? (
           <div className={styles.controlGrid}>
-            <label className={styles.checkControl}>
-              <input
-                type="checkbox"
-                checked={state.device.running}
-                disabled={unavailable('iabp:set-running')}
-                onChange={(event) =>
-                  dispatch({
-                    type: 'SET_IABP_CONTROL',
-                    control: 'running',
-                    value: event.target.checked,
-                  })
+            {!hideUnavailable || !unavailable('iabp:set-running') ? (
+              <label className={styles.checkControl}>
+                <input
+                  type="checkbox"
+                  checked={state.device.running}
+                  disabled={unavailable('iabp:set-running')}
+                  onChange={(event) =>
+                    dispatch({
+                      type: 'SET_IABP_CONTROL',
+                      control: 'running',
+                      value: event.target.checked,
+                    })
+                  }
+                />
+                <span>
+                  <strong>Console support</strong>
+                  <small>{state.device.running ? 'Running' : 'Paused'}</small>
+                </span>
+              </label>
+            ) : null}
+            {!hideUnavailable || !unavailable('iabp:set-ratio') ? (
+              <label className={styles.selectControl}>
+                <span>Assist ratio</span>
+                <select
+                  value={state.device.assistRatio}
+                  disabled={unavailable('iabp:set-ratio')}
+                  onChange={(event) =>
+                    dispatch({
+                      type: 'SET_IABP_CONTROL',
+                      control: 'assistRatio',
+                      value: Number(event.target.value),
+                    })
+                  }
+                >
+                  <option value={1}>1:1</option>
+                  <option value={2}>1:2</option>
+                  <option value={3}>1:3</option>
+                </select>
+              </label>
+            ) : null}
+            {!hideUnavailable || !unavailable('iabp:set-trigger') ? (
+              <label
+                className={styles.selectControl}
+                {...controlProps('control:iabp-trigger', highlightControl)}
+              >
+                <span>Trigger source</span>
+                <select
+                  value={state.device.triggerSource}
+                  disabled={unavailable('iabp:set-trigger')}
+                  onChange={(event) =>
+                    dispatch({
+                      type: 'SET_IABP_CONTROL',
+                      control: 'triggerSource',
+                      value: event.target.value,
+                    })
+                  }
+                >
+                  <option value="ecg">ECG</option>
+                  <option value="pressure">Arterial pressure</option>
+                  <option value="internal">Internal</option>
+                </select>
+              </label>
+            ) : null}
+            {!hideUnavailable || !unavailable('iabp:set-inflation') ? (
+              <RangeControl
+                label="Inflation vs notch"
+                value={state.device.inflationOffsetMs}
+                minimum={-180}
+                maximum={180}
+                step={5}
+                unit="ms"
+                disabled={unavailable('iabp:set-inflation')}
+                controlId="control:iabp-inflation"
+                highlightControl={highlightControl}
+                onChange={(value) =>
+                  dispatch({ type: 'SET_IABP_CONTROL', control: 'inflationOffsetMs', value })
                 }
               />
-              <span>
-                <strong>Console support</strong>
-                <small>{state.device.running ? 'Running' : 'Paused'}</small>
-              </span>
-            </label>
-            <label className={styles.selectControl}>
-              <span>Assist ratio</span>
-              <select
-                value={state.device.assistRatio}
-                disabled={unavailable('iabp:set-ratio')}
-                onChange={(event) =>
-                  dispatch({
-                    type: 'SET_IABP_CONTROL',
-                    control: 'assistRatio',
-                    value: Number(event.target.value),
-                  })
+            ) : null}
+            {!hideUnavailable || !unavailable('iabp:set-deflation') ? (
+              <RangeControl
+                label="Deflation vs systole"
+                value={state.device.deflationOffsetMs}
+                minimum={-180}
+                maximum={180}
+                step={5}
+                unit="ms"
+                disabled={unavailable('iabp:set-deflation')}
+                onChange={(value) =>
+                  dispatch({ type: 'SET_IABP_CONTROL', control: 'deflationOffsetMs', value })
                 }
-              >
-                <option value={1}>1:1</option>
-                <option value={2}>1:2</option>
-                <option value={3}>1:3</option>
-              </select>
-            </label>
-            <label
-              className={styles.selectControl}
-              {...controlProps('control:iabp-trigger', highlightControl)}
-            >
-              <span>Trigger source</span>
-              <select
-                value={state.device.triggerSource}
-                disabled={unavailable('iabp:set-trigger')}
-                onChange={(event) =>
-                  dispatch({
-                    type: 'SET_IABP_CONTROL',
-                    control: 'triggerSource',
-                    value: event.target.value,
-                  })
-                }
-              >
-                <option value="ecg">ECG</option>
-                <option value="pressure">Arterial pressure</option>
-                <option value="internal">Internal</option>
-              </select>
-            </label>
-            <RangeControl
-              label="Inflation vs notch"
-              value={state.device.inflationOffsetMs}
-              minimum={-180}
-              maximum={180}
-              step={5}
-              unit="ms"
-              disabled={unavailable('iabp:set-inflation')}
-              controlId="control:iabp-inflation"
-              highlightControl={highlightControl}
-              onChange={(value) =>
-                dispatch({ type: 'SET_IABP_CONTROL', control: 'inflationOffsetMs', value })
-              }
-            />
-            <RangeControl
-              label="Deflation vs systole"
-              value={state.device.deflationOffsetMs}
-              minimum={-180}
-              maximum={180}
-              step={5}
-              unit="ms"
-              disabled={unavailable('iabp:set-deflation')}
-              onChange={(value) =>
-                dispatch({ type: 'SET_IABP_CONTROL', control: 'deflationOffsetMs', value })
-              }
-            />
+              />
+            ) : null}
           </div>
         ) : state.device.kind === 'impella' ? (
           <div className={styles.impellaControlStack}>
             <div className={styles.impellaConfiguration}>
-              <label className={styles.selectControl}>
-                <span>Left-sided support</span>
-                <select
-                  aria-label="Left-sided Impella configuration"
-                  value={state.device.left.enabled ? state.device.left.variant : 'off'}
-                  disabled={
-                    unavailable('impella:enable-left') && unavailable('impella:set-left-variant')
-                  }
-                  onChange={(event) => {
-                    if (event.target.value === 'off') {
+              {!hideUnavailable ||
+              !(unavailable('impella:enable-left') && unavailable('impella:set-left-variant')) ? (
+                <label className={styles.selectControl}>
+                  <span>Left-sided support</span>
+                  <select
+                    aria-label="Left-sided Impella configuration"
+                    value={state.device.left.enabled ? state.device.left.variant : 'off'}
+                    disabled={
+                      unavailable('impella:enable-left') && unavailable('impella:set-left-variant')
+                    }
+                    onChange={(event) => {
+                      if (event.target.value === 'off') {
+                        dispatch({
+                          type: 'SET_IMPELLA_CONFIGURATION',
+                          control: 'leftEnabled',
+                          value: false,
+                        })
+                        return
+                      }
                       dispatch({
                         type: 'SET_IMPELLA_CONFIGURATION',
-                        control: 'leftEnabled',
-                        value: false,
+                        control: 'leftVariant',
+                        value: event.target.value as 'cp' | '55',
                       })
-                      return
+                    }}
+                  >
+                    <option value="off">Off</option>
+                    <option value="cp">Impella CP</option>
+                    <option value="55">Impella 5.5</option>
+                  </select>
+                </label>
+              ) : null}
+              {!hideUnavailable || !unavailable('impella:enable-right') ? (
+                <label
+                  className={styles.selectControl}
+                  {...controlProps('control:impella-right-enable', highlightControl)}
+                >
+                  <span>Right-sided support</span>
+                  <select
+                    aria-label="Right-sided Impella configuration"
+                    value={state.device.right.enabled ? 'rp' : 'off'}
+                    disabled={unavailable('impella:enable-right')}
+                    onChange={(event) =>
+                      dispatch({
+                        type: 'SET_IMPELLA_CONFIGURATION',
+                        control: 'rightEnabled',
+                        value: event.target.value === 'rp',
+                      })
                     }
-                    dispatch({
-                      type: 'SET_IMPELLA_CONFIGURATION',
-                      control: 'leftVariant',
-                      value: event.target.value as 'cp' | '55',
-                    })
-                  }}
-                >
-                  <option value="off">Off</option>
-                  <option value="cp">Impella CP</option>
-                  <option value="55">Impella 5.5</option>
-                </select>
-              </label>
-              <label
-                className={styles.selectControl}
-                {...controlProps('control:impella-right-enable', highlightControl)}
-              >
-                <span>Right-sided support</span>
-                <select
-                  aria-label="Right-sided Impella configuration"
-                  value={state.device.right.enabled ? 'rp' : 'off'}
-                  disabled={unavailable('impella:enable-right')}
-                  onChange={(event) =>
-                    dispatch({
-                      type: 'SET_IMPELLA_CONFIGURATION',
-                      control: 'rightEnabled',
-                      value: event.target.value === 'rp',
-                    })
-                  }
-                >
-                  <option value="off">Off</option>
-                  <option value="rp">Impella RP</option>
-                </select>
-              </label>
+                  >
+                    <option value="off">Off</option>
+                    <option value="rp">Impella RP</option>
+                  </select>
+                </label>
+              ) : null}
             </div>
             <p className={styles.impellaBalanceNote}>
               Left flow unloads the LV and contributes to systemic output. RP flow bypasses the RV
@@ -503,6 +536,7 @@ export function McsControls({
                 side="left"
                 device={state.device}
                 disabled={unavailable}
+                hideUnavailable={hideUnavailable}
                 dispatch={dispatch}
                 highlightControl={highlightControl}
               />
@@ -512,6 +546,7 @@ export function McsControls({
                 side="right"
                 device={state.device}
                 disabled={unavailable}
+                hideUnavailable={hideUnavailable}
                 dispatch={dispatch}
                 highlightControl={highlightControl}
               />
@@ -519,103 +554,114 @@ export function McsControls({
           </div>
         ) : (
           <div className={styles.controlGrid}>
-            <label className={styles.checkControl}>
-              <input
-                type="checkbox"
-                checked={state.device.powerConnected}
-                disabled={unavailable('lvad:set-power')}
-                onChange={(event) =>
-                  dispatch({
-                    type: 'SET_LVAD_CONTROL',
-                    control: 'powerConnected',
-                    value: event.target.checked,
-                  })
-                }
-              />
-              <span>
-                <strong>Approved power path</strong>
-                <small>{state.device.powerConnected ? 'Connected' : 'Disconnected'}</small>
-              </span>
-            </label>
-            <label className={styles.checkControl}>
-              <input
-                type="checkbox"
-                checked={state.device.speedChangeAuthorized}
-                disabled={unavailable('lvad:authorize-speed')}
-                onChange={(event) =>
-                  dispatch({
-                    type: 'SET_LVAD_CONTROL',
-                    control: 'speedChangeAuthorized',
-                    value: event.target.checked,
-                  })
-                }
-              />
-              <span>
-                <strong>Authorized-personnel order</strong>
-                {/*
+            {!hideUnavailable || !unavailable('lvad:set-power') ? (
+              <label className={styles.checkControl}>
+                <input
+                  type="checkbox"
+                  checked={state.device.powerConnected}
+                  disabled={unavailable('lvad:set-power')}
+                  onChange={(event) =>
+                    dispatch({
+                      type: 'SET_LVAD_CONTROL',
+                      control: 'powerConnected',
+                      value: event.target.checked,
+                    })
+                  }
+                />
+                <span>
+                  <strong>Approved power path</strong>
+                  <small>{state.device.powerConnected ? 'Connected' : 'Disconnected'}</small>
+                </span>
+              </label>
+            ) : null}
+            {!hideUnavailable || !unavailable('lvad:authorize-speed') ? (
+              <label className={styles.checkControl}>
+                <input
+                  type="checkbox"
+                  checked={state.device.speedChangeAuthorized}
+                  disabled={unavailable('lvad:authorize-speed')}
+                  onChange={(event) =>
+                    dispatch({
+                      type: 'SET_LVAD_CONTROL',
+                      control: 'speedChangeAuthorized',
+                      value: event.target.checked,
+                    })
+                  }
+                />
+                <span>
+                  <strong>Authorized-personnel order</strong>
+                  {/*
                   What this box gates, said on the box. The speed slider below is disabled until
                   it is ticked, and nothing said so: a learner met a dead control with a labelled
                   checkbox above it that did not say it was the key. Driven by the same flag that
                   disables the slider, so the two cannot drift.
                 */}
-                <small data-speed-authorization-note>
-                  {state.device.speedChangeAuthorized
-                    ? 'Simulation authorization only · the pump speed below can be changed'
-                    : 'Simulation authorization only · tick it to unlock the pump speed below'}
-                </small>
-              </span>
-            </label>
-            <RangeControl
-              label="Pump speed"
-              value={state.device.speedRpm}
-              minimum={4600}
-              maximum={6200}
-              step={100}
-              unit="rpm"
-              disabled={unavailable('lvad:set-speed') || !state.device.speedChangeAuthorized}
-              onChange={(value) =>
-                dispatch({ type: 'SET_LVAD_CONTROL', control: 'speedRpm', value })
-              }
-            />
-            <label className={styles.checkControl}>
-              <input
-                type="checkbox"
-                checked={state.device.controllerFault}
-                disabled={unavailable('lvad:set-controller')}
-                onChange={(event) =>
-                  dispatch({
-                    type: 'SET_LVAD_CONTROL',
-                    control: 'controllerFault',
-                    value: event.target.checked,
-                  })
+                  <small data-speed-authorization-note>
+                    {state.device.speedChangeAuthorized
+                      ? 'Simulation authorization only · the pump speed below can be changed'
+                      : 'Simulation authorization only · tick it to unlock the pump speed below'}
+                  </small>
+                </span>
+              </label>
+            ) : null}
+            {!hideUnavailable ||
+            !(unavailable('lvad:set-speed') || !state.device.speedChangeAuthorized) ? (
+              <RangeControl
+                label="Pump speed"
+                value={state.device.speedRpm}
+                minimum={4600}
+                maximum={6200}
+                step={100}
+                unit="rpm"
+                disabled={unavailable('lvad:set-speed') || !state.device.speedChangeAuthorized}
+                onChange={(value) =>
+                  dispatch({ type: 'SET_LVAD_CONTROL', control: 'speedRpm', value })
                 }
               />
-              <span>
-                <strong>Controller fault</strong>
-                <small>Selected device fault</small>
-              </span>
-            </label>
-            <label
-              className={styles.checkControl}
-              {...controlProps('control:lvad-thrombosis', highlightControl)}
-            >
-              <input
-                type="checkbox"
-                checked={state.device.suspectedPumpThrombosis}
-                disabled={unavailable('lvad:set-thrombosis')}
-                onChange={(event) =>
-                  dispatch({
-                    type: 'SET_LVAD_CONTROL',
-                    control: 'suspectedPumpThrombosis',
-                    value: event.target.checked,
-                  })
-                }
-              />
-              <span>
-                <strong>High-power / thrombosis pattern</strong>
-                <small>Selected obstruction fault</small>
-              </span>
-            </label>
+            ) : null}
+            {!hideUnavailable || !unavailable('lvad:set-controller') ? (
+              <label className={styles.checkControl}>
+                <input
+                  type="checkbox"
+                  checked={state.device.controllerFault}
+                  disabled={unavailable('lvad:set-controller')}
+                  onChange={(event) =>
+                    dispatch({
+                      type: 'SET_LVAD_CONTROL',
+                      control: 'controllerFault',
+                      value: event.target.checked,
+                    })
+                  }
+                />
+                <span>
+                  <strong>Controller fault</strong>
+                  <small>Selected device fault</small>
+                </span>
+              </label>
+            ) : null}
+            {!hideUnavailable || !unavailable('lvad:set-thrombosis') ? (
+              <label
+                className={styles.checkControl}
+                {...controlProps('control:lvad-thrombosis', highlightControl)}
+              >
+                <input
+                  type="checkbox"
+                  checked={state.device.suspectedPumpThrombosis}
+                  disabled={unavailable('lvad:set-thrombosis')}
+                  onChange={(event) =>
+                    dispatch({
+                      type: 'SET_LVAD_CONTROL',
+                      control: 'suspectedPumpThrombosis',
+                      value: event.target.checked,
+                    })
+                  }
+                />
+                <span>
+                  <strong>High-power / thrombosis pattern</strong>
+                  <small>Selected obstruction fault</small>
+                </span>
+              </label>
+            ) : null}
           </div>
         )}
       </details>

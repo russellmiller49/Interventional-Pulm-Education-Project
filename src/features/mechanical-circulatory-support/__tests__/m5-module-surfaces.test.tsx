@@ -1,3 +1,4 @@
+import { mcsPresentationTitle } from '../content/casePresentation'
 /**
  * M5 — the front door, the route chrome, and the two point-of-use drawers.
  *
@@ -273,7 +274,9 @@ describe('MCS M5 — the reference and evidence drawers', () => {
     await renderWorkbench({ section: 'practice', initialActivityId: scenario.id })
 
     const drawer = await openDrawer('Reference')
-    expect(within(drawer).getByRole('heading', { name: scenario.title })).toBeInTheDocument()
+    expect(
+      within(drawer).getByRole('heading', { name: mcsPresentationTitle(scenario) }),
+    ).toBeInTheDocument()
     expect(within(drawer).getByText(scenario.presentation)).toBeInTheDocument()
   })
 
@@ -313,6 +316,8 @@ describe('MCS M5 — the reference and evidence drawers', () => {
 
     expect(sharedStepperPhase()).toBe(phaseBefore)
     expect(readTiming()).toBe(timingBefore)
-    expect(screen.getAllByRole('heading', { name: scenario.title }).length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByRole('heading', { name: mcsPresentationTitle(scenario) }).length,
+    ).toBeGreaterThan(0)
   })
 })

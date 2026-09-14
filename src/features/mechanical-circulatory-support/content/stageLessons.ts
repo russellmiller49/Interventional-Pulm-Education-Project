@@ -15,6 +15,7 @@ import {
   isMcsIntroductorySection,
   type McsIntroduction,
 } from './introductorySteps'
+import { mcsTaskPresentation, type McsPresentationKind } from './taskPresentation'
 import { mcsPresentationTitle } from './casePresentation'
 import { MCS_CONTROL_PANEL_SORT, type McsControlPanelSort } from './controlPanelSort'
 import { mcsIncrementForSection, type McsDeviceIncrement } from './deviceIncrements'
@@ -100,6 +101,7 @@ export type McsStageInteraction =
   | { readonly kind: 'transfer'; readonly transfer: McsLessonTransferDefinition }
 
 export interface McsStageStep extends StageStepBase<McsStageInteraction> {
+  readonly presentation: McsPresentationKind
   /** Authored setup, never learner evidence. An empty array still requests a fresh baseline. */
   readonly setupOnEntry?: readonly McsAction[]
   /** Surfaces opened when the step is entered; the learner may open the rest. */
@@ -214,6 +216,7 @@ export function buildMcsStageLesson(sectionId: string): McsStageLesson {
       lookIn,
       actionLabel,
       interaction,
+      presentation: mcsTaskPresentation(sectionId, interaction),
       gate: phase === 'recognize' || phase === 'predict' ? 'open' : 'after-prediction',
       surfaces: surfacesFor(phase, spec, contract, onMap),
       stopIds: spec.stopIds,

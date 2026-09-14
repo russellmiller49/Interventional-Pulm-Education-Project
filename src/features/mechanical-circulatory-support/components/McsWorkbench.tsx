@@ -1,7 +1,7 @@
 'use client'
 
 import type { Route } from 'next'
-import { useEffect, useReducer, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useReducer, useRef, useState } from 'react'
 import { Check } from 'lucide-react'
 
 import { criticalCareActivityById } from '@/features/critical-care/content/activities'
@@ -48,7 +48,11 @@ import {
   type McsProgressV1,
   type McsSimulationState,
 } from '../engine'
-import { McsAnatomy3D } from './McsAnatomy3D'
+import { CirculationMap } from './circulation-map/CirculationMap'
+import { mcsPresentationTitle } from '../content/casePresentation'
+const McsAnatomy3D = lazy(() =>
+  import('./McsAnatomy3D').then((module) => ({ default: module.McsAnatomy3D })),
+)
 import { McsCaseWorkflow } from './McsCaseWorkflow'
 import { McsControls } from './McsControls'
 import { McsModuleFrame } from './McsModuleFrame'
@@ -76,8 +80,6 @@ const deviceLabels: Record<McsDeviceKind, { short: string; title: string; mechan
     mechanism: 'Apical continuous flow',
   },
 }
-
-type MobileSurface = 'anatomy' | 'monitor' | 'controls' | 'workflow'
 
 const semanticPhaseByMcsPhase: Readonly<
   Record<ReturnType<typeof createInitialMcsState>['scenarioPhase'], CriticalCareActivityPhase>
@@ -183,17 +185,21 @@ export function McsWorkbench({
       ? (requestedPractice?.id ?? 'studio')
       : (requestedCapstone?.id ?? initialCapstoneForDevice?.id ?? 'CAP-IABP-01'),
   )
-  const [mobileSurface, setMobileSurface] = useState<MobileSurface>('anatomy')
+  const [studioOpen, setStudioOpen] = useState(
+    Boolean(initialDevice) && !requestedPractice && section === 'practice',
+  )
+  const [anatomyOpen, setAnatomyOpen] = useState(false)
   const [helpVisible, setHelpVisible] = useState(false)
   const [showChallengeFeedback, setShowChallengeFeedback] = useState(false)
+  const [assistanceUsed, setAssistanceUsed] = useState(false)
   const recordedCompletion = useRef<string | null>(null)
   const recordedSafetyEvents = useRef(new Set<string>())
   const activeHref = `${mechanicalCirculatorySupportNavBase}/${section}`
   const revealCausality =
-    section !== 'assess' ||
-    showChallengeFeedback ||
+    !state.scenario ||
     state.completed ||
-    state.alarms.some((alarm) => alarm.active && alarm.priority === 'critical')
+    (state.actionIds.some((id) => !id.startsWith('inspect:')) &&
+      (section === 'practice' || showChallengeFeedback))
   const activityMode = section === 'practice' ? ('practice' as const) : ('challenge' as const)
   const lifecycleActivityId =
     section === 'practice'
@@ -230,6 +236,7 @@ export function McsWorkbench({
   }, [requestedPractice])
 
   useEffect(() => {
+    if (!state.scenario && !studioOpen) return
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
     const intervalMs = reducedMotion ? 250 : 100
     const timer = window.setInterval(
@@ -237,7 +244,7 @@ export function McsWorkbench({
       intervalMs,
     )
     return () => window.clearInterval(timer)
-  }, [])
+  }, [state.scenario, studioOpen])
 
   useEffect(() => {
     recordSiteModuleEvent({
@@ -305,6 +312,8 @@ export function McsWorkbench({
   }, [lifecycleAnalytics, state])
 
   function openStudio(device: McsDeviceKind) {
+    setStudioOpen(true)
+    setAnatomyOpen(false)
     setHelpVisible(false)
     setSelectedActivityId('studio')
     dispatch({ type: 'OPEN_STUDIO', device })
@@ -317,6 +326,7 @@ export function McsWorkbench({
     setSelectedActivityId(capstone.id)
     setHelpVisible(false)
     setShowChallengeFeedback(false)
+    setAssistanceUsed(false)
     dispatch({ type: 'LOAD_SCENARIO', scenario: capstone })
   }
 
@@ -326,6 +336,9 @@ export function McsWorkbench({
     if (!scenario) return
     setHelpVisible(false)
     setSelectedActivityId(id)
+    setAnatomyOpen(false)
+    setShowChallengeFeedback(false)
+    setAssistanceUsed(false)
     dispatch({ type: 'LOAD_SCENARIO', scenario })
     recordCriticalCareActivitySelection(window.localStorage, {
       activityId: `mcs:practice:${scenario.id}`,
@@ -341,14 +354,23 @@ export function McsWorkbench({
     (scenario) => scenario.device === state.deviceKind,
   )
   const capstone = mcsCapstoneScenarios.find((scenario) => scenario.device === state.deviceKind)
-  const activeTitle = state.scenario?.title ?? 'Mechanism Studio'
+  const activeTitle = state.scenario
+    ? state.completed
+      ? state.scenario.title
+      : mcsPresentationTitle(state.scenario)
+    : studioOpen
+      ? 'Mechanism Studio'
+      : section === 'practice'
+        ? 'Practice'
+        : 'MCS Challenge'
   const currentObjective =
-    state.scenario?.learningObjectives[0] ??
-    'Compare device support with the synchronized patient and circuit response.'
+    (state.scenario
+      ? 'Interpret the observations, explain the support pathway’s limits, and reassess the patient.'
+      : undefined) ?? 'Compare device support with the synchronized patient and circuit response.'
   const requiredAction = state.scenario
     ? state.scenarioPhase === 'predict'
       ? state.scenario.predictionPrompt
-      : state.scenario.guidedPrompt
+      : 'Inspect the current observations, record your interpretation, then use the permitted actions.'
     : 'Change one bounded variable and reconcile the patient, monitor, and device response.'
   const activeSourceIds = state.scenario
     ? [...state.scenario.sourceIds, ...state.scenario.evidenceSourceIds]
@@ -402,6 +424,7 @@ export function McsWorkbench({
   function resetActivity() {
     setHelpVisible(false)
     setShowChallengeFeedback(false)
+    setAssistanceUsed(false)
     dispatch({ type: 'RESET' })
   }
 
@@ -411,13 +434,6 @@ export function McsWorkbench({
 
   function selectActivityPhase(phase: CriticalCareActivityPhase) {
     setHelpVisible(false)
-    const surface: MobileSurface =
-      phase === 'act'
-        ? 'controls'
-        : phase === 'recognize' || phase === 'observe'
-          ? 'monitor'
-          : 'workflow'
-    setMobileSurface(surface)
     const targetId =
       phase === 'recognize'
         ? 'mcs-case-inspect'
@@ -437,7 +453,7 @@ export function McsWorkbench({
   }
 
   return (
-    <McsModuleFrame locale={locale} activeHref={activeHref} activityMode theme="light">
+    <McsModuleFrame locale={locale} activeHref={activeHref} activityMode flowing theme="light">
       <ActivityShell
         layout="native-workbench"
         activityId={lifecycleActivityId}
@@ -466,7 +482,9 @@ export function McsWorkbench({
                 },
                 {
                   label: 'Filling-pressure congestion pattern',
-                  value: congestionPattern(state),
+                  value: revealCausality
+                    ? congestionPattern(state)
+                    : 'Interpret the displayed filling pressures',
                 },
                 {
                   label: 'Rhythm',
@@ -522,13 +540,17 @@ export function McsWorkbench({
           <TaskPanel
             objective={currentObjective}
             requiredAction={requiredAction}
-            targets={state.scenario?.learningObjectives ?? []}
-            hint={state.scenario?.guidedPrompt}
+            targets={revealCausality ? (state.scenario?.learningObjectives ?? []) : []}
+            hint={state.predictionCommitted ? state.scenario?.guidedPrompt : undefined}
             mode={activityMode}
             hintVisible={helpVisible}
             onHintRequested={showHelp}
           >
             <div className={styles.taskSelectors}>
+              <p>
+                Switching the device or case starts its reference state and clears current actions
+                and answers. Completed history is retained.
+              </p>
               {/*
                * The device tabs are an axis orthogonal to the teaching sequence, which is why the
                * lesson stage that now carries Learn has none. Practice and Challenge keep them.
@@ -569,7 +591,7 @@ export function McsWorkbench({
                       onClick={() => choosePractice(candidate.id)}
                     >
                       <span>{String(index + 1).padStart(2, '0')}</span>
-                      <strong>{candidate.shortTitle}</strong>
+                      <strong>{mcsPresentationTitle(candidate)}</strong>
                     </button>
                   ))}
                 </section>
@@ -577,7 +599,7 @@ export function McsWorkbench({
                 <section className={styles.taskCapstoneCard} data-available>
                   <div>
                     <Check aria-hidden="true" />
-                    <strong>{capstone?.title ?? 'MCS challenge'}</strong>
+                    <strong>{capstone ? mcsPresentationTitle(capstone) : 'MCS challenge'}</strong>
                   </div>
                   <p>Open from the start. Feedback is collected for the end-of-case debrief.</p>
                   <button
@@ -587,6 +609,7 @@ export function McsWorkbench({
                       if (!capstone) return
                       setHelpVisible(false)
                       setShowChallengeFeedback(false)
+                      setAssistanceUsed(false)
                       setSelectedActivityId(capstone.id)
                       dispatch({ type: 'LOAD_SCENARIO', scenario: capstone })
                       recordCriticalCareActivitySelection(window.localStorage, {
@@ -637,64 +660,113 @@ export function McsWorkbench({
                   query: { case: nextPractice.id },
                 }}
               >
-                Next recommended · {nextPractice.shortTitle}
+                Next recommended · {mcsPresentationTitle(nextPractice)}
               </Link>
             ) : null}
           </>
         }
         viewport={
           <div id="mcs-activity-viewport" className={styles.activityViewport} tabIndex={-1}>
-            <div
-              className={styles.mobileSurfaceTabs}
-              role="group"
-              aria-label="Choose mobile workspace surface"
-            >
-              {(['anatomy', 'monitor', 'controls', 'workflow'] as const).map((surface) => (
-                <button
-                  type="button"
-                  key={surface}
-                  aria-pressed={mobileSurface === surface}
-                  onClick={() => setMobileSurface(surface)}
-                >
-                  {surface}
-                </button>
-              ))}
-            </div>
-            <section className={styles.simulationGrid} aria-label="Synchronized support simulation">
-              <div data-mobile-visible={mobileSurface === 'anatomy'}>
-                <SimulationLaunchGate
-                  activityTitle="Mechanical circulatory support 3D anatomy"
-                  minimumViewport="desktop"
-                  bandwidthClass="heavy"
-                  estimatedSizeLabel="Interactive heart and device model"
-                  lightweightAlternativeHref="/critical-care/reference?item=mcs-cardiac-text-summary"
-                  onSaveForLater={() => router.push(mechanicalCirculatorySupportNavBase as Route)}
-                >
-                  <McsAnatomy3D state={state} revealCausality={revealCausality} />
-                </SimulationLaunchGate>
-              </div>
-              <div data-mobile-visible={mobileSurface === 'monitor'}>
-                <McsMonitor state={state} revealCausality={revealCausality} />
-              </div>
-              <div
-                className={styles.liveControlsRail}
-                data-mobile-visible={mobileSurface === 'controls'}
-              >
-                <McsControls state={state} dispatch={dispatch} />
-              </div>
-            </section>
-            <section className={styles.taskGrid} data-mobile-visible={mobileSurface === 'workflow'}>
-              <McsCaseWorkflow
-                state={state}
-                dispatch={dispatch}
-                showChallengeFeedback={showChallengeFeedback}
-                onShowChallengeFeedbackChange={setShowChallengeFeedback}
-              />
-            </section>
+            {!state.scenario && !studioOpen ? (
+              <section className={styles.practiceEntry} aria-label="Choose your practice">
+                <article>
+                  <h2>Explore mechanisms</h2>
+                  <p>
+                    Mechanism Studio is open exploration. Change a device setting or loading
+                    condition and inspect the response. No case score or earned-case progress.
+                  </p>
+                  <button type="button" onClick={() => openStudio(state.deviceKind)}>
+                    Explore mechanisms
+                  </button>
+                </article>
+                <article>
+                  <h2>
+                    {section === 'practice' ? 'Work a clinical case' : 'Work an MCS Challenge'}
+                  </h2>
+                  <p>
+                    {section === 'practice'
+                      ? 'Start with the patient presentation, then inspect, act and reassess.'
+                      : 'Open from the start. Routine feedback is deferred to debrief; safety interruptions remain immediate.'}
+                  </p>
+                  {(section === 'practice' ? mcsPracticeScenarios : mcsCapstoneScenarios).map(
+                    (candidate) => (
+                      <button
+                        type="button"
+                        key={candidate.id}
+                        onClick={() => {
+                          if (section === 'practice') choosePractice(candidate.id)
+                          else {
+                            setSelectedActivityId(candidate.id)
+                            setAnatomyOpen(false)
+                            setShowChallengeFeedback(false)
+                            setAssistanceUsed(false)
+                            dispatch({ type: 'LOAD_SCENARIO', scenario: candidate })
+                          }
+                        }}
+                      >
+                        {candidate.id} · {mcsPresentationTitle(candidate)}
+                      </button>
+                    ),
+                  )}
+                </article>
+              </section>
+            ) : (
+              <>
+                <McsCaseWorkflow
+                  state={state}
+                  dispatch={(action) => {
+                    if (action.type === 'RESET') resetActivity()
+                    else dispatch(action)
+                  }}
+                  showChallengeFeedback={showChallengeFeedback}
+                  onShowChallengeFeedbackChange={(show) => {
+                    setShowChallengeFeedback(show)
+                    if (show) setAssistanceUsed(true)
+                  }}
+                  observations={<McsMonitor state={state} revealCausality={revealCausality} />}
+                  controls={
+                    <McsControls
+                      state={state}
+                      dispatch={dispatch}
+                      hideUnavailable={Boolean(state.scenario)}
+                    />
+                  }
+                />
+                <details className={styles.optionalCaseView}>
+                  <summary>Support pathway · lightweight circulation map</summary>
+                  <CirculationMap state={state} />
+                </details>
+                <section className={styles.optionalCaseView} data-optional-anatomy>
+                  <button
+                    type="button"
+                    aria-expanded={anatomyOpen}
+                    onClick={() => setAnatomyOpen((open) => !open)}
+                  >
+                    Optional three-dimensional view
+                  </button>
+                  {anatomyOpen ? (
+                    <SimulationLaunchGate
+                      activityTitle="Mechanical circulatory support 3D anatomy"
+                      minimumViewport="desktop"
+                      bandwidthClass="heavy"
+                      estimatedSizeLabel="Interactive heart and device model"
+                      lightweightAlternativeHref="/critical-care/reference?item=mcs-cardiac-text-summary"
+                      onSaveForLater={() =>
+                        router.push(mechanicalCirculatorySupportNavBase as Route)
+                      }
+                    >
+                      <Suspense fallback={<p>Loading optional anatomy…</p>}>
+                        <McsAnatomy3D state={state} revealCausality={revealCausality} />
+                      </Suspense>
+                    </SimulationLaunchGate>
+                  ) : null}
+                </section>
+              </>
+            )}
 
             {state.completed && state.scenario && state.score ? (
               <DebriefPanel
-                clinicalModel={state.causalExplanation || state.scenario.debrief.join(' ')}
+                clinicalModel={`${section === 'assess' && assistanceUsed ? 'Assisted Challenge: post-action teaching was requested. ' : ''}${state.causalExplanation || state.scenario.debrief.join(' ')}`}
                 actions={state.actionIds}
                 consequences={state.scenario.debrief}
                 performanceDomains={[
@@ -706,7 +778,7 @@ export function McsWorkbench({
                 ]}
                 transfer={<p>{state.scenario.learningObjectives.join(' ')}</p>}
                 replay={
-                  <button type="button" onClick={() => dispatch({ type: 'RESET' })}>
+                  <button type="button" onClick={resetActivity}>
                     Replay this case
                   </button>
                 }

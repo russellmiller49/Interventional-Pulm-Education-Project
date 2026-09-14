@@ -71,11 +71,11 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
       <section className={styles.pathwaySection} aria-labelledby="mcs-hub-pathway-heading">
         <div className={styles.sectionHeading}>
           <span className={styles.kicker}>THE PATHWAY</span>
-          <h2 id="mcs-hub-pathway-heading">Nine sections, in one order</h2>
+          <h2 id="mcs-hub-pathway-heading">{composition.total} sections, in one order</h2>
           <p>
             The common model first, then each device as the model plus a counted number of new
-            ideas, then the choice among them. Every section opens from its own link; the order is a
-            recommendation, not a lock.
+            ideas, then integration with patient assessment. Every section opens from its own link;
+            the order is a recommendation, not a lock.
           </p>
           <ul className={styles.incrementList} data-track-increments>
             {MCS_DEVICE_INCREMENTS.filter((increment) => increment.track !== 'integration').map(

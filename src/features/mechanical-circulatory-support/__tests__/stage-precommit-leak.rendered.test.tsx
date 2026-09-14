@@ -195,7 +195,8 @@ describe('the rendered pre-commitment scan', () => {
       expect(document.querySelector('[data-surface="controls"]')).toBeNull()
       expect(document.querySelector('[data-surface="anatomy"]')).toBeNull()
       commitPrediction(sectionId)
-      expect(document.querySelector('[data-surface="controls"]')).not.toBeNull()
+      // Controls remain absent on the feedback screen; each action task mounts its permitted set.
+      expect(document.querySelector('[data-surface="controls"]')).toBeNull()
       expect(document.querySelector('[data-surface="anatomy"]')).not.toBeNull()
     },
   )

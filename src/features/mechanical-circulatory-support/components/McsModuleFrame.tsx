@@ -19,12 +19,14 @@ export function McsModuleFrame({
   locale,
   activeHref,
   activityMode = false,
+  flowing = false,
   theme = activityMode ? 'dark' : 'light',
   children,
 }: {
   locale: string
   activeHref: string
   activityMode?: boolean
+  flowing?: boolean
   theme?: 'light' | 'dark'
   children: ReactNode
 }) {
@@ -33,6 +35,7 @@ export function McsModuleFrame({
       <main
         className={styles.moduleShell}
         data-activity-mode={activityMode || undefined}
+        data-flowing={flowing || undefined}
         data-no-handoff-translate={locale !== 'en'}
       >
         <ModuleFrameV2

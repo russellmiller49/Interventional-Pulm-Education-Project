@@ -9,7 +9,7 @@
  * but never rendered. The record beside this module's docs says what each became; this suite says
  * it stays.
  */
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, screen, within } from '@testing-library/react'
 
 jest.mock('@/i18n/navigation', () =>
   jest
@@ -26,7 +26,6 @@ jest.mock('../components/McsAnatomy3D', () =>
     .anatomyModule(),
 )
 
-import { McsStageHost } from '../components/stage/McsStageHost'
 import { mcsLessonTransferByLessonId, mcsLessonTransfers } from '../content/lessonTransfers'
 import {
   mcsSectionLearningContractById,
@@ -58,26 +57,14 @@ afterEach(() => {
   teardownMcsStage()
 })
 
-function paneOrder(): readonly string[] {
-  return [...document.querySelectorAll('[data-pane]')].map(
-    (pane) => pane.getAttribute('data-pane') ?? '',
-  )
-}
-
-describe('the panes say what they are', () => {
-  it('lead with the steps, and each pane prints its name and what it is for', () => {
+describe('the task owns its teaching and observations', () => {
+  it('uses the circulation reader with one task and no permanent panes', () => {
     mountSection('mcs-foundations-signals')
-    expect(paneOrder()).toEqual(['task', 'teaching', 'simulator'])
+    expect(document.querySelectorAll('[data-now-card]')).toHaveLength(1)
     expect(
-      [...document.querySelectorAll('[data-pane-label]')].map((label) => label.textContent),
-    ).toEqual([
-      'Steps panel · what to do',
-      'Teaching panel · what to read',
-      'Simulator panel · the monitor, the map and the controls',
-    ])
-    for (const name of ['Steps panel', 'Teaching panel', 'Simulator panel']) {
-      expect(screen.getByRole('region', { name })).toBeInTheDocument()
-    }
+      document.querySelector('[data-now-card] [data-presentation="circulation-reader"]'),
+    ).not.toBeNull()
+    expect(document.querySelectorAll('[data-pane]')).toHaveLength(0)
   })
 })
 
@@ -93,30 +80,20 @@ describe('every step says where it is worked', () => {
     }
   })
 
-  it('prints the location under the instruction, naming a pane whose caption says the same word', () => {
+  it('keeps the answer and observation in the current task without pane directions', () => {
     mountSection('mcs-foundations-mechanisms')
-    const where = document.querySelector('[data-now-card] [data-now-where]')
-    expect(where?.textContent).toBe(
-      'Where to look: Steps panel — this guided task and its controls below, and Teaching panel — Follow three support pathways.',
-    )
-    const captions = [...document.querySelectorAll('[data-pane-label]')].map(
-      (label) => label.textContent ?? '',
-    )
-    for (const named of where?.querySelectorAll('strong') ?? []) {
-      expect(captions.some((caption) => caption.startsWith(named.textContent ?? '∅'))).toBe(true)
-    }
+    expect(document.querySelector('[data-now-where]')).toBeNull()
     walkTheLoop()
     expect(currentStepId()).toBe('mcs-foundations-mechanisms-recognize')
-    expect(document.querySelector('[data-now-card] [data-now-where]')?.textContent).toBe(
-      'Where to look: Steps panel — the answer choices below, and Simulator panel — the Circulation map.',
-    )
+    expect(document.querySelector('[data-now-card] fieldset')).not.toBeNull()
+    expect(document.querySelector('[data-now-card] [data-circulation-map]')).not.toBeNull()
   })
 
-  it('repeats the location in the help dialog', () => {
+  it('repeats the current task instruction in the help dialog', () => {
     mountSection('iabp-timing-triggering')
     fireEvent.click(screen.getByRole('button', { name: /What do I do now/ }))
     expect(document.querySelector('dialog')?.textContent).toMatch(
-      /Where to look: Steps panel — this guided task and its controls below, and Teaching panel — A normal assisted beat\./,
+      /Inspect the Timing reference, then read the arterial trace using the button below/,
     )
   })
 
@@ -228,75 +205,13 @@ describe('the dead control says what unlocks it', () => {
   })
 })
 
-describe('the compact viewport opens on the pane the step is worked in', () => {
-  const COMPACT_WIDTH = 600
-  let originalGetBoundingClientRect: typeof HTMLElement.prototype.getBoundingClientRect
-  let originalResizeObserver: typeof ResizeObserver | undefined
-
-  beforeEach(() => {
-    jest.useFakeTimers()
-    originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
-    HTMLElement.prototype.getBoundingClientRect = function measured(this: HTMLElement) {
-      const rect = originalGetBoundingClientRect.call(this)
-      if (
-        /^Mechanical circulatory support lesson workspace/.test(
-          this.getAttribute('aria-label') ?? '',
-        )
-      ) {
-        return { ...rect, width: COMPACT_WIDTH, left: 0 }
-      }
-      return rect
-    }
-    originalResizeObserver = globalThis.ResizeObserver
-    globalThis.ResizeObserver = class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    } as unknown as typeof ResizeObserver
-  })
-
-  afterEach(() => {
-    HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect
-    globalThis.ResizeObserver = originalResizeObserver as typeof ResizeObserver
-  })
-
-  function visiblePane(): string {
-    const visible = [...document.querySelectorAll<HTMLElement>('[role="region"]')].filter(
-      (region) => /panel$/.test(region.getAttribute('aria-label') ?? '') && !region.hidden,
-    )
-    expect(visible).toHaveLength(1)
-    return visible[0].querySelector('[data-pane]')?.getAttribute('data-pane') ?? ''
-  }
-
-  it('shows the steps for an identification answered on the card, and the simulator for one answered on the map', () => {
-    render(<McsStageHost sectionId="impella-suction-purge-rv" />)
-    act(() => {
-      jest.runOnlyPendingTimers()
-    })
-    expect(document.querySelectorAll('[role="tab"]')).toHaveLength(3)
-    // Where does the right-sided pump return blood? Answered by the pins, in the simulator pane.
+describe('compact task continuity', () => {
+  it('keeps the map answer and next action together without tabs', () => {
+    mountSection('impella-suction-purge-rv')
     expect(document.querySelector('[data-map-answer-prompt]')).not.toBeNull()
-    expect(visiblePane()).toBe('simulator')
-    // The learner may still switch panes themselves; the preference is followed, not forced.
-    fireEvent.click(
-      [...document.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find(
-        (tab) => tab.textContent === 'Steps',
-      )!,
-    )
-    expect(visiblePane()).toBe('task')
-  })
-
-  it('shows the steps on a walk, which is worked from the card', () => {
-    render(<McsStageHost sectionId="mcs-foundations-mechanisms" />)
-    act(() => {
-      jest.runOnlyPendingTimers()
-    })
-    expect(visiblePane()).toBe('task')
-    walkTheLoop()
-    // The identification that follows is read on the map and answered on the card, so the card
-    // is the pane a compact viewport shows; the map is the second place the location names.
-    expect(document.querySelector('[data-map-answer-prompt]')).toBeNull()
-    expect(visiblePane()).toBe('task')
+    expect(nowCard().querySelector('[data-circulation-map]')).not.toBeNull()
+    expect(nowPrimary()).not.toBeNull()
+    expect(document.querySelectorAll('[role="tab"]')).toHaveLength(0)
   })
 })
 

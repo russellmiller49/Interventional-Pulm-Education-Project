@@ -1,3 +1,5 @@
+import { mcsPracticeScenarios } from '../content/scenarios'
+import { mcsPresentationTitle } from '../content/casePresentation'
 /**
  * The shared harness the M5 suites drive the workbench through.
  *
@@ -216,7 +218,10 @@ export async function renderWorkbench(options: RenderWorkbenchOptions) {
   const result = render(
     <McsWorkbench
       section={options.section}
-      initialDevice={options.initialDevice}
+      initialDevice={
+        options.initialDevice ??
+        (!options.initialActivityId && options.section === 'practice' ? 'iabp' : undefined)
+      }
       initialActivityId={options.initialActivityId}
       locale={options.locale}
     />,
@@ -232,7 +237,10 @@ export function renderWorkbenchWithoutSettling(options: RenderWorkbenchOptions) 
   return render(
     <McsWorkbench
       section={options.section}
-      initialDevice={options.initialDevice}
+      initialDevice={
+        options.initialDevice ??
+        (!options.initialActivityId && options.section === 'practice' ? 'iabp' : undefined)
+      }
       initialActivityId={options.initialActivityId}
       locale={options.locale}
     />,
@@ -288,7 +296,10 @@ export async function renderWorkbenchOnFakeTimers(options: RenderWorkbenchOption
   const result = render(
     <McsWorkbench
       section={options.section}
-      initialDevice={options.initialDevice}
+      initialDevice={
+        options.initialDevice ??
+        (!options.initialActivityId && options.section === 'practice' ? 'iabp' : undefined)
+      }
       initialActivityId={options.initialActivityId}
       locale={options.locale}
     />,
@@ -349,9 +360,11 @@ export function practiceRail(): HTMLElement {
 
 /** The practice rail entry whose visible short title matches, without regex-escaping every case. */
 export function practiceRailButton(shortTitle: string): HTMLElement {
+  const scenario = mcsPracticeScenarios.find((candidate) => candidate.shortTitle === shortTitle)
+  const visibleTitle = scenario ? mcsPresentationTitle(scenario) : shortTitle
   const match = within(practiceRail())
     .getAllByRole('button')
-    .find((button) => button.textContent?.includes(shortTitle))
+    .find((button) => button.textContent?.includes(visibleTitle))
   if (!match) throw new Error(`No practice rail entry for "${shortTitle}"`)
   return match
 }

@@ -259,20 +259,12 @@ describe('the stage: verdicts, Back, sources, help', () => {
     expect(firstPositions.size).toBeGreaterThan(1)
   })
 
-  it('keeps the teaching pane to its first block until the commitment, with one control to show the rest', () => {
+  it('integrates relevant teaching without a separate preview toggle', () => {
     mountSection('iabp-efficacy-limits')
-    const column = document.querySelector('[data-teaching-column]')
-    expect(column).toHaveAttribute('data-teaching-preview', 'true')
-    const toggle = screen.getByRole('button', { name: /Show the rest of the teaching/ })
-    fireEvent.click(toggle)
-    expect(column).not.toHaveAttribute('data-teaching-preview')
-    fireEvent.click(screen.getByRole('button', { name: /Show only the first part/ }))
-    expect(column).toHaveAttribute('data-teaching-preview', 'true')
-    answerIdentification('iabp-efficacy-limits')
-    continueStep()
-    commitPrediction('iabp-efficacy-limits')
-    expect(column).not.toHaveAttribute('data-teaching-preview')
-    expect(screen.queryByRole('button', { name: /Show the rest of the teaching/ })).toBeNull()
+    expect(document.querySelector('[data-now-card] [data-teaching-column]')).not.toBeNull()
+    expect(document.querySelector('[data-teaching-preview]')).toBeNull()
+    expect(document.querySelector('[data-teaching-reveal]')).toBeNull()
+    expect(document.querySelector('[data-verdict]')).toBeNull()
   })
 
   it('moves to the next section from the completion card through the router', () => {
@@ -307,11 +299,11 @@ describe('the stage: verdicts, Back, sources, help', () => {
   it('ticks the simulation while mounted and stops when unmounted', () => {
     jest.useFakeTimers()
     const { unmount } = mountSection('lvad-parameters-assessment')
-    const before = document.querySelector('[data-context-line]')?.textContent
+    const before = document.querySelector('[data-session-identity]')?.textContent
     act(() => {
       jest.advanceTimersByTime(1000)
     })
-    expect(document.querySelector('[data-context-line]')?.textContent).toBeDefined()
+    expect(document.querySelector('[data-session-identity]')?.textContent).toBeDefined()
     expect(before).toBeDefined()
     unmount()
     act(() => {

@@ -129,7 +129,7 @@ describe('the hub', () => {
     const references = document.querySelectorAll('[data-reference]')
     expect(references).toHaveLength(4)
     for (const block of references) expect((block as HTMLDetailsElement).open).toBe(false)
-    expect(screen.getByText(/Nine sections, in one order/)).toBeInTheDocument()
+    expect(screen.getByText(/9 sections, in one order/)).toBeInTheDocument()
   })
 })
 

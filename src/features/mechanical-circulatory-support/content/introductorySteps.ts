@@ -45,7 +45,7 @@ export const mcsIntroductions: Readonly<Record<string, readonly McsIntroduction[
       title: 'Meet the circulation and the balloon',
       visual: 'signals',
       instruction:
-        'Read the four measurement groups in Teaching, then follow the Circulation map. The balloon is already running; no adjustment is needed.',
+        'Read the four measurement groups beside the Circulation map. The balloon is already running; no adjustment is needed.',
       paragraphs: [
         'The native circulation runs from the veins through the right heart, lungs and left heart to the aorta. The intra-aortic balloon pump (IABP) sits in the descending aorta. Inflation in diastole augments aortic pressure; deflation before ejection reduces the load on the native left ventricle.',
         'IABP has no separate pump-flow stream. Any effect on forward output belongs to the native contribution during support. That contribution is different from native output measured before support began.',
@@ -75,7 +75,7 @@ export const mcsIntroductions: Readonly<Record<string, readonly McsIntroduction[
       title: 'Follow three support pathways',
       visual: 'pathways',
       instruction:
-        'Follow the annotated pathways in Teaching and locate the balloon on the Circulation map. Then read the current device account below.',
+        'Study one conceptual support pathway at a time; locate where the device acts. Then read the current device account below.',
       paragraphs: [
         'The native aortic-valve route and a left-pump route run in parallel. Concurrent forward flow through those routes combines, after subtracting any represented regurgitant return. The pump changes native ejection, so adding native output from before support to a later pump estimate can be misleading.',
         'Right and left pumps work in series across the lungs. Adding their outputs would count the same throughput twice. None of these pumps oxygenates blood; the patient’s lungs provide gas exchange.',
@@ -166,7 +166,7 @@ export const mcsIntroductions: Readonly<Record<string, readonly McsIntroduction[
       title: 'The durable LVAD controller and the patient',
       visual: 'lvad',
       instruction:
-        'Read the labeled controller tour in Teaching, then open the device reading below. All values on this screen are simulated.',
+        'Study the controller quantities one at a time, then open the device reading below. All values on this screen are simulated.',
       paragraphs: [
         'An implanted inflow cannula draws from the LV apex; an outflow graft returns blood to the ascending aorta. The controller describes pump operation. Independent patient assessment supplies pressure, filling, imaging and perfusion information.',
         'This simplified model generates flow from speed and loading, then derives power and pulsatility index (PI). It does not implement a manufacturer’s power-and-speed flow estimator; PI is not an input to its flow calculation.',

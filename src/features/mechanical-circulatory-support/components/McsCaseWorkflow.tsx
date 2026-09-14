@@ -1,11 +1,12 @@
 'use client'
 
-import type { Dispatch } from 'react'
+import type { Dispatch, ReactNode } from 'react'
 import { Check, Eye, RotateCcw, ShieldAlert } from 'lucide-react'
 
 import type { McsAction, McsSimulationState } from '../engine'
 import { isMcsActionIdPermitted } from '../engine'
 import styles from './mechanical-circulatory-support.module.css'
+import { mcsPresentationTitle } from '../content/casePresentation'
 
 const deviceLabels: Readonly<Record<McsSimulationState['deviceKind'], string>> = {
   iabp: 'Counterpulsation — a balloon in the descending thoracic aorta, moving no blood of its own',
@@ -31,9 +32,13 @@ function jumpToPhase(phase: (typeof phases)[number]) {
 export function McsCaseWorkflow({
   state,
   dispatch,
+  observations,
+  controls,
   showChallengeFeedback,
   onShowChallengeFeedbackChange,
 }: {
+  observations?: ReactNode
+  controls?: ReactNode
   state: McsSimulationState
   dispatch: Dispatch<McsAction>
   showChallengeFeedback: boolean
@@ -65,19 +70,29 @@ export function McsCaseWorkflow({
             <span>Explain every pressure and flow change—not only the desired one.</span>
           </li>
         </ol>
+        <div className={styles.studioWorkspace}>
+          {observations}
+          {controls}
+        </div>
       </section>
     )
   }
 
   const currentPhaseIndex = phases.indexOf(state.scenarioPhase)
   return (
-    <section className={styles.workflowCard} aria-labelledby="case-workflow-heading">
+    <section
+      className={styles.workflowCard}
+      data-case-workflow
+      aria-labelledby="case-workflow-heading"
+    >
       <header>
         <div>
           <span className={styles.kicker}>
             {state.section === 'assess' ? 'CHALLENGE' : state.section.toUpperCase()} · {scenario.id}
           </span>
-          <h2 id="case-workflow-heading">{scenario.title}</h2>
+          <h2 id="case-workflow-heading">
+            {state.completed ? scenario.title : mcsPresentationTitle(scenario)}
+          </h2>
         </div>
         <button
           type="button"
@@ -111,11 +126,15 @@ export function McsCaseWorkflow({
         </div>
         <div>
           <dt>Immediate goal</dt>
-          <dd>{scenario.learningObjectives[0]}</dd>
+          <dd>
+            {state.completed
+              ? scenario.learningObjectives[0]
+              : 'Explain what the observations establish and what still needs assessment.'}
+          </dd>
         </div>
         <div>
           <dt>What makes this one different</dt>
-          <dd>{scenario.shortTitle}</dd>
+          <dd>{mcsPresentationTitle(scenario)}</dd>
         </div>
       </dl>
       <ol className={styles.phaseRail} aria-label="Case reasoning sequence">
@@ -133,6 +152,9 @@ export function McsCaseWorkflow({
         ))}
       </ol>
 
+      <div className={styles.caseObservation} data-case-observations>
+        {observations}
+      </div>
       <div id="mcs-case-inspect" className={styles.workflowStep} tabIndex={-1}>
         <div>
           <span>01</span>
@@ -207,12 +229,20 @@ export function McsCaseWorkflow({
         </button>
       </fieldset>
 
-      {state.section === 'practice' && !state.completed ? (
+      {state.section === 'practice' && state.predictionCommitted && !state.completed ? (
         <aside className={styles.guidedPrompt}>
           <strong>Practice cue</strong>
           <span>{scenario.guidedPrompt}</span>
         </aside>
       ) : null}
+      <section className={styles.casePermittedActions}>
+        <h3>Permitted actions</h3>
+        <p>
+          The initial interpretation is optional in this case engine. Permitted safety actions
+          remain available while you inspect.
+        </p>
+        {controls}
+      </section>
       {state.section === 'assess' && !state.completed ? (
         <aside className={styles.assessPrompt}>
           <span>Work from the visible cues; routine teaching is collected for the debrief.</span>
@@ -227,7 +257,9 @@ export function McsCaseWorkflow({
         </aside>
       ) : null}
 
-      {state.section !== 'assess' || showChallengeFeedback || state.completed ? (
+      {state.completed ||
+      (state.actionIds.some((id) => !id.startsWith('inspect:')) &&
+        (state.section === 'practice' || showChallengeFeedback)) ? (
         <div
           id="mcs-case-response"
           className={styles.responseStatus}
