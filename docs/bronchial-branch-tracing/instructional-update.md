@@ -61,6 +61,104 @@ The scoped acceptance below applies to this repair, not to clinical validation o
 
 The bundled `audit-stage.mjs` returned **BLOCKED (exit 2)** because it requires the standard three-pane `data-stage-frame`; the authorized local CT workspace does not mount that frame. Its result is not counted as a pass. Feature-specific Playwright checks exercise this layout and its real controls instead. Faculty review and a learner pilot remain separate pending work, as detailed below.
 
+## Orientation onboarding repair
+
+The September 13 orientation brief corrects the next prerequisite gap for a first-time CT learner: `emptyLocalSession` and the next-example transition previously called `orientationFor(trace.preset)` immediately. This made the first warm-up appear reflected before the learner had established standard axial orientation. `CtOrientationTeaching` existed in the full-route experience but did not appear in the local lesson flow.
+
+This repair targets display comprehension (Miller: knows how). The learner distinguishes standard axial CT, a display transformation, and the distal view through a parent airway. A short, ungraded response checks that distinction; it does not assess clinical tracing accuracy.
+
+The visible local sequence is now:
+
+1. Full standard axial context with R/L/A/P markers and a gold parent-airway locator. Visible teaching explains the view from the feet and patient right on screen-left. **Focus on this airway** moves to the parent crop.
+2. Both warm-up intervals stay in standard axial. The next lesson also traces the bifurcation in standard before asking about the parent-airway view.
+3. At the first parent-view comparison, visible teaching explains CT cross-section versus observer → parent bronchus → daughter bronchi. **Reflect left ↔ right** transforms the same displayed CT, with its slice, image/window, crop, zoom and airway reference unchanged.
+4. **Standard axial** and **Show tracing view** alternate on that same viewer. The learner answers **What changed?**. Each wrong option has specific feedback; a correct response enables **Continue in tracing view**, without automatic advance. Only then does the original parent-opening question appear.
+5. Direct links into later local lessons receive the same prerequisites. The first RUL convention is introduced as **90° counterclockwise**; the first upper-division convention as **90° clockwise**. Once understood, a preset is reused in later lessons through the existing progress adapter. The warm-up remains standard on restart even when the reflection has already been learned.
+
+`CtOrientationTeaching` now has a guided mode for the local renderer. It uses the same orientation functions and the actual `NativeCtViewer`; no second viewer or geometry engine was added. Routine local controls offer reset and the named tracing view. The existing free rotation/reflection controls remain under **More orientation controls** after introduction. The explanation and check occupy the existing left teaching pane, and the pane returns to its top when a new teaching phase opens. No full-width or frozen onboarding banner was added.
+
+Session changes are additive: `orientationGuide`, `taughtPresets` and `orientationResponses`. A completed comprehension check uses the shared progress adapter with no score or competency evidence. Actual responses, including the first error, remain in the local draft. Lesson/exercise objects and geometry signatures are unchanged. Older unfinished drafts are recognized by the absent guide field: they establish full standard context, explain that saved work remains, then return to the saved task. Native marks, branch choices, first-attempt orientations and prior comparisons are retained. New drafts restore the exact guide phase and current view, including an incorrect response or a toggle back to standard. Restart retains attempts and learned conventions; it resets the beginner CT view.
+
+Preserved scope: patient coordinates, source images/window, annotations, named branches, regional presets, decisions, nodule targets, paired camera geometry, full-route teaching/practice/assessment, shared stage files and global layout are unchanged. The terminology follows the existing Kurimoto/Morita teaching source and supplied brief. The [DICOM patient-orientation convention](https://dicom.nema.org/medical/dicom/current/output/chtml/part03/sect_C.7.6.2.html) supports the patient-direction distinction; this is not a new clinical recommendation or validation of the model.
+
+Implementation paths: `engine/local-session.ts`, `engine/progress.ts`, `components/LocalCtLesson.tsx`, `components/NativeCtViewer.tsx`, `components/CtOrientationTeaching.tsx` and the feature CSS. Tests changed in `__tests__/local-session.test.ts`, `__tests__/local-lesson.test.tsx` and `e2e/branch-tracing.spec.ts`.
+
+The comparison fits all three answer choices without scrolling at 1280 × 720. Response-specific feedback replaces the task instruction, so it stays visible beside the CT. Final dark-mode measurements on current `main` retain a 509 px activity pane (70.8%) at 1280 × 720 and a 674 px pane (76.2%) at 2488 × 885; the CT images remain 355 and 520 px square. The same-slice before/after images, all three presets, full-context opening, feedback and phone layout were inspected. In-session screenshots are `/tmp/branch-orientation-standard-context-1280.png`, `/tmp/branch-orientation-before-reflection-dark-1280.png`, `/tmp/branch-orientation-after-reflection-dark-1280.png`, `/tmp/branch-orientation-feedback-dark-1280.png`, `/tmp/branch-orientation-after-reflection-390.png`, `/tmp/branch-orientation-rul.png` and `/tmp/branch-orientation-upper-division.png`. Measurements are in `/tmp/branch-orientation-final-metrics.json`.
+
+Verification on the follow-up branch, based on `origin/main` after PR #183 merged:
+
+- `npm run build`: passed, including both embedded trainers, asset validation, TypeScript and standalone packaging. The existing Mermaid dependency warning remains.
+- `npm run type-check`, scoped ESLint, Prettier and `git diff --check`: passed.
+- `npx jest --runInBand --testTimeout=60000 src/features/bronchial-branch-tracing`: **41 passed, one existing failure** at `contracts.test.ts:201`. The unchanged access rule exposes `/airway-anatomy/case-001/case_manifest.json`; the test expects it to be private. The final local component rerun also passed all six tests.
+- `npx playwright test --config playwright.branch-tracing.config.ts --timeout=180000`: all **23 scenarios verified across the full run and focused repair rerun**. The main-base run passed 22 and identified a partly clipped final answer choice; shortening the comparison repaired it. The four affected scenarios (seven-width warm-up, fresh/legacy draft, reflection/resume/reuse and both regional rotations) then passed together, including full-visibility and feedback assertions. The test waits for the focus crop to finish before taking its standard-image baseline.
+- An initial dev-server run timed out before page load under host load; two five-second unit timeouts also cleared on rerun. The final browser checks used the production build. No test assertion was removed to clear those timeouts.
+
+| Contract                   | Result | Evidence for this orientation repair                                                                               |
+| -------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------ |
+| H1: entry and curriculum   | PASS   | Existing registry, lesson order and course destinations unchanged.                                                 |
+| H2: teach before testing   | PASS   | Standard context and viewing direction precede the explicit display change and ungraded check.                     |
+| H3: shared stage           | PASS   | Existing LessonShell/SectionHeader/NowCard and the authorized local CT layout retained.                            |
+| H4: current task           | PASS   | One visible primary action; image readiness and comprehension govern its enabled state.                            |
+| H5: rendered teaching      | PASS   | Prerequisites open beside the actual CT; feedback appears in the current task.                                     |
+| H6: real activity          | PASS   | Actual transform, response and explicit continuation; no automatic completion from viewing text.                   |
+| H7: response and feedback  | PASS   | Specific misconception repair, preserved first response, no clinical accuracy score.                               |
+| H8: fidelity               | PASS   | Same image/crop/slice assertions, all preset directions and existing native mark/asset checks.                     |
+| H9: progress               | PASS   | Legacy mark/history preservation, exact new-draft resume and shared preset-understanding records.                  |
+| H10: language              | PASS   | Standard axial, left–right reflection and actual clockwise/counterclockwise rotations.                             |
+| H11: scope                 | PASS   | Feature, feature tests and this report only; no geometry, shared-stage or global layout edits.                     |
+| H12: rendered verification | PASS   | All local flows and existing route/practice/assessment behaviors; inspected desktop/phone and light/dark captures. |
+
+The previously documented standard three-pane audit limitation and external faculty/learner-pilot boundaries still apply; these browser checks establish implemented behavior and layout, not educational efficacy or clinical competence.
+
+## Progression after marking branches
+
+The follow-up repair starts from `7f77e63d` (PR #192). The learner reported being unable to advance from the second bifurcation after marking both daughters. Browser reproduction at 1280 × 720 confirmed that the review opened with replay controls ahead of the feedback, the required next activity was labeled **Relate the parent view**, and the later opening-choice buttons fell below the visible instruction pane.
+
+This is a navigation repair for the existing fellow-facing, ungraded image-interpretation lesson. Its objective remains following a parent airway into its daughters and relating the CT branches to the existing parent-view schematic. No clinical recommendation, model answer, coordinate, display convention, asset, lesson ID, progress schema or completion gate changes. `LocalCtLesson` still uses the existing LessonShell, SectionHeader and NowCard within the previously approved compact CT workspace. The warm-up's distinct three-step flow remains intact.
+
+The non-warm-up sequence now names its four steps:
+
+1. **Watch this bifurcation**, then **Start marking branches**.
+2. Mark a daughter. The current task acknowledges the mark or uncertainty response and offers **Mark [remaining branch]**, which opens that branch's existing answer slice. After both responses, **Review my marks** becomes available. Pattern and integration lessons still require their additional course or continuation response and name that missing action.
+3. **Your branch marks are recorded** (or **responses** for uncertainty). The branch comparison controls appear first. **Continue to branch matching** names the required next activity and explains its purpose. Replay and redoing marks are explicitly optional.
+4. **Match the branches** asks for the actual numbered opening. Labels and the parent airway view remain withheld until the learner selects an opening or records uncertainty. **Branch match recorded** then names **Next example: [parent]** or **Finish lesson**. The completion screen exposes the registry-derived next lesson.
+
+Feedback never advances automatically. Native marks and first attempts survive reload, including the user's second-example review state; continuing does not add another tracing attempt. Display labels are derived in the renderer so the existing lesson/exercise signature remains compatible. No new data model or calculation is introduced.
+
+The local matching diagram uses the same SVG geometry at 200 px and keeps 44 px answer targets. The shorter question and narrower button padding expose the whole diagram and all three choices at laptop width. The CT workspace and full-route diagram presentation retain their existing dimensions.
+
+Entering the matching question opens the existing slice for daughter A, which the question asks about, including after the orientation introduction. Previously the CT stayed on the most recently reviewed daughter; the LLL example could ask about A on slice 326 while displaying B on slice 313. The repair changes the viewer request, not either native slice or annotation.
+
+When a stacked layout changes step, the document returns to the new task and its teaching content, below the site header. Marking or browsing within the same step keeps the CT position. This fixes the mobile case where the sticky task updated while the new matching diagram remained above the learner's scroll position. Initial entry does not force a document scroll.
+
+Changed paths: `components/LocalCtLesson.tsx`, `components/branch-tracing.module.css`, `__tests__/local-lesson.test.tsx`, `e2e/branch-tracing.spec.ts`, and this report. UI wording is grounded in the existing module; no private transcripts or new clinical sources were needed.
+
+Validation:
+
+- `npm run build`: passed, including the final question/slice alignment, embedded trainers, asset validation, TypeScript and standalone output. The existing Mermaid dependency warning remains.
+- `npm run type-check`, scoped ESLint, Prettier and `git diff --check`: passed.
+- `npx --no-install jest --runInBand --testTimeout=30000 src/features/bronchial-branch-tracing/__tests__/local-lesson.test.tsx`: **7 passed**. The added test drives native marks, the remaining-branch action, restored second-example comparison, actual opening responses, final completion and the next-lesson link while checking immutable attempts and draft signatures. It also asserts that the matching question shows daughter A's native slice.
+- `npx --no-install playwright test --config playwright.branch-tracing.config.ts --timeout=120000`: **24 passed**. This includes all local lessons, full routes, Practice/Assess, asset/storage recovery, native transforms and compact layouts. The new progression scenario drives both examples through the visible controls at 1440 × 900, 1280 × 720, 1024 × 768, 900 × 800, 390 × 844 and 320 × 844. It requires every opening choice and the complete matching diagram in the viewport, tests second-example reload, and opens the next lesson.
+- After visual inspection identified the A-question/B-slice mismatch, the same browser command with `--grep 'branch marks lead|local teaching loop: continuity|RUL and upper-division'` passed **3 tests**. This final rerun includes all six progression viewports, the new native-slice assertion, and both regional rotation workflows. The corrected daughter-A image was inspected at 1280 × 720.
+- Inspected the baseline review, revised second-example review and matching screens at laptop/desktop sizes, and actual phone viewports at 390 and 320 CSS pixels. Screenshots remain outside Git: `/tmp/branch-progression-before.png`, `/tmp/branch-progression-review-1280.png`, `/tmp/branch-progression-matching-1280.png`, `/tmp/branch-progression-matching-1440.png`, `/tmp/branch-progression-matching-viewport-390.png` and `/tmp/branch-progression-matching-viewport-320.png`.
+
+| Contract                   | Result | Evidence within this progression repair                                                                    |
+| -------------------------- | ------ | ---------------------------------------------------------------------------------------------------------- |
+| H1: entry and curriculum   | PASS   | Existing lesson order and registry-derived next lesson retained; browser follows the next link.            |
+| H2: teaching sequence      | PASS   | Worked example, marks, comparison and real opening question remain required in the same order.             |
+| H3: shared stage           | PASS   | Existing shell/NowCard and the authorized compact CT layout retained.                                      |
+| H4: current task           | PASS   | Current response, missing action and named next step are exposed; matching choices remain visible.         |
+| H5: rendered content       | PASS   | Review controls precede optional replay; the required matching diagram opens with its question.            |
+| H6: real activity          | PASS   | Existing reducer gates require marks, additional interpretations and an opening response.                  |
+| H7: feedback               | PASS   | Actual responses retained; no automatic advance or invented accuracy verdict.                              |
+| H8: fidelity               | PASS   | Native images, coordinates, orientation presets, camera geometry and model labels unchanged.               |
+| H9: progress               | PASS   | Saved second-example review advances without restarting; first attempts and draft signatures are retained. |
+| H10: language              | PASS   | Explicit mark acknowledgement, branch matching, optional retry, next example and finish labels.            |
+| H11: scope                 | PASS   | Only the local renderer, feature CSS, focused tests and this report changed.                               |
+| H12: rendered verification | PASS   | Six-width progression and existing browser regression coverage; inspected screenshots.                     |
+
+The earlier standard three-pane audit limitation and provisional clinical-reference/faculty-review boundaries remain applicable. These checks verify the repaired interaction, not clinical accuracy grading or learning efficacy.
+
 ## Annotation and clinical boundary
 
 Every supplied local annotation remains **provisional**. The CT frames are real existing acquisition planes. Parent/daughter locators use existing source geometry; the two single-lumen exercises use explicitly labeled model intersections on native planes. No wall contours are inferred from centerlines, no neighboring structure is newly labeled as a distractor, and a mark's distance from a model point is never an accuracy grade.

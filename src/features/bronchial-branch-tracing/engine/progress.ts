@@ -7,6 +7,7 @@ import type { CriticalCareProgressEnvelope } from '@/features/learning-module/ac
 import { BASE_PATH, LESSONS, VERSION } from '../content/lessons'
 import type { Exercise } from '../content/types'
 import { scoreResponse, type Response } from './session'
+import { TRACING_PRESETS, type TaughtPreset } from './local-session'
 
 export const PREFIX = `branch-tracing.${VERSION}`
 export function browserStorage(): Storage | null {
@@ -17,6 +18,33 @@ export function browserStorage(): Storage | null {
   }
 }
 export const readProgress = () => readCriticalCareProgress(browserStorage())
+export function learnedOrientations() {
+  const progress = readProgress()
+  return TRACING_PRESETS.filter((preset) =>
+    progress.activities.some(
+      (activity) =>
+        activity.activityId === `${PREFIX}.orientation.${preset}` &&
+        activity.status === 'completed',
+    ),
+  )
+}
+/** Ungraded display comprehension, not clinical tracing or competency evidence. */
+export function saveOrientationUnderstanding(preset: TaughtPreset) {
+  const activityId = `${PREFIX}.orientation.${preset}`
+  const current = readProgress()
+  if (current.activities.some((a) => a.activityId === activityId && a.status === 'completed'))
+    return true
+  return writeCriticalCareProgress(
+    browserStorage(),
+    upsertCriticalCareActivityProgress(current, {
+      activityId,
+      status: 'completed',
+      attempts: 1,
+      competencyEvidenceIds: [],
+      updatedAt: new Date().toISOString(),
+    }),
+  )
+}
 export function completedLessons(envelope: CriticalCareProgressEnvelope) {
   return LESSONS.filter((l) =>
     envelope.activities.some(

@@ -61,7 +61,7 @@ interface Props {
   highlightRegion?: boolean
   scopeAvailable?: boolean
   answerSlice?: number
-  sliceRequest?: { slice: number; serial: number }
+  sliceRequest?: { slice: number; serial: number; focusAirway?: boolean }
   teachingFrame?: CtTeachingFrame
   annotationReview?: AnnotationReview
   initialView?: CtViewerState
@@ -238,9 +238,13 @@ export function NativeCtViewer({
   useEffect(() => {
     if (!sliceRequest) return
     setSlice(sliceRequest.slice)
-    setStartFocus(null)
+    setStartFocus(sliceRequest.focusAirway ? { active, levelRequest } : null)
+    if (sliceRequest.focusAirway) {
+      setFull(false)
+      setMagnification(1)
+    }
     setTargetFocus(null)
-  }, [sliceRequest, setSlice])
+  }, [sliceRequest, setSlice, active, levelRequest])
   useEffect(() => {
     onViewChange?.({
       slice,
@@ -363,6 +367,15 @@ export function NativeCtViewer({
       </button>
     </div>
   )
+  const manualOrientationControls = (
+    <>
+      <button onClick={() => setOrientation(turnCt(orientation, 'left'))}>↶ Rotate 90° left</button>
+      <button onClick={() => setOrientation(turnCt(orientation, 'right'))}>
+        ↷ Rotate 90° right
+      </button>
+      <button onClick={() => setOrientation(turnCt(orientation, 'flip'))}>⇆ Flip left–right</button>
+    </>
+  )
   return (
     <section
       ref={viewer}
@@ -389,16 +402,33 @@ export function NativeCtViewer({
       )}
       {orientationControls && (
         <div className={styles.ctViewButtons} role="group" aria-label="CT orientation">
-          <button onClick={() => setOrientation(turnCt(orientation, 'left'))}>
-            ↶ Rotate 90° left
-          </button>
-          <button onClick={() => setOrientation(turnCt(orientation, 'right'))}>
-            ↷ Rotate 90° right
-          </button>
-          <button onClick={() => setOrientation(turnCt(orientation, 'flip'))}>
-            ⇆ Flip left–right
-          </button>
-          <button onClick={() => setOrientation(STANDARD_ORIENTATION)}>Reset to standard</button>
+          {local ? (
+            <>
+              <button
+                aria-pressed={sameOrientation(orientation, STANDARD_ORIENTATION)}
+                onClick={() => setOrientation(STANDARD_ORIENTATION)}
+              >
+                Reset to standard
+              </button>
+              <button
+                aria-pressed={sameOrientation(orientation, orientationFor(trace.preset))}
+                onClick={() => setOrientation(orientationFor(trace.preset))}
+              >
+                Show tracing view
+              </button>
+              <details>
+                <summary>More orientation controls</summary>
+                {manualOrientationControls}
+              </details>
+            </>
+          ) : (
+            <>
+              {manualOrientationControls}
+              <button onClick={() => setOrientation(STANDARD_ORIENTATION)}>
+                Reset to standard
+              </button>
+            </>
+          )}
         </div>
       )}
       {expandError && <p role="status">Expanded view is unavailable in this browser.</p>}
@@ -730,7 +760,7 @@ export function NativeCtViewer({
             {showScope ? 'Hide parent airway view' : 'Show parent airway view'}
           </button>
         )}
-        {orientationControls && (demonstrate || revealed) && (
+        {!local && orientationControls && (demonstrate || revealed) && (
           <button onClick={() => setOrientation(orientationFor(trace.preset))}>
             Show book convention
           </button>
