@@ -1,5 +1,13 @@
 # Critical-care activity contract
 
+> **September 14, 2026 — scoped supersession:** For the nine educational modules named in the
+> [active self-paced contract](../gap-remediation/self-paced/README.md), that owner decision
+> supersedes the examination, required-answer, mastery, feedback-withholding, and fixed-layout
+> requirements below. Retain this document as historical context; preserve its applicable
+> simulation safety, data integrity, source, privacy, and accessibility protections. The
+> [migration ledger](../gap-remediation/self-paced/test-contracts.md) records the conflicts.
+> This supersession does not apply to Device Intelligence and does not claim runtime conversion.
+
 ## Navigation grammar
 
 Every migrated module uses:
