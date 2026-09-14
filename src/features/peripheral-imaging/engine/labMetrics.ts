@@ -286,7 +286,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'captured',
       kind: 'action',
-      label: 'Capture the verified setup',
+      label: 'Capture the checked model setup',
       default: false,
       patch: { captured: true },
     },
@@ -570,7 +570,7 @@ export const LAB_METRICS: Readonly<Record<LabMetricId, LabMetricSpec>> = {
   planeMm: { label: 'DTS plane depth', unit: ' mm', digits: 0 },
   centered: { label: 'Lesion centered on both scout images' },
   ready: { label: 'Acquisition readiness' },
-  captured: { label: 'Verified setup captured' },
+  captured: { label: 'Checked model setup captured' },
   windowLabel: { label: 'Side-cutting window and lesion' },
   windowIntersects: { label: 'Side-cutting window intersects the lesion' },
   windowFull: { label: 'Side-cutting window fully within the lesion' },

@@ -189,7 +189,21 @@ export interface ChainAnswer {
   readonly hint?: string
 }
 
+/** In-section view memory only. Never serialized into learner history. */
+export interface SuiteViewMemory {
+  baseline?: import('./Monitor').StoredProjection
+  captureSequence?: number
+  cbct?: {
+    key: string
+    frames: { angle: number; canvas: HTMLCanvasElement }[]
+    scouts: { angle: number; canvas: HTMLCanvasElement }[]
+    angle: number | null
+  }
+}
+
 export interface ImagingSuitePaneProps {
+  readonly presentation?: import('../../content/learningActivities').ImagingPresentation
+  readonly viewMemory?: import('react').MutableRefObject<SuiteViewMemory>
   readonly view: SuiteViewSpec
   readonly lab: LabState
   /** A partial or whole values object; only keys whose value differs count as a change. */

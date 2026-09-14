@@ -55,7 +55,7 @@ export function LabDock(props: ImagingSuitePaneProps & { disabledControls?: Read
   }, [spotlightKey])
   return (
     <div className={styles.dock}>
-      {view.lab && (
+      {view.lab && controls.length > 0 && (
         <fieldset className={styles.controls} disabled={!controlsEnabled} data-suite-controls>
           <legend>Image controls</legend>
           {view.lab === 'acquisition' && (

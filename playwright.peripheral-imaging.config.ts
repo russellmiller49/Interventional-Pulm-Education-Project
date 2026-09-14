@@ -5,7 +5,7 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   reporter: 'list',
-  outputDir: 'test-results/peripheral-imaging',
+  outputDir: process.env.PERIPHERAL_IMAGING_OUTPUT_DIR ?? 'test-results/peripheral-imaging',
   use: {
     ...devices['Desktop Chrome'],
     viewport: { width: 1440, height: 1050 },

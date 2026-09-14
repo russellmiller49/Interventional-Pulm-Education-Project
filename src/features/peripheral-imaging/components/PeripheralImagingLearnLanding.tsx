@@ -38,7 +38,10 @@ export function PeripheralImagingLearnLanding({
       <p className={styles.composition} data-pathway-composition>
         {imagingCompositionLine()}
       </p>
-      <ImagingStoredPathwayAccordion id="imaging-learn-map" />
+      <details>
+        <summary>Course outline · {peripheralImagingPathway.sections.length} sections</summary>
+        <ImagingStoredPathwayAccordion id="imaging-learn-map" />
+      </details>
     </div>
   )
 }

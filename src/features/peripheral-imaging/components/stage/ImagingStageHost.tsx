@@ -7,36 +7,25 @@ import type { ClinicalLearningItem } from '@/features/learning-module/activity'
 import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdict'
 import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
 import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
-import { ContextStrip, type ContextStripItem } from '@/features/learning-module/stage/ContextStrip'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
-import { LookInLine } from '@/features/learning-module/stage/LookInLine'
-import { NowCard, type NowCardModel } from '@/features/learning-module/stage/NowCard'
-import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
-import { SectionsDrawer } from '@/features/learning-module/stage/SectionsDrawer'
-import { StageLayout } from '@/features/learning-module/stage/StageLayout'
-import {
-  STAGE_PHASE_LABELS,
-  compactPaneForLocation,
-  type StagePaneId,
-} from '@/features/learning-module/stage/stageModel'
+import { type NowCardModel } from '@/features/learning-module/stage/NowCard'
+import { STAGE_PHASE_LABELS } from '@/features/learning-module/stage/stageModel'
 import { StageSourcesFooter } from '@/features/learning-module/stage/StageSourcesFooter'
 import { StageSourcesScope } from '@/features/learning-module/stage/StageSourcesScope'
 import { StageTeachingScope } from '@/features/learning-module/stage/StageTeachingScope'
-import { StepList } from '@/features/learning-module/stage/StepList'
 import shellStyles from '@/features/learning-module/stage/lesson-shell.module.css'
 import stageStyles from '@/features/learning-module/stage/lesson-stage.module.css'
-import { Link, useRouter } from '@/i18n/navigation'
+import { Link } from '@/i18n/navigation'
 
 import { imagingCaseById } from '../../content/cases'
 import { microCasesForSection } from '../../content/microCases'
 import { isOffChainTarget } from '../../content/chainAnswerTargets'
-import { chainCaption, chainStop, type ChainStopId } from '../../content/imagingChain'
+import { chainCaption, type ChainStopId } from '../../content/imagingChain'
 import { peripheralImagingPathway } from '../../content/pathway'
 import { imagingSectionLinkTarget } from '../../content/pathwayResolver'
 import {
   PERIPHERAL_IMAGING_ASSESS_HREF,
   PERIPHERAL_IMAGING_LEARN_HREF,
-  PERIPHERAL_IMAGING_NAV_BASE,
   imagingCaseLinkTarget,
 } from '../../content/routes'
 import {
@@ -64,18 +53,14 @@ import {
 import { deriveStageProgress, stepWorkDone } from '../../engine/stageSession'
 import { PeripheralImagingModuleFrame } from '../PeripheralImagingModuleFrame'
 import { ImagingSuitePane } from '../suite/ImagingSuitePane'
-import {
-  controlElementId,
-  type ChainAnswer,
-  type SuiteMode,
-  type SuiteViewSpec,
-} from '../suite/types'
+import { controlElementId, type ChainAnswer, type SuiteViewSpec } from '../suite/types'
 import { ChainWalkCard, walkPositionWords } from './ChainWalkCard'
 import { ImagingSortControl } from './ImagingSortControl'
 import { ImagingSourceList } from './ImagingSourceList'
+import { ImagingActivityShell } from './ImagingActivityShell'
 import { LessonDemonstration } from './LessonDemonstration'
 import { IndependentImagePanels, hasIndependentImagePanel } from './TeachingPanels'
-import { independentValues, teachingDemonstration } from '../../content/teachingExamples'
+import { independentValues } from '../../content/teachingExamples'
 import { ImagingTeachingColumn } from './ImagingTeachingColumn'
 import { useImagingStageSession } from './useImagingStageSession'
 import styles from './imaging-stage.module.css'
@@ -109,20 +94,6 @@ export function ImagingStageHost({
   )
 }
 
-/*
- * Steps, Teaching, Simulator — left to right — each pane captioned with its name and what it is
- * for, and the simulator kept the widest of the three. The four critical-care adopters pass the
- * same four values; sibling modules must not disagree about the first thing a learner sees.
- */
-const PANE_ORDER = ['steps', 'teaching', 'simulator'] as const
-const PANE_CAPTIONS = {
-  steps: 'what to do',
-  teaching: 'what to read',
-  simulator: 'the imaging suite, its controls and the image-formation map',
-} as const
-const PANE_WIDTH_FRACTIONS = { primary: 0.26, secondary: 0.29 } as const
-const PANE_MINIMUMS = { primary: 300, secondary: 280, tertiary: 340 } as const
-
 const DECISION_FRAMES = {
   best: 'That is the move to make first',
   'reasonable-but-incomplete': 'Defensible, but it leaves a step out',
@@ -131,23 +102,6 @@ const DECISION_FRAMES = {
 
 function verdictFrames(item: ClinicalLearningItem) {
   return item.itemType === 'management-decision' ? DECISION_FRAMES : undefined
-}
-
-const MODE_WORDS: Readonly<Record<SuiteMode, string>> = {
-  projection: '2D fluoroscopy',
-  signal: '2D fluoroscopy',
-  field: '2D fluoroscopy',
-  time: 'pulsed fluoroscopy',
-  dts: 'digital tomosynthesis',
-  'dts-prior': 'digital tomosynthesis',
-  cbct: 'cone-beam CT',
-  sampling: 'multiplanar review',
-  rebus: 'radial EBUS',
-  navigation: 'navigation and registration',
-  augmented: 'augmented fluoroscopy',
-  staff: 'staff protection',
-  dose: 'dose metrics',
-  room: 'the suite at rest',
 }
 
 /** The control to spotlight for a goal not yet met. */
@@ -207,7 +161,6 @@ function ImagingStageSession({
   readonly locale: string
   readonly onRestart: () => void
 }) {
-  const router = useRouter()
   const lesson = useMemo(
     () => imagingStageLesson(sectionId as ImagingStageLesson['sectionId']),
     [sectionId],
@@ -219,7 +172,6 @@ function ImagingStageSession({
   const [pendingChoice, setPendingChoice] = useState<Record<string, string>>({})
   const [sortDraft, setSortDraft] = useState<Record<string, string>>({})
   const [viewIndex, setViewIndex] = useState<number | null>(null)
-  const [review, setReview] = useState<number | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const [spotlight, setSpotlight] = useState<{ stepId: string; key: string; count: number } | null>(
     null,
@@ -227,6 +179,13 @@ function ImagingStageSession({
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const nowFocusRef = useRef<HTMLDivElement>(null)
 
+  const [independentDisplay, setIndependentDisplay] = useState<
+    Record<string, Record<string, number | boolean | string>>
+  >({})
+  const demonstrationMemories = useRef<
+    Record<string, { current: import('../suite/types').SuiteViewMemory }>
+  >({})
+  const learnerViewMemory = useRef<import('../suite/types').SuiteViewMemory>({})
   const [representation, setRepresentation] = useState<{ stepId: string; ready: boolean } | null>(
     null,
   )
@@ -236,6 +195,7 @@ function ImagingStageSession({
   const heldIndex = Math.min(liveIndex, commitments.confirmed + 1)
   const activeIndex = Math.max(0, Math.min(viewIndex ?? heldIndex, lesson.steps.length - 1))
   const activeStep = lesson.steps[activeIndex]
+  const activity = activeStep.activity
   const lookingBack = viewIndex !== null && viewIndex < heldIndex
   const isLastStep = activeIndex === lesson.steps.length - 1
   const performedIds = progress.performedIds
@@ -259,8 +219,12 @@ function ImagingStageSession({
   const workDone =
     stepWorkDone(lesson, activeStep, activeIndex, session) && (!needsImage || !!imageReady)
 
+  const previousActivity = useRef(activeStep.id)
   useEffect(() => {
     nowFocusRef.current?.focus({ preventScroll: true })
+    if (previousActivity.current !== activeStep.id)
+      nowFocusRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' })
+    previousActivity.current = activeStep.id
   }, [activeStep.id])
 
   useEffect(() => {
@@ -315,7 +279,6 @@ function ImagingStageSession({
       }
       dispatch({ type: 'CONFIRM_THROUGH', index })
       setViewIndex(null)
-      setReview(null)
       setSpotlight(null)
     },
     [dispatch, lesson.steps],
@@ -341,7 +304,6 @@ function ImagingStageSession({
     const target = activeIndex - 1
     if (target < 0 || !performedIds.has(lesson.steps[target].id)) return
     setViewIndex(target)
-    setReview(null)
   }
 
   function returnToLive() {
@@ -349,14 +311,8 @@ function ImagingStageSession({
   }
 
   function selectStepRow(index: number) {
-    if (index === activeIndex) return
     if (!performedIds.has(lesson.steps[index].id)) return
-    setReview((current) => (current === index ? null : index))
-  }
-
-  function goToSection(nextId: string) {
-    if (nextId === sectionId) return
-    router.push({ pathname: PERIPHERAL_IMAGING_LEARN_HREF, query: { section: nextId } })
+    setViewIndex(index)
   }
 
   function finish() {
@@ -419,7 +375,7 @@ function ImagingStageSession({
         disabled: chainCommittedId !== undefined || lookingBack,
         hint:
           chainCommittedId === undefined
-            ? 'Choose the component where the problem arises, then commit on the card in the Steps panel.'
+            ? 'Choose the component where the problem arises, then check your interpretation.'
             : undefined,
       }
     : undefined
@@ -430,10 +386,6 @@ function ImagingStageSession({
     stopSentence: chainCaption(litStop),
     chainAnswer: chainItem !== null,
   }
-
-  const compactPane: StagePaneId = chainItem
-    ? 'simulator'
-    : compactPaneForLocation(activeStep.lookIn)
 
   /* ---------------------------------------------------------------- *
    * Goals, spotlight
@@ -479,7 +431,6 @@ function ImagingStageSession({
    * The Now card
    * ---------------------------------------------------------------- */
   const stepPosition = `Step ${activeStep.ordinal} of ${lesson.steps.length} · ${STAGE_PHASE_LABELS[activeStep.phase]}`
-  const lookInLine = <LookInLine location={activeStep.lookIn} />
   const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
   const canGoBack = previousStep !== undefined && performedIds.has(previousStep.id) && !finished
   const showWhereAction =
@@ -491,7 +442,12 @@ function ImagingStageSession({
         }
       : undefined
   const continueAction = {
-    label: 'Continue',
+    label:
+      lesson.steps[activeIndex + 1]?.activity.task === 'check'
+        ? 'Interpret a changed example'
+        : lesson.steps[activeIndex + 1]?.activity.task === 'observe'
+          ? 'Compare the images'
+          : 'Continue',
     onActivate: () => confirmThrough(activeIndex),
     icon: <ArrowRight aria-hidden="true" />,
   }
@@ -506,12 +462,11 @@ function ImagingStageSession({
       kicker: stepPosition,
       heading: activeStep.title,
       body: activeStep.instruction,
-      where: lookInLine,
       why: activeStep.rationale,
       ...(canGoBack && previousStep
         ? {
             back: {
-              label: `Back to ${STAGE_PHASE_LABELS[previousStep.phase]}`,
+              label: 'Back',
               onActivate: goBack,
             },
           }
@@ -539,7 +494,7 @@ function ImagingStageSession({
           primary: {
             label: activeStep.actionLabel,
             onActivate: () => confirmThrough(activeIndex),
-            disabled: !!teachingDemonstration(lesson.sectionId) && !imageReady,
+            disabled: activity.visual === 'suite' && !imageReady,
             disabledReason:
               'The demonstration image must load. Teaching text remains available; retry the view.',
           },
@@ -594,7 +549,10 @@ function ImagingStageSession({
             onActivate: () => commitChoice(activeStep),
             disabled:
               !pendingChoice[activeStep.id] ||
-              (interaction.round === 0 && !!lesson.lesson.lab && !imageReady),
+              (interaction.round === 0 &&
+                activity.visual !== 'case' &&
+                !!lesson.lesson.lab &&
+                !imageReady),
             disabledReason: interaction.chainTargets
               ? 'Choose a component on the image-formation map to enable this.'
               : 'Choose one option to enable this.',
@@ -616,7 +574,11 @@ function ImagingStageSession({
       }
       case 'lab-task':
         if (workDone)
-          return { ...base, status: 'Done. The change is on the suite.', primary: continueAction }
+          return {
+            ...base,
+            status: 'The required observations are complete. Review the image, then continue.',
+            primary: continueAction,
+          }
         return {
           ...base,
           status: !imageReady
@@ -626,7 +588,11 @@ function ImagingStageSession({
         }
       case 'observe':
         if (workDone) return { ...base, status: 'Done.', primary: continueAction }
-        return { ...base, status: 'Waiting for the work on the suite.', secondary: showWhereAction }
+        return {
+          ...base,
+          status: 'Complete the listed comparison before continuing.',
+          secondary: showWhereAction,
+        }
       case 'explain':
         return { ...base, primary: isLastStep ? finishAction : continueAction }
       default:
@@ -783,7 +749,11 @@ function ImagingStageSession({
     interaction.kind === 'prediction' && commitments.choices[activeStep.id] === undefined
   // Demonstrations own their state; guided work uses the session. Independent images stay fixed.
   const beforePrediction = interaction.kind === 'read'
-  const controlsEnabled = !deciding && !beforePrediction && !lookingBack
+  const browsingIndependent =
+    interaction.kind === 'prediction' &&
+    interaction.round === 0 &&
+    ['sampling', 'dts', 'dts-prior'].includes(suiteView.mode)
+  const controlsEnabled = (!deciding || browsingIndependent) && !beforePrediction && !lookingBack
   const lockedReason = deciding
     ? 'Independent interpretation: the image state is held while you answer.'
     : beforePrediction
@@ -794,50 +764,35 @@ function ImagingStageSession({
       ? 'The controls are paused while you look back at an earlier step. Return to the live step to take them.'
       : undefined
 
-  const contextItems: readonly ContextStripItem[] = [
-    { label: 'Suite', value: MODE_WORDS[suiteView.mode] },
-    {
-      // The component name only: the image-formation caption in the Simulator panel is the one
-      // place its number is printed, so this strip does not add another "N of M" to the screen.
-      label: 'Image formation',
-      value: litStop ? chainStop(litStop).title : 'not named on this step',
-    },
-    {
-      label: 'Controls',
-      value: !lesson.lesson.lab
-        ? 'none in this section'
-        : controlsEnabled
-          ? 'open'
-          : deciding
-            ? 'locked while you decide'
-            : beforePrediction
-              ? 'demonstration'
-              : 'paused',
-    },
-  ]
-
   const exampleValues =
-    interaction.kind === 'prediction' && interaction.round === 0
-      ? independentValues(lesson.sectionId, 0)
+    interaction.kind === 'prediction'
+      ? independentValues(lesson.sectionId, interaction.round)
       : null
   const panelQuestion =
     interaction.kind === 'prediction' &&
     interaction.round === 0 &&
     hasIndependentImagePanel(lesson.sectionId)
+  const independentImage = interaction.kind === 'prediction'
+  const imageView = browsingIndependent
+    ? {
+        ...suiteView,
+        controls:
+          suiteView.mode === 'sampling' ? ['axial', 'coronal', 'sagittal', 'slab'] : ['plane'],
+      }
+    : suiteView
+  const captureGroup = activity.captureGroup ?? activity.id
+  const demoMemory = (demonstrationMemories.current[captureGroup] ??= { current: {} })
   const simulator =
     interaction.kind === 'read' ? (
       <LessonDemonstration
+        key={activity.id}
         sectionId={lesson.sectionId}
+        activity={activity}
+        savedViewMemory={demoMemory}
         onRepresentationReady={onRepresentationReady}
       />
-    ) : (
+    ) : activity.visual === 'case' ? null : (
       <div className={styles.demonstration}>
-        <p className={styles.lookFor}>
-          <strong>Look for…</strong>{' '}
-          {interaction.kind === 'prediction'
-            ? 'the visible relationship and what remains unconfirmed in this example.'
-            : (lesson.lesson.labTask ?? 'the image question and the evidence available.')}
-        </p>
         {panelQuestion ? (
           <IndependentImagePanels
             sectionId={lesson.sectionId}
@@ -845,17 +800,50 @@ function ImagingStageSession({
           />
         ) : (
           <ImagingSuitePane
-            key={`${activeStep.id}:${independentPending ? 'question' : 'review'}`}
-            independent={independentPending}
+            key={independentImage ? activeStep.id : 'learner'}
+            viewMemory={independentImage ? undefined : learnerViewMemory}
+            presentation={activity.presentation}
+            independent={independentImage}
             onRepresentationReady={onRepresentationReady}
-            view={suiteView}
-            lab={exampleValues ? { values: exampleValues, events: [] } : (session.lab ?? EMPTY_LAB)}
-            onLabChange={(patch) => dispatch({ type: 'LAB_CHANGE', patch })}
-            onLabReset={() => dispatch({ type: 'LAB_RESET' })}
+            view={imageView}
+            lab={
+              independentImage
+                ? {
+                    values: {
+                      ...(exampleValues ?? session.lab?.values),
+                      ...independentDisplay[activeStep.id],
+                    },
+                    events: [],
+                  }
+                : (session.lab ?? EMPTY_LAB)
+            }
+            onLabChange={(patch) => {
+              if (independentImage) {
+                const allowed =
+                  suiteView.mode === 'sampling'
+                    ? ['axial', 'coronal', 'sagittal', 'slab']
+                    : ['plane']
+                const displayPatch = Object.fromEntries(
+                  Object.entries(patch).filter(([key]) => allowed.includes(key)),
+                )
+                setIndependentDisplay((current) => ({
+                  ...current,
+                  [activeStep.id]: { ...current[activeStep.id], ...displayPatch },
+                }))
+              } else dispatch({ type: 'LAB_CHANGE', patch })
+            }}
+            onLabReset={() => {
+              if (independentImage)
+                setIndependentDisplay((current) => ({ ...current, [activeStep.id]: {} }))
+              else {
+                learnerViewMemory.current = {}
+                dispatch({ type: 'LAB_RESET' })
+              }
+            }}
             controlsEnabled={controlsEnabled}
             lockedReason={lockedReason}
             pausedReason={pausedReason}
-            goals={goals.map((goal, index) => ({ goal, met: goalsMetNow[index] }))}
+            goals={[]}
             chainCaption={suiteView.stopSentence}
             chainAnswer={chainAnswer}
             spotlightKey={spotlight?.stepId === activeStep.id ? spotlight.key : undefined}
@@ -868,55 +856,16 @@ function ImagingStageSession({
     <StageTeachingScope
       value={{ phase: activeStep.phase, predictionCommitted, stepId: activeStep.id }}
     >
-      <ImagingTeachingColumn lesson={lesson} stops={litStops} independent={independentPending} />
+      <ImagingTeachingColumn
+        lesson={lesson}
+        activity={activity}
+        stops={litStops}
+        independent={independentPending}
+      />
     </StageTeachingScope>
   )
 
-  const completion =
-    finished && isLastStep ? (
-      <CompletionCard lesson={lesson} nextSectionId={nextSection?.id ?? null} />
-    ) : null
-
-  const task = (
-    <div className={stageStyles.taskColumn}>
-      <div ref={nowFocusRef} tabIndex={-1} data-now-focus>
-        <NowCard model={nowModel}>{nowBody}</NowCard>
-      </div>
-      {completion}
-      <StepList
-        lesson={lesson}
-        currentIndex={activeIndex}
-        furthestPerformedIndex={progress.furthestPerformedIndex}
-        performedStepIds={performedIds}
-        predictionCommitted={predictionCommitted}
-        reviewIndex={review}
-        recapFor={(index) => recapLines(lesson, lesson.steps[index], index, session)}
-        onSelect={selectStepRow}
-      />
-    </div>
-  )
-
-  const header = (
-    <SectionHeader
-      breadcrumb={{ href: PERIPHERAL_IMAGING_NAV_BASE, label: 'Peripheral bronchoscopy imaging' }}
-      kicker={`Section ${lesson.index + 1} of ${lesson.total} · ${lesson.minutes} min`}
-      title={lesson.title}
-      sectionsControl={
-        <SectionsDrawer
-          pathway={peripheralImagingPathway}
-          activeSectionId={lesson.sectionId}
-          position={`${lesson.index + 1} of ${lesson.total}`}
-          label="Sections"
-          onSelect={goToSection}
-        />
-      }
-      helpRef={helpButtonRef}
-      onHelp={() => setHelpOpen(true)}
-      onRestart={onRestart}
-      restartLabel="Restart section"
-      saveAndExitHref={PERIPHERAL_IMAGING_NAV_BASE}
-    />
-  )
+  const completion = finished && isLastStep ? <CompletionCard lesson={lesson} /> : null
 
   const helpDialog = (
     <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} returnFocusTo={helpButtonRef}>
@@ -928,7 +877,6 @@ function ImagingStageSession({
         the current incomplete section; demonstration settings and in-section position are not
         saved.
       </p>
-      {lookInLine}
       {activeStep.rationale ? <p>{activeStep.rationale}</p> : null}
       {firstUnmetKey && !workDone ? (
         <button
@@ -952,43 +900,40 @@ function ImagingStageSession({
       activityMode
     >
       <StageSourcesScope>
-        <StageLayout
-          stageId={activeStep.id}
-          label="Guided peripheral imaging section"
-          module="peripheral-imaging"
-          workspaceLabel="Imaging lesson workspace: steps, teaching, and simulator"
-          header={header}
-          contextStrip={<ContextStrip items={contextItems} badge="Authored teaching model" />}
-          simulator={simulator}
+        <ImagingActivityShell
+          lesson={lesson}
+          index={activeIndex}
+          model={nowModel}
+          headingRef={nowFocusRef}
+          visual={simulator}
           teaching={teaching}
-          task={task}
-          paneOrder={PANE_ORDER}
-          paneCaptions={PANE_CAPTIONS}
-          defaultWidthFractions={PANE_WIDTH_FRACTIONS}
-          paneMinimums={PANE_MINIMUMS}
-          compactPane={compactPane}
-          footer={
-            <>
-              <p className={shellStyles.footerLine}>
-                Progress: completed sections and first answers are saved; reloading restarts this
-                section. Professional education only. Not a clinical device or a patient-specific
-                guide; every image, target, tool and number is an authored teaching model. Follow
-                current device instructions, local protocols and medical-physics judgment.
-              </p>
-              <StageSourcesFooter
-                count={stageSources.evidenceIds.length}
-                label="Sources for this section"
-                claimsVisible={!independentPending}
-              >
-                <ImagingSourceList
-                  records={stageSources.records}
-                  claimsVisible={!independentPending}
-                />
-              </StageSourcesFooter>
-            </>
+          response={nowBody}
+          onReview={selectStepRow}
+          performedIds={performedIds}
+          onHelp={() => setHelpOpen(true)}
+          helpRef={helpButtonRef}
+          onRestart={onRestart}
+          finished={finished && isLastStep}
+          nextHref={
+            nextSection ? imagingSectionLinkTarget(nextSection.id) : PERIPHERAL_IMAGING_ASSESS_HREF
           }
-          overlay={helpDialog}
-        />
+          nextTitle={nextSection ? `Continue to ${nextSection.title}` : 'Go to the capstone'}
+          references={
+            <StageSourcesFooter
+              count={stageSources.evidenceIds.length}
+              label="Sources for this section"
+              claimsVisible={!independentPending}
+            >
+              <ImagingSourceList
+                records={stageSources.records}
+                claimsVisible={!independentPending}
+              />
+            </StageSourcesFooter>
+          }
+        >
+          {completion}
+          {helpDialog}
+        </ImagingActivityShell>
       </StageSourcesScope>
     </PeripheralImagingModuleFrame>
   )
@@ -1109,13 +1054,7 @@ function StepRecap({
   )
 }
 
-function CompletionCard({
-  lesson,
-  nextSectionId,
-}: {
-  readonly lesson: ImagingStageLesson
-  readonly nextSectionId: string | null
-}) {
+function CompletionCard({ lesson }: { readonly lesson: ImagingStageLesson }) {
   const capstoneCase = lesson.spec.capstoneCaseId
     ? imagingCaseById.get(lesson.spec.capstoneCaseId)
     : undefined
@@ -1151,28 +1090,6 @@ function CompletionCard({
           .
         </p>
       ) : null}
-      <div className={styles.completionActions}>
-        {nextSectionId ? (
-          <Link
-            className={shellStyles.nowPrimary}
-            href={imagingSectionLinkTarget(nextSectionId)}
-            data-next-section={nextSectionId}
-          >
-            Continue to the next section
-          </Link>
-        ) : (
-          <Link
-            className={shellStyles.nowPrimary}
-            href={PERIPHERAL_IMAGING_ASSESS_HREF}
-            data-next-section="assess"
-          >
-            Go to the capstone
-          </Link>
-        )}
-        <Link className={shellStyles.nowSecondary} href={PERIPHERAL_IMAGING_NAV_BASE}>
-          Back to the overview
-        </Link>
-      </div>
     </section>
   )
 }

@@ -1,0 +1,31 @@
+# Peripheral imaging course flow
+
+Baseline: `d209c800`, inspected September 13, 2026. The supplied redesign brief is design context for the requested review/update; it is not separate authorization for release changes. Existing teaching repairs, question versions and image engines are retained. One discrepancy: `good-image` still used `five-things` sorting at this baseline. Its guided task now uses the existing geometry/display model; the original questions and historical completion remain valid and are never rescored.
+
+Audience: clinicians familiar with basic bronchoscopy and chest CT, learning intraprocedural imaging decisions. The existing six objectives and prerequisite graph remain authoritative. Online work supports interpretation and decision reasoning, not procedural competence. The existing estimates remain estimates pending learner observation.
+
+The working sequence follows the imaging question, available evidence, useful adjustment/acquisition, interpretation and remaining uncertainty. `pathway.ts` is the section authority; the validated chapter mapping in `pathwayResolver.ts` tiles it exactly once. The module-local `learningActivities.ts` authors task type, presentation, stable activity identity, content references, visual configuration, disclosure and completion. The existing stage adapter translates these descriptors to the existing session reducer; there is no new progress store.
+
+The focused task uses five internal arrangements: illustrated explanation, image comparison, acquisition geometry, multiplanar review and case/record. These are rendering choices, not learner modes. Short explanation and evidence share a working area. Back and the primary action stay in a bottom navigation bar. Earlier activities and the course outline are disclosures; section access is direct and unlocked. Formal Assess eligibility is unchanged.
+
+This task deliberately replaces the old skill's H3 fixed Steps/Teaching/Simulator arrangement. No shared stage, sibling feature, standalone FluoroView, release catalog, auth or database changes are needed. The repository has no stable shared focused shell at the baseline; the composition is local. Reading has explicit Continue, without dwell timers. Model tasks retain their supported predicates; responses retain commitment, feedback and deliberate continuation. Demonstrations do not write learner attempts or satisfy goals.
+
+Clinical content is moved from existing source-associated lesson blocks. No new device specifications, radiation thresholds or physiological models are introduced. General radiation optimization remains conditional on adequate information; the IAEA general fluoroscopy source was checked at https://www.iaea.org/resources/rpop/health-professionals/other-specialities-and-imaging-modalities/gastroenterology/patients . Its gastroenterology context is not a bronchoscopy protocol. Existing WABIP/AAPM and modality sources remain the course authority.
+
+Incomplete sections restart on reload/exit; completed sections and first responses persist. Presentation IDs do not replace question IDs. The new geometry practice in `good-image` is an activity change in course flow v2, with historical completion accepted; historical responses are not scored against a new answer key.
+
+## Delivered composition and deviations
+
+All 19 sections use the activity host; none retain the permanent three-pane layout. The section-by-section destination map is in `flow-preservation-matrix.md`, and executed checks and limitations are in `flow-redesign-validation.md`.
+
+The course has eight chapters: define the imaging question; understand the image and its context; optimize 2D fluoroscopy; understand DTS; acquire CBCT; confirm and reassess; protect and document; and integrate the decisions. Chapter names do not change section IDs, prerequisite rules or completion order.
+
+Projection, field and timing keep a captured reference beside a current example. Signal teaching compares one selected limitation with its reference. CBCT pairs frontal/lateral scouts with centering, declared readiness and a captured-volume substitute. DTS gives the reconstructed plane and depth control the main display. Tool confirmation presents linked planes at usable size, stacking them on narrow screens; geometric explanation is optional during teaching and unmounted during independent interpretation. Provenance and dose tasks use source/result rows and records. Integrated cases use the existing evidence panels and decisions.
+
+Differences from the supplied brief are limited to existing capability boundaries and compatibility choices. The `good-image` sorting task had not already been replaced at this baseline; this update performs that migration and accepts historical completion. Core phase names remain compatibility fields for the existing reducer; learners see task titles. The DTS independent example changes supported sweep/plane values within the existing model, not to a new patient dataset. Narrow screens use vertical MPR/comparison stacking rather than adding image tabs. Current clinical images, model limitations, question identities and scoring remain intact.
+
+The only opt-in interfaces are inside peripheral imaging: `presentation` and `viewMemory` on `ImagingSuitePaneProps`. View memory retains baseline pixels, overlay/display state, source/context and CBCT scout/sequence copies through in-section view changes. It is never serialized as progress. Demonstration memory is separate from learner work; explicit model reset clears the owning memory, while demonstration replay leaves the frozen reference intact. No shared learning-stage interface was changed.
+
+## Instructor walkthrough (subsequent human validation)
+
+With a clinician encountering the module for the first time, use projection, CBCT acquisition, tool confirmation and dose records. Ask the learner to state the current imaging question; find the relevant image and control; perform the adjustment or interpretation; explain what the feedback changes; and proceed without coaching. Record navigation errors, misunderstood evidence claims, image readability, time and unprompted safety reasoning. Repeat on a small screen. Automated checks do not establish educational efficacy or clinical validation.

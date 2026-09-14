@@ -54,7 +54,7 @@ const capturedGoal: LabGoal = {
   type: 'flag',
   key: 'captured',
   value: true,
-  label: 'Capture the verified setup',
+  label: 'Capture the checked model setup',
 }
 const movedAfterCapture: LabGoal = {
   type: 'event',
@@ -63,6 +63,22 @@ const movedAfterCapture: LabGoal = {
 }
 
 export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, SectionLabGoals>>> = {
+  'good-image': {
+    act: [
+      {
+        type: 'event',
+        id: 'touched-orbit',
+        label: 'Change the projection with fixed tool and lesion geometry',
+      },
+      {
+        type: 'event',
+        id: 'touched-zoom',
+        label: 'Compare stored-image zoom with the changed projection',
+      },
+    ],
+    observe: [],
+    watch: ['separationMm', 'depthMm', 'zoomAddsExposure'],
+  },
   'chain-walk': {
     act: [
       {

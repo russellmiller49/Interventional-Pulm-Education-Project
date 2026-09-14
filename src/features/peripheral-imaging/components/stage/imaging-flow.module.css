@@ -1,0 +1,417 @@
+.course {
+  color: var(--ink);
+  width: 100%;
+  min-width: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+.course :is(button, summary, a) {
+  touch-action: manipulation;
+}
+.course :is(button, summary) {
+  cursor: pointer;
+}
+.course :focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 4px;
+}
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  padding: 1.1rem max(1rem, calc((100% - 1320px) / 2));
+  background: #0f282f;
+  border-bottom: 1px solid var(--line);
+}
+.header h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.header p {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0.25rem 0;
+}
+.eyebrow {
+  color: var(--cyan-bright);
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.headerTools,
+.courseNav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.courseNav {
+  order: 3;
+  flex-basis: 100%;
+}
+.courseNav a {
+  padding: 0.3rem 0.7rem;
+  border-radius: 0.4rem;
+  color: var(--muted);
+}
+.courseNav a[aria-current] {
+  background: var(--panel-2);
+  color: var(--cyan-bright);
+}
+.course button,
+.headerTools summary {
+  border: 1px solid var(--line);
+  padding: 0.5rem 0.8rem;
+  min-height: 44px;
+  border-radius: 0.5rem;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.875rem;
+}
+.course button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.course button:hover:not(:disabled) {
+  border-color: var(--cyan-bright);
+}
+.outline {
+  position: relative;
+}
+.outline nav {
+  position: absolute;
+  z-index: 20;
+  top: 100%;
+  right: 0;
+  width: min(80vw, 30rem);
+  max-height: 65dvh;
+  overflow-y: auto;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  background: #0e262d;
+  box-shadow: 0 1rem 3rem #0009;
+}
+.outline h2 {
+  color: var(--cyan-bright);
+  font-size: 0.9rem;
+  margin: 1rem 0 0.25rem;
+}
+.outline ol {
+  list-style: none;
+  padding: 0;
+}
+.outline a {
+  display: block;
+  padding: 0.4rem;
+  font-size: 0.9rem;
+  border-radius: 0.3rem;
+}
+.outline a[aria-current] {
+  background: var(--panel-3);
+}
+.progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  max-width: 1320px;
+  margin: 1rem auto;
+  padding: 0 1rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.progress progress {
+  width: 9rem;
+  height: 0.4rem;
+  accent-color: var(--cyan);
+}
+.progress details {
+  margin-left: auto;
+}
+.progress ol {
+  padding-left: 1rem;
+}
+.taskHeading {
+  max-width: 1320px;
+  padding: 0.5rem 1rem 1rem;
+  margin: auto;
+  scroll-margin-top: 6rem;
+}
+.taskHeading h2 {
+  font-size: clamp(1.35rem, 2.2vw, 1.85rem);
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0.2rem 0 0.5rem;
+}
+.taskHeading p {
+  max-width: 80ch;
+  color: #bed1d4;
+  font-size: 0.95rem;
+}
+.task {
+  max-width: 1320px;
+  margin: auto;
+  padding: 0 1rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+.evidence,
+.explanation {
+  min-width: 0;
+}
+.course [data-provenance-flow] ol {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0;
+  list-style: none;
+}
+.course [data-provenance-flow] li {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.7fr) minmax(0, 2fr);
+  gap: 0.8rem;
+  padding: 0.75rem;
+  border-left: 3px solid var(--cyan);
+  background: #0e262d;
+}
+.course [data-provenance-flow] li strong {
+  color: var(--cyan-bright);
+}
+.explanation {
+  display: grid;
+  gap: 1rem;
+  padding: 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: #102930;
+}
+.explanation h3 {
+  font-size: 1rem;
+  line-height: 1.4;
+  color: #e4f1f1;
+  font-weight: 700;
+  margin: 0 0 0.55rem;
+}
+.explanation p {
+  margin: 0.4rem 0 0.7rem;
+}
+.explanation details {
+  color: var(--muted);
+  margin-top: 0.75rem;
+}
+.course[data-presentation='multiplanar'] .task {
+  grid-template-columns: minmax(0, 1fr);
+}
+.course[data-presentation='multiplanar'] .explanation {
+  max-width: 900px;
+  width: 100%;
+  justify-self: center;
+}
+.course[data-presentation='record'] .task {
+  grid-template-columns: minmax(0, 1.1fr) minmax(300px, 1fr);
+}
+.evidence:empty {
+  display: none;
+}
+.task:has(.evidence:empty) {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 960px;
+}
+.boundary {
+  max-width: 1288px;
+  margin: 1.2rem auto;
+  padding: 0.8rem 1rem;
+  border-left: 3px solid var(--amber);
+  background: #182b2a;
+  color: #bfcfd0;
+  font-size: 0.8rem;
+}
+.references {
+  max-width: 1320px;
+  margin: 1rem auto;
+  padding: 0 1rem;
+}
+.actions {
+  position: sticky;
+  z-index: 10;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem max(1rem, calc((100% - 1288px) / 2));
+  background: #0a2028f7;
+  border-top: 1px solid #41606a;
+  box-shadow: 0 -4px 20px #0003;
+}
+.actionStatus {
+  font-size: 0.8rem;
+  max-width: 50ch;
+  color: #b9ced1;
+}
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+.buttons [data-now-primary] {
+  background: #70dfdf;
+  color: #092a30;
+  border: 0;
+  border-radius: 0.5rem;
+  padding: 0.65rem 1rem;
+  font-weight: 750;
+  min-height: 44px;
+  text-align: center;
+}
+@media (max-width: 1000px) {
+  .task,
+  .course[data-presentation='record'] .task {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 800px;
+  }
+  .header {
+    padding: 1rem;
+  }
+  .courseNav {
+    flex-basis: auto;
+  }
+  .explanation {
+    padding: 1rem;
+  }
+  .actions {
+    padding: 0.65rem 1rem;
+  }
+}
+@media (max-width: 560px) {
+  .course [data-provenance-flow] li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.2rem;
+  }
+  .header {
+    gap: 0.6rem;
+  }
+  .header h1 {
+    font-size: 1.1rem;
+  }
+  .headerTools {
+    width: 100%;
+  }
+  .outline {
+    position: static;
+  }
+  .outline nav {
+    top: auto;
+    right: 1rem;
+    left: 1rem;
+    width: auto;
+  }
+  .progress {
+    gap: 0.6rem;
+  }
+  .progress details {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+  .task {
+    gap: 0.8rem;
+  }
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+  }
+  .actionStatus {
+    line-height: 1.4;
+  }
+  .buttons {
+    justify-content: stretch;
+  }
+  .buttons > * {
+    flex: 1;
+  }
+  .boundary {
+    margin-inline: 1rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .course * {
+    scroll-behavior: auto;
+  }
+}
+/* Keep the evidence within a laptop viewport while the document remains freely scrollable. */
+.header {
+  padding-block: 0.65rem;
+  gap: 0.6rem 1rem;
+}
+.header h1 {
+  font-size: 1.1rem;
+}
+.courseNav {
+  order: initial;
+  flex-basis: auto;
+}
+.progress {
+  margin-block: 0.55rem;
+}
+.taskHeading {
+  padding-block: 0.25rem 0.65rem;
+}
+.taskHeading h2 {
+  font-size: clamp(1.25rem, 1.8vw, 1.55rem);
+}
+.taskHeading:focus-visible {
+  outline: none;
+}
+.taskHeading:focus-visible h2 {
+  text-decoration: underline;
+  text-decoration-color: var(--amber);
+  text-underline-offset: 0.2em;
+}
+.safetyCue {
+  max-width: 1288px;
+  margin: 0 auto 0.8rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 2px solid var(--amber);
+  color: #b6cbd0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+@media (max-width: 560px) {
+  .safetyCue {
+    margin-inline: 1rem;
+  }
+}
+.header {
+  position: sticky;
+  top: var(--site-header-height, 4rem);
+  z-index: 15;
+}
+.taskHeading {
+  scroll-margin-top: calc(var(--site-header-height, 4rem) + 7rem);
+}
+.course:is([data-task-kind='act'], [data-task-kind='observe']) .task {
+  grid-template-columns: minmax(0, 1fr);
+}
+.course:is([data-task-kind='act'], [data-task-kind='observe']) .explanation {
+  order: -1;
+  padding: 0.5rem 0.85rem;
+}
+.course:is([data-task-kind='act'], [data-task-kind='observe']) .explanation:has([data-walk-stop]) {
+  order: initial;
+}
+@media (max-width: 700px) {
+  .header {
+    position: static;
+  }
+  .taskHeading {
+    scroll-margin-top: calc(var(--site-header-height, 4rem) + 1rem);
+  }
+}

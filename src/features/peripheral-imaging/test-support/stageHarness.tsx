@@ -150,6 +150,19 @@ export function installDom() {
 /** Coached work through real controls; used before the independent boundary assertions. */
 export function performGuidedStep(lesson: ImagingStageLesson) {
   const step = lesson.steps.find((s) => s.id === currentStepId())!
+  if (step.interaction.kind === 'read') {
+    clickPrimary()
+    return
+  }
+  if (step.interaction.kind === 'sort') {
+    for (const row of step.interaction.sort.rows)
+      fireEvent.change(document.querySelector(`[data-sort-row="${row.id}"] select`)!, {
+        target: { value: row.origin },
+      })
+    clickPrimary()
+    clickPrimary()
+    return
+  }
   const observe = step.interaction.kind === 'observe'
   const clickControl = (key: string) => fireEvent.click(control(key))
   switch (lesson.sectionId) {
@@ -174,6 +187,10 @@ export function performGuidedStep(lesson: ImagingStageLesson) {
         setRange('width', 5)
         setSelect('rate', '3.75')
       } else setRange('width', 10)
+      break
+    case 'good-image':
+      setRange('orbit', 35)
+      setRange('zoom', 1.5)
       break
     case 'two-dimensional':
       setRange('orbit', 35)
@@ -241,6 +258,8 @@ export function performGuidedStep(lesson: ImagingStageLesson) {
 }
 
 export function reachIndependent(lesson: ImagingStageLesson) {
-  clickPrimary()
-  for (let i = 1; i < lesson.predictionStepIndex; i++) performGuidedStep(lesson)
+  for (let count = 0; currentStepId() !== lesson.steps[lesson.predictionStepIndex].id; count++) {
+    if (count > lesson.steps.length) throw new Error('Independent interpretation not reachable')
+    performGuidedStep(lesson)
+  }
 }

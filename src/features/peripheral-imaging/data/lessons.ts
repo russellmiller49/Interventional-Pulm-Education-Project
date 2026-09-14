@@ -115,7 +115,7 @@ export const LESSONS: Lesson[] = [
       {
         title: 'Six components, one image',
         kind: 'signals',
-        body: 'A fluoroscopic image is formed in sequence. The X-ray tube emits photons, the collimated beam crosses the patient, the flat-panel detector records what arrives, the system may reconstruct or register what was acquired, and the monitor displays the result for interpretation. Each component changes the image in its own way, and every modality in this course uses the same components differently.',
+        body: 'A fluoroscopic image is formed in sequence. The X-ray tube emits photons, the collimated beam crosses the patient, the flat-panel detector records what arrives, the system may reconstruct or register what was acquired, and the monitor displays the result for interpretation. Each component changes the image in its own way, and the X-ray modalities use these components differently. Radial EBUS uses ultrasound and does not share this X-ray pipeline.',
         points: [
           'The X-ray tube and generator set kV, mA and pulses.',
           'Beam geometry sets the projection, collimation and distances.',
@@ -210,7 +210,7 @@ export const LESSONS: Lesson[] = [
         'Magnification enlarges the same projection, heart included. Obliquity changes the projection, so the heart can move off the lesion. The first changes the display or the detector sampling; the second changes the projection. Name the control before you change it.',
     },
     labTask:
-      'Assign each console control to the fluoroscopy control it belongs to — projection, collimation, pulse rate and width, acquisition mode or display — or to monitoring, when it does not change the acquisition.',
+      'Change projection with fixed tool and lesion geometry, then inspect the same model with display zoom. Compare what each control changes and what remains unresolved.',
     lab: 'geometry',
     takeaway: [
       'Control families organize the main acquisition and display adjustments.',

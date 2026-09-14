@@ -12,7 +12,7 @@ import {
 import { imagingStageItems } from '../content/stageItems'
 
 describe('the stage lessons', () => {
-  it('validate clean at import and share one shape', () => {
+  it('validate every activity and preserve the existing response contracts', () => {
     expect(validateImagingStageLessons()).toEqual([])
     const lessons = imagingStageLessons()
     expect(lessons).toHaveLength(peripheralImagingSectionIds.length)
@@ -39,18 +39,21 @@ describe('the stage lessons', () => {
     expect(imagingStageLesson('chain-walk').steps.map((s) => s.interaction.kind)).toEqual([
       'read',
       'walk',
+      'read',
       'prediction',
       'explain',
       'prediction',
     ])
     expect(imagingStageLesson('imaging-questions').steps.map((s) => s.interaction.kind)).toEqual([
       'read',
-      'prediction',
+      'read',
       'sort',
+      'prediction',
       'explain',
       'prediction',
     ])
     expect(imagingStageLesson('projection').steps.map((s) => s.interaction.kind)).toEqual([
+      'read',
       'read',
       'lab-task',
       'observe',

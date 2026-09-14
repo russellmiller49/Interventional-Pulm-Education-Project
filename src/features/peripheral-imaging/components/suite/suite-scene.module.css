@@ -605,3 +605,85 @@
 .displays[data-image-first='true'] .scenePanel {
   order: 1;
 }
+
+/* Opt-in layouts for the peripheral imaging course. The standalone suite defaults stay intact. */
+.pane[data-task-presentation] .displays {
+  position: static;
+}
+.pane[data-task-presentation] .displays .monitorPanel {
+  max-width: none;
+  width: 100%;
+}
+.pane[data-task-presentation] .displays .monitor {
+  width: min(100%, 540px);
+  height: auto;
+}
+.pane[data-task-presentation] .displays[data-image-first='true'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.pane[data-task-presentation] .displays[data-image-first='true'] .scenePanel {
+  --suite-display-height: 220px;
+}
+.pane[data-task-presentation] .toolbar {
+  flex-wrap: wrap;
+}
+.pane[data-task-presentation] .controls {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+}
+.pane[data-task-presentation] .comparison[data-has-baseline='true'] {
+  gap: 0.8rem;
+}
+.pane[data-task-presentation='multiplanar'] .mprGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.pane[data-task-presentation='multiplanar'] .mprGrid svg {
+  max-height: none;
+  width: 100%;
+}
+.pane[data-task-presentation] .mprGrid svg {
+  /* The legacy phone overlay background obscures the CT canvas underneath it. */
+  background: transparent;
+}
+.pane[data-task-presentation='multiplanar'] .scenePanel {
+  --suite-display-height: 250px;
+}
+.pane[data-task-presentation='acquisition'] .displays {
+  --suite-display-height: 290px;
+}
+.pane[data-task-presentation='acquisition'][data-volume-captured='true'] .scenePanel {
+  --suite-display-height: 170px;
+}
+.pane[data-task-presentation='record'] .scenePanel {
+  --suite-display-height: 180px;
+}
+@container suite (max-width: 500px) {
+  .pane[data-task-presentation] .comparison[data-has-baseline='true'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pane[data-task-presentation='multiplanar'] .mprGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@container suite (min-width: 900px) {
+  .pane[data-task-presentation='comparison'] .displays[data-image-first='true'] {
+    grid-template-columns: minmax(0, 1.8fr) minmax(260px, 0.8fr);
+  }
+  .pane[data-task-presentation='comparison'] .displays .monitorPanel {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .pane[data-task-presentation='comparison'] .displays .nearImageControls {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .pane[data-task-presentation='comparison'] .displays .scenePanel {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+.pane[data-task-presentation='acquisition'] .displays {
+  grid-template-columns: minmax(0, 1fr);
+}
+.pane[data-task-presentation='acquisition'][data-suite-mode='cbct'] .monitorPanel {
+  display: none;
+}
