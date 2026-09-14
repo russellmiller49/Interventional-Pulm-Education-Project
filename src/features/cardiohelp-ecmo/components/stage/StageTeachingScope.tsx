@@ -18,6 +18,9 @@ export interface StageTeachingScopeValue {
   readonly predictionCommitted: boolean
   readonly stepId: string
   readonly foundationBlock?: string
+  readonly focusedPresentation?: boolean
+  readonly teachingSections?: readonly string[]
+  readonly baselineGroup?: string
   /** Context and the existing Continue action, repeated beside reading in a single-pane view. */
   readonly foundationNavigation?: {
     readonly instruction: string

@@ -32,6 +32,14 @@
   line-height: 1.55;
 }
 
+.shell[data-flowing='true'] {
+  height: auto;
+  display: block;
+}
+.shell[data-flowing='true'] > .body {
+  overflow: visible;
+}
+
 /* Below the fixed-workspace viewport the shell flows with the document and nothing is clipped. */
 @media (max-width: 1023px), (max-height: 699px) {
   .shell {
@@ -115,6 +123,19 @@
   border-color: var(--ecmo-shell-accent);
   background: var(--ecmo-shell-accent);
   color: #04211f;
+}
+
+.shell[data-flowing='true'] .headerButton[data-primary='true'] {
+  border-color: var(--ecmo-shell-line);
+  background: transparent;
+  color: var(--ecmo-shell-ink);
+}
+
+.shell[data-flowing='true'] .sourcesBody {
+  position: static;
+  width: 100%;
+  max-height: none;
+  overflow: visible;
 }
 
 .headerButton:disabled {
@@ -612,4 +633,12 @@
 .nowBack svg {
   width: 0.9rem;
   height: 0.9rem;
+}
+
+/* Urgent device status remains readable while the task and operational view scroll below it. */
+.shell[data-flowing='true'] > .strip:has([data-operational-status='true']) {
+  position: sticky;
+  top: var(--site-header-height, 5rem);
+  z-index: 5;
+  background: #10262b;
 }

@@ -644,7 +644,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(
       within(reassessmentPanel).getByRole('button', { name: /Reassessment submitted/i }),
     ).toBeDisabled()
-    const revealButton = within(reassessmentPanel).getByRole('button', {
+    const revealButton = screen.getByRole('button', {
       name: /Reveal causal debrief/i,
     })
     expect(revealButton).toBeEnabled()
@@ -873,8 +873,8 @@ describe('CARDIOHELP ECMO learner interface', () => {
     await waitFor(() => {
       expect(screen.getByText(/Reviewed English content fallback/i)).toBeInTheDocument()
     })
-    expect(screen.getByRole('heading', { name: 'Gas blender' })).toBeInTheDocument()
-    expect(screen.getByText(/not CARDIOHELP-i touchscreen controls/i)).toBeInTheDocument()
+    expect(document.querySelector('[data-presentation="guided-device"]')).not.toBeNull()
+    expect(document.querySelector('#cardiohelp-console')).not.toBeNull()
   })
 
   it('encodes touch-target, focus, and reduced-motion safeguards in the feature stylesheet', () => {

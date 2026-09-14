@@ -1,3 +1,5 @@
+import { useStageTeachingScope } from '../stage/StageTeachingScope'
+import { FocusedFoundationSections } from './FocusedFoundationSections'
 import type { EcmoFoundationSnapshot } from '../../session/foundationSession'
 import {
   ECMO_BASELINE_DISPLAY_DEADBANDS,
@@ -380,8 +382,12 @@ export function VvNormalStatePanel({
   readonly state: EcmoSimulationState
   readonly snapshot?: EcmoFoundationSnapshot | null
 }) {
+  const scope = useStageTeachingScope()
+  const selectedGroup = scope?.baselineGroup
   const window = windowStart(state, snapshot)
-  const rows = baselineRows(state, window.values)
+  const rows = baselineRows(state, window.values).filter(
+    (row) => !selectedGroup || selectedGroup === 'all' || row.group === selectedGroup,
+  )
   const groups: readonly BaselineGroupId[] = [
     'drainage-and-load',
     'membrane-and-return',
@@ -390,7 +396,7 @@ export function VvNormalStatePanel({
   ]
 
   return (
-    <div className={styles.panel} data-teaching-panel="vv-normal-state">
+    <FocusedFoundationSections className={styles.panel} panelId="vv-normal-state">
       {/*
         A short topology statement before the stable state, because this section now comes before
         the one that draws the series path in detail. A baseline is unreadable without knowing what
@@ -454,49 +460,53 @@ export function VvNormalStatePanel({
                 </th>
               </tr>
             </thead>
-            {groups.map((group) => (
-              <tbody key={group} data-baseline-group={group}>
-                <tr>
-                  <th
-                    scope="colgroup"
-                    colSpan={4}
-                    className="pt-3 text-xs uppercase tracking-wide text-muted-foreground"
-                  >
-                    {groupLabels[group]}
-                  </th>
-                </tr>
-                {rows
-                  .filter((row) => row.group === group)
-                  .map((row) => (
-                    <tr key={row.id} data-baseline-row={row.id}>
-                      <th scope="row" className="py-1 pr-3 font-medium">
-                        {row.label}
-                      </th>
-                      <td className="py-1 pr-3" data-current-value>
-                        {format(row.current, row.precision, row.unit)}
-                        {row.unavailableReason ? (
-                          <span className="sr-only"> Not available. {row.unavailableReason}</span>
-                        ) : null}
-                      </td>
-                      <td
-                        className="py-1 pr-3 text-muted-foreground"
-                        data-reference-value
-                        data-reference-provenance={row.referenceProvenance}
-                      >
-                        {row.reference === null
-                          ? 'not reported in the reference state'
-                          : format(row.reference, row.precision, row.unit)}
-                        <span className="ml-1 text-xs">
-                          ({provenanceLabel[row.referenceProvenance]})
-                        </span>
-                      </td>
-                      <td className="py-1">
-                        <ChangeCell row={row} />
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            ))}
+            {groups
+              .filter(
+                (group) => !selectedGroup || selectedGroup === 'all' || group === selectedGroup,
+              )
+              .map((group) => (
+                <tbody key={group} data-baseline-group={group}>
+                  <tr>
+                    <th
+                      scope="colgroup"
+                      colSpan={4}
+                      className="pt-3 text-xs uppercase tracking-wide text-muted-foreground"
+                    >
+                      {groupLabels[group]}
+                    </th>
+                  </tr>
+                  {rows
+                    .filter((row) => row.group === group)
+                    .map((row) => (
+                      <tr key={row.id} data-baseline-row={row.id}>
+                        <th scope="row" className="py-1 pr-3 font-medium">
+                          {row.label}
+                        </th>
+                        <td className="py-1 pr-3" data-current-value>
+                          {format(row.current, row.precision, row.unit)}
+                          {row.unavailableReason ? (
+                            <span className="sr-only"> Not available. {row.unavailableReason}</span>
+                          ) : null}
+                        </td>
+                        <td
+                          className="py-1 pr-3 text-muted-foreground"
+                          data-reference-value
+                          data-reference-provenance={row.referenceProvenance}
+                        >
+                          {row.reference === null
+                            ? 'not reported in the reference state'
+                            : format(row.reference, row.precision, row.unit)}
+                          <span className="ml-1 text-xs">
+                            ({provenanceLabel[row.referenceProvenance]})
+                          </span>
+                        </td>
+                        <td className="py-1">
+                          <ChangeCell row={row} />
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              ))}
           </table>
         </div>
 
@@ -534,15 +544,17 @@ export function VvNormalStatePanel({
         </ModelBoundary>
       </section>
 
-      <GuidedValue
-        guide={ecmoDerivedValueGuides.baselineChangeFromEarlierValue}
-        value={
-          rows[0].current === null || rows[0].start === null
-            ? null
-            : round(rows[0].current - rows[0].start, 2)
-        }
-        headingLevel={3}
-      />
+      <div data-presentation-section="derived-values">
+        <GuidedValue
+          guide={ecmoDerivedValueGuides.baselineChangeFromEarlierValue}
+          value={
+            rows[0].current === null || rows[0].start === null
+              ? null
+              : round(rows[0].current - rows[0].start, 2)
+          }
+          headingLevel={3}
+        />
+      </div>
 
       <section className={styles.section} aria-labelledby="drift-heading">
         <h3 id="drift-heading" className={styles.heading}>
@@ -645,6 +657,6 @@ export function VvNormalStatePanel({
           </li>
         </ul>
       </section>
-    </div>
+    </FocusedFoundationSections>
   )
 }

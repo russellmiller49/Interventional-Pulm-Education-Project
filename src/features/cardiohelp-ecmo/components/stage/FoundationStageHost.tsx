@@ -77,17 +77,18 @@ import {
 import { FoundationStoryProblems } from './FoundationStoryProblems'
 import { SectionsDrawer } from './SectionsDrawer'
 import { StageLayout } from './StageLayout'
+import { ActivityContent } from './ActivityContent'
+import { ecmoTaskPresentation } from './activityPresentation'
+import {
+  baselineGroups,
+  baselineGroupLabels,
+  foundationPresentationSections,
+} from './foundationPresentationSections'
 import { scrollTaskPaneToTop } from './scrollTaskPaneToTop'
 import { StageSourcesScope } from './StageSourcesScope'
 import { StageTeachingScope } from './StageTeachingScope'
 import { StepList } from './StepList'
-import {
-  STAGE_PHASE_LABELS,
-  canEnterStep,
-  mountStepIndex,
-  type StagePhase,
-  type StageSurfaceId,
-} from './stageModel'
+import { canEnterStep, mountStepIndex, type StagePhase, type StageSurfaceId } from './stageModel'
 import styles from './EcmoLessonStage.module.css'
 
 /**
@@ -107,6 +108,12 @@ const FIXED_PATHWAY_COPY: Readonly<Record<SupportMode, string>> = {
   vv: 'VV pathway · this section teaches series physiology and always runs on the VV reference circuit.',
   va: 'VA pathway · this section teaches parallel circulation and always runs on the VA reference circuit.',
 }
+
+const COMBINED_BASELINE_PRESENTATION = {
+  kind: 'guided-device',
+  console: true,
+  surfaces: ['monitor'],
+} as const
 
 const DEVICE_BOUNDARY_SHORT =
   'Console follows the U.S. CARDIOHELP Instructions for Use, Revision 2.3 (January 2025). The VV and VA teaching is not limited to the U.S. labeled indication or duration.'
@@ -229,10 +236,19 @@ function FoundationStageSession({
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const nowFocusRef = useRef<HTMLDivElement>(null)
   const teachingRef = useRef<HTMLDivElement>(null)
+  const [baselineGroupIndex, setBaselineGroupIndex] = useState(0)
   const [pressureSite, setPressureSite] = useState<FoundationPressureSite>('pVen')
 
   const activeIndex = Math.min(progression.index, lesson.steps.length - 1)
   const activeStep = lesson.steps[activeIndex]
+  const mappedPresentation = ecmoTaskPresentation(lesson, activeStep)
+  const normalReading =
+    (sectionId === 'vv-normal-state' || sectionId === 'va-normal-state') &&
+    activeStep.phase === 'recognize'
+  const readingGroups = baselineGroups[supportMode]
+  const baselineGroup = normalReading ? readingGroups[baselineGroupIndex] : undefined
+  const presentation =
+    normalReading && baselineGroup === 'all' ? COMBINED_BASELINE_PRESENTATION : mappedPresentation
   const performedIds = useMemo(() => new Set(progression.performedIds), [progression.performedIds])
   const foundationTask = activeStep.foundationTask
   const focusedStory = foundationTask?.storyProblemId
@@ -250,7 +266,6 @@ function FoundationStageSession({
     !foundationTask?.actionId || savedComparison?.actionId === foundationTask.actionId
   const stepPerformed = performedIds.has(activeStep.id) && comparisonReady
   const focusedMapQuestion =
-    focusedFoundation &&
     (activeStep.interaction.kind === 'prediction' ||
       activeStep.interaction.kind === 'transfer-item') &&
     ecmoMapAnswerTargets(activeStep.interaction.item.id) !== null
@@ -285,10 +300,10 @@ function FoundationStageSession({
   useEffect(() => {
     nowFocusRef.current?.focus({ preventScroll: true })
     scrollTaskPaneToTop(nowFocusRef.current)
-  }, [activeStep.id])
+  }, [activeStep.id, baselineGroup])
 
   useEffect(() => {
-    if (!foundationTask) return
+    if (!foundationTask || presentation) return
     const frame = requestAnimationFrame(() => {
       const target = teachingRef.current?.querySelector<HTMLElement>(
         `[data-active-foundation-block="${foundationTask.block}"]`,
@@ -315,7 +330,7 @@ function FoundationStageSession({
       }
     })
     return () => cancelAnimationFrame(frame)
-  }, [activeStep.id, activeStep.lookIn?.pane, foundationTask])
+  }, [activeStep.id, activeStep.lookIn?.pane, foundationTask, presentation])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -472,7 +487,18 @@ function FoundationStageSession({
       : [...progression.performedIds, stepId]
   }
 
+  const walkingBloodPath = Boolean(presentation && foundationTask?.block === 'blood-path')
+  const walkIndex = walkStops.findIndex((stop) => stop.id === activeWalkStop?.id)
+
   function advance() {
+    if (normalReading && baselineGroupIndex < readingGroups.length - 1) {
+      setBaselineGroupIndex(baselineGroupIndex + 1)
+      return
+    }
+    if (walkingBloodPath && walkIndex < walkStops.length - 1) {
+      setActiveWalkStop(walkStops[walkIndex + 1])
+      return
+    }
     // Guard the actual Continue handler, not just its button. A reset invalidates this task's
     // comparison, even if its step had previously been marked performed.
     if (!comparisonReady) return
@@ -605,7 +631,7 @@ function FoundationStageSession({
    * The Now card
    * ---------------------------------------------------------------- */
 
-  const stepPosition = `Step ${activeStep.ordinal} of ${lesson.steps.length}${focusedFoundation ? '' : ` · ${STAGE_PHASE_LABELS[activeStep.phase]}`}`
+  const stepPosition = `Task ${activeStep.ordinal} of ${lesson.steps.length}`
 
   /*
    * Where this step's work is done, said in the same words the pane carries.
@@ -616,7 +642,8 @@ function FoundationStageSession({
    * matching caption on the pane itself, and `foundationLessonRuntime` refuses at import to author a
    * phase without a location, so the two cannot drift apart.
    */
-  const lookInLine = activeStep.lookIn ? <EcmoLookInLine location={activeStep.lookIn} /> : undefined
+  const lookInLine =
+    !presentation && activeStep.lookIn ? <EcmoLookInLine location={activeStep.lookIn} /> : undefined
   const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
   const canGoBack = previousStep !== undefined && performedIds.has(previousStep.id)
   const lookingBack = activeIndex < progression.furthestEntered
@@ -635,7 +662,7 @@ function FoundationStageSession({
       kicker: stepPosition,
       heading: activeStep.title,
       body: activeStep.instruction,
-      where: lookInLine,
+      where: presentation ? undefined : lookInLine,
       why: activeStep.rationale,
       primaryBeforeContent: Boolean(
         comparisonPlan && !savedComparison && (!focusedStory || storyCommittedId),
@@ -643,13 +670,53 @@ function FoundationStageSession({
       ...(canGoBack && previousStep
         ? {
             back: {
-              label: `Back to ${focusedFoundation ? previousStep.title : STAGE_PHASE_LABELS[previousStep.phase]}`,
+              label: `Back to ${previousStep.title}`,
               onActivate: () => goToStep(activeIndex - 1),
             },
           }
         : {}),
       ...(lookingBack ? { status: LOOKING_BACK } : {}),
     }
+    if (normalReading)
+      return {
+        ...base,
+        body: `Read ${baselineGroupLabels[baselineGroup ?? 'all'].toLowerCase()} against this modeled run's own reference. These values are not universal treatment targets.`,
+        kicker: `${stepPosition} · Signal group ${baselineGroupIndex + 1} of ${readingGroups.length}`,
+        ...(baselineGroupIndex > 0
+          ? {
+              back: {
+                label: 'Back to the previous signal group',
+                onActivate: () => setBaselineGroupIndex(baselineGroupIndex - 1),
+              },
+            }
+          : {}),
+        primary: {
+          label:
+            baselineGroupIndex < readingGroups.length - 1
+              ? `Continue to ${baselineGroupLabels[readingGroups[baselineGroupIndex + 1]]}`
+              : 'Continue',
+          onActivate: advance,
+        },
+      }
+    if (walkingBloodPath)
+      return {
+        ...base,
+        ...(walkIndex > 0
+          ? {
+              back: {
+                label: 'Back along the blood path',
+                onActivate: () => setActiveWalkStop(walkStops[walkIndex - 1]),
+              },
+            }
+          : {}),
+        primary: {
+          label:
+            walkIndex < walkStops.length - 1
+              ? 'Follow blood to the next stop'
+              : 'Continue to the gas path',
+          onActivate: advance,
+        },
+      }
     if (focusedStory && !storyCommittedId)
       return {
         ...base,
@@ -815,12 +882,23 @@ function FoundationStageSession({
                       </>
                     ) : (
                       <>
-                        <p role="status">
-                          {
-                            mapAnswerItem.choices.find((choice) => choice.id === selectedChoiceId)
-                              ?.rationale
-                          }
-                        </p>
+                        <div data-verdict>
+                          <ChoiceReasoningFeedback
+                            choice={
+                              mapAnswerItem.choices.find(
+                                (choice) => choice.id === selectedChoiceId,
+                              )!
+                            }
+                            outcome="stated"
+                            frames={ECMO_VERDICT_FRAMES}
+                            explanation={mapAnswerItem.explanation}
+                            evidenceIds={mapAnswerItem.evidenceIds}
+                          />
+                          <EcmoOtherAnswers
+                            item={mapAnswerItem}
+                            committedChoiceId={selectedChoiceId!}
+                          />
+                        </div>
                         {activeStep.interaction.kind === 'prediction' ? (
                           <button
                             type="button"
@@ -830,7 +908,7 @@ function FoundationStageSession({
                             Continue
                           </button>
                         ) : nextSection ? (
-                          <div className={styles.compactFoundationNavigation}>
+                          <div data-stage-completion>
                             <p>Section worked through.</p>
                             <button
                               type="button"
@@ -971,6 +1049,7 @@ function FoundationStageSession({
 
   const nowBody = (() => {
     const { interaction } = activeStep
+    if (focusedMapQuestion) return null
     if (focusedStory) {
       const choice = focusedStory.item.choices.find(
         (candidate) => candidate.id === storyCommittedId,
@@ -1077,9 +1156,7 @@ function FoundationStageSession({
       const committedChoice = item.choices.find((choice) => choice.id === committedId)
       return (
         <>
-          {mapAnswer && focusedFoundation ? (
-            <p>Answer the question and submit beside the map in the Simulator panel.</p>
-          ) : mapAnswer ? (
+          {mapAnswer && focusedMapQuestion ? null : mapAnswer ? (
             <div className={styles.mapAnswerPrompt} data-map-answer-prompt>
               <p id="prediction-heading" className={styles.mapAnswerStem}>
                 {item.stem}
@@ -1142,7 +1219,9 @@ function FoundationStageSession({
   const activeAlarm = simulation.alarms.find((alarm) => alarm.active && alarm.source === 'device')
   const contextLine: EcmoContextStripLine = {
     mode: supportMode.toUpperCase(),
-    flow: `${simulation.circuit.bloodFlow.toFixed(2)} L/min`,
+    flow: simulation.circuit.flowSensorConnected
+      ? `${simulation.circuit.bloodFlow.toFixed(2)} L/min`
+      : '-- · flow sensor disconnected',
     rpm: `${simulation.device.rpmSetpoint} RPM`,
     sweep: `${simulation.gas.sweepLpm.toFixed(1)} L/min`,
     alarm: activeAlarm
@@ -1152,7 +1231,7 @@ function FoundationStageSession({
 
   const stateCard = (
     <div className={styles.stateCard} data-active-state-variant={activeVariant.id}>
-      <p className={shellStyles.kicker}>The circuit on screen</p>
+      <p className={shellStyles.kicker}>Model reference for this task</p>
       <p className="font-semibold">{activeVariant.label}</p>
       {running ? null : (
         <p data-clock-held>
@@ -1166,8 +1245,8 @@ function FoundationStageSession({
       ) : null}
       {focusedFoundation ? (
         <p>
-          Observation-only display. Use the enabled guided controls in Steps; each comparison starts
-          from the reference and holds its result.
+          Observation-only display. Use the enabled guided controls beside this display; each
+          comparison starts from the reference and holds its result.
         </p>
       ) : (
         <div className={styles.stateControls}>
@@ -1196,10 +1275,10 @@ function FoundationStageSession({
     <>
       {focusedFoundation ? (
         <p className={styles.boundaryNote} data-observation-only>
-          Observation-only CARDIOHELP display · use the guided controls in Steps.
+          Observation-only CARDIOHELP display · use the guided controls for this task.
         </p>
       ) : null}
-      <FitWidthSurface label="CARDIOHELP console, scaled to fit the width of this panel">
+      <FitWidthSurface mode={presentation ? 'actual' : 'fit'} label="CARDIOHELP console">
         <CardiohelpConsole
           state={simulation}
           dispatch={(action) => dispatch({ type: 'SIMULATION', action })}
@@ -1221,8 +1300,9 @@ function FoundationStageSession({
   const simulator = (
     <>
       <EcmoSimulatorSurfaces
-        console={consoleNode}
-        safety={stateCard}
+        console={presentation && !presentation.console ? null : consoleNode}
+        surfaceIds={presentation?.surfaces}
+        safety={focusedFoundation ? stateCard : null}
         state={simulation}
         dispatch={(action) => dispatch({ type: 'SIMULATION', action })}
         controlsEnabled={false}
@@ -1231,6 +1311,7 @@ function FoundationStageSession({
         mapAnswer={mapAnswer}
         circuitMeasurementNote={focusedFoundation ? PART_MEASUREMENT_IDENTITY : undefined}
         // Keep the existing whole-map frame; highlighting follows the active teaching task.
+        circuitAutoScroll={false}
         circuitFit="pane"
         circuitViewPreference={circuitViewPreference}
         locationDisclosure={foundationCircuitLocationDisclosure(
@@ -1241,9 +1322,6 @@ function FoundationStageSession({
         openSurfaces={openSurfaces}
         onToggleSurface={toggleSurface}
       />
-      <p className={styles.boundaryNote} data-device-boundary>
-        {DEVICE_BOUNDARY_SHORT}
-      </p>
     </>
   )
 
@@ -1258,6 +1336,7 @@ function FoundationStageSession({
    * whole panel renders. The choice is per step and is not persisted.
    */
   const teachingPreview =
+    !presentation &&
     !focusedFoundation &&
     !predictionCommitted &&
     (activeStep.phase === 'recognize' || activeStep.phase === 'predict')
@@ -1328,7 +1407,16 @@ function FoundationStageSession({
           predictionCommitted,
           stepId: activeStep.id,
           foundationBlock: foundationTask?.block,
+          focusedPresentation: Boolean(presentation),
+          teachingSections: foundationPresentationSections[sectionId]?.[activeStep.phase]?.filter(
+            (id) =>
+              !normalReading ||
+              baselineGroupIndex === 0 ||
+              (id !== 'vv-topology-heading' && id !== 'va-topology-heading'),
+          ),
+          baselineGroup,
           foundationNavigation:
+            !presentation &&
             foundationTask &&
             activeStep.lookIn?.pane === 'teaching' &&
             activeStep.interaction.kind === 'read'
@@ -1353,7 +1441,11 @@ function FoundationStageSession({
           asks for the narrative by name.
         */}
         {prose === 'full' ? narrative : null}
-        {foundationTask?.block === 'application' ? (
+        {foundationTask?.block === 'application' ||
+        (presentation &&
+          !focusedFoundation &&
+          activeStep.phase === 'predict' &&
+          foundationPresentationSections[sectionId]) ? (
           <section className={teachingStyles.section} data-independent-application>
             <h3 className={teachingStyles.heading}>Apply what you learned</h3>
             <p className="mt-3">
@@ -1373,8 +1465,9 @@ function FoundationStageSession({
             pressureSite={pressureSite}
             onPressureSiteChange={setPressureSite}
             walk={{
-              activeStopId: activeWalkStop?.id,
+              activeStopId: foundationTask?.walkStopId ?? activeWalkStop?.id,
               onStopChange: setActiveWalkStop,
+              navigationInTask: Boolean(presentation),
               onRunComparison: runComparisonBeat,
               activeComparisonId,
               pastPrediction: focusedFoundation || predictionCommitted,
@@ -1394,39 +1487,55 @@ function FoundationStageSession({
     <>
       <div ref={nowFocusRef} tabIndex={-1} data-now-focus data-active-phase={activeStep.phase}>
         <EcmoNowCard model={nowModel}>
-          {nowBody}
-          {comparisonPlan && (!focusedStory || storyCommittedId) ? (
-            <>
-              <FoundationComparison
-                baseline={ecmoFoundationSnapshot(
-                  createFoundationVariantState(comparisonPlan.baselineVariant),
-                )}
-                comparison={savedComparison}
-                actionId={comparisonPlan.guided.id}
-                supportMode={supportMode}
-              />
-              {savedComparison && foundationTask?.actionId ? (
-                <div className={styles.comparisonControls}>
-                  <button
-                    type="button"
-                    className={shellStyles.nowSecondary}
-                    onClick={() => runFocusedComparison(comparisonPlan)}
-                  >
-                    Repeat this comparison
-                  </button>
-                  <button
-                    type="button"
-                    className={shellStyles.nowSecondary}
-                    onClick={() => resetFocusedComparison(comparisonPlan)}
-                  >
-                    Reset this comparison
-                  </button>
-                </div>
-              ) : null}
-            </>
-          ) : null}
+          <ActivityContent
+            presentation={presentation}
+            teaching={teaching}
+            visual={
+              presentation && (presentation.console || presentation.surfaces.length > 0)
+                ? simulator
+                : null
+            }
+          >
+            {nowBody}
+            {comparisonPlan && (!focusedStory || storyCommittedId) ? (
+              <>
+                <p data-active-state-variant={activeVariant.id}>{activeVariant.label}</p>
+                <p data-teaching-run-note>
+                  Teaching comparison: the Run button restores and advances the model. It is not a
+                  CARDIOHELP hardware control.
+                </p>
+                <FoundationComparison
+                  baseline={ecmoFoundationSnapshot(
+                    createFoundationVariantState(comparisonPlan.baselineVariant),
+                  )}
+                  comparison={savedComparison}
+                  actionId={comparisonPlan.guided.id}
+                  supportMode={supportMode}
+                />
+                {savedComparison && foundationTask?.actionId ? (
+                  <div className={styles.comparisonControls}>
+                    <button
+                      type="button"
+                      className={shellStyles.nowSecondary}
+                      onClick={() => runFocusedComparison(comparisonPlan)}
+                    >
+                      Repeat this comparison
+                    </button>
+                    <button
+                      type="button"
+                      className={shellStyles.nowSecondary}
+                      onClick={() => resetFocusedComparison(comparisonPlan)}
+                    >
+                      Reset this comparison
+                    </button>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
+          </ActivityContent>
         </EcmoNowCard>
       </div>
+      {!focusedFoundation ? stateCard : null}
       {/* On the Act step the card carries these; rendering them here too would duplicate every id. */}
       {activeStep.interaction.kind === 'bounded-actions' ? null : boundedActions}
       {!focusedFoundation &&
@@ -1452,31 +1561,37 @@ function FoundationStageSession({
           </p>
         </details>
       ) : null}
-      <StepList
-        lesson={lesson}
-        currentIndex={activeIndex}
-        furthestPerformedIndex={progression.furthestPerformed}
-        performedStepIds={performedIds}
-        predictionCommitted={predictionCommitted}
-        reviewIndex={progression.review}
-        recapFor={(index) => {
-          const step = lesson.steps[index]
-          if (!step) return []
-          if (step.interaction.kind === 'prediction' || step.interaction.kind === 'transfer-item') {
-            const choiceId = progression.choiceByStepId[step.id]
-            const choice = step.interaction.item.choices.find((item) => item.id === choiceId)
-            return choice ? [`You chose: ${choice.label}`] : ['Committed.']
-          }
-          return []
-        }}
-        onSelect={selectStepRow}
-      />
+      <details open={!presentation} data-task-history>
+        <summary>Tasks in this section</summary>
+        <StepList
+          lesson={lesson}
+          currentIndex={activeIndex}
+          furthestPerformedIndex={progression.furthestPerformed}
+          performedStepIds={performedIds}
+          predictionCommitted={predictionCommitted}
+          reviewIndex={progression.review}
+          recapFor={(index) => {
+            const step = lesson.steps[index]
+            if (!step) return []
+            if (
+              step.interaction.kind === 'prediction' ||
+              step.interaction.kind === 'transfer-item'
+            ) {
+              const choiceId = progression.choiceByStepId[step.id]
+              const choice = step.interaction.item.choices.find((item) => item.id === choiceId)
+              return choice ? [`You chose: ${choice.label}`] : ['Committed.']
+            }
+            return []
+          }}
+          onSelect={selectStepRow}
+        />
+      </details>
       {predictionCommitted || focusedFoundation ? null : (
         <p className={shellStyles.nowStatus} data-phase-lock-note>
           The later steps unlock when you commit your prediction.
         </p>
       )}
-      {finished ? (
+      {finished && !focusedMapQuestion ? (
         <section
           className={styles.completion}
           role="status"
@@ -1505,7 +1620,7 @@ function FoundationStageSession({
   const header = (
     <EcmoSectionHeader
       breadcrumb={{ href: cardiohelpEcmoNavBase, label: 'ECMO Management' }}
-      kicker={`${supportMode.toUpperCase()} track · Section ${lesson.index + 1} of ${lesson.total} · ${lesson.minutes} min`}
+      kicker={`${focusedFoundation ? 'Shared foundations · ' : ''}${supportMode.toUpperCase()} track · Section ${lesson.index + 1} of ${lesson.total} · ${lesson.minutes} min`}
       title={lesson.title}
       meta={trackIsFixed ? [FIXED_PATHWAY_COPY[supportMode]] : undefined}
       sectionsControl={
@@ -1570,18 +1685,27 @@ function FoundationStageSession({
     >
       <StageSourcesScope>
         <StageLayout
+          presentation={presentation}
           stageId={activeStep.id}
           label={`${supportMode.toUpperCase()} foundation section`}
           supportMode={supportMode}
           fixedPathway={trackIsFixed ? supportMode : undefined}
           header={header}
-          contextStrip={<EcmoContextStrip line={contextLine} badge="Simulated values" />}
+          contextStrip={
+            presentation?.kind === 'concept' ||
+            presentation?.kind === 'comparison-lab' ? undefined : (
+              <EcmoContextStrip line={contextLine} badge="Simulated values" />
+            )
+          }
           simulator={simulator}
           teaching={teaching}
           task={task}
           compactPane={compactPane}
           footer={
             <>
+              <p className={styles.boundaryNote} data-device-boundary>
+                {DEVICE_BOUNDARY_SHORT}
+              </p>
               <p className={styles.footerLine}>
                 Professional education only. Not a clinical device or a patient-specific guide;
                 every value is simulated. Follow current manufacturer instructions and local

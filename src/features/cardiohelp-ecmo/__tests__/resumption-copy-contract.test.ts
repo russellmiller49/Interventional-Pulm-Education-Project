@@ -326,7 +326,8 @@ describe('what the module does still teach', () => {
     // in September 2026 replaced "a bounded simulation abstraction" with "a deliberate
     // simplification" — same hedge, without the module's internal vocabulary — so this now pins the
     // substance that follows it rather than the label alone.
-    expect(sourceOf('src/features/cardiohelp-ecmo/components/EcmoCircuit3D.tsx')).toMatch(
+    // The same control now renders outside the optional 3D launch gate.
+    expect(sourceOf('src/features/cardiohelp-ecmo/components/EcmoCircuitControls.tsx')).toMatch(
       /deliberate simplification\. It stands in for the device- and program-specific/i,
     )
   })

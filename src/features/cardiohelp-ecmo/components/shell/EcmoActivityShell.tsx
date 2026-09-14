@@ -22,6 +22,7 @@ export function EcmoActivityShell({
   contextStrip,
   footer,
   children,
+  flowing = false,
 }: {
   readonly section: EcmoShellSection
   /** The current step or stage id, rewritten on every progression change. */
@@ -31,6 +32,7 @@ export function EcmoActivityShell({
   readonly contextStrip?: ReactNode
   readonly footer?: ReactNode
   readonly children: ReactNode
+  readonly flowing?: boolean
 }) {
   return (
     <section
@@ -38,6 +40,7 @@ export function EcmoActivityShell({
       data-critical-care-activity-shell="true"
       data-ecmo-shell={section}
       data-stage={stage}
+      data-flowing={flowing || undefined}
       aria-label={label}
     >
       <div className={styles.header}>{header}</div>

@@ -192,14 +192,15 @@ describe('answering on the circuit', () => {
       `[data-map-answer] input[value="${choiceId}"]`,
     ) as HTMLInputElement
 
-  it('puts the choices on the map and not in the task pane', () => {
+  it('puts one answer group beside the map within the integrated task', () => {
     const { container } = mountAtPredict()
     const fieldset = container.querySelector('[data-map-answer]')
     expect(fieldset).not.toBeNull()
-    // On the drawing: inside the circuit panel, not in the column that used to list them.
+    // The map owns the answer form; the flowing task wraps both, without a second form.
     expect(fieldset?.closest('#cardiohelp-circuit-panel')).not.toBeNull()
-    expect(fieldset?.closest('[data-pane="task"]')).toBeNull()
-    expect(container.querySelector('[data-pane="task"] [data-prediction-choices]')).toBeNull()
+    expect(fieldset?.closest('[data-ecmo-flow]')).not.toBeNull()
+    expect(container.querySelectorAll('[data-map-answer]')).toHaveLength(1)
+    expect(container.querySelectorAll('[data-prediction-choices]')).toHaveLength(1)
     // The question is still asked where the learner is working, and it says where to answer.
     const prompt = container.querySelector('[data-map-question]')
     expect(prompt?.textContent).toContain(item().stem)

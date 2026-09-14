@@ -85,7 +85,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Follow the blood',
       block: 'blood-path',
       instruction:
-        'Use Next in the Circuit walk to follow blood from drainage through the pump and membrane lung to return. The same segment is marked on the existing circuit map.',
+        'Follow blood from drainage through the pump and membrane lung to return. The same segment is marked on the existing circuit map.',
       lookIn: teaching('Circuit walk'),
     },
     {
@@ -103,7 +103,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Find the pressure measurements',
       block: 'pressure-sites',
       instruction:
-        'Select each pressure label in the Teaching panel. Its location is named beside the reading and marked on the map. Finish with the derived pressure difference, ΔP.',
+        'Select each pressure label beside the map. Its location is named beside the reading and marked on the map. Finish with the derived pressure difference, ΔP.',
       lookIn: teaching('Pressure measurements'),
     },
     {

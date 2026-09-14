@@ -44,9 +44,9 @@ export function CardiohelpLearnLanding({ supportMode }: { readonly supportMode: 
         </p>
         <h1 className="text-2xl font-semibold">Learn</h1>
         <p className="max-w-3xl text-base leading-7">
-          Every section is read on the same simulated circuit: first what the support stands in for
-          and where each reading is taken, then one failure at a time, then the whole track in one
-          case. Move in order, or open any section from the map below.
+          Start with what extracorporeal support provides, follow the circuit, and compare its
+          controls. Then read a stable run, work through individual problems, and apply the selected
+          track in a case. Move in order, or open any section from the map below.
         </p>
         {increment ? (
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground" data-track-increment>

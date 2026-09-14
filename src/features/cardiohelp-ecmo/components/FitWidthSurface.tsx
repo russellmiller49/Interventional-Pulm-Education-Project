@@ -180,6 +180,13 @@ export function FitWidthSurface({
   return (
     <div
       ref={outerRef}
+      tabIndex={mode === 'actual' ? 0 : undefined}
+      role={mode === 'actual' ? 'region' : undefined}
+      aria-label={
+        mode === 'actual'
+          ? 'Console viewport. Scroll horizontally to inspect all controls.'
+          : undefined
+      }
       className={[styles.fitSurface, className].filter(Boolean).join(' ')}
       style={outerStyle}
       data-fit-width-surface=""

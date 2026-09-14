@@ -1,3 +1,4 @@
+import { cardiohelpLearnLessonByScenarioId } from '../content/learnLessons'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
@@ -576,7 +577,9 @@ describe('the way back on a drill', () => {
     expect(committedBefore.committed).toBe(true)
     const rpmBefore = latestState().device.rpmSetpoint
 
-    expect(backControl()?.textContent).toContain('Back to Predict')
+    expect(backControl()?.textContent).toContain(
+      `Back to ${cardiohelpLearnLessonByScenarioId.get('preload-drainage-collapse')?.steps.find((step) => step.predictionScenarioId)?.title}`,
+    )
     fireEvent.click(backControl()!)
 
     // The verdict is on screen again, the commitment is untouched, and the engine has not moved.

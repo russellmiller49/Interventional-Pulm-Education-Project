@@ -29,6 +29,7 @@ export interface EcmoWalkPanelProps {
   readonly activeStopId?: EcmoCircuitWalkStopId
   readonly onStopChange?: (stop: EcmoCircuitWalkStop) => void
   readonly onRunComparison?: (beat: EcmoWalkComparisonBeat) => void
+  readonly navigationInTask?: boolean
   readonly activeComparisonId?: string | null
   /**
    * Whether the learner has committed the section's prediction.
@@ -47,6 +48,7 @@ export interface EcmoCircuitWalkNavigation {
   readonly walkLength: number
   readonly pastPrediction: boolean
   readonly onRunComparison?: (beat: EcmoWalkComparisonBeat) => void
+  readonly navigationInTask?: boolean
   readonly activeComparisonId?: string | null
 }
 
@@ -75,6 +77,7 @@ export function useEcmoCircuitWalkNavigation(
 
   return {
     stops,
+    navigationInTask: walk?.navigationInTask,
     activeStopId,
     onStopChange,
     /*

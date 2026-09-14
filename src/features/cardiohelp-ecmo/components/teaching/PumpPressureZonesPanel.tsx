@@ -102,7 +102,7 @@ export function PumpPressureZonesPanel({
               more suction.
             </p>
             <p className="mt-2 text-sm leading-6">
-              Use the guided control in Steps. The console is an observation display in this lesson.
+              Use the teaching Run control for this task. The saved readings come from the model.
             </p>
             <p className="mt-2 text-sm leading-6">
               This reference does not model drainage collapse or chatter at the offered speeds. A
@@ -117,9 +117,8 @@ export function PumpPressureZonesPanel({
               Read the saved comparison
             </h3>
             <p className="mt-3 text-sm leading-6">
-              Compare flow and pVen in the retained table in Steps, then read the pressures after
-              the pump. A negative Change for pVen means that drainage pressure became more
-              negative.
+              Compare flow and pVen in the retained table below, then read the pressures after the
+              pump. A negative Change for pVen means that drainage pressure became more negative.
             </p>
             <p className="mt-2 text-sm leading-6">
               ΔP also depends on flow through the oxygenator. A change in ΔP after changing speed is

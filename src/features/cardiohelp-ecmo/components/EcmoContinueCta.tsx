@@ -47,7 +47,13 @@ export function EcmoContinueCta({ supportMode }: { readonly supportMode: Support
       className="inline-flex min-h-12 max-w-sm items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"
     >
       <span>
-        Continue — {next.section.title}
+        {progress.lastVisited ||
+        progress.completedFoundationSectionIds?.length ||
+        progress.completedLabs.length ||
+        progress.completedLearnLessonIds.length
+          ? 'Continue'
+          : 'Start'}{' '}
+        — {next.section.title}
         <span className="block text-xs font-medium opacity-90">
           Section {next.index + 1} of {next.total} · {next.section.minutes} minutes
         </span>

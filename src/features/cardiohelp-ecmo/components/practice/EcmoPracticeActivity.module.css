@@ -402,3 +402,53 @@
     position: static;
   }
 }
+
+/* The case stage changes presentation, never the session or the state machine. */
+.flowBody.body {
+  height: auto;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+.flowBody .caseColumn,
+.flowBody .simulatorColumn {
+  overflow: visible;
+  min-width: 0;
+}
+.flowBody .nowCardHolder,
+.flowBody [data-now-card] {
+  position: static;
+}
+.flowBody [data-now-card] {
+  padding: clamp(1rem, 2vw, 1.5rem);
+}
+.flowBody button[data-now-primary] {
+  color: #04211f;
+}
+.flowBody[data-case-stage='brief'],
+.flowBody[data-case-stage='plan'] {
+  max-width: 1000px;
+}
+.flowBody[data-case-stage='debrief'] {
+  max-width: 1200px;
+}
+.flowBody [data-case-column] {
+  scroll-margin-top: calc(var(--site-header-height, 5rem) + 1rem);
+}
+.workflowMap summary {
+  min-height: 44px;
+  padding-block: 0.7rem;
+  cursor: pointer;
+}
+@media (min-width: 1200px) {
+  .flowBody[data-case-stage='manage'],
+  .flowBody[data-case-stage='reassess'] {
+    grid-template-columns: minmax(360px, 0.7fr) minmax(0, 1.3fr);
+  }
+}
+@media (max-width: 600px) {
+  .flowBody.body {
+    padding: 0.5rem;
+  }
+}

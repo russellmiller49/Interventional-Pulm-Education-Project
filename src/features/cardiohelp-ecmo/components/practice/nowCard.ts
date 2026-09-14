@@ -59,7 +59,7 @@ export function resolveNowCard(input: NowCardInput): NowCardModel {
          * ("it" for the panel, "it" for the circuit) and a spatial claim about a pane that may not
          * be beside anything at a narrow width.
          */
-        body: `${input.setting ? `${input.setting}. ` : ''}Read the patient picture and the data shown; nothing needs a decision yet. The circuit is on screen too, showing where this patient's support currently stands.`,
+        body: `${input.setting ? `${input.setting}. ` : ''}Read the clinical brief and its measurements, then begin the case to record your plan. The working simulation opens when you reach management.`,
         primary: { label: 'Begin case', onActivate: actions.beginCase },
       }
     case 'plan':

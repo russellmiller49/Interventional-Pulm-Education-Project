@@ -1,5 +1,5 @@
 import { reachFoundationStep } from '../test-support/foundationJourney'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, waitFor } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
@@ -396,7 +396,7 @@ describe('what the reviewers reproduced, pinned', () => {
     )
     const stops = ecmoCircuitWalkStopsForSection('circuit-flow-path')
     for (let index = 1; index < stops.length; index += 1) {
-      fireEvent.click(document.querySelector('[data-walk-next]')!)
+      fireEvent.click(document.querySelector('[data-now-primary]')!)
     }
     expect(markedSegments()).toEqual(['post-membrane', 'return'])
     const geometry = circuitMapGeometry('va')
@@ -451,7 +451,7 @@ describe('the circuit walk, marked on the real map', () => {
     mountSection('circuit-flow-path')
     const stops = ecmoCircuitWalkStopsForSection('circuit-flow-path')
     for (let index = 1; index < stops.length; index += 1) {
-      fireEvent.click(document.querySelector('[data-walk-next]')!)
+      fireEvent.click(document.querySelector('[data-now-primary]')!)
       expect(`${stops[index].id}: ${markedSegments().join(',')}`).toBe(
         `${stops[index].id}: ${ecmoWalkStopSegmentIds(stops[index]).join(',')}`,
       )
@@ -505,10 +505,10 @@ describe('the circuit walk, marked on the real map', () => {
     fireEvent.click(document.getElementById('cardiohelp-bedside-view-tab')!)
     expect(mapTab().getAttribute('aria-selected')).toBe('false')
     // Moving the walk within the step does not drag the tab back.
-    fireEvent.click(document.querySelector('[data-walk-next]')!)
+    fireEvent.click(document.querySelector('[data-now-primary]')!)
     expect(mapTab().getAttribute('aria-selected')).toBe('false')
     // Entering the next step applies the step's own view again.
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    reachFoundationStep('circuit-flow-path', 'gas-path')
     expect(mapTab().getAttribute('aria-selected')).toBe('true')
   })
 
@@ -521,7 +521,7 @@ describe('the circuit walk, marked on the real map', () => {
     zones.unmount()
 
     mountSection('why-extracorporeal-support')
-    expect(mapTab().getAttribute('aria-selected')).toBe('false')
+    expect(document.querySelector('#cardiohelp-circuit-panel')).toBeNull()
     expect(document.querySelector('[data-map-emphasis]')).toBeNull()
   })
 })
