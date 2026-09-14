@@ -1,3 +1,4 @@
+import { mcsPresentationTitle } from '../content/casePresentation'
 /**
  * M5 — what the workbench resolves on arrival, and what changes when the learner moves.
  *
@@ -77,7 +78,9 @@ describe('MCS M5 — workbench initialization and route resolution', () => {
       const scenario = mcsPracticeScenarios.find((candidate) => candidate.id === caseId)!
       await renderWorkbench({ section: 'practice', initialActivityId: caseId })
 
-      expect(screen.getAllByRole('heading', { name: scenario.title }).length).toBeGreaterThan(0)
+      expect(
+        screen.getAllByRole('heading', { name: mcsPresentationTitle(scenario) }).length,
+      ).toBeGreaterThan(0)
       expect(deviceTab(scenario.device)).toHaveAttribute('aria-pressed', 'true')
       expect(practiceRailButton(scenario.shortTitle)).toHaveAttribute('aria-current', 'true')
     },
@@ -89,7 +92,9 @@ describe('MCS M5 — workbench initialization and route resolution', () => {
       const capstone = mcsCapstoneScenarios.find((candidate) => candidate.id === capstoneId)!
       await renderWorkbench({ section: 'assess', initialActivityId: capstoneId })
 
-      expect(screen.getAllByRole('heading', { name: capstone.title }).length).toBeGreaterThan(0)
+      expect(
+        screen.getAllByRole('heading', { name: mcsPresentationTitle(capstone) }).length,
+      ).toBeGreaterThan(0)
       expect(deviceTab(capstone.device)).toHaveAttribute('aria-pressed', 'true')
     },
   )
@@ -97,9 +102,7 @@ describe('MCS M5 — workbench initialization and route resolution', () => {
   it('falls back to Mechanism Studio when the practice case id is unknown', async () => {
     await renderWorkbench({ section: 'practice', initialActivityId: 'IABP-99' })
 
-    expect(
-      screen.getByRole('region', { name: 'Mechanism Studio instructions' }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Choose your practice' })).toBeInTheDocument()
     expect(getCriticalCareResumeTarget(window.localStorage)).toBeNull()
   })
 
@@ -107,9 +110,7 @@ describe('MCS M5 — workbench initialization and route resolution', () => {
     await renderWorkbench({ section: 'assess', initialActivityId: 'CAP-NOPE-01' })
 
     // No scenario is loaded, so the workspace is the studio rather than a fabricated challenge.
-    expect(
-      screen.getByRole('region', { name: 'Mechanism Studio instructions' }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Choose your practice' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Open challenge' })).toBeEnabled()
     expect(getCriticalCareResumeTarget(window.localStorage)).toBeNull()
   })
@@ -127,7 +128,9 @@ describe('MCS M5 — workbench initialization and route resolution', () => {
       initialDevice: 'iabp',
     })
 
-    expect(screen.getAllByRole('heading', { name: scenario.title }).length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByRole('heading', { name: mcsPresentationTitle(scenario) }).length,
+    ).toBeGreaterThan(0)
     expect(deviceTab('lvad')).toHaveAttribute('aria-pressed', 'true')
     expect(deviceTab('iabp')).toHaveAttribute('aria-pressed', 'false')
   })
@@ -205,18 +208,24 @@ describe('MCS M5 — device and activity transitions', () => {
       selectDeviceTrack(device)
 
       const capstone = mcsCapstoneScenarios.find((candidate) => candidate.id === capstoneId)!
-      expect(screen.getAllByRole('heading', { name: capstone.title }).length).toBeGreaterThan(0)
+      expect(
+        screen.getAllByRole('heading', { name: mcsPresentationTitle(capstone) }).length,
+      ).toBeGreaterThan(0)
     },
   )
 
   it('drops the previous patient case when the Practice device changes', async () => {
     const scenario = mcsPracticeScenarios.find((candidate) => candidate.id === 'IMP-02')!
     await renderWorkbench({ section: 'practice', initialActivityId: 'IMP-02' })
-    expect(screen.getAllByRole('heading', { name: scenario.title }).length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByRole('heading', { name: mcsPresentationTitle(scenario) }).length,
+    ).toBeGreaterThan(0)
 
     selectDeviceTrack('lvad')
 
-    expect(screen.queryByRole('heading', { name: scenario.title })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: mcsPresentationTitle(scenario) }),
+    ).not.toBeInTheDocument()
     expect(screen.queryByText(scenario.presentation)).not.toBeInTheDocument()
   })
 })

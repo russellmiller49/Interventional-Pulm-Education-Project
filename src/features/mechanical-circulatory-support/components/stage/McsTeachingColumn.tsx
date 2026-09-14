@@ -87,7 +87,7 @@ export function McsTeachingColumn({
             </p>
             <p data-flow-account-note>{contract.teaching.flowAccountNote}</p>
             <p>
-              Use the captured results in Steps to establish what actually changed in this run.
+              Use the captured results in this task to establish what actually changed in this run.
               Expected direction is a hypothesis; unchanged values remain valid observations.
             </p>
             <div data-causal-ladder-summary>

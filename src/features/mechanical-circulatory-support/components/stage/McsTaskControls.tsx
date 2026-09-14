@@ -24,15 +24,18 @@ export function McsTaskControls({
   if (!controls.length)
     return (
       <p data-task-controls-locked>
-        No device or patient adjustment is part of this task. Use the Read or Select buttons in
-        Steps when requested.
+        No device or patient adjustment is part of this task. Use the Read or Select buttons in this
+        task when requested.
       </p>
     )
   return (
     <section className={styles.block} data-task-controls aria-label="Controls for this task">
       {controls.map((control) => {
         const condition =
-          control.id === 'control:patient-svr' || control.id === 'control:impella-left-position'
+          control.id === 'control:patient-svr' ||
+          control.id === 'control:patient-rv-contractility' ||
+          control.id === 'control:lvad-thrombosis' ||
+          control.id === 'control:impella-left-position'
         const range = (
           label: string,
           value: number,
@@ -62,6 +65,72 @@ export function McsTaskControls({
             <p className={styles.kicker}>
               {condition ? 'Simulated patient condition / fault' : 'Device setting'}
             </p>
+            {control.id === 'control:patient-rv-contractility'
+              ? range(
+                  'RV contractility',
+                  state.patient.rightVentricularContractility,
+                  0.2,
+                  1.4,
+                  0.02,
+                  'relative',
+                  (value) => ({
+                    type: 'SET_PATIENT_CONTROL',
+                    control: 'rightVentricularContractility',
+                    value,
+                  }),
+                )
+              : null}
+            {control.id === 'control:impella-right-enable' && state.device.kind === 'impella' ? (
+              <label>
+                Right-sided support
+                <select
+                  aria-label="Right-sided Impella configuration"
+                  value={state.device.right.enabled ? 'rp' : 'off'}
+                  disabled={
+                    disabled ||
+                    !isMcsLearningActionPermitted(
+                      state,
+                      { type: 'SET_IMPELLA_CONFIGURATION', control: 'rightEnabled', value: true },
+                      allowedActionIds,
+                    )
+                  }
+                  onChange={(event) =>
+                    dispatch({
+                      type: 'SET_IMPELLA_CONFIGURATION',
+                      control: 'rightEnabled',
+                      value: event.target.value === 'rp',
+                    })
+                  }
+                >
+                  <option value="off">Off</option>
+                  <option value="rp">Impella RP</option>
+                </select>
+              </label>
+            ) : null}
+            {control.id === 'control:lvad-thrombosis' && state.device.kind === 'lvad' ? (
+              <label>
+                <input
+                  type="checkbox"
+                  checked={state.device.suspectedPumpThrombosis}
+                  disabled={
+                    disabled ||
+                    !isMcsLearningActionPermitted(
+                      state,
+                      { type: 'SET_LVAD_CONTROL', control: 'suspectedPumpThrombosis', value: true },
+                      allowedActionIds,
+                    )
+                  }
+                  onChange={(event) =>
+                    dispatch({
+                      type: 'SET_LVAD_CONTROL',
+                      control: 'suspectedPumpThrombosis',
+                      value: event.target.checked,
+                    })
+                  }
+                />
+                High-power / thrombosis pattern
+              </label>
+            ) : null}
             {control.id === 'control:patient-svr'
               ? range(
                   'SVR',
@@ -167,9 +236,9 @@ export function McsTaskControls({
         )
       })}
       <p className={styles.footnote}>
-        Each setting change repeats the observation from this task’s captured baseline for eight
-        simulated seconds. Other settings stay fixed. The interval is a teaching choice, not a
-        clinical stabilization time.
+        These are the permitted controls for this task. Patient properties and fault selectors
+        create experimental conditions; they are not bedside treatments. Captures use the session
+        model time, not a clinical stabilization interval.
       </p>
     </section>
   )

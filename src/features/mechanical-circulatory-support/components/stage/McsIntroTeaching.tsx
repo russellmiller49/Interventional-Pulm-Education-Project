@@ -1,6 +1,9 @@
+import { McsPumpCutaway } from './McsPumpCutaway'
+import { useState } from 'react'
+import { McsPathwayTour, McsCirculationSketch } from './McsPathwayTour'
 import type { McsIntroduction } from '../../content/introductorySteps'
 import type { McsSimulationState } from '../../engine/types'
-import { activePathways, mcsComparisonPathways } from '../teaching/selectors'
+import { activePathways } from '../teaching/selectors'
 import { PathwayGraphic } from '../teaching/shared'
 import { McsCapturedResults } from './McsCapturedResults'
 import styles from './mcs-stage.module.css'
@@ -14,6 +17,7 @@ export function McsIntroTeaching({
   state: McsSimulationState
   before: McsSimulationState | null
 }) {
+  const [parameter, setParameter] = useState(0)
   return (
     <section className={styles.block} data-intro-teaching={introduction.id}>
       <p className={styles.kicker}>Concept and guided example · not independent credit</p>
@@ -21,6 +25,7 @@ export function McsIntroTeaching({
       {introduction.paragraphs.map((text) => (
         <p key={text}>{text}</p>
       ))}
+      {introduction.id === 'orientation' ? <McsCirculationSketch /> : null}
       {introduction.visual === 'signals' ? (
         <dl className={styles.definitionList} data-measurement-tour>
           <dt>Pressure · mm Hg</dt>
@@ -48,57 +53,92 @@ export function McsIntroTeaching({
           </dd>
         </dl>
       ) : null}
-      {introduction.visual === 'pathways' ? (
-        <div data-annotated-pathway-comparison>
-          <PathwayGraphic pathway={mcsComparisonPathways.iabp} />
-          <PathwayGraphic pathway={mcsComparisonPathways.impellaLeft} />
-          <PathwayGraphic pathway={mcsComparisonPathways.lvad} />
-          <p>
-            Parallel flow account: concurrent native forward flow + left-pump flow − represented
-            recirculation = modeled effective systemic flow, within the engine’s numeric clamps.
-            These teaching quantities are not independently measured clinical components.
-          </p>
-        </div>
-      ) : null}
+      {introduction.visual === 'pathways' ? <McsPathwayTour /> : null}
+      {introduction.id === 'inlet-outlet' ? <McsPumpCutaway /> : null}
       {introduction.visual === 'impella'
         ? activePathways(state).map((pathway) => (
             <PathwayGraphic key={pathway.id} pathway={pathway} />
           ))
         : null}
       {introduction.visual === 'lvad' ? (
-        <dl className={styles.definitionList} data-controller-tour>
-          <dt>Speed · {state.device.kind === 'lvad' ? state.device.speedRpm : '—'} rpm</dt>
-          <dd>The prescribed rotation setting. It does not set an invariant flow.</dd>
-          <dt>Estimated pump flow · {state.metrics.deviceFlowLMin.toFixed(2)} L/min</dt>
-          <dd>
-            In this model, generated from speed and loading. Clinical estimation methods depend on
-            the device; this is not a flow-probe reading.
-          </dd>
-          <dt>Electrical pump power · {state.metrics.pumpPowerW?.toFixed(1)} W</dt>
-          <dd>
-            Represents pump electrical demand. Here it is derived from modeled flow, speed and the
-            power-fault term.
-          </dd>
-          <dt>Pulsatility index · {state.metrics.pulsatilityIndex?.toFixed(1)}</dt>
-          <dd>
-            A unitless controller parameter related to pulsatility. Here it is an authored function
-            of native flow, pump flow and preload, not a measured clinical PI or flow-estimator
-            input.
-          </dd>
-          <dt>Separate patient assessment</dt>
-          <dd>
-            Blood pressure, filling pressures, echocardiography and clinical perfusion findings
-            supply information beyond the controller. Modeled LV volume (mL) illustrates unloading;
-            it is neither pressure nor a bedside volume measurement.
-          </dd>
-          <dt>
-            Calculated cardiac power output · {state.metrics.cardiacPowerOutputW.toFixed(2)} W
-          </dt>
-          <dd>
-            MAP × modeled effective systemic flow / 451. It is a pressure–flow product, distinct
-            from pump electrical power and oxygen delivery.
-          </dd>
-        </dl>
+        <div data-controller-tour>
+          <div role="group" aria-label="Controller quantity tour">
+            {[
+              'Speed',
+              'Estimated pump flow',
+              'Electrical pump power',
+              'Pulsatility index',
+              'Patient assessment',
+              'Cardiac power output',
+            ].map((label, index) => (
+              <button
+                type="button"
+                key={label}
+                aria-pressed={parameter === index}
+                onClick={() => setParameter(index)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <dl className={styles.definitionList} data-parameter={parameter}>
+            {parameter === 0 ? (
+              <>
+                <dt>Speed · {state.device.kind === 'lvad' ? state.device.speedRpm : '—'} rpm</dt>
+                <dd>The prescribed rotation setting. It does not set an invariant flow.</dd>
+              </>
+            ) : null}
+            {parameter === 1 ? (
+              <>
+                <dt>Estimated pump flow · {state.metrics.deviceFlowLMin.toFixed(2)} L/min</dt>
+                <dd>
+                  In this model, generated from speed and loading. Clinical estimation methods
+                  depend on the device; this is not a flow-probe reading.
+                </dd>
+              </>
+            ) : null}
+            {parameter === 2 ? (
+              <>
+                <dt>Electrical pump power · {state.metrics.pumpPowerW?.toFixed(1)} W</dt>
+                <dd>
+                  Represents pump electrical demand. Here it is derived from modeled flow, speed and
+                  the power-fault term.
+                </dd>
+              </>
+            ) : null}
+            {parameter === 3 ? (
+              <>
+                <dt>Pulsatility index · {state.metrics.pulsatilityIndex?.toFixed(1)}</dt>
+                <dd>
+                  A unitless controller parameter related to pulsatility. Here it is an authored
+                  function of native flow, pump flow and preload, not a measured clinical PI or
+                  flow-estimator input.
+                </dd>
+              </>
+            ) : null}
+            {parameter === 4 ? (
+              <>
+                <dt>Separate patient assessment</dt>
+                <dd>
+                  Blood pressure, filling pressures, echocardiography and clinical perfusion
+                  findings supply information beyond the controller. Modeled LV volume (mL)
+                  illustrates unloading; it is neither pressure nor a bedside volume measurement.
+                </dd>
+              </>
+            ) : null}
+            {parameter === 5 ? (
+              <>
+                <dt>
+                  Calculated cardiac power output · {state.metrics.cardiacPowerOutputW.toFixed(2)} W
+                </dt>
+                <dd>
+                  MAP × modeled effective systemic flow / 451. It is a pressure–flow product,
+                  distinct from pump electrical power and oxygen delivery.
+                </dd>
+              </>
+            ) : null}
+          </dl>
+        </div>
       ) : null}
       {before &&
       (introduction.id === 'unloading-example' || introduction.id === 'afterload-example') ? (

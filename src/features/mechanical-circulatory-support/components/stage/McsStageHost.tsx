@@ -80,6 +80,10 @@ import {
   MCS_OBSERVATION_SECONDS,
 } from '../../engine/learningSession'
 import styles from './mcs-stage.module.css'
+import flowStyles from './mcs-flow.module.css'
+import { McsPrerequisiteReference, mcsHasPrerequisiteReference } from './McsPrerequisiteReference'
+import { McsTaskPresentation } from './McsTaskPresentation'
+import { MCS_TASK_PRESENTATIONS_ENABLED } from '../../content/taskPresentation'
 
 /**
  * One section of the mechanical-circulatory-support pathway on the lesson stage.
@@ -244,6 +248,9 @@ function McsStageSession({
   const pathway = mcsPathway()
   const nextSection = nextPathwaySection(pathway, sectionId)
 
+  const [referenceViewed, setReferenceViewed] = useState(
+    !MCS_TASK_PRESENTATIONS_ENABLED || !mcsHasPrerequisiteReference(sectionId),
+  )
   const [liveState, sendModel] = useReducer(sessionReducer, lesson, initialSession)
   const [playbackRunning, setPlaybackRunning] = useState(!lesson.introductory)
   const [progression, setProgression] = useState<Progression>(() => ({
@@ -362,7 +369,7 @@ function McsStageSession({
    * ---------------------------------------------------------------- */
 
   useEffect(() => {
-    if (!playbackRunning || lookingBack) return
+    if (!playbackRunning || lookingBack || !referenceViewed) return
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
     const intervalMs = reducedMotion ? 500 : 250
     const timer = window.setInterval(
@@ -370,7 +377,7 @@ function McsStageSession({
       intervalMs,
     )
     return () => window.clearInterval(timer)
-  }, [playbackRunning, lookingBack])
+  }, [playbackRunning, lookingBack, referenceViewed])
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -428,7 +435,7 @@ function McsStageSession({
       nextState = mcsReducer(liveState, { type: 'CLEAR_ACTION_LOG' })
     }
     if (nextState !== liveState) sendModel({ type: 'RESTORE_TEACHING_STATE', state: nextState })
-    if (lesson.introductory) setPlaybackRunning(false)
+    if (lesson.introductory || nextStep.interaction.kind === 'observe') setPlaybackRunning(false)
     const newTask =
       enteringTransfer ||
       nextStep.setupOnEntry !== undefined ||
@@ -662,6 +669,8 @@ function McsStageSession({
   const emphasis: CirculationMapEmphasis | null = (() => {
     // While a place is the question, nothing on the map is lit: a lit stop is a hint.
     if (identifyOnMap && !identifyCommitted) return null
+    if (activeStep.interaction.kind === 'transfer' && !committedChoiceId) return null
+    if (sectionId === 'mcs-device-selection-integration' && !predictionCommitted) return null
     if (litStopIds.length === 0) return null
     const stops = litStopIds.map((id) => mcsSpineStop(id))
     const segmentIds = stops.flatMap((stop) => stop.segmentIds)
@@ -1081,7 +1090,7 @@ function McsStageSession({
                 <strong>{target.label}.</strong>{' '}
                 {target.location === 'guided-actions'
                   ? 'Use the button below.'
-                  : 'It is in the Controls, in the Simulator panel, and it is highlighted.'}
+                  : 'Use the highlighted control beside the current observations.'}
               </p>
             ) : null}
             {guidedActionButtons(
@@ -1523,16 +1532,16 @@ function McsStageSession({
   const simulator = (
     <McsSimulatorPane
       lesson={lesson}
+      presentation={MCS_TASK_PRESENTATIONS_ENABLED ? activeStep.presentation : undefined}
       state={state}
       dispatch={dispatch}
       predictionCommitted={
-        predictionCommitted &&
-        !(lesson.introductory && activeStep.interaction.kind === 'transfer' && !committedChoiceId)
+        predictionCommitted && !(activeStep.interaction.kind === 'transfer' && !committedChoiceId)
       }
       teachingAvailable={teachingStep || walking}
       timingIdentification={pendingTimingIdentification}
       allowedActionIds={teachingStep ? [] : allowedActionIds}
-      focusedControls={lesson.introductory}
+      focusedControls={MCS_TASK_PRESENTATIONS_ENABLED || lesson.introductory}
       flowAccountWithheld={flowAccountWithheld}
       emphasis={emphasis}
       mapAnswer={mapAnswer}
@@ -1544,6 +1553,7 @@ function McsStageSession({
   )
 
   const teachingPreview =
+    !MCS_TASK_PRESENTATIONS_ENABLED &&
     !lesson.introductory &&
     !predictionCommitted &&
     (activeStep.phase === 'recognize' || activeStep.phase === 'predict')
@@ -1582,15 +1592,13 @@ function McsStageSession({
             before={capturedBefore}
           />
         ) : pendingTimingIdentification ||
-          (lesson.introductory &&
-            activeStep.interaction.kind === 'transfer' &&
-            !committedChoiceId) ? (
+          (activeStep.interaction.kind === 'transfer' && !committedChoiceId) ? (
           <section className={styles.block}>
             <h3>Apply the concept to this example</h3>
             <p>
-              Inspect the current example in Simulator and choose your interpretation in Steps.
-              Earlier explanations describe their captured reference patient. Feedback for this
-              example appears after you submit.
+              Inspect the current example and choose your interpretation below. Earlier explanations
+              describe their captured reference patient. Feedback for this example appears after you
+              submit.
             </p>
             <p>
               The model does not establish clinical operating competence; use current device
@@ -1629,7 +1637,40 @@ function McsStageSession({
         · seed {state.seed} · {state.timeSeconds.toFixed(2)} simulated seconds.
       </p>
       <div ref={nowFocusRef} tabIndex={-1} data-now-focus>
-        <NowCard model={nowModel}>{nowBody}</NowCard>
+        <NowCard
+          model={
+            MCS_TASK_PRESENTATIONS_ENABLED
+              ? {
+                  ...nowModel,
+                  where: undefined,
+                  body: nowModel.body
+                    ?.replaceAll('in Teaching', 'below')
+                    .replaceAll('in Steps', 'below')
+                    .replaceAll(
+                      'in the Teaching panel, under On the loop',
+                      'beside the map, under On the loop',
+                    )
+                    .replaceAll('in the Simulator panel', 'beside the observations'),
+                }
+              : nowModel
+          }
+        >
+          {MCS_TASK_PRESENTATIONS_ENABLED ? (
+            <McsTaskPresentation
+              kind={activeStep.presentation}
+              teaching={teaching}
+              visual={simulator}
+              action={nowBody}
+              explaining={
+                activeStep.interaction.kind === 'explain' ||
+                activeStep.interaction.kind === 'observe'
+              }
+              reference={teachingStep || walking}
+            />
+          ) : (
+            nowBody
+          )}
+        </NowCard>
       </div>
       <details className={styles.block}>
         <summary>Display playback</summary>
@@ -1640,6 +1681,16 @@ function McsStageSession({
           onClick={() => setPlaybackRunning((running) => !running)}
         >
           {playbackRunning ? 'Pause display playback' : 'Play display playback'}
+        </button>
+        <button
+          type="button"
+          disabled={lookingBack || pendingTimingIdentification}
+          onClick={() => {
+            setPlaybackRunning(false)
+            sendModel({ type: 'TICK', seconds: 60 / liveState.patient.heartRateBpm })
+          }}
+        >
+          Step one cardiac cycle
         </button>
         <p className={styles.footnote}>
           Playback changes the model clock; it does not stop device support. Captured comparisons
@@ -1661,38 +1712,43 @@ function McsStageSession({
           </p>
         </details>
       ) : null}
-      <StepList
-        lesson={lesson}
-        currentIndex={activeIndex}
-        furthestPerformedIndex={progression.furthestPerformed}
-        performedStepIds={performedIds}
-        predictionCommitted={predictionCommitted}
-        reviewIndex={progression.review}
-        recapFor={(index) => {
-          const step = lesson.steps[index]
-          if (!step) return []
-          const committed = progression.committedByStepId[step.id]
-          if (step.interaction.kind === 'identify') {
-            const option = step.interaction.options.find((candidate) => candidate.id === committed)
-            return option ? [`You chose: ${option.label}`] : []
-          }
-          if (step.interaction.kind === 'prediction') {
-            const choice = step.interaction.item.choices.find(
-              (candidate) => candidate.id === committed,
-            )
-            return choice ? [`You chose: ${choice.label}`] : []
-          }
-          if (step.interaction.kind === 'transfer') {
-            const choice = step.interaction.transfer.item.choices.find(
-              (candidate) => candidate.id === committed,
-            )
-            return choice ? [`You chose: ${choice.label}`] : []
-          }
-          if (step.interaction.kind === 'walk') return ['Walked every stop of the loop.']
-          return []
-        }}
-        onSelect={selectStepRow}
-      />
+      <details className={flowStyles.taskMap}>
+        <summary>Task history and lesson map</summary>
+        <StepList
+          lesson={lesson}
+          currentIndex={activeIndex}
+          furthestPerformedIndex={progression.furthestPerformed}
+          performedStepIds={performedIds}
+          predictionCommitted={predictionCommitted}
+          reviewIndex={progression.review}
+          recapFor={(index) => {
+            const step = lesson.steps[index]
+            if (!step) return []
+            const committed = progression.committedByStepId[step.id]
+            if (step.interaction.kind === 'identify') {
+              const option = step.interaction.options.find(
+                (candidate) => candidate.id === committed,
+              )
+              return option ? [`You chose: ${option.label}`] : []
+            }
+            if (step.interaction.kind === 'prediction') {
+              const choice = step.interaction.item.choices.find(
+                (candidate) => candidate.id === committed,
+              )
+              return choice ? [`You chose: ${choice.label}`] : []
+            }
+            if (step.interaction.kind === 'transfer') {
+              const choice = step.interaction.transfer.item.choices.find(
+                (candidate) => candidate.id === committed,
+              )
+              return choice ? [`You chose: ${choice.label}`] : []
+            }
+            if (step.interaction.kind === 'walk') return ['Walked every stop of the loop.']
+            return []
+          }}
+          onSelect={selectStepRow}
+        />
+      </details>
       {predictionCommitted ? null : (
         <p className={shellStyles.nowStatus} data-phase-lock-note>
           The later steps unlock when you commit your prediction.
@@ -1787,8 +1843,17 @@ function McsStageSession({
       <p>
         <strong>{activeStep.title}</strong>
       </p>
-      <p>{activeStep.instruction}</p>
-      {lookInLine ? <p>{lookInLine}</p> : null}
+      <p>
+        {MCS_TASK_PRESENTATIONS_ENABLED
+          ? activeStep.instruction
+              .replaceAll(
+                'in the Teaching panel, under On the loop',
+                'beside the map, under On the loop',
+              )
+              .replaceAll('in the Simulator panel', 'beside the observations')
+          : activeStep.instruction}
+      </p>
+      {!MCS_TASK_PRESENTATIONS_ENABLED && lookInLine ? <p>{lookInLine}</p> : null}
       {activeStep.rationale && predictionCommitted ? <p>{activeStep.rationale}</p> : null}
     </HelpDialog>
   )
@@ -1798,33 +1863,30 @@ function McsStageSession({
       locale={locale}
       activeHref={`${mechanicalCirculatorySupportNavBase}/learn`}
       activityMode
+      flowing={MCS_TASK_PRESENTATIONS_ENABLED}
     >
       <StageSourcesScope>
         <div className={styles.stage} data-mcs-stage data-section-id={sectionId}>
-          <StageLayout
-            stageId={activeStep.id}
-            label="Mechanical circulatory support section"
-            module="mechanical-circulatory-support"
-            workspaceLabel="Mechanical circulatory support lesson workspace: steps, teaching, and simulator"
-            header={header}
-            contextStrip={
-              <ContextStrip items={contextItems} alarm={alarm} badge="Simulated values" />
-            }
-            simulator={simulator}
-            teaching={teaching}
-            task={task}
-            paneOrder={PANE_ORDER}
-            paneCaptions={PANE_CAPTIONS}
-            defaultWidthFractions={PANE_WIDTH_FRACTIONS}
-            paneMinimums={PANE_MINIMUMS}
-            compactPane={compactPane}
-            footer={
-              <>
-                <p className={stageStyles.footerLine}>
-                  Professional education only. Not a clinical device or a patient-specific guide;
-                  every value is simulated. Follow current manufacturer instructions and local
-                  protocol.
-                </p>
+          {MCS_TASK_PRESENTATIONS_ENABLED ? (
+            <div
+              className={flowStyles.flow}
+              data-critical-care-activity-shell
+              data-stage={activeStep.id}
+              data-mcs-task-flow
+            >
+              {header}
+              {referenceViewed && !(teachingStep || walking) ? (
+                <ContextStrip items={contextItems} alarm={alarm} badge="Simulated values" />
+              ) : null}
+              {referenceViewed ? (
+                task
+              ) : (
+                <McsPrerequisiteReference
+                  sectionId={sectionId}
+                  onContinue={() => setReferenceViewed(true)}
+                />
+              )}
+              <footer>
                 <StageSourcesFooter
                   count={stageSources.sourceIds.length}
                   label="Sources for this section"
@@ -1835,10 +1897,49 @@ function McsStageSession({
                     claimsVisible={predictionCommitted}
                   />
                 </StageSourcesFooter>
-              </>
-            }
-            overlay={helpDialog}
-          />
+              </footer>
+              {helpDialog}
+            </div>
+          ) : (
+            <StageLayout
+              stageId={activeStep.id}
+              label="Mechanical circulatory support section"
+              module="mechanical-circulatory-support"
+              workspaceLabel="Mechanical circulatory support lesson workspace: steps, teaching, and simulator"
+              header={header}
+              contextStrip={
+                <ContextStrip items={contextItems} alarm={alarm} badge="Simulated values" />
+              }
+              simulator={simulator}
+              teaching={teaching}
+              task={task}
+              paneOrder={PANE_ORDER}
+              paneCaptions={PANE_CAPTIONS}
+              defaultWidthFractions={PANE_WIDTH_FRACTIONS}
+              paneMinimums={PANE_MINIMUMS}
+              compactPane={compactPane}
+              footer={
+                <>
+                  <p className={stageStyles.footerLine}>
+                    Professional education only. Not a clinical device or a patient-specific guide;
+                    every value is simulated. Follow current manufacturer instructions and local
+                    protocol.
+                  </p>
+                  <StageSourcesFooter
+                    count={stageSources.sourceIds.length}
+                    label="Sources for this section"
+                    claimsVisible={predictionCommitted}
+                  >
+                    <McsSourceList
+                      sourceIds={stageSources.sourceIds}
+                      claimsVisible={predictionCommitted}
+                    />
+                  </StageSourcesFooter>
+                </>
+              }
+              overlay={helpDialog}
+            />
+          )}
         </div>
       </StageSourcesScope>
     </McsModuleFrame>

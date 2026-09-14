@@ -1,3 +1,4 @@
+import { mcsPresentationTitle } from '../content/casePresentation'
 /**
  * M5 — Mechanism Studio, the patient cases, and the challenge capstones.
  *
@@ -40,7 +41,6 @@ jest.mock('../components/ImpellaVariantPreview', () =>
 import { getCriticalCareResumeTarget } from '@/features/critical-care/progress'
 
 import { mcsCapstoneScenarios, mcsPracticeScenarios } from '../content'
-import { createInitialMcsState } from '../engine'
 import {
   advanceSimulation,
   challengeFeedbackToggle,
@@ -123,9 +123,7 @@ describe('MCS M5 — Mechanism Studio is a workspace, not a case', () => {
 
   it('moves the anatomy pathway summary when the device topology changes', async () => {
     const { container } = await renderWorkbench({ section: 'practice' })
-    const summaryText = () =>
-      container.querySelector('[data-anatomy-target="anatomy:support-pathway-overview"]')
-        ?.textContent
+    const summaryText = () => container.querySelector('[data-circulation-map]')?.textContent
 
     const before = summaryText()
     selectDeviceTrack('impella')
@@ -159,7 +157,9 @@ describe('MCS M5 — Mechanism Studio is a workspace, not a case', () => {
     await renderWorkbench({ section: 'practice' })
 
     fireEvent.click(practiceRailButton(scenario.shortTitle))
-    expect(screen.getAllByRole('heading', { name: scenario.title }).length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByRole('heading', { name: mcsPresentationTitle(scenario) }).length,
+    ).toBeGreaterThan(0)
     expect(
       screen.queryByRole('region', { name: 'Mechanism Studio instructions' }),
     ).not.toBeInTheDocument()
@@ -191,8 +191,12 @@ describe('MCS M5 — practice case identity and permissions', () => {
       expect(within(identity!).getByText(label)).toBeInTheDocument()
     }
     expect(within(identity!).getByText(scenario.presentation)).toBeInTheDocument()
-    expect(within(identity!).getByText(scenario.learningObjectives[0])).toBeInTheDocument()
-    expect(within(identity!).getByText(scenario.shortTitle)).toBeInTheDocument()
+    expect(
+      within(identity!).getByText(
+        'Explain what the observations establish and what still needs assessment.',
+      ),
+    ).toBeInTheDocument()
+    expect(within(identity!).getByText(mcsPresentationTitle(scenario))).toBeInTheDocument()
     expect(within(identity!).getByText(/Work it with coaching available/)).toBeInTheDocument()
   })
 
@@ -215,8 +219,8 @@ describe('MCS M5 — practice case identity and permissions', () => {
     await renderWorkbench({ section: 'practice', initialActivityId: 'LVAD-03' })
 
     // LVAD-03 permits neither patient adjustment nor speed changes.
-    expect(screen.getByRole('slider', { name: 'Preload' })).toBeDisabled()
-    expect(screen.getByRole('slider', { name: 'SVR' })).toBeDisabled()
+    expect(screen.queryByRole('slider', { name: 'Preload' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('slider', { name: 'SVR' })).not.toBeInTheDocument()
     expect(screen.getByRole('checkbox', { name: /Approved power path/ })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Escalate to shock/MCS team' })).toBeEnabled()
   })
@@ -228,9 +232,9 @@ describe('MCS M5 — practice case identity and permissions', () => {
     expect(screen.getByRole('slider', { name: 'SVR' })).toBeEnabled()
     expect(screen.getByRole('checkbox', { name: /Authorized-personnel order/ })).toBeEnabled()
     expect(
-      screen.getByRole('checkbox', { name: /High-power \/ thrombosis pattern/ }),
-    ).toBeDisabled()
-    expect(screen.getByRole('checkbox', { name: /Controller fault/ })).toBeDisabled()
+      screen.queryByRole('checkbox', { name: /High-power \/ thrombosis pattern/ }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('checkbox', { name: /Controller fault/ })).not.toBeInTheDocument()
   })
 })
 
@@ -258,8 +262,11 @@ describe('MCS M5 — working a practice case through to its debrief', () => {
     async (caseId, scenario) => {
       await renderWorkbench({ section: 'practice', initialActivityId: caseId })
 
+      expect(screen.queryByText('Practice cue')).not.toBeInTheDocument()
+      commitCasePrediction(scenario.predictionOptions[0].label)
       expect(screen.getByText('Practice cue')).toBeInTheDocument()
       expect(screen.getAllByText(scenario.guidedPrompt).length).toBeGreaterThan(0)
+      fireEvent.click(screen.getByRole('button', { name: 'Escalate to shock/MCS team' }))
       expect(screen.getByText('Simulation response')).toBeInTheDocument()
     },
   )
@@ -352,7 +359,7 @@ describe('MCS M5 — working a practice case through to its debrief', () => {
   it('returns the case to its authored start from the card\u2019s own Reset', async () => {
     const scenario = mcsPracticeScenarios.find((candidate) => candidate.id === 'IABP-01')!
     await renderWorkbench({ section: 'practice', initialActivityId: 'IABP-01' })
-    const workflow = screen.getByRole('region', { name: scenario.title })
+    const workflow = screen.getByRole('region', { name: mcsPresentationTitle(scenario) })
     inspectInCase('inspect:arterial')
     expect(screen.getByRole('button', { name: 'Arterial waveform' })).toHaveAttribute(
       'data-complete',
@@ -456,35 +463,50 @@ describe('MCS M5 — Challenge withholds routine teaching and nothing else', () 
       seedStoredProgress({ completedLessonIds: [], masteredCaseIds: [], completedCapstoneIds: [] })
       await renderWorkbench({ section: 'assess', initialActivityId: capstoneId })
 
-      expect(screen.getAllByRole('heading', { name: capstone.title }).length).toBeGreaterThan(0)
+      expect(
+        screen.getAllByRole('heading', { name: mcsPresentationTitle(capstone) }).length,
+      ).toBeGreaterThan(0)
       expect(screen.getByText(/Work it independently/)).toBeInTheDocument()
       expect(screen.queryByText('Practice cue')).not.toBeInTheDocument()
 
-      /*
-       * A capstone that starts in a critical alarm state is the one documented exception: the
-       * explanation appears without an opt-in, because a safety interruption is not routine teaching.
-       */
-      const initial = createInitialMcsState('assess', capstone.device, capstone)
-      const criticalAtStart = initial.alarms.some(
-        (alarm) => alarm.active && alarm.priority === 'critical',
-      )
-      if (criticalAtStart) {
-        expect(screen.getByText(/Why the display changed/)).toBeInTheDocument()
-      } else {
-        expect(screen.getByText('Routine teaching deferred')).toBeInTheDocument()
-        expect(screen.queryByText(/Why the display changed/)).not.toBeInTheDocument()
-      }
+      // Critical alarms remain visible without revealing the entire diagnosis.
+      expect(screen.getByText('Routine teaching deferred')).toBeInTheDocument()
+      expect(screen.queryByText(/Why the display changed/)).not.toBeInTheDocument()
     },
   )
 
-  it.each(capstones)('reveals the deferred teaching for %s only on opt-in', async (capstoneId) => {
-    await renderWorkbench({ section: 'assess', initialActivityId: capstoneId })
+  it.each(capstones)(
+    'reveals the deferred teaching for %s only on opt-in',
+    async (capstoneId, capstone) => {
+      await renderWorkbench({ section: 'assess', initialActivityId: capstoneId })
 
-    expect(challengeFeedbackToggle()).not.toBeChecked()
+      expect(challengeFeedbackToggle()).not.toBeChecked()
+      commitCasePrediction(capstone.predictionOptions[0].label)
+      fireEvent.click(screen.getByRole('button', { name: 'Escalate to shock/MCS team' }))
+      fireEvent.click(challengeFeedbackToggle())
+
+      expect(screen.getByText('Simulation response')).toBeInTheDocument()
+      expect(screen.getByText(/Why the display changed/)).toBeInTheDocument()
+    },
+  )
+
+  it('retains assisted status after teaching is hidden, and resets it for a fresh attempt', async () => {
+    await renderWorkbench({ section: 'assess', initialActivityId: 'CAP-IABP-01' })
+    fireEvent.click(screen.getByRole('button', { name: 'Escalate to shock/MCS team' }))
     fireEvent.click(challengeFeedbackToggle())
-
-    expect(screen.getByText('Simulation response')).toBeInTheDocument()
-    expect(screen.getByText(/Why the display changed/)).toBeInTheDocument()
+    fireEvent.click(challengeFeedbackToggle())
+    reassessCase()
+    openCausalDebrief()
+    expect(
+      screen.getByText(/Assisted Challenge: post-action teaching was requested/),
+    ).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Replay this case' }))
+    expect(challengeFeedbackToggle()).not.toBeChecked()
+    reassessCase()
+    openCausalDebrief()
+    expect(
+      screen.queryByText(/Assisted Challenge: post-action teaching was requested/),
+    ).not.toBeInTheDocument()
   })
 
   it('keeps the patient and the clock live while the teaching is withheld', async () => {
@@ -519,9 +541,9 @@ describe('MCS M5 — Challenge withholds routine teaching and nothing else', () 
     })
 
     expect(screen.getByRole('alert')).toHaveTextContent('iabp late deflation created')
-    // The critical alarm is the one documented reason coaching appears without an opt-in.
+    // The safety interruption is immediate; unrelated routine explanation stays deferred.
     expect(challengeFeedbackToggle()).not.toBeChecked()
-    expect(screen.getByText(/Why the display changed/)).toBeInTheDocument()
+    expect(screen.queryByText(/Why the display changed/)).not.toBeInTheDocument()
   })
 
   it('emits no hint event when Help is used inside a Challenge', async () => {

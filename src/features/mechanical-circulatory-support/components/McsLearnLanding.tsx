@@ -22,16 +22,18 @@ export function McsLearnLanding() {
         <p>
           Every section is read on the same simulated circulation: first the pressure apart from the
           flow, then the loop every device is drawn on, then each device one at a time, then the
-          choice among them. Move in order, or open any section from the map below.
+          assessment of the supported patient. Temporary support and assessment of an existing
+          durable LVAD are distinct clinical contexts; this is not a treatment ladder. Move in
+          order, or open any section from the map below.
         </p>
         <div className={styles.heroActions}>
           <McsContinueCta />
         </div>
       </header>
-      <section aria-labelledby="mcs-learn-landing-map-heading">
-        <h2 id="mcs-learn-landing-map-heading">The pathway</h2>
+      <details>
+        <summary>Open the lesson map</summary>
         <McsStoredPathwayAccordion id="mcs-learn-landing-pathway" />
-      </section>
+      </details>
       <aside role="note" className={styles.releaseReview}>
         <strong>Educational model · pending clinical review</strong>
         <p>

@@ -1,3 +1,4 @@
+import { mcsPresentationTitle } from '../content/casePresentation'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
@@ -126,10 +127,9 @@ describe('Mechanical Circulatory Support learner interface', () => {
       'aria-pressed',
       'true',
     )
-    expect(screen.getByRole('button', { name: /Placement signal/i })).toHaveAttribute(
-      'aria-current',
-      'true',
-    )
+    expect(
+      screen.getByRole('button', { name: /Displayed flow below expectation/i }),
+    ).toHaveAttribute('aria-current', 'true')
     await waitFor(() =>
       expect(getCriticalCareResumeTarget(window.localStorage)?.href).toBe(
         '/mechanical-circulatory-support/practice?case=IMP-02',
@@ -144,16 +144,17 @@ describe('Mechanical Circulatory Support learner interface', () => {
       'aria-pressed',
       'true',
     )
-    expect(screen.getAllByText('Advanced Impella effective-flow challenge').length).toBeGreaterThan(
-      1,
-    )
+    expect(
+      screen.getAllByText('Pump activity on the display, little of it arriving').length,
+    ).toBeGreaterThan(1)
     const feedbackToggle = screen.getByRole('checkbox', {
       name: /Show teaching notes after each action/i,
     })
     expect(feedbackToggle).not.toBeChecked()
     expect(screen.getByText('Routine teaching deferred')).toBeInTheDocument()
-    expect(screen.getByText(/Why the display changed/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Why the display changed/i)).not.toBeInTheDocument()
     fireEvent.click(feedbackToggle)
+    fireEvent.click(screen.getByRole('button', { name: 'Escalate to shock/MCS team' }))
     expect(screen.getByText('Simulation response')).toBeInTheDocument()
     await waitFor(() =>
       expect(screen.getByRole('button', { name: /Open challenge/i })).toBeEnabled(),
@@ -170,11 +171,12 @@ describe('Mechanical Circulatory Support learner interface', () => {
         name: /Show teaching notes after each action/i,
       }),
     )
+    fireEvent.click(screen.getByRole('button', { name: 'Escalate to shock/MCS team' }))
     expect(screen.getByText(/Why the display changed/i)).toBeInTheDocument()
   })
 
   it('renders the safety boundary, synchronized accessible traces, and required hemodynamics', () => {
-    render(<McsWorkbench section="practice" />)
+    render(<McsWorkbench section="practice" initialDevice="iabp" />)
     expect(screen.getByText(/Educational model—not a clinical device/i)).toBeInTheDocument()
     expect(
       screen.getByRole('region', { name: /Synchronized mechanical-support bedside monitor/i }),
@@ -205,7 +207,7 @@ describe('Mechanical Circulatory Support learner interface', () => {
   })
 
   it('configures and displays independent 5.5 and RP pumps in the biventricular workspace', () => {
-    render(<McsWorkbench section="practice" />)
+    render(<McsWorkbench section="practice" initialDevice="iabp" />)
     fireEvent.click(screen.getByRole('button', { name: /Impella CP \/ 5\.5 \/ RP/i }))
 
     fireEvent.change(screen.getByRole('combobox', { name: /Left-sided Impella configuration/i }), {
@@ -225,8 +227,10 @@ describe('Mechanical Circulatory Support learner interface', () => {
   })
 
   it('keeps permitted controls open while preserving an optional initial frame', async () => {
-    render(<McsWorkbench section="practice" />)
-    fireEvent.click(screen.getByRole('button', { name: /Late deflation/i }))
+    render(<McsWorkbench section="practice" initialDevice="iabp" />)
+    fireEvent.click(
+      screen.getByRole('button', { name: /Weak augmentation after a timing change/i }),
+    )
     const deflation = screen.getByRole('slider', { name: /Deflation vs systole/i })
     expect(deflation).toBeEnabled()
     const commit = screen.getByRole('button', { name: /Record initial frame/i })
@@ -238,8 +242,8 @@ describe('Mechanical Circulatory Support learner interface', () => {
     fireEvent.click(commit)
     expect(await screen.findByRole('button', { name: /Prediction committed/i })).toBeDisabled()
     expect(screen.getByRole('slider', { name: /Deflation vs systole/i })).toBeEnabled()
-    expect(screen.getByRole('slider', { name: /Preload/i })).toBeDisabled()
-    expect(screen.getByText(/Initial frame recorded. Adjust the model/i)).toBeInTheDocument()
+    expect(screen.queryByRole('slider', { name: /Preload/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Prediction committed/ })).toBeDisabled()
     const lifecyclePayloads = (global.fetch as jest.Mock).mock.calls.map(([, request]) =>
       JSON.parse(request.body as string),
     )
@@ -257,8 +261,10 @@ describe('Mechanical Circulatory Support learner interface', () => {
   })
 
   it('keeps a revealed case debrief at Explain without emitting transfer completion', async () => {
-    render(<McsWorkbench section="practice" />)
-    fireEvent.click(screen.getByRole('button', { name: /Late deflation/i }))
+    render(<McsWorkbench section="practice" initialDevice="iabp" />)
+    fireEvent.click(
+      screen.getByRole('button', { name: /Weak augmentation after a timing change/i }),
+    )
     fireEvent.click(screen.getByRole('button', { name: /Arterial waveform/i }))
     fireEvent.click(
       screen.getByRole('radio', { name: /Late deflation raises effective LV afterload/i }),
@@ -303,11 +309,13 @@ describe('Mechanical Circulatory Support learner interface', () => {
       expect(screen.getByRole('button', { name: /Open challenge/i })).toBeEnabled(),
     )
     const capstone = mcsCapstoneScenarios.find((item) => item.device === 'iabp')!
-    expect(screen.getByText(capstone.title)).toBeInTheDocument()
+    expect(screen.getByText(mcsPresentationTitle(capstone))).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /Open challenge/i }))
-    expect(screen.getAllByRole('heading', { name: capstone.title })).not.toHaveLength(0)
+    expect(
+      screen.getAllByRole('heading', { name: mcsPresentationTitle(capstone) }),
+    ).not.toHaveLength(0)
     for (const objective of capstone.learningObjectives) {
-      expect(screen.getAllByText(objective)).not.toHaveLength(0)
+      expect(screen.queryByText(objective)).not.toBeInTheDocument()
     }
 
     fireEvent.click(screen.getByRole('button', { name: 'Evidence' }))
@@ -322,7 +330,7 @@ describe('Mechanical Circulatory Support learner interface', () => {
   })
 
   it('sends only the allowlisted aggregate analytics payload', async () => {
-    render(<McsWorkbench section="practice" />)
+    render(<McsWorkbench section="practice" initialDevice="iabp" />)
     await act(async () => Promise.resolve())
     const fetchMock = global.fetch as jest.Mock
     expect(fetchMock).toHaveBeenCalled()

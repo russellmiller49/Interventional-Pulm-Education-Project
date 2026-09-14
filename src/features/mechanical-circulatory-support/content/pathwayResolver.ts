@@ -121,9 +121,9 @@ export interface McsPathwayGroup {
 }
 
 const GROUP_TITLES: Readonly<Record<McsDeviceKind, string>> = {
-  iabp: 'Counterpulsation',
-  impella: 'The transvalvular pump',
-  lvad: 'The durable pump',
+  iabp: 'IABP · counterpulsation',
+  impella: 'Microaxial support',
+  lvad: 'Existing durable LVAD · patient assessment',
 }
 
 /**
@@ -149,9 +149,9 @@ export function mcsPathwayGroups(): readonly McsPathwayGroup[] {
       id,
       title:
         id === 'foundations'
-          ? 'The common model'
+          ? 'Shared foundations'
           : id === 'choosing'
-            ? 'Choosing among them'
+            ? 'Integration'
             : GROUP_TITLES[device as McsDeviceKind],
       device: kind,
       sections: [section],

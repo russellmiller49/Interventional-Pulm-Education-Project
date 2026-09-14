@@ -10,7 +10,7 @@
  *
  * The workbench hosts Practice and Challenge; the Learn controls live on the lesson stage.
  */
-import { fireEvent, screen, within } from '@testing-library/react'
+import { act, fireEvent, screen, within } from '@testing-library/react'
 
 jest.mock('@/i18n/navigation', () =>
   jest
@@ -41,7 +41,6 @@ jest.mock('../components/ImpellaVariantPreview', () =>
     .impellaPreviewModule(),
 )
 
-import { mcsPracticeScenarios } from '../content'
 import {
   advanceSimulation,
   flushAnimationFrames,
@@ -153,12 +152,14 @@ describe('MCS M5 — patient controls', () => {
     await renderWorkbench({ section: 'practice', initialActivityId: 'LVAD-03' })
 
     for (const [label] of patientSliders) {
-      expect(within(controlsCard()).getByRole('slider', { name: label })).toBeDisabled()
+      expect(within(controlsCard()).queryByRole('slider', { name: label })).not.toBeInTheDocument()
     }
-    expect(within(controlsCard()).getByRole('combobox', { name: 'Rhythm' })).toBeDisabled()
     expect(
-      within(controlsCard()).getByRole('checkbox', { name: /Pericardial constraint/ }),
-    ).toBeDisabled()
+      within(controlsCard()).queryByRole('combobox', { name: 'Rhythm' }),
+    ).not.toBeInTheDocument()
+    expect(
+      within(controlsCard()).queryByRole('checkbox', { name: /Pericardial constraint/ }),
+    ).not.toBeInTheDocument()
   })
 
   it('opens the pericardial-constraint fault only on the capstone that asks for it', async () => {
@@ -420,11 +421,11 @@ describe('MCS M5 — durable LVAD controls', () => {
       within(controlsCard()).getByRole('checkbox', { name: /Authorized-personnel order/ }),
     ).toBeEnabled()
     expect(
-      within(controlsCard()).getByRole('checkbox', { name: /Approved power path/ }),
-    ).toBeDisabled()
+      within(controlsCard()).queryByRole('checkbox', { name: /Approved power path/ }),
+    ).not.toBeInTheDocument()
     expect(
-      within(controlsCard()).getByRole('checkbox', { name: /Controller fault/ }),
-    ).toBeDisabled()
+      within(controlsCard()).queryByRole('checkbox', { name: /Controller fault/ }),
+    ).not.toBeInTheDocument()
   })
 })
 
@@ -462,6 +463,10 @@ describe('MCS M5 — the synchronized monitor and anatomy surfaces', () => {
     const width = window.innerWidth
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 800 })
     await renderWorkbench({ section: 'practice' })
+    fireEvent.click(screen.getByRole('button', { name: 'Optional three-dimensional view' }))
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
 
     expect(screen.getByRole('heading', { name: 'A larger screen is recommended' })).toBeVisible()
     fireEvent.click(screen.getByRole('button', { name: 'Save for later' }))
@@ -470,7 +475,7 @@ describe('MCS M5 — the synchronized monitor and anatomy surfaces', () => {
     // Continuing anyway is still offered, and it does not change the simulation.
     fireEvent.click(screen.getByRole('button', { name: 'Continue on this device' }))
     expect(
-      screen.getByRole('region', { name: 'Animated mechanical-support anatomy' }),
+      await screen.findByRole('region', { name: 'Animated mechanical-support anatomy' }),
     ).toBeInTheDocument()
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: width })
   })
@@ -514,12 +519,22 @@ describe('MCS M5 — the synchronized monitor and anatomy surfaces', () => {
 
   it('changes the anatomy pathway summary with the device topology', async () => {
     const { container } = await renderWorkbench({ section: 'practice' })
+    fireEvent.click(screen.getByRole('button', { name: 'Optional three-dimensional view' }))
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+    await screen.findByRole('region', { name: 'Animated mechanical-support anatomy' })
     const summary = () =>
       container.querySelector('[data-anatomy-target="anatomy:support-pathway-overview"]')!
         .textContent ?? ''
 
     const counterpulsation = summary()
     selectDeviceTrack('lvad')
+    fireEvent.click(screen.getByRole('button', { name: 'Optional three-dimensional view' }))
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+    await screen.findByRole('region', { name: 'Animated mechanical-support anatomy' })
     const durable = summary()
 
     expect(durable).not.toBe(counterpulsation)
@@ -529,9 +544,13 @@ describe('MCS M5 — the synchronized monitor and anatomy surfaces', () => {
 
   it('keeps the semantic pathway summary reachable behind the stubbed 3D canvas', async () => {
     const { container } = await renderWorkbench({ section: 'practice' })
+    fireEvent.click(screen.getByRole('button', { name: 'Optional three-dimensional view' }))
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
 
     expect(
-      screen.getByRole('region', {
+      await screen.findByRole('region', {
         name: 'Support pathway: where blood enters and where it returns',
       }),
     ).toBeInTheDocument()
@@ -547,109 +566,26 @@ describe('MCS M5 — the synchronized monitor and anatomy surfaces', () => {
 
     fireEvent.click(screen.getByRole('checkbox', { name: /Show teaching notes after each action/ }))
 
+    fireEvent.click(screen.getByRole('button', { name: 'Escalate to shock/MCS team' }))
     expect(screen.getByText('Why the display changed:')).toBeInTheDocument()
   })
 })
 
-describe('MCS M5 — mobile surface semantics and phase focus', () => {
+describe('MCS case presentation continuity', () => {
   beforeEach(() => setupMcsWorkbenchEnvironment())
   afterEach(() => teardownMcsWorkbenchEnvironment())
-
-  it.each(['anatomy', 'monitor', 'controls', 'workflow'] as const)(
-    'presses the %s mobile tab and shows only that surface',
-    async (surface) => {
-      const { container } = await renderWorkbench({ section: 'practice' })
-      const tabs = screen.getByRole('group', { name: 'Choose mobile workspace surface' })
-
-      fireEvent.click(within(tabs).getByRole('button', { name: surface }))
-
-      for (const candidate of ['anatomy', 'monitor', 'controls', 'workflow'] as const) {
-        expect(within(tabs).getByRole('button', { name: candidate })).toHaveAttribute(
-          'aria-pressed',
-          String(candidate === surface),
-        )
-      }
-      expect(container.querySelectorAll('[data-mobile-visible="true"]').length).toBeGreaterThan(0)
-    },
-  )
-
-  it.each([
-    ['Act', 'controls', 'mcs-case-actions'],
-    ['Observe', 'monitor', 'mcs-case-response'],
-    ['Predict', 'workflow', 'mcs-case-predict'],
-    ['Explain', 'workflow', 'mcs-case-actions'],
-    ['Transfer', 'workflow', 'mcs-case-actions'],
-  ] as const)(
-    'selects the %s phase, shows the %s surface, and focuses %s',
-    async (phase, surface, targetId) => {
-      await renderWorkbench({ section: 'practice', initialActivityId: 'IABP-01' })
-
-      fireEvent.click(screen.getByRole('button', { name: `Open ${phase} phase` }))
-      flushAnimationFrames()
-
-      const tabs = screen.getByRole('group', { name: 'Choose mobile workspace surface' })
-      expect(within(tabs).getByRole('button', { name: surface })).toHaveAttribute(
-        'aria-pressed',
-        'true',
-      )
-      expect(document.activeElement).toHaveAttribute('id', targetId)
-    },
-  )
-
-  it('selects the monitor and the inspect step when Recognize is chosen', async () => {
+  it('shows observations and permitted controls in the case without mobile tabs', async () => {
     await renderWorkbench({ section: 'practice', initialActivityId: 'IABP-01' })
-    // The stepper offers a jump control only for phases other than the current one, and in a case
-    // the current phase is the reducer's, so an inspection has to move it off Recognize first.
-    fireEvent.click(screen.getByRole('button', { name: 'Arterial waveform' }))
-    expect(sharedStepperPhase()).toBe('Predict')
-
-    fireEvent.click(screen.getByRole('button', { name: 'Open Recognize phase' }))
-    flushAnimationFrames()
-
-    const tabs = screen.getByRole('group', { name: 'Choose mobile workspace surface' })
-    expect(within(tabs).getByRole('button', { name: 'monitor' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
-    expect(document.activeElement).toHaveAttribute('id', 'mcs-case-inspect')
+    expect(document.querySelector('[data-case-observations]')).not.toBeNull()
+    expect(screen.getByRole('slider', { name: 'Deflation vs systole' })).toBeEnabled()
+    expect(screen.queryByRole('group', { name: 'Choose mobile workspace surface' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Reassess response' })).toBeEnabled()
   })
-
-  it('navigates with the shared stepper in a case without moving the case phase', async () => {
+  it('does not advance the patient phase through navigation', async () => {
     await renderWorkbench({ section: 'practice', initialActivityId: 'IABP-01' })
-    expect(sharedStepperPhase()).toBe('Recognize')
-
-    fireEvent.click(screen.getByRole('button', { name: 'Open Transfer phase' }))
+    const before = sharedStepperPhase()
+    fireEvent.click(screen.getByRole('button', { name: 'Open Act phase' }))
     flushAnimationFrames()
-
-    // Practice and Challenge derive the phase from the reducer, so the stepper moves the learner to
-    // a region rather than declaring a step complete.
-    expect(sharedStepperPhase()).toBe('Recognize')
-    expect(document.activeElement).toHaveAttribute('id', 'mcs-case-actions')
-  })
-
-  it('survives a phase selection in the studio, where the case regions do not exist', async () => {
-    await renderWorkbench({ section: 'practice' })
-
-    expect(document.getElementById('mcs-case-actions')).toBeNull()
-    expect(() => {
-      fireEvent.click(screen.getByRole('button', { name: 'Open Act phase' }))
-      flushAnimationFrames()
-    }).not.toThrow()
-
-    const tabs = screen.getByRole('group', { name: 'Choose mobile workspace surface' })
-    expect(within(tabs).getByRole('button', { name: 'controls' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
-  })
-
-  it('keeps every practice case reachable from the rail without a mobile surface change', async () => {
-    await renderWorkbench({ section: 'practice' })
-    const rail = screen.getByRole('region', { name: 'Mechanism Studio and device cases' })
-
-    // The studio plus the three cases for the active device track.
-    expect(within(rail).getAllByRole('button')).toHaveLength(
-      1 + mcsPracticeScenarios.filter((scenario) => scenario.device === 'iabp').length,
-    )
+    expect(sharedStepperPhase()).toBe(before)
   })
 })

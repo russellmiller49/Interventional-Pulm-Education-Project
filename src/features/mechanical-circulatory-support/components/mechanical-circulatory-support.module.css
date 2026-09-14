@@ -4636,3 +4636,73 @@
   margin: 0 0 0.4rem;
   font-size: 1.15rem;
 }
+
+.moduleShell[data-flowing='true'] {
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+}
+
+.practiceEntry {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+.practiceEntry article {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+}
+.practiceEntry h2 {
+  font-size: 1.5rem;
+}
+.practiceEntry button {
+  min-height: 44px;
+  text-align: left;
+  border: 1px solid var(--line);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+}
+.studioWorkspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 1rem;
+}
+.caseObservation,
+.casePermittedActions {
+  min-width: 0;
+  margin: 1rem 0;
+}
+.optionalCaseView {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+}
+.optionalCaseView summary,
+.optionalCaseView button {
+  min-height: 44px;
+  cursor: pointer;
+}
+@media (max-width: 900px) {
+  .practiceEntry,
+  .studioWorkspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Scope shared chrome's intrinsic-width correction to the MCS flowing workspace. */
+.moduleShell[data-flowing='true'] [data-critical-care-activity-shell] > header > div:first-child {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.moduleShell[data-flowing='true'] [data-critical-care-activity-shell] > header h1 {
+  white-space: normal;
+  overflow: visible;
+  min-width: 0;
+  max-width: 100%;
+}
+.moduleShell[data-flowing='true'] [data-case-workflow] [tabindex='-1'] {
+  scroll-margin-top: 6rem;
+}
