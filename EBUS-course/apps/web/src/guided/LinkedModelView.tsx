@@ -4,7 +4,7 @@ import {
   LANDMARK_HINTS,
   STRUCTURE_FEATURES,
 } from '../../../../../src/lib/ebus-linked-contract'
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { AcousticVolume } from '@bronchoscopy-core/acoustic'
@@ -26,6 +26,7 @@ import {
 } from './linkedModels'
 import { ModelSection } from './ModelSection'
 import { canDiscoverImage } from './imageDiscoveryPixels'
+import { createStructureCallouts } from './structureCallouts'
 
 type Mode = 'scope' | 'anatomy' | 'section'
 type Controller = { update: () => void; orbit: (angle: number) => void; reset: () => void }
@@ -68,9 +69,57 @@ export function LinkedModelView(props: Props) {
   const [isolate, setIsolate] = useState(
     !!config.demonstration && config.linkedLesson !== 'acoustic-contact',
   )
+  const roots = useMemo(
+    () => (models ? (mode === 'scope' ? [models.scope] : [models.anatomy, models.nodes]) : []),
+    [models, mode === 'scope'],
+  )
+  const options = useMemo(() => {
+    const result: THREE.Mesh[] = []
+    roots.forEach((root) =>
+      root.traverse((object) => {
+        if (
+          object instanceof THREE.Mesh &&
+          object.userData.semanticId &&
+          !object.name.startsWith('bending_ring_') &&
+          object.userData.role !== 'node'
+        )
+          result.push(object)
+      }),
+    )
+    return result
+  }, [roots])
+  const candidateIds =
+    mode === 'scope'
+      ? ['transducer_face', 'optical_lens', 'channel_outlet', 'legacy_distal_body']
+      : [
+          'carina',
+          'right_main_bronchus',
+          'left_main_bronchus',
+          'azygous',
+          'superior_vena_cava',
+          'left_brachiocephalic_vein',
+          'brachiocephalic_trunk',
+          'aorta',
+        ]
+  // The selector, mesh picking and letter callouts share this exact order.
+  const unnamedCandidates = options.filter((object) => candidateIds.includes(object.name))
+  const identifying = !config.demonstration && !config.reveal
+  const candidates = identifying ? unnamedCandidates : options
+  const landmarkIds = config.linkedLesson ? LINKED_LANDMARKS[config.linkedLesson] : []
+  const landmarkTarget = landmarkIds.find((id) => !evidence.identifiedStructures?.includes(id))
+  const landmarkMode = landmarkTarget === 'transducer_face' ? 'scope' : 'anatomy'
   const host = useRef<HTMLDivElement>(null)
   const controller = useRef<Controller | null>(null)
-  const latest = useRef({ ...props, mode, selection, regions, isolate, wholeScope })
+  const latest = useRef({
+    ...props,
+    mode,
+    selection,
+    regions,
+    isolate,
+    wholeScope,
+    identifying,
+    unnamedCandidates,
+  })
   const callback = useRef(onEvidence)
   useEffect(() => {
     callback.current = onEvidence
@@ -95,12 +144,22 @@ export function LinkedModelView(props: Props) {
     }
   }, [volume])
   useEffect(() => {
-    latest.current = { ...props, mode, selection, regions, isolate, wholeScope }
+    latest.current = {
+      ...props,
+      mode,
+      selection,
+      regions,
+      isolate,
+      wholeScope,
+      identifying,
+      unnamedCandidates,
+    }
     controller.current?.update()
   }, [props, mode, selection, regions, isolate, wholeScope])
   const choose = useCallback((id: string, point?: THREE.Vector3) => {
     if (latest.current.config.locked) return
     setSelection(id)
+    setLandmarkFeedback('')
     if (point) setSelectedPoint(point)
     if (!latest.current.config.demonstration) callback.current({ selectedStructure: id })
   }, [])
@@ -134,7 +193,7 @@ export function LinkedModelView(props: Props) {
     renderer.domElement.addEventListener('webglcontextlost', contextLost)
     renderer.domElement.setAttribute(
       'aria-label',
-      'Linked 3D teaching model. Use the named structure selector and observer buttons for keyboard access.',
+      'Linked 3D teaching model. Use the structure selector, letter markers and observer buttons for keyboard access.',
     )
     element.appendChild(renderer.domElement)
     const orbit = new OrbitControls(camera, renderer.domElement)
@@ -256,7 +315,13 @@ export function LinkedModelView(props: Props) {
       const visible: THREE.Object3D[] = []
       roots.forEach((root) =>
         root.traverseVisible((object) => {
-          if (object instanceof THREE.Mesh && object.userData.semanticId) visible.push(object)
+          if (
+            object instanceof THREE.Mesh &&
+            object.userData.semanticId &&
+            (!latest.current.identifying ||
+              latest.current.unnamedCandidates.some((candidate) => candidate.name === object.name))
+          )
+            visible.push(object)
         }),
       )
       // Example nodes render over surrounding anatomy; picking follows that visible order.
@@ -268,7 +333,11 @@ export function LinkedModelView(props: Props) {
     const refreshHover = () => {
       hoverFrame = 0
       const state = latest.current
-      if (!hoverPosition || state.mode === 'section' || !state.config.reveal) {
+      if (
+        !hoverPosition ||
+        state.mode === 'section' ||
+        (!state.config.reveal && (state.config.locked || !state.identifying))
+      ) {
         hideHover()
         return
       }
@@ -280,7 +349,12 @@ export function LinkedModelView(props: Props) {
       }
       dismissed = null
       hovered = object
-      tooltip.textContent = labelFor(object, state.config.reveal)
+      tooltip.textContent = state.identifying
+        ? 'Structure ' +
+          String.fromCharCode(
+            65 + state.unnamedCandidates.findIndex((candidate) => candidate.name === object.name),
+          )
+        : labelFor(object, state.config.reveal)
       tooltip.hidden = false
       const rect = element.getBoundingClientRect()
       const x = hoverPosition.x - rect.left,
@@ -313,8 +387,15 @@ export function LinkedModelView(props: Props) {
       }
       orbit.update()
     }
+    let callouts: ReturnType<typeof createStructureCallouts> | undefined
     const render = () => {
       renderer.render(scene, camera)
+      const state = latest.current
+      callouts?.render(
+        camera,
+        state.identifying && !state.config.locked && state.mode !== 'section',
+        state.selection,
+      )
       element.dataset.modelTriangles = String(renderer.info.render.triangles)
       queueHover()
     }
@@ -351,6 +432,7 @@ export function LinkedModelView(props: Props) {
                 'left_subclavian_artery',
               ].includes(object.name)
         meshes.push(object)
+        object.renderOrder = selected ? 3 : 0
         const mats = (
           Array.isArray(object.material) ? object.material : [object.material]
         ) as THREE.MeshStandardMaterial[]
@@ -369,7 +451,7 @@ export function LinkedModelView(props: Props) {
           material.opacity = selected ? 1 : role === 'airway' ? 0.48 : 0.38
           material.depthWrite = selected
           material.needsUpdate = true
-          material.emissive?.set(selected ? '#453323' : '#000000')
+          material.emissive?.set(selected ? '#70551c' : '#000000')
         })
       })
       nodes.traverse((object) => {
@@ -407,7 +489,11 @@ export function LinkedModelView(props: Props) {
             : [object.material]) as THREE.MeshStandardMaterial[]
         ).forEach((material) => {
           material.emissive?.set(
-            showSelection && state.selection === object.name ? '#306c69' : '#000000',
+            showSelection && state.selection === object.name
+              ? state.identifying
+                ? '#70551c'
+                : '#306c69'
+              : '#000000',
           )
         })
       })
@@ -542,6 +628,15 @@ export function LinkedModelView(props: Props) {
     }
     reset()
     update()
+    const calloutRoots = mode === 'scope' ? [scope] : [anatomy, nodes]
+    const calloutMeshes = unnamedCandidates.map(
+      (candidate) =>
+        calloutRoots
+          .map((root) => root.getObjectByName(candidate.name))
+          .find(Boolean) as THREE.Mesh,
+    )
+    callouts = createStructureCallouts(element, calloutMeshes, orbit.target, choose)
+    render()
     return () => {
       cancelAnimationFrame(hoverFrame)
       window.removeEventListener('keydown', dismiss)
@@ -556,6 +651,7 @@ export function LinkedModelView(props: Props) {
       orbit.dispose()
       renderer.dispose()
       renderer.forceContextLoss()
+      callouts?.dispose()
       element.replaceChildren()
       materials.forEach((m) => m.dispose())
       fanGeometry.dispose()
@@ -567,36 +663,6 @@ export function LinkedModelView(props: Props) {
       orientationMaterials.forEach((material) => material.dispose())
     }
   }, [models, choose, mode === 'scope', wholeScope])
-  const roots = models ? (mode === 'scope' ? [models.scope] : [models.anatomy, models.nodes]) : []
-  const options: THREE.Object3D[] = []
-  roots.forEach((root) =>
-    root.traverse((object) => {
-      if (
-        object instanceof THREE.Mesh &&
-        object.userData.semanticId &&
-        !object.name.startsWith('bending_ring_') &&
-        object.userData.role !== 'node'
-      )
-        options.push(object)
-    }),
-  )
-  const landmarkIds = config.linkedLesson ? LINKED_LANDMARKS[config.linkedLesson] : []
-  const landmarkTarget = landmarkIds.find((id) => !evidence.identifiedStructures?.includes(id))
-  const identifying = !config.demonstration && !config.reveal
-  const candidateIds =
-    mode === 'scope'
-      ? ['transducer_face', 'optical_lens', 'channel_outlet', 'legacy_distal_body']
-      : [
-          'carina',
-          'right_main_bronchus',
-          'left_main_bronchus',
-          'azygous',
-          'superior_vena_cava',
-          'left_brachiocephalic_vein',
-          'brachiocephalic_trunk',
-          'aorta',
-        ]
-  const candidates = identifying ? options.filter((o) => candidateIds.includes(o.name)) : options
   const sweep = evidence.sweeps?.[evidence.approach]
   function checkLandmark() {
     if (config.locked || !landmarkTarget || !selection) return
@@ -625,6 +691,32 @@ export function LinkedModelView(props: Props) {
     choose(id, point && mode !== 'scope' ? point : undefined)
   }
   const concealed = config.locked && !config.reveal
+  const selectedIndex = candidates.findIndex((object) => object.name === selection)
+  const structureSelector = (
+    <label>
+      {identifying ? 'Select an unnamed structure' : 'Inspect a structure'}
+      <select
+        aria-label={identifying ? 'Select an unnamed structure' : 'Inspect a structure'}
+        value={identifying ? (selectedIndex < 0 ? '' : String(selectedIndex)) : selection}
+        onChange={(e) =>
+          selectNamed(
+            identifying && e.target.value !== ''
+              ? (candidates[Number(e.target.value)]?.name ?? '')
+              : e.target.value,
+          )
+        }
+      >
+        <option value="">Choose a structure</option>
+        {candidates.map((object, i) => (
+          <option key={object.name} value={identifying ? String(i) : object.name}>
+            {identifying
+              ? 'Structure ' + String.fromCharCode(65 + i)
+              : labelFor(object, config.reveal)}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
   return (
     <section className="linked-models" aria-label="Linked teaching models">
       <div hidden={concealed}>
@@ -683,6 +775,39 @@ export function LinkedModelView(props: Props) {
         )}
         {!models && !error && <p role="status">Checking and loading teaching models…</p>}
       </div>
+      {identifying && !config.locked && landmarkTarget && (
+        <div className="linked-landmark-task">
+          <h3>Find the {LANDMARK_NAMES[landmarkTarget]}</h3>
+          <p>
+            Letters mark structures on the 3D {landmarkMode} model. Click a letter or choose its
+            matching option, then check your selection.
+          </p>
+          {mode !== landmarkMode && (
+            <button
+              onClick={() => {
+                setMode(landmarkMode)
+                choose('')
+              }}
+            >
+              Open {landmarkMode === 'scope' ? 'Scope' : 'Anatomy'} model for this check
+            </button>
+          )}
+          {models && mode === landmarkMode && (
+            <div className="linked-landmark-controls">
+              {structureSelector}
+              <button disabled={!selection} onClick={checkLandmark}>
+                Check landmark
+              </button>
+            </div>
+          )}
+          {selectedIndex >= 0 && mode === landmarkMode && (
+            <p className="linked-selection" aria-live="polite">
+              Structure {String.fromCharCode(65 + selectedIndex)} selected — highlighted in gold.
+            </p>
+          )}
+          {landmarkFeedback && <p role="status">{landmarkFeedback}</p>}
+        </div>
+      )}
       <div className={concealed ? 'linked-pair linked-pair--retained' : 'linked-pair'}>
         <div className="linked-physical" hidden={concealed}>
           <div ref={host} className="linked-canvas" hidden={mode === 'section'} />
@@ -712,39 +837,16 @@ export function LinkedModelView(props: Props) {
           </div>
           <p className="guided-label">
             {config.reveal && mode !== 'section' && 'Hover to name a structure. '}
+            {identifying &&
+              mode !== 'section' &&
+              'Letters refer to the 3D model. Hover to see a matching letter. '}
             Drag to orbit; scroll to zoom. Observer controls change your viewpoint only.
           </p>
         </div>
       )}
       {!config.locked && models && (
         <>
-          <label>
-            {identifying ? 'Select an unnamed structure' : 'Inspect a structure'}
-            <select
-              aria-label={identifying ? 'Select an unnamed structure' : 'Inspect a structure'}
-              value={
-                identifying
-                  ? selection
-                    ? String(candidates.findIndex((o) => o.name === selection))
-                    : ''
-                  : selection
-              }
-              onChange={(e) =>
-                selectNamed(
-                  identifying && e.target.value !== '' ? (candidates[Number(e.target.value)]?.name ?? '') : e.target.value,
-                )
-              }
-            >
-              <option value="">Choose a structure</option>
-              {candidates.map((object, i) => (
-                <option key={object.name} value={identifying ? String(i) : object.name}>
-                  {identifying
-                    ? 'Structure ' + String.fromCharCode(65 + i)
-                    : labelFor(object, config.reveal)}
-                </option>
-              ))}
-            </select>
-          </label>
+          {(!identifying || !landmarkTarget || mode !== landmarkMode) && structureSelector}
           {selection && !identifying && (
             <p className="linked-selection" role="status">
               Selected:{' '}
@@ -771,19 +873,6 @@ export function LinkedModelView(props: Props) {
             </label>
           )}
         </>
-      )}
-      {identifying && !config.locked && landmarkTarget && (
-        <div className="linked-landmark-task">
-          <h3>Landmark check</h3>
-          <p>
-            Find the {LANDMARK_NAMES[landmarkTarget]}. Select it in the model or compare the unnamed
-            structure choices, then check your selection.
-          </p>
-          <button disabled={!selection} onClick={checkLandmark}>
-            Check landmark
-          </button>
-          {landmarkFeedback && <p role="status">{landmarkFeedback}</p>}
-        </div>
       )}
       {identifying && !config.locked && !landmarkTarget && landmarkIds.length > 0 && (
         <p role="status">Landmarks identified. Acquire the required ultrasound sweep.</p>

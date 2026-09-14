@@ -19,4 +19,6 @@ The named `Text.zip`, `Handbook of Endobronchial Ultrasound.pdf`, and `EBUS_GUID
 
 ## Acceptance
 
+Focused learner repair: the unnamed A–H choices need matching visible references on the 3D model. Add clickable letter callouts with leaders to the actual meshes, keep the dropdown mapping identical, and show the active landmark instruction beside its selection/check controls above the model. Keep anatomical names concealed until feedback/reveal. Verify marker selection, observer movement, wrong-answer retry, concealed observation and compact layout in the real lesson. Preserve acquisition, scoring, geometry and release state.
+
 Run root/embedded type checks, guided and affected acoustic/simulator/knobology tests; verify the real five lesson routes, frame correspondence, observer isolation, wrong-landmark retry, gradual sweep, changed-window transfer, hidden annotations, retained frames, versioned records, stale/failure gates, restart/review, keyboard and compact/reduced-motion behavior. Preserve any failures in the final review record. Existing additional-model behavior receives regression checks, not redesign.
