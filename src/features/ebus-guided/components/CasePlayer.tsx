@@ -1,87 +1,94 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from '@/i18n/navigation'
 import { NowCard } from '@/features/learning-module/stage/NowCard'
-import type { EbusCase } from '../content/types'
+import type { ClinicalLearningItem } from '@/features/learning-module/activity'
+import type { EbusCase, Question } from '../content/types'
 import { BASE, lessonHref, LESSONS } from '../content/curriculum'
-import { firstAttempt, updateRecord, completeCase } from '../engine/progress'
-import { useCourseRecord } from './useCourseRecord'
+import { recordLocation } from '../engine/selfPacedProgress'
 import { QuestionBody } from './QuestionBody'
+import { QuestionExplanation } from './QuestionExplanation'
 import { SourceList } from './SourceList'
 import { DecisionImage } from './DecisionImage'
 import { StationFigure } from './StationFigure'
 import styles from './course.module.css'
+
+function learningItem(question: Question): ClinicalLearningItem {
+  return {
+    id: question.id,
+    activityId: 'ebus-guided',
+    phase: 'predict',
+    itemType: 'management-decision',
+    contextRequirement: 'technical',
+    stem: question.prompt,
+    choices: question.choices.map((c) => ({
+      id: c.id,
+      label: c.text,
+      rationale: c.rationale,
+      plausibility: c.unsafe ? 'unsafe' : c.correct ? 'best' : 'incorrect-mechanism',
+    })),
+    correctChoiceIds: question.choices.filter((c) => c.correct).map((c) => c.id),
+    explanation: question.explanation,
+    evidenceIds: ['ebus-guided-sources'],
+    reviewStatus: 'draft',
+  }
+}
+
+/**
+ * An authored clinical case, self-paced (EBUS-01). Each check can be answered, explained first,
+ * retried or passed over; the debrief lists what was chosen in this session and every explanation.
+ * Nothing is stored except that the case was opened.
+ */
 export function CasePlayer({
   item,
-  mode,
+  kind,
   onExit,
-  feedback = 'coached',
 }: {
   item: EbusCase
-  mode: 'practice' | 'assess'
-  feedback?: 'coached' | 'independent'
+  kind: 'practice' | 'integrated'
   onExit: () => void
 }) {
-  const record = useCourseRecord()
-  const coached = mode === 'practice' && feedback === 'coached'
-  const historyId = coached ? item.id + '-coached-v1' : item.id
   const [index, setIndex] = useState(0)
-  const [selected, setSelected] = useState('')
+  const [selected, setSelected] = useState<Record<string, string>>({})
   const [answers, setAnswers] = useState<Record<string, string>>({})
-  const [first, setFirst] = useState<Record<string, string>>({})
   const [debrief, setDebrief] = useState(false)
-  const [storageFailed, setStorageFailed] = useState(false)
+  useEffect(() => {
+    recordLocation({ kind: kind === 'practice' ? 'practice-case' : 'integrated-case', id: item.id })
+  }, [item.id, kind])
   const q = item.questions[index],
     committed = answers[q.id]
   const unsafe = !!q.choices.find((c) => c.id === committed)?.unsafe
+  const last = index === item.questions.length - 1
+  const lessons = useMemo(
+    () => item.lessonIds.map((id) => LESSONS.find((l) => l.id === id)).filter(Boolean),
+    [item.lessonIds],
+  )
   function advance() {
-    if (!committed) {
-      if (!q.choices.some((c) => c.id === selected)) return
-      setAnswers((a) => ({ ...a, [q.id]: selected }))
-      setFirst((a) => (Object.hasOwn(a, q.id) ? a : { ...a, [q.id]: selected }))
-      setStorageFailed(!updateRecord((r) => firstAttempt(r, historyId + ':' + q.id, q, selected)))
-      return
-    }
-    if (unsafe) {
-      setAnswers((a) => {
-        const copy = { ...a }
-        delete copy[q.id]
-        return copy
-      })
-      setSelected('')
-      return
-    }
-    if (index === item.questions.length - 1) {
+    if (last) {
       setDebrief(true)
       return
     }
     setIndex((i) => i + 1)
-    setSelected('')
   }
-  function finish() {
-    if (mode === 'assess' && !updateRecord((r) => completeCase(r, item.id, answers))) {
-      setStorageFailed(true)
-      return
-    }
-    onExit()
-  }
+  const hint = (
+    <>
+      <p>Use the clinical situation and the described landmarks. The lessons behind this case:</p>
+      <ul>
+        {lessons.map((lesson) => (
+          <li key={lesson!.id}>
+            <Link href={lessonHref(lesson!.id)}>{lesson!.title}</Link> — {lesson!.concept}
+          </li>
+        ))}
+      </ul>
+    </>
+  )
+  const exitHref = BASE + (kind === 'practice' ? '/practice' : '/assess')
   return (
-    <div>
+    <div data-ebus-case={item.id}>
       <p className={styles.eyebrow}>
-        {mode === 'assess'
-          ? 'Formative assessment'
-          : coached
-            ? 'Coached practice · Version 1'
-            : 'Independent practice'}{' '}
-        · Authored clinical case
+        {kind === 'integrated' ? 'Integrated case' : 'Practice case'} · Authored clinical case
       </p>
       <h1 className={styles.caseTitle}>{item.title}</h1>
-      {storageFailed && (
-        <p className={styles.notice} role="status">
-          This browser could not save the record. Keep this page open or enable browser storage
-          before continuing.
-        </p>
-      )}
       {!debrief ? (
         <div className={styles.caseGrid}>
           <section className={styles.card}>
@@ -89,98 +96,100 @@ export function CasePlayer({
             <p>{item.context}</p>
             {q.imageStation && <DecisionImage key={q.id} station={q.imageStation} />}
             <p className={styles.muted}>
-              {coached
-                ? 'Reasoning appears after each response. Coached first responses are stored separately from independent practice history.'
-                : 'Reasoning appears in the debrief.'}{' '}
-              Unsafe choices receive immediate feedback and require revision. An unfinished case
-              restarts from its first question.
+              Feedback appears when you check a response. You can open the hint or the explanation
+              first, try again after any response, or continue without answering. An unsafe choice
+              is explained immediately. Nothing you choose here is stored.
             </p>
           </section>
           <NowCard
             model={{
-              kicker: 'Question ' + (index + 1) + ' of ' + item.questions.length,
+              kicker: 'Check ' + (index + 1) + ' of ' + item.questions.length,
               heading: 'Your decision',
-              body: 'Select the best response to the situation.',
+              body: 'Select a response and check it, open the explanation first, or continue.',
               tone: unsafe ? 'safety' : 'neutral',
               primary: {
-                label: unsafe
-                  ? 'Revise this response'
-                  : !committed
-                    ? 'Submit response'
-                    : index === item.questions.length - 1
-                      ? 'Open debrief'
-                      : 'Next question',
+                label: committed
+                  ? last
+                    ? 'Open debrief'
+                    : 'Next check'
+                  : last
+                    ? 'Open debrief without answering'
+                    : 'Continue without answering',
                 onActivate: advance,
-                disabled: !committed && !selected,
-                disabledReason: 'Select a response first.',
               },
             }}
           >
             <QuestionBody
+              key={q.id}
               question={q}
-              selected={selected || committed || ''}
+              selected={selected[q.id] ?? committed ?? ''}
               committed={committed}
-              onSelect={setSelected}
-              timing={coached ? 'immediate-after-commit' : 'debrief-only'}
+              hint={hint}
+              onSelect={(id) => setSelected((value) => ({ ...value, [q.id]: id }))}
+              onCheck={() => {
+                const id = selected[q.id]
+                if (q.choices.some((c) => c.id === id))
+                  setAnswers((value) => ({ ...value, [q.id]: id }))
+              }}
+              onRetry={() => {
+                setAnswers((value) => {
+                  const next = { ...value }
+                  delete next[q.id]
+                  return next
+                })
+                setSelected((value) => ({ ...value, [q.id]: '' }))
+              }}
             />
           </NowCard>
         </div>
       ) : (
-        <section className={styles.debrief}>
+        <section className={styles.debrief} data-case-debrief>
           <h2>Case debrief</h2>
           <p>
-            Review your original decisions and the alternatives. Revisions do not overwrite first
-            responses. These results guide further study and are not a passing or competence
-            standard.
+            Each decision with its explanation. This is a reading of the case, not a result: what
+            you chose here is not stored, and you can open the case again at any time.
           </p>
           {item.questions.map((question) => {
-            const initial = first[question.id],
-              earliest = record.firstAttempts[historyId + ':' + question.id]?.choiceId
+            const chosen = question.choices.find((c) => c.id === answers[question.id])
             return (
               <section key={question.id} className={styles.card}>
-                <QuestionBody
-                  question={question}
-                  selected={initial}
-                  committed={initial}
-                  onSelect={() => {}}
-                  timing="debrief-only"
-                  debrief
-                />
-                {answers[question.id] !== initial && (
-                  <p className={styles.notice}>
-                    You revised the unsafe response before continuing.
-                  </p>
-                )}
-                {earliest && earliest !== initial && (
-                  <p className={styles.muted}>
-                    First recorded response from an earlier attempt:{' '}
-                    {question.choices.find((c) => c.id === earliest)?.text}
-                  </p>
-                )}
+                <h3>{question.prompt}</h3>
+                <p>
+                  {chosen ? (
+                    <>
+                      <strong>Your response in this session:</strong> {chosen.text}
+                      {chosen.unsafe ? <strong> Unsafe.</strong> : null}
+                      {!chosen.correct ? ' — ' + chosen.rationale : ''}
+                    </>
+                  ) : (
+                    <em>Not answered in this session.</em>
+                  )}
+                </p>
+                <QuestionExplanation item={learningItem(question)} />
                 {question.imageStation && <StationFigure station={question.imageStation} />}
               </section>
             )
           })}
           <section className={styles.card}>
-            <h2>Targeted review</h2>
-            <p>Revisit these lessons, then try another case on a later day.</p>
+            <h2>Lessons behind this case</h2>
+            <p>Revisit any of these, then try another case on a later day.</p>
             <ul>
-              {item.lessonIds.map((id) => (
-                <li key={id}>
-                  <Link href={lessonHref(id)}>{LESSONS.find((l) => l.id === id)?.title}</Link>
+              {lessons.map((lesson) => (
+                <li key={lesson!.id}>
+                  <Link href={lessonHref(lesson!.id)}>{lesson!.title}</Link>
                 </li>
               ))}
             </ul>
           </section>
-          <button className={styles.button} onClick={finish}>
-            {mode === 'assess' ? 'Record case review and return' : 'Return to practice'}
+          <button className={styles.button} onClick={onExit}>
+            {kind === 'integrated' ? 'Return to the cases' : 'Return to practice'}
           </button>
         </section>
       )}
       <SourceList ids={item.sources} />
       <div className={styles.actions}>
-        <Link className={styles.secondary} href={BASE + '/' + mode}>
-          Save and exit
+        <Link className={styles.secondary} href={exitHref}>
+          Leave this case
         </Link>
       </div>
     </div>

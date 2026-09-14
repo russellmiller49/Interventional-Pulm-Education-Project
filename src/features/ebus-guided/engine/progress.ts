@@ -8,8 +8,20 @@ import {
   linkedTaskKey,
   type LinkedFrameSource,
 } from '@/lib/ebus-linked-contract'
+
+/**
+ * The pre-conversion course record, `ip-ebus-guided-v1`: completed lessons, first attempts with
+ * a support flag, support requests, linked skill observations paired with an interpretation, and
+ * completed cases.
+ *
+ * Since EBUS-01 (owner decision of 2026-09-14, `docs/gap-remediation/self-paced/`) the course
+ * keeps only the self-paced record in `selfPacedProgress.ts`. This module is read-only
+ * compatibility: it can still interpret an old value, and its pure transforms document what the
+ * old record meant, so the historical acquisition and first-response records stay readable. No
+ * writer remains here, no component imports this module, and nothing converts an old completion,
+ * response or observation into current progress.
+ */
 export const STORAGE_KEY = 'ip-ebus-guided-v1'
-export const RECORD_EVENT = 'ebus-guided-record'
 const attempt = z
   .object({
     choiceId: z.string().max(80),
@@ -81,6 +93,7 @@ export const emptyRecord = (): CourseRecord => ({
   assessmentComplete: false,
   updatedAt: '',
 })
+/** Interpret a stored legacy value. Pure: nothing is written back. */
 export function parseRecord(raw: string | null): CourseRecord {
   try {
     const parsed = schema.safeParse(JSON.parse(raw ?? 'null'))
@@ -108,25 +121,7 @@ export function parseRecord(raw: string | null): CourseRecord {
     return emptyRecord()
   }
 }
-export function readRecord(): CourseRecord {
-  try {
-    return parseRecord(window.localStorage.getItem(STORAGE_KEY))
-  } catch {
-    return emptyRecord()
-  }
-}
-export function writeRecord(record: CourseRecord): boolean {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(schema.parse(record)))
-    window.dispatchEvent(new Event(RECORD_EVENT))
-    return true
-  } catch {
-    return false
-  }
-}
-export function updateRecord(change: (record: CourseRecord) => CourseRecord): boolean {
-  return writeRecord({ ...change(readRecord()), updatedAt: new Date().toISOString() })
-}
+/** Legacy transform, kept to document the old first-response rule. Pure; no current caller writes it. */
 export function firstAttempt(
   record: CourseRecord,
   key: string,
@@ -145,31 +140,12 @@ export function firstAttempt(
     },
   }
 }
-export function recordSupportRequest(
-  record: CourseRecord,
-  lessonId: string,
-  activityId: string,
-  sessionId: string,
-): CourseRecord {
-  const requests = record.supportRequests[lessonId] ?? []
-  if (requests.some((entry) => entry.activityId === activityId && entry.sessionId === sessionId))
-    return record
-  return {
-    ...record,
-    supportRequests: {
-      ...record.supportRequests,
-      [lessonId]: [...requests, { activityId, sessionId, at: new Date().toISOString() }].slice(
-        -200,
-      ),
-    },
-  }
-}
-export function completeLesson(record: CourseRecord, id: string): CourseRecord {
-  if (!LESSONS.some((l) => l.id === id) || record.completed.includes(id)) return record
-  return { ...record, completed: [...record.completed, id] }
-}
 
-/** Store the actual acquisition paired with this response; never derive it from old completion. */
+/**
+ * Legacy transform: the actual acquisition paired with its response, never derived from old
+ * completion. Pure; kept so the retained-evidence and linked-task rules of old records remain
+ * tested. No current session records a skill observation.
+ */
 export function recordLinkedObservation(
   record: CourseRecord,
   lab: Lab,
@@ -218,28 +194,5 @@ export function recordLinkedObservation(
         at: new Date().toISOString(),
       },
     },
-  }
-}
-
-export function assessmentReady(record: CourseRecord): boolean {
-  return LESSONS.every((l) => record.completed.includes(l.id))
-}
-export function completeCase(
-  record: CourseRecord,
-  id: string,
-  answers: Record<string, string>,
-): CourseRecord {
-  const item = FINAL_CASES.find((c) => c.id === id)
-  if (
-    !assessmentReady(record) ||
-    !item ||
-    item.questions.some((q) => !q.choices.some((c) => c.id === answers[q.id] && !c.unsafe))
-  )
-    return record
-  const completedCases = [...new Set([...record.completedCases, id])]
-  return {
-    ...record,
-    completedCases,
-    assessmentComplete: completedCases.length === FINAL_CASES.length,
   }
 }

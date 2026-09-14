@@ -762,3 +762,37 @@
 .embed iframe[hidden] {
   display: none;
 }
+.checkActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 10px 0;
+}
+.explanation,
+.hint {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 12px 15px;
+  margin: 12px 0;
+  line-height: 1.55;
+  display: grid;
+  gap: 8px;
+}
+.explanation ul,
+.hint ul {
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+}
+.explanation li[data-unsafe='true'] {
+  border-left: 3px solid #b76868;
+  padding-left: 8px;
+}
+.taskAdvance .skip {
+  order: 3;
+}
+.taskSummary {
+  display: grid;
+  gap: 6px;
+  padding-left: 20px;
+}
