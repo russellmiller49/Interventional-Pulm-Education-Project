@@ -117,7 +117,7 @@ describe('the surfaces', () => {
       (details) => (details as HTMLDetailsElement).open,
     )
     expect(open).toHaveLength(1)
-    expect(open[0].textContent).toMatch(/Four places, four shapes/)
+    expect(open[0].textContent).toMatch(/Identify the chamber from the waveform/)
     expect(open[0].querySelector('[data-recommended="true"]')?.textContent).toMatch(/Up next/)
     expect(document.querySelectorAll('[data-kind="section"][data-complete="true"]')).toHaveLength(2)
     expect(document.querySelectorAll('[data-kind="section"]')).toHaveLength(

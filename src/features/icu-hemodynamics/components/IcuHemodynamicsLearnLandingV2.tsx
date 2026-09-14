@@ -18,10 +18,10 @@ export function IcuHemodynamicsLearnLandingV2() {
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Learn</p>
         <h1 className="text-3xl font-bold tracking-tight">{hemodynamicsPathway.arcSentence}</h1>
         <p className="max-w-3xl text-base leading-7 text-muted-foreground">
-          Every section runs on one monitored bed: a running monitor, the catheter map beneath it,
-          and one thing to do at a time. Move in order or open any section directly; nothing is
-          gated, and working through a section records that you took part — not a claim about
-          clinical readiness.
+          Follow one clinical or measurement question at a time, with the relevant tracing, anatomy,
+          acquisition or calculation beside its controls. Move in order or open any section
+          directly; nothing is gated, and working through a section records that you took part — not
+          a claim about clinical readiness.
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <HemodynamicsContinueCta />
@@ -30,9 +30,12 @@ export function IcuHemodynamicsLearnLandingV2() {
           {hemodynamicsCompositionLine()}
         </p>
       </section>
-      <section aria-label="Every section of the pathway">
+      <details aria-label="Every section of the pathway">
+        <summary className="cursor-pointer font-semibold">
+          Browse the pathway · open any section
+        </summary>
         <HemodynamicsStoredPathwayAccordion id="hemodynamics-learn-map" />
-      </section>
+      </details>
     </div>
   )
 }

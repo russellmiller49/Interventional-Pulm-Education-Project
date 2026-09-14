@@ -29,6 +29,8 @@ interface BedsideMonitorProps {
   chamberLabel?: 'shown' | 'withheld'
   /** The monitor's own footer controls; the lesson stage supplies its own beneath the monitor. */
   showControls?: boolean
+  /** A focused channel uses the same samples and readout calculation as the full monitor. */
+  focus?: 'all' | 'pac' | 'arterial'
 }
 
 interface PacTraceConfiguration {
@@ -109,6 +111,7 @@ export function BedsideMonitor({
   onOpenCardiacOutput,
   chamberLabel = 'shown',
   showControls = true,
+  focus = 'all',
 }: BedsideMonitorProps) {
   const measurements = state.measurements
   const withheld = chamberLabel === 'withheld'
@@ -291,6 +294,70 @@ export function BedsideMonitor({
                 detail: 'live occlusion mean · mmHg',
               }
 
+  if (focus !== 'all') {
+    const arterial = focus === 'arterial'
+    return (
+      <section
+        className={styles.focusedMonitor}
+        data-focused-monitor={focus}
+        aria-label="Simulated pressure observation"
+      >
+        <header>
+          <strong>{arterial ? 'Systemic arterial pressure' : pacPressureDisplay.label}</strong>
+          <span>
+            {arterial
+              ? `${value(artSystolic)}/${value(artDiastolic)} · MAP ${value(artMean)}`
+              : pacPressureDisplay.value}{' '}
+            mmHg
+          </span>
+          <small>
+            Simulated · {state.sweepSeconds} s sweep · {state.parameters.respiratoryRateBpm}{' '}
+            breaths/min · PEEP {state.parameters.peepCmH2O} cm H₂O
+          </small>
+        </header>
+        <WaveformStrip
+          samples={state.waveforms}
+          field="ecgMv"
+          label="ECG II"
+          unit="mV"
+          minimum={-0.3}
+          maximum={1.4}
+          color="#61e294"
+          sweepSeconds={state.sweepSeconds}
+          readable
+        />
+        <WaveformStrip
+          samples={state.waveforms}
+          field={arterial ? 'artMmHg' : pacTrace.field}
+          label={arterial ? 'ART' : pacTrace.label}
+          unit="mmHg"
+          minimum={arterial ? 0 : pacTrace.minimum}
+          maximum={arterial ? state.pressureScaleMmHg : pacTrace.maximum}
+          color={arterial ? '#ff647c' : pacTrace.color}
+          sweepSeconds={state.sweepSeconds}
+          showScale
+          readable
+          heartRateBpm={measurements.heartRateBpm}
+          landmarks={annotate ? (arterial ? ARTERIAL_LANDMARKS : pacTrace.landmarks) : undefined}
+          referenceValue={arterial ? artMean : pacTrace.referenceValue}
+          referenceLabel={arterial ? 'MAP' : pacTrace.referenceLabel}
+          transitionFrom={arterial ? undefined : pacTrace.transitionFrom}
+          unavailableMessage={arterial ? undefined : pacTrace.unavailableMessage}
+          phaseCursor={withheld ? undefined : endExpirationMarker}
+        />
+        {state.catheter.balloonInflated || state.catheter.storedWedgeMmHg !== null ? (
+          <p>
+            Balloon {state.catheter.balloonInflated ? 'inflated' : 'down'} · stored end-expiratory
+            PAWP {value(state.catheter.storedWedgeMmHg)} mmHg
+          </p>
+        ) : null}
+        {activeAlarms.length > 0 ? (
+          <p role="status">{activeAlarms.map((alarm) => alarm.label).join(' · ')}</p>
+        ) : null}
+      </section>
+    )
+  }
+
   return (
     <section className={styles.monitor} aria-label="Vendor-neutral simulated ICU bedside monitor">
       <header className={styles.monitorHeader}>
@@ -336,6 +403,7 @@ export function BedsideMonitor({
             maximum={1.4}
             color="#61e294"
             sweepSeconds={state.sweepSeconds}
+            readable
           />
           <WaveformStrip
             samples={state.waveforms}
@@ -346,6 +414,7 @@ export function BedsideMonitor({
             maximum={state.pressureScaleMmHg}
             color="#ff647c"
             sweepSeconds={state.sweepSeconds}
+            readable
             showScale
             heartRateBpm={measurements.heartRateBpm}
             landmarks={annotate ? ARTERIAL_LANDMARKS : undefined}
@@ -362,6 +431,7 @@ export function BedsideMonitor({
             maximum={cvpScaleMaximum}
             color="#55c6ff"
             sweepSeconds={state.sweepSeconds}
+            readable
             showScale
             heartRateBpm={measurements.heartRateBpm}
             landmarks={annotate ? ATRIAL_LANDMARKS : undefined}
@@ -376,6 +446,7 @@ export function BedsideMonitor({
             maximum={pacTrace.maximum}
             color={pacTrace.color}
             sweepSeconds={state.sweepSeconds}
+            readable
             showScale
             heartRateBpm={measurements.heartRateBpm}
             landmarks={annotate ? pacTrace.landmarks : undefined}
@@ -394,6 +465,7 @@ export function BedsideMonitor({
             maximum={1.2}
             color="#6ee7e0"
             sweepSeconds={state.sweepSeconds}
+            readable
           />
         </div>
 

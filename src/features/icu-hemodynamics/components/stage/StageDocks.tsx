@@ -18,10 +18,16 @@ import { DYNAMIC_RESPONSE_REFERENCE } from '../../engine/waveformArtifacts'
 import {
   DYNAMIC_RESPONSE_CLASSIFIED_CHECK,
   DYNAMIC_RESPONSE_CORRECTED_CHECK,
+  CURRENT_RESPONSE_RECHECKED,
   LEVEL_TOLERANCE_CM,
   standardTechnique,
 } from '../../engine/stageRuntime'
 import { WEDGE_AUTO_DEFLATION_SECONDS } from '../../engine/simulation'
+import {
+  catheterFlushBlocked,
+  pressureObservationKey,
+  flushReleaseReady,
+} from '../../engine/pressureObservation'
 import { thermodilutionAcceptedAverage } from '../../engine/thermodilution'
 import type {
   DynamicResponseKind,
@@ -32,6 +38,7 @@ import type {
 import { FastFlushTrace } from '../PressureSystemTeachingVisual'
 import { ThermodilutionSeriesReadout, ThermodilutionTrialCard } from '../ThermodilutionTrialReview'
 import styles from './hemodynamics-stage.module.css'
+import { useHemodynamicsTaskDraft } from './HemodynamicsTaskDrafts'
 
 /**
  * The controls a lesson step opens beneath the monitor.
@@ -57,83 +64,103 @@ export function quickControlId(key: string): string {
  * The line: level, zero, scale
  * ------------------------------------------------------------------ */
 
-export function LineDock({ state, dispatch, enabled }: DockProps) {
+export function LineDock({
+  state,
+  dispatch,
+  enabled,
+  only,
+}: DockProps & { readonly only?: 'level' | 'zero' | 'scale' }) {
   const level = state.measurementSystem.transducerLevelCm
   const levelled = Math.abs(level) <= LEVEL_TOLERANCE_CM
   return (
     <fieldset className={styles.dock} disabled={!enabled} data-dock="line">
       <legend>The line</legend>
-      <div className={styles.dockRow}>
-        <label htmlFor={quickControlId('level')}>
-          <span>Where the transducer sits</span>
-          <small>
-            {levelled
-              ? 'At the reference height.'
-              : level > 0
-                ? 'Above the reference: every pressure reads low.'
-                : 'Below the reference: every pressure reads high.'}
-          </small>
-        </label>
-        <div className={styles.slider}>
-          <input
-            id={quickControlId('level')}
-            type="range"
-            min={-20}
-            max={20}
-            step={1}
-            value={level}
-            aria-valuetext={`${level > 0 ? '+' : ''}${level} cm from the reference`}
+      {!only || only === 'level' ? (
+        <div className={styles.dockRow}>
+          <label htmlFor={quickControlId('level')}>
+            <span>Where the transducer sits</span>
+            <small>
+              {levelled
+                ? 'At the reference height.'
+                : level > 0
+                  ? 'Above the reference: every pressure reads low.'
+                  : 'Below the reference: every pressure reads high.'}
+            </small>
+          </label>
+          <div className={styles.slider}>
+            <input
+              id={quickControlId('level')}
+              type="range"
+              min={-20}
+              max={20}
+              step={1}
+              value={level}
+              aria-valuetext={`${level > 0 ? '+' : ''}${level} cm from the reference`}
+              onChange={(event) =>
+                dispatch({ type: 'SET_TRANSDUCER_LEVEL', levelCm: Number(event.target.value) })
+              }
+            />
+            <output htmlFor={quickControlId('level')} data-level-readout>
+              {level > 0 ? '+' : ''}
+              {level} cm
+            </output>
+          </div>
+        </div>
+      ) : null}
+      {!only || only === 'zero' ? (
+        <div className={styles.dockRow}>
+          <div>
+            <span>What it calls zero</span>
+            <small>
+              {state.measurementSystem.zeroed
+                ? 'Zeroed to air. Level is a separate step.'
+                : 'Not yet zeroed: the reference has not been set.'}
+            </small>
+          </div>
+          <button
+            id={quickControlId('zero')}
+            type="button"
+            className={styles.dockButton}
+            onClick={() => dispatch({ type: 'ZERO_TRANSDUCER' })}
+            disabled={state.measurementSystem.zeroed}
+          >
+            {state.measurementSystem.zeroed ? 'Zeroed' : 'Open to air and zero'}
+          </button>
+        </div>
+      ) : null}
+      {only === 'zero' ? (
+        <p className={styles.dockNote}>
+          Simplified workflow: this button represents opening the transducer to atmosphere,
+          accepting zero, and reconnecting the pressure channel. Stopcock handling is not modeled.
+          Zeroing does not move the transducer.
+        </p>
+      ) : null}
+      {!only || only === 'scale' ? (
+        <div className={styles.dockRow}>
+          <label htmlFor={quickControlId('scale')}>
+            <span>The display scale</span>
+            <small>
+              Changes how large the arterial tracing is drawn, and nothing underneath it.
+            </small>
+          </label>
+          <select
+            id={quickControlId('scale')}
+            value={state.pressureScaleMmHg}
             onChange={(event) =>
-              dispatch({ type: 'SET_TRANSDUCER_LEVEL', levelCm: Number(event.target.value) })
+              dispatch({
+                type: 'SET_PRESSURE_SCALE',
+                maximum: Number(event.target.value) as 40 | 80 | 160 | 240,
+              })
             }
-          />
-          <output htmlFor={quickControlId('level')} data-level-readout>
-            {level > 0 ? '+' : ''}
-            {level} cm
-          </output>
+          >
+            {[40, 80, 160, 240].map((scale) => (
+              <option key={scale} value={scale}>
+                0–{scale} mmHg
+              </option>
+            ))}
+          </select>
         </div>
-      </div>
-      <div className={styles.dockRow}>
-        <div>
-          <span>What it calls zero</span>
-          <small>
-            {state.measurementSystem.zeroed
-              ? 'Zeroed to air. Level is a separate step.'
-              : 'Not yet zeroed: the reference has not been set.'}
-          </small>
-        </div>
-        <button
-          id={quickControlId('zero')}
-          type="button"
-          className={styles.dockButton}
-          onClick={() => dispatch({ type: 'ZERO_TRANSDUCER' })}
-          disabled={state.measurementSystem.zeroed}
-        >
-          {state.measurementSystem.zeroed ? 'Zeroed' : 'Open to air and zero'}
-        </button>
-      </div>
-      <div className={styles.dockRow}>
-        <label htmlFor={quickControlId('scale')}>
-          <span>The display scale</span>
-          <small>Changes how large the arterial tracing is drawn, and nothing underneath it.</small>
-        </label>
-        <select
-          id={quickControlId('scale')}
-          value={state.pressureScaleMmHg}
-          onChange={(event) =>
-            dispatch({
-              type: 'SET_PRESSURE_SCALE',
-              maximum: Number(event.target.value) as 40 | 80 | 160 | 240,
-            })
-          }
-        >
-          {[40, 80, 160, 240].map((scale) => (
-            <option key={scale} value={scale}>
-              0–{scale} mmHg
-            </option>
-          ))}
-        </select>
-      </div>
+      ) : null}
     </fieldset>
   )
 }
@@ -147,11 +174,25 @@ export function FlushDock({
   dispatch,
   enabled,
   lineType,
-}: DockProps & { readonly lineType: FastFlushLineType }) {
-  const [hasRun, setHasRun] = useState(false)
-  const [observed, setObserved] = useState<DynamicResponseKind | null>(null)
-  const [classification, setClassification] = useState<DynamicResponseKind | null>(null)
-  const [revealed, setRevealed] = useState(false)
+  requireFreshObservation = false,
+}: DockProps & {
+  readonly lineType: FastFlushLineType
+  readonly requireFreshObservation?: boolean
+}) {
+  const [hasRun, setHasRun] = useHemodynamicsTaskDraft('flush:hasRun', false)
+  const [observed, setObserved] = useHemodynamicsTaskDraft<DynamicResponseKind | null>(
+    'flush:observed',
+    null,
+  )
+  const [classification, setClassification] = useHemodynamicsTaskDraft<DynamicResponseKind | null>(
+    'flush:classification',
+    null,
+  )
+  const [revealed, setRevealed] = useHemodynamicsTaskDraft('flush:revealed', false)
+  const [observedKey, setObservedKey] = useHemodynamicsTaskDraft<string | null>(
+    'flush:observedKey',
+    null,
+  )
   const groupId = useId()
   const current = classifyDynamicResponse(state.measurementSystem)
   const response = observed ?? current
@@ -162,30 +203,38 @@ export function FlushDock({
     (state.measurementSystem.artifact === 'none' &&
       state.measurementSystem.dampingRatio >= DYNAMIC_RESPONSE_REFERENCE.underdampedBelow &&
       state.measurementSystem.dampingRatio <= DYNAMIC_RESPONSE_REFERENCE.overdampedAbove)
-  const paUnsafe =
-    lineType === 'pulmonary-artery' &&
-    (state.catheter.position === 'wedge' || state.catheter.balloonInflated)
+  const paUnsafe = catheterFlushBlocked(state, lineType)
+  const stale = hasRun && observedKey !== pressureObservationKey(state, lineType)
+  const acquiring = requireFreshObservation && hasRun && !stale && !flushReleaseReady(state)
   const outcome = revealed ? (classification === response ? 'correct' : 'not-correct') : null
 
   function run() {
-    if (paUnsafe) return
+    if (paUnsafe || !enabled) return
     dispatch({ type: 'FAST_FLUSH', lineType })
     setObserved(classifyDynamicResponse(state.measurementSystem))
     setHasRun(true)
     setClassification(null)
     setRevealed(false)
+    setObservedKey(pressureObservationKey(state, lineType))
   }
 
   function check() {
-    if (!classification) return
+    if (!classification || !enabled || acquiring || (requireFreshObservation && stale)) return
     setRevealed(true)
     if (classification === response) {
       dispatch({ type: 'VALIDATE_SIGNAL', check: DYNAMIC_RESPONSE_CLASSIFIED_CHECK })
+      if (requireFreshObservation && response === 'acceptable') {
+        dispatch({
+          type: 'VALIDATE_SIGNAL',
+          check: `${CURRENT_RESPONSE_RECHECKED}:${pressureObservationKey(state, lineType)}`,
+        })
+      }
     }
   }
 
   /** The reading stays on screen after the repair; flushing again shows the settled line. */
   function repair() {
+    if (!enabled) return
     dispatch({ type: 'SET_DAMPING', dampingRatio: 0.65 })
     dispatch({ type: 'SET_ARTIFACT', artifact: 'none' })
     dispatch({ type: 'VALIDATE_SIGNAL', check: DYNAMIC_RESPONSE_CORRECTED_CHECK })
@@ -198,7 +247,9 @@ export function FlushDock({
         <p className={styles.dockNote} role={paUnsafe ? 'alert' : undefined}>
           A flush on the pulmonary-artery line needs a confirmed artery tracing and a balloon that
           is down. Never flush a wedged catheter.
-          {paUnsafe ? ' The catheter is not in that state now.' : ''}
+          {paUnsafe
+            ? ' Flushing is blocked while wedged, while either balloon state is inflated, or while the tip is moving.'
+            : ''}
         </p>
       ) : null}
       <div className={styles.dockRow}>
@@ -218,8 +269,30 @@ export function FlushDock({
       </div>
       {hasRun ? (
         <>
+          {acquiring ? (
+            <p className={styles.dockNote} role="status" data-flush-acquiring>
+              Observe the plateau, release and first complete pulse after the flush. Classification
+              becomes available when this modeled acquisition finishes.
+            </p>
+          ) : null}
+          {stale ? (
+            <p className={styles.dockNote} role="status" data-flush-stale>
+              Before correction — the captured response below belongs to the earlier line
+              configuration. Flush again to observe the current line.
+            </p>
+          ) : (
+            <p className={styles.dockNote}>
+              Current acquisition ·{' '}
+              {lineType === 'pulmonary-artery' ? 'PAC pressure channel' : 'systemic arterial line'}{' '}
+              · qualitative release rendering.
+            </p>
+          )}
           <FastFlushTrace response={response} lineType={lineType} revealLabel={revealed} />
-          <fieldset className={styles.choiceGroup} data-flush-classification>
+          <fieldset
+            className={styles.choiceGroup}
+            data-flush-classification
+            disabled={acquiring || (requireFreshObservation && stale)}
+          >
             <legend id={groupId}>How did it settle?</legend>
             {dynamicResponseDefinitions.map((candidate) => (
               <label key={candidate.id} data-selected={classification === candidate.id}>
@@ -228,7 +301,7 @@ export function FlushDock({
                   name={`flush-${groupId}`}
                   value={candidate.id}
                   checked={classification === candidate.id}
-                  disabled={classified && revealed}
+                  disabled={revealed && classification === response}
                   onChange={() => {
                     setClassification(candidate.id)
                     setRevealed(false)
@@ -245,7 +318,7 @@ export function FlushDock({
             <button
               type="button"
               className={styles.dockButton}
-              disabled={!classification}
+              disabled={!classification || acquiring || (requireFreshObservation && stale)}
               onClick={check}
             >
               Say what it is
@@ -262,12 +335,13 @@ export function FlushDock({
               {definition.label.toLowerCase()}. {definition.interpretation}
             </p>
           ) : null}
-          {classified && response !== 'acceptable' ? (
+          {classified && revealed && classification === response && response !== 'acceptable' ? (
             <div className={styles.dockRow}>
               <div>
-                <span>Repair the line</span>
+                <span>Simulated line correction</span>
                 <small>
-                  Trace it from the patient to the transducer: air, kinks, connections, the bag.
+                  This sets the modeled dynamic response to an acceptable preset. Finding and
+                  correcting a real air bubble, kink, clot, or connection problem is not modeled.
                 </small>
               </div>
               <button
@@ -277,7 +351,7 @@ export function FlushDock({
                 disabled={corrected}
                 onClick={repair}
               >
-                {corrected ? 'Repaired' : 'Repair the fluid path'}
+                {corrected ? 'Simulated correction applied' : 'Apply the simulated line correction'}
               </button>
             </div>
           ) : null}

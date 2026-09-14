@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, screen } from '@testing-library/react'
 import { ICU_HEMODYNAMICS_LEARN_STORAGE_KEY, parseLearnRecord } from '../engine/learnProgress'
 import {
   clickPrimary,
+  advanceToPrediction,
   commitChoice,
   control,
   currentStepId,
@@ -77,11 +78,12 @@ describe('a section on the stage', () => {
     clickPrimary()
     expect(nowStatus()).toMatch(/Every stop visited/)
     clickPrimary()
-    expect(currentStepId()).toBe(lesson.steps[1].id)
+    advanceToPrediction('pressure-system')
+    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 0].id)
 
     // The prediction: the faulty line is loaded, the controls are locked, the verdict is stated.
-    expect(document.querySelector('[data-controls-locked]')).not.toBeNull()
-    expect(document.querySelector<HTMLFieldSetElement>('[data-dock="line"]')?.disabled).toBe(true)
+    // The new question view exposes evidence and withholds action controls entirely.
+    expect(document.querySelector('[data-dock="line"]')).toBeNull()
     expect(nowPrimary()?.disabled).toBe(true)
     expect(verdictOutcome()).toBeNull()
     commitChoice(/off level, not zeroed, and underdamped/)
@@ -93,7 +95,7 @@ describe('a section on the stage', () => {
     clickPrimary()
 
     // Act: the reference. Continue only appears once both goals are met.
-    expect(currentStepId()).toBe(lesson.steps[2].id)
+    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 1].id)
     expect(goalStates()).toEqual(['false', 'false'])
     expect(nowPrimary()).toBeNull()
     setLevel(0)
@@ -103,17 +105,17 @@ describe('a section on the stage', () => {
     clickPrimary()
 
     // Observe: the flush, said and repaired.
-    expect(currentStepId()).toBe(lesson.steps[3].id)
-    expect(goalStates()).toEqual(['false', 'false', 'false'])
+    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 2].id)
+    expect(goalStates()).toEqual(['false', 'false', 'false', 'false'])
     readAndRepairFlush('underdamped')
     expect(document.querySelector('[data-flush-outcome]')?.getAttribute('data-flush-outcome')).toBe(
       'correct',
     )
-    expect(goalStates()).toEqual(['true', 'true', 'true'])
+    expect(goalStates()).toEqual(['true', 'true', 'true', 'true'])
     clickPrimary()
 
     // Explain: the recap, what changed, the rows, the strip, the stories.
-    expect(currentStepId()).toBe(lesson.steps[4].id)
+    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 3].id)
     expect(document.querySelector('[data-explain-recap]')?.textContent).toMatch(/^Correct\./)
     expect(document.querySelectorAll('[data-before-after] tbody tr')).toHaveLength(4)
     expect(
@@ -126,17 +128,17 @@ describe('a section on the stage', () => {
     clickPrimary()
 
     // Transfer: a new patient, transducer low and the line damped.
-    expect(currentStepId()).toBe(lesson.steps[5].id)
-    expect(document.querySelector('[data-level-readout]')?.textContent).toBe('-6 cm')
+    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 4].id)
+    expect(document.querySelector('[data-dock]')).toBeNull()
     commitChoice(/Re-level the transducer and restore/)
     expect(verdictOutcome()).toBe('correct')
     clickPrimary()
-    expect(currentStepId()).toBe(lesson.steps[6].id)
+    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 5].id)
     setLevel(0)
     readAndRepairFlush('overdamped')
-    expect(goalStates()).toEqual(['true', 'true', 'true', 'true'])
+    expect(goalStates()).toEqual(['true', 'true', 'true', 'true', 'true'])
     clickPrimary()
-    expect(currentStepId()).toBe(lesson.steps[7].id)
+    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 6].id)
     expect(localStorage.getItem(ICU_HEMODYNAMICS_LEARN_STORAGE_KEY)).not.toMatch(
       /"pressure-system"\]/,
     )
@@ -149,35 +151,37 @@ describe('a section on the stage', () => {
     expect(
       document.querySelector('[data-practice-pairing]')?.getAttribute('data-practice-pairing'),
     ).toBe('mechanism-match')
-    expect(stepRows()).toEqual(['done', 'done', 'done', 'done', 'done', 'done', 'done', 'done'])
+    expect(stepRows()).toEqual(lesson.steps.map(() => 'done'))
     expect(document.querySelectorAll('[data-step-list] [aria-current="step"]')).toHaveLength(1)
   })
 
   it('offers Back on the Now card and walks home without losing a commitment', () => {
     const { lesson } = mountSection('pressure-system')
-    clickPrimary()
-    clickPrimary()
+    advanceToPrediction('pressure-system')
     commitChoice(/off level, not zeroed, and underdamped/)
     clickPrimary()
-    expect(currentStepId()).toBe(lesson.steps[2].id)
+    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 1].id)
     fireEvent.click(document.querySelector('[data-now-back]')!)
-    expect(currentStepId()).toBe(lesson.steps[1].id)
-    expect(nowStatus()).toMatch(/looking back/)
+    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 0].id)
+    expect(nowStatus()).toMatch(/Reviewing an earlier step/)
     expect(document.querySelector('[data-controls-locked]')).toBeNull()
-    expect(document.querySelector<HTMLFieldSetElement>('[data-dock="line"]')?.disabled).toBe(true)
-    fireEvent.click(document.querySelector('[data-now-back]')!)
+    expect(document.querySelector('[data-dock="line"]')).toBeNull()
+    while (document.querySelector('[data-now-back]'))
+      fireEvent.click(document.querySelector('[data-now-back]')!)
     expect(currentStepId()).toBe(lesson.steps[0].id)
     expect(document.querySelector('[data-now-back]')).toBeNull()
     clickPrimary()
-    expect(currentStepId()).toBe(lesson.steps[2].id)
+    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 1].id)
     expect(verdictOutcome()).toBeNull()
-    expect(stepRows().slice(0, 3)).toEqual(['done', 'done', 'current'])
+    expect(stepRows().slice(0, lesson.predictionStepIndex + 2)).toEqual([
+      ...Array(lesson.predictionStepIndex + 1).fill('done'),
+      'current',
+    ])
   })
 
   it('restarts from nothing', () => {
     const { lesson } = mountSection('pressure-system')
-    clickPrimary()
-    clickPrimary()
+    advanceToPrediction('pressure-system')
     commitChoice(/off level, not zeroed, and underdamped/)
     fireEvent.click(document.querySelector('[data-stage-restart]')!)
     expect(currentStepId()).toBe(lesson.steps[0].id)
@@ -200,9 +204,11 @@ describe('the orientation section', () => {
   it('commits the question sort as a set and says each row in words', () => {
     const { lesson } = mountSection('why-measure')
     clickPrimary()
-    commitChoice(/push behind the blood/)
+    commitChoice(/arterial pressure is low at the measurement site/)
     clickPrimary()
     expect(currentStepId()).toBe(lesson.steps[2].id)
+    expect(document.querySelector('[data-sort-row]')).toBeNull()
+    clickPrimary() // read the worked classification before the independent sort
     expect(nowPrimary()?.disabled).toBe(true)
     const answers: Record<string, string> = {
       'pa-pressure': 'measured',
@@ -237,7 +243,7 @@ describe('the orientation section', () => {
     ).toMatch(/^Not correct\./)
     clickPrimary()
     clickPrimary()
-    commitChoice(/pressures where its tip sits/)
+    commitChoice(/Transduced pressures/)
     clickPrimary()
     expect(
       parseLearnRecord(localStorage.getItem(ICU_HEMODYNAMICS_LEARN_STORAGE_KEY))
@@ -256,6 +262,7 @@ describe('answering on the catheter map', () => {
     clickPrimary()
     expect(currentStepId()).toBe(lesson.steps[1].id)
 
+    advanceToPrediction('waveform-interpretation')
     // The question: nothing names the place.
     expect(document.querySelector('[data-catheter-map]')?.getAttribute('data-tip')).toBe('withheld')
     expect(document.querySelector('[data-map-emphasis-target]')).toBeNull()
@@ -294,7 +301,7 @@ describe('answering on the catheter map', () => {
 
   it('keeps the off-map option as a row with no pin, never keyed', () => {
     mountSection('waveform-interpretation')
-    for (let stop = 0; stop < 5; stop += 1) clickPrimary()
+    advanceToPrediction('waveform-interpretation')
     const offMap = document.querySelector('[data-catheter-map-answer] label[data-off-map="true"]')
     expect(offMap?.textContent).toMatch(/cannot be named/)
     expect(document.querySelector('[data-map-pin="line"]')).toBeNull()
@@ -381,8 +388,8 @@ describe('the capstone', () => {
   it('restores the line, the tip and the series in order, reassesses, then reads a different line', () => {
     const { lesson } = mountSection('pac-signal-validation')
     // HD-08 as authored: the tip reads a false wedge on a line that is high, unzeroed and ringing.
-    expect(document.querySelector('[data-level-readout]')?.textContent).toBe('+10 cm')
-    expect(document.querySelector('[data-catheter-map]')?.getAttribute('data-tip')).toBe('wedge')
+    expect(document.querySelector('[data-dock]')).toBeNull()
+    expect(document.querySelector('[data-catheter-map]')).toBeNull()
     clickPrimary()
     commitChoice(/Set every number aside as unconfirmed/)
     clickPrimary()
@@ -395,7 +402,7 @@ describe('the capstone', () => {
     expect((control('flush') as HTMLButtonElement).disabled).toBe(true)
     fireEvent.click(control('withdraw'))
     tick(5)
-    expect(document.querySelector('[data-catheter-map]')?.getAttribute('data-tip')).toBe('pa')
+    expect(control('advance')).toBeDisabled() // PA reached; the engine goal below confirms it.
     expect(goalStates()).toEqual(['false', 'true', 'false'])
     readAndRepairFlush('underdamped')
     expect(goalStates()).toEqual(['true', 'true', 'false'])
@@ -452,6 +459,9 @@ describe('the capstone', () => {
 describe('what the wedge dock says about a deflated balloon', () => {
   it('never describes deflation as proving the occlusion has ended', () => {
     mountSection('pawp-capture')
+    clickPrimary()
+    commitChoice(/Place the cursor at end expiration/)
+    clickPrimary()
     const dock = document.querySelector('[data-dock="wedge"]')!
     expect(dock.textContent).not.toMatch(/nothing is occluding/i)
     expect(dock.textContent).toMatch(/does not by itself establish that the occlusion has ended/i)

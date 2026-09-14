@@ -3,6 +3,7 @@
 import { useMemo, useState, type Dispatch } from 'react'
 
 import { waveformAtlasById, waveformAtlasEntries } from '../content/waveformAtlas'
+import { unidentifiedTraceDescription } from '../content/introductoryTeaching'
 import type { HemodynamicAction } from '../engine'
 import { WaveformAtlasFigure } from './WaveformAtlasFigure'
 import styles from './icu-hemodynamics.module.css'
@@ -69,22 +70,42 @@ const PLACE_QUESTIONS: readonly {
 
 const REQUIRED_CORRECT = 5
 
+export interface RecognitionRecord {
+  readonly index: number
+  readonly selectedId: string | null
+  readonly revealed: boolean
+  readonly correctCount: number
+  readonly answered: number
+}
+export const emptyRecognitionRecord = (): RecognitionRecord => ({
+  index: 0,
+  selectedId: null,
+  revealed: false,
+  correctCount: 0,
+  answered: 0,
+})
+
 interface WaveformRecognitionDrillProps {
   readonly dispatch?: Dispatch<HemodynamicAction>
   /** `places` restricts the run to the four normal tracings; `all` is the full atlas. */
   readonly questionSet?: 'places' | 'all'
+  readonly enabled?: boolean
+  readonly record?: RecognitionRecord
+  readonly onRecord?: (record: RecognitionRecord) => void
 }
 
 export function WaveformRecognitionDrill({
   dispatch,
   questionSet = 'all',
+  enabled = true,
+  record,
+  onRecord,
 }: WaveformRecognitionDrillProps) {
   const QUESTION_SET = questionSet === 'places' ? PLACE_QUESTIONS : QUESTIONS
-  const [index, setIndex] = useState(0)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [revealed, setRevealed] = useState(false)
-  const [correctCount, setCorrectCount] = useState(0)
-  const [answered, setAnswered] = useState(0)
+  const [localRecord, setLocalRecord] = useState<RecognitionRecord>(emptyRecognitionRecord)
+  const currentRecord = record ?? localRecord
+  const { index, selectedId, revealed, correctCount, answered } = currentRecord
+  const updateRecord = onRecord ?? setLocalRecord
 
   const question = QUESTION_SET[index % QUESTION_SET.length]
   const answer = waveformAtlasById.get(question.answerId)
@@ -99,40 +120,40 @@ export function WaveformRecognitionDrill({
   const complete = correctCount >= REQUIRED_CORRECT
 
   function submit() {
-    if (!selectedId || revealed || !answer) return
-    setRevealed(true)
-    setAnswered((current) => current + 1)
-    if (selectedId === answer.id) {
-      const next = correctCount + 1
-      setCorrectCount(next)
-      if (next >= REQUIRED_CORRECT) {
-        dispatch?.({ type: 'VALIDATE_SIGNAL', check: 'waveform-recognition' })
-      }
+    if (!enabled || !selectedId || revealed || !answer || complete) return
+    const next = correctCount + (selectedId === answer.id ? 1 : 0)
+    updateRecord({ ...currentRecord, revealed: true, answered: answered + 1, correctCount: next })
+    if (next === REQUIRED_CORRECT && correctCount < REQUIRED_CORRECT) {
+      dispatch?.({ type: 'VALIDATE_SIGNAL', check: 'waveform-recognition' })
     }
   }
 
   function nextQuestion() {
-    setIndex((current) => (current + 1) % QUESTION_SET.length)
-    setSelectedId(null)
-    setRevealed(false)
+    if (!enabled || complete) return
+    updateRecord({ ...currentRecord, index: index + 1, selectedId: null, revealed: false })
   }
 
   return (
     <section className={styles.recognitionDrill} aria-labelledby="recognition-drill-heading">
       <header className={styles.atlasPanelHeader}>
         <div>
-          <span>Recognition drill</span>
+          <span>Your attempt · question tracing</span>
           <h3 id="recognition-drill-heading">Name the tracing</h3>
         </div>
         <p className={styles.drillScore} role="status" aria-live="polite">
           <strong>{complete ? 'Pattern set worked through' : 'Compare the morphology'}</strong>
           <span>
-            {answered > 0
-              ? 'Use the revealed landmarks to refine the next identification.'
-              : 'Commit to a tracing before revealing its landmarks.'}
+            {correctCount} of {REQUIRED_CORRECT} correct · {answered} attempted. Correct responses
+            accumulate; an error does not reset the count.
           </span>
         </p>
       </header>
+      {index >= QUESTION_SET.length ||
+      QUESTION_SET.slice(0, index).some((candidate) => candidate.answerId === question.answerId) ? (
+        <p>Repeated practice · this reference pattern has appeared earlier.</p>
+      ) : (
+        <p>Identify this tracing; it is the sole question example.</p>
+      )}
 
       <WaveformAtlasFigure
         key={`${question.answerId}-${revealed}`}
@@ -143,9 +164,16 @@ export function WaveformRecognitionDrill({
               { ...answer, label: 'Unidentified tracing', normalRange: null, insertionDepth: null }
         }
         annotated={revealed}
+        ecgLandmarks
+        readable={questionSet === 'places'}
+        figureDescription={
+          revealed
+            ? undefined
+            : `${unidentifiedTraceDescription(answer)} Axis 0–${answer.scaleMaxMmHg} mmHg. Identifying labels are withheld.`
+        }
       />
 
-      <fieldset className={styles.drillOptions} disabled={revealed}>
+      <fieldset className={styles.drillOptions} disabled={revealed || !enabled || complete}>
         <legend>Which tracing is this?</legend>
         {options.map((option) => (
           <label key={option.id} data-state={revealed ? optionState(option.id) : undefined}>
@@ -154,7 +182,7 @@ export function WaveformRecognitionDrill({
               name={`recognition-${index}`}
               value={option.id}
               checked={selectedId === option.id}
-              onChange={() => setSelectedId(option.id)}
+              onChange={() => updateRecord({ ...currentRecord, selectedId: option.id })}
             />
             <span>{option.label}</span>
             {revealed && option.id === answer.id ? (
@@ -167,14 +195,19 @@ export function WaveformRecognitionDrill({
       </fieldset>
 
       <div className={styles.drillControls}>
-        {!revealed ? (
-          <button type="button" disabled={!selectedId} onClick={submit}>
+        {!revealed && !complete ? (
+          <button type="button" disabled={!selectedId || !enabled} onClick={submit}>
             Check answer
           </button>
-        ) : (
-          <button type="button" onClick={nextQuestion}>
+        ) : !complete ? (
+          <button type="button" disabled={!enabled} onClick={nextQuestion}>
             Next tracing
           </button>
+        ) : (
+          <p>
+            Five correct responses recorded. This is completion of practice, not a clinical
+            proficiency standard.
+          </p>
         )}
       </div>
 

@@ -1,0 +1,259 @@
+.flow[data-lesson-shell] {
+  display: block;
+  height: auto;
+  overflow: visible;
+  min-height: 70vh;
+  --stage-type-floor: 1rem;
+}
+.flow [data-now-focus] {
+  scroll-margin-top: calc(var(--site-header-height, 5rem) + 1rem);
+}
+.flow :is(button, input, select, summary) {
+  scroll-margin-block: 6rem;
+}
+
+.flow > header {
+  position: static;
+}
+.activity {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem;
+}
+.flow[data-presentation='concept'] .activity {
+  max-width: 850px;
+}
+.flow [data-now-card] {
+  position: static;
+  gap: 1rem;
+  padding: 1.5rem;
+  box-shadow: none;
+}
+.flow [data-now-card] > h2 {
+  font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+  line-height: 1.25;
+}
+.taskContent {
+  display: grid;
+  gap: 1.2rem;
+  min-width: 0;
+}
+.taskContent:empty {
+  display: none;
+}
+.taskContent > * {
+  min-width: 0;
+}
+.taskMap {
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+}
+.taskMap summary {
+  cursor: pointer;
+  color: var(--cyan-bright);
+}
+.taskMap ol {
+  display: grid;
+  gap: 0.35rem;
+  margin: 1rem 0;
+}
+.taskMap button {
+  min-height: 44px;
+  padding: 0.4rem;
+  text-align: left;
+}
+.taskMap button:disabled {
+  color: var(--muted);
+}
+.taskMap button[aria-current] {
+  color: var(--cyan-bright);
+  font-weight: 700;
+}
+.references {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 1.25rem 2rem;
+  font-size: 0.875rem;
+}
+.comparison {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+}
+.comparison th,
+.comparison td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.9rem;
+}
+.safety {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.8rem;
+  border: 1px solid var(--amber);
+  background: var(--panel);
+  color: var(--amber);
+}
+.safety button {
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  border: 1px solid;
+  border-radius: 0.5rem;
+}
+.paired {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem;
+}
+.paired > * {
+  min-width: 0;
+}
+.toolGroups {
+  display: grid;
+  gap: 0.75rem;
+}
+.toolGroups > details {
+  border: 1px solid var(--line);
+  padding: 0.75rem;
+  border-radius: 0.8rem;
+}
+.toolGroups summary {
+  cursor: pointer;
+  padding: 0.4rem;
+  font-weight: 650;
+}
+.toolGroups details > div {
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 760px) {
+  .activity {
+    padding: 0.8rem 0.5rem;
+  }
+  .flow [data-now-card] {
+    padding: 0.85rem;
+  }
+  .paired {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .comparison {
+    padding: 0.5rem;
+  }
+  .comparison th,
+  .comparison td {
+    padding: 0.3rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow * {
+    scroll-behavior: auto;
+  }
+}
+
+.caseFlow {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  display: grid;
+  gap: 1.25rem;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+.caseFlow h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+.caseFlow h2 {
+  font-size: 1.2rem;
+  font-weight: 650;
+  margin-bottom: 0.75rem;
+}
+.caseActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block: 0.8rem;
+}
+.caseActions button,
+.caseFlow nav button {
+  min-height: 44px;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+}
+.caseFlow button:disabled {
+  opacity: 0.5;
+}
+.caseFlow nav {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-block: 0.5rem;
+}
+.caseBrief,
+.caseTask,
+.caseDebrief {
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 1rem;
+  min-width: 0;
+}
+.caseWorkspace {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+.caseWorkspace > .paired {
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 1fr);
+}
+.caseDebrief {
+  background: #0e252d;
+}
+.caseDebrief > div {
+  height: auto;
+  overflow: visible;
+}
+@media (max-width: 900px) {
+  .caseWorkspace > .paired {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.surfaceFieldset {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.surfaceFieldset :where(fieldset, section, article, details, div, label, dl) {
+  min-width: 0;
+  max-width: 100%;
+}
+.surfaceFieldset select {
+  width: 100%;
+  max-width: 100%;
+}
+.surfaceFieldset :where(p, label, li, td, th, dt, dd, select, button) {
+  overflow-wrap: anywhere;
+  font-size: 0.95rem;
+}
+.surfaceFieldset legend {
+  max-width: 100%;
+}
+.caseTask [aria-label='Bounded simulated interventions'] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 760px) {
+  .caseTask [aria-label='Bounded simulated interventions'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

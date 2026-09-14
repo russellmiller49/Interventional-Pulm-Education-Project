@@ -172,7 +172,7 @@ export function FastFlushTrace({
   )
 }
 
-function LevelingVisual({ state }: { readonly state: HemodynamicSimulationState }) {
+export function LevelingVisual({ state }: { readonly state: HemodynamicSimulationState }) {
   const levelCm = state.measurementSystem.transducerLevelCm
   const offsetMmHg = hydrostaticPressureOffsetMmHg(levelCm)
   const referenceMeasurements = useMemo(

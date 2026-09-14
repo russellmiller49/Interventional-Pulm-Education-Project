@@ -37,6 +37,8 @@ interface WaveformStripProps {
   heartRateBpm?: number
   /** Draws a calibrated pressure axis. Off for non-pressure channels. */
   showScale?: boolean
+  /** Keep axis text readable in the focused activity view. */
+  readable?: boolean
   /** Numerical reference drawn across the trace, such as MAP or end-expiratory mean pressure. */
   referenceValue?: number
   referenceLabel?: string
@@ -80,6 +82,7 @@ export function WaveformStrip({
   landmarks,
   heartRateBpm,
   showScale = false,
+  readable = false,
   referenceValue,
   referenceLabel,
   transitionFrom,
@@ -87,6 +90,7 @@ export function WaveformStrip({
   phaseCursor,
 }: WaveformStripProps) {
   const gridId = useId()
+  const viewWidth = readable ? 440 : VIEW_WIDTH
 
   const visibleSamples = useMemo(() => {
     const latest = samples.at(-1)?.time ?? 0
@@ -103,7 +107,7 @@ export function WaveformStrip({
     if (unavailableMessage || visibleSamples.length < 2) return ''
     return visibleSamples
       .map((sample) => {
-        const x = ((sample.time - window.first) / window.duration) * VIEW_WIDTH
+        const x = ((sample.time - window.first) / window.duration) * viewWidth
         const value =
           transitionFrom && sample.time < transitionFrom.untilTime
             ? sample[transitionFrom.field]
@@ -112,7 +116,16 @@ export function WaveformStrip({
         return `${x.toFixed(1)},${y.toFixed(1)}`
       })
       .join(' ')
-  }, [field, maximum, minimum, transitionFrom, unavailableMessage, visibleSamples, window])
+  }, [
+    field,
+    maximum,
+    minimum,
+    transitionFrom,
+    unavailableMessage,
+    visibleSamples,
+    window,
+    viewWidth,
+  ])
 
   // Landmarks repeat on every beat inside the visible window. The engine derives cardiac phase
   // from time modulo the cycle length, so beat boundaries fall on multiples of the cycle.
@@ -141,7 +154,7 @@ export function WaveformStrip({
         placed.push({
           id: `${landmark.id}-${beat}`,
           label: landmark.label,
-          x: ((time - window.first) / window.duration) * VIEW_WIDTH,
+          x: ((time - window.first) / window.duration) * viewWidth,
           y: valueToY(
             transitionFrom && nearest.time < transitionFrom.untilTime
               ? nearest[transitionFrom.field]
@@ -164,6 +177,7 @@ export function WaveformStrip({
     unavailableMessage,
     visibleSamples,
     window,
+    viewWidth,
   ])
 
   const values = unavailableMessage
@@ -206,11 +220,11 @@ export function WaveformStrip({
     transitionFrom &&
     transitionFrom.untilTime >= window.first &&
     transitionFrom.untilTime <= window.last
-      ? ((transitionFrom.untilTime - window.first) / window.duration) * VIEW_WIDTH
+      ? ((transitionFrom.untilTime - window.first) / window.duration) * viewWidth
       : null
   const phaseCursorX =
     phaseCursor && phaseCursor.time >= window.first && phaseCursor.time <= window.last
-      ? ((phaseCursor.time - window.first) / window.duration) * VIEW_WIDTH
+      ? ((phaseCursor.time - window.first) / window.duration) * viewWidth
       : null
   const phaseCursorY =
     phaseCursor?.value !== undefined && Number.isFinite(phaseCursor.value)
@@ -224,7 +238,7 @@ export function WaveformStrip({
         <span>{unit}</span>
       </figcaption>
       <svg
-        viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
+        viewBox={`0 0 ${viewWidth} ${VIEW_HEIGHT}`}
         preserveAspectRatio="none"
         role="img"
         aria-label={summary}
@@ -239,23 +253,23 @@ export function WaveformStrip({
             />
           </pattern>
         </defs>
-        <rect width={VIEW_WIDTH} height={VIEW_HEIGHT} fill={`url(#grid-${gridId})`} />
+        <rect width={viewWidth} height={VIEW_HEIGHT} fill={`url(#grid-${gridId})`} />
 
         {unavailableMessage ? (
           <text
             className={styles.stripUnavailable}
-            x={VIEW_WIDTH / 2}
+            x={viewWidth / 2}
             y={VIEW_HEIGHT / 2}
             textAnchor="middle"
           >
-            {unavailableMessage}
+            {readable ? 'No chamber waveform' : unavailableMessage}
           </text>
         ) : null}
 
         {referenceY !== null ? (
           <g className={styles.stripReference}>
-            <line x1="0" x2={VIEW_WIDTH} y1={referenceY} y2={referenceY} />
-            <text x={VIEW_WIDTH - 8} y={Math.max(12, referenceY - 4)} textAnchor="end">
+            <line x1="0" x2={viewWidth} y1={referenceY} y2={referenceY} />
+            <text x={viewWidth - 8} y={Math.max(12, referenceY - 4)} textAnchor="end">
               {referenceLabel ?? 'mean'} {referenceValue?.toFixed(0)}
             </text>
           </g>
@@ -265,7 +279,7 @@ export function WaveformStrip({
           const y = valueToY(tick, minimum, maximum)
           return (
             <g key={tick} className={styles.stripScale}>
-              <line x1="0" x2={VIEW_WIDTH} y1={y} y2={y} />
+              <line x1="0" x2={viewWidth} y1={y} y2={y} />
               <text x="6" y={y - 3}>
                 {tick}
               </text>
@@ -277,9 +291,9 @@ export function WaveformStrip({
           <g className={styles.stripPhaseCursor}>
             <line x1={phaseCursorX} x2={phaseCursorX} y1={TRACE_TOP} y2={TRACE_BOTTOM} />
             <text
-              x={phaseCursorX > VIEW_WIDTH * 0.76 ? phaseCursorX - 8 : phaseCursorX + 8}
+              x={phaseCursorX > viewWidth * 0.76 ? phaseCursorX - 8 : phaseCursorX + 8}
               y={14}
-              textAnchor={phaseCursorX > VIEW_WIDTH * 0.76 ? 'end' : 'start'}
+              textAnchor={phaseCursorX > viewWidth * 0.76 ? 'end' : 'start'}
             >
               {phaseCursor.label}
             </text>
@@ -298,7 +312,7 @@ export function WaveformStrip({
           <g className={styles.stripPhaseCursorPoint}>
             <line
               x1={Math.max(0, phaseCursorX - 15)}
-              x2={Math.min(VIEW_WIDTH, phaseCursorX + 15)}
+              x2={Math.min(viewWidth, phaseCursorX + 15)}
               y1={phaseCursorY}
               y2={phaseCursorY}
             />
@@ -310,9 +324,9 @@ export function WaveformStrip({
           <g className={styles.stripTransition}>
             <line x1={transitionX} x2={transitionX} y1={TRACE_TOP} y2={TRACE_BOTTOM} />
             <text
-              x={transitionX > VIEW_WIDTH * 0.72 ? transitionX - 8 : transitionX + 8}
+              x={transitionX > viewWidth * 0.72 ? transitionX - 8 : transitionX + 8}
               y={18}
-              textAnchor={transitionX > VIEW_WIDTH * 0.72 ? 'end' : 'start'}
+              textAnchor={transitionX > viewWidth * 0.72 ? 'end' : 'start'}
             >
               {transitionFrom.label}
             </text>
@@ -332,6 +346,9 @@ export function WaveformStrip({
           </g>
         ))}
       </svg>
+      {readable && unavailableMessage ? (
+        <p className={styles.stripAvailabilityNote}>{unavailableMessage}</p>
+      ) : null}
       <span className={styles.srOnly}>Waveform text: {summary}</span>
     </figure>
   )

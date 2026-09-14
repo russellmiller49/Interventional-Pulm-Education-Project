@@ -1,6 +1,6 @@
 'use client'
 
-import type { Dispatch } from 'react'
+import { useState, type Dispatch } from 'react'
 
 import { PAC_POSITION_ANATOMY } from '@/features/cardiac-anatomy/content/paths'
 import { useReducedMotionPreference } from '@/features/cardiac-anatomy/components/useCardiac3DSupport'
@@ -20,6 +20,7 @@ interface PacActionDockProps {
   state: HemodynamicSimulationState
   dispatch: Dispatch<HemodynamicAction>
   focus?: 'advancement' | 'wedge'
+  maskPosition?: boolean
 }
 
 const positions = ['introducer', 'ra', 'rv', 'pa', 'wedge'] as const
@@ -40,7 +41,14 @@ const atlasEntryForPosition: Record<CatheterPosition, string> = {
   wedge: 'wedge-normal',
 }
 
-export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
+export function PacActionDock({
+  state,
+  dispatch,
+  focus,
+  maskPosition = false,
+}: PacActionDockProps) {
+  const [selectedPosition, setSelectedPosition] = useState<CatheterPosition | ''>('')
+  const [positionNote, setPositionNote] = useState('')
   const { catheter } = state
   const reducedMotion = useReducedMotionPreference()
   const moving = catheter.targetPosition !== null
@@ -88,9 +96,11 @@ export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
           <h2 id="pac-action-dock-heading">Advance by waveform and catheter route</h2>
         </div>
         <output className={styles.pacDockTip} aria-live="polite" aria-atomic="true">
-          Tip: {catheter.position.toUpperCase()}
-          {catheter.targetPosition ? ` → ${catheter.targetPosition.toUpperCase()}` : ''} ·{' '}
-          {catheter.insertionDepthCm}
+          {maskPosition ? 'Insertion depth' : `Tip: ${catheter.position.toUpperCase()}`}
+          {catheter.targetPosition && !maskPosition
+            ? ` → ${catheter.targetPosition.toUpperCase()}`
+            : ''}{' '}
+          · {catheter.insertionDepthCm}
           {catheter.targetPosition ? `→${catheterPositionDepth(catheter.targetPosition)}` : ''} cm
         </output>
       </header>
@@ -108,7 +118,13 @@ export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
             → RV → PA. Stop advancing and deflate promptly when the PA waveform appears; confirm
             every chamber transition by waveform rather than depth alone.
           </p>
-          <output aria-live="polite">{advancementBalloonStatus}</output>
+          <output aria-live="polite">
+            {maskPosition
+              ? catheter.floatBalloonInflated
+                ? 'Flow-directed balloon inflated. Confirm the tracing before continuing.'
+                : 'Flow-directed balloon deflated.'
+              : advancementBalloonStatus}
+          </output>
         </aside>
       ) : null}
 
@@ -121,15 +137,54 @@ export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
                 <li
                   key={position}
                   aria-label={PAC_POSITION_ANATOMY[position].shortLabel}
-                  aria-current={catheter.position === position ? 'step' : undefined}
-                  data-target={catheter.targetPosition === position || undefined}
+                  aria-current={
+                    !maskPosition && catheter.position === position ? 'step' : undefined
+                  }
+                  data-target={(!maskPosition && catheter.targetPosition === position) || undefined}
                 >
                   {positionLabels[position]}
                 </li>
               ))}
             </ol>
-            <p className={styles.pacDockCue}>{anatomy.waveform}</p>
-            {catheter.position !== 'introducer' && catheter.position !== 'wedge' ? (
+            {!maskPosition ? <p className={styles.pacDockCue}>{anatomy.waveform}</p> : null}
+            {maskPosition ? (
+              <div>
+                <label>
+                  Identify the pressure tracing
+                  <select
+                    value={selectedPosition}
+                    onChange={(event) => {
+                      setSelectedPosition(event.target.value as CatheterPosition)
+                      setPositionNote('')
+                    }}
+                  >
+                    <option value="">Choose a location</option>
+                    <option value="ra">Right atrium</option>
+                    <option value="rv">Right ventricle</option>
+                    <option value="pa">Pulmonary artery</option>
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  disabled={moving || !selectedPosition}
+                  onClick={() => {
+                    if (selectedPosition === catheter.position) {
+                      dispatch({
+                        type: 'VALIDATE_SIGNAL',
+                        check: `waveform-confirmed-${selectedPosition}`,
+                      })
+                      setPositionNote('Confirmed from the tracing.')
+                    } else
+                      setPositionNote(
+                        'This selection does not match the current tracing. Review its pulsatility and diastolic shape.',
+                      )
+                  }}
+                >
+                  Confirm selected waveform
+                </button>
+                {positionNote ? <p role="status">{positionNote}</p> : null}
+              </div>
+            ) : catheter.position !== 'introducer' && catheter.position !== 'wedge' ? (
               <button
                 type="button"
                 className={styles.pacDockConfirmButton}
@@ -193,7 +248,9 @@ export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
                 />
               </div>
               <span role="status" aria-live="polite" aria-atomic="true">
-                {wedgeStatus}
+                {maskPosition && !catheter.balloonInflated && !catheter.floatBalloonInflated
+                  ? 'Balloon deflated. Confirm the tracing before using a stored value.'
+                  : wedgeStatus}
               </span>
             </div>
             <div className={styles.pacDockActionGrid}>
@@ -231,7 +288,7 @@ export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
         ) : null}
       </div>
 
-      {focus !== 'wedge' && catheter.position === 'ra' ? (
+      {!maskPosition && focus !== 'wedge' && catheter.position === 'ra' ? (
         <aside
           className={styles.pacCvpTeaching}
           role="note"
@@ -259,8 +316,8 @@ export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
 
       {focus !== 'wedge' ? (
         <WaveformAtlasPanel
-          key={`advance-${catheter.position}`}
-          initialEntryId={atlasEntryForPosition[catheter.position]}
+          key={maskPosition ? 'general-reference' : `advance-${catheter.position}`}
+          initialEntryId={maskPosition ? 'ra-normal' : atlasEntryForPosition[catheter.position]}
           onlyCategories={['insertion']}
           heading="What each position looks like"
         />

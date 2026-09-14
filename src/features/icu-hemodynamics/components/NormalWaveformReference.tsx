@@ -38,7 +38,13 @@ import { WaveformAtlasFigure } from './WaveformAtlasFigure'
  *    in words, the reading point is labelled on the trace, and the whole figure has a text
  *    equivalent assembled from the same authored facets rather than written a second time.
  */
-export function NormalWaveformReference() {
+export function NormalWaveformReference({
+  fixedPosition,
+  concise = false,
+}: {
+  readonly fixedPosition?: NormalWaveformReferenceEntry['position']
+  readonly concise?: boolean
+} = {}) {
   const headingId = useId()
   const panelId = useId()
   const tabIdPrefix = useId()
@@ -51,14 +57,16 @@ export function NormalWaveformReference() {
   const [scaleId, setScaleId] = useState<NormalWaveformScaleId>('shared')
 
   const entry =
-    normalWaveformReference.find((candidate) => candidate.position === activePosition) ??
-    normalWaveformReference[0]
+    normalWaveformReference.find(
+      (candidate) => candidate.position === (fixedPosition ?? activePosition),
+    ) ?? normalWaveformReference[0]
   if (!entry) return null
   const atlasEntry = normalWaveformAtlasEntry(entry)
   const scale = normalWaveformScaleOption(scaleId)
   const activeIndex = normalWaveformReference.indexOf(entry)
 
   function moveTab(event: KeyboardEvent<HTMLDivElement>) {
+    if (fixedPosition) return
     const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End']
     if (!keys.includes(event.key)) return
     event.preventDefault()
@@ -94,12 +102,16 @@ export function NormalWaveformReference() {
         left to be inferred. Every entry times its waves against a P wave; a learner who never reads
         that will meet atrial fibrillation and conclude the tracing is invalid.
       */}
-      <section className={styles.referenceRhythmNote} aria-label="Rhythm this reference assumes">
-        <strong>{NORMAL_WAVEFORM_RHYTHM_CONTEXT.assumption}</strong>
-        <p>{NORMAL_WAVEFORM_RHYTHM_CONTEXT.whyItMatters}</p>
-        <p>{NORMAL_WAVEFORM_RHYTHM_CONTEXT.atrialFibrillation}</p>
-        <p>{NORMAL_WAVEFORM_RHYTHM_CONTEXT.whatToUseInstead}</p>
-      </section>
+      {!concise ? (
+        <section className={styles.referenceRhythmNote} aria-label="Rhythm this reference assumes">
+          <strong>{NORMAL_WAVEFORM_RHYTHM_CONTEXT.assumption}</strong>
+          <p>{NORMAL_WAVEFORM_RHYTHM_CONTEXT.whyItMatters}</p>
+          <p>{NORMAL_WAVEFORM_RHYTHM_CONTEXT.atrialFibrillation}</p>
+          <p>{NORMAL_WAVEFORM_RHYTHM_CONTEXT.whatToUseInstead}</p>
+        </section>
+      ) : (
+        <p>{NORMAL_WAVEFORM_RHYTHM_CONTEXT.assumption}</p>
+      )}
 
       <div
         role="tablist"
@@ -120,6 +132,7 @@ export function NormalWaveformReference() {
             aria-controls={panelId}
             tabIndex={candidate.position === entry.position ? 0 : -1}
             className={styles.referenceTab}
+            disabled={Boolean(fixedPosition)}
             onClick={() => setActivePosition(candidate.position)}
           >
             <span aria-hidden="true">{candidate.order}</span>
@@ -176,6 +189,7 @@ export function NormalWaveformReference() {
             entry={atlasEntry}
             scaleMaxMmHg={scale.maxMmHg}
             ecgLandmarks
+            readable={concise}
             respiration={{
               swingMmHg: entry.respiratorySwingMmHg,
               cyclesPerStrip: NORMAL_WAVEFORM_RESPIRATORY_CONTEXT.cyclesPerStrip,
@@ -233,25 +247,27 @@ export function NormalWaveformReference() {
           </dl>
         </section>
 
-        <section
-          className={styles.referenceDistortions}
-          aria-label={`Distortions that mimic ${atlasEntry.label} physiology`}
-        >
-          <h4>Distortion that mimics physiology here</h4>
-          <ul>
-            {entry.technicalDistortions.map((distortion) => (
-              <li key={distortion.id}>
-                <strong>{distortion.label}</strong>
-                <span>
-                  <em>You see:</em> {distortion.whatYouSee}
-                </span>
-                <span>
-                  <em>Mistaken for:</em> {distortion.whatItMimics}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
+        {!concise ? (
+          <section
+            className={styles.referenceDistortions}
+            aria-label={`Distortions that mimic ${atlasEntry.label} physiology`}
+          >
+            <h4>Distortion that mimics physiology here</h4>
+            <ul>
+              {entry.technicalDistortions.map((distortion) => (
+                <li key={distortion.id}>
+                  <strong>{distortion.label}</strong>
+                  <span>
+                    <em>You see:</em> {distortion.whatYouSee}
+                  </span>
+                  <span>
+                    <em>Mistaken for:</em> {distortion.whatItMimics}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         <details className={styles.referenceTextEquivalent}>
           <summary>Read this display as text</summary>

@@ -2,6 +2,11 @@ import { act, fireEvent, render } from '@testing-library/react'
 
 import { HemodynamicsStageHost } from '../components/stage/HemodynamicsStageHost'
 import { hemodynamicsStageLesson } from '../content/stageLessons'
+import {
+  componentOrder,
+  componentRegions,
+  type ComponentMode,
+} from '../content/introductoryTeaching'
 
 /**
  * Drives a section on the real lesson stage, over the real engine, the way a learner does: the
@@ -40,6 +45,42 @@ export function clickPrimary() {
   fireEvent.click(button)
 }
 
+/** Perform the real numbered-region selections, without bypassing host commitments. */
+export function identifyComponents(mode: ComponentMode) {
+  for (const component of componentOrder) {
+    const region = componentRegions(mode).find((candidate) => candidate.component === component)!
+    const activity = document.querySelector(`[data-component-activity="${mode}"]`)!
+    const labels = [...activity.querySelectorAll('label')]
+    fireEvent.click(
+      labels
+        .find((label) => label.textContent?.startsWith(`Region ${region.number} ·`))!
+        .querySelector('input')!,
+    )
+    fireEvent.click(
+      [...activity.querySelectorAll('button')].find(
+        (button) => button.textContent === 'Check component',
+      )!,
+    )
+    const next = [...activity.querySelectorAll('button')].find(
+      (button) => button.textContent === 'Next component',
+    )
+    if (next) fireEvent.click(next)
+  }
+}
+
+/** Walk through prerequisites using the visible controls, stopping at the independent item. */
+export function advanceToPrediction(sectionId: string) {
+  const lesson = hemodynamicsStageLesson(sectionId)
+  let remaining = 40
+  while (currentStepId() !== lesson.steps[lesson.predictionStepIndex].id && remaining-- > 0) {
+    const step = lesson.steps.find((candidate) => candidate.id === currentStepId())!
+    if (step.interaction.kind === 'component-identification')
+      identifyComponents(step.interaction.mode)
+    clickPrimary()
+  }
+  if (remaining <= 0) throw new Error('Prerequisite traversal did not reach the question')
+}
+
 /** Choose a prediction choice by its label and commit it. */
 export function commitChoice(pattern: RegExp) {
   const labels = [...document.querySelectorAll<HTMLLabelElement>('[data-prediction-choices] label')]
@@ -73,6 +114,11 @@ export function setLevel(levelCm: number) {
 /** Run the flush, say what it is, and repair the line when the reading needed a repair. */
 export function readAndRepairFlush(kind: 'acceptable' | 'overdamped' | 'underdamped') {
   fireEvent.click(control('flush'))
+  if (document.querySelector('[data-flush-acquiring]')) {
+    act(() => {
+      jest.advanceTimersByTime(3500)
+    })
+  }
   const label = [
     ...document.querySelectorAll<HTMLLabelElement>('[data-flush-classification] label'),
   ].find((candidate) => new RegExp(kind, 'i').test(candidate.textContent ?? ''))
@@ -85,6 +131,15 @@ export function readAndRepairFlush(kind: 'acceptable' | 'overdamped' | 'underdam
   fireEvent.click(say)
   const repair = document.getElementById('hemodynamics-control-repair')
   if (repair) fireEvent.click(repair)
+  // The pressure-system lesson requires a new observation after the simulated correction.
+  if (
+    kind !== 'acceptable' &&
+    document
+      .querySelector('[data-step-goals]')
+      ?.textContent?.includes('Flush the corrected line again')
+  ) {
+    readAndRepairFlush('acceptable')
+  }
 }
 
 /** The whole document, hidden nodes included, with the answer fieldsets removed. */

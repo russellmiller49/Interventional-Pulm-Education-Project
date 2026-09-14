@@ -10,6 +10,7 @@ import {
 } from '../content'
 import {
   calculateDerivedHemodynamics,
+  thermodilutionAcceptedAverage,
   type HemodynamicAction,
   type HemodynamicSimulationState,
   type InterpretationValue,
@@ -19,6 +20,7 @@ import styles from './icu-hemodynamics.module.css'
 interface FormulaDrawerProps {
   state: HemodynamicSimulationState
   dispatch: Dispatch<HemodynamicAction>
+  observedInputsOnly?: boolean
 }
 
 function DerivedValue({
@@ -59,10 +61,16 @@ function DerivedValue({
   )
 }
 
-export function FormulaDrawer({ state, dispatch }: FormulaDrawerProps) {
+export function FormulaDrawer({ state, dispatch, observedInputsOnly = false }: FormulaDrawerProps) {
   const derivedReviewComplete = state.signalValidationChecks.includes('derived-reviewed')
   const derived = calculateDerivedHemodynamics({
-    measurements: state.measurements,
+    measurements: observedInputsOnly
+      ? {
+          ...state.measurements,
+          cardiacOutputLMin: thermodilutionAcceptedAverage(state.thermodilutionTrials) ?? undefined,
+          pawpMmHg: state.catheter.storedWedgeMmHg,
+        }
+      : state.measurements,
     bodySurfaceAreaM2: state.parameters.bodySurfaceAreaM2,
     inputsStale: !state.measurementSystem.zeroed || state.measurementSystem.artifact !== 'none',
     ppvContext: {
@@ -85,6 +93,9 @@ export function FormulaDrawer({ state, dispatch }: FormulaDrawerProps) {
       <summary>Derived hemodynamics and interpretation limits</summary>
       <div className={styles.formulaIntro}>
         <p>
+          {observedInputsOnly
+            ? 'Flow-dependent results use the accepted thermodilution series; wedge-dependent results require a captured value. '
+            : ''}
           Every value is calculated from the current simulated measurements. Stale, unzeroed,
           artifact-contaminated, or physiologically invalid inputs remain explicitly
           uninterpretable.

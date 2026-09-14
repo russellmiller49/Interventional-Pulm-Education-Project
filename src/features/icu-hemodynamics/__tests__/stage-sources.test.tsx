@@ -4,7 +4,12 @@ import { hemodynamicsSectionIds } from '../content/sectionSpecs'
 import { hemodynamicsStageItems } from '../content/stageItems'
 import { hemodynamicsStageSources } from '../content/stageSources'
 import { hemodynamicsSourceById } from '../content/sources'
-import { clickPrimary, commitChoice, installDom, mountSection } from '../test-support/stageHarness'
+import {
+  advanceToPrediction,
+  commitChoice,
+  installDom,
+  mountSection,
+} from '../test-support/stageHarness'
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -66,8 +71,7 @@ describe('the sources a lesson cites', () => {
     expect(document.querySelectorAll('[data-source-claims]')).toHaveLength(0)
     expect(document.querySelector('[data-stage-sources-note]')).not.toBeNull()
 
-    clickPrimary()
-    clickPrimary()
+    advanceToPrediction('pressure-system')
     expect(document.querySelector('[data-stage]')?.getAttribute('data-stage')).toBe(
       lesson.steps[lesson.predictionStepIndex].id,
     )

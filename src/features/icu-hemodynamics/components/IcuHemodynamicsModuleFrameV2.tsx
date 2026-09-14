@@ -47,17 +47,20 @@ export function IcuHemodynamicsModuleFrameV2({
   activeHref,
   locale = 'en',
   activityMode = false,
+  documentFlow = false,
   children,
 }: {
   readonly activeHref: string
   readonly locale?: string
   readonly activityMode?: boolean
+  readonly documentFlow?: boolean
   readonly children: ReactNode
 }) {
   return (
     <div
       className={activityMode ? styles.moduleShell : undefined}
       data-activity-mode={activityMode || undefined}
+      data-document-flow={documentFlow || undefined}
     >
       <ModuleFrameV2
         eyebrow="Critical care · Hemodynamic reasoning"

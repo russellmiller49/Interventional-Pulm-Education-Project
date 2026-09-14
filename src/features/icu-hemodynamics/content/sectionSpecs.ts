@@ -197,9 +197,9 @@ export const hemodynamicsSectionSpecs: readonly HemodynamicsSectionSpec[] = Obje
   {
     id: 'waveform-components',
     newConcept:
-      'Inside a place you have named, one wave component can carry a diagnosis — but only after the place and the signal are confirmed.',
+      'Within a confirmed chamber, individual waves and descents reflect phases of the cardiac cycle; a changed component can support a mechanism in clinical context.',
     objective:
-      'Decide, for an abnormal wave in a confirmed tracing, which mechanism produces that wave and which would produce a different one.',
+      'Identify normal atrial waves and descents against the ECG, then interpret contrasting abnormal components in context.',
     incrementSentence:
       'This section adds one idea to the last: once the place is certain, the waves inside it can be read — and the same letter does not mean the same thing in every chamber.',
     prerequisiteSectionIds: ['waveform-interpretation'],
@@ -369,7 +369,7 @@ export const hemodynamicsSectionSpecs: readonly HemodynamicsSectionSpec[] = Obje
   },
   {
     id: 'pac-signal-validation',
-    newConcept: 'No new mechanism: the rows of the one table, combined on one screen.',
+    newConcept: 'Apply the pressure, catheter and cardiac-output checks together in one patient.',
     objective:
       'Decide, when a screen changes and the patient does not, which of the line, the tip, the series and the calculation to doubt first — and in what order to restore them.',
     incrementSentence:

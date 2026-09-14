@@ -86,18 +86,16 @@ describe('PressureSystemTeachingVisual', () => {
     ).toBeDisabled()
   })
 
-  it('exposes three keyboard-scrollable panes with accessible resize separators', () => {
+  it('keeps the monitor and measurement tools in document flow without internal model disclosure', () => {
     const state = createInitialHemodynamicState(hemodynamicCaseById.get('HD-01')!, 'learn', 99)
     render(<HemodynamicNativeWorkspace state={state} dispatch={jest.fn()} />)
 
     expect(screen.getByRole('region', { name: 'Mock bedside monitor' })).toBeInTheDocument()
-    for (const name of [
-      'Monitor panel',
-      'Anatomy and pressure-reference panel',
-      'PAC controls and waveform-teaching panel',
-    ]) {
-      expect(screen.getByRole('region', { name })).toHaveAttribute('tabindex', '0')
-    }
-    expect(screen.getAllByRole('separator')).toHaveLength(2)
+    expect(document.querySelector('[data-case-workspace]')).not.toBeNull()
+    expect(
+      screen.queryByRole('region', { name: 'Anatomy and pressure-reference panel' }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryAllByRole('separator')).toHaveLength(0)
+    expect(screen.getByText('Pressure measurement · level, zero and response')).toBeInTheDocument()
   })
 })

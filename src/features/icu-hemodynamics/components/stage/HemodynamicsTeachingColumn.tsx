@@ -1,6 +1,6 @@
 'use client'
 
-import { useId } from 'react'
+import { useId, useEffect, useRef } from 'react'
 
 import { StageBlock } from '@/features/learning-module/stage/StageBlock'
 import { useStageTeachingScope } from '@/features/learning-module/stage/StageTeachingScope'
@@ -31,6 +31,8 @@ import { NormalWaveformValidityChallenges } from '../NormalWaveformValidityChall
 import { DerivedHemodynamicsTeachingPanel } from '../PacMeasurementTeaching'
 import { WaveformAtlasPanel } from '../WaveformAtlasPanel'
 import { WedgeValidityPanel } from '../WedgeValidityPanel'
+import type { HemodynamicSimulationState } from '../../engine/types'
+import { IntroductoryTeaching } from './IntroductoryTeaching'
 import styles from './hemodynamics-stage.module.css'
 
 /**
@@ -54,108 +56,154 @@ export function HemodynamicsTeachingColumn({
   step,
   stops,
   provenanceResolved,
+  state,
+  flow = false,
 }: {
   readonly lesson: HemodynamicsStageLesson
   readonly step: HemodynamicsStageStep
   readonly stops: readonly RouteStopId[]
   readonly provenanceResolved: boolean
+  readonly state?: HemodynamicSimulationState
+  readonly flow?: boolean
 }) {
   const scope = useStageTeachingScope()
   const listIdBase = useId()
   const committed = scope?.predictionCommitted ?? true
   const spec = lesson.spec
-  void step
+  const focusRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    // Task changes only: no focus stealing or scroll resets on simulator ticks.
+    const panel = focusRef.current?.closest('[role="region"][aria-label="Teaching panel"]')
+    if (panel instanceof HTMLElement) panel.scrollTop = 0
+  }, [step.id])
+  const introductory = [
+    'why-measure',
+    'pressure-system',
+    'waveform-interpretation',
+    'waveform-components',
+  ].includes(lesson.sectionId)
+  const procedural =
+    lesson.sectionId === 'catheter-advancement' || lesson.sectionId === 'pawp-capture'
+  const independentAttempt = step.teaching === 'attempt' || step.surface === 'recognition'
   const rows = signalGrammarRows.filter((row) => spec.grammarRowIds.includes(row.id))
-  const stopsToShow = stops.length > 0 ? stops : spec.spineStops
-  const introducesPanel = lesson.sectionId === 'pressure-system'
+  const stopsToShow = flow
+    ? []
+    : introductory
+      ? step.interaction.kind === 'walk'
+        ? stops
+        : []
+      : stops.length > 0
+        ? stops
+        : spec.spineStops
+  const introducesPanel = !flow && lesson.sectionId === 'pressure-system' && step.ordinal === 1
 
   return (
-    <div className={styles.teaching} data-teaching-panel>
-      <StageBlock kind="question" heading="What this section is for">
-        <section className={styles.teachingCard} data-teaching-block="purpose">
-          <p className={styles.kicker}>What this section is for</p>
-          <p>{spec.objective}</p>
-          <p>
-            <strong>One new idea.</strong> {spec.newConcept}
-          </p>
-          {/*
+    <div ref={focusRef} className={styles.teaching} data-teaching-panel>
+      {step.teaching && state && (!flow || step.teaching !== 'attempt') ? (
+        <div data-current-teaching={step.teaching}>
+          <IntroductoryTeaching topic={step.teaching} state={state} />
+        </div>
+      ) : null}
+      {procedural && (!flow || step.interaction.kind === 'read') ? (
+        <DeeperReference lesson={lesson} provenanceResolved={provenanceResolved} prebrief />
+      ) : null}
+      {flow && procedural && step.interaction.kind !== 'read' ? (
+        <p className={styles.dockNote} data-procedural-safety>
+          {lesson.sectionId === 'pawp-capture'
+            ? 'Acquire only from a confirmed PA tracing. Store an end-expiratory value, deflate, and verify the PA tracing returns. The automatic release is a model safeguard, not a clinical inflation limit.'
+            : 'Confirm each settled tracing before moving. Stop for resistance, ectopy or patient deterioration; those events are not modeled here.'}
+        </p>
+      ) : null}
+      {!independentAttempt && (!flow || (step.ordinal === 1 && !step.teaching)) ? (
+        <>
+          <StageBlock kind="question" heading="What this section is for">
+            <section className={styles.teachingCard} data-teaching-block="purpose">
+              <p className={styles.kicker}>What this section is for</p>
+              <p>{spec.objective}</p>
+              <p>
+                <strong>One new idea.</strong> {spec.newConcept}
+              </p>
+              {/*
             The increment sentence, under a label a step can point at. Five Recognize instructions
             said "read the increment", which named a dashed box with no heading; the box says what
             it is now, and the instructions say "what this section adds".
           */}
-          <div className={styles.increment}>
-            <p className={styles.kicker}>What this section adds</p>
-            <p data-increment-sentence>{spec.incrementSentence}</p>
-          </div>
-        </section>
-      </StageBlock>
+              <div className={styles.increment}>
+                <p className={styles.kicker}>What this section adds</p>
+                <p data-increment-sentence>{spec.incrementSentence}</p>
+              </div>
+            </section>
+          </StageBlock>
 
-      {introducesPanel ? (
-        <StageBlock kind="signals" heading="Five things you can change">
-          <section className={styles.teachingCard} data-teaching-block="control-panel">
-            <p className={styles.kicker}>Five things you can change</p>
-            <p>{HEMODYNAMICS_CONTROL_PANEL.sentence}</p>
-            <ul className={styles.checklist}>
-              {HEMODYNAMICS_CONTROL_PANEL.controls.map((control) => (
-                <li key={control.id}>
-                  <strong>{control.plainName}</strong> — moves {control.moves}; does not move{' '}
-                  {control.doesNotMove}.
-                </li>
-              ))}
-            </ul>
-            <p>{HEMODYNAMICS_CONTROL_PANEL.axes.reference}</p>
-            <p>{HEMODYNAMICS_CONTROL_PANEL.axes.response}</p>
-          </section>
-        </StageBlock>
+          {introducesPanel ? (
+            <StageBlock kind="signals" heading="Five things you can change">
+              <section className={styles.teachingCard} data-teaching-block="control-panel">
+                <p className={styles.kicker}>Five things you can change</p>
+                <p>{HEMODYNAMICS_CONTROL_PANEL.sentence}</p>
+                <ul className={styles.checklist}>
+                  {HEMODYNAMICS_CONTROL_PANEL.controls.map((control) => (
+                    <li key={control.id}>
+                      <strong>{control.plainName}</strong> — moves {control.moves}; does not move{' '}
+                      {control.doesNotMove}.
+                    </li>
+                  ))}
+                </ul>
+                <p>{HEMODYNAMICS_CONTROL_PANEL.axes.reference}</p>
+                <p>{HEMODYNAMICS_CONTROL_PANEL.axes.response}</p>
+              </section>
+            </StageBlock>
+          ) : null}
+
+          <StageBlock kind="pattern" heading="Where you are on the path">
+            {stopsToShow.map((stopId) => {
+              const stop = routeStop(stopId)
+              return (
+                <section
+                  key={stopId}
+                  className={styles.teachingCard}
+                  data-teaching-block="stop"
+                  data-stop={stopId}
+                  aria-label={stop.title}
+                >
+                  <p className={styles.kicker}>
+                    Stop {routeStopNumber(stopId)} · {stop.title}
+                  </p>
+                  <p className={styles.analogy}>{stop.analogy}</p>
+                  <p>{stop.precise}</p>
+                  <dl className={styles.stopFacts}>
+                    <div>
+                      <dt>On the monitor</dt>
+                      <dd>{stop.monitorLabel}.</dd>
+                    </div>
+                    <div>
+                      <dt>Later activity</dt>
+                      <dd>
+                        {stop.wiggle.change} {stop.wiggle.watch} Use the controls when the lesson
+                        opens that activity.
+                      </dd>
+                    </div>
+                  </dl>
+                  <p className={styles.kicker} id={`${listIdBase}-${stopId}`}>
+                    {stop.checklistLabel}
+                  </p>
+                  <ul className={styles.checklist} aria-labelledby={`${listIdBase}-${stopId}`}>
+                    {stop.checklist.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                </section>
+              )
+            })}
+          </StageBlock>
+        </>
       ) : null}
 
-      <StageBlock kind="pattern" heading="Where you are on the path">
-        {stopsToShow.map((stopId) => {
-          const stop = routeStop(stopId)
-          return (
-            <section
-              key={stopId}
-              className={styles.teachingCard}
-              data-teaching-block="stop"
-              data-stop={stopId}
-              aria-label={stop.title}
-            >
-              <p className={styles.kicker}>
-                Stop {routeStopNumber(stopId)} · {stop.title}
-              </p>
-              <p className={styles.analogy}>{stop.analogy}</p>
-              <p>{stop.precise}</p>
-              <dl className={styles.stopFacts}>
-                <div>
-                  <dt>On the monitor</dt>
-                  <dd>{stop.monitorLabel}.</dd>
-                </div>
-                <div>
-                  <dt>Try this</dt>
-                  <dd>
-                    {stop.wiggle.change} {stop.wiggle.watch}
-                  </dd>
-                </div>
-              </dl>
-              <p className={styles.kicker} id={`${listIdBase}-${stopId}`}>
-                {stop.checklistLabel}
-              </p>
-              <ul className={styles.checklist} aria-labelledby={`${listIdBase}-${stopId}`}>
-                {stop.checklist.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
-            </section>
-          )
-        })}
-      </StageBlock>
-
-      {committed ? (
+      {committed && !independentAttempt && (!flow || step.interaction.kind === 'explain') ? (
         <>
           {rows.length > 0 ? (
-            <StageBlock kind="after-commitment" heading="The one table">
+            <StageBlock kind="after-commitment" heading="Waveform patterns and common causes">
               <section className={styles.teachingCard} data-teaching-block="grammar">
-                <p className={styles.kicker}>The one table · rows this section fills in</p>
+                <p className={styles.kicker}>Waveform patterns and common causes</p>
                 <table className={styles.grammarTable}>
                   <thead>
                     <tr>
@@ -207,7 +255,9 @@ export function HemodynamicsTeachingColumn({
             </section>
           </StageBlock>
 
-          <DeeperReference lesson={lesson} provenanceResolved={provenanceResolved} />
+          {!procedural ? (
+            <DeeperReference lesson={lesson} provenanceResolved={provenanceResolved} />
+          ) : null}
 
           <StageBlock kind="boundary" heading="What this simulation leaves out">
             <section className={styles.teachingCard} data-teaching-block="boundary">
@@ -216,11 +266,7 @@ export function HemodynamicsTeachingColumn({
             </section>
           </StageBlock>
         </>
-      ) : (
-        <p className={styles.readBefore} data-read-before-you-decide>
-          The rows of the table, the control strip and the reference open once you have committed.
-        </p>
-      )}
+      ) : null}
     </div>
   )
 }
@@ -228,9 +274,11 @@ export function HemodynamicsTeachingColumn({
 function DeeperReference({
   lesson,
   provenanceResolved,
+  prebrief = false,
 }: {
   readonly lesson: HemodynamicsStageLesson
   readonly provenanceResolved: boolean
+  readonly prebrief?: boolean
 }) {
   switch (lesson.sectionId) {
     case 'pressure-system':
@@ -278,7 +326,11 @@ function DeeperReference({
       )
     case 'catheter-advancement':
       return (
-        <StageBlock kind="after-commitment" heading="When to stop">
+        <StageBlock
+          kind="after-commitment"
+          heading="When to stop"
+          visibility={prebrief ? 'shown' : undefined}
+        >
           <section className={styles.teachingCard} data-teaching-block="stop-conditions">
             <p className={styles.kicker}>What to expect, and when to stop</p>
             <ul className={styles.checklist}>
@@ -300,7 +352,11 @@ function DeeperReference({
     case 'pawp-capture':
       return (
         <>
-          <StageBlock kind="after-commitment" heading="The wedge sequence, in full">
+          <StageBlock
+            kind="after-commitment"
+            heading="The wedge sequence, in full"
+            visibility={prebrief ? 'shown' : undefined}
+          >
             <section className={styles.teachingCard} data-teaching-block="wedge-sequence">
               <p className={styles.kicker}>The wedge sequence, in full</p>
               <ol className={styles.sequence}>
@@ -313,7 +369,11 @@ function DeeperReference({
               </ol>
             </section>
           </StageBlock>
-          <StageBlock kind="after-commitment" heading="Is the wedge real?">
+          <StageBlock
+            kind="after-commitment"
+            heading="Is the wedge real?"
+            visibility={prebrief ? 'collapsed' : undefined}
+          >
             <div data-teaching-block="wedge-validity">
               <WedgeValidityPanel />
             </div>

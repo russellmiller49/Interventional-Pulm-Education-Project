@@ -11,6 +11,20 @@
   min-width: 0;
 }
 
+.teachingCard h3,
+.surfaceCard h3 {
+  margin: 0 0 0.65rem;
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.teachingCard h4 {
+  margin-block: 0.8rem 0.45rem;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
 .monitorFrame {
   min-width: 0;
   overflow: hidden;
@@ -664,4 +678,40 @@
   width: 1rem;
   height: 1rem;
   flex: none;
+}
+.componentTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-block: 0.75rem;
+}
+
+.compactTaskContext {
+  display: none;
+}
+
+:global([data-compact='true']) .compactTaskContext {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(110, 210, 220, 0.35);
+  border-radius: 0.6rem;
+  background: #13252e;
+  color: #effaff;
+}
+
+/* Activity-specific flow uses the document scrollport at every viewport. */
+.moduleShell[data-document-flow='true'] {
+  height: auto;
+  overflow: visible;
+  min-height: 100vh;
+}
+.moduleShell[data-document-flow='true'] [data-activity-frame] {
+  height: auto;
+  overflow: visible;
+}
+.moduleShell[data-document-flow='true'] [data-activity-frame] > div:last-child {
+  height: auto;
+  overflow: visible;
+  display: block;
 }
