@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { RecordedFrameSource } from '../../../../../src/lib/ebus-recorded-contract'
+type Snapshot = { image: string; source: RecordedFrameSource }
 import {
   createKnobologyFrameState,
   reduceKnobologyFrameState,
@@ -53,9 +55,10 @@ export function GuidedKnobology({
   const [readyKey, setReadyKey] = useState('')
   const [error, setError] = useState('')
   const [capture, setCapture] = useState<string | null>(null)
-  const [playbackPaused, setPlaybackPaused] = useState(
-    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-  )
+  const [playbackPaused, setPlaybackPaused] = useState(true)
+  const [baseline, setBaseline] = useState<Snapshot | null>(null)
+  const [held, setHeld] = useState<Snapshot | null>(null)
+  const [decoded, setDecoded] = useState<Snapshot | null>(null)
   const video = useRef<HTMLVideoElement>(null)
   const { lookup, status } = useKnobologyVideoLookup()
   const resolved = useMemo(
@@ -81,6 +84,79 @@ export function GuidedKnobology({
       state.measurementStart.x - state.measurementEnd.x,
       state.measurementStart.y - state.measurementEnd.y,
     ) > 0.025
+  const snapshot = useCallback(
+    (isHeld: boolean): Snapshot | null => {
+      const element = video.current
+      if (!element || element.readyState < 2 || element.seeking || !key || !element.videoWidth)
+        return null
+      const canvas = document.createElement('canvas')
+      canvas.width = element.videoWidth
+      canvas.height = element.videoHeight
+      const context = canvas.getContext('2d')
+      if (!context) return null
+      try {
+        context.drawImage(element, 0, 0)
+        const calipers = [state.measurementStart, state.measurementEnd].filter(
+          (point): point is { x: number; y: number } => !!point,
+        )
+        context.strokeStyle = '#6ff2db'
+        context.lineWidth = 3
+        for (const point of calipers) {
+          const x = point.x * canvas.width,
+            y = point.y * canvas.height
+          context.beginPath()
+          context.moveTo(x - 9, y)
+          context.lineTo(x + 9, y)
+          context.moveTo(x, y - 9)
+          context.lineTo(x, y + 9)
+          context.stroke()
+        }
+        const image = canvas.toDataURL('image/png')
+        let hash = 2166136261
+        for (let i = 0; i < image.length; i++)
+          hash = Math.imul(hash ^ image.charCodeAt(i), 16777619)
+        return {
+          image,
+          source: {
+            type: 'recorded-frame',
+            version: 1,
+            sessionId: config.sessionId,
+            taskId: config.recordedTask ?? 'practice',
+            frameId: config.sessionId + ':' + (hash >>> 0).toString(16),
+            segmentId: key,
+            mediaTime: element.currentTime,
+            width: canvas.width,
+            height: canvas.height,
+            settings: {
+              depthMm: getKnobologyVideoDepthCm(state.depth) * 10,
+              gain: state.gain,
+              contrast: state.contrast,
+              doppler: state.colorDoppler,
+            },
+            calipers,
+            held: isHeld,
+            captured: !!capture && state.saved,
+          },
+        }
+      } catch {
+        setError('The selected recording could not be captured. Reload the workbench to retry.')
+        return null
+      }
+    },
+    [
+      key,
+      config.sessionId,
+      config.recordedTask,
+      state.depth,
+      state.gain,
+      state.contrast,
+      state.colorDoppler,
+      state.measurementStart,
+      state.measurementEnd,
+      state.saved,
+      capture,
+    ],
+  )
   const allowed = (control: EbusControl) => !config.locked && config.controls.includes(control)
   function act(control: EbusControl, action: KnobologySimulatorAction) {
     if (!allowed(control) || !frameReady) return
@@ -98,8 +174,7 @@ export function GuidedKnobology({
     setReadyKey('')
     setError('')
     let cancelled = false,
-      animation = 0,
-      frameCallback = 0
+      animation = 0
     const start = getKnobologyVideoSegmentStart(segment) + 0.025,
       end = getKnobologyVideoSegmentEnd(segment)
     const report = () => {
@@ -111,11 +186,8 @@ export function GuidedKnobology({
         element.currentTime >= end
       )
         return
-      if (element.requestVideoFrameCallback)
-        frameCallback = element.requestVideoFrameCallback(() => {
-          if (!cancelled) setReadyKey(segment.name)
-        })
-      else setReadyKey(segment.name)
+      // A decoded, seeked frame can be drawn while paused. Never play to manufacture readiness.
+      setReadyKey(segment.name)
     }
     const seek = () => {
       try {
@@ -139,25 +211,35 @@ export function GuidedKnobology({
     element.addEventListener('error', fail)
     if (element.readyState >= 1) seek()
     animation = requestAnimationFrame(loop)
-    void element.play().catch(() => {})
+    element.pause()
+    setPlaybackPaused(true)
     return () => {
       cancelled = true
       cancelAnimationFrame(animation)
-      if (frameCallback) element.cancelVideoFrameCallback(frameCallback)
       element.removeEventListener('loadedmetadata', seek)
       element.removeEventListener('loadeddata', report)
       element.removeEventListener('seeked', report)
       element.removeEventListener('error', fail)
     }
   }, [segment])
-  // Let the selected frame reach the compositor before pausing so a newly selected clip
-  // can still report its actual frame in reduced-motion mode.
+  // Playback begins only with an explicit learner action. Layout and hydration cannot start it.
   useEffect(() => {
     const element = video.current
     if (!element) return
-    if (frameReady && (state.frozen || config.locked || playbackPaused)) element.pause()
-    else void element.play().catch(() => {})
+    if (config.locked && !playbackPaused) setPlaybackPaused(true)
+    if (!frameReady || state.frozen || config.locked || playbackPaused) element.pause()
+    else void element.play().catch(() => setPlaybackPaused(true))
   }, [state.frozen, config.locked, key, frameReady, playbackPaused])
+  useEffect(() => {
+    if (!frameReady) return
+    if (config.locked) video.current?.pause()
+    const actual = snapshot(config.locked)
+    if (!actual) return
+    setDecoded(actual)
+    if (config.locked) setHeld(actual)
+    else setHeld(null)
+    setBaseline((prior) => prior ?? actual)
+  }, [frameReady, config.locked, snapshot])
   useEffect(
     () =>
       onObservation({
@@ -166,7 +248,8 @@ export function GuidedKnobology({
         actionCount: actions.count,
         lastAction: actions.last,
         ready: status === 'ready',
-        frameReady,
+        frameReady: frameReady && !!decoded && (!config.locked || !!held),
+        recorded: (config.locked ? held : decoded)?.source,
         depth: getKnobologyVideoDepthCm(state.depth) * 10,
         gain: state.gain,
         contrast: state.contrast,
@@ -175,7 +258,18 @@ export function GuidedKnobology({
         measured: validMeasurement,
         saved: !!capture && state.saved,
       }),
-    [actions, status, frameReady, state, capture, validMeasurement, onObservation],
+    [
+      actions,
+      status,
+      frameReady,
+      state,
+      capture,
+      validMeasurement,
+      onObservation,
+      config.locked,
+      held,
+      decoded,
+    ],
   )
   const processor = (
     control: EbusControl,
@@ -214,7 +308,7 @@ export function GuidedKnobology({
     }))
   }
   return (
-    <div className="guided-workbench">
+    <div className="guided-workbench guided-recording">
       <h2>EBUS workbench</h2>
       <p className="guided-label">Recorded ultrasound clips · Educational controls</p>
       {(status === 'error' || error) && (
@@ -222,10 +316,28 @@ export function GuidedKnobology({
           {error || 'The image library could not load. Reload to retry.'}
         </p>
       )}
-      <div className="guided-media">
+      {baseline && config.recordedTask !== 'capture' && (
+        <figure className="recorded-baseline">
+          <div className="guided-media">
+            <img
+              src={baseline.image}
+              alt="Previous recorded image retained for comparison"
+              data-recorded-baseline
+            />
+          </div>
+          <figcaption>
+            Previous recording · Selected depth {baseline.source.settings.depthMm / 10} cm · Gain{' '}
+            {baseline.source.settings.gain} · Contrast {baseline.source.settings.contrast} ·{' '}
+            {baseline.source.settings.doppler ? 'Color Doppler' : 'Grayscale'}. These pixels stay
+            fixed until you keep a new comparison.
+          </figcaption>
+        </figure>
+      )}
+      <div className="guided-media recorded-current">
         {segment && (
           <video
             ref={video}
+            hidden={config.locked && !!held}
             src={getKnobologyVideoSegmentSrc(segment.depth)}
             muted
             playsInline
@@ -233,8 +345,15 @@ export function GuidedKnobology({
             aria-label="Ultrasound teaching clip"
           />
         )}
+        {config.locked && held && (
+          <img
+            src={held.image}
+            alt="Held recorded image from this acquisition"
+            data-recorded-held
+          />
+        )}
         {!frameReady && !error && <p role="status">Loading the selected ultrasound image…</p>}
-        {state.calipers && (
+        {state.calipers && !config.locked && (
           <svg viewBox="0 0 100 100" aria-label="Movable measurement calipers">
             {[state.measurementStart, state.measurementEnd].map(
               (p, i) =>
@@ -264,8 +383,14 @@ export function GuidedKnobology({
         )}
       </div>
       <p role="status">
-        {state.frozen ? 'Image frozen' : playbackPaused ? 'Clip paused' : 'Live clip'} · Depth{' '}
-        {getKnobologyVideoDepthCm(state.depth)} cm
+        {config.locked
+          ? 'Held recording'
+          : state.frozen
+            ? 'Image frozen'
+            : playbackPaused
+              ? 'Recording paused'
+              : 'Recording playing'}{' '}
+        · Depth {getKnobologyVideoDepthCm(state.depth)} cm
       </p>
       <button
         disabled={!frameReady || state.frozen || config.locked}
@@ -273,12 +398,25 @@ export function GuidedKnobology({
       >
         {playbackPaused ? 'Play clip' : 'Pause clip'}
       </button>
+      {config.recordedTask !== 'capture' && (
+        <button
+          disabled={!frameReady || config.locked}
+          onClick={() => {
+            video.current?.pause()
+            setPlaybackPaused(true)
+            const actual = snapshot(false)
+            if (actual) setBaseline(actual)
+          }}
+        >
+          Keep this image for comparison
+        </button>
+      )}
       <p className="guided-label">
         Each control selects a recorded example. Combined settings are not a continuous ultrasound
         simulation. Control levels and caliper positions are educational; no clinical measurement is
         reported.
       </p>
-      <fieldset disabled={config.locked || !frameReady}>
+      <fieldset hidden={config.locked} disabled={config.locked || !frameReady}>
         <legend>Image controls</legend>
         {(['depth', 'gain', 'contrast'] as const)
           .filter((c) => config.controls.includes(c))
@@ -394,7 +532,7 @@ export function GuidedKnobology({
           </button>
         )}
       </fieldset>
-      {capture && (
+      {capture && !config.locked && (
         <figure>
           <img src={capture} alt="Saved teaching image with the calipers you placed" />
           <figcaption>

@@ -1,6 +1,6 @@
 # EBUS guided course — remaining work
 
-Updated September 13, 2026 for PR #189. This checklist tracks the broader `EBUS_GUIDED_REVIEW_AND_3D_BUILD_PLAN.md` beyond the completed bounded Phase 1 assignment. The owner has authorized pushing the implementation and this record to the existing PR. The course remains an unlisted development module.
+Updated September 13, 2026. The earlier PR #189 checklist is retained below; see the bounded flow-redesign delivery note for subsequent implementation. This checklist tracks the broader `EBUS_GUIDED_REVIEW_AND_3D_BUILD_PLAN.md` beyond the completed bounded Phase 1 assignment. The owner has authorized pushing the implementation and this record to the existing PR. The course remains an unlisted development module.
 
 ## Completed implementation
 
@@ -31,3 +31,12 @@ Recommended implementation order: B1, then B2–B4 as reviewed media become avai
 - [ ] **R5 — Additional compatibility/accessibility checks.** Complete Safari, assistive-technology and physical-device comparison reviews noted in the model report. Rerun the appropriate real-browser and regression checks for each subsequent implementation change.
 
 PR delivery is authorized. Merge, public release, legacy-course replacement and backend/data changes are not part of this update.
+
+## Bounded flow-redesign delivery — September 13, 2026
+
+The [flow redesign review](flow-redesign-review.md) and [coverage matrix](flow-redesign-coverage.md) supersede the old seven-stage presentation assumptions. All 26 stable lessons now use explicit task flows, retaining their original teaching and source boundaries.
+
+- **B2, supported portion delivered:** recorded depth/gain/Doppler interpretation and actual capture have explicit held-frame provenance, fixed comparison pixels and versioned questions. A structured description uses a clearly written vignette. Expert clinical border/axis truth, a reviewed clinical image bank and pathological interpretation remain open.
+- **B4, supported portion delivered:** an authored written ROSE/specimen case separates nonrepresentative material, provisional malignant cells, final pathology and pending ancillary studies. The allocation task retains case/station/node/specimen identity and accepts laboratory clarification where requirements are absent. A reviewed cytology gallery remains open.
+- **B5, bounded implementation delivered:** three separate versioned local case artifacts cover a station-7 model window, a written node-description vignette, and a left-primary examination/specimen/report case. The written case preserves two 4R nodes within one station, planned coverage, inadequate/unexamined targets, reasons not sampled, distinct specimens and pending results. Compatible drafts restore without live guidance; incompatible drafts are isolated and archived on explicit replacement. No pass counts are supplied or invented. Additional primary-side variants, anatomies and broader clinical records remain future scope.
+- **B1/B3/B6 and R items remain open where they depend on reviewed anatomy/media, device detail, faculty or learner validation.** The flow refactor does not approve a 4R/10R contrast, new station sweep, pathology image or clinical measurement merely because a task renders.

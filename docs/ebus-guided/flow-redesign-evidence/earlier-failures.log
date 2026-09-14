@@ -1,0 +1,241 @@
+Earlier failed attempts, preserved for review. These are not the final validation results.
+The implementation report describes corrections and the accepted final checks.
+
+===== ebus-flow-pilot.log =====
+(node:72141) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+START clinical-question
+TASK clinical-question:clinical-request
+TASK clinical-question:information-needs
+TASK clinical-question:apply-another-situation
+PASS clinical-question
+START scope-orientation
+TASK scope-orientation:distal-scope
+TASK scope-orientation:plane-demonstration
+TASK scope-orientation:plane-interpretation
+TASK scope-orientation:acquire-sweep
+TASK scope-orientation:review-acquisition
+locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-now-primary]')[22m
+[2m    - locator resolved to <button disabled data-now-primary="true" class="course_button__i2_S1">Submit response</button>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m    40 × waiting for element to be visible, enabled and stable[22m
+[2m       - element is not enabled[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+[2m    - waiting for element to be visible, enabled and stable[22m
+[2m  - element was detached from the DOM, retrying[22m
+[2m    - locator resolved to <button disabled data-now-primary="true" class="course_button__i2_S1">Submit response</button>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m    16 × waiting for element to be visible, enabled and stable[22m
+[2m       - element is not enabled[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+
+    at main (/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/codex-ebus-9-12/scripts/ebus-guided/browser-flow-redesign.ts:62:27) {
+  log: [
+    "  - waiting for locator('[data-now-primary]')",
+    '    - locator resolved to <button disabled data-now-primary="true" class="course_button__i2_S1">Submit response</button>',
+    '  - attempting click action',
+    '    2 × waiting for element to be visible, enabled and stable',
+    '      - element is not enabled',
+    '    - retrying click action',
+    '    - waiting 20ms',
+    '    2 × waiting for element to be visible, enabled and stable',
+    '      - element is not enabled',
+    '    - retrying click action',
+    '      - waiting 100ms',
+    '    40 × waiting for element to be visible, enabled and stable',
+    '       - element is not enabled',
+    '     - retrying click action',
+    '       - waiting 500ms',
+    '    - waiting for element to be visible, enabled and stable',
+    '  - element was detached from the DOM, retrying',
+    '    - locator resolved to <button disabled data-now-primary="true" class="course_button__i2_S1">Submit response</button>',
+    '  - attempting click action',
+    '    2 × waiting for element to be visible, enabled and stable',
+    '      - element is not enabled',
+    '    - retrying click action',
+    '    - waiting 20ms',
+    '    2 × waiting for element to be visible, enabled and stable',
+    '      - element is not enabled',
+    '    - retrying click action',
+    '      - waiting 100ms',
+    '    16 × waiting for element to be visible, enabled and stable',
+    '       - element is not enabled',
+    '     - retrying click action',
+    '       - waiting 500ms'
+  ],
+  name: 'TimeoutError'
+}
+
+===== ebus-flow-station-trace.log =====
+(node:117) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+START station-seven
+NAV root http://127.0.0.1:3136/en/ebus-guided/learn?section=station-seven
+TASK station-seven:subcarinal-region
+NAV root http://127.0.0.1:3136/en/ebus-guided/learn?section=station-seven
+CLICK <button data-now-primary="true" class="course_button__i2_S1">Compare the two bronchial approaches</button>
+TASK station-seven:assisted-window
+NAV iframe http://127.0.0.1:3136/socal-ebus-course/app/guided.html?locale=en&publicTraining=1&publicScope=ebus
+NAV iframe http://127.0.0.1:3136/socal-ebus-course/app/guided.html?locale=en&publicTraining=1&publicScope=ebus
+CLICK <button data-now-primary="true" class="course_button__i2_S1">Separate approach from station</button>
+TASK station-seven:station-decision
+CLICK <input type="radio" value="b" name="seven-predict">
+CLICK <button data-now-primary="true" class="course_button__i2_S1">Submit response</button>
+CLICK <button data-now-primary="true" class="course_button__i2_S1">Acquire both bronchial windows</button>
+TASK station-seven:bronchial-sweeps
+NAV iframe http://127.0.0.1:3136/socal-ebus-course/app/guided.html?locale=en&publicTraining=1&publicScope=ebus
+NAV iframe http://127.0.0.1:3136/socal-ebus-course/app/guided.html?locale=en&publicTraining=1&publicScope=ebus
+CLICK <button>Check landmark</button>
+CLICK <button>Check landmark</button>
+CLICK <button>Check landmark</button>
+CLICK <button>Check landmark</button>
+CLICK <button>Check landmark</button>
+CLICK <button>Check landmark</button>
+CLICK <button>Check landmark</button>
+CLICK <button>Check landmark</button>
+CLICK <button>Check landmark</button>
+CLICK <button>Check landmark</button>
+CLICK <button>Check landmark</button>
+CLICK <button>Check landmark</button>
+CLICK <button>Check landmark</button>
+CLICK <button>Check landmark</button>
+CLICK <button>Check landmark</button>
+CLICK <button>Check landmark</button>
+CLICK <button>Check landmark</button>
+CLICK <button aria-pressed="false">Left main bronchus</button>
+CLICK <button data-now-primary="true" class="course_button__i2_S1">Hold this acquisition</button>
+TASK station-seven:review-acquisition
+NAV iframe http://127.0.0.1:3136/socal-ebus-course/app/guided.html?locale=en&publicTraining=1&publicScope=ebus
+NAV iframe http://127.0.0.1:3136/socal-ebus-course/app/guided.html?locale=en&publicTraining=1&publicScope=ebus
+CLICK <input type="radio" value="b" name="seven-observe" style="">
+locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-now-primary]')[22m
+[2m    - locator resolved to <button disabled data-now-primary="true" class="course_button__i2_S1">Submit response</button>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m    58 × waiting for element to be visible, enabled and stable[22m
+[2m       - element is not enabled[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+
+    at main (/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/codex-ebus-9-12/scripts/ebus-guided/browser-flow-redesign.ts:70:27) {
+  log: [
+    "  - waiting for locator('[data-now-primary]')",
+    '    - locator resolved to <button disabled data-now-primary="true" class="course_button__i2_S1">Submit response</button>',
+    '  - attempting click action',
+    '    2 × waiting for element to be visible, enabled and stable',
+    '      - element is not enabled',
+    '    - retrying click action',
+    '    - waiting 20ms',
+    '    2 × waiting for element to be visible, enabled and stable',
+    '      - element is not enabled',
+    '    - retrying click action',
+    '      - waiting 100ms',
+    '    58 × waiting for element to be visible, enabled and stable',
+    '       - element is not enabled',
+    '     - retrying click action',
+    '       - waiting 500ms'
+  ],
+  name: 'TimeoutError'
+}
+
+===== ebus-flow-pilot-final.log =====
+(node:76630) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+START acoustic-contact
+TASK acoustic-contact:contact-example
+TASK acoustic-contact:contact-decision
+TASK acoustic-contact:restore-window
+ExpectError: expect(locator).toBeEnabled() failed
+
+Locator:  locator('[data-now-primary]')
+Expected: enabled
+Received: disabled
+Timeout:  5000ms
+
+Call log:
+  - Expect "to.be.enabled" with timeout 5000ms
+  - waiting for locator('[data-now-primary]')
+    14 × locator resolved to <button disabled data-now-primary="true" class="course_button__i2_S1">Hold this acquisition</button>
+       - unexpected value "disabled"
+
+    at captureRawStack (/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/codex-ebus-9-12/node_modules/playwright-core/lib/coreBundle.js:9681:17)
+    at callMatcherAsStep (/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/codex-ebus-9-12/node_modules/playwright/lib/matchers/expect.js:13310:57)
+    at Object.toBeEnabled (/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/codex-ebus-9-12/node_modules/playwright/lib/matchers/expect.js:13300:23)
+    at main (/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/codex-ebus-9-12/scripts/ebus-guided/browser-flow-redesign.ts:66:33) {
+  matcherResult: {
+    message: 'expect(locator).toBeEnabled() failed\n' +
+      '\n' +
+      "Locator:  locator('[data-now-primary]')\n" +
+      'Expected: enabled\n' +
+      'Received: disabled\n' +
+      'Timeout:  5000ms\n' +
+      '\n' +
+      'Call log:\n' +
+      '  - Expect "to.be.enabled" with timeout 5000ms\n' +
+      "  - waiting for locator('[data-now-primary]')\n" +
+      '    14 × locator resolved to <button disabled data-now-primary="true" class="course_button__i2_S1">Hold this acquisition</button>\n' +
+      '       - unexpected value "disabled"\n',
+    pass: false,
+    actual: 'disabled',
+    name: 'toBeEnabled',
+    expected: 'enabled',
+    log: [
+      '  - Expect "to.be.enabled" with timeout 5000ms',
+      "  - waiting for locator('[data-now-primary]')",
+      '    14 × locator resolved to <button disabled data-now-primary="true" class="course_button__i2_S1">Hold this acquisition</button>',
+      '       - unexpected value "disabled"'
+    ],
+    timeout: 5000,
+    ariaSnapshot: '- button "Hold this acquisition" [disabled]'
+  }
+}
+
+===== ebus-flow-typecheck.log =====
+
+> interventionalpulm@0.1.0 type-check
+> tsc --noEmit
+
+src/features/ebus-guided/__tests__/course.test.tsx(7,10): error TS2305: Module '"../content/stage"' has no exported member 'stageLesson'.
+
+===== ebus-flow-browser-regressions.log =====
+(node:61639) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3136/en/ebus-guided/learn?section=clinical-question
+Call log:
+[2m  - navigating to "http://127.0.0.1:3136/en/ebus-guided/learn?section=clinical-question", waiting until "load"[22m
+
+    at main (/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/codex-ebus-9-12/scripts/ebus-guided/browser-flow-regressions.ts:66:18) {
+  log: [
+    '  - navigating to "http://127.0.0.1:3136/en/ebus-guided/learn?section=clinical-question", waiting until "load"'
+  ],
+  name: 'Error'
+}

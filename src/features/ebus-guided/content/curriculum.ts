@@ -1,6 +1,7 @@
 import { needleModel, contactModel, measurementModel, routeModel } from './models'
 import type { Lesson, Topic } from './types'
 import { question } from './authoring'
+import { IMAGE_INTERPRETATIONS } from './image-items'
 import { prepareLessons } from './prepare'
 import { optimizeLessons } from './optimize'
 import { locateLessons } from './locate'
@@ -112,7 +113,7 @@ export const coupling: Lesson = {
   boundary:
     'The grayscale image is simulated from one anatomy model. Contact quality is an authored model index; it is not a measured pressure or a clinical safety threshold.',
 }
-export const LESSONS: Lesson[] = [
+const authoredLessons: Lesson[] = [
   ...prepareLessons,
   coupling,
   contactModel,
@@ -126,6 +127,74 @@ export const LESSONS: Lesson[] = [
   ),
   ...completeLessons,
 ]
+export const HISTORICAL_IMAGE_QUESTIONS = authoredLessons
+  .filter((lesson) => IMAGE_INTERPRETATIONS[lesson.id])
+  .map((lesson) => lesson.observation)
+export const HISTORICAL_MODEL_QUESTIONS = authoredLessons
+  .filter((lesson) => lesson.lab?.kind === 'model')
+  .map((lesson) => lesson.question)
+function chapter(id: string, title: string, ids: string[]) {
+  return {
+    id,
+    title,
+    lessons: ids.map((lessonId) => {
+      const lesson = authoredLessons.find((entry) => entry.id === lessonId)
+      if (!lesson) throw new Error('Unknown EBUS chapter lesson: ' + lessonId)
+      if (lesson.lab?.kind === 'model')
+        return {
+          ...lesson,
+          question: { ...lesson.question, id: lesson.question.id + '-application-v2' },
+        }
+      return IMAGE_INTERPRETATIONS[lessonId]
+        ? { ...lesson, observation: IMAGE_INTERPRETATIONS[lessonId] }
+        : lesson
+    }),
+  }
+}
+/** The sole course-order registry. Topic IDs remain historical analytics categories. */
+export const CHAPTERS = [
+  chapter('prepare', 'Define the examination and prepare', ['clinical-question', 'preparation']),
+  chapter('contact', 'Understand the scope and establish contact', [
+    'scope-orientation',
+    'acoustic-contact',
+    'contact-cutaway-model',
+  ]),
+  chapter('image', 'Obtain and interpret a useful ultrasound image', [
+    'image-depth',
+    'gain-contrast',
+    'doppler',
+    'measurement-phantoms',
+    'capture',
+  ]),
+  chapter('anatomy', 'Identify anatomical windows and stations', [
+    'ct-map',
+    'station-seven',
+    'right-paratracheal',
+    'left-paratracheal',
+    'hilar-interlobar',
+  ]),
+  chapter('plan', 'Describe nodes and plan the examination', [
+    'node-characterization',
+    'systematic-staging',
+    'eus-b',
+    'eus-b-route-model',
+  ]),
+  chapter('sample', 'Sample and preserve useful tissue', [
+    'needle-safety',
+    'needle-assembly-model',
+    'adequacy-rose',
+    'specimen-triage',
+  ]),
+  chapter('report', 'Troubleshoot, recover, and report', [
+    'difficult-acquisition',
+    'complications-recovery',
+    'results-reporting',
+  ]),
+]
+export const LESSONS: Lesson[] = CHAPTERS.flatMap((entry) => entry.lessons)
+export function chapterForLesson(id: string) {
+  return CHAPTERS.find((entry) => entry.lessons.some((lesson) => lesson.id === id))!
+}
 export function lessonById(id: string | undefined) {
   return LESSONS.find((l) => l.id === id)
 }

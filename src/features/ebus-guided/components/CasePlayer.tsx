@@ -15,12 +15,16 @@ export function CasePlayer({
   item,
   mode,
   onExit,
+  feedback = 'coached',
 }: {
   item: EbusCase
   mode: 'practice' | 'assess'
+  feedback?: 'coached' | 'independent'
   onExit: () => void
 }) {
   const record = useCourseRecord()
+  const coached = mode === 'practice' && feedback === 'coached'
+  const historyId = coached ? item.id + '-coached-v1' : item.id
   const [index, setIndex] = useState(0)
   const [selected, setSelected] = useState('')
   const [answers, setAnswers] = useState<Record<string, string>>({})
@@ -35,7 +39,7 @@ export function CasePlayer({
       if (!q.choices.some((c) => c.id === selected)) return
       setAnswers((a) => ({ ...a, [q.id]: selected }))
       setFirst((a) => (Object.hasOwn(a, q.id) ? a : { ...a, [q.id]: selected }))
-      setStorageFailed(!updateRecord((r) => firstAttempt(r, item.id + ':' + q.id, q, selected)))
+      setStorageFailed(!updateRecord((r) => firstAttempt(r, historyId + ':' + q.id, q, selected)))
       return
     }
     if (unsafe) {
@@ -64,7 +68,12 @@ export function CasePlayer({
   return (
     <div>
       <p className={styles.eyebrow}>
-        {mode === 'assess' ? 'Formative assessment' : 'Optional practice'} · Authored clinical case
+        {mode === 'assess'
+          ? 'Formative assessment'
+          : coached
+            ? 'Coached practice · Version 1'
+            : 'Independent practice'}{' '}
+        · Authored clinical case
       </p>
       <h1 className={styles.caseTitle}>{item.title}</h1>
       {storageFailed && (
@@ -80,8 +89,11 @@ export function CasePlayer({
             <p>{item.context}</p>
             {q.imageStation && <DecisionImage key={q.id} station={q.imageStation} />}
             <p className={styles.muted}>
-              Reasoning appears in the debrief. Unsafe choices receive immediate feedback and
-              require revision. An unfinished case restarts from its first question.
+              {coached
+                ? 'Reasoning appears after each response. Coached first responses are stored separately from independent practice history.'
+                : 'Reasoning appears in the debrief.'}{' '}
+              Unsafe choices receive immediate feedback and require revision. An unfinished case
+              restarts from its first question.
             </p>
           </section>
           <NowCard
@@ -109,7 +121,7 @@ export function CasePlayer({
               selected={selected || committed || ''}
               committed={committed}
               onSelect={setSelected}
-              timing="debrief-only"
+              timing={coached ? 'immediate-after-commit' : 'debrief-only'}
             />
           </NowCard>
         </div>
@@ -123,7 +135,7 @@ export function CasePlayer({
           </p>
           {item.questions.map((question) => {
             const initial = first[question.id],
-              earliest = record.firstAttempts[item.id + ':' + question.id]?.choiceId
+              earliest = record.firstAttempts[historyId + ':' + question.id]?.choiceId
             return (
               <section key={question.id} className={styles.card}>
                 <QuestionBody

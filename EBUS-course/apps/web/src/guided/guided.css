@@ -375,10 +375,97 @@ p {
   color: #abc3ca;
 }
 /* Actual initial/current acquisitions, using the existing workbench palette. */
-.linked-contact-comparison > div { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.linked-contact-comparison figure { margin: 0; min-width: 0; }
-.linked-contact-comparison canvas { display: block; width: 100%; height: auto; margin-top: 6px; }
-.linked-contact-comparison figcaption { font-weight: 650; }
-.linked-landmark-task, .linked-sweep { padding: 12px; margin-block: 12px; border: 1px solid #46626b; border-radius: 8px; }
-.linked-pair--retained { grid-template-columns: minmax(0, 1fr) !important; }
-.linked-physical[hidden] { display: none; }
+.linked-contact-comparison > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.linked-contact-comparison figure {
+  margin: 0;
+  min-width: 0;
+}
+.linked-contact-comparison canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 6px;
+}
+.linked-contact-comparison figcaption {
+  font-weight: 650;
+}
+.linked-landmark-task,
+.linked-sweep {
+  padding: 12px;
+  margin-block: 12px;
+  border: 1px solid #46626b;
+  border-radius: 8px;
+}
+.linked-pair--retained {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+.linked-physical[hidden] {
+  display: none;
+}
+/* The host sizes this document from a session-validated ResizeObserver message. */
+html,
+body,
+#root {
+  min-height: 0;
+  height: auto;
+}
+.guided-workbench video[hidden] {
+  display: none;
+}
+.guided-workbench .recorded-baseline {
+  margin: 8px 0 16px;
+}
+.guided-workbench .recorded-baseline .guided-media {
+  max-height: 240px;
+}
+.guided-workbench .guided-media img {
+  display: block;
+}
+.guided-workbench select:focus-visible {
+  outline: 3px solid #79e4e3;
+  outline-offset: 3px;
+}
+.guided-workbench button {
+  min-height: 42px;
+}
+.guided-recording {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 14px;
+  align-items: start;
+}
+.guided-recording > * {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.guided-recording > .recorded-baseline {
+  grid-column: 1;
+  margin: 0;
+}
+.guided-recording > .recorded-current {
+  grid-column: 2;
+}
+.guided-recording:not(:has(.recorded-baseline)) > .recorded-current {
+  grid-column: 1 / -1;
+}
+.guided-recording > .recorded-baseline .guided-media {
+  max-height: 360px;
+}
+.guided-recording > fieldset[hidden] {
+  display: none;
+}
+@media (max-width: 560px) {
+  .guided-recording {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .guided-recording > .recorded-current {
+    grid-column: 1;
+  }
+}
+.guided-workbench fieldset[hidden] {
+  display: none;
+}

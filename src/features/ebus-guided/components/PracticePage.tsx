@@ -11,6 +11,7 @@ import { Workbench } from './Workbench'
 import { StationFigure } from './StationFigure'
 import styles from './course.module.css'
 export function PracticePage({ locale = 'en' }: { locale?: string }) {
+  const [feedback, setFeedback] = useState<'coached' | 'independent'>('coached')
   const [active, setActive] = useState<string | null>(null)
   const [round, setRound] = useState(0)
   const [observation, setObservation] = useState<EbusObservation>(EMPTY_EBUS_OBSERVATION)
@@ -32,6 +33,7 @@ export function PracticePage({ locale = 'en' }: { locale?: string }) {
             key={item.id + round}
             item={item}
             mode="practice"
+            feedback={feedback}
             onExit={() => choose(null)}
           />
         ) : lesson?.lab ? (
@@ -79,10 +81,32 @@ export function PracticePage({ locale = 'en' }: { locale?: string }) {
             <h1 className={styles.caseTitle}>Return to the parts that need another look.</h1>
             <p>
               Practice is optional and does not complete required lessons. Revisit these activities
-              after a few days. Case feedback appears at debrief; safety feedback is immediate.
+              after a few days. Coached practice explains each response. Independent practice delays
+              ordinary feedback until debrief; safety feedback is immediate in both.
             </p>
             <section className={styles.card}>
               <h2>Station recognition and clinical cases</h2>
+              <fieldset>
+                <legend>Feedback timing</legend>
+                <label>
+                  <input
+                    type="radio"
+                    name="practice-feedback"
+                    checked={feedback === 'coached'}
+                    onChange={() => setFeedback('coached')}
+                  />{' '}
+                  Coached practice — feedback after each response
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="practice-feedback"
+                    checked={feedback === 'independent'}
+                    onChange={() => setFeedback('independent')}
+                  />{' '}
+                  Independent practice — feedback at debrief
+                </label>
+              </fieldset>
               <p>
                 Use the CT references and described landmarks, then compare your decisions with the
                 debrief.

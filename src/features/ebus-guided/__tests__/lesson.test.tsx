@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { LessonHost } from '../components/LessonHost'
 import { acquired } from '../testing/linked-fixture'
-import { coupling, LESSONS } from '../content/curriculum'
+import { LESSONS } from '../content/curriculum'
 import { EMPTY_EBUS_OBSERVATION, type EbusObservation } from '@/lib/ebus-guided-bridge'
 import { readRecord } from '../engine/progress'
 
@@ -17,12 +17,51 @@ jest.mock('../components/Workbench', () => ({
     onObservation,
     lab,
     sessionId,
+    locked,
   }: {
     onObservation: (s: EbusObservation) => void
     lab: import('../content/types').Lab
     sessionId: string
+    locked: boolean
   }) => (
-    <section>
+    <section data-mock-locked={locked}>
+      {lab.kind === 'knobology' && (
+        <>
+          <button
+            onClick={() =>
+              onObservation({
+                ...EMPTY_EBUS_OBSERVATION,
+                acquisitionSession: sessionId,
+                ready: true,
+                frameReady: true,
+                actionCount: 1,
+                lastAction: 'depth',
+                depth: 40,
+                gain: 43,
+                contrast: 43,
+                recorded: {
+                  type: 'recorded-frame',
+                  version: 1,
+                  sessionId,
+                  taskId: 'depth',
+                  frameId: 'unit-frame',
+                  segmentId: 'unit-recording',
+                  mediaTime: 1,
+                  width: 640,
+                  height: 480,
+                  settings: { depthMm: 40, gain: 43, contrast: 43, doppler: false },
+                  calipers: [],
+                  held: false,
+                  captured: false,
+                },
+              })
+            }
+          >
+            Load recorded acquisition
+          </button>
+          <button onClick={() => onObservation(EMPTY_EBUS_OBSERVATION)}>Lose workbench</button>
+        </>
+      )}
       <button
         onClick={() =>
           onObservation({
@@ -92,6 +131,7 @@ beforeEach(() => {
   }
 })
 afterEach(cleanup)
+const coupling = LESSONS.find((lesson) => lesson.id === 'acoustic-contact')!
 const primary = () => document.querySelector('[data-now-primary]') as HTMLButtonElement
 const next = () => fireEvent.click(primary())
 function answer(text: string) {
@@ -101,13 +141,11 @@ function answer(text: string) {
 function startLab() {
   render(<LessonHost lesson={coupling} />)
   next()
-  next()
   answer(coupling.question.choices.find((c) => c.correct)!.text)
   next()
 }
 it('records the actual wrong response, withholds explanations until submission and does not advance automatically', () => {
   render(<LessonHost lesson={coupling} />)
-  next()
   next()
   expect(screen.queryByText(coupling.worked.reasoning)).not.toBeInTheDocument()
   expect(screen.queryByText(coupling.question.explanation)).not.toBeInTheDocument()
@@ -128,7 +166,6 @@ it('requires an action and a current rendered image; unsafe transfer must be cor
   next()
   answer(coupling.observation.choices.find((c) => c.correct)!.text)
   next()
-  next()
   answer(coupling.transfer.choices.find((c) => c.unsafe)!.text)
   expect(primary()).toHaveTextContent('Revise this response')
   expect(readRecord().completed).toEqual([])
@@ -141,12 +178,14 @@ it('requires an action and a current rendered image; unsafe transfer must be cor
 it('restart and reload preserve first decisions but restart the incomplete lesson', () => {
   startLab()
   fireEvent.click(screen.getByText('Restart lesson'))
-  expect(primary()).toHaveTextContent('Continue')
+  expect(primary()).toHaveTextContent('Identify the acquisition problem')
   expect(readRecord().completed).toEqual([])
   expect(readRecord().firstAttempts['acoustic-contact:contact-predict']).toBeDefined()
   cleanup()
   render(<LessonHost lesson={coupling} />)
-  expect(screen.getByRole('heading', { name: 'Orientation' })).toBeInTheDocument()
+  expect(
+    screen.getByRole('heading', { name: 'Compare contact and brightness' }),
+  ).toBeInTheDocument()
 })
 it('blocks an image-dependent response if its retained acquisition becomes unavailable', () => {
   startLab()
@@ -155,7 +194,7 @@ it('blocks an image-dependent response if its retained acquisition becomes unava
   fireEvent.click(screen.getByText('Move before frame'))
   answer(coupling.observation.choices.find((c) => c.correct)!.text)
   expect(primary()).toBeDisabled()
-  expect(readRecord().firstAttempts['acoustic-contact:contact-observe']).toBeUndefined()
+  expect(readRecord().firstAttempts['acoustic-contact:' + coupling.observation.id]).toBeUndefined()
   expect(readRecord().firstAttempts['acoustic-contact:contact-predict']).toBeDefined()
 })
 it('requires a fresh changed-window acquisition before the station transfer response', () => {
@@ -169,7 +208,6 @@ it('requires a fresh changed-window acquisition before the station transfer resp
   next()
   answer(lesson.observation.choices.find((c) => c.correct)!.text)
   next()
-  next()
   expect(primary()).toHaveTextContent('Hold this acquisition')
   expect(primary()).toBeDisabled()
   expect(screen.queryByText(lesson.transfer.prompt)).not.toBeInTheDocument()
@@ -181,5 +219,46 @@ it('requires a fresh changed-window acquisition before the station transfer resp
   answer(lesson.transfer.choices.find((c) => c.correct)!.text)
   next()
   expect(Object.keys(readRecord().skillObservations)).toHaveLength(2)
+  expect(readRecord().completed).not.toContain(lesson.id)
+  fireEvent.change(screen.getByLabelText('Visualization supported by this image'), {
+    target: { value: 'described' },
+  })
+  fireEvent.change(screen.getByLabelText('Basis for station identity'), {
+    target: { value: 'landmarks' },
+  })
+  fireEvent.change(screen.getByLabelText('Extent supported by this acquisition'), {
+    target: { value: 'window-only' },
+  })
+  fireEvent.click(screen.getByText('Check and save record'))
+  next()
   expect(readRecord().completed).toContain(lesson.id)
+})
+
+it('keeps requested help with the session and does not overwrite the first response after support', () => {
+  render(<LessonHost lesson={coupling} />)
+  fireEvent.click(screen.getByRole('button', { name: 'Help' }))
+  expect(readRecord().supportRequests[coupling.id]).toHaveLength(1)
+  fireEvent.click(screen.getByRole('button', { name: /Close/ }))
+  next()
+  answer(coupling.question.choices.find((choice) => choice.correct)!.text)
+  expect(
+    readRecord().firstAttempts[coupling.id + ':' + coupling.question.id].supportRequested,
+  ).toBe(true)
+})
+
+it('cancels a pending recorded hold on a real workbench invalidation so recovery can acquire again', () => {
+  const lesson = LESSONS.find((item) => item.id === 'image-depth')!
+  render(<LessonHost lesson={lesson} />)
+  next()
+  answer(lesson.question.choices.find((choice) => choice.correct)!.text)
+  next()
+  fireEvent.click(screen.getByText('Load recorded acquisition'))
+  next()
+  expect(primary()).toHaveTextContent('Holding the selected frame')
+  expect(document.querySelector('[data-mock-locked]')).toHaveAttribute('data-mock-locked', 'true')
+  fireEvent.click(screen.getByText('Lose workbench'))
+  expect(document.querySelector('[data-mock-locked]')).toHaveAttribute('data-mock-locked', 'false')
+  fireEvent.click(screen.getByText('Load recorded acquisition'))
+  expect(primary()).toBeEnabled()
+  expect(readRecord().completed).toEqual([])
 })

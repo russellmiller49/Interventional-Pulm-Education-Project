@@ -1,3 +1,4 @@
+import { isRecordedFrameSource, type RecordedFrameSource } from './ebus-recorded-contract'
 import {
   MODEL_PACKAGES,
   MODEL_REVISION,
@@ -60,11 +61,15 @@ export interface EbusWorkbenchConfig {
   linkedVariant?: LinkedVariant
   linkedTaskVersion?: typeof LINKED_TASK_VERSION
   demonstration?: boolean
+  recordedTask?: string
+  observationRequest?: number
   initialRoll: number
   initialDepth: number
   initialGain: number
 }
 export interface EbusObservation {
+  acquisitionSession?: string
+  recorded?: RecordedFrameSource
   usedControls: EbusControl[]
   actionCount: number
   lastAction: string
@@ -112,7 +117,14 @@ export const EMPTY_EBUS_OBSERVATION: EbusObservation = {
 export type EbusBridgeMessage =
   | { version: 1; type: 'ready' }
   | { version: 1; type: 'configure'; config: EbusWorkbenchConfig }
-  | { version: 1; type: 'observation'; sessionId: string; observation: EbusObservation }
+  | {
+      version: 1
+      type: 'observation'
+      sessionId: string
+      observationRequest?: number
+      observation: EbusObservation
+    }
+  | { version: 1; type: 'resize'; sessionId: string; height: number }
   | { version: 1; type: 'error'; sessionId: string; message: string }
 const controls: EbusControl[] = [
   'roll',
@@ -132,6 +144,14 @@ const finite = (v: unknown) => typeof v === 'number' && Number.isFinite(v)
 export function isEbusConfig(v: unknown): v is EbusWorkbenchConfig {
   if (!object(v)) return false
   return (
+    (v.observationRequest === undefined ||
+      (Number.isInteger(v.observationRequest) &&
+        Number(v.observationRequest) >= 0 &&
+        Number(v.observationRequest) <= 100000)) &&
+    (v.recordedTask === undefined ||
+      (typeof v.recordedTask === 'string' &&
+        /^[a-z0-9-]+$/.test(v.recordedTask) &&
+        v.recordedTask.length < 100)) &&
     typeof v.sessionId === 'string' &&
     v.sessionId.length > 0 &&
     v.sessionId.length < 180 &&
@@ -178,6 +198,9 @@ export function isEbusObservation(v: unknown): v is EbusObservation {
     ) &&
     typeof v.lastAction === 'string' &&
     v.lastAction.length < 120 &&
+    (v.acquisitionSession === undefined ||
+      (typeof v.acquisitionSession === 'string' && v.acquisitionSession.length < 180)) &&
+    (v.recorded === undefined || isRecordedFrameSource(v.recorded)) &&
     (v.model === undefined ||
       (object(v.model) &&
         MODEL_PACKAGES.includes(v.model.package as ModelPackage) &&
@@ -245,6 +268,15 @@ export function isEbusMessage(v: unknown): v is EbusBridgeMessage {
   if (v.type === 'ready') return true
   if (v.type === 'configure') return isEbusConfig(v.config)
   if (typeof v.sessionId !== 'string') return false
-  if (v.type === 'observation') return isEbusObservation(v.observation)
+  if (v.type === 'resize')
+    return Number.isInteger(v.height) && Number(v.height) >= 200 && Number(v.height) <= 10000
+  if (v.type === 'observation')
+    return (
+      (v.observationRequest === undefined ||
+        (Number.isInteger(v.observationRequest) &&
+          Number(v.observationRequest) >= 0 &&
+          Number(v.observationRequest) <= 100000)) &&
+      isEbusObservation(v.observation)
+    )
   return v.type === 'error' && typeof v.message === 'string' && v.message.length <= 500
 }

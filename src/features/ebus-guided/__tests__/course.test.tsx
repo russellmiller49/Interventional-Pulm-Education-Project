@@ -1,10 +1,10 @@
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { LESSONS, nextLesson } from '../content/curriculum'
+import { CHAPTERS, LESSONS, nextLesson } from '../content/curriculum'
 import { FINAL_CASES, PRACTICE_CASES } from '../content/cases'
 import { SOURCES } from '../content/sources'
-import { stageLesson } from '../content/stage'
+import { activitiesForLesson } from '../content/stage'
 import { LessonHost } from '../components/LessonHost'
 import { CasePlayer } from '../components/CasePlayer'
 import { AssessPage } from '../components/AssessPage'
@@ -60,7 +60,16 @@ it('defines the full curriculum, unique decisions, sources, meaningful activitie
   for (const lesson of LESSONS) {
     expect([lesson.lab, lesson.sequence, lesson.matching].filter(Boolean)).toHaveLength(1)
     expect(lesson.sources.every((id) => SOURCES.some((s) => s.id === id))).toBe(true)
-    expect(stageLesson({ ...lesson }).index).toBe(ids.indexOf(lesson.id))
+    const activities = activitiesForLesson({ ...lesson })
+    expect(activities.flatMap((activity) => activity.questions).sort()).toEqual([
+      'observation',
+      'question',
+      'transfer',
+    ])
+    expect(activities.some((activity) => activity.teaching.includes('foundation'))).toBe(true)
+    expect(activities.some((activity) => activity.teaching.includes('worked'))).toBe(true)
+    expect(activities.some((activity) => activity.teaching.includes('takeaways'))).toBe(true)
+    expect(new Set(activities.map((activity) => activity.id)).size).toBe(activities.length)
     if (lesson.lab?.kind === 'simulator')
       expect(manifest.presets.some((p) => p.preset_key === lesson.lab!.presetKey)).toBe(true)
   }
@@ -82,20 +91,24 @@ it.each(LESSONS.map((l) => [l.id, l] as const))(
     render(<LessonHost lesson={lesson} />)
     expect(screen.getByText(lesson.objective, { exact: false })).toBeVisible()
     for (const paragraph of lesson.paragraphs) expect(screen.getByText(paragraph)).toBeVisible()
-    next()
-    expect(screen.getByText(lesson.worked.context)).toBeVisible()
-    expect(screen.getByText(lesson.worked.reasoning, { exact: false })).toBeVisible()
-    next()
-    expect(screen.getByText(lesson.question.prompt)).toBeVisible()
+    const activities = activitiesForLesson(lesson)
+    for (const activity of activities) {
+      if (activity.interaction !== 'read') break
+      if (activity.teaching.includes('worked')) {
+        expect(screen.getByText(lesson.worked.context)).toBeVisible()
+        expect(screen.getByText(lesson.worked.reasoning, { exact: false })).toBeVisible()
+      }
+      next()
+    }
     expect(screen.queryByText(lesson.worked.context)).not.toBeInTheDocument()
     expect(screen.queryByText(lesson.question.explanation)).not.toBeInTheDocument()
-    expect(document.querySelector('iframe')).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Steps panel' })).not.toBeInTheDocument()
   },
 )
 it('withholds ordinary practice feedback until debrief; unsafe responses require repair with first response retained', () => {
   const item = PRACTICE_CASES.find((c) => c.id === 'practice-handoff')!
   const exit = jest.fn()
-  render(<CasePlayer item={item} mode="practice" onExit={exit} />)
+  render(<CasePlayer item={item} mode="practice" feedback="independent" onExit={exit} />)
   fireEvent.click(screen.getByLabelText(item.questions[0].choices.find((c) => c.unsafe)!.text))
   next()
   expect(screen.getByText('Not correct, and unsafe.', { exact: false })).toBeVisible()
@@ -158,4 +171,24 @@ it('exposes only the new direct-link route family without replacing existing EBU
   }
   expect(isPublicUnlistedPath('/en/ebus-guided-unrelated')).toBe(false)
   expect(isPublicUnlistedPath('/en/ebus-training')).toBe(false)
+})
+
+it('uses seven chapters and teaches measurement before capture without changing lesson identity', () => {
+  expect(CHAPTERS).toHaveLength(7)
+  expect(
+    LESSONS.indexOf(LESSONS.find((lesson) => lesson.id === 'measurement-phantoms')!),
+  ).toBeLessThan(LESSONS.indexOf(LESSONS.find((lesson) => lesson.id === 'capture')!))
+  expect(
+    new Set(LESSONS.map((lesson) => activitiesForLesson(lesson).length)).size,
+  ).toBeGreaterThanOrEqual(4)
+})
+it('coaches optional practice immediately under separate versioned history keys', () => {
+  const item = PRACTICE_CASES[0],
+    question = item.questions[0]
+  render(<CasePlayer item={item} mode="practice" onExit={jest.fn()} />)
+  fireEvent.click(screen.getByLabelText(question.choices.find((choice) => choice.correct)!.text))
+  next()
+  expect(screen.getAllByText(question.explanation)[0]).toBeVisible()
+  expect(readRecord().firstAttempts[item.id + '-coached-v1:' + question.id]).toBeDefined()
+  expect(readRecord().firstAttempts[item.id + ':' + question.id]).toBeUndefined()
 })
