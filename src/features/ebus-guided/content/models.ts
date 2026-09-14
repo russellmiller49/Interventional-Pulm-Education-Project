@@ -48,19 +48,22 @@ export const needleModel: Lesson = {
     instruction:
       'Prepare the sheath and lock it. Display the tip live, introduce a plane change, then stop and reassess. Restore the window. Introduce resistance and stop again. Finish by retracting the needle and removing the secured assembly.',
   },
-  observation: question(
-    'assembly-observe',
-    'Why was advancement blocked after the plane changed?',
-    [
-      'A shaft echo could remain while the tip left the modeled imaging plane',
-      'The needle geometry and imaging plane are separate. A surviving shaft intersection does not prove visible tip guidance.',
-    ],
-    ['The needle reached a validated depth limit', 'Model travel has no clinical depth meaning.'],
-    [
-      'The model diagnosed a vessel puncture',
-      'This activity does not simulate or validate puncture safety.',
-    ],
-  ),
+  observation: {
+    ...question(
+      'assembly-observe',
+      'Why was advancement blocked after the plane changed?',
+      [
+        'A shaft echo could remain while the tip left the modeled imaging plane',
+        'The needle geometry and imaging plane are separate. A surviving shaft intersection does not prove visible tip guidance.',
+      ],
+      ['The needle reached a validated depth limit', 'Model travel has no clinical depth meaning.'],
+      [
+        'The model diagnosed a vessel puncture',
+        'This activity does not simulate or validate puncture safety.',
+      ],
+    ),
+    imagePolicy: 'retained-acquisition',
+  },
   transfer: question(
     'assembly-transfer',
     'The assembly meets resistance despite a recognizable tip. What is the appropriate response?',
@@ -128,19 +131,22 @@ export const contactModel: Lesson = {
     instruction:
       'Raise gain with the air gap present. Then select and inspect direct contact, balloon contact, the bubble window and the reflector shadow. Compare the cutaway with the schematic after each change.',
   },
-  observation: question(
-    'cutaway-observe',
-    'Why did changing gain fail to remove the dark region behind the reflector?',
-    [
-      'The modeled acoustic path is attenuated behind the reflector',
-      'Amplifying the remaining echoes does not restore the missing information.',
-    ],
-    ['All dark regions represent malignant tissue', 'An artifact does not establish histology.'],
-    [
-      'Balloon inflation always removes artifacts',
-      'A balloon can assist coupling but does not remove every artifact.',
-    ],
-  ),
+  observation: {
+    ...question(
+      'cutaway-observe',
+      'Why did changing gain fail to remove the dark region behind the reflector?',
+      [
+        'The modeled acoustic path is attenuated behind the reflector',
+        'Amplifying the remaining echoes does not restore the missing information.',
+      ],
+      ['All dark regions represent malignant tissue', 'An artifact does not establish histology.'],
+      [
+        'Balloon inflation always removes artifacts',
+        'A balloon can assist coupling but does not remove every artifact.',
+      ],
+    ),
+    imagePolicy: 'retained-acquisition',
+  },
   transfer: question(
     'cutaway-transfer',
     'After a pass, a focal interruption appears although surrounding tissue echoes persist. What should you reassess?',
@@ -204,22 +210,25 @@ export const measurementModel: Lesson = {
     instruction:
       'Sweep every shape through all plane positions. Return to Elongated, set plane offset to zero and freeze. Select the short axis and place two calipers on opposite visible borders. Label the image “Phantom station 7” and record it. Use “Not adequately visualized” when borders cannot be measured.',
   },
-  observation: question(
-    'phantom-observe',
-    'What does the recorded millimeter measurement represent?',
-    [
-      'A distance in the authored geometric phantom',
-      'The value comes from the phantom coordinate system and placed calipers; it does not calibrate clinical media.',
-    ],
-    [
-      'A calibrated measurement in the course videos',
-      'Uncalibrated recordings cannot inherit phantom dimensions.',
-    ],
-    [
-      'Evidence of malignancy from object shape',
-      'These shapes teach geometry, not pathological diagnosis.',
-    ],
-  ),
+  observation: {
+    ...question(
+      'phantom-observe',
+      'What does the recorded millimeter measurement represent?',
+      [
+        'A distance in the authored geometric phantom',
+        'The value comes from the phantom coordinate system and placed calipers; it does not calibrate clinical media.',
+      ],
+      [
+        'A calibrated measurement in the course videos',
+        'Uncalibrated recordings cannot inherit phantom dimensions.',
+      ],
+      [
+        'Evidence of malignancy from object shape',
+        'These shapes teach geometry, not pathological diagnosis.',
+      ],
+    ),
+    imagePolicy: 'retained-acquisition',
+  },
   transfer: question(
     'phantom-transfer',
     'Two separate nodes are seen within one anatomically defined station. How should their measurements be recorded?',
@@ -290,19 +299,25 @@ export const routeModel: Lesson = {
     instruction:
       'Compare and record both airway and esophageal views for 4L and 7. Inspect the lower paraesophageal example from the esophagus. Select an unsupported window and record that limitation.',
   },
-  observation: question(
-    'route-model-observe',
-    'Why did the station label remain unchanged when the approach switched?',
-    [
-      'Both views reference the same fixed anatomical target',
-      'The route markers change, while target coordinates and anatomical identity stay fixed.',
-    ],
-    ['Station labels are assigned by the scope route', 'Anatomical location defines the station.'],
-    [
-      'The model guarantees both approaches can safely sample it',
-      'Orientation locators are not validated puncture windows.',
-    ],
-  ),
+  observation: {
+    ...question(
+      'route-model-observe',
+      'Why did the station label remain unchanged when the approach switched?',
+      [
+        'Both views reference the same fixed anatomical target',
+        'The route markers change, while target coordinates and anatomical identity stay fixed.',
+      ],
+      [
+        'Station labels are assigned by the scope route',
+        'Anatomical location defines the station.',
+      ],
+      [
+        'The model guarantees both approaches can safely sample it',
+        'Orientation locators are not validated puncture windows.',
+      ],
+    ),
+    imagePolicy: 'retained-acquisition',
+  },
   transfer: question(
     'route-model-transfer',
     'Relevant interlobar nodes remain unexamined after an esophageal survey. What does that imply?',

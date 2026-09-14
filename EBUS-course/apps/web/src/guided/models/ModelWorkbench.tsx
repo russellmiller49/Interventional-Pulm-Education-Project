@@ -391,7 +391,7 @@ export function ModelWorkbench({
             )}
             {complete && !config.locked && (
               <p role="status" className="model-feedback">
-                Required model actions recorded. Continue in the Steps panel.
+                Required model actions recorded. Hold this acquisition in the lesson.
               </p>
             )}
             {config.locked && (

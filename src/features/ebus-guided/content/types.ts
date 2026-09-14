@@ -82,6 +82,19 @@ export interface EbusCase {
 }
 export function labGoalMet(lab: Lab, state: EbusObservation): boolean {
   if (!state.ready || !state.frameReady || state.actionCount < 1) return false
+  if (lab.kind === 'knobology') {
+    const source = state.recorded
+    if (
+      !source ||
+      source.taskId !== lab.goal ||
+      source.settings.depthMm !== state.depth ||
+      source.settings.gain !== state.gain ||
+      source.settings.contrast !== state.contrast ||
+      source.settings.doppler !== state.doppler ||
+      source.captured !== state.saved
+    )
+      return false
+  }
   if (lab.linkedLesson) {
     const linked = state.linked
     const source = linked?.source

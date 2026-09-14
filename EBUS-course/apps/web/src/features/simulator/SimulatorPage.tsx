@@ -1248,7 +1248,7 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
   const [guidedView, setGuidedView] = useState<'sector'|'bronch'|'anatomy'>(guided?.config.view ?? 'sector');
   const onGuidedFrame = useCallback((frame: typeof guidedFrame) => setGuidedFrame(frame), []);
   const guidedAction = (name: string, apply: () => void) => {
-    if (!guided || guided.config.locked || !guided.config.controls.includes(name as EbusControl)) return;
+    if (!guided || guided.config.locked || !guided.config.controls.includes(name as EbusControl) || (guided.config.linkedLesson === 'acoustic-contact' && !guidedFrame.baselineFrameId)) return;
     if (!guided.config.demonstration) guidedActions.current = { count: guidedActions.current.count + 1, last: name, used: [...new Set([...guidedActions.current.used,name as EbusControl])] };
     if (name === 'roll' && !guided.config.demonstration) rollAcquisition.current = { approach: linkedEvidence.approach, count: guidedActions.current.count };
     apply();
@@ -2093,8 +2093,9 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
 
   if (guided) {
     const { config } = guided;
-    const can = (control: typeof config.controls[number]) => !config.locked && config.controls.includes(control);
-    const scopeControls = <fieldset disabled={config.locked}><legend>Scope controls</legend>
+    const baselinePending = config.linkedLesson === 'acoustic-contact' && !guidedFrame.baselineFrameId;
+    const can = (control: typeof config.controls[number]) => !config.locked && !baselinePending && config.controls.includes(control);
+    const scopeControls = <fieldset hidden={config.locked} disabled={config.locked}><legend>Scope controls</legend>
         {config.controls.includes('roll') && <label>Scope rotation <output>{Math.round(rollTrimDeg)}°</output><input aria-label="Scope rotation" type="range" min="-90" max="90" step="1" value={rollTrimDeg} disabled={!can('roll')} onChange={e => guidedAction('roll', () => setRollTrimDeg(Number(e.target.value)))} /></label>}
         {config.controls.includes('flexion') && <label>Tip flexion <output>{Math.round(flexionDeg)}°</output><input aria-label="Tip flexion" type="range" min="-30" max="60" value={flexionDeg} disabled={!can('flexion')} onChange={e => guidedAction('flexion', () => setFlexionDeg(Number(e.target.value)))} /></label>}
         {config.controls.includes('advance') && <div className="guided-tabs"><button disabled={!can('advance')} onClick={() => guidedAction('advance', () => setSMm(v => constrainAdvance(v,v - 1)))}>Withdraw</button><button disabled={!can('advance')} onClick={() => guidedAction('advance', () => setSMm(v => constrainAdvance(v,v + 1)))}>Advance</button></div>}
@@ -2113,6 +2114,7 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
       <h2>EBUS workbench</h2>
       <p className="guided-label">Simulated anatomy and grayscale ultrasound</p>
       {config.linkedLesson && <p className="guided-label">{config.linkedVariant === 'changed-window' ? 'Changed-position check: a different assisted start in the same anatomy model. Acquire new planes; the prior sweep does not count.' : 'Assisted start: airway position is supplied. Your scope movements acquire the ultrasound planes.'}</p>}
+      {baselinePending && <p role="status">Loading the initial contact comparison before movement controls open.</p>}
       {config.linkedLesson && scopeControls}
       {config.linkedLesson && acoustic.volume && <LinkedModelView ultrasound={sector} config={config} pose={pose} volume={acoustic.volume} caseData={caseData} contactQuality={sectorContactQuality} flexion={flexionDeg} evidence={linkedEvidence} onEvidence={onLinkedEvidence} onApproach={chooseApproach} onDemo={action => {
         if (!config.demonstration) return;
@@ -2127,7 +2129,7 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
       {guidedView === 'bronch' && <div className="guided-anatomy"><BronchoscopyView assets={assets} balloonInflated={bronchBalloonInflated} camera={caseData.endoscope_camera} caseData={caseData} focusStationKey={null} pose={pose} seeThroughWall={false} structures={[]} /></div>}
       </div>
       {!config.linkedLesson && <div hidden={guidedView !== 'sector'}>{sector}</div>}
-      <p role="status">{config.locked ? (config.linkedLesson ? 'Acquisition held for observation. This is your last unannotated ultrasound frame.' : 'Controls are paused while you read or answer. They open for the guided activity.') : (config.linkedLesson ? 'Use Scope controls above the images, then return to Steps.' : 'Use the controls below, then return to Steps.')}</p>
+      <p role="status">{config.locked ? (config.linkedLesson ? 'Acquisition held for observation. This is your last unannotated ultrasound frame.' : 'Controls are paused while you read or answer. They open for the guided activity.') : (config.linkedLesson ? 'Use Scope controls above the images. Hold the acquisition in the lesson when your task is ready.' : 'Use the controls below. Hold the acquisition in the lesson when your task is ready.')}</p>
       {!config.linkedLesson && scopeControls}
       {config.linkedLesson && !config.locked && !config.demonstration && <button onClick={() => { guided.onObservation(EMPTY_EBUS_OBSERVATION); window.location.reload(); }}>Reset acquisition</button>}
       <p className="guided-label">Position assists remain active. This exercise does not reproduce needle passage, tactile feedback, or patient response.</p>

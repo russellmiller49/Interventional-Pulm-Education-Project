@@ -9,6 +9,7 @@ export const question = (
 ): Question => ({
   id,
   prompt,
+  imagePolicy: 'none',
   choices: [
     { id: 'a', text: wrong[0], rationale: wrong[1], unsafe: !!unsafe },
     { id: 'b', text: correct[0], rationale: correct[1], correct: true },

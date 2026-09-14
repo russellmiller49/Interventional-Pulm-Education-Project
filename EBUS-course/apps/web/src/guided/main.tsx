@@ -56,11 +56,43 @@ function GuidedApp() {
     return () => window.removeEventListener('message', receive)
   }, [])
   const sessionId = config?.sessionId
+  useEffect(() => {
+    if (!sessionId) return
+    let pending = 0
+    const resize = () => {
+      cancelAnimationFrame(pending)
+      pending = requestAnimationFrame(() => {
+        const root = document.getElementById('root')!
+        send({
+          type: 'resize',
+          sessionId,
+          height: Math.max(
+            200,
+            Math.min(10000, Math.ceil(root.getBoundingClientRect().height) + 4),
+          ),
+        })
+      })
+    }
+    const observer = new ResizeObserver(resize)
+    observer.observe(document.getElementById('root')!)
+    resize()
+    return () => {
+      observer.disconnect()
+      cancelAnimationFrame(pending)
+    }
+  }, [sessionId])
   const onObservation = useCallback(
     (observation: EbusObservation) => {
-      if (sessionId) send({ type: 'observation', sessionId, observation })
+      if (sessionId)
+        send({
+          type: 'observation',
+          sessionId,
+          observationRequest: config?.observationRequest,
+          observation,
+        })
     },
-    [sessionId],
+    // A view-resume request reports current rendered evidence; it never restores cached host data.
+    [sessionId, config?.observationRequest],
   )
   if (!config) return <p role="status">Waiting for the guided lesson…</p>
   return (

@@ -1,0 +1,356 @@
+{
+  "generatedAt": "2026-09-14T04:02:42.363119+00:00",
+  "baseCommit": "2b10cb6a",
+  "branch": "codex/ebus-guided-flow",
+  "source": "Production standalone build on http://127.0.0.1:3157; isolated Playwright Chromium contexts with software WebGL and reduced motion.",
+  "journeyCommand": "EBUS_REVIEW_URL=http://127.0.0.1:3157 EBUS_RUN_NAME=production npx tsx scripts/ebus-guided/browser-flow-redesign.ts",
+  "regressionCommand": "EBUS_REVIEW_URL=http://127.0.0.1:3157 npx tsx scripts/ebus-guided/browser-flow-regressions.ts",
+  "journeyExitCode": 0,
+  "regressionExitCode": 0,
+  "lessonCount": 26,
+  "activityCount": 114,
+  "practiceCaseCount": 3,
+  "assessmentCaseCount": 8,
+  "firstResponseCount": 108,
+  "completedLessonCount": 26,
+  "assessmentComplete": true,
+  "browserPageErrors": [],
+  "journey": [
+    {
+      "lesson": "clinical-question",
+      "activities": 3,
+      "retainedPixelsChecked": false
+    },
+    {
+      "lesson": "preparation",
+      "activities": 3,
+      "retainedPixelsChecked": false
+    },
+    {
+      "lesson": "scope-orientation",
+      "activities": 6,
+      "retainedPixelsChecked": true
+    },
+    {
+      "lesson": "acoustic-contact",
+      "activities": 5,
+      "retainedPixelsChecked": true
+    },
+    {
+      "lesson": "contact-cutaway-model",
+      "activities": 4,
+      "retainedPixelsChecked": false
+    },
+    {
+      "lesson": "image-depth",
+      "activities": 5,
+      "retainedPixelsChecked": true
+    },
+    {
+      "lesson": "gain-contrast",
+      "activities": 5,
+      "retainedPixelsChecked": true
+    },
+    {
+      "lesson": "doppler",
+      "activities": 5,
+      "retainedPixelsChecked": true
+    },
+    {
+      "lesson": "measurement-phantoms",
+      "activities": 4,
+      "retainedPixelsChecked": false
+    },
+    {
+      "lesson": "capture",
+      "activities": 5,
+      "retainedPixelsChecked": true
+    },
+    {
+      "lesson": "ct-map",
+      "activities": 6,
+      "retainedPixelsChecked": true
+    },
+    {
+      "lesson": "station-seven",
+      "activities": 8,
+      "retainedPixelsChecked": true
+    },
+    {
+      "lesson": "right-paratracheal",
+      "activities": 7,
+      "retainedPixelsChecked": true
+    },
+    {
+      "lesson": "left-paratracheal",
+      "activities": 5,
+      "retainedPixelsChecked": false
+    },
+    {
+      "lesson": "hilar-interlobar",
+      "activities": 3,
+      "retainedPixelsChecked": false
+    },
+    {
+      "lesson": "node-characterization",
+      "activities": 4,
+      "retainedPixelsChecked": false
+    },
+    {
+      "lesson": "systematic-staging",
+      "activities": 4,
+      "retainedPixelsChecked": false
+    },
+    {
+      "lesson": "eus-b",
+      "activities": 3,
+      "retainedPixelsChecked": false
+    },
+    {
+      "lesson": "eus-b-route-model",
+      "activities": 4,
+      "retainedPixelsChecked": false
+    },
+    {
+      "lesson": "needle-safety",
+      "activities": 3,
+      "retainedPixelsChecked": false
+    },
+    {
+      "lesson": "needle-assembly-model",
+      "activities": 4,
+      "retainedPixelsChecked": false
+    },
+    {
+      "lesson": "adequacy-rose",
+      "activities": 4,
+      "retainedPixelsChecked": false
+    },
+    {
+      "lesson": "specimen-triage",
+      "activities": 4,
+      "retainedPixelsChecked": false
+    },
+    {
+      "lesson": "difficult-acquisition",
+      "activities": 3,
+      "retainedPixelsChecked": false
+    },
+    {
+      "lesson": "complications-recovery",
+      "activities": 3,
+      "retainedPixelsChecked": false
+    },
+    {
+      "lesson": "results-reporting",
+      "activities": 4,
+      "retainedPixelsChecked": false
+    },
+    {
+      "case": "practice-boundary",
+      "mode": "practice",
+      "decisions": 2
+    },
+    {
+      "case": "practice-right",
+      "mode": "practice",
+      "decisions": 2
+    },
+    {
+      "case": "practice-handoff",
+      "mode": "practice",
+      "decisions": 2
+    },
+    {
+      "case": "assessment-planning",
+      "mode": "assess",
+      "decisions": 3
+    },
+    {
+      "case": "assessment-image",
+      "mode": "assess",
+      "decisions": 3
+    },
+    {
+      "case": "assessment-map",
+      "mode": "assess",
+      "decisions": 3
+    },
+    {
+      "case": "assessment-access",
+      "mode": "assess",
+      "decisions": 3
+    },
+    {
+      "case": "assessment-distribution",
+      "mode": "assess",
+      "decisions": 3
+    },
+    {
+      "case": "assessment-sampling",
+      "mode": "assess",
+      "decisions": 3
+    },
+    {
+      "case": "assessment-differential",
+      "mode": "assess",
+      "decisions": 3
+    },
+    {
+      "case": "assessment-followup",
+      "mode": "assess",
+      "decisions": 3
+    }
+  ],
+  "regressions": [
+    {
+      "check": "reading-controls-and-supported-device-behavior",
+      "width": 1440,
+      "height": 900,
+      "passed": true
+    },
+    {
+      "check": "reading-controls-and-supported-device-behavior",
+      "width": 1280,
+      "height": 720,
+      "passed": true
+    },
+    {
+      "check": "reading-controls-and-supported-device-behavior",
+      "width": 1024,
+      "height": 768,
+      "passed": true
+    },
+    {
+      "check": "reading-controls-and-supported-device-behavior",
+      "width": 900,
+      "height": 768,
+      "passed": true
+    },
+    {
+      "check": "reading-controls-and-supported-device-behavior",
+      "width": 768,
+      "height": 900,
+      "passed": true
+    },
+    {
+      "check": "reading-controls-and-supported-device-behavior",
+      "width": 390,
+      "height": 844,
+      "passed": true
+    },
+    {
+      "check": "reading-controls-and-supported-device-behavior",
+      "width": 320,
+      "height": 844,
+      "passed": true
+    },
+    {
+      "check": "review-resize-held-pixels-selection-reboot-stale-source-window",
+      "passed": true
+    },
+    {
+      "check": "observer-camera-no-credit-keyboard-scope-and-focus-exit",
+      "passed": true
+    },
+    {
+      "check": "explicit-play-review-return-and-resize-do-not-autoplay",
+      "passed": true
+    },
+    {
+      "check": "missing-model",
+      "passed": true
+    },
+    {
+      "check": "unavailable-recording",
+      "passed": true
+    },
+    {
+      "check": "decode-failure",
+      "passed": true
+    },
+    {
+      "check": "actual-webgl-context-loss-invalidates-acquisition",
+      "passed": true
+    },
+    {
+      "check": "200-percent-computed-text-root-and-iframe-held-calipers",
+      "passed": true,
+      "browserZoom": "not tested"
+    },
+    {
+      "check": "case-plan-resize-reload-version-mismatch-and-archive",
+      "passed": true
+    },
+    {
+      "check": "assessment-eligibility-independent-practice-safety-history-reload",
+      "passed": true
+    },
+    {
+      "check": "unavailable-local-storage-notice",
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "contact-held-before-response.png",
+      "width": 1440,
+      "height": 900,
+      "sha256": "9442351ad3742eed51f59111e260be413b95299c65e8bb1ec2a1fa89f51b5cd2"
+    },
+    {
+      "file": "image-depth-held-recording.png",
+      "width": 1440,
+      "height": 900,
+      "sha256": "4b76239576912214bf47aacd725577c9bd4256049d68f079a237f13dd45aa3cb"
+    },
+    {
+      "file": "capture-held-recording.png",
+      "width": 1440,
+      "height": 900,
+      "sha256": "2ee6e970c2943afc2f36736722708a6d8b30ea71ccf89766ea8e81b42a79c735"
+    },
+    {
+      "file": "systematic-staging-case-record.png",
+      "width": 1440,
+      "height": 900,
+      "sha256": "81139c5aa9d58eccdb11d0f5b19caf097b405c25fc811e6c9f627f9b113bf6e4"
+    },
+    {
+      "file": "results-reporting-report.png",
+      "width": 1440,
+      "height": 900,
+      "sha256": "ed62def847a347e3d5cff6924b3685fd52d0b931b90f2e45e20b4215279c1e9a"
+    },
+    {
+      "file": "reading-390.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "b362ef0655c46d7b0e46bd15446a2f238bc371f395562b28d2a1c56d6e041f1d"
+    },
+    {
+      "file": "recorded-phone-320.png",
+      "width": 320,
+      "height": 844,
+      "sha256": "a32a33e5de505fa730059cb7fbb0fde1156f03628608b4458b97d9448f19e16a"
+    },
+    {
+      "file": "capture-200-percent-text.png",
+      "width": 1440,
+      "height": 900,
+      "sha256": "844204b277e081062dd0f2e82785538bdf96d93ead3434fee9a829838fce57bd"
+    },
+    {
+      "file": "missing-model.png",
+      "width": 1440,
+      "height": 900,
+      "sha256": "cdc03b1c97c77224705421521d810e6cb72e5a3259c71727cee0cb3058c41c97"
+    }
+  ],
+  "limits": [
+    "Technical and formative verification; no faculty content or rights approval.",
+    "200% computed text sizes were tested, not browser zoom.",
+    "No physical phone, screen reader, observed novice study or clinical-effectiveness study.",
+    "Full-page screenshot retention was not validated; accepted captures use viewport screenshots."
+  ]
+}

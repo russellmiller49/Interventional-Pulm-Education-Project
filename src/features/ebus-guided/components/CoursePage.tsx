@@ -3,7 +3,7 @@ import { Link } from '@/i18n/navigation'
 import {
   BASE,
   LESSONS,
-  TOPICS,
+  CHAPTERS,
   COURSE_OBJECTIVES,
   GUIDED_MINUTES,
   lessonHref,
@@ -78,7 +78,7 @@ export function CoursePage({
           <>
             <p className={styles.eyebrow}>Learn · Your course map</p>
             <h1 className="text-3xl font-bold">
-              Prepare, optimize, locate, plan, sample, complete.
+              From the clinical question to a defensible report.
             </h1>
             <p className={styles.muted}>
               Follow the suggested order. An unfinished lesson restarts at its first step; completed
@@ -100,13 +100,22 @@ export function CoursePage({
             </p>
           </section>
         )}
+        {record.completed.length > 0 && (
+          <p className={styles.muted}>
+            Earlier lesson completion remains part of your history. Newly introduced image
+            interpretations and examination-record tasks have separate records; earlier completion
+            does not establish those added skills.
+          </p>
+        )}
         <div className={styles.map}>
-          {TOPICS.map((topic) => {
-            const lessons = LESSONS.filter((l) => l.topic === topic)
+          {CHAPTERS.map((chapter, chapterIndex) => {
+            const lessons = chapter.lessons
             if (!lessons.length) return null
             return (
-              <section className={styles.card} key={topic}>
-                <h2>{topic}</h2>
+              <section className={styles.card} key={chapter.id}>
+                <h2>
+                  {chapterIndex + 1}. {chapter.title}
+                </h2>
                 <ol start={LESSONS.indexOf(lessons[0]) + 1}>
                   {lessons.map((l) => (
                     <li key={l.id}>

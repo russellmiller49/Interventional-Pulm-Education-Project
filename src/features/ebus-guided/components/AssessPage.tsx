@@ -43,7 +43,9 @@ export function AssessPage({ locale = 'en' }: { locale?: string }) {
           <CasePlayer key={item.id} item={item} mode="assess" onExit={() => setActive(null)} />
         ) : (
           <>
-            <p className={styles.eyebrow}>Assess · Eight integrated cases · About 25 minutes</p>
+            <p className={styles.eyebrow}>
+              Assess · {FINAL_CASES.length} integrated cases · About 25 minutes
+            </p>
             <h1 className={styles.caseTitle}>
               {record.assessmentComplete
                 ? 'Your learning review'

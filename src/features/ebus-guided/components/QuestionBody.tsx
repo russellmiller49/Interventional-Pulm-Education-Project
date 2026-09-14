@@ -45,7 +45,14 @@ export function QuestionBody({
     [question],
   )
   return (
-    <div>
+    <div
+      className={styles.questionFeedback}
+      data-repeated-reasoning={
+        !!committed &&
+        question.choices.find((choice) => choice.id === committed)?.rationale ===
+          question.explanation
+      }
+    >
       <fieldset className={styles.choices} disabled={!!committed}>
         <legend>{question.prompt}</legend>
         {choiceOrder(question).map((c) => (

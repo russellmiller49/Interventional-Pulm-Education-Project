@@ -78,6 +78,6 @@ export async function performModel(frame: FrameLocator, pkg: ModelPackage) {
     await expect(frame.getByRole('status').first()).toContainText('not modeled')
   }
   await expect(
-    frame.getByText('Required model actions recorded. Continue in the Steps panel.'),
+    frame.getByText('Required model actions recorded. Hold this acquisition in the lesson.'),
   ).toBeVisible()
 }

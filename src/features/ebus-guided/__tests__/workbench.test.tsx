@@ -3,7 +3,7 @@ import { Workbench } from '../components/Workbench'
 import { EMPTY_EBUS_OBSERVATION } from '@/lib/ebus-guided-bridge'
 import { LESSONS } from '../content/curriculum'
 afterEach(cleanup)
-it('accepts observations only from the current iframe, origin, version and session', () => {
+it('accepts observations only from the current iframe, origin, version, session and view request', () => {
   window.matchMedia = jest
     .fn()
     .mockReturnValue({ addEventListener: jest.fn(), removeEventListener: jest.fn() })
@@ -35,6 +35,8 @@ it('accepts observations only from the current iframe, origin, version and sessi
     version: 1,
     type: 'observation',
     sessionId: currentSession,
+    observationRequest: (posted.mock.calls.at(-1)![0] as { config: { observationRequest: number } })
+      .config.observationRequest,
     observation: { ...EMPTY_EBUS_OBSERVATION, ready: true, frameReady: true },
   }
   const send = (
@@ -46,9 +48,11 @@ it('accepts observations only from the current iframe, origin, version and sessi
   send(good, location.origin, window)
   send({ ...good, version: 2 })
   send({ ...good, sessionId: 'old' })
+  send({ ...good, observationRequest: undefined })
+  send({ ...good, observationRequest: good.observationRequest - 1 })
   expect(received).not.toHaveBeenCalled()
   send(good)
-  expect(received).toHaveBeenCalledWith(good.observation)
+  expect(received).toHaveBeenCalledWith({ ...good.observation, acquisitionSession: currentSession })
   send({ version: 1, type: 'error', sessionId: currentSession, message: 'Render failed' })
   expect(received).toHaveBeenLastCalledWith(EMPTY_EBUS_OBSERVATION)
   send({ version: 1, type: 'ready' })

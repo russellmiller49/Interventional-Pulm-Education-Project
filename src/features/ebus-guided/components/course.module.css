@@ -401,3 +401,364 @@
     font-size: 27px;
   }
 }
+
+/* Guided flow uses one page scroll. The visual/task arrangement follows the activity. */
+.moduleShell[data-activity-mode='true'] {
+  height: auto;
+  min-height: 100vh;
+  overflow: visible;
+  padding: 12px clamp(10px, 2vw, 28px);
+}
+.moduleShell :global([data-activity-frame='true']) {
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+.moduleShell :global([data-activity-frame='true']) > div:last-child {
+  overflow: visible;
+  flex: none;
+}
+.lessonFlow {
+  max-width: 1520px;
+  margin: auto;
+  min-width: 0;
+  line-height: 1.55;
+}
+.flowHeader {
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+}
+.flowHeader h1 {
+  font-size: clamp(1.15rem, 2vw, 1.5rem);
+  font-weight: 700;
+}
+.flowHeader .eyebrow {
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+}
+.flowHeader nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.flowHeader button,
+.flowHeader a {
+  font-size: 0.8rem;
+}
+.flowProgress {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  padding-bottom: 12px;
+}
+.flowProgress progress {
+  width: 140px;
+  height: 5px;
+  accent-color: var(--cyan-bright);
+}
+.taskSurface {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #102a32;
+  overflow-wrap: anywhere;
+}
+.taskHeading {
+  padding: 18px 24px 12px;
+}
+.taskHeading h2 {
+  font-size: clamp(1.25rem, 2.5vw, 1.8rem);
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 4px 0 8px;
+}
+.taskHeading > p:last-child {
+  max-width: 105ch;
+  font-size: 0.94rem;
+}
+.taskComposition {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(290px, 1fr);
+  gap: 20px;
+  padding: 8px 24px 20px;
+  align-items: start;
+}
+.taskEvidence,
+.taskContent {
+  min-width: 0;
+}
+.taskEvidence[hidden] {
+  display: none;
+}
+.taskComposition:has(> .taskEvidence[hidden]) {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 960px;
+  margin: auto;
+}
+.taskComposition[data-composition='briefing'] {
+  grid-template-columns: minmax(200px, 0.7fr) minmax(0, 1.4fr);
+  max-width: 1200px;
+  margin: auto;
+}
+.taskComposition[data-composition='ultrasound'] {
+  grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.8fr);
+}
+.taskComposition[data-composition='case'],
+.taskComposition[data-composition='record'] {
+  max-width: 1120px;
+  margin: auto;
+}
+.taskComposition:has(> .taskEvidence[hidden]) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.taskContent {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+.taskContent p {
+  margin-bottom: 10px;
+}
+.taskContent h3 {
+  font-size: 1.06rem;
+  font-weight: 700;
+  margin: 8px 0 10px;
+}
+.lessonTeaching {
+  font-size: 0.96rem;
+}
+.lessonTeaching ul {
+  list-style: disc;
+  padding-left: 22px;
+  margin-top: 12px;
+}
+.lessonTeaching li {
+  margin: 7px 0;
+}
+.workedExample {
+  border-left: 3px solid var(--cyan);
+  padding: 4px 16px;
+  background: #173a4344;
+}
+.taskStatus {
+  border-left: 3px solid var(--cyan);
+  padding: 12px;
+  background: #173a43;
+}
+.taskAdvance {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 16px 24px;
+  border-top: 1px solid var(--line);
+}
+.taskAdvance > p {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.taskAdvance .button {
+  margin-left: auto;
+  max-width: 100%;
+}
+.flowFooter {
+  color: var(--muted);
+  font-size: 0.8rem;
+  padding: 12px;
+}
+.outline {
+  display: grid;
+  gap: 18px;
+  max-height: 70vh;
+  overflow: auto;
+  padding-right: 10px;
+}
+.outline h3 {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.outline li {
+  padding: 5px 0;
+}
+.outline a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.outline button {
+  border: 1px solid var(--line);
+  padding: 8px;
+  border-radius: 6px;
+  text-align: left;
+}
+.outline a[aria-current] {
+  font-weight: 700;
+  color: var(--cyan-bright);
+}
+.lessonFlow .embed {
+  min-height: 0;
+}
+.lessonFlow .embed iframe {
+  height: 800px;
+  border-radius: 10px;
+}
+@media (max-width: 1100px) {
+  .flowHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .taskComposition,
+  .taskComposition[data-composition] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lessonFlow .embed iframe {
+    height: 850px;
+  }
+}
+@media (max-width: 767px) {
+  .taskHeading,
+  .taskComposition,
+  .taskAdvance {
+    padding: 14px;
+  }
+  .flowHeader .eyebrow {
+    letter-spacing: 0;
+  }
+  .taskAdvance .button {
+    margin-left: 0;
+  }
+  .taskHeading h2 {
+    font-size: 1.35rem;
+  }
+  .lessonFlow .embed iframe {
+    height: 920px;
+  }
+}
+.flowNav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  padding: 8px 0;
+  font-size: 0.8rem;
+}
+.flowNav a {
+  padding: 6px 4px;
+}
+.flowNav a[aria-current] {
+  color: var(--cyan-bright);
+  border-bottom: 2px solid var(--cyan);
+}
+.flowNav span {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.examination {
+  min-width: 0;
+}
+.examination header {
+  border-left: 3px solid var(--cyan);
+  padding-left: 14px;
+  margin-bottom: 18px;
+}
+.examination fieldset {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.examination legend,
+.examination h3,
+.examination h4 {
+  font-weight: 700;
+}
+.examination label {
+  display: block;
+  margin: 12px 0 4px;
+}
+.examination select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  border: 1px solid #58737d;
+  background: #112f39;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 10px;
+  font: inherit;
+  white-space: normal;
+}
+.examination input[type='checkbox'] {
+  margin: 8px;
+  accent-color: var(--cyan);
+}
+.examination button {
+  margin-top: 14px;
+}
+.examination p {
+  margin-block: 8px;
+}
+.recordCard {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-block: 14px;
+}
+.nodalMap,
+.specimenInventory {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+}
+.recordPair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.recordPair > div {
+  min-width: 0;
+}
+.recordError {
+  color: #ffd2b4;
+  border-left: 3px solid #e7a675;
+  padding-left: 10px;
+}
+.reportPreview {
+  padding: 18px;
+  border: 2px solid var(--cyan);
+  border-radius: 8px;
+  margin-top: 18px;
+}
+.taskComposition[data-composition='record']:has(.taskEvidence[hidden]) {
+  max-width: 1100px;
+}
+@media (max-width: 900px) {
+  .recordPair {
+    grid-template-columns: 1fr;
+  }
+}
+.guided-media[hidden] {
+  display: none;
+}
+.lessonFlow {
+  overflow-anchor: none;
+}
+.taskHeading h2 {
+  scroll-margin-top: 110px;
+}
+.questionFeedback[data-repeated-reasoning='true'] :global([data-how-to-distinguish]) {
+  display: none;
+}
+.embed iframe[hidden] {
+  display: none;
+}

@@ -30,8 +30,13 @@ export function Workbench({
   useEffect(() => {
     callback.current = onObservation
   }, [onObservation])
+  const [height, setHeight] = useState(800)
   const [error, setError] = useState('')
   const [retry, setRetry] = useState(0)
+  const [compact, setCompact] = useState(false)
+  const [initialized, setInitialized] = useState(false)
+  const [observationRequest, setObservationRequest] = useState(0)
+  const viewportUsable = useRef(true)
   const [supported, setSupported] = useState<boolean | null>(null)
   const [ready, setReady] = useState(false)
   const [generation, setGeneration] = useState('initial')
@@ -42,7 +47,8 @@ export function Workbench({
       modelPackage: lab.modelPackage,
       presetKey: lab.presetKey,
       controls: lab.controls,
-      locked,
+      locked: locked || compact,
+      observationRequest,
       reveal,
       view: 'sector',
       freeDrive: lab.freeDrive,
@@ -50,28 +56,32 @@ export function Workbench({
       linkedVariant: lab.linkedVariant ?? 'guided',
       linkedTaskVersion: lab.linkedLesson ? LINKED_TASK_VERSION : undefined,
       demonstration,
+      recordedTask: lab.kind === 'knobology' ? lab.goal : undefined,
       initialRoll: lab.initialRoll ?? 35,
       initialDepth: lab.initialDepth ?? 40,
       initialGain: lab.initialGain ?? (lab.kind === 'simulator' ? 0 : 43),
     }),
-    [sessionId, generation, lab, locked, reveal, demonstration],
+    [sessionId, generation, lab, locked, reveal, demonstration, compact, observationRequest],
   )
   const latest = useRef(config)
   useEffect(() => {
     latest.current = config
   }, [config])
   useEffect(() => {
+    const canvas = document.createElement('canvas')
+    const gl = lab.kind === 'knobology' ? null : canvas.getContext('webgl2')
+    const hasRenderer = lab.kind === 'knobology' || !!gl
+    // WebGL capability is external browser state, available only after mounting.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSupported(hasRenderer)
+    gl?.getExtension('WEBGL_lose_context')?.loseContext()
     const assess = () => {
-      if (lab.kind === 'knobology') {
-        setSupported(true)
-        return
-      }
-      const canvas = document.createElement('canvas')
-      const gl = canvas.getContext('webgl2')
-      const canRender = window.innerWidth >= 768 && !!gl
-      setSupported(canRender)
-      if (!canRender) callback.current(EMPTY_EBUS_OBSERVATION)
-      gl?.getExtension('WEBGL_lose_context')?.loseContext()
+      const usable = hasRenderer && (lab.kind === 'knobology' || window.innerWidth >= 768)
+      viewportUsable.current = usable
+      setCompact(!usable)
+      setInitialized((previous) => previous || usable)
+      setObservationRequest((request) => request + 1)
+      if (!usable) callback.current(EMPTY_EBUS_OBSERVATION)
     }
     assess()
     const query = window.matchMedia('(min-width: 768px)')
@@ -107,8 +117,11 @@ export function Workbench({
           window.location.origin,
         )
       }
+      if (e.data.type === 'resize' && e.data.sessionId === latest.current.sessionId)
+        setHeight(e.data.height)
       if (e.data.type === 'observation' && e.data.sessionId === latest.current.sessionId) {
-        if (!booted.current) return
+        if (!booted.current || e.data.observationRequest !== latest.current.observationRequest)
+          return
         const source = e.data.observation.linked?.source
         if (
           source &&
@@ -117,11 +130,19 @@ export function Workbench({
               linkedTaskId(latest.current.linkedLesson!, latest.current.linkedVariant ?? 'guided'))
         )
           return
+        const recorded = e.data.observation.recorded
+        if (
+          recorded &&
+          (recorded.sessionId !== latest.current.sessionId ||
+            recorded.taskId !== latest.current.recordedTask)
+        )
+          return
         if (e.data.observation.frameReady) {
           setError('')
           window.clearTimeout(timeout)
         }
-        if (!latest.current.demonstration) callback.current(e.data.observation)
+        if (!latest.current.demonstration && viewportUsable.current)
+          callback.current({ ...e.data.observation, acquisitionSession: latest.current.sessionId })
       }
       if (e.data.type === 'error' && e.data.sessionId === latest.current.sessionId) {
         setError(e.data.message)
@@ -141,19 +162,26 @@ export function Workbench({
         window.location.origin,
       )
   }, [config, ready])
-  if (supported === false)
-    return (
-      <div className={styles.notice}>
-        <h2>Desktop or tablet lab</h2>
+  const unavailable = (
+    <div className={styles.notice}>
+      <h2>Desktop or tablet lab</h2>
+      <p>
+        This required scope activity needs a larger viewport and WebGL 2. You can read the lesson
+        here; continue this lab on a supported device. No completion is earned by this fallback.
+      </p>
+      {initialized && (
         <p>
-          This required scope activity needs a larger viewport and WebGL 2. You can read the lesson
-          here; continue this lab on a supported device. No completion has been recorded.
+          Your current workbench is paused and preserved. Return to a supported width to continue
+          with the same acquisition.
         </p>
-      </div>
-    )
+      )}
+    </div>
+  )
+  if (supported === false || (compact && !initialized)) return unavailable
   return (
     <section aria-label="EBUS workbench" className={styles.embed}>
-      {!ready && <p role="status">Loading EBUS workbench…</p>}
+      {compact && unavailable}
+      {!ready && !compact && <p role="status">Loading EBUS workbench…</p>}
       {error && (
         <div role="alert" className={styles.notice}>
           <p>{error}</p>
@@ -171,11 +199,13 @@ export function Workbench({
           </button>
         </div>
       )}
-      {supported && (
+      {initialized && (
         <iframe
           key={retry}
+          hidden={compact}
           ref={frame}
           title="EBUS workbench"
+          style={{ height }}
           src="/socal-ebus-course/app/guided.html?locale=en&publicTraining=1&publicScope=ebus"
           allow="fullscreen"
         />

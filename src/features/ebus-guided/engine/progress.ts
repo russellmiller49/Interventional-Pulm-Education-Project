@@ -10,7 +10,13 @@ import {
 } from '@/lib/ebus-linked-contract'
 export const STORAGE_KEY = 'ip-ebus-guided-v1'
 export const RECORD_EVENT = 'ebus-guided-record'
-const attempt = z.object({ choiceId: z.string().max(80), at: z.string().max(80) }).strict()
+const attempt = z
+  .object({
+    choiceId: z.string().max(80),
+    at: z.string().max(80),
+    supportRequested: z.boolean().optional(),
+  })
+  .strict()
 const skillObservation = z
   .object({
     source: z.custom<LinkedFrameSource>(isLinkedFrameSource),
@@ -41,6 +47,22 @@ const schema = z
     lastLesson: z.string().max(100).nullable(),
     firstAttempts: z.record(attempt),
     skillObservations: z.record(skillObservation).default({}).catch({}),
+    supportRequests: z
+      .record(
+        z
+          .array(
+            z
+              .object({
+                activityId: z.string().max(180),
+                sessionId: z.string().max(180),
+                at: z.string().max(80),
+              })
+              .strict(),
+          )
+          .max(200),
+      )
+      .default({}),
+    skillHistory: z.record(z.array(skillObservation).max(100)).default({}).catch({}),
     completedCases: z.array(z.string().max(100)).max(100).default([]),
     assessmentComplete: z.boolean(),
     updatedAt: z.string().max(80),
@@ -53,6 +75,8 @@ export const emptyRecord = (): CourseRecord => ({
   lastLesson: null,
   firstAttempts: {},
   skillObservations: {},
+  skillHistory: {},
+  supportRequests: {},
   completedCases: [],
   assessmentComplete: false,
   updatedAt: '',
@@ -108,13 +132,36 @@ export function firstAttempt(
   key: string,
   question: Question,
   choiceId: string,
+  supportRequested = false,
 ): CourseRecord {
   if (Object.hasOwn(record.firstAttempts, key) || !question.choices.some((c) => c.id === choiceId))
     return record
   if (!/^[a-z0-9-]+:[a-z0-9-]+$/.test(key)) return record
   return {
     ...record,
-    firstAttempts: { ...record.firstAttempts, [key]: { choiceId, at: new Date().toISOString() } },
+    firstAttempts: {
+      ...record.firstAttempts,
+      [key]: { choiceId, at: new Date().toISOString(), supportRequested },
+    },
+  }
+}
+export function recordSupportRequest(
+  record: CourseRecord,
+  lessonId: string,
+  activityId: string,
+  sessionId: string,
+): CourseRecord {
+  const requests = record.supportRequests[lessonId] ?? []
+  if (requests.some((entry) => entry.activityId === activityId && entry.sessionId === sessionId))
+    return record
+  return {
+    ...record,
+    supportRequests: {
+      ...record.supportRequests,
+      [lessonId]: [...requests, { activityId, sessionId, at: new Date().toISOString() }].slice(
+        -200,
+      ),
+    },
   }
 }
 export function completeLesson(record: CourseRecord, id: string): CourseRecord {
@@ -143,6 +190,14 @@ export function recordLinkedObservation(
   const key = linkedTaskKey(lab.linkedLesson, lab.linkedVariant ?? 'guided')
   return {
     ...record,
+    skillHistory: {
+      ...record.skillHistory,
+      [key]:
+        record.skillObservations[key] &&
+        record.skillObservations[key].source.sessionId !== source.sessionId
+          ? [...(record.skillHistory[key] ?? []), record.skillObservations[key]].slice(-100)
+          : (record.skillHistory[key] ?? []),
+    },
     skillObservations: {
       ...record.skillObservations,
       [key]: {
