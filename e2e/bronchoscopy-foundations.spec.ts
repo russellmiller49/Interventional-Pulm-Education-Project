@@ -22,10 +22,12 @@ test.use({ hasTouch: true })
 const base = '/en/bronchoscopy-foundations'
 const primary = (page: Page) => page.locator('[data-now-card] [data-now-primary]')
 const stage = (page: Page) => page.locator('[data-stage]')
-const ready = (page: Page) =>
-  expect(page.locator('[data-three-state]')).toHaveAttribute('data-three-state', 'ready', {
+const ready = async (page: Page) => {
+  await page.locator('[data-three-state]').scrollIntoViewIfNeeded()
+  await expect(page.locator('[data-three-state]')).toHaveAttribute('data-three-state', 'ready', {
     timeout: 30_000,
   })
+}
 const control = (page: Page, key: Parameters<typeof scopeControlId>[0]) =>
   page.locator('[id="' + scopeControlId(key) + '"]')
 
@@ -44,20 +46,23 @@ async function openSection(page: Page, id: BronchSectionId) {
   await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[0].id)
   return lesson
 }
-async function reachAct(page: Page, id: BronchSectionId, miss = false) {
+async function reachAct(page: Page, id: BronchSectionId) {
   const lesson = await openSection(page, id)
-  await primary(page).click()
-  const step = lesson.steps[lesson.predictionStepIndex]
-  if (step.interaction.kind !== 'prediction') throw new Error('Prediction expected')
-  const item = step.interaction.stage.item
-  const choice = miss
-    ? item.choices.find((entry) => !item.correctChoiceIds.includes(entry.id))!.id
-    : item.correctChoiceIds[0]
-  await page.locator('[data-prediction-choices] input[value="' + choice + '"]').check()
-  await primary(page).click()
-  await expect(page.locator('[data-answer-verdict]')).toHaveAttribute('data-revealed', 'true')
-  await primary(page).click()
-  return { lesson, choice, item }
+  for (const step of lesson.steps) {
+    if (step.course?.kind === 'practice') break
+    if (step.interaction.kind === 'prediction') {
+      await page
+        .locator(
+          '[data-prediction-choices] input[value="' +
+            step.interaction.stage.item.correctChoiceIds[0] +
+            '"]',
+        )
+        .check()
+      await primary(page).click()
+    }
+    await primary(page).click()
+  }
+  return { lesson }
 }
 async function setRange(page: Page, key: 'rotate' | 'deflect', value: number) {
   // Native keyboard input exercises React's real change handler and input provenance.
@@ -113,7 +118,7 @@ async function expectPaintedControlHead(page: Page) {
     .toBe(true)
 }
 
-test('one entry, direct links and incomplete-section resume preserve the first decision', async ({
+test('one entry, Back review and reload preserve the first decision and its support', async ({
   page,
 }) => {
   await expect(page.locator('[data-bronch-continue]')).toHaveAttribute(
@@ -121,19 +126,29 @@ test('one entry, direct links and incomplete-section resume preserve the first d
     /section=shared-airway/,
   )
   await page.locator('[data-bronch-continue]').click()
-  await expect(stage(page)).toHaveAttribute(
-    'data-stage',
-    bronchStageLesson('shared-airway').steps[0].id,
-  )
-  const { lesson, choice, item } = await reachAct(page, 'branch-entry', true)
-  await ready(page)
+  const lesson = bronchStageLesson('shared-airway')
+  const check = lesson.steps[lesson.predictionStepIndex]
+  if (check.interaction.kind !== 'prediction') throw new Error('Check expected')
+  await expect(page.locator('[data-course-teaching]')).toBeVisible()
+  for (const step of lesson.steps.slice(0, lesson.predictionStepIndex)) {
+    await expect(stage(page)).toHaveAttribute('data-stage', step.id)
+    await primary(page).click()
+  }
+  await page.locator('[data-now-back]').click()
+  await expect(page.locator('[data-now-status]')).toContainText('looking back')
+  await primary(page).click()
+  const item = check.interaction.stage.item
+  const wrong = item.choices.find((entry) => !item.correctChoiceIds.includes(entry.id))!
+  await page.locator('[data-prediction-choices] input[value="' + wrong.id + '"]').check()
+  await primary(page).click()
   const saved = await record(page)
-  const first = Object.values(saved.firstAttempts) as { choiceId: string; correct: boolean }[]
-  expect(first).toEqual([expect.objectContaining({ choiceId: choice, correct: false })])
-  expect(saved.completedSectionIds).not.toContain('branch-entry')
+  expect(Object.values(saved.firstAttempts)).toEqual([
+    expect.objectContaining({ choiceId: wrong.id, correct: false, support: 'reviewed-teaching' }),
+  ])
+  expect(saved.completedSectionIds).toEqual([])
   await page.reload()
   await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[0].id)
-  await primary(page).click()
+  for (let index = 0; index < lesson.predictionStepIndex; index++) await primary(page).click()
   await page
     .locator('[data-prediction-choices] input[value="' + item.correctChoiceIds[0] + '"]')
     .check()
@@ -141,20 +156,13 @@ test('one entry, direct links and incomplete-section resume preserve the first d
   expect((await record(page)).firstAttempts).toEqual(saved.firstAttempts)
 })
 
-async function showPanel(page: Page, name: 'Steps' | 'Teaching' | 'Simulator') {
-  const tab = page.getByRole('tab', { name, exact: true })
-  if (await tab.isVisible()) await tab.click()
-}
 async function pilotAction(page: Page, name: string) {
-  await showPanel(page, 'Steps')
   await page.locator('[data-now-card]').getByRole('button', { name, exact: true }).click()
 }
 async function pilotContinue(page: Page) {
-  await showPanel(page, 'Steps')
   await primary(page).click()
 }
 async function pilotMovement(page: Page, id: string) {
-  await showPanel(page, 'Simulator')
   const depth = async (direction: 'advance' | 'withdraw') => {
     if ((page.viewportSize()?.width ?? 1440) <= 390) await control(page, direction).tap()
     else await control(page, direction).click()
@@ -221,11 +229,11 @@ for (const viewport of [
       const errors: string[] = []
       page.on('pageerror', (error) => errors.push(error.message))
       const lesson = await openSection(page, 'five-controls')
-      await showPanel(page, 'Teaching')
+
       await expect(page.getByRole('heading', { name: 'What each hand does' })).toBeVisible()
       await expect(page.locator('[data-prediction-choices]')).toHaveCount(0)
       await page.screenshot({ path: info.outputPath('01-before-answer-teaching.png') })
-      await showPanel(page, 'Simulator')
+
       await expect(page.locator('[data-instrument-orientation]')).toBeVisible()
       await page.getByRole('button', { name: 'Steering and suction', exact: true }).click()
       await page.screenshot({ path: info.outputPath('02-instrument.png') })
@@ -234,7 +242,6 @@ for (const viewport of [
       for (const step of lesson.steps.slice(1)) {
         await expect(stage(page)).toHaveAttribute('data-stage', step.id)
         if (step.interaction.kind === 'prediction') {
-          await showPanel(page, 'Steps')
           const item = step.interaction.stage.item
           // Current teaching has no example-specific answer; key/rationales are not rendered.
           const teachingText = await page.locator('[data-pilot-teaching]').textContent()
@@ -265,7 +272,7 @@ for (const viewport of [
             await pilotAction(page, 'Watch the example')
             for (const [index, angle] of [60, 0, -60, 0].entries()) {
               if (index) await pilotAction(page, 'Next demonstration movement')
-              await showPanel(page, 'Simulator')
+
               await ready(page)
               await expect(page.locator('[data-control-head]')).toHaveAttribute(
                 'data-lever-deflection',
@@ -287,7 +294,7 @@ for (const viewport of [
           }
           if (step.learn?.id === 'depth') {
             await pilotAction(page, 'Watch the example')
-            await showPanel(page, 'Simulator')
+
             await ready(page)
             await expect(page.locator('[data-readout="depthMm"] dd')).toContainText('12 mm')
             await expect(control(page, 'advance')).toBeDisabled()
@@ -298,7 +305,7 @@ for (const viewport of [
             expect((await record(page)).completedSectionIds).toEqual([])
           }
           if (step.learn?.demonstration) await pilotAction(page, 'Try with guidance')
-          await showPanel(page, 'Simulator')
+
           await ready(page)
           if (step.learn?.id === 'rotation') {
             await setRange(page, 'deflect', 45)
@@ -317,7 +324,7 @@ for (const viewport of [
             await control(page, 'reset').click()
             await expect(page.locator('[data-control-head]')).toHaveAttribute(
               'data-handle-rotation',
-              '0.00',
+              /^-?0\.00$/,
             )
           }
           if (step.learn?.id === 'suction') {
@@ -334,7 +341,7 @@ for (const viewport of [
           if (step.learn?.id === 'depth') {
             await control(page, 'advance').press('Enter')
             await control(page, 'advance').press('Enter')
-            await expect(primary(page)).toHaveCount(0)
+            await expect(primary(page)).toBeDisabled()
             await control(page, 'reset').click()
             await expect(page.locator('[data-readout="depthMm"] dd')).toContainText('0 mm')
           }
@@ -350,13 +357,13 @@ for (const viewport of [
             await page.locator('[data-three-state]').scrollIntoViewIfNeeded()
             await page.screenshot({ path: info.outputPath('07-changed-target.png') })
             await control(page, 'advance').click()
-            await showPanel(page, 'Steps')
+
             await expect(page.locator('[data-now-status]')).toContainText(
               'advanced before centering',
             )
             await page.screenshot({ path: info.outputPath('08-target-error-feedback.png') })
             await pilotAction(page, 'Reset this attempt')
-            await expect(primary(page)).toHaveCount(0)
+            await expect(primary(page)).toBeDisabled()
           }
           await pilotMovement(page, step.learn!.id)
           if (step.learn?.id === 'depth')
@@ -438,7 +445,7 @@ test('the survey distinguishes entering from inspecting and refuses an unseen-ai
     'data-ledger-status',
     'not-observed',
   )
-  await expect(primary(page)).toHaveCount(0)
+  await expect(primary(page)).toBeDisabled()
   await expect(page.locator('[data-scope-scene]')).toContainText(
     'Entering an airway is not inspecting it',
   )
@@ -531,105 +538,153 @@ test('capstone with one unsafe critical decision does not meet the standard', as
 
 for (const viewport of [
   { width: 1440, height: 900 },
-  { width: 1024, height: 700 },
+  { width: 1024, height: 768 },
   { width: 390, height: 844 },
   { width: 320, height: 844 },
 ]) {
-  test('lesson surfaces reflow at ' + viewport.width + 'px', async ({ page }, info) => {
-    test.setTimeout(240_000)
-    await page.setViewportSize(viewport)
-    const errors: string[] = []
-    page.on('pageerror', (error) => errors.push(error.message))
-    for (const id of [
-      'shared-airway',
-      'five-controls',
-      'branch-entry',
-      'right-side',
-      'systematic-survey',
-      'honest-report',
-    ] as const) {
-      const lesson = await openSection(page, id)
-      const stepsTab = page.getByRole('tab', { name: 'Steps', exact: true })
-      // Wait for responsive hydration; SSR markup alone is not a compact-layout result.
-      if (viewport.width < 960) {
-        await expect(stepsTab).toBeVisible()
-        await stepsTab.click()
-        await stepsTab.press('ArrowRight')
-        await expect(page.getByRole('tab', { name: 'Teaching', exact: true })).toHaveAttribute(
-          'aria-selected',
-          'true',
+  test(
+    'course presentations reflow with one task and continuation at ' + viewport.width,
+    async ({ page }, info) => {
+      test.setTimeout(240_000)
+      await page.setViewportSize(viewport)
+      const errors: string[] = []
+      page.on('pageerror', (error) => errors.push(error.message))
+      const ids =
+        viewport.width === 1440
+          ? BRONCH_SECTION_IDS
+          : ([
+              'pre-use-check',
+              'five-controls',
+              'right-side',
+              'deterioration',
+              'honest-report',
+            ] as const)
+      for (const id of ids) {
+        await openSection(page, id)
+        await expect(page.locator('[data-course-teaching]')).toBeVisible()
+        for (const img of await page.locator('[data-media-kind] img:visible').all()) {
+          await expect
+            .poll(() => img.evaluate((image) => (image as HTMLImageElement).naturalWidth))
+            .toBeGreaterThan(0)
+        }
+
+        await expect(page.locator('[data-step-list]')).toHaveCount(0)
+        await expect(page.getByRole('tab', { name: /^(Steps|Teaching|Simulator)$/ })).toHaveCount(0)
+        await expect(primary(page)).toBeVisible()
+        expect(
+          await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+        ).toBe(true)
+        expect(await page.locator('[data-stage]').innerText()).not.toMatch(
+          /(?:return to|read|in) the (?:Steps|Teaching|Simulator) panel/i,
         )
+        await page.screenshot({
+          path: info.outputPath(id + '-' + viewport.width + '.png'),
+          fullPage: true,
+        })
+        await primary(page).focus()
+        await primary(page).press('Enter')
+        await expect(page.locator('[data-now-focus]')).toBeFocused()
+        expect(
+          await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+        ).toBe(true)
       }
-      if (await stepsTab.isVisible()) await stepsTab.click()
-      await expect(primary(page)).toBeVisible()
-      expect(
-        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
-      ).toBe(true)
-      const simTab = page.getByRole('tab', { name: 'Simulator', exact: true })
-      if (await simTab.isVisible()) {
-        await page.screenshot({ path: info.outputPath(id + '-' + viewport.width + '-steps.png') })
-        await simTab.click()
-      }
-      if (lesson.section.workspace.kind === 'scope' && id !== 'five-controls') {
-        await page.locator('[data-three-state]').scrollIntoViewIfNeeded()
-        await ready(page)
-        await expect
-          .poll(() =>
-            page.locator('[data-ostium-pin]').evaluateAll((elements) => {
-              const boxes = elements
-                .filter((element) => element.textContent?.trim() !== '·')
-                .map((element) => element.getBoundingClientRect())
-              return boxes.some((a, index) =>
-                boxes
-                  .slice(index + 1)
-                  .some(
-                    (b) =>
-                      Math.min(a.right, b.right) > Math.max(a.left, b.left) + 0.5 &&
-                      Math.min(a.bottom, b.bottom) > Math.max(a.top, b.top) + 0.5,
-                  ),
-              )
-            }),
+      expect(errors).toEqual([])
+    },
+  )
+}
+
+for (const id of ['pre-use-check', 'deterioration', 'honest-report'] as const) {
+  test('complete course workspace through native responses: ' + id, async ({ page }, info) => {
+    const lesson = await openSection(page, id)
+    for (const step of lesson.steps) {
+      await expect(stage(page)).toHaveAttribute('data-stage', step.id)
+      const task = step.interaction
+      if (task.kind === 'prediction') {
+        await expect(page.locator('[data-course-teaching]')).toHaveCount(0)
+        await expect(page.locator('[data-worked-example]')).toHaveCount(0)
+        await page
+          .locator(
+            '[data-prediction-choices] input[value="' + task.stage.item.correctChoiceIds[0] + '"]',
           )
-          .toBe(false)
-      }
-      if (lesson.section.workspace.kind === 'media')
-        await expect(page.locator('[data-media-workspace] img')).toHaveCount(
-          lesson.section.workspace.media.length,
-        )
-      if (lesson.section.workspace.kind === 'map') {
-        const map = page.getByRole('group', { name: 'The airway map', exact: true })
-        await expect(map.locator('svg')).toBeVisible()
-        await map.scrollIntoViewIfNeeded()
-      }
-      if (await simTab.isVisible()) await expect(simTab).toHaveAttribute('aria-selected', 'true')
-      const shown = await page
-        .locator('[data-stage-frame] [role="region"]')
-        .evaluateAll((elements) =>
-          elements
-            .filter(
-              (element) =>
-                /^(Steps|Teaching|Simulator) panel$/.test(
-                  element.getAttribute('aria-label') ?? '',
-                ) && !element.hasAttribute('hidden'),
+          .check()
+        await primary(page).click()
+      } else if (task.kind === 'identify') {
+        for (const row of task.identify.rows)
+          await page
+            .locator('[data-identify-row="' + row.id + '"] input[value="' + row.answerId + '"]')
+            .check()
+        await primary(page).click()
+      } else if (task.kind === 'report') {
+        for (const field of task.report.fields)
+          await page
+            .locator(
+              '[data-report-field="' +
+                field.id +
+                '"] input[value="' +
+                field.options.find((option) => option.supported)!.id +
+                '"]',
             )
-            .map((element) => ({
-              name: element.getAttribute('aria-label'),
-              width: element.getBoundingClientRect().width,
-              left: element.getBoundingClientRect().left,
-            })),
-        )
-      expect(shown).toHaveLength(viewport.width < 960 ? 1 : 3)
-      if (shown.length === 3) {
-        expect([...shown].sort((a, b) => a.left - b.left).map((pane) => pane.name)).toEqual([
-          'Steps panel',
-          'Teaching panel',
-          'Simulator panel',
-        ])
-        expect(shown[2].width).toBeGreaterThan(shown[0].width)
-        expect(shown[2].width).toBeGreaterThan(shown[1].width)
+            .check()
+      } else if (task.kind === 'scenario') {
+        for (const frame of task.scenario.frames) {
+          if (await page.locator('[data-scenario-continue]').count())
+            await page.locator('[data-scenario-continue]').click()
+          await expect(page.locator('[data-case-baseline]')).toBeVisible()
+          const unsafe = frame.choices.find((choice) => choice.plausibility === 'unsafe')
+          if (unsafe) {
+            await page
+              .locator('[data-scenario-frame="' + frame.id + '"] input[value="' + unsafe.id + '"]')
+              .check()
+            await page.locator('[data-scenario-decide]').click()
+            await expect(page.locator('[data-scenario-outcome="refused"]')).toBeVisible()
+          }
+          await page
+            .locator(
+              '[data-scenario-frame="' +
+                frame.id +
+                '"] input[value="' +
+                frame.choices.find((choice) => choice.plausibility === 'best')!.id +
+                '"]',
+            )
+            .check()
+          await page.locator('[data-scenario-decide]').click()
+        }
       }
-      await page.screenshot({ path: info.outputPath(id + '-' + viewport.width + '.png') })
+      if (step.course?.kind === 'practice')
+        await page.screenshot({ path: info.outputPath(step.id + '.png'), fullPage: true })
+      await primary(page).click()
     }
-    expect(errors).toEqual([])
+    await expect(page.locator('[data-section-completion]')).toBeVisible()
+    expect((await record(page)).completedSectionIds).toContain(id)
+    await page.goto(base)
+    await expect(page.locator('[data-bronch-continue]')).toHaveAttribute(
+      'data-next-section',
+      'shared-airway',
+    )
   })
 }
+
+test('missing teaching media is explicitly identified', async ({ page }) => {
+  await page.route('**/airway-quiz/quiz-frames.json', (route) => route.abort())
+  await page.route('**/*quiz*frames*.json', (route) => route.abort())
+  await openSection(page, 'right-side')
+  await expect(page.locator('[data-media-state="failed"]')).toBeVisible()
+  expect((await record(page)).completedSectionIds).toEqual([])
+})
+
+test('the course remains readable at 200 percent zoom', async ({ page }, info) => {
+  await openSection(page, 'pre-use-check')
+  await page.locator('[data-stage]').evaluate((element) => {
+    ;(element as HTMLElement).style.zoom = '2'
+  })
+  await expect(primary(page)).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+    true,
+  )
+  await primary(page).press('Enter')
+  await expect(page.locator('[data-now-focus]')).toBeFocused()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+    true,
+  )
+  await page.screenshot({ path: info.outputPath('course-200-percent.png') })
+})

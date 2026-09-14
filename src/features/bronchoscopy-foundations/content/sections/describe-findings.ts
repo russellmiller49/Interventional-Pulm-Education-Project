@@ -97,7 +97,7 @@ export const section: BronchSectionDefinition = {
     /\bby eye\b/i,
   ],
   modelBoundary:
-    'The finding in this section is given in words, because the course has no image of an abnormal airway; the still in the Simulator panel is a normal right main bronchus, for comparison. Choosing entries on a card is practice for the report you will write and speak, which faculty review.',
+    'The finding in this section is given in words, because the course has no image of an abnormal airway; the introductory still is a normal right main bronchus, for comparison. Choosing entries on a card is practice for the report you will write and speak, which faculty review.',
   localPolicyIds: [],
   reviewItemIds: ['R18', 'R19', 'R20', 'R34', 'R51'],
 
@@ -119,7 +119,7 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'normal-reference',
       heading: 'The normal right main bronchus',
-      body: 'The still in the Simulator panel comes from a normal survey. The right main bronchus is open and round in contour, and its mucosa is smooth and even, without erythema, edema or nodularity. There is no mass, no blood and no narrowing; a few small bubbles cling to the upper edge of the image.\n\nThat is the reference for what follows. Normal-appearing mucosa, the contour the cartilage gives the wall and a recognizable posterior membrane are the features to recognize first, so that a change from them can be seen.',
+      body: 'This reference still comes from a normal survey. The right main bronchus is open and round in contour, and its mucosa is smooth and even, without erythema, edema or nodularity. There is no mass, no blood and no narrowing; a few small bubbles cling to the upper edge of the image.\n\nThat is the reference for what follows. Normal-appearing mucosa, the contour the cartilage gives the wall and a recognizable posterior membrane are the features to recognize first, so that a change from them can be seen.',
       media: { kind: 'endoscopic-still', structureId: 'rmb', outline: false },
       claimClass: 'source',
       sourceRefs: [
@@ -133,7 +133,7 @@ export const section: BronchSectionDefinition = {
       kind: 'signals',
       role: 'signals',
       heading: 'The finding, in words',
-      body: 'Read the finding against the normal still in the Simulator panel.',
+      body: 'Compare this written finding with the normal right main bronchus introduced earlier. The abnormal finding itself is supplied in words.',
       pointsLabel: 'What the view and the room show',
       points: [
         'A smooth, broad-based lesion rising from the lateral wall of the proximal right main bronchus into the lumen; the airway beyond it is only partly in view',

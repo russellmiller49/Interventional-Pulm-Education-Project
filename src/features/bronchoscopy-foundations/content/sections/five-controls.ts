@@ -197,7 +197,7 @@ export const section: BronchSectionDefinition = {
       kind: 'after-commitment',
       role: 'worked-example',
       heading: 'The bench sequence, worked',
-      body: 'The teaching sequence separates the movements before combining them, and asks for a prediction before each one. Worked through at the bench in this section:',
+      body: 'The teaching sequence separates the movements before combining them, with explanation and guided attempts before the later formative check. Worked through at the bench in this section:',
       pointsLabel: 'One movement at a time',
       points: [
         'Hold the depth and turn the control section through a small, comfortable range: the image turns.',

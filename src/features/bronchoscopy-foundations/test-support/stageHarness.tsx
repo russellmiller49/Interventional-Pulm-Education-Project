@@ -263,6 +263,8 @@ export function decideFrame(
   step: BronchStageStep,
   plausibility: 'best' | 'unsafe' | 'incorrect-mechanism' | 'reasonable-but-incomplete',
 ) {
+  const nextObservation = document.querySelector<HTMLButtonElement>('[data-scenario-continue]')
+  if (nextObservation) fireEvent.click(nextObservation)
   if (step.interaction.kind !== 'scenario') throw new Error(`${step.id} is not a scenario`)
   const frameId = document
     .querySelector('[data-bronch-scenario] [data-scenario-frame]')

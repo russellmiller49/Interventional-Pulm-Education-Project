@@ -81,15 +81,21 @@ export function BronchoscopyFoundationsModuleFrame({
   locale = 'en',
   activeHref,
   activityMode = false,
+  courseMode = false,
   children,
 }: {
   readonly locale?: string
   readonly activeHref: string
   readonly activityMode?: boolean
+  readonly courseMode?: boolean
   readonly children: ReactNode
 }) {
   return (
-    <main className={styles.moduleShell} data-activity-mode={activityMode || undefined}>
+    <main
+      className={styles.moduleShell}
+      data-activity-mode={activityMode || undefined}
+      data-course-mode={courseMode || undefined}
+    >
       <ModuleFrameV2
         eyebrow="Interventional pulmonology · Bronchoscopy foundations"
         title="Bronchoscopy Foundations"

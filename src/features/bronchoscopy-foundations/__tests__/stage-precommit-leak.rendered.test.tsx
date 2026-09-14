@@ -1,16 +1,13 @@
+import { reachCourseStep } from '../test-support/courseHarness'
 import { cleanup } from '@testing-library/react'
 
 import { BRONCH_SECTION_IDS } from '../content/pathway'
-import { bronchStageLesson } from '../content/stageLessons'
 import {
   attributesText,
-  clickPrimary,
-  currentStepId,
   installDom,
   leakMatches,
   mountSection,
   scannableText,
-  settle,
 } from '../test-support/stageHarness'
 
 jest.mock(
@@ -57,30 +54,27 @@ afterEach(() => {
   jest.useRealTimers()
 })
 
-/**
- * The composed document, at the two moments that matter: the first step on mount, and the
- * prediction step reached the way a learner reaches it. Hidden nodes and attributes count; the
- * answer fieldsets are the one excused surface. The deny set is the section's own, so an author
- * who moves an answer into a step title, a teaching card, the context strip or the pane's own
- * labels is told which section and which phrase.
- */
-describe('nothing answers a section before its prediction is committed (rendered)', () => {
-  // The pilot's post-teaching check has its own rendered disclosure test in five-controls-learn.
+/** Worked instruction is intentionally visible. Pending checks replace it, including the DOM and accessibility attributes. */
+describe('pending independent checks withhold worked solutions (rendered)', () => {
   it.each(BRONCH_SECTION_IDS.filter((id) => id !== 'five-controls'))('%s', async (sectionId) => {
-    const lesson = bronchStageLesson(sectionId)
-    const deny = lesson.section.precommitDenyPatterns
-    await mountSection(sectionId)
-    const findings: string[] = []
-    const atFirstStep = `${scannableText()} ${attributesText()}`
-    for (const match of leakMatches(atFirstStep, deny))
-      findings.push(`${sectionId} · first step: /${match}/`)
-
-    clickPrimary()
-    await settle()
-    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex].id)
-    const atPrediction = `${scannableText()} ${attributesText()}`
-    for (const match of leakMatches(atPrediction, deny))
-      findings.push(`${sectionId} · prediction step: /${match}/`)
-    expect(findings).toEqual([])
+    const { lesson } = await mountSection(sectionId)
+    expect(document.querySelector('[data-course-teaching]')).not.toBeNull()
+    for (const check of lesson.steps.filter((step) => step.activity === 'independent-check')) {
+      await reachCourseStep(lesson, check)
+      expect(document.querySelector('[data-course-teaching]')).toBeNull()
+      expect(document.querySelector('[data-normal-airway-tour]')).toBeNull()
+      expect(document.querySelector('[data-worked-example]')).toBeNull()
+      expect(document.querySelector('[data-answer-verdict]')).toBeNull()
+      expect(document.querySelector('[data-new-concept]')).toBeNull()
+      expect(document.querySelector('[data-lit="true"]')).toBeNull()
+      const pending = `${scannableText()} ${attributesText()}`
+      // The section's deny patterns guard its first question; changed checks additionally inspect all rationale surfaces.
+      if (check.interaction.kind === 'prediction' && check.interaction.round === 0)
+        expect(leakMatches(pending, lesson.section.precommitDenyPatterns)).toEqual([])
+      if (check.interaction.kind === 'prediction')
+        for (const choice of check.interaction.stage.item.choices) {
+          if (choice.rationale) expect(pending).not.toContain(choice.rationale)
+        }
+    }
   })
 })

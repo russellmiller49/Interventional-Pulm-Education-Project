@@ -1,5 +1,6 @@
 'use client'
 
+import { capstoneStageItems } from '../content/stageItems'
 import { BronchCapstone } from './BronchCapstone'
 
 /** The Assess landing: the capstone, gated on Learn completion. */
@@ -10,7 +11,9 @@ export function BronchoscopyFoundationsAssessLanding() {
       data-assess-landing
     >
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Assess</p>
-      <h1 className="text-3xl font-bold tracking-tight">Eight decisions, made once</h1>
+      <h1 className="text-3xl font-bold tracking-tight">
+        {capstoneStageItems.length} decisions, made once
+      </h1>
       <BronchCapstone />
     </div>
   )

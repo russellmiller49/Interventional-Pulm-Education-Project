@@ -114,7 +114,7 @@ function task(
 
 export function fiveControlsLearnInputs(): readonly StepInput[] {
   const transferView = { ...combineView, benchTarget: TRANSFER_BENCH_TARGET }
-  return [
+  const inputs: StepInput[] = [
     {
       phase: 'recognize',
       title: 'Meet the bronchoscope',
@@ -138,7 +138,7 @@ export function fiveControlsLearnInputs(): readonly StepInput[] {
         paragraphs: [
           'Learn how each basic movement changes the bronchoscope tip and the image.',
           'The control hand holds the handle. In the usual setup this is the left hand, with the thumb on the angulation lever and the index finger available for suction. The other hand guides the insertion tube near the entry point and manages depth.',
-          'Either control hand may be used when steering, suction, depth control, scope protection and assistant access remain effective. Arrange a comfortable monitor and working height; avoid pulling cables, sharp bends and large shaft loops.',
+          'Either control hand may be used when steering, suction, depth control, scope protection and assistant access remain effective. Arrange a comfortable monitor and working height; avoid pulling cables, sharp bends and large shaft loops. The patient’s face and eyes must not serve as a fulcrum.',
         ],
         notice:
           'Before patient use, work through shared-airway safety, preparation and monitoring. This bench exercise does not replace those prerequisites.',
@@ -278,6 +278,7 @@ export function fiveControlsLearnInputs(): readonly StepInput[] {
         paragraphs: [
           'Rotate the control section while the insertion hand guides the shaft. The camera turns, so the image rotates. The plane in which the distal section bends turns with the instrument.',
           'On this model the lever still bends toward image-up or image-down after rotation. Watch the bent tip sweep around in the Outside view. A real curved shaft may delay or absorb rotation; this model does not measure that.',
+          'Camera orientation is the direction of the image on the screen. Image-up is not a fixed direction in the patient: rotating the camera changes screen positions while the anatomical parent–daughter relationships stay the same. Use visible landmarks to recover orientation. The later Reference frames lesson adds CT display orientation.',
         ],
         cue: 'Use Rotation with the tip straight. Add a bend with Deflection, then change Rotation again while keeping that bend.',
         success:
@@ -477,4 +478,59 @@ export function fiveControlsLearnInputs(): readonly StepInput[] {
       },
     ),
   ]
+  // Group actual attempts into coherent concepts. The connecting explanation belongs with
+  // the suction chunk; it does not need its own Continue screen or successful demo state.
+  const connect = inputs.find((input) => input.learn?.id === 'connect')!.learn!
+  const referenceBlocks: Readonly<Record<string, readonly string[]>> = {
+    instrument: ['what-the-hands-change', 'working-position'],
+    depth: ['what-to-watch'],
+    rotation: ['what-each-control-changes'],
+    combine: ['bench-sequence'],
+    suction: ['common-errors', 'faculty-station'],
+  }
+  const groups: Readonly<Record<string, string>> = {
+    instrument: 'Instrument orientation',
+    depth: 'Depth',
+    'depth-repeat': 'Depth',
+    bend: 'Deflection',
+    'bend-repeat': 'Deflection',
+    rotation: 'Rotation',
+    'rotation-repeat': 'Rotation',
+    combine: 'Combined aiming',
+    check: 'Combined aiming',
+    suction: 'Suction',
+    'suction-repeat': 'Suction',
+    transfer: 'Changed target',
+  }
+  return inputs
+    .filter((input) => input.learn?.id !== 'connect')
+    .map((input) => {
+      const unit = input.learn!
+      return {
+        ...input,
+        learn:
+          unit.id === 'suction'
+            ? { ...unit, paragraphs: [...unit.paragraphs, ...connect.paragraphs] }
+            : unit,
+        course: {
+          id: groups[unit.id],
+          title: groups[unit.id],
+          kind:
+            unit.support === 'check'
+              ? 'check'
+              : unit.support === 'transfer'
+                ? 'transfer'
+                : input.interaction.kind === 'read'
+                  ? 'teach'
+                  : 'practice',
+          presentation: unit.orientation
+            ? 'illustrated'
+            : unit.support === 'check'
+              ? 'case'
+              : 'skill',
+          blocks: referenceBlocks[unit.id] ?? [],
+          visual: unit.orientation ? 'instrument' : 'none',
+        },
+      }
+    })
 }

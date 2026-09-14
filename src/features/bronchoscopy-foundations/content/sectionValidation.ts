@@ -46,7 +46,6 @@ import type {
  * the section-definition test. Set-level rules (unique item ids across the module, every core
  * objective homed exactly once, the key-is-longest fraction) live in `validateAllSections`.
  */
-const PRECOMMIT_BLOCK_KINDS = new Set(['question', 'signals', 'pattern', 'discriminators'])
 const CHOICE_ID = /^[a-d]$/
 const MODULE_IDS = new Set(MANIFEST_MODULES.map((module) => module.id))
 const OBJECTIVE_BY_ID = new Map(
@@ -247,11 +246,6 @@ function blockErrors(
   }
   if (block.kind === 'boundary' && block.role !== 'boundary')
     c.add(`${where} is a boundary block with role ${block.role}.`)
-  if (PRECOMMIT_BLOCK_KINDS.has(block.kind)) {
-    for (const text of [block.heading, block.body, block.pointsLabel, ...(block.points ?? [])]) {
-      c.add(denyErrors(where, text, section.precommitDenyPatterns))
-    }
-  }
 }
 
 function landmarkErrors(
@@ -344,7 +338,6 @@ function workspaceErrors(
       return
     case 'media':
       c.copy(`${where} caption`, workspace.caption)
-      c.add(denyErrors(`${where} caption`, workspace.caption, section.precommitDenyPatterns))
       if (workspace.media.length === 0) c.add(`${where} shows no media.`)
       workspace.media.forEach((media, index) =>
         c.add(mediaRefErrors(`${where} media ${index + 1}`, media)),
@@ -352,13 +345,11 @@ function workspaceErrors(
       return
     case 'map':
       c.copy(`${where} caption`, workspace.caption)
-      c.add(denyErrors(`${where} caption`, workspace.caption, section.precommitDenyPatterns))
       for (const label of workspace.lit)
         if (!isAirwayLabel(label)) c.add(`${where} lights an unknown airway ${label}.`)
       return
     case 'monitor':
       c.copy(`${where} caption`, workspace.caption)
-      c.add(denyErrors(`${where} caption`, workspace.caption, section.precommitDenyPatterns))
       workspace.readings.forEach((reading) => c.copy(`${where} ${reading.channel}`, reading.words))
       return
   }
@@ -574,7 +565,9 @@ export function bronchSectionErrors(section: BronchSectionDefinition): readonly 
   ]
   for (const [label, text] of precommit) {
     c.copy(`${id} ${label}`, text, { allowDigits: !label.includes('title') })
-    c.add(denyErrors(`${id} ${label}`, text, section.precommitDenyPatterns))
+    // Persistent headings remain visible during checks; teaching is audited separately.
+    if (label === 'title' || label === 'short title')
+      c.add(denyErrors(`${id} ${label}`, text, section.precommitDenyPatterns))
   }
   for (const [label, text] of [
     ['new concept', section.newConcept],

@@ -245,7 +245,7 @@ export const section: BronchSectionDefinition = {
       kind: 'after-commitment',
       role: 'mechanism',
       heading: 'When ventilation worsens with the scope in',
-      body: 'A falling exhaled volume, new difficulty ventilating, hypotension, findings on one side, or worsening gas exchange call for a pause and for restoring safe ventilation as appropriate while the team looks for the cause. Obstruction by the scope in the tube, dynamic hyperinflation, pneumothorax, bleeding or clot, a displaced device, medication effects and the underlying illness can each produce it, and several can act together.\n\nThe sizes do not settle which. A tight fit does not prove the scope is the cause, a roomy one does not exclude it, and coughing at the start is not a reason to call later deterioration a need for more sedation. The pattern of rising pressure and falling exhaled volume is in Reading the view, in the Teaching panel.',
+      body: 'A falling exhaled volume, new difficulty ventilating, hypotension, findings on one side, or worsening gas exchange call for a pause and for restoring safe ventilation as appropriate while the team looks for the cause. Obstruction by the scope in the tube, dynamic hyperinflation, pneumothorax, bleeding or clot, a displaced device, medication effects and the underlying illness can each produce it, and several can act together.\n\nThe sizes do not settle which. A tight fit does not prove the scope is the cause, a roomy one does not exclude it, and coughing at the start is not a reason to call later deterioration a need for more sedation. Compare pressure and exhaled volume with this patient’s baseline while the team evaluates the cause.',
       claimClass: 'synthesis',
       sourceRefs: [T15_BURDEN, S1_TUBE],
     },
