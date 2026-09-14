@@ -404,7 +404,7 @@ describe('M4 — nothing reveals the answer before it is committed', () => {
 
     const after = renderPanel(contract, state, 'mechanism')
     expect(after.container.querySelector('[data-parameter-dependency]')).not.toBeNull()
-    expect(after.container.textContent ?? '').toMatch(/computed from power and speed/i)
+    expect(after.container.textContent ?? '').toMatch(/generated from speed and loading/i)
     expect(
       after.container.querySelector('[data-cpo-paradox]')?.getAttribute('data-cpo-paradox'),
     ).not.toBe('withheld')

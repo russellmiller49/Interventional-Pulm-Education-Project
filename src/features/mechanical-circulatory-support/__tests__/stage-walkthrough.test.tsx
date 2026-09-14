@@ -98,7 +98,7 @@ describe('the stage: one progression per section', () => {
       expect(phases.slice(-5)).toEqual(['predict', 'act', 'observe', 'explain', 'transfer'])
 
       if (spec.walksTheLoop) {
-        expect(nowCard().textContent).toMatch(/Stop 1 of 5/)
+        expect(nowCard().textContent).toMatch(/Follow three support pathways/)
         walkTheLoop()
       }
       // Recognize: the identification commits and states its outcome.
@@ -132,7 +132,7 @@ describe('the stage: one progression per section', () => {
       const table = document.querySelector('[data-before-after]')
       expect(table).toBeInTheDocument()
       expect(table?.querySelectorAll('tbody tr')).toHaveLength(
-        lesson.contract.observedSignals.length,
+        sectionId === 'mcs-foundations-mechanisms' ? 4 : lesson.contract.observedSignals.length,
       )
       for (const cell of table?.querySelectorAll('tbody td') ?? []) {
         expect(cell.textContent).not.toBe('not captured')
@@ -201,19 +201,16 @@ describe('the stage: verdicts, Back, sources, help', () => {
     expect(currentStepId()).toBe('lvad-parameters-assessment-act')
     fireEvent.click(document.querySelector('[data-now-back]') as HTMLElement)
     expect(currentStepId()).toBe('lvad-parameters-assessment-predict')
-    expect(nowStatus()).toMatch(/looking back/i)
+    expect(nowStatus()).toMatch(/Review: captured state/)
     expect(document.querySelector('[data-verdict] [data-verdict-outcome]')).toHaveAttribute(
       'data-verdict-outcome',
       'correct',
     )
     fireEvent.click(document.querySelector('[data-now-back]') as HTMLElement)
     expect(currentStepId()).toBe('lvad-parameters-assessment-recognize')
-    expect(document.querySelector('[data-now-back]')).toBeNull()
-    // Forward again, without redoing anything: Continue is the primary on a performed step, and
-    // on the committed prediction it is the verdict's own Continue.
+    // Return directly to the preserved current task, without replaying setups.
+    expect(nowPrimary()?.textContent).toMatch(/Return to current task/)
     continueStep()
-    expect(currentStepId()).toBe('lvad-parameters-assessment-predict')
-    continueFromVerdict()
     expect(currentStepId()).toBe('lvad-parameters-assessment-act')
   })
 
@@ -298,13 +295,13 @@ describe('the stage: verdicts, Back, sources, help', () => {
     expect(pairing?.textContent).not.toMatch(/power interruption/i)
   })
 
-  it('mounts a later-phase URL at the prediction and says so', () => {
+  it('mounts a selected later-phase URL at its reference without invented work', () => {
     mountSection('iabp-timing-triggering', 'explain')
-    expect(currentStepId()).toBe('iabp-timing-triggering-predict')
+    expect(currentStepId()).toBe('iabp-timing-triggering-normal-beat')
     expect(document.querySelector('[data-stage-resumed-note]')?.textContent).toMatch(
-      /opened at the predict step/i,
+      /starts with its reference and guided examples/i,
     )
-    expect(stepRowStates().slice(2)).toEqual(['locked', 'locked', 'locked', 'locked'])
+    expect(storedLessonIds()).toEqual([])
   })
 
   it('ticks the simulation while mounted and stops when unmounted', () => {

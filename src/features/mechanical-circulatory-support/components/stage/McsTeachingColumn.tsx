@@ -66,6 +66,75 @@ export function McsTeachingColumn({
   const explaining = phase === 'explain'
   const target = mcsSurfaceTarget(contract.primarySurface, contract.primaryTarget)
 
+  // The selected introductions teach first. Later tasks foreground one explanation; the full
+  // legacy panel is retained for the four application sections and the open workbench.
+  if (lesson.introductory && !walkStop) {
+    const pending = !predictionCommitted && (phase === 'recognize' || phase === 'predict')
+    return (
+      <section className={styles.block} data-teaching-panel data-teaching-focus={phase}>
+        <h3>{pending ? 'Apply the concept' : 'Why it moved'}</h3>
+        {pending ? (
+          <p>
+            Use the readings and answer choices for this task. You have already studied the
+            reference and guided example. The explanation of your selected response appears after
+            submission.
+          </p>
+        ) : (
+          <>
+            <p>
+              <strong>Expected response in this model:</strong>{' '}
+              {contract.teaching.howTheActionAffectsTheModel}
+            </p>
+            <p data-flow-account-note>{contract.teaching.flowAccountNote}</p>
+            <p>
+              Use the captured results in Steps to establish what actually changed in this run.
+              Expected direction is a hypothesis; unchanged values remain valid observations.
+            </p>
+            <div data-causal-ladder-summary>
+              <p>
+                <strong>Pressure and blood flow:</strong> mm Hg and L/min answer different
+                questions. A change in MAP alone cannot establish a change in flow.
+              </p>
+              <p>
+                <strong>Oxygen delivery and patient response:</strong> oxygen content and
+                consumption matter. Mentation, urine output, skin findings and lactate trend require
+                clinical assessment; these responses are not simulated.
+              </p>
+            </div>
+            <p data-does-not-establish>
+              <strong>This exercise does not establish:</strong> {contract.whatThisDoesNotEstablish}
+            </p>
+            <details>
+              <summary>Relevant reference: interpreting the constraint</summary>
+              <ul>
+                {mcsGrammarRowsFor(lesson.sectionId).map((row) => (
+                  <li key={row.id}>
+                    {row.whatMoved} — {row.whereTheConstraintLives}. {row.shortlist.join(' · ')}
+                  </li>
+                ))}
+              </ul>
+              <details>
+                <summary>Complete mechanism reference</summary>
+                <ul>
+                  {MCS_SUPPORT_GRAMMAR.rows.map((row) => (
+                    <li key={row.id}>
+                      {row.whatMoved} — {row.whereTheConstraintLives}. {row.shortlist.join(' · ')}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </details>
+          </>
+        )}
+        <p className={styles.footnote}>
+          Every value is simulated. Device estimates, modeled flow and volume, calculated
+          pressure–flow products, and patient measurements have distinct meanings. Clinical device
+          operation requires current instructions and the responsible MCS team.
+        </p>
+      </section>
+    )
+  }
+
   const framing: StageBlockVisibility =
     phase === 'recognize' || phase === 'predict' ? 'shown' : 'collapsed'
   const afterCommit: StageBlockVisibility = !predictionCommitted

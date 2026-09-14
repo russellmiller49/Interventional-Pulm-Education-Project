@@ -64,6 +64,21 @@ import { McsSimulatorPane } from './McsSimulatorPane'
 import { McsSourceList } from './McsSourceList'
 import { McsStoryProblems } from './McsStoryProblems'
 import { McsTeachingColumn } from './McsTeachingColumn'
+import { McsTaskControls } from './McsTaskControls'
+import { McsIntroTeaching } from './McsIntroTeaching'
+import {
+  McsCapturedResults,
+  McsDeviceComparisonTable,
+  type McsComparisonRecords,
+} from './McsCapturedResults'
+import { advanceMcsSimulation } from '../../engine/model'
+import {
+  isMcsLearningActionPermitted,
+  captureMcsDeviceComparison,
+  mcsTeachingSetup,
+  mcsObservedDirection,
+  MCS_OBSERVATION_SECONDS,
+} from '../../engine/learningSession'
 import styles from './mcs-stage.module.css'
 
 /**
@@ -76,12 +91,13 @@ import styles from './mcs-stage.module.css'
  * its required work done: this section's id, marking it worked. Opening, reading, navigating and
  * predicting write nothing.
  *
- * Commitment is the sole reveal authority: derived from the committed prediction and from nothing
- * else — not the step, not the URL, not stored progress.
+ * Selected introductions expose instructional references before a fresh independent task.
+ * Independent answers remain gated by the learner's actual commitment; completed history and
+ * URL phases never manufacture answers. Earlier steps render immutable session snapshots.
  */
 
 const LOOKING_BACK =
-  'You are looking back at an earlier step; nothing you have worked through is lost.'
+  'Review: captured state from this earlier task. The current patient is preserved; controls are locked. Return to the current task to continue.'
 
 /*
  * Steps, Teaching, Simulator — left to right — each pane captioned with its name and what it is
@@ -147,6 +163,16 @@ const GUIDED_ACTION_IDS: Readonly<Record<string, McsAction>> = {
 }
 
 interface Progression {
+  readonly taskBaseline: McsSimulationState | null
+  readonly capturedAfter: McsSimulationState | null
+  readonly comparisons: McsComparisonRecords
+  readonly snapshots: Readonly<
+    Record<
+      string,
+      { readonly state: McsSimulationState; readonly before: McsSimulationState | null }
+    >
+  >
+  readonly firstObservationByStepId: Readonly<Record<string, string>>
   readonly index: number
   readonly furthestPerformed: number
   readonly furthestEntered: number
@@ -164,9 +190,19 @@ interface Progression {
 }
 
 function initialSession(lesson: McsStageLesson): McsSimulationState {
+  if (lesson.introductory)
+    return mcsTeachingSetup(
+      lesson.startingDevice,
+      lesson.steps[0].setupOnEntry ?? lesson.contract.startingActions,
+    )
   let state = createInitialMcsState('learn', lesson.startingDevice)
   for (const action of lesson.contract.startingActions) state = mcsReducer(state, action)
-  return state
+  return mcsReducer(state, { type: 'CLEAR_ACTION_LOG' })
+}
+
+type SessionAction = McsAction | { type: 'RESTORE_TEACHING_STATE'; state: McsSimulationState }
+function sessionReducer(state: McsSimulationState, action: SessionAction) {
+  return action.type === 'RESTORE_TEACHING_STATE' ? action.state : mcsReducer(state, action)
 }
 
 export function McsStageHost({
@@ -208,8 +244,14 @@ function McsStageSession({
   const pathway = mcsPathway()
   const nextSection = nextPathwaySection(pathway, sectionId)
 
-  const [state, dispatch] = useReducer(mcsReducer, lesson, initialSession)
+  const [liveState, sendModel] = useReducer(sessionReducer, lesson, initialSession)
+  const [playbackRunning, setPlaybackRunning] = useState(!lesson.introductory)
   const [progression, setProgression] = useState<Progression>(() => ({
+    taskBaseline: initialSession(lesson),
+    capturedAfter: null,
+    comparisons: {},
+    snapshots: {},
+    firstObservationByStepId: {},
     index: mount.index,
     furthestPerformed: mount.index - 1,
     furthestEntered: mount.index,
@@ -238,8 +280,74 @@ function McsStageSession({
   const predictionCommitted =
     predictionStep !== undefined && progression.committedByStepId[predictionStep.id] !== undefined
   const lookingBack = activeIndex < progression.furthestEntered
+  const reviewSnapshot = lookingBack ? progression.snapshots[activeStep.id] : undefined
+  const state = reviewSnapshot?.state ?? liveState
+  const capturedBefore = reviewSnapshot ? reviewSnapshot.before : progression.taskBaseline
+  const beforeMetrics = capturedBefore?.metrics ?? progression.beforeMetrics
   const selectedChoiceId = progression.choiceByStepId[activeStep.id] ?? null
   const committedChoiceId = progression.committedByStepId[activeStep.id] ?? null
+
+  const allowedActionIds =
+    lookingBack ||
+    (activeStep.interaction.kind === 'transfer' &&
+      progression.committedByStepId[`${activeStep.id}-observation`])
+      ? []
+      : activeStep.interaction.kind === 'teaching'
+        ? (activeStep.interaction.introduction.allowedControls ?? []).map(
+            (id) => mcsLearnControls[id].actionId,
+          )
+        : activeStep.interaction.kind === 'action'
+          ? activeStep.interaction.allowedActions.map((id) => mcsLearnControls[id].actionId)
+          : activeStep.interaction.kind === 'transfer'
+            ? lesson.transfer.requiredActionIds.filter(
+                (id) => committedChoiceId !== null || id.startsWith('inspect:'),
+              )
+            : []
+
+  function dispatch(action: McsAction) {
+    if (!isMcsLearningActionPermitted(liveState, action, allowedActionIds, lookingBack)) return
+    if (
+      lesson.introductory &&
+      activeStep.interaction.kind === 'action' &&
+      sectionId === 'mcs-foundations-mechanisms' &&
+      action.type === 'SELECT_DEVICE'
+    ) {
+      const record = captureMcsDeviceComparison(liveState, action.device)
+      sendModel({ type: 'RESTORE_TEACHING_STATE', state: record.state })
+      setProgression((current) => ({
+        ...current,
+        comparisons: { ...current.comparisons, [action.device]: record },
+        capturedAfter: record.state,
+      }))
+      setPlaybackRunning(false)
+      return
+    }
+    if (lesson.introductory && action.type !== 'INSPECT' && action.type !== 'ESCALATE') {
+      const base = progression.taskBaseline ?? liveState
+      let next = advanceMcsSimulation(mcsReducer(base, action), MCS_OBSERVATION_SECONDS)
+      if (activeStep.interaction.kind === 'transfer' && action.type === 'SELECT_DEVICE') {
+        next = {
+          ...mcsTeachingSetup(action.device, lesson.transfer.setupActions, liveState.seed),
+          actionIds: [`device:select:${action.device}`],
+        }
+      }
+      sendModel({ type: 'RESTORE_TEACHING_STATE', state: next })
+      setProgression((current) => ({ ...current, capturedAfter: next }))
+      setPlaybackRunning(false)
+      return
+    }
+    sendModel(action)
+  }
+
+  function repeatExercise() {
+    if (lookingBack || !progression.taskBaseline) return
+    sendModel({
+      type: 'RESTORE_TEACHING_STATE',
+      state: mcsReducer(progression.taskBaseline, { type: 'CLEAR_ACTION_LOG' }),
+    })
+    setProgression((current) => ({ ...current, capturedAfter: null, comparisons: {} }))
+    setPlaybackRunning(false)
+  }
 
   const lifecycleAnalytics = useCriticalCareActivityAnalytics({
     moduleId: 'mechanical-circulatory-support',
@@ -254,14 +362,15 @@ function McsStageSession({
    * ---------------------------------------------------------------- */
 
   useEffect(() => {
+    if (!playbackRunning || lookingBack) return
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
     const intervalMs = reducedMotion ? 500 : 250
     const timer = window.setInterval(
-      () => dispatch({ type: 'TICK', seconds: intervalMs / 1000 }),
+      () => sendModel({ type: 'TICK', seconds: intervalMs / 1000 }),
       intervalMs,
     )
     return () => window.clearInterval(timer)
-  }, [])
+  }, [playbackRunning, lookingBack])
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -305,34 +414,46 @@ function McsStageSession({
   function enterStep(index: number, performedNow: readonly string[]) {
     const nextStep = lesson.steps[index]
     if (!nextStep) return
-    /*
-     * The transfer patient loads when the transfer step is first entered. It is a different
-     * patient with a different loading, so nothing in the section's own state is carried into it.
-     */
-    if (nextStep.interaction.kind === 'transfer' && !progression.transferLoaded) {
-      dispatch({ type: 'OPEN_STUDIO', device: lesson.transfer.setupDevice })
-      for (const action of lesson.transfer.setupActions) dispatch(action)
-      // The build is not the learner's work: a transfer patient set up with the very control the
-      // learner is then asked to move would otherwise arrive with that work already recorded.
-      dispatch({ type: 'CLEAR_ACTION_LOG' })
+    let nextState = liveState
+    const enteringTransfer = nextStep.interaction.kind === 'transfer' && !progression.transferLoaded
+    if (enteringTransfer) {
+      nextState = mcsTeachingSetup(
+        lesson.transfer.setupDevice,
+        lesson.transfer.setupActions,
+        liveState.seed + 1,
+      )
+    } else if (nextStep.setupOnEntry !== undefined) {
+      nextState = mcsTeachingSetup(lesson.startingDevice, nextStep.setupOnEntry, liveState.seed + 1)
+    } else if (nextStep.interaction.kind === 'action') {
+      nextState = mcsReducer(liveState, { type: 'CLEAR_ACTION_LOG' })
     }
+    if (nextState !== liveState) sendModel({ type: 'RESTORE_TEACHING_STATE', state: nextState })
+    if (lesson.introductory) setPlaybackRunning(false)
+    const newTask =
+      enteringTransfer ||
+      nextStep.setupOnEntry !== undefined ||
+      nextStep.interaction.kind === 'action'
     setProgression((current) => ({
       ...current,
       index,
       review: null,
       performedIds: performedNow,
+      snapshots: { ...current.snapshots, [activeStep.id]: { state, before: capturedBefore } },
       furthestEntered: Math.max(current.furthestEntered, index),
       furthestPerformed: Math.max(current.furthestPerformed, index - 1),
-      transferLoaded: current.transferLoaded || nextStep.interaction.kind === 'transfer',
-      // Entering Act freezes the readings the observation is compared against.
+      transferLoaded: current.transferLoaded || enteringTransfer,
+      taskBaseline: newTask ? nextState : current.taskBaseline,
+      capturedAfter: newTask ? null : current.capturedAfter,
       beforeMetrics:
-        nextStep.interaction.kind === 'action' && current.beforeMetrics === null
-          ? state.metrics
-          : current.beforeMetrics,
+        nextStep.interaction.kind === 'action' ? nextState.metrics : current.beforeMetrics,
     }))
   }
 
   function advance() {
+    if (lookingBack) {
+      setProgression((current) => ({ ...current, index: current.furthestEntered, review: null }))
+      return
+    }
     const performedNow = recordPerformed(activeStep.id)
     const next = activeIndex + 1
     if (next >= lesson.steps.length) {
@@ -348,13 +469,18 @@ function McsStageSession({
   }
 
   function commitChoice() {
-    if (!selectedChoiceId || stepPerformed) return
+    if (!selectedChoiceId || stepPerformed || lookingBack) return
     const kind = activeStep.interaction.kind
-    if (kind !== 'identify' && kind !== 'prediction' && kind !== 'transfer') return
+    if (kind !== 'identify' && kind !== 'prediction' && kind !== 'transfer' && kind !== 'observe')
+      return
     const performedNow = recordPerformed(activeStep.id)
     setProgression((current) => ({
       ...current,
       committedByStepId: { ...current.committedByStepId, [activeStep.id]: selectedChoiceId },
+      firstObservationByStepId:
+        kind === 'observe' && !current.firstObservationByStepId[activeStep.id]
+          ? { ...current.firstObservationByStepId, [activeStep.id]: selectedChoiceId }
+          : current.firstObservationByStepId,
       performedIds: performedNow,
       furthestPerformed: Math.max(current.furthestPerformed, activeIndex),
     }))
@@ -386,13 +512,18 @@ function McsStageSession({
   /**
    * Back to a step already worked, on the learner's own request. The performed set is carried
    * through untouched, so the section does not lose its progress; the simulation is left as it
-   * is, because on this stage every step reads the live circulation.
+   * is; earlier steps render captured state and baseline together.
    */
   function goToStep(index: number) {
     const target = lesson.steps[index]
     if (!target || index === progression.index) return
     if (!performedIds.has(target.id)) return
-    enterStep(index, progression.performedIds)
+    setProgression((current) => ({
+      ...current,
+      index,
+      review: null,
+      snapshots: { ...current.snapshots, [activeStep.id]: { state, before: capturedBefore } },
+    }))
   }
 
   function toggleSurface(surface: McsStageSurfaceId, open: boolean) {
@@ -428,9 +559,14 @@ function McsStageSession({
   const transferCommitted = transferStep
     ? progression.committedByStepId[transferStep.id] !== undefined
     : false
-  const transferWorkDone = lesson.transfer.requiredActionIds.every((id) =>
-    state.actionIds.includes(id),
-  )
+  const transferActionsDone =
+    lesson.transfer.requiredActionIds.every((id) => liveState.actionIds.includes(id)) &&
+    (lesson.transfer.isWorkSatisfied?.(liveState) ?? true)
+  const transferObservationId = `${transferStep?.id}-observation`
+  const transferWorkDone =
+    transferActionsDone &&
+    (!lesson.transfer.observation ||
+      progression.committedByStepId[transferObservationId] !== undefined)
   const sectionWorkedThrough = transferCommitted && transferWorkDone
   const completionRecorded = useRef(false)
   useEffect(() => {
@@ -501,6 +637,7 @@ function McsStageSession({
             activeStep.interaction.options.find((option) => option.correct)?.id ?? '',
           name: `mcs-map-${activeStep.id}`,
           onSelect: (optionId) =>
+            !lookingBack &&
             setProgression((current) => ({
               ...current,
               choiceByStepId: { ...current.choiceByStepId, [activeStep.id]: optionId },
@@ -552,7 +689,7 @@ function McsStageSession({
   const withLookingBack = (own: string) => (lookingBack ? `${own} ${LOOKING_BACK}` : own)
 
   const continueAction = {
-    label: 'Continue',
+    label: lookingBack ? 'Return to current task' : 'Continue',
     onActivate: advance,
     icon: <ArrowRight aria-hidden="true" />,
   }
@@ -578,7 +715,20 @@ function McsStageSession({
       ...(lookingBack ? { status: LOOKING_BACK } : {}),
     }
     const { interaction } = activeStep
+    if (lookingBack) return { ...base, status: LOOKING_BACK, primary: continueAction }
     switch (interaction.kind) {
+      case 'teaching': {
+        const satisfied = interaction.introduction.isSatisfied?.(state) ?? true
+        return {
+          ...base,
+          status: 'Guided demonstration; no independent credit.',
+          primary: {
+            ...continueAction,
+            disabled: !satisfied,
+            disabledReason: 'Complete the guided observation below to continue.',
+          },
+        }
+      }
       case 'walk':
         return stepPerformed
           ? {
@@ -621,7 +771,10 @@ function McsStageSession({
               },
             }
       case 'action': {
-        const satisfied = interaction.isSatisfied(state)
+        const satisfied =
+          interaction.isSatisfied(state) &&
+          (sectionId !== 'mcs-foundations-mechanisms' ||
+            Object.keys(progression.comparisons).length === 3)
         return stepPerformed
           ? { ...base, status: withLookingBack('Done.'), primary: continueAction }
           : {
@@ -644,6 +797,16 @@ function McsStageSession({
             }
       }
       case 'observe':
+        if (lesson.introductory && !committedChoiceId)
+          return {
+            ...base,
+            primary: {
+              label: 'Record observation',
+              onActivate: commitChoice,
+              disabled: selectedChoiceId === null,
+              disabledReason: 'Choose the observed direction from the captured table.',
+            },
+          }
         return stepPerformed
           ? { ...base, status: withLookingBack('Read.'), primary: continueAction }
           : { ...base, primary: continueAction }
@@ -764,10 +927,17 @@ function McsStageSession({
               data-mcs-control={control.id}
               data-mcs-control-highlighted={highlightControl === control.id || undefined}
               data-worked-through={done || undefined}
+              disabled={!allowedActionIds.includes(control.actionId) || lookingBack}
               onClick={() => dispatch(GUIDED_ACTION_IDS[control.actionId])}
             >
               {done ? <Check aria-hidden="true" /> : null}
-              <span>{control.label}</span>
+              <span>
+                {control.label}
+                {sectionId === 'mcs-foundations-mechanisms' &&
+                activeStep.interaction.kind === 'action'
+                  ? ' · observe and retain 8 s'
+                  : ''}
+              </span>
             </button>
           )
         })}
@@ -778,6 +948,24 @@ function McsStageSession({
   const nowBody: ReactNode = (() => {
     const { interaction } = activeStep
     switch (interaction.kind) {
+      case 'teaching':
+        return (
+          <div data-guided-introduction>
+            {guidedActionButtons(allowedActionIds)}
+            <McsTaskControls
+              state={state}
+              dispatch={dispatch}
+              allowedActionIds={(interaction.introduction.allowedControls ?? []).map(
+                (id) => mcsLearnControls[id].actionId,
+              )}
+              disabled={lookingBack}
+            />
+            {state.responseMessage && state.actionIds.length > 0 ? (
+              <p role="status">{state.responseMessage}</p>
+            ) : null}
+          </div>
+        )
+
       case 'walk':
         return walkStop ? (
           <p className={styles.walkHint} data-walk-progress>
@@ -880,9 +1068,10 @@ function McsStageSession({
         )
       }
       case 'action': {
-        const target = interaction.targetControl
-          ? mcsLearnControls[interaction.targetControl]
-          : undefined
+        const target =
+          sectionId !== 'mcs-foundations-mechanisms' && interaction.targetControl
+            ? mcsLearnControls[interaction.targetControl]
+            : undefined
         return (
           <div className={styles.actionBody} data-action-body data-action-mode={interaction.mode}>
             {interaction.mode === 'inspect-only' ? (
@@ -892,13 +1081,28 @@ function McsStageSession({
                 <strong>{target.label}.</strong>{' '}
                 {target.location === 'guided-actions'
                   ? 'Use the button below.'
-                  : 'It is in the Controls under the monitor, in the Simulator panel, and it is highlighted.'}
+                  : 'It is in the Controls, in the Simulator panel, and it is highlighted.'}
               </p>
             ) : null}
             {guidedActionButtons(
               interaction.allowedActions.map((id) => mcsLearnControls[id].actionId),
               interaction.targetControl,
             )}
+            {lesson.introductory && sectionId === 'mcs-foundations-mechanisms' ? (
+              <McsDeviceComparisonTable records={progression.comparisons} />
+            ) : null}
+            {lesson.introductory ? (
+              <>
+                <button type="button" onClick={repeatExercise} disabled={lookingBack}>
+                  Reset this model exercise
+                </button>
+                <p className={styles.footnote}>
+                  Restores the task baseline and clears this exercise’s actions and captures.
+                  Earlier answers and completed-section history are preserved. This is a model
+                  reset, not clinical repositioning.
+                </p>
+              </>
+            ) : null}
             {state.responseMessage ? (
               <p className={styles.response} role="status" aria-live="polite" data-response-message>
                 {state.responseMessage}
@@ -908,6 +1112,81 @@ function McsStageSession({
         )
       }
       case 'observe':
+        if (lesson.introductory) {
+          const after = reviewSnapshot?.state ?? progression.capturedAfter ?? state
+          const reference =
+            sectionId === 'mcs-foundations-mechanisms'
+              ? progression.comparisons.iabp?.state
+              : capturedBefore
+          const result =
+            sectionId === 'mcs-foundations-mechanisms' ? progression.comparisons.lvad?.state : after
+          const key =
+            sectionId === 'iabp-timing-triggering'
+              ? 'timingQualityPercent'
+              : ['mcs-foundations-signals', 'mcs-foundations-mechanisms'].includes(sectionId)
+                ? 'effectiveSystemicFlowLMin'
+                : 'deviceFlowLMin'
+          const label =
+            sectionId === 'mcs-foundations-mechanisms'
+              ? 'modeled effective systemic flow from captured IABP to captured LVAD'
+              : key === 'timingQualityPercent'
+                ? 'timing synchrony'
+                : key === 'effectiveSystemicFlowLMin'
+                  ? 'modeled effective flow'
+                  : 'pump-flow estimate'
+          const first = reference?.metrics[key]
+          const last = result?.metrics[key]
+          const expected =
+            typeof first === 'number' && typeof last === 'number'
+              ? mcsObservedDirection(
+                  first,
+                  last,
+                  sectionId === 'mcs-foundations-mechanisms'
+                    ? 2
+                    : (interaction.signals.find((signal) => signal.key === key)?.digits ?? 1),
+                )
+              : 'unchanged'
+          return (
+            <>
+              {sectionId === 'mcs-foundations-mechanisms' ? (
+                <McsDeviceComparisonTable records={progression.comparisons} />
+              ) : (
+                <McsCapturedResults
+                  before={capturedBefore}
+                  after={after}
+                  signals={interaction.signals}
+                  inspectOnly={lesson.contract.actionMode === 'inspect-only'}
+                />
+              )}
+              {choiceFieldset(
+                `In these captured results, how did ${label} change?`,
+                ['increased', 'decreased', 'unchanged'].map((id) => ({
+                  id,
+                  label:
+                    id === 'unchanged'
+                      ? 'Unchanged within displayed precision'
+                      : id === 'increased'
+                        ? 'Increased'
+                        : 'Decreased',
+                })),
+                activeStep.id,
+                'observation-heading',
+                committedChoiceId !== null || lookingBack,
+              )}
+              {committedChoiceId ? (
+                <p
+                  role="status"
+                  data-observation-feedback
+                  data-correct={committedChoiceId === expected}
+                >
+                  <strong>{committedChoiceId === expected ? 'Correct.' : 'Not correct.'}</strong>{' '}
+                  The captured quantity {expected}. This records an interpretation of modeled
+                  results, not adequate patient perfusion.
+                </p>
+              ) : null}
+            </>
+          )
+        }
         /*
          * The authored account first, the numbers second.
          *
@@ -954,7 +1233,7 @@ function McsStageSession({
               </thead>
               <tbody>
                 {interaction.signals.map((signal) => {
-                  const before = progression.beforeMetrics?.[signal.key] ?? null
+                  const before = beforeMetrics?.[signal.key] ?? null
                   const now = state.metrics[signal.key]
                   const format = (value: number | boolean | null) =>
                     value === null
@@ -1094,21 +1373,109 @@ function McsStageSession({
                 />
               </div>
             ) : null}
-            <div className={styles.transferWork} data-transfer-work data-met={transferWorkDone}>
-              <p>
-                <strong>Then work it in the new patient.</strong> {transfer.requiredActionLabel}
-              </p>
-              {guidedActionButtons(transfer.requiredActionIds)}
-              {needsControls ? (
+            {!lesson.introductory ||
+            committedChoiceId !== null ||
+            lesson.transfer.requiredActionIds.every((id) => id.startsWith('inspect:')) ? (
+              <div className={styles.transferWork} data-transfer-work data-met={transferWorkDone}>
                 <p>
-                  The control to use is in the Controls under the monitor, in the Simulator panel,
-                  and it is highlighted.
+                  <strong>Then work it in the new patient.</strong> {transfer.requiredActionLabel}
                 </p>
-              ) : null}
-              <p role="status" aria-live="polite" data-transfer-work-status>
-                {transferWorkDone ? 'Done in the new patient.' : 'Not yet done in the new patient.'}
-              </p>
-            </div>
+                {guidedActionButtons(transfer.requiredActionIds)}
+                {needsControls ? (
+                  <p>
+                    The control to use is in the Controls, in the Simulator panel, and it is
+                    highlighted.
+                  </p>
+                ) : null}
+                {transfer.observation && transferActionsDone && progression.capturedAfter ? (
+                  <div data-transfer-observation>
+                    <McsCapturedResults
+                      before={capturedBefore}
+                      after={reviewSnapshot?.state ?? progression.capturedAfter}
+                      signals={[transfer.observation]}
+                    />
+                    <fieldset
+                      disabled={
+                        lookingBack || Boolean(progression.committedByStepId[transferObservationId])
+                      }
+                    >
+                      <legend>
+                        Compared with this transfer patient’s baseline, how did{' '}
+                        {transfer.observation.label.toLowerCase()} change?
+                      </legend>
+                      {(['increased', 'decreased', 'unchanged'] as const).map((direction) => (
+                        <label className={styles.choice} key={direction}>
+                          <input
+                            type="radio"
+                            name={transferObservationId}
+                            value={direction}
+                            checked={
+                              progression.choiceByStepId[transferObservationId] === direction
+                            }
+                            onChange={() =>
+                              setProgression((current) => ({
+                                ...current,
+                                choiceByStepId: {
+                                  ...current.choiceByStepId,
+                                  [transferObservationId]: direction,
+                                },
+                              }))
+                            }
+                          />
+                          {direction === 'unchanged'
+                            ? 'Unchanged within displayed precision'
+                            : direction === 'increased'
+                              ? 'Increased'
+                              : 'Decreased'}
+                        </label>
+                      ))}
+                    </fieldset>
+                    {progression.committedByStepId[transferObservationId] ? (
+                      <p role="status" data-transfer-observation-feedback>
+                        {progression.committedByStepId[transferObservationId] ===
+                        mcsObservedDirection(
+                          Number(capturedBefore?.metrics[transfer.observation.key]),
+                          Number(progression.capturedAfter.metrics[transfer.observation.key]),
+                          transfer.observation.digits,
+                        )
+                          ? 'Correct.'
+                          : 'Not correct.'}{' '}
+                        The captured quantity{' '}
+                        {mcsObservedDirection(
+                          Number(capturedBefore?.metrics[transfer.observation.key]),
+                          Number(progression.capturedAfter.metrics[transfer.observation.key]),
+                          transfer.observation.digits,
+                        )}
+                        . This is a model observation, not a clinical device-selection or
+                        trigger-source recommendation.
+                      </p>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={lookingBack || !progression.choiceByStepId[transferObservationId]}
+                        onClick={() =>
+                          setProgression((current) => ({
+                            ...current,
+                            committedByStepId: {
+                              ...current.committedByStepId,
+                              [transferObservationId]:
+                                current.choiceByStepId[transferObservationId],
+                            },
+                          }))
+                        }
+                      >
+                        Record transfer observation
+                      </button>
+                    )}
+                  </div>
+                ) : null}
+                <p role="status" aria-live="polite" data-transfer-work-status>
+                  {transferWorkDone
+                    ? 'Done in the new patient.'
+                    : 'Not yet done in the new patient.'}
+                </p>
+              </div>
+            ) : null}
           </>
         )
       }
@@ -1124,7 +1491,13 @@ function McsStageSession({
   const activeAlarm =
     state.alarms.find((alarm) => alarm.active && alarm.priority === 'critical') ??
     state.alarms.find((alarm) => alarm.active)
-  const flowAccountWithheld = lesson.spec.withholdsFlowAccountUntilCommit && !predictionCommitted
+  const teachingStep = activeStep.interaction.kind === 'teaching'
+  const pendingTimingIdentification =
+    sectionId === 'iabp-timing-triggering' &&
+    activeStep.interaction.kind === 'identify' &&
+    !committedChoiceId
+  const flowAccountWithheld =
+    lesson.spec.withholdsFlowAccountUntilCommit && !predictionCommitted && !teachingStep && !walking
   const contextItems: ContextStripItem[] = [
     { label: 'Mechanism', value: mechanismLabel(state) },
     { label: 'Setting', value: settingLabel(state) },
@@ -1134,9 +1507,11 @@ function McsStageSession({
     },
     { label: 'Mean pressure', value: `${state.metrics.mapMmHg} mm Hg` },
   ]
-  const alarm = activeAlarm
-    ? { priority: alarmPriority(activeAlarm.priority), text: activeAlarm.label }
-    : { priority: 'none' as const, text: 'No active alarm' }
+  const alarm = pendingTimingIdentification
+    ? { priority: 'none' as const, text: 'Timing interpretation pending · support running' }
+    : activeAlarm
+      ? { priority: alarmPriority(activeAlarm.priority), text: activeAlarm.label }
+      : { priority: 'none' as const, text: 'No active alarm' }
 
   const highlightControl: McsLearnControlId | undefined =
     activeStep.interaction.kind === 'action'
@@ -1150,7 +1525,14 @@ function McsStageSession({
       lesson={lesson}
       state={state}
       dispatch={dispatch}
-      predictionCommitted={predictionCommitted}
+      predictionCommitted={
+        predictionCommitted &&
+        !(lesson.introductory && activeStep.interaction.kind === 'transfer' && !committedChoiceId)
+      }
+      teachingAvailable={teachingStep || walking}
+      timingIdentification={pendingTimingIdentification}
+      allowedActionIds={teachingStep ? [] : allowedActionIds}
+      focusedControls={lesson.introductory}
       flowAccountWithheld={flowAccountWithheld}
       emphasis={emphasis}
       mapAnswer={mapAnswer}
@@ -1162,7 +1544,9 @@ function McsStageSession({
   )
 
   const teachingPreview =
-    !predictionCommitted && (activeStep.phase === 'recognize' || activeStep.phase === 'predict')
+    !lesson.introductory &&
+    !predictionCommitted &&
+    (activeStep.phase === 'recognize' || activeStep.phase === 'predict')
   const teachingExpanded = teachingPreview && progression.expandedTeachingStepId === activeStep.id
   const teaching = (
     <div
@@ -1191,16 +1575,40 @@ function McsStageSession({
       <StageTeachingScope
         value={{ phase: activeStep.phase, predictionCommitted, stepId: activeStep.id }}
       >
-        <McsTeachingColumn
-          lesson={lesson}
-          step={activeStep}
-          state={state}
-          predictionCommitted={predictionCommitted}
-          flowAccountWithheld={flowAccountWithheld}
-          beforeMetrics={progression.beforeMetrics}
-          walkStop={walkStop}
-          litStopIds={identifyOnMap && !identifyCommitted ? [] : litStopIds}
-        />
+        {activeStep.interaction.kind === 'teaching' ? (
+          <McsIntroTeaching
+            introduction={activeStep.interaction.introduction}
+            state={state}
+            before={capturedBefore}
+          />
+        ) : pendingTimingIdentification ||
+          (lesson.introductory &&
+            activeStep.interaction.kind === 'transfer' &&
+            !committedChoiceId) ? (
+          <section className={styles.block}>
+            <h3>Apply the concept to this example</h3>
+            <p>
+              Inspect the current example in Simulator and choose your interpretation in Steps.
+              Earlier explanations describe their captured reference patient. Feedback for this
+              example appears after you submit.
+            </p>
+            <p>
+              The model does not establish clinical operating competence; use current device
+              instructions and supervised training.
+            </p>
+          </section>
+        ) : (
+          <McsTeachingColumn
+            lesson={lesson}
+            step={activeStep}
+            state={state}
+            predictionCommitted={predictionCommitted}
+            flowAccountWithheld={flowAccountWithheld}
+            beforeMetrics={beforeMetrics}
+            walkStop={walkStop}
+            litStopIds={identifyOnMap && !identifyCommitted ? [] : litStopIds}
+          />
+        )}
       </StageTeachingScope>
     </div>
   )
@@ -1210,10 +1618,36 @@ function McsStageSession({
 
   const task = (
     <>
+      <p className={styles.footnote} data-session-identity>
+        {lookingBack
+          ? 'Captured review'
+          : progression.transferLoaded
+            ? 'Transfer patient'
+            : teachingStep
+              ? 'Guided reference'
+              : 'Current exercise'}{' '}
+        · seed {state.seed} · {state.timeSeconds.toFixed(2)} simulated seconds.
+      </p>
       <div ref={nowFocusRef} tabIndex={-1} data-now-focus>
         <NowCard model={nowModel}>{nowBody}</NowCard>
       </div>
-      {predictionCommitted &&
+      <details className={styles.block}>
+        <summary>Display playback</summary>
+        <button
+          type="button"
+          className={shellStyles.nowSecondary}
+          disabled={lookingBack || pendingTimingIdentification}
+          onClick={() => setPlaybackRunning((running) => !running)}
+        >
+          {playbackRunning ? 'Pause display playback' : 'Play display playback'}
+        </button>
+        <p className={styles.footnote}>
+          Playback changes the model clock; it does not stop device support. Captured comparisons
+          stay fixed.
+        </p>
+      </details>
+      {!lesson.introductory &&
+      predictionCommitted &&
       (activeStep.phase === 'observe' || activeStep.phase === 'explain') &&
       stories.length > 0 ? (
         <McsStoryProblems stories={stories} />
@@ -1336,11 +1770,13 @@ function McsStageSession({
       restartLabel="Restart section"
       saveAndExitHref={mechanicalCirculatorySupportNavBase}
       resumedNote={
-        mount.clamped
-          ? `This section takes a prediction before its later steps, so it opened at the predict step with a clean state. The ${requestedPhase} step unlocks when you commit.`
-          : mount.index > 0
-            ? `Opened at the ${requestedPhase} step with a clean state. Earlier choices were not restored.`
-            : undefined
+        lesson.introductory && mount.clamped
+          ? 'This section starts with its reference and guided examples. Completed-section history is retained; an incomplete exercise starts again without inventing prior answers.'
+          : mount.clamped
+            ? `This section takes a prediction before its later steps, so it opened at the predict step with a clean state. The ${requestedPhase} step unlocks when you commit.`
+            : mount.index > 0
+              ? `Opened at the ${requestedPhase} step with a clean state. Earlier choices were not restored.`
+              : undefined
       }
     />
   )

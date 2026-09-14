@@ -81,7 +81,13 @@ export interface McsObservedSignal {
   readonly unit: string
   readonly digits: number
   /** Which level of the causal ladder this reading answers at. */
-  readonly level: 'pressure' | 'flow' | 'oxygen-delivery' | 'device-display'
+  readonly level:
+    | 'pressure'
+    | 'flow'
+    | 'oxygen-balance'
+    | 'device-display'
+    | 'volume'
+    | 'pressure-flow'
 }
 
 export interface McsSectionTeachingPanel {
@@ -210,7 +216,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     deviceOrMechanism:
       'Intra-aortic balloon pump — a mechanism that changes the timing and shape of pressure, not a chamber-to-artery pump.',
     learningObjective:
-      'Read the three flow lines as three separate quantities, and name the one this pathway leaves at zero.',
+      'Distinguish pressure, modeled blood flow, oxygen-delivery assessment and clinical perfusion findings; explain why IABP has no separate pump-flow stream.',
     startingDevice: 'iabp',
     startingActions: [],
     recognizePrompt:
@@ -221,7 +227,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         label: 'That a driving pressure exists where it is measured, and the shape of the pulse',
         correct: true,
         feedback:
-          'That is the whole claim. A preserved or even augmented pressure can sit on top of a very small forward stroke volume, so how much blood is moving is still unknown — the flow account, covered for now, answers that.',
+          'That is the whole claim. A preserved or even augmented pressure can sit on top of a very small forward stroke volume, so how much blood is moving is still unknown — the flow account addresses a separate question.',
       },
       {
         id: 'blood-moving',
@@ -239,7 +245,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       },
     ],
     predictionPrompt:
-      'Predict what the flow account will show for this pathway before you open any of the readings.',
+      'Apply the flow distinction to another patient receiving counterpulsation. Which components would belong in that patient’s flow account?',
     predictionItem: item({
       id: 'mcs-foundations-signals-predict-1',
       activityId: 'mcs:learn:mcs-foundations-signals',
@@ -248,14 +254,14 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       contextRequirement: 'patient',
       clinicalContextId: 'mcs-foundations-counterpulsation-baseline',
       visualAssetIds: ['mcs-monitor'],
-      stem: 'Counterpulsation is running at a one-to-one ratio with aligned timing. Before you open the readings, what do you expect the flow account to show?',
+      stem: 'A separate handover describes an IABP patient whose native output improved after support began. Which account correctly assigns the forward flow during support?',
       choices: [
         {
           id: 'native-only',
           label:
-            'A native contribution, an effective delivery equal to it, and no device contribution',
+            'Concurrent native forward flow, modeled effective flow equal to it, and no separate pump-flow stream',
           rationale:
-            'This pathway moves no blood of its own, so effective systemic delivery is the native contribution and nothing else. There is no second line to add.',
+            'In this model IABP has no separate pump-flow stream. Modeled effective systemic flow equals concurrent native forward flow, including any effect of counterpulsation on native loading.',
           plausibility: 'best',
         },
         {
@@ -279,7 +285,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
           label:
             'A device contribution that can be added to the native contribution to give cardiac output',
           rationale:
-            'Adding a device number to a native output is an operation the circulation has not agreed to — and for this pathway there is no device number to add in the first place.',
+            'IABP has no separate pump-flow stream. Native forward output during support already includes its modeled loading effect; adding that effect again would double-count it.',
           plausibility: 'unsafe',
         },
       ],
@@ -287,10 +293,10 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       explanation:
         'The three lines are separated by what they describe, not by how large they are. Native is what the patient ejects. The device line is what a pump reports moving along its own pathway. Effective systemic delivery is what reaches the circulation once competition, regurgitation and topology have been accounted for. Counterpulsation has no pathway of its own, so its device line is empty and its effect appears on the native line.',
       evidenceIds: iabpEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
     predictionReasoning:
-      'Committing before you look matters here more than anywhere else in the module: once three numbers are on the screen, whichever one is largest will supply its own explanation, and a prediction made afterwards can never be contradicted.',
+      'Apply the pathway you have just studied to a separate IABP handover. This records your interpretation, not a treatment response.',
     actionMode: 'inspect-only',
     actionInstruction:
       'Do not change any control in this section. Open all three readings in turn — arterial pressure, filling pressures, then device and effective flow — and read each one as an answer to its own question.',
@@ -313,7 +319,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       signal('nativeFlowLMin', 'Native contribution', 'L/min', 1, 'flow'),
       signal('deviceFlowLMin', 'Displayed device contribution', 'L/min', 1, 'device-display'),
       signal('effectiveSystemicFlowLMin', 'Effective systemic delivery', 'L/min', 1, 'flow'),
-      signal('svo2Percent', 'Mixed venous saturation', '%', 0, 'oxygen-delivery'),
+      signal('svo2Percent', 'Simulated mixed venous saturation', '%', 0, 'oxygen-balance'),
     ],
     beforeStateLabels: [
       'One undifferentiated impression: "the pressure looks acceptable"',
@@ -321,20 +327,20 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       'An effective systemic delivery you have not yet separated from the device line',
     ],
     afterStateLabels: [
-      'A mean pressure that has not moved, because you changed nothing',
-      'A device line sitting at zero, because this pathway reports none',
+      'No treatment action: any differences reflect modeled settling or sampling',
+      'IABP: no separate pump-flow stream',
       'An effective systemic delivery equal to the native contribution, with a mixed venous saturation that disagrees with the pressure',
     ],
     unmodeledNote:
       'Reading changes nothing in the patient. Any small movement between the two columns is the fixed-step model settling, not a response to you.',
     explanation:
-      'Three readings, three different questions, three different answers. The pressure answers where a driving pressure exists. The flow lines answer how much blood is moving and by which path. The venous saturation answers whether delivery is keeping up with what the tissues are taking. Nothing forced them to agree, and here they do not.',
+      'Three readings, three different questions, three different answers. The pressure answers where a driving pressure exists. The flow lines answer how much blood is moving and by which path. Venous saturation informs the balance of oxygen delivery and consumption; it does not independently measure either. Nothing forced them to agree, and here they do not.',
     pressureLevelExplanation:
       'Mean arterial pressure is preserved and the wedge pressure is high. A driving pressure exists at the radial artery; that is the entire claim.',
     flowLevelExplanation:
       'Effective systemic delivery equals the native contribution, because the device line is empty. Whatever counterpulsation is achieving, it is achieving through the beat the patient is still generating.',
     oxygenDeliveryExplanation:
-      'A mixed venous saturation in the high fifties says extraction is high — the tissues are taking a larger fraction of what arrives, which is what a circulation does when delivery is marginal.',
+      'SvO2 is a mixed venous saturation. Its interpretation also depends on arterial oxygen content and oxygen consumption; this model uses a simplified flow-linked surrogate, not a full oxygen transport calculation.',
     organResponseExplanation:
       'Nothing on this screen answers at the organ level. Mentation, urine output, skin perfusion, and the lactate trajectory answer there, and this simulation does not model them.',
     whatThisEstablishes:
@@ -353,7 +359,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       'Recorded once all three readings have been opened, the prediction and its verdict have been worked through, the before-and-after comparison has been seen, and a transfer answer has been committed.',
     teaching: {
       whatYouAreSeeing:
-        'A bedside monitor for a patient on counterpulsation. The highlighted trace is the arterial pressure. The flow account beside it is covered until you have committed your prediction of what it will show.',
+        'A simulated arterial trace and separately labeled flow quantities in a patient receiving counterpulsation. The guided introduction explains their sources before you apply the distinction.',
       whatTheTargetRepresents:
         'A pressure, measured at one site, with a shape that says when the balloon is inflating. It is the first level of the model, and it answers only its own question.',
       howTheActionAffectsTheModel:
@@ -457,15 +463,15 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       ],
       correctChoiceIds: ['flow-appears-pulsatility-falls'],
       explanation:
-        'Source, active component, destination. The balloon has no source and no destination, so it changes pressure without moving blood along a path. Both pumps draw from the left ventricle and return to the aorta, so both report a flow — and both narrow the arterial pulse as they take volume away from the native outflow tract.',
+        'Source, active component, destination. The balloon has no source and no destination, so it changes pressure without moving blood along a path. Both left pumps draw from the LV and return to the aorta. Their estimated flow and the concurrent native contribution are separate modeled components; their actual pulse-pressure changes are recorded in the comparison.',
       evidenceIds: [...bedside, 'ishlt-durable-mcs-2023'],
       reviewStatus: 'draft',
     }),
     predictionReasoning:
       'The prediction is about the shape of the change, not its size. If you expect a device line to appear for two of the three and the pulse to narrow rather than widen, you are reading the pathway rather than the display.',
-    actionMode: 'sequence',
+    actionMode: 'compare',
     actionInstruction:
-      'Select each mechanism in turn — counterpulsation, then the transvalvular pump, then durable continuous flow — and watch the pathway drawn on the Circulation map change with each one.',
+      'Select all three mechanisms in any order. Each selection resets the reference patient and retains the result after eight simulated seconds. Compare the three named records below.',
     targetControl: 'control:select-impella',
     allowedActions: ['control:select-iabp', 'control:select-impella', 'control:select-lvad'],
     isActionSatisfied: (state) =>
@@ -479,7 +485,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       signal('deviceFlowLMin', 'Displayed device contribution', 'L/min', 1, 'device-display'),
       signal('effectiveSystemicFlowLMin', 'Effective systemic delivery', 'L/min', 1, 'flow'),
       signal('pulsePressureMmHg', 'Pulse pressure', 'mm Hg', 0, 'pressure'),
-      signal('lvedvMl', 'Left ventricular end-diastolic volume', 'mL', 0, 'pressure'),
+      signal('lvedvMl', 'Modeled LV end-diastolic volume', 'mL', 0, 'volume'),
       signal('mapMmHg', 'Mean arterial pressure', 'mm Hg', 0, 'pressure'),
     ],
     beforeStateLabels: [
@@ -493,13 +499,13 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       'A smaller left ventricular end-diastolic volume — the chamber that is being relieved',
     ],
     explanation:
-      'The device line appeared only when a pathway appeared with it. The pulse narrowed as volume was redirected away from the native outflow tract, and the ventricle got smaller because a pump was taking blood out of it. Effective systemic delivery rose by far less than the device number, because the pump and the native ventricle are drawing from the same circulation.',
+      'The device line appeared only when a pathway appeared with it. The pulse narrowed as volume was redirected away from the native outflow tract, and the ventricle got smaller because a pump was taking blood out of it. A pump may reduce concurrent native ejection. That changes the improvement from baseline, not the arithmetic for the concurrent forward routes. Use the retained records for the changes observed in this run.',
     pressureLevelExplanation:
-      'Mean pressure rises and pulse pressure falls with each pump. Both are pressure-level findings, and neither of them is a flow measurement.',
+      'Compare captured mean and pulse pressures for each named configuration. Neither pressure is a direct blood-flow measurement; unchanged results must remain visible.',
     flowLevelExplanation:
-      'Native contribution falls as device flow rises: the two are not independent, because the pump is removing the volume the ventricle would otherwise have ejected. Effective systemic delivery is the reconciled result and is smaller than the arithmetic sum.',
+      'Native contribution falls as device flow rises: the two are not independent, because the pump is removing the volume the ventricle would otherwise have ejected. Within the model’s clamps, effective systemic flow equals concurrent native forward flow plus left-pump flow minus represented regurgitant recirculation. With no recirculation, those parallel forward components add.',
     oxygenDeliveryExplanation:
-      'Mixed venous saturation rises with effective delivery rather than with the device number, which is the first hint that the largest figure on the screen is not the one to follow.',
+      'The model links its SvO2 surrogate to effective flow. Actual oxygen delivery also depends on arterial oxygen content, and SvO2 additionally depends on oxygen consumption.',
     organResponseExplanation:
       'None of these three changes tells you an organ has recovered. Each mechanism buys time under different constraints, and the reassessment that decides whether it worked happens at the bedside.',
     whatThisEstablishes:
@@ -507,7 +513,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     whatThisDoesNotEstablish:
       'It does not establish which mechanism this patient should receive. Holding one circulation against three mechanisms compares what they do; it does not diagnose what is limiting this circulation.',
     commonMisinterpretation:
-      'Adding the device line to the native line to get cardiac output. The pump and the ventricle are drawing on the same delivery, so the sum counts some of that blood twice.',
+      'Adding pre-support native output to a later pump estimate, or summing serial right- and left-pump flows. Concurrent net forward LV-to-aorta components do combine; their interaction does not make that sum double-counting. These modeled values are not measured bedside cardiac output.',
     reassessmentPrompt:
       'If a pump raised the device line but the native contribution fell by the same amount, what would have changed for the patient?',
     transferContext:
@@ -515,10 +521,10 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     transferPrompt:
       'Choose the comparison that tests a different mechanism against that problem, then select that mechanism with the button under the answer.',
     completionCondition:
-      'Recorded once all three mechanisms have been selected, the prediction and its verdict have been worked through, the comparison has been seen, and a transfer answer has been committed.',
+      'Recorded once all three mechanism results have been retained and interpreted, the prediction and its verdict have been worked through, the comparison has been seen, and a transfer answer has been committed.',
     teaching: {
       whatYouAreSeeing:
-        'The three-dimensional anatomy with the currently selected mechanism in place, and beneath it the pathway summary naming where blood enters and where it returns.',
+        'The Circulation map shows the selected mechanism. The annotated pathway comparison is available during the introduction; 3D is optional.',
       whatTheTargetRepresents:
         'Source, active component, destination — the three facts that answer most troubleshooting questions before any alarm has been read.',
       howTheActionAffectsTheModel:
@@ -536,7 +542,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     clinicalQuestion:
       'The balloon is running and the console reports no fault. Is it inflating at the right moment?',
     startingContext:
-      'Counterpulsation at a one-to-one ratio with inflation set 120 ms early. The early-inflation alarm is active and timing synchrony is well below its aligned value.',
+      'Begin with an aligned reference beat. Demonstrations vary one timing event at a time; a different unannotated example then tests recognition before correction.',
     patientProblem:
       'The same low-output circulation, now receiving counterpulsation that is technically running but mistimed.',
     supportPathway:
@@ -548,30 +554,29 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     startingDevice: 'iabp',
     startingActions: [{ type: 'SET_IABP_CONTROL', control: 'inflationOffsetMs', value: -120 }],
     recognizePrompt:
-      'Read the highlighted arterial trace and identify what inflating 120 ms early does to the beat the ventricle is trying to eject.',
+      'Inspect the unannotated Timing example and balloon band. Which timing relationship is present?',
     recognizeOptions: [
       {
         id: 'raises-impedance',
-        label:
-          'It raises the pressure the ventricle must open against, because the valve has not yet closed',
+        label: 'Early inflation: balloon inflation begins before the valve-closure reference',
         correct: true,
         feedback:
           'Early inflation puts the balloon in the way of an ejection that is still happening. The mechanism that is supposed to reduce the load is adding to it.',
       },
       {
         id: 'loses-augmentation',
-        label:
-          'It loses diastolic augmentation, because inflation arrives after the useful window has passed',
+        label: 'Late inflation: balloon inflation begins after the valve-closure reference',
         correct: false,
         feedback:
           'That is late inflation, the mirror error. Here inflation is arriving too soon, so the problem is added impedance rather than a missed window.',
       },
       {
         id: 'no-effect',
-        label: 'Nothing, because the balloon inflates and deflates within the same beat either way',
+        label:
+          'Aligned timing: inflation begins at closure and deflation precedes the next ejection',
         correct: false,
         feedback:
-          'Timing is the whole mechanism. Within one beat, 120 ms is the difference between assisting ejection and obstructing it.',
+          'Timing is the whole mechanism. The relationship to valve closure and the next ejection matters; a numeric offset alone does not demonstrate recognition.',
       },
     ],
     predictionPrompt:
@@ -584,7 +589,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       contextRequirement: 'patient',
       clinicalContextId: 'mcs-iabp-early-inflation',
       visualAssetIds: ['mcs-arterial-waveform'],
-      stem: 'Inflation is currently 120 ms early. You are about to move it to the dicrotic notch. What do you expect?',
+      stem: 'You have identified the timing relationship in a changed example. What does correcting inflation establish about native flow and adequacy of support?',
       choices: [
         {
           id: 'synchrony-and-modest-flow',
@@ -599,7 +604,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
           label:
             'Effective systemic delivery rises by one to two litres per minute once the timing is right',
           rationale:
-            'A gain that size would mean the balloon had contributed a stream of its own. Timing changes what the ventricle works against; it does not add a second source of forward flow.',
+            'This model does not support that fixed gain. Counterpulsation changes native loading and has no separate pump-flow stream; clinical effects depend on the patient and device.',
           plausibility: 'incorrect-mechanism',
         },
         {
@@ -626,14 +631,18 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       reviewStatus: 'draft',
     }),
     predictionReasoning:
-      'A prediction that names both the direction and the rough size is the useful one here, because it is the size that separates "the balloon is working properly" from "the balloon is doing the work".',
+      'Recognition, entering an offset, and adequate perfusion are separate claims. This task records your selected timing relationship and the corrected simulated state.',
     actionMode: 'adjust',
     actionInstruction:
-      'Move the highlighted inflation control from −120 ms toward 0 ms so inflation sits at the dicrotic notch, and watch the arterial trace as you do.',
+      'Align inflation with valve closure using Inflation vs notch, watching the Timing reference as you adjust. Zero refers only to this teaching model. Keep support running and deflation aligned.',
     targetControl: 'control:iabp-inflation',
     allowedActions: ['control:iabp-inflation'],
     isActionSatisfied: (state) =>
-      state.device.kind === 'iabp' && Math.abs(state.device.inflationOffsetMs) <= 20,
+      state.device.kind === 'iabp' &&
+      state.device.running &&
+      Math.abs(state.device.inflationOffsetMs) <= 20 &&
+      Math.abs(state.device.deflationOffsetMs) <= 20 &&
+      state.actionIds.includes('iabp:set-inflation'),
     observationFocus:
       'Watch the early-inflation alarm clear and timing synchrony recover, then read how much effective systemic delivery actually moved.',
     observedSignals: [
@@ -642,7 +651,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       signal('pulsePressureMmHg', 'Pulse pressure', 'mm Hg', 0, 'pressure'),
       signal('nativeFlowLMin', 'Native contribution', 'L/min', 1, 'flow'),
       signal('effectiveSystemicFlowLMin', 'Effective systemic delivery', 'L/min', 1, 'flow'),
-      signal('cardiacPowerOutputW', 'Cardiac power', 'W', 2, 'oxygen-delivery'),
+      signal('cardiacPowerOutputW', 'Calculated cardiac power output', 'W', 2, 'pressure-flow'),
     ],
     beforeStateLabels: [
       'Early-inflation alarm active',
@@ -652,7 +661,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     afterStateLabels: [
       'No active timing alarm',
       'Timing synchrony restored',
-      'A higher mean pressure with a much smaller gain in effective systemic delivery',
+      'Compare the actual recorded pressure and native-flow changes; these do not establish sufficient support',
     ],
     explanation:
       'Correcting the timing removed a load the ventricle was ejecting against, so the ventricle ejected more. Every litre of that gain is native output: the balloon still has no pathway of its own, and the device line is still empty. The pressure moved further than the flow, which is what this mechanism does.',
@@ -801,7 +810,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       signal('papi', 'Pulmonary pulsatility ratio', 'ratio', 1, 'pressure'),
       signal('effectiveSystemicFlowLMin', 'Effective systemic delivery', 'L/min', 1, 'flow'),
       signal('mapMmHg', 'Mean arterial pressure', 'mm Hg', 0, 'pressure'),
-      signal('svo2Percent', 'Mixed venous saturation', '%', 0, 'oxygen-delivery'),
+      signal('svo2Percent', 'Simulated mixed venous saturation', '%', 0, 'oxygen-balance'),
     ],
     beforeStateLabels: [
       'Aligned timing, no active alarm',
@@ -908,8 +917,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       choices: [
         {
           id: 'flow-falls-chamber-refills',
-          label:
-            'Displayed flow falls by about half, the wedge pressure rises, and a placement alarm appears',
+          label: 'Estimated flow falls and a placement alarm appears; loading must be reassessed',
           rationale:
             'Support and unloading are both lost together, because both depended on the inlet drawing from inside the chamber. The blood-trauma risk rises because blood is being accelerated through a poorly aligned inlet.',
           plausibility: 'best',
@@ -940,7 +948,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       ],
       correctChoiceIds: ['flow-falls-chamber-refills'],
       explanation:
-        'A microaxial pump works by sitting in two compartments at once. Lose that and you lose the flow, the unloading, and the safety margin together — which is why a falling flow is a position question before it is a settings question.',
+        'The aligned inlet-to-outlet relationship supports LV-to-aorta flow. The simulated placement fault reduces flow and unloading. A low estimated flow alone does not diagnose position: assess loading, device function and imaging.',
       evidenceIds: impellaEvidence,
       reviewStatus: 'draft',
     }),
@@ -948,18 +956,22 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       'Predicting the direction of the wedge pressure is what separates a guess from a mechanism. If flow falls because the pump stopped removing volume, the chamber behind it has to refill.',
     actionMode: 'adjust',
     actionInstruction:
-      'Change the highlighted placement state from aligned to too deep, then watch the alarm band on the monitor and the displayed pump flow beside it.',
+      'Set the simulated placement condition to Too deep, then compare the captured pump estimate and modeled LV volume. This fault selector is not an instruction to advance or withdraw a catheter.',
     targetControl: 'control:impella-left-position',
     allowedActions: ['control:impella-left-position'],
     isActionSatisfied: (state) =>
-      state.device.kind === 'impella' && state.device.left.position !== 'correct',
+      state.device.kind === 'impella' &&
+      state.device.left.enabled &&
+      state.device.left.running &&
+      state.device.left.position === 'too-deep' &&
+      state.actionIds.includes('impella:left:set-position'),
     observationFocus:
       'Compare displayed pump flow with effective systemic delivery, and read the ventricular volume and wedge pressure as the unloading claim being checked.',
     observedSignals: [
       signal('leftDeviceFlowLMin', 'Displayed pump flow', 'L/min', 1, 'device-display'),
       signal('effectiveSystemicFlowLMin', 'Effective systemic delivery', 'L/min', 1, 'flow'),
       signal('nativeFlowLMin', 'Native contribution', 'L/min', 1, 'flow'),
-      signal('lvedvMl', 'Left ventricular end-diastolic volume', 'mL', 0, 'pressure'),
+      signal('lvedvMl', 'Modeled LV end-diastolic volume', 'mL', 0, 'volume'),
       signal('pcwpMmHg', 'Wedge pressure', 'mm Hg', 0, 'pressure'),
       signal('mapMmHg', 'Mean arterial pressure', 'mm Hg', 0, 'pressure'),
     ],
@@ -970,7 +982,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     ],
     afterStateLabels: [
       'A placement alarm with a low-flow and a blood-trauma warning beside it',
-      'A pump flow roughly halved at an unchanged setting',
+      'A captured pump-flow estimate at an unchanged performance level; use its actual change',
       'A larger ventricle and a higher wedge pressure — the unloading given back',
     ],
     explanation:
@@ -978,7 +990,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     pressureLevelExplanation:
       'Wedge pressure rose and mean arterial pressure fell together. The first is the chamber refilling; the second is the lost forward stream.',
     flowLevelExplanation:
-      'Displayed pump flow fell by about half, and effective systemic delivery fell by less, because the native ventricle took some of the work back. The two lines do not move by the same amount, and only the second is the one the patient experiences.',
+      'The modeled placement condition reduces pump flow; the magnitude depends on the configuration and loading. Concurrent native flow may also change. The two lines do not move by the same amount, and only the second is the one the patient experiences.',
     oxygenDeliveryExplanation:
       'Mixed venous saturation follows the effective line down, not the displayed one. Delivery is a product of what actually reaches the circulation, not of what the console reports moving.',
     organResponseExplanation:
@@ -996,7 +1008,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     transferPrompt:
       'Interpret that fall, then read the device and effective flow in the transfer patient.',
     completionCondition:
-      'Recorded once the placement state has been moved off aligned, the prediction and its verdict have been worked through, the before-and-after comparison has been seen, and a transfer answer has been committed.',
+      'Recorded once the specifically requested too-deep condition has been reached and its captured results interpreted, the prediction and its verdict have been worked through, the before-and-after comparison has been seen, and a transfer answer has been committed.',
     teaching: {
       whatYouAreSeeing:
         'The heart with a transvalvular pump in place: inlet below the aortic valve inside the left ventricle, outlet above it in the ascending aorta.',
@@ -1005,7 +1017,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       howTheActionAffectsTheModel:
         'The placement state moves the modeled inlet relative to the valve. Too deep or too shallow reduces what the pump can draw and raises the blood-trauma warning.',
       flowAccountNote:
-        'Displayed pump flow is an estimate produced from pump behaviour and assumed loading — not a probe in the bloodstream. Watch it fall further than effective systemic delivery does, because the native ventricle takes part of the work back.',
+        'Displayed pump flow is an estimate produced from pump behaviour and assumed loading — not a probe in the bloodstream. Compare its observed change with concurrent native flow and effective systemic flow; do not infer a fixed proportion.',
     },
   },
 
@@ -1202,15 +1214,14 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       'Read displayed flow, power and pulsatility index as one interdependent set, and explain why the displayed flow is an estimate.',
     startingDevice: 'lvad',
     startingActions: [],
-    recognizePrompt:
-      'Read the highlighted controller block and identify what the displayed flow is derived from.',
+    recognizePrompt: 'Identify how the flow shown by this teaching model is produced.',
     recognizeOptions: [
       {
         id: 'from-power-and-speed',
-        label: 'It is computed from pump power and speed, with assumptions about loading',
+        label: 'It is generated from speed and loading; power and PI are then derived',
         correct: true,
         feedback:
-          'That is why it is labelled an estimate. It inherits every assumption in that computation, and it drifts when those assumptions stop holding — which is exactly when the patient is changing.',
+          'The model generates flow first and then derives electrical power and PI. It does not implement a manufacturer’s estimator and does not measure bedside cardiac output.',
       },
       {
         id: 'from-a-probe',
@@ -1259,7 +1270,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
           label:
             'Power surges, because the pump is working harder against the higher pressure it faces',
           rationale:
-            'Power tracks the work the impeller is doing on the blood it is actually moving. When less blood crosses, power falls rather than surging — a surge belongs to an obstructed flow path.',
+            'In this simplified model, power is derived partly from modeled flow and falls as flow falls at fixed speed. That response is not a universal diagnostic rule for durable pumps, loading changes or obstruction.',
           plausibility: 'incorrect-mechanism',
         },
         {
@@ -1278,7 +1289,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       reviewStatus: 'draft',
     }),
     predictionReasoning:
-      'The part of this prediction worth arguing about is the power line. If you expect power to fall rather than surge, you have separated "working against a higher pressure" from "working on more blood".',
+      'The part of this prediction worth arguing about is the power line. In this model a power change reflects its authored equation, not a validated controller algorithm or a diagnosis.',
     actionMode: 'adjust',
     actionInstruction:
       'Raise the highlighted systemic vascular resistance control toward the top of its range without touching the pump, then read the controller block.',
@@ -1293,7 +1304,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       signal('deviceFlowLMin', 'Displayed pump flow', 'L/min', 1, 'device-display'),
       signal('effectiveSystemicFlowLMin', 'Effective systemic delivery', 'L/min', 1, 'flow'),
       signal('mapMmHg', 'Mean arterial pressure', 'mm Hg', 0, 'pressure'),
-      signal('cardiacPowerOutputW', 'Cardiac power', 'W', 2, 'oxygen-delivery'),
+      signal('cardiacPowerOutputW', 'Calculated cardiac power output', 'W', 2, 'pressure-flow'),
     ],
     beforeStateLabels: [
       'An unchanged speed with power and pulsatility index in their usual range',
@@ -1306,7 +1317,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       'A markedly higher mean pressure — and a cardiac power that rose while flow fell',
     ],
     explanation:
-      'Nothing was done to the pump. Raising the pressure it ejects against reduced the volume crossing it, so both the displayed flow and the delivery fell. Power fell too, because the impeller is doing work on less blood. The one value that rose is the one built by multiplying a pressure by a flow.',
+      'Nothing was done to the pump. Raising the pressure it ejects against reduced the volume crossing it, so both the displayed flow and the delivery fell. Power is subsequently derived from flow in this model. Interpret the captured direction without extrapolating it to every clinical pump. The one value that rose is the one built by multiplying a pressure by a flow.',
     pressureLevelExplanation:
       'Mean arterial pressure rose by tens of mm Hg. Read alone, that is the picture of an improving patient.',
     flowLevelExplanation:
@@ -1333,7 +1344,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       whatYouAreSeeing:
         'The controller block of a durable continuous-flow pump: pump power and pulsatility index beside the flow the controller displays.',
       whatTheTargetRepresents:
-        'A computed flow and the two values it is computed from. They are readable as one set precisely because they are not three independent measurements.',
+        'A speed setting, estimated flow, electrical power and PI. Here flow is generated from speed and loading; power and PI are derived afterwards. The patient measurements are a separate assessment.',
       howTheActionAffectsTheModel:
         'Raising systemic vascular resistance raises the pressure at the outlet, which lowers the volume crossing the pump at an unchanged speed.',
       flowAccountNote:
@@ -1402,7 +1413,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
           label:
             'Power rises substantially while the displayed flow barely moves, and an alarm appears',
           rationale:
-            'The displayed flow is computed from power and speed under assumptions that this state breaks. Power and the flow it is supposed to imply come apart, and that separation is itself the signal.',
+            'This teaching model adds a high-power signature after calculating flow, without simulating a clinical estimator failure. Power and the flow it is supposed to imply come apart, and that separation is itself the signal.',
           plausibility: 'best',
         },
         {
@@ -1452,7 +1463,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       signal('pulsatilityIndex', 'Pulsatility index', 'index', 1, 'device-display'),
       signal('effectiveSystemicFlowLMin', 'Effective systemic delivery', 'L/min', 1, 'flow'),
       signal('mapMmHg', 'Mean arterial pressure', 'mm Hg', 0, 'pressure'),
-      signal('svo2Percent', 'Mixed venous saturation', '%', 0, 'oxygen-delivery'),
+      signal('svo2Percent', 'Simulated mixed venous saturation', '%', 0, 'oxygen-balance'),
     ],
     beforeStateLabels: [
       'No active alarm, power in its usual range',
@@ -1467,7 +1478,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     unmodeledNote:
       'This model raises the power signature and leaves the delivered flow essentially where it was. It does not represent the haemolysis, the neurological events, or the collapse that a real obstructed flow path can produce, and the absence of those here is a limit of the model rather than reassurance about the state.',
     explanation:
-      'Two values that are supposed to move together stopped doing so. The power went up by about three watts and the flow the controller computes from it did not follow, because the state broke the relationship the computation assumes. A learner reading only the flow display would see a normal number.',
+      'Two values that are supposed to move together stopped doing so. The model adds a power signature without reducing its modeled flow. It does not implement a real controller estimator or the full consequences of obstruction. A learner reading only the flow display would see a normal number.',
     pressureLevelExplanation:
       'Mean arterial pressure did not move. At the pressure level of the model, nothing has happened — which is the trap.',
     flowLevelExplanation:
@@ -1498,7 +1509,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       howTheActionAffectsTheModel:
         'The high-power pattern makes the pump draw substantially more power at an unchanged speed while the computed flow stays where it was.',
       flowAccountNote:
-        'This is the estimate failing. The displayed line is derived from power and speed, so a state that breaks that relationship leaves a plausible number attached to a circulation that is no longer producing it.',
+        'The displayed flow estimate here is generated from loading and speed; the fault adds power afterwards. This demonstrates discordant readings, not a validated manufacturer flow-estimator failure.',
     },
   },
 
@@ -1617,7 +1628,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       signal('leftDeviceFlowLMin', 'Displayed pump flow', 'L/min', 1, 'device-display'),
       signal('effectiveSystemicFlowLMin', 'Effective systemic delivery', 'L/min', 1, 'flow'),
       signal('mapMmHg', 'Mean arterial pressure', 'mm Hg', 0, 'pressure'),
-      signal('svo2Percent', 'Mixed venous saturation', '%', 0, 'oxygen-delivery'),
+      signal('svo2Percent', 'Simulated mixed venous saturation', '%', 0, 'oxygen-balance'),
     ],
     beforeStateLabels: [
       'A high right atrial pressure with a modestly raised wedge pressure',

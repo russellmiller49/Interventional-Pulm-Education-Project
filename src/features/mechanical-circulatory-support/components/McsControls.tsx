@@ -88,7 +88,7 @@ const patientControls: readonly {
   },
 ]
 
-function RangeControl({
+export function RangeControl({
   label,
   value,
   minimum,
@@ -261,13 +261,17 @@ export function McsControls({
   state,
   dispatch,
   highlightControl,
+  allowedActionIds,
 }: {
   state: McsSimulationState
   dispatch: Dispatch<McsAction>
   /** The one control the current Learn phase is asking for, if any. */
   highlightControl?: McsLearnControlId
+  allowedActionIds?: readonly string[]
 }) {
-  const unavailable = (actionId: string) => !isMcsActionIdPermitted(state, actionId)
+  const unavailable = (actionId: string) =>
+    !isMcsActionIdPermitted(state, actionId) ||
+    (allowedActionIds !== undefined && !allowedActionIds.includes(actionId))
   const patientActionId = (control: McsPatientControl) =>
     control === 'preloadPercent'
       ? 'patient:set-preload'

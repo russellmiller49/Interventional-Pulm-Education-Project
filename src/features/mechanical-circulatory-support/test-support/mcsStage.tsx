@@ -14,6 +14,7 @@
 import { fireEvent, render, screen, within, type RenderResult } from '@testing-library/react'
 
 import { McsStageHost } from '../components/stage/McsStageHost'
+import { buildMcsStageLesson } from '../content/stageLessons'
 import { mcsLessonTransferByLessonId } from '../content/lessonTransfers'
 import { mcsSectionLearningContractById } from '../content/sectionLearningContracts'
 import { mockRouterPush } from './mcsWorkbenchStubs'
@@ -126,15 +127,28 @@ function clickPrimary(): void {
 /* ------------------------------------------------------------------ drivers */
 
 /** The walk on the section that walks the loop: Next stop until the last stop, then Continue. */
-export function walkTheLoop(): void {
-  for (let guard = 0; guard < 8; guard += 1) {
-    const primary = nowPrimary()
-    if (!primary) throw new Error('No primary action while walking')
-    const label = primary.textContent ?? ''
-    fireEvent.click(primary)
-    if (/^Continue/.test(label)) return
+export function completeIntroductorySteps(sectionId: string): void {
+  const lesson = buildMcsStageLesson(sectionId)
+  for (let guard = 0; guard < 30; guard += 1) {
+    const step = lesson.steps.find((candidate) => candidate.id === currentStepId())
+    if (!step || !['teaching', 'walk'].includes(step.interaction.kind)) return
+    if (step.interaction.kind === 'teaching') {
+      for (const button of within(nowCard()).queryAllByRole('button', { name: /^Read / }))
+        fireEvent.click(button)
+      const level = within(nowCard()).queryByRole('slider', { name: 'Performance level' })
+      if (level) fireEvent.change(level, { target: { value: '6' } })
+      const svr = within(nowCard()).queryByRole('slider', { name: 'SVR' })
+      if (svr) fireEvent.change(svr, { target: { value: '1400' } })
+    }
+    clickPrimary()
   }
-  throw new Error('The walk did not end')
+  throw new Error('The guided introduction did not end')
+}
+
+export function walkTheLoop(): void {
+  const sectionId = document.querySelector('[data-section-id]')?.getAttribute('data-section-id')
+  if (!sectionId) throw new Error('No current section')
+  completeIntroductorySteps(sectionId)
 }
 
 /** Recognize: choose the option asked for (the correct one by default) and commit it. */
@@ -142,6 +156,7 @@ export function answerIdentification(
   sectionId: string,
   choose: 'correct' | 'wrong' = 'correct',
 ): void {
+  completeIntroductorySteps(sectionId)
   const contract = mcsSectionLearningContractById.get(sectionId)
   if (!contract) throw new Error(`No contract for ${sectionId}`)
   const option = contract.recognizeOptions.find((candidate) =>
@@ -174,6 +189,12 @@ export function continueFromVerdict(): void {
 }
 
 export function continueStep(): void {
+  if (nowPrimary()?.textContent === 'Record observation') {
+    fireEvent.click(
+      within(nowCard()).getByRole('radio', { name: 'Unchanged within displayed precision' }),
+    )
+    clickPrimary()
+  }
   clickPrimary()
 }
 
@@ -188,7 +209,7 @@ const actionDrivers: Readonly<Record<string, () => void>> = {
       'Read the filling pressures and right-sided delivery',
       'Read the device and effective flow',
     ]) {
-      fireEvent.click(screen.getByRole('button', { name: label }))
+      fireEvent.click(screen.getByRole('button', { name: new RegExp(escape(label)) }))
     }
   },
   'mcs-foundations-mechanisms': () => {
@@ -197,7 +218,7 @@ const actionDrivers: Readonly<Record<string, () => void>> = {
       'Select the transvalvular pump mechanism',
       'Select the durable continuous-flow mechanism',
     ]) {
-      fireEvent.click(screen.getByRole('button', { name: label }))
+      fireEvent.click(screen.getByRole('button', { name: new RegExp(escape(label)) }))
     }
   },
   'iabp-timing-triggering': () => {
@@ -267,7 +288,7 @@ const transferDrivers: Readonly<Record<string, () => void>> = {
       'Read the filling pressures and right-sided delivery',
       'Read the device and effective flow',
     ]) {
-      fireEvent.click(screen.getByRole('button', { name: label }))
+      fireEvent.click(screen.getByRole('button', { name: new RegExp(escape(label)) }))
     }
   },
   'mcs-foundations-mechanisms': () => {
@@ -304,7 +325,7 @@ const transferDrivers: Readonly<Record<string, () => void>> = {
       'Read the filling pressures and right-sided delivery',
       'Read the device and effective flow',
     ]) {
-      fireEvent.click(screen.getByRole('button', { name: label }))
+      fireEvent.click(screen.getByRole('button', { name: new RegExp(escape(label)) }))
     }
   },
 }
@@ -313,6 +334,19 @@ export function performTransferWork(sectionId: string): void {
   const driver = transferDrivers[sectionId]
   if (!driver) throw new Error(`No transfer driver for section ${sectionId}`)
   driver()
+  const observation = document.querySelector('[data-transfer-observation]')
+  if (observation) {
+    fireEvent.click(
+      within(observation as HTMLElement).getByRole('radio', {
+        name: 'Unchanged within displayed precision',
+      }),
+    )
+    fireEvent.click(
+      within(observation as HTMLElement).getByRole('button', {
+        name: 'Record transfer observation',
+      }),
+    )
+  }
 }
 
 export function commitTransfer(sectionId: string): void {

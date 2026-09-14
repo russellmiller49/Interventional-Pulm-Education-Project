@@ -98,7 +98,7 @@ export interface McsSectionSpec {
  */
 const IN_STEPS = {
   choices: { pane: 'steps', landmark: 'the answer choices below' },
-  account: { pane: 'steps', landmark: 'the before-and-after account and the table below' },
+  account: { pane: 'steps', landmark: 'the captured readings and the table below' },
   accountAndStories: {
     pane: 'steps',
     landmark: 'the before-and-after account, the table and the story problems below',
@@ -112,7 +112,7 @@ const IN_TEACHING = {
 const ON_SIMULATOR = {
   map: 'the Circulation map',
   pins: 'the pins on the Circulation map',
-  controls: 'in the Controls under the monitor',
+  controls: 'in the Controls',
 } as const
 
 const ALSO_ON_SIMULATOR = (landmark: string) =>
@@ -228,7 +228,7 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
     track: 'iabp',
     newConcept: 'timing decides how much of a mechanism is available',
     objective:
-      'Tell early inflation from late, and early deflation from late, on the arterial trace; tell what corrected timing recovers from what it cannot add.',
+      'Recognize inflation relative to valve closure on a changed example, relate inflation to its reference, and distinguish technical correction from adequate perfusion.',
     prerequisiteSectionIds: ['mcs-foundations-mechanisms'],
     stopIds: ['aortic-valve'],
     walksTheLoop: false,
@@ -252,7 +252,7 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       predict: IN_STEPS.choices,
       act: {
         pane: 'simulator',
-        landmark: `Inflation vs notch, ${ON_SIMULATOR.controls}, and the arterial pressure trace above it`,
+        landmark: `Inflation vs notch, ${ON_SIMULATOR.controls}, and the Timing reference`,
       },
       observe: { ...IN_STEPS.account, ...ALSO_ON_SIMULATOR('the alarm band on the monitor') },
       explain: IN_TEACHING.why,
@@ -338,7 +338,7 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       predict: IN_STEPS.choices,
       act: {
         pane: 'simulator',
-        landmark: `Placement state, ${ON_SIMULATOR.controls}, and the alarm band above it`,
+        landmark: `Placement state, ${ON_SIMULATOR.controls}, and the monitor alarm band`,
       },
       observe: IN_STEPS.account,
       explain: IN_TEACHING.why,
@@ -434,7 +434,7 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       predict: IN_STEPS.choices,
       act: {
         pane: 'simulator',
-        landmark: `SVR, ${ON_SIMULATOR.controls}, and the controller readout above it`,
+        landmark: `SVR, ${ON_SIMULATOR.controls}, and the controller readout`,
       },
       observe: IN_STEPS.accountAndStories,
       explain: {
