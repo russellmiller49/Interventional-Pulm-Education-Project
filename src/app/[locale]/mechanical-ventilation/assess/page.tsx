@@ -16,9 +16,8 @@ import {
 } from '@/features/mechanical-ventilation/engine'
 
 export const metadata: Metadata = {
-  title: 'Assess · Mechanical Ventilation',
-  description:
-    'An independent knowledge check after the mechanical ventilation pathway, and challenge cases with less prompting.',
+  title: 'Applications · Mechanical Ventilation',
+  description: 'Optional worked applications and self-paced clinical cases.',
   robots: { index: false, follow: false, noarchive: true },
 }
 
@@ -78,7 +77,7 @@ export default async function MechanicalVentilationAssessPage({ params, searchPa
       <MechanicalVentilationAssessSetupV2
         compatibilityNotice={
           hadIncompleteQuery
-            ? 'The challenge parameters were missing or incompatible. Set up the challenge again below.'
+            ? 'The saved case parameters were missing or incompatible. Open an application below.'
             : undefined
         }
       />

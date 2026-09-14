@@ -30,7 +30,7 @@ function progressByActivityId(
   return new Map(
     envelope.activities.flatMap((progress) => {
       const activity = activityById.get(progress.activityId)
-      return activity
+      return activity && activity.moduleId !== 'mechanical-ventilation'
         ? [[progress.activityId, enforceCriticalCareProgressAuthority(activity, progress)] as const]
         : []
     }),

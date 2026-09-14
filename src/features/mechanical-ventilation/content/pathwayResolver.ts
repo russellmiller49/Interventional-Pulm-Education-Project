@@ -8,6 +8,31 @@ import {
   type VentilationStage,
 } from './learningCurriculum'
 import { ventilationSectionSpec } from './sectionSpecs'
+import type { VentilationSelfPacedProgress } from '../engine/selfPacedProgress'
+
+/** Only an explicitly visited location chooses Resume. Legacy grades have no role. */
+export function nextSelfPacedVentilationSection(
+  progress: VentilationSelfPacedProgress,
+): VentilationNextSection {
+  const location = progress.location
+  const index =
+    location?.section === 'learn'
+      ? Math.max(
+          0,
+          ventilationLearningUnits.findIndex((unit) => unit.id === location.id),
+        )
+      : Math.max(
+          0,
+          ventilationLearningUnits.findIndex((unit) => !progress.visited.includes(unit.id)),
+        )
+  const unit = ventilationLearningUnits[index]
+  return {
+    unit,
+    index,
+    href: ventilationUnitHref(unit.id),
+    inProgress: progress.visited.includes(unit.id),
+  }
+}
 
 /**
  * The one door.

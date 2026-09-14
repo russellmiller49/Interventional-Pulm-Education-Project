@@ -155,10 +155,13 @@ export function enforceProgressCollectionAuthority(
   progressItems: readonly CriticalCareActivityProgress[],
 ): readonly CriticalCareActivityProgress[] {
   const activityById = new Map(activities.map((activity) => [activity.id, activity]))
-  return progressItems.map((progress) => {
-    const activity = activityById.get(progress.activityId)
-    return activity ? enforceCriticalCareProgressAuthority(activity, progress) : progress
-  })
+  // MV's legacy attempts stay in storage and cannot become current visits or achievements.
+  return progressItems
+    .filter((progress) => !progress.activityId.startsWith('ventilation:'))
+    .map((progress) => {
+      const activity = activityById.get(progress.activityId)
+      return activity ? enforceCriticalCareProgressAuthority(activity, progress) : progress
+    })
 }
 
 export function makeLegacyResumePointer(

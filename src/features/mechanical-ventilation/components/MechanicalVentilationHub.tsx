@@ -6,38 +6,35 @@ import { ArrowRight, ChevronDown } from 'lucide-react'
 import { mechanicalVentilationNavBase } from '@/features/learning-module/moduleRoutes'
 import { Link } from '@/i18n/navigation'
 
+import { mechanicalVentilationCaseById } from '../content/runtimeCases'
 import { ventilatorDeviceProfiles } from '../content/deviceProfiles'
 import { VENTILATION_CONTROL_PANEL } from '../content/controlPanel'
 import {
-  nextIncompleteVentilationSection,
+  nextSelfPacedVentilationSection,
   ventilationCompositionLine,
   ventilationPathwayComposition,
 } from '../content/pathwayResolver'
-import { readProgress as readCaseProgress } from '../engine/progress'
 import type { VentilatorDeviceId } from '../engine/types'
 import { MechanicalVentilationModuleFrame } from './MechanicalVentilationModuleFrame'
 import { SourcesPanel } from './SourcesPanel'
 import { VentilationPathwayAccordion } from './VentilationPathwayAccordion'
 import { readDevicePreference, saveDevicePreference } from './stage/useVentilationLabSession'
 import styles from './mechanical-ventilation-hub.module.css'
-import { useVentilationLabProgress } from './useVentilationLabProgress'
+import { useVentilationSelfPacedProgress } from './useVentilationSelfPacedProgress'
 
-/**
- * The hub: one door, one map.
- *
- * A hero with exactly one primary call to action — Continue, resolving to the learner's next
- * incomplete section through the same function every other entry surface uses — the composition of
- * the pathway derived from the registry, the map browsed in place, how the module works, and the
- * console the facsimile will show. Progress is read from the same saved record the sections write.
- */
+/** Open outline and a reading-location suggestion; visits never imply completion or competence. */
 export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: string }) {
-  const { progress, ready } = useVentilationLabProgress()
+  const { progress, ready } = useVentilationSelfPacedProgress()
   const [browsing, setBrowsing] = useState(false)
   const [device, setDevice] = useState<VentilatorDeviceId | null>(null)
   const accordionId = useId()
-  const next = nextIncompleteVentilationSection(progress)
+  const next = nextSelfPacedVentilationSection(progress)
+  const lastCase =
+    progress.location?.section !== 'learn'
+      ? mechanicalVentilationCaseById.get(progress.location?.id ?? '')
+      : undefined
   const composition = ventilationPathwayComposition()
-  const completedCases = ready ? new Set(readCaseProgress().completedCases) : new Set<string>()
+  const visitedCases = new Set(progress.visited)
   const chosenDevice = device ?? (ready ? readDevicePreference() : 'hamilton-c6')
 
   return (
@@ -48,8 +45,9 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
           <p>
             Fourteen short sections on a running ventilator: follow one normal breath from start to
             finish, learn the five things you can change, then take one mechanism at a time on the
-            live patient — predict, make the change, watch, and explain. Clinical cases apply each
-            mechanism, and an independent knowledge check closes the module.
+            live patient — predict, make the change, watch, and explain. Clinical cases and optional
+            worked applications connect the mechanisms. You can open any section and reveal
+            explanations without answering.
           </p>
           <div className={styles.entryActions}>
             {next ? (
@@ -70,10 +68,20 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
               </Link>
             ) : (
               <p className={styles.done} data-ventilation-continue="complete">
-                Every section is worked through. Revisit any of them below, apply them in Practice,
-                or take the knowledge check.
+                Revisit any section below or explore the cases.
               </p>
             )}
+            {lastCase ? (
+              <Link
+                className={styles.pathwayLink}
+                href={{
+                  pathname: '/mechanical-ventilation/practice',
+                  query: { case: lastCase.id, device: chosenDevice, mode: 'practice' },
+                }}
+              >
+                Return to {lastCase.title}
+              </Link>
+            ) : null}
           </div>
         </header>
 
@@ -96,10 +104,7 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
           <div className={styles.browsePanel} id={accordionId} hidden={!browsing}>
             {browsing ? (
               <>
-                <VentilationPathwayAccordion
-                  progress={progress}
-                  completedCaseIds={completedCases}
-                />
+                <VentilationPathwayAccordion progress={progress} visitedCaseIds={visitedCases} />
                 <Link className={styles.pathwayLink} href={`${mechanicalVentilationNavBase}/learn`}>
                   Open the pathway page
                 </Link>
@@ -115,23 +120,21 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
               <Link href={`${mechanicalVentilationNavBase}/learn`}>Learn</Link>
               <span>
                 one ordered pathway of {composition.total} sections on the simulated console: the
-                breath, the controls, then one mechanism at a time, each section a prediction, a
-                change you make, and a response you watch.
+                breath, the controls, then one mechanism at a time, each section offers an optional
+                prediction, an experiment, and its explanation.
               </span>
             </li>
             <li>
               <Link href={`${mechanicalVentilationNavBase}/practice`}>Practice</Link>
               <span>
-                {composition.cases} clinical cases that apply what the sections taught — commit a
-                mechanism, act, reassess, debrief — each paired to the section that taught it.
+                {composition.cases} clinical cases that apply what the sections taught — inspect,
+                act, reassess, and explore the explanation — each paired to the section that taught
+                it.
               </span>
             </li>
             <li>
-              <Link href={`${mechanicalVentilationNavBase}/assess`}>Assess</Link>
-              <span>
-                an independent knowledge check once the sections are worked through, and challenge
-                cases with less prompting.
-              </span>
+              <Link href={`${mechanicalVentilationNavBase}/assess`}>Applications</Link>
+              <span>optional worked questions and clinical cases, available from the start.</span>
             </li>
           </ol>
           <ul className={styles.principles} aria-label="How the sections teach">
@@ -146,9 +149,9 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
             </li>
             <li>
               <strong>Learn, apply, interpret</strong>
-              The first five sections begin with a worked explanation. Then record your own
-              prediction, inspect or change the patient, and interpret the captured result.
-              Independent answers receive feedback after submission.
+              The first five sections begin with a worked explanation. You can predict a response,
+              inspect or change the patient, and interpret a captured result. Hints and explanations
+              are always available.
             </li>
             <li>
               <strong>Trend, not threshold</strong>
@@ -162,7 +165,7 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
           <h2 id="mv-hub-console">Which console you will see</h2>
           <p>
             Four original facsimiles teach the same physiology. Choose the one closest to your unit;
-            you can change it again from inside a section before its first prediction.
+            you can change it again from inside a section by starting a fresh patient.
           </p>
           <div className={styles.consoles} role="radiogroup" aria-label="Training console">
             {ventilatorDeviceProfiles.map((profile) => (

@@ -68,7 +68,7 @@ function NormalTimingReference() {
       </svg>
       <p>
         Compare the start of effort with the start of machine inspiration. Then compare their
-        endings. The current patient’s independent tracing has no location highlights.
+        endings. Use the same start and end landmarks when inspecting the current patient.
       </p>
     </figure>
   )
@@ -108,7 +108,7 @@ export function VentilationPrerequisite({
       </ol>
       {!neutralIntegration ? (
         <div data-worked-example>
-          <h3>Separate worked example · no independent credit</h3>
+          <h3>Separate worked example</h3>
           {systematic ? (
             <>
               <p>

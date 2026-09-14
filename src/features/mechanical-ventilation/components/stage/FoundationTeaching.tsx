@@ -79,7 +79,9 @@ function WorkedHold({ device }: { device: VentilationSimulationState['deviceId']
   return (
     <div data-worked-hold>
       <p>
-        <strong>Worked reference hold · actual simulated maneuver · no learner credit</strong>
+        <strong>
+          Worked reference hold · actual simulated maneuver · separate from your patient
+        </strong>
       </p>
       <p>
         Flowing peak {reference.baseline.measurements.peakPressureCmH2O.toFixed(1)} cmH₂O; plateau
@@ -113,23 +115,9 @@ export function FoundationTeaching({
     () => createLabSimulation(unitId, 0, state.deviceId),
     [unitId, state.deviceId],
   )
-  const independent = ['prediction', 'sort', 'interpret'].includes(step.interaction.kind)
-  const worked = step.phase === 'recognize'
-  if (independent)
-    return (
-      <section className={styles.block} data-foundation-boundary>
-        <h2>Apply the concept independently</h2>
-        <p>
-          The worked explanation and labels are closed for this item. Use the information named in
-          Where to look on the Steps card. Your first answer is retained; feedback appears after
-          submission.
-        </p>
-        <p>
-          Playback changes the view or simulated time. It does not perform a physiological
-          occlusion.
-        </p>
-      </section>
-    )
+  const worked =
+    step.phase === 'recognize' ||
+    ['prediction', 'sort', 'interpret'].includes(step.interaction.kind)
   if (!worked && step.interaction.kind !== 'explain')
     return (
       <section

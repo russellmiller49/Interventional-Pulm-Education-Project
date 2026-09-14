@@ -7,7 +7,8 @@ import { ArrowRight, GitCompareArrows, ShieldCheck } from 'lucide-react'
 import { useRouter } from '@/i18n/navigation'
 
 import { MECHANICAL_VENTILATION_ASSESSMENT_ID, ventilatorDeviceProfiles } from '../content'
-import { readProgress, setLastDevice, writeProgress, type VentilatorDeviceId } from '../engine'
+import type { VentilatorDeviceId } from '../engine'
+import { readDevicePreference, saveDevicePreference } from './stage/useVentilationLabSession'
 
 export function MechanicalVentilationAssessSetupV2({
   compatibilityNotice,
@@ -19,18 +20,13 @@ export function MechanicalVentilationAssessSetupV2({
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setDeviceId(readProgress().lastDeviceId), 0)
+    const timer = window.setTimeout(() => setDeviceId(readDevicePreference()), 0)
     return () => window.clearTimeout(timer)
   }, [])
 
   function launchAssessment() {
-    const progress = readProgress()
-    writeProgress(setLastDevice(progress, deviceId))
-    const attempts = Object.values(progress.attemptsByDeviceCase).reduce(
-      (total, count) => total + count,
-      0,
-    )
-    const seed = `${Date.now().toString(36)}-${attempts + 1}`
+    saveDevicePreference(deviceId)
+    const seed = Date.now().toString(36)
     router.push(
       `/mechanical-ventilation/assess?case=${MECHANICAL_VENTILATION_ASSESSMENT_ID}&seed=${seed}&device=${deviceId}` as Route,
     )
@@ -40,15 +36,16 @@ export function MechanicalVentilationAssessSetupV2({
     <main className="mx-auto grid w-full max-w-5xl gap-7 px-4 py-10 text-foreground sm:px-6 lg:px-8">
       <header className="max-w-3xl">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
-          Challenge setup · locally varied
+          Optional case · local variation
         </p>
         <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
           Choose the console before the case opens.
         </h1>
         <p className="mt-4 text-base leading-7 text-muted-foreground">
           A local variation selects one of the fifteen cases. You will see the patient context, case
-          identity, references, and evidence from the start; teaching feedback is collected for the
-          debrief so you can reason without interruption.
+          identity, references, and evidence from the start; explanations are available whenever you
+          want them. MV-03 opens as a worked explanation while its live measurement display is under
+          review.
         </p>
       </header>
 
@@ -67,8 +64,7 @@ export function MechanicalVentilationAssessSetupV2({
             Training console
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            This console stays fixed for the challenge. Exiting and changing it creates a clean new
-            run.
+            This console stays fixed for this case. Exiting and changing it creates a clean new run.
           </p>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             {ventilatorDeviceProfiles.map((profile) => (
@@ -106,18 +102,22 @@ export function MechanicalVentilationAssessSetupV2({
             <GitCompareArrows className="mt-1 size-7 shrink-0 text-primary" aria-hidden="true" />
             <div>
               <h2 id="challenge-boundary-heading" className="text-2xl font-bold">
-                Challenge ready
+                Case ready
               </h2>
               <ul className="mt-4 grid gap-3 text-sm leading-6 text-muted-foreground">
                 <li>
                   You can record an initial frame before acting, but all therapy controls remain
                   available.
                 </li>
-                <li>The challenge timer behavior is enabled and coaching is deferred.</li>
+                <li>
+                  Simulated time describes physiology. Explanations and controls stay available.
+                </li>
                 <li>
                   Patient context, case identity, references, and source boundaries stay visible.
                 </li>
-                <li>The end state is a causal debrief and an explicit transfer check.</li>
+                <li>
+                  Compare the actual response, read the explanation, or continue to another case.
+                </li>
               </ul>
               <div className="mt-5 flex items-center gap-2 rounded-xl bg-muted/40 p-3 text-sm">
                 <ShieldCheck className="size-4 text-primary" aria-hidden="true" />
@@ -128,7 +128,7 @@ export function MechanicalVentilationAssessSetupV2({
                 className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"
                 onClick={launchAssessment}
               >
-                Open challenge <ArrowRight className="size-4" aria-hidden="true" />
+                Open case <ArrowRight className="size-4" aria-hidden="true" />
               </button>
             </div>
           </div>

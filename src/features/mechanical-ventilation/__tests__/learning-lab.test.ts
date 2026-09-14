@@ -52,11 +52,13 @@ describe('live experiments as the course completion contract', () => {
     },
   )
 
-  it('resets free exploration for prediction, keeps the baseline moving, and locks only treatment changes', () => {
+  it('resets free exploration for prediction while keeping treatment controls available', () => {
     let session = change(createLabSession('waveform-anatomy'), 'peakFlowLMin', 80)
     session = learningLabReducer(session, { type: 'PREDICT' })
     expect(session.simulation.ventilator.settings).toMatchObject({ peakFlowLMin: 40 })
-    expect(change(session, 'peakFlowLMin', 60)).toBe(session)
+    expect(change(session, 'peakFlowLMin', 60).simulation.ventilator.settings).toMatchObject({
+      peakFlowLMin: 60,
+    })
     const ticked = learningLabReducer(session, {
       type: 'ENGINE',
       action: { type: 'TICK', seconds: 1 },

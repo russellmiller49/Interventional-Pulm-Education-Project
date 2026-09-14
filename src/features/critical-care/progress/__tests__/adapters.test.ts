@@ -18,7 +18,6 @@ import {
   LEGACY_HAMILTON_C6_PROGRESS_STORAGE_KEY,
   MECHANICAL_VENTILATION_PROGRESS_STORAGE_KEY,
 } from '@/features/mechanical-ventilation/engine/progress'
-import { resolveCriticalCareResumePointer } from '@/features/learning-module/activity'
 
 import {
   cardiohelpV1ProgressFixture,
@@ -166,66 +165,27 @@ describe('critical-care legacy progress adapters', () => {
     expect(activity(mastered, 'hemodynamics:practice:HD-01')?.status).toBe('mastered')
   })
 
-  it('aggregates ventilation attempts by case and preserves the preferred device in safe resume', () => {
-    const partial = readVentilationLegacyProgress(
-      new ReadOnlyFixtureStorage({
-        [MECHANICAL_VENTILATION_PROGRESS_STORAGE_KEY]:
-          partialLegacyProgressFixtures[MECHANICAL_VENTILATION_PROGRESS_STORAGE_KEY],
-      }),
-      criticalCareActivities,
-    )
-
-    expect(activity(partial, 'ventilation:practice:MV-02')).toMatchObject({
-      status: 'in-progress',
-      attempts: 2,
-      bestScore: 60,
-    })
-    expect(partial.resume).toMatchObject({
-      activityId: 'ventilation:practice:MV-02',
-      deviceId: 'drager-evita-v800-v600',
-      query: {
-        case: 'MV-02',
-        device: 'drager-evita-v800-v600',
-        mode: 'practice',
-      },
-    })
-    expect(
-      partial.resume
-        ? resolveCriticalCareResumePointer(partial.resume, criticalCareActivities)?.href
-        : null,
-    ).toBe(
-      '/mechanical-ventilation/practice?case=MV-02&device=drager-evita-v800-v600&mode=practice',
-    )
-
-    const legacy = readVentilationLegacyProgress(
-      new ReadOnlyFixtureStorage({
-        [LEGACY_HAMILTON_C6_PROGRESS_STORAGE_KEY]:
-          completedLegacyProgressFixtures[LEGACY_HAMILTON_C6_PROGRESS_STORAGE_KEY],
-      }),
-      criticalCareActivities,
-    )
-    expect(activity(legacy, 'ventilation:practice:MV-01')).toMatchObject({
-      status: 'completed',
-      attempts: 1,
-      bestScore: 75,
-    })
-    expect(legacy.resume?.deviceId).toBe('hamilton-c6')
-
-    const safelyMastered = readVentilationLegacyProgress(
-      new ReadOnlyFixtureStorage({
-        [MECHANICAL_VENTILATION_PROGRESS_STORAGE_KEY]: JSON.stringify({
-          version: 2,
-          lastStation: 'lung-protection-demand',
-          lastDeviceId: 'hamilton-c6',
-          completedCases: ['MV-01'],
-          attemptsByDeviceCase: { 'hamilton-c6:MV-01': 3 },
-          bestScores: { 'MV-01': 88 },
-          criticalErrorStatus: { 'MV-01': false },
-        }),
-      }),
-      criticalCareActivities,
-    )
-    expect(activity(safelyMastered, 'ventilation:practice:MV-01')?.status).toBe('mastered')
+  it('recognizes both ventilation legacy formats without projecting attempts, scores or resume', () => {
+    for (const fixtures of [
+      partialLegacyProgressFixtures,
+      completedLegacyProgressFixtures,
+      masteredLegacyProgressFixtures,
+    ]) {
+      for (const key of [
+        MECHANICAL_VENTILATION_PROGRESS_STORAGE_KEY,
+        LEGACY_HAMILTON_C6_PROGRESS_STORAGE_KEY,
+      ]) {
+        if (!fixtures[key]) continue
+        const storage = new ReadOnlyFixtureStorage({ [key]: fixtures[key] })
+        const before = JSON.stringify(storage.values)
+        const result = readVentilationLegacyProgress(storage, criticalCareActivities)
+        expect(result.status).toBe('valid')
+        expect(result.activities).toEqual([])
+        expect(result.resume).toBeUndefined()
+        expect(JSON.stringify(storage.values)).toBe(before)
+        expect(storage.setItem).not.toHaveBeenCalled()
+      }
+    }
   })
 
   it('safely projects permissive MCS V1 data without invoking its browser store', () => {

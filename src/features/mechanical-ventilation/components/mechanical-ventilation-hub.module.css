@@ -262,6 +262,11 @@ details[open] > .unitSummary::after {
   margin-top: 0.6rem;
 }
 
+select.consoleChoice {
+  max-width: 100%;
+  min-width: 0;
+}
+
 .chip {
   display: inline-flex;
   align-items: center;
@@ -287,12 +292,12 @@ details[open] > .unitSummary::after {
   border-color: rgba(113, 225, 229, 0.5);
 }
 
-.chip[data-complete='true'] {
+.chip[data-visited='true'] {
   border-color: rgba(118, 214, 155, 0.55);
   color: var(--green);
 }
 
-.chip[data-complete='true'] svg {
+.chip[data-visited='true'] svg {
   color: var(--green);
 }
 

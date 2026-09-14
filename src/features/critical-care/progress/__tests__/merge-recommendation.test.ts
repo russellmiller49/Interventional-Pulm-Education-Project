@@ -104,7 +104,7 @@ describe('normalized critical-care progress merge', () => {
     expect(storage.setItem).not.toHaveBeenCalled()
   })
 
-  it('sanitizes historical completion and competency claims against the current activity contract', () => {
+  it('excludes MV historical completion and competency claims from current consumers', () => {
     const activityId = 'ventilation:learn:mechanics-load-and-pressure'
     const result = mergeCriticalCareProgress(
       normalizedEnvelope([
@@ -121,10 +121,7 @@ describe('normalized critical-care progress merge', () => {
       criticalCareActivities,
     )
 
-    expect(result.activities.find((item) => item.activityId === activityId)).toMatchObject({
-      status: 'in-progress',
-      competencyEvidenceIds: [],
-    })
+    expect(result.activities.find((item) => item.activityId === activityId)).toBeUndefined()
   })
 
   it('reports corrupt and incompatible normalized envelopes while safely retaining legacy data', () => {
@@ -260,10 +257,10 @@ describe('deterministic critical-care recommendations', () => {
 
   it('prioritizes continuing an in-progress activity', () => {
     const progress = normalizedEnvelope([
-      normalizedActivity('ventilation:practice:MV-06', { status: 'in-progress' }),
+      normalizedActivity('hemodynamics:practice:HD-06', { status: 'in-progress' }),
     ])
     expect(getCriticalCareRecommendation(criticalCareActivities, progress)).toMatchObject({
-      activity: { id: 'ventilation:practice:MV-06' },
+      activity: { id: 'hemodynamics:practice:HD-06' },
       reason: 'continue',
     })
   })

@@ -421,7 +421,7 @@ describe('mechanical ventilation reducer and progress boundary', () => {
     expect(parseProgress('not json')).toBeNull()
   })
 
-  it('migrates v1 C6 progress non-destructively and defaults the learner to C6', () => {
+  it('reads legacy C6 progress without writing a migrated record', () => {
     const legacy = {
       version: 1,
       lastStation: 'pressure-support-timing',
@@ -447,7 +447,7 @@ describe('mechanical ventilation reducer and progress boundary', () => {
       criticalErrorStatus: { 'MV-01': false, 'MV-11': true },
     })
     expect(window.localStorage.getItem(LEGACY_HAMILTON_C6_PROGRESS_STORAGE_KEY)).toBe(serialized)
-    expect(window.localStorage.getItem(MECHANICAL_VENTILATION_PROGRESS_STORAGE_KEY)).not.toBeNull()
+    expect(window.localStorage.getItem(MECHANICAL_VENTILATION_PROGRESS_STORAGE_KEY)).toBeNull()
     expect(nextCaseAttempt(migrated, 'MV-01', 'hamilton-c6')).toBe(4)
     expect(nextCaseAttempt(migrated, 'MV-01', 'puritan-bennett-980')).toBe(1)
   })

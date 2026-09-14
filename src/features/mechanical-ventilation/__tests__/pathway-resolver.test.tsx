@@ -1,16 +1,19 @@
-import { completeLabUnit } from '../test-support/live-learning'
+import { mechanicalVentilationCaseById } from '../content/runtimeCases'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { render, screen, within } from '@testing-library/react'
 
 import { VentilationPathwayAccordion } from '../components/VentilationPathwayAccordion'
 import { ventilationLearningUnits, ventilationUnitHref } from '../content/learningCurriculum'
 import {
-  nextIncompleteVentilationSection,
+  nextSelfPacedVentilationSection,
   ventilationCompositionLine,
   ventilationPathwayComposition,
   ventilationPathwayGroups,
 } from '../content/pathwayResolver'
-import { emptyLabProgress, type LabCheckpoint, type LabProgress } from '../engine/learningLab'
+import {
+  emptySelfPacedProgress,
+  type VentilationSelfPacedProgress,
+} from '../engine/selfPacedProgress'
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -34,32 +37,28 @@ jest.mock('@/i18n/navigation', () => ({
   ),
 }))
 
-function completed(unitId: string): LabCheckpoint {
-  return completeLabUnit(unitId)
-}
-
-function progressWith(...unitIds: string[]): LabProgress {
-  return { version: 1, units: Object.fromEntries(unitIds.map((id) => [id, completed(id)])) }
+function progressWith(...unitIds: string[]): VentilationSelfPacedProgress {
+  return { version: 1, visited: unitIds }
 }
 
 describe('one door, one map', () => {
-  it('sends a fresh learner to section one, and a returning learner to the first section not worked', () => {
-    const fresh = nextIncompleteVentilationSection(emptyLabProgress())
+  it('sends a fresh learner to section one, and a returning learner to the first section not visited', () => {
+    const fresh = nextSelfPacedVentilationSection(emptySelfPacedProgress())
     expect(fresh?.unit.id).toBe(ventilationLearningUnits[0].id)
     expect(fresh?.index).toBe(0)
     expect(fresh?.href).toBe(ventilationUnitHref(ventilationLearningUnits[0].id))
-    const later = nextIncompleteVentilationSection(
+    const later = nextSelfPacedVentilationSection(
       progressWith(ventilationLearningUnits[0].id, ventilationLearningUnits[1].id),
     )
     expect(later?.unit.id).toBe(ventilationLearningUnits[2].id)
     // A gap is honoured: the first incomplete section wins, whatever was done after it.
-    const gap = nextIncompleteVentilationSection(
+    const gap = nextSelfPacedVentilationSection(
       progressWith(ventilationLearningUnits[0].id, ventilationLearningUnits[5].id),
     )
     expect(gap?.unit.id).toBe(ventilationLearningUnits[1].id)
     expect(
-      nextIncompleteVentilationSection(progressWith(...ventilationLearningUnits.map((u) => u.id))),
-    ).toBeNull()
+      nextSelfPacedVentilationSection(progressWith(...ventilationLearningUnits.map((u) => u.id))),
+    ).toMatchObject({ index: 0 })
   })
 
   it('derives every count from the registry and flattens the groups to the canonical order', () => {
@@ -84,9 +83,7 @@ describe('one door, one map', () => {
       ventilationLearningUnits[1].id,
       ventilationLearningUnits[2].id,
     )
-    render(
-      <VentilationPathwayAccordion progress={progress} completedCaseIds={new Set(['MV-13'])} />,
-    )
+    render(<VentilationPathwayAccordion progress={progress} visitedCaseIds={new Set(['MV-13'])} />)
     const open = document.querySelectorAll('[data-pathway-accordion] details[open]')
     expect(open).toHaveLength(1)
     expect(open[0].getAttribute('data-unit')).toBe('mechanism')
@@ -94,15 +91,14 @@ describe('one door, one map', () => {
     expect(next.textContent).toContain(ventilationLearningUnits[3].title)
     expect(next.textContent).toContain('Up next')
     expect(next.getAttribute('href')).toContain(`activity=${ventilationLearningUnits[3].id}`)
-    // Worked sections say so in words; a worked case too.
-    expect(screen.getAllByText(/✓ worked through/).length).toBeGreaterThanOrEqual(3)
-    const caseChip = document.querySelector('[data-kind="case"][data-complete="true"]')!
-    expect(caseChip.textContent).toMatch(/high-pressure alarm/i)
-    // No case is named by its diagnosis.
-    for (const chip of document.querySelectorAll('[data-kind="case"]')) {
-      expect(chip.textContent).not.toMatch(
-        /pneumothorax|COPD|asthma|ARDS|reverse triggering|autotriggering|premature cycling|delayed cycling/i,
-      )
+    // Visits are labeled as visits, including the case title.
+    expect(screen.getAllByText(/· visited/).length).toBeGreaterThanOrEqual(3)
+    const caseChip = document.querySelector('[data-kind="case"][data-visited="true"]')!
+    expect(caseChip.textContent).toContain(mechanicalVentilationCaseById.get('MV-13')!.title)
+    // The outline no longer masks diagnoses to protect a future answer.
+    for (const chip of document.querySelectorAll<HTMLAnchorElement>('[data-kind="case"]')) {
+      const caseId = new URL(chip.href, 'https://example.test').searchParams.get('case')!
+      expect(chip.textContent).toContain(mechanicalVentilationCaseById.get(caseId)!.title)
     }
     // Every section appears exactly once.
     const sectionChips = [...document.querySelectorAll('[data-kind="section"]')].map((chip) =>
