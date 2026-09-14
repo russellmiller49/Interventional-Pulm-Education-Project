@@ -285,6 +285,7 @@ export function crrtOperationalTaskComplete(
   }
 }
 export type CrrtOperationalAction =
+  | { type: 'choose-plan'; plan: 'correct' | 'defer' }
   | { type: 'command'; id: string }
   | { type: 'device'; action: PrismaxPilotInterfaceAction }
 export function crrtOperationalRunReducer(
@@ -292,6 +293,12 @@ export function crrtOperationalRunReducer(
   operation: CrrtLearnOperation | undefined,
   action: CrrtOperationalAction,
 ): CrrtOperationalRun {
+  if (action.type === 'choose-plan') {
+    if (run.id !== 'integration' || operation !== 'integration-action' || run.integrationPlan)
+      return run
+    // This chooses which modeled sequence to explore. It performs no intervention.
+    return { ...run, integrationPlan: action.plan }
+  }
   let next: CrrtLearningSessionAction
   if (action.type === 'device') {
     if (

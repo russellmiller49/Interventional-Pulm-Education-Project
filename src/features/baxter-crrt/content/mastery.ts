@@ -24,9 +24,9 @@ export interface BaxterCrrtMasteryManifest {
 }
 
 /**
- * CRRT-16 is presented under a masked title and combines recurrent filter,
- * access/circuit, interruption, delivery-history, and reassessment signals.
- * The 80% rule is an educational completion rule, not certification.
+ * Historical grading manifest retained for compatibility with existing records and engine tests.
+ * The public self-paced host uses only the stable ID and device identity. Thresholds and
+ * restrictions here must not govern access, hints, current progress, or learner claims.
  */
 export const baxterCrrtMasteryManifest: BaxterCrrtMasteryManifest = Object.freeze({
   id: 'MASTERY-PRISMAX-01',

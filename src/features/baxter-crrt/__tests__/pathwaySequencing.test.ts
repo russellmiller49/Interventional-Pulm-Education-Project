@@ -240,12 +240,9 @@ describe('CRRT Learn pathway sequencing', () => {
     }
   })
 
-  it('keeps prerequisites advisory: the integration capstone still lists all seven earlier sections', () => {
+  it('keeps integration teaching order without any catalog prerequisite lock', () => {
     const integration = criticalCareActivityById.get('crrt:learn:crrt-pressure-profile-integration')
-    expect([...(integration?.prerequisiteActivityIds ?? [])].sort()).toEqual(
-      PERSISTENT_SECTION_IDS.filter((id) => id !== 'crrt-pressure-profile-integration')
-        .map((id) => `crrt:learn:${id}`)
-        .sort(),
-    )
+    expect(integration?.prerequisiteActivityIds).toEqual([])
+    expect(integration?.completionEvidenceAuthority).toBe('none')
   })
 })

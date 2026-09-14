@@ -188,7 +188,8 @@ function defineActivities(
       title: seed.title,
       description,
       kind:
-        moduleId === 'mechanical-ventilation' && section === 'assess'
+        (moduleId === 'mechanical-ventilation' || moduleId === 'baxter-crrt') &&
+        section === 'assess'
           ? 'practice-case'
           : section === 'learn'
             ? seed.sourceId === 'pac-signal-validation'
@@ -204,7 +205,9 @@ function defineActivities(
       pathwayIds: seed.pathwayIds,
       competencyIds: seed.competencyIds,
       prerequisiteActivityIds:
-        moduleId === 'mechanical-ventilation' ? [] : (seed.prerequisiteActivityIds ?? []),
+        moduleId === 'mechanical-ventilation' || moduleId === 'baxter-crrt'
+          ? []
+          : (seed.prerequisiteActivityIds ?? []),
       teachesConceptIds: seed.teachesConceptIds ?? conceptMetadata.teachesConceptIds,
       assumedConceptIds: seed.assumedConceptIds ?? conceptMetadata.assumedConceptIds,
       estimatedMinutes:
@@ -213,7 +216,9 @@ function defineActivities(
       curriculumStage: seed.curriculumStage,
       stageOrder: seed.stageOrder,
       completionRuleId: `${moduleDefinition.activityIdPrefix}:completion:${section}-existing`,
-      ...(section === 'assess' && moduleId !== 'mechanical-ventilation'
+      ...(section === 'assess' &&
+      moduleId !== 'mechanical-ventilation' &&
+      moduleId !== 'baxter-crrt'
         ? {
             masteryRuleId: `${moduleDefinition.activityIdPrefix}:mastery:existing-assessment`,
           }
@@ -225,9 +230,14 @@ function defineActivities(
       reviewStatus: governance.reviewStatus,
       evidenceIds: seed.evidenceIds,
       contentVersion: contentVersionByModule[moduleId],
-      creditPolicy: moduleId === 'mechanical-ventilation' ? 'non-credit' : governance.creditPolicy,
+      creditPolicy:
+        moduleId === 'mechanical-ventilation' || moduleId === 'baxter-crrt'
+          ? 'non-credit'
+          : governance.creditPolicy,
       completionEvidenceAuthority:
-        moduleId === 'mechanical-ventilation' ? 'none' : governance.completionEvidenceAuthority,
+        moduleId === 'mechanical-ventilation' || moduleId === 'baxter-crrt'
+          ? 'none'
+          : governance.completionEvidenceAuthority,
     }) as CriticalCareActivityDefinition
   })
 }
@@ -1133,6 +1143,8 @@ const crrtAssessSeeds: readonly ActivitySeed[] = [
   {
     sourceId: 'MASTERY-PRISMAX-01',
     title: 'PrisMax troubleshooting challenge',
+    description:
+      'Explore a worked plan, use optional hints, and compare the modeled responses at your own pace.',
     difficulty: 'advanced',
     curriculumStage: 'integration',
     // stageOrder 1 is reserved for the pressure-profile integration lesson (WP10 §5.2).

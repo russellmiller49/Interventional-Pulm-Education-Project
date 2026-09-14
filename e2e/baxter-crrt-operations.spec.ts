@@ -194,7 +194,7 @@ for (const compact of [false, true]) {
     await answer(page, /Delivery has not been demonstrated/)
     expect((await saved(page)).completedLessonIds).not.toContain('crrt-alarms-troubleshooting')
     await review(page)
-    expect((await saved(page)).completedLessonIds).toContain('crrt-alarms-troubleshooting')
+    expect((await saved(page)).selfPaced.visitedLessonIds).toContain('crrt-alarms-troubleshooting')
     // The stable intervening citrate lesson is Batch C; choose only the authorized fluid lesson.
     await page.goto(`${base}crrt-fluid-liberation`)
     await click(page, 'Continue')
@@ -251,24 +251,13 @@ for (const compact of [false, true]) {
     await answer(page, /Reassess the original indication, native function/)
     await review(page)
     const history = await saved(page)
-    expect(history.completedLessonIds).toEqual(
+    expect(history.selfPaced.visitedLessonIds).toEqual(
       expect.arrayContaining(['crrt-alarms-troubleshooting', 'crrt-fluid-liberation']),
     )
     expect(history.completedLessonIds).not.toContain('crrt-anticoagulation')
     expect(history.bestSafeScores).toEqual({})
-    expect(
-      history.learnTaskHistory.find(
-        (e: { taskId: string }) => e.taskId === 'delivery-interpretation',
-      ),
-    ).toMatchObject({ response: 'current', correct: false, reviewed: true })
-    expect(
-      history.learnTaskHistory.find((e: { taskId: string }) => e.taskId === 'recorded-balance'),
-    ).toMatchObject({
-      response: compact ? 'balance:300' : 'balance:400',
-      correct: compact,
-      reviewed: true,
-      inputs: { simulationSeconds: 14400 },
-    })
+    expect(history.learnTaskHistory).toBeUndefined()
+    expect(history.completedLessonIds).toEqual([])
     expect(errors).toEqual([])
     await capture(page, info, '12-completed-two-lessons')
   })
@@ -314,9 +303,7 @@ test('Practice and Assess retain their original entry surfaces and do not award 
   page,
 }, info) => {
   await page.goto('/en/baxter-crrt/practice?case=CRRT-13')
-  await expect(
-    page.getByRole('heading', { name: 'Plan your approach before acting' }),
-  ).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Explain this case', exact: true })).toBeVisible()
   await expect(
     page.getByRole('heading', {
       name: 'Localize and correct a worsening access-pressure pattern',
@@ -331,12 +318,8 @@ test('Practice and Assess retain their original entry surfaces and do not award 
   ).toBeVisible()
   await capture(page, info, 'practice-device-reference-1440')
   await page.goto('/en/baxter-crrt/assess')
-  await expect(
-    page.getByRole('heading', { name: 'Plan your approach before acting' }),
-  ).toBeVisible()
-  await expect(
-    page.getByRole('checkbox', { name: 'Show teaching notes after each action' }),
-  ).not.toBeChecked()
+  await expect(page.getByRole('button', { name: 'Explain this case', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Reveal hint 1', exact: true })).toBeEnabled()
   await capture(page, info, 'assess-reference-1440')
   await page.setViewportSize({ width: 390, height: 844 })
   await capture(page, info, 'assess-reference-390')

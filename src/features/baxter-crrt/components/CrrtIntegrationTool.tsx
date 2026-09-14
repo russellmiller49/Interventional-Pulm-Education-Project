@@ -104,13 +104,36 @@ export function CrrtIntegrationTool({
             {s.alarms.length}. No manufacturer priority or automatic response is inferred.
           </p>
           {task.operation === 'integration-action' ? (
-            <p className={styles.observation}>
-              Current plan:{' '}
-              {run.integrationPlan === 'defer'
-                ? 'keep paused and escalate'
-                : 'guided case correction and verification'}
-              . Your first plan response remains in history.
-            </p>
+            <div className={styles.observation}>
+              {!run.integrationPlan ? (
+                <>
+                  <p>
+                    Choose a simulation path to explore. This does not answer the earlier question
+                    or perform an intervention.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => onAction({ type: 'choose-plan', plan: 'correct' })}
+                  >
+                    Explore correction path
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onAction({ type: 'choose-plan', plan: 'defer' })}
+                  >
+                    Explore paused escalation path
+                  </button>
+                </>
+              ) : (
+                <p>
+                  Current plan:{' '}
+                  {run.integrationPlan === 'defer'
+                    ? 'keep paused and escalate'
+                    : 'guided case correction and verification'}
+                  . The controls below perform the actual simulated actions.
+                </p>
+              )}
+            </div>
           ) : null}
           {command ? (
             <div className={styles.observation}>
@@ -217,9 +240,11 @@ export function CrrtIntegrationTool({
             <>
               <FluidChart run={run} />
               <p>
-                {run.integrationPlan === 'defer'
+                {run.integrationPlan === 'defer' && s.device.deliveryState === 'paused'
                   ? 'Delivery remains paused. The restriction is unresolved, and escalation has not improved the model.'
-                  : 'Compare the subsequent profile at restored flow with the earlier profile. Resumption does not erase recorded downtime or prove patient recovery.'}
+                  : corrected && s.device.deliveryState === 'running'
+                    ? 'Compare the subsequent profile at restored flow with the earlier profile. Resumption does not erase recorded downtime or prove patient recovery.'
+                    : 'No corrected and resumed interval has been recorded. Review the available observations or return to the preceding run steps.'}
               </p>
             </>
           ) : null}

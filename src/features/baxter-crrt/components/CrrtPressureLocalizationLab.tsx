@@ -63,6 +63,7 @@ const nodeForSite: Record<PressureLocalizationSite, CrrtCircuitNodeId> = {
 }
 
 export interface CrrtPressureLocalizationLabProps {
+  readonly onRetry?: () => void
   readonly onPhaseChange?: (phase: 'predict' | 'act' | 'observe' | 'explain') => void
   readonly onPredictionCommitted?: (prediction: PressureLocalizationPrediction) => void
   readonly onFeedbackDisplayed?: (prediction: PressureLocalizationPrediction) => void
@@ -73,6 +74,7 @@ export interface CrrtPressureLocalizationLabProps {
 
 export function CrrtPressureLocalizationLab({
   onPhaseChange,
+  onRetry,
   onPredictionCommitted,
   onFeedbackDisplayed,
   onCompletionEvidence,
@@ -138,6 +140,7 @@ export function CrrtPressureLocalizationLab({
   }
 
   function revisePrediction() {
+    onRetry?.()
     setCompletionReported(false)
     setCommittedPrediction(null)
     setRevealed(false)
@@ -296,7 +299,7 @@ export function CrrtPressureLocalizationLab({
       />
 
       <fieldset className={styles.predictionFieldset} disabled={committedPrediction !== null}>
-        <legend>3. Predict each signal before reveal</legend>
+        <legend>3. Optional prediction</legend>
         <p>
           Choose a direction relative to the starting values. “Higher” and “lower” refer only to
           numeric direction, including for negative values.
@@ -325,6 +328,16 @@ export function CrrtPressureLocalizationLab({
       </fieldset>
 
       <div className={styles.actions}>
+        {!revealed ? (
+          <button type="button" onClick={revealResult}>
+            Show explanation
+          </button>
+        ) : null}
+        {revealed && !committedPrediction ? (
+          <button type="button" onClick={revisePrediction}>
+            Try a prediction
+          </button>
+        ) : null}
         {committedPrediction === null ? (
           <button type="button" disabled={!predictionComplete} onClick={commitPrediction}>
             Commit prediction
@@ -349,7 +362,7 @@ export function CrrtPressureLocalizationLab({
         </p>
       ) : null}
 
-      {committedPrediction !== null && revealed ? (
+      {revealed ? (
         <section className={styles.resultPanel} aria-labelledby={`${idPrefix}-result-heading`}>
           <header>
             <span>Modeled pressure result</span>
@@ -358,6 +371,7 @@ export function CrrtPressureLocalizationLab({
             </h4>
           </header>
 
+          {!committedPrediction ? <p>Worked example · no prediction recorded.</p> : null}
           <p>{result.locationExplanation}</p>
           <p>{result.modelExplanation}</p>
 
@@ -381,7 +395,11 @@ export function CrrtPressureLocalizationLab({
                 {result.signals.map((signal) => (
                   <tr key={signal.id}>
                     <th scope="row">{signal.label}</th>
-                    <td>{directionLabel(committedPrediction[signal.id])}</td>
+                    <td>
+                      {committedPrediction
+                        ? directionLabel(committedPrediction[signal.id])
+                        : 'No prediction recorded'}
+                    </td>
                     <td>{directionLabel(signal.direction)}</td>
                     <td>
                       {formatSyntheticPressure(signal.baselineMmHg)} →{' '}
@@ -395,7 +413,7 @@ export function CrrtPressureLocalizationLab({
 
           <button
             type="button"
-            disabled={completionReported}
+            disabled={completionReported || !committedPrediction}
             onClick={() => {
               if (!committedPrediction || !revealed || completionReported) return
               setCompletionReported(true)

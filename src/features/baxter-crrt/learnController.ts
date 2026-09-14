@@ -51,6 +51,9 @@ export function crrtCurrentTaskIdentity(state: CrrtLearnAttempt): CrrtLearnIdent
   }
 }
 export type CrrtLearnAction =
+  | { type: 'continue'; identity: CrrtLearnIdentity }
+  | { type: 'retry'; identity: CrrtLearnIdentity }
+  | { type: 'navigate'; taskIndex: number }
   | { type: 'evidence'; evidence: CrrtLearnEvidence }
   | { type: 'complete'; identity: CrrtLearnIdentity; evidence?: CrrtLearnEvidence }
   | { type: 'operation'; identity: CrrtLearnIdentity; action: CrrtOperationalAction }
@@ -58,14 +61,47 @@ export function crrtLearnAttemptReducer(
   state: CrrtLearnAttempt,
   action: CrrtLearnAction,
 ): CrrtLearnAttempt {
+  const tasks = crrtLearnTasks[state.lessonId]!
+  if (action.type === 'navigate') {
+    if (!Number.isInteger(action.taskIndex) || !tasks[action.taskIndex]) return state
+    const task = tasks[action.taskIndex]
+    return {
+      ...state,
+      taskIndex: action.taskIndex,
+      finished: false,
+      run: task.run
+        ? task.run === state.run?.id
+          ? state.run
+          : createCrrtOperationalRun(task.run)
+        : undefined,
+    }
+  }
   const identity = crrtCurrentTaskIdentity(state)
   if (
     state.finished ||
     !sameCrrtLearnIdentity(identity, action.type === 'evidence' ? action.evidence : action.identity)
   )
     return state
-  const tasks = crrtLearnTasks[state.lessonId]!
   const task = tasks[state.taskIndex]
+  if (action.type === 'retry') {
+    return {
+      ...state,
+      evidence: state.evidence.filter((item) => !sameCrrtLearnIdentity(identity, item)),
+    }
+  }
+  if (action.type === 'continue') {
+    const next = tasks[state.taskIndex + 1]
+    return {
+      ...state,
+      taskIndex: next ? state.taskIndex + 1 : state.taskIndex,
+      finished: !next,
+      run: next?.run
+        ? next.run === state.run?.id
+          ? state.run
+          : createCrrtOperationalRun(next.run)
+        : undefined,
+    }
+  }
   if (action.type === 'operation') {
     if (!state.run || state.run.id !== task.run) return state
     const run = crrtOperationalRunReducer(state.run, task.operation, action.action)
@@ -109,14 +145,6 @@ export function crrtLearnAttemptReducer(
       !action.evidence.feedbackDisplayed)
   )
     return state
-  const continuedRun =
-    task.operation === 'integration-decision' && state.run
-      ? {
-          ...state.run,
-          integrationPlan:
-            action.evidence?.response === 'defer' ? ('defer' as const) : ('correct' as const),
-        }
-      : state.run
   return {
     ...state,
     evidence: action.evidence
@@ -127,7 +155,7 @@ export function crrtLearnAttemptReducer(
     finished: state.taskIndex === tasks.length - 1,
     run: tasks[state.taskIndex + 1]?.run
       ? tasks[state.taskIndex + 1].run === state.run?.id
-        ? continuedRun
+        ? state.run
         : createCrrtOperationalRun(tasks[state.taskIndex + 1].run!)
       : undefined,
   }

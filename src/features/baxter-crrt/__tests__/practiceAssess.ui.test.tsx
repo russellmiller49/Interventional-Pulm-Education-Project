@@ -46,9 +46,9 @@ describe('Baxter CRRT Practice curation and open Challenge access', () => {
   })
 
   // The revised introductory Learn journey is exercised in foundationLessons.ui.test.tsx.
-  // Practice and Assess regression expectations below remain unchanged.
+  // Case/device checks remain; grading and inferred phase completion are superseded.
 
-  it('keeps a revealed case debrief at Explain without emitting transfer completion', async () => {
+  it('does not infer completed phases or emit completion from an example debrief', async () => {
     const definition = getBaxterCrrtCase('CRRT-01')
     const initialSession = createCrrtLearningSession({
       caseDefinition: definition,
@@ -67,42 +67,25 @@ describe('Baxter CRRT Practice curation and open Challenge access', () => {
       <CrrtActivityWorkspace
         session={revealedSession}
         mode="practice"
-        progressLabel="Completed case"
+        progressLabel="Example reviewed"
         onReset={jest.fn()}
         onSaveAndExit={jest.fn()}
       >
-        <div>Completed CRRT case</div>
+        <div>CRRT example</div>
       </CrrtActivityWorkspace>,
     )
 
-    const phases = screen.getByRole('group', { name: 'CRRT shared activity phases' })
-    expect(within(phases).getByText('Explain').closest('li')).toHaveAttribute(
-      'aria-current',
-      'step',
-    )
-    expect(within(phases).getByText('Transfer').closest('li')).not.toHaveAttribute('aria-current')
-    await waitFor(() =>
-      expect(
-        mockRecordLifecycleEvent.mock.calls.map(
-          ([event]) => (event as { interaction: string }).interaction,
-        ),
-      ).toContain('critical_care_debrief_viewed'),
-    )
-    expect(
-      mockRecordLifecycleEvent.mock.calls.map(
-        ([event]) => (event as { interaction: string }).interaction,
-      ),
-    ).not.toContain('critical_care_transfer_completed')
+    expect(screen.queryByRole('group', { name: 'CRRT shared activity phases' })).toBeNull()
+    expect(screen.queryByText(/, completed/)).toBeNull()
+    expect(mockRecordLifecycleEvent).not.toHaveBeenCalled()
   })
 
   it('opens the full case workspace first, with ten core cases and seven collapsed extras', () => {
     const { container } = render(<BaxterCrrtPractice />)
 
     expect(container.querySelector('[data-critical-care-activity-shell]')).toBeInTheDocument()
-    const sharedPhases = screen.getByRole('group', { name: 'CRRT shared activity phases' })
-    for (const label of ['Recognize', 'Predict', 'Act', 'Observe', 'Explain', 'Transfer']) {
-      expect(within(sharedPhases).getByText(label)).toBeInTheDocument()
-    }
+    expect(screen.getByRole('navigation', { name: 'CRRT case stages' })).toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: 'CRRT shared activity phases' })).toBeNull()
     const selector = screen.getByRole('combobox', { name: 'Station-grouped core case' })
     const values = within(selector)
       .getAllByRole('option')
@@ -187,7 +170,7 @@ describe('Baxter CRRT Practice curation and open Challenge access', () => {
         name: 'Recurrent filter loss across access, filtration, downtime, and policy domains',
       }),
     ).not.toHaveLength(0)
-    expect(screen.getByRole('note', { name: 'Challenge flow.' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Explain this case' })).toBeEnabled()
     expect(screen.queryByText(/remaining core cases|capstone locked/i)).not.toBeInTheDocument()
   })
 
@@ -207,7 +190,7 @@ describe('Baxter CRRT Practice curation and open Challenge access', () => {
         }).length,
       ).toBeGreaterThan(0),
     )
-    expect(screen.getByRole('note', { name: 'Challenge flow.' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Explain this case' })).toBeEnabled()
     expect(screen.getByText('Live patient, prescription, and circuit')).toBeInTheDocument()
     expect(screen.getByText('Relevant labs')).toBeInTheDocument()
     expect(screen.getByText('Pressure pattern')).toBeInTheDocument()

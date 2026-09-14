@@ -1,13 +1,6 @@
 'use client'
 
-import {
-  ArrowRight,
-  BadgeCheck,
-  BookOpenCheck,
-  Check,
-  ClipboardCheck,
-  GraduationCap,
-} from 'lucide-react'
+import { ArrowRight, BookOpenCheck, Check, ClipboardCheck, GraduationCap } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { baxterCrrtNavBase } from '@/features/learning-module/moduleRoutes'
@@ -21,7 +14,8 @@ import {
   type BaxterCrrtRecommendedActivity,
 } from '../content/curriculum'
 import { baxterCrrtLearnLessonById } from '../content/learnLessons'
-import { createDefaultProgress, readProgress, type BaxterCrrtProgressV3 } from '../engine/progress'
+import { readCrrtSelfPacedProgress } from '../selfPacedProgress'
+import { BAXTER_CRRT_LEARN_LESSON_IDS } from '../content/learnerRegistry'
 import { BaxterCrrtModuleFrame } from './BaxterCrrtModuleFrame'
 import { SourcesPanel } from './SourcesPanel'
 import styles from './baxter-crrt.module.css'
@@ -46,23 +40,26 @@ function activityLink(activity: BaxterCrrtRecommendedActivity) {
 }
 
 export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
-  const [progress, setProgress] = useState<BaxterCrrtProgressV3>(createDefaultProgress)
+  const [progress, setProgress] = useState(() => readCrrtSelfPacedProgress(null))
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
     const hydrationTimer = window.setTimeout(() => {
-      setProgress(readProgress())
+      setProgress(readCrrtSelfPacedProgress())
       setHydrated(true)
     }, 0)
     return () => window.clearTimeout(hydrationTimer)
   }, [])
 
-  const completedLessons = new Set(progress.completedLessonIds)
-  const completedCases = new Set(progress.completedPracticeCaseIds.map((id) => id.toUpperCase()))
-  const recommendation = nextRecommendedCrrtActivity(progress)
+  const completedLessons = new Set(progress.visitedLessonIds)
+  const completedCases = new Set(progress.visitedCaseIds.map((id) => id.toUpperCase()))
+  const visited = {
+    completedLessonIds: progress.visitedLessonIds,
+    completedPracticeCaseIds: progress.visitedCaseIds,
+  }
+  const recommendation = nextRecommendedCrrtActivity(visited)
   const resume = recommendation ? activityLink(recommendation) : null
-  const started =
-    progress.completedLessonIds.length > 0 || progress.completedPracticeCaseIds.length > 0
+  const started = progress.visitedLessonIds.length > 0 || progress.visitedCaseIds.length > 0
 
   return (
     <BaxterCrrtModuleFrame locale={locale} activeHref={baxterCrrtNavBase}>
@@ -71,14 +68,15 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
           <p className={styles.eyebrow}>Learn → Practice → Challenge</p>
           <h1>High-yield CRRT reasoning on PrisMax</h1>
           <p>
-            Build the concepts in seven focused lessons, apply them in a ten-case core path,
-            rehearse five cause-first safety drills, then try a harder challenge.
+            Build the concepts in {BAXTER_CRRT_LEARN_LESSON_IDS.length} focused lessons, apply them
+            in a ten-case core path, rehearse five cause-first safety drills, then try a harder
+            challenge.
           </p>
           {resume ? (
             <Link className={styles.hubContinue} href={resume.href}>
               <ArrowRight aria-hidden="true" />
               <span>
-                <strong>{started ? 'Continue where you left off' : 'Start the core path'}</strong>
+                <strong>{started ? 'Continue to the next topic' : 'Start the core path'}</strong>
                 <small>{resume.label}</small>
               </span>
             </Link>
@@ -97,15 +95,14 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
               <BookOpenCheck aria-hidden="true" />
               <strong>1 · Learn</strong>
               <p>
-                Seven real didactic lessons with a prescription lab and pressure-localization lab.
+                {BAXTER_CRRT_LEARN_LESSON_IDS.length} lessons with a prescription lab and
+                pressure-localization lab.
               </p>
             </Link>
             <Link href={`${baxterCrrtNavBase}/practice`}>
               <ClipboardCheck aria-hidden="true" />
               <strong>2 · Practice</strong>
-              <p>
-                Commit a plan, run the PrisMax simulation, reassess, and review a causal debrief.
-              </p>
+              <p>Read a worked plan, explore the PrisMax simulation, and compare its responses.</p>
             </Link>
             <Link href={`${baxterCrrtNavBase}/assess`}>
               <GraduationCap aria-hidden="true" />
@@ -128,7 +125,7 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
 
           <ol className={styles.stationList}>
             {baxterCrrtCurriculum.map((unit) => {
-              const complete = isCrrtCurriculumUnitComplete(progress, unit)
+              const complete = isCrrtCurriculumUnitComplete(visited, unit)
               return (
                 <li key={unit.id} className={styles.stationCard} data-complete={complete}>
                   <div className={styles.stationHeading}>
@@ -137,7 +134,7 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
                       <h3>{unit.title}</h3>
                       <p>{unit.summary}</p>
                     </div>
-                    {complete ? <BadgeCheck aria-label="Station complete" /> : null}
+                    {complete ? <span>Topics visited</span> : null}
                   </div>
                   <div className={styles.curriculumChips}>
                     {unit.lessonIds.map((lessonId) => {
@@ -195,7 +192,7 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
             <div>
               <span>Challenge</span>
               <h3>PrisMax troubleshooting challenge</h3>
-              <p>Open from the start. Teaching feedback is collected for the causal debrief.</p>
+              <p>Open from the start. Worked plans and hints are available throughout.</p>
             </div>
             <Link href={`${baxterCrrtNavBase}/assess`}>Open challenge</Link>
           </article>

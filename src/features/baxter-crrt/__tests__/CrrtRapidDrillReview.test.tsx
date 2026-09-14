@@ -12,7 +12,7 @@ describe('CRRT runnable rapid-drill interface', () => {
     const drillUi = screen.getByTestId('crrt-rapid-drill-review')
     expect(drillUi).toHaveAttribute('data-reviewer-only', 'false')
     expect(drillUi).toHaveAttribute('data-learner-runnable', 'true')
-    expect(drillUi).toHaveAttribute('data-analytics', 'allowlisted')
+    expect(drillUi).toHaveAttribute('data-analytics', 'none')
 
     const selector = within(drillUi).getByRole('combobox', { name: 'Rapid drill' })
     expect(
@@ -34,7 +34,7 @@ describe('CRRT runnable rapid-drill interface', () => {
     expect(screen.getByText(drill.openingSignal)).toBeInTheDocument()
   })
 
-  it('separates acknowledgement from correction and completes the cause-first sequence', () => {
+  it('separates acknowledgement from correction and reviews the sequence without claiming cause correction', () => {
     render(<CrrtRapidDrillReview />)
     const drillUi = screen.getByTestId('crrt-rapid-drill-review')
     const drill = getCrrtReviewerRapidDrill('DRILL-AIR')
@@ -52,9 +52,9 @@ describe('CRRT runnable rapid-drill interface', () => {
     for (const step of [...CRRT_CAUSE_FIRST_STEPS].reverse()) {
       fireEvent.click(within(drillUi).getByRole('button', { name: `Review: ${step.label}` }))
     }
-    expect(drillUi).toHaveAttribute('data-correction-verification', 'reviewed')
+    expect(drillUi).toHaveAttribute('data-correction-verification', 'not-reviewed')
     expect(
-      within(drillUi).getByText(/Cause-first sequence worked through.*Outcome: safe/i),
+      within(drillUi).getByText(/Reviewing steps does not verify cause correction/),
     ).toBeInTheDocument()
     expect(window.localStorage).toHaveLength(0)
   })

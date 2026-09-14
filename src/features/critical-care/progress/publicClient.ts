@@ -159,9 +159,9 @@ function mergePublicProgress(
   activities: readonly CriticalCareActivityDefinition[],
 ): CriticalCareProgressEnvelope {
   const publicActivityIds = new Set(activities.map((activity) => activity.id))
-  const normalizedActivities = (normalized?.activities ?? []).filter((activity) =>
-    publicActivityIds.has(activity.activityId),
-  )
+  const normalizedActivities = (normalized?.activities ?? [])
+    .filter((item) => !item.activityId.startsWith('crrt:'))
+    .filter((activity) => publicActivityIds.has(activity.activityId))
   const mergedByStrength = mergeProjectedActivities([
     ...enforceProgressCollectionAuthority(
       activities,

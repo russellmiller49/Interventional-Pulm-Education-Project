@@ -4,6 +4,7 @@ export default defineConfig({
   testDir: './e2e',
   testMatch: [
     'baxter-crrt-foundations.spec.ts',
+    'baxter-crrt-self-paced.spec.ts',
     'baxter-crrt-operations.spec.ts',
     'baxter-crrt-advanced.spec.ts',
   ],

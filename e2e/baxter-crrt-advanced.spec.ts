@@ -126,7 +126,7 @@ for (const compact of [false, true]) {
     await review(page)
     await answer(page, /Assess patient and circuit/)
     await review(page)
-    expect((await saved(page)).completedLessonIds).toContain('crrt-anticoagulation')
+    expect((await saved(page)).selfPaced.visitedLessonIds).toContain('crrt-anticoagulation')
     await capture(page, info, '06-citrate-complete')
 
     await page.goto(`${base}crrt-pressure-profile-integration`)
@@ -187,7 +187,9 @@ for (const compact of [false, true]) {
     )
     await capture(page, info, '11-plan-feedback')
     await review(page)
+    if (compact) await click(page, 'Explore paused escalation path')
     if (!compact) {
+      await click(page, 'Explore correction path')
       await click(page, 'Apply the verified case correction')
       await expect(page.getByTestId('integration-state')).toContainText('Delivery: paused')
       await capture(page, info, '12-corrected-before-resume')
@@ -226,38 +228,23 @@ for (const compact of [false, true]) {
     await answer(page, /Retain the reported effluent total/)
     await review(page)
     const progress = await saved(page)
-    expect(progress.completedLessonIds).toEqual(
+    expect(progress.selfPaced.visitedLessonIds).toEqual(
       expect.arrayContaining(['crrt-anticoagulation', 'crrt-pressure-profile-integration']),
     )
     expect(progress.bestSafeScores).toEqual({})
     expect(progress.completedPracticeCaseIds).toEqual([])
     expect(progress.completedMasteryCapstoneIds).toEqual([])
-    expect(
-      progress.learnTaskHistory.find((e: { taskId: string }) => e.taskId === 'case-plan'),
-    ).toMatchObject({
-      response: compact ? 'defer' : 'unsafe-flow',
-      correct: compact,
-      reviewed: true,
-    })
-    expect(
-      progress.learnTaskHistory.find((e: { taskId: string }) => e.taskId === 'case-balance'),
-    ).toMatchObject({
-      correct: true,
-      inputs: {
-        downtimeSeconds: compact ? 1800 : 600,
-        simulationSeconds: 3600,
-        bloodFlowMlMin: 120,
-      },
-    })
+    expect(progress.learnTaskHistory).toBeUndefined()
+    expect(progress.completedLessonIds).toEqual([])
     await capture(page, info, '16-completed-citrate-and-integration')
-    await click(page, 'Repeat with a new attempt')
+    await click(page, 'Repeat lesson')
     expect((await saved(page)).learnTaskHistory).toEqual(progress.learnTaskHistory)
     await expect(button(page, 'Review patient and treatment')).toBeVisible()
     expect(errors).toEqual([])
   })
 }
 
-test('Batch C history, reload, review and compact reflow retain old responses and restart the whole session', async ({
+test('Batch C session review, reload and compact reflow keep answers transient and restart the whole session', async ({
   page,
 }, info) => {
   await page.goto(`${base}crrt-pressure-profile-integration`)
@@ -269,11 +256,12 @@ test('Batch C history, reload, review and compact reflow retain old responses an
   const old = (await saved(page)).learnTaskHistory
   await page.getByText(/Lesson tasks ·/).click()
   await click(page, 'Localize the change and state the uncertainty · reviewed')
-  await expect(page.getByText(/First response:/)).toContainText(
-    'An isolated access-side limitation',
-  )
-  await capture(page, info, '17-review-preserves-first-answer')
-  await click(page, 'Return to current task')
+  await expect(
+    page.getByRole('radio', { name: /An isolated access-side limitation/ }),
+  ).toBeChecked()
+  await expect(page.getByRole('heading', { name: 'Reasoning feedback' })).toBeVisible()
+  await capture(page, info, '17-review-current-session-answer')
+  await review(page)
   await page.getByRole('combobox', { name: 'CRRT lesson' }).selectOption('crrt-anticoagulation')
   await page.goBack()
   await expect(button(page, 'Review patient and treatment')).toBeVisible()
@@ -286,7 +274,7 @@ test('Batch C history, reload, review and compact reflow retain old responses an
   await page.reload()
   await expect(button(page, 'Review patient and treatment')).toBeVisible()
   expect((await saved(page)).learnTaskHistory).toEqual(old)
-  await expect(page.getByText(/in-progress controls are not restored/)).toBeVisible()
+  await expect(page.getByText(/Each visit starts a fresh simulation/)).toBeVisible()
   for (const width of [1440, 1280, 1024, 900, 720, 320]) {
     await page.setViewportSize({ width, height: 900 })
     await capture(page, info, `18-integration-reflow-${width}`)

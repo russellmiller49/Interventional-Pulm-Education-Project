@@ -101,7 +101,7 @@ describe('CRRT learning-session reducer', () => {
     expect(directDebrief.debriefRevealed).toBe(true)
   })
 
-  it('runs only the masked CRRT-16 capstone mapping and ignores hint actions', () => {
+  it('runs only the masked CRRT-16 capstone mapping and permits optional hints', () => {
     const mastery = createCrrtLearningSession({
       caseDefinition: getBaxterCrrtCase('CRRT-16'),
       experience: 'mastery',
@@ -109,7 +109,7 @@ describe('CRRT learning-session reducer', () => {
       attempt: 1,
     })
     expect(mastery.masteryCapstoneId).toBe('MASTERY-PRISMAX-01')
-    expect(crrtLearningSessionReducer(mastery, { type: 'USE_HINT' })).toBe(mastery)
+    expect(crrtLearningSessionReducer(mastery, { type: 'USE_HINT' }).usedHintIds).toHaveLength(1)
     expect(() =>
       createCrrtLearningSession({
         caseDefinition: getBaxterCrrtCase('CRRT-04'),

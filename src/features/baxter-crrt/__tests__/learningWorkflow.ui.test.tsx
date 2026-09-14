@@ -43,7 +43,7 @@ describe('Baxter CRRT case player', () => {
       expect(within(ribbon).getByText(label)).toBeInTheDocument()
     }
     expect(within(ribbon).getByText('Read + Define')).toBeInTheDocument()
-    expect(within(ribbon).getByText('Select + Predict')).toBeInTheDocument()
+    expect(within(ribbon).getByText('Worked example')).toBeInTheDocument()
     expect(within(ribbon).getByText('Act + Observe')).toBeInTheDocument()
     expect(within(ribbon).getByText('Reassess + Reflect')).toBeInTheDocument()
     const sharedPhases = screen.getByRole('group', { name: 'CRRT shared activity phases' })
@@ -110,10 +110,10 @@ describe('Baxter CRRT case player', () => {
     expect(machine.getByLabelText('Pilot flow displays')).toHaveTextContent('70 mL/h')
   })
 
-  it('runs the named Challenge without hints or a case/device picker', () => {
+  it('runs the named Challenge with optional hints and no case/device picker', () => {
     render(<CasePlayerHarness experience="mastery" />)
 
-    expect(screen.getByRole('note', { name: 'Challenge flow.' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reveal hint 1' })).toBeEnabled()
     expect(
       screen.getByRole('heading', {
         name: 'Recurrent filter loss across access, filtration, downtime, and policy domains',

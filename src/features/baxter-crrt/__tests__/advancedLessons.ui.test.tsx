@@ -7,7 +7,7 @@ import {
   createDefaultProgress,
   recordLessonCompletion,
 } from '../engine/progress'
-import { CRRT_ADVANCED_VERSION } from '../content/advancedLessons'
+import { readCrrtSelfPacedProgress } from '../selfPacedProgress'
 
 jest.mock('@/features/critical-care/analytics', () => ({ recordCriticalCareEvent: jest.fn() }))
 jest.mock('@/i18n/navigation', () => ({
@@ -35,10 +35,12 @@ beforeEach(() => {
   window.localStorage.clear()
   window.history.replaceState({}, '', '/en/baxter-crrt/learn?lesson=crrt-anticoagulation')
 })
-it('completes the actual citrate pathway after selections and reviewed applications, retaining a wrong first response', async () => {
+it('completes the actual citrate pathway after selections and reviewed applications, keeping feedback in-session', async () => {
   writeProgress(recordLessonCompletion(createDefaultProgress(), 'crrt-anticoagulation'))
   render(<BaxterCrrtLearn initialLessonId="crrt-anticoagulation" />)
-  await waitFor(() => expect(screen.getByText(/Prior completion retained/)).toBeInTheDocument())
+  await waitFor(() =>
+    expect(screen.getByText(/Historical records remain unchanged/)).toBeInTheDocument(),
+  )
   expect(readProgress().learnTaskHistory ?? []).toHaveLength(0)
   click('Continue')
   expect(screen.getByRole('button', { name: 'Review observations and continue' })).toBeDisabled()
@@ -52,15 +54,8 @@ it('completes the actual citrate pathway after selections and reviewed applicati
   ).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('radio', { name: /Patient calcium is adequate/ }))
   click('Check reasoning')
-  await waitFor(() =>
-    expect(
-      readProgress().learnTaskHistory?.find((e) => e.taskId === 'sample-application')
-        ?.feedbackDisplayed,
-    ).toBe(true),
-  )
-  expect(
-    readProgress().learnTaskHistory?.find((e) => e.taskId === 'sample-application')?.reviewed,
-  ).toBe(false)
+  expect(screen.getByRole('status')).toHaveTextContent('Reasoning feedback')
+  expect(readProgress().learnTaskHistory).toBeUndefined()
   click('Review feedback and continue')
   click('Continue')
   for (const b of within(
@@ -70,26 +65,17 @@ it('completes the actual citrate pathway after selections and reviewed applicati
   click('Review observations and continue')
   answer(/Conclude that circuit anticoagulation is insufficient/)
   answer(/Net alkali excess/)
-  expect(screen.queryByText('Current lesson work recorded')).not.toBeInTheDocument()
+  expect(screen.queryByText('End of this lesson')).not.toBeInTheDocument()
   answer(/Assess patient and circuit/)
-  expect(screen.getByText('Current lesson work recorded')).toBeInTheDocument()
-  const history = readProgress().learnTaskHistory!
-  expect(history).toHaveLength(6)
-  expect(history.every((e) => e.contentVersion === CRRT_ADVANCED_VERSION && e.reviewed)).toBe(true)
-  expect(history.find((e) => e.taskId === 'sample-application')).toMatchObject({
-    response: 'systemic-safe',
-    correct: false,
-  })
-  expect(history.find((e) => e.taskId === 'metabolic-application')).toMatchObject({
-    response: 'circuit-dose',
-    correct: false,
-  })
+  expect(screen.getByText('End of this lesson')).toBeInTheDocument()
+  expect(readProgress().learnTaskHistory).toBeUndefined()
+  expect(readCrrtSelfPacedProgress().visitedLessonIds).toContain('crrt-anticoagulation')
   expect(readProgress().completedPracticeCaseIds).toEqual([])
   expect(readProgress().completedMasteryCapstoneIds).toEqual([])
   expect(readProgress().bestSafeScores).toEqual({})
-  click('Repeat with a new attempt')
+  click('Repeat lesson')
   expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument()
-  expect(readProgress().learnTaskHistory).toEqual(history)
+  expect(readProgress().learnTaskHistory).toBeUndefined()
 })
 
 it.each(['correct', 'defer', 'unsafe-flow'] as const)(
@@ -132,6 +118,7 @@ it.each(['correct', 'defer', 'unsafe-flow'] as const)(
           ? /Apply the existing verified regional correction/
           : /Increase blood flow through the unresolved restriction/,
     )
+    click(plan === 'defer' ? 'Explore paused escalation path' : 'Explore correction path')
     if (plan !== 'defer') {
       expect(
         screen.queryByRole('button', { name: 'Resume this corrected simulation' }),
@@ -149,7 +136,7 @@ it.each(['correct', 'defer', 'unsafe-flow'] as const)(
     const field = screen.getByRole('textbox', { name: 'Signed whole-patient balance (mL)' })
     fireEvent.change(field, { target: { value: 'Infinity' } })
     fireEvent.submit(field.closest('form')!)
-    expect(readProgress().learnTaskHistory?.some((e) => e.taskId === 'case-balance')).toBe(false)
+    expect(readProgress().learnTaskHistory).toBeUndefined()
     fireEvent.change(field, { target: { value: plan === 'defer' ? '150' : '133.3' } })
     click('Check recorded balance')
     expect(screen.getByRole('status')).toHaveTextContent(
@@ -161,23 +148,17 @@ it.each(['correct', 'defer', 'unsafe-flow'] as const)(
     answer(/Report regional findings, actions/)
     expect(screen.queryByLabelText('Current run and recorded observations')).not.toBeInTheDocument()
     answer(/Retain the reported effluent total/)
-    expect(screen.getByText('Current lesson work recorded')).toBeInTheDocument()
-    const history = readProgress().learnTaskHistory!
-    expect(history).toHaveLength(10)
-    expect(history.find((e) => e.taskId === 'case-plan')).toMatchObject({
-      response: plan,
-      correct: plan !== 'unsafe-flow',
-    })
-    expect(history.find((e) => e.taskId === 'case-balance')).toMatchObject({
-      correct: true,
-      inputs: { downtimeSeconds: plan === 'defer' ? 1800 : 600, bloodFlowMlMin: 120 },
-    })
+    expect(screen.getByText('End of this lesson')).toBeInTheDocument()
+    expect(readProgress().learnTaskHistory).toBeUndefined()
+    expect(readCrrtSelfPacedProgress().visitedLessonIds).toContain(
+      'crrt-pressure-profile-integration',
+    )
     expect(readProgress().completedPracticeCaseIds).toEqual([])
     expect(readProgress().bestSafeScores).toEqual({})
   },
 )
 
-it('resets the whole capstone on history navigation and rejects stale callbacks while preserving first answers', async () => {
+it('resets the whole capstone on history navigation and rejects stale callbacks without writing answers', async () => {
   window.history.replaceState(
     {},
     '',
@@ -188,7 +169,6 @@ it('resets the whole capstone on history navigation and rejects stale callbacks 
   click('Record the first 30 minutes')
   click('Review observations and continue')
   answer(/An isolated access-side limitation/)
-  const history = readProgress().learnTaskHistory!
   fireEvent.change(screen.getByRole('combobox', { name: 'CRRT lesson' }), {
     target: { value: 'crrt-anticoagulation' },
   })
@@ -200,7 +180,7 @@ it('resets the whole capstone on history navigation and rejects stale callbacks 
   fireEvent.popState(window)
   expect(screen.getByRole('button', { name: 'Review patient and treatment' })).toBeInTheDocument()
   expect(screen.getByText(/clock 0h 00m/)).toBeInTheDocument()
-  expect(readProgress().learnTaskHistory).toEqual(history)
+  expect(readProgress().learnTaskHistory).toBeUndefined()
   click('Restart lesson')
-  expect(readProgress().learnTaskHistory).toEqual(history)
+  expect(readProgress().learnTaskHistory).toBeUndefined()
 })

@@ -2,6 +2,7 @@ import { test, expect, type Page, type TestInfo, type Locator } from '@playwrigh
 
 type SavedProgress = {
   completedLessonIds: string[]
+  selfPaced: { visitedLessonIds: string[] }
   learnTaskHistory?: {
     taskId: string
     attemptId: string
@@ -116,15 +117,13 @@ for (const keyboardOnly of [false, true]) {
     await next(page)
     await modalityWalk(page)
     await answer(page, /Use the modality with the most mechanisms/)
-    await expect(page.getByRole('heading', { name: 'Review the reasoning' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Reasoning feedback' })).toBeVisible()
     expect((await progress(page)).completedLessonIds).toEqual([])
     await screenshot(page, info, '02-wrong-feedback')
     await review(page)
     await answer(page, /Solute support and zero net CRRT removal/)
     await review(page)
-    expect(
-      (await progress(page)).learnTaskHistory?.find((e) => e.taskId === 'goals-case'),
-    ).toMatchObject({ response: 'most-mechanisms', correct: false, reviewed: true })
+    expect((await progress(page)).learnTaskHistory).toBeUndefined()
     await click(page, /Continue to Circuit anatomy/)
     await selectAll(page, [
       'Patient access',
@@ -170,9 +169,7 @@ for (const keyboardOnly of [false, true]) {
       )
     await click(page, 'Commit prediction')
     await click(page, 'Reveal pressure pattern')
-    expect(
-      (await progress(page)).learnTaskHistory?.find((e) => e.taskId === 'known-fault'),
-    ).toMatchObject({ feedbackDisplayed: true, reviewed: false })
+    expect((await progress(page)).learnTaskHistory).toBeUndefined()
     await screenshot(page, info, '04-known-pressure-feedback')
     await click(page, 'Review pressure comparison and continue')
     await expect(
@@ -209,18 +206,14 @@ for (const keyboardOnly of [false, true]) {
     await enterDowntime(page, '')
     await click(page, /Continue to Predicted consequences/)
     await expect(page.getByText(/Every predicted consequence is unavailable until/)).toBeVisible()
-    expect(
-      (await progress(page)).learnTaskHistory?.some((e) => e.taskId === 'downtime-comparison'),
-    ).toBe(false)
+    expect((await progress(page)).learnTaskHistory).toBeUndefined()
     await screenshot(page, info, '08-invalid-downtime-no-credit')
     await click(page, /Back to Construction/)
     await enterDowntime(page, '6')
     await click(page, /Continue to Predicted consequences/)
     await activate(page, page.getByRole('radio', { name: /projected average dose fell/ }))
     await click(page, 'Check comparison')
-    expect(
-      (await progress(page)).learnTaskHistory?.find((e) => e.taskId === 'downtime-comparison'),
-    ).toMatchObject({ reviewed: false, inputs: { weightKg: 80, downtimeHours: 6 } })
+    expect((await progress(page)).learnTaskHistory).toBeUndefined()
     await screenshot(page, info, '09-valid-projected-comparison')
     await click(page, 'Review comparison and continue')
     await next(page)
@@ -229,7 +222,7 @@ for (const keyboardOnly of [false, true]) {
     await answer(page, /^\+600 mL/)
     await review(page)
     const saved = await progress(page)
-    expect(saved.completedLessonIds).toEqual(
+    expect(saved.selfPaced.visitedLessonIds).toEqual(
       expect.arrayContaining([
         'crrt-indications-modality',
         'crrt-circuit-pressures',
@@ -237,7 +230,8 @@ for (const keyboardOnly of [false, true]) {
         'crrt-prescription-dosing',
       ]),
     )
-    expect(saved.completedLessonIds).toHaveLength(4)
+    expect(saved.selfPaced.visitedLessonIds).toHaveLength(4)
+    expect(saved.completedLessonIds).toEqual([])
     expect(saved.bestSafeScores).toEqual({})
     await screenshot(page, info, '10-batch-a-completion')
     await noOverflow(page)
@@ -245,16 +239,16 @@ for (const keyboardOnly of [false, true]) {
   })
 }
 
-test('Back/Forward, direct links, reload and repeat restart transient work and preserve first responses', async ({
+test('Back/Forward, direct links, reload and repeat restart transient work and preserve ungraded visits', async ({
   page,
 }, info) => {
   await page.goto('/en/baxter-crrt/learn?lesson=crrt-indications-modality')
-  await expect(page.getByText(/This visit starts a new exercise/)).toBeVisible()
+  await expect(page.getByText(/Each visit starts a fresh simulation/)).toBeVisible()
   await next(page)
   await next(page)
   await modalityWalk(page)
   await answer(page, /Fluid removal alone/)
-  const first = (await progress(page)).learnTaskHistory!.find((e) => e.taskId === 'goals-case')!
+  expect((await progress(page)).learnTaskHistory).toBeUndefined()
   await toLesson(page, 'crrt-prescription-dosing')
   await next(page)
   await click(page, /Continue to Construction/)
@@ -263,11 +257,7 @@ test('Back/Forward, direct links, reload and repeat restart transient work and p
   await expect(
     page.getByRole('heading', { name: 'Two treatment goals, one blood circuit' }),
   ).toBeVisible()
-  expect(
-    (await progress(page)).learnTaskHistory!.find(
-      (e) => e.attemptId === first.attemptId && e.taskId === 'goals-case',
-    ),
-  ).toEqual(first)
+  expect((await progress(page)).learnTaskHistory).toBeUndefined()
   await page.goForward()
   await expect(
     page.getByRole('heading', { name: 'One example, one denominator, one interval' }),
@@ -280,7 +270,7 @@ test('Back/Forward, direct links, reload and repeat restart transient work and p
     page.getByRole('heading', { name: 'One example, one denominator, one interval' }),
   ).toBeVisible()
   await click(page, 'Restart lesson')
-  expect((await progress(page)).learnTaskHistory).toHaveLength(2)
+  expect((await progress(page)).learnTaskHistory).toBeUndefined()
   await screenshot(page, info, 'history-restored-boundary')
 })
 
@@ -325,7 +315,8 @@ test('compact reduced-motion keyboard-only introductory journey and reflow', asy
   await keyboardActivate(/Solute support and zero net CRRT removal/, 'radio')
   await keyboardActivate('Check reasoning')
   await keyboardActivate('Review feedback and continue')
-  expect((await progress(page)).completedLessonIds).toEqual(['crrt-indications-modality'])
+  expect((await progress(page)).selfPaced.visitedLessonIds).toEqual(['crrt-indications-modality'])
+  expect((await progress(page)).completedLessonIds).toEqual([])
   for (const viewport of [
     { width: 1280, height: 720 },
     { width: 1024, height: 768 },

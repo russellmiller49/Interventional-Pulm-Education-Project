@@ -76,6 +76,7 @@ export interface CrrtRapidDrillReviewState {
 
 export type CrrtRapidDrillReviewAction =
   | { readonly type: 'SELECT_DRILL'; readonly drillId: CrrtRapidDrillId; readonly seed?: number }
+  | { readonly type: 'REVEAL_EXAMPLE' }
   | { readonly type: 'COMMIT_PREDICTION'; readonly optionId: string }
   | { readonly type: 'ACKNOWLEDGE_SIGNAL' }
   | { readonly type: 'COMPLETE_NEXT_STEP' }
@@ -117,6 +118,7 @@ export function reduceCrrtRapidDrillReview(
   if (action.type === 'RESET') return createCrrtRapidDrillReviewState(state.drillId, state.seed)
 
   const drill = getBaxterCrrtRapidDrill(state.drillId)
+  if (action.type === 'REVEAL_EXAMPLE') return freezeState({ ...state, faultRevealed: true })
   if (action.type === 'COMMIT_PREDICTION') {
     if (state.predictionOptionId !== null) return state
     const prediction = drill.predictionOptions.find((option) => option.id === action.optionId)
@@ -145,6 +147,7 @@ export function reduceCrrtRapidDrillReview(
         : CRRT_CAUSE_FIRST_STEP_IDS[state.completedStepIds.length]
     if (!reviewedStep || state.completedStepIds.includes(reviewedStep)) return state
     const completedStepIds = [...state.completedStepIds, reviewedStep]
+    if (action.type === 'REVIEW_STEP') return freezeState({ ...state, completedStepIds })
     const completed = completedStepIds.length === CRRT_CAUSE_FIRST_STEP_IDS.length
     const prediction = drill.predictionOptions.find(
       (option) => option.id === state.predictionOptionId,
