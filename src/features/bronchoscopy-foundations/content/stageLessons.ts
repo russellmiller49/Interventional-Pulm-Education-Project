@@ -1,5 +1,4 @@
 import {
-  stageStepLocationErrors,
   type StageLessonBase,
   type StagePhase,
   type StageStepBase,
@@ -8,10 +7,11 @@ import {
 
 import type { ScopeGoal, ScopeMetricId, ScopeViewSpec } from '../components/scope/types'
 import { scopeViewErrors } from '../engine/scope/scopeViewErrors'
-import { STEPS_LANDMARKS, TEACHING_LANDMARKS } from './landmarks'
 import { bronchLearnerCopyErrors } from './learnerCopy'
 import { fiveControlsLearnInputs } from './fiveControlsLearn'
 import type { BronchLearnUnit } from './learnUnit'
+import { COURSE_FLOWS, activityForChunk, type CourseChunk, type CourseActivity } from './courseFlow'
+import { inspectionReport } from '../engine/inspectionReport'
 import {
   bronchActivityId,
   bronchSection,
@@ -30,15 +30,8 @@ import type {
   BronchWorkspace,
 } from './types'
 
-/**
- * The adapter: every section as one ordered list of steps on the lesson stage.
- *
- * Nothing here is authored as a step by a component. A section definition says what it is — its
- * texts, its items, its Act, its workspace — and this file arranges them into the one shape every
- * section shares: Recognize, Predict, Act, [Observe], Explain, then the transfer as a second,
- * shorter round. A section whose Act is a scope lab with an `observe` gets the Observe step; no
- * other Act does. Every step says which pane its work is done in, in the words the pane carries.
- */
+/** Section-authored sequences adapt existing content and engines to the course host.
+ * Presentation, disclosure, response identity and engine phases remain separate. */
 export type BronchStageInteraction =
   | { readonly kind: 'read' }
   | { readonly kind: 'prediction'; readonly stage: BronchStageItem; readonly round: 0 | 1 }
@@ -63,9 +56,11 @@ export type BronchStageInteraction =
 
 export interface BronchStageStep extends StageStepBase<BronchStageInteraction> {
   readonly lookIn: StageStepLocation
-  /** What the Simulator panel shows while this step is current. */
+  /** The existing tool or media needed by the current authored task. */
   readonly workspace: BronchWorkspace
   readonly learn?: BronchLearnUnit
+  readonly course?: CourseChunk
+  readonly activity?: CourseActivity
 }
 
 export interface BronchStageLesson extends StageLessonBase<BronchStageStep> {
@@ -90,6 +85,7 @@ export const ACT_ACTION_LABELS = {
 } as const
 
 export interface StepInput {
+  readonly id?: string
   readonly phase: StagePhase
   readonly title: string
   readonly instruction: string
@@ -99,28 +95,8 @@ export interface StepInput {
   readonly interaction: BronchStageInteraction
   readonly workspace: BronchWorkspace
   readonly learn?: BronchLearnUnit
-}
-
-function predictionInstruction(stage: BronchStageItem, section: BronchSectionDefinition): string {
-  if (stage.choiceAirways) {
-    return 'Read the situation on this card, choose the airway on the airway map in the Simulator panel, then submit your choice on this card.'
-  }
-  const unlock =
-    section.workspace.kind === 'scope' || section.act.kind === 'scope-lab'
-      ? ' The scope controls unlock once you have.'
-      : ''
-  return `Read the situation, choose one answer on this card, then submit it.${unlock}`
-}
-
-function predictionLookIn(stage: BronchStageItem): StageStepLocation {
-  return stage.choiceAirways
-    ? {
-        pane: 'simulator',
-        landmark: 'the airway map',
-        alsoPane: 'steps',
-        alsoLandmark: STEPS_LANDMARKS.decision,
-      }
-    : { pane: 'steps', landmark: STEPS_LANDMARKS.choices }
+  readonly course?: CourseChunk
+  readonly activity?: CourseActivity
 }
 
 function actInteraction(section: BronchSectionDefinition): BronchStageInteraction {
@@ -158,104 +134,81 @@ function actWorkspace(section: BronchSectionDefinition): BronchWorkspace {
 
 function buildInputs(section: BronchSectionDefinition): readonly StepInput[] {
   if (section.id === 'five-controls') return fiveControlsLearnInputs()
-  const items = bronchSectionItems(section.id)
-  const base = section.workspace
-  const inputs: StepInput[] = []
-
-  inputs.push({
-    phase: 'recognize',
-    title: section.recognizeTitle,
-    instruction: section.steps.recognize.instruction,
-    lookIn: section.steps.recognize.lookIn,
-    rationale: section.why,
-    actionLabel: CONTINUE,
-    interaction: { kind: 'read' },
-    workspace: base,
+  const flow = COURSE_FLOWS[section.id]
+  if (!flow) throw new Error(`Section ${section.id} has no authored course flow.`)
+  return flow.map((chunk) => {
+    const items = bronchSectionItems(section.id)
+    const isCheck = chunk.kind === 'check' || chunk.kind === 'transfer'
+    const stage = chunk.kind === 'transfer' ? items.transfer : items.prediction
+    const act = section.act
+    const observe = act.kind === 'scope-lab' ? act.observe : undefined
+    const view = observe?.view ?? (act.kind === 'scope-lab' ? act.view : null)
+    const interaction: BronchStageInteraction = isCheck
+      ? { kind: 'prediction', stage, round: chunk.kind === 'transfer' ? 1 : 0 }
+      : chunk.learnerRecord
+        ? { kind: 'report', report: inspectionReport({ inspectionSnapshot: null }) }
+        : chunk.kind === 'practice'
+          ? actInteraction(section)
+          : chunk.kind === 'observe' && view && observe
+            ? {
+                kind: 'observe',
+                view,
+                goals: observe.goals,
+                readouts: observe.readouts ?? view.readouts ?? [],
+              }
+            : { kind: chunk.kind === 'debrief' ? 'explain' : 'read' }
+    const workspace: BronchWorkspace =
+      chunk.kind === 'practice'
+        ? actWorkspace(section)
+        : chunk.kind === 'observe' && view
+          ? { kind: 'scope', view }
+          : isCheck && stage.choiceAirways
+            ? { kind: 'map', lit: [], caption: 'Choose an airway from the map.' }
+            : section.workspace
+    return {
+      id: chunk.id,
+      phase:
+        chunk.kind === 'teach'
+          ? 'recognize'
+          : chunk.kind === 'practice'
+            ? 'act'
+            : chunk.kind === 'check'
+              ? 'predict'
+              : chunk.kind === 'debrief'
+                ? 'explain'
+                : chunk.kind,
+      title: chunk.title,
+      instruction:
+        chunk.instruction ??
+        (isCheck
+          ? 'Consider the situation and choose an answer. Feedback appears after you submit.'
+          : chunk.kind === 'debrief'
+            ? 'Review the reasoning and the limits of this exercise before continuing.'
+            : 'Read the explanation with its example, then continue when you are ready to apply it.'),
+      lookIn: { pane: 'steps', landmark: 'the current lesson activity' },
+      actionLabel: isCheck
+        ? COMMIT
+        : chunk.kind === 'practice'
+          ? ACT_ACTION_LABELS[section.act.kind]
+          : CONTINUE,
+      interaction,
+      workspace,
+      course: chunk,
+      activity: activityForChunk(chunk),
+    }
   })
-
-  inputs.push({
-    phase: 'predict',
-    title: 'Decide first',
-    instruction: predictionInstruction(items.prediction, section),
-    lookIn: predictionLookIn(items.prediction),
-    actionLabel: COMMIT,
-    interaction: { kind: 'prediction', stage: items.prediction, round: 0 },
-    workspace: base,
-  })
-
-  inputs.push({
-    phase: 'act',
-    title: section.steps.act.title,
-    instruction: section.steps.act.instruction,
-    lookIn: section.steps.act.lookIn,
-    actionLabel: ACT_ACTION_LABELS[section.act.kind],
-    interaction: actInteraction(section),
-    workspace: actWorkspace(section),
-  })
-
-  if (section.act.kind === 'scope-lab' && section.act.observe) {
-    const observe = section.act.observe
-    const texts = section.steps.observe
-    if (!texts) throw new Error(`Section ${section.id} observes without a step text.`)
-    const view = observe.view ?? section.act.view
-    inputs.push({
-      phase: 'observe',
-      title: texts.title,
-      instruction: texts.instruction,
-      lookIn: texts.lookIn,
-      actionLabel: CONTINUE,
-      interaction: {
-        kind: 'observe',
-        view,
-        goals: observe.goals,
-        readouts: observe.readouts ?? view.readouts ?? [],
-      },
-      workspace: { kind: 'scope', view },
-    })
-  }
-
-  inputs.push({
-    phase: 'explain',
-    title: section.steps.explain.title,
-    instruction: section.steps.explain.instruction,
-    lookIn: {
-      pane: 'steps',
-      landmark: STEPS_LANDMARKS.verdict,
-      alsoPane: 'teaching',
-      alsoLandmark: TEACHING_LANDMARKS.adds,
-    },
-    rationale: section.controlStrip.sentence,
-    actionLabel: CONTINUE,
-    interaction: { kind: 'explain' },
-    workspace: section.act.kind === 'scope-lab' ? actWorkspace(section) : base,
-  })
-
-  const transfer = items.transfer
-  inputs.push({
-    phase: 'transfer',
-    title: 'Carry it forward',
-    instruction: transfer.retrievesFrom
-      ? 'The same principle from an earlier section, in a different situation. Choose one answer on this card and submit it.'
-      : 'The same principle, in a different situation. Choose one answer on this card and submit it.',
-    lookIn: predictionLookIn(transfer),
-    rationale: transfer.transferVariant,
-    actionLabel: COMMIT,
-    interaction: { kind: 'prediction', stage: transfer, round: 1 },
-    workspace: section.act.kind === 'scope-lab' ? actWorkspace(section) : base,
-  })
-
-  return inputs
 }
 
 function buildSteps(
   sectionId: BronchSectionId,
   inputs: readonly StepInput[],
 ): readonly BronchStageStep[] {
-  const predictionIndex = inputs.findIndex(
-    (input) => input.interaction.kind === 'prediction' && input.interaction.round === 0,
-  )
   return inputs.map((input, index) => ({
-    id: `${sectionId}-${index + 1}-${input.phase}`,
+    id: input.id
+      ? `${sectionId}-flow-v1-${input.id}`
+      : input.learn
+        ? `${sectionId}-learn-${input.learn.id}`
+        : `${sectionId}-${index + 1}-${input.phase}`,
     ordinal: index + 1,
     phase: input.phase,
     title: input.title,
@@ -264,13 +217,19 @@ function buildSteps(
     rationale: input.rationale,
     actionLabel: input.actionLabel,
     interaction: input.interaction,
-    gate: input.learn
-      ? 'open'
-      : predictionIndex >= 0 && index > predictionIndex
-        ? 'after-prediction'
-        : 'open',
+    gate: 'open',
     workspace: input.workspace,
     learn: input.learn,
+    course: input.course,
+    activity:
+      input.activity ??
+      (input.learn
+        ? input.learn.support === 'check' || input.learn.support === 'transfer'
+          ? 'independent-check'
+          : input.interaction.kind === 'read'
+            ? 'teaching'
+            : 'guided-practice'
+        : undefined),
   }))
 }
 
@@ -311,88 +270,52 @@ export function scopeViewOfStep(step: BronchStageStep): ScopeViewSpec | null {
   return step.workspace.kind === 'scope' ? step.workspace.view : null
 }
 
-/** The pre-commit surfaces of a lesson, as authored text: everything at or before the prediction. */
+/** Only pending checks are disclosure-restricted. Earlier worked teaching is intentional. */
 export function precommitAuthoredSurfaces(
   lesson: BronchStageLesson,
 ): readonly { readonly where: string; readonly text: string }[] {
-  // The pilot teaches before its formative check. Check the pending-item surfaces,
-  // not explanations deliberately taught earlier. Assess keeps its own disclosure policy.
-  if (lesson.steps[0]?.learn) {
-    const step = lesson.steps[lesson.predictionStepIndex]
-    return [
-      { where: 'check title', text: step.title },
-      { where: 'check instruction', text: step.instruction },
-      { where: 'check teaching', text: step.learn?.paragraphs.join(' ') ?? '' },
-    ]
-  }
-  const { section } = lesson
-  const surfaces: { where: string; text: string }[] = [
-    { where: 'title', text: section.title },
-    { where: 'short title', text: section.shortTitle },
-    { where: 'objective', text: section.objective },
-    { where: 'why', text: section.why },
-    { where: 'clinical question', text: section.clinicalQuestion },
+  return [
+    { where: 'title', text: lesson.title },
+    ...lesson.steps
+      .filter((step) => step.activity === 'independent-check')
+      .flatMap((step) => [
+        { where: `${step.id} check title`, text: step.title },
+        { where: `${step.id} check instruction`, text: step.instruction },
+        { where: `${step.id} check teaching`, text: step.learn?.paragraphs.join(' ') ?? '' },
+      ]),
   ]
-  for (const block of section.blocks) {
-    if (block.kind === 'after-commitment' || block.kind === 'boundary') continue
-    surfaces.push({ where: `block "${block.heading}" heading`, text: block.heading })
-    surfaces.push({ where: `block "${block.heading}" body`, text: block.body })
-    for (const point of block.points ?? [])
-      surfaces.push({ where: `block "${block.heading}" point`, text: point })
-    if (block.pointsLabel)
-      surfaces.push({ where: `block "${block.heading}" points label`, text: block.pointsLabel })
-  }
-  if (section.workspace.kind !== 'scope')
-    surfaces.push({ where: 'workspace caption', text: section.workspace.caption })
-  if (section.workspace.kind === 'monitor') {
-    for (const reading of section.workspace.readings)
-      surfaces.push({ where: `monitor ${reading.channel}`, text: reading.words })
-  }
-  lesson.steps.forEach((step, index) => {
-    if (index > lesson.predictionStepIndex && lesson.predictionStepIndex >= 0) return
-    surfaces.push(
-      { where: `step ${step.ordinal} title`, text: step.title },
-      { where: `step ${step.ordinal} instruction`, text: step.instruction },
-      { where: `step ${step.ordinal} action`, text: step.actionLabel },
-      { where: `step ${step.ordinal} look-in`, text: step.lookIn.landmark },
-    )
-    if (step.rationale)
-      surfaces.push({ where: `step ${step.ordinal} rationale`, text: step.rationale })
-    if (step.lookIn.alsoLandmark)
-      surfaces.push({ where: `step ${step.ordinal} look-in`, text: step.lookIn.alsoLandmark })
-    if (step.interaction.kind === 'prediction') {
-      surfaces.push({ where: `step ${step.ordinal} stem`, text: step.interaction.stage.item.stem })
-      if (step.interaction.stage.situation)
-        surfaces.push({
-          where: `step ${step.ordinal} situation`,
-          text: step.interaction.stage.situation,
-        })
-    }
-  })
-  return surfaces
 }
 
 export function validateBronchStageLessons(): readonly string[] {
   const errors: string[] = []
   for (const lesson of bronchStageLessons()) {
     const where = `Lesson ${lesson.sectionId}`
-    const teachingFirst = lesson.steps[0]?.learn !== undefined
     if (lesson.predictionStepIndex < 0) errors.push(`${where} has no prediction step.`)
     if (lesson.transferStepIndex < 0) errors.push(`${where} has no transfer prediction.`)
     if (lesson.transferStepIndex <= lesson.predictionStepIndex)
       errors.push(`${where} puts the transfer before the prediction.`)
-    const phases = lesson.steps.map((step) => step.phase)
-    if (phases[0] !== 'recognize') errors.push(`${where} does not open on Recognize.`)
-    if (phases.at(-1) !== 'transfer') errors.push(`${where} does not end on a transfer step.`)
-    if (!phases.includes('act')) errors.push(`${where} has nothing to do.`)
-    if (!phases.includes('explain')) errors.push(`${where} never explains.`)
+    if (lesson.steps[0]?.activity !== 'teaching')
+      errors.push(`${where} must introduce the task before a check.`)
+    if (!lesson.steps.some((step) => step.activity === 'guided-practice'))
+      errors.push(`${where} has no learner application.`)
+    if (new Set(lesson.steps.map((step) => step.id)).size !== lesson.steps.length)
+      errors.push(`${where} repeats a step identity.`)
+    {
+      const assigned = lesson.steps.flatMap((step) => step.course?.blocks ?? [])
+      for (const block of lesson.section.blocks)
+        if (!assigned.includes(block.id)) errors.push(`${where} drops source block ${block.id}.`)
+      for (const id of assigned)
+        if (!lesson.section.blocks.some((block) => block.id === id))
+          errors.push(`${where} names missing block ${id}.`)
+    }
     if (
-      !teachingFirst &&
-      phases.includes('observe') !==
-        (lesson.section.act.kind === 'scope-lab' && !!lesson.section.act.observe)
+      lesson.sectionId !== 'five-controls' &&
+      lesson.section.act.kind === 'scope-lab' &&
+      lesson.section.act.observe &&
+      !lesson.steps.some((step) => step.interaction.kind === 'observe')
     )
-      errors.push(`${where} observes without a scope lab that asks it to, or the reverse.`)
-    lesson.steps.forEach((step, index) => {
+      errors.push(`${where} drops its authored observation task.`)
+    lesson.steps.forEach((step) => {
       const stepWhere = `${where} step ${step.ordinal}`
       errors.push(
         ...bronchLearnerCopyErrors(`${stepWhere} title`, step.title, { allowDigits: false }),
@@ -401,13 +324,14 @@ export function validateBronchStageLessons(): readonly string[] {
       )
       if (step.rationale)
         errors.push(...bronchLearnerCopyErrors(`${stepWhere} rationale`, step.rationale))
-      errors.push(...stageStepLocationErrors(stepWhere, step.lookIn))
-      const expectedGate = teachingFirst
-        ? 'open'
-        : index > lesson.predictionStepIndex
-          ? 'after-prediction'
-          : 'open'
-      if (step.gate !== expectedGate) errors.push(`${stepWhere} has the wrong gate.`)
+      if (!step.course || !step.activity)
+        errors.push(`${stepWhere} lacks a presentation or disclosure contract.`)
+      if (step.gate !== 'open') errors.push(`${stepWhere} gates teaching behind a guess.`)
+      if (
+        step.activity === 'independent-check' &&
+        (step.course?.blocks.length || step.course?.visual !== 'none')
+      )
+        errors.push(`${stepWhere} carries worked teaching into a pending check.`)
       if (
         step.interaction.kind === 'prediction' &&
         step.interaction.round === 1 &&

@@ -34,7 +34,7 @@ describe('the one map', () => {
     const line = bronchCompositionLine()
     expect(line).toMatch(new RegExp(`^${composition.total} sections`))
     expect(line).toContain(`${BRONCH_PHASES.length} phases`)
-    expect(line).toMatch(new RegExp(`${composition.minutes} min$`))
+    expect(line).toMatch(new RegExp(`${composition.minutes} min estimated$`))
   })
 })
 

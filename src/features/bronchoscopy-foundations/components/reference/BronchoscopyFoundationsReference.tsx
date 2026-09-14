@@ -46,14 +46,14 @@ export function BronchoscopyFoundationsReference() {
             <a
               key={section.id}
               href={`#${section.id}`}
-              className="rounded-full border px-3 py-1 font-semibold"
+              className="inline-flex min-h-11 items-center rounded-full border px-3 py-2 font-semibold"
             >
               {section.title}
             </a>
           ))}
           <Link
             href={BRONCHOSCOPY_FOUNDATIONS_ATLAS_HREF}
-            className="rounded-full border px-3 py-1 font-semibold text-primary"
+            className="inline-flex min-h-11 items-center rounded-full border px-3 py-2 font-semibold text-primary"
             data-atlas-link
           >
             Airway atlas →

@@ -96,10 +96,25 @@ function Frame({
   readonly alt: string
   readonly outline?: readonly number[] | null
 }) {
+  const [failedSource, setFailedSource] = useState<string | null>(null)
+  if (failedSource === src)
+    return (
+      <span role="status" data-media-state="failed">
+        The teaching image could not be loaded. Reload to try again; a missing image does not
+        establish visual recognition.
+      </span>
+    )
   return (
     <span className={styles.figureFrame}>
       {/* eslint-disable-next-line @next/next/no-img-element -- static teaching files under public/ */}
-      <img className={styles.figureImage} src={src} alt={alt} width={width} height={height} />
+      <img
+        className={styles.figureImage}
+        src={src}
+        onError={() => setFailedSource(src)}
+        alt={alt}
+        width={width}
+        height={height}
+      />
       {outline && outline.length >= 6 ? (
         <svg
           className={styles.figureOverlay}
@@ -126,9 +141,19 @@ function ScopePhotoFigure({
 }) {
   const atlas = useManifest<ScopePhotoAtlas>(SCOPE_PHOTO_ATLAS_URL)
   if (atlas === null) return <p role="status">Loading the photograph…</p>
-  if (atlas === 'failed') return <p role="status">The photograph could not be loaded.</p>
+  if (atlas === 'failed')
+    return (
+      <p role="status" data-media-state="failed">
+        The photograph could not be loaded.
+      </p>
+    )
   const image = atlas.images.find((candidate) => candidate.id === media.imageId)
-  if (!image) return <p role="status">The photograph is not in the atlas.</p>
+  if (!image)
+    return (
+      <p role="status" data-media-state="failed">
+        The photograph is not in the atlas.
+      </p>
+    )
   const annotation = media.highlight
     ? image.annotations.find((candidate) => candidate.id === media.highlight)
     : undefined
@@ -150,9 +175,19 @@ function StillFigure({
 }) {
   const frames = useManifest<QuizFramesData>(QUIZ_FRAMES_URL)
   if (frames === null) return <p role="status">Loading the still…</p>
-  if (frames === 'failed') return <p role="status">The still could not be loaded.</p>
+  if (frames === 'failed')
+    return (
+      <p role="status" data-media-state="failed">
+        The still could not be loaded.
+      </p>
+    )
   const structure = frames.structures[media.structureId]
-  if (!structure) return <p role="status">The still is not in the atlas.</p>
+  if (!structure)
+    return (
+      <p role="status" data-media-state="failed">
+        The still is not in the atlas.
+      </p>
+    )
   const outline = media.kind === 'endoscopic-still' && media.outline ? structure.poly : null
   return (
     <Frame
@@ -168,9 +203,19 @@ function StillFigure({
 function CtFigure({ media }: { readonly media: Extract<MediaRef, { kind: 'ct-slice' }> }) {
   const ct = useManifest<CtCorrelationData>(CT_CORRELATION_URL)
   if (ct === null) return <p role="status">Loading the CT slice…</p>
-  if (ct === 'failed') return <p role="status">The CT slice could not be loaded.</p>
+  if (ct === 'failed')
+    return (
+      <p role="status" data-media-state="failed">
+        The CT slice could not be loaded.
+      </p>
+    )
   const structure = ct.structures[media.structureId]
-  if (!structure) return <p role="status">The CT slice is not in the atlas.</p>
+  if (!structure)
+    return (
+      <p role="status" data-media-state="failed">
+        The CT slice is not in the atlas.
+      </p>
+    )
   const src = media.plane === 'axial' ? structure.axial : structure.coronal
   return <Frame src={src} width={512} height={512} alt={mediaDescription(media)} />
 }

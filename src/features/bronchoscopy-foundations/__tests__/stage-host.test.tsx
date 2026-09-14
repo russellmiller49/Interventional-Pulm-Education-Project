@@ -1,3 +1,4 @@
+import { completeCourseStep, reachCourseStep } from '../test-support/courseHarness'
 import { cleanup, fireEvent, screen } from '@testing-library/react'
 
 import { BRONCH_SECTION_IDS, type BronchSectionId } from '../content/pathway'
@@ -16,7 +17,6 @@ import {
   decideFrame,
   fillLedgerEntries,
   fillReport,
-  goalStates,
   installDom,
   keyedChoiceId,
   mountSection,
@@ -26,9 +26,7 @@ import {
   orderSequence,
   otherChoiceId,
   placeSortRows,
-  scopePilot,
   settle,
-  stepRows,
   verdictOutcome,
 } from '../test-support/stageHarness'
 
@@ -86,85 +84,25 @@ function stepOfKind(lesson: BronchStageLesson, kind: BronchStageStep['interactio
   return step
 }
 
-/** Reads the Recognize step and commits the keyed prediction. */
+/** Reach the existing activity through the authored teaching sequence. */
 async function reachAct(lesson: BronchStageLesson) {
-  clickPrimary()
-  await settle()
-  commitById(keyedChoiceId(lesson.steps[lesson.predictionStepIndex]))
-  clickPrimary()
-  await settle()
-}
-
-/** Does the Act (and Observe) of any section the way a learner would, keyed answers throughout. */
-async function performAct(lesson: BronchStageLesson) {
-  const act = stepOfKind(
+  await reachCourseStep(
     lesson,
-    lesson.section.act.kind === 'scope-lab' ? 'scope-task' : lesson.section.act.kind,
+    stepOfKind(
+      lesson,
+      lesson.section.act.kind === 'scope-lab' ? 'scope-task' : lesson.section.act.kind,
+    ),
   )
-  expect(currentStepId()).toBe(act.id)
-  switch (act.interaction.kind) {
-    case 'sort':
-      placeSortRows(act)
-      clickPrimary()
-      clickPrimary()
-      break
-    case 'identify':
-      nameIdentifyRows(act)
-      clickPrimary()
-      clickPrimary()
-      break
-    case 'sequence':
-      orderSequence(act)
-      clickPrimary()
-      clickPrimary()
-      break
-    case 'ledger':
-      fillLedgerEntries(act)
-      answerLedger(act, 'best')
-      clickPrimary()
-      break
-    case 'report':
-      fillReport(act)
-      clickPrimary()
-      break
-    case 'scenario':
-      decideAllFrames(act)
-      clickPrimary()
-      break
-    case 'scope-task': {
-      const recipe = SCOPE_RECIPES[lesson.sectionId]
-      if (!recipe) throw new Error(`No scope recipe for ${lesson.sectionId}`)
-      recipe.act(scopePilot())
-      expect(goalStates().every((state) => state === 'true')).toBe(true)
-      clickPrimary()
-      await settle()
-      if (recipe.observe) {
-        const observe = stepOfKind(lesson, 'observe')
-        expect(currentStepId()).toBe(observe.id)
-        recipe.observe(scopePilot())
-        expect(goalStates().every((state) => state === 'true')).toBe(true)
-        clickPrimary()
-      }
-      break
-    }
-    default:
-      throw new Error(`Unexpected act ${act.interaction.kind}`)
-  }
-  await settle()
 }
-
-async function finishSection(lesson: BronchStageLesson, transferKeyed = true) {
-  expect(currentStepId()).toBe(stepOfKind(lesson, 'explain').id)
-  clickPrimary()
-  await settle()
-  const transfer = lesson.steps[lesson.transferStepIndex]
-  expect(currentStepId()).toBe(transfer.id)
-  commitById(transferKeyed ? keyedChoiceId(transfer) : otherChoiceId(transfer))
-  while (nowPrimary()) {
-    clickPrimary()
-    await settle()
-  }
+async function performAct(lesson: BronchStageLesson) {
+  const step = lesson.steps.find((entry) => entry.id === currentStepId())!
+  await completeCourseStep(lesson, step)
+}
+async function finishSection(lesson: BronchStageLesson) {
+  await reachCourseStep(lesson, lesson.steps.at(-1)!)
+  await completeCourseStep(lesson, lesson.steps.at(-1)!)
   expect(nowStatus()).toMatch(/worked through/)
+  expect(document.querySelector('[data-section-completion]')).not.toBeNull()
 }
 
 /**
@@ -178,11 +116,11 @@ describe('a sort section on the stage', () => {
     const steps = lesson.steps
     expect(currentStepId()).toBe(steps[0].id)
     expect(screen.getByRole('heading', { name: steps[0].title })).toBeInTheDocument()
-    expect(document.querySelector('[data-monitor]')).not.toBeNull()
-    expect(stepRows()[0]).toBe('current')
+    expect(document.querySelector('[data-monitor]')).toBeNull()
+    expect(document.querySelector('[data-course-teaching]')).not.toBeNull()
+    expect(document.querySelector('[data-step-list]')).toBeNull()
 
-    clickPrimary()
-    await settle()
+    await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
     expect(currentStepId()).toBe(steps[lesson.predictionStepIndex].id)
     expect(nowPrimary()?.disabled).toBe(true)
     expect(verdictOutcome()).toBeNull()
@@ -190,7 +128,7 @@ describe('a sort section on the stage', () => {
     expect(
       document.querySelector('[data-stage-sources]')?.getAttribute('data-stage-sources-claims'),
     ).toBe('false')
-    expect(document.querySelector('[data-read-before-you-decide]')).not.toBeNull()
+    expect(document.querySelector('[data-course-teaching]')).toBeNull()
     const predictStep = steps[lesson.predictionStepIndex]
     commitById(keyedChoiceId(predictStep))
     expect(verdictOutcome()).toBe('correct')
@@ -221,7 +159,7 @@ describe('a sort section on the stage', () => {
 
     expect(currentStepId()).toBe(stepOfKind(lesson, 'explain').id)
     expect(document.querySelector('[data-explain-recap] [data-answer-verdict]')).not.toBeNull()
-    expect(document.querySelector('[data-control-strip]')).not.toBeNull()
+    expect(document.querySelector('[data-teaching-block="anchor"]')).not.toBeNull()
     expect(document.querySelector('[data-new-concept]')).not.toBeNull()
     expect(document.querySelector('[data-teaching-block="boundary"]')).not.toBeNull()
     clickPrimary()
@@ -250,8 +188,7 @@ describe('a sort section on the stage', () => {
 
   it('lets a learner look back without losing the live step, and restarts from nothing', async () => {
     const { lesson } = await mountSection('shared-airway')
-    clickPrimary()
-    await settle()
+    await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
     commitById(keyedChoiceId(lesson.steps[lesson.predictionStepIndex]))
     clickPrimary()
     await settle()
@@ -259,7 +196,7 @@ describe('a sort section on the stage', () => {
     expect(currentStepId()).toBe(actId)
 
     const back = [...document.querySelectorAll<HTMLButtonElement>('[data-now-card] button')].find(
-      (button) => /^Back to/.test(button.textContent ?? ''),
+      (button) => /^Back$/.test(button.textContent ?? ''),
     )
     expect(back).toBeDefined()
     fireEvent.click(back!)
@@ -282,8 +219,7 @@ describe('a sort section on the stage', () => {
 
   it('opens at the first step whatever phase the address names, and keeps the first attempt across a reload', async () => {
     const { lesson } = await mountSection('shared-airway')
-    clickPrimary()
-    await settle()
+    await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
     commitById(otherChoiceId(lesson.steps[lesson.predictionStepIndex]))
     const before = storedRecord()
     cleanup()
@@ -297,8 +233,7 @@ describe('a sort section on the stage', () => {
     expect(currentStepId()).toBe(lesson.steps[0].id)
     expect(verdictOutcome()).toBeNull()
     expect(storedRecord()).toEqual(before)
-    clickPrimary()
-    await settle()
+    await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
     commitById(keyedChoiceId(lesson.steps[lesson.predictionStepIndex]))
     expect(verdictOutcome()).toBe('correct')
     const key = Object.keys(storedRecord()?.firstAttempts ?? {}).find((k) =>
@@ -310,17 +245,15 @@ describe('a sort section on the stage', () => {
 
 /** Non-target lessons retain their prediction and safety boundaries. */
 describe('a scope section on the stage', () => {
-  it('keeps the non-pilot dock locked until the prediction and feedback are acknowledged', async () => {
+  it('introduces entry with teaching and opens the controls for practice before the check', async () => {
     const { lesson } = await mountSection('branch-entry')
-    expect(controlsFieldset()).toBeDisabled()
-    clickPrimary()
-    await settle()
-    expect(controlsFieldset()).toBeDisabled()
-    commitById(keyedChoiceId(lesson.steps[lesson.predictionStepIndex]))
-    expect(controlsFieldset()).toBeDisabled()
-    clickPrimary()
-    await settle()
+    expect(controlsFieldset()).toBeNull()
+    expect(document.querySelector('[data-normal-airway-tour]')).not.toBeNull()
+    expect(storedRecord()?.firstAttempts).toEqual({})
+    await reachAct(lesson)
     expect(controlsFieldset()).not.toBeDisabled()
+    expect(nowPrimary()).toBeDisabled()
+    expect(document.querySelector('[data-now-disabled-reason]')).not.toBeNull()
     await performAct(lesson)
     await finishSection(lesson)
     expect(storedRecord()?.completedSectionIds).toEqual(['branch-entry'])

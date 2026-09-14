@@ -243,7 +243,8 @@ export function bronchStageReducer(lesson: BronchStageLesson) {
       case 'SCOPE_COMMAND': {
         if (
           action.inputMode === 'scripted' &&
-          lesson.steps.find((step) => step.id === action.stepId)?.learn
+          (lesson.steps.find((step) => step.id === action.stepId)?.learn ||
+            lesson.steps.find((step) => step.id === action.stepId)?.course)
         )
           return session
         const current = session.scope[action.stepId]
@@ -270,7 +271,11 @@ export function bronchStageReducer(lesson: BronchStageLesson) {
       case 'RETRY_LEARN_CHOICE': {
         const index = lesson.steps.findIndex((step) => step.id === action.stepId)
         const step = lesson.steps[index]
-        if (!step?.learn || step.interaction.kind !== 'prediction' || commitments.finished)
+        if (
+          !(step?.learn || step?.course) ||
+          step.interaction.kind !== 'prediction' ||
+          commitments.finished
+        )
           return session
         const choices = { ...commitments.choices }
         delete choices[action.stepId]
@@ -397,6 +402,15 @@ export function bronchStageReducer(lesson: BronchStageLesson) {
         }
       }
       case 'CONFIRM_THROUGH': {
+        if (action.index !== commitments.confirmed + 1 || !lesson.steps[action.index])
+          return session
+        const current = lesson.steps[action.index]
+        if (
+          current.interaction.kind !== 'read' &&
+          current.interaction.kind !== 'explain' &&
+          !stepWorkDone(lesson, current, action.index, session)
+        )
+          return session
         let next: BronchCommitments = {
           ...commitments,
           confirmed: Math.max(commitments.confirmed, action.index),
@@ -410,7 +424,7 @@ export function bronchStageReducer(lesson: BronchStageLesson) {
       }
       case 'FINISH':
         if (
-          lesson.steps[0]?.learn &&
+          (lesson.steps[0]?.learn || lesson.steps[0]?.course) &&
           !lesson.steps.every((step) => commitments.performedIds.includes(step.id))
         )
           return session

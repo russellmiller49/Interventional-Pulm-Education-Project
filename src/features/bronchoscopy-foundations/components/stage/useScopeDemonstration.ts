@@ -13,7 +13,7 @@ export function useScopeDemonstration(step: BronchStageStep, scopeCase: ScopeCas
     state: ScopeRuntimeState
   } | null>(null)
   const active = demo?.stepId === step.id ? demo : null
-  const moves = step.learn?.demonstration ?? []
+  const moves = step.learn?.demonstration ?? step.course?.demonstration ?? []
   const view = scopeViewOfStep(step)
   function show(index: number) {
     if (!view || !moves[index]) return

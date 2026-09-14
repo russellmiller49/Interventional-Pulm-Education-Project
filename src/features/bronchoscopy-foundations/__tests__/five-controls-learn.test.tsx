@@ -96,7 +96,7 @@ test('orientation and depth teaching precede answers; demonstrations do not earn
   fireEvent.click(control('advance'))
   fireEvent.click(control('advance'))
   expect(goalStates()).toEqual(['false'])
-  expect(nowPrimary()).toBeNull()
+  expect(nowPrimary()).toBeDisabled()
   fireEvent.click(control('withdraw'))
   fireEvent.click(control('withdraw'))
   expect(goalStates()).toEqual(['true'])
@@ -139,11 +139,11 @@ test('the complete real pilot keeps a wrong first answer, allows retry and recor
   expect(record().completedSectionIds).toEqual([])
   fireEvent.click(control('advance')) // early depth is observed, not misdiagnosed grip/force
   expect(nowStatus()).toContain('advanced before centering')
-  expect(nowPrimary()).toBeNull()
+  expect(nowPrimary()).toBeDisabled()
   fireEvent.click(pilotButton('Reset this attempt'))
   await performPilotStep(lesson.steps.at(-1)!) // no rotation needed for the changed target
   expect(isSectionCompleted(record(), 'five-controls')).toBe(true)
-  expect(record().sectionVersions).toEqual(BRONCH_LEARN_VERSIONS)
+  expect(record().sectionVersions['five-controls']).toBe(BRONCH_LEARN_VERSIONS['five-controls'])
   expect(record().sectionPerformance['five-controls-learn-v2']).toMatchObject({
     unaided: false,
     assistsUsed: ['guided-practice'],
@@ -162,7 +162,7 @@ test('the complete real pilot keeps a wrong first answer, allows retry and recor
 test('an unfinished reload and review preserve history without pretending to restore the task', async () => {
   const { lesson } = await mountSection('five-controls')
   await performFiveControlsLearn(lesson, 2)
-  fireEvent.click(pilotButton('Back to Act'))
+  fireEvent.click(pilotButton('Back'))
   expect(controlsFieldset()).toBeDisabled()
   expect(nowStatus()).toContain('looking back')
   clickPrimary()
@@ -192,7 +192,7 @@ test('legacy completion remains historical and Start/Continue selects the revise
   expect(current.sectionPerformance['five-controls']).toEqual(
     legacy.sectionPerformance['five-controls'],
   )
-  expect(nextIncompleteBronchSection(current)).toBeNull()
+  expect(nextIncompleteBronchSection(current)?.section.id).toBe('honest-report')
 })
 
 test('every worked demonstration ends with the actual modeled goal achieved, without creating a learner record', () => {

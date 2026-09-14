@@ -56,6 +56,24 @@
   font-size: 0.875rem;
 }
 
+/* Foundations' content-led Learn flow uses the document scroll, including at desktop sizes. */
+.moduleShell[data-course-mode='true'] {
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+  padding: 0;
+}
+.moduleShell[data-course-mode='true'] :global([data-activity-frame]) {
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+.moduleShell[data-course-mode='true'] :global([data-activity-frame]) > div:last-child {
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+
 .englishFallback svg {
   width: 1rem;
   height: 1rem;

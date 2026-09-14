@@ -19,19 +19,24 @@ describe('the stage lessons', () => {
   })
 
   it.each(BRONCH_SECTION_IDS.filter((id) => id !== 'five-controls'))(
-    '%s opens on Recognize, predicts once, acts, explains and ends on the transfer',
+    '%s explicitly introduces teaching, preserves activities and completes a changed application',
     (sectionId) => {
       const lesson = bronchStageLesson(sectionId)
       const phases = lesson.steps.map((step) => step.phase)
       expect(phases[0]).toBe('recognize')
       expect(phases.at(-1)).toBe('transfer')
-      expect(lesson.predictionStepIndex).toBe(1)
+      expect(lesson.predictionStepIndex).toBeGreaterThan(0)
+      expect(lesson.steps[0].activity).toBe('teaching')
+      expect(lesson.steps.flatMap((step) => step.course?.blocks ?? []).sort()).toEqual(
+        lesson.section.blocks.map((block) => block.id).sort(),
+      )
       expect(lesson.transferStepIndex).toBe(lesson.steps.length - 1)
       expect(lesson.steps.filter((step) => step.interaction.kind === 'prediction')).toHaveLength(2)
-      expect(lesson.steps.filter((step) => step.phase === 'act')).toHaveLength(1)
+      expect(lesson.steps.filter((step) => step.phase === 'act').length).toBeGreaterThanOrEqual(1)
       lesson.steps.forEach((step, index) => {
         expect(step.ordinal).toBe(index + 1)
-        expect(step.gate).toBe(index > lesson.predictionStepIndex ? 'after-prediction' : 'open')
+        expect(step.gate).toBe('open')
+        expect(step.course).toBeDefined()
         expect(step.lookIn.landmark.length).toBeGreaterThan(0)
         const view = scopeViewOfStep(step)
         if (view) expect(scopeViewErrors(view)).toEqual([])
@@ -42,7 +47,7 @@ describe('the stage lessons', () => {
     },
   )
 
-  it('opts only the pilot into teaching, demonstration and practice before its learning check', () => {
+  it('preserves repeated physical-control concepts and isolated demos in the five-controls sequence', () => {
     const lesson = bronchStageLesson('five-controls')
     expect(lesson.steps[0].learn?.orientation).toBe(true)
     expect(

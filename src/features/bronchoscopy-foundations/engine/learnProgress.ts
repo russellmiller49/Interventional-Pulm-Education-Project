@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { bronchItem } from '../content/stageItems'
 import { BRONCH_LEARN_VERSIONS, bronchLearnRecordId } from '../content/lessonVersions'
+import { AIRWAY_LABELS, type InspectionLedger } from '../components/scope/types'
 
 /**
  * The module's own record: which sections have been worked through on this device, where the
@@ -27,6 +28,7 @@ const firstAttemptSchema = z
     choiceId: z.string().min(1).max(40),
     correct: z.boolean(),
     at: z.string().min(1).max(64),
+    support: z.enum(['learn-after-teaching', 'reviewed-teaching']).optional(),
   })
   .strict()
 
@@ -47,6 +49,31 @@ const recordSchema = z
     sectionPerformance: z.record(z.string().min(1).max(160), performanceSchema).default({}),
     sectionVersions: z.record(z.string().min(1).max(160), z.number().int().positive()).default({}),
     capstoneDebriefViewedAt: z.string().min(1).max(64).nullable().default(null),
+    inspectionSnapshot: z
+      .object({
+        sectionId: z.literal('systematic-survey'),
+        at: z.string().max(64),
+        rows: z
+          .array(
+            z
+              .object({
+                label: z.enum(AIRWAY_LABELS),
+                identified: z.boolean(),
+                ostiumVisualized: z.boolean(),
+                entered: z.boolean(),
+                distalViewObtained: z.boolean(),
+                inspected: z.enum(['no', 'declared', 'declared-without-view']),
+                limitation: z
+                  .enum(['not-safely-accessible', 'not-observed', 'entry-route'])
+                  .nullable(),
+              })
+              .strict(),
+          )
+          .max(40),
+      })
+      .strict()
+      .nullable()
+      .default(null),
     updatedAt: z.string().min(1).max(64),
   })
   .strict()
@@ -64,6 +91,7 @@ export function createEmptyBronchRecord(): BronchRecord {
     sectionPerformance: {},
     sectionVersions: {},
     capstoneDebriefViewedAt: null,
+    inspectionSnapshot: null,
     updatedAt: '1970-01-01T00:00:00.000Z',
   }
 }
@@ -187,6 +215,7 @@ export function withFirstAttempt(
   key: string,
   choiceId: string,
   now = new Date().toISOString(),
+  support?: BronchFirstAttempt['support'],
 ): BronchRecord {
   if (record.firstAttempts[key]) return record
   const item = bronchItem(itemIdOfAttemptKey(key))
@@ -196,7 +225,29 @@ export function withFirstAttempt(
     ...record,
     firstAttempts: {
       ...record.firstAttempts,
-      [key]: { choiceId, correct: item.correctChoiceIds.includes(choiceId), at: now },
+      [key]: {
+        choiceId,
+        correct: item.correctChoiceIds.includes(choiceId),
+        at: now,
+        ...(support ? { support } : {}),
+      },
+    },
+    updatedAt: now,
+  }
+}
+
+/** Saved only when the learner explicitly finishes the survey, never from a demonstration. */
+export function withInspectionSnapshot(
+  record: BronchRecord,
+  ledger: InspectionLedger,
+  now = new Date().toISOString(),
+): BronchRecord {
+  return {
+    ...record,
+    inspectionSnapshot: {
+      sectionId: 'systematic-survey',
+      at: now,
+      rows: Object.values(ledger).filter((row) => row !== undefined),
     },
     updatedAt: now,
   }

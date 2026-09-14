@@ -82,7 +82,7 @@ export function bronchPathwayComposition(): BronchPathwayComposition {
 /** "23 sections in 9 phases · 186 min". */
 export function bronchCompositionLine(): string {
   const composition = bronchPathwayComposition()
-  return `${composition.total} sections in ${composition.byPhase.length} phases · ${composition.minutes} min`
+  return `${composition.total} sections in ${composition.byPhase.length} phases · ${composition.minutes} min estimated`
 }
 
 export interface BronchPathwayGroup {

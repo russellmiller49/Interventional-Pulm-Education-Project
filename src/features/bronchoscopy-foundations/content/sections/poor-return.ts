@@ -190,7 +190,7 @@ export const section: BronchSectionDefinition = {
       kind: 'after-commitment',
       role: 'mechanism',
       heading: 'Two more causes of low return',
-      body: 'Three causes of low return are rows of the diagnostic table, shown under Reading the view in this panel: saline escaping around the tip, a lumen that closes under suction, and no return through a patent airway, which leads back to the suction path checked before use: channel, valve, trap, tubing and vacuum source. Two more complete the differential. Neither is answered by more saline or more suction.',
+      body: 'The differential includes three causes of low return: saline escaping around the tip, a lumen that closes under suction, and no return through a patent airway, which leads back to the suction path checked before use: channel, valve, trap, tubing and vacuum source. Two more complete the differential. Neither is answered by more saline or more suction.',
       pointsLabel: 'The observation, then the supervised response',
       points: [
         'Blood appears after repeated impaction: possible mucosal injury or another source of bleeding. Stop further traumatic manipulation, and reassess the sample and the patient.',

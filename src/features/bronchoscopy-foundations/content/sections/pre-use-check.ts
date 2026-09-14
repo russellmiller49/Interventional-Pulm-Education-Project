@@ -109,7 +109,7 @@ export const section: BronchSectionDefinition = {
       kind: 'question',
       role: 'framing',
       heading: 'What ready means',
-      body: 'Before a bronchoscope enters a patient, someone decides that it is ready. That decision rests on knowing the parts of the instrument, what each one does, and what the check before use has to show.\n\nThe bronchoscope photograph in the Simulator panel is the instrument this section works with.',
+      body: 'Before a bronchoscope enters a patient, someone decides that it is ready. That decision rests on knowing the parts of the instrument, what each one does, and what the check before use has to show.\n\nUse the labeled instrument overview to locate the parts before identifying them in the photographs.',
       claimClass: 'synthesis',
       sourceRefs: [
         { sourceId: 'S1', location: { kind: 'pdf-pages', from: 89, to: 97 } },
@@ -150,7 +150,7 @@ export const section: BronchSectionDefinition = {
       kind: 'after-commitment',
       role: 'worked-example',
       heading: 'The scene, worked through',
-      body: 'The scene from the prediction, worked through the four systems before the patient arrives:',
+      body: 'Work through this readiness problem using the four systems before the patient arrives:',
       pointsLabel: 'The check, as it went',
       points: [
         'Image and illumination: live and clear, on the right record. Holds.',

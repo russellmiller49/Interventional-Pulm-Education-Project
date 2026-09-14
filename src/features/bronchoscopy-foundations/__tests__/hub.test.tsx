@@ -7,7 +7,6 @@ import { BronchoscopyFoundationsLearnLanding } from '../components/BronchoscopyF
 import { BRONCH_SECTION_IDS, bronchPathwaySections } from '../content/pathway'
 import { bronchPathwayComposition } from '../content/pathwayResolver'
 import { BRONCH_PHASES } from '../content/sectionIds'
-import { SOURCES } from '../data/sources'
 import {
   BRONCH_STORAGE_KEY,
   createEmptyBronchRecord,
@@ -64,7 +63,7 @@ describe('the hub', () => {
     const line = document.querySelector('[data-pathway-composition]')!
     expect(line.textContent).toMatch(new RegExp(`^${composition.total} sections`))
     expect(line.textContent).toContain(`${composition.byPhase.length} phases`)
-    expect(line.textContent).toMatch(new RegExp(`${composition.minutes} min$`))
+    expect(line.textContent).toMatch(new RegExp(`${composition.minutes} min estimated$`))
     expect(
       document.querySelectorAll('[data-pathway-accordion] a[data-kind="section"]'),
     ).toHaveLength(bronchPathwaySections.length)
@@ -74,29 +73,30 @@ describe('the hub', () => {
     expect(await axe(container)).toHaveNoViolations()
   })
 
-  it('states the novice purpose, safety preparation and pilot boundary before the pathway', () => {
+  it('states the novice purpose, preparation and honest resume before the outline', () => {
     render(<BronchoscopyFoundationsHub />)
-    expect(document.querySelector('[data-hub-hero]')).toBeNull()
     expect(
-      screen.getByRole('heading', { name: 'Learn the basics of flexible bronchoscopy' }),
+      screen.getByRole('heading', { name: 'Prepare for supervised bronchoscopy' }),
     ).toBeVisible()
-    expect(
-      screen.getByText(/Prepare for supervised adult flexible bronchoscopy/),
-    ).toHaveTextContent('prior bronchoscopy experience is not')
-    expect(screen.getByText(/Begin with shared-airway safety/)).toHaveTextContent(
-      'does not establish clinical competence',
+    expect(screen.getByText(/A guided introduction to adult flexible/)).toHaveTextContent(
+      'prior bronchoscopy experience is not',
     )
-    expect(screen.getByText(/Teaching pilot: Five controls/)).toHaveTextContent(
-      'remaining lessons retain their current format',
+    expect(screen.getByText(/Screen activities prepare you/)).toHaveTextContent(
+      'do not establish clinical competence',
     )
+    expect(screen.getByText(/Completed work and first responses/)).toHaveTextContent(
+      'scope position is not saved',
+    )
+    expect(document.body.textContent).not.toMatch(/Teaching pilot|remaining lessons retain/)
   })
 
-  it('lists every source once, by id', () => {
+  it('makes Practice, Assess and Reference secondary links', () => {
     render(<BronchoscopyFoundationsHub />)
-    const ids = [...document.querySelectorAll('[data-source-id]')].map((el) =>
-      el.getAttribute('data-source-id'),
-    )
-    expect(ids).toEqual(SOURCES.map((source) => source.id))
+    const nav = screen.getByRole('navigation', { name: 'Further Foundations activities' })
+    expect(nav.querySelectorAll('a')).toHaveLength(3)
+    expect(
+      screen.getByRole('link', { name: /Reference, sources and model limits/ }),
+    ).toHaveAttribute('href', '/bronchoscopy-foundations/reference')
   })
 
   it('continues a learner at the first section not yet worked through and marks worked chips', () => {
