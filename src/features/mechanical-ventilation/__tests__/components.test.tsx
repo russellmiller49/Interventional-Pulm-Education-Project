@@ -60,7 +60,7 @@ describe('multi-device mechanical ventilation learner interface', () => {
       name: 'Persistent ventilator and patient physiology',
     })
     expect(
-      within(liveWorkspace).getByRole('complementary', { name: 'Live patient status' }),
+      within(liveWorkspace).getByRole('region', { name: 'Live patient status' }),
     ).toBeInTheDocument()
     expect(within(liveWorkspace).getByLabelText('Current comfort and sedation')).toBeInTheDocument()
     expect(

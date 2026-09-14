@@ -16,6 +16,7 @@ import { NowCard, type NowCardModel } from '@/features/learning-module/stage/Now
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { SectionsDrawer } from '@/features/learning-module/stage/SectionsDrawer'
 import { StageLayout, type StagePaneCaptions } from '@/features/learning-module/stage/StageLayout'
+import { LessonShell } from '@/features/learning-module/stage/LessonShell'
 import {
   STAGE_PHASE_LABELS,
   compactPaneForLocation,
@@ -76,6 +77,12 @@ import { VentilationSimulatorPane, goalLabel, quickControlId } from './Ventilati
 import { VentilationSourceList } from './VentilationSourceList'
 import { VentilationTeachingColumn } from './VentilationTeachingColumn'
 import styles from './ventilation-stage.module.css'
+import taskStyles from './task-flow.module.css'
+import { VentilationTaskWorkspace } from './VentilationTaskWorkspace'
+import { VentilationTaskWorkbench } from './VentilationTaskWorkbench'
+import { VentilationPrerequisite } from './VentilationPrerequisite'
+import { VentilationResponseTimeline } from './VentilationResponseTimeline'
+import { RecordedBreathComparison } from './RecordedBreathComparison'
 
 const CHOICE_IDS = ['a', 'b', 'c'] as const
 
@@ -149,9 +156,12 @@ function InspectedBreath({ evidence }: { evidence: LabEvidence }) {
 export function VentilationStageHost({
   unitId,
   locale = 'en',
+  renderer = 'task',
 }: {
   readonly unitId: string
   readonly locale?: string
+  /** Local rollback for review; both renderers use the same session and curriculum. */
+  readonly renderer?: 'task' | 'legacy'
 }) {
   const lab = useVentilationLabProgress()
   if (!lab.ready) {
@@ -175,6 +185,7 @@ export function VentilationStageHost({
       saved={lab.progress.units[unitId]}
       save={lab.save}
       storageAvailable={lab.storageAvailable}
+      taskFlow={renderer === 'task'}
     />
   )
 }
@@ -185,12 +196,14 @@ function VentilationStageSession({
   saved,
   save,
   storageAvailable,
+  taskFlow,
 }: {
   readonly unitId: string
   readonly locale: string
   readonly saved?: LabCheckpoint
   readonly save: (record: LabCheckpoint) => void
   readonly storageAvailable: boolean
+  readonly taskFlow: boolean
 }) {
   const router = useRouter()
   const lesson = useMemo(() => ventilationStageLesson(unitId), [unitId])
@@ -206,6 +219,7 @@ function VentilationStageSession({
    * ---------------------------------------------------------------- */
   const [walkStopIndex, setWalkStopIndex] = useState(0)
   const [walkDone, setWalkDone] = useState(false)
+  const [exampleSeen, setExampleSeen] = useState(false)
   const [pendingChoice, setPendingChoice] = useState<Record<string, string>>({})
   const [observationDraft, setObservationDraft] = useState<Record<string, string>>({})
   const [sortDraft, setSortDraft] = useState<Record<string, 'set' | 'reported'>>({})
@@ -390,6 +404,7 @@ function VentilationStageSession({
     setReview(null)
     setWalkStopIndex(0)
     setWalkDone(false)
+    setExampleSeen(false)
     setReadConfirmed(false)
     setPendingChoice({})
     setSortDraft({})
@@ -413,6 +428,16 @@ function VentilationStageSession({
    * The current step's shape
    * ---------------------------------------------------------------- */
   const interaction = activeStep.interaction
+  const showingPrerequisite =
+    taskFlow &&
+    !foundation &&
+    activeStep.phase === 'recognize' &&
+    (interaction.kind !== 'locate' || !exampleSeen)
+  const protectPriorPatient =
+    taskFlow &&
+    unitId === 'high-peak-pressure-integration' &&
+    session.round === 1 &&
+    evidence.prediction === undefined
   const goals: readonly LabGoal[] =
     interaction.kind === 'simulator-task'
       ? interaction.goals
@@ -432,7 +457,7 @@ function VentilationStageSession({
     activeManeuver === 'pause'
       ? 'Pause during the requested phase, or use the captured time cursor and Use this captured interval below. No timed click is required.'
       : activeManeuver === 'hold'
-        ? 'Waiting for the hold. Use the hold control under the console; it happens at the next breath boundary.'
+        ? 'Waiting for the hold. Use the measurement maneuver; it happens at the next breath boundary.'
         : 'Waiting for the change on the ventilator. This step is done once the patient is receiving it.'
   // The readings shown under the console: a change's before-and-after set; nothing for a pause.
   const watch =
@@ -569,7 +594,7 @@ function VentilationStageSession({
    */
   const [teachingVisit, setTeachingVisit] = useState(0)
   useEffect(() => {
-    if (!foundation || activeStep.lookIn.pane !== 'teaching') return
+    if (taskFlow || !foundation || activeStep.lookIn.pane !== 'teaching') return
     if (teachingVisit > 0) {
       const tab = Array.from(
         document.querySelectorAll<HTMLButtonElement>(
@@ -580,7 +605,7 @@ function VentilationStageSession({
     }
     const target = document.getElementById('mv-foundation-teaching')
     target?.scrollIntoView?.({ block: 'start', behavior: 'auto' })
-  }, [foundation, activeStep.id, activeStep.lookIn.pane, teachingVisit])
+  }, [taskFlow, foundation, activeStep.id, activeStep.lookIn.pane, teachingVisit])
   useEffect(() => {
     if (foundation && lookingBack) engine({ type: 'SET_PAUSED', paused: true })
   }, [foundation, lookingBack, engine])
@@ -601,9 +626,17 @@ function VentilationStageSession({
    * instruction on every step, and again in the help dialog; the lesson builder refuses at import
    * to make a step without one, so the caption on the pane and the line on the card cannot drift.
    */
-  const lookInLine = <LookInLine location={activeStep.lookIn} />
+  const lookInLine = taskFlow ? (
+    <>Inspect {activeStep.presentation.landmark}. Your response and Continue are below.</>
+  ) : (
+    <LookInLine location={activeStep.lookIn} />
+  )
   const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
-  const canGoBack = previousStep !== undefined && performedIds.has(previousStep.id) && !finished
+  const canGoBack =
+    previousStep !== undefined &&
+    performedIds.has(previousStep.id) &&
+    !finished &&
+    !protectPriorPatient
   const showWhereAction =
     firstUnmetGoalKey && !stepPerformed && !lookingBack
       ? {
@@ -629,6 +662,15 @@ function VentilationStageSession({
           }
         : {}),
     }
+    if (showingPrerequisite && interaction.kind === 'locate' && !lookingBack) {
+      return {
+        ...base,
+        heading: 'Compare normal timing first',
+        body: 'Study this separate worked reference before interpreting the current patient.',
+        where: lookInLine,
+        primary: { label: 'Continue to patient tracing', onActivate: () => setExampleSeen(true) },
+      }
+    }
     if (lookingBack) {
       return {
         ...base,
@@ -648,7 +690,7 @@ function VentilationStageSession({
       case 'read':
         return {
           ...base,
-          ...(foundation
+          ...(foundation && !taskFlow
             ? {
                 secondary: {
                   label: 'Show the worked reference',
@@ -696,7 +738,9 @@ function VentilationStageSession({
         if (locationCommitted) {
           return {
             ...base,
-            body: 'Your answer is marked on the breath map, with the stop that fits this patient.',
+            body: taskFlow
+              ? 'Your interpretation is recorded. Read the explanation, then continue.'
+              : 'Your answer is marked on the breath map, with the stop that fits this patient.',
             primary: {
               label: 'Continue',
               onActivate: continueFromRecognize,
@@ -710,7 +754,9 @@ function VentilationStageSession({
             label: activeStep.actionLabel,
             onActivate: () => commitLocation(activeStep),
             disabled: !pendingChoice[activeStep.id],
-            disabledReason: 'Choose a stop on the breath map to enable this.',
+            disabledReason: taskFlow
+              ? 'Choose a location in the breath to enable this.'
+              : 'Choose a stop on the breath map to enable this.',
             icon: <SlidersHorizontal aria-hidden="true" />,
           },
         }
@@ -862,6 +908,7 @@ function VentilationStageSession({
   })()
 
   const nowBody: ReactNode = (() => {
+    if (showingPrerequisite && !lookingBack) return null
     if (lookingBack) {
       /*
        * Looking back at a committed prediction shows the verdict again — the rationale, the
@@ -890,7 +937,7 @@ function VentilationStageSession({
           return (
             <p data-walk-stop={walkStop ?? 'complete'}>
               {walkStop
-                ? `Inspect ${walkStop === 'trigger' ? 'the trigger that starts inspiration' : walkStop === 'cycling' ? 'cycling at the end of inspiration' : walkStop} on the captured reference in the Teaching panel. The phase marker and cursor move with this step.`
+                ? `Inspect ${walkStop === 'trigger' ? 'the trigger that starts inspiration' : walkStop === 'cycling' ? 'cycling at the end of inspiration' : walkStop} on the captured reference. The phase marker and cursor move with this step.`
                 : 'All four parts of the reference breath have been inspected.'}
             </p>
           )
@@ -946,6 +993,25 @@ function VentilationStageSession({
             />
           )
         }
+        if (taskFlow)
+          return (
+            <fieldset className={stageStyles.choiceList} data-location-choices>
+              <legend>{interaction.item.stem}</legend>
+              {orderChoices(interaction.item.id, interaction.item.choices).map((choice) => (
+                <label key={choice.id} className={stageStyles.choice}>
+                  <input
+                    type="radio"
+                    name={`mv-locate-${activeStep.id}`}
+                    checked={pendingChoice[activeStep.id] === choice.id}
+                    onChange={() =>
+                      setPendingChoice((current) => ({ ...current, [activeStep.id]: choice.id }))
+                    }
+                  />
+                  <span>{choice.label}</span>
+                </label>
+              ))}
+            </fieldset>
+          )
         return (
           <p className={stageStyles.taskInstruction} data-map-answer-note>
             Answer on the breath map below the console: choose the stop where the problem lives.
@@ -1018,6 +1084,18 @@ function VentilationStageSession({
           (interaction.kind === 'simulator-task' && interaction.withObservation)
         return (
           <>
+            {taskFlow && activeStep.guide ? (
+              <div
+                className={taskStyles.block}
+                data-teaching-block="guide"
+                data-maneuver={activeStep.guide.maneuver}
+              >
+                <p>{activeStep.guide.note}</p>
+                <p>
+                  <strong>What to inspect:</strong> {activeStep.guide.look}
+                </p>
+              </div>
+            ) : null}
             {unitId === 'breathing-with-support' && showGoals && evidence.baseline ? (
               <CapturedBreath
                 key={`inspection-${session.round}`}
@@ -1074,12 +1152,30 @@ function VentilationStageSession({
                 />
                 <details open={unitId === 'waveform-anatomy'}>
                   <summary>Captured baseline and result waveforms</summary>
-                  <CapturedBreath
-                    label="Captured baseline"
-                    samples={before.waveforms}
-                    axes={axes}
-                  />
-                  <CapturedBreath label="Captured result" samples={after.waveforms} axes={axes} />
+                  <div className={taskFlow ? taskStyles.comparison : undefined}>
+                    <CapturedBreath
+                      label="Captured baseline"
+                      samples={before.waveforms}
+                      axes={axes}
+                      durationSeconds={Math.max(
+                        ...[before, after].map((record) => {
+                          const breath = completedBreath(record.waveforms)
+                          return breath.length ? breath.at(-1)!.time - breath[0].time : 0
+                        }),
+                      )}
+                    />
+                    <CapturedBreath
+                      label="Captured result"
+                      samples={after.waveforms}
+                      axes={axes}
+                      durationSeconds={Math.max(
+                        ...[before, after].map((record) => {
+                          const breath = completedBreath(record.waveforms)
+                          return breath.length ? breath.at(-1)!.time - breath[0].time : 0
+                        }),
+                      )}
+                    />
+                  </div>
                 </details>
                 {after.hold ? (
                   <CapturedBreath
@@ -1196,6 +1292,7 @@ function VentilationStageSession({
             roundManeuver(experiment.rounds[interaction.round]) === 'pause' ? (
               <FrozenTraceReading
                 response={stepEvidence.response}
+                inspection={stepEvidence.inspection}
                 peep={Number(
                   stepEvidence.response.inputs?.peepCmH2O ??
                     session.simulation.ventilator.settings.peepCmH2O,
@@ -1362,7 +1459,73 @@ function VentilationStageSession({
   const task = (
     <>
       <div ref={nowFocusRef} tabIndex={-1} data-now-focus>
-        <NowCard model={nowModel}>{nowBody}</NowCard>
+        <NowCard model={nowModel}>
+          {taskFlow ? (
+            <VentilationTaskWorkspace
+              presentation={activeStep.presentation}
+              instruction={
+                showingPrerequisite ? (
+                  <VentilationPrerequisite lesson={lesson} device={session.device} />
+                ) : activeStep.presentation.surface === 'reference' ? (
+                  teaching
+                ) : undefined
+              }
+              workbench={
+                activeStep.presentation.surface !== 'comparison' &&
+                interaction.kind !== 'sort' &&
+                !showingPrerequisite ? (
+                  <VentilationTaskWorkbench
+                    key={`${session.device}:${session.round}`}
+                    session={session}
+                    presentation={activeStep.presentation}
+                    engine={engine}
+                    goals={goals}
+                    watch={activeRound?.watch ?? watch}
+                    controlsEnabled={controlsEnabled && !lookingBack}
+                    deviceLocked={predictionCommitted}
+                    onSelectDevice={selectDevice}
+                    onResetPatient={() => {
+                      lab({ type: 'RESET' })
+                      setObservationDraft({})
+                    }}
+                    lockedReason={lockedReason ?? pausedReason}
+                    readOnly={lookingBack}
+                    transportOnly={
+                      activeStep.presentation.surface === 'reference' ||
+                      unitId === 'breathing-with-support'
+                    }
+                  />
+                ) : undefined
+              }
+              response={
+                <>
+                  {nowBody}
+                  {interaction.kind === 'explain' ? (
+                    <>
+                      {!foundation &&
+                      evidenceFor(activeStep).baseline &&
+                      evidenceFor(activeStep).response ? (
+                        <RecordedBreathComparison
+                          evidence={evidenceFor(activeStep)}
+                          effort={activeStep.presentation.effort}
+                        />
+                      ) : null}
+                      {activeStep.presentation.kind === 'response-lab' && !lookingBack ? (
+                        <VentilationResponseTimeline session={session} />
+                      ) : null}
+                      <details>
+                        <summary>Review the mechanism and references</summary>
+                        {teaching}
+                      </details>
+                    </>
+                  ) : null}
+                </>
+              }
+            />
+          ) : (
+            nowBody
+          )}
+        </NowCard>
       </div>
       {activeIndex === 0 ? (
         <details className={stageStyles.objectives} data-stage-objectives>
@@ -1396,16 +1559,21 @@ function VentilationStageSession({
           ))}
         </details>
       ) : null}
-      <StepList
-        lesson={lesson}
-        currentIndex={activeIndex}
-        furthestPerformedIndex={progress.furthestPerformedIndex}
-        performedStepIds={shownPerformedIds}
-        predictionCommitted={predictionCommitted}
-        reviewIndex={review}
-        recapFor={(index) => recapLines(lesson.steps[index], session)}
-        onSelect={selectStepRow}
-      />
+      {!protectPriorPatient ? (
+        <details open={!taskFlow} data-task-map>
+          <summary>Lesson map · {lesson.steps.length} tasks</summary>
+          <StepList
+            lesson={lesson}
+            currentIndex={activeIndex}
+            furthestPerformedIndex={progress.furthestPerformedIndex}
+            performedStepIds={shownPerformedIds}
+            predictionCommitted={predictionCommitted}
+            reviewIndex={review}
+            recapFor={(index) => recapLines(lesson.steps[index], session)}
+            onSelect={selectStepRow}
+          />
+        </details>
+      ) : null}
       {!storageAvailable ? (
         <p className={stageStyles.boundaryNote} role="status">
           This browser is not saving your place. The section still works; a reload starts it again.
@@ -1518,46 +1686,84 @@ function VentilationStageSession({
       locale={locale}
       activeHref={`${mechanicalVentilationNavBase}/learn`}
       activityMode
+      taskFlow={taskFlow}
     >
       <StageSourcesScope>
-        <StageLayout
-          stageId={activeStep.id}
-          label="Guided mechanical ventilation section"
-          module="mechanical-ventilation"
-          workspaceLabel="Ventilation lesson workspace: steps, teaching, and simulator"
-          header={header}
-          contextStrip={
-            <ContextStrip items={contextItems} alarm={alarm} badge="Simulated values" />
-          }
-          simulator={simulator}
-          teaching={teaching}
-          task={task}
-          paneOrder={PANE_ORDER}
-          paneCaptions={PANE_CAPTIONS}
-          defaultWidthFractions={PANE_WIDTH_FRACTIONS}
-          paneMinimums={PANE_MINIMUMS}
-          compactPane={compactPane}
-          footer={
-            <>
-              <p className={shellStyles.footerLine}>
-                Professional education only. Not a clinical device or a patient-specific guide;
-                every value is simulated. Follow current manufacturer instructions and local
-                protocol.
-              </p>
-              <StageSourcesFooter
-                count={stageSources.evidenceIds.length}
-                label="Sources for this section"
-                claimsVisible={predictionCommitted}
-              >
-                <VentilationSourceList
-                  records={stageSources.records}
+        {taskFlow ? (
+          <div className={taskStyles.flow} data-stage-frame>
+            <LessonShell
+              section="learn"
+              stage={activeStep.id}
+              label="Guided mechanical ventilation section"
+              module="mechanical-ventilation"
+              header={header}
+              contextStrip={
+                <ContextStrip items={contextItems} alarm={alarm} badge="Simulated values" />
+              }
+              footer={
+                <>
+                  <p className={shellStyles.footerLine}>
+                    Professional education only. Not a clinical device or a patient-specific guide;
+                    every value is simulated. Follow current manufacturer instructions and local
+                    protocol.
+                  </p>
+                  <StageSourcesFooter
+                    label="Sources for this section"
+                    count={stageSources.evidenceIds.length}
+                    claimsVisible={predictionCommitted && !protectPriorPatient}
+                  >
+                    <VentilationSourceList
+                      records={stageSources.records}
+                      claimsVisible={predictionCommitted && !protectPriorPatient}
+                    />
+                  </StageSourcesFooter>
+                </>
+              }
+            >
+              <div className={taskStyles.content}>{task}</div>
+            </LessonShell>
+            {helpDialog}
+          </div>
+        ) : (
+          <StageLayout
+            stageId={activeStep.id}
+            label="Guided mechanical ventilation section"
+            module="mechanical-ventilation"
+            workspaceLabel="Ventilation lesson workspace: steps, teaching, and simulator"
+            header={header}
+            contextStrip={
+              <ContextStrip items={contextItems} alarm={alarm} badge="Simulated values" />
+            }
+            simulator={simulator}
+            teaching={teaching}
+            task={task}
+            paneOrder={PANE_ORDER}
+            paneCaptions={PANE_CAPTIONS}
+            defaultWidthFractions={PANE_WIDTH_FRACTIONS}
+            paneMinimums={PANE_MINIMUMS}
+            compactPane={compactPane}
+            footer={
+              <>
+                <p className={shellStyles.footerLine}>
+                  Professional education only. Not a clinical device or a patient-specific guide;
+                  every value is simulated. Follow current manufacturer instructions and local
+                  protocol.
+                </p>
+                <StageSourcesFooter
+                  count={stageSources.evidenceIds.length}
+                  label="Sources for this section"
                   claimsVisible={predictionCommitted}
-                />
-              </StageSourcesFooter>
-            </>
-          }
-          overlay={helpDialog}
-        />
+                >
+                  <VentilationSourceList
+                    records={stageSources.records}
+                    claimsVisible={predictionCommitted}
+                  />
+                </StageSourcesFooter>
+              </>
+            }
+            overlay={helpDialog}
+          />
+        )}
       </StageSourcesScope>
     </MechanicalVentilationModuleFrame>
   )
@@ -1640,14 +1846,16 @@ function StepRecap({
  */
 function FrozenTraceReading({
   response,
+  inspection,
   peep,
 }: {
   readonly response: NonNullable<LabEvidence['response']>
+  readonly inspection?: LabEvidence['inspection']
   readonly peep: number
 }) {
   const samples = response.waveforms
-  const last = samples.at(-1)
-  const previous = samples.at(-2)
+  const last = inspection?.sample ?? samples.at(-1)
+  const previous = inspection?.previous ?? samples.at(-2)
   if (!last) return null
   const flowWord =
     last.flowLMin < -0.5
@@ -1670,11 +1878,11 @@ function FrozenTraceReading({
         : 'below the baseline'
   return (
     <table className={stageStyles.compareTable} data-frozen-reading>
-      <caption className={shellStyles.kicker}>What the frozen traces showed</caption>
+      <caption className={shellStyles.kicker}>What your captured interval showed</caption>
       <thead>
         <tr>
           <th scope="col">Trace</th>
-          <th scope="col">At the pause</th>
+          <th scope="col">At your selected interval</th>
           <th scope="col">Read as</th>
         </tr>
       </thead>

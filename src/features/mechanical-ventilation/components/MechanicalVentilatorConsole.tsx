@@ -48,6 +48,7 @@ import type {
 } from '../engine'
 import { WaveformLoops, WaveformStrip } from './WaveformStrip'
 import styles from './mechanical-ventilation.module.css'
+import taskStyles from './stage/task-flow.module.css'
 
 /** How this simulator names each flow pattern, and the fallback set for an unsourced device. */
 const flowPatternLabels: Record<FlowPattern, string> = {
@@ -62,6 +63,12 @@ interface MechanicalVentilatorConsoleProps {
   state: VentilationSimulationState
   dispatch: Dispatch<VentilationAction>
   controlsEnabled: boolean
+  /** Opt-in teaching interface; uses this component's native adapters and pending edit. */
+  teachingControls?: readonly VentilatorControlKey[]
+  nativeView?: boolean
+  allowTeachingAnnotations?: boolean
+  /** Independent measurement tasks must not expose an unacquired model plateau. */
+  withholdUnacquiredPlateau?: boolean
 }
 
 interface NumericControl {
@@ -133,8 +140,9 @@ function MonitorPanel({
   display: VentilatorDisplayProfile
 }) {
   return (
-    <aside
+    <section
       className={styles.mmpPanel}
+      data-native-monitor
       data-layout={display.monitorLayout}
       aria-label={display.monitorLabel}
     >
@@ -158,7 +166,7 @@ function MonitorPanel({
           ))}
         </div>
       ) : null}
-    </aside>
+    </section>
   )
 }
 
@@ -256,6 +264,10 @@ export function MechanicalVentilatorConsole({
   state,
   dispatch,
   controlsEnabled,
+  teachingControls,
+  nativeView = false,
+  allowTeachingAnnotations = true,
+  withholdUnacquiredPlateau = false,
 }: MechanicalVentilatorConsoleProps) {
   const settings = state.ventilator.settings
   const profile = getVentilatorDeviceProfile(state.deviceId)
@@ -677,6 +689,7 @@ export function MechanicalVentilatorConsole({
     displayedControls.find((control) => control.key === activeControlKey) ?? displayedControls[0]
 
   const changeControl = (control: NumericControl, value: number) => {
+    if (therapyDisabled) return
     const bounded = Math.min(control.maximum, Math.max(control.minimum, value))
     const rounded = Math.round(bounded / control.step) * control.step
     const nativeValue = Number(rounded.toFixed(2))
@@ -705,7 +718,7 @@ export function MechanicalVentilatorConsole({
   }
 
   const commitPendingControl = () => {
-    if (!pendingControl) return
+    if (!pendingControl || therapyDisabled) return
     const canonicalValue =
       pendingControl.nativeNumeric && typeof pendingControl.value === 'number'
         ? Number(
@@ -785,7 +798,7 @@ export function MechanicalVentilatorConsole({
     },
     { label: pressureNames.mean, value: state.measurements.meanAirwayPressureCmH2O },
     { label: pressureNames.peep, value: settings.peepCmH2O },
-  ]
+  ].filter((reading) => !withholdUnacquiredPlateau || reading.label !== pressureNames.plateau)
   /*
    * The annotations name what each level *is*. While the patient is pulling, the plateau is not the
    * elastic load and the gap to peak is not the resistive one, so those two labels state the level
@@ -828,7 +841,7 @@ export function MechanicalVentilatorConsole({
     state.ventilator.holdUntil !== null && state.ventilator.holdUntil > state.simulationTime
   // An occlusion holds the trace still, so the reference levels can be named without chasing a
   // moving line — and naming the plateau during the hold is the point of it.
-  const annotationsVisible = state.paused || holdActive
+  const annotationsVisible = allowTeachingAnnotations && (state.paused || holdActive)
   const holdSecondsRemaining = holdActive
     ? Math.max(0, (state.ventilator.holdUntil as number) - state.simulationTime)
     : 0
@@ -849,7 +862,7 @@ export function MechanicalVentilatorConsole({
         minimum={channel.minimum}
         maximum={channel.maximum}
         color={channel.color}
-        showPmus={state.showEducatorOverlay}
+        showPmus={allowTeachingAnnotations && state.showEducatorOverlay}
         readouts={pressureReadouts}
         annotationsVisible={annotationsVisible}
         annotations={pressureAnnotations}
@@ -953,6 +966,77 @@ export function MechanicalVentilatorConsole({
   const lockOnBezel = display.bezelKeys.some((key) => key.action === 'screen-lock')
   // A device that publishes its own set offers only those; the rest keep the simulator's four.
   const flowPatternOptions = display.flowPatterns ?? allFlowPatterns
+
+  if (teachingControls && !nativeView) {
+    const relevant = displayedControls.filter((control) => teachingControls.includes(control.key))
+    if (teachingControls.length === 0 && !pendingControl) return null
+    return (
+      <section
+        className={taskStyles.controlEditor}
+        data-teaching-setting-editor
+        aria-label="Ventilator settings · teaching interface"
+      >
+        <h3>Ventilator settings</h3>
+        <p className={taskStyles.note}>
+          {profile.shortName} · {activeMode.label}. Teaching interface using this device’s supported
+          controls.
+        </p>
+        {relevant.map((control) => (
+          <label key={control.key} htmlFor={`mv-quick-${control.key}`}>
+            <span>
+              {control.label}{' '}
+              <output>
+                {control.value} {control.unit}
+              </output>
+            </span>
+            <input
+              id={`mv-quick-${control.key}`}
+              type="range"
+              min={control.minimum}
+              max={control.maximum}
+              step={control.step}
+              value={control.value}
+              disabled={therapyDisabled}
+              onFocus={() => {
+                if (activeControlKey !== control.key) selectControl(control.key)
+              }}
+              onChange={(event) => changeControl(control, Number(event.target.value))}
+            />
+            {control.rangeNote ? <small>{control.rangeNote}</small> : null}
+          </label>
+        ))}
+        {!relevant.length ? (
+          <p className={taskStyles.note}>No ventilator setting change is required for this task.</p>
+        ) : null}
+        {teachingControls.some((key) => !numericControls.some((control) => control.key === key)) ? (
+          <p className={taskStyles.boundary}>
+            A requested control is unavailable in this mode. Use the full console to review the
+            selected mode, or reset this round to its intended baseline.
+          </p>
+        ) : null}
+        {pendingControl ? (
+          <div data-pending-setting>
+            <p role="status">
+              Pending {pendingControl.label}: {pendingControl.displayValue} {pendingControl.unit}.
+              Delivery has not changed.
+            </p>
+            <button type="button" disabled={therapyDisabled} onClick={commitPendingControl}>
+              {state.deviceId === 'carefusion-avea' ? 'ACCEPT' : 'Press knob to confirm'}
+            </button>{' '}
+            <button type="button" onClick={() => setPendingControl(null)}>
+              CANCEL
+            </button>
+          </div>
+        ) : (
+          <p className={taskStyles.note}>
+            {profile.commitBehavior === 'immediate'
+              ? 'Changes apply immediately.'
+              : 'Adjust the value, then confirm to change delivery.'}
+          </p>
+        )}
+      </section>
+    )
+  }
 
   return (
     <section
@@ -1335,7 +1419,9 @@ export function MechanicalVentilatorConsole({
           {screen === 'graphics' ? (
             <div className={styles.graphicsScreen}>
               <WaveformLoops samples={state.waveforms} />
-              <DynamicLungPanel state={state} pressureUnit={display.pressureUnit} />
+              {allowTeachingAnnotations ? (
+                <DynamicLungPanel state={state} pressureUnit={display.pressureUnit} />
+              ) : null}
             </div>
           ) : null}
 
@@ -1484,7 +1570,7 @@ export function MechanicalVentilatorConsole({
               {pendingControl.displayValue} {pendingControl.unit}
             </strong>
           </div>
-          <button type="button" onClick={commitPendingControl}>
+          <button type="button" disabled={therapyDisabled} onClick={commitPendingControl}>
             {state.deviceId === 'carefusion-avea' ? 'ACCEPT' : 'Press knob to confirm'}
           </button>
           <button type="button" onClick={() => setPendingControl(null)}>
@@ -1547,16 +1633,19 @@ export function MechanicalVentilatorConsole({
             return `${channel.label} ${shown} ${channel.unit}`
           })
           .join('; ')}
-        ; measured {pressureNames.plateau} {state.measurements.plateauPressureCmH2O.toFixed(0)}{' '}
-        {display.pressureUnit}
+        {withholdUnacquiredPlateau
+          ? '; plateau pressure has not been acquired'
+          : `; measured ${pressureNames.plateau} ${state.measurements.plateauPressureCmH2O.toFixed(0)} ${display.pressureUnit}`}
         {/*
          * The readout beside the trace marks an uninterpretable plateau with a bare "?" that is
          * hidden from assistive technology, and the trace's own caption — screen-reader only —
          * carries the clause. The visible text equivalent carries it too, so a sighted learner is
          * told what the "?" means.
          */}
-        {plateauUnreliable ? ` — ${plateauWithheldNote(plateauValidity)}` : ''}; intrinsic PEEP{' '}
-        {state.measurements.intrinsicPeepCmH2O.toFixed(1)} {display.pressureUnit}.
+        {!withholdUnacquiredPlateau && plateauUnreliable
+          ? ` — ${plateauWithheldNote(plateauValidity)}`
+          : ''}
+        ; intrinsic PEEP {state.measurements.intrinsicPeepCmH2O.toFixed(1)} {display.pressureUnit}.
         {/*
          * While the trace is held still it carries labelled reference levels. The trace itself only
          * has room beside each line for the name and the value, so what each level *is* is stated

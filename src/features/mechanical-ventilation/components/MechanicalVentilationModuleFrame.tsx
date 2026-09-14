@@ -65,15 +65,22 @@ export function MechanicalVentilationModuleFrame({
   locale = 'en',
   activeHref,
   activityMode = false,
+  taskFlow = false,
   children,
 }: {
   readonly locale?: string
   readonly activeHref: string
   readonly activityMode?: boolean
+  readonly taskFlow?: boolean
   readonly children: ReactNode
 }) {
   return (
-    <main className={styles.moduleShell} data-activity-mode={activityMode || undefined}>
+    <section
+      className={styles.moduleShell}
+      data-activity-mode={activityMode || undefined}
+      data-task-flow={taskFlow || undefined}
+      aria-label="Mechanical ventilation module"
+    >
       <ModuleFrameV2
         eyebrow="Critical care · Respiratory support"
         title="Mechanical Ventilation"
@@ -95,6 +102,6 @@ export function MechanicalVentilationModuleFrame({
         ) : null}
         {children}
       </ModuleFrameV2>
-    </main>
+    </section>
   )
 }

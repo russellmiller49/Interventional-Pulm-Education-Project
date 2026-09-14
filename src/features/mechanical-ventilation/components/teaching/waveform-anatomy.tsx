@@ -107,7 +107,7 @@ export function VentilationWaveformAnatomy({
         <IdealizedComparison />
       </details>
       <ModelBoundary>
-        These captured traces come from the patient engine. The optional idealized comparison has
+        These captured traces come from the simulated patient. The optional idealized comparison has
         separate, fixed, authored inputs and does not operate the live patient. Passive expiration
         depends on mechanics, prior delivery, PEEP and the time available; its flow need not be
         identical in different modes.

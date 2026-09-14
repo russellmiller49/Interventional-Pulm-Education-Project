@@ -138,6 +138,32 @@ describe('mechanical ventilation V2 case activity', () => {
     })
   })
 
+  it('resaves a reconstructed checkpoint without putting its final event after the restored clock', async () => {
+    const props = {
+      caseId: 'MV-01',
+      deviceId: 'hamilton-c6' as const,
+      mode: 'practice' as const,
+      section: 'practice' as const,
+    }
+    const first = render(<MechanicalVentilationCaseActivityV2 {...props} />)
+    await screen.findByTestId('mock-workflow')
+    fireEvent.click(screen.getByRole('button', { name: 'Observe mock breath' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Commit mock prediction' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Finish mock case' }))
+    const saved = JSON.parse(localStorage.getItem(MECHANICAL_VENTILATION_SESSION_STORAGE_KEY)!)
+    first.unmount()
+    // A valid persisted event lies inside the replay helper's existing 1 ms time tolerance.
+    saved.simulationTime += 0.0005
+    saved.events[saved.events.length - 1].atSimulationSeconds = saved.simulationTime
+    localStorage.setItem(MECHANICAL_VENTILATION_SESSION_STORAGE_KEY, JSON.stringify(saved))
+    render(<MechanicalVentilationCaseActivityV2 {...props} />)
+    await screen.findByTestId('mock-workflow')
+    const resaved = JSON.parse(localStorage.getItem(MECHANICAL_VENTILATION_SESSION_STORAGE_KEY)!)
+    expect(resaved.simulationTime).toBe(saved.simulationTime)
+    expect(resaved.events).toEqual(saved.events)
+    expect(resaved.activityPhase).toBe('explain')
+  })
+
   it('keeps the selected console fixed and saves completion only after transfer', async () => {
     render(
       <MechanicalVentilationCaseActivityV2

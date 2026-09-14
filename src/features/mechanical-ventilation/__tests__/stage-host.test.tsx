@@ -80,15 +80,14 @@ describe('the ventilation lesson stage', () => {
   const lesson = ventilationStageLesson(unitId)
   const [first, second] = ventilationExperimentByUnit.get(unitId)!.rounds
 
-  it('opens on the first step with the console running, the map lit, and nothing revealed', () => {
+  it('opens on a separate reference with playback available and solutions withheld', () => {
     render(<VentilationStageHost unitId={unitId} />)
     boot()
     expect(stageId()).toBe(lesson.steps[0].id)
     expect(within(nowCard()).getByText(/Step 1 of 10 · Recognize/)).toBeInTheDocument()
-    expect(document.querySelector('[data-ventilation-console]')).not.toBeNull()
-    expect(document.querySelector('[data-breath-map]')?.getAttribute('data-lit')).toBe(
-      'inspiration',
-    )
+    expect(document.querySelector('[data-ventilation-console]')).toBeNull()
+    expect(document.querySelector('[data-breath-map]')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Advance one breath' })).toBeEnabled()
     // Post-commitment teaching is not in the document before the prediction.
     for (const rationale of first.rationales) expect(screen.queryByText(rationale)).toBeNull()
     expect(document.querySelector('[data-teaching-block="grammar"]')).toBeNull()

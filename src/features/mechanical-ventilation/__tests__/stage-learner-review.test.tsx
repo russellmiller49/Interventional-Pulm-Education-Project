@@ -1,26 +1,14 @@
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 
-import { STAGE_PANE_NAMES } from '@/features/learning-module/stage/stageModel'
-
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-
 import { VentilationStageHost } from '../components/stage/VentilationStageHost'
+import { ventilatorDeviceProfiles } from '../content/deviceProfiles'
+import { ventilationUnitPresentation } from '../content/taskPresentation'
+import { parseLabProgress, VENTILATION_LAB_STORAGE_KEY } from '../engine/learningLab'
 import { breathStopIds } from '../content/breathSpine'
 import { ventilationLearningUnits } from '../content/learningCurriculum'
 import { ventilationExperimentByUnit } from '../content/learningExperiments'
 import { ventilationStageLesson, ventilationStageLessonErrors } from '../content/stageLessons'
-
-/**
- * What the September 2026 learner-review round changed on this module's stage, pinned.
- *
- * The findings came from a walk of the ECMO Learn pathway by someone who had not built it, and the
- * ones that transfer are properties of the shape this module shares: panes with names only in
- * `aria-label`, steps that name no pane, a surface a step points at that carries no printed name.
- * The record beside this module's docs says what each became; this suite says it stays. It also
- * re-pins the pane order D2 recorded, whose previous guard was retired with the flow rebuild.
- */
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -61,309 +49,187 @@ const primary = () => document.querySelector('[data-now-primary]') as HTMLButton
 const stageId = () => document.querySelector('[data-stage]')?.getAttribute('data-stage')
 const whereLine = () => document.querySelector('[data-now-card] [data-now-where]')?.textContent
 
-function paneOrder(): readonly string[] {
-  return [...document.querySelectorAll('[data-pane]')].map(
-    (pane) => pane.getAttribute('data-pane') ?? '',
-  )
-}
-
-function captions(): readonly string[] {
-  return [...document.querySelectorAll('[data-pane-label]')].map((label) => label.textContent ?? '')
-}
-
 function mount(unitId: string) {
   render(<VentilationStageHost unitId={unitId} />)
   boot()
   return ventilationStageLesson(unitId)
 }
+function reachMechanicsAction() {
+  mount('mechanics-load-and-pressure')
+  fireEvent.click(primary()!)
+  expect(document.querySelector('[data-controls-locked-note]')).toHaveTextContent(
+    'locked while you decide',
+  )
+  expect(document.querySelector('[data-reset-patient]')).toBeDisabled()
+  fireEvent.click(within(nowCard()).getAllByRole('radio')[0])
+  fireEvent.click(primary()!)
+  fireEvent.click(primary()!)
+}
 
-describe('the panes say what they are', () => {
-  it('leads with the steps and prints a name on each, as the other three adopters do', () => {
-    mount('mechanics-load-and-pressure')
-    /*
-     * MVLR-OD-1, which amends D2 §2's "live ventilator → teaching → learner action". That order
-     * had had no guard since PR #127 deleted the test §7 named for it; this is the guard, and it
-     * holds the order the owner settled across all four adopters of the shared stage.
-     */
-    expect(paneOrder()).toEqual(['task', 'teaching', 'simulator'])
-    expect(captions()).toEqual([
-      'Steps panel · what to do',
-      'Teaching panel · what to read',
-      'Simulator panel · the live ventilator, the quick controls and the breath map',
-    ])
-    for (const name of Object.values(STAGE_PANE_NAMES)) {
-      expect(screen.getByRole('region', { name })).toBeInTheDocument()
-    }
-  })
-
-  it('passes the fractions and floors that keep the ventilator the widest pane', () => {
-    // Byte-identical to hemodynamics and mechanical circulatory support: the simulator is the
-    // widest pane at every validated width whatever end of the row it sits at. The measured table
-    // is in the module's learner-review record.
-    const host = readFileSync(
-      join(
-        process.cwd(),
-        'src/features/mechanical-ventilation/components/stage/VentilationStageHost.tsx',
-      ),
-      'utf8',
-    )
-    expect(host).toContain("const PANE_ORDER = ['steps', 'teaching', 'simulator'] as const")
-    expect(host).toContain(
-      'const PANE_WIDTH_FRACTIONS = { primary: 0.26, secondary: 0.29 } as const',
-    )
-    expect(host).toContain(
-      'const PANE_MINIMUMS = { primary: 300, secondary: 280, tertiary: 340 } as const',
-    )
-  })
-})
-
-describe('every step says where it is worked', () => {
-  it('authors a location on every step of every section, and the builder would refuse one without', () => {
-    for (const unit of ventilationLearningUnits) {
-      const lesson = ventilationStageLesson(unit.id)
+describe('task presentation replaces pane navigation', () => {
+  it.each(ventilationLearningUnits.map((unit) => unit.id))(
+    '%s has one task, explicit presentation and stable identities',
+    (unitId) => {
+      const lesson = mount(unitId)
       expect(ventilationStageLessonErrors(lesson)).toEqual([])
+      expect(Object.keys(ventilationUnitPresentation)).toHaveLength(14)
+      expect(document.querySelectorAll('[data-now-card]')).toHaveLength(1)
+      expect(document.querySelector('[data-pane]')).toBeNull()
+      expect(screen.queryByRole('tablist', { name: 'Workspace panel views' })).toBeNull()
+      expect(document.querySelector('[data-task-map]')).not.toHaveAttribute('open')
+      expect(whereLine()).toContain(lesson.steps[0].presentation.landmark)
       for (const step of lesson.steps) {
-        expect(`${unit.id} ${step.id}: ${step.lookIn.pane}`).toMatch(
-          /: (steps|teaching|simulator)$/,
-        )
-        expect(step.lookIn.landmark.trim().length).toBeGreaterThan(0)
+        expect(step.presentation.landmark.length).toBeGreaterThan(10)
+        expect(step.id).toContain(unitId)
       }
-    }
-    const lesson = ventilationStageLesson('waveform-anatomy')
-    const broken = {
-      ...lesson,
-      steps: lesson.steps.map((step, index) =>
-        index === 0 ? { ...step, lookIn: { pane: 'teaching', landmark: 'Teaching panel' } } : step,
-      ),
-    } as typeof lesson
-    expect(ventilationStageLessonErrors(broken)).toEqual([
-      'waveform-anatomy step 1 uses a pane name as a landmark inside that pane.',
-    ])
-  })
-
-  it('prints the location under the instruction, naming a pane whose caption says the same word', () => {
-    const lesson = mount('breathing-with-support')
-    expect(whereLine()).toBe(
-      'Where to look: Teaching panel — Read one complete passive breath, and Steps panel — Continue or Next stop, on this card.',
-    )
-    // The heading it names is on the teaching pane at this step, open.
-    expect(
-      within(document.querySelector('[data-foundation-teaching]') as HTMLElement).getByRole(
-        'heading',
-        { name: 'Read one complete passive breath' },
-      ),
-    ).toBeInTheDocument()
-    const printed = captions()
-    for (const named of nowCard().querySelectorAll('[data-now-where] strong')) {
-      expect(printed.some((caption) => caption.startsWith(named.textContent ?? '∅'))).toBe(true)
-    }
-    fireEvent.click(primary()!)
-    expect(stageId()).toBe(lesson.steps[1].id)
-    expect(whereLine()).toBe(
-      'Where to look: Steps panel — captured complete breath, interval A, and the choices below.',
-    )
-  })
-
-  it('repeats the location in the help dialog', () => {
-    mount('breathing-with-support')
-    fireEvent.click(document.querySelector('[data-stage-help]')!)
-    expect(document.querySelector('[data-stage-help-dialog]')?.textContent).toMatch(
-      /Where to look: Teaching panel — Read one complete passive breath/,
-    )
-  })
-
-  it('points a location question at the map, the walk at the stop card, and the reveal at the picture and the checklist', () => {
-    const locate = ventilationStageLesson('triggering-and-cycling').steps[0]
-    expect(locate.lookIn).toEqual({
-      pane: 'simulator',
-      landmark: 'the numbered stops on the breath map',
-      alsoPane: 'steps',
-      alsoLandmark: 'Commit my answer, on this card',
-    })
-    const walk = ventilationStageLesson('waveform-anatomy').steps[0]
-    expect(walk.lookIn.pane).toBe('teaching')
-    expect(walk.lookIn.alsoPane).toBe('steps')
-    const explain = ventilationStageLesson('mechanics-load-and-pressure').steps[5]
-    expect(explain.phase).toBe('explain')
-    expect(explain.lookIn).toEqual({
-      pane: 'steps',
-      landmark: 'the verdict and what changed, below',
-      alsoPane: 'teaching',
-      alsoLandmark: 'Compare pressure during flow and a passive hold',
-    })
-    const bedside = ventilationStageLesson('safety-reassessment-and-human-factors').steps[0]
-    expect(bedside.lookIn.landmark).toBe('Patient and circuit findings, below the breath map')
-  })
-
-  it('names the surfaces the act and observe steps are worked on, in the words they carry', () => {
-    const unitId = 'mechanics-load-and-pressure'
-    const lesson = mount(unitId)
-    const first = ventilationExperimentByUnit.get(unitId)!.rounds[0]
-    fireEvent.click(primary()!)
-    fireEvent.click(within(nowCard()).getByRole('radio', { name: first.choices[first.correct] }))
-    fireEvent.click(primary()!)
-    fireEvent.click(primary()!)
-    expect(stageId()).toBe(lesson.steps[2].id)
-    expect(whereLine()).toBe(
-      'Where to look: Simulator panel — Quick controls for this step, under the console.',
-    )
-    expect(screen.getByRole('region', { name: 'Quick controls for this step' })).toBeInTheDocument()
-    fireEvent.change(screen.getByRole('slider', { name: /Patient resistance/ }), {
-      target: { value: '2' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: /Perform inspiratory hold/ }))
-    simulate(6)
-    fireEvent.click(primary()!)
-    expect(stageId()).toBe(lesson.steps[3].id)
-    expect(whereLine()).toBe(
-      'Where to look: Simulator panel — Readings to watch, under the console.',
-    )
-    // The label the step names is printed on the readings, not only in an accessible name.
-    const readings = document.querySelector('[data-live-readings]') as HTMLElement
-    expect(within(readings).getByText('Readings to watch')).toBeInTheDocument()
-    expect(readings.getAttribute('aria-labelledby')).toBeTruthy()
-    simulate(first.seconds + 1)
-    fireEvent.click(primary()!)
-    expect(stageId()).toBe(lesson.steps[4].id)
-    expect(whereLine()).toBe(
-      'Where to look: Steps panel — the captured comparison and observation choices below.',
-    )
-    fireEvent.click(within(nowCard()).getByRole('radio', { name: 'Rose' }))
-    fireEvent.click(primary()!)
-    fireEvent.click(primary()!)
-    expect(
-      within(document.querySelector('[data-teaching-block="method"]') as HTMLElement).getByRole(
-        'heading',
-        { name: 'Compare pressure during flow and a passive hold' },
-      ),
-    ).toBeInTheDocument()
-  })
-})
-
-describe('the simulator says when it cannot be operated', () => {
-  it('names the lock while the learner decides, and the pause while they look back', () => {
-    const unitId = 'mechanics-load-and-pressure'
-    const lesson = mount(unitId)
-    const first = ventilationExperimentByUnit.get(unitId)!.rounds[0]
-    fireEvent.click(primary()!)
-    expect(stageId()).toBe(lesson.steps[1].id)
-    expect(document.querySelector('[data-controls-locked-note]')?.textContent).toMatch(
-      /locked while you decide/,
-    )
-    expect(document.querySelector('[data-controls-paused-note]')).toBeNull()
-    fireEvent.click(within(nowCard()).getByRole('radio', { name: first.choices[first.correct] }))
-    fireEvent.click(primary()!)
-    expect(document.querySelector('[data-controls-locked-note]')).toBeNull()
-    fireEvent.click(primary()!)
-    expect(stageId()).toBe(lesson.steps[2].id)
-    expect(document.querySelector('[data-quick-controls-note]')?.textContent).toBe(
-      'Simulated patient properties; keep ventilator settings fixed.',
-    )
-
-    // Meet the goals, move on to Observe, then look back at Act — where the quick controls are.
-    fireEvent.change(screen.getByRole('slider', { name: /Patient resistance/ }), {
-      target: { value: '2' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: /Perform inspiratory hold/ }))
-    simulate(6)
-    fireEvent.click(primary()!)
-    expect(stageId()).toBe(lesson.steps[3].id)
-    fireEvent.click(document.querySelector('[data-now-back]')!)
-    expect(stageId()).toBe(lesson.steps[2].id)
-    expect(document.querySelector('[data-now-status]')?.textContent).toMatch(/looking back/)
-    expect(
-      document.querySelector('[data-ventilation-console]')?.getAttribute('data-controls-locked'),
-    ).toBe('true')
-    expect(document.querySelector('[data-controls-locked-note]')).toBeNull()
-    expect(document.querySelector('[data-controls-paused-note]')?.textContent).toMatch(
-      /paused while you look back/,
-    )
-    expect(document.querySelector('[data-quick-controls-note]')?.textContent).toBe(
-      'Paused while you look back.',
-    )
-    // Looking back in a revised unit cannot advance the current experiment.
-    expect(screen.getByRole('button', { name: /Advance one breath/ })).toBeDisabled()
-  })
-})
-
-describe('Reset patient says what it does', () => {
-  it('waits while the learner decides, is paused on a look-back, and says what it clears once there is something to clear', () => {
-    const unitId = 'mechanics-load-and-pressure'
-    const lesson = mount(unitId)
-    const first = ventilationExperimentByUnit.get(unitId)!.rounds[0]
-    const reset = () => screen.getByRole('button', { name: /Reset patient/ })
-    expect(reset()).toBeEnabled()
-    expect(reset().getAttribute('title')).toMatch(/Your prediction is kept/)
-    expect(document.querySelector('[data-reset-note]')).toBeNull()
-
-    // Deciding: a reset would only send the learner back a step, so it waits and says so.
-    fireEvent.click(primary()!)
-    expect(stageId()).toBe(lesson.steps[1].id)
-    expect(reset()).toBeDisabled()
-    expect(reset().getAttribute('title')).toMatch(/while you decide/)
-
-    fireEvent.click(within(nowCard()).getByRole('radio', { name: first.choices[first.correct] }))
-    fireEvent.click(primary()!)
-    fireEvent.click(primary()!)
-    expect(stageId()).toBe(lesson.steps[2].id)
-    expect(reset()).toBeEnabled()
-    expect(document.querySelector('[data-reset-note]')).toBeNull()
-
-    // A change has been made: the surface says what a reset would undo.
-    fireEvent.change(screen.getByRole('slider', { name: /Patient resistance/ }), {
-      target: { value: '2' },
-    })
-    expect(document.querySelector('[data-reset-note]')?.textContent).toMatch(
-      /clears the change, hold or observation you have made\. Your prediction is kept\./,
-    )
-    expect(reset().getAttribute('aria-describedby')).toBe(
-      document.querySelector('[data-reset-note]')?.getAttribute('id'),
-    )
-
-    // Looking back: paused with the other controls.
-    fireEvent.click(document.querySelector('[data-now-back]')!)
-    expect(reset()).toBeDisabled()
-    expect(reset().getAttribute('title')).toMatch(/Return to the live step/)
-    expect(document.querySelector('[data-reset-note]')).toBeNull()
-  })
-})
-
-describe('the short list says what kind of list it is', () => {
-  const stageStyles = readFileSync(
-    join(
-      process.cwd(),
-      'src/features/mechanical-ventilation/components/stage/ventilation-stage.module.css',
-    ),
-    'utf8',
+      expect(primary()).toBeEnabled()
+      fireEvent.click(document.querySelector('[data-stage-help]')!)
+      expect(document.querySelector('[data-stage-help-dialog]')?.textContent).toContain(
+        lesson.steps[0].presentation.landmark,
+      )
+    },
   )
 
-  it('keeps the walk on one captured reference, with the map phase and all three cursors aligned', () => {
+  it('retains a local rollback renderer without changing the patient or curriculum', () => {
+    const view = render(<VentilationStageHost unitId="mechanics-load-and-pressure" />)
+    boot()
+    const stage = stageId()
+    const before = localStorage.getItem(VENTILATION_LAB_STORAGE_KEY)
+    view.rerender(<VentilationStageHost unitId="mechanics-load-and-pressure" renderer="legacy" />)
+    expect(stageId()).toBe(stage)
+    expect(document.querySelectorAll('[data-pane]')).toHaveLength(3)
+    expect(localStorage.getItem(VENTILATION_LAB_STORAGE_KEY)).toBe(before)
+  })
+
+  it('keeps every waveform stop and all linked cursors on the same reference', () => {
     mount('waveform-anatomy')
-    for (const stopId of breathStopIds) {
-      expect(document.querySelector('[data-walk-stop]')?.getAttribute('data-walk-stop')).toBe(
-        stopId,
-      )
-      expect(document.querySelector('[data-guided-stop]')?.getAttribute('data-guided-stop')).toBe(
-        stopId,
-      )
-      expect(document.querySelector('[data-breath-map]')?.getAttribute('data-lit')).toBe(stopId)
-      const cursors = [...document.querySelectorAll('[data-time-cursor]')].map((e) =>
-        e.getAttribute('data-time-cursor'),
+    for (const stop of breathStopIds) {
+      expect(document.querySelector('[data-guided-stop]')).toHaveAttribute('data-guided-stop', stop)
+      const cursors = [...document.querySelectorAll('[data-time-cursor]')].map((node) =>
+        node.getAttribute('data-time-cursor'),
       )
       expect(cursors).toHaveLength(3)
       expect(new Set(cursors).size).toBe(1)
       fireEvent.click(primary()!)
     }
-    expect(stageStyles).toMatch(/\.block ol {[^}]*list-style: decimal;/)
+  })
+})
+
+describe('control semantics and read-only review', () => {
+  it('makes supported bedside assessment available without replacing required measurements', () => {
+    mount('high-peak-pressure-integration')
+    fireEvent.click(primary()!)
+    fireEvent.click(within(nowCard()).getAllByRole('radio')[0])
+    fireEvent.click(primary()!)
+    fireEvent.click(primary()!)
+    expect(document.querySelector('[data-metric="plateau"] dd')).toHaveTextContent(
+      'Acquire a current inspiratory hold',
+    )
+    expect(document.querySelector('[data-metric="plateau"] small')).toBeNull()
+    fireEvent.click(screen.getByText('Console and experiment options'))
+    fireEvent.click(screen.getByRole('button', { name: /View full .* console/ }))
+    expect(screen.getByText(/plateau pressure has not been acquired/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Return to task controls' }))
+    const assess = screen.getByRole('button', { name: 'Assess the patient' })
+    expect(assess).toBeEnabled()
+    fireEvent.click(assess)
+    const saved = parseLabProgress(localStorage.getItem(VENTILATION_LAB_STORAGE_KEY)).units[
+      'high-peak-pressure-integration'
+    ]!
+    expect(saved.events.at(-1)?.action).toEqual({
+      type: 'PERFORM_INTERVENTION',
+      interventionId: 'assess-patient',
+    })
+    expect(saved.holds).toEqual([])
+    expect(document.querySelectorAll('[data-step-goals] li[data-met="true"]')).toHaveLength(0)
+    expect(primary()).toBeNull()
   })
 
-  it('reads the muted colour from the shell token, never from the Tailwind triple', () => {
-    // Inside the shared workspace `--muted` is an HSL triple, invalid as a colour, so every read
-    // of it silently inherited the ink. Only the comment that says so may mention it.
-    const reads = stageStyles.match(/var\(--muted[,)]/g) ?? []
-    expect(reads).toEqual([])
-    expect(stageStyles).toMatch(/var\(--stage-muted, #9fb4b7\)/)
+  it('distinguishes patient properties, playback, and an actual acquired hold', () => {
+    reachMechanicsAction()
+    expect(
+      screen.getByText(/Experimental conditions; these are not bedside treatment controls/),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/Playback controls do not acquire a pressure/)).toBeInTheDocument()
+    fireEvent.change(screen.getByRole('slider', { name: /Patient resistance/ }), {
+      target: { value: '2' },
+    })
+    expect(document.querySelectorAll('[data-step-goals] li[data-met="true"]')).toHaveLength(1)
+    fireEvent.click(screen.getByRole('button', { name: /Perform inspiratory hold/ }))
+    simulate(6)
+    expect(document.querySelectorAll('[data-step-goals] li[data-met="true"]')).toHaveLength(2)
+    fireEvent.click(primary()!)
+    fireEvent.click(document.querySelector('[data-now-back]')!)
+    expect(screen.getByRole('button', { name: /Advance one breath/ })).toBeDisabled()
+    expect(screen.getByRole('slider', { name: /Patient resistance/ })).toBeDisabled()
+    expect(document.querySelector('[data-reset-patient]')).toBeDisabled()
+    expect(document.querySelector('[data-controls-locked-note]')?.textContent).toMatch(
+      /paused while you look back/,
+    )
   })
+
+  it('describes reset beside the action and preserves the first prediction in a clean repeat', () => {
+    reachMechanicsAction()
+    fireEvent.click(screen.getByText('Console and experiment options'))
+    const reset = screen.getByRole('button', { name: 'Reset patient' })
+    expect(document.getElementById(reset.getAttribute('aria-describedby')!)).toHaveTextContent(
+      /first prediction stays/,
+    )
+    fireEvent.change(screen.getByRole('slider', { name: /Patient resistance/ }), {
+      target: { value: '2' },
+    })
+    const before = parseLabProgress(localStorage.getItem(VENTILATION_LAB_STORAGE_KEY)).units[
+      'mechanics-load-and-pressure'
+    ]!
+    fireEvent.click(reset)
+    const after = parseLabProgress(localStorage.getItem(VENTILATION_LAB_STORAGE_KEY)).units[
+      'mechanics-load-and-pressure'
+    ]!
+    expect(after.evidence[0].prediction).toBe(before.evidence[0].prediction)
+    expect(after.history!.length).toBeGreaterThan(before.history?.length ?? 0)
+    expect(document.querySelectorAll('[data-step-goals] li[data-met="true"]')).toHaveLength(0)
+  })
+
+  it.each(ventilatorDeviceProfiles)(
+    '$shortName preserves confirmation and pending edits across native view changes',
+    (profile) => {
+      mount('controls-and-goals')
+      fireEvent.click(primary()!)
+      fireEvent.click(screen.getByText('Console and experiment options'))
+      fireEvent.change(screen.getByRole('combobox', { name: 'Console' }), {
+        target: { value: profile.id },
+      })
+      // Device selection intentionally rebuilds the uncommitted round, returning to prerequisite.
+      if (!document.querySelector('[data-prediction-choices]')) fireEvent.click(primary()!)
+      fireEvent.click(within(nowCard()).getAllByRole('radio')[0])
+      fireEvent.click(primary()!)
+      fireEvent.click(primary()!)
+      const snapshot = () =>
+        parseLabProgress(localStorage.getItem(VENTILATION_LAB_STORAGE_KEY)).units[
+          'controls-and-goals'
+        ]!
+      const events = snapshot().events.length
+      const setting = document.getElementById('mv-quick-vtMl')!
+      fireEvent.change(setting, { target: { value: '500' } })
+      expect(snapshot().events.length).toBe(
+        events + (profile.commitBehavior === 'immediate' ? 1 : 0),
+      )
+      fireEvent.click(screen.getByText('Console and experiment options'))
+      fireEvent.click(screen.getByRole('button', { name: /View full .* console/ }))
+      expect(document.querySelectorAll('[data-device]')).toHaveLength(1)
+      fireEvent.click(screen.getByRole('button', { name: 'Return to task controls' }))
+      expect(document.querySelectorAll('#mv-quick-vtMl')).toHaveLength(1)
+      expect(document.getElementById('mv-quick-vtMl')).toHaveValue('500')
+      if (profile.commitBehavior !== 'immediate')
+        fireEvent.click(
+          screen.getByRole('button', {
+            name: profile.id === 'carefusion-avea' ? 'ACCEPT' : 'Press knob to confirm',
+          }),
+        )
+      expect(snapshot().events.length).toBe(events + 1)
+      expect(screen.getByRole('combobox', { name: 'Console' })).toBeDisabled()
+    },
+  )
 })
 
 describe('the card keeps the promise the step makes', () => {
@@ -434,7 +300,8 @@ describe('the card keeps the promise the step makes', () => {
     cleanup()
 
     mount('triggering-and-cycling')
-    const answer = document.querySelector('[data-breath-map-answer]') as HTMLElement
+    fireEvent.click(primary()!)
+    const answer = document.querySelector('[data-location-choices]') as HTMLElement
     fireEvent.click(within(answer).getAllByRole('radio')[0])
     fireEvent.click(primary()!)
     expect(nowCard().querySelector('[data-answer-verdict] p')?.textContent).toMatch(

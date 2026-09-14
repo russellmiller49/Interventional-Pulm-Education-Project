@@ -3,11 +3,12 @@ import { chromium, expect } from '@playwright/test'
 import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 const base = process.env.MV_REVIEW_URL ?? 'http://127.0.0.1:3161'
-const output = path.resolve('artifacts/mv-targeted')
+const output = path.resolve(process.env.MV_REVIEW_OUTPUT ?? 'artifacts/mv-targeted')
 const key = 'mechanical-ventilation-live-learning-v1'
 const browser = await chromium.launch()
 const results = []
 const page = await browser.newPage({
+  ...(process.env.MV_REVIEW_STORAGE ? { storageState: process.env.MV_REVIEW_STORAGE } : {}),
   viewport: { width: 1280, height: 800 },
   reducedMotion: 'reduce',
 })
@@ -23,8 +24,9 @@ async function hold() {
     await page.getByRole('button', { name: 'Advance one breath', exact: true }).click()
 }
 try {
-  await page.clock.install()
   await page.goto(`${base}/en/mechanical-ventilation/learn?activity=mechanics-load-and-pressure`)
+  await expect(page.locator('[data-now-card]')).toBeVisible()
+  await page.clock.install()
   await primary()
   await page
     .locator('[data-prediction-choices]')
@@ -47,7 +49,9 @@ try {
   await primary()
   await page.getByRole('combobox', { name: 'Simulation speed' }).selectOption('5')
   await page.getByRole('button', { name: 'Run', exact: true }).click()
-  await page.clock.runFor(5000)
+  for (let tick = 0; tick < 40 && !(await page.locator('[data-now-primary]').count()); tick++) {
+    await page.clock.runFor(1000)
+  }
   await primary()
   await page
     .locator('[data-observation-task]')
@@ -64,6 +68,7 @@ try {
   await page.reload()
   await expect(control).toHaveValue('1')
   await expect(page.getByRole('button', { name: 'Run', exact: true })).toBeVisible()
+  await page.getByText('Console and experiment options', { exact: true }).click()
   await page.getByRole('button', { name: 'Restart section', exact: true }).click()
   await expect(page.locator('[data-foundation-teaching]')).toBeVisible()
   saved = (await state()).units['mechanics-load-and-pressure']
@@ -114,6 +119,7 @@ try {
   await expect(page.locator('[data-foundation-teaching]')).toBeVisible()
   results.push({ check: 'malformed storage starts safely', result: 'passed' })
   const unavailable = await browser.newPage({
+    ...(process.env.MV_REVIEW_STORAGE ? { storageState: process.env.MV_REVIEW_STORAGE } : {}),
     viewport: { width: 390, height: 844 },
     reducedMotion: 'reduce',
   })

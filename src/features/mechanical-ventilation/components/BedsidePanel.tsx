@@ -43,13 +43,18 @@ export function BedsidePanel({
   state,
   definition,
   compact = false,
+  requireAssessment = false,
 }: {
   state: VentilationSimulationState
   definition: VentilationCaseDefinition
   compact?: boolean
+  /** Independent tasks reveal findings through the existing assessment/intervention workflow. */
+  requireAssessment?: boolean
 }) {
-  const assessed = state.experience === 'learn' || performed(state, 'assess-patient')
-  const circuitInspected = state.experience === 'learn' || performed(state, 'inspect-circuit')
+  const assessed =
+    (!requireAssessment && state.experience === 'learn') || performed(state, 'assess-patient')
+  const circuitInspected =
+    (!requireAssessment && state.experience === 'learn') || performed(state, 'inspect-circuit')
   const classified = classifyCaseFindings(definition.id)
   const presentFindings = classified.filter((finding) => finding.kind === 'present')
   const differentialFindings = classified.filter((finding) => finding.kind === 'byBranch')
@@ -59,8 +64,9 @@ export function BedsidePanel({
   const mean = state.patient.hemodynamics.mapMmHg
 
   return (
-    <aside
+    <section
       className={styles.bedsidePanel}
+      data-bedside-panel
       data-compact={compact || undefined}
       aria-labelledby="bedside-heading"
     >
@@ -94,8 +100,13 @@ export function BedsidePanel({
           <small>MAP {mean.toFixed(0)}</small>
         </div>
         <div>
-          <span>fPatient</span>
-          <strong>{state.patient.drive.neuralRatePerMin.toFixed(0)}</strong>
+          <span>{requireAssessment ? 'fTotal' : 'fPatient'}</span>
+          <strong>
+            {(requireAssessment
+              ? state.measurements.totalRatePerMin
+              : state.patient.drive.neuralRatePerMin
+            ).toFixed(0)}
+          </strong>
           <small>/min</small>
         </div>
       </section>
@@ -112,11 +123,19 @@ export function BedsidePanel({
           </div>
           <div>
             <dt>Pain</dt>
-            <dd>{state.patient.human.painScore.toFixed(0)} / 10</dd>
+            <dd>
+              {!requireAssessment || assessed
+                ? `${state.patient.human.painScore.toFixed(0)} / 10`
+                : 'Assess patient'}
+            </dd>
           </div>
           <div>
             <dt>Delirium</dt>
-            <dd>{state.patient.human.deliriumScore.toFixed(0)} / 10</dd>
+            <dd>
+              {!requireAssessment || assessed
+                ? `${state.patient.human.deliriumScore.toFixed(0)} / 10`
+                : 'Assess patient'}
+            </dd>
           </div>
         </dl>
       ) : null}
@@ -156,7 +175,7 @@ export function BedsidePanel({
                     </ul>
                   </>
                 ) : null}
-                {conditionalFindings.length ? (
+                {conditionalFindings.length && !requireAssessment ? (
                   <>
                     <p>
                       <strong>Only if you look:</strong> these appear in response to something you
@@ -185,11 +204,19 @@ export function BedsidePanel({
                 </div>
                 <div>
                   <dt>Pain</dt>
-                  <dd>{state.patient.human.painScore.toFixed(0)} / 10</dd>
+                  <dd>
+                    {!requireAssessment || assessed
+                      ? `${state.patient.human.painScore.toFixed(0)} / 10`
+                      : 'Assess patient'}
+                  </dd>
                 </div>
                 <div>
                   <dt>Delirium burden</dt>
-                  <dd>{state.patient.human.deliriumScore.toFixed(0)} / 10</dd>
+                  <dd>
+                    {!requireAssessment || assessed
+                      ? `${state.patient.human.deliriumScore.toFixed(0)} / 10`
+                      : 'Assess patient'}
+                  </dd>
                 </div>
               </dl>
             ) : null}
@@ -243,6 +270,6 @@ export function BedsidePanel({
           </div>
         </details>
       </div>
-    </aside>
+    </section>
   )
 }

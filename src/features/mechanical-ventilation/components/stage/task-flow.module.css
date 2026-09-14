@@ -1,0 +1,344 @@
+.flow {
+  --stage-muted: #aec5c8;
+  --muted: #aec5c8;
+  --ink: #eaf4f4;
+  --line: #345158;
+  color: var(--ink);
+  min-width: 0;
+}
+
+.flow [data-lesson-shell] {
+  display: block;
+  height: auto;
+}
+
+.flow [data-lesson-shell] > div {
+  position: static;
+  height: auto;
+  overflow: visible;
+}
+
+.content {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: clamp(0.65rem, 2vw, 1.5rem);
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.flow [data-now-card] {
+  position: static;
+  display: block;
+  min-width: 0;
+  padding: clamp(0.8rem, 2vw, 1.4rem);
+}
+
+.flow [data-now-card] > * + * {
+  margin-top: 0.75rem;
+}
+.flow [data-now-card] > h2 {
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
+}
+.flow [data-now-where] {
+  font-size: 0.875rem;
+}
+.flow [data-now-focus]:focus {
+  outline: none;
+}
+.flow :is(button, input, select, summary, a):focus-visible {
+  outline: 3px solid #71e1e5;
+  outline-offset: 3px;
+}
+.flow :is(button, input, select) {
+  max-width: 100%;
+}
+.flow :is(p, h2, h3, dd, button, label, summary) {
+  overflow-wrap: anywhere;
+}
+.flow details > summary {
+  cursor: pointer;
+  padding: 0.4rem 0;
+}
+.flow [data-step-list] {
+  margin-top: 0.75rem;
+}
+.flow [data-teaching-column] {
+  display: grid;
+  gap: 0.75rem;
+}
+.flow [data-foundation-teaching] {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+.flow [data-foundation-teaching] > h2 {
+  display: none;
+}
+.flow [data-foundation-teaching] > p:first-child {
+  margin-top: 0;
+}
+.flow [data-foundation-teaching] > p {
+  max-width: 85ch;
+}
+.flow [aria-label='Adult ARDS guideline reference'] {
+  --ink: #16383b;
+  --muted: #436068;
+  --accent: #17685f;
+  color: var(--ink);
+}
+.flow [data-bedside-panel] {
+  --ink: #16383b;
+  --muted: #436068;
+  --line: #c4d7da;
+  --accent: #17685f;
+  color: var(--ink);
+}
+.flow [data-task-workbench] [data-bedside-panel][data-compact='true'] details > div {
+  max-height: none;
+  overflow: visible;
+}
+
+.workspace {
+  display: grid;
+  min-width: 0;
+  gap: 0.8rem;
+}
+.workspace[data-kind='concept-control'] {
+  max-width: 900px;
+  margin-inline: auto;
+}
+.workspace[data-surface='reference'][data-kind='patient-case'] {
+  max-width: 900px;
+}
+.workspace [data-captured-breath] {
+  width: 100%;
+  margin: 0;
+}
+.workspace [data-captured-breath] > svg {
+  max-height: none;
+  width: 100%;
+}
+.workspace [data-captured-breath] svg text {
+  font-size: 12px;
+}
+.workspace [data-prediction-choices] {
+  margin-block: 0.75rem;
+}
+
+.workbench {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+}
+.experiment {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+}
+.signals {
+  min-width: 0;
+  display: grid;
+  gap: 0.7rem;
+  align-content: start;
+}
+.controls {
+  min-width: 0;
+  display: grid;
+  gap: 0.7rem;
+  align-content: start;
+}
+.controls:empty {
+  display: none;
+}
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.tools p {
+  flex: 1 1 20rem;
+}
+.note {
+  color: #aec5c8;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.boundary {
+  padding: 0.6rem 0.8rem;
+  border-left: 3px solid #71e1e5;
+  background: #10262b;
+}
+.block {
+  padding: 0.85rem;
+  border: 1px solid #345158;
+  border-radius: 0.75rem;
+  min-width: 0;
+}
+.block > * + * {
+  margin-top: 0.6rem;
+}
+.block h3 {
+  font-weight: 700;
+}
+.block ol {
+  padding-left: 1.3rem;
+  list-style: decimal;
+}
+.block ul {
+  padding-left: 1.3rem;
+  list-style: disc;
+}
+.readings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: 0.55rem;
+}
+.readings div {
+  padding: 0.55rem;
+  border: 1px solid #345158;
+  border-radius: 0.5rem;
+}
+.readings dt {
+  font-size: 0.85rem;
+  color: #aec5c8;
+}
+.readings dd {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.comparison {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+}
+.comparison [data-captured-breath] {
+  min-width: 0;
+}
+.timeline {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.timeline svg {
+  display: block;
+  width: 100%;
+}
+.timeline {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
+.timeline > :is(h3, p) {
+  grid-column: 1 / -1;
+}
+.experiment[data-native-view='true'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.timeline table {
+  width: 100%;
+  font-size: 0.9rem;
+}
+.timeline :is(th, td) {
+  text-align: left;
+  padding: 0.4rem;
+}
+.timeline th {
+  color: #aec5c8;
+}
+.native {
+  min-width: 0;
+  overflow-x: auto;
+}
+.native > div {
+  min-width: 640px;
+}
+.nativeGate {
+  display: none;
+}
+.controlEditor {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.8rem;
+  border: 1px solid #345158;
+  border-radius: 0.7rem;
+}
+.controlEditor label {
+  display: grid;
+  gap: 0.4rem;
+}
+.controlEditor output {
+  font-weight: 700;
+}
+.controlEditor input {
+  width: 100%;
+  accent-color: #71e1e5;
+  min-height: 2rem;
+}
+.controlEditor button {
+  min-height: 2.4rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #71e1e5;
+  border-radius: 0.5rem;
+}
+.controlEditor button:disabled {
+  opacity: 0.5;
+}
+.controlEditor [role='status'] {
+  color: #ffcf85;
+}
+
+@media (min-width: 1000px) {
+  .experiment:not([data-native-view='true']):has(.controls:not(:empty)) {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    align-items: start;
+  }
+  .comparison {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 699px) {
+  .flow [data-now-card] {
+    padding: 0.7rem;
+  }
+  .content {
+    padding: 0.5rem;
+  }
+  .nativeGate {
+    display: block;
+  }
+  .native {
+    display: none;
+  }
+  .timeline table {
+    font-size: 0.8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow * {
+    scroll-behavior: auto;
+  }
+}
+
+/* Sources expand in the same document flow, including at short heights and browser zoom. */
+.flow [data-stage-sources] > div {
+  position: static;
+  width: auto;
+  max-height: none;
+  overflow: visible;
+  margin-top: 0.5rem;
+}
+
+.readings dd small {
+  display: block;
+  font-weight: 400;
+  color: #aec5c8;
+}
+
+.flow [data-native-monitor] :is(span, small) {
+  font-size: 0.75rem;
+}
+.flow [data-device='drager-evita-v800-v600'] [data-native-monitor] :is(span, small) {
+  color: #42616a;
+}

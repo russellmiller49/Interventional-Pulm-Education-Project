@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   idealBreaths,
   idealComparisonAxes,
@@ -21,6 +21,17 @@ export const IDEAL_REFERENCE: IdealInputs = {
   duration: 4,
 }
 export function IdealizedComparison() {
+  const figure = useRef<HTMLElement>(null)
+  const [width, setWidth] = useState(330)
+  useEffect(() => {
+    if (!figure.current || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(([entry]) =>
+      setWidth(Math.max(180, entry.contentRect.width)),
+    )
+    observer.observe(figure.current)
+    return () => observer.disconnect()
+  }, [])
+  const plotWidth = width - 70
   const [complianceScale, setCompliance] = useState(1)
   const [resistanceScale, setResistance] = useState(1)
   const input = {
@@ -40,12 +51,12 @@ export function IdealizedComparison() {
         {IDEAL_REFERENCE.pressure.toFixed(2)} cmH₂O above PEEP. Both: PEEP 5 cmH₂O, inspiration 1.00
         s, expiration 3.00 s, total 4.00 s.
       </p>
-      <figure className={styles.capturedBreath}>
+      <figure className={styles.capturedBreath} ref={figure}>
         <figcaption>
           <strong>VC: solid cyan · PC: dashed amber</strong>
         </figcaption>
         <svg
-          viewBox="0 0 330 318"
+          viewBox={`0 0 ${width} 318`}
           role="img"
           aria-label={`Idealized VC and PC on common axes. VC end-inspiratory volume ${comparison.volumeTargeted.deliveredVolume.toFixed(1)} mL; PC ${comparison.pressureTargeted.deliveredVolume.toFixed(1)} mL. Same 4.00 s clock.`}
         >
@@ -63,18 +74,26 @@ export function IdealizedComparison() {
               <g transform="translate(55 24)">
                 <line
                   x1="0"
-                  x2="260"
+                  x2={plotWidth}
                   y1={variable === 'flow' ? 35 : 70}
                   y2={variable === 'flow' ? 35 : 70}
                   className={styles.zeroLine}
                 />
-                <line x1="65" x2="65" y1="0" y2="70" className={styles.zeroLine} />
+                <line
+                  x1={plotWidth / 4}
+                  x2={plotWidth / 4}
+                  y1="0"
+                  y2="70"
+                  className={styles.zeroLine}
+                />
                 {(['volumeTargeted', 'pressureTargeted'] as const).map((key) => (
                   <path
                     key={key}
                     data-ideal-trace={variable}
                     data-ideal-mode={key}
                     d={idealSeriesPath(comparison[key], variable, axes)}
+                    transform={`scale(${plotWidth / 260} 1)`}
+                    vectorEffect="non-scaling-stroke"
                     className={key === 'volumeTargeted' ? styles.breathTrace : styles.pressureTrace}
                   />
                 ))}
@@ -84,11 +103,11 @@ export function IdealizedComparison() {
           <text x="55" y="316">
             0
           </text>
-          <text x="118" y="316">
+          <text x={55 + plotWidth / 4} y="316" textAnchor="middle">
             1 s
           </text>
-          <text x="222" y="316">
-            Time: 4 s
+          <text x={width - 15} y="316" textAnchor="end">
+            4 s
           </text>
         </svg>
       </figure>
@@ -158,8 +177,8 @@ export function IdealizedComparison() {
         <p>
           These closed-form single-compartment breaths omit effort, leaks, pressure limits, circuit
           compliance and adaptive targeting. They are mathematical teaching examples, not two runs
-          of the patient engine. Passive expiration also depends on time available, PEEP and prior
-          delivery; an identical expiratory limb is not guaranteed.
+          of the simulated patient. Passive expiration also depends on time available, PEEP and
+          prior delivery; an identical expiratory limb is not guaranteed.
         </p>
       </details>
     </section>
