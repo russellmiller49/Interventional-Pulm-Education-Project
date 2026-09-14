@@ -4,7 +4,25 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { DrrTextureSource, type ProjectionState, type DrrPose } from './drrTextureSource'
 import type { Point3 } from '../../lib/physics'
 import { ProjectionOverlays } from './ProjectionOverlays'
+import type { ImagingSuitePaneProps } from './types'
 import styles from './suite-scene.module.css'
+
+export interface StoredProjection {
+  image: string
+  overlay: ReactNode
+  mask: ReactNode
+  displayMask: ReactNode
+  zoom: number
+  label: string
+  id: string
+  state: {
+    pose: DrrPose
+    depth: number
+    acquisitionField: number
+    offset?: Point3
+    context?: Record<string, unknown>
+  }
+}
 
 export function Monitor({
   pose,
@@ -20,6 +38,9 @@ export function Monitor({
   comparison = false,
   acquisitionField = 100,
   displayMask,
+  viewMemory,
+  captureEnabled = true,
+  frameContext,
 }: {
   pose: DrrPose
   depth: number
@@ -34,18 +55,16 @@ export function Monitor({
   comparison?: boolean
   acquisitionField?: number
   displayMask?: ReactNode
+  viewMemory?: ImagingSuitePaneProps['viewMemory']
+  captureEnabled?: boolean
+  frameContext?: Record<string, unknown>
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const engine = useRef<DrrTextureSource | null>(null)
   const [state, setState] = useState<ProjectionState>('loading')
-  const [baseline, setBaseline] = useState<{
-    image: string
-    overlay: ReactNode
-    mask: ReactNode
-    displayMask: ReactNode
-    zoom: number
-    label: string
-  } | null>(null)
+  const [baseline, setBaseline] = useState<StoredProjection | null>(
+    viewMemory?.current.baseline ?? null,
+  )
   const label = `Orbit ${pose.orbit}° · tilt ${pose.tilt}° · acquired field ${acquisitionField}% · exposure: not modeled`
   const currentOverlay = overlay ?? (
     <ProjectionOverlays
@@ -60,14 +79,28 @@ export function Monitor({
   )
   function captureBaseline() {
     if (engine.current?.state !== 'ready') return
-    setBaseline({
+    const sequence = (viewMemory?.current.captureSequence ?? 0) + 1
+    const saved: StoredProjection = {
+      id: `acquisition-${sequence}`,
+      state: {
+        pose: structuredClone(pose),
+        depth,
+        acquisitionField,
+        context: structuredClone(frameContext),
+        offset: offset ? ([...offset] as Point3) : undefined,
+      },
       image: engine.current.snapshot().toDataURL(),
       overlay: currentOverlay,
       mask,
       displayMask,
       zoom,
       label,
-    })
+    }
+    if (viewMemory) {
+      viewMemory.current.baseline = saved
+      viewMemory.current.captureSequence = sequence
+    }
+    setBaseline(saved)
   }
   useEffect(() => {
     const source = new DrrTextureSource(canvas.current!)
@@ -85,6 +118,11 @@ export function Monitor({
   useEffect(() => {
     engine.current?.update(pose)
   }, [pose])
+  useEffect(() => {
+    if (comparison && state === 'ready' && !baseline) captureBaseline()
+    // Freeze the first usable frame once; subsequent display/model changes cannot update it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comparison, state, baseline])
   return (
     <div
       className={comparison ? styles.comparison : undefined}
@@ -93,15 +131,19 @@ export function Monitor({
     >
       {comparison && (
         <div className={styles.toolbar}>
-          <button type="button" disabled={state !== 'ready'} onClick={captureBaseline}>
+          <button
+            type="button"
+            disabled={!captureEnabled || state !== 'ready'}
+            onClick={captureBaseline}
+          >
             Save baseline image
           </button>
           <span>Freeze this image, then change one control.</span>
         </div>
       )}
       {comparison && baseline && (
-        <figure data-baseline-image>
-          <figcaption>Baseline · {baseline.label}</figcaption>
+        <figure data-baseline-image data-acquisition-id={baseline.id}>
+          <figcaption>Baseline acquisition A · {baseline.label}</figcaption>
           <div className={styles.monitor} role="img" aria-label="Saved baseline projection">
             <div className={styles.monitorImage} style={{ transform: `scale(${baseline.zoom})` }}>
               {/* A local canvas capture, retained with its own overlay and acquisition state. */}
@@ -115,7 +157,7 @@ export function Monitor({
         </figure>
       )}
       <figure data-current-image>
-        {comparison && <figcaption>Current · {label}</figcaption>}
+        {comparison && <figcaption>Current simulated projection · {label}</figcaption>}
         <div
           className={styles.monitor}
           data-projection-state={state}

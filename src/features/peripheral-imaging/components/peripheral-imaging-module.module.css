@@ -34,15 +34,19 @@
   font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
 }
 
-@media (min-width: 1024px) and (min-height: 700px) {
-  .moduleShell[data-activity-mode='true'] {
-    /* Preserve room for the lesson when text enlargement grows the header and footer.
-       A short viewport can scroll the document instead of crushing the three panes. */
-    height: max(calc(100dvh - var(--site-header-height, 4rem)), 44rem);
-    min-height: 0;
-    overflow: hidden;
-    padding: 0;
-  }
+/* Focused lessons use document flow; presentation changes never select architecture tabs. */
+.moduleShell[data-activity-mode='true'] {
+  min-height: 100vh;
+  padding: 0;
+}
+.moduleShell[data-activity-mode='true'] > div {
+  height: auto;
+  overflow: visible;
+  display: block;
+}
+.moduleShell[data-activity-mode='true'] > div > div {
+  overflow: visible;
+  display: block;
 }
 
 .englishFallback {

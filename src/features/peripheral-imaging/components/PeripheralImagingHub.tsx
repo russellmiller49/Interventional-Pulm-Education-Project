@@ -63,12 +63,6 @@ export function PeripheralImagingHub() {
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <ImagingContinueCta />
-            <Link
-              href={PERIPHERAL_IMAGING_ASSESS_HREF}
-              className="inline-flex min-h-11 items-center rounded-xl border px-5 py-3 text-sm font-semibold"
-            >
-              The capstone
-            </Link>
           </div>
           <p className={`${styles.composition} mt-4`} data-pathway-composition>
             {imagingCompositionLine()}
@@ -108,15 +102,16 @@ export function PeripheralImagingHub() {
         </figcaption>
       </figure>
 
-      <section aria-labelledby="imaging-map-heading">
+      <details aria-labelledby="imaging-map-heading">
+        <summary id="imaging-map-heading" className="cursor-pointer font-semibold">
+          Course outline · {peripheralImagingPathwaySections.length} sections
+        </summary>
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">The pathway</p>
-        <h2 id="imaging-map-heading" className="mt-2 text-2xl font-bold">
-          {peripheralImagingPathway.arcSentence}
-        </h2>
+        <h2 className="mt-2 text-2xl font-bold">{peripheralImagingPathway.arcSentence}</h2>
         <div className="mt-5">
           <ImagingStoredPathwayAccordion id="imaging-pathway-map" />
         </div>
-      </section>
+      </details>
 
       <section
         className="grid gap-5 rounded-3xl border bg-card p-6 shadow-sm lg:grid-cols-2 lg:p-8"
@@ -149,8 +144,8 @@ export function PeripheralImagingHub() {
           <div>
             <dt className="font-semibold">How the image is formed</dt>
             <dd className="text-muted-foreground">
-              {CHAIN_STOPS.map((stop) => stop.title).join(' → ')}. Each section highlights the
-              component behind it, as the physics beneath the clinical steps.
+              The image-formation lesson follows {CHAIN_STOPS.map((stop) => stop.title).join(' → ')}
+              . Later activities use the view that answers the current imaging question.
             </dd>
           </div>
           <div>

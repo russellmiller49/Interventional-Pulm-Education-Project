@@ -40,14 +40,19 @@ export function useCbctAcquisition(
     useCallback(() => source?.state ?? 'loading', [source]),
     () => 'loading',
   )
-  const [frames, setFrames] = useState<ProjectionCopy[]>([])
-  const [scouts, setScouts] = useState<ProjectionCopy[]>([])
-  const [angle, setAngle] = useState<number | null>(null)
+  const [frames, setFrames] = useState<ProjectionCopy[]>(
+    props.viewMemory?.current.cbct?.frames ?? [],
+  )
+  const [scouts, setScouts] = useState<ProjectionCopy[]>(
+    props.viewMemory?.current.cbct?.scouts ?? [],
+  )
+  const [angle, setAngle] = useState<number | null>(props.viewMemory?.current.cbct?.angle ?? null)
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
   const abort = useRef<AbortController | null>(null)
   const copies = useRef<ProjectionCopy[]>([])
   const autoKey = useRef('')
+  const representedKey = useRef(props.viewMemory?.current.cbct?.key ?? '')
   const pose = useCallback(
     (orbit: number): DrrPose => ({
       orbit,
@@ -62,6 +67,16 @@ export function useCbctAcquisition(
   // Depend on the scalar setup key, not React callback identities. A moved setup loses its copies.
   useEffect(() => {
     if (!enabled || sourceState !== 'ready' || !source) return
+    const saved = props.viewMemory?.current.cbct
+    if (saved?.key === key) {
+      copies.current = saved.frames
+      setFrames(saved.frames)
+      setScouts(saved.scouts)
+      setAngle(saved.angle)
+      return
+    }
+    representedKey.current = ''
+    if (props.viewMemory) delete props.viewMemory.current.cbct
     abort.current?.abort()
     copies.current = []
     setFrames([])
@@ -83,6 +98,7 @@ export function useCbctAcquisition(
           return { angle: orbit, canvas: source.snapshot(192) }
         })
         source.update(poseNow(inputs.acquisitionOrbit))
+        representedKey.current = key
         setScouts(pair)
         if (reducedMotion) {
           const completed = cbctOrbitSamples(inputs.orbitSpanDeg, inputs.projectionCount).map(
@@ -112,6 +128,10 @@ export function useCbctAcquisition(
       setBusy(false)
     }
   }, [props.controlsEnabled, visible])
+  useEffect(() => {
+    if (enabled && props.viewMemory && representedKey.current === key && scouts.length === 2)
+      props.viewMemory.current.cbct = { key, frames, scouts, angle }
+  }, [enabled, props.viewMemory, key, frames, scouts, angle])
   const angles = cbctOrbitSamples(inputs.orbitSpanDeg, inputs.projectionCount)
   const stop = () => {
     abort.current?.abort()

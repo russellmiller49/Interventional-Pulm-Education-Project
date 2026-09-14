@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId } from 'react'
+import { useEffect, useId, useState } from 'react'
 import type { ImagingSectionId } from '../../content/pathway'
 import { FIELD_CONTEXT, LESION_CENTER, projectToDetector } from '../../lib/physics'
 import { collimator, suiteFrame } from '../suite/suiteModel'
@@ -76,19 +76,50 @@ export function SignalImage({
 }
 
 export function SignalComparison({ independent = false }: { independent?: boolean }) {
+  const [factor, setFactor] = useState<'noise' | 'contrast' | 'overlap'>('noise')
   return (
     <section className={styles.teachingCard} data-signal-comparison>
       <p className={styles.kicker}>Matched conceptual images · draft illustrations</p>
+      {!independent && (
+        <div className={styles.demoButtons} aria-label="Conceptual comparison">
+          <button
+            type="button"
+            aria-pressed={factor === 'noise'}
+            onClick={() => setFactor('noise')}
+          >
+            Quantum noise
+          </button>
+          <button
+            type="button"
+            aria-pressed={factor === 'contrast'}
+            onClick={() => setFactor('contrast')}
+          >
+            Contrast loss
+          </button>
+          <button
+            type="button"
+            aria-pressed={factor === 'overlap'}
+            onClick={() => setFactor('overlap')}
+          >
+            Superimposition
+          </button>
+        </div>
+      )}
       <div className={styles.exampleGrid}>
         <SignalImage label={independent ? 'Image A' : 'Reference'} />
         {independent ? (
           <SignalImage factor="contrast" label="Image B" />
         ) : (
-          <>
-            <SignalImage factor="noise" label="Quantum noise · irregular mottling" />
-            <SignalImage factor="contrast" label="Scatter-related contrast loss · smooth veil" />
-            <SignalImage factor="overlap" label="Superimposition · projected silhouettes" />
-          </>
+          <SignalImage
+            factor={factor}
+            label={
+              factor === 'noise'
+                ? 'Quantum noise · irregular mottling'
+                : factor === 'contrast'
+                  ? 'Scatter-related contrast loss · smooth veil'
+                  : 'Superimposition · projected silhouettes'
+            }
+          />
         )}
       </div>
       <p>
@@ -215,57 +246,85 @@ export function DoseRecord({ independent = false }: { independent?: boolean }) {
 }
 
 export function ImagingQuestionPanels() {
+  const [panel, setPanel] = useState(0)
   return (
     <section className={styles.teachingCard} data-imaging-question-example>
-      <p className={styles.kicker}>One peripheral-lesion example · labeled teaching panels</p>
+      <p className={styles.kicker}>Navigation indicates arrival · conceptual evidence sequence</p>
       <div className={styles.exampleGrid}>
         {[
           'Navigation target · planning CT',
           'Current lesion · updated imaging',
           'Actual biopsy tool · sampling component',
           'Tissue result · still awaited',
-        ].map((title, i) => (
-          <figure key={title} className={styles.teachingFigure}>
-            <figcaption>{title}</figcaption>
-            <svg viewBox="0 0 200 115" role="img" aria-label={title}>
-              <rect width="200" height="115" fill="#152935" rx="5" />
-              {i < 3 ? (
-                <>
-                  <path
-                    d="M80 10V45L40 88M80 45L135 85"
-                    fill="none"
-                    stroke="#87a7b2"
-                    strokeWidth="7"
-                  />
-                  <circle
-                    cx={i ? 143 : 132}
-                    cy={i ? 72 : 85}
-                    r="13"
-                    stroke="#e8bb70"
-                    strokeDasharray={i ? undefined : '4 3'}
-                    fill="none"
-                    strokeWidth="2"
-                  />
-                  {i === 2 && (
-                    <>
-                      <path d="M85 48L151 75" stroke="#edf8f6" strokeWidth="3" />
-                      <path d="M132 67L142 71" stroke="#61d8bc" strokeWidth="5" />
-                    </>
-                  )}
-                </>
-              ) : (
-                <text x="32" y="62" fill="#e7f2ef" fontSize="17">
-                  No diagnosis yet
-                </text>
-              )}
-            </svg>
-          </figure>
-        ))}
+        ].map((title, i) =>
+          i === panel ? (
+            <figure key={title} className={styles.teachingFigure}>
+              <figcaption>{title}</figcaption>
+              <svg viewBox="0 0 200 115" role="img" aria-label={title}>
+                <rect width="200" height="115" fill="#152935" rx="5" />
+                {i < 3 ? (
+                  <>
+                    <path
+                      d="M80 10V45L40 88M80 45L135 85"
+                      fill="none"
+                      stroke="#87a7b2"
+                      strokeWidth="7"
+                    />
+                    <circle
+                      cx={i ? 143 : 132}
+                      cy={i ? 72 : 85}
+                      r="13"
+                      stroke="#e8bb70"
+                      strokeDasharray={i ? undefined : '4 3'}
+                      fill="none"
+                      strokeWidth="2"
+                    />
+                    {i === 2 && (
+                      <>
+                        <path d="M85 48L151 75" stroke="#edf8f6" strokeWidth="3" />
+                        <path d="M132 67L142 71" stroke="#61d8bc" strokeWidth="5" />
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <text x="32" y="62" fill="#e7f2ef" fontSize="17">
+                    No diagnosis yet
+                  </text>
+                )}
+              </svg>
+            </figure>
+          ) : null,
+        )}
+      </div>
+      <p>
+        {
+          [
+            'The planning target guides the catheter to a previously defined location. It does not establish the current lesion location.',
+            'Current imaging can localize the lesion in the depicted state. It does not confirm a tool exchanged afterward.',
+            'Assess the actual sampling component against the current intended lesion. The tool tip is a different component.',
+            'An image of tool–lesion position does not establish diagnostic tissue. The specimen result answers that question.',
+          ][panel]
+        }
+      </p>
+      <div className={styles.demoButtons} aria-label="Evidence sequence">
+        {['Planning target', 'Current lesion', 'Sampling component', 'Tissue result'].map(
+          (label, i) => (
+            <button
+              type="button"
+              key={label}
+              aria-pressed={panel === i}
+              onClick={() => setPanel(i)}
+            >
+              {label}
+            </button>
+          ),
+        )}
       </div>
       <p>
         The virtual target guides navigation. Current imaging can show a different lesion location.
         After tool exchange, assess the actual sampling component. Even tool-in-lesion does not
-        establish diagnostic tissue. These are teaching diagrams, not captured device screens.
+        establish diagnostic tissue. These are conceptual teaching diagrams, not matched patient
+        acquisitions or captured device screens.
       </p>
     </section>
   )
@@ -300,21 +359,39 @@ export function TeachingPanels({
     )
   if (sectionId === 'dts-interpretation' && !independent)
     return (
-      <section className={styles.teachingCard}>
+      <section className={styles.teachingCard} data-provenance-flow>
         <p className={styles.kicker}>From acquisition to guidance</p>
         <ol>
-          <li>Current limited-angle projections contribute measured attenuation information.</li>
           <li>
-            Planning CT may contribute prior anatomical information in some reconstruction methods.
-          </li>
-          <li>The reconstructed planes combine those inputs according to the method.</li>
-          <li>
-            A navigation-target update changes guidance coordinates; it is not a new biopsy-tool
-            image.
+            <strong>Acquired now</strong>
+            <span>
+              Current limited-angle projections contribute measured attenuation information.
+            </span>
           </li>
           <li>
-            An overlay displays stored information on a projection; its acquisition source and age
-            still matter.
+            <strong>Prior anatomy</strong>
+            <span>
+              Planning CT may contribute prior anatomical information in some reconstruction
+              methods.
+            </span>
+          </li>
+          <li>
+            <strong>Reconstructed planes</strong>
+            <span>The reconstructed planes combine those inputs according to the method.</span>
+          </li>
+          <li>
+            <strong>Navigation update</strong>
+            <span>
+              A navigation-target update changes guidance coordinates; it is not a new biopsy-tool
+              image.
+            </span>
+          </li>
+          <li>
+            <strong>Displayed overlay</strong>
+            <span>
+              An overlay displays stored information on a projection; its acquisition source and age
+              still matter.
+            </span>
           </li>
         </ol>
         <p>

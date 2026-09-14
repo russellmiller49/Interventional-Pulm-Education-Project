@@ -130,7 +130,7 @@ export function ImagingContinueCta({ className }: { readonly className?: string 
     )
   }
   const fresh = record.completedSectionIds.length === 0 && !next.resumed
-  const verb = fresh ? 'Start' : next.resumed ? 'Resume' : 'Continue'
+  const verb = fresh ? 'Start' : 'Continue'
   return (
     <Link
       href={imagingSectionLinkTarget(next.section.id)}

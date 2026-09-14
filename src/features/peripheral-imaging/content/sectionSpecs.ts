@@ -161,7 +161,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     prerequisiteSectionIds: ['chain-walk'],
     chainStops: ['source', 'beam', 'detector', 'display'],
     grammarRowIds: ['hidden-by-anatomy', 'small-on-screen'],
-    act: { kind: 'sort', sortId: 'five-things' },
+    act: { kind: 'lab' },
     controlStrip: {
       verdict: 'this-control',
       states: {

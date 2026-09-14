@@ -73,7 +73,9 @@ describe('teaching and independent disclosure have separate boundaries', () => {
       if (hasIndependentImagePanel(sectionId)) {
         expect(document.querySelector('[data-independent-image-panels]')).not.toBeNull()
         expect(document.querySelector('[data-suite-scene]')).toBeNull()
-      } else expect(document.querySelector('[data-suite-scene]')).toHaveAttribute('data-lit', '')
+      } else if (lesson.steps[lesson.predictionStepIndex].activity.visual !== 'case')
+        expect(document.querySelector('[data-suite-scene]')).toHaveAttribute('data-lit', '')
+      else expect(document.querySelector('[data-suite-scene]')).toBeNull()
       expect(
         document.querySelector('[data-readout="depthMm"], [data-readout="windowLabel"]'),
       ).toBeNull()

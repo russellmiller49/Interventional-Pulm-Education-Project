@@ -91,7 +91,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
   const { view, onRepresentationReady } = props
   const isRoom = view.mode === 'room'
   const showChain =
-    !props.independent && (!isRoom || view.layers.includes('labels') || Boolean(props.chainAnswer))
+    !props.independent &&
+    (!props.presentation || view.sectionId === 'chain-walk') &&
+    (!isRoom || view.layers.includes('labels') || Boolean(props.chainAnswer))
   const [projectionReady, setProjectionReady] = useState(false)
   const [source, setSource] = useState<DrrTextureSource | null>(null)
   const [visible, setVisible] = useState(true)
@@ -123,7 +125,13 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
   )
   const cbct = useCbctAcquisition(props, inputs, source, reducedMotion, visible)
   const isCbct = view.mode === 'cbct'
-  const dts = useTomosynthesis(view, inputs, props.controlsEnabled, visible, reducedMotion)
+  const dts = useTomosynthesis(
+    view,
+    inputs,
+    props.controlsEnabled && props.presentation !== 'multiplanar',
+    visible,
+    reducedMotion,
+  )
   const sceneOrbit = isCbct ? cbct.angle : dts.active ? dts.angle : inputs.orbit
   const sceneGeometry = isCbct ? cbct.setup.geometry : inputs.geometry
   const monitorOffset = useMemo(
@@ -220,6 +228,8 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
   } | null>(null)
   const [contextLost, setContextLost] = useState(false)
   const [epoch, setEpoch] = useState(0)
+  const [attemptEpoch, setAttemptEpoch] = useState(0)
+  const [geometryOpen, setGeometryOpen] = useState(false)
   const [ready, setReady] = useState(false)
   const viewport = useRef<HTMLDivElement>(null)
   const portal = useRef<HTMLDivElement>(null)
@@ -282,7 +292,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
   ].includes(view.mode)
   const running = isCbct ? cbct.busy : dts.active ? dts.running : playback.running
   const representationReady =
-    (props.independent || (ready && !contextLost)) &&
+    (props.independent || props.presentation === 'multiplanar' || (ready && !contextLost)) &&
     (drrMode
       ? projectionReady
       : view.mode === 'sampling'
@@ -294,8 +304,11 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
     onRepresentationReady?.(representationReady)
   }, [onRepresentationReady, representationReady])
   const imageFirst =
-    ['projection', 'signal', 'field', 'time', 'sampling', 'dts', 'dts-prior'].includes(view.mode) &&
-    view.sectionId !== 'chain-walk'
+    props.presentation === 'comparison' ||
+    (['projection', 'signal', 'field', 'time', 'sampling', 'dts', 'dts-prior'].includes(
+      view.mode,
+    ) &&
+      view.sectionId !== 'chain-walk')
   const fieldVisible =
     view.mode === 'field' || view.sectionId === 'two-dimensional' || view.sectionId === 'good-image'
   const controlDock = (
@@ -313,6 +326,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         playback.reset()
         cbct.reset()
         dts.reset()
+        setAttemptEpoch((n) => n + 1)
         props.onLabReset()
       }}
     />
@@ -322,6 +336,8 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
       <div
         className={styles.pane}
         data-suite-scene
+        data-task-presentation={props.presentation}
+        data-volume-captured={props.lab.values.captured === true ? 'true' : undefined}
         data-suite-mode={view.mode}
         data-suite-camera={displayCamera}
         data-suite-state={contextLost ? 'failed' : ready ? 'ready' : 'fallback'}
@@ -329,9 +345,11 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         data-suite-anim={running ? 'running' : 'idle'}
         data-reduced-motion={reducedMotion ? 'true' : 'false'}
       >
-        <p className={styles.caption} data-chain-caption>
-          {props.chainCaption}
-        </p>
+        {showChain && (
+          <p className={styles.caption} data-chain-caption>
+            {props.chainCaption}
+          </p>
+        )}
         {view.litStop && view.stopSentence && view.stopSentence !== props.chainCaption && (
           <p className={styles.stopSentence} data-stop-sentence>
             {view.stopSentence}
@@ -349,289 +367,315 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
           data-independent={props.independent ? 'true' : undefined}
           data-monitor-layout={isRoom ? 'hidden' : view.monitor}
         >
-          <div className={styles.scenePanel} hidden={props.independent}>
-            <div className={styles.sceneHeader}>
-              <span>
-                {isRoom ? 'The imaging suite at rest' : 'CT-derived anatomy · image formation'}
-              </span>
-              <span>Authored teaching model</span>
-            </div>
-            <div className={styles.viewport} ref={viewport} data-suite-viewport>
-              {contextLost ? (
-                <div className={styles.contextLost} role="status">
-                  The 3D view paused after a graphics interruption.
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setContextLost(false)
-                      setEpoch((n) => n + 1)
-                    }}
-                  >
-                    Restore 3D view
-                  </button>
+          <div
+            className={styles.scenePanel}
+            hidden={props.independent || (props.presentation === 'multiplanar' && !geometryOpen)}
+          >
+            {!props.independent && (
+              <>
+                <div className={styles.sceneHeader}>
+                  <span>
+                    {isRoom ? 'The imaging suite at rest' : 'CT-derived anatomy · image formation'}
+                  </span>
+                  <span>Authored teaching model</span>
                 </div>
-              ) : (
-                <div
-                  role="img"
-                  aria-label={
-                    isRoom
-                      ? 'Imaging suite at rest with a gantry, table, CT-derived thorax and monitor boom'
-                      : 'CT-derived thorax with a source, cone, detector and authored target and tool'
-                  }
-                  className={styles.canvasHost}
-                >
-                  <Canvas
-                    key={epoch}
-                    frameloop={
-                      !ready || visible ? (running && visible ? 'always' : 'demand') : 'never'
-                    }
-                    dpr={[1, 1.5]}
-                    camera={{ fov: 42, near: 1, far: 12000 }}
-                    gl={{ antialias: true, preserveDrawingBuffer: true }}
-                    onCreated={({ gl }) => gl.setClearColor(isRoom ? ROOM_BACKGROUND : '#11232d')}
-                    fallback={
-                      <p>
-                        {isRoom
-                          ? 'The 3D canvas is unavailable.'
-                          : 'The 3D canvas is unavailable. The controls and text readouts remain available.'}
-                      </p>
-                    }
-                  >
-                    {playback.running && <SuiteClock tick={playback.tick} />}
-                    {dts.running && <SuiteClock tick={dts.tick} />}
-                    <WebGLContextGuard onContextLost={onLost} />
-                    <ambientLight intensity={0.8} />
-                    <directionalLight position={[400, 600, 500]} intensity={2} />
-                    <directionalLight
-                      position={[-400, 100, -300]}
-                      intensity={0.5}
-                      color="#9ab9cf"
-                    />
-                    <Suspense fallback={null}>
-                      <Anatomy
-                        layers={view.layers}
-                        offset={translation}
-                        contextOpacity={view.mode === 'sampling' ? 0.12 : 1}
-                        room={isRoom}
-                      />
-                      <Room
-                        layers={view.layers}
-                        geometry={inputs.geometry}
-                        floorSpan={staffModel ? 8000 : undefined}
-                        atRest={isRoom}
-                      />
-                      {view.layers.includes('gantry') && (
-                        <ParametricCarm
-                          frame={frame}
-                          variant={inputs.variant}
-                          atRest={isRoom}
-                          lit={
-                            view.mode === 'time' ? timeModel.pulseIsOn : view.litStop === 'source'
-                          }
-                          shutters={!['field', 'dose'].includes(view.mode)}
-                        />
-                      )}
-                      {view.layers.includes('cone') && (
-                        <BeamCone
-                          frame={frame}
-                          fieldPercent={dose ? dose.fieldPercent : inputs.fieldPercent}
-                          target={dose ? frame.iso : undefined}
-                          opacity={isRoom ? 0.14 : undefined}
-                        />
-                      )}
-                      {view.layers.includes('gantry') && (
-                        <DetectorImage frame={detectorFrame} source={source} />
-                      )}
-                      {drrMode && !['time', 'navigation'].includes(view.mode) && (
-                        <ProjectionView3D
-                          frame={frame}
-                          inputs={inputs}
-                          offset={translation}
-                          ray={view.layers.includes('ray')}
-                          labels={view.layers.includes('labels')}
-                          portal={portal as RefObject<HTMLDivElement>}
-                        />
-                      )}
-                      {view.mode === 'time' && (
-                        <TimeView
-                          frame={frame}
-                          model={timeModel}
-                          portal={portal as RefObject<HTMLDivElement>}
-                          labels={view.layers.includes('labels')}
-                        />
-                      )}
-                      {isCbct && <ConeBeamView acquisition={cbct} inputs={inputs} />}
-                      {dts.active && (
-                        <TomosynthesisView
-                          model={dts}
-                          inputs={inputs}
-                          prior={view.mode === 'dts-prior'}
-                        />
-                      )}
-                      {view.mode === 'sampling' && !props.independent && (
-                        <SamplingView
-                          inputs={inputs}
-                          volume={volume}
-                          planes={view.layers.includes('planes')}
-                          portal={portal as RefObject<HTMLDivElement>}
-                          labels={view.layers.includes('labels')}
-                        />
-                      )}
-                      {isRegistration && (
-                        <RegistrationView
-                          inputs={inputs}
-                          augmented={view.mode === 'augmented'}
-                          portal={portal as RefObject<HTMLDivElement>}
-                          labels={view.layers.includes('labels')}
-                          onSensor={setRegisteredSensor}
-                        />
-                      )}
-                      {view.mode === 'staff' && <StaffView inputs={inputs} layers={view.layers} />}
-                      {view.mode === 'dose' && view.layers.includes('planes') && (
-                        <DoseView inputs={inputs} profile={profile} />
-                      )}
-                      {fieldVisible && (
-                        <FieldView frame={frame} fieldPercent={inputs.fieldPercent} crop={false} />
-                      )}
-                      {view.mode === 'signal' && view.layers.includes('ray') && (
-                        <RayTrace profile={profile} />
-                      )}
-                      {showChain && (
-                        <ChainPins
-                          spread={['suite', 'room', 'anterior', 'side', 'head'].includes(
-                            displayCamera,
-                          )}
-                          frame={frame}
-                          portal={portal as RefObject<HTMLDivElement>}
-                          lit={view.litStop}
-                          answer={props.chainAnswer}
-                          onCamera={onCamera}
-                          monitorOffset={monitorOffset}
-                        />
-                      )}
-                      <FrameReady ready={onReady} />
-                    </Suspense>
-                    <CameraRig
-                      view={displayCamera}
-                      frame={frame}
-                      enabled={props.controlsEnabled}
-                      labelled={showChain}
-                      roomComposition={isRoom}
-                      monitorOffset={monitorOffset}
-                      overviewBounds={overviewBounds}
-                      focus={isCbct ? cbct.setup.target : undefined}
-                      closeupDistance={
-                        view.mode === 'sampling' ? 120 : isRegistration ? 180 : undefined
+                <div className={styles.viewport} ref={viewport} data-suite-viewport>
+                  {contextLost ? (
+                    <div className={styles.contextLost} role="status">
+                      The 3D view paused after a graphics interruption.
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setContextLost(false)
+                          setEpoch((n) => n + 1)
+                        }}
+                      >
+                        Restore 3D view
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      role="img"
+                      aria-label={
+                        isRoom
+                          ? 'Imaging suite at rest with a gantry, table, CT-derived thorax and monitor boom'
+                          : 'CT-derived thorax with a source, cone, detector and authored target and tool'
                       }
-                    />
-                  </Canvas>
+                      className={styles.canvasHost}
+                    >
+                      <Canvas
+                        key={epoch}
+                        frameloop={
+                          !ready || visible ? (running && visible ? 'always' : 'demand') : 'never'
+                        }
+                        dpr={[1, 1.5]}
+                        camera={{ fov: 42, near: 1, far: 12000 }}
+                        gl={{ antialias: true, preserveDrawingBuffer: true }}
+                        onCreated={({ gl }) =>
+                          gl.setClearColor(isRoom ? ROOM_BACKGROUND : '#11232d')
+                        }
+                        fallback={
+                          <p>
+                            {isRoom
+                              ? 'The 3D canvas is unavailable.'
+                              : 'The 3D canvas is unavailable. The controls and text readouts remain available.'}
+                          </p>
+                        }
+                      >
+                        {playback.running && <SuiteClock tick={playback.tick} />}
+                        {dts.running && <SuiteClock tick={dts.tick} />}
+                        <WebGLContextGuard onContextLost={onLost} />
+                        <ambientLight intensity={0.8} />
+                        <directionalLight position={[400, 600, 500]} intensity={2} />
+                        <directionalLight
+                          position={[-400, 100, -300]}
+                          intensity={0.5}
+                          color="#9ab9cf"
+                        />
+                        <Suspense fallback={null}>
+                          <Anatomy
+                            layers={view.layers}
+                            offset={translation}
+                            contextOpacity={view.mode === 'sampling' ? 0.12 : 1}
+                            room={isRoom}
+                          />
+                          <Room
+                            layers={view.layers}
+                            geometry={inputs.geometry}
+                            floorSpan={staffModel ? 8000 : undefined}
+                            atRest={isRoom}
+                          />
+                          {view.layers.includes('gantry') && (
+                            <ParametricCarm
+                              frame={frame}
+                              variant={inputs.variant}
+                              atRest={isRoom}
+                              lit={
+                                view.mode === 'time'
+                                  ? timeModel.pulseIsOn
+                                  : view.litStop === 'source'
+                              }
+                              shutters={!['field', 'dose'].includes(view.mode)}
+                            />
+                          )}
+                          {view.layers.includes('cone') && (
+                            <BeamCone
+                              frame={frame}
+                              fieldPercent={dose ? dose.fieldPercent : inputs.fieldPercent}
+                              target={dose ? frame.iso : undefined}
+                              opacity={isRoom ? 0.14 : undefined}
+                            />
+                          )}
+                          {view.layers.includes('gantry') && (
+                            <DetectorImage frame={detectorFrame} source={source} />
+                          )}
+                          {drrMode && !['time', 'navigation'].includes(view.mode) && (
+                            <ProjectionView3D
+                              frame={frame}
+                              inputs={inputs}
+                              offset={translation}
+                              ray={view.layers.includes('ray')}
+                              labels={view.layers.includes('labels')}
+                              portal={portal as RefObject<HTMLDivElement>}
+                            />
+                          )}
+                          {view.mode === 'time' && (
+                            <TimeView
+                              frame={frame}
+                              model={timeModel}
+                              portal={portal as RefObject<HTMLDivElement>}
+                              labels={view.layers.includes('labels')}
+                            />
+                          )}
+                          {isCbct && <ConeBeamView acquisition={cbct} inputs={inputs} />}
+                          {dts.active && (
+                            <TomosynthesisView
+                              model={dts}
+                              inputs={inputs}
+                              prior={view.mode === 'dts-prior'}
+                            />
+                          )}
+                          {view.mode === 'sampling' && !props.independent && (
+                            <SamplingView
+                              inputs={inputs}
+                              volume={volume}
+                              planes={view.layers.includes('planes')}
+                              portal={portal as RefObject<HTMLDivElement>}
+                              labels={view.layers.includes('labels')}
+                            />
+                          )}
+                          {isRegistration && (
+                            <RegistrationView
+                              inputs={inputs}
+                              augmented={view.mode === 'augmented'}
+                              portal={portal as RefObject<HTMLDivElement>}
+                              labels={view.layers.includes('labels')}
+                              onSensor={setRegisteredSensor}
+                            />
+                          )}
+                          {view.mode === 'staff' && (
+                            <StaffView inputs={inputs} layers={view.layers} />
+                          )}
+                          {view.mode === 'dose' && view.layers.includes('planes') && (
+                            <DoseView inputs={inputs} profile={profile} />
+                          )}
+                          {fieldVisible && (
+                            <FieldView
+                              frame={frame}
+                              fieldPercent={inputs.fieldPercent}
+                              crop={false}
+                            />
+                          )}
+                          {view.mode === 'signal' && view.layers.includes('ray') && (
+                            <RayTrace profile={profile} />
+                          )}
+                          {showChain && (
+                            <ChainPins
+                              spread={['suite', 'room', 'anterior', 'side', 'head'].includes(
+                                displayCamera,
+                              )}
+                              frame={frame}
+                              portal={portal as RefObject<HTMLDivElement>}
+                              lit={view.litStop}
+                              answer={props.chainAnswer}
+                              onCamera={onCamera}
+                              monitorOffset={monitorOffset}
+                            />
+                          )}
+                          <FrameReady ready={onReady} />
+                        </Suspense>
+                        <CameraRig
+                          view={displayCamera}
+                          frame={frame}
+                          enabled={props.controlsEnabled}
+                          labelled={showChain}
+                          roomComposition={isRoom}
+                          monitorOffset={monitorOffset}
+                          overviewBounds={overviewBounds}
+                          focus={isCbct ? cbct.setup.target : undefined}
+                          closeupDistance={
+                            view.mode === 'sampling' ? 120 : isRegistration ? 180 : undefined
+                          }
+                        />
+                      </Canvas>
+                    </div>
+                  )}
+                  <div
+                    ref={portal}
+                    className={styles.overlay}
+                    data-chain-map
+                    role={showChain ? 'group' : undefined}
+                    aria-label={showChain ? 'Image formation' : undefined}
+                  />
                 </div>
-              )}
-              <div
-                ref={portal}
-                className={styles.overlay}
-                data-chain-map
-                role={showChain ? 'group' : undefined}
-                aria-label={showChain ? 'Image formation' : undefined}
-              />
-            </div>
-            {!isRoom && (
-              <div className={styles.toolbar} aria-label="3D camera views">
-                <button
-                  type="button"
-                  disabled={
-                    !props.controlsEnabled ||
-                    (!view.lab && !dts.active) ||
-                    (!view.bindings.some((b) => b.input === 'orbit') &&
-                      ![
-                        'field',
-                        'time',
-                        'cbct',
-                        'dts',
-                        'dts-prior',
-                        'sampling',
-                        'navigation',
-                        'augmented',
-                        'dose',
-                      ].includes(view.mode))
-                  }
-                  onClick={() => {
-                    if (view.mode === 'sampling' && view.lab) {
-                      const control = labControl(view.lab, 'axial')
-                      props.onLabChange({
-                        slab: false,
-                        axial:
-                          inputs.axial >= (control?.max ?? 20)
-                            ? (control?.min ?? -20)
-                            : inputs.axial + (control?.step ?? 1),
-                      })
-                      return
-                    }
-                    if (dts.active) {
-                      dts.step()
-                      return
-                    }
-                    if (isCbct) {
-                      cbct.step()
-                      return
-                    }
-                    if (view.mode === 'time') {
-                      playback.step(1 / inputs.pulseRate)
-                      return
-                    }
-                    const binding = view.bindings.find((b) => b.input === 'orbit')
-                    if (!binding || !view.lab) {
-                      setSteppedOrbit((n) => n + 1)
-                      return
-                    }
-                    const control = labControl(view.lab, binding.control)
-                    const value = labNumber(
-                      view.lab,
-                      props.lab.values,
-                      binding.control,
-                      view.sectionId,
-                    )
-                    props.onLabChange({
-                      [binding.control]: clamp(
-                        value + 1,
-                        control?.min ?? -Infinity,
-                        control?.max ?? Infinity,
-                      ),
-                    })
-                  }}
-                >
-                  Step
-                </button>
-                {view.animation && !isCbct && (
-                  <button
-                    type="button"
-                    disabled={!props.controlsEnabled || reducedMotion}
-                    onClick={dts.active ? dts.play : playback.toggle}
-                  >
-                    {running ? 'Pause' : 'Play'}
-                  </button>
+                {!isRoom && (
+                  <div className={styles.toolbar} aria-label="3D camera views">
+                    <button
+                      type="button"
+                      disabled={
+                        !props.controlsEnabled ||
+                        (!view.lab && !dts.active) ||
+                        (!view.bindings.some((b) => b.input === 'orbit') &&
+                          ![
+                            'field',
+                            'time',
+                            'cbct',
+                            'dts',
+                            'dts-prior',
+                            'sampling',
+                            'navigation',
+                            'augmented',
+                            'dose',
+                          ].includes(view.mode))
+                      }
+                      onClick={() => {
+                        if (view.mode === 'sampling' && view.lab) {
+                          const control = labControl(view.lab, 'axial')
+                          props.onLabChange({
+                            slab: false,
+                            axial:
+                              inputs.axial >= (control?.max ?? 20)
+                                ? (control?.min ?? -20)
+                                : inputs.axial + (control?.step ?? 1),
+                          })
+                          return
+                        }
+                        if (dts.active) {
+                          dts.step()
+                          return
+                        }
+                        if (isCbct) {
+                          cbct.step()
+                          return
+                        }
+                        if (view.mode === 'time') {
+                          playback.step(1 / inputs.pulseRate)
+                          return
+                        }
+                        const binding = view.bindings.find((b) => b.input === 'orbit')
+                        if (!binding || !view.lab) {
+                          setSteppedOrbit((n) => n + 1)
+                          return
+                        }
+                        const control = labControl(view.lab, binding.control)
+                        const value = labNumber(
+                          view.lab,
+                          props.lab.values,
+                          binding.control,
+                          view.sectionId,
+                        )
+                        props.onLabChange({
+                          [binding.control]: clamp(
+                            value + 1,
+                            control?.min ?? -Infinity,
+                            control?.max ?? Infinity,
+                          ),
+                        })
+                      }}
+                    >
+                      Step
+                    </button>
+                    {view.animation && !isCbct && (
+                      <button
+                        type="button"
+                        disabled={!props.controlsEnabled || reducedMotion}
+                        onClick={dts.active ? dts.play : playback.toggle}
+                      >
+                        {running ? 'Pause' : 'Play'}
+                      </button>
+                    )}
+                    {(['suite', 'beam', 'anterior', 'side', 'head', 'target'] as const).map((v) => (
+                      <button
+                        type="button"
+                        key={v}
+                        aria-pressed={displayCamera === v}
+                        onClick={() => onCamera(v)}
+                      >
+                        {v === 'suite'
+                          ? 'Suite'
+                          : v === 'beam'
+                            ? 'Beam view'
+                            : v.charAt(0).toUpperCase() + v.slice(1)}
+                      </button>
+                    ))}
+                  </div>
                 )}
-                {(['suite', 'beam', 'anterior', 'side', 'head', 'target'] as const).map((v) => (
-                  <button
-                    type="button"
-                    key={v}
-                    aria-pressed={displayCamera === v}
-                    onClick={() => onCamera(v)}
-                  >
-                    {v === 'suite'
-                      ? 'Suite'
-                      : v === 'beam'
-                        ? 'Beam view'
-                        : v.charAt(0).toUpperCase() + v.slice(1)}
-                  </button>
-                ))}
-              </div>
+              </>
             )}
           </div>
           {drrMode && (
             <section className={styles.monitorPanel} hidden={view.monitor === 'hidden'}>
               <div className={styles.sceneHeader}>CT-derived projection</div>
               <Monitor
+                key={attemptEpoch}
+                viewMemory={props.viewMemory}
+                captureEnabled={props.controlsEnabled}
+                frameContext={{
+                  source: '/peripheral-imaging/anatomy',
+                  mode: view.mode,
+                  values: props.lab.values,
+                  temporalPhase: view.mode === 'time' ? playback.phase : undefined,
+                }}
                 pose={pose}
                 depth={inputs.toolDepth}
                 comparison={!props.independent}
@@ -704,6 +748,15 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
           )}
           {imageFirst && <div className={styles.nearImageControls}>{controlDock}</div>}
         </div>
+        {props.presentation === 'multiplanar' && !props.independent && (
+          <button
+            type="button"
+            aria-expanded={geometryOpen}
+            onClick={() => setGeometryOpen((open) => !open)}
+          >
+            {geometryOpen ? 'Hide geometric explanation' : 'Show geometric explanation'}
+          </button>
+        )}
         {props.chainAnswer && (
           <div className={styles.answer}>
             <ChainAnswerFieldset answer={props.chainAnswer} />
@@ -740,9 +793,11 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
             teaching explanation and retry the view.
           </p>
         )}
-        <p className={styles.boundary} data-model-boundary>
-          {view.boundary}
-        </p>
+        {!props.presentation && (
+          <p className={styles.boundary} data-model-boundary>
+            {view.boundary}
+          </p>
+        )}
         {props.children}
       </div>
     </SceneBoundary>

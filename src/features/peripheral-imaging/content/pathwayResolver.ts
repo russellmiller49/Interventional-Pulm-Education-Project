@@ -71,7 +71,15 @@ export function workedImagingSectionIds(record: ImagingRecord): ReadonlySet<stri
  * section carries (orientation, foundation, mechanism, application, integration) stays internal to
  * the pedagogy checks; learners see the clinical phase.
  */
-export type ImagingPhaseId = 'plan' | 'localize' | 'confirm' | 'sample' | 'safety' | 'cases'
+export type ImagingPhaseId =
+  | 'question'
+  | 'context'
+  | 'fluoroscopy'
+  | 'dts'
+  | 'cbct'
+  | 'confirm'
+  | 'protect'
+  | 'integrate'
 
 export interface ImagingPhase {
   readonly id: ImagingPhaseId
@@ -80,54 +88,56 @@ export interface ImagingPhase {
   readonly sectionIds: readonly ImagingSectionId[]
 }
 
+/** Chapter names are presentation only; validation requires exactly the canonical section order. */
 export const IMAGING_PHASES: readonly ImagingPhase[] = Object.freeze([
   {
-    id: 'plan',
-    title: 'Plan',
-    description:
-      'Decide what the imaging must answer — navigation, localization, tool confirmation or diagnosis — and how the fluoroscopic image that answers it is formed.',
-    sectionIds: ['imaging-questions', 'chain-walk'],
+    id: 'question',
+    title: 'Define the imaging question',
+    description: 'Identify the procedural uncertainty and the evidence needed.',
+    sectionIds: ['imaging-questions'],
   },
   {
-    id: 'localize',
-    title: 'Localize and optimize',
+    id: 'context',
+    title: 'Understand the image and its context',
+    description: 'Follow image formation, control effects and the relationship to planning CT.',
+    sectionIds: ['chain-walk', 'good-image', 'current-anatomy'],
+  },
+  {
+    id: 'fluoroscopy',
+    title: 'Optimize 2D fluoroscopy',
+    description: 'Compare projection, conspicuity, field and temporal sampling in a coached case.',
+    sectionIds: ['projection', 'signal', 'field', 'time', 'two-dimensional'],
+  },
+  {
+    id: 'dts',
+    title: 'Understand digital tomosynthesis',
+    description: 'Connect acquired projections, reconstructed planes and guidance information.',
+    sectionIds: ['dts-acquisition', 'dts-interpretation'],
+  },
+  {
+    id: 'cbct',
+    title: 'Acquire CBCT',
     description:
-      'Account for CT-to-body divergence, then optimize the fluoroscopic image: projection and parallax, lesion conspicuity, collimation and magnification, pulse rate and pulse width.',
-    sectionIds: ['good-image', 'current-anatomy', 'projection', 'signal', 'field', 'time'],
+      'Prepare a useful acquisition and apply the prerequisites to fixed and mobile rooms.',
+    sectionIds: ['cbct-acquisition', 'fixed-suite', 'mobile-suite'],
   },
   {
     id: 'confirm',
-    title: 'Confirm',
+    title: 'Confirm and reassess',
     description:
-      'Work through a practical 2D fluoroscopy sequence, then use digital tomosynthesis and CBCT, fixed or mobile, when 2D imaging cannot resolve the lesion–tool relationship.',
-    sectionIds: [
-      'two-dimensional',
-      'dts-acquisition',
-      'dts-interpretation',
-      'cbct-acquisition',
-      'fixed-suite',
-      'mobile-suite',
-    ],
-  },
-  {
-    id: 'sample',
-    title: 'Sample and reconfirm',
-    description:
-      'Confirm that the part of the biopsy tool that acquires tissue lies within the lesion, and recognize when localization has to be repeated.',
+      'Review the actual sampling component and recognize when evidence is no longer current.',
     sectionIds: ['tool-confirmation', 'changing-anatomy'],
   },
   {
-    id: 'safety',
-    title: 'Radiation safety',
-    description:
-      'Protect the team from scatter radiation, and read fluoroscopy and CBCT dose metrics correctly.',
+    id: 'protect',
+    title: 'Protect and document',
+    description: 'Review staff geometry and interpret the whole procedure record.',
     sectionIds: ['staff-protection', 'dose-reporting'],
   },
   {
-    id: 'cases',
-    title: 'Integrated cases',
-    description:
-      'Troubleshooting findings placed in context, then the eight case decisions on the Assess page.',
+    id: 'integrate',
+    title: 'Integrate the decisions',
+    description: 'Follow the evidence through a case before independent Practice and Assess.',
     sectionIds: ['suite-cases'],
   },
 ])
@@ -163,7 +173,7 @@ export function imagingPathwayComposition(): ImagingPathwayComposition {
 /** "19 sections in 6 phases · 106 min". */
 export function imagingCompositionLine(): string {
   const composition = imagingPathwayComposition()
-  return `${composition.total} sections in ${composition.byPhase.length} phases · ${composition.minutes} min`
+  return `${composition.total} sections in ${composition.byPhase.length} chapters · ${composition.minutes} min`
 }
 
 export interface ImagingPathwayGroup {

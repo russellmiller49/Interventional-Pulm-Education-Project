@@ -303,6 +303,7 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
 
 /** Separate, authored image states. The lesson controller never writes them into learner lab history. */
 export function independentValues(id: ImagingSectionId, round: 0 | 1): LabValues | null {
+  if (id === 'dts-acquisition') return { sweep: 20, plane: 10 }
   if (id === 'projection')
     return {
       orbit: round ? 0 : -28,

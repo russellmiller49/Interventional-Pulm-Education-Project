@@ -1,3 +1,9 @@
+import {
+  imagingLearningActivities,
+  validateImagingLearningActivities,
+  type ImagingLearningActivity,
+} from './learningActivities'
+
 import type { ClinicalLearningItem } from '@/features/learning-module/activity'
 import {
   stageStepLocationErrors,
@@ -29,11 +35,9 @@ import { suiteViewForStep } from './suiteViews'
 /**
  * The adapter: every section of the pathway as one ordered list of steps on the lesson stage.
  *
- * Nothing here is authored as a step by a component. The registries say what a section is — its
- * lesson, its items, its goals, its sort, its spec — and this file arranges them into the one
- * shape every section shares: Recognize, Predict, Act, Observe, Explain, then the transfer as a
- * second, shorter round. A section whose Act is a sort has no Observe; a walk carries its own
- * goal. Every step says which pane its work is done in, in the words the pane caption carries.
+ * learningActivities authors each section's sequence and presentation. This adapter resolves
+ * its teaching references, existing questions and real lab predicates into the session reducer's
+ * interaction types. Phase names remain internal compatibility fields, not required screen layouts.
  */
 export type ImagingStageInteraction =
   | { readonly kind: 'read' }
@@ -60,6 +64,7 @@ export type ImagingStageInteraction =
   | { readonly kind: 'explain'; readonly round: 0 | 1 }
 
 export interface ImagingStageStep extends StageStepBase<ImagingStageInteraction> {
+  readonly activity: ImagingLearningActivity
   readonly lookIn: StageStepLocation
   /** What the suite shows while this step is current. */
   readonly suite: SuiteViewSpec
@@ -98,9 +103,9 @@ export const IN_TEACHING = {
 } as const
 
 const CONTINUE = 'Continue'
-const COMMIT = 'Check your interpretation'
 
 interface StepInput {
+  readonly activity: ImagingLearningActivity
   readonly phase: StagePhase
   readonly title: string
   readonly instruction: string
@@ -130,151 +135,93 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
   const spec = imagingSectionSpec(sectionId)
   const items = imagingSectionItems(sectionId)
   const goals = imagingLabGoals(sectionId)
-  const base = suiteViewForStep(sectionId)
-  const inputs: StepInput[] = []
-
-  inputs.push({
-    phase: 'recognize',
-    title: spec.recognizeTitle,
-    instruction: `Read the explanation in the Teaching panel and compare the worked demonstration in the Simulator panel. Try the labeled examples before applying the concept yourself.`,
-    lookIn: {
-      pane: 'teaching',
-      landmark: IN_TEACHING.purpose,
-      alsoPane: 'simulator',
-      alsoLandmark: ON_SUITE.scene,
-    },
-    rationale: lesson.why,
-    actionLabel: CONTINUE,
-    interaction: { kind: 'read' },
-    suite: base,
-  })
-
-  const predictionInteraction = prediction(items.prediction, 0)
-  const chainAnswered = predictionInteraction.chainTargets !== null
-  inputs.push({
-    phase: 'predict',
-    title: 'Check your interpretation',
-    instruction: chainAnswered
-      ? 'Choose the component on the image-formation map beneath the scene in the Simulator panel, then commit on this card. The controls unlock once you have.'
-      : 'Use the image and context to choose one answer below. Review the explanation after submitting.',
-    lookIn: chainAnswered
-      ? {
-          pane: 'simulator',
-          landmark: ON_SUITE.pins,
-          alsoPane: 'steps',
-          alsoLandmark: IN_STEPS.commit,
-        }
-      : { pane: 'steps', landmark: IN_STEPS.choices },
-    actionLabel: COMMIT,
-    interaction: predictionInteraction,
-    suite: suiteViewForStep(sectionId, { chainAnswer: chainAnswered }),
-  })
-
-  if (spec.act.kind === 'walk') {
-    if (!lesson.lab || !goals)
-      throw new Error(`Section ${sectionId} walks without a lab or a goal.`)
-    inputs.push({
-      phase: 'act',
-      title: 'Walk through image formation',
+  return imagingLearningActivities(sectionId).map((activity): StepInput => {
+    const base: StepInput = {
+      activity,
+      phase: 'recognize',
+      title: activity.title,
       instruction:
-        'Step through the components of image formation on this card. At beam geometry, change the C-arm obliquity once in the Simulator panel and watch the X-ray path, the beam and the image move together.',
-      lookIn: {
-        pane: 'steps',
-        landmark: IN_STEPS.walkCard,
-        alsoPane: 'simulator',
-        alsoLandmark: ON_SUITE.controls,
+        'Read the explanation alongside the image. Compare the labeled examples, then continue when ready.',
+      actionLabel: CONTINUE,
+      interaction: { kind: 'read' },
+      lookIn: { pane: 'simulator', landmark: 'the image and its explanation in this task' },
+      suite: {
+        ...suiteViewForStep(sectionId),
+        ...(activity.controls ? { controls: activity.controls } : {}),
       },
-      actionLabel: CONTINUE,
-      interaction: { kind: 'walk', stops: spec.chainStops, lab: lesson.lab, goals: goals.act },
-      suite: suiteViewForStep(sectionId, { litStop: spec.chainStops[0] }),
-    })
-  } else if (spec.act.kind === 'sort') {
-    const sort = imagingSort(spec.act.sortId)
-    inputs.push({
-      phase: 'act',
-      title: 'Place each one',
-      instruction: sort.prompt,
-      lookIn: { pane: 'steps', landmark: IN_STEPS.sortRows },
-      actionLabel: 'Commit the set',
-      interaction: { kind: 'sort', sort },
-      suite: base,
-    })
-  } else {
-    if (!lesson.lab || !goals) throw new Error(`Section ${sectionId} acts on a lab without goals.`)
-    inputs.push({
-      phase: 'act',
-      title: 'Try the guided task',
-      instruction: `${lesson.labTask ? firstSentence(lesson.labTask) : 'Work the controls under the scene.'} This step is done when every item on this card is met.`,
-      lookIn: { pane: 'simulator', landmark: ON_SUITE.controls },
-      actionLabel: CONTINUE,
-      interaction: { kind: 'lab-task', lab: lesson.lab, goals: goals.act },
-      suite: base,
-    })
-    if (goals.observe.length > 0) {
-      inputs.push({
-        phase: 'observe',
-        title: 'Compare the images',
-        instruction:
-          'Do the next thing this card lists, and read the readouts beside the controls as you do.',
-        lookIn: { pane: 'simulator', landmark: ON_SUITE.readouts },
-        actionLabel: CONTINUE,
-        interaction: {
-          kind: 'observe',
-          lab: lesson.lab,
-          goals: goals.observe,
-          readouts: goals.watch,
-        },
-        suite: base,
-      })
     }
-  }
-
-  inputs.push({
-    phase: 'explain',
-    title: 'Review your answer',
-    instruction: `Read the verdict and the table of what changed on this card, then “${IN_TEACHING.adds}” in the Teaching panel.`,
-    lookIn: {
-      pane: 'steps',
-      landmark: IN_STEPS.verdictAndChange,
-      alsoPane: 'teaching',
-      alsoLandmark: IN_TEACHING.adds,
-    },
-    rationale: spec.controlStrip.sentence,
-    actionLabel: CONTINUE,
-    interaction: { kind: 'explain', round: 0 },
-    suite: base,
-  })
-
-  const transferInteraction = prediction(items.transfer, 1)
-  const transferOnChain = transferInteraction.chainTargets !== null
-  inputs.push({
-    phase: 'transfer',
-    title: 'Apply it to another situation',
-    instruction: transferOnChain
-      ? 'The same principle from an earlier section, in a different situation. Choose the component on the image-formation map beneath the scene, then commit on this card.'
-      : 'Use the principle from an earlier section in this different situation. Choose one answer below.',
-    lookIn: transferOnChain
-      ? {
-          pane: 'simulator',
-          landmark: ON_SUITE.pins,
-          alsoPane: 'steps',
-          alsoLandmark: IN_STEPS.commit,
+    switch (activity.task) {
+      case 'read':
+        return base
+      case 'check':
+      case 'transfer':
+        return {
+          ...base,
+          phase: activity.task === 'transfer' ? 'transfer' : 'predict',
+          instruction:
+            activity.task === 'transfer'
+              ? 'Use the stated evidence in this different situation. Select an answer, then review the feedback.'
+              : 'Inspect the image and acquisition context. Choose what the evidence supports and what remains uncertain.',
+          actionLabel: 'Check my interpretation',
+          interaction: prediction(
+            activity.task === 'transfer' ? items.transfer : items.prediction,
+            activity.task === 'transfer' ? 1 : 0,
+          ),
+          lookIn: { pane: 'steps', landmark: IN_STEPS.choices },
         }
-      : { pane: 'steps', landmark: IN_STEPS.choices },
-    actionLabel: COMMIT,
-    interaction: transferInteraction,
-    suite: suiteViewForStep(sectionId, { chainAnswer: transferOnChain }),
+      case 'act': {
+        if (spec.act.kind === 'sort')
+          return {
+            ...base,
+            phase: 'act',
+            instruction: imagingSort(spec.act.sortId).prompt,
+            actionLabel: 'Check the evidence matches',
+            interaction: { kind: 'sort', sort: imagingSort(spec.act.sortId) },
+            lookIn: { pane: 'steps', landmark: IN_STEPS.sortRows },
+          }
+        if (!lesson.lab || !goals) throw new Error(`${activity.id} has no supported lab task`)
+        return {
+          ...base,
+          phase: 'act',
+          instruction:
+            spec.act.kind === 'walk'
+              ? 'Follow one component at a time. At beam geometry, change the C-arm obliquity and compare the image with the beam path. This X-ray map does not apply to radial EBUS.'
+              : sectionId === 'good-image'
+                ? 'Change the projection, then use display zoom. Compare the visible effect of each action with the same tool and lesion geometry.'
+                : `${firstSentence(lesson.labTask ?? activity.title)} Follow the requirements below; each is checked against the supported model.`,
+          interaction:
+            spec.act.kind === 'walk'
+              ? { kind: 'walk', stops: spec.chainStops, lab: lesson.lab, goals: goals.act }
+              : { kind: 'lab-task', lab: lesson.lab, goals: goals.act },
+        }
+      }
+      case 'observe': {
+        if (!lesson.lab || !goals?.observe.length)
+          throw new Error(`${activity.id} has no supported comparison`)
+        return {
+          ...base,
+          phase: 'observe',
+          instruction:
+            'Compare the image as you make the changes listed below. Describe what changed on the image and what stayed fixed in the model.',
+          interaction: {
+            kind: 'observe',
+            lab: lesson.lab,
+            goals: goals.observe,
+            readouts: goals.watch,
+          },
+        }
+      }
+      case 'debrief':
+        return {
+          ...base,
+          phase: 'explain',
+          instruction:
+            'Review your interpretation and the evidence from your work. Then apply the principle to another situation.',
+          interaction: { kind: 'explain', round: 0 },
+          lookIn: { pane: 'steps', landmark: IN_STEPS.verdictAndChange },
+        }
+    }
   })
-
-  // Guided model work precedes the first independent application. Sort-only foundations
-  // retain a brief check following the worked demonstration rather than inventing device actions.
-  if (spec.act.kind !== 'sort') {
-    const checkIndex = inputs.findIndex((input) => input.interaction.kind === 'prediction')
-    const [check] = inputs.splice(checkIndex, 1)
-    const explanationIndex = inputs.findIndex((input) => input.interaction.kind === 'explain')
-    inputs.splice(explanationIndex, 0, check)
-  }
-  return inputs
 }
 
 function buildSteps(
@@ -286,7 +233,8 @@ function buildSteps(
     (input) => input.interaction.kind === 'prediction' && input.interaction.round === 0,
   )
   return inputs.map((input, index) => ({
-    id: `${sectionId}-${index + 1}-${input.phase}`,
+    id: input.activity.id,
+    activity: input.activity,
     ordinal: index + 1,
     phase: input.phase,
     title: input.title,
@@ -349,7 +297,7 @@ export function precommitAuthoredSurfaces(
 }
 
 export function validateImagingStageLessons(): readonly string[] {
-  const errors: string[] = []
+  const errors: string[] = [...validateImagingLearningActivities()]
   for (const lesson of imagingStageLessons()) {
     const where = `Lesson ${lesson.sectionId}`
     if (lesson.predictionStepIndex < 0) errors.push(`${where} has no prediction step.`)
