@@ -93,7 +93,7 @@ test('the reference scope roll matches the book display axes for cranial and cau
   expect(bookScopeUp('mirror', [0, -1, 0])).toEqual([0, 0, 1])
 })
 
-test('orientation is required, a wrong first response survives correction, and transfer starts standard', () => {
+test('records a chosen display without grading regional convention and starts transfer standard', () => {
   const prediction = traceById('middle-lobe-caudal'),
     transfer = traceById('right-upper-apical')
   const reduce = ctSessionReducer(prediction, transfer)
@@ -104,11 +104,10 @@ test('orientation is required, a wrong first response survives correction, and t
     mark: { slice: prediction.checkpoints[0].slice, pixel: null },
   }
   expect(reduce(s, mark)).toBe(s)
-  expect(reduce(s, { type: 'check-orientation' })).toBe(s)
+  expect(reduce(s, { type: 'check-orientation' }).alignment).toEqual(STANDARD_ORIENTATION)
   const wrong: CtOrientation = { turns: 1, reflected: false }
   s = reduce(reduce(s, { type: 'orientation', value: wrong }), { type: 'check-orientation' })
-  expect(s.alignment).toBeNull()
-  expect(reduce(s, mark)).toBe(s)
+  expect(s.alignment).toEqual(wrong)
   s = reduce(reduce(s, { type: 'orientation', value: orientationFor(prediction.preset) }), {
     type: 'check-orientation',
   })
@@ -121,6 +120,7 @@ test('orientation is required, a wrong first response survives correction, and t
   s = reduce(s, { type: 'advance' })
   s = reduce(s, { type: 'course', value: 'uncertain' })
   s = reduce(s, { type: 'target-relation', value: 'unresolved' })
+  s = reduce(s, { type: 'target-inspected' })
   s = reduce(s, { type: 'advance' })
   expect(s.prediction?.orientation.first).toEqual(wrong)
   expect(s.prediction?.orientation.used).toEqual(orientationFor(prediction.preset))

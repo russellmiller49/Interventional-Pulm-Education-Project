@@ -3,25 +3,21 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { useRouter } from '@/i18n/navigation'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
-import { draftSignature, readCtDraft, writeCtDraft } from '../engine/ct-draft'
+import { draftSignature, readCtDraft, writeCtDraft, freshRouteView } from '../engine/ct-draft'
 import { parseRouteDraft } from '../engine/route-draft'
 import type { CtViewerState } from '../content/ct-types'
 import { CtProgressiveMap } from './CtBranchMap'
-import { StageLayout } from '@/features/learning-module/stage/StageLayout'
+import { CtRouteAttemptHistory } from './CtRouteAttemptHistory'
+import { CtRouteWorkspace } from './CtRouteWorkspace'
+import { CourseOutline } from './CourseOutline'
 import { NowCard } from '@/features/learning-module/stage/NowCard'
-import { LookInLine } from '@/features/learning-module/stage/LookInLine'
 import { StepList } from '@/features/learning-module/stage/StepList'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { StageBlock } from '@/features/learning-module/stage/StageBlock'
 import { BASE_PATH, LESSONS, SOURCE, VERSION, lessonById, nextLesson } from '../content/lessons'
 import { COURSE_OPTIONS, type CtLesson } from '../content/ct-types'
 import { traceById, targetForTrace } from '../geometry/native-ct'
-import {
-  STANDARD_ORIENTATION,
-  orientationFor,
-  orientationName,
-  sameOrientation,
-} from '../geometry/orientation'
+import { orientationFor, orientationName } from '../geometry/orientation'
 import { CtOrientationTeaching, CtOrientationFeedback } from './CtOrientationTeaching'
 import {
   completedLessons,
@@ -110,6 +106,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSaved(writeCtDraft(browserStorage(), draftKey, signature, { session: s, views }))
   }, [draftKey, signature, s, views])
+  const [imageReady, setImageReady] = useState(false)
   const [review, setReview] = useState<number | null>(null)
   const [levelRequest, setLevelRequest] = useState(0)
   useEffect(() => {
@@ -148,19 +145,21 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
       : lastUnlocked(s.recorded)
     : trace.checkpoints.length - 1
   const describing = s.step === 2 || (transfer && !response && routeDone)
-  const disabled = orienting
-    ? sameOrientation(s.orientation, STANDARD_ORIENTATION)
-    : stationTask
-      ? !stationDone && !junctionReady(trace, s.active, s.marks, s.branches)
-      : s.step === 1
-        ? !routeDone
-        : describing
-          ? !routeDone || !s.course || !s.targetRelation
-          : false
+  const disabled =
+    !imageReady ||
+    (orienting
+      ? false
+      : stationTask
+        ? !stationDone && !junctionReady(trace, s.active, s.marks, s.branches)
+        : s.step === 1
+          ? !routeDone
+          : describing
+            ? !routeDone || !s.course || !s.targetRelation || !s.targetViewed[trace.id]
+            : false)
   const stationAction = stationDone
     ? s.active + 1 === trace.checkpoints.length - 1
       ? 'Inspect the distal airway–nodule relationship'
-      : 'Next junction'
+      : 'Continue to the next division'
     : trace.checkpoints[s.active].decision
       ? 'Check this junction'
       : 'Record nodule approach'
@@ -187,25 +186,16 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
   }
   const done = new Set(lesson.steps.slice(0, s.step + (s.complete ? 1 : 0)).map((v) => v.id))
   return (
-    <StageLayout
-      module="bronchial-branch-tracing"
+    <CtRouteWorkspace
+      section="learn"
       stageId={s.complete ? 'complete' : step.id}
       label="Branch tracing lesson"
-      workspaceLabel="Branch tracing workspace"
-      paneOrder={['steps', 'teaching', 'simulator']}
-      defaultWidthFractions={{ primary: 0.26, secondary: 0.29 }}
-      paneMinimums={{ primary: 300, secondary: 280, tertiary: 340 }}
-      paneCaptions={{
-        steps: 'your CT trace',
-        teaching: 'how to read the airway',
-        simulator: 'real CT and comparison',
-      }}
-      compactPane={s.complete ? 'steps' : step.lookIn?.pane}
+      explanationOpen={s.step === 0 || s.step === 3 || s.step === 4}
       header={
         <SectionHeader
           kicker={`Learn · Lesson ${LESSONS.indexOf(lesson) + 1} of ${LESSONS.length}`}
           title={lesson.title}
-          meta={['Real CT · 0.5 mm slices', `${lesson.minutes} min`]}
+          sectionsControl={<CourseOutline currentId={lesson.id} />}
           onRestart={() => perform({ type: 'restart' })}
           restartLabel="Restart lesson"
           helpRef={helpRef}
@@ -218,7 +208,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
           resumedNote={
             !saved
               ? 'Browser storage is unavailable. Work continues, but progress cannot be saved.'
-              : loaded.notice || 'Draft saves on this device, including the CT view and answers.'
+              : loaded.notice || undefined
           }
         />
       }
@@ -248,11 +238,10 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
               body: s.complete
                 ? 'You recorded two routes toward simulated nodules and compared their CT continuity. Completion records the work, not clinical competence.'
                 : orienting
-                  ? 'Start in standard axial. Rotate or reflect the CT to the tracing convention for this region, using the paired airway view and patient direction letters. Then check your orientation.'
+                  ? 'Standard axial is a valid tracing display. Use the patient labels to maintain direction; regional display conventions are optional aids. Record the display you choose.'
                   : stationTask
                     ? 'Select the branch you would follow, then mark its lumen on the answer slice. Record this fork before continuing.'
                     : step.instruction,
-              where: s.complete ? undefined : <LookInLine location={step.lookIn!} />,
               primary: s.complete
                 ? {
                     label: next ? `Next: ${next.title}` : 'Return to overview',
@@ -260,7 +249,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                   }
                 : {
                     label: orienting
-                      ? 'Check orientation'
+                      ? 'Use this orientation'
                       : stationTask
                         ? stationAction
                         : transfer && response
@@ -276,13 +265,14 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                           : perform({ type: 'advance' }),
                     disabled,
                     disabledReason: orienting
-                      ? 'Use the rotate or flip controls in the CT tracing stack first.'
+                      ? 'Wait for the CT image to load.'
                       : stationTask
                         ? 'Select a daughter branch (or uncertainty) and mark its lumen (or unresolved lumen) before recording this junction.'
-                        : 'Record every junction and the distal approach, then describe the course and its relationship to the nodule.',
+                        : 'Record every junction and the distal approach. Use Show target to inspect the nodule, then describe the course and distal relationship.',
                   },
             }}
-          >
+          />
+          <div className={styles.routeResponses}>
             {orienting && s.orientationAttempts.length > 0 && (
               <div className={styles.feedback} role="status">
                 <strong>Recheck the direction letters</strong>
@@ -293,7 +283,8 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                   ).toLowerCase()}
                   . For this region, the book uses{' '}
                   {orientationName(orientationFor(trace.preset)).toLowerCase()} from standard axial.
-                  Reset the image, apply that operation, then check again.
+                  Standard axial remains a valid choice; the regional convention is an optional
+                  comparison aid.
                 </p>
               </div>
             )}
@@ -309,6 +300,19 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                     !stationDone
                       ? (value) => perform({ type: 'branch', index: s.active, value })
                       : undefined
+                  }
+                />
+                {stationDone && (
+                  <button onClick={() => perform({ type: 'retry-junction' })}>
+                    Retry this junction
+                  </button>
+                )}
+                <CtRouteAttemptHistory
+                  key={`${trace.id}.${s.active}`}
+                  trace={trace}
+                  active={s.active}
+                  attempts={
+                    s.junctionHistory[`${trace.id}.${trace.checkpoints[s.active].id}`] ?? []
                   }
                 />
                 <p role="status">
@@ -365,7 +369,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 )}
               </div>
             )}
-          </NowCard>
+          </div>
           {s.step > 0 && !s.complete && (
             <CtTraceList
               trace={trace}
@@ -376,37 +380,52 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
               onActive={(index) => perform({ type: 'active', index })}
             />
           )}
-          <CtProgressiveMap trace={trace} recorded={s.recorded} branches={s.branches} />
-          <StepList
-            lesson={{
-              sectionId: lesson.id,
-              title: lesson.title,
-              minutes: lesson.minutes,
-              index: LESSONS.indexOf(lesson),
-              total: LESSONS.length,
-              steps: lesson.steps,
-              predictionStepIndex: 1,
-            }}
-            currentIndex={s.step}
-            furthestPerformedIndex={s.step - 1}
-            performedStepIds={done}
-            predictionCommitted={Boolean(s.prediction)}
-            reviewIndex={review}
-            onSelect={(i) => setReview(review === i ? null : i)}
-            recapFor={(i) => [
-              i === 0 && !orienting
-                ? lesson.worked
-                : 'Review only. The current trace and the original recorded attempt are preserved.',
-            ]}
-          />
+
+          <details>
+            <summary>Review earlier route tasks</summary>
+            <StepList
+              lesson={{
+                sectionId: lesson.id,
+                title: lesson.title,
+                minutes: lesson.minutes,
+                index: LESSONS.indexOf(lesson),
+                total: LESSONS.length,
+                steps: lesson.steps,
+                predictionStepIndex: 1,
+              }}
+              currentIndex={s.step}
+              furthestPerformedIndex={s.step - 1}
+              performedStepIds={done}
+              predictionCommitted={Boolean(s.prediction)}
+              reviewIndex={review}
+              onSelect={(i) => setReview(review === i ? null : i)}
+              recapFor={(i) => [
+                i === 0 && !orienting
+                  ? lesson.worked
+                  : 'Review only. The current trace and the original recorded attempt are preserved.',
+              ]}
+            />
+          </details>
         </div>
+      }
+      map={
+        <CtProgressiveMap
+          trace={trace}
+          recorded={s.recorded}
+          branches={s.branches}
+          active={s.active}
+          onReview={(index) => perform({ type: 'active', index })}
+        />
       }
       teaching={
         <div ref={teachingTop} className={styles.teaching}>
           {!orienting && s.step !== 0 && <CtJunctionTeaching trace={trace} active={s.active} />}
           {s.step === 0 ? (
             <>
-              <CtOrientationTeaching trace={trace} />
+              <details>
+                <summary>Review display conventions</summary>
+                <CtOrientationTeaching trace={trace} />
+              </details>
               <StageBlock kind="question" heading="Clinical purpose" visibility="shown">
                 <h2>Clinical purpose</h2>
                 <p>{lesson.objective}</p>
@@ -433,9 +452,9 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 <p>{lesson.worked}</p>
                 <p>
                   Use <strong>Show target</strong> to inspect the nodule, then Start at the trachea.
-                  Use <strong>Next junction</strong> beneath the paired views to inspect each worked
-                  junction. Every route includes all modeled branch decisions before the distal
-                  approach.
+                  Use <strong>Continue to the next division</strong> beneath the paired views to
+                  inspect each worked junction. Every route includes all modeled branch decisions
+                  before the distal approach.
                 </p>
                 <p className={styles.small}>
                   The gold crosses identify the source-derived trace in this worked example. Your
@@ -463,7 +482,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 <p>
                   At each fork, inspect all daughter branches. Choose the branch you would follow
                   and mark the visible continuation on Current junction CT, or record uncertainty.
-                  Check the junction and compare before selecting Next junction.
+                  Check the junction and compare before selecting Continue to the next division.
                 </p>
                 <p>
                   At the distal checkpoint, scroll toward the nodule. Decide whether you can follow
@@ -521,8 +540,11 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
           <NativeCtViewer
             key={`${trace.id}-${s.step === 0 ? 'example' : transfer ? 'transfer' : 'prediction'}.${viewerEpoch}`}
             trace={trace}
-            initialView={views[viewKey]}
+            initialView={views[viewKey] ?? freshRouteView(trace)}
             onViewChange={onViewChange}
+            onReadyChange={setImageReady}
+            onTargetReady={() => perform({ type: 'target-inspected' })}
+            scopeAvailable={revealed || stationDone}
             marks={s.step === 0 ? trace.checkpoints.map(() => null) : s.marks}
             active={s.active}
             levelRequest={levelRequest}
@@ -552,12 +574,12 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
               {orienting
                 ? 'Use the rotate or flip controls, then check your orientation.'
                 : stationTask
-                  ? 'Select the branch you would follow. Browse neighboring CT slices, then use Go to answer slice to mark its lumen or record uncertainty.'
+                  ? 'Select the branch you would follow. Browse neighboring CT slices, then use Go to response slice to mark its lumen or record uncertainty.'
                   : step.instruction}
             </p>
             <p>
-              Slice controls browse the CT; Next junction changes the active fork. Help preserves
-              your current responses.
+              Slice controls browse the CT; Continue to the next division changes the active fork.
+              Help preserves your current responses.
             </p>
           </HelpDialog>
           <HelpDialog

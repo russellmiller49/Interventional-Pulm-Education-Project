@@ -4,15 +4,16 @@ import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from '@/i18n/navigation'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
-import { draftSignature, readCtDraft, writeCtDraft } from '../engine/ct-draft'
+import { draftSignature, readCtDraft, writeCtDraft, freshRouteView } from '../engine/ct-draft'
 import { parsePracticeDraft, type PracticeDraft } from '../engine/practice-draft'
 import { browserStorage } from '../engine/progress'
 import { CtProgressiveMap } from './CtBranchMap'
+import { CtRouteAttemptHistory } from './CtRouteAttemptHistory'
 import type { CtViewerState } from '../content/ct-types'
-import { StageLayout } from '@/features/learning-module/stage/StageLayout'
+import { CtRouteWorkspace } from './CtRouteWorkspace'
+import { CourseOutline } from './CourseOutline'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { NowCard } from '@/features/learning-module/stage/NowCard'
-import { LookInLine } from '@/features/learning-module/stage/LookInLine'
 import { BASE_PATH, SOURCE, VERSION } from '../content/lessons'
 import { ASSESS_TRACES, PRACTICE_TRACES, SEGMENT_PRACTICE_TRACES } from '../content/practice'
 import {
@@ -186,6 +187,9 @@ function CtPracticeSession({
     readCtDraft(browserStorage(), draftKey, signature, (v) => parsePracticeDraft(v, ids)),
   )
   const resume = loaded.value
+  const [targetViewed, setTargetViewed] = useState<Record<string, boolean>>(
+    resume?.targetViewed ?? {},
+  )
   const [attempts, setAttempts] = useState<PracticeDraft['attempts']>(resume?.attempts ?? {})
   const [help, setHelp] = useState(false)
   const [exitWarning, setExitWarning] = useState(false)
@@ -194,6 +198,7 @@ function CtPracticeSession({
   const [index, setIndex] = useState(resume?.index ?? 0),
     [active, setActive] = useState(resume?.active ?? 0)
   const [furthest, setFurthest] = useState(resume?.furthest ?? 0)
+  const [imageReady, setImageReady] = useState(false)
   const [levelRequest, setLevelRequest] = useState(0)
   const [marks, setMarks] = useState<(CtMark | null)[]>(
     () => resume?.work.marks ?? emptyTraceWork(traceById(ids[0])).marks,
@@ -236,6 +241,7 @@ function CtPracticeSession({
   )
   const snapshot = useMemo(
     () => ({
+      targetViewed,
       index,
       active,
       furthest,
@@ -257,6 +263,7 @@ function CtPracticeSession({
       views,
     }),
     [
+      targetViewed,
       index,
       active,
       furthest,
@@ -292,7 +299,12 @@ function CtPracticeSession({
   }, [active, index, alignment, stationDone])
   const stationTask = Boolean(alignment) && !routeDone
   const maxActive = alignment ? lastUnlocked(junctions) : 0
-  const ready = Boolean(alignment) && routeDone && Boolean(course) && Boolean(targetRelation)
+  const ready =
+    Boolean(alignment) &&
+    routeDone &&
+    Boolean(course) &&
+    Boolean(targetRelation) &&
+    Boolean(targetViewed[trace.id])
   function selectActive(i: number) {
     if (i < 0 || i > maxActive) return
     setActive(i)
@@ -304,7 +316,7 @@ function CtPracticeSession({
     !recordedResponse ||
     !alignment ||
     !sameOrientation(recordedResponse.orientation.first, alignment.first) ||
-    !sameOrientation(recordedResponse.orientation.used, alignment.used) ||
+    !sameOrientation(recordedResponse.orientation.used, orientation) ||
     JSON.stringify(recordedResponse.marks.map((m) => [m.slice, m.pixel])) !==
       JSON.stringify(marks.map((m) => m && [m.slice, m.pixel])) ||
     JSON.stringify(recordedResponse.branches) !== JSON.stringify(branches) ||
@@ -347,7 +359,7 @@ function CtPracticeSession({
   function record() {
     if (!ready || !alignment) return
     const response: CtResponse = {
-      orientation: alignment,
+      orientation: { first: alignment.first, used: { ...orientation } },
       marks: marks as CtMark[],
       branches: [...branches],
       course: course as Course,
@@ -452,24 +464,15 @@ function CtPracticeSession({
       </div>
     )
   return (
-    <StageLayout
-      module="bronchial-branch-tracing"
+    <CtRouteWorkspace
+      section={mode}
       stageId={`ct-${index}`}
       label="Independent CT tracing"
-      workspaceLabel="CT interpretation workspace"
-      paneOrder={['steps', 'teaching', 'simulator']}
-      defaultWidthFractions={{ primary: 0.26, secondary: 0.29 }}
-      paneMinimums={{ primary: 300, secondary: 280, tertiary: 340 }}
-      paneCaptions={{
-        steps: 'your interpretation',
-        teaching: 'task and orientation',
-        simulator: 'real CT stack',
-      }}
-      compactPane="simulator"
       header={
         <SectionHeader
           kicker={mode === 'practice' ? 'Practice · Real CT' : 'Assess · CT worksheet'}
           title={`Trace ${index + 1} of ${ids.length}`}
+          sectionsControl={<CourseOutline />}
           meta={[
             `Target: ${target.segment.code}`,
             mode === 'practice' ? 'Feedback after each junction' : 'Feedback after submission',
@@ -489,8 +492,7 @@ function CtPracticeSession({
           resumedNote={
             saveFailed
               ? 'Browser storage is unavailable. Work continues, but progress cannot be saved.'
-              : loaded.notice ||
-                'Draft saves on this device. Resume by starting this same selection.'
+              : loaded.notice || undefined
           }
         />
       }
@@ -515,8 +517,7 @@ function CtPracticeSession({
                   : 'Describe the completed route',
               body: alignment
                 ? `Plan an airway approach to the nodule in ${target.segment.code}. Select and mark every daughter branch in order, then record the distal airway–nodule relationship.`
-                : 'Start in standard axial. Rotate or reflect the CT to the tracing convention for this region. Compare it with the virtual airway view, then record the orientation you chose.',
-              where: <LookInLine location={{ pane: 'simulator', landmark: 'CT tracing stack' }} />,
+                : 'Standard axial is a valid tracing display. Patient directions remain attached to the image if you choose to rotate or reflect it. Record the display you choose.',
               primary: {
                 label: !alignment
                   ? 'Use this orientation'
@@ -524,7 +525,7 @@ function CtPracticeSession({
                     ? stationDone
                       ? active + 1 === trace.checkpoints.length - 1
                         ? 'Inspect the distal airway–nodule relationship'
-                        : 'Next junction'
+                        : 'Continue to the next division'
                       : trace.checkpoints[active].decision
                         ? mode === 'practice'
                           ? 'Check this junction'
@@ -535,7 +536,6 @@ function CtPracticeSession({
                       : 'Record CT interpretation',
                 onActivate: () => {
                   if (!alignment) {
-                    if (sameOrientation(orientation, STANDARD_ORIENTATION)) return
                     const first = firstOrientations[index] ?? { ...orientation }
                     setFirstOrientations((current) =>
                       current.map((v, i) => (i === index ? first : v)),
@@ -550,7 +550,17 @@ function CtPracticeSession({
                         ...current,
                         [key]: [
                           ...(current[key] ?? []),
-                          { mark: marks[active]!, branch: branches[active], hints },
+                          {
+                            mark: marks[active]!,
+                            branch: branches[active],
+                            hints,
+                            orientation: { ...orientation },
+                            support: current[key]?.length
+                              ? 'after-comparison'
+                              : mode === 'practice'
+                                ? 'coached'
+                                : 'independent',
+                          },
                         ],
                       }))
                       setJunctions((values) => values.map((v, i) => (i === active ? true : v)))
@@ -558,17 +568,24 @@ function CtPracticeSession({
                   } else if (recorded && !dirty) setSubmitted(true)
                   else record()
                 },
-                disabled: !alignment
-                  ? sameOrientation(orientation, STANDARD_ORIENTATION)
-                  : stationTask
-                    ? !stationDone && !junctionReady(trace, active, marks, branches)
-                    : !ready,
+                disabled:
+                  !imageReady ||
+                  (!alignment
+                    ? false
+                    : stationTask
+                      ? !stationDone && !junctionReady(trace, active, marks, branches)
+                      : !ready),
                 disabledReason: !alignment
-                  ? 'Use the rotate or flip controls first.'
-                  : 'Select a daughter (or uncertainty) and mark its lumen (or unresolved lumen). Record each junction before moving on.',
+                  ? 'Wait for the CT image to load.'
+                  : !routeDone
+                    ? 'Select a daughter (or uncertainty) and mark its lumen (or unresolved lumen).'
+                    : !targetViewed[trace.id]
+                      ? 'Use Show target to inspect the nodule and its adjacent CT before submitting the distal interpretation.'
+                      : 'Describe the course and airway–nodule relationship.',
               },
             }}
-          >
+          />
+          <div className={styles.routeResponses}>
             {alignment && (
               <>
                 {stationTask && (
@@ -619,6 +636,12 @@ function CtPracticeSession({
                   </>
                 )}
                 <button onClick={() => setAlignment(null)}>Revise orientation</button>
+                <CtRouteAttemptHistory
+                  key={`${trace.id}.${active}`}
+                  trace={trace}
+                  active={active}
+                  attempts={attempts[`${trace.id}.${trace.checkpoints[active].id}`] ?? []}
+                />
                 {routeDone && (
                   <>
                     <CtCourseControl
@@ -657,12 +680,8 @@ function CtPracticeSession({
                 </button>
               ))}
             </div>
-          </NowCard>
-          <CtProgressiveMap
-            trace={trace}
-            recorded={mode === 'practice' ? junctions : []}
-            branches={branches}
-          />
+          </div>
+
           <CtTraceList
             trace={trace}
             marks={marks}
@@ -672,6 +691,16 @@ function CtPracticeSession({
             onActive={selectActive}
           />
         </div>
+      }
+      map={
+        <CtProgressiveMap
+          trace={trace}
+          recorded={junctions}
+          active={active}
+          onReview={selectActive}
+          reveal={mode === 'practice'}
+          branches={branches}
+        />
       }
       teaching={
         <div ref={teachingTop} className={styles.teaching}>
@@ -699,11 +728,11 @@ function CtPracticeSession({
             approach.
           </p>
           <p>
-            Use Rotate 90° left, Rotate 90° right or Flip left–right. Reset to standard lets you
-            start again. These controls change the display; your marks remain attached to the same
-            anatomy. The virtual camera follows the model reference route, even after a different
-            branch choice. An axial slice and an endoscopic view have different projections; compare
-            their branch relationships.
+            Use Rotate 90° left, Rotate 90° right or Flip left–right. Return to standard axial lets
+            you start again. These controls change the display; your marks remain attached to the
+            same anatomy. The virtual camera follows the model reference route, even after a
+            different branch choice. An axial slice and an endoscopic view have different
+            projections; compare their branch relationships.
           </p>
           <h2>Record uncertainty honestly</h2>
           <p>
@@ -724,8 +753,15 @@ function CtPracticeSession({
         <NativeCtViewer
           key={trace.id}
           trace={trace}
-          initialView={views[trace.id]}
+          initialView={views[trace.id] ?? freshRouteView(trace)}
           onViewChange={onViewChange}
+          onReadyChange={setImageReady}
+          onTargetReady={() =>
+            setTargetViewed((current) =>
+              current[trace.id] ? current : { ...current, [trace.id]: true },
+            )
+          }
+          scopeAvailable={mode === 'practice' && stationDone}
           referenceThrough={
             mode === 'practice' ? lastUnlocked(junctions) - (routeDone ? 0 : 1) : -1
           }
@@ -755,7 +791,7 @@ function CtPracticeSession({
               {!alignment
                 ? 'Choose the display orientation, then record it.'
                 : !routeDone
-                  ? 'Select the branch you would follow and mark its lumen. Browse freely; Go to answer slice restores the marking frame.'
+                  ? 'Select the branch you would follow and mark its lumen. Browse freely; Go to response slice restores the marking frame.'
                   : 'Describe the airway course and distal relationship, then record the interpretation.'}
             </p>
             <p>

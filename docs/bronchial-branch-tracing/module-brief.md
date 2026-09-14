@@ -1,4 +1,6 @@
-# Bronchial branch tracing — current teaching brief
+# Bronchial branch tracing — historical c5 teaching brief
+
+> Historical requirements and evidence from September 11, 2026. The current nine-lesson curriculum, orientation-first dependency, local task compositions, coached Practice and saved drafts are documented in [flow-redesign.md](flow-redesign.md). The September 13 redesign supersedes the eight-lesson count, universal full-route/six-stage task, fixed three-pane dimensions, mandatory convention match and session-only viewing claims below. Source geometry, complete-route topology, uncertainty and clinical-review boundaries remain relevant. These older QA claims are not evidence for the new flow.
 
 September 11, 2026 · reference checkout `65b8375c` · content `c5-all-branches-r1` · unpublished, anonymous direct URL.
 

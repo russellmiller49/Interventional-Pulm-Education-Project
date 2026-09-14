@@ -122,6 +122,8 @@ test('future forks and the lesion cannot bypass a choice, a mark and explicit re
   s = reduce(s, { type: 'advance' })
   s = reduce(s, { type: 'course', value: 'uncertain' })
   s = reduce(s, { type: 'target-relation', value: 'unresolved' })
+  expect(reduce(s, { type: 'advance' })).toBe(s)
+  s = reduce(s, { type: 'target-inspected' })
   s = reduce(s, { type: 'advance' })
   expect(s.prediction!.branches[0]).toBe(wrong)
   expect(s.prediction!.marks[0].pixel).toEqual([10, 10])

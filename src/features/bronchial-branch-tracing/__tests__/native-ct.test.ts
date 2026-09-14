@@ -58,7 +58,9 @@ test('native Slicer PNGs match their hashes and source HU window at every compar
       const x = Math.round(point.pixel[0]),
         y = Math.round(point.pixel[1])
       const intensity = slices.get(point.slice)![y * 513 + 1 + x]
-      const expected = Math.round(Math.max(0, Math.min(1, (point.sourceHu + 1000) / 1400)) * 255)
+      const expected = Math.round(
+        Math.max(0, Math.min(1, (Number(point.sourceHu) + 1000) / 1400)) * 255,
+      )
       expect(Math.abs(intensity - expected)).toBeLessThanOrEqual(1)
       expect(Math.abs(point.lps[2] - sliceZ(point.slice))).toBeLessThanOrEqual(0.251)
       for (let i = 0; i < 2; i++)
@@ -221,6 +223,8 @@ test('CT actions reject an unrecorded response and wrong slice while preserving 
   s = reduce(s, { type: 'course', value: 'cranial' })
   expect(reduce(s, { type: 'advance' })).toBe(s)
   s = reduce(s, { type: 'target-relation', value: 'unresolved' })
+  expect(reduce(s, { type: 'advance' })).toBe(s)
+  s = reduce(s, { type: 'target-inspected' })
   s = reduce(s, { type: 'advance' })
   expect(s.prediction?.targetRelation).toBe('unresolved')
   expect(s.prediction?.marks[0].pixel).toEqual([10, 10])

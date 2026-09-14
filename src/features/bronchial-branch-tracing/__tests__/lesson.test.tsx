@@ -33,11 +33,14 @@ function imageReady() {
   document.querySelectorAll('image').forEach((image) => fireEvent.load(image))
 }
 function relation(value = 'unresolved') {
+  fireEvent.click(screen.getByRole('button', { name: 'Show target' }))
+  imageReady()
   fireEvent.change(screen.getByRole('combobox', { name: 'Airway–nodule relationship' }), {
     target: { value },
   })
 }
 function orient(id: string) {
+  imageReady()
   const preset = traceById(id).preset
   fireEvent.click(
     screen.getByRole('button', {
@@ -49,7 +52,7 @@ function orient(id: string) {
             : /Rotate 90° right/,
     }),
   )
-  fireEvent.click(screen.getByRole('button', { name: 'Check orientation' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Use this orientation' }))
 }
 function markLevels(id: string, wrong = false) {
   const trace = traceById(id)
@@ -67,7 +70,7 @@ function markLevels(id: string, wrong = false) {
           .find((input) => (input as HTMLInputElement).value === String(edge))!,
       )
     }
-    fireEvent.click(screen.getByRole('button', { name: 'Go to answer slice' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Go to response slice' }))
     imageReady()
     if (wrong && i === 0) {
       const svg = screen.getByRole('group', { name: /^CT image\./ })
@@ -87,7 +90,7 @@ function markLevels(id: string, wrong = false) {
           name:
             i + 1 === trace.checkpoints.length - 1
               ? 'Inspect the distal airway–nodule relationship'
-              : 'Next junction',
+              : 'Continue to the next division',
         }),
       )
   }
@@ -95,9 +98,11 @@ function markLevels(id: string, wrong = false) {
 it('requires every real branch response, withholds each junction comparison until recording, retains a wrong choice and requires a complete changed transfer', async () => {
   const lesson = LESSONS.find((l) => l.id === 'variants-limits')!
   render(<BranchTracingLesson requestedId={lesson.id} />)
-  fireEvent.click(await screen.findByRole('button', { name: 'Trace this airway' }))
+  await screen.findByRole('button', { name: 'Trace this airway' })
+  imageReady()
+  fireEvent.click(screen.getByRole('button', { name: 'Trace this airway' }))
   expect(document.querySelector('[data-ct-reference]')).toBeNull()
-  expect(screen.getByRole('button', { name: 'Check orientation' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Use this orientation' })).toBeInTheDocument()
   orient(lesson.prediction)
   expect(screen.queryByRole('button', { name: 'Record trace' })).not.toBeInTheDocument()
   markLevels(lesson.prediction, true)
@@ -111,7 +116,6 @@ it('requires every real branch response, withholds each junction comparison unti
   relation()
   fireEvent.click(screen.getByRole('button', { name: 'Reveal CT comparison' }))
   imageReady()
-  expect(document.querySelector('[data-ct-reference]')).not.toBeNull()
   fireEvent.click(screen.getByText('Review the route in order'))
   fireEvent.click(screen.getByRole('button', { name: /^Stop 1:/ }))
   imageReady()
@@ -119,7 +123,7 @@ it('requires every real branch response, withholds each junction comparison unti
   fireEvent.click(screen.getByRole('button', { name: 'Review the relationship' }))
   fireEvent.click(screen.getByRole('button', { name: 'Trace another airway' }))
   expect(document.querySelector('[data-ct-reference]')).toBeNull()
-  expect(screen.getByRole('button', { name: 'Check orientation' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Use this orientation' })).toBeInTheDocument()
   orient(lesson.transfer)
   expect(screen.queryByRole('button', { name: 'Compare new trace' })).not.toBeInTheDocument()
   expect(completedLessons(readProgress())).toEqual([])
@@ -146,7 +150,9 @@ it('retains the first recorded trace and hint count across reload before compari
   const view = render(
     <BranchTracingLesson requestedId={LESSONS.find((l) => l.id === 'variants-limits')!.id} />,
   )
-  fireEvent.click(await screen.findByRole('button', { name: 'Trace this airway' }))
+  await screen.findByRole('button', { name: 'Trace this airway' })
+  imageReady()
+  fireEvent.click(screen.getByRole('button', { name: 'Trace this airway' }))
   orient(LESSONS.find((l) => l.id === 'variants-limits')!.prediction)
   fireEvent.click(screen.getByRole('button', { name: 'Tracing reminder' }))
   markLevels(LESSONS.find((l) => l.id === 'variants-limits')!.prediction)

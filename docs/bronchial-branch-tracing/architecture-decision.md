@@ -1,5 +1,7 @@
 # Native CT within the shared clinical lesson stage
 
+> Historical architecture decision. The current [CT-first flow](flow-redesign.md) retains the shared public LessonShell and activity store, but supersedes permanent three-pane dimensions and session-only draft assumptions. It also restricts CT/virtual correspondence to the active source-edge interval before ranking multiple plane crossings. See [current validation](flow-redesign-validation.md); the source and coordinate audit below remains historical evidence.
+
 The shared stage and bounded activity store remain unchanged. Feature-owned CT reducers manage actual marks, course responses, manual reveal and completion. NativeCtViewer cannot award credit. Steps → Teaching → Simulator is explicit, with 0.26/0.29 opening fractions and 300/280/340 px floors. The mechanical-ventilation host at base `7da3886e` is the visual reference.
 
 `/learn/anatomy/branch-tracing` and its Learn/Practice/Assess children are anonymous, unlisted and noindex. Assets under `/branch-tracing/` share the narrow public asset access. Existing admin anatomy routes remain protected; no catalog/search/sitemap addition or release action occurs.

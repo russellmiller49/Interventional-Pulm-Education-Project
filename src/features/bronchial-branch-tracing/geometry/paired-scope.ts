@@ -8,7 +8,7 @@ const distance = (a: readonly number[], b: readonly number[]) =>
 const interpolate = (a: readonly number[], b: readonly number[], f: number) =>
   a.map((v, i) => v + (b[i] - v) * f) as Vec3
 const edges = new Map(routes.edges.map((e) => [e.id, e.points]))
-const cache = new Map<string, { points: Vec3[]; arcs: number[] }>()
+const cache = new Map<string, { points: Vec3[]; arcs: number[]; segmentEdges: number[] }>()
 /** Fix the reference scope roll, independently of the learner's CT operations. */
 export function bookScopeUp(preset: DisplayPreset, forward: Vec3): Vec3 {
   // Apical tracing: lateral chest wall below (RUL: R below; upper division: L below).
@@ -23,24 +23,37 @@ export function pairedPath(trace: CtTrace) {
   const known = cache.get(trace.id)
   if (known) return known
   const points: Vec3[] = []
+  const segmentEdges: number[] = []
   for (const id of trace.sourceEdgeIds) {
     const edge = edges.get(id)
     if (!edge) throw new Error(`Missing paired airway edge ${id}`)
     for (const point of edge) {
-      if (!points.length || distance(points[points.length - 1], point) > 0.0001)
+      if (!points.length || distance(points[points.length - 1], point) > 0.0001) {
         points.push(point as Vec3)
+        segmentEdges.push(id)
+      }
     }
   }
   const arcs = [0]
   for (let i = 1; i < points.length; i++)
     arcs.push(arcs[i - 1] + distance(points[i - 1], points[i]))
-  const path = { points, arcs }
+  const path = { points, arcs, segmentEdges }
   cache.set(trace.id, path)
   return path
 }
 /** Select by patient plane, then by distance along the selected airway, not screen proximity. */
 export function pairedScope(trace: CtTrace, slice: number, active: number, atStart: boolean) {
-  const { points, arcs } = pairedPath(trace)
+  const { points, arcs, segmentEdges } = pairedPath(trace)
+  const checkpoint = trace.checkpoints[active]
+  // A returning route can cross this plane repeatedly. Limit correspondence to
+  // the active parent/daughter source interval before ranking crossings by arc.
+  const allowedEdges = new Set(
+    atStart
+      ? [trace.anchor.sourceEdgeId]
+      : [checkpoint.sourceEdgeId, checkpoint.decision?.parent.sourceEdgeId].filter(
+          (id): id is number => id !== undefined,
+        ),
+  )
   const anchor: readonly number[] = atStart
     ? [
         NATIVE_CT.origin[0] + trace.anchor.pixel[0] * NATIVE_CT.spacing[0],
@@ -56,7 +69,7 @@ export function pairedScope(trace: CtTrace, slice: number, active: number, atSta
     const a = points[i - 1],
       b = points[i],
       length = arcs[i] - arcs[i - 1]
-    if (!length) continue
+    if (!length || !allowedEdges.has(segmentEdges[i])) continue
     const f = Math.max(
       0,
       Math.min(1, a.reduce((sum, v, j) => sum + (anchor[j] - v) * (b[j] - v), 0) / length ** 2),

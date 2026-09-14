@@ -3,7 +3,11 @@
 import { ArrowRight, GitBranch } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { BASE_PATH, LESSONS, nextLesson, SOURCE, lessonById, VERSION } from '../content/lessons'
-import { completedLessons, progressVersionChanged } from '../engine/progress'
+import {
+  completedLessons,
+  progressVersionChanged,
+  hasHistoricalOrientation,
+} from '../engine/progress'
 import { useDeviceProgress } from './useDeviceProgress'
 import { ModuleFrame } from './ModuleFrame'
 import { TargetCtPreview } from './TargetCtPreview'
@@ -29,7 +33,7 @@ export function BranchTracingOverview() {
           <div>
             <h1>Bronchial branch tracing</h1>
             <p className={styles.subtitle}>
-              Follow one airway, recognize its division, then build a route.
+              Follow one lumen, establish the viewpoint, then build a route.
             </p>
             <p>
               Start with a short CT interval and one visible airway. Compare a demonstration with
@@ -61,6 +65,12 @@ export function BranchTracingOverview() {
           </div>
           <TargetCtPreview />
         </header>
+        {hasHistoricalOrientation(progress) && !completed.includes('orientation') && (
+          <p className={styles.notice}>
+            Your earlier orientation participation is retained. The new observer comparison and
+            same-airway application remain available to complete.
+          </p>
+        )}
         {changed && (
           <p className={styles.notice}>
             An earlier version’s history is retained. This version starts a new course record

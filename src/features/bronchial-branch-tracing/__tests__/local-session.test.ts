@@ -65,7 +65,7 @@ it('gates phase transitions, permits off-center lumen marks without grading, and
   expect(s.phase).toBe('compare')
   expect(reduce(s, { type: 'mark', mark: { slice: 387, pixel: null } })).toBe(s)
   s = reduce(s, { type: 'retry' })
-  expect(s.hints).toBe(0)
+  expect(s.hints).toBe(3)
   expect(s.history[exercises[0].id][0].hints).toBe(3)
   s = answer(s)
   s = reduce(s, { type: 'check' })
@@ -117,8 +117,8 @@ it.each(['mirror', 'rul', 'upper-division'] as const)(
       localSessionReducer([exercise], s, a)
     let s = emptyLocalSession([exercise])
     expect(s.orientation).toEqual(STANDARD_ORIENTATION)
-    expect(s.orientationGuide).toBe('context')
-    s = step(s, { type: 'focus-airway' })
+    expect(s.orientationGuide).toBeNull()
+    s = step(s, { type: 'explain-orientation' })
     expect(s.orientationGuide).toBe('direction')
     expect(step(s, { type: 'begin' })).toBe(s)
     expect(step(s, { type: 'orientation', value: orientationFor(preset) })).toBe(s)
@@ -140,7 +140,7 @@ it.each(['mirror', 'rul', 'upper-division'] as const)(
     expect(s.orientationGuide).toBe('compare')
     s = step(s, { type: 'finish-orientation' })
     expect(s.orientationGuide).toBeNull()
-    expect(s.orientation).toEqual(orientationFor(preset))
+    expect(s.orientation).toEqual(STANDARD_ORIENTATION)
     expect(s.orientationResponses[preset]).toEqual(['anatomy', 'display'])
     expect(emptyLocalSession([exercise], {}, s.taughtPresets).orientationGuide).toBeNull()
     expect(step(s, { type: 'restart' }).orientationResponses).toEqual(s.orientationResponses)
@@ -160,16 +160,16 @@ it('migrates pre-onboarding drafts without losing marks, branch responses or his
   delete legacy.orientationResponses
   const restored = parseLocalSession(legacy, exercises)!
   expect(restored.phase).toBe('compare')
-  expect(restored.orientationGuide).toBe('context')
-  expect(restored.orientation).toEqual(STANDARD_ORIENTATION)
+  expect(restored.orientationGuide).toBeNull()
+  expect(restored.orientation).toEqual(orientationFor('mirror'))
   expect(restored.marks).toEqual(current.marks)
   expect(restored.history).toEqual(legacy.history)
   expect(restored.branch).toEqual(current.branch)
-  expect(restored.views[exercises[0].id].full).toBe(true)
+  expect(restored.views).toEqual(current.views)
   expect(parseLocalSession(restored, exercises)).toEqual(restored)
   expect(
     parseLocalSession({ ...restored, orientation: orientationFor('rul') }, exercises),
-  ).toBeNull()
+  ).not.toBeNull()
 })
 it('restores only compatible, structurally valid drafts and reports damaged or changed versions', () => {
   const storage = window.localStorage

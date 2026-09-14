@@ -2,8 +2,24 @@ import { z } from 'zod'
 import nativeManifest from '../../../../public/branch-tracing/native-v1/manifest.json'
 import { VERSION } from '../content/lessons'
 import { ANNOTATION_VERSION } from '../content/local-exercises'
+import type { CtTrace, CtViewerState } from '../content/ct-types'
+
+export const freshRouteView = (trace: CtTrace): CtViewerState => ({
+  slice: trace.anchor.slice,
+  focus: 'start',
+  full: false,
+  magnification: 1,
+  showNodule: true,
+  showScope: false,
+})
 
 export const DRAFT_PREFIX = 'branch-tracing.draft.'
+const recoveryRequired = new WeakMap<Storage, Map<string, string>>()
+function retainForRecovery(storage: Storage, key: string, raw: string) {
+  const drafts = recoveryRequired.get(storage) ?? new Map<string, string>()
+  drafts.set(key, raw)
+  recoveryRequired.set(storage, drafts)
+}
 const envelopeSchema = z.object({
   version: z.literal(1),
   signature: z.string(),
@@ -47,23 +63,32 @@ export function readCtDraft<T>(
   key: string,
   signature: string,
   parse: (value: unknown) => T | null,
+  compatibleSignatures: string[] = [],
 ): { value: T | null; notice: string } {
+  let raw: string | null = null
   try {
     if (!storage)
       return {
         value: null,
         notice: 'Browser storage is unavailable. This session cannot be saved.',
       }
-    const raw = storage.getItem(DRAFT_PREFIX + key)
+    raw = storage.getItem(DRAFT_PREFIX + key)
     if (!raw) return { value: null, notice: '' }
     const envelope = envelopeSchema.safeParse(JSON.parse(raw))
-    if (!envelope.success || envelope.data.signature !== signature)
+    if (
+      !envelope.success ||
+      (envelope.data.signature !== signature &&
+        !compatibleSignatures.includes(envelope.data.signature))
+    ) {
+      retainForRecovery(storage, key, raw)
       return {
         value: null,
         notice:
-          'The saved draft belongs to different lesson content or CT annotations and cannot be resumed. A new draft starts here; earlier participation history is retained.',
+          'The saved draft belongs to different lesson content or CT annotations and cannot be resumed. A new draft starts here; earlier participation history is retained and the previous draft is kept for recovery on a successful save.',
       }
+    }
     const value = parse(envelope.data.value)
+    if (!value) retainForRecovery(storage, key, raw)
     return value
       ? {
           value,
@@ -72,10 +97,15 @@ export function readCtDraft<T>(
       : {
           value: null,
           notice:
-            'The saved draft is incomplete or damaged and cannot be resumed. A new draft starts here; earlier participation history is retained.',
+            'The saved draft is incomplete or damaged and cannot be resumed. A new draft starts here; earlier participation history is retained and the previous draft is kept for recovery on a successful save.',
         }
   } catch {
-    return { value: null, notice: 'The saved draft could not be read. A new session starts here.' }
+    if (storage && raw) retainForRecovery(storage, key, raw)
+    return {
+      value: null,
+      notice:
+        'The saved draft could not be read. A new session starts here; recoverable prior data is retained before a replacement save.',
+    }
   }
 }
 
@@ -87,7 +117,27 @@ export function writeCtDraft(
 ) {
   try {
     if (!storage) return false
+    const pendingRecovery = recoveryRequired.get(storage)?.get(key)
+    const previous = pendingRecovery ?? storage.getItem(DRAFT_PREFIX + key)
+    if (previous) {
+      let oldSignature: string | null = null
+      try {
+        oldSignature = JSON.parse(previous).signature ?? null
+      } catch {
+        /* Preserve unreadable input too. */
+      }
+      if (pendingRecovery || oldSignature !== signature) {
+        const recoveryBase = `${DRAFT_PREFIX}${key}.recovery.${oldSignature ?? 'unreadable'}`
+        let recoveryKey = recoveryBase
+        let suffix = 1
+        while (storage.getItem(recoveryKey) && storage.getItem(recoveryKey) !== previous)
+          recoveryKey = `${recoveryBase}.${suffix++}`
+        // If preservation fails, do not overwrite recoverable work or claim a save.
+        if (!storage.getItem(recoveryKey)) storage.setItem(recoveryKey, previous)
+      }
+    }
     storage.setItem(DRAFT_PREFIX + key, JSON.stringify({ version: 1, signature, value }))
+    recoveryRequired.get(storage)?.delete(key)
     return true
   } catch {
     return false

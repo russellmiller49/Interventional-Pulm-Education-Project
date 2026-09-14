@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { CtTrace } from '../content/ct-types'
+import type { CtTrace, CtJunctionAttempt } from '../content/ct-types'
 import { validBranch, validCtMark, traceComplete } from './ct-session'
 import { markSchema, orientationSchema, viewerSchema } from './ct-draft'
 
@@ -15,6 +15,20 @@ export const responseSchema = z.object({
   orientation: z.object({ first: orientationSchema, used: orientationSchema }),
 })
 const sessionSchema = z.object({
+  targetViewed: z.record(z.boolean()).default({}),
+  junctionHistory: z
+    .record(
+      z.array(
+        z.object({
+          mark: markSchema,
+          branch,
+          hints: z.number().int().nonnegative(),
+          orientation: orientationSchema.optional(),
+          support: z.enum(['coached', 'after-comparison']),
+        }),
+      ),
+    )
+    .default({}),
   step: z.number().int().min(0).max(5),
   active: z.number().int().nonnegative(),
   marks: z.array(markSchema.nullable()),
@@ -33,6 +47,22 @@ const sessionSchema = z.object({
 const draftSchema = z.object({ session: sessionSchema, views: z.record(viewerSchema) })
 export type RouteDraft = z.infer<typeof draftSchema>
 
+export function validJunctionHistory(
+  history: Record<string, Pick<CtJunctionAttempt, 'mark' | 'branch'>[]>,
+  traces: CtTrace[],
+) {
+  return Object.entries(history).every(([key, attempts]) => {
+    for (const trace of traces) {
+      const index = trace.checkpoints.findIndex((point) => key === `${trace.id}.${point.id}`)
+      if (index >= 0)
+        return attempts.every(
+          (a) => validCtMark(a.mark, trace, index) && validBranch(trace, index, a.branch),
+        )
+    }
+    return false
+  })
+}
+
 export function parseRouteDraft(
   value: unknown,
   prediction: CtTrace,
@@ -42,6 +72,13 @@ export function parseRouteDraft(
   const parsed = draftSchema.safeParse(value)
   if (!parsed.success) return null
   const { session: s, views } = parsed.data
+  if (
+    !validJunctionHistory(s.junctionHistory, [prediction, transfer]) ||
+    Object.keys(s.targetViewed).some(
+      (id) => ![prediction, transfer, example].some((t) => t.id === id),
+    )
+  )
+    return null
   const trace = s.step === 5 ? transfer : prediction
   if (
     s.active >= (s.step === 0 ? example : trace).checkpoints.length ||

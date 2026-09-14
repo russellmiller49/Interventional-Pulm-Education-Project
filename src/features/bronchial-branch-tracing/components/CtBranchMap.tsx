@@ -1,6 +1,10 @@
 'use client'
 
-import type { CtTrace, CtBranchChoice } from '../content/ct-types'
+import { useEffect, useRef, useState } from 'react'
+import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
+import type { LocalSession } from '../engine/local-session'
+import { NativeCtViewer } from './NativeCtViewer'
+import type { LocalCtExercise, CtTrace, CtBranchChoice } from '../content/ct-types'
 import { parentMap } from '../geometry/parent-map'
 import styles from './branch-tracing.module.css'
 
@@ -99,23 +103,139 @@ export function CtProgressiveMap({
   trace,
   recorded,
   branches,
+  active = 0,
+  reveal = true,
+  onReview,
 }: {
   trace: CtTrace
   recorded: boolean[]
   branches: (CtBranchChoice | null)[]
+  active?: number
+  reveal?: boolean
+  onReview?: (index: number) => void
 }) {
+  const mapRef = useRef<HTMLElement>(null)
+  const recordedKey = recorded.join(',')
+  useEffect(() => {
+    const scroller = mapRef.current?.parentElement
+    const current = mapRef.current?.querySelector('[aria-current="step"]')
+    if (scroller && current && getComputedStyle(scroller).overflowY === 'auto') {
+      scroller.scrollTop +=
+        current.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 30
+    }
+  }, [active, recordedKey])
   return (
-    <details className={styles.progressiveMap}>
-      <summary>Your route map · {recorded.filter(Boolean).length} recorded stops</summary>
-      <p>
-        Each recorded division retains its siblings and your chosen continuation. Junctions follow
-        the model route even if your choice differs.
-      </p>
-      {trace.checkpoints.map((p, i) =>
-        recorded[i] && p.decision ? (
-          <CtParentMap key={p.id} trace={trace} active={i} choice={branches[i]} />
-        ) : null,
+    <section ref={mapRef} className={styles.progressiveMap} aria-label="Connected route map">
+      <h3>Your route map · {recorded.filter(Boolean).length} recorded stops</h3>
+      <ol className={styles.connectedRoute}>
+        {trace.checkpoints.map((p, i) => {
+          if (!recorded[i]) return null
+          const decision = p.decision
+          return (
+            <li
+              key={p.id}
+              aria-current={i === active ? 'step' : undefined}
+              data-map-division={p.id}
+            >
+              <strong>
+                {i + 1}. {decision?.parent.airway.code ?? 'Distal approach'}
+              </strong>
+              {onReview && <button onClick={() => onReview(i)}>Review division {i + 1}</button>}
+              {branches[i] === 'unresolved' && <p>Your continuation: unresolved</p>}
+              {decision && (
+                <ul>
+                  {decision.options.map((option, n) => (
+                    <li key={option.sourceEdgeId}>
+                      {`Daughter ${String.fromCharCode(65 + n)}`}
+                      {reveal && ` · ${option.airway.code}`}
+                      {branches[i] === option.sourceEdgeId && <strong> · your selection</strong>}
+                      {reveal && p.sourceEdgeId === option.sourceEdgeId && (
+                        <span> · model continuation</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {decision && reveal && (
+                <details>
+                  <summary>Parent reference for division {i + 1}</summary>
+                  <CtParentMap trace={trace} active={i} choice={branches[i]} />
+                </details>
+              )}
+            </li>
+          )
+        })}
+      </ol>
+      {!recorded.some(Boolean) && (
+        <p>Record a division to add your interpretation. Future continuations are not prefilled.</p>
       )}
-    </details>
+      <details>
+        <summary>How to read this map</summary>
+        <p className={styles.small}>
+          Connected divisions in source-route order, with every sibling retained. Your selections
+          and unresolved responses are recorded separately. Continuing follows the source route even
+          after a different or uncertain choice; it does not simulate your proposed path. Parent
+          views have provisional opening positions. CT display changes never change this map.
+        </p>
+      </details>
+    </section>
+  )
+}
+
+export function CtLocalRouteMap({
+  exercises,
+  history,
+  active,
+}: {
+  exercises: LocalCtExercise[]
+  history: LocalSession['history']
+  active: number
+}) {
+  const [review, setReview] = useState<number | null>(null)
+  const trace = { ...exercises[0].trace, checkpoints: exercises.map((e) => e.trace.checkpoints[0]) }
+  const reviewing = review !== null ? exercises[review] : null
+  const attempt = reviewing ? history[reviewing.id]?.at(-1) : undefined
+  return (
+    <>
+      <CtProgressiveMap
+        trace={trace}
+        active={active}
+        recorded={exercises.map((e) => Boolean(history[e.id]?.length))}
+        branches={exercises.map((e) => history[e.id]?.at(-1)?.branch ?? null)}
+        onReview={setReview}
+      />
+      <HelpDialog
+        open={review !== null}
+        onClose={() => setReview(null)}
+        title="Recorded division · review only"
+      >
+        {reviewing && attempt && (
+          <>
+            <p>Reviewing preserves the current task and all first responses.</p>
+            <NativeCtViewer
+              key={reviewing.id}
+              trace={reviewing.trace}
+              active={0}
+              local
+              marks={attempt.marks}
+              orientation={attempt.orientation}
+              scopeAvailable={false}
+              showAnchor
+              teachingFrame={reviewing.frames.find(
+                (f) => f.slice === reviewing.answerPoints[0].slice,
+              )}
+              initialView={{
+                slice: reviewing.answerPoints[0].slice,
+                focus: 'junction',
+                full: false,
+                magnification: 1,
+                showNodule: false,
+                showScope: false,
+              }}
+            />
+          </>
+        )}
+      </HelpDialog>
+    </>
   )
 }

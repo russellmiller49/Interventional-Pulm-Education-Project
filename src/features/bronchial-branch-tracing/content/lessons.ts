@@ -6,6 +6,8 @@ import type { CtLesson, LocalExerciseSpec } from './ct-types'
 
 export const BASE_PATH = '/learn/anatomy/branch-tracing'
 export const VERSION = 'c6-local-teaching-r1'
+// Only this new activity changes completion semantics; historic participation stays intact.
+export const ORIENTATION_CONTRACT = 'observer-comparison-r2'
 export const SOURCE = {
   title: 'Kurimoto & Morita. Bronchial Branch Tracing (2020)',
   url: 'https://doi.org/10.1007/978-981-13-9905-3',
@@ -124,7 +126,7 @@ const ROUTE_LESSONS: CtLesson[] = [
     concept: 'A branch connection is established by continuity, not proximity.',
     teaching: [
       'Begin at the outlined parent lumen. Move through adjacent slices in small increments and keep its walls in view. At the division, follow each candidate far enough to understand its course.',
-      'The route includes every modeled branch decision from the trachea to the distal approach. Use the slider, arrow buttons or mouse wheel to inspect every intervening 0.5 mm plane. A nearby vessel or another airway is not proof of a connection.',
+      'This exercise follows one local division. Use the slider, arrow buttons or mouse wheel to inspect neighboring 0.5 mm planes. A nearby vessel or another airway is not proof of a connection.',
     ],
     worked:
       'In the right-upper-lobe example, the route first descends in the right main bronchus and then turns cranially. The slice order can reverse along a continuous route.',
@@ -290,10 +292,7 @@ const LOCAL_PLANS: Record<string, LocalExerciseSpec[]> = {
     local('central-right', 'junction-1', 'bifurcation'),
     local('left-lower-returning', 'junction-6', 'bifurcation'),
   ],
-  orientation: [
-    local('central-right', 'junction-1', 'parent-view'),
-    local('right-upper-entry', 'junction-4', 'parent-view'),
-  ],
+  orientation: [local('central-right', 'junction-1', 'viewpoint')],
   vertical: [
     local('right-upper-apical', 'junction-14', 'pattern'),
     local('right-lower-basal', 'junction-9', 'pattern'),
@@ -380,8 +379,8 @@ export const LESSONS: CtLesson[] = [
     steps: LOCAL_STEPS.slice(0, 3),
   },
   ...[
-    'continuity',
     'orientation',
+    'continuity',
     'vertical',
     'horizontal-horizontal',
     'horizontal-vertical',
@@ -402,14 +401,16 @@ export const LESSONS: CtLesson[] = [
               : lesson.title,
       objective:
         id === 'continuity'
-          ? 'Maintain parent-airway identity through a division and identify both daughter lumens using adjacent slices.'
+          ? 'Maintain parent-airway identity through a division and identify its daughter lumens using adjacent slices.'
           : id === 'orientation'
             ? 'Separate patient direction, CT display transformation and the view down the parent airway.'
             : id === 'orientation-changes'
-              ? 'Verify three successive divisions from a segmental parent, retaining sibling branches and uncertainty.'
+              ? 'Build a connected map through three successive divisions and retain airway identity as the course reverses cranial–caudal direction.'
               : lesson.objective,
       prerequisite:
-        id === 'continuity' ? 'Follow one airway across neighboring slices.' : lesson.prerequisite,
+        id === 'continuity'
+          ? 'Follow one lumen and distinguish CT presentation from the parent-airway viewpoint.'
+          : lesson.prerequisite,
       minutes: LOCAL_PLANS[id] ? (id === 'orientation-changes' ? 8 : 6) : lesson.minutes,
       exercises: LOCAL_PLANS[id],
       steps: LOCAL_PLANS[id] ? LOCAL_STEPS : LESSON_STEPS,
@@ -424,3 +425,6 @@ export function lessonLocationErrors() {
     l.steps.flatMap((s) => stageStepLocationErrors(`${l.id}.${s.id}`, s.lookIn)),
   )
 }
+
+export const lessonAfter = (id: string) =>
+  LESSONS[LESSONS.findIndex((lesson) => lesson.id === id) + 1]

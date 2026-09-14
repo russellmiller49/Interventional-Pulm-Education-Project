@@ -10,6 +10,7 @@ import {
   STANDARD_ORIENTATION,
   type CtOrientation,
 } from '../geometry/orientation'
+import { ObserverReference } from './CtViewpointComparison'
 import styles from './branch-tracing.module.css'
 
 function OrientationImage({ trace, orientation }: { trace: CtTrace; orientation: CtOrientation }) {
@@ -57,7 +58,7 @@ function OrientationImage({ trace, orientation }: { trace: CtTrace; orientation:
 }
 export const orientationActionLabel = (trace: CtTrace) =>
   trace.preset === 'mirror'
-    ? 'Reflect left ↔ right'
+    ? 'Compare with the caudal tracing view'
     : trace.preset === 'rul'
       ? 'Rotate 90° counterclockwise'
       : 'Rotate 90° clockwise'
@@ -99,6 +100,7 @@ export function CtOrientationTeaching({
               The gold ring locates <strong>{trace.anchor.airway.name}</strong> within the full CT
               field. Focus on this airway before following it through neighboring slices.
             </p>
+            <ObserverReference />
             <p>
               Later, you will reflect or rotate this display to compare branch directions with the
               view down an airway. First, establish the usual CT view.
@@ -106,28 +108,24 @@ export function CtOrientationTeaching({
           </>
         ) : guide.step === 'direction' ? (
           <>
-            <h2>CT and bronchoscopy look in different directions</h2>
+            <h2>Patient, display and parent-airway viewpoint</h2>
             <p>
-              The CT is still in standard axial: patient R on your left, A at the top. CT shows a
-              cross-section. A bronchoscope looks forward through the parent airway toward its
-              daughter branches.
+              Patient anatomy stays fixed. CT presents a cross-section; the parent-airway observer
+              looks along the lumen with a separately defined camera roll.
             </p>
-            <p
-              className={styles.viewingDirection}
-              aria-label="Bronchoscope looks from observer through parent bronchus toward daughter bronchi"
-            >
-              Observer → parent bronchus → daughter bronchi
-            </p>
+            <ObserverReference />
             <p>
               {trace.preset === 'mirror'
-                ? 'For this caudally directed example, a left–right reflection makes branch directions easier to compare with the view down the parent airway.'
+                ? 'In the straight central-airway reference, standard axial looks from feet toward head. The parent observer looks in the opposite direction, toward the carina, with anterior held at the top. Reflecting the comparison CT helps compare that left–right relationship. This remains a cross-section, not a bronchoscope image.'
                 : trace.preset === 'rul'
                   ? 'For this right upper lobe example, the tracing display uses a 90° counterclockwise rotation from standard axial.'
                   : 'For this left upper division example, the tracing display uses a 90° clockwise rotation from standard axial.'}
             </p>
             <p>
-              Select <strong>{orientationActionLabel(trace)}</strong>. Watch the direction letters
-              move on the same CT slice. The window, zoom and airway reference stay the same.
+              The patient and airway stay fixed. Select{' '}
+              <strong>{orientationActionLabel(trace)}</strong> to change only the comparison
+              display. The standard copy stays fixed. The same slice, crop, window and landmark
+              remain in both copies.
             </p>
           </>
         ) : (
@@ -142,19 +140,24 @@ export function CtOrientationTeaching({
                 aria-pressed={sameOrientation(guide.orientation, STANDARD_ORIENTATION)}
                 onClick={() => guide.onAction({ type: 'orientation', value: STANDARD_ORIENTATION })}
               >
-                Standard axial
+                Return to standard axial
               </button>
               <button
                 aria-pressed={sameOrientation(guide.orientation, expected)}
                 onClick={() => guide.onAction({ type: 'orientation', value: expected })}
               >
-                Show tracing view
+                Replay comparison
               </button>
             </div>
             <p>
               {trace.preset === 'mirror'
-                ? 'R and L exchange sides; A stays at the top.'
+                ? 'With reflection, R and L exchange sides while A stays at the top. The patient has not moved.'
                 : 'All four direction markers turn with the CT.'}
+            </p>
+            <p>
+              The parent direction and camera roll must be re-established as the airway turns. These
+              buttons step between displays without animation; repeating them does not record a
+              tracing attempt.
             </p>
             <fieldset className={styles.orientationCheck}>
               <legend>What changed? · Ungraded check</legend>
