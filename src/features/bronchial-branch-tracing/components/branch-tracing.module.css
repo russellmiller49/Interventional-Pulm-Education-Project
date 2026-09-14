@@ -1448,6 +1448,12 @@
   display: block;
   margin: auto;
 }
+.localInstructions[data-branch-matching] .parentMap svg {
+  width: min(100%, 200px);
+}
+.localInstructions[data-branch-matching] .mapChoices button {
+  padding-inline: 0.4rem;
+}
 .parentMap p {
   margin: 0.35rem 0;
 }
@@ -1466,6 +1472,7 @@
   .localWorkspace {
     height: auto;
     overflow: visible;
+    scroll-margin-top: var(--site-header-height, 4rem);
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto auto;
     grid-template-areas: 'task' 'instructions' 'ct';
