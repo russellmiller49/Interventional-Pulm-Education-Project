@@ -26,7 +26,7 @@ const orientationFacts = (): readonly { icon: LucideIcon; value: string; label: 
   return [
     { icon: ListTree, value: `${composition.total}`, label: 'sections, in one order' },
     { icon: Clock3, value: `${composition.minutes} min`, label: 'of guided work, start to finish' },
-    { icon: Stethoscope, value: 'Adult ICU', label: 'one monitored bed throughout' },
+    { icon: Stethoscope, value: 'Adult ICU', label: 'pressure, flow and clinical reasoning' },
   ]
 }
 
@@ -48,10 +48,10 @@ export function IcuHemodynamicsOverviewV2() {
             Make the measurement part of the clinical reasoning.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">
-            Every section runs on one monitored bed. Ask why a line is placed at all, walk the line
-            from the tip to the number, learn the four places the tip can sit, then take a wedge,
-            measure flow and trace every calculated value back to its inputs. Sections are ordered
-            as a recommendation, not a gate.
+            Begin with a clinical question. Ask what monitoring can establish, walk the line from
+            the tip to the number, learn the four places the tip can sit, then take a wedge, measure
+            flow and trace every calculated value back to its inputs. Sections are ordered as a
+            recommendation, not a gate.
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <HemodynamicsContinueCta />
@@ -83,9 +83,12 @@ export function IcuHemodynamicsOverviewV2() {
         <h2 id="hemodynamics-map-heading" className="mt-2 text-2xl font-bold">
           {hemodynamicsPathway.arcSentence}
         </h2>
-        <div className="mt-5">
+        <details className="mt-5">
+          <summary className="cursor-pointer font-semibold">
+            Browse the pathway · open any section
+          </summary>
           <HemodynamicsStoredPathwayAccordion id="hemodynamics-pathway-map" />
-        </div>
+        </details>
       </section>
 
       <section

@@ -794,6 +794,9 @@ describe('H5 station surfaces', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: 'Commit these classifications' }))
     expect(onSeparated).toHaveBeenCalledTimes(1)
+    expect(document.querySelector('[data-first-attempt-record]')).toHaveTextContent(
+      'SVR on the flowsheet: Measured',
+    )
   })
 
   it('hides the coherent episode results until the chain and the method are committed', () => {

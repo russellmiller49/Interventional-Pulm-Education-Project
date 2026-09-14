@@ -176,7 +176,8 @@ describe('focused hemodynamic case activity', () => {
     expect(screen.getAllByText('HD-07').length).toBeGreaterThan(0)
     expect(screen.queryByText('CI ≥ 2.2 L/min/m²')).not.toBeInTheDocument()
     expect(screen.queryByText('MAP ≥ 65 mmHg')).not.toBeInTheDocument()
-    expect(screen.getByText(/tamponade/i)).toBeInTheDocument()
+    // The diagnosis was previously exposed by the case-focus context chip.
+    expect(screen.queryByText(/tamponade/i)).not.toBeInTheDocument()
     expect(
       screen.getByRole('checkbox', { name: /Show teaching feedback as I work/ }),
     ).toBeInTheDocument()

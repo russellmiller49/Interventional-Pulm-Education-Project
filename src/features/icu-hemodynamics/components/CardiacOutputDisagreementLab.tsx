@@ -1,6 +1,8 @@
 'use client'
 
-import { useId, useMemo, useState } from 'react'
+import { useHemodynamicsTaskDraft } from './stage/HemodynamicsTaskDrafts'
+
+import { useId, useMemo } from 'react'
 
 import {
   cardiacOutputComparisonScenarios,
@@ -65,8 +67,14 @@ function ScenarioCard({
 }) {
   const headingId = useId()
   const groupName = useId()
-  const [choiceId, setChoiceId] = useState<string | null>(null)
-  const [committed, setCommitted] = useState(false)
+  const [choiceId, setChoiceId] = useHemodynamicsTaskDraft<string | null>(
+    `ScenarioCard:${scenario.id}:choiceId`,
+    null,
+  )
+  const [committed, setCommitted] = useHemodynamicsTaskDraft(
+    `ScenarioCard:${scenario.id}:committed`,
+    false,
+  )
 
   const trials = useMemo(() => buildTrials(scenario), [scenario])
   const fick = useMemo(() => fickCardiacOutput(scenario.fick), [scenario])
@@ -237,10 +245,13 @@ function ScenarioCard({
 
 export function CardiacOutputDisagreementLab({
   onDisagreementResolved,
+  progressive = false,
 }: {
   readonly onDisagreementResolved?: () => void
+  readonly progressive?: boolean
 }) {
   const headingId = useId()
+  const [scenarioIndex, setScenarioIndex] = useHemodynamicsTaskDraft('disagreement:scenario', 0)
   return (
     <section className={styles.disagreementLab} aria-labelledby={headingId}>
       <h2 id={headingId}>When the two methods disagree</h2>
@@ -250,7 +261,26 @@ export function CardiacOutputDisagreementLab({
         then say which result can be defended — which may be neither. Nothing here ranks the two
         methods in general; each episode is decided on its own acquisition evidence.
       </p>
-      {cardiacOutputComparisonScenarios.map((scenario) => (
+      {progressive ? (
+        <label>
+          Measurement comparison
+          <select
+            aria-label="Measurement comparison"
+            value={scenarioIndex}
+            onChange={(event) => setScenarioIndex(Number(event.target.value))}
+          >
+            {cardiacOutputComparisonScenarios.map((scenario, index) => (
+              <option key={scenario.id} value={index}>
+                Comparison {index + 1} of {cardiacOutputComparisonScenarios.length}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+      {(progressive
+        ? [cardiacOutputComparisonScenarios[scenarioIndex]]
+        : cardiacOutputComparisonScenarios
+      ).map((scenario) => (
         <ScenarioCard
           key={scenario.id}
           scenario={scenario}

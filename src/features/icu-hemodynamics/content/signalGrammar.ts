@@ -122,7 +122,7 @@ export const signalGrammarRows: readonly SignalGrammarRow[] = Object.freeze([
   {
     id: 'ventricular-shape',
     whatYouSee:
-      'A tall systolic peak, a diastole that dips to the floor and then rises, and no notch.',
+      'A tall systolic peak, low early diastolic pressure that rises during filling, and no notch.',
     locus: 'rv',
     shortlist: [
       'the tip is in the ventricle',
@@ -137,7 +137,8 @@ export const signalGrammarRows: readonly SignalGrammarRow[] = Object.freeze([
   },
   {
     id: 'arterial-shape',
-    whatYouSee: 'The same peak, but the floor steps up and a notch appears on the way down.',
+    whatYouSee:
+      'A similar systolic peak, a higher diastolic pressure, and a notch on the descending limb.',
     locus: 'pa',
     shortlist: ['confirmed pulmonary artery', 'the position every measurement starts from'],
     firstMove: 'Confirm it by the notch and the diastolic step-up, not by the insertion depth.',

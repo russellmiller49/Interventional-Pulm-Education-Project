@@ -1,6 +1,11 @@
 import { hemodynamicCaseById, normalCirculationParameters } from '../content/cases'
 import type { HemodynamicsSectionId } from '../content/sectionSpecs'
 import { icuHemodynamicsReducer } from './reducer'
+import {
+  pressureObservationKey,
+  catheterFlushBlocked,
+  flushReleaseReady,
+} from './pressureObservation'
 import { createInitialHemodynamicState } from './simulation'
 import { thermodilutionAcceptedAverage } from './thermodilution'
 import type {
@@ -30,6 +35,8 @@ export const WAVEFORM_RECOGNITION_CHECK = 'waveform-recognition'
 export const DYNAMIC_RESPONSE_CLASSIFIED_CHECK = 'dynamic-response-classified'
 export const DYNAMIC_RESPONSE_CORRECTED_CHECK = 'dynamic-response-corrected'
 export const FAST_FLUSH_CHECK = 'fast-flush'
+/** Evidence unique to this Learn reassessment; a correction click cannot supply it. */
+export const CURRENT_RESPONSE_RECHECKED = 'learn-current-response-rechecked'
 export const LEVEL_TOLERANCE_CM = 1
 
 export type StageGoal =
@@ -54,6 +61,16 @@ export function stageGoalMet(goal: StageGoal, state: HemodynamicSimulationState)
     case 'zeroed':
       return state.measurementSystem.zeroed
     case 'check':
+      if (goal.id === CURRENT_RESPONSE_RECHECKED) {
+        return (
+          !catheterFlushBlocked(state, 'pulmonary-artery') &&
+          flushReleaseReady(state) &&
+          state.measurementSystem.artifact === 'none' &&
+          checks.has(
+            `${CURRENT_RESPONSE_RECHECKED}:${pressureObservationKey(state, 'pulmonary-artery')}`,
+          )
+        )
+      }
       return checks.has(goal.id)
     case 'position': {
       if (state.catheter.targetPosition !== null) return false
@@ -98,7 +115,8 @@ const CHECK_WORDS: Readonly<Record<string, string>> = {
   [FAST_FLUSH_CHECK]: 'Run a fast flush on the pulmonary-artery line',
   [DYNAMIC_RESPONSE_CLASSIFIED_CHECK]: 'Read the flush response and say what it is',
   [DYNAMIC_RESPONSE_CORRECTED_CHECK]: 'Repair the line until the flush response is acceptable',
-  [WAVEFORM_RECOGNITION_CHECK]: 'Name five tracings in a row from their shape',
+  [WAVEFORM_RECOGNITION_CHECK]: 'Identify five tracings correctly in total',
+  [CURRENT_RESPONSE_RECHECKED]: 'Flush the corrected line again and identify the current response',
   [PA_RETURN_CHECK]: 'Say whether the pulmonary-artery tracing has come back',
   'waveform-confirmed-ra': 'Confirm the right atrium from its tracing',
   'waveform-confirmed-rv': 'Confirm the right ventricle from its tracing',
@@ -205,6 +223,12 @@ export function faultyLineState(seed = 510): HemodynamicSimulationState {
     { type: 'SET_ARTIFACT', artifact: 'underdamped' },
     { type: 'SET_CATHETER_POSITION', position: 'pa' },
   ])
+}
+
+/** Isolated teaching states. No physiology changes or application credit are introduced. */
+export function pressureDemonstrationState(topic: 'level' | 'zero' | 'scale' | 'response') {
+  if (topic === 'zero') return freshTeachingState(510)
+  return cleanState(510, 'pa')
 }
 
 /** The pressure-system transfer: a new patient, transducer low, line damped. */
@@ -393,6 +417,7 @@ const runtimes: Readonly<Record<HemodynamicsSectionId, SectionRuntime>> = {
       { type: 'check', id: FAST_FLUSH_CHECK },
       { type: 'check', id: DYNAMIC_RESPONSE_CLASSIFIED_CHECK },
       { type: 'check', id: DYNAMIC_RESPONSE_CORRECTED_CHECK },
+      { type: 'check', id: CURRENT_RESPONSE_RECHECKED },
     ],
     transferEntry: () => dampedLineState(611),
     transferGoals: [
@@ -400,6 +425,7 @@ const runtimes: Readonly<Record<HemodynamicsSectionId, SectionRuntime>> = {
       { type: 'check', id: FAST_FLUSH_CHECK },
       { type: 'check', id: DYNAMIC_RESPONSE_CLASSIFIED_CHECK },
       { type: 'check', id: DYNAMIC_RESPONSE_CORRECTED_CHECK },
+      { type: 'check', id: CURRENT_RESPONSE_RECHECKED },
     ],
     watch: ['papSystolic', 'papDiastolic', 'meanPap', 'pulsePressure'],
   },
@@ -409,15 +435,16 @@ const runtimes: Readonly<Record<HemodynamicsSectionId, SectionRuntime>> = {
     predictionEntry: () => cleanState(520, 'rv'),
     actGoals: [{ type: 'check', id: WAVEFORM_RECOGNITION_CHECK }],
     observeGoals: [],
-    transferEntry: () => cleanState(521, 'wedge'),
+    transferEntry: () =>
+      reduceAll(ventilatedWedgeState(521), [{ type: 'SET_CATHETER_POSITION', position: 'wedge' }]),
     transferGoals: [],
     watch: ['position'],
     walkPositions: ['ra', 'rv', 'pa', 'wedge'],
   },
   'waveform-components': {
     sectionId: 'waveform-components',
-    initial: () => cleanState(530, 'ra'),
-    actGoals: [{ type: 'frozen' }],
+    initial: () => reduceAll(cleanState(530, 'ra'), [{ type: 'TOGGLE_FREEZE' }]),
+    actGoals: [],
     observeGoals: [],
     transferEntry: null,
     transferGoals: [],

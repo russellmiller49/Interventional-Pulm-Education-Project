@@ -5,6 +5,7 @@ import { hemodynamicsStageLesson } from '../content/stageLessons'
 import {
   attributesText,
   clickPrimary,
+  advanceToPrediction,
   currentStepId,
   installDom,
   leakMatches,
@@ -54,8 +55,20 @@ describe('nothing answers a section before its prediction is committed (rendered
     const deny = hemodynamicsSectionSpec(sectionId).precommitDenyPatterns
     mountSection(sectionId)
     const atFirstStep = `${scannableText()} ${attributesText()}`
-    for (const match of leakMatches(atFirstStep, deny))
-      findings.push(`${sectionId} · first step: /${match}/`)
+    // Prerequisite demonstrations may explain concepts; independent-item surfaces must not identify the active answer.
+    if (
+      ![
+        'why-measure',
+        'pressure-system',
+        'waveform-interpretation',
+        'waveform-components',
+        'catheter-advancement',
+        'pawp-capture',
+      ].includes(sectionId)
+    ) {
+      for (const match of leakMatches(atFirstStep, deny))
+        findings.push(`${sectionId} · first step: /${match}/`)
+    }
 
     // Reach the prediction the way a learner does.
     const first = lesson.steps[0]
@@ -65,6 +78,7 @@ describe('nothing answers a section before its prediction is committed (rendered
     } else if (first.interaction.kind === 'read') {
       clickPrimary()
     } else if (first.interaction.kind === 'provenance-drill') {
+      while (document.querySelector('[data-metric-reading]')) clickPrimary()
       // The drill is the Recognize work; the scan reaches the prediction through it.
       const selects = document.querySelectorAll<HTMLSelectElement>(
         '[data-surface="provenance-drill"] select',
@@ -85,6 +99,7 @@ describe('nothing answers a section before its prediction is committed (rendered
       fireEvent.click(commit)
       clickPrimary()
     }
+    advanceToPrediction(sectionId)
     act(() => {
       jest.advanceTimersByTime(10)
     })

@@ -1,4 +1,5 @@
 import { clamp, measurementMeetsCriterion, roundTo } from './calculations'
+import { catheterFlushBlocked } from './pressureObservation'
 import {
   advanceHemodynamicSimulation,
   catheterTransitionDurationSeconds,
@@ -32,7 +33,13 @@ const HD08_PROCEDURE_MILESTONES = new Set([
 
 function refreshMeasurements(state: HemodynamicSimulationState): HemodynamicSimulationState {
   const measurements = deriveHemodynamicMeasurements(state.parameters, state.measurementSystem)
-  return { ...state, measurements }
+  return {
+    ...state,
+    measurements,
+    signalValidationChecks: state.signalValidationChecks.filter(
+      (check) => !check.startsWith('learn-current-response-rechecked:'),
+    ),
+  }
 }
 
 /**
@@ -354,6 +361,13 @@ export function icuHemodynamicsReducer(
         }),
       )
     case 'FAST_FLUSH': {
+      if (catheterFlushBlocked(state, action.lineType)) {
+        return {
+          ...state,
+          responseMessage:
+            'Catheter flush blocked: stop movement and confirm a safe waveform with the balloon deflated. Never flush a wedged catheter.',
+        }
+      }
       const artifact = state.measurementSystem.artifact
       const dampingRatio = state.measurementSystem.dampingRatio
       const finding =
@@ -371,7 +385,14 @@ export function icuHemodynamicsReducer(
           fastFlushLineType: action.lineType,
           lastFastFlushFinding: finding,
         },
-        signalValidationChecks: [...new Set([...state.signalValidationChecks, 'fast-flush'])],
+        signalValidationChecks: [
+          ...new Set([
+            ...state.signalValidationChecks.filter(
+              (check) => !check.startsWith('learn-current-response-rechecked:'),
+            ),
+            'fast-flush',
+          ]),
+        ],
         responseMessage: finding,
       })
     }

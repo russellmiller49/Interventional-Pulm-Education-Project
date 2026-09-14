@@ -40,17 +40,17 @@ export interface QuestionSort {
 
 export const HEMODYNAMICS_QUESTION_SORT: QuestionSort = {
   prompt:
-    'Seven questions from the bedside of a patient in shock. For each one, say where its answer comes from: the catheter measures it, it is calculated from what the catheter measures, or the catheter cannot answer it on its own.',
+    'Seven questions from the bedside of a patient in shock. For each one, say where its answer comes from: a clinical measurement, a calculated hemodynamic variable, or a question the catheter cannot answer on its own.',
   origins: [
     {
       id: 'measured',
-      label: 'The catheter measures it',
+      label: 'Clinical measurement',
       definition:
-        'A pressure read where the tip sits, a flow taken from a temperature curve, or a blood sample drawn from the tip.',
+        'Pressure transduced from a catheter port or cardiac output obtained by a defined measurement method. The raw temperature signal and the method-derived cardiac output are distinct. A blood sample requires laboratory analysis.',
     },
     {
       id: 'calculated',
-      label: 'It is calculated from what the catheter measures',
+      label: 'Calculated hemodynamic variable',
       definition:
         'An equation over measured values. It inherits every doubt about the numbers that went into it.',
     },
@@ -80,7 +80,7 @@ export const HEMODYNAMICS_QUESTION_SORT: QuestionSort = {
       question: 'How much blood is the heart pumping each minute?',
       origin: 'measured',
       rationale:
-        'A cold injection upstream and a temperature curve at the tip measure flow. The curve, not the number, is what the catheter produces.',
+        'Thermodilution derives cardiac output from the temperature–time curve and injection information. It is clinically called a cardiac output measurement; it is not a directly sensed flow signal. This row uses that clinical measurement category.',
     },
     {
       id: 'vascular-resistance',
@@ -94,7 +94,7 @@ export const HEMODYNAMICS_QUESTION_SORT: QuestionSort = {
       question: 'How much oxygen is reaching the tissues each minute?',
       origin: 'calculated',
       rationale:
-        'Flow multiplied by the oxygen content of arterial blood. The flow and the sample are measured; the delivery is arithmetic.',
+        'Oxygen delivery is calculated from cardiac output and arterial oxygen content. Arterial content is calculated using hemoglobin, saturation and dissolved oxygen; a distal PAC sample instead provides mixed venous blood for laboratory analysis.',
     },
     {
       id: 'fluid-responsiveness',
@@ -108,7 +108,7 @@ export const HEMODYNAMICS_QUESTION_SORT: QuestionSort = {
       question: 'Why is the pressure low?',
       origin: 'beyond',
       rationale:
-        'A pattern of pressures and flow supports a mechanism. The bedside examination, the history and the echo decide it.',
+        'A pattern of pressures and flow supports a mechanism. The history, examination, perfusion findings and echocardiography help establish the clinical interpretation.',
     },
   ],
   sourceIds: ['pac-review-2014', 'esicm-shock-2025', 'pac-derived-part-2-2021'],

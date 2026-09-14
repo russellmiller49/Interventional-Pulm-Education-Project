@@ -98,7 +98,7 @@ describe('the items across the set', () => {
   it('name a discrimination, not an action, in every objective', () => {
     for (const sectionId of hemodynamicsSectionIds) {
       const spec = hemodynamicsSectionSpec(sectionId)
-      expect(spec.objective).toMatch(/^(Decide|Distinguish|Name)/)
+      expect(spec.objective).toMatch(/^(Decide|Distinguish|Name|Identify)/)
     }
   })
 })

@@ -260,7 +260,7 @@ describe('50 Hz circulation, waveforms, and measurement system', () => {
     state = icuHemodynamicsReducer(state, { type: 'ZERO_TRANSDUCER' })
     state = icuHemodynamicsReducer(state, {
       type: 'FAST_FLUSH',
-      lineType: 'pulmonary-artery',
+      lineType: 'systemic-arterial',
     })
     state = icuHemodynamicsReducer(state, {
       type: 'VALIDATE_SIGNAL',

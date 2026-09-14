@@ -7,7 +7,12 @@ import {
   type StageStepLocation,
 } from '@/features/learning-module/stage/stageModel'
 
-import { sectionRuntime, type SectionRuntime, type StageGoal } from '../engine/stageRuntime'
+import {
+  sectionRuntime,
+  pressureDemonstrationState,
+  type SectionRuntime,
+  type StageGoal,
+} from '../engine/stageRuntime'
 import type {
   CatheterPosition,
   FastFlushLineType,
@@ -45,6 +50,13 @@ export type StageSurface =
   | 'wedge'
   | 'thermodilution'
   | 'recognition'
+  | 'level-demo'
+  | 'zero-demo'
+  | 'scale-demo'
+  | 'response-demo'
+  | 'component-demo'
+  | 'component-identification'
+  | 'question-trace'
   | 'freeze'
   | 'derived'
   | 'capstone'
@@ -61,6 +73,19 @@ export type WedgeCommitmentKind = 'plausibility' | 'return'
  * a drawing cannot show and a model can.
  */
 export type StageAnatomy = 'none' | 'heart'
+
+export type IntroTeaching =
+  | 'orientation'
+  | 'sort-example'
+  | 'level'
+  | 'zero'
+  | 'scale'
+  | 'response'
+  | 'normal-walk'
+  | 'rv-pa'
+  | 'components'
+  | 'abnormal'
+  | 'attempt'
 
 export type HemodynamicsStageInteraction =
   | { readonly kind: 'read' }
@@ -88,6 +113,7 @@ export type HemodynamicsStageInteraction =
   | { readonly kind: 'derived-workbench' }
   | { readonly kind: 'derived-transfer' }
   | { readonly kind: 'disagreement' }
+  | { readonly kind: 'component-identification'; readonly mode: 'guided' | 'independent' }
 
 export interface HemodynamicsStageStep extends StageStepBase<HemodynamicsStageInteraction> {
   /** The control surface the simulator pane opens beside the monitor for this step. */
@@ -102,6 +128,8 @@ export interface HemodynamicsStageStep extends StageStepBase<HemodynamicsStageIn
   readonly flushLine: FastFlushLineType
   /** The anatomy surface the simulator pane shows beneath the docks for this step. */
   readonly anatomy: StageAnatomy
+  readonly teaching?: IntroTeaching
+  readonly questionTraceId?: string
 }
 
 export interface HemodynamicsStageLesson extends StageLessonBase<HemodynamicsStageStep> {
@@ -132,6 +160,8 @@ interface StepInput {
   readonly flushLine?: FastFlushLineType
   readonly anatomy?: StageAnatomy
   readonly expectedResponse?: readonly string[]
+  readonly teaching?: IntroTeaching
+  readonly questionTraceId?: string
 }
 
 function buildSteps(
@@ -160,6 +190,8 @@ function buildSteps(
     flushLine: input.flushLine ?? 'pulmonary-artery',
     anatomy: input.anatomy ?? 'none',
     expectedResponse: input.expectedResponse,
+    teaching: input.teaching,
+    questionTraceId: input.questionTraceId,
   }))
 }
 
@@ -171,7 +203,7 @@ function prediction(
 }
 
 const CONTINUE = 'Continue'
-const COMMIT = 'Commit this answer'
+const COMMIT = 'Check answer'
 
 /*
  * The landmarks a step points at, in the words the surface carries.
@@ -199,12 +231,12 @@ const ON_SIMULATOR = {
 
 const IN_TEACHING = {
   adds: 'What this section adds',
-  table: 'The one table',
+  table: 'Waveform patterns and common causes',
 } as const
 
 const commitOnCard = {
   alsoPane: 'steps',
-  alsoLandmark: 'Commit this answer, on this card',
+  alsoLandmark: 'Check answer, on this card',
 } as const
 
 /* ------------------------------------------------------------------ *
@@ -218,40 +250,51 @@ function whyMeasureSteps(): readonly StepInput[] {
       phase: 'recognize',
       title: 'Why put a line in at all?',
       instruction:
-        'Look at the running monitor and the catheter map beneath it. A catheter has been threaded through the right heart so that pressures can be read from inside the circulation; read what that buys, and what it does not.',
+        'Read where the arterial and PAC signals originate, then follow the worked pressure-versus-flow example. This pathway focuses on invasive pressure and PAC measurements in their clinical context.',
       lookIn: {
-        pane: 'simulator',
-        landmark: 'the monitor and the catheter map beneath it',
-        alsoPane: 'teaching',
-        alsoLandmark: 'What this section is for',
+        pane: 'teaching',
+        landmark: 'Measurements and their origins',
       },
       rationale:
         'Every later section makes one of these numbers trustworthy. Knowing what a number can and cannot say is what makes the effort worth it.',
       actionLabel: CONTINUE,
       interaction: { kind: 'read' },
+      teaching: 'orientation',
     },
     {
       phase: 'predict',
       title: 'What does a trustworthy number establish?',
-      instruction: 'Read the situation and commit to one answer before the reasoning is shown.',
+      instruction: 'Read the text vignette and choose what the arterial pressure establishes.',
       lookIn: IN_STEPS.choices,
       actionLabel: COMMIT,
       interaction: prediction(items.prediction, 0),
+      teaching: 'attempt',
+    },
+    {
+      phase: 'act',
+      title: 'How to use the measurement categories',
+      instruction:
+        'Read the category definitions and the worked example before sorting the independent set. The worked row is not counted.',
+      lookIn: { pane: 'teaching', landmark: 'A worked measurement classification' },
+      actionLabel: CONTINUE,
+      interaction: { kind: 'read' },
+      teaching: 'sort-example',
     },
     {
       phase: 'act',
       title: 'Where does each answer come from?',
       instruction:
-        'Seven bedside questions. Attribute each to the catheter measuring it, a calculation over what it measures, or something the catheter cannot say on its own — then commit the set.',
+        'Classify seven independent questions as clinical measurements, calculated variables, or questions requiring additional clinical context. Measured cardiac output describes a measurement method, not a directly sensed flow signal.',
       lookIn: { pane: 'steps', landmark: 'the seven questions below' },
-      actionLabel: 'Commit the set',
+      actionLabel: 'Check the set',
       interaction: { kind: 'sort', sort: HEMODYNAMICS_QUESTION_SORT },
+      teaching: 'attempt',
     },
     {
       phase: 'explain',
       title: 'Read, measured, calculated, inferred',
       instruction:
-        'The catheter map lights every stop a measured value comes from. Read the reasoning behind your prediction, then carry one sentence forward: a pressure is a force, not a flow, and not a cause.',
+        'Review your reasoning. Pressure is force per unit area; flow is volume per unit time. A valid pressure alone does not establish cardiac output or the cause of hypotension.',
       lookIn: {
         pane: 'steps',
         landmark: 'the verdict below',
@@ -269,6 +312,7 @@ function whyMeasureSteps(): readonly StepInput[] {
       lookIn: IN_STEPS.choices,
       actionLabel: COMMIT,
       interaction: prediction(items.transfer, 1),
+      teaching: 'attempt',
     },
   ]
 }
@@ -280,7 +324,7 @@ function pressureSystemSteps(runtime: SectionRuntime): readonly StepInput[] {
       phase: 'recognize',
       title: 'A line that can be trusted',
       instruction:
-        'The line is level, zeroed, on a scale that fits, and it settles crisply after a flush. Read the four things to check on the line in the walk card below, then try the level control in the dock under the monitor: the whole tracing moves, and nothing changes shape.',
+        'The line is level, zeroed, on a scale that fits, and it settles crisply after a flush. Follow the measurement chain below. The next demonstrations change one setting at a time against this clean reference.',
       lookIn: {
         ...IN_STEPS.walkCard,
         alsoPane: 'simulator',
@@ -292,6 +336,42 @@ function pressureSystemSteps(runtime: SectionRuntime): readonly StepInput[] {
       interaction: { kind: 'walk', positions: ['pa'], stops: ['line'] },
       surface: 'line',
     },
+    ...(['level', 'zero', 'scale', 'response'] as const).map(
+      (topic): StepInput => ({
+        phase: 'recognize',
+        title: {
+          level: 'Leveling: a height reference',
+          zero: 'Zeroing: an atmospheric reference',
+          scale: 'Arterial display scale',
+          response: 'Three dynamic responses',
+        }[topic],
+        instruction: {
+          level:
+            'A clean baseline is loaded. Use the transducer-height control and compare the actual readout with the hydrostatic illustration. Only height changes in this demonstration.',
+          zero: 'The line is at reference height with normal damping; its atmospheric zero is unset. Use the simplified zero control and observe the reference change. Zeroing does not move the transducer.',
+          scale:
+            'A clean baseline is loaded again. Change the arterial display scale and compare the drawing with the arterial pressure readout. The measured pressure is unchanged.',
+          response:
+            'Compare the labeled acceptable, overdamped, and underdamped release examples on the same PAC pressure scale. These are reference demonstrations, not your classification attempt.',
+        }[topic],
+        lookIn: {
+          pane: 'simulator',
+          landmark: topic === 'response' ? 'Reference flush responses' : 'The line',
+          alsoPane: 'teaching',
+          alsoLandmark: {
+            level: 'Leveling',
+            zero: 'Zeroing',
+            scale: 'Display scale',
+            response: 'Dynamic response',
+          }[topic],
+        },
+        actionLabel: CONTINUE,
+        interaction: { kind: 'read' },
+        surface: `${topic}-demo` as StageSurface,
+        entryState: () => pressureDemonstrationState(topic),
+        teaching: topic,
+      }),
+    ),
     {
       phase: 'predict',
       title: 'What is this number carrying?',
@@ -301,6 +381,7 @@ function pressureSystemSteps(runtime: SectionRuntime): readonly StepInput[] {
       actionLabel: COMMIT,
       interaction: prediction(items.prediction, 0),
       entryState: runtime.predictionEntry,
+      teaching: 'attempt',
       surface: 'line',
     },
     {
@@ -317,7 +398,7 @@ function pressureSystemSteps(runtime: SectionRuntime): readonly StepInput[] {
       phase: 'observe',
       title: 'Read the response',
       instruction:
-        'Now the other axis. Run a fast flush on the pulmonary-artery line, read how it settles, say what it is, and repair the line until it settles acceptably.',
+        'Confirm a safe catheter position with the balloon down. Flush the PAC pressure channel, classify the response, apply the simulated correction, then flush again and classify the new response.',
       lookIn: { pane: 'simulator', landmark: ON_SIMULATOR.flush },
       actionLabel: CONTINUE,
       interaction: {
@@ -330,7 +411,7 @@ function pressureSystemSteps(runtime: SectionRuntime): readonly StepInput[] {
     },
     {
       phase: 'explain',
-      title: 'Two axes, two repairs',
+      title: 'Reference errors versus dynamic-response errors',
       instruction:
         'Read the reasoning and what changed, then the rows this section fills in. Then try the two stories: a colleague reaches for the tempting axis, you predict what happens, and the simulation shows you.',
       lookIn: {
@@ -352,13 +433,14 @@ function pressureSystemSteps(runtime: SectionRuntime): readonly StepInput[] {
       actionLabel: COMMIT,
       interaction: prediction(items.transfer, 1),
       entryState: runtime.transferEntry ?? undefined,
+      teaching: 'attempt',
       surface: 'line',
     },
     {
       phase: 'transfer',
       title: 'Repair both',
       instruction:
-        'Do it: set the reference, then run the flush, read it, and repair the response.',
+        'Set the reference, flush and classify the response, apply the simulated correction, then repeat the flush to check the current line.',
       lookIn: {
         pane: 'simulator',
         landmark: 'The line and The flush check, the docks under the monitor',
@@ -387,7 +469,7 @@ function waveformInterpretationSteps(runtime: SectionRuntime): readonly StepInpu
       phase: 'recognize',
       title: 'Walk the four places',
       instruction:
-        'Follow the tip along the catheter map. At each stop the monitor shows the tracing that place writes: read the shape on the monitor, and the checklist and the one thing to try in the walk card.',
+        'Follow the tip along the catheter map. At each stop the monitor shows the tracing that place writes: compare the live shape with the normal reference for the same chamber. The reference axis is shared across positions.',
       lookIn: {
         ...IN_STEPS.walkCard,
         alsoPane: 'simulator',
@@ -402,25 +484,37 @@ function waveformInterpretationSteps(runtime: SectionRuntime): readonly StepInpu
         stops: heartRouteStopIds,
       },
       stops: [],
+      teaching: 'normal-walk',
+    },
+    {
+      phase: 'recognize',
+      title: 'RV and PA: compare diastole',
+      instruction:
+        'Compare the reference examples at one pressure scale. Similar systolic peaks do not identify the chamber: inspect diastolic pressure and the valve-closure notch.',
+      lookIn: { pane: 'teaching', landmark: 'Right ventricle versus pulmonary artery' },
+      actionLabel: CONTINUE,
+      interaction: { kind: 'read' },
+      teaching: 'rv-pa',
     },
     {
       phase: 'predict',
       title: 'Where is the tip?',
       instruction:
-        'The tracing is on the monitor with its chamber label covered. Choose the place on the catheter map, then commit.',
+        'The tracing is on the monitor with its chamber label covered. Choose the place on the catheter map, then check your answer.',
       lookIn: { pane: 'simulator', landmark: ON_SIMULATOR.pins, ...commitOnCard },
       actionLabel: COMMIT,
       interaction: prediction(items.prediction, 0),
       entryState: runtime.predictionEntry,
       stops: [],
       chamberLabel: 'withheld',
+      teaching: 'attempt',
     },
     {
       phase: 'act',
-      title: 'Name five in a row',
+      title: 'Identify five tracings correctly',
       instruction:
-        'A run of tracings from the reference, in a set order. Name each from its shape; the step is done when five are named in a row.',
-      lookIn: { pane: 'simulator', landmark: 'Name the tracing, under the monitor' },
+        'Identify the question tracing from its shape. Work toward five correct responses in total; errors do not reset the count. Repeated examples are labeled as repeated practice.',
+      lookIn: { pane: 'simulator', landmark: 'Name the tracing' },
       actionLabel: CONTINUE,
       interaction: { kind: 'simulator-task', goals: runtime.actGoals, round: 0 },
       surface: 'recognition',
@@ -429,27 +523,28 @@ function waveformInterpretationSteps(runtime: SectionRuntime): readonly StepInpu
       phase: 'explain',
       title: 'The shape names the place',
       instruction:
-        'Read the three rows of the table this section fills in, and the one distinction that trips most people: the ventricle and the artery share a peak and differ in their floor.',
+        'Read the three rows of the table this section fills in, and the one distinction that trips most people: the ventricle and the artery can share a systolic peak but differ in diastolic pressure and the notch.',
       lookIn: {
         pane: 'teaching',
-        landmark: IN_TEACHING.table,
-        alsoPane: 'steps',
-        alsoLandmark: 'the ventricle and the artery, side by side',
+        landmark:
+          'Right ventricle versus pulmonary artery, then Waveform patterns and common causes',
       },
       actionLabel: CONTINUE,
       interaction: { kind: 'explain', round: 0 },
+      teaching: 'rv-pa',
     },
     {
       phase: 'transfer',
-      title: 'A tracing described, not shown',
+      title: 'New visual application',
       instruction:
-        'No picture this time — a tracing described by its timing against the ECG. Choose the place on the catheter map and commit.',
+        'A new model example has faster breathing and higher positive-pressure support. Inspect the PAC tracing and its ECG timing, then select its origin on the map. The chamber name remains withheld until you answer.',
       lookIn: { pane: 'simulator', landmark: ON_SIMULATOR.pins, ...commitOnCard },
       actionLabel: COMMIT,
       interaction: prediction(items.transfer, 1),
       entryState: runtime.transferEntry ?? undefined,
       stops: [],
       chamberLabel: 'withheld',
+      teaching: 'attempt',
     },
     {
       phase: 'transfer',
@@ -463,74 +558,97 @@ function waveformInterpretationSteps(runtime: SectionRuntime): readonly StepInpu
   ]
 }
 
-function waveformComponentsSteps(runtime: SectionRuntime): readonly StepInput[] {
+function waveformComponentsSteps(): readonly StepInput[] {
   const items = hemodynamicsSectionItems('waveform-components')
   return [
     {
       phase: 'recognize',
-      title: 'The waves inside a named place',
+      title: 'Atrial waves and descents',
       instruction:
-        'The tip is in the right atrium on a trusted line. Read what this section adds, then look at the tracing: three waves and two descents, each timed against the ECG.',
-      lookIn: {
-        pane: 'teaching',
-        landmark: IN_TEACHING.adds,
-        alsoPane: 'simulator',
-        alsoLandmark: 'the tracing on the monitor',
-      },
-      rationale:
-        'A wave can only be read once its place and its line are certain; that is the order this section keeps.',
+        'Study the frozen normal right-atrial reference with its ECG. Select each component to read its timing and mechanism. This is a labeled demonstration; viewing it does not count as identifying a component.',
+      lookIn: { pane: 'simulator', landmark: 'Normal atrial components' },
       actionLabel: CONTINUE,
       interaction: { kind: 'read' },
-      surface: 'freeze',
+      surface: 'component-demo',
+      teaching: 'components',
+    },
+    {
+      phase: 'act',
+      title: 'Guided component identification',
+      instruction:
+        'For each named component, select the numbered region on the frozen tracing. The region choices also describe timing against the ECG. Feedback follows each selection; a retry after feedback is assisted.',
+      lookIn: { pane: 'simulator', landmark: 'Identify the atrial component' },
+      actionLabel: CONTINUE,
+      interaction: { kind: 'component-identification', mode: 'guided' },
+      surface: 'component-identification',
+      teaching: 'attempt',
+    },
+    {
+      phase: 'act',
+      title: 'Practice with renumbered components',
+      instruction:
+        'Repeat identification with a changed mean pressure and renumbered regions, using the same normal atrial morphology. This is additional practice, not an independent transfer specimen. Identify all five components. First answers and assisted retries are recorded separately in this session.',
+      lookIn: { pane: 'simulator', landmark: 'Identify the atrial component' },
+      actionLabel: CONTINUE,
+      interaction: { kind: 'component-identification', mode: 'independent' },
+      surface: 'component-identification',
+      teaching: 'attempt',
+    },
+    {
+      phase: 'recognize',
+      title: 'When the atrial contour changes',
+      instruction:
+        'Compare the existing abnormal reference patterns in a known chamber. Use the ECG and the affected wave or descent to distinguish mechanisms. A pattern supports a mechanism in context; it does not establish a diagnosis alone.',
+      lookIn: { pane: 'teaching', landmark: 'Contrasting abnormal atrial patterns' },
+      actionLabel: CONTINUE,
+      interaction: { kind: 'read' },
+      teaching: 'abnormal',
     },
     {
       phase: 'predict',
       title: 'What made this wave?',
       instruction:
-        'An abnormal wave in a confirmed tracing. Commit to the mechanism before the reasoning is shown.',
-      lookIn: IN_STEPS.choices,
+        'Use the right-atrial question trace and the patient vignette to select a mechanism. This is an authored waveform example; the live reference patient is not being altered to produce it.',
+      lookIn: { pane: 'steps', landmark: 'the question trace and answer choices below' },
       actionLabel: COMMIT,
       interaction: prediction(items.prediction, 0),
-      surface: 'freeze',
-    },
-    {
-      phase: 'act',
-      title: 'Freeze and find the five',
-      instruction:
-        'Freeze the live tracing and find each component against the ECG: the a wave after the P wave, the c wave after the QRS, the v wave at the end of the T wave, and the two descents between them.',
-      lookIn: { pane: 'simulator', landmark: ON_SIMULATOR.tracing },
-      actionLabel: CONTINUE,
-      interaction: { kind: 'simulator-task', goals: runtime.actGoals, round: 0 },
-      surface: 'freeze',
+      surface: 'question-trace',
+      questionTraceId: 'ra-tricuspid-regurgitation',
+      teaching: 'attempt',
     },
     {
       phase: 'explain',
-      title: 'What each wave can say',
+      title: 'Interpret the component in context',
       instruction:
-        'Read the patterns the waves can make, one mechanism at a time. Each pattern supports a mechanism; the bedside and the echo decide it.',
-      lookIn: { pane: 'teaching', landmark: 'The patterns the waves can make' },
+        'Review the explanation and the revealed landmarks. Decide which wave changed before inferring a mechanism.',
+      lookIn: IN_STEPS.verdict,
       actionLabel: CONTINUE,
       interaction: { kind: 'explain', round: 0 },
-      surface: 'freeze',
+      surface: 'question-trace',
+      questionTraceId: 'ra-tricuspid-regurgitation',
     },
     {
       phase: 'transfer',
       title: 'A different wave, a different patient',
-      instruction: 'Another confirmed tracing with one component changed. Commit to the mechanism.',
-      lookIn: IN_STEPS.choices,
+      instruction:
+        'Read the new vignette and right-atrial question trace. Select the mechanism that fits the changed descent and the clinical context.',
+      lookIn: { pane: 'steps', landmark: 'the question trace and answer choices below' },
       actionLabel: COMMIT,
       interaction: prediction(items.transfer, 1),
-      surface: 'freeze',
+      surface: 'question-trace',
+      questionTraceId: 'ra-tamponade',
+      teaching: 'attempt',
     },
     {
       phase: 'transfer',
       title: 'What carried over',
       instruction:
-        'Read the outcome. The habit to carry forward: which wave, in which chamber, against which part of the ECG — and only then which mechanism.',
+        'Review the explanation. Identify the chamber, the component, and its ECG timing before interpreting the mechanism.',
       lookIn: IN_STEPS.verdict,
       actionLabel: 'Finish the section',
       interaction: { kind: 'explain', round: 1 },
-      surface: 'freeze',
+      surface: 'question-trace',
+      questionTraceId: 'ra-tamponade',
     },
   ]
 }
@@ -598,7 +716,10 @@ function catheterAdvancementSteps(runtime: SectionRuntime): readonly StepInput[]
       title: 'Position from the shape, permission from the list',
       instruction:
         'Read the rows this section fills in, then When to stop: the conditions the simulation cannot show you — resistance, ectopy, a patient who changes while the tracing does not.',
-      lookIn: { pane: 'teaching', landmark: 'The one table, then When to stop' },
+      lookIn: {
+        pane: 'teaching',
+        landmark: 'Waveform patterns and common causes, then When to stop',
+      },
       actionLabel: CONTINUE,
       interaction: { kind: 'explain', round: 0 },
       surface: 'tip',
@@ -651,7 +772,7 @@ function pawpCaptureSteps(runtime: SectionRuntime): readonly StepInput[] {
       phase: 'recognize',
       title: 'Listening past the tip',
       instruction:
-        'The tip is in a confirmed pulmonary artery. Read what this section adds and the wedge stop, lit on the catheter map: what the balloon does, what the tracing becomes, and what has to be true when it is over.',
+        'The tip is in a confirmed pulmonary artery. Read the purpose and acquisition sequence below: what the balloon does, what the tracing becomes, and what has to be true when it is over.',
       lookIn: {
         pane: 'teaching',
         landmark: 'What this section adds, then the wedge stop card',
@@ -715,7 +836,7 @@ function pawpCaptureSteps(runtime: SectionRuntime): readonly StepInput[] {
         'Read the rows this section fills in and Which control, if any. Then try the story: a colleague adds balloon volume to a wedge that does not look right, and the simulation shows what it does with that.',
       lookIn: {
         pane: 'teaching',
-        landmark: 'The one table, then Which control, if any',
+        landmark: 'Waveform patterns and common causes, then Which control, if any',
         alsoPane: 'steps',
         alsoLandmark: 'the story below',
       },
@@ -773,7 +894,7 @@ function thermodilutionSteps(runtime: SectionRuntime): readonly StepInput[] {
       phase: 'recognize',
       title: 'A curve, then a number',
       instruction:
-        'Cold injectate goes in at the atrium and a thermistor at the tip watches the temperature fall and recover. The catheter map marks both. Read what this section adds: flow is measured, and every measurement has a technique that shows in what it produces.',
+        'Cold injectate goes in at the atrium and a thermistor at the tip watches the temperature fall and recover. The acquisition account identifies both locations: flow is measured, and every measurement has a technique that shows in what it produces.',
       lookIn: {
         pane: 'teaching',
         landmark: IN_TEACHING.adds,
@@ -827,7 +948,7 @@ function thermodilutionSteps(runtime: SectionRuntime): readonly StepInput[] {
         'Read the row this section fills in and the three ways to a flow number — thermodilution, direct Fick, and Fick with a substituted uptake — and what each can and cannot say.',
       lookIn: {
         pane: 'teaching',
-        landmark: 'The one table, then The three ways to a flow number',
+        landmark: 'Waveform patterns and common causes, then The three ways to a flow number',
       },
       actionLabel: CONTINUE,
       interaction: { kind: 'explain', round: 0 },
@@ -918,7 +1039,8 @@ function derivedSteps(): readonly StepInput[] {
         'Read the row this section fills in and the records behind every calculated value on the screen: the formula, its inputs, its units, and the boundary on what it can say.',
       lookIn: {
         pane: 'teaching',
-        landmark: 'The one table, then The records behind every calculated value',
+        landmark:
+          'Waveform patterns and common causes, then The records behind every calculated value',
       },
       actionLabel: CONTINUE,
       interaction: { kind: 'explain', round: 0 },
@@ -967,7 +1089,7 @@ function capstoneSteps(runtime: SectionRuntime): readonly StepInput[] {
       phase: 'recognize',
       title: 'The screen changed. The patient did not.',
       instruction:
-        'One patient, one hour on. The patient looks the same as an hour ago; the screen does not. Look at the monitor and the five settings in the strip above the panes, then read what this section adds: nothing new is taught here. Every row you need is already in the table.',
+        'One patient, one hour on. The patient looks the same as an hour ago; the screen does not. Read the patient brief and the displayed signals: nothing new is taught here. Every row you need is already in the table.',
       lookIn: {
         pane: 'simulator',
         landmark: ON_SIMULATOR.monitor,
@@ -1128,7 +1250,7 @@ export function hemodynamicsStageLessons(): readonly HemodynamicsStageLesson[] {
   return hemodynamicsSectionIds.map((sectionId) => hemodynamicsStageLesson(sectionId))
 }
 
-/** The pre-commit surfaces of a lesson, as authored text: everything at or before the prediction. */
+/** Prerequisite teaching is allowed in the four introductory lessons; the active item is not disclosed. */
 export function precommitAuthoredSurfaces(
   lesson: HemodynamicsStageLesson,
 ): readonly { readonly where: string; readonly text: string }[] {
@@ -1138,8 +1260,15 @@ export function precommitAuthoredSurfaces(
     { where: 'new concept', text: lesson.spec.newConcept },
     { where: 'increment', text: lesson.spec.incrementSentence },
   ]
+  const teachingFirst = [
+    'why-measure',
+    'pressure-system',
+    'waveform-interpretation',
+    'waveform-components',
+  ].includes(lesson.spec.id)
   lesson.steps.forEach((step, index) => {
-    if (index > lesson.predictionStepIndex && lesson.predictionStepIndex >= 0) return
+    if (teachingFirst ? index !== lesson.predictionStepIndex : index > lesson.predictionStepIndex)
+      return
     surfaces.push(
       { where: `step ${step.ordinal} title`, text: step.title },
       { where: `step ${step.ordinal} instruction`, text: step.instruction },
@@ -1176,7 +1305,16 @@ export function validateHemodynamicsStageLessons(): readonly string[] {
       const stepWhere = `${where} step ${step.ordinal}`
       errors.push(
         ...hemodynamicsLearnerCopyErrors(`${stepWhere} title`, step.title),
-        ...hemodynamicsLearnerCopyErrors(`${stepWhere} instruction`, step.instruction),
+        ...hemodynamicsLearnerCopyErrors(
+          `${stepWhere} instruction`,
+          step.instruction,
+          step.surface === 'recognition'
+            ? {
+                learnerCopyOverrideReason:
+                  'Correct describes the existing cumulative correct-response rule; it is not a clinical competence claim.',
+              }
+            : {},
+        ),
         ...hemodynamicsLearnerCopyErrors(`${stepWhere} action`, step.actionLabel),
       )
       if (step.rationale) {

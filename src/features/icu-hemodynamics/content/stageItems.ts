@@ -67,9 +67,9 @@ const whyMeasure: HemodynamicsSectionItems = {
       {
         id: 'driving-pressure-only',
         label:
-          'That the push behind the blood is low right now — not how much is flowing, nor why.',
+          'That arterial pressure is low at the measurement site, without establishing cardiac output or cause.',
         rationale:
-          'A pressure is a force, not a flow. It says how hard blood is being pushed, not how much is moving or what is causing the fall.',
+          'Pressure is force per unit area; flow is volume per unit time. A valid low arterial pressure does not distinguish reduced cardiac output from reduced vascular resistance or establish the cause.',
         plausibility: 'best',
       },
       {
@@ -89,7 +89,7 @@ const whyMeasure: HemodynamicsSectionItems = {
     ],
     correctChoiceIds: ['driving-pressure-only'],
     explanation:
-      'A trustworthy pressure answers one question well: how hard is blood being pushed at this moment. Why it is low, whether more volume would help, and how much is flowing are questions it can only support, which is why a catheter that also measures flow and the pressures inside the right heart is placed at all.',
+      'A valid arterial pressure establishes pressure at the measurement site. Cardiac output and additional clinical context help interpret it. A low pressure alone neither establishes fluid benefit nor mandates a pulmonary-artery catheter or a specific treatment.',
     evidenceIds: orientationEvidence,
     reviewStatus: 'draft',
   }),
@@ -101,14 +101,14 @@ const whyMeasure: HemodynamicsSectionItems = {
     contextRequirement: 'patient',
     clinicalContextId: 'why-measure-pa-catheter',
     transferVariantId: 'why-measure-what-the-catheter-measures',
-    stem: 'A pulmonary-artery catheter has been placed in a patient in shock, and its tracings are trustworthy. Which of these does the catheter measure, rather than calculate or infer?',
+    stem: 'A pulmonary-artery catheter has been placed in a patient in shock, and its tracings are trustworthy. Which set correctly distinguishes the catheter signals and samples from their downstream interpretation?',
     choices: [
       {
         id: 'measures-pressures-flow-samples',
         label:
-          'The pressures where its tip sits, a temperature curve that gives flow, and the oxygen content of blood drawn from the tip.',
+          'Transduced pressures, a temperature–time curve used to derive cardiac output, and a distal blood sample for laboratory analysis.',
         rationale:
-          'Those are the three things the catheter can produce directly. Everything else on the screen is calculated from them or has to be inferred alongside the bedside.',
+          'The transducer measures pressure and the thermistor senses temperature. Thermodilution derives cardiac output from the temperature curve and injection information. A distal sample is analyzed for saturation; oxygen content is calculated using hemoglobin and oxygen measurements.',
         plausibility: 'best',
       },
       {
@@ -130,7 +130,7 @@ const whyMeasure: HemodynamicsSectionItems = {
     ],
     correctChoiceIds: ['measures-pressures-flow-samples'],
     explanation:
-      'The catheter reads pressures, measures flow through a curve, and gives blood to sample. Resistance, oxygen delivery and the rest are numbers made of those numbers, and responsiveness is a question about change that no single reading answers.',
+      'Distinguish the pressure signal, the thermodilution measurement workflow, and the blood sample. Laboratory saturation and calculated oxygen content are separate from sampling. Resistance and oxygen delivery are further calculated variables; fluid benefit requires additional clinical evaluation.',
     evidenceIds: orientationEvidence,
     reviewStatus: 'draft',
   }),
@@ -163,14 +163,14 @@ const waveformInterpretation: HemodynamicsSectionItems = {
         id: 'rv',
         label: 'The right ventricle',
         rationale:
-          'A tall peak, a diastole that falls to the floor and rises through filling, and no notch on the way down: the ventricle.',
+          'A tall peak, a diastole that falls to a low diastolic pressure and rises through filling, and no notch on the way down: the ventricle.',
         plausibility: 'best',
       },
       {
         id: 'pa',
         label: 'The pulmonary artery',
         rationale:
-          'The artery shares the peak but keeps its floor up between beats and shows a notch as the valve closes. Neither is here.',
+          'The artery shares the peak but maintains a higher diastolic pressure between beats and shows a notch as the valve closes. Neither is here.',
         plausibility: 'reasonable-but-incomplete',
       },
       {
@@ -190,18 +190,20 @@ const waveformInterpretation: HemodynamicsSectionItems = {
     ],
     correctChoiceIds: ['rv'],
     explanation:
-      'The systolic number cannot tell the ventricle from the artery, because they normally share it. The diastole can: a floor that falls low and climbs, with no notch, is the ventricle; a floor that steps up and a notch on the way down is the artery.',
+      'The systolic number cannot tell the ventricle from the artery, because they normally share it. The diastole can: diastolic pressure that falls low and climbs, with no notch, is the ventricle; a diastolic step-up and a notch on the way down is the artery.',
     evidenceIds: waveformEvidence,
     reviewStatus: 'draft',
   }),
   transfer: item({
     ...pacGuidedLearningItems['waveform-interpretation'].transfer,
     id: 'hd-place-transfer-1',
+    stem: 'The live PAC tracing is shown in a new model example with faster breathing and higher positive-pressure support. Use its pressure morphology and delayed timing against the ECG to identify its origin.',
+    visualAssetIds: ['pac-live-waveform'],
     choices: [
       ...pacGuidedLearningItems['waveform-interpretation'].transfer.choices,
       {
         id: 'cannot-name',
-        label: 'It cannot be named from this description',
+        label: 'It cannot be named from this display',
         rationale:
           'It can. The timing against the ECG is given, and an atrial shape whose waves arrive later than the right atrium’s is the left atrium heard through the occluded branch.',
         plausibility: 'reasonable-but-incomplete',

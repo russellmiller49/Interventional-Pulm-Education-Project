@@ -1,8 +1,16 @@
 import { render, screen } from '@testing-library/react'
 
 jest.mock('@/features/icu-hemodynamics/components/HemodynamicCaseActivity', () => ({
-  HemodynamicCaseActivity: ({ caseId, mode }: { caseId: string; mode: string }) => (
-    <div data-testid="case-activity">
+  HemodynamicCaseActivity: ({
+    caseId,
+    mode,
+    nextLearn,
+  }: {
+    caseId: string
+    mode: string
+    nextLearn?: string
+  }) => (
+    <div data-testid="case-activity" data-next-learn={nextLearn}>
       {caseId}:{mode}
     </div>
   ),
@@ -36,10 +44,23 @@ describe('ICU hemodynamics practice route', () => {
     const { rerender } = render(
       await IcuHemodynamicsPracticePage({
         params: Promise.resolve({ locale: 'en' }),
-        searchParams: Promise.resolve({ case: 'HD-08' }),
+        searchParams: Promise.resolve({ case: 'HD-08', nextLearn: 'catheter-advancement' }),
       }),
     )
     expect(screen.getByTestId('case-activity')).toHaveTextContent('HD-08:practice')
+    expect(screen.getByTestId('case-activity')).toHaveAttribute(
+      'data-next-learn',
+      'catheter-advancement',
+    )
+    for (const nextLearn of ['unknown-section', ['pressure-system', 'why-measure']]) {
+      rerender(
+        await IcuHemodynamicsPracticePage({
+          params: Promise.resolve({ locale: 'en' }),
+          searchParams: Promise.resolve({ case: 'HD-08', nextLearn }),
+        }),
+      )
+      expect(screen.getByTestId('case-activity')).not.toHaveAttribute('data-next-learn')
+    }
 
     rerender(
       await IcuHemodynamicsPracticePage({

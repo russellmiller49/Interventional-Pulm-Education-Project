@@ -42,8 +42,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'waveform-interpretation',
-        shortTitle: 'Name the place',
-        title: 'Four places, four shapes',
+        shortTitle: 'Identify the chamber',
+        title: 'Identify the chamber from the waveform',
         minutes: 10,
         description:
           'Walk the four places the tip can sit — right atrium, right ventricle, pulmonary artery, the wedge — and learn to name each from its shape alone.',
@@ -53,10 +53,10 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       {
         id: 'waveform-components',
         shortTitle: 'Read the waves',
-        title: 'What the waves inside can say',
+        title: 'Atrial waves and descents',
         minutes: 10,
         description:
-          'Inside a place you have named, a single wave component can carry a diagnosis — once the place and the signal have both been confirmed.',
+          'Identify atrial waves and descents against the ECG, then interpret abnormal components in a confirmed chamber and clinical context.',
         stage: 'mechanism',
         activityId: 'hemodynamics:learn:waveform-components',
       },

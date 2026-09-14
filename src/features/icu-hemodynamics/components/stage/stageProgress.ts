@@ -1,6 +1,10 @@
 import type { HemodynamicsStageLesson, HemodynamicsStageStep } from '../../content/stageLessons'
 import { goalsMet } from '../../engine/stageRuntime'
 import type { HemodynamicSimulationState } from '../../engine/types'
+import {
+  componentIdentificationComplete,
+  type ComponentSelection,
+} from '../../content/introductoryTeaching'
 
 /**
  * Everything a learner has committed or done on a section, apart from the engine's own state.
@@ -29,6 +33,7 @@ export interface StageCommitments {
   readonly derivedThresholdResolved: boolean
   readonly derivedTransferDone: boolean
   readonly finished: boolean
+  readonly componentSelections: Readonly<Record<string, readonly ComponentSelection[]>>
 }
 
 export function emptyCommitments(): StageCommitments {
@@ -45,6 +50,7 @@ export function emptyCommitments(): StageCommitments {
     derivedThresholdResolved: false,
     derivedTransferDone: false,
     finished: false,
+    componentSelections: {},
   }
 }
 
@@ -69,6 +75,11 @@ export function stepWorkDone(
       return commitments.choices[step.id] !== undefined
     case 'sort':
       return commitments.sort !== null
+    case 'component-identification':
+      return componentIdentificationComplete(
+        commitments.componentSelections[step.id] ?? [],
+        interaction.mode,
+      )
     case 'simulator-task':
       return goalsMet(interaction.goals, state)
     case 'observe': {

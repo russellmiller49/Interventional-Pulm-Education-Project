@@ -96,7 +96,7 @@ export const routeStops: readonly RouteStop[] = Object.freeze([
     title: 'Right ventricle',
     monitorLabel: 'RV',
     analogy:
-      'The pump chamber. High while it squeezes, near the floor as it relaxes, then rising slowly as it fills again — and nothing in between marks a valve closing behind the tip.',
+      'Ventricular pressure rises during systole, falls to a low early diastolic pressure during relaxation, then rises during filling. There is no valve-closure notch.',
     precise:
       'A rapid systolic rise to a pressure far above the atrium, then a fall toward a low diastolic pressure that climbs gradually through filling. No diastolic step-up, no run-off and no dicrotic notch. Systolic pressure is normally the same as the pulmonary artery; the diastolic contour is what tells them apart.',
     checklistLabel: 'What to look for in this tracing',
@@ -108,7 +108,8 @@ export const routeStops: readonly RouteStop[] = Object.freeze([
     ],
     wiggle: {
       change: 'Compare this trace with the one that follows it.',
-      watch: 'The peaks match; only the floor and the notch differ.',
+      watch:
+        'Systolic peaks are similar; diastolic pressure and the notch distinguish the tracings.',
     },
     sourceIds: ['clinical-hemodynamics-waveforms', 'pac-waveforms-part-1-2021'],
   },
@@ -118,9 +119,9 @@ export const routeStops: readonly RouteStop[] = Object.freeze([
     title: 'Pulmonary artery',
     monitorLabel: 'PA or PAP',
     analogy:
-      'The pipe after the pump. The pump still throws the same peak, but now a valve shuts behind the tip — the notch — and the pressure never falls to the floor because the pipe holds it up between beats.',
+      'The artery beyond the ventricle. Systolic peaks are similar, but pulmonic valve closure produces a notch and arterial recoil sustains pressure between beats.',
     precise:
-      'A systolic peak matching the ventricle, a dicrotic notch as the pulmonic valve closes, and a diastolic run-off that never reaches the ventricular floor: the diastolic step-up. This is the position every measurement starts from — the wedge, the thermistor, the mixed venous sample.',
+      'A systolic peak matching the ventricle, a dicrotic notch as the pulmonic valve closes, and diastolic run-off that remains above the low ventricular diastolic pressure: the diastolic step-up. This is the position every measurement starts from — the wedge, the thermistor, the mixed venous sample.',
     checklistLabel: 'What to look for in this tracing',
     checklist: [
       'systolic peak (same as RV)',

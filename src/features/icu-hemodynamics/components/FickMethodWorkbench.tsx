@@ -117,7 +117,7 @@ function FickTrace({ result }: { readonly result: FickResult }) {
   )
 }
 
-function FickEpisodeCard({ episode }: { readonly episode: FickEpisode }) {
+export function FickEpisodeCard({ episode }: { readonly episode: FickEpisode }) {
   const headingId = useId()
   const result = fickCardiacOutput(episode.inputs)
   const method = requireCardiacOutputMethod(episode.inputs.methodId)

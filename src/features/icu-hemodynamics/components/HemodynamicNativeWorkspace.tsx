@@ -1,13 +1,13 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import type { HemodynamicAction, HemodynamicSimulationState } from '../engine'
 import { BedsideMonitor } from './BedsideMonitor'
 import { FormulaDrawer } from './FormulaDrawer'
 import { PacActionDock } from './PacActionDock'
 import { PacSkillsLab } from './PacSkillsLab'
 import { PhysiologyPanel } from './PhysiologyPanel'
-import { ResizablePacWorkspace } from './ResizablePacWorkspace'
-import styles from './icu-hemodynamics.module.css'
+import flowStyles from './stage/hemodynamics-flow.module.css'
 
 interface HemodynamicNativeWorkspaceProps {
   readonly state: HemodynamicSimulationState
@@ -16,12 +16,12 @@ interface HemodynamicNativeWorkspaceProps {
   readonly showThermodilution?: boolean
   readonly showDerived?: boolean
   readonly pressureChallengeMode?: 'selectable' | 'current-state'
+  readonly interactive?: boolean
+  readonly revealModel?: boolean
+  readonly task?: ReactNode
 }
 
-/**
- * Keeps the monitor, anatomy, and complete validation workflow synchronized while allowing every
- * pane to scroll and resize independently.
- */
+/** One patient owner above this view. Tools disclose in place; layout never reloads the engine. */
 export function HemodynamicNativeWorkspace({
   state,
   dispatch,
@@ -29,50 +29,66 @@ export function HemodynamicNativeWorkspace({
   showThermodilution = true,
   showDerived = true,
   pressureChallengeMode = 'selectable',
+  interactive = true,
+  revealModel = false,
+  task,
 }: HemodynamicNativeWorkspaceProps) {
-  function openCardiacOutput() {
-    const lab = document.getElementById('hemodynamic-native-thermodilution')
-    if (lab instanceof HTMLDetailsElement) lab.open = true
-    window.setTimeout(() => lab?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
-  }
-
   return (
-    <ResizablePacWorkspace
-      className={styles.hemodynamicNativeWorkspace}
-      monitor={
-        <BedsideMonitor state={state} dispatch={dispatch} onOpenCardiacOutput={openCardiacOutput} />
-      }
-      physiology={<PhysiologyPanel state={state} dispatch={dispatch} />}
-      controls={
-        <div className={styles.hemodynamicNativeControls}>
-          <PacActionDock state={state} dispatch={dispatch} />
-          <div className={styles.hemodynamicNativeLabs}>
-            {showPressureSystem ? (
-              <details open>
-                <summary>Pressure-system validation · level, zero, and dynamic response</summary>
-                <PacSkillsLab
-                  state={state}
-                  dispatch={dispatch}
-                  focus="pressure-system"
-                  pressureChallengeMode={pressureChallengeMode}
-                />
-              </details>
-            ) : null}
-            {showThermodilution ? (
-              <details id="hemodynamic-native-thermodilution" open>
-                <summary>Thermodilution technique and accepted-curve series</summary>
-                <PacSkillsLab state={state} dispatch={dispatch} focus="thermodilution" />
-              </details>
-            ) : null}
-            {showDerived ? (
-              <details>
-                <summary>Derived hemodynamics and input-validity review</summary>
-                <FormulaDrawer state={state} dispatch={dispatch} />
-              </details>
-            ) : null}
-          </div>
+    <div className={flowStyles.caseWorkspace} data-case-workspace>
+      <div className={flowStyles.paired}>
+        <BedsideMonitor
+          state={state}
+          dispatch={dispatch}
+          chamberLabel={revealModel ? 'shown' : 'withheld'}
+          showControls={false}
+        />
+        {task}
+      </div>
+      {interactive || state.catheter.balloonInflated || state.catheter.floatBalloonInflated ? (
+        <div className={flowStyles.toolGroups} aria-label="Measurement tools">
+          {showPressureSystem ? (
+            <details>
+              <summary>Pressure measurement · level, zero and response</summary>
+              <PacSkillsLab
+                state={state}
+                dispatch={dispatch}
+                focus="pressure-system"
+                pressureChallengeMode={pressureChallengeMode}
+              />
+            </details>
+          ) : null}
+          <details
+            open={
+              state.catheter.balloonInflated || state.catheter.floatBalloonInflated || undefined
+            }
+          >
+            <summary>Catheter actions and acquisition</summary>
+            <PacActionDock state={state} dispatch={dispatch} maskPosition={!revealModel} />
+          </details>
+          {showThermodilution ? (
+            <details id="hemodynamic-native-thermodilution">
+              <summary>Cardiac-output trials</summary>
+              <PacSkillsLab state={state} dispatch={dispatch} focus="thermodilution" />
+            </details>
+          ) : null}
+          {showDerived ? (
+            <details>
+              <summary>Calculated results and source validity</summary>
+              <FormulaDrawer state={state} dispatch={dispatch} observedInputsOnly />
+            </details>
+          ) : null}
         </div>
-      }
-    />
+      ) : null}
+      {revealModel ? (
+        <details>
+          <summary>Model reference: internal physiology and anatomy</summary>
+          <p>
+            This view exposes internal simulation values. It is not an additional acquired
+            measurement.
+          </p>
+          <PhysiologyPanel state={state} dispatch={dispatch} />
+        </details>
+      ) : null}
+    </div>
   )
 }

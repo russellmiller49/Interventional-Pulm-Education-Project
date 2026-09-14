@@ -1,6 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useHemodynamicsTaskDraft } from './stage/HemodynamicsTaskDrafts'
+
+import { useCallback, useEffect, useId, useMemo, useRef } from 'react'
 
 import {
   cardiacOutputInputStatusLabels,
@@ -104,6 +106,19 @@ const PROVENANCE_CHOICES: readonly CardiacOutputInputStatus[] = [
   'calculated',
 ]
 
+function FirstAnswerRecord({ answers }: { readonly answers: readonly string[] | null }) {
+  return answers ? (
+    <details data-first-attempt-record>
+      <summary>First answer · retained when you revise</summary>
+      <ul>
+        {answers.map((answer) => (
+          <li key={answer}>{answer}</li>
+        ))}
+      </ul>
+    </details>
+  ) : null
+}
+
 export function DerivedProvenanceDrill({
   separated,
   onSeparated,
@@ -112,11 +127,20 @@ export function DerivedProvenanceDrill({
   readonly onSeparated: () => void
 }) {
   const headingId = useId()
-  const [answers, setAnswers] = useState<Record<string, CardiacOutputInputStatus | ''>>({})
-  const [committed, setCommitted] = useState(false)
+  const [answers, setAnswers] = useHemodynamicsTaskDraft<
+    Record<string, CardiacOutputInputStatus | ''>
+  >('DerivedProvenanceDrill:answers', {})
+  const [committed, setCommitted] = useHemodynamicsTaskDraft(
+    'DerivedProvenanceDrill:committed',
+    false,
+  )
 
   const allAnswered = PROVENANCE_DRILL_ROWS.every((row) => answers[row.id])
   const allCorrect = PROVENANCE_DRILL_ROWS.every((row) => answers[row.id] === row.correct)
+  const [firstAnswers, setFirstAnswers] = useHemodynamicsTaskDraft<readonly string[] | null>(
+    'DerivedProvenanceDrill:first',
+    null,
+  )
 
   return (
     <section className={styles.measurementTeachingPanel} aria-labelledby={headingId}>
@@ -180,12 +204,21 @@ export function DerivedProvenanceDrill({
           className={styles.derivedCommitButton}
           disabled={!allAnswered || committed}
           onClick={() => {
+            setFirstAnswers(
+              (first) =>
+                first ??
+                PROVENANCE_DRILL_ROWS.map(
+                  (row) =>
+                    `${row.label}: ${cardiacOutputInputStatusLabels[answers[row.id] as CardiacOutputInputStatus].label}`,
+                ),
+            )
             setCommitted(true)
             if (allCorrect) onSeparated()
           }}
         >
           Commit these classifications
         </button>
+        <FirstAnswerRecord answers={firstAnswers} />
         {separated ? (
           <p className={styles.methodVerdict} role="status">
             Measured and calculated are separated on this station. The workbench episodes now hold
@@ -344,8 +377,15 @@ function DecisionFieldset({
   readonly disabled?: boolean
 }) {
   const groupName = useId()
-  const [choiceId, setChoiceId] = useState<string | null>(null)
+  const [choiceId, setChoiceId] = useHemodynamicsTaskDraft<string | null>(
+    `DecisionFieldset:${prompt}:choiceId`,
+    null,
+  )
   const committed = committedOptionId !== null
+  const [firstOptionId, setFirstOptionId] = useHemodynamicsTaskDraft<string | null>(
+    `DecisionFieldset:${prompt}:first`,
+    null,
+  )
   const chosen = options.find((option) => option.id === (committedOptionId ?? choiceId))
   const recoverable = committed && chosen !== undefined && chosen.verdict !== 'defensible'
 
@@ -363,7 +403,7 @@ function DecisionFieldset({
     returningToChoices.current = true
     setChoiceId(null)
     onReconsider?.()
-  }, [onReconsider])
+  }, [onReconsider, setChoiceId])
 
   return (
     <fieldset className={styles.methodCommitment}>
@@ -386,11 +426,20 @@ function DecisionFieldset({
         disabled={choiceId === null || committed || disabled}
         onClick={() => {
           const option = options.find((candidate) => candidate.id === choiceId)
-          if (option) onCommit(option)
+          if (option) {
+            setFirstOptionId((first) => first ?? option.id)
+            onCommit(option)
+          }
         }}
       >
         Commit this position
       </button>
+      {firstOptionId && firstOptionId !== committedOptionId ? (
+        <p data-first-commitment>
+          First answer: {options.find((option) => option.id === firstOptionId)?.label}. Further
+          attempts follow feedback.
+        </p>
+      ) : null}
       {committed && chosen ? (
         <p className={styles.methodVerdict} data-verdict={chosen.verdict} role="status">
           <strong>
@@ -421,6 +470,7 @@ function DecisionFieldset({
 
 interface DerivedEpisodeWorkbenchProps {
   readonly dispatch: (action: HemodynamicAction) => void
+  readonly focused?: boolean
   readonly checks: readonly string[]
   readonly disagreementPreserved: boolean
   readonly onDisagreementPreserved: () => void
@@ -518,10 +568,20 @@ function DependencyChainChallenge({
     'bodySurfaceAreaM2',
     'heartRateBpm',
   ]
-  const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [committed, setCommitted] = useState(false)
+  const [selected, setSelected] = useHemodynamicsTaskDraft<Set<string>>(
+    'DependencyChainChallenge:selected',
+    new Set(),
+  )
+  const [committed, setCommitted] = useHemodynamicsTaskDraft(
+    'DependencyChainChallenge:committed',
+    false,
+  )
   const correct =
     selected.size === requiredIds.size && [...requiredIds].every((id) => selected.has(id))
+  const [firstAnswers, setFirstAnswers] = useHemodynamicsTaskDraft<readonly string[] | null>(
+    'DependencyChainChallenge:first',
+    null,
+  )
 
   return (
     <fieldset className={styles.methodCommitment}>
@@ -555,12 +615,16 @@ function DependencyChainChallenge({
         type="button"
         disabled={selected.size === 0 || earned || committed}
         onClick={() => {
+          setFirstAnswers(
+            (first) => first ?? [...selected].map((id) => requireDerivedInputDefinition(id).label),
+          )
           setCommitted(true)
           if (correct) onEarned()
         }}
       >
         Commit the dependency chain
       </button>
+      <FirstAnswerRecord answers={firstAnswers} />
       {committed || earned ? (
         <p
           className={styles.methodVerdict}
@@ -592,8 +656,11 @@ function FlowMethodChallenge({
   const groupName = useId()
   const accepted = episode.flowResults.find((flow) => flow.status === 'accepted')
   const correctId = accepted?.methodId ?? 'method-unknown'
-  const [choiceId, setChoiceId] = useState<string | null>(null)
-  const [committed, setCommitted] = useState(false)
+  const [choiceId, setChoiceId] = useHemodynamicsTaskDraft<string | null>(
+    'FlowMethodChallenge:choiceId',
+    null,
+  )
+  const [committed, setCommitted] = useHemodynamicsTaskDraft('FlowMethodChallenge:committed', false)
   const options = [
     { id: 'thermodilution', label: cardiacOutputMethodById.get('thermodilution')?.name ?? '' },
     { id: 'fick-direct', label: cardiacOutputMethodById.get('fick-direct')?.name ?? '' },
@@ -601,6 +668,10 @@ function FlowMethodChallenge({
     { id: 'method-unknown', label: 'No method is established for this flow' },
   ]
   const correct = choiceId === correctId
+  const [firstAnswers, setFirstAnswers] = useHemodynamicsTaskDraft<readonly string[] | null>(
+    'FlowMethodChallenge:first',
+    null,
+  )
 
   return (
     <fieldset className={styles.methodCommitment}>
@@ -624,12 +695,16 @@ function FlowMethodChallenge({
         type="button"
         disabled={choiceId === null || earned || committed}
         onClick={() => {
+          setFirstAnswers(
+            (first) => first ?? [options.find((option) => option.id === choiceId)!.label],
+          )
           setCommitted(true)
           if (correct) onEarned()
         }}
       >
         Commit the method
       </button>
+      <FirstAnswerRecord answers={firstAnswers} />
       {committed || earned ? (
         <p
           className={styles.methodVerdict}
@@ -674,10 +749,22 @@ function SelectiveInvalidationChallenge({
   readonly onCommitted: () => void
 }) {
   const flow = episode.flowResults.find((candidate) => candidate.status === 'accepted') ?? null
-  const [decisions, setDecisions] = useState<Record<string, 'calculate' | 'withhold' | ''>>({})
-  const [reasons, setReasons] = useState<Record<string, string>>({})
-  const [committed, setCommitted] = useState(false)
+  const [decisions, setDecisions] = useHemodynamicsTaskDraft<
+    Record<string, 'calculate' | 'withhold' | ''>
+  >('SelectiveInvalidationChallenge:decisions', {})
+  const [reasons, setReasons] = useHemodynamicsTaskDraft<Record<string, string>>(
+    'SelectiveInvalidationChallenge:reasons',
+    {},
+  )
+  const [committed, setCommitted] = useHemodynamicsTaskDraft(
+    'SelectiveInvalidationChallenge:committed',
+    false,
+  )
   const alreadyEarned = withheldEarned && preservedEarned
+  const [firstAnswers, setFirstAnswers] = useHemodynamicsTaskDraft<readonly string[] | null>(
+    'SelectiveInvalidationChallenge:first',
+    null,
+  )
 
   const evaluations = useMemo(
     () =>
@@ -784,6 +871,14 @@ function SelectiveInvalidationChallenge({
         type="button"
         disabled={!allDecided || committed || alreadyEarned}
         onClick={() => {
+          setFirstAnswers(
+            (first) =>
+              first ??
+              derivedSelectiveDecision.metricIds.map(
+                (id) =>
+                  `${requireDerivedMetric(id).shortLabel}: ${decisions[id] === 'calculate' ? 'Calculate' : `Withhold — ${derivedSelectiveDecision.withholdReasonOptions.find((reason) => reason.id === reasons[id])?.label}`}`,
+              ),
+          )
           setCommitted(true)
           onCommitted()
           const withheldCorrect = derivedSelectiveDecision.metricIds
@@ -798,6 +893,7 @@ function SelectiveInvalidationChallenge({
       >
         Commit these decisions
       </button>
+      <FirstAnswerRecord answers={firstAnswers} />
       {committed && !alreadyEarned ? (
         <button type="button" onClick={() => setCommitted(false)}>
           Revise the decisions and commit again
@@ -815,6 +911,7 @@ function SelectiveInvalidationChallenge({
 
 export function DerivedEpisodeWorkbench({
   dispatch,
+  focused = false,
   checks,
   disagreementPreserved,
   onDisagreementPreserved,
@@ -822,11 +919,23 @@ export function DerivedEpisodeWorkbench({
   onThresholdContextResolved,
 }: DerivedEpisodeWorkbenchProps) {
   const headingId = useId()
-  const [episodeId, setEpisodeId] = useState<string>(derivedWorkbenchEpisodes[0]?.id ?? '')
+  const [episodeId, setEpisodeId] = useHemodynamicsTaskDraft<string>(
+    'DerivedEpisodeWorkbench:episodeId',
+    derivedWorkbenchEpisodes[0]?.id ?? '',
+  )
   const episode = requireDerivedMeasurementEpisode(episodeId)
-  const [revealCommitted, setRevealCommitted] = useState<Record<string, boolean>>({})
-  const [disagreementChoice, setDisagreementChoice] = useState<string | null>(null)
-  const [thresholdChoice, setThresholdChoice] = useState<string | null>(null)
+  const [revealCommitted, setRevealCommitted] = useHemodynamicsTaskDraft<Record<string, boolean>>(
+    'DerivedEpisodeWorkbench:revealCommitted',
+    {},
+  )
+  const [disagreementChoice, setDisagreementChoice] = useHemodynamicsTaskDraft<string | null>(
+    'DerivedEpisodeWorkbench:disagreementChoice',
+    null,
+  )
+  const [thresholdChoice, setThresholdChoice] = useHemodynamicsTaskDraft<string | null>(
+    'DerivedEpisodeWorkbench:thresholdChoice',
+    null,
+  )
 
   const checkSet = new Set(checks)
   const chainEarned = checkSet.has(DERIVED_SECTION_CHECKS.dependencyChain)
@@ -835,6 +944,10 @@ export function DerivedEpisodeWorkbench({
   const preservedEarned = checkSet.has(DERIVED_SECTION_CHECKS.selectivePreserved)
 
   const resultSets = useMemo(() => evaluateDerivedEpisode(episode), [episode])
+  const [metricId, setMetricId] = useHemodynamicsTaskDraft<DerivedMetricId>(
+    'workbench:metric',
+    'cardiacIndexLMinM2',
+  )
 
   /**
    * Commitment gates the reveal, not correctness: an episode with a graded interaction keeps its
@@ -956,6 +1069,22 @@ export function DerivedEpisodeWorkbench({
 
         {revealed ? (
           <>
+            {focused ? (
+              <label>
+                Calculated result
+                <select
+                  aria-label="Calculated result"
+                  value={metricId}
+                  onChange={(event) => setMetricId(event.target.value as DerivedMetricId)}
+                >
+                  {resultSets[0]?.results.map((result) => (
+                    <option key={result.metricId} value={result.metricId}>
+                      {result.shortLabel} · {result.metricName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             {resultSets.map((set) => (
               <section
                 key={set.flow?.id ?? 'no-flow'}
@@ -965,9 +1094,11 @@ export function DerivedEpisodeWorkbench({
                   <span>Results · {set.flowMethodLabel}</span>
                 </h4>
                 <div className={styles.derivedResultGrid}>
-                  {set.results.map((result) => (
-                    <MetricResultCard key={result.metricId} evaluation={result} />
-                  ))}
+                  {set.results
+                    .filter((result) => !focused || result.metricId === metricId)
+                    .map((result) => (
+                      <MetricResultCard key={result.metricId} evaluation={result} />
+                    ))}
                 </div>
               </section>
             ))}
@@ -1040,9 +1171,15 @@ export function DerivedTransferComparison() {
   const coherent = requireDerivedMeasurementEpisode(
     derivedTransferComparisonDecision.coherentEpisodeId,
   )
-  const [committedOptionId, setCommittedOptionId] = useState<string | null>(null)
+  const [committedOptionId, setCommittedOptionId] = useHemodynamicsTaskDraft<string | null>(
+    'DerivedTransferComparison:committedOptionId',
+    null,
+  )
   // Latched: the comparison was earned by committing once, and reconsidering does not take it back.
-  const [comparisonRevealed, setComparisonRevealed] = useState(false)
+  const [comparisonRevealed, setComparisonRevealed] = useHemodynamicsTaskDraft(
+    'DerivedTransferComparison:comparisonRevealed',
+    false,
+  )
 
   const plausibleSets = useMemo(() => evaluateDerivedEpisode(plausible), [plausible])
   const coherentSets = useMemo(() => evaluateDerivedEpisode(coherent), [coherent])

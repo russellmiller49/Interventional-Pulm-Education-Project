@@ -57,6 +57,10 @@ interface WaveformAtlasFigureProps {
   readonly showEcg?: boolean
   readonly annotated?: boolean
   readonly compact?: boolean
+  /** Larger tracing and labels for a narrow lesson panel, using the same sampled waveform. */
+  readonly readable?: boolean
+  /** Omit repeated prose when the caller supplies component-by-component explanations. */
+  readonly showLegend?: boolean
   /**
    * Axis maximum, overriding the entry's own.
    *
@@ -80,13 +84,13 @@ function pressureToY(value: number, scaleMaxMmHg: number): number {
   return TRACE_BOTTOM - (clamped / scaleMaxMmHg) * (TRACE_BOTTOM - TRACE_TOP)
 }
 
-function phaseToX(phase: number, beat: number, beats: number): number {
+function phaseToX(phase: number, beat: number, beats: number, plotRight = PLOT_RIGHT): number {
   const progress = (beat + phase) / beats
-  return PLOT_LEFT + progress * (PLOT_RIGHT - PLOT_LEFT)
+  return PLOT_LEFT + progress * (plotRight - PLOT_LEFT)
 }
 
-function stripFractionToX(fraction: number): number {
-  return PLOT_LEFT + Math.max(0, Math.min(1, fraction)) * (PLOT_RIGHT - PLOT_LEFT)
+function stripFractionToX(fraction: number, plotRight = PLOT_RIGHT): number {
+  return PLOT_LEFT + Math.max(0, Math.min(1, fraction)) * (plotRight - PLOT_LEFT)
 }
 
 /** Evenly spaced pressure ticks that stay readable at any scale. */
@@ -131,6 +135,8 @@ export function WaveformAtlasFigure({
   showEcg = true,
   annotated = true,
   compact = false,
+  readable = false,
+  showLegend = true,
   scaleMaxMmHg,
   channelLabel,
   ecgLandmarks = false,
@@ -139,6 +145,8 @@ export function WaveformAtlasFigure({
   figureDescription,
 }: WaveformAtlasFigureProps) {
   const gradientId = useId()
+  const viewWidth = readable ? 360 : VIEW_WIDTH
+  const plotRight = viewWidth - (VIEW_WIDTH - PLOT_RIGHT)
   const scaleMax = fault?.scaleMaxMmHg ?? scaleMaxMmHg ?? entry.scaleMaxMmHg
   const viewHeight = respiration ? VIEW_HEIGHT_WITH_RESPIRATION : VIEW_HEIGHT
   const envelope = traceEnvelope(entry)
@@ -183,7 +191,7 @@ export function WaveformAtlasFigure({
     for (let step = 0; step <= steps; step += 1) {
       const progress = step / steps
       const phase = (progress * beats) % 1
-      const x = PLOT_LEFT + progress * (PLOT_RIGHT - PLOT_LEFT)
+      const x = PLOT_LEFT + progress * (plotRight - PLOT_LEFT)
       const y = pressureToY(sampleAt(progress, phase), scaleMax)
       commands.push(`${step === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`)
     }
@@ -197,7 +205,7 @@ export function WaveformAtlasFigure({
     for (let step = 0; step <= steps; step += 1) {
       const progress = step / steps
       const phase = (progress * beats) % 1
-      const x = PLOT_LEFT + progress * (PLOT_RIGHT - PLOT_LEFT)
+      const x = PLOT_LEFT + progress * (plotRight - PLOT_LEFT)
       const millivolts = ecgShapeMv(phase)
       const y = ECG_BOTTOM - ((millivolts + 0.3) / 1.75) * (ECG_BOTTOM - ECG_TOP)
       commands.push(`${step === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`)
@@ -213,7 +221,7 @@ export function WaveformAtlasFigure({
     const amplitude = (RESPIRATION_BOTTOM - RESPIRATION_TOP) / 2 - 2
     for (let step = 0; step <= steps; step += 1) {
       const progress = step / steps
-      const x = PLOT_LEFT + progress * (PLOT_RIGHT - PLOT_LEFT)
+      const x = PLOT_LEFT + progress * (plotRight - PLOT_LEFT)
       const offset =
         -Math.cos(
           2 * Math.PI * respiration.cyclesPerStrip * (progress - respiration.endExpirationPhase),
@@ -231,8 +239,8 @@ export function WaveformAtlasFigure({
     if (!annotated) return []
     const placed = entry.annotations
       .map((annotation) => {
-        const x = phaseToX(annotation.phase, annotationBeat, beats)
-        const progress = (x - PLOT_LEFT) / (PLOT_RIGHT - PLOT_LEFT)
+        const x = phaseToX(annotation.phase, annotationBeat, beats, plotRight)
+        const progress = (x - PLOT_LEFT) / (plotRight - PLOT_LEFT)
         return {
           annotation,
           x,
@@ -261,7 +269,7 @@ export function WaveformAtlasFigure({
   const readingFraction = respiration
     ? (respiration.readAtStripFraction ?? respiration.endExpirationPhase)
     : null
-  const readingX = readingFraction === null ? null : stripFractionToX(readingFraction)
+  const readingX = readingFraction === null ? null : stripFractionToX(readingFraction, plotRight)
   const readingLabel =
     respiration?.readMarkerLabel ??
     (readingFraction !== null && readingFraction === respiration?.endExpirationPhase
@@ -279,7 +287,11 @@ export function WaveformAtlasFigure({
       .join(' ')}`
 
   return (
-    <figure className={styles.atlasFigure} data-compact={compact || undefined}>
+    <figure
+      className={styles.atlasFigure}
+      data-compact={compact || undefined}
+      data-readable={readable || undefined}
+    >
       <figcaption>
         <div>
           <strong>{channelLabel ?? entry.label}</strong>
@@ -289,7 +301,7 @@ export function WaveformAtlasFigure({
       </figcaption>
 
       <svg
-        viewBox={`0 0 ${VIEW_WIDTH} ${viewHeight}`}
+        viewBox={`0 0 ${viewWidth} ${viewHeight}`}
         role="img"
         aria-label={description}
         preserveAspectRatio="xMidYMid meet"
@@ -305,7 +317,7 @@ export function WaveformAtlasFigure({
           const y = pressureToY(tick, scaleMax)
           return (
             <g key={tick}>
-              <line className={styles.atlasGridline} x1={PLOT_LEFT} x2={PLOT_RIGHT} y1={y} y2={y} />
+              <line className={styles.atlasGridline} x1={PLOT_LEFT} x2={plotRight} y1={y} y2={y} />
               <text className={styles.atlasAxisLabel} x={PLOT_LEFT - 10} y={y + 4}>
                 {tick}
               </text>
@@ -324,7 +336,7 @@ export function WaveformAtlasFigure({
             </text>
             {ecgLandmarks
               ? ECG_LANDMARKS.map((landmark) => {
-                  const x = phaseToX(landmark.phase, annotationBeat, beats)
+                  const x = phaseToX(landmark.phase, annotationBeat, beats, plotRight)
                   return (
                     <g key={landmark.id} className={styles.atlasEcgLandmark}>
                       <line x1={x} x2={x} y1={ECG_TOP - 2} y2={TRACE_BOTTOM} />
@@ -340,7 +352,7 @@ export function WaveformAtlasFigure({
 
         <path
           className={styles.atlasTraceFill}
-          d={`${tracePath} L ${PLOT_RIGHT} ${TRACE_BOTTOM} L ${PLOT_LEFT} ${TRACE_BOTTOM} Z`}
+          d={`${tracePath} L ${plotRight} ${TRACE_BOTTOM} L ${PLOT_LEFT} ${TRACE_BOTTOM} Z`}
           fill={`url(#${gradientId})`}
         />
         <path className={styles.atlasTrace} d={tracePath} />
@@ -375,7 +387,7 @@ export function WaveformAtlasFigure({
         ) : null}
       </svg>
 
-      {annotated && entry.annotations.length > 0 ? (
+      {showLegend && annotated && entry.annotations.length > 0 ? (
         <dl className={styles.atlasLegend}>
           {entry.annotations.map((annotation) => (
             <div key={annotation.id}>

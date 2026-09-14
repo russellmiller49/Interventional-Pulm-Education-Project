@@ -5,14 +5,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { criticalCareActivityById } from '@/features/critical-care/content/activities'
 import { criticalCareReferences } from '@/features/critical-care/content/references'
-import { ActivityShell } from '@/features/learning-module/components/ActivityShell'
 import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
-import { PatientContextBar } from '@/features/learning-module/components/PatientContextBar'
 import { ReferenceDrawer } from '@/features/learning-module/components/ReferenceDrawer'
 import { ScenarioFeedbackCard } from '@/features/learning-module/components/ScenarioFeedbackCard'
 import { ScenarioTeachingDebrief } from '@/features/learning-module/components/ScenarioTeachingDebrief'
 import { SimulationLaunchGate } from '@/features/learning-module/components/SimulationLaunchGate'
-import { TaskPanel } from '@/features/learning-module/components/TaskPanel'
 import {
   authoritativeCriticalCareCompetencyEvidence,
   authoritativeCriticalCareStatus,
@@ -48,7 +45,10 @@ import {
   thermodilutionAcceptedAverage,
   writeIcuHemodynamicsProgress,
   type HemodynamicAction,
+  type HemodynamicSimulationState,
 } from '../engine'
+import { IcuHemodynamicsModuleFrameV2 } from './IcuHemodynamicsModuleFrameV2'
+import flowStyles from './stage/hemodynamics-flow.module.css'
 import { HemodynamicNativeWorkspace } from './HemodynamicNativeWorkspace'
 
 type CaseMode = 'practice' | 'challenge'
@@ -71,10 +71,12 @@ export function HemodynamicCaseActivity({
   caseId,
   mode,
   locale = 'en',
+  nextLearn,
 }: {
   readonly caseId: string
   readonly mode: CaseMode
   readonly locale?: string
+  readonly nextLearn?: string
 }) {
   const definition = requireValue(
     hemodynamicCaseById.get(caseId),
@@ -98,7 +100,9 @@ export function HemodynamicCaseActivity({
   )
   const [phase, setPhase] = useState<CriticalCareActivityPhase>('recognize')
   const [hintVisible, setHintVisible] = useState(false)
+  const [baseline, setBaseline] = useState<HemodynamicSimulationState | null>(null)
   const [transferComplete, setTransferComplete] = useState(false)
+  const [transferStarted, setTransferStarted] = useState(false)
   const [transferChoiceId, setTransferChoiceId] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [challengeFeedbackImmediate, setChallengeFeedbackImmediate] = useState(false)
@@ -284,6 +288,18 @@ export function HemodynamicCaseActivity({
   }
 
   function selectPhase(nextPhase: CriticalCareActivityPhase) {
+    if (
+      state.catheter.balloonInflated ||
+      state.catheter.floatBalloonInflated ||
+      nextPhase === phase
+    )
+      return
+    if (
+      (nextPhase === 'act' && !state.predictionCommitted) ||
+      (nextPhase === 'observe' && !canObserve) ||
+      ((nextPhase === 'explain' || nextPhase === 'transfer') && !state.completed)
+    )
+      return
     if (nextPhase === 'transfer') {
       beginTransfer()
       return
@@ -315,6 +331,7 @@ export function HemodynamicCaseActivity({
   }
 
   function commitPrediction() {
+    setBaseline(state)
     const mechanism =
       definition.mechanismOptions.find((item) => item.id === state.selectedMechanismId)?.label ??
       'No mechanism selected'
@@ -375,6 +392,7 @@ export function HemodynamicCaseActivity({
   }
 
   function observeModeledResponse() {
+    if (state.catheter.balloonInflated || state.catheter.floatBalloonInflated) return
     recordDecision('Paused to observe the modeled response before final reassessment.')
     setRevealedFeedbackIds((current) => [
       ...new Set([
@@ -388,6 +406,7 @@ export function HemodynamicCaseActivity({
   }
 
   function completeReassessment() {
+    if (state.catheter.balloonInflated || state.catheter.floatBalloonInflated) return
     recordDecision('Committed the final whole-patient reassessment and opened the debrief.')
     setState((current) => {
       const reassessed = icuHemodynamicsReducer(current, { type: 'REASSESS' })
@@ -398,6 +417,12 @@ export function HemodynamicCaseActivity({
   }
 
   function beginTransfer() {
+    if (state.catheter.balloonInflated || state.catheter.floatBalloonInflated) return
+    if (transferStarted) {
+      checkpoint('transfer')
+      return
+    }
+    setTransferStarted(true)
     setState((current) => {
       const leveledVariant = icuHemodynamicsReducer(current, {
         type: 'SET_TRANSDUCER_LEVEL',
@@ -453,7 +478,9 @@ export function HemodynamicCaseActivity({
     setState(createInitialHemodynamicState(definition, 'practice', seededCaseNumber(caseId, mode)))
     setPhase('recognize')
     setHintVisible(false)
+    setBaseline(null)
     setTransferComplete(false)
+    setTransferStarted(false)
     setTransferChoiceId(null)
     setChallengeFeedbackImmediate(false)
     setFeedbackEvents([])
@@ -497,7 +524,6 @@ export function HemodynamicCaseActivity({
       ? requiredCompleted === definition.requiredInterventionIds.length
       : state.completedInterventionIds.length > 0)
   const visibleInterventions = definition.interventions
-  const modeLabel: CriticalCareActivityMode = mode
 
   let taskControls = null
   if (phase === 'recognize') {
@@ -509,6 +535,7 @@ export function HemodynamicCaseActivity({
               type="checkbox"
               className="mt-1"
               checked={challengeFeedbackImmediate}
+              disabled={state.predictionCommitted}
               onChange={(event) => setChallengeFeedbackImmediate(event.target.checked)}
             />
             <span>
@@ -525,6 +552,27 @@ export function HemodynamicCaseActivity({
           onClick={() => checkpoint('predict')}
         >
           Orient to the patient and signals
+        </button>
+      </div>
+    )
+  } else if (phase === 'predict' && state.predictionCommitted) {
+    taskControls = (
+      <div>
+        <p>
+          Recorded interpretation:{' '}
+          {
+            definition.mechanismOptions.find((option) => option.id === state.selectedMechanismId)
+              ?.label
+          }
+          . Priority:{' '}
+          {
+            definition.priorityOptions.find((option) => option.id === state.selectedPriorityId)
+              ?.label
+          }
+          .
+        </p>
+        <button type="button" onClick={() => checkpoint('act')}>
+          Return to actions
         </button>
       </div>
     )
@@ -598,7 +646,6 @@ export function HemodynamicCaseActivity({
               ? 'classified'
               : 'not classified'}
           </p>
-          <p className="rounded-lg border p-2">Catheter: {state.catheter.position.toUpperCase()}</p>
         </div>
         <div className="grid gap-2" aria-label="Bounded simulated interventions">
           {visibleInterventions.map((item) => (
@@ -616,7 +663,9 @@ export function HemodynamicCaseActivity({
         </div>
         <button
           type="button"
-          disabled={!canObserve}
+          disabled={
+            !canObserve || state.catheter.balloonInflated || state.catheter.floatBalloonInflated
+          }
           className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
           onClick={observeModeledResponse}
         >
@@ -634,7 +683,11 @@ export function HemodynamicCaseActivity({
           </div>
           <div className="flex justify-between">
             <dt>Cardiac index</dt>
-            <dd>{metricValue(state.measurements.cardiacIndexLMinM2, 1)} L/min/m²</dd>
+            <dd>
+              {average === null
+                ? 'Not acquired'
+                : `${metricValue(average / state.parameters.bodySurfaceAreaM2, 1)} L/min/m²`}
+            </dd>
           </div>
           <div className="flex justify-between">
             <dt>Modeled response</dt>
@@ -737,210 +790,238 @@ export function HemodynamicCaseActivity({
     )
   }
 
-  const viewport =
-    phase === 'explain' ? (
-      <div className="h-full overflow-auto">
-        <ScenarioTeachingDebrief
-          scenarioTitle={definition.title}
-          decisionTrace={decisionTrace}
-          expertTrace={teachingArtifact.expertTrace}
-          feedbackEvents={feedbackEvents}
-          conceptIds={teachingArtifact.conceptIds}
-          evidence={definition.sourceIds.flatMap((sourceId) => {
-            const source = hemodynamicsSourceById.get(sourceId)
-            return source
-              ? [
-                  {
-                    id: source.id,
-                    title: source.title,
-                    citation: `${source.citation} · version ${source.version}`,
-                  },
-                ]
-              : []
-          })}
-          onContinue={beginTransfer}
-        />
-      </div>
-    ) : (
-      <HemodynamicNativeWorkspace
-        state={state}
-        dispatch={dispatch}
-        pressureChallengeMode={
-          definition.id === 'HD-08' || phase === 'transfer' ? 'current-state' : 'selectable'
-        }
-      />
-    )
   const inlineFeedbackEvents = feedbackEvents
     .filter((event) => revealedFeedbackIds.includes(event.id))
     .slice(-2)
 
+  const objectives: Record<CriticalCareActivityPhase, string> = {
+    recognize: 'Read the patient and the available signals',
+    predict: 'Interpret the findings and choose a priority',
+    act: 'Choose an action and check the measurements',
+    observe: 'Compare the response and reassess',
+    explain: 'Review your reasoning and the modeled response',
+    transfer: 'Revalidate the changed signal',
+  }
+  const feedback = (
+    <>
+      {inlineFeedbackEvents.map((event) => (
+        <ScenarioFeedbackCard
+          key={event.id}
+          event={event}
+          onRewind={
+            event.id === activeHardInterruptId
+              ? () => {
+                  setActiveHardInterruptId(null)
+                  setRevealedFeedbackIds((current) => current.filter((id) => id !== event.id))
+                  setMessage(
+                    'Returned to the unchanged pre-action state. Choose a different action when ready.',
+                  )
+                }
+              : undefined
+          }
+        />
+      ))}
+    </>
+  )
+  const currentTask = (
+    <section className={flowStyles.caseTask} aria-label="Current case task">
+      <h2>{objectives[phase]}</h2>
+      {taskControls}
+      {hintVisible && mode === 'practice' ? <p>{definition.guidedPrompt}</p> : null}
+      {feedback}
+    </section>
+  )
+
   return (
-    <SimulationLaunchGate
-      activityTitle={definition.title}
-      minimumViewport="tablet"
-      bandwidthClass="standard"
-      estimatedSizeLabel="Under 2 MB after shared application assets"
-      lightweightAlternativeHref={`/icu-hemodynamics/${section}`}
-      onSaveForLater={saveAndExit}
-      theme="dark"
+    <IcuHemodynamicsModuleFrameV2
+      locale={locale}
+      activeHref={`/icu-hemodynamics/${section}`}
+      activityMode
+      documentFlow
     >
-      {locale !== 'en' ? (
-        <p className="sr-only">Reviewed English fallback; localized clinical review is pending.</p>
-      ) : null}
-      <ActivityShell
-        layout="case-workspace"
-        activityId={activityId}
-        assumedConceptIds={activity.assumedConceptIds}
-        breadcrumb={
-          <span>
-            <Link href={'/icu-hemodynamics' as Route}>ICU Hemodynamics</Link> /{' '}
-            <Link href={`/icu-hemodynamics/${section}` as Route}>
-              {section === 'assess' ? 'Challenge' : 'Practice'}
-            </Link>{' '}
-            / {caseId}
-          </span>
-        }
+      <SimulationLaunchGate
         activityTitle={definition.title}
-        phase={phase}
-        onPhaseSelect={selectPhase}
-        mode={modeLabel}
-        progressLabel={transferComplete ? 'Worked through' : `Current phase: ${phase}`}
-        patientContext={
-          <PatientContextBar
-            title="Patient context"
-            items={[
-              { label: 'Scenario', value: caseId },
-              { label: 'Case focus', value: definition.shortTitle },
-              { label: 'Setting', value: 'Adult ICU · simulated' },
-              {
-                label: 'Presentation',
-                value: definition.presentation,
-              },
-              { label: 'HR', value: `${state.parameters.heartRateBpm.toFixed(0)} /min` },
-              { label: 'MAP', value: `${state.measurements.mapMmHg.toFixed(0)} mmHg` },
-              {
-                label: 'Cardiac index',
-                value: `${state.measurements.cardiacIndexLMinM2.toFixed(1)} L/min/m²`,
-              },
-              {
-                label: 'PA / PAWP',
-                value: `${state.measurements.papSystolicMmHg}/${state.measurements.papDiastolicMmHg} · ${state.measurements.pawpMmHg ?? '—'} mmHg`,
-              },
-              {
-                label: 'Support',
-                value: `PEEP ${state.parameters.peepCmH2O.toFixed(0)} cm H₂O`,
-              },
-              { label: 'PAC position', value: state.catheter.position.toUpperCase() },
-              { label: 'Model time', value: `${state.timeSeconds.toFixed(1)} s` },
-            ]}
-            immediateGoal={
-              phase === 'recognize'
-                ? definition.presentation
-                : phase === 'transfer'
-                  ? 'Revalidate the altered measurement chain before carrying the case interpretation forward.'
-                  : 'Build a mechanism, act in bounded tiers, and reassess the whole patient.'
-            }
-            safetyConstraints={[
-              'Educational model—not a clinical device.',
-              'No patient-specific dosing or treatment guidance.',
-            ]}
-          />
-        }
-        viewport={viewport}
-        currentTask={
-          <TaskPanel
-            objective={
-              phase === 'recognize'
-                ? 'Recognize the patient, signal quality, and immediate problem.'
-                : phase === 'predict'
-                  ? 'Commit to a mechanism and immediate priority.'
-                  : phase === 'act'
-                    ? 'Validate signals and choose bounded modeled interventions.'
-                    : phase === 'observe'
-                      ? 'Observe the response and complete a whole-patient reassessment.'
-                      : phase === 'explain'
-                        ? 'Capture your frame, compare reasoning traces, and locate the divergence.'
-                        : 'Apply signal validation to an altered level and dynamic-response variant.'
-            }
-            requiredAction={
-              phase === 'recognize'
-                ? definition.presentation
-                : phase === 'act'
-                  ? 'Use the monitor, optional CO/derived surfaces, and case interventions.'
-                  : 'Complete the current reasoning checkpoint.'
-            }
-            targets={
-              mode === 'challenge'
-                ? ['Work from the displayed cues; teaching feedback arrives at the debrief.']
-                : definition.successCriteria.map((criterion) => criterion.label)
-            }
-            hint={mode === 'challenge' ? undefined : definition.guidedPrompt}
-            hintVisible={hintVisible}
-            onHintRequested={mode === 'challenge' ? undefined : showHint}
-            mode={modeLabel}
-          >
-            <div className="grid gap-4">
-              {taskControls}
-              {inlineFeedbackEvents.map((event) => (
-                <ScenarioFeedbackCard
-                  key={event.id}
-                  event={event}
-                  onRewind={
-                    event.id === activeHardInterruptId
-                      ? () => {
-                          setActiveHardInterruptId(null)
-                          setRevealedFeedbackIds((current) =>
-                            current.filter((feedbackId) => feedbackId !== event.id),
-                          )
-                          setMessage(
-                            'Returned to the unchanged pre-action state. Choose a different action when ready.',
-                          )
-                        }
-                      : undefined
-                  }
-                />
-              ))}
-            </div>
-          </TaskPanel>
-        }
-        bottomContent={
-          message ? (
-            <span role="status">{message}</span>
-          ) : (
-            (state.responseMessage ?? 'Ready for your next action.')
-          )
-        }
-        secondaryActions={
-          <>
-            <ReferenceDrawer
-              entries={referenceEntries}
-              trigger={
-                <button
-                  type="button"
-                  className="min-h-10 rounded-lg border px-3 text-xs font-semibold"
-                >
-                  Reference
-                </button>
-              }
-            />
-            <EvidenceDrawer
-              entries={evidenceEntries}
-              trigger={
-                <button
-                  type="button"
-                  className="min-h-10 rounded-lg border px-3 text-xs font-semibold"
-                >
-                  Evidence
-                </button>
-              }
-            />
-          </>
-        }
-        onHelp={showHint}
-        onReset={reset}
-        onSaveAndExit={saveAndExit}
+        minimumViewport="tablet"
+        bandwidthClass="standard"
+        estimatedSizeLabel="Under 2 MB after shared application assets"
+        lightweightAlternativeHref={`/icu-hemodynamics/${section}`}
+        onSaveForLater={saveAndExit}
         theme="dark"
-      />
-    </SimulationLaunchGate>
+      >
+        <div
+          className={flowStyles.caseFlow}
+          data-case-flow
+          data-phase={phase}
+          data-feedback-mode={
+            mode === 'challenge' && !challengeFeedbackImmediate ? 'deferred' : 'immediate'
+          }
+        >
+          <header>
+            <Link href={`/icu-hemodynamics/${section}` as Route}>
+              {mode === 'challenge' ? 'Challenge' : 'Practice'} · <span>{caseId}</span>
+            </Link>
+            <h1>{definition.title}</h1>
+            <div className={flowStyles.caseActions}>
+              <button type="button" onClick={showHint}>
+                Help
+              </button>
+              <button
+                type="button"
+                onClick={reset}
+                disabled={state.catheter.balloonInflated || state.catheter.floatBalloonInflated}
+              >
+                Reset case
+              </button>
+              <button
+                type="button"
+                onClick={saveAndExit}
+                disabled={state.catheter.balloonInflated || state.catheter.floatBalloonInflated}
+              >
+                Save and exit
+              </button>
+              <ReferenceDrawer
+                entries={referenceEntries}
+                trigger={<button type="button">Reference</button>}
+              />
+              <EvidenceDrawer
+                entries={evidenceEntries}
+                trigger={<button type="button">Evidence</button>}
+              />
+            </div>
+            <details>
+              <summary>Case checkpoints</summary>
+              <nav aria-label="Case checkpoints">
+                {(['recognize', 'predict', 'act', 'observe', 'explain', 'transfer'] as const).map(
+                  (candidate) => (
+                    <button
+                      type="button"
+                      key={candidate}
+                      disabled={
+                        state.catheter.balloonInflated ||
+                        (candidate === 'act' && !state.predictionCommitted) ||
+                        (candidate === 'observe' && !canObserve) ||
+                        ((candidate === 'explain' || candidate === 'transfer') && !state.completed)
+                      }
+                      aria-current={candidate === phase ? 'step' : undefined}
+                      onClick={() => selectPhase(candidate)}
+                    >
+                      {objectives[candidate]}
+                    </button>
+                  ),
+                )}
+              </nav>
+            </details>
+          </header>
+          <section className={flowStyles.caseBrief} aria-label="Patient brief">
+            <h2>Patient brief</h2>
+            <p>{definition.presentation}</p>
+            <p>
+              Adult ICU · simulated · HR {metricValue(state.measurements.heartRateBpm)} /min · PEEP{' '}
+              {state.parameters.peepCmH2O} cm H₂O
+            </p>
+          </section>
+          {state.catheter.balloonInflated ? (
+            <aside className={flowStyles.safety} role="status">
+              Balloon active: finish acquisition and recovery before leaving this task.
+              <button type="button" onClick={() => dispatch({ type: 'DEFLATE_WEDGE' })}>
+                Deflate balloon
+              </button>
+            </aside>
+          ) : null}
+          {phase === 'explain' ? (
+            <section className={flowStyles.caseDebrief} aria-label="Case debrief">
+              <h2>{objectives.explain}</h2>
+              <ScenarioTeachingDebrief
+                scenarioTitle={definition.title}
+                decisionTrace={decisionTrace}
+                expertTrace={teachingArtifact.expertTrace}
+                feedbackEvents={feedbackEvents}
+                conceptIds={teachingArtifact.conceptIds}
+                evidence={definition.sourceIds.flatMap((sourceId) => {
+                  const source = hemodynamicsSourceById.get(sourceId)
+                  return source
+                    ? [
+                        {
+                          id: source.id,
+                          title: source.title,
+                          citation: `${source.citation} · version ${source.version}`,
+                        },
+                      ]
+                    : []
+                })}
+                onContinue={beginTransfer}
+              />
+
+              <p>The case was worked through. This does not establish clinical competence.</p>
+              <HemodynamicNativeWorkspace
+                state={state}
+                dispatch={dispatch}
+                interactive={false}
+                revealModel
+              />
+            </section>
+          ) : (
+            <>
+              {phase === 'observe' && baseline ? (
+                <section className={flowStyles.comparison} aria-label="Retained case observations">
+                  <h2>Before action and current response</h2>
+                  <p>Recorded at your interpretation; current values reflect the running model.</p>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Observation</th>
+                        <th>Before action</th>
+                        <th>Current</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <th>MAP (mmHg)</th>
+                        <td>{metricValue(baseline.measurements.mapMmHg)}</td>
+                        <td>{metricValue(state.measurements.mapMmHg)}</td>
+                      </tr>
+                      <tr>
+                        <th>Accepted thermodilution CO (L/min)</th>
+                        <td>
+                          {metricValue(
+                            thermodilutionAcceptedAverage(baseline.thermodilutionTrials),
+                            1,
+                          )}
+                        </td>
+                        <td>{metricValue(average, 1)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </section>
+              ) : null}
+              <HemodynamicNativeWorkspace
+                state={state}
+                dispatch={dispatch}
+                interactive={phase === 'act' || phase === 'transfer'}
+                task={currentTask}
+                pressureChallengeMode={
+                  definition.id === 'HD-08' || phase === 'transfer' ? 'current-state' : 'selectable'
+                }
+              />
+            </>
+          )}
+          {message ? <p role="status">{message}</p> : null}
+          {transferComplete ? (
+            <p role="status">
+              Case worked through. Your history has been retained.{' '}
+              <Link
+                href={
+                  nextLearn
+                    ? { pathname: '/icu-hemodynamics/learn', query: { activity: nextLearn } }
+                    : '/icu-hemodynamics/learn'
+                }
+              >
+                Continue learning
+              </Link>
+            </p>
+          ) : null}
+        </div>
+      </SimulationLaunchGate>
+    </IcuHemodynamicsModuleFrameV2>
   )
 }
