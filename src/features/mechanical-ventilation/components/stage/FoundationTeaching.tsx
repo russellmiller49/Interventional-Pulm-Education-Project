@@ -79,7 +79,7 @@ function WorkedHold({ device }: { device: VentilationSimulationState['deviceId']
   return (
     <div data-worked-hold>
       <p>
-        <strong>Worked reference hold · actual engine maneuver · no learner credit</strong>
+        <strong>Worked reference hold · actual simulated maneuver · no learner credit</strong>
       </p>
       <p>
         Flowing peak {reference.baseline.measurements.peakPressureCmH2O.toFixed(1)} cmH₂O; plateau

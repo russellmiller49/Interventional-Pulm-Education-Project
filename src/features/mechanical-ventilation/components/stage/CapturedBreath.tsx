@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import type { WaveformSample } from '../../engine/types'
 import type { BreathStopId } from '../../content/breathSpine'
 import {
@@ -16,6 +16,7 @@ const labels = {
   pawCmH2O: 'Airway pressure (cmH₂O)',
   flowLMin: 'Flow (L/min)',
   volumeMl: 'Breath-relative volume (mL)',
+  pmusCmH2O: 'Effort · model (cmH₂O)',
 }
 const stopNames: Record<BreathStopId, string> = {
   trigger: 'Trigger',
@@ -33,6 +34,8 @@ export function CapturedBreath({
   axes,
   whole = true,
   onInspect,
+  effort = false,
+  durationSeconds,
 }: {
   samples: readonly WaveformSample[]
   label: string
@@ -42,9 +45,23 @@ export function CapturedBreath({
   axes?: WaveformAxes
   whole?: boolean
   onInspect?: (sample: WaveformSample, previous: WaveformSample) => void
+  effort?: boolean
+  /** Shared physical time range for retained before/after comparisons. */
+  durationSeconds?: number
 }) {
   const id = useId()
+  const figureRef = useRef<HTMLElement>(null)
+  const [width, setWidth] = useState(360)
   const breath = whole ? completedBreath(samples) : samples
+  const hasCompleteBreath = breath.length >= 4
+  useEffect(() => {
+    if (!figureRef.current || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(([entry]) =>
+      setWidth(Math.max(180, entry.contentRect.width)),
+    )
+    observer.observe(figureRef.current)
+    return () => observer.disconnect()
+  }, [hasCompleteBreath])
   const [position, setPosition] = useState<number | null>(null)
   const index = Math.min(
     breath.length - 1,
@@ -57,22 +74,25 @@ export function CapturedBreath({
         A complete breath is not yet available. Run or advance one breath, then capture again.
       </p>
     )
-  const bounds = axes ?? waveformAxes(breath)
+  const bounds = { ...(axes ?? waveformAxes(breath)), pmusCmH2O: [-25, 5] as const }
+  const fields = effort ? [...waveformFields, 'pmusCmH2O' as const] : waveformFields
   const first = breath[0].time
   const duration = breath.at(-1)!.time - first
+  const timeRange = Math.max(duration, durationSeconds ?? 0)
   const sample = breath[index]
   const previous = breath[Math.max(0, index - 1)]
-  const x = (time: number) => 50 + ((time - first) / duration) * 290
-  const y = (value: number, field: (typeof waveformFields)[number]) =>
+  const x = (time: number) => 50 + ((time - first) / timeRange) * (width - 70)
+  const y = (value: number, field: (typeof fields)[number]) =>
     64 - ((value - bounds[field][0]) / (bounds[field][1] - bounds[field][0])) * 54
   const cycling = breath.findIndex((s) => s.phase === 'expiration')
   const highlighted = stop === 'trigger' || stop === 'cycling' ? stop : sample.phase
   const from = highlighted === 'expiration' ? breath[cycling]?.time : first
   const to = highlighted === 'inspiration' ? breath[cycling]?.time : breath.at(-1)!.time
-  const text = `Cursor at ${(sample.time - first).toFixed(2)} s. Airway pressure ${sample.pawCmH2O.toFixed(1)} cmH₂O; flow ${sample.flowLMin.toFixed(1)} L/min; volume ${previous.volumeMl.toFixed(0)} to ${sample.volumeMl.toFixed(0)} mL over the preceding ${(sample.time - previous.time).toFixed(2)} s.`
+  const text = `Cursor at ${(sample.time - first).toFixed(2)} s. Airway pressure ${sample.pawCmH2O.toFixed(1)} cmH₂O; flow ${sample.flowLMin.toFixed(1)} L/min; volume ${previous.volumeMl.toFixed(0)} to ${sample.volumeMl.toFixed(0)} mL over the preceding ${(sample.time - previous.time).toFixed(2)} s.${effort ? ` Model effort ${sample.pmusCmH2O.toFixed(1)} cmH₂O; machine ${sample.phase}.` : ''}`
   return (
     <figure
       className={styles.capturedBreath}
+      ref={figureRef}
       data-captured-breath
       data-guided-stop={guided ? stop : undefined}
     >
@@ -80,8 +100,8 @@ export function CapturedBreath({
         <strong>{label}</strong>
         {guided ? ' · Worked demonstration; no independent credit' : ''}
       </figcaption>
-      <svg viewBox="0 0 360 278" role="img" aria-label={text}>
-        {waveformFields.map((field, row) => (
+      <svg viewBox={`0 0 ${width} ${fields.length * 85 + 23}`} role="img" aria-label={text}>
+        {fields.map((field, row) => (
           <g key={field} transform={`translate(0 ${row * 85})`}>
             <text x="0" y="12">
               {labels[field]}
@@ -106,18 +126,18 @@ export function CapturedBreath({
                   </text>
                   <line
                     x1="50"
-                    x2="340"
+                    x2={width - 20}
                     y1={y(v, field)}
                     y2={y(v, field)}
                     className={styles.breathGrid}
                   />
                 </g>
               ))}
-              {field === 'flowLMin' ? (
+              {bounds[field][0] < 0 ? (
                 <g>
                   <line
                     x1="50"
-                    x2="340"
+                    x2={width - 20}
                     y1={y(0, field)}
                     y2={y(0, field)}
                     className={styles.zeroLine}
@@ -156,16 +176,28 @@ export function CapturedBreath({
             </g>
           </g>
         ))}
-        <text x="50" y="275">
+        <text x="50" y={fields.length * 85 + 20}>
           0
         </text>
-        <text x="145" y="275">
+        <text x={width / 2} y={fields.length * 85 + 20} textAnchor="middle">
           Time (s)
         </text>
-        <text x="307" y="275">
-          {duration.toFixed(2)}
+        <text x={width - 20} y={fields.length * 85 + 20} textAnchor="end">
+          {timeRange.toFixed(2)}
         </text>
       </svg>
+      <p className={styles.quickNote}>
+        Breath duration {duration.toFixed(2)} s ·{' '}
+        {durationSeconds
+          ? 'Shared comparison time and signal scales'
+          : 'One time axis for all signals'}
+      </p>
+      {effort ? (
+        <p className={styles.quickNote}>
+          Effort is a teaching model signal, not routine measured ventilator data. Read the onset
+          and end of effort separately from machine inspiration.
+        </p>
+      ) : null}
       {fixedIndex === undefined && !stop ? (
         <label className={styles.cursorControl}>
           Inspect time in this captured trace

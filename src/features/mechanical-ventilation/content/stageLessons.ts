@@ -31,6 +31,7 @@ import {
   type VentilationSettingSort,
 } from './stageItems'
 import { labMetricLabels } from '../engine/learningLab'
+import { ventilationTaskPresentation, type VentilationTaskPresentation } from './taskPresentation'
 
 /**
  * Each unit as a lesson on the stage.
@@ -105,6 +106,7 @@ export interface VentilationStepGuide {
 }
 
 export interface VentilationStageStep extends StageStepBase<VentilationStageInteraction> {
+  readonly presentation: VentilationTaskPresentation
   /**
    * Which pane this step is worked in, and what to look for there — required on every step. The
    * Now card prints it under the instruction, the help dialog repeats it, and the builder refuses
@@ -374,12 +376,12 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
         ? { kind: 'locate', item: location.item, targets: location.targets }
         : { kind: 'read' }
 
-  const steps: Omit<VentilationStageStep, 'ordinal' | 'id'>[] = [
+  const steps: Omit<VentilationStageStep, 'ordinal' | 'id' | 'presentation'>[] = [
     {
       phase: 'recognize',
       title: foundation?.title ?? spec.recognizeTitle,
       instruction: foundation
-        ? 'Read the explanation and worked reference in the Teaching panel. Inspect the aligned traces or setting map, then continue to your own application.'
+        ? 'Inspect the worked reference below, then apply the concept to your own breath or experiment.'
         : spec.recognizeInstruction,
       rationale: unit.increment,
       actionLabel:
@@ -432,7 +434,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
         roundManeuver(first) === 'pause'
           ? 'Playback changes the display and elapsed time; captured inspection changes only the view. Phase identification is recorded separately.'
           : roundManeuver(first) === 'change'
-            ? 'The change is yours to make, on the console or with the quick controls beneath it. The step is done once the patient is receiving it.'
+            ? 'Use the task control or the selected native console to make the change. The step is done once the patient is receiving it.'
             : 'You are taking a measurement, not treating anything. The step is done once the maneuver has happened on the console.',
       actionLabel: 'Continue',
       interaction: { kind: 'simulator-task', round: 0, goals: first.goals, withObservation: false },
@@ -473,10 +475,10 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
       phase: 'explain',
       title: first.title,
       instruction: foundation
-        ? 'Compare the recorded response with your observation, then review the mechanism in the Teaching panel.'
+        ? 'Compare the recorded response with your observation, then review the mechanism.'
         : roundManeuver(first) === 'pause'
-          ? 'Read the verdict on your prediction and what the frozen traces showed, then the explanation under it. The Teaching panel opens on the picture and the checklist.'
-          : 'Read the verdict on your prediction and what actually changed, then the explanation under it. The Teaching panel opens on the picture and the checklist.',
+          ? 'Read the verdict on your prediction and what the frozen traces showed, then the explanation under it. The picture and checklist are available with this comparison.'
+          : 'Read the verdict on your prediction and what actually changed, then the explanation under it. The picture and checklist are available with this comparison.',
       actionLabel: 'Continue to a new setup',
       interaction: { kind: 'explain', round: 0 },
       lookIn: {
@@ -584,6 +586,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
 
   const built: VentilationStageStep[] = steps.map((step, position) => ({
     ...step,
+    presentation: ventilationTaskPresentation(unitId, step.interaction),
     ordinal: position + 1,
     id: stepId(unitId, step.phase, position + 1),
   }))

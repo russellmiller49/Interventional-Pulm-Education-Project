@@ -18,7 +18,7 @@ import {
   type CriticalCareActivityPhase,
   type CriticalCareResumePointer,
 } from '@/features/learning-module/activity'
-import { ActivityShell } from '@/features/learning-module/components/ActivityShell'
+import { VentilationCaseLayout } from './VentilationCaseLayout'
 import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
 import { PatientContextBar } from '@/features/learning-module/components/PatientContextBar'
 import { ReferenceDrawer } from '@/features/learning-module/components/ReferenceDrawer'
@@ -35,6 +35,7 @@ import {
   type VentilationEvidenceReference,
 } from '../content'
 import { classifyCaseFindings, type FindingKind } from '../content/caseFindings'
+import { ventilationCasePresentationTitle } from '../content/casePresentation'
 import {
   MECHANICAL_VENTILATION_REPLAY_PAYLOAD_VERSION,
   clearMechanicalVentilationSession,
@@ -146,6 +147,7 @@ const requiredTransferEvidence = [
 ] as const
 
 function TransferFollowUp({
+  state,
   definition,
   selectedMechanismId,
   evidence,
@@ -154,6 +156,7 @@ function TransferFollowUp({
   onMechanismSelected,
   onAction,
 }: {
+  readonly state: VentilationSimulationState
   readonly definition: VentilationCaseDefinition
   readonly selectedMechanismId: string
   readonly evidence: readonly string[]
@@ -176,6 +179,26 @@ function TransferFollowUp({
       hintVisible={false}
     >
       <div className="grid gap-4">
+        <div className="flex flex-wrap items-center gap-2" aria-label="Playback and inspection">
+          <strong>Playback / inspection</strong>
+          <button
+            type="button"
+            className={styles.bottomUtility}
+            onClick={() => onAction({ type: 'SET_PAUSED', paused: !state.paused })}
+          >
+            {state.paused ? 'Run transfer patient' : 'Pause transfer patient'}
+          </button>
+          <button
+            type="button"
+            className={styles.bottomUtility}
+            onClick={() => onAction({ type: 'STEP_BREATH' })}
+          >
+            Advance one transfer breath
+          </button>
+          <span aria-live="off" data-transfer-time={state.simulationTime}>
+            {state.simulationTime.toFixed(0)} simulated seconds
+          </span>
+        </div>
         <fieldset className="grid gap-2">
           <legend className="text-sm font-semibold leading-6">
             A different ventilated patient now has the findings and waveforms shown. Which mechanism
@@ -331,7 +354,13 @@ function bootstrapCase(props: MechanicalVentilationCaseActivityV2Props): CaseBoo
   )
 
   if ((resumeCompatible || transferSafeCompatible) && storedSession && sessionCompatible) {
-    const restored = replayMechanicalVentilationSession(storedSession)
+    const replayed = replayMechanicalVentilationSession(storedSession)
+    // Replay tolerates sub-millisecond floating-point differences. Retain the validated saved
+    // clock so its final event cannot become a future event when this checkpoint is saved again.
+    const restored =
+      replayed && Math.abs(replayed.simulationTime - storedSession.simulationTime) <= 0.001
+        ? { ...replayed, simulationTime: storedSession.simulationTime }
+        : replayed
     if (restored) {
       return {
         state:
@@ -516,25 +545,28 @@ export default function MechanicalVentilationCaseActivityV2(
     () =>
       maskedAssessment
         ? []
-        : classifyCaseFindings(caseId).map((finding, index) => ({
-            id: `${caseId}-finding-${index}`,
-            title: findingTitles[finding.kind],
-            summary: finding.text,
-          })),
-    [caseId, maskedAssessment],
+        : classifyCaseFindings(caseId)
+            .filter(
+              (finding) =>
+                mode === 'guided' || state.phase === 'debrief' || finding.kind === 'present',
+            )
+            .map((finding, index) => ({
+              id: `${caseId}-finding-${index}`,
+              title: findingTitles[finding.kind],
+              summary: finding.text,
+            })),
+    [caseId, maskedAssessment, mode, state.phase],
   )
 
-  const transferReferenceEntries = useMemo(
-    () =>
-      maskedAssessment
-        ? []
-        : classifyCaseFindings(transferCaseId).map((finding, index) => ({
-            id: `${transferCaseId}-finding-${index}`,
-            title: findingTitles[finding.kind],
-            summary: finding.text,
-          })),
-    [maskedAssessment, transferCaseId],
-  )
+  const transferReferenceEntries = maskedAssessment
+    ? []
+    : classifyCaseFindings(transferCaseId)
+        .filter((finding) => completed || finding.kind === 'present')
+        .map((finding, index) => ({
+          id: `${transferCaseId}-finding-${index}`,
+          title: findingTitles[finding.kind],
+          summary: finding.text,
+        }))
 
   const buildPointer = useCallback(
     (now: string): CriticalCareResumePointer => ({
@@ -641,10 +673,12 @@ export default function MechanicalVentilationCaseActivityV2(
 
   useEffect(() => {
     const intervalMs = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 250 : 100
-    const timer = window.setInterval(
-      () => coreDispatch({ type: 'TICK', seconds: intervalMs / 1000 }),
-      intervalMs,
-    )
+    const timer = window.setInterval(() => {
+      const action: VentilationAction = { type: 'TICK', seconds: intervalMs / 1000 }
+      if (activityPhaseRef.current === 'transfer')
+        dispatchTransferSession({ type: 'DISPATCH', action })
+      else coreDispatch(action)
+    }, intervalMs)
     return () => window.clearInterval(timer)
   }, [])
 
@@ -925,8 +959,8 @@ export default function MechanicalVentilationCaseActivityV2(
     activeState.phase === 'debrief' ||
     activeState.criticalErrors.length > 0
   const shellTitle = inTransfer
-    ? `Transfer · ${transferDefinition.id} · ${transferDefinition.title}`
-    : `${definition.id} · ${definition.title}`
+    ? `Transfer · ${transferDefinition.id} · ${completed ? transferDefinition.title : ventilationCasePresentationTitle(transferDefinition.id)}`
+    : `${definition.id} · ${state.phase === 'debrief' ? definition.title : ventilationCasePresentationTitle(definition.id)}`
 
   const bottomAction = completed ? (
     <Link
@@ -967,7 +1001,7 @@ export default function MechanicalVentilationCaseActivityV2(
           pending.
         </div>
       ) : null}
-      <ActivityShell
+      <VentilationCaseLayout
         layout="native-workbench"
         activityId={expectedActivityId}
         assumedConceptIds={catalogActivity?.assumedConceptIds}
@@ -1030,14 +1064,22 @@ export default function MechanicalVentilationCaseActivityV2(
         viewport={
           <div className={styles.caseViewport}>
             <div className={styles.patientSurface}>
-              <BedsidePanel state={activeState} definition={activeDefinition} compact />
+              <BedsidePanel
+                state={activeState}
+                definition={activeDefinition}
+                compact
+                requireAssessment={mode !== 'guided' || inTransfer}
+              />
             </div>
             <div className={styles.consoleSurface}>
               <MechanicalVentilatorConsole
-                key={`${deviceId}:${activeState.caseId}:${activeState.ventilator.settings.deviceMode}:${resetVersion}`}
+                key={`${deviceId}:${activeState.caseId}:${resetVersion}`}
                 state={activeState}
                 dispatch={inTransfer ? dispatchTransfer : dispatch}
                 controlsEnabled
+                allowTeachingAnnotations={
+                  inTransfer ? completed : mode === 'guided' || state.phase === 'debrief'
+                }
               />
             </div>
           </div>
@@ -1046,6 +1088,7 @@ export default function MechanicalVentilationCaseActivityV2(
           <div className={styles.workflowSurface}>
             {inTransfer ? (
               <TransferFollowUp
+                state={transferSession.state}
                 definition={transferDefinition}
                 selectedMechanismId={transferMechanismId}
                 evidence={transferSession.evidence}
@@ -1078,6 +1121,8 @@ export default function MechanicalVentilationCaseActivityV2(
                  * for itself rather than trusting this flag.
                  */
                 coachingEnabled={section === 'practice'}
+                focusedPhase={activityPhase}
+                onFocusPhase={selectActivityPhase}
               />
             )}
           </div>

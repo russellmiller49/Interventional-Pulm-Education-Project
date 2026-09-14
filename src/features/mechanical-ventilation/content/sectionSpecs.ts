@@ -242,7 +242,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Localize a timing mismatch to the start of the breath or to the end of inspiration, from the effort trace and the flow trace.',
     recognizeTitle: 'Where does the mismatch live?',
     recognizeInstruction:
-      'Watch this patient for several breaths with the dashed effort trace in view. Then choose the stop on the breath map where the patient and the machine disagree.',
+      'Watch this patient for several breaths with the dashed effort trace in view. Then identify where the patient and machine disagree using the response choices beside the tracing.',
     stops: ['trigger', 'cycling'],
     knobStrip: strip({
       mode: {
@@ -320,7 +320,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Given a striking feature on one trace, follow the whole breath in order and name the discriminating observation.',
     recognizeTitle: 'Where do the extra breaths come from?',
     recognizeInstruction:
-      'The displayed rate is higher than the set rate. Watch several breaths against the dashed effort trace, then choose the stop on the breath map where the extra breaths originate.',
+      'The displayed rate is higher than the set rate. Watch several breaths against the dashed effort trace, then identify where the extra breaths originate using the response choices beside the tracing.',
     stops: ['trigger', 'inspiration'],
     knobStrip: strip({
       mode: noKnob(
@@ -338,7 +338,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Distinguish a delivery mismatch during the push from a trigger or cycling mismatch, and name the reassessment each one needs.',
     recognizeTitle: 'Where does this patient’s discomfort live?',
     recognizeInstruction:
-      'This patient starts every supported breath but is uncomfortable. Watch the early part of each push against the effort trace, then choose the stop on the breath map.',
+      'This patient starts every supported breath but is uncomfortable. Watch the early part of each push against the effort trace, then identify the interval using the response choices beside the tracing.',
     stops: ['inspiration', 'cycling'],
     knobStrip: strip({
       mode: {
@@ -365,10 +365,10 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Decide which finding would show that an intervention helped this patient, and which findings only show that it was performed.',
     recognizeTitle: 'The person before the machine',
     recognizeInstruction:
-      'This awake patient is distressed. Open the patient and circuit findings, below the breath map, and read them before touching any setting.',
+      'This awake patient is distressed. Read the available patient context, then assess the patient and communicate before changing a setting.',
     recognizeLookIn: {
       pane: 'simulator',
-      landmark: 'Patient and circuit findings, below the breath map',
+      landmark: 'Patient context and bedside actions',
     },
     stops: [],
     knobStrip: strip({

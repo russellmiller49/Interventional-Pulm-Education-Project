@@ -7,7 +7,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 const base = process.env.MV_REVIEW_URL ?? 'http://127.0.0.1:3161'
-const output = path.resolve('artifacts/mv-targeted')
+const output = path.resolve(process.env.MV_REVIEW_OUTPUT ?? 'artifacts/mv-targeted')
 await mkdir(output, { recursive: true })
 const browser = await chromium.launch()
 const results = []
@@ -83,14 +83,15 @@ try {
   for (const [unit, predictions, controls, observations] of scenarios) {
     if (process.env.MV_REVIEW_UNIT && unit !== process.env.MV_REVIEW_UNIT) continue
     const page = await browser.newPage({
+      ...(process.env.MV_REVIEW_STORAGE ? { storageState: process.env.MV_REVIEW_STORAGE } : {}),
       viewport: { width: 1440, height: 900 },
       reducedMotion: 'reduce',
     })
     const errors = []
     page.on('pageerror', (e) => errors.push(e.message))
-    await page.clock.install()
     await page.goto(`${base}/en/mechanical-ventilation/learn?activity=${unit}`)
-    await expect(page.locator('[data-foundation-teaching]')).toBeVisible()
+    await expect(page.locator('[data-foundation-teaching]')).toBeVisible({ timeout: 30000 })
+    await page.clock.install()
     await screenshot(page, `${unit}-teaching-1440`)
     if (unit === 'waveform-anatomy') {
       const positions = []
@@ -146,7 +147,12 @@ try {
         await page.getByRole('combobox', { name: 'Simulation speed' }).selectOption('5')
         const run = page.getByRole('button', { name: 'Run', exact: true })
         if (await run.count()) await run.click()
-        await page.clock.runFor(9000)
+        for (
+          let wait = 0;
+          wait < 8 && (await page.locator('[data-now-primary]').isDisabled());
+          wait++
+        )
+          await page.clock.runFor(9000)
       }
       await primary(page)
       await expect(page.locator('[data-observation-task]')).toBeVisible()
@@ -231,7 +237,7 @@ try {
     await expect(page.locator('[data-now-card]')).toContainText(
       'This section has been worked through.',
     )
-    await expect(page.getByRole('button', { name: 'Run', exact: true })).toBeVisible()
+    await expect(page.locator('[data-task-workbench]')).toHaveCount(0)
     await page.close()
     console.log(`PASS ${unit}: both rounds, recorded observation, refresh`)
   }

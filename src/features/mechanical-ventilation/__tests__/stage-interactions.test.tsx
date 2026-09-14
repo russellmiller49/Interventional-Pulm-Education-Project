@@ -2,7 +2,7 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 
 import { VentilationStageHost } from '../components/stage/VentilationStageHost'
-import { breathStop, breathStopIds } from '../content/breathSpine'
+import { breathStopIds } from '../content/breathSpine'
 import { ventilationLocationItemByUnit, ventilationSettingSort } from '../content/stageItems'
 import { ventilationStageLesson } from '../content/stageLessons'
 import { ventilationExperimentByUnit } from '../content/learningExperiments'
@@ -44,16 +44,11 @@ const primary = () => document.querySelector('[data-now-primary]') as HTMLButton
 const stageId = () => document.querySelector('[data-stage]')?.getAttribute('data-stage')
 
 describe('the walk', () => {
-  it('visits the four stops in order, lights each on the map, and only then continues', () => {
+  it('visits four synchronized intervals in order before independent application', () => {
     render(<VentilationStageHost unitId="waveform-anatomy" />)
     boot()
     expect(stageId()).toBe(ventilationStageLesson('waveform-anatomy').steps[0].id)
     for (const [index, stopId] of breathStopIds.entries()) {
-      const map = document.querySelector('[data-breath-map]')!
-      expect(map.getAttribute('data-lit')).toBe(stopId)
-      expect(document.querySelector('[data-breath-map-caption]')?.textContent).toContain(
-        breathStop(stopId).title,
-      )
       expect(document.querySelector('[data-walk-stop]')?.getAttribute('data-walk-stop')).toBe(
         stopId,
       )
@@ -73,23 +68,22 @@ describe('answering where on the breath', () => {
   const unitId = 'triggering-and-cycling'
   const location = ventilationLocationItemByUnit.get(unitId)!
 
-  it('is a real radio group on the map, numbered along the breath, silent until committed, and withholds the findings', () => {
+  it('places one independent radio group beside unlabelled aligned traces and withholds findings', () => {
     render(<VentilationStageHost unitId={unitId} />)
     boot()
-    const answer = document.querySelector('[data-breath-map-answer]')!
+    fireEvent.click(primary()!) // separate normal reference → independent tracing
+    const answer = document.querySelector('[data-location-choices]')!
     const radios = within(answer as HTMLElement).getAllByRole('radio')
     expect(radios).toHaveLength(4)
     expect(radios.map((radio) => (radio as HTMLInputElement).name)).toEqual(
       Array(4).fill(radios[0].getAttribute('name')),
     )
-    // The pins carry the stop numbers in breath order, whatever the authored choice order.
-    const pins = [...document.querySelectorAll('[data-breath-pin]')]
-    expect(pins.map((pin) => pin.getAttribute('data-breath-pin'))).toEqual([...breathStopIds])
-    expect(pins.map((pin) => pin.textContent)).toEqual(['1', '2', '3', '4'])
+    expect(document.querySelector('[data-breath-map]')).toBeNull()
+    expect(document.querySelector('[data-phase-band]')).toBeNull()
     // Nothing says which is right, and the findings are not yet available.
     expect(document.querySelector('[data-breath-map-outcome]')).toBeNull()
     expect(document.querySelector('[data-bedside-findings]')).toBeNull()
-    expect(document.querySelector('[data-bedside-withheld]')).not.toBeNull()
+    expect(document.querySelector('[data-normal-timing]')).toBeNull()
     expect(primary()).toBeDisabled()
 
     // Choose from a pin's row (the same radio the pin labels), commit, and read the verdict.
@@ -102,12 +96,8 @@ describe('answering where on the breath', () => {
     fireEvent.click(primary()!)
     const verdict = document.querySelector('[data-answer-verdict]')!
     expect(verdict.getAttribute('data-verdict-outcome')).toBe('correct')
-    expect(document.querySelectorAll('[data-breath-map-outcome]').length).toBe(1)
-    expect(document.querySelector('[data-breath-map-outcome]')?.textContent).toMatch(
-      /your answer · correct/,
-    )
-    expect((answer as HTMLFieldSetElement).disabled).toBe(true)
-    expect(document.querySelector('[data-bedside-findings]')).not.toBeNull()
+    expect(document.querySelector('[data-location-choices]')).toBeNull()
+    expect(verdict.textContent).toContain(location.item.choices.find((c) => c.id === keyed)!.label)
     const saved = parseLabProgress(localStorage.getItem(VENTILATION_LAB_STORAGE_KEY))
     expect(saved.units[unitId]?.evidence[0].location).toBe(keyed)
 
@@ -117,20 +107,18 @@ describe('answering where on the breath', () => {
     expect(document.querySelector('[data-prediction-choices]')).not.toBeNull()
   })
 
-  it('names a wrong stop as such and still marks the right one', () => {
+  it('explains a wrong location after commitment without reoffering its answer form', () => {
     render(<VentilationStageHost unitId={unitId} />)
     boot()
-    const answer = document.querySelector('[data-breath-map-answer]') as HTMLElement
+    fireEvent.click(primary()!) // separate normal reference → independent tracing
+    const answer = document.querySelector('[data-location-choices]') as HTMLElement
     const wrong = location.item.choices.find((c) => c.plausibility !== 'best')!
     fireEvent.click(within(answer).getByRole('radio', { name: wrong.label }))
     fireEvent.click(primary()!)
     expect(
       document.querySelector('[data-answer-verdict]')?.getAttribute('data-verdict-outcome'),
     ).toBe('not-correct')
-    const outcomes = [...document.querySelectorAll('[data-breath-map-outcome]')].map(
-      (node) => node.textContent,
-    )
-    expect(outcomes.sort()).toEqual(['correct', 'your answer'])
+    expect(document.querySelector('[data-how-to-distinguish]')).not.toBeNull()
   })
 })
 
@@ -146,7 +134,7 @@ describe('the settings sort', () => {
     fireEvent.click(within(nowCard()).getByRole('radio', { name: first.choices[first.correct] }))
     fireEvent.click(primary()!) // commit
     fireEvent.click(primary()!) // → Act
-    fireEvent.change(screen.getByRole('slider', { name: /Tidal volume/ }), {
+    fireEvent.change(document.getElementById('mv-quick-vtMl')!, {
       target: { value: '500' },
     })
     fireEvent.click(primary()!) // → Observe
@@ -217,17 +205,12 @@ describe('a round whose action is a pause', () => {
         ?.getAttribute('data-step-state'),
     ).not.toBe('done')
 
-    // Let a breath pass, then pause while gas is leaving.
-    simulate(5)
-    const flowValue = () => {
-      const label = [...document.querySelectorAll('[data-ventilation-console] figure')].find(
-        (f) => f.querySelector('strong')?.textContent === 'Flow',
-      )
-      return Number(label?.querySelector('span')?.textContent?.split(' ')[0] ?? '0')
-    }
-    for (let tick = 0; tick < 60 && flowValue() > -1; tick += 1) simulate(0.1)
-    expect(flowValue()).toBeLessThan(-1)
-    fireEvent.click(screen.getByRole('button', { name: /^Pause$/ }))
+    // Capture with the linked keyboard-equivalent cursor; a timed Pause click is unnecessary.
+    const cursor = screen.getByRole('slider', { name: 'Captured breath time cursor' })
+    fireEvent.change(cursor, {
+      target: { value: Math.floor(Number(cursor.getAttribute('max')) * 0.3) },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Use this captured interval' }))
     expect(within(nowCard()).getByText(/Done\. A breath interval is captured/)).toBeInTheDocument()
     fireEvent.click(primary()!) // → Observe
     expect(stageId()).toBe(lesson.steps[3].id)

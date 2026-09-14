@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 
 import { branchResolution } from '../content/caseFindings'
+import type { CriticalCareActivityPhase } from '@/features/learning-module/activity'
 import {
   capturePostActionBaseline,
   postActionObservation,
@@ -210,6 +211,8 @@ export function CaseWorkflow({
   showActionFeedback = true,
   onShowActionFeedbackChange,
   coachingEnabled = false,
+  focusedPhase,
+  onFocusPhase,
 }: {
   state: VentilationSimulationState
   definition: VentilationCaseDefinition
@@ -224,6 +227,8 @@ export function CaseWorkflow({
    * Off by default so a caller that has not thought about it does not get it by accident.
    */
   coachingEnabled?: boolean
+  focusedPhase?: CriticalCareActivityPhase
+  onFocusPhase?: (phase: CriticalCareActivityPhase) => void
 }) {
   const [mechanismId, setMechanismId] = useState('')
   const [priorityId, setPriorityId] = useState('')
@@ -322,34 +327,50 @@ export function CaseWorkflow({
   )
 
   return (
-    <section className={styles.workflowPanel} aria-labelledby="workflow-heading">
+    <section
+      className={styles.workflowPanel}
+      aria-labelledby="workflow-heading"
+      data-focused-workflow={focusedPhase}
+    >
       <div className={styles.panelHeading}>
         <div>
           <span>{state.experience === 'learn' ? 'Guided case' : 'Independent attempt'}</span>
           <h2 id="workflow-heading">
-            {definition.id} · {definition.title}
+            {focusedPhase
+              ? focusedPhase === 'recognize'
+                ? 'Read the patient and one breath'
+                : focusedPhase === 'predict'
+                  ? 'Record your interpretation and priority'
+                  : focusedPhase === 'act'
+                    ? 'Manage the patient'
+                    : focusedPhase === 'observe'
+                      ? 'Reassess the response'
+                      : 'Review this attempt'
+              : `${definition.id} · ${definition.title}`}
           </h2>
         </div>
         <span className={styles.difficultyBadge}>{definition.difficulty}</span>
       </div>
 
-      <ol className={styles.workflowStepper} aria-label="Case workflow">
-        {['Observe', 'Commit', 'Intervene', 'Observe response', 'Reassess', 'Debrief'].map(
-          (label, index) => {
-            const status = workflowStepState(state, index)
-            return (
-              <li
-                key={label}
-                data-status={status}
-                aria-current={status === 'current' ? 'step' : undefined}
-              >
-                <span>{status === 'complete' ? <Check aria-hidden="true" /> : index + 1}</span>
-                <small>{label}</small>
-              </li>
-            )
-          },
-        )}
-      </ol>
+      {!focusedPhase ? (
+        <ol className={styles.workflowStepper} aria-label="Case workflow">
+          {['Observe', 'Commit', 'Intervene', 'Observe response', 'Reassess', 'Debrief'].map(
+            (label, index) => {
+              const status = workflowStepState(state, index)
+              return (
+                <li
+                  key={label}
+                  data-status={status}
+                  aria-current={status === 'current' ? 'step' : undefined}
+                >
+                  <span>{status === 'complete' ? <Check aria-hidden="true" /> : index + 1}</span>
+                  <small>{label}</small>
+                </li>
+              )
+            },
+          )}
+        </ol>
+      ) : null}
 
       {onShowActionFeedbackChange ? (
         <aside className={styles.challengeFeedbackControl}>
@@ -368,354 +389,425 @@ export function CaseWorkflow({
         </aside>
       ) : null}
 
-      <section id="mv-case-recognize" className={styles.workflowSection} tabIndex={-1}>
-        <div className={styles.workflowSectionHeading}>
-          <Eye aria-hidden="true" />
-          <div>
-            <span>Step 1</span>
-            <h3>Observe the baseline and event</h3>
-          </div>
-        </div>
-        <p>{definition.patientDescription}</p>
-        <div className={styles.simulationTransport}>
-          <button
-            type="button"
-            className={styles.primaryAction}
-            onClick={() => dispatch({ type: 'SET_PAUSED', paused: !state.paused })}
+      {!focusedPhase || focusedPhase !== 'explain' ? (
+        <>
+          <strong>Playback and inspection</strong>
+          <div
+            className={styles.simulationTransport}
+            data-case-transport
+            aria-label="Playback and inspection"
           >
-            {state.paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}
-            {state.paused ? 'Run physiology' : 'Pause'}
-          </button>
-          <button type="button" onClick={() => dispatch({ type: 'STEP_BREATH' })}>
-            <ChevronRight aria-hidden="true" /> One breath
-          </button>
-          <div className={styles.speedGroup} aria-label="Simulation speed">
-            {([1, 5, 30] as const).map((speed) => (
-              <button
-                type="button"
-                key={speed}
-                aria-pressed={state.speed === speed}
-                onClick={() => dispatch({ type: 'SET_SPEED', speed })}
-              >
-                {speed === 1 ? <Clock3 aria-hidden="true" /> : <FastForward aria-hidden="true" />}
-                {speed}×
-              </button>
-            ))}
+            <button
+              type="button"
+              className={focusedPhase ? undefined : styles.primaryAction}
+              onClick={() => dispatch({ type: 'SET_PAUSED', paused: !state.paused })}
+            >
+              {state.paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}
+              {state.paused ? 'Run physiology' : 'Pause'}
+            </button>
+            <button type="button" onClick={() => dispatch({ type: 'STEP_BREATH' })}>
+              <ChevronRight aria-hidden="true" /> One breath
+            </button>
+            <div className={styles.speedGroup} aria-label="Simulation speed">
+              {([1, 5, 30] as const).map((speed) => (
+                <button
+                  type="button"
+                  key={speed}
+                  aria-pressed={state.speed === speed}
+                  onClick={() => dispatch({ type: 'SET_SPEED', speed })}
+                >
+                  {speed === 1 ? <Clock3 aria-hidden="true" /> : <FastForward aria-hidden="true" />}
+                  {speed}×
+                </button>
+              ))}
+            </div>
+            <span className={styles.simulationClock} aria-live="off">
+              {state.simulationTime.toFixed(0)} simulated seconds
+            </span>
           </div>
-          <span className={styles.simulationClock}>
-            {state.simulationTime.toFixed(0)} simulated seconds
-          </span>
-        </div>
-        {state.experience === 'learn' ? (
-          <div className={styles.learnCallout}>
-            <BookOpenCheck aria-hidden="true" />
+          <p>
+            Run, pause, step, and speed change how you inspect this simulation. They are not therapy
+            or a pressure hold.
+          </p>
+        </>
+      ) : null}
+
+      {!focusedPhase || focusedPhase === 'recognize' ? (
+        <section id="mv-case-recognize" className={styles.workflowSection} tabIndex={-1}>
+          <div className={styles.workflowSectionHeading}>
+            <Eye aria-hidden="true" />
             <div>
-              <strong>What to learn here</strong>
-              <ul>
-                {definition.learningObjectives.map((objective) => (
-                  <li key={objective}>{objective}</li>
-                ))}
-              </ul>
+              <span>Step 1</span>
+              <h3>Observe the baseline and event</h3>
             </div>
           </div>
-        ) : null}
-      </section>
+          <p>{definition.patientDescription}</p>
 
-      <section id="mv-case-predict" className={styles.workflowSection} tabIndex={-1}>
-        <div className={styles.workflowSectionHeading}>
-          <ClipboardCheck aria-hidden="true" />
-          <div>
-            <span>Step 2</span>
-            <h3>Commit before changing therapy</h3>
+          {state.experience === 'learn' ? (
+            <div className={styles.learnCallout}>
+              <BookOpenCheck aria-hidden="true" />
+              <div>
+                <strong>What to learn here</strong>
+                <ul>
+                  {definition.learningObjectives.map((objective) => (
+                    <li key={objective}>{objective}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      {!focusedPhase || focusedPhase === 'predict' ? (
+        <section id="mv-case-predict" className={styles.workflowSection} tabIndex={-1}>
+          <div className={styles.workflowSectionHeading}>
+            <ClipboardCheck aria-hidden="true" />
+            <div>
+              <span>Step 2</span>
+              <h3>Commit before changing therapy</h3>
+            </div>
           </div>
-        </div>
-        {state.experience === 'learn' ? (
-          <div className={styles.guidedPrediction}>
-            <p>
-              <strong>Mechanism:</strong>{' '}
-              {
-                definition.mechanismOptions.find(
-                  (item) => item.id === definition.correctMechanismId,
-                )?.label
-              }
+          {state.experience === 'learn' ? (
+            <div className={styles.guidedPrediction}>
+              <p>
+                <strong>Mechanism:</strong>{' '}
+                {
+                  definition.mechanismOptions.find(
+                    (item) => item.id === definition.correctMechanismId,
+                  )?.label
+                }
+              </p>
+              <p>
+                <strong>Safety priority:</strong>{' '}
+                {
+                  definition.priorityOptions.find(
+                    (item) => item.id === definition.correctPriorityId,
+                  )?.label
+                }
+              </p>
+              <p>
+                <strong>Expected response:</strong>{' '}
+                {
+                  definition.responseOptions.find(
+                    (item) => item.id === definition.correctResponseId,
+                  )?.label
+                }
+              </p>
+            </div>
+          ) : state.prediction.committed ? (
+            <p className={styles.committedNotice}>
+              <BadgeCheck aria-hidden="true" /> Initial frame recorded. Act on it, then reassess its
+              physiologic effect.
             </p>
-            <p>
-              <strong>Safety priority:</strong>{' '}
-              {
-                definition.priorityOptions.find((item) => item.id === definition.correctPriorityId)
-                  ?.label
-              }
-            </p>
-            <p>
-              <strong>Expected response:</strong>{' '}
-              {
-                definition.responseOptions.find((item) => item.id === definition.correctResponseId)
-                  ?.label
-              }
-            </p>
-          </div>
-        ) : state.prediction.committed ? (
-          <p className={styles.committedNotice}>
-            <BadgeCheck aria-hidden="true" /> Initial frame recorded. Act on it, then reassess its
-            physiologic effect.
-          </p>
-        ) : (
-          <div className={styles.predictionFields}>
-            <label>
-              Suspected mechanism
-              <select value={mechanismId} onChange={(event) => setMechanismId(event.target.value)}>
-                <option value="">Choose one…</option>
-                {definition.mechanismOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Immediate safety priority
-              <select value={priorityId} onChange={(event) => setPriorityId(event.target.value)}>
-                <option value="">Choose one…</option>
-                {definition.priorityOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Expected physiologic response
-              <select value={responseId} onChange={(event) => setResponseId(event.target.value)}>
-                <option value="">Choose one…</option>
-                {definition.responseOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+          ) : (
+            <div className={styles.predictionFields}>
+              <label>
+                Suspected mechanism
+                <select
+                  value={mechanismId}
+                  onChange={(event) => setMechanismId(event.target.value)}
+                >
+                  <option value="">Choose one…</option>
+                  {definition.mechanismOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Immediate safety priority
+                <select value={priorityId} onChange={(event) => setPriorityId(event.target.value)}>
+                  <option value="">Choose one…</option>
+                  {definition.priorityOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Expected physiologic response
+                <select value={responseId} onChange={(event) => setResponseId(event.target.value)}>
+                  <option value="">Choose one…</option>
+                  {definition.responseOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                className={styles.primaryAction}
+                disabled={!predictionReady}
+                onClick={() =>
+                  dispatch({ type: 'COMMIT_PREDICTION', mechanismId, priorityId, responseId })
+                }
+              >
+                <ClipboardCheck aria-hidden="true" /> Commit prediction
+              </button>
+            </div>
+          )}
+
+          {focusedPhase && (state.experience === 'learn' || state.prediction.committed) ? (
             <button
               type="button"
               className={styles.primaryAction}
-              disabled={!predictionReady}
-              onClick={() =>
-                dispatch({ type: 'COMMIT_PREDICTION', mechanismId, priorityId, responseId })
-              }
+              onClick={() => onFocusPhase?.('act')}
             >
-              <ClipboardCheck aria-hidden="true" /> Commit prediction
+              Begin management
             </button>
-          </div>
-        )}
-      </section>
-
-      <section id="mv-case-act" className={styles.workflowSection} tabIndex={-1}>
-        <div className={styles.workflowSectionHeading}>
-          <Gauge aria-hidden="true" />
-          <div>
-            <span>Steps 3–4</span>
-            <h3>Intervene, then watch the response</h3>
-          </div>
-        </div>
-        <div className={styles.interventionGroups}>
-          {[...groupedInterventions.entries()].map(([category, interventions]) => (
-            <div key={category}>
-              <h4>{categoryLabels[category]}</h4>
-              <div className={styles.interventionGrid}>
-                {interventions.map((intervention) => {
-                  const isPerformed = performedIds.has(intervention.id)
-                  const unmet = intervention.prerequisites?.some((id) => !performedIds.has(id))
-                  return (
-                    <button
-                      type="button"
-                      key={intervention.id}
-                      data-performed={isPerformed}
-                      disabled={Boolean(unmet) || (isPerformed && !intervention.repeatable)}
-                      onClick={() =>
-                        dispatch({ type: 'PERFORM_INTERVENTION', interventionId: intervention.id })
-                      }
-                    >
-                      <span>
-                        {isPerformed ? (
-                          <Check aria-hidden="true" />
-                        ) : intervention.category === 'procedure' ? (
-                          <ShieldAlert aria-hidden="true" />
-                        ) : (
-                          <Stethoscope aria-hidden="true" />
-                        )}
-                        <strong>{intervention.label}</strong>
-                      </span>
-                      <small>{intervention.description}</small>
-                      {unmet ? <em>Requires a prior inspection or stabilizing action.</em> : null}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-        {state.lastResponse &&
-        (showActionFeedback || state.phase === 'debrief' || hardInterruptActive) ? (
-          <div className={styles.responseCallout} role="status">
-            <RotateCcw aria-hidden="true" />
-            <span>{state.lastResponse}</span>
-          </div>
-        ) : null}
-        {!showActionFeedback && state.lastResponse && !hardInterruptActive ? (
-          <p className={styles.deferredResponseNotice}>
-            Routine teaching note saved for the debrief. Read the physiologic response on the
-            patient and ventilator surfaces.
-          </p>
-        ) : null}
-        {state.criticalErrors.length > 0 && state.phase !== 'debrief' ? (
-          <div className={styles.criticalErrorBox} role="alert">
-            <ShieldAlert aria-hidden="true" />
-            <div>
-              <strong>Safety interruption</strong>
-              <p>
-                Stopping here—these findings represent a potentially catastrophic trajectory in a
-                real patient. Stabilize the patient and revisit the action before continuing.
-              </p>
-              <ul>
-                {state.criticalErrors.map((error) => (
-                  <li key={error}>{error}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        ) : null}
-        {/*
-         * Last in the section, deliberately. The safety interruption above is immediate and must not
-         * move down the screen when a block that arrives later appears underneath it; the response
-         * callout above is the evidence this block is about, so the two read together.
-         */}
-        {coachingPending ? (
-          <p className={styles.coachingPending} role="status" data-mv-coaching-pending>
-            The response to this action is still developing. Read the patient and the traces while
-            it does.
-          </p>
-        ) : null}
-        {coaching ? <PostActionCoachingPanel coaching={coaching} /> : null}
-      </section>
-
-      <section id="mv-case-observe" className={styles.workflowSection} tabIndex={-1}>
-        <div className={styles.workflowSectionHeading}>
-          <Stethoscope aria-hidden="true" />
-          <div>
-            <span>Step 5</span>
-            <h3>Repeat the discriminating bedside check</h3>
-          </div>
-        </div>
-        <p>
-          Repeat the waveform review, hold, bedside examination, ABG, or comfort check that can
-          prove or refute your working mechanism.
-        </p>
-        {state.experience === 'learn' ? (
-          <p className={styles.learnPrompt}>
-            Guided target:{' '}
-            {definition.requiredReassessmentIds
-              .map((id) => definition.interventions.find((item) => item.id === id)?.label ?? id)
-              .join(' and ')}
-            .
-          </p>
-        ) : null}
-        <button
-          type="button"
-          className={styles.primaryAction}
-          onClick={() => dispatch({ type: 'COMMIT_REASSESSMENT' })}
-        >
-          <ClipboardCheck aria-hidden="true" /> Commit reassessment
-        </button>
-        <div className={styles.hintRow}>
-          <button
-            type="button"
-            disabled={!hintAvailable}
-            onClick={() => dispatch({ type: 'USE_HINT' })}
-          >
-            <Lightbulb aria-hidden="true" />
-            {state.experience === 'learn' ? 'Show guided hint' : 'Show a focused hint'}
-          </button>
-          {state.experience === 'practice' && !hintAvailable ? (
-            <small>
-              {state.challengeMode === 'timed'
-                ? 'Hints are hidden in timed challenge.'
-                : `Focused hints become available after ${Math.max(0, 60 - state.simulationTime).toFixed(0)} simulated seconds.`}
-            </small>
           ) : null}
-        </div>
-      </section>
+        </section>
+      ) : null}
 
-      <section id="mv-case-explain" className={styles.workflowSection} tabIndex={-1}>
-        <div className={styles.workflowSectionHeading}>
-          <MessageSquareText aria-hidden="true" />
-          <div>
-            <span>Step 6</span>
-            <h3>Reveal the debrief</h3>
-          </div>
-        </div>
-        {state.phase !== 'debrief' ? (
-          <button
-            type="button"
-            className={styles.revealAction}
-            onClick={() => dispatch({ type: 'REVEAL_DEBRIEF' })}
-          >
-            Reveal case reasoning
-          </button>
-        ) : (
-          <div className={styles.debriefPanel}>
-            <div className={styles.outcomeHeader}>
-              <MessageSquareText aria-hidden="true" />
-              <div>
-                <span>
-                  {state.experience === 'learn'
-                    ? 'Guided walkthrough complete'
-                    : 'Case worked through'}
-                </span>
-                <strong>Causal debrief</strong>
-              </div>
-            </div>
-            <p>{definition.debrief}</p>
-            {state.lastResponse ? (
-              <div className={styles.responseCallout}>
-                <RotateCcw aria-hidden="true" />
-                <span>{state.lastResponse}</span>
-              </div>
-            ) : null}
-            <div className={styles.debriefColumns}>
-              <div>
-                <h4>Expected actions</h4>
-                <ul>
-                  {definition.expectedActions.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h4>Accepted alternatives</h4>
-                <ul>
-                  {definition.acceptedAlternatives.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            {outcome.criticalErrors.length ? (
-              <div className={styles.criticalErrorBox}>
-                <ShieldAlert aria-hidden="true" />
+      {!focusedPhase || focusedPhase !== 'explain' ? (
+        <section id="mv-case-act" className={styles.workflowSection} tabIndex={-1}>
+          {!focusedPhase || focusedPhase === 'act' || focusedPhase === 'observe' ? (
+            <>
+              <div className={styles.workflowSectionHeading}>
+                <Gauge aria-hidden="true" />
                 <div>
-                  <strong>Safety stop to revisit</strong>
+                  <span>Steps 3–4</span>
+                  <h3>Intervene, then watch the response</h3>
+                </div>
+              </div>
+            </>
+          ) : null}
+          <details open={!focusedPhase || focusedPhase === 'act' || focusedPhase === 'observe'}>
+            <summary>Bedside actions and safety checks</summary>
+            <div className={styles.interventionGroups}>
+              {[...groupedInterventions.entries()].map(([category, interventions]) => (
+                <div key={category}>
+                  <h4>{categoryLabels[category]}</h4>
+                  <div className={styles.interventionGrid}>
+                    {interventions.map((intervention) => {
+                      const isPerformed = performedIds.has(intervention.id)
+                      const unmet = intervention.prerequisites?.some((id) => !performedIds.has(id))
+                      return (
+                        <button
+                          type="button"
+                          key={intervention.id}
+                          data-performed={isPerformed}
+                          disabled={Boolean(unmet) || (isPerformed && !intervention.repeatable)}
+                          onClick={() =>
+                            dispatch({
+                              type: 'PERFORM_INTERVENTION',
+                              interventionId: intervention.id,
+                            })
+                          }
+                        >
+                          <span>
+                            {isPerformed ? (
+                              <Check aria-hidden="true" />
+                            ) : intervention.category === 'procedure' ? (
+                              <ShieldAlert aria-hidden="true" />
+                            ) : (
+                              <Stethoscope aria-hidden="true" />
+                            )}
+                            <strong>{intervention.label}</strong>
+                          </span>
+                          <small>{intervention.description}</small>
+                          {unmet ? (
+                            <em>Requires a prior inspection or stabilizing action.</em>
+                          ) : null}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </details>
+          {state.lastResponse &&
+          (showActionFeedback || state.phase === 'debrief' || hardInterruptActive) ? (
+            <div className={styles.responseCallout} role="status">
+              <RotateCcw aria-hidden="true" />
+              <span>{state.lastResponse}</span>
+            </div>
+          ) : null}
+          {!showActionFeedback && state.lastResponse && !hardInterruptActive ? (
+            <p className={styles.deferredResponseNotice}>
+              Routine teaching note saved for the debrief. Read the physiologic response on the
+              patient and ventilator surfaces.
+            </p>
+          ) : null}
+          {state.criticalErrors.length > 0 && state.phase !== 'debrief' ? (
+            <div className={styles.criticalErrorBox} role="alert">
+              <ShieldAlert aria-hidden="true" />
+              <div>
+                <strong>Safety interruption</strong>
+                <p>
+                  Stopping here—these findings represent a potentially catastrophic trajectory in a
+                  real patient. Stabilize the patient and revisit the action before continuing.
+                </p>
+                <ul>
+                  {state.criticalErrors.map((error) => (
+                    <li key={error}>{error}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ) : null}
+          {/*
+           * Last in the section, deliberately. The safety interruption above is immediate and must not
+           * move down the screen when a block that arrives later appears underneath it; the response
+           * callout above is the evidence this block is about, so the two read together.
+           */}
+          {coachingPending ? (
+            <p className={styles.coachingPending} role="status" data-mv-coaching-pending>
+              The response to this action is still developing. Read the patient and the traces while
+              it does.
+            </p>
+          ) : null}
+          {coaching ? <PostActionCoachingPanel coaching={coaching} /> : null}
+          {focusedPhase === 'act' ? (
+            <button
+              type="button"
+              className={styles.primaryAction}
+              onClick={() => onFocusPhase?.('observe')}
+            >
+              Review response and reassess
+            </button>
+          ) : null}
+        </section>
+      ) : null}
+
+      {!focusedPhase || focusedPhase === 'observe' ? (
+        <section id="mv-case-observe" className={styles.workflowSection} tabIndex={-1}>
+          <div className={styles.workflowSectionHeading}>
+            <Stethoscope aria-hidden="true" />
+            <div>
+              <span>Step 5</span>
+              <h3>Repeat the discriminating bedside check</h3>
+            </div>
+          </div>
+          <p>
+            Repeat the waveform review, hold, bedside examination, ABG, or comfort check that can
+            prove or refute your working mechanism.
+          </p>
+          {state.experience === 'learn' ? (
+            <p className={styles.learnPrompt}>
+              Guided target:{' '}
+              {definition.requiredReassessmentIds
+                .map((id) => definition.interventions.find((item) => item.id === id)?.label ?? id)
+                .join(' and ')}
+              .
+            </p>
+          ) : null}
+          {!focusedPhase || !state.reassessment.committed ? (
+            <button
+              type="button"
+              className={styles.primaryAction}
+              onClick={() => dispatch({ type: 'COMMIT_REASSESSMENT' })}
+            >
+              <ClipboardCheck aria-hidden="true" /> Commit reassessment
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={styles.primaryAction}
+              onClick={() => onFocusPhase?.('explain')}
+            >
+              Review case debrief
+            </button>
+          )}
+          <div className={styles.hintRow}>
+            <button
+              type="button"
+              disabled={!hintAvailable}
+              onClick={() => dispatch({ type: 'USE_HINT' })}
+            >
+              <Lightbulb aria-hidden="true" />
+              {state.experience === 'learn' ? 'Show guided hint' : 'Show a focused hint'}
+            </button>
+            {state.experience === 'practice' && !hintAvailable ? (
+              <small>
+                {state.challengeMode === 'timed'
+                  ? 'Hints are hidden in timed challenge.'
+                  : `Focused hints become available after ${Math.max(0, 60 - state.simulationTime).toFixed(0)} simulated seconds.`}
+              </small>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      {!focusedPhase || focusedPhase === 'explain' ? (
+        <section id="mv-case-explain" className={styles.workflowSection} tabIndex={-1}>
+          <div className={styles.workflowSectionHeading}>
+            <MessageSquareText aria-hidden="true" />
+            <div>
+              <span>Step 6</span>
+              <h3>Reveal the debrief</h3>
+            </div>
+          </div>
+          {state.phase !== 'debrief' ? (
+            <button
+              type="button"
+              className={styles.revealAction}
+              onClick={() => dispatch({ type: 'REVEAL_DEBRIEF' })}
+            >
+              Reveal case reasoning
+            </button>
+          ) : (
+            <div className={styles.debriefPanel}>
+              <div className={styles.outcomeHeader}>
+                <MessageSquareText aria-hidden="true" />
+                <div>
+                  <span>
+                    {state.experience === 'learn'
+                      ? 'Guided walkthrough complete'
+                      : 'Case worked through'}
+                  </span>
+                  <strong>Causal debrief</strong>
+                </div>
+              </div>
+              <p>{definition.debrief}</p>
+              {state.lastResponse ? (
+                <div className={styles.responseCallout}>
+                  <RotateCcw aria-hidden="true" />
+                  <span>{state.lastResponse}</span>
+                </div>
+              ) : null}
+              <div className={styles.debriefColumns}>
+                <div>
+                  <h4>Expected actions</h4>
                   <ul>
-                    {outcome.criticalErrors.map((error) => (
-                      <li key={error}>{error}</li>
+                    {definition.expectedActions.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h4>Accepted alternatives</h4>
+                  <ul>
+                    {definition.acceptedAlternatives.map((item) => (
+                      <li key={item}>{item}</li>
                     ))}
                   </ul>
                 </div>
               </div>
-            ) : null}
-            <CaseCauseDebrief state={state} definition={definition} />
-            <VentilationCaseCalibration state={state} definition={definition} />
-          </div>
-        )}
-      </section>
+              {outcome.criticalErrors.length ? (
+                <div className={styles.criticalErrorBox}>
+                  <ShieldAlert aria-hidden="true" />
+                  <div>
+                    <strong>Safety stop to revisit</strong>
+                    <ul>
+                      {outcome.criticalErrors.map((error) => (
+                        <li key={error}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : null}
+              <CaseCauseDebrief state={state} definition={definition} />
+              <VentilationCaseCalibration state={state} definition={definition} />
+            </div>
+          )}
+        </section>
+      ) : null}
     </section>
   )
 }

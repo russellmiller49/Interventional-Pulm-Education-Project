@@ -50,6 +50,20 @@
   font-size: 0.875rem;
 }
 
+/* The task renderer owns a single document flow; shared stage consumers retain their sizing. */
+.moduleShell[data-task-flow='true'] {
+  height: auto;
+  min-height: calc(100dvh - var(--site-header-height, 4rem));
+  overflow: visible;
+  padding: 0;
+}
+.moduleShell[data-task-flow='true'] [data-activity-frame='true'],
+.moduleShell[data-task-flow='true'] [data-activity-frame='true'] > div {
+  display: block;
+  height: auto;
+  overflow: visible;
+}
+
 .englishFallback svg {
   width: 1rem;
   height: 1rem;

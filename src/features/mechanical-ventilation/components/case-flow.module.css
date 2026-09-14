@@ -1,0 +1,148 @@
+.flow {
+  min-width: 0;
+  color: #eff8ff;
+  background: #07111d;
+}
+.flow > [data-critical-care-activity-shell] {
+  height: auto;
+  min-height: calc(100dvh - var(--site-header-height, 4rem));
+  overflow: visible;
+}
+.flow > [data-critical-care-activity-shell] > :is(header, footer) {
+  position: static;
+}
+.document {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  min-width: 0;
+}
+.context {
+  min-width: 0;
+}
+.context > * {
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 390px;
+  gap: 1rem;
+  align-items: start;
+  min-width: 0;
+}
+.ventilator,
+.task {
+  min-width: 0;
+}
+.ventilator > div {
+  height: auto;
+  overflow: visible;
+}
+.workspace[data-case-debrief='true'] {
+  display: block;
+  max-width: 1100px;
+  width: 100%;
+  margin-inline: auto;
+}
+.flow [data-focused-workflow] > [data-case-transport] {
+  margin-block: 0.8rem;
+}
+.flow [data-focused-workflow] h3 {
+  font-size: 1rem;
+}
+.flow [data-focused-workflow] :is(select, button) {
+  min-height: 2.6rem;
+}
+.flow [data-focused-workflow] section {
+  scroll-margin-top: 6rem;
+}
+.flow :is(button, select, input, summary):focus-visible {
+  outline: 3px solid #71e1e5;
+  outline-offset: 3px;
+}
+.flow details > summary {
+  cursor: pointer;
+  padding: 0.5rem 0;
+}
+.flow .document [data-bedside-panel][data-compact='true'] details > div {
+  max-height: none;
+  overflow: visible;
+}
+@media (max-width: 1100px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .task {
+    grid-row: 1;
+  }
+}
+
+/* Keep the patient brief compact enough to leave the working console in view. */
+.context dl {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.context dl > div {
+  display: block;
+  padding: 0.4rem;
+}
+.context dl > div:first-child {
+  grid-column: 1 / -1;
+}
+.context dl dd {
+  text-align: left;
+  margin-top: 0.25rem;
+}
+.context > section {
+  padding: 0.7rem;
+}
+.context ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+}
+.flow .task > div {
+  height: auto;
+  overflow: visible;
+}
+.flow [data-focused-workflow] {
+  color: var(--ink);
+  padding: 0.75rem;
+  border-radius: 0.8rem;
+}
+.flow [data-focused-workflow] > p {
+  color: var(--muted);
+  margin-block: 0.5rem;
+  font-size: 0.85rem;
+}
+.flow [data-focused-workflow] > div:first-child {
+  display: block;
+  padding: 0.5rem 0;
+}
+.flow [data-focused-workflow] > div:first-child > span {
+  margin-top: 0.5rem;
+}
+.flow [data-focused-workflow] fieldset,
+.flow [data-focused-workflow] select {
+  min-width: 0;
+  max-width: 100%;
+}
+.flow [data-focused-workflow] [class*='predictionFields'],
+.flow [data-focused-workflow] [class*='interventionGrid'] {
+  grid-template-columns: 1fr;
+}
+@media (max-width: 1100px) {
+  .context dl {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.flow [data-native-monitor] :is(span, small) {
+  font-size: 0.75rem;
+}
+.flow [data-device='drager-evita-v800-v600'] [data-native-monitor] :is(span, small) {
+  color: #42616a;
+}

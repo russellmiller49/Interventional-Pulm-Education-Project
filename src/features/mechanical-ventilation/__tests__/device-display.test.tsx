@@ -71,7 +71,7 @@ describe('device-specific console displays', () => {
     expect(profile.display.pressureUnit).toBe('mbar')
 
     renderConsole('drager-evita-v800-v600')
-    const monitor = screen.getByRole('complementary', { name: 'Monitoring area' })
+    const monitor = screen.getByRole('region', { name: 'Monitoring area' })
     expect(within(monitor).getByText('MVe')).toBeInTheDocument()
     expect(within(monitor).getAllByText('mbar').length).toBe(2)
     expect(screen.queryByText('fTotal')).not.toBeInTheDocument()
@@ -92,7 +92,7 @@ describe('device-specific console displays', () => {
       expect(within(banner).getByText(label)).toBeInTheDocument()
     }
     // The banner replaces the side column rather than sitting next to it.
-    expect(screen.queryByRole('complementary', { name: /monitoring parameters/i })).toBeNull()
+    expect(screen.queryByRole('region', { name: /monitoring parameters/i })).toBeNull()
   })
 
   it('straddles the PB980 rotary encoder with its documented bezel keys', () => {
@@ -156,7 +156,7 @@ describe('device-specific console displays', () => {
     renderConsole('carefusion-avea')
     expect(screen.getByRole('img', { name: /Vt waveform/i })).toBeInTheDocument()
     expect(screen.queryByRole('img', { name: /Volume waveform/i })).toBeNull()
-    const monitor = screen.getByRole('complementary', { name: 'Patient data' })
+    const monitor = screen.getByRole('region', { name: 'Patient data' })
     expect(within(monitor).getByText('Vte')).toBeInTheDocument()
     expect(within(monitor).getByText('BPM')).toBeInTheDocument()
   })
@@ -173,7 +173,7 @@ describe('device-specific console displays', () => {
     ])
 
     renderConsole('hamilton-c6')
-    const monitor = screen.getByRole('complementary', { name: 'Main monitoring parameters' })
+    const monitor = screen.getByRole('region', { name: 'Main monitoring parameters' })
     expect(within(monitor).getByText('ExpMinVol')).toBeInTheDocument()
     expect(within(monitor).getByText('SpO2')).toBeInTheDocument()
     expect(within(monitor).queryByText('MinVol')).toBeNull()

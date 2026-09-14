@@ -46,7 +46,9 @@ afterEach(() => {
  */
 function scannableText(): string {
   const clone = document.body.cloneNode(true) as HTMLElement
-  for (const node of clone.querySelectorAll('[data-prediction-choices], [data-breath-map-answer]'))
+  for (const node of clone.querySelectorAll(
+    '[data-prediction-choices], [data-breath-map-answer], [data-location-choices]',
+  ))
     node.remove()
   for (const node of clone.querySelectorAll('script, style')) node.remove()
   return clone.textContent ?? ''
@@ -73,8 +75,12 @@ describe('nothing answers a section before its prediction is committed (rendered
       jest.advanceTimersByTime(10)
     })
     const atFirstStep = `${scannableText()} ${attributesText()}`
-    // The five revised units intentionally teach a reference before independent application.
-    for (const match of ventilationLeakMatches(atFirstStep, isFoundationUnit(unitId) ? [] : deny))
+    // Prerequisites are explicitly labelled separate examples; integration has only a neutral brief.
+    expect(document.querySelector('[data-prediction-choices]')).toBeNull()
+    for (const match of ventilationLeakMatches(
+      atFirstStep,
+      unitId === 'high-peak-pressure-integration' ? deny : [],
+    ))
       findings.push(`${unitId} · first step: /${match}/`)
 
     // Reach the prediction the way a learner does: through the first step's own Continue.
@@ -87,7 +93,12 @@ describe('nothing answers a section before its prediction is committed (rendered
       fireEvent.click(document.querySelector('[data-now-primary]')!)
     } else {
       // A location question is itself a commitment; the scan stops at its prediction step.
-      const radio = document.querySelector<HTMLInputElement>('[data-breath-map-answer] input')!
+      fireEvent.click(document.querySelector('[data-now-primary]')!) // leave separate reference
+      expect(document.querySelector('[data-prerequisite-teaching]')).toBeNull()
+      expect(document.querySelector('[data-phase-band]')).toBeNull()
+      for (const match of ventilationLeakMatches(`${scannableText()} ${attributesText()}`, deny))
+        findings.push(`${unitId} · location: /${match}/`)
+      const radio = document.querySelector<HTMLInputElement>('[data-location-choices] input')!
       fireEvent.click(radio)
       fireEvent.click(document.querySelector('[data-now-primary]')!)
       fireEvent.click(document.querySelector('[data-now-primary]')!)

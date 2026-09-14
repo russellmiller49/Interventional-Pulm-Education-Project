@@ -271,7 +271,7 @@ describe('mechanical-ventilation teaching panels', () => {
       render(<MechanicalVentilationTeachingPanel lessonId="waveform-anatomy" state={reference()} />)
       const comparison = document.querySelector('[data-idealized-comparison]')!
       expect(comparison.closest('details')).not.toHaveAttribute('open')
-      expect(comparison.textContent).toMatch(/not two runs of the patient engine/)
+      expect(comparison.textContent).toMatch(/not two runs of the simulated patient/)
       expect(comparison.textContent).toMatch(/different expiratory flows/)
       expect(screen.queryByText(/It cannot set both/)).toBeNull()
     })
