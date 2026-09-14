@@ -1,4 +1,5 @@
 'use client'
+import { useEffect, useState } from 'react'
 import { Link } from '@/i18n/navigation'
 import {
   BASE,
@@ -7,23 +8,53 @@ import {
   COURSE_OBJECTIVES,
   GUIDED_MINUTES,
   lessonHref,
-  nextLesson,
 } from '../content/curriculum'
+import { legacyRecordPresent, recommendedLesson } from '../engine/selfPacedProgress'
 import { EbusModuleFrame } from './ModuleFrame'
-import { useCourseRecord } from './useCourseRecord'
+import { useCourseProgress } from './useCourseProgress'
 import { TeachingDiagram } from './Diagram'
+import { StorageNotice } from './StorageNotice'
 import styles from './course.module.css'
+
+/**
+ * Overview and Learn landing (EBUS-01). One recommended door — the lesson the learner was in, or
+ * the first not yet marked reviewed — and the full map, always open. The marks on the map say
+ * where the learner has been (opened, reviewed, saved for later), never how they answered.
+ */
 export function CoursePage({
   locale = 'en',
   mode = 'Overview',
   unknownSection,
 }: {
   locale?: string
-  mode?: string
+  mode?: 'Overview' | 'Learn'
   unknownSection?: string
 }) {
-  const record = useCourseRecord(),
-    next = nextLesson(record.completed)
+  const { progress, status } = useCourseProgress()
+  const [legacy, setLegacy] = useState(false)
+  useEffect(() => {
+    // The old record is browser state; its presence is read after mounting and its bytes untouched.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLegacy(legacyRecordPresent())
+  }, [])
+  const next = recommendedLesson(progress)
+  const reviewed = progress.reviewedLessonIds.length
+  const opened = progress.visitedLessonIds.length
+  const remainingMinutes = LESSONS.filter((l) => !progress.reviewedLessonIds.includes(l.id)).reduce(
+    (n, l) => n + l.minutes,
+    0,
+  )
+  const mark = (id: string) =>
+    [
+      progress.reviewedLessonIds.includes(id)
+        ? 'Reviewed'
+        : progress.visitedLessonIds.includes(id)
+          ? 'Opened'
+          : '',
+      progress.reviewLaterLessonIds.includes(id) ? 'Saved for later' : '',
+    ]
+      .filter(Boolean)
+      .join(' · ')
   return (
     <EbusModuleFrame locale={locale} active={mode}>
       <div className={styles.page}>
@@ -35,7 +66,7 @@ export function CoursePage({
         {mode === 'Overview' ? (
           <div className={styles.hero}>
             <div>
-              <p className={styles.eyebrow}>Linear EBUS · A guided clinical course</p>
+              <p className={styles.eyebrow}>Linear EBUS · A self-paced guided course</p>
               <h1>
                 From the airway view
                 <br />
@@ -48,28 +79,29 @@ export function CoursePage({
               </p>
               <p className={styles.muted}>
                 For early pulmonary fellows with basic flexible bronchoscopy and chest CT knowledge.{' '}
-                {GUIDED_MINUTES} minutes of guided lessons plus about 25 minutes of case review,
-                over several sittings. Selected labs require a desktop or tablet with WebGL 2.
+                {GUIDED_MINUTES} minutes of guided lessons plus about 25 minutes of integrated
+                cases, in any order and over several sittings. Selected labs require a desktop or
+                tablet with WebGL 2.
               </p>
               <div className={styles.actions}>
                 <Link
+                  data-course-door
                   className={styles.button}
                   href={next ? lessonHref(next.id) : BASE + '/assess'}
                 >
                   {next
-                    ? record.completed.length
-                      ? 'Continue learning'
-                      : 'Start course'
-                    : 'Open final assessment'}
+                    ? opened
+                      ? 'Continue with ' + next.title
+                      : 'Start with ' + next.title
+                    : 'Open the integrated cases'}
+                </Link>
+                <Link className={styles.secondary} href={BASE + '/assess'}>
+                  Integrated cases
                 </Link>
               </div>
-              <p className={styles.muted}>
-                {record.completed.length} of {LESSONS.length} lessons completed ·{' '}
-                {LESSONS.filter((l) => !record.completed.includes(l.id)).reduce(
-                  (n, l) => n + l.minutes,
-                  0,
-                )}{' '}
-                guided minutes remaining
+              <p className={styles.muted} data-course-marks>
+                {reviewed} of {LESSONS.length} lessons reviewed · {opened} opened ·{' '}
+                {remainingMinutes} guided minutes in lessons not yet reviewed
               </p>
             </div>
             <TeachingDiagram kind="workflow" />
@@ -81,11 +113,20 @@ export function CoursePage({
               From the clinical question to a defensible report.
             </h1>
             <p className={styles.muted}>
-              Follow the suggested order. An unfinished lesson restarts at its first step; completed
-              lessons and first responses are retained in this browser.
+              The order below is the recommended route; open any lesson in any order. Finishing a
+              lesson marks it reviewed in this browser. Reopening an unfinished lesson starts it at
+              its first task.
             </p>
+            {next && (
+              <p>
+                <Link data-course-door className={styles.button} href={lessonHref(next.id)}>
+                  {opened ? 'Continue with ' + next.title : 'Start with ' + next.title}
+                </Link>
+              </p>
+            )}
           </>
         )}
+        <StorageNotice status={status} />
         {mode === 'Overview' && (
           <section className={styles.card}>
             <h2>What you will practice</h2>
@@ -95,16 +136,16 @@ export function CoursePage({
               ))}
             </ul>
             <p className={styles.muted}>
-              These objectives assess knowledge and clinical reasoning (“knows how”). Supervised
-              procedural performance requires separate assessment.
+              These objectives describe the knowledge and clinical reasoning taught here (“knows
+              how”). Supervised procedural performance is taught and judged separately.
             </p>
           </section>
         )}
-        {record.completed.length > 0 && (
-          <p className={styles.muted}>
-            Earlier lesson completion remains part of your history. Newly introduced image
-            interpretations and examination-record tasks have separate records; earlier completion
-            does not establish those added skills.
+        {legacy && (
+          <p className={styles.muted} data-legacy-record-note>
+            A course record from before the self-paced conversion exists in this browser. It is kept
+            unchanged and is not used: this course now keeps only your place, the lessons you have
+            opened, finished or saved for later, and the cases you have opened.
           </p>
         )}
         <div className={styles.map}>
@@ -121,7 +162,7 @@ export function CoursePage({
                     <li key={l.id}>
                       <Link href={lessonHref(l.id)}>{l.title}</Link>{' '}
                       <span className={styles.muted}>
-                        · {l.minutes} min {record.completed.includes(l.id) ? '· Completed' : ''}
+                        · {l.minutes} min {mark(l.id) ? '· ' + mark(l.id) : ''}
                       </span>
                     </li>
                   ))}
@@ -131,9 +172,9 @@ export function CoursePage({
           })}
         </div>
         <p className={styles.notice}>
-          Completion records learning activities, not independent procedural competence. Continue
-          with supervised simulation and workplace assessment. This development course remains
-          separate from the existing EBUS tools.
+          Reviewed and opened marks record where you have been in the course, not procedural
+          competence. Continue with supervised simulation and workplace teaching. This development
+          course remains separate from the existing EBUS tools.
         </p>
       </div>
     </EbusModuleFrame>

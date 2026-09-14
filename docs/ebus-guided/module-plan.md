@@ -1,5 +1,7 @@
 # EBUS: Guided Course
 
+> **Superseded in part (2026-09-14, EBUS-01).** The owner's self-paced decision replaces the progress and assessment rules below: there is no Assess unlock, no first-decision record, no support-request record, no required repair of an unsafe choice and no case-completion record. Acquisition, held-image and record-task validity are unchanged. See [`docs/gap-remediation/self-paced/EBUS-01-handoff.md`](../gap-remediation/self-paced/EBUS-01-handoff.md). This file is kept as the historical design record.
+
 Approved September 12, 2026. Early fellows; approximately three hours; full linear EBUS with introductory EUS-B; required guided simulator activities; formative assessment without a passing threshold. Separate unlisted /ebus-guided course and development links; no replacement of existing EBUS routes or progress.
 
 September 13 implementation checkpoint: the six initial model packages, four companion lessons and the five Phase 1 lesson updates are built. The current course has 26 lessons; the sequence/counts below describe the original 22-lesson baseline. Further build, source and review tasks are tracked in [remaining-work.md](remaining-work.md).

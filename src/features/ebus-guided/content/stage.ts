@@ -44,6 +44,7 @@ export interface LessonActivity extends ActivitySpec {
   sourceIds: string[]
   limitation: string
   support: 'worked' | 'guided' | 'independent'
+  /** What performing this activity means. Descriptive only: nothing waits on it (EBUS-01). */
   completion: { action: Interaction; responses: QuestionSlot[] }
   transitions: { next: string | null; retry: string; review: 'read-only' }
 }
@@ -72,7 +73,7 @@ const demo = (id: string, title: string, presentation: Presentation): ActivitySp
   kind: 'demonstration',
   interaction: 'read',
   instruction:
-    'Follow the worked example. You will start a separate acquisition next; this demonstration earns no acquisition credit.',
+    'Follow the worked example. You will start a separate acquisition next; this demonstration is an example, not your acquisition.',
   teaching: ['worked'],
   questions: [],
 })
@@ -93,7 +94,7 @@ const decide = (
   teaching: [],
   instruction:
     image === 'held'
-      ? 'This is the image you acquired. Interpret it before reviewing the explanation.'
+      ? 'This is the image you acquired. Interpret it, or open the explanation first.'
       : 'Use the stated situation to make your decision.',
 })
 const acquire = (
