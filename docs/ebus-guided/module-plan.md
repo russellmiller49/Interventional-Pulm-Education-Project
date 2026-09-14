@@ -2,6 +2,8 @@
 
 Approved September 12, 2026. Early fellows; approximately three hours; full linear EBUS with introductory EUS-B; required guided simulator activities; formative assessment without a passing threshold. Separate unlisted /ebus-guided course and development links; no replacement of existing EBUS routes or progress.
 
+September 13 implementation checkpoint: the six initial model packages, four companion lessons and the five Phase 1 lesson updates are built. The current course has 26 lessons; the sequence/counts below describe the original 22-lesson baseline. Further build, source and review tasks are tracked in [remaining-work.md](remaining-work.md).
+
 ## Reference and preservation
 
 Reference: Peripheral Bronchoscopy Imaging shared stage at ab05b9d6. Reuse ModuleFrameV2, StageLayout, NowCard, StepList, LookInLine and AnswerVerdict, with Steps/Teaching/Simulator order, .26/.29/remainder fractions and 300/280/340 px floors. Keep shared components unchanged.

@@ -1,6 +1,6 @@
 # Linked orientation and anatomical windows — follow-up
 
-Assignment: `EBUS_GUIDED_CODEX_PHASE_1_PROMPT.md`, September 13, 2026. Current base is `83998e78`; preserve its four additional model packages and all existing lesson IDs. Work remains local: no push, merge or release changes.
+Assignment: `EBUS_GUIDED_CODEX_PHASE_1_PROMPT.md`, September 13, 2026. Current base is `83998e78`; preserve its four additional model packages and all existing lesson IDs. The initial assignment was local-only. The owner subsequently authorized documenting the remaining work and pushing the existing PR; merge and release changes remain outside this update. See [remaining-work.md](remaining-work.md) for the completed checkpoint and open tasks.
 
 ## Bounded implementation
 
