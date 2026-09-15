@@ -18,6 +18,7 @@ import type { CriticalCareActivityPhase } from '@/features/learning-module/activ
 import { ActivityStepper } from '@/features/learning-module/components/ActivityStepper'
 
 import type { RuntimeCrrtCase } from '../content/schema'
+import { getCrrtWorkedCaseExample } from '../content/workedCaseExamples'
 import { selectCrrtConsoleControls } from '../engine/consoleControls'
 import { selectSecondsUntilNextScheduledEvent } from '../engine/selectors'
 import { selectPrismaxPilotCaseOperationsDisplay } from '../engine/deviceAdapters/prismax'
@@ -28,7 +29,9 @@ import type {
 } from '../engine/learningSession'
 import { hasCrrtRunActivity } from '../engine/learningSession'
 import { crrtSoluteIds, type CrrtRoleLens } from '../engine/types'
+import { selectCrrtWorkedRetiredIds } from '../workedCaseModel'
 import { PrismaxPilotInterface, type PrismaxPilotCaseContext } from './PrismaxPilotInterface'
+import { CrrtWorkedCaseGuide, CrrtWorkedRunComparison } from './CrrtWorkedCaseExample'
 import styles from './crrt-case-player.module.css'
 
 const reasoningStages = [
@@ -197,6 +200,15 @@ function CrrtCasePlayerContent({
 }: CrrtCasePlayerProps) {
   const definition = session.caseDefinition
   const isMastery = session.experience === 'mastery'
+  // Worked cases retire generic options from the learner surface; their records stay for history.
+  const workedExample = getCrrtWorkedCaseExample(definition.id)
+  const retiredIds = selectCrrtWorkedRetiredIds(definition, workedExample)
+  const visibleInterventions = definition.interventions.filter(
+    ({ id }) => !retiredIds.interventionIds.has(id),
+  )
+  const visibleReassessmentOptions = definition.reassessmentOptions.filter(
+    ({ id }) => !retiredIds.reassessmentOptionIds.has(id),
+  )
   const scopedId = (id: string) => (idNamespace ? `${idNamespace}-${id}` : id)
   const experienceLabel = session.experience === 'practice' ? 'Practice' : 'Challenge'
   const visibleCaseTitle = definition.title
@@ -449,52 +461,59 @@ function CrrtCasePlayerContent({
           </ul>
         </section>
 
-        <section
-          className={styles.predictionSection}
-          aria-labelledby={scopedId('crrt-prediction-heading')}
-        >
-          <div className={styles.workflowHeading}>
-            <BrainCircuit aria-hidden="true" />
-            <div>
-              <span>Clinical context</span>
-              <h4 id={scopedId('crrt-prediction-heading')}>Understand this case</h4>
-            </div>
-          </div>
-          <p>
-            {selectedLabel(definition.goalOptions, definition.hiddenMechanism.correctGoalOptionId)}
-          </p>
-          <p>
-            Explore the controls, review a worked plan, or continue to another case at any time.
-          </p>
-          <button
-            type="button"
-            className={styles.commitButton}
-            onClick={() => setExampleVisible((visible) => !visible)}
+        {workedExample ? (
+          <CrrtWorkedCaseGuide session={session} example={workedExample} scopedId={scopedId} />
+        ) : (
+          <section
+            className={styles.predictionSection}
+            aria-labelledby={scopedId('crrt-prediction-heading')}
           >
-            {exampleVisible ? 'Hide worked plan' : 'Explain this case'}
-          </button>
-          {exampleVisible ? (
-            <section aria-label="Worked example">
-              <h5>Worked plan · example only</h5>
-              <p>{definition.hiddenMechanism.summary}</p>
-              <ol>
-                {definition.hiddenMechanism.causalChain.map((step) => (
-                  <li key={step}>{step}</li>
-                ))}
-              </ol>
-              <h5>What to reassess</h5>
-              <ul>
-                {definition.requiredReassessmentIds.map((id) => (
-                  <li key={id}>{selectedLabel(definition.reassessmentOptions, id)}</li>
-                ))}
-              </ul>
-              <p>
-                Viewing this plan records no answer, intervention, or observation. Clinical and
-                device review remains pending.
-              </p>
-            </section>
-          ) : null}
-        </section>
+            <div className={styles.workflowHeading}>
+              <BrainCircuit aria-hidden="true" />
+              <div>
+                <span>Clinical context</span>
+                <h4 id={scopedId('crrt-prediction-heading')}>Understand this case</h4>
+              </div>
+            </div>
+            <p>
+              {selectedLabel(
+                definition.goalOptions,
+                definition.hiddenMechanism.correctGoalOptionId,
+              )}
+            </p>
+            <p>
+              Explore the controls, review a worked plan, or continue to another case at any time.
+            </p>
+            <button
+              type="button"
+              className={styles.commitButton}
+              onClick={() => setExampleVisible((visible) => !visible)}
+            >
+              {exampleVisible ? 'Hide worked plan' : 'Explain this case'}
+            </button>
+            {exampleVisible ? (
+              <section aria-label="Worked example">
+                <h5>Worked plan · example only</h5>
+                <p>{definition.hiddenMechanism.summary}</p>
+                <ol>
+                  {definition.hiddenMechanism.causalChain.map((step) => (
+                    <li key={step}>{step}</li>
+                  ))}
+                </ol>
+                <h5>What to reassess</h5>
+                <ul>
+                  {definition.requiredReassessmentIds.map((id) => (
+                    <li key={id}>{selectedLabel(definition.reassessmentOptions, id)}</li>
+                  ))}
+                </ul>
+                <p>
+                  Viewing this plan records no answer, intervention, or observation. Clinical and
+                  device review remains pending.
+                </p>
+              </section>
+            ) : null}
+          </section>
+        )}
 
         <section
           className={styles.actionSection}
@@ -509,7 +528,7 @@ function CrrtCasePlayerContent({
           </div>
 
           <div className={styles.actionList}>
-            {definition.interventions.map((intervention) => {
+            {visibleInterventions.map((intervention) => {
               const performed = performedSet.has(intervention.id)
               const missingPrerequisite = intervention.prerequisites.find(
                 (id) => !performedSet.has(id),
@@ -639,7 +658,7 @@ function CrrtCasePlayerContent({
           ) : (
             <fieldset disabled={!canReassess}>
               <legend>Select every reassessment you actually completed</legend>
-              {definition.reassessmentOptions.map((option) => (
+              {visibleReassessmentOptions.map((option) => (
                 <label key={option.id}>
                   <input
                     checked={actualReassessmentIds.includes(option.id)}
@@ -886,6 +905,14 @@ function CrrtCasePlayerContent({
                 <p>No five-minute trend sample was recorded before debrief.</p>
               )}
             </section>
+
+            {workedExample ? (
+              <CrrtWorkedRunComparison
+                session={session}
+                example={workedExample}
+                heading="Expected and observed in this case"
+              />
+            ) : null}
 
             {isMastery && session.performedInterventionIds.length > 0 ? (
               <section aria-labelledby={scopedId('crrt-deferred-action-feedback')}>

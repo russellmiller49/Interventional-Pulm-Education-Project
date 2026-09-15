@@ -1,0 +1,272 @@
+.guide {
+  display: grid;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.goal {
+  margin: 0.55rem 0 0;
+  color: #e7f2f0;
+  font-size: 0.78rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.tryIt,
+.check {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.6rem;
+}
+
+.tryIt {
+  border: 1px solid rgba(117, 215, 204, 0.3);
+  background: rgba(12, 45, 50, 0.55);
+}
+
+.check {
+  border: 1px solid rgba(245, 192, 113, 0.35);
+  background: rgba(40, 32, 14, 0.35);
+}
+
+.tryIt h5,
+.check h5,
+.example h5,
+.runComparison h5 {
+  margin: 0;
+  color: #8ce2d7;
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.tryIt ol,
+.example ul,
+.example ol {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding-left: 1.15rem;
+  list-style: disc outside;
+  color: #d9e8e6;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.example {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+  margin-top: 0.7rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(148, 196, 191, 0.28);
+  border-radius: 0.7rem;
+  background: rgba(5, 24, 28, 0.7);
+}
+
+.tryIt ol {
+  list-style-type: decimal;
+}
+
+.example section,
+.runComparison {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.example p,
+.runComparison p,
+.check p {
+  margin: 0;
+  color: #d9e8e6;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.example .learningPoint {
+  color: #f1f7f6;
+  font-size: 0.76rem;
+}
+
+.example .caption,
+.runComparison .caption,
+.check .caption {
+  color: #bdcecc;
+  font-size: 0.64rem;
+}
+
+.citation {
+  display: block;
+  margin-top: 0.15rem;
+  color: #9fbdb9;
+  font-size: 0.6rem;
+}
+
+.values {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.values div {
+  min-width: 0;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid rgba(148, 196, 191, 0.2);
+  border-radius: 0.45rem;
+  background: rgba(8, 29, 33, 0.7);
+}
+
+.values dt {
+  color: #9fbdb9;
+  font-size: 0.6rem;
+  font-weight: 750;
+}
+
+.values dd {
+  margin: 0.15rem 0 0;
+  color: #f1f7f6;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.tableRegion {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid rgba(148, 196, 191, 0.24);
+  border-radius: 0.55rem;
+}
+
+.tableRegion:focus-visible {
+  outline: 0.18rem solid #f5c071;
+  outline-offset: 0.12rem;
+}
+
+.tableRegion table {
+  width: 100%;
+  min-width: 30rem;
+  border-collapse: collapse;
+  font-size: 0.62rem;
+}
+
+.tableRegion caption {
+  padding: 0.45rem;
+  color: #bdcecc;
+  caption-side: top;
+  text-align: left;
+}
+
+.tableRegion th,
+.tableRegion td {
+  padding: 0.42rem;
+  border-bottom: 1px solid rgba(148, 196, 191, 0.16);
+  color: #d9e8e6;
+  text-align: left;
+  vertical-align: top;
+}
+
+.tableRegion thead th {
+  color: #8ce2d7;
+  background: rgba(14, 52, 57, 0.76);
+}
+
+.tableRegion tbody th {
+  color: #f5c071;
+}
+
+.tableRegion td[data-direction='higher'] {
+  color: #f5c071;
+  font-weight: 800;
+}
+
+.tableRegion td[data-direction='lower'] {
+  color: #8ccfe2;
+  font-weight: 800;
+}
+
+.status {
+  margin: 0;
+  padding: 0.5rem 0.6rem;
+  border-left: 3px solid #f5c071;
+  color: #f3e2c4;
+  background: rgba(245, 192, 113, 0.08);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.check fieldset {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.check legend {
+  margin-bottom: 0.4rem;
+  color: #f1f7f6;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.check label {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(148, 196, 191, 0.24);
+  border-radius: 0.5rem;
+  color: #d9e8e6;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.check label input {
+  flex: 0 0 auto;
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: #74d7cc;
+}
+
+.checkActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.checkActions button {
+  min-height: 44px;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid rgba(117, 215, 204, 0.55);
+  border-radius: 0.55rem;
+  color: #dff5f2;
+  background: transparent;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.checkActions button[data-primary='true'] {
+  color: #06201f;
+  background: #74d7cc;
+}
+
+.feedback {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid rgba(148, 196, 191, 0.24);
+  border-radius: 0.5rem;
+  background: rgba(8, 29, 33, 0.8);
+}
+
+.feedback strong {
+  color: #f1f7f6;
+  font-size: 0.68rem;
+}

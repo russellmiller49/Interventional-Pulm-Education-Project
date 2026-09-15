@@ -258,17 +258,19 @@ describe('Baxter CRRT v1 case registry', () => {
     )
   })
 
+  // CRRT-02 contract change: the run starts with no low-effective-flow term, so the former
+  // set-to-0.1 correction created the contributor it named. No CRRT-15 action may set the term.
   it('treats low effective flow as a contributor to correct, not one to create', () => {
     const definition = getBaxterCrrtCase('CRRT-15')
-    const correction = definition.interventions.find(({ id }) => id.endsWith('safe-candidate'))
-    const lowFlowEffect = correction?.effects.find(
-      ({ target }) => target === 'circuit.filter.lowEffectiveBloodFlowFraction',
+    const targets = definition.interventions.flatMap(({ effects }) =>
+      effects.map(({ target }) => target),
     )
     const lowFlowCondition = definition.successConditions.find(
       ({ metric }) => metric === 'circuit.filter.lowEffectiveBloodFlowFraction',
     )
 
-    expect(lowFlowEffect).toMatchObject({ operation: 'set', valueType: 'number', value: 0.1 })
+    expect(targets).not.toContain('circuit.filter.lowEffectiveBloodFlowFraction')
+    expect(startAttempt(definition).simulation.circuit.filter.lowEffectiveBloodFlowFraction).toBe(0)
     expect(lowFlowCondition).toMatchObject({ comparator: 'lte', value: 0.2 })
   })
 })
