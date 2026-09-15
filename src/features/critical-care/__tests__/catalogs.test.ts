@@ -187,11 +187,11 @@ describe('critical-care catalogs', () => {
     )
   })
 
-  it('preserves the seeded hemodynamics ID while exposing its named Challenge', () => {
+  it('preserves the seeded hemodynamics ID while exposing its self-paced applied case', () => {
     const serializedCatalog = JSON.stringify(criticalCareActivities)
 
     expect(serializedCatalog).toContain('hemodynamics:assess:masked-seeded')
-    expect(serializedCatalog).toContain('HD-07 pressure-equalization challenge')
+    expect(serializedCatalog).toContain('HD-07 pressure-equalization applied case')
   })
 
   it('uses the query keys consumed by each rebuilt module route', () => {

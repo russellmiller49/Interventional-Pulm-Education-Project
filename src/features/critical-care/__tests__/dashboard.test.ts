@@ -63,7 +63,7 @@ describe('critical-care dashboard derivation', () => {
   })
 
   it('resolves an exact safe checkpoint and recommends a different next activity', () => {
-    const activity = criticalCareActivityById.get('hemodynamics:learn:pac-signal-validation')!
+    const activity = criticalCareActivityById.get('mcs:learn:mcs-foundations-signals')!
     const dashboard = deriveCriticalCareDashboard(
       readResult({
         version: 1,
@@ -84,7 +84,7 @@ describe('critical-care dashboard derivation', () => {
 
     expect(dashboard.audienceState).toBe('returning')
     expect(dashboard.resume).toMatchObject({
-      href: '/icu-hemodynamics/learn?activity=pac-signal-validation',
+      href: '/mechanical-circulatory-support/learn?lesson=mcs-foundations-signals',
       pointer: { phase: 'act', checkpointId: 'measurement-chain-checked' },
     })
     expect(dashboard.recommendation?.activity.id).not.toBe(activity.id)
@@ -113,7 +113,7 @@ describe('critical-care dashboard derivation', () => {
   })
 
   it('recalculates recommendations and summaries from authoritative evidence', () => {
-    const invalidCompletion = progress('hemodynamics:learn:pressure-system', {
+    const invalidCompletion = progress('mcs:learn:mcs-foundations-signals', {
       status: 'mastered',
       competencyEvidenceIds: ['signal-validation', 'critical-care-safety'],
     })
@@ -126,14 +126,16 @@ describe('critical-care dashboard derivation', () => {
     )
 
     expect(dashboard.recommendation).toMatchObject({
-      activity: { id: 'hemodynamics:learn:pressure-system' },
+      activity: { id: 'mcs:learn:mcs-foundations-signals' },
       progress: { status: 'in-progress', competencyEvidenceIds: [] },
     })
     expect(dashboard.recent[0]?.progress).toMatchObject({
       status: 'in-progress',
       competencyEvidenceIds: [],
     })
-    expect(dashboard.modules.find((item) => item.module.id === 'icu-hemodynamics')).toMatchObject({
+    expect(
+      dashboard.modules.find((item) => item.module.id === 'mechanical-circulatory-support'),
+    ).toMatchObject({
       state: 'in-progress',
       completedActivities: 0,
       startedActivities: 1,
@@ -160,20 +162,22 @@ describe('critical-care dashboard derivation', () => {
 
   it('calculates module states and pathway milestones only from explicit completion', () => {
     const completed = [
-      progress('hemodynamics:learn:pac-signal-validation', { status: 'completed' }),
-      progress('hemodynamics:practice:HD-01', { status: 'completed' }),
+      progress('mcs:practice:IMP-01', { status: 'completed' }),
+      progress('mcs:practice:IABP-01', { status: 'completed' }),
     ]
     const modules = summarizeCriticalCareModules(completed)
     const pathways = summarizeCriticalCarePathways(completed)
-    const hemodynamicsActivityCount = criticalCareActivities.filter(
-      (activity) => activity.moduleId === 'icu-hemodynamics',
+    const mcsActivityCount = criticalCareActivities.filter(
+      (activity) => activity.moduleId === 'mechanical-circulatory-support',
     ).length
 
-    expect(modules.find((item) => item.module.id === 'icu-hemodynamics')).toMatchObject({
+    expect(
+      modules.find((item) => item.module.id === 'mechanical-circulatory-support'),
+    ).toMatchObject({
       state: 'in-progress',
       completedActivities: 2,
-      totalActivities: hemodynamicsActivityCount,
-      percentComplete: Math.round((2 / hemodynamicsActivityCount) * 100),
+      totalActivities: mcsActivityCount,
+      percentComplete: Math.round((2 / mcsActivityCount) * 100),
     })
     expect(pathways.find((item) => item.pathway.id === 'shock-and-perfusion')).toMatchObject({
       state: 'in-progress',

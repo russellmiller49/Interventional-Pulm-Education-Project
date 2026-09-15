@@ -28,6 +28,7 @@ import {
 import {
   enforceProgressCollectionAuthority,
   isRecord,
+  isHistoricalOnlyActivity,
   mergeProjectedActivities,
   parseStoredJson,
   readStoredValue,
@@ -135,7 +136,11 @@ export function mergeCriticalCareProgress(
     ...legacy.flatMap((result) => (result.resume ? [result.resume] : [])),
   ]
   const resolvedResume = newestValidCriticalCareResume(
-    resumeCandidates.filter((pointer) => !pointer.activityId.startsWith('ventilation:')),
+    resumeCandidates.filter(
+      (pointer) =>
+        !pointer.activityId.startsWith('ventilation:') &&
+        !isHistoricalOnlyActivity(pointer.activityId),
+    ),
     activities,
   )
   const timestamps = [

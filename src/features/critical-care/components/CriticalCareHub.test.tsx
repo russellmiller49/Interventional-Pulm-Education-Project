@@ -133,7 +133,7 @@ describe('CriticalCareHub', () => {
         version: 1,
         activities: [
           {
-            activityId: 'hemodynamics:learn:pac-signal-validation',
+            activityId: 'mcs:learn:mcs-foundations-signals',
             status: 'in-progress',
             currentPhase: 'act',
             mode: 'guided',
@@ -143,9 +143,9 @@ describe('CriticalCareHub', () => {
           },
         ],
         resume: {
-          activityId: 'hemodynamics:learn:pac-signal-validation',
-          pathname: '/icu-hemodynamics/learn',
-          query: { activity: 'pac-signal-validation' },
+          activityId: 'mcs:learn:mcs-foundations-signals',
+          pathname: '/mechanical-circulatory-support/learn',
+          query: { lesson: 'mcs-foundations-signals' },
           mode: 'guided',
           phase: 'act',
           checkpointId: 'measurement-chain-checked',
@@ -166,7 +166,10 @@ describe('CriticalCareHub', () => {
 
     render(<CriticalCareHub catalog={catalog} />)
     const resume = await screen.findByRole('link', { name: 'Resume activity' })
-    expect(resume).toHaveAttribute('href', '/icu-hemodynamics/learn?activity=pac-signal-validation')
+    expect(resume).toHaveAttribute(
+      'href',
+      '/mechanical-circulatory-support/learn?lesson=mcs-foundations-signals',
+    )
     expect(screen.getByText(/Safe checkpoint · Act phase/)).toBeInTheDocument()
     expect(screen.getByText(/Device Impella CP-family support/)).toBeInTheDocument()
 
@@ -177,7 +180,7 @@ describe('CriticalCareHub', () => {
     })
     expect(mockRecordCriticalCareDashboardEvent).toHaveBeenCalledWith({
       interaction: 'critical_care_resume_selected',
-      targetId: 'hemodynamics:learn:pac-signal-validation',
+      targetId: 'mcs:learn:mcs-foundations-signals',
       targetType: 'activity',
     })
   })

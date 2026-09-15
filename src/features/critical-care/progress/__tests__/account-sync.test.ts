@@ -29,12 +29,12 @@ function definition(
 ): CriticalCareActivityDefinition {
   return {
     id,
-    moduleId: 'icu-hemodynamics',
+    moduleId: 'mechanical-circulatory-support',
     title: id,
     description: 'Bounded test activity',
     kind: 'practice-case',
     supportedModes: ['practice'],
-    pathname: `/icu-hemodynamics/${id.split(':')[1]}`,
+    pathname: `/mechanical-circulatory-support/${id.split(':')[1]}`,
     pathwayIds: [],
     competencyIds: ['signal-validation'],
     prerequisiteActivityIds: [],
@@ -74,10 +74,10 @@ function progress(
 }
 
 const activities = [
-  definition('hemodynamics:learn:signal-validation', { kind: 'micro-lesson' }),
-  definition('hemodynamics:learn:derived-values', { kind: 'micro-lesson' }),
-  definition('hemodynamics:practice:HD-01'),
-  definition('hemodynamics:assess:masked-seeded', {
+  definition('mcs:learn:signal-validation', { kind: 'micro-lesson' }),
+  definition('mcs:learn:derived-values', { kind: 'micro-lesson' }),
+  definition('mcs:practice:IABP-01'),
+  definition('mcs:assess:CAP-IMP-01', {
     kind: 'assessment',
     masteryRuleId: 'safe-mastery',
     reviewStatus: 'draft',
@@ -91,14 +91,14 @@ describe('critical-care coarse account sync projection', () => {
     const envelope: CriticalCareProgressEnvelope = {
       version: 1,
       activities: [
-        progress('hemodynamics:learn:signal-validation', { status: 'completed' }),
-        progress('hemodynamics:learn:derived-values'),
-        progress('hemodynamics:practice:HD-01', { status: 'mastered', bestScore: 94 }),
-        progress('hemodynamics:assess:masked-seeded', { status: 'mastered', bestScore: 98 }),
+        progress('mcs:learn:signal-validation', { status: 'completed' }),
+        progress('mcs:learn:derived-values'),
+        progress('mcs:practice:IABP-01', { status: 'mastered', bestScore: 94 }),
+        progress('mcs:assess:CAP-IMP-01', { status: 'mastered', bestScore: 98 }),
       ],
       resume: {
-        activityId: 'hemodynamics:learn:derived-values',
-        pathname: '/icu-hemodynamics/learn',
+        activityId: 'mcs:learn:derived-values',
+        pathname: '/mechanical-circulatory-support/learn',
         mode: 'practice',
         phase: 'act',
         scenarioId: 'synthetic-case',
@@ -115,7 +115,7 @@ describe('critical-care coarse account sync projection', () => {
       schemaVersion: 1,
       modules: [
         {
-          moduleId: 'icu-hemodynamics',
+          moduleId: 'mechanical-circulatory-support',
           percentComplete: 67,
           completedSections: ['practice'],
           completed: false,
@@ -150,14 +150,14 @@ describe('critical-care coarse account sync projection', () => {
       projectCriticalCareCoarseProgress(
         {
           ...empty,
-          activities: [progress('hemodynamics:assess:masked-seeded', { status: 'mastered' })],
+          activities: [progress('mcs:assess:CAP-IMP-01', { status: 'mastered' })],
         },
         [activities[3]],
       ),
     ).toBeNull()
   })
 
-  it('projects legacy MCS and ECMO progress while retaining CRRT records without completion claims', () => {
+  it('projects legacy MCS progress while retaining self-paced module records without completion claims', () => {
     const values = {
       ...partialLegacyProgressFixtures,
       ...completedLegacyProgressFixtures,
@@ -178,9 +178,11 @@ describe('critical-care coarse account sync projection', () => {
     )
 
     expect(projected?.modules.map((module) => module.moduleId)).toEqual(
-      expect.arrayContaining(['mechanical-circulatory-support', 'cardiohelp-ecmo']),
+      expect.arrayContaining(['mechanical-circulatory-support']),
     )
-    expect(projected?.modules.map((module) => module.moduleId)).not.toContain('baxter-crrt')
+    for (const moduleId of ['baxter-crrt', 'icu-hemodynamics', 'cardiohelp-ecmo']) {
+      expect(projected?.modules.map((module) => module.moduleId)).not.toContain(moduleId)
+    }
   })
 
   it('hydrates only explicitly completed sections without inventing partial identities', () => {
@@ -194,7 +196,7 @@ describe('critical-care coarse account sync projection', () => {
       accountId: 'user-1',
       modules: [
         {
-          moduleId: 'icu-hemodynamics',
+          moduleId: 'mechanical-circulatory-support',
           percentComplete: 75,
           completedSections: ['learn'],
           completedAt: null,
@@ -209,13 +211,13 @@ describe('critical-care coarse account sync projection', () => {
     expect(hydrated.activities).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          activityId: 'hemodynamics:learn:signal-validation',
+          activityId: 'mcs:learn:signal-validation',
           status: 'completed',
           attempts: 0,
           competencyEvidenceIds: [],
         }),
         expect.objectContaining({
-          activityId: 'hemodynamics:learn:derived-values',
+          activityId: 'mcs:learn:derived-values',
           status: 'completed',
         }),
       ]),
@@ -237,7 +239,7 @@ describe('critical-care coarse account sync projection', () => {
     const local: CriticalCareProgressEnvelope = {
       version: 1,
       activities: [
-        progress('hemodynamics:learn:signal-validation', {
+        progress('mcs:learn:signal-validation', {
           status: 'mastered',
           bestScore: 96,
           attempts: 4,
@@ -253,7 +255,7 @@ describe('critical-care coarse account sync projection', () => {
         accountId: 'user-1',
         modules: [
           {
-            moduleId: 'icu-hemodynamics',
+            moduleId: 'mechanical-circulatory-support',
             percentComplete: 50,
             completedSections: ['learn'],
             completedAt: null,
@@ -265,9 +267,7 @@ describe('critical-care coarse account sync projection', () => {
     )
 
     expect(
-      hydrated.activities.find(
-        (item) => item.activityId === 'hemodynamics:learn:signal-validation',
-      ),
+      hydrated.activities.find((item) => item.activityId === 'mcs:learn:signal-validation'),
     ).toMatchObject({
       status: 'mastered',
       bestScore: 96,
@@ -310,7 +310,7 @@ describe('critical-care coarse account sync projection', () => {
       schemaVersion: 1,
       modules: [
         {
-          moduleId: 'icu-hemodynamics',
+          moduleId: 'mechanical-circulatory-support',
           percentComplete: 50,
           completedSections: [],
           completed: false,

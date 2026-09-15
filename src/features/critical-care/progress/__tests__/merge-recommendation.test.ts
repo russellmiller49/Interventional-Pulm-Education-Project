@@ -2,7 +2,7 @@ import {
   criticalCareActivities,
   criticalCareActivityById,
 } from '@/features/critical-care/content/activities'
-import { ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY } from '@/features/icu-hemodynamics/engine/progress'
+import { MCS_PROGRESS_STORAGE_KEY } from '../adapters/mcs'
 import {
   CRITICAL_CARE_PROGRESS_STORAGE_KEY,
   type CriticalCareActivityProgress,
@@ -80,14 +80,13 @@ describe('normalized critical-care progress merge', () => {
   })
 
   it('merges colliding normalized and legacy records monotonically', () => {
-    const activityId = 'hemodynamics:practice:HD-01'
+    const activityId = 'mcs:assess:CAP-IMP-01'
     const normalized = normalizedEnvelope([
       normalizedActivity(activityId, { status: 'in-progress', attempts: 7, bestScore: 40 }),
     ])
     const storage = new ReadOnlyFixtureStorage({
       [CRITICAL_CARE_PROGRESS_STORAGE_KEY]: JSON.stringify(normalized),
-      [ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY]:
-        masteredLegacyProgressFixtures[ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY],
+      [MCS_PROGRESS_STORAGE_KEY]: masteredLegacyProgressFixtures[MCS_PROGRESS_STORAGE_KEY],
     })
 
     const result = readMergedCriticalCareProgress(storage, criticalCareActivities)
@@ -95,7 +94,7 @@ describe('normalized critical-care progress merge', () => {
       {
         status: 'mastered',
         attempts: 7,
-        bestScore: 92,
+        bestScore: 91,
         updatedAt: '2026-07-22T12:00:00.000Z',
       },
     )
@@ -128,8 +127,7 @@ describe('normalized critical-care progress merge', () => {
     const corrupt = readMergedCriticalCareProgress(
       new ReadOnlyFixtureStorage({
         [CRITICAL_CARE_PROGRESS_STORAGE_KEY]: corruptProgressFixture,
-        [ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY]:
-          masteredLegacyProgressFixtures[ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY],
+        [MCS_PROGRESS_STORAGE_KEY]: masteredLegacyProgressFixtures[MCS_PROGRESS_STORAGE_KEY],
       }),
       criticalCareActivities,
     )
@@ -138,7 +136,7 @@ describe('normalized critical-care progress merge', () => {
       issue: 'invalid-json',
     })
     expect(
-      corrupt.envelope.activities.find((item) => item.activityId === 'hemodynamics:practice:HD-01')
+      corrupt.envelope.activities.find((item) => item.activityId === 'mcs:assess:CAP-IMP-01')
         ?.status,
     ).toBe('mastered')
 
@@ -157,16 +155,16 @@ describe('normalized critical-care progress merge', () => {
   })
 
   it('selects the newest valid catalog resume and falls back from an invalid normalized route', () => {
-    const definition = catalogActivity('hemodynamics:practice:HD-01')
+    const definition = catalogActivity('mcs:assess:CAP-IMP-01')
     const validNormalized: CriticalCareProgressEnvelope = {
       ...normalizedEnvelope([normalizedActivity(definition.id)]),
       resume: {
         activityId: definition.id,
         pathname: definition.pathname,
         query: definition.query,
-        mode: 'practice',
+        mode: 'challenge',
         phase: 'act',
-        scenarioId: 'HD-01',
+        scenarioId: 'CAP-IMP-01',
         payloadVersion: 'normalized-v1',
         updatedAt: '2026-07-22T12:00:00.000Z',
       },
@@ -174,13 +172,12 @@ describe('normalized critical-care progress merge', () => {
     const normalizedTarget = getCriticalCareResumeTarget(
       new ReadOnlyFixtureStorage({
         [CRITICAL_CARE_PROGRESS_STORAGE_KEY]: JSON.stringify(validNormalized),
-        [ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY]:
-          masteredLegacyProgressFixtures[ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY],
+        [MCS_PROGRESS_STORAGE_KEY]: masteredLegacyProgressFixtures[MCS_PROGRESS_STORAGE_KEY],
       }),
       criticalCareActivities,
     )
     expect(normalizedTarget).toMatchObject({
-      href: '/icu-hemodynamics/practice?case=HD-01',
+      href: '/mechanical-circulatory-support/assess?case=CAP-IMP-01',
       pointer: { payloadVersion: 'normalized-v1', phase: 'act' },
     })
 
@@ -191,22 +188,20 @@ describe('normalized critical-care progress merge', () => {
     const fallback = getCriticalCareResumeTarget(
       new ReadOnlyFixtureStorage({
         [CRITICAL_CARE_PROGRESS_STORAGE_KEY]: JSON.stringify(invalidNormalized),
-        [ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY]:
-          masteredLegacyProgressFixtures[ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY],
+        [MCS_PROGRESS_STORAGE_KEY]: masteredLegacyProgressFixtures[MCS_PROGRESS_STORAGE_KEY],
       }),
       criticalCareActivities,
     )
     expect(fallback?.pointer).toMatchObject({
-      activityId: 'hemodynamics:practice:HD-01',
-      payloadVersion: 'icu-hemodynamics-progress-v2',
+      activityId: 'mcs:assess:CAP-IMP-01',
+      payloadVersion: 'mcs-progress-v1',
       updatedAt: LEGACY_PROGRESS_EPOCH,
     })
 
     const fallbackRead = readMergedCriticalCareProgress(
       new ReadOnlyFixtureStorage({
         [CRITICAL_CARE_PROGRESS_STORAGE_KEY]: JSON.stringify(invalidNormalized),
-        [ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY]:
-          masteredLegacyProgressFixtures[ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY],
+        [MCS_PROGRESS_STORAGE_KEY]: masteredLegacyProgressFixtures[MCS_PROGRESS_STORAGE_KEY],
       }),
       criticalCareActivities,
     )
@@ -220,13 +215,10 @@ describe('normalized critical-care progress merge', () => {
   })
 
   it('merges pure inputs without mutating either source', () => {
-    const normalized = normalizedEnvelope([
-      normalizedActivity('hemodynamics:learn:pac-signal-validation'),
-    ])
+    const normalized = normalizedEnvelope([normalizedActivity('mcs:learn:mcs-foundations-signals')])
     const legacy = readMergedCriticalCareProgress(
       new ReadOnlyFixtureStorage({
-        [ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY]:
-          masteredLegacyProgressFixtures[ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY],
+        [MCS_PROGRESS_STORAGE_KEY]: masteredLegacyProgressFixtures[MCS_PROGRESS_STORAGE_KEY],
       }),
       criticalCareActivities,
     ).legacySources
@@ -235,8 +227,8 @@ describe('normalized critical-care progress merge', () => {
     const merged = mergeCriticalCareProgress(normalized, legacy, criticalCareActivities)
 
     expect(merged.activities.map((item) => item.activityId)).toEqual([
-      'hemodynamics:learn:pac-signal-validation',
-      'hemodynamics:practice:HD-01',
+      'mcs:learn:mcs-foundations-signals',
+      'mcs:assess:CAP-IMP-01',
     ])
     expect(JSON.stringify({ normalized, legacy })).toBe(before)
   })
@@ -257,16 +249,16 @@ describe('deterministic critical-care recommendations', () => {
 
   it('prioritizes continuing an in-progress activity', () => {
     const progress = normalizedEnvelope([
-      normalizedActivity('hemodynamics:practice:HD-06', { status: 'in-progress' }),
+      normalizedActivity('mcs:practice:IMP-01', { status: 'in-progress' }),
     ])
     expect(getCriticalCareRecommendation(criticalCareActivities, progress)).toMatchObject({
-      activity: { id: 'hemodynamics:practice:HD-06' },
+      activity: { id: 'mcs:practice:IMP-01' },
       reason: 'continue',
     })
   })
 
   it('downgrades unsupported completion without turning prerequisites into a gate', () => {
-    const nonCreditLesson = catalogActivity('hemodynamics:learn:pressure-system')
+    const nonCreditLesson = catalogActivity('mcs:learn:mcs-foundations-signals')
     const invalidCompletion = normalizedEnvelope([
       normalizedActivity(nonCreditLesson.id, {
         status: 'mastered',
