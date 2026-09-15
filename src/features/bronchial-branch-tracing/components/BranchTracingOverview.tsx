@@ -2,29 +2,23 @@
 
 import { ArrowRight, GitBranch } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
-import { BASE_PATH, LESSONS, nextLesson, SOURCE, lessonById, VERSION } from '../content/lessons'
-import {
-  completedLessons,
-  progressVersionChanged,
-  hasHistoricalOrientation,
-} from '../engine/progress'
-import { useDeviceProgress } from './useDeviceProgress'
+import { BASE_PATH, LESSONS, SOURCE } from '../content/lessons'
+import { recommendedLesson } from '../engine/selfPacedProgress'
+import { useSelfPacedProgress } from './useSelfPacedProgress'
 import { ModuleFrame } from './ModuleFrame'
 import { TargetCtPreview } from './TargetCtPreview'
 import styles from './branch-tracing.module.css'
 
 export function BranchTracingOverview() {
-  const { ready, progress } = useDeviceProgress()
-  const completed = completedLessons(progress)
-  const changed = progressVersionChanged(progress)
-  const resume =
-    progress.resume?.payloadVersion === VERSION && progress.resume.pathname === `${BASE_PATH}/learn`
-      ? lessonById(progress.resume.query?.lesson)
-      : undefined
-  const next = resume && !completed.includes(resume.id) ? resume : nextLesson(completed)
+  const { ready, status, record } = useSelfPacedProgress()
+  const recommendation = recommendedLesson(record)
+  const opened = LESSONS.filter((l) => record.visitedLessonIds.includes(l.id))
+  const reviewed = LESSONS.filter((l) => record.reviewedLessonIds.includes(l.id))
+  const savedForReview = LESSONS.filter((l) => record.reviewLaterLessonIds.includes(l.id))
+  const door = recommendation?.lesson ?? LESSONS[0]
   return (
     <ModuleFrame section="overview">
-      <main className={styles.overview}>
+      <main className={styles.overview} data-course-overview>
         <div className={styles.eyebrow}>
           <GitBranch size={18} aria-hidden /> BRONCHOSCOPY / SPATIAL ANATOMY{' '}
           <span>Unpublished preview</span>
@@ -37,44 +31,42 @@ export function BranchTracingOverview() {
             </p>
             <p>
               Start with a short CT interval and one visible airway. Compare a demonstration with
-              your own marks, retry the same task, then relate the daughter branches to the view
-              from their parent.
+              your own marks, show the reference whenever you want it, then relate the daughter
+              branches to the view from their parent.
             </p>
             <Link
               className={styles.primary}
-              href={
-                next
-                  ? `${BASE_PATH}/learn?lesson=${next.id}`
-                  : `${BASE_PATH}/learn?lesson=${LESSONS[0].id}`
-              }
+              href={`${BASE_PATH}/learn?lesson=${door.id}`}
               aria-disabled={!ready}
             >
               {!ready
-                ? 'Loading progress'
-                : !next
+                ? 'Loading your place'
+                : !recommendation
                   ? 'Review the course'
-                  : completed.length || resume
-                    ? `Continue: ${next.title}`
-                    : 'Start learning'}
+                  : recommendation.kind === 'start'
+                    ? 'Start learning'
+                    : recommendation.kind === 'resume'
+                      ? `Resume: ${door.title}`
+                      : `Continue: ${door.title}`}
               <ArrowRight size={18} aria-hidden />
             </Link>
             <p className={styles.small}>
               {LESSONS.length} lessons · about {LESSONS.reduce((n, l) => n + l.minutes, 0)} minutes
-              · {completed.length} completed on this device
+              · every lesson open · {opened.length} opened and {reviewed.length} reviewed on this
+              device
             </p>
           </div>
           <TargetCtPreview />
         </header>
-        {hasHistoricalOrientation(progress) && !completed.includes('orientation') && (
-          <p className={styles.notice}>
-            Your earlier orientation participation is retained. The new observer comparison and
-            same-airway application remain available to complete.
+        {status === 'unavailable' && (
+          <p className={styles.notice} role="status">
+            This browser is not saving your place. Every lesson and route set stays open.
           </p>
         )}
-        {changed && (
-          <p className={styles.notice}>
-            An earlier version’s history is retained. This version starts a new course record
-            because its content, assets, or rubric changed.
+        {status === 'unreadable' && (
+          <p className={styles.notice} role="status">
+            Your saved place on this device could not be read, so it has been left untouched and
+            nothing new is saved over it. Every lesson and route set stays open.
           </p>
         )}
         <div className={styles.introGrid}>
@@ -106,21 +98,34 @@ export function BranchTracingOverview() {
           <h2>What this preview contains</h2>
           <p>
             Foundations isolate a single lumen or bifurcation. Local pattern exercises follow, then
-            a three-division route and complete nodule approaches. Learn and Practice reveal
-            comparisons after each recorded attempt; Assess keeps comparisons hidden until the set
-            is submitted. All exercises use one teaching scan. Different targets in that scan do not
-            demonstrate transfer to an unfamiliar patient CT.
+            a three-division route and complete nodule approaches. In Learn, Practice and More
+            routes you can show the reference before you mark, compare after you check, or continue
+            without marking. Nothing is scored, and no lesson waits on a correct branch. All
+            exercises use one teaching scan. Different targets in that scan do not demonstrate
+            transfer to an unfamiliar patient CT.
           </p>
           <p>
             Educational spatial reasoning only. This module does not establish device reach,
             patient-specific routes, or independent procedural competence.
           </p>
         </section>
+        {savedForReview.length > 0 && (
+          <section>
+            <h2>Saved for review</h2>
+            <ul>
+              {savedForReview.map((lesson) => (
+                <li key={lesson.id}>
+                  <Link href={`${BASE_PATH}/learn?lesson=${lesson.id}`}>{lesson.title}</Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         <section>
           <div className={styles.sectionTitle}>
             <h2>Your lesson pathway</h2>
             <span>
-              {completed.length}/{LESSONS.length} complete
+              {reviewed.length}/{LESSONS.length} reviewed on this device
             </span>
           </div>
           <ol className={styles.lessonList}>
@@ -131,7 +136,14 @@ export function BranchTracingOverview() {
                   <Link href={`${BASE_PATH}/learn?lesson=${lesson.id}`}>{lesson.title}</Link>
                   <p>{lesson.objective}</p>
                 </div>
-                <span>{completed.includes(lesson.id) ? 'Completed' : `${lesson.minutes} min`}</span>
+                <span>
+                  {record.reviewedLessonIds.includes(lesson.id)
+                    ? 'Reviewed'
+                    : record.visitedLessonIds.includes(lesson.id)
+                      ? `Opened · ${lesson.minutes} min`
+                      : `${lesson.minutes} min`}
+                  {record.reviewLaterLessonIds.includes(lesson.id) ? ' · Saved for review' : ''}
+                </span>
               </li>
             ))}
           </ol>
@@ -152,11 +164,12 @@ export function BranchTracingOverview() {
             instrument reach or tool-in-lesion.
           </p>
           <p>
-            Versioned drafts save your current exercise, answers, CT slice, orientation and viewing
-            state on this device. Save & exit restores that draft when you reopen the lesson or the
-            same Practice/Assess selection. First-attempt participation remains separate. A changed
-            lesson or annotation version explains why an older draft cannot be resumed. Saving
-            failures are disclosed before you leave. CT interpretation is ungraded.
+            This device keeps your place: the last lesson, lessons opened or finished, lessons saved
+            for review, and a draft of your current marks, CT slice, orientation and viewing state
+            so you can resume. Nothing is scored and hint use is not counted. Participation records
+            from earlier versions stay on this device untouched and are not shown as progress. A
+            changed lesson or annotation version explains why an older draft cannot be resumed.
+            Saving failures are disclosed before you leave.
           </p>
         </section>
       </main>

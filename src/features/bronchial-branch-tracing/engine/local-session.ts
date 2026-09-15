@@ -14,14 +14,18 @@ import { markSchema, orientationSchema, viewerSchema } from './ct-draft'
 const branchSchema = z.union([z.number().int().nonnegative(), z.literal('unresolved')]).nullable()
 export const TRACING_PRESETS = ['mirror', 'rul', 'upper-division'] as const
 export type TaughtPreset = (typeof TRACING_PRESETS)[number]
+/** Legacy answers to the removed orientation check; kept readable, never written. */
 const orientationResponseSchema = z.enum(['display', 'anatomy', 'bronchoscopy'])
 const attemptSchema = z.object({
+  // Self-paced attempts store 'not-recorded'. Older drafts keep their label, or
+  // 'legacy-unknown' when they predate it. Neither is shown to the learner.
   support: z
-    .enum(['guided', 'independent', 'after-comparison', 'legacy-unknown'])
+    .enum(['guided', 'independent', 'after-comparison', 'legacy-unknown', 'not-recorded'])
     .default('legacy-unknown'),
   marks: z.array(markSchema),
   branch: branchSchema,
-  hints: z.number().int().min(0).max(3),
+  /** Legacy drafts only; self-paced attempts do not record hint use. */
+  hints: z.number().int().min(0).max(3).optional(),
   course: z.enum(['cranial', 'caudal', 'horizontal', 'returning', 'uncertain', '']),
   orientation: orientationSchema,
 })
@@ -33,10 +37,12 @@ const stateSchema = z.object({
   marks: z.array(markSchema.nullable()),
   branch: branchSchema,
   course: attemptSchema.shape.course,
-  hints: attemptSchema.shape.hints,
+  /** In-session help level for the current example: highlight or return to the parent. */
+  hints: z.number().int().min(0).max(3),
   orientation: orientationSchema,
   viewAnswer: branchSchema,
   history: z.record(z.array(attemptSchema)),
+  /** Legacy opening-choice history; kept readable, no longer appended. */
   viewAnswers: z.record(z.array(branchSchema)),
   parentChoice: z.string().nullable(),
   parentConfirmed: z.boolean(),
@@ -53,8 +59,9 @@ export type LocalAction =
   | { type: 'explain-orientation' }
   | { type: 'reset-attempt' }
   | { type: 'demonstrate-orientation' }
-  | { type: 'orientation-response'; value: z.infer<typeof orientationResponseSchema> }
   | { type: 'finish-orientation' }
+  /** Move past the current attempt without marking. Nothing is recorded. */
+  | { type: 'skip' }
   | { type: 'orientation'; value: CtOrientation }
   | { type: 'select-parent'; value: string }
   | { type: 'record-parent' }
@@ -168,12 +175,11 @@ export function parseLocalSession(
     )
       return null
   }
-  if (
-    ['compare', 'parent-view', 'complete'].includes(s.phase) &&
-    (!localReady(s, exercise) || !s.history[exercise.id]?.length)
-  )
+  // Only the comparison shows a checked attempt, so only it needs one. Position is independent of
+  // what was marked: a learner may reach the parent view, a later example or the end of the lesson
+  // having continued without marking.
+  if (s.phase === 'compare' && (!localReady(s, exercise) || !s.history[exercise.id]?.length))
     return null
-  if (exercises.slice(0, s.exercise).some((ex) => !s.history[ex.id]?.length)) return null
   for (const [key, view] of Object.entries(s.views)) {
     const ex = exercises.find((e) => e.id === key)
     if (!ex || view.slice < ex.trace.range[0] || view.slice > ex.trace.range[1] || view.showNodule)
@@ -243,26 +249,8 @@ export function localSessionReducer(
         orientationGuide: 'compare',
         orientation: orientationFor(exercise.trace.preset),
       }
-    if (
-      action.type === 'orientation-response' &&
-      s.orientationGuide === 'compare' &&
-      orientationResponseSchema.safeParse(action.value).success
-    )
-      return {
-        ...s,
-        orientationResponses: {
-          ...s.orientationResponses,
-          [exercise.trace.preset]: [
-            ...(s.orientationResponses[exercise.trace.preset] ?? []),
-            action.value,
-          ],
-        },
-      }
-    if (
-      action.type === 'finish-orientation' &&
-      s.orientationGuide === 'compare' &&
-      s.orientationResponses[exercise.trace.preset]?.at(-1) === 'display'
-    )
+    // The explanation and side-by-side comparison precede any transform; leaving it needs no answer.
+    if (action.type === 'finish-orientation' && s.orientationGuide === 'compare')
       return {
         ...s,
         orientationGuide: null,
@@ -319,21 +307,14 @@ export function localSessionReducer(
       return { ...s, branch: action.value }
     if (action.type === 'course' && attemptSchema.shape.course.safeParse(action.value).success)
       return { ...s, course: action.value }
+    // A checked attempt keeps the learner's own marks for comparison and retry, exactly as placed.
+    // It records no hint use and no guided/independent label.
     if (action.type === 'check' && localReady(s, exercise)) {
       const attempt: LocalAttempt = {
-        support: s.history[exercise.id]?.length
-          ? 'after-comparison'
-          : s.exercise === 0 ||
-              s.hints > 0 ||
-              exercises
-                .slice(0, s.exercise)
-                .some((e) => e.spec.checkpointId === exercise.spec.checkpointId)
-            ? 'guided'
-            : 'independent',
+        support: 'not-recorded',
         marks: s.marks.map((m) => ({ ...m!, pixel: m!.pixel ? [...m!.pixel] : null })),
         branch: s.branch,
         course: s.course,
-        hints: s.hints,
         orientation: { ...s.orientation },
       }
       return {
@@ -342,54 +323,65 @@ export function localSessionReducer(
         history: { ...s.history, [exercise.id]: [...(s.history[exercise.id] ?? []), attempt] },
       }
     }
+    // Continue without marking: unplaced responses are discarded, no attempt is created, and the
+    // parent-view teaching for this example stays available when the lesson has one.
+    if (action.type === 'skip') {
+      const cleared: LocalSession = {
+        ...s,
+        slot: 0,
+        marks: exercise.answerPoints.map(() => null),
+        branch: null,
+        course: '',
+        viewAnswer: null,
+      }
+      return parentViewTask(exercise.spec, s.exercise) !== 'none'
+        ? enterParentView(cleared, exercise)
+        : advance(exercises, cleared)
+    }
   }
   if (
     action.type === 'parent-view' &&
     s.phase === 'compare' &&
     parentViewTask(exercise.spec, s.exercise) !== 'none'
   )
-    return {
-      ...s,
-      phase: 'parent-view',
-      orientationGuide: hasLearnedPreset(s, exercise) ? null : 'direction',
-      orientation: hasLearnedPreset(s, exercise) ? s.orientation : { ...STANDARD_ORIENTATION },
-    }
+    return enterParentView(s, exercise)
   if (
     action.type === 'view-answer' &&
     s.phase === 'parent-view' &&
     s.viewAnswer === null &&
     validChoice(exercise, action.value)
   )
-    return {
-      ...s,
-      viewAnswer: action.value,
-      viewAnswers: {
-        ...s.viewAnswers,
-        [exercise.id]: [...(s.viewAnswers[exercise.id] ?? []), action.value],
-      },
-    }
-  if (
-    action.type === 'next' &&
-    ((s.phase === 'parent-view' &&
-      (s.viewAnswer !== null || parentViewTask(exercise.spec, s.exercise) === 'guided')) ||
-      (s.phase === 'compare' && parentViewTask(exercise.spec, s.exercise) === 'none'))
-  ) {
-    if (s.exercise === exercises.length - 1) return { ...s, phase: 'complete' }
-    const next = exercises[s.exercise + 1]
-    return {
-      ...s,
-      exercise: s.exercise + 1,
-      slot: 0,
-      phase: 'attempt',
-      frame: 0,
-      marks: next.answerPoints.map(() => null),
-      branch: null,
-      course: '',
-      hints: 0,
-      viewAnswer: null,
-      orientation: { ...STANDARD_ORIENTATION },
-      orientationGuide: null,
-    }
-  }
+    return { ...s, viewAnswer: action.value }
+  // Moving on never waits on an opening choice or on the parent view itself.
+  if (action.type === 'next' && (s.phase === 'compare' || s.phase === 'parent-view'))
+    return advance(exercises, s)
   return s
+}
+
+function enterParentView(s: LocalSession, exercise: LocalCtExercise): LocalSession {
+  return {
+    ...s,
+    phase: 'parent-view',
+    orientationGuide: hasLearnedPreset(s, exercise) ? null : 'direction',
+    orientation: hasLearnedPreset(s, exercise) ? s.orientation : { ...STANDARD_ORIENTATION },
+  }
+}
+
+function advance(exercises: LocalCtExercise[], s: LocalSession): LocalSession {
+  if (s.exercise === exercises.length - 1) return { ...s, phase: 'complete' }
+  const next = exercises[s.exercise + 1]
+  return {
+    ...s,
+    exercise: s.exercise + 1,
+    slot: 0,
+    phase: 'attempt',
+    frame: 0,
+    marks: next.answerPoints.map(() => null),
+    branch: null,
+    course: '',
+    hints: 0,
+    viewAnswer: null,
+    orientation: { ...STANDARD_ORIENTATION },
+    orientationGuide: null,
+  }
 }

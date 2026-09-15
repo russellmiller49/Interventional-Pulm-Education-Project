@@ -12,6 +12,7 @@ export const SOURCE = {
   title: 'Kurimoto & Morita. Bronchial Branch Tracing (2020)',
   url: 'https://doi.org/10.1007/978-981-13-9905-3',
 }
+// Self-paced (BBT-01): no step waits on an answer, a recorded trace or a correct branch.
 export const LESSON_STEPS: StageStepBase<string>[] = [
   {
     id: 'orientation',
@@ -31,7 +32,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     phase: 'predict',
     title: 'Follow the lumen',
     instruction:
-      'Follow the airway toward the nodule in the named segment. At every junction, choose the daughter branch and mark its lumen. Record the junction, compare it, then continue to the next fork.',
+      'Follow the airway toward the nodule in the named segment. At every junction, choose the daughter branch and mark its lumen, or show the reference first. Record the junction to compare it, or continue without recording.',
     lookIn: { pane: 'simulator', landmark: 'CT tracing stack' },
     actionLabel: 'Record trace',
     interaction: 'choose',
@@ -47,7 +48,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     lookIn: { pane: 'steps', landmark: 'Route checkpoints' },
     actionLabel: 'Reveal CT comparison',
     interaction: 'map',
-    gate: 'after-prediction',
+    gate: 'open',
   },
   {
     id: 'comparison',
@@ -59,7 +60,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     lookIn: { pane: 'simulator', landmark: 'CT tracing stack' },
     actionLabel: 'Review the relationship',
     interaction: 'observe',
-    gate: 'after-prediction',
+    gate: 'open',
   },
   {
     id: 'reasoning',
@@ -71,7 +72,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     lookIn: { pane: 'teaching', landmark: 'Reading this airway' },
     actionLabel: 'Trace another airway',
     interaction: 'explain',
-    gate: 'after-prediction',
+    gate: 'open',
   },
   {
     id: 'transfer',
@@ -79,7 +80,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     phase: 'transfer',
     title: 'Apply it to another trace',
     instruction:
-      'Plan a route to this new nodule target. Work through every junction from the trachea, then mark the distal approach and describe its course and relationship to the nodule.',
+      'Plan a route to this new nodule target. Work through the junctions from the trachea, then mark the distal approach and describe its course and relationship to the nodule.',
     lookIn: {
       pane: 'simulator',
       landmark: 'CT tracing stack',
@@ -88,7 +89,7 @@ export const LESSON_STEPS: StageStepBase<string>[] = [
     },
     actionLabel: 'Compare new trace',
     interaction: 'transfer',
-    gate: 'after-prediction',
+    gate: 'open',
   },
 ]
 
@@ -332,7 +333,8 @@ const LOCAL_STEPS: StageStepBase<string>[] = [
     ordinal: 2,
     phase: 'predict',
     title: 'Follow the lumen',
-    instruction: 'Browse adjacent slices, then mark the lumen on the answer slice.',
+    instruction:
+      'Browse adjacent slices, then mark the lumen on the answer slice. You can show the reference or continue without marking.',
     actionLabel: 'Check my tracing',
     interaction: 'choose',
     gate: 'open',
@@ -347,7 +349,7 @@ const LOCAL_STEPS: StageStepBase<string>[] = [
       'Review the image evidence. Keep uncertainty where continuity cannot be established.',
     actionLabel: 'Relate the parent view',
     interaction: 'observe',
-    gate: 'after-prediction',
+    gate: 'open',
     lookIn: { pane: 'simulator', landmark: 'CT tracing stack' },
   },
   {
@@ -355,23 +357,49 @@ const LOCAL_STEPS: StageStepBase<string>[] = [
     ordinal: 4,
     phase: 'explain',
     title: 'Relate the parent view',
-    instruction: 'Choose the opening before revealing its label and the paired airway view.',
+    instruction:
+      'Choose the matching opening or show the labels, then compare the paired airway view.',
     actionLabel: 'Try another local example',
     interaction: 'explain',
-    gate: 'after-prediction',
+    gate: 'open',
     lookIn: { pane: 'simulator', landmark: 'Fixed parent view' },
   },
 ]
-const continuity = ROUTE_LESSONS.find((lesson) => lesson.id === 'continuity')!
 export const LESSONS: CtLesson[] = [
   {
-    ...continuity,
+    // Authored for its own two intervals (BBT-01), not inherited from the bifurcation lesson:
+    // the trachea above the carina (central-right, slices 416→412) and the left main bronchus
+    // (central-left, 352→348), each four 0.5 mm steps in standard axial display.
     id: 'follow-one-airway',
     title: 'Follow one airway',
-    minutes: 4,
-    objective: 'Maintain the identity of one air-filled lumen across neighboring CT slices.',
-    prerequisite: 'Recognize an air-filled airway on CT.',
-    concept: 'Follow the same lumen before interpreting a division.',
+    minutes: 5,
+    objective: 'Keep the identity of one air-filled lumen across neighboring axial CT slices.',
+    prerequisite: 'Recognize an air-filled airway on axial CT.',
+    concept: 'Stay in the same lumen, one slice at a time, before interpreting any division.',
+    purpose:
+      'A CT route to a peripheral target is built one slice at a time. If a single step jumps to a neighboring airway, every branch decision after it is made on the wrong route.',
+    checklist: [
+      'Start on the outlined lumen and note where it sits against R, L, A and P.',
+      'Step one slice at a time, keeping the same air column and its wall in view.',
+      'Adjacent 0.5 mm slices change little; a sudden jump in position or size means you may have left the lumen.',
+      'Lost it? Go back to the last slice you were sure of, or record uncertainty.',
+    ],
+    teaching: [
+      'Standard axial CT is viewed from the feet: patient right is on screen-left and anterior is at the top. The air-filled lumen is dark, bounded by its wall. Both intervals in this lesson stay in this standard display.',
+      'Step through adjacent slices in small increments. The airway you started in appears in nearly the same place on each neighboring slice. A nearby lucency that is not continuous with it, such as another bronchus, is a different airway.',
+    ],
+    worked:
+      'The first interval starts in the trachea above the carina and moves caudally toward it in four 0.5 mm steps (2 mm). The second repeats the same task in the left main bronchus, a narrower lumen, again over four caudal steps.',
+    interpretation:
+      'Compare your marked slice with the starting slice. If you stayed in the same airway, its lumen sits in almost the same place, with a similar size and a continuous wall on every slice between them. The ring is a model locator, not a wall outline: a mark anywhere inside the lumen is valid. If you lost the airway, return to the starting slice and step through the interval again.',
+    transferPrompt:
+      'Repeat the task in the left main bronchus: keep the outlined lumen in view across the adjacent slices, then mark it or record uncertainty.',
+    // The method is the book's; the exact page for single-lumen continuity awaits faculty review.
+    sourcePages: 'Chapter 1 · page reference pending review',
+    // Demonstration and first try share the tracheal interval; the repeat moves to the LMSB.
+    example: 'central-right',
+    prediction: 'central-right',
+    transfer: 'central-left',
     exercises: [
       local('central-right', 'junction-1', 'same-lumen'),
       local('central-left', 'junction-3', 'same-lumen'),

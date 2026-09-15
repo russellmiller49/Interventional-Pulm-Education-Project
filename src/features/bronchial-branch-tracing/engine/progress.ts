@@ -1,50 +1,21 @@
-import {
-  readCriticalCareProgress,
-  writeCriticalCareProgress,
-  upsertCriticalCareActivityProgress,
-} from '@/features/learning-module/activity/progress'
+import { readCriticalCareProgress } from '@/features/learning-module/activity/progress'
 import type { CriticalCareProgressEnvelope } from '@/features/learning-module/activity/types'
-import { BASE_PATH, LESSONS, VERSION, ORIENTATION_CONTRACT } from '../content/lessons'
-import type { Exercise } from '../content/types'
-import { scoreResponse, type Response } from './session'
-import { TRACING_PRESETS, type TaughtPreset } from './local-session'
+import { LESSONS, ORIENTATION_CONTRACT, VERSION } from '../content/lessons'
+import { browserStorage } from './selfPacedProgress'
 
+/**
+ * Legacy participation records, read-only since BBT-01 (self-paced conversion).
+ *
+ * Earlier versions wrote lesson visits and completions, first-attempt branch scores, trace
+ * participation with hint counts and orientation-check results into the shared
+ * `critical-care-activity-progress-v1` envelope under `branch-tracing.<version>.*`. The course no
+ * longer writes that envelope, and no route, recommendation or learner-facing text reads these
+ * records. The pure readers below keep the bytes interpretable. The self-paced record in
+ * `selfPacedProgress.ts` is separate and is never derived from them.
+ */
 export const PREFIX = `branch-tracing.${VERSION}`
-export function browserStorage(): Storage | null {
-  try {
-    return typeof window === 'undefined' ? null : window.localStorage
-  } catch {
-    return null
-  }
-}
-export const readProgress = () => readCriticalCareProgress(browserStorage())
-export function learnedOrientations() {
-  const progress = readProgress()
-  return TRACING_PRESETS.filter((preset) =>
-    progress.activities.some(
-      (activity) =>
-        activity.activityId === `${PREFIX}.orientation.${preset}` &&
-        activity.status === 'completed',
-    ),
-  )
-}
-/** Ungraded display comprehension, not clinical tracing or competency evidence. */
-export function saveOrientationUnderstanding(preset: TaughtPreset) {
-  const activityId = `${PREFIX}.orientation.${preset}`
-  const current = readProgress()
-  if (current.activities.some((a) => a.activityId === activityId && a.status === 'completed'))
-    return true
-  return writeCriticalCareProgress(
-    browserStorage(),
-    upsertCriticalCareActivityProgress(current, {
-      activityId,
-      status: 'completed',
-      attempts: 1,
-      competencyEvidenceIds: [],
-      updatedAt: new Date().toISOString(),
-    }),
-  )
-}
+export const readLegacyProgress = () => readCriticalCareProgress(browserStorage())
+
 export function completedLessons(envelope: CriticalCareProgressEnvelope) {
   return LESSONS.filter((l) =>
     envelope.activities.some(
@@ -55,109 +26,11 @@ export function completedLessons(envelope: CriticalCareProgressEnvelope) {
     ),
   ).map((l) => l.id)
 }
-export function recordFirst(
-  envelope: CriticalCareProgressEnvelope,
-  key: string,
-  exercise: Exercise,
-  response: Response,
-) {
-  const scores = scoreResponse(exercise, response)
-  let next = envelope
-  for (const domain of ['connectivity', 'viewpoint'] as const) {
-    const activityId = `${PREFIX}.${key}.${domain}.first`
-    if (next.activities.some((a) => a.activityId === activityId)) continue
-    next = upsertCriticalCareActivityProgress(next, {
-      activityId,
-      status: 'completed',
-      attempts: 1,
-      bestScore:
-        domain === 'connectivity'
-          ? scores.connectivity * 100
-          : Math.round((scores.viewpoint / scores.viewpointTotal) * 100),
-      hintCount: response.hints,
-      competencyEvidenceIds: [],
-      updatedAt: new Date().toISOString(),
-    })
-  }
-  return next
-}
-export function saveFirst(key: string, exercise: Exercise, response: Response) {
-  return writeCriticalCareProgress(
-    browserStorage(),
-    recordFirst(readProgress(), key, exercise, response),
-  )
-}
-export function saveBranchFirst(
-  key: string,
-  exercise: Exercise,
-  response: { branchId: string; hints: number },
-) {
-  const activityId = `${PREFIX}.${key}.connectivity.first`
-  const current = readProgress()
-  if (current.activities.some((a) => a.activityId === activityId)) return true
-  return writeCriticalCareProgress(
-    browserStorage(),
-    upsertCriticalCareActivityProgress(current, {
-      activityId,
-      status: 'completed',
-      attempts: 1,
-      bestScore: Number(response.branchId === exercise.targetId) * 100,
-      hintCount: response.hints,
-      competencyEvidenceIds: [],
-      updatedAt: new Date().toISOString(),
-    }),
-  )
-}
-export function saveVisit(id: string, complete = false) {
-  const now = new Date().toISOString(),
-    activityId = `${PREFIX}.learn.${id}${id === 'orientation' ? `.${ORIENTATION_CONTRACT}` : ''}`
-  return writeCriticalCareProgress(
-    browserStorage(),
-    upsertCriticalCareActivityProgress(
-      readProgress(),
-      {
-        activityId,
-        status: complete ? 'completed' : 'in-progress',
-        attempts: 0,
-        competencyEvidenceIds: [],
-        updatedAt: now,
-      },
-      {
-        activityId,
-        pathname: `${BASE_PATH}/learn`,
-        query: { lesson: id },
-        mode: 'guided',
-        phase: 'recognize',
-        payloadVersion: VERSION,
-        updatedAt: now,
-      },
-    ),
-  )
-}
 export function progressVersionChanged(envelope: CriticalCareProgressEnvelope) {
   return envelope.activities.some(
     (a) => a.activityId.startsWith('branch-tracing.') && !a.activityId.startsWith(`${PREFIX}.`),
   )
 }
-
-/** CT responses record participation and assistance, never unreviewed clinical scores. */
-export function saveCtAttempt(key: string, hints: number) {
-  const activityId = `${PREFIX}.${key}.trace.first`
-  const current = readProgress()
-  if (current.activities.some((a) => a.activityId === activityId)) return true
-  return writeCriticalCareProgress(
-    browserStorage(),
-    upsertCriticalCareActivityProgress(current, {
-      activityId,
-      status: 'completed',
-      attempts: 1,
-      hintCount: hints,
-      competencyEvidenceIds: [],
-      updatedAt: new Date().toISOString(),
-    }),
-  )
-}
-
 export function hasHistoricalOrientation(envelope: CriticalCareProgressEnvelope) {
   return envelope.activities.some(
     (a) => a.activityId === `${PREFIX}.learn.orientation` && a.status === 'completed',

@@ -16,7 +16,7 @@ import {
   createEmptyCriticalCareProgress,
   upsertCriticalCareActivityProgress,
 } from '@/features/learning-module/activity/progress'
-import { recordFirst, PREFIX, completedLessons } from '../engine/progress'
+import { PREFIX, completedLessons } from '../engine/progress'
 import { LESSONS, nextLesson } from '../content/lessons'
 import { isPublicPath, isPublicUnlistedPath } from '@/lib/site-auth/access'
 import { isVisibleModulePath } from '@/lib/draft-modules'
@@ -111,7 +111,9 @@ test('clinical case eligibility fails closed without rights, matching derivative
     }),
   ).toBe(true)
 })
-test('predict and transfer actions cannot be bypassed; first attempts survive changed answers and hints', () => {
+// BBT-01 removed the dormant `recordFirst` branch scorer (first-attempt bestScore and hintCount).
+// The phantom session engine below is not used by any course route; its checks are unchanged.
+test('dormant phantom engine keeps its step order; legacy readers ignore other modules and no branch score is produced', () => {
   const reduce = sessionReducer(source(), source())
   let s = reduce(emptySession(), { type: 'advance' })
   expect(reduce(s, { type: 'advance' })).toBe(s)
@@ -126,17 +128,12 @@ test('predict and transfer actions cannot be bypassed; first attempts survive ch
     competencyEvidenceIds: [],
     updatedAt: new Date().toISOString(),
   })
-  const wrong = { ...response(), branchId: 'unresolved', hints: 1 }
-  p = recordFirst(p, 'example', source(), wrong)
-  p = recordFirst(p, 'example', source(), response())
-  expect(
-    p.activities.find((a) => a.activityId === `${PREFIX}.example.connectivity.first`),
-  ).toMatchObject({ bestScore: 0, hintCount: 1 })
   expect(p.activities.some((a) => a.activityId === 'other-module')).toBe(true)
+  expect(p.activities.some((a) => a.activityId.startsWith(PREFIX))).toBe(false)
   expect(completedLessons(p)).toEqual([])
   expect(nextLesson([])?.id).toBe(LESSONS[0].id)
   expect(nextLesson(LESSONS.map((l) => l.id))).toBeNull()
-  expect(JSON.stringify(p)).not.toMatch(/pointsLps|openings|branchId|camera|targetId/)
+  expect(JSON.stringify(p)).not.toMatch(/bestScore|hintCount|pointsLps|openings|branchId/)
 })
 test('independent modes require submission; backtracking and an unrecorded edit cannot reveal results', () => {
   for (const mode of ['practice', 'assess'] as const)

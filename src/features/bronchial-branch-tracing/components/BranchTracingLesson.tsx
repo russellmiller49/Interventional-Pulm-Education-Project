@@ -5,6 +5,7 @@ import { useRouter } from '@/i18n/navigation'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
 import { draftSignature, readCtDraft, writeCtDraft, freshRouteView } from '../engine/ct-draft'
 import { parseRouteDraft } from '../engine/route-draft'
+import { ROUTE_DRAFT_ALIASES } from '../engine/local-draft-migration'
 import type { CtViewerState } from '../content/ct-types'
 import { CtProgressiveMap } from './CtBranchMap'
 import { CtRouteAttemptHistory } from './CtRouteAttemptHistory'
@@ -14,24 +15,25 @@ import { NowCard } from '@/features/learning-module/stage/NowCard'
 import { StepList } from '@/features/learning-module/stage/StepList'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { StageBlock } from '@/features/learning-module/stage/StageBlock'
-import { BASE_PATH, LESSONS, SOURCE, VERSION, lessonById, nextLesson } from '../content/lessons'
+import { BASE_PATH, LESSONS, SOURCE, lessonAfter, lessonById } from '../content/lessons'
 import { COURSE_OPTIONS, type CtLesson } from '../content/ct-types'
 import { traceById, targetForTrace } from '../geometry/native-ct'
 import { orientationFor, orientationName } from '../geometry/orientation'
 import { CtOrientationTeaching, CtOrientationFeedback } from './CtOrientationTeaching'
 import {
-  completedLessons,
-  readProgress,
-  saveCtAttempt,
-  saveVisit,
   browserStorage,
-} from '../engine/progress'
+  readSelfPacedRecord,
+  recommendedLesson,
+  recordLessonOpened,
+  setLessonReviewed,
+} from '../engine/selfPacedProgress'
 import {
   ctSessionReducer,
   emptyCtSession,
   traceComplete,
   junctionReady,
-  lastUnlocked,
+  reachableThrough,
+  referenceIndex,
   type CtAction,
 } from '../engine/ct-session'
 import { NativeCtViewer } from './NativeCtViewer'
@@ -46,12 +48,12 @@ import {
 } from './CtTraceControls'
 import { LocalCtLesson } from './LocalCtLesson'
 import { ModuleFrame } from './ModuleFrame'
-import { useDeviceProgress } from './useDeviceProgress'
+import { useSelfPacedProgress } from './useSelfPacedProgress'
 import styles from './branch-tracing.module.css'
 import { resetPaneScroll } from './resetPaneScroll'
 
 export function BranchTracingLesson({ requestedId }: { requestedId?: string }) {
-  const { ready } = useDeviceProgress()
+  const { ready } = useSelfPacedProgress()
   return (
     <ModuleFrame section="learn" activity>
       {ready ? (
@@ -63,20 +65,13 @@ export function BranchTracingLesson({ requestedId }: { requestedId?: string }) {
   )
 }
 function LessonEntry({ requestedId }: { requestedId?: string }) {
-  const [lesson] = useState(() => {
-    const progress = readProgress(),
-      completed = completedLessons(progress)
-    const resume =
-      progress.resume?.payloadVersion === VERSION &&
-      progress.resume.pathname === `${BASE_PATH}/learn`
-        ? lessonById(progress.resume.query?.lesson)
-        : undefined
-    return (
+  // A named lesson always opens. Otherwise resume from the self-paced record only.
+  const [lesson] = useState(
+    () =>
       lessonById(requestedId) ??
-      (resume && !completed.includes(resume.id) ? resume : nextLesson(completed)) ??
-      LESSONS[0]
-    )
-  })
+      recommendedLesson(readSelfPacedRecord().record)?.lesson ??
+      LESSONS[0],
+  )
   return lesson.exercises ? <LocalCtLesson lesson={lesson} /> : <LessonSession lesson={lesson} />
 }
 function LessonSession({ lesson }: { lesson: CtLesson }) {
@@ -93,14 +88,21 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
   )
   const draftKey = `learn.${lesson.id}`
   const [loaded] = useState(() =>
-    readCtDraft(browserStorage(), draftKey, signature, (v) =>
-      parseRouteDraft(v, prediction, transferTrace, traceById(lesson.example)),
+    readCtDraft(
+      browserStorage(),
+      draftKey,
+      signature,
+      (v) => parseRouteDraft(v, prediction, transferTrace, traceById(lesson.example)),
+      ROUTE_DRAFT_ALIASES[lesson.id] ?? [],
     ),
   )
   const [s, dispatch] = useReducer(reduce, loaded.value?.session ?? emptyCtSession(prediction))
+  const { record } = useSelfPacedProgress()
   const [saved, setSaved] = useState(() => browserStorage() !== null)
   const [viewerEpoch, setViewerEpoch] = useState(0)
   const [views, setViews] = useState<Record<string, CtViewerState>>(loaded.value?.views ?? {})
+  // Junction references the learner chose to show, per trace. Transient; records nothing.
+  const [shownRefs, setShownRefs] = useState<Record<string, number[]>>({})
   useEffect(() => {
     // Report whether synchronization with browser storage succeeded.
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -110,7 +112,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
   const [review, setReview] = useState<number | null>(null)
   const [levelRequest, setLevelRequest] = useState(0)
   useEffect(() => {
-    saveVisit(lesson.id)
+    recordLessonOpened(lesson.id)
   }, [lesson.id])
   const step = lesson.steps[s.step],
     transfer = s.step === 5
@@ -127,11 +129,14 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
   )
   const target = targetForTrace(trace)
   const response = transfer ? s.transfer : s.prediction
-  const revealed = s.step === 0 || Boolean(response)
-  const marking = s.step === 1 || (transfer && !response)
+  // The comparison steps show the reference whether or not an interpretation was recorded.
+  const revealed = s.step === 0 || s.step === 3 || s.step === 4 || Boolean(response)
+  const marking = !s.complete && (s.step === 1 || (transfer && !response))
   const orienting = marking && !s.alignment
   const routeDone = traceComplete(trace, s)
   const stationDone = Boolean(s.recorded[s.active])
+  const shown = new Set(shownRefs[trace.id] ?? [])
+  const referenceShown = shown.has(s.active)
   const taskTop = useRef<HTMLDivElement>(null)
   const teachingTop = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -142,9 +147,10 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
   const maxActive = marking
     ? orienting
       ? 0
-      : lastUnlocked(s.recorded)
+      : reachableThrough(s.recorded, s.reached)
     : trace.checkpoints.length - 1
-  const describing = s.step === 2 || (transfer && !response && routeDone)
+  const describing = !s.complete && (s.step === 2 || (transfer && !response && routeDone))
+  // Recording needs its real parts; moving on does not.
   const disabled =
     !imageReady ||
     (orienting
@@ -163,20 +169,22 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
     : trace.checkpoints[s.active].decision
       ? 'Check this junction'
       : 'Record nodule approach'
-  const next = nextLesson([...completedLessons(readProgress()), lesson.id])
+  const next = lessonAfter(lesson.id)
+  const reviewed = record.reviewedLessonIds.includes(lesson.id)
+  const recordedCount = [s.prediction, s.transfer].filter(Boolean).length
   function perform(action: CtAction) {
     const nextState = reduce(s, action)
-    if (s.step === 1 && nextState.step === 2)
-      setSaved(saveCtAttempt(`learn.${lesson.id}.prediction`, s.hints))
-    if (!s.prediction && nextState.prediction)
-      setSaved(saveCtAttempt(`learn.${lesson.id}.prediction`, nextState.prediction.hints))
-    if (!s.transfer && nextState.transfer)
-      setSaved(saveCtAttempt(`learn.${lesson.id}.transfer`, nextState.transfer.hints))
-    if (!s.complete && nextState.complete) setSaved(saveVisit(lesson.id, true))
-    if (action.type === 'active' || (action.type === 'check-orientation' && nextState.alignment))
+    // Reaching the end marks the lesson reviewed on this device; no trace or hint is recorded.
+    if (!s.complete && nextState.complete) setLessonReviewed(lesson.id, true)
+    if (
+      action.type === 'active' ||
+      action.type === 'skip-junction' ||
+      (action.type === 'check-orientation' && nextState.alignment)
+    )
       setLevelRequest((v) => v + 1)
     if (action.type === 'restart') {
       setViews({})
+      setShownRefs({})
       setViewerEpoch((v) => v + 1)
     }
     if (action.type === 'advance' || action.type === 'restart') {
@@ -184,6 +192,36 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
     }
     dispatch(action)
   }
+  function toggleReference() {
+    setShownRefs((current) => {
+      const list = current[trace.id] ?? []
+      return {
+        ...current,
+        [trace.id]: list.includes(s.active)
+          ? list.filter((i) => i !== s.active)
+          : [...list, s.active],
+      }
+    })
+  }
+  const skipJunction =
+    stationTask && !stationDone && s.active < trace.checkpoints.length - 1
+      ? {
+          label: 'Continue without recording',
+          onActivate: () => perform({ type: 'skip-junction' }),
+        }
+      : undefined
+  const skipTrace =
+    !s.complete && (s.step === 1 || s.step === 2 || (transfer && !response))
+      ? {
+          label:
+            s.step === 2
+              ? 'Show the comparison without recording'
+              : transfer
+                ? 'Finish without recording'
+                : 'Continue without recording this trace',
+          onActivate: () => perform({ type: 'continue-without-recording' }),
+        }
+      : undefined
   const done = new Set(lesson.steps.slice(0, s.step + (s.complete ? 1 : 0)).map((v) => v.id))
   return (
     <CtRouteWorkspace
@@ -207,7 +245,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
           }}
           resumedNote={
             !saved
-              ? 'Browser storage is unavailable. Work continues, but progress cannot be saved.'
+              ? 'Browser storage is unavailable. Work continues, but your draft cannot be saved.'
               : loaded.notice || undefined
           }
         />
@@ -218,16 +256,16 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
             Target: {target.segment.code} · {target.segment.name}
           </span>
           <span>Orient the CT · compare the parent view</span>
-          <span>One source CT · ungraded interpretation</span>
+          <span>One source CT · self-paced, not scored</span>
         </div>
       }
       task={
         <div ref={taskTop}>
           <NowCard
             model={{
-              kicker: s.complete ? 'Lesson completed' : `Step ${s.step + 1} of 6 · ${step.phase}`,
+              kicker: s.complete ? 'Lesson finished' : `Step ${s.step + 1} of 6 · ${step.phase}`,
               heading: s.complete
-                ? 'CT trace completed'
+                ? 'Lesson finished'
                 : orienting
                   ? 'Orient before tracing'
                   : stationTask
@@ -236,11 +274,17 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                       : 'Distal nodule approach'
                     : step.title,
               body: s.complete
-                ? 'You recorded two routes toward simulated nodules and compared their CT continuity. Completion records the work, not clinical competence.'
+                ? `${
+                    recordedCount === 2
+                      ? 'You recorded both routes toward simulated nodules and compared their CT continuity.'
+                      : recordedCount === 1
+                        ? 'You recorded one of the two routes and compared it with the CT; the other was passed without recording.'
+                        : 'You moved through both routes without recording an interpretation.'
+                  } Finishing is a note for finding your place, not a result or clinical competence.`
                 : orienting
                   ? 'Standard axial is a valid tracing display. Use the patient labels to maintain direction; regional display conventions are optional aids. Record the display you choose.'
                   : stationTask
-                    ? 'Select the branch you would follow, then mark its lumen on the answer slice. Record this fork before continuing.'
+                    ? 'Select the branch you would follow, then mark its lumen on the answer slice. Check this fork to compare it, show the reference first, or continue without recording.'
                     : step.instruction,
               primary: s.complete
                 ? {
@@ -264,12 +308,13 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                             : perform({ type: 'record-junction' })
                           : perform({ type: 'advance' }),
                     disabled,
-                    disabledReason: orienting
+                    disabledReason: !imageReady
                       ? 'Wait for the CT image to load.'
                       : stationTask
-                        ? 'Select a daughter branch (or uncertainty) and mark its lumen (or unresolved lumen) before recording this junction.'
-                        : 'Record every junction and the distal approach. Use Show target to inspect the nodule, then describe the course and distal relationship.',
+                        ? 'To check this junction, select a daughter branch (or uncertainty) and mark its lumen (or unresolved lumen). You can also continue without recording.'
+                        : 'To record, mark every junction and the distal approach, use Show target to inspect the nodule, then describe the course and distal relationship. You can also continue without recording.',
                   },
+              secondary: skipJunction ?? skipTrace,
             }}
           />
           <div className={styles.routeResponses}>
@@ -295,13 +340,18 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                   active={s.active}
                   choice={s.branches[s.active]}
                   recorded={stationDone}
-                  reveal={stationDone}
+                  reveal={stationDone || referenceShown}
                   onChange={
                     !stationDone
                       ? (value) => perform({ type: 'branch', index: s.active, value })
                       : undefined
                   }
                 />
+                {!stationDone && (
+                  <button aria-pressed={referenceShown} onClick={toggleReference}>
+                    Show reference for this junction
+                  </button>
+                )}
                 {stationDone && (
                   <button onClick={() => perform({ type: 'retry-junction' })}>
                     Retry this junction
@@ -318,11 +368,13 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 <p role="status">
                   {stationDone
                     ? 'Response recorded. Review this fork, then continue.'
-                    : !s.marks[s.active]
-                      ? 'Lumen mark needed in the CT tracing stack.'
-                      : s.marks[s.active]?.pixel === null
-                        ? 'Lumen recorded as unresolved.'
-                        : 'Lumen marked. Record this junction to compare.'}
+                    : referenceShown
+                      ? 'Reference shown. Choosing a branch and placing a mark are still yours to do, or continue without recording.'
+                      : !s.marks[s.active]
+                        ? 'Lumen mark needed in the CT tracing stack to check this junction.'
+                        : s.marks[s.active]?.pixel === null
+                          ? 'Lumen recorded as unresolved.'
+                          : 'Lumen marked. Check this junction to compare.'}
                 </p>
               </>
             )}
@@ -354,6 +406,25 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                   score is assigned.
                 </p>
               </div>
+            )}
+            {!response && (s.step === 3 || s.step === 4) && (
+              <div className={styles.feedback} role="status">
+                <strong>No interpretation recorded for this trace</strong>
+                <p>
+                  You continued without recording one. The reference route is shown on the CT;
+                  compare it level by level, then trace another airway when ready.
+                </p>
+              </div>
+            )}
+            {s.complete && (
+              <p role="status">
+                {reviewed
+                  ? 'Marked reviewed on this device — a note for finding your place, not a result.'
+                  : 'Not marked reviewed.'}{' '}
+                <button onClick={() => setLessonReviewed(lesson.id, !reviewed)}>
+                  {reviewed ? 'Undo reviewed' : 'Mark reviewed'}
+                </button>
+              </p>
             )}
             {marking && !orienting && (
               <div className={styles.hints}>
@@ -402,7 +473,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
               recapFor={(i) => [
                 i === 0 && !orienting
                   ? lesson.worked
-                  : 'Review only. The current trace and the original recorded attempt are preserved.',
+                  : 'Review only. The current trace and your recorded responses are unchanged.',
               ]}
             />
           </details>
@@ -458,7 +529,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 </p>
                 <p className={styles.small}>
                   The gold crosses identify the source-derived trace in this worked example. Your
-                  next trace begins without those crosses.
+                  next trace begins without them; Show reference brings them back at any junction.
                 </p>
               </StageBlock>
             </>
@@ -482,7 +553,8 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 <p>
                   At each fork, inspect all daughter branches. Choose the branch you would follow
                   and mark the visible continuation on Current junction CT, or record uncertainty.
-                  Check the junction and compare before selecting Continue to the next division.
+                  Check the junction to compare it, or show the reference first. You can continue
+                  without recording at any junction.
                 </p>
                 <p>
                   At the distal checkpoint, scroll toward the nodule. Decide whether you can follow
@@ -544,14 +616,12 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
             onViewChange={onViewChange}
             onReadyChange={setImageReady}
             onTargetReady={() => perform({ type: 'target-inspected' })}
-            scopeAvailable={revealed || stationDone}
+            scopeAvailable={revealed || stationDone || referenceShown}
             marks={s.step === 0 ? trace.checkpoints.map(() => null) : s.marks}
             active={s.active}
             levelRequest={levelRequest}
             maxActive={maxActive}
-            referenceThrough={
-              marking || s.step === 2 ? lastUnlocked(s.recorded) - (routeDone ? 0 : 1) : -1
-            }
+            referenceThrough={marking || s.step === 2 ? referenceIndex(s.recorded, shown) : -1}
             onActive={(index) => perform({ type: 'active', index })}
             onMark={
               marking && !orienting && !stationDone
@@ -572,14 +642,15 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
           <HelpDialog open={help} onClose={() => setHelp(false)} returnFocusTo={helpRef}>
             <p>
               {orienting
-                ? 'Use the rotate or flip controls, then check your orientation.'
+                ? 'Use the rotate or flip controls, then use this orientation.'
                 : stationTask
-                  ? 'Select the branch you would follow. Browse neighboring CT slices, then use Go to response slice to mark its lumen or record uncertainty.'
+                  ? 'Select the branch you would follow. Browse neighboring CT slices, then use Go to response slice to mark its lumen or record uncertainty. Show reference for this junction displays the model continuation without recording anything.'
                   : step.instruction}
             </p>
             <p>
               Slice controls browse the CT; Continue to the next division changes the active fork.
-              Help preserves your current responses.
+              Continue without recording moves on and records nothing for that junction or trace.
+              Nothing here is scored. Help preserves your current responses.
             </p>
           </HelpDialog>
           <HelpDialog
