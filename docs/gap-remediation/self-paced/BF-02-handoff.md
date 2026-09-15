@@ -50,19 +50,20 @@ no auth or media-access controls changed. The isolated server had no Supabase en
 its unrelated analytics endpoint returned 500. The existing Playwright setup stubs analytics
 locally; no remote data, services, migrations or uploads were used.
 
-All browser commands below used `BRONCH_FOUNDATIONS_BASE_URL=http://127.0.0.1:3112`.
+The Playwright commands in this initial validation table used
+`BRONCH_FOUNDATIONS_BASE_URL=http://127.0.0.1:3112`. The standalone scope harness starts its own server.
 
-| Command                                                                                                                                                                                                                                        | Actual result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npx --no-install jest src/features/bronchoscopy-foundations --runInBand --json --outputFile=/tmp/bf-02-baseline-jest.json`                                                                                                                    | Before edits: **24 suites passed; 324 passed, 1 existing TODO**; 24.057 s.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `npx --no-install playwright test -c playwright.bronchoscopy-foundations.config.ts -g 'larynx transition.*1440' --reporter=list,json`                                                                                                          | New regression on original renderer: **1 failed**, 18.5 s. At 42 mm the central optical image had **0** tissue-pixel fraction despite reporting ready/clear. Failure log retained.                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `npx --no-install jest src/features/bronchoscopy-foundations/__tests__/scenePins.test.ts --runInBand`                                                                                                                                          | First draft of new handoff assertion: **6 passed, 1 failed**. An assumed <0.001-radian match was too strict for the existing authored frame. Inspection found an unchanged 2.6613° roll difference at neutral controls, with forward-axis difference 0.000284°. No engine/axis changes made. The final assertion bounds the existing offset at 3° and separately requires round-trip restoration. This is a software regression bound, not an anatomical tolerance.                                                                                                                      |
-| `npx --no-install playwright test -c playwright.bronchoscopy-foundations.config.ts -g 'larynx transition' --reporter=list,json`                                                                                                                | After repair: **3 passed**, 2.7 min, at **1440×900, 900×800 and 390×844**. Each checks actual pixels at approach 42 mm, crossing 45 mm, trachea 48 mm, return 42 mm, rotation 30°/deflection 10° on return, and reset/repeat. Controls available without an answer; Continue without completing works; no legacy record or reviewed-section claim; no horizontal overflow.                                                                                                                                                                                                               |
-| `npx --no-install jest src/features/bronchoscopy-foundations src/lib/airway-anatomy --runInBand --json --outputFile=/tmp/bf-02-final-jest.json`                                                                                                | **33 suites passed; 397 passed, 1 existing TODO**; 23.516 s. Includes decoded assets/hash/provenance, real graph/control/safety, collision-review invariants, projection, new 12-combination handoff round trips, and module self-paced regressions.                                                                                                                                                                                                                                                                                                                                     |
-| `npx --no-install playwright test -c playwright.bronchoscopy-foundations.config.ts -g 'one entry, explanation\|retains working controls\|survey distinguishes entering\|Practice explains before\|integrated cases open' --reporter=list,json` | **5 passed**, 23.5 s. Actual route checks cover explanation before answering, wrong answer/retry, Back/reload, usable WebGL fallback, entered-versus-inspected survey records, Practice and legacy integrated-case access without grades.                                                                                                                                                                                                                                                                                                                                                |
-| `npx --no-install tsc --noEmit --pretty false`                                                                                                                                                                                                 | **Passed**, exit 0, no diagnostics.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `npx --no-install eslint src/features/bronchoscopy-foundations/components/scope/ScopeOpticalView.tsx src/features/bronchoscopy-foundations/__tests__/scenePins.test.ts e2e/bronchoscopy-foundations.spec.ts`                                   | **Passed**, exit 0, no diagnostics.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `node scripts/bronchoscopy-foundations/review-scope-pane.mjs`                                                                                                                                                                                  | **Failed**, exit 1: timed out at line 281 waiting for ready after deliberately aborting and then retrying `devices/bench.glb` in `controls-isolated` mode. Earlier sequential assertions ran through all seven rendered modes, loaded-lumen survey, red-out recovery, tube annular geometry, controls, laryngeal entry, accessory changes, WebGL context replacement, phone map, automatic/offscreen-paused breathing and touch input. This is partial evidence, not a green harness. Its retry branch is outside the changed larynx visibility condition; it was not repaired in BF-02. |
+| Command                                                                                                                                                                                                                                        | Actual result                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npx --no-install jest src/features/bronchoscopy-foundations --runInBand --json --outputFile=/tmp/bf-02-baseline-jest.json`                                                                                                                    | Before edits: **24 suites passed; 324 passed, 1 existing TODO**; 24.057 s.                                                                                                                                                                                                                                                                                                                                                                                          |
+| `npx --no-install playwright test -c playwright.bronchoscopy-foundations.config.ts -g 'larynx transition.*1440' --reporter=list,json`                                                                                                          | New regression on original renderer: **1 failed**, 18.5 s. At 42 mm the central optical image had **0** tissue-pixel fraction despite reporting ready/clear. Failure log retained.                                                                                                                                                                                                                                                                                  |
+| `npx --no-install jest src/features/bronchoscopy-foundations/__tests__/scenePins.test.ts --runInBand`                                                                                                                                          | First draft of new handoff assertion: **6 passed, 1 failed**. An assumed <0.001-radian match was too strict for the existing authored frame. Inspection found an unchanged 2.6613° roll difference at neutral controls, with forward-axis difference 0.000284°. No engine/axis changes made. The final assertion bounds the existing offset at 3° and separately requires round-trip restoration. This is a software regression bound, not an anatomical tolerance. |
+| `npx --no-install playwright test -c playwright.bronchoscopy-foundations.config.ts -g 'larynx transition' --reporter=list,json`                                                                                                                | After repair: **3 passed**, 2.7 min, at **1440×900, 900×800 and 390×844**. Each checks actual pixels at approach 42 mm, crossing 45 mm, trachea 48 mm, return 42 mm, rotation 30°/deflection 10° on return, and reset/repeat. Controls available without an answer; Continue without completing works; no legacy record or reviewed-section claim; no horizontal overflow.                                                                                          |
+| `npx --no-install jest src/features/bronchoscopy-foundations src/lib/airway-anatomy --runInBand --json --outputFile=/tmp/bf-02-final-jest.json`                                                                                                | **33 suites passed; 397 passed, 1 existing TODO**; 23.516 s. Includes decoded assets/hash/provenance, real graph/control/safety, collision-review invariants, projection, new 12-combination handoff round trips, and module self-paced regressions.                                                                                                                                                                                                                |
+| `npx --no-install playwright test -c playwright.bronchoscopy-foundations.config.ts -g 'one entry, explanation\|retains working controls\|survey distinguishes entering\|Practice explains before\|integrated cases open' --reporter=list,json` | **5 passed**, 23.5 s. Actual route checks cover explanation before answering, wrong answer/retry, Back/reload, usable WebGL fallback, entered-versus-inspected survey records, Practice and legacy integrated-case access without grades.                                                                                                                                                                                                                           |
+| `npx --no-install tsc --noEmit --pretty false`                                                                                                                                                                                                 | **Passed**, exit 0, no diagnostics.                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `npx --no-install eslint src/features/bronchoscopy-foundations/components/scope/ScopeOpticalView.tsx src/features/bronchoscopy-foundations/__tests__/scenePins.test.ts e2e/bronchoscopy-foundations.spec.ts`                                   | **Passed**, exit 0, no diagnostics.                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `node scripts/bronchoscopy-foundations/review-scope-pane.mjs`                                                                                                                                                                                  | **Initial run failed**, exit 1: line 281 timed out after deliberately aborting and then retrying `devices/bench.glb` in `controls-isolated` mode. All earlier sequential assertions passed. **Exact base/head reruns both passed**, including the retry and subsequent WebGL-unavailable fallback. The paired investigation below preserves the original failure and records the matched conditions and results.                                                    |
 
 No existing test was removed, disabled or weakened. The failed first draft was a new
 camera assertion corrected against the unchanged pre-existing engine; its failure is recorded
@@ -71,6 +72,88 @@ above. The historical surface-junction TODO and pending-review assertions remain
 Not run: full-site lint/Jest/Playwright, production build and embedded training-app builds,
 new mesh generation or source-deviation review, native screen-reader testing, faculty review.
 The targeted suite is not a claim of full-site or clinical approval.
+
+## Missing-asset retry investigation — 2026-09-15
+
+**Results match: PASS on the exact pre-BF-02 base and PR #216 implementation head.**
+The original timeout was not reproduced. No BF-02 regression was demonstrated, so the
+blackout repair remains unchanged. A transient harness/environment timing issue is a
+possible explanation; the historical cause is unconfirmed. These results do not establish
+a persistent pre-existing product defect or justify claiming that the timeout was fixed.
+
+### Original failing assertion
+
+After aborting `**/devices/bench.glb`, selecting `controls-isolated`, observing the failed
+state, removing the abort route and clicking **Reload the 3D view**, the original run failed at
+`scripts/bronchoscopy-foundations/review-scope-pane.mjs:281:53`:
+
+```js
+await retry.locator('[data-three-state="ready"]').waitFor()
+```
+
+Error: `locator.waitFor: Timeout 30000ms exceeded`, waiting for that locator to be visible.
+This is the missing-asset reload assertion; the earlier WebGL context-loss check had passed.
+The original catch block photographed the main page, not the retry page, so its screenshot
+does not diagnose the failed retry's state. The original `scope-pane.log` remains retained.
+
+### Matched setup and results
+
+- Detached test checkouts contained the exact commits below, with clean tracked files before
+  and after the checks. They did not follow the moving `main` branch.
+- Each unchanged script built its own esbuild harness and started its own loopback HTTP
+  server on an OS-assigned port. Runs were sequential to avoid contention between our test
+  browsers. No shared development server was used; every test server/browser was closed.
+- Both used the same installed dependencies: Node **26.5.0**, Playwright **1.62.0**, esbuild
+  **0.25.12**, headless Chromium **151.0.7922.34**, macOS **27.0 arm64**. Dependencies were
+  linked for read-only use; no install or lockfile change occurred.
+- Each harness launched a fresh browser, and each retry used a new isolated browser context:
+  **1000×900**, reduced motion, no reused profile, cookies, storage or browser asset cache.
+  Network conditions used the same local static server, default cache behavior and exact
+  `route.abort()` → failed-state wait → `unroute()` → Reload sequence. No added throttling,
+  cache-busting or timeout extension was used.
+- The original script and React harness, dependency lockfile, retry loader/lifecycle/CSS and
+  `bench.glb` are unchanged between the two commits. Their recorded SHA-256 values match.
+
+Command in each detached checkout: `node scripts/bronchoscopy-foundations/review-scope-pane.mjs`.
+
+| Revision                    | Exact commit                               | Isolated server   | Unchanged full harness     | Additional observed retries                  |
+| --------------------------- | ------------------------------------------ | ----------------- | -------------------------- | -------------------------------------------- |
+| Pre-BF-02 base              | `3cacff099967a7f3bb5cfa8b818460f1c939bdc9` | `127.0.0.1:49710` | **PASS**, exit 0, 28.239 s | **3/3 PASS**, ready waits 335 / 318 / 317 ms |
+| PR #216 implementation head | `41e1a540ef1f20f0c24549ab23533eea7bd4987c` | `127.0.0.1:49731` | **PASS**, exit 0, 31.248 s | **3/3 PASS**, ready waits 336 / 319 / 322 ms |
+
+The additional observations isolated only the retry sequence, using the unchanged script's
+build/server/browser prefix and the same assertion/default 30-second timeout. Head ran first
+on `127.0.0.1:49768`, then base on `127.0.0.1:49775`; each attempt used a fresh context.
+Logging and state snapshots were added only to a local diagnostic script, not the repository
+harness or application. All six attempts recorded:
+
+1. First bench request deliberately aborted with `net::ERR_FAILED`; both render-state
+   attributes became `failed`, with zero canvases.
+2. Reload made a second bench request, completed with **HTTP 200**, with no service-worker
+   response. Both render-state attributes became `ready`, with exactly one canvas and no
+   page errors.
+3. Captured bench views match byte-for-byte across all six attempts, SHA-256
+   `8d2e4151a5e0be907dca34f0077211eedc858581b78bd4249b998e6c338a9e3f`.
+
+### Evidence and disposition
+
+Evidence root:
+`/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/BF-02/retry-comparison-2026-09-15/`.
+`manifest.json` identifies both detached checkouts; `original-pair.json` records revision,
+command, ports, hashes, runtime and exit status; `original-{base,head}/` retains complete logs
+and the harness reports. `source-identities.json` records all ten compared source/asset hashes.
+`diagnostic-{base,head}/` retains network events, DOM states,
+screenshots and retry durations. `summary.json`, `run-original-pair.py`,
+`run-diagnostic-pair.py` and `retry-diagnostic-body.mjs` retain the comparison and its procedure.
+The original harness SHA-256 is
+`0bbcea4244f5efc102b5c168392d468564f822c80efcff7c0190a9bd39f15fba`;
+the unchanged bench asset SHA-256 is
+`ed5af750097eb78c60724f43a6598ca003780f4db20146abfe778242cb84a71f`.
+
+This follow-up changes only this handoff and PR documentation. The previously passed
+transition checks refer to the identical application code. No retry workaround, assertion
+relaxation, mesh, camera calibration, physical inlet geometry, clinical teaching, shared
+infrastructure or Device Intelligence change was made. BF-03 was not begun.
 
 ## Behavior and contract changes
 
@@ -151,20 +234,20 @@ or approval is supplied by this PR.
 This checks the repair, not full-module compliance. The current v2 self-paced direction takes
 precedence over examination-oriented skill defaults.
 
-| Contract                 | Status / evidence                                                                                                                                                                                                                          |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| H1 — Entry/navigation    | **PASS in scope:** direct larynx route, two Continue steps, real controls without a question; open navigation regressions pass.                                                                                                            |
-| H2 — Teach before use    | **PASS in scope:** two existing visible teaching steps precede the unchanged model. No new clinical copy.                                                                                                                                  |
-| H3 — Shared stage/layout | **NOT APPLICABLE:** no migration; v2 does not require fixed panes; shared stage untouched.                                                                                                                                                 |
-| H4 — Current task        | **PASS in scope:** existing active instruction and genuine controls retained at desktop/compact/phone widths.                                                                                                                              |
-| H5 — Rendered teaching   | **PASS in scope:** repaired downstream anatomy actually paints in the learner view.                                                                                                                                                        |
-| H6 — Real activities     | **PASS in scope:** actual Advance/Withdraw; Skip invents no declaration or completed goals.                                                                                                                                                |
-| H7 — Questions/feedback  | **PASS under v2:** explanations and unanswered continuation remain available; existing unsafe feedback passes.                                                                                                                             |
-| H8 — Fidelity            | **PASS for preservation; BLOCKED for anatomical approval:** exact asset hashes/engine retained; decoded-geometry and handoff checks pass; source-inlet hold remains.                                                                       |
-| H9 — Progress            | **PASS in scope:** no store changes or graded writes; browser checks retain honest record boundaries.                                                                                                                                      |
-| H10 — Language           | **NOT APPLICABLE to new copy:** no learner-facing language change. Existing source holds retained.                                                                                                                                         |
-| H11 — Scope/release      | **PASS:** four module-specific code/test/doc paths only; no shared infrastructure, other modules, Device Intelligence, release or data changes.                                                                                            |
-| H12 — UX evidence        | **PASS for reproduced transition and targeted consumers; FAIL for complete legacy harness:** eight targeted browser tests pass and captures inspected; missing bench-asset retry timed out as reported above. Faculty review remains open. |
+| Contract                 | Status / evidence                                                                                                                                                                                                                                                                                                                  |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| H1 — Entry/navigation    | **PASS in scope:** direct larynx route, two Continue steps, real controls without a question; open navigation regressions pass.                                                                                                                                                                                                    |
+| H2 — Teach before use    | **PASS in scope:** two existing visible teaching steps precede the unchanged model. No new clinical copy.                                                                                                                                                                                                                          |
+| H3 — Shared stage/layout | **NOT APPLICABLE:** no migration; v2 does not require fixed panes; shared stage untouched.                                                                                                                                                                                                                                         |
+| H4 — Current task        | **PASS in scope:** existing active instruction and genuine controls retained at desktop/compact/phone widths.                                                                                                                                                                                                                      |
+| H5 — Rendered teaching   | **PASS in scope:** repaired downstream anatomy actually paints in the learner view.                                                                                                                                                                                                                                                |
+| H6 — Real activities     | **PASS in scope:** actual Advance/Withdraw; Skip invents no declaration or completed goals.                                                                                                                                                                                                                                        |
+| H7 — Questions/feedback  | **PASS under v2:** explanations and unanswered continuation remain available; existing unsafe feedback passes.                                                                                                                                                                                                                     |
+| H8 — Fidelity            | **PASS for preservation; BLOCKED for anatomical approval:** exact asset hashes/engine retained; decoded-geometry and handoff checks pass; source-inlet hold remains.                                                                                                                                                               |
+| H9 — Progress            | **PASS in scope:** no store changes or graded writes; browser checks retain honest record boundaries.                                                                                                                                                                                                                              |
+| H10 — Language           | **NOT APPLICABLE to new copy:** no learner-facing language change. Existing source holds retained.                                                                                                                                                                                                                                 |
+| H11 — Scope/release      | **PASS:** four module-specific code/test/doc paths only; no shared infrastructure, other modules, Device Intelligence, release or data changes.                                                                                                                                                                                    |
+| H12 — UX evidence        | **PASS for reproduced transition, targeted consumers and paired harness reruns:** eight targeted browser tests pass; the complete harness passes on exact base and implementation head, with three additional retry passes each. The original timeout is retained as unreproduced, cause unconfirmed. Faculty review remains open. |
 
 ## Changed files and next slice
 
@@ -176,6 +259,7 @@ precedence over examination-oriented skill defaults.
 **No shared integration is required for this repair.** After faculty reviews the packet,
 any physical-inlet work needs a separately stated asset decision: whether the source cap may
 change, the scope of the source-deviation exception, the consumer/geometry checks and anatomical
-acceptance evidence. Preserve the existing TODO until that is actually resolved. Independently,
-reproduce the existing bench missing-asset retry failure in a bounded BF follow-up. BF-03 source/
-teaching work and all BF-01 clinical holds remain separate.
+acceptance evidence. Preserve the existing TODO until that is actually resolved. The requested
+bench retry comparison is complete with matching passes and no demonstrated BF-02 regression;
+the historical timeout's specific cause remains unconfirmed. BF-03 source/teaching work was
+not begun, and all BF-01 clinical holds remain separate.
