@@ -98,11 +98,13 @@ export function McsCapturedResults({
   after,
   signals,
   inspectOnly = false,
+  providedExample = false,
 }: {
   before: McsSimulationState | null
   after: McsSimulationState
   signals: readonly McsObservedSignal[]
   inspectOnly?: boolean
+  providedExample?: boolean
 }) {
   const format = (value: number | boolean | null | undefined, digits: number) =>
     value == null
@@ -115,7 +117,8 @@ export function McsCapturedResults({
   return (
     <div className={styles.block} data-captured-results>
       <p>
-        <strong>Observed in this run.</strong> {mcsConfigurationLabel(after)}. Captured at{' '}
+        <strong>{providedExample ? 'Provided model reference.' : 'Observed in this run.'}</strong>{' '}
+        {mcsConfigurationLabel(after)}. {providedExample ? 'Reference at' : 'Captured at'}{' '}
         {after.timeSeconds.toFixed(2)} simulated seconds
         {before ? `; baseline at ${before.timeSeconds.toFixed(2)} s` : ''}.
       </p>
@@ -127,12 +130,16 @@ export function McsCapturedResults({
       ) : null}
       <div className={styles.tableScroll}>
         <table className={styles.grammar} data-before-after>
-          <caption>Captured model readings</caption>
+          <caption>
+            {providedExample
+              ? 'Provided reference readings; no action recorded'
+              : 'Captured model readings'}
+          </caption>
           <thead>
             <tr>
               <th scope="col">Quantity / unit</th>
               <th scope="col">Before</th>
-              <th scope="col">After</th>
+              <th scope="col">{providedExample ? 'Current reference' : 'After'}</th>
               <th scope="col">Observed change</th>
             </tr>
           </thead>

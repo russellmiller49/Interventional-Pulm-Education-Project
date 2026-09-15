@@ -1,188 +1,107 @@
-/**
- * M5 — what leaves the browser, what stays in it, and what stops when the workbench unmounts.
- *
- * Analytics is asserted at the one boundary every event crosses: `fetch('/api/analytics')`. That is
- * deliberate. Counting calls to a mocked hook would prove the hook was called; counting requests
- * proves what a learner's browser actually sent, which is the claim the privacy note makes.
- *
- * The exact-once assertions all advance the simulation afterwards, because "emitted once" and
- * "emitted on every tick and therefore also once" are indistinguishable without that.
- *
- * The workbench hosts Practice and Challenge; a Learn section's one persisted record and its
- * lifecycle events are the lesson stage's, and are proved in its own suite.
- */
-import { act, fireEvent, screen, waitFor } from '@testing-library/react'
-
+// MCS-01 replaces graded writes and detailed lifecycle collection. Existing clock/cleanup tests remain.
+import { act, fireEvent, screen } from '@testing-library/react'
 jest.mock('@/i18n/navigation', () =>
-  jest
-    .requireActual<
-      typeof import('../test-support/mcsWorkbenchStubs')
-    >('../test-support/mcsWorkbenchStubs')
-    .navigationModule(),
+  jest.requireActual('../test-support/mcsWorkbenchStubs').navigationModule(),
 )
 jest.mock('../components/McsAnatomy3D', () =>
-  jest
-    .requireActual<
-      typeof import('../test-support/mcsWorkbenchStubs')
-    >('../test-support/mcsWorkbenchStubs')
-    .anatomyModule(),
-)
-jest.mock('../components/EcmoCannulationPreview', () =>
-  jest
-    .requireActual<
-      typeof import('../test-support/mcsWorkbenchStubs')
-    >('../test-support/mcsWorkbenchStubs')
-    .ecmoPreviewModule(),
-)
-jest.mock('../components/ImpellaVariantPreview', () =>
-  jest
-    .requireActual<
-      typeof import('../test-support/mcsWorkbenchStubs')
-    >('../test-support/mcsWorkbenchStubs')
-    .impellaPreviewModule(),
+  jest.requireActual('../test-support/mcsWorkbenchStubs').anatomyModule(),
 )
 
-import { mcsPracticeScenarios } from '../content'
-import { createDefaultMcsProgress } from '../engine'
+import { createDefaultMcsProgress } from '../engine/progress'
 import {
-  advanceSimulation,
-  aggregateAnalyticsEvents,
-  capturedAnalyticsEvents,
+  readMcsLearningProgress,
+  recordMcsVisit,
+  MCS_LOCAL_PROGRESS_KEY,
+} from '../engine/learningProgress'
+import { nextIncompleteMcsSectionLink } from '../content/pathwayResolver'
+import {
+  renderWorkbench,
+  renderWorkbenchWithoutSettling,
+  renderWorkbenchOnFakeTimers,
+  setupMcsWorkbenchEnvironment,
+  teardownMcsWorkbenchEnvironment,
   capturedIntervalDelays,
   everyInstalledIntervalCleared,
-  challengeFeedbackToggle,
-  commitCasePrediction,
-  countLifecycleInteraction,
-  flushAnimationFrames,
-  inspectInCase,
-  lifecycleAnalyticsPayloads,
-  lifecycleInteractions,
-  mockRouterPush,
-  openCausalDebrief,
   pendingAnimationFrameCount,
-  practiceRailButton,
-  progressWriteCount,
-  reassessCase,
-  readStoredProgressRaw,
-  renderWorkbench,
-  renderWorkbenchOnFakeTimers,
-  renderWorkbenchWithoutSettling,
+  flushAnimationFrames,
   seedStoredProgress,
-  selectDeviceTrack,
-  setupMcsWorkbenchEnvironment,
-  storedCompletedCaseIds,
-  storedLessonIds,
-  teardownMcsWorkbenchEnvironment,
-  writeMalformedStoredProgress,
-  MCS_PROGRESS_KEY,
+  capturedAnalyticsEvents,
 } from '../test-support/mcsWorkbench'
 
-describe('MCS M5 — loading, writing, and leaving stored progress', () => {
-  beforeEach(() => setupMcsWorkbenchEnvironment())
-  afterEach(() => teardownMcsWorkbenchEnvironment())
-
-  it('loads stored progress asynchronously rather than during the first render', async () => {
-    seedStoredProgress({ masteredCaseIds: ['IABP-01'] })
-    renderWorkbenchWithoutSettling({ section: 'practice' })
-
-    // The rail marks a mastered case only once the deferred read has landed.
-    expect(practiceRailButton('Late deflation')).toHaveAttribute('data-complete', 'false')
-
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0))
-    })
-
-    expect(practiceRailButton('Late deflation')).toHaveAttribute('data-complete', 'true')
-  })
-
-  it('falls back to a default record when the stored payload is malformed', async () => {
-    writeMalformedStoredProgress()
-    await renderWorkbench({ section: 'practice' })
-
-    expect(practiceRailButton('Late deflation')).toHaveAttribute('data-complete', 'false')
-    expect(
-      screen.getByRole('region', { name: 'Mechanism Studio instructions' }),
-    ).toBeInTheDocument()
-    // The malformed value is left exactly as it was: nothing is migrated and nothing is destroyed.
-    expect(window.localStorage.getItem(MCS_PROGRESS_KEY)).toBe('{ this is not json')
-  })
-
-  it('reflects a mastered case and a stored capstone record after loading', async () => {
-    seedStoredProgress({
-      masteredCaseIds: ['IABP-02'],
-      completedCaseIds: ['IABP-02', 'CAP-IABP-01'],
-      completedCapstoneIds: ['CAP-IABP-01'],
-    })
-    await renderWorkbench({ section: 'practice' })
-
-    expect(practiceRailButton('Trigger mismatch')).toHaveAttribute('data-complete', 'true')
-    expect(readStoredProgressRaw()?.completedCapstoneIds).toEqual(['CAP-IABP-01'])
-  })
-
-  it('writes nothing merely from mounting, on any workbench route', async () => {
-    // Practice and Challenge: the workbench's two sections.
-    for (const section of ['practice', 'assess'] as const) {
-      const view = await renderWorkbench({ section })
-      expect(progressWriteCount()).toBe(0)
-      view.unmount()
-    }
-    expect(window.localStorage.getItem(MCS_PROGRESS_KEY)).toBeNull()
-  })
-
-  it('keeps stored history when the activity is reset', async () => {
-    seedStoredProgress({
-      completedLessonIds: ['mcs-foundations-signals'],
-      masteredCaseIds: ['IABP-02'],
-    })
-    await renderWorkbench({ section: 'practice', initialActivityId: 'IABP-01' })
-
-    fireEvent.click(screen.getAllByRole('button', { name: 'Reset' })[0])
-
-    expect(storedLessonIds()).toEqual(['mcs-foundations-signals'])
-    expect(readStoredProgressRaw()?.masteredCaseIds).toEqual(['IABP-02'])
-  })
-
-  it('writes the current record and routes to the module front door on Save & exit', async () => {
-    seedStoredProgress({ completedLessonIds: ['mcs-foundations-signals'] })
-    await renderWorkbench({ section: 'practice' })
-
-    fireEvent.click(screen.getByRole('button', { name: 'Save & exit' }))
-
-    expect(progressWriteCount()).toBe(1)
-    expect(readStoredProgressRaw()).toMatchObject({
-      version: 1,
-      completedLessonIds: ['mcs-foundations-signals'],
-    })
-    expect(mockRouterPush).toHaveBeenCalledWith('/mechanical-circulatory-support')
-  })
-
-  it('keeps the storage key, the payload version, and the payload shape', async () => {
-    await renderWorkbench({ section: 'practice' })
-
-    fireEvent.click(screen.getByRole('button', { name: 'Save & exit' }))
-
-    const stored = readStoredProgressRaw()!
-    expect(Object.keys(stored).sort()).toEqual(Object.keys(createDefaultMcsProgress()).sort())
-    expect(stored.version).toBe(1)
-  })
-
-  it('discards no historical id it does not recognize', async () => {
-    // The write that records a case result goes through the same envelope as every other write,
-    // so a section id from an earlier release has to survive it untouched.
-    seedStoredProgress({ completedLessonIds: ['a-section-from-an-earlier-release'] })
-    const scenario = mcsPracticeScenarios[0]
-    await renderWorkbench({ section: 'practice', initialActivityId: scenario.id })
-
-    inspectInCase('inspect:arterial')
-    commitCasePrediction(scenario.predictionOptions[0].label)
-    reassessCase()
-    openCausalDebrief()
-
-    await waitFor(() => expect(storedCompletedCaseIds()).toContain(scenario.id))
-    expect(storedLessonIds()).toEqual(['a-section-from-an-earlier-release'])
-  })
+beforeEach(setupMcsWorkbenchEnvironment)
+afterEach(teardownMcsWorkbenchEnvironment)
+it('preserves every legacy value and unknown field through visits, help, reset and explanation', async () => {
+  const legacy = {
+    ...createDefaultMcsProgress(),
+    bestScores: { 'IABP-01': 91 },
+    masteredCaseIds: ['IABP-01'],
+    completedLessonIds: ['old-lesson'],
+    unknown: { firstAttempt: 'untouched' },
+  }
+  localStorage.setItem(MCS_LOCAL_PROGRESS_KEY, JSON.stringify(legacy))
+  await renderWorkbench({ section: 'practice', initialActivityId: 'IABP-01' })
+  fireEvent.click(screen.getByRole('button', { name: 'Hint' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Show explanation' }))
+  fireEvent.click(screen.getAllByRole('button', { name: 'Reset' })[0])
+  const saved = JSON.parse(localStorage.getItem(MCS_LOCAL_PROGRESS_KEY)!)
+  const { selfPaced, ...historical } = saved
+  expect(historical).toEqual(legacy)
+  expect(Object.keys(selfPaced).sort()).toEqual(
+    [
+      'lastActivityId',
+      'lastDevice',
+      'lastPhase',
+      'locationUpdatedAt',
+      'lastSection',
+      'visitedCaseIds',
+      'visitedLessonIds',
+    ].sort(),
+  )
+  expect(capturedAnalyticsEvents()).toEqual([])
 })
-
+it('never infers visits or recommendations from legacy grades', () => {
+  seedStoredProgress({
+    completedLessonIds: ['mcs-foundations-signals'],
+    masteredCaseIds: ['IABP-01'],
+    bestScores: { 'IABP-01': 100 },
+  })
+  const progress = readMcsLearningProgress()
+  expect(progress.visitedLessonIds).toEqual([])
+  expect(progress.visitedCaseIds).toEqual([])
+  expect(nextIncompleteMcsSectionLink(progress).state).toBe('start')
+})
+it.each(['{ bad json', JSON.stringify({ version: 99 }), JSON.stringify(null)])(
+  'leaves unreadable or newer storage intact: %s',
+  (raw) => {
+    localStorage.setItem(MCS_LOCAL_PROGRESS_KEY, raw)
+    expect(recordMcsVisit('IABP-01', 'practice', 'iabp')).toBe(false)
+    expect(localStorage.getItem(MCS_LOCAL_PROGRESS_KEY)).toBe(raw)
+  },
+)
+it('handles unavailable storage without blocking learning', () => {
+  const spy = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    throw new Error('storage disabled')
+  })
+  expect(recordMcsVisit('IABP-01', 'practice', 'iabp')).toBe(false)
+  spy.mockRestore()
+})
+it('deduplicates actual topic visits and resumes the last location', () => {
+  recordMcsVisit('mcs-foundations-signals', 'learn', 'iabp', 'predict')
+  recordMcsVisit('mcs-foundations-signals', 'learn', 'iabp', 'explain')
+  expect(readMcsLearningProgress().visitedLessonIds).toEqual(['mcs-foundations-signals'])
+  expect(nextIncompleteMcsSectionLink(readMcsLearningProgress()).href).toContain('phase=explain')
+})
+it('retains no responses or model actions across a reload', async () => {
+  const view = await renderWorkbench({ section: 'practice', initialActivityId: 'IABP-01' })
+  fireEvent.change(screen.getByRole('slider', { name: 'Preload' }), { target: { value: '135' } })
+  view.unmount()
+  await renderWorkbench({ section: 'practice', initialActivityId: 'IABP-01' })
+  expect(screen.getByRole('slider', { name: 'Preload' })).not.toHaveValue('135')
+  fireEvent.click(screen.getByRole('button', { name: 'Show explanation' }))
+  expect(document.querySelector('[data-worked-explanation]')).toHaveTextContent(
+    'No actions performed.',
+  )
+})
 describe('MCS M5 — the simulation interval and unmount cleanup', () => {
   beforeEach(() => setupMcsWorkbenchEnvironment())
   afterEach(() => teardownMcsWorkbenchEnvironment())
@@ -266,241 +185,5 @@ describe('MCS M5 — the simulation interval and unmount cleanup', () => {
 
     expect(errors).toEqual([])
     consoleError.mockRestore()
-  })
-})
-
-describe('MCS M5 — every lifecycle event is emitted once', () => {
-  beforeEach(() => setupMcsWorkbenchEnvironment())
-  afterEach(() => teardownMcsWorkbenchEnvironment())
-
-  it('reports a committed prediction once, and not again on every tick', async () => {
-    const scenario = mcsPracticeScenarios[0]
-    await renderWorkbenchOnFakeTimers({ section: 'practice', initialActivityId: scenario.id })
-
-    commitCasePrediction(scenario.predictionOptions[0].label)
-    advanceSimulation(3_000)
-
-    expect(countLifecycleInteraction('critical_care_prediction_submitted')).toBe(1)
-  })
-
-  it('reports a new prediction for the next case', async () => {
-    const first = mcsPracticeScenarios[0]
-    await renderWorkbench({ section: 'practice', initialActivityId: first.id })
-    commitCasePrediction(first.predictionOptions[0].label)
-
-    fireEvent.click(practiceRailButton('Trigger mismatch'))
-    const second = mcsPracticeScenarios.find((candidate) => candidate.id === 'IABP-02')!
-    commitCasePrediction(second.predictionOptions[0].label)
-
-    expect(
-      countLifecycleInteraction('critical_care_prediction_submitted', {
-        activityId: 'mcs:practice:IABP-01',
-      }),
-    ).toBe(1)
-    expect(
-      countLifecycleInteraction('critical_care_prediction_submitted', {
-        activityId: 'mcs:practice:IABP-02',
-      }),
-    ).toBe(1)
-  })
-
-  it('reports one safety event for one safety error, however long the case runs', async () => {
-    await renderWorkbenchOnFakeTimers({ section: 'practice', initialActivityId: 'IABP-01' })
-
-    fireEvent.change(screen.getByRole('slider', { name: 'Deflation vs systole' }), {
-      target: { value: '180' },
-    })
-    advanceSimulation(3_000)
-    fireEvent.change(screen.getByRole('slider', { name: 'Deflation vs systole' }), {
-      target: { value: '170' },
-    })
-
-    expect(countLifecycleInteraction('critical_care_safety_event')).toBe(1)
-  })
-
-  it('reports a distinct safety error in another case separately', async () => {
-    await renderWorkbench({ section: 'practice', initialActivityId: 'IABP-01' })
-    fireEvent.change(screen.getByRole('slider', { name: 'Deflation vs systole' }), {
-      target: { value: '180' },
-    })
-    expect(countLifecycleInteraction('critical_care_safety_event')).toBe(1)
-
-    selectDeviceTrack('lvad')
-    fireEvent.click(practiceRailButton('Power emergency'))
-    // The power-emergency case opens with the approved path already lost, so restoring it comes
-    // first and the learner-caused disconnection is the second move.
-    const power = screen.getByRole('checkbox', { name: /Approved power path/ })
-    expect(power).not.toBeChecked()
-    fireEvent.click(power)
-    fireEvent.click(screen.getByRole('checkbox', { name: /Approved power path/ }))
-
-    expect(
-      lifecycleAnalyticsPayloads()
-        .filter((payload) => payload.interaction === 'critical_care_safety_event')
-        .map((payload) => payload.activityId),
-    ).toEqual(['mcs:practice:IABP-01', 'mcs:practice:LVAD-03'])
-  })
-
-  it('reports the safety event again when the case is reset and the error recreated', async () => {
-    await renderWorkbench({ section: 'practice', initialActivityId: 'IABP-01' })
-    const setDeflation = (value: string) =>
-      fireEvent.change(screen.getByRole('slider', { name: 'Deflation vs systole' }), {
-        target: { value },
-      })
-
-    setDeflation('180')
-    fireEvent.click(screen.getAllByRole('button', { name: 'Reset' })[0])
-    setDeflation('180')
-
-    expect(countLifecycleInteraction('critical_care_safety_event')).toBe(2)
-  })
-
-  it('reports no goal met from the studio, which has no required actions', async () => {
-    await renderWorkbenchOnFakeTimers({ section: 'practice' })
-    advanceSimulation(2_000)
-
-    expect(lifecycleInteractions()).not.toContain('critical_care_goal_met')
-  })
-
-  it('reports no goal met while a case still has required actions outstanding', async () => {
-    // IABP-01 requires an arterial inspection and a deflation change.
-    await renderWorkbench({ section: 'practice', initialActivityId: 'IABP-01' })
-
-    inspectInCase('inspect:arterial')
-
-    expect(lifecycleInteractions()).not.toContain('critical_care_goal_met')
-  })
-
-  it('reports goal met once when the last required action lands', async () => {
-    await renderWorkbenchOnFakeTimers({ section: 'practice', initialActivityId: 'IABP-01' })
-
-    inspectInCase('inspect:arterial')
-    fireEvent.change(screen.getByRole('slider', { name: 'Deflation vs systole' }), {
-      target: { value: '0' },
-    })
-    advanceSimulation(3_000)
-
-    expect(countLifecycleInteraction('critical_care_goal_met')).toBe(1)
-  })
-
-  it('reports the debrief and the completion once each, and no transfer completion', async () => {
-    const scenario = mcsPracticeScenarios[0]
-    await renderWorkbenchOnFakeTimers({ section: 'practice', initialActivityId: scenario.id })
-
-    inspectInCase('inspect:arterial')
-    commitCasePrediction(scenario.predictionOptions[0].label)
-    reassessCase()
-    openCausalDebrief()
-    advanceSimulation(3_000)
-
-    expect(countLifecycleInteraction('critical_care_debrief_viewed')).toBe(1)
-    expect(
-      countLifecycleInteraction('critical_care_activity_completed') +
-        countLifecycleInteraction('critical_care_activity_mastered'),
-    ).toBe(1)
-    expect(lifecycleInteractions()).not.toContain('critical_care_transfer_completed')
-  })
-
-  it('persists the case result once, and not again on later rerenders', async () => {
-    const scenario = mcsPracticeScenarios[0]
-    await renderWorkbenchOnFakeTimers({ section: 'practice', initialActivityId: scenario.id })
-
-    inspectInCase('inspect:arterial')
-    commitCasePrediction(scenario.predictionOptions[0].label)
-    reassessCase()
-    openCausalDebrief()
-    advanceSimulation(0)
-    await waitFor(() => expect(storedCompletedCaseIds()).toContain(scenario.id))
-    const writes = progressWriteCount()
-
-    /*
-     * A learner can still act after the debrief opens, and each action produces a new state the
-     * persistence effect sees. Reassessing keeps the same scenario, score and error count, so the
-     * result has not changed and must not be written again.
-     */
-    reassessCase()
-    advanceSimulation(1)
-    expect(progressWriteCount()).toBe(writes)
-
-    advanceSimulation(5_000)
-    fireEvent.click(screen.getByRole('button', { name: 'Optional three-dimensional view' }))
-
-    expect(progressWriteCount()).toBe(writes)
-  })
-})
-
-describe('MCS M5 — lifecycle identity and the privacy boundary', () => {
-  beforeEach(() => setupMcsWorkbenchEnvironment())
-  afterEach(() => teardownMcsWorkbenchEnvironment())
-
-  it.each([
-    ['practice', 'IMP-02', 'mcs:practice:IMP-02', 'practice'],
-    ['assess', 'CAP-LVAD-01', 'mcs:assess:CAP-LVAD-01', 'challenge'],
-  ] as const)(
-    'reports %s under its own activity id and mode',
-    async (section, activity, activityId, mode) => {
-      await renderWorkbench({ section, initialActivityId: activity })
-
-      const opened = lifecycleAnalyticsPayloads().filter(
-        (payload) => payload.interaction === 'critical_care_activity_opened',
-      )
-      expect(opened.at(-1)).toMatchObject({ activityId, mode })
-    },
-  )
-
-  it('reports the studio under a studio id rather than a fabricated case id', async () => {
-    await renderWorkbench({ section: 'practice' })
-    selectDeviceTrack('lvad')
-
-    const opened = lifecycleAnalyticsPayloads().filter(
-      (payload) => payload.interaction === 'critical_care_activity_opened',
-    )
-    expect(opened.at(-1)).toMatchObject({
-      activityId: 'mcs:practice:studio-lvad',
-      mode: 'practice',
-    })
-  })
-
-  it('sends only the device track, the station, and a coarse completion state', async () => {
-    await renderWorkbench({ section: 'practice', initialActivityId: 'IMP-02' })
-
-    const aggregate = aggregateAnalyticsEvents()
-    expect(aggregate.length).toBeGreaterThan(0)
-    for (const event of aggregate) {
-      expect(event.eventPayload).toEqual({
-        deviceTrack: 'impella',
-        station: 'IMP-02',
-        completion: 'in-progress',
-      })
-    }
-  })
-
-  it('reports completion coarsely once the case is complete', async () => {
-    const scenario = mcsPracticeScenarios[0]
-    await renderWorkbench({ section: 'practice', initialActivityId: scenario.id })
-
-    commitCasePrediction(scenario.predictionOptions[0].label)
-    openCausalDebrief()
-
-    expect(aggregateAnalyticsEvents().at(-1)?.eventPayload).toMatchObject({
-      completion: 'complete',
-    })
-  })
-
-  it('sends no physiologic value anywhere in any payload', async () => {
-    await renderWorkbench({ section: 'assess', initialActivityId: 'CAP-IMP-01' })
-    fireEvent.click(challengeFeedbackToggle())
-    inspectInCase('inspect:device')
-    reassessCase()
-    openCausalDebrief()
-
-    const serialized = JSON.stringify(capturedAnalyticsEvents())
-    expect(serialized).not.toMatch(
-      /waveform|trace|pressure|actionIds|presentation|freeText|mapMmHg|pcwp|papi|svo2|cardiacPower|effectiveSystemic|rapMmHg|debrief:/i,
-    )
-    // The privacy note on the page says exactly this, so it must remain true.
-    expect(
-      screen.getByText(/Physiologic traces, pressures, detailed action histories, and free text/),
-    ).toBeInTheDocument()
   })
 })

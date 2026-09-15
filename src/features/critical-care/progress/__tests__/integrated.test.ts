@@ -57,31 +57,22 @@ describe('integrated ICU capstone progress boundary', () => {
     expect(CRITICAL_CARE_INTEGRATED_OUTCOMES_MAX_COURSES).toBe(icuScenarioFamilies.length)
   })
 
-  it('starts at the authored foundation scenario and changes recommendation with focused completion', () => {
-    // The entry point is the single-dominant-mechanism scenario, not the longest multisystem one.
-    expect(getCriticalCareIcuScenarioRecommendation(envelope())).toMatchObject({
+  it('keeps historical HD and MCS completion out of ICU recommendations and preparation', () => {
+    const cardiogenic = envelope(['hemodynamics:practice:HD-03', 'mcs:practice:IMP-03'])
+    expect(getCriticalCareIcuScenarioRecommendation(cardiogenic)).toEqual(
+      getCriticalCareIcuScenarioRecommendation(envelope()),
+    )
+    expect(getCriticalCareIcuScenarioRecommendation(cardiogenic)).toMatchObject({
       scenarioId: 'hemorrhagic',
       reason: 'foundation',
     })
-
-    // Historical HD completion no longer satisfies the hemodynamics preparation requirement.
-    const cardiogenic = envelope(['hemodynamics:practice:HD-03', 'mcs:practice:IMP-03'])
-    expect(getCriticalCareIcuScenarioRecommendation(cardiogenic)).toMatchObject({
-      scenarioId: 'lv-cardiogenic',
-      reason: 'focused-alignment',
-      readiness: {
-        completedRequirementCount: 1,
-        totalRequirementCount: 2,
-        eligibleForAssess: true,
-        approvedGateRequirementCount: 0,
-        gateStatus: 'preview-open',
-      },
+    expect(getCriticalCareIcuScenarioReadiness('lv-cardiogenic', cardiogenic)).toMatchObject({
+      completedRequirementCount: 0,
+      totalRequirementCount: 2,
+      eligibleForAssess: true,
+      approvedGateRequirementCount: 0,
+      gateStatus: 'preview-open',
     })
-
-    expect(
-      getCriticalCareIcuScenarioRecommendation(envelope(['hemodynamics:practice:HD-01']))
-        .scenarioId,
-    ).toBe('hemorrhagic')
   })
 
   it('keeps preparation advisory and does not treat historical MV grades as current completion', () => {

@@ -1,4 +1,4 @@
-import { isHistoricalOnlyModule } from './utils'
+import { isCurrentProgressActivity } from './utils'
 import { enforceCriticalCareProgressAuthority } from '@/features/learning-module/activity/evidence'
 import type {
   CriticalCareActivityDefinition,
@@ -31,9 +31,7 @@ function progressByActivityId(
   return new Map(
     envelope.activities.flatMap((progress) => {
       const activity = activityById.get(progress.activityId)
-      return activity &&
-        activity.moduleId !== 'mechanical-ventilation' &&
-        !isHistoricalOnlyModule(activity.moduleId)
+      return activity && isCurrentProgressActivity(progress)
         ? [[progress.activityId, enforceCriticalCareProgressAuthority(activity, progress)] as const]
         : []
     }),

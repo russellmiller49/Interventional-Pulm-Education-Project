@@ -41,7 +41,7 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
     <McsModuleFrame locale={locale} activeHref={mechanicalCirculatorySupportNavBase}>
       <section className={styles.hubHero}>
         <div>
-          <span className={styles.kicker}>LEARN → PRACTICE → CHALLENGE</span>
+          <span className={styles.kicker}>SELF-PACED LEARNING</span>
           <h1>Mechanical Circulatory Support ICU Lab</h1>
           <p>
             One circulation, one monitor, one map. Read the pressure and the flow apart, walk the
@@ -61,8 +61,8 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
           <span>PERSONAL HISTORY</span>
           <strong>Stored locally</strong>
           <p>
-            Sections you work through are remembered in this browser, and Continue picks up at the
-            first one you have not.
+            Topic visits and your last location are remembered in this browser. Resume returns to
+            that location with a fresh model; previous controls and answers are not replayed.
           </p>
           <small>No ranking, comparison, or claim about what you know.</small>
         </aside>

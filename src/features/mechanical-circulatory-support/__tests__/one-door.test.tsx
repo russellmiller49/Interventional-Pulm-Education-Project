@@ -31,7 +31,8 @@ import { McsHub } from '../components/McsHub'
 import { McsLearnLanding } from '../components/McsLearnLanding'
 import { mcsPathway, mcsPathwayComposition } from '../content/pathwayResolver'
 import { mcsCapstoneScenarios, mcsPracticeScenarios } from '../content/scenarios'
-import { createDefaultMcsProgress, recordMcsLessonComplete, writeMcsProgress } from '../engine'
+import { mcsPresentationTitle } from '../content/casePresentation'
+import { recordMcsVisit } from '../engine/learningProgress'
 
 async function settle() {
   await act(async () => {
@@ -67,23 +68,19 @@ describe('the hub', () => {
     expect(document.querySelectorAll('[data-mcs-continue]')).toHaveLength(1)
   })
 
-  it('resumes a returning learner at the first incomplete section and opens that group', async () => {
+  it('resumes the last visited lesson phase and labels visits honestly', async () => {
     const order = mcsPathway().sections.map((section) => section.id)
-    let progress = createDefaultMcsProgress()
-    progress = recordMcsLessonComplete(progress, order[0], 'iabp')
-    progress = recordMcsLessonComplete(progress, order[1], 'iabp')
-    progress = recordMcsLessonComplete(progress, order[2], 'iabp')
-    writeMcsProgress(progress)
+    for (const id of order.slice(0, 3)) recordMcsVisit(id, 'learn', 'iabp', 'explain')
     render(<McsHub />)
     await settle()
     const cta = document.querySelector('[data-mcs-continue]')!
-    expect(cta.textContent).toMatch(/^Continue — /)
-    expect(cta).toHaveAttribute('data-mcs-continue-section', order[3])
+    expect(cta.textContent).toMatch(/^Resume — /)
+    expect(cta).toHaveAttribute('data-mcs-continue-section', order[2])
     const open = [...document.querySelectorAll('[data-pathway-accordion] details')].filter(
       (d) => (d as HTMLDetailsElement).open,
     )
     expect(open.map((d) => d.getAttribute('data-unit'))).toEqual(['iabp'])
-    expect(document.querySelectorAll('[data-kind="section"][data-complete="true"]')).toHaveLength(3)
+    expect(document.querySelectorAll('[data-kind="section"][data-visited="true"]')).toHaveLength(3)
     expect(document.querySelector('[data-recommended="true"]')?.textContent).toContain('up next')
   })
 
@@ -110,12 +107,12 @@ describe('the hub', () => {
     )
   })
 
-  it('names every case by presentation, never by diagnosis', async () => {
+  it('names every case by its clinical teaching topic', async () => {
     render(<McsHub />)
     await settle()
     const text = document.querySelector('[data-pathway-accordion]')?.textContent ?? ''
     for (const scenario of [...mcsPracticeScenarios, ...mcsCapstoneScenarios]) {
-      expect(text).not.toContain(scenario.title)
+      expect(text).toContain(mcsPresentationTitle(scenario))
     }
     expect(
       within(document.querySelector('[data-pathway-accordion]') as HTMLElement).getAllByRole('link')

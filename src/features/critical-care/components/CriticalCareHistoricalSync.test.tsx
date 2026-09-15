@@ -3,13 +3,18 @@ import { buildCriticalCarePublicClientCatalog } from '../content/publicCatalog.s
 import { CriticalCareAccountSync } from './CriticalCareAccountSync'
 import { CriticalCareRestrictedAccountSync } from './CriticalCareRestrictedAccountSync'
 import { CRITICAL_CARE_PROGRESS_STORAGE_KEY } from '@/features/learning-module/activity'
-import { masteredLegacyProgressFixtures } from '../progress/__fixtures__/legacyProgress'
+import {
+  masteredLegacyProgressFixtures,
+  partialLegacyProgressFixtures,
+} from '../progress/__fixtures__/legacyProgress'
+
+const mockGetUser = jest.fn(async () => ({ data: { user: { id: 'learner' } }, error: null }))
 
 jest.mock('@/lib/supabase/browser', () => ({
   hasSupabaseBrowserConfig: () => true,
   supabaseCookieBrowser: () => ({
     auth: {
-      getUser: async () => ({ data: { user: { id: 'learner' } }, error: null }),
+      getUser: () => mockGetUser(),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe: jest.fn() } } }),
     },
   }),
@@ -17,7 +22,7 @@ jest.mock('@/lib/supabase/browser', () => ({
 
 const now = '2026-09-14T12:00:00.000Z'
 
-describe('real public and restricted account hydration with historical HD/ECMO data', () => {
+describe('real public and restricted account hydration with historical HD/ECMO/MCS/MV/CRRT data', () => {
   const originalFetch = global.fetch
   afterEach(() => {
     global.fetch = originalFetch
@@ -27,28 +32,43 @@ describe('real public and restricted account hydration with historical HD/ECMO d
     '%s mount does not rewrite historical bytes or POST completion',
     async (surface) => {
       localStorage.clear()
+      mockGetUser.mockClear()
       localStorage.setItem(
         'critical-care-account-sync-ownership-v1',
         JSON.stringify({ version: 1, accountId: 'learner' }),
       )
-      for (const key of ['icu-hemodynamics-progress-v2', 'cardiohelp-ecmo-progress-v1']) {
-        localStorage.setItem(key, `\n ${masteredLegacyProgressFixtures[key]} \n`)
+      for (const key of [
+        'icu-hemodynamics-progress-v2',
+        'cardiohelp-ecmo-progress-v1',
+        'interventionalpulm:mcs-progress:v1',
+        'mechanical-ventilation-progress-v2',
+        'baxter-crrt-progress-v3',
+      ]) {
+        const historical = { ...partialLegacyProgressFixtures, ...masteredLegacyProgressFixtures }[
+          key
+        ]
+        expect(historical).toBeDefined()
+        localStorage.setItem(key, `\n ${historical} \n`)
       }
       localStorage.setItem(
         CRITICAL_CARE_PROGRESS_STORAGE_KEY,
         JSON.stringify(
           {
             version: 1,
-            activities: ['hemodynamics:practice:HD-01', 'ecmo:assess:vv-off-sweep-capstone'].map(
-              (activityId) => ({
-                activityId,
-                status: 'mastered',
-                attempts: 3,
-                bestScore: 100,
-                competencyEvidenceIds: [],
-                updatedAt: now,
-              }),
-            ),
+            activities: [
+              'hemodynamics:practice:HD-01',
+              'ecmo:assess:vv-off-sweep-capstone',
+              'mcs:assess:CAP-IMP-01',
+              'ventilation:practice:MV-01',
+              'crrt:assess:MASTERY-PRISMAX-01',
+            ].map((activityId) => ({
+              activityId,
+              status: 'mastered',
+              attempts: 3,
+              bestScore: 100,
+              competencyEvidenceIds: [],
+              updatedAt: now,
+            })),
             updatedAt: now,
           },
           null,
@@ -61,7 +81,13 @@ describe('real public and restricted account hydration with historical HD/ECMO d
         json: async () => ({
           schemaVersion: 1,
           accountId: 'learner',
-          modules: ['icu-hemodynamics', 'cardiohelp-ecmo'].map((moduleId) => ({
+          modules: [
+            'icu-hemodynamics',
+            'cardiohelp-ecmo',
+            'mechanical-circulatory-support',
+            'mechanical-ventilation',
+            'baxter-crrt',
+          ].map((moduleId) => ({
             moduleId,
             percentComplete: 100,
             completedSections: ['learn', 'practice', 'assess'],
@@ -80,7 +106,7 @@ describe('real public and restricted account hydration with historical HD/ECMO d
       )
       await waitFor(() => expect(fetcher).toHaveBeenCalled(), { timeout: 3000 })
       // Let the actual hydration, reconciliation, and projection continuation finish.
-      await waitFor(() => expect(fetcher.mock.results[0]?.type).toBe('return'))
+      await waitFor(() => expect(mockGetUser).toHaveBeenCalledTimes(2))
       expect(fetcher.mock.calls.map((call) => call[1]?.method)).toEqual(['GET'])
       expect({ ...localStorage }).toEqual(before)
       unmount()

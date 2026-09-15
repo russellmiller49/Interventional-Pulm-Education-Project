@@ -49,7 +49,7 @@ export function McsPrerequisiteReference({
   return (
     <section className={styles.tour} data-prerequisite-reference>
       <p>
-        Prerequisite reference · {index + 1} of {pages.length} · no independent credit
+        Reference · {index + 1} of {pages.length} · optional reading
       </p>
       <h2>{page.title}</h2>
       <p>{page.text}</p>
@@ -60,6 +60,9 @@ export function McsPrerequisiteReference({
         This conceptual reference does not display the upcoming patient’s diagnosis or model
         settings.
       </p>
+      <button type="button" onClick={onContinue}>
+        Continue to the model
+      </button>
       <button
         type="button"
         onClick={() => (index < pages.length - 1 ? setIndex(index + 1) : onContinue())}

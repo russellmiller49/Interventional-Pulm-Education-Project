@@ -121,7 +121,7 @@ it('leaves old account completion out of CRRT hydration and publication', () => 
 })
 it('preserves another module consumer when CRRT history is present', () => {
   const activity = criticalCareActivities.find(
-    (item) => item.moduleId === 'mechanical-circulatory-support' && item.kind !== 'assessment',
+    (item) => item.moduleId === 'icu-simulation' && item.kind !== 'assessment',
   )!
   const other = {
     ...oldEnvelope.activities[0],

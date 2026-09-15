@@ -127,7 +127,7 @@ describe('CriticalCareHub', () => {
     expect(outcomes).toHaveTextContent(/case identity, patient state, commands, and replay remain/)
   })
 
-  it('resumes the exact normalized activity and emits bounded resume analytics', async () => {
+  it('resumes the current MCS location and emits bounded resume analytics', async () => {
     mockReadMergedCriticalCareProgress.mockReturnValue({
       envelope: {
         version: 1,
@@ -137,9 +137,9 @@ describe('CriticalCareHub', () => {
             status: 'in-progress',
             currentPhase: 'act',
             mode: 'guided',
-            attempts: 1,
+            attempts: 0,
             competencyEvidenceIds: [],
-            updatedAt: '2026-07-22T12:00:00.000Z',
+            updatedAt: '1970-01-01T00:00:00.000Z',
           },
         ],
         resume: {
@@ -150,7 +150,7 @@ describe('CriticalCareHub', () => {
           phase: 'act',
           checkpointId: 'measurement-chain-checked',
           deviceId: 'impella',
-          payloadVersion: 'pac-signal-validation-v1',
+          payloadVersion: 'mcs-location-v1',
           updatedAt: '2026-07-22T12:00:00.000Z',
         },
         updatedAt: '2026-07-22T12:00:00.000Z',

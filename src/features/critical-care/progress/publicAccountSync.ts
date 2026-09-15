@@ -1,4 +1,4 @@
-import { isHistoricalOnlyModule, isHistoricalOnlyActivity } from './utils'
+import { isCoarseSyncExcludedModule, isHistoricalNormalizedActivity } from './utils'
 import {
   upsertCriticalCareActivityProgress,
   withCriticalCareResumePointer,
@@ -81,12 +81,7 @@ function allowedModuleIds(
   // Self-paced modules retain old account records without new completion claims.
   return new Set(
     activities
-      .filter(
-        (activity) =>
-          activity.moduleId !== 'mechanical-ventilation' &&
-          activity.moduleId !== 'baxter-crrt' &&
-          !isHistoricalOnlyModule(activity.moduleId),
-      )
+      .filter((activity) => !isCoarseSyncExcludedModule(activity.moduleId))
       .map((activity) => activity.moduleId),
   )
 }
@@ -197,10 +192,10 @@ export function mergeCriticalCareSubsetProgress(
 ): CriticalCareProgressEnvelope {
   let merged = fullEnvelope
   for (const activity of subsetEnvelope.activities) {
-    if (isHistoricalOnlyActivity(activity.activityId)) continue
+    if (isHistoricalNormalizedActivity(activity.activityId)) continue
     merged = upsertCriticalCareActivityProgress(merged, activity)
   }
-  return subsetEnvelope.resume && !isHistoricalOnlyActivity(subsetEnvelope.resume.activityId)
+  return subsetEnvelope.resume && !isHistoricalNormalizedActivity(subsetEnvelope.resume.activityId)
     ? withCriticalCareResumePointer(merged, subsetEnvelope.resume)
     : merged
 }

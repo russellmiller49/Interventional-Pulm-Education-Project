@@ -28,7 +28,9 @@ import {
 import {
   enforceProgressCollectionAuthority,
   isRecord,
-  isHistoricalOnlyActivity,
+  isHistoricalNormalizedActivity,
+  isCurrentProgressResume,
+  isCurrentNormalizedResume,
   mergeProjectedActivities,
   parseStoredJson,
   readStoredValue,
@@ -108,10 +110,8 @@ export function mergeCriticalCareProgress(
   legacy: readonly CriticalCareLegacyProgressResult[],
   activities: readonly CriticalCareActivityDefinition[] = criticalCareActivities,
 ): CriticalCareProgressEnvelope {
-  // Legacy stores remain authoritative evidence of completion/mastery during the
-  // compatibility window. Merge them before normalized records so V2 can keep
-  // its newer phase/mode metadata without allowing a page-open write to
-  // downgrade an older completed or mastered result.
+  // Only modules that still support grading can contribute legacy achievements.
+  // Converted modules contribute validated, ungraded navigation from their own stores.
   const mergedByStrength = mergeProjectedActivities([
     ...enforceProgressCollectionAuthority(
       activities,
@@ -119,7 +119,9 @@ export function mergeCriticalCareProgress(
     ),
     ...enforceProgressCollectionAuthority(
       activities,
-      (normalized?.activities ?? []).filter((item) => !item.activityId.startsWith('crrt:')),
+      (normalized?.activities ?? []).filter(
+        (item) => !isHistoricalNormalizedActivity(item.activityId),
+      ),
     ),
   ])
   const activityOrder = [
@@ -132,15 +134,13 @@ export function mergeCriticalCareProgress(
     return activity ? [activity] : []
   })
   const resumeCandidates: CriticalCareResumePointer[] = [
-    ...(normalized?.resume ? [normalized.resume] : []),
+    ...(normalized?.resume && isCurrentNormalizedResume(normalized.resume)
+      ? [normalized.resume]
+      : []),
     ...legacy.flatMap((result) => (result.resume ? [result.resume] : [])),
   ]
   const resolvedResume = newestValidCriticalCareResume(
-    resumeCandidates.filter(
-      (pointer) =>
-        !pointer.activityId.startsWith('ventilation:') &&
-        !isHistoricalOnlyActivity(pointer.activityId),
-    ),
+    resumeCandidates.filter(isCurrentProgressResume),
     activities,
   )
   const timestamps = [

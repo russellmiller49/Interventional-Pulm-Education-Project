@@ -20,7 +20,7 @@ export function McsIntroTeaching({
   const [parameter, setParameter] = useState(0)
   return (
     <section className={styles.block} data-intro-teaching={introduction.id}>
-      <p className={styles.kicker}>Concept and guided example · not independent credit</p>
+      <p className={styles.kicker}>Concept and guided example</p>
       <h3>{introduction.title}</h3>
       {introduction.paragraphs.map((text) => (
         <p key={text}>{text}</p>
@@ -145,6 +145,7 @@ export function McsIntroTeaching({
         <McsCapturedResults
           before={before}
           after={state}
+          providedExample={state.actionIds.length === 0}
           signals={
             introduction.visual === 'impella'
               ? [

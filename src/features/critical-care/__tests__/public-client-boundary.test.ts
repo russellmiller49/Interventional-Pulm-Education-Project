@@ -164,12 +164,23 @@ describe('critical-care public client data boundary', () => {
     expect(relativeGraph.some((file) => file.startsWith('features/icu-simulation/'))).toBe(false)
   })
 
-  it('reconciles account hydration without clobbering another catalog subset or its resume', () => {
+  it('reconciles a test-only public subset without clobbering ICU navigation or MCS history', () => {
+    // Converted public modules cannot serve as graded fixtures. This synthetic
+    // activity checks the generic subset merge without changing production authority.
+    const historicalMcs = {
+      activityId: 'mcs:assess:CAP-IMP-01',
+      status: 'mastered' as const,
+      attempts: 4,
+      bestScore: 99,
+      competencyEvidenceIds: [],
+      updatedAt: '2026-07-22T10:00:00.000Z',
+    }
     const fullEnvelope = {
       version: 1 as const,
       activities: [
+        historicalMcs,
         {
-          activityId: 'mcs:learn:mcs-foundations-signals',
+          activityId: 'fixture:learn:public-sync',
           status: 'in-progress' as const,
           attempts: 1,
           competencyEvidenceIds: [],
@@ -197,8 +208,9 @@ describe('critical-care public client data boundary', () => {
     const publicHydration = {
       version: 1 as const,
       activities: [
+        { ...historicalMcs, attempts: 99, updatedAt: '2026-09-15T10:00:00.000Z' },
         {
-          activityId: 'mcs:learn:mcs-foundations-signals',
+          activityId: 'fixture:learn:public-sync',
           status: 'completed' as const,
           attempts: 1,
           competencyEvidenceIds: [],
@@ -206,12 +218,12 @@ describe('critical-care public client data boundary', () => {
         },
       ],
       resume: {
-        activityId: 'mcs:learn:mcs-foundations-signals',
-        pathname: '/mechanical-circulatory-support/learn',
-        query: { lesson: 'mcs-foundations-signals' },
+        activityId: 'fixture:learn:public-sync',
+        pathname: '/test-only/learn',
+        query: { lesson: 'public-sync' },
         mode: 'guided' as const,
         phase: 'recognize' as const,
-        payloadVersion: 'mcs-progress-v1',
+        payloadVersion: 'test-only-v1',
         updatedAt: '2026-07-22T09:00:00.000Z',
       },
       updatedAt: '2026-07-22T13:00:00.000Z',
@@ -221,8 +233,9 @@ describe('critical-care public client data boundary', () => {
 
     expect(reconciled.activities).toEqual(
       expect.arrayContaining([
+        historicalMcs,
         expect.objectContaining({
-          activityId: 'mcs:learn:mcs-foundations-signals',
+          activityId: 'fixture:learn:public-sync',
           status: 'completed',
         }),
         expect.objectContaining({

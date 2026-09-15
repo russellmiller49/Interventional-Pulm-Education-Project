@@ -188,38 +188,24 @@ describe('critical-care legacy progress adapters', () => {
     }
   })
 
-  it('safely projects permissive MCS V1 data without invoking its browser store', () => {
-    const partial = readMcsLegacyProgress(
-      new ReadOnlyFixtureStorage({
-        [MCS_PROGRESS_STORAGE_KEY]: partialLegacyProgressFixtures[MCS_PROGRESS_STORAGE_KEY],
-      }),
-      criticalCareActivities,
-    )
-    expect(activity(partial, 'mcs:learn:mcs-foundations-signals')).toMatchObject({
-      status: 'in-progress',
-      competencyEvidenceIds: [],
-    })
-    expect(activity(partial, 'mcs:practice:IMP-01')).toMatchObject({
-      status: 'in-progress',
-      attempts: 0,
-      bestScore: 55,
-    })
-    expect(partial.resume).toMatchObject({
-      activityId: 'mcs:practice:IMP-01',
-      deviceId: 'impella',
-    })
-
-    const mastered = readMcsLegacyProgress(
-      new ReadOnlyFixtureStorage({
-        [MCS_PROGRESS_STORAGE_KEY]: masteredLegacyProgressFixtures[MCS_PROGRESS_STORAGE_KEY],
-      }),
-      criticalCareActivities,
-    )
-    expect(activity(mastered, 'mcs:assess:CAP-IMP-01')).toMatchObject({
-      status: 'mastered',
-      attempts: 0,
-      bestScore: 91,
-    })
+  it('reads historical MCS records without projecting grades, completion or old resume', () => {
+    for (const fixture of [
+      partialLegacyProgressFixtures,
+      completedLegacyProgressFixtures,
+      masteredLegacyProgressFixtures,
+    ]) {
+      if (!fixture[MCS_PROGRESS_STORAGE_KEY]) continue // This fixture covers other modules only.
+      const storage = new ReadOnlyFixtureStorage({
+        [MCS_PROGRESS_STORAGE_KEY]: fixture[MCS_PROGRESS_STORAGE_KEY],
+      })
+      const before = JSON.stringify(storage.values)
+      const result = readMcsLegacyProgress(storage, criticalCareActivities)
+      expect(result.status).toBe('valid')
+      expect(result.activities).toEqual([])
+      expect(result.resume).toBeUndefined()
+      expect(JSON.stringify(storage.values)).toBe(before)
+      expect(storage.setItem).not.toHaveBeenCalled()
+    }
   })
 
   it('maps ECMO lesson, clinical-case, and capstone IDs to their catalog sections', () => {

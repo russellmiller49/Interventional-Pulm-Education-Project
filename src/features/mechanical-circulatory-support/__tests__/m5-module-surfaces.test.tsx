@@ -83,7 +83,9 @@ describe('MCS M5 — the module front door derives what it claims', () => {
       screen.getByText(`${mcsPracticeScenarios.length} patient cases, plus an open studio`),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(`${mcsCapstoneScenarios.length} harder cases, one per device track`),
+      screen.getByText(
+        `${mcsCapstoneScenarios.length} optional integrated cases, one per device track`,
+      ),
     ).toBeInTheDocument()
     expect(screen.getByText(`Browse all ${mcsLessons.length} sections`)).toBeInTheDocument()
   })
@@ -192,7 +194,7 @@ describe('MCS M5 — module chrome on every route', () => {
   // Learn is on the lesson stage, so the workbench's chrome is exercised on its two sections.
   it.each([
     ['practice', 'Practice'],
-    ['assess', 'Challenge'],
+    ['assess', 'Integrated cases'],
   ] as const)('marks %s as the active route in the module nav', async (section, label) => {
     await renderWorkbench({ section })
 

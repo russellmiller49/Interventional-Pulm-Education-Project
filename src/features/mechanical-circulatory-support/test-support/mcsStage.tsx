@@ -179,7 +179,7 @@ export function answerIdentification(
   )
   if (!option) throw new Error(`${sectionId}: no ${choose} identification option`)
   chooseByLabel(option.label)
-  clickPrimary()
+  fireEvent.click(within(nowCard()).getByRole('button', { name: 'Compare answer' }))
 }
 
 /** Predict: choose the authored best answer (or a named plausibility) and commit it. */
@@ -193,14 +193,12 @@ export function commitPrediction(
     contract.predictionItem.choices.find((candidate) => candidate.plausibility === plausibility) ??
     contract.predictionItem.choices[0]
   chooseByLabel(choice.label)
-  clickPrimary()
+  fireEvent.click(within(nowCard()).getByRole('button', { name: 'Compare answer' }))
 }
 
 /** The Continue inside the prediction's verdict, which is the way past the commit point. */
 export function continueFromVerdict(): void {
-  const button = document.querySelector<HTMLButtonElement>('[data-verdict-continue]')
-  if (!button) throw new Error('No Continue in the verdict')
-  fireEvent.click(button)
+  clickPrimary()
 }
 
 export function continueStep(): void {
@@ -292,7 +290,7 @@ export function commitSort(): void {
     const id = row.getAttribute('data-sort-candidate') ?? ''
     fireEvent.change(within(row).getByRole('combobox'), { target: { value: answers[id] ?? '' } })
   }
-  clickPrimary()
+  fireEvent.click(within(nowCard()).getByRole('button', { name: 'Compare classifications' }))
 }
 
 /** Transfer: work the required actions in the new patient, by their visible controls. */
@@ -371,7 +369,7 @@ export function commitTransfer(sectionId: string): void {
     transfer.item.choices.find((choice) => choice.plausibility === 'best') ??
     transfer.item.choices[0]
   chooseByLabel(best.label)
-  clickPrimary()
+  fireEvent.click(within(nowCard()).getByRole('button', { name: 'Compare answer' }))
 }
 
 /** Walks a section from its first step to a worked-through completion, through the interface. */
@@ -396,5 +394,5 @@ export function workThroughSection(
 export function storedLessonIds(): readonly string[] {
   const raw = window.localStorage.getItem('interventionalpulm:mcs-progress:v1')
   if (!raw) return []
-  return (JSON.parse(raw) as { completedLessonIds: string[] }).completedLessonIds
+  return (JSON.parse(raw) as { completedLessonIds?: string[] }).completedLessonIds ?? []
 }

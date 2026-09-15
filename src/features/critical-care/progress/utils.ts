@@ -26,6 +26,64 @@ export function isHistoricalOnlyActivity(activityId: string): boolean {
   return activityId.startsWith('hemodynamics:') || activityId.startsWith('ecmo:')
 }
 
+/** Converted modules keep coarse account grades only as historical data. */
+export function isCoarseSyncExcludedModule(moduleId: string): boolean {
+  return (
+    isHistoricalOnlyModule(moduleId) ||
+    moduleId === 'mechanical-circulatory-support' ||
+    moduleId === 'mechanical-ventilation' ||
+    moduleId === 'baxter-crrt'
+  )
+}
+
+/** Current MCS/CRRT visit rows come from module stores, never normalized history. */
+export function isHistoricalNormalizedActivity(activityId: string): boolean {
+  return (
+    isHistoricalOnlyActivity(activityId) ||
+    activityId.startsWith('ventilation:') ||
+    activityId.startsWith('mcs:') ||
+    activityId.startsWith('crrt:')
+  )
+}
+
+export function isCurrentProgressActivity(progress: CriticalCareActivityProgress): boolean {
+  if (
+    isHistoricalOnlyActivity(progress.activityId) ||
+    progress.activityId.startsWith('ventilation:')
+  )
+    return false
+  if (progress.activityId.startsWith('mcs:') || progress.activityId.startsWith('crrt:')) {
+    // The module adapters project visits without grades, assistance or invented chronology.
+    // Reject historical rows before catalog authority could downgrade them into false visits.
+    return (
+      progress.status === 'in-progress' &&
+      progress.attempts === 0 &&
+      progress.bestScore === undefined &&
+      progress.hintCount === undefined &&
+      progress.tricky === undefined &&
+      progress.competencyEvidenceIds.length === 0 &&
+      progress.updatedAt === LEGACY_PROGRESS_EPOCH &&
+      (progress.activityId.startsWith('crrt:') || progress.mode === 'guided')
+    )
+  }
+  return true
+}
+
+export function isCurrentProgressResume(pointer: CriticalCareResumePointer): boolean {
+  if (isHistoricalOnlyActivity(pointer.activityId) || pointer.activityId.startsWith('ventilation:'))
+    return false
+  if (pointer.activityId.startsWith('mcs:'))
+    return pointer.payloadVersion === 'mcs-location-v1' && pointer.mode === 'guided'
+  if (pointer.activityId.startsWith('crrt:')) return pointer.payloadVersion === 'crrt-selection-v1'
+  return true
+}
+
+export function isCurrentNormalizedResume(pointer: CriticalCareResumePointer): boolean {
+  // CRRT still supports explicit selection pointers in the shared store. MCS now
+  // resumes exclusively from its module-local location, even if history has a newer date.
+  return !pointer.activityId.startsWith('mcs:') && isCurrentProgressResume(pointer)
+}
+
 const MAX_NORMALIZED_COUNTER = 10_000
 
 const statusRank: Readonly<Record<CriticalCareActivityStatus, number>> = {
@@ -164,17 +222,10 @@ export function enforceProgressCollectionAuthority(
   progressItems: readonly CriticalCareActivityProgress[],
 ): readonly CriticalCareActivityProgress[] {
   const activityById = new Map(activities.map((activity) => [activity.id, activity]))
-  // MV, HD and ECMO legacy attempts cannot become current visits or achievements.
-  return progressItems
-    .filter(
-      (progress) =>
-        !progress.activityId.startsWith('ventilation:') &&
-        !isHistoricalOnlyActivity(progress.activityId),
-    )
-    .map((progress) => {
-      const activity = activityById.get(progress.activityId)
-      return activity ? enforceCriticalCareProgressAuthority(activity, progress) : progress
-    })
+  return progressItems.filter(isCurrentProgressActivity).map((progress) => {
+    const activity = activityById.get(progress.activityId)
+    return activity ? enforceCriticalCareProgressAuthority(activity, progress) : progress
+  })
 }
 
 export function makeLegacyResumePointer(

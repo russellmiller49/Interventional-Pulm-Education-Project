@@ -32,7 +32,9 @@ import {
 import {
   enforceProgressCollectionAuthority,
   isRecord,
-  isHistoricalOnlyActivity,
+  isHistoricalNormalizedActivity,
+  isCurrentProgressResume,
+  isCurrentNormalizedResume,
   mergeProjectedActivities,
   parseStoredJson,
   readStoredValue,
@@ -161,7 +163,7 @@ function mergePublicProgress(
 ): CriticalCareProgressEnvelope {
   const publicActivityIds = new Set(activities.map((activity) => activity.id))
   const normalizedActivities = (normalized?.activities ?? [])
-    .filter((item) => !item.activityId.startsWith('crrt:'))
+    .filter((item) => !isHistoricalNormalizedActivity(item.activityId))
     .filter((activity) => publicActivityIds.has(activity.activityId))
   const mergedByStrength = mergeProjectedActivities([
     ...enforceProgressCollectionAuthority(
@@ -180,15 +182,13 @@ function mergePublicProgress(
     return activity ? [activity] : []
   })
   const resumeCandidates: CriticalCareResumePointer[] = [
-    ...(normalized?.resume ? [normalized.resume] : []),
+    ...(normalized?.resume && isCurrentNormalizedResume(normalized.resume)
+      ? [normalized.resume]
+      : []),
     ...legacy.flatMap((result) => (result.resume ? [result.resume] : [])),
   ]
   const resolvedResume = newestValidCriticalCareResume(
-    resumeCandidates.filter(
-      (pointer) =>
-        !pointer.activityId.startsWith('ventilation:') &&
-        !isHistoricalOnlyActivity(pointer.activityId),
-    ),
+    resumeCandidates.filter(isCurrentProgressResume),
     activities,
   )
   const timestamps = [

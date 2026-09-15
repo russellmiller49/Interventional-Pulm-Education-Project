@@ -1,4 +1,4 @@
-import { isHistoricalOnlyModule } from './utils'
+import { isCoarseSyncExcludedModule } from './utils'
 import { criticalCareActivities } from '@/features/critical-care/content/activities'
 import type {
   CriticalCareActivityDefinition,
@@ -81,7 +81,7 @@ export function projectCriticalCareCoarseProgress(
     envelope.activities.map((progress) => [progress.activityId, progress]),
   )
   const modules = criticalCareAccountSyncModuleIds.flatMap((moduleId) => {
-    if (isHistoricalOnlyModule(moduleId)) return []
+    if (isCoarseSyncExcludedModule(moduleId)) return []
     const moduleDefinitions = activities.filter(
       (activity) =>
         activity.moduleId === moduleId &&
@@ -139,7 +139,7 @@ export function hydrateCriticalCareCoarseProgress(
 
   let hydrated = envelope
   for (const moduleProgress of parsed.data.modules) {
-    if (isHistoricalOnlyModule(moduleProgress.moduleId)) continue
+    if (isCoarseSyncExcludedModule(moduleProgress.moduleId)) continue
     for (const section of moduleProgress.completedSections) {
       const completedDefinitions = activities.filter(
         (activity) =>
@@ -174,7 +174,7 @@ export async function getCriticalCareCoarseProgress(
     if (!parsed.success || parsed.data.accountId !== expectedAccountId) return null
     return {
       ...parsed.data,
-      modules: parsed.data.modules.filter((module) => !isHistoricalOnlyModule(module.moduleId)),
+      modules: parsed.data.modules.filter((module) => !isCoarseSyncExcludedModule(module.moduleId)),
     }
   } catch {
     return null
@@ -191,7 +191,7 @@ export async function postCriticalCareCoarseProgress(
     !parsed.success ||
     !expectedAccountId ||
     expectedAccountId.length > 128 ||
-    parsed.data.modules.some((module) => isHistoricalOnlyModule(module.moduleId))
+    parsed.data.modules.some((module) => isCoarseSyncExcludedModule(module.moduleId))
   )
     return false
 

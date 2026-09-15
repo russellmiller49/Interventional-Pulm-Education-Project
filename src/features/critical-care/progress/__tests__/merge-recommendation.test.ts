@@ -2,7 +2,7 @@ import {
   criticalCareActivities,
   criticalCareActivityById,
 } from '@/features/critical-care/content/activities'
-import { MCS_PROGRESS_STORAGE_KEY } from '../adapters/mcs'
+import { ICU_SIMULATION_PROGRESS_STORAGE_KEY } from '@/features/icu-simulation/engine/persistence'
 import {
   CRITICAL_CARE_PROGRESS_STORAGE_KEY,
   type CriticalCareActivityProgress,
@@ -80,21 +80,23 @@ describe('normalized critical-care progress merge', () => {
   })
 
   it('merges colliding normalized and legacy records monotonically', () => {
-    const activityId = 'mcs:assess:CAP-IMP-01'
+    const activityId = 'icu:assess:septic-ards-aki'
     const normalized = normalizedEnvelope([
       normalizedActivity(activityId, { status: 'in-progress', attempts: 7, bestScore: 40 }),
     ])
     const storage = new ReadOnlyFixtureStorage({
       [CRITICAL_CARE_PROGRESS_STORAGE_KEY]: JSON.stringify(normalized),
-      [MCS_PROGRESS_STORAGE_KEY]: masteredLegacyProgressFixtures[MCS_PROGRESS_STORAGE_KEY],
+      [ICU_SIMULATION_PROGRESS_STORAGE_KEY]:
+        masteredLegacyProgressFixtures[ICU_SIMULATION_PROGRESS_STORAGE_KEY],
     })
 
     const result = readMergedCriticalCareProgress(storage, criticalCareActivities)
     expect(result.envelope.activities.find((item) => item.activityId === activityId)).toMatchObject(
       {
-        status: 'mastered',
+        // ICU's existing draft policy allows completion, not competency mastery.
+        status: 'completed',
         attempts: 7,
-        bestScore: 91,
+        bestScore: 88,
         updatedAt: '2026-07-22T12:00:00.000Z',
       },
     )
@@ -127,7 +129,8 @@ describe('normalized critical-care progress merge', () => {
     const corrupt = readMergedCriticalCareProgress(
       new ReadOnlyFixtureStorage({
         [CRITICAL_CARE_PROGRESS_STORAGE_KEY]: corruptProgressFixture,
-        [MCS_PROGRESS_STORAGE_KEY]: masteredLegacyProgressFixtures[MCS_PROGRESS_STORAGE_KEY],
+        [ICU_SIMULATION_PROGRESS_STORAGE_KEY]:
+          masteredLegacyProgressFixtures[ICU_SIMULATION_PROGRESS_STORAGE_KEY],
       }),
       criticalCareActivities,
     )
@@ -136,9 +139,9 @@ describe('normalized critical-care progress merge', () => {
       issue: 'invalid-json',
     })
     expect(
-      corrupt.envelope.activities.find((item) => item.activityId === 'mcs:assess:CAP-IMP-01')
+      corrupt.envelope.activities.find((item) => item.activityId === 'icu:assess:septic-ards-aki')
         ?.status,
-    ).toBe('mastered')
+    ).toBe('completed')
 
     const incompatible = readMergedCriticalCareProgress(
       new ReadOnlyFixtureStorage({
@@ -155,7 +158,7 @@ describe('normalized critical-care progress merge', () => {
   })
 
   it('selects the newest valid catalog resume and falls back from an invalid normalized route', () => {
-    const definition = catalogActivity('mcs:assess:CAP-IMP-01')
+    const definition = catalogActivity('icu:assess:septic-ards-aki')
     const validNormalized: CriticalCareProgressEnvelope = {
       ...normalizedEnvelope([normalizedActivity(definition.id)]),
       resume: {
@@ -164,7 +167,7 @@ describe('normalized critical-care progress merge', () => {
         query: definition.query,
         mode: 'challenge',
         phase: 'act',
-        scenarioId: 'CAP-IMP-01',
+        scenarioId: 'septic-ards-aki',
         payloadVersion: 'normalized-v1',
         updatedAt: '2026-07-22T12:00:00.000Z',
       },
@@ -172,12 +175,13 @@ describe('normalized critical-care progress merge', () => {
     const normalizedTarget = getCriticalCareResumeTarget(
       new ReadOnlyFixtureStorage({
         [CRITICAL_CARE_PROGRESS_STORAGE_KEY]: JSON.stringify(validNormalized),
-        [MCS_PROGRESS_STORAGE_KEY]: masteredLegacyProgressFixtures[MCS_PROGRESS_STORAGE_KEY],
+        [ICU_SIMULATION_PROGRESS_STORAGE_KEY]:
+          masteredLegacyProgressFixtures[ICU_SIMULATION_PROGRESS_STORAGE_KEY],
       }),
       criticalCareActivities,
     )
     expect(normalizedTarget).toMatchObject({
-      href: '/mechanical-circulatory-support/assess?case=CAP-IMP-01',
+      href: '/icu-simulation/assess?case=septic-ards-aki',
       pointer: { payloadVersion: 'normalized-v1', phase: 'act' },
     })
 
@@ -188,20 +192,22 @@ describe('normalized critical-care progress merge', () => {
     const fallback = getCriticalCareResumeTarget(
       new ReadOnlyFixtureStorage({
         [CRITICAL_CARE_PROGRESS_STORAGE_KEY]: JSON.stringify(invalidNormalized),
-        [MCS_PROGRESS_STORAGE_KEY]: masteredLegacyProgressFixtures[MCS_PROGRESS_STORAGE_KEY],
+        [ICU_SIMULATION_PROGRESS_STORAGE_KEY]:
+          masteredLegacyProgressFixtures[ICU_SIMULATION_PROGRESS_STORAGE_KEY],
       }),
       criticalCareActivities,
     )
     expect(fallback?.pointer).toMatchObject({
-      activityId: 'mcs:assess:CAP-IMP-01',
-      payloadVersion: 'mcs-progress-v1',
+      activityId: 'icu:assess:septic-ards-aki',
+      payloadVersion: 'icu-simulation-progress-v1',
       updatedAt: LEGACY_PROGRESS_EPOCH,
     })
 
     const fallbackRead = readMergedCriticalCareProgress(
       new ReadOnlyFixtureStorage({
         [CRITICAL_CARE_PROGRESS_STORAGE_KEY]: JSON.stringify(invalidNormalized),
-        [MCS_PROGRESS_STORAGE_KEY]: masteredLegacyProgressFixtures[MCS_PROGRESS_STORAGE_KEY],
+        [ICU_SIMULATION_PROGRESS_STORAGE_KEY]:
+          masteredLegacyProgressFixtures[ICU_SIMULATION_PROGRESS_STORAGE_KEY],
       }),
       criticalCareActivities,
     )
@@ -215,10 +221,11 @@ describe('normalized critical-care progress merge', () => {
   })
 
   it('merges pure inputs without mutating either source', () => {
-    const normalized = normalizedEnvelope([normalizedActivity('mcs:learn:mcs-foundations-signals')])
+    const normalized = normalizedEnvelope([normalizedActivity('icu:practice:hemorrhagic')])
     const legacy = readMergedCriticalCareProgress(
       new ReadOnlyFixtureStorage({
-        [MCS_PROGRESS_STORAGE_KEY]: masteredLegacyProgressFixtures[MCS_PROGRESS_STORAGE_KEY],
+        [ICU_SIMULATION_PROGRESS_STORAGE_KEY]:
+          masteredLegacyProgressFixtures[ICU_SIMULATION_PROGRESS_STORAGE_KEY],
       }),
       criticalCareActivities,
     ).legacySources
@@ -227,8 +234,8 @@ describe('normalized critical-care progress merge', () => {
     const merged = mergeCriticalCareProgress(normalized, legacy, criticalCareActivities)
 
     expect(merged.activities.map((item) => item.activityId)).toEqual([
-      'mcs:learn:mcs-foundations-signals',
-      'mcs:assess:CAP-IMP-01',
+      'icu:practice:hemorrhagic',
+      'icu:assess:septic-ards-aki',
     ])
     expect(JSON.stringify({ normalized, legacy })).toBe(before)
   })
@@ -249,16 +256,21 @@ describe('deterministic critical-care recommendations', () => {
 
   it('prioritizes continuing an in-progress activity', () => {
     const progress = normalizedEnvelope([
-      normalizedActivity('mcs:practice:IMP-01', { status: 'in-progress' }),
+      normalizedActivity('icu:practice:septic-ards-aki', { status: 'in-progress' }),
     ])
     expect(getCriticalCareRecommendation(criticalCareActivities, progress)).toMatchObject({
-      activity: { id: 'mcs:practice:IMP-01' },
+      activity: { id: 'icu:practice:septic-ards-aki' },
       reason: 'continue',
     })
   })
 
   it('downgrades unsupported completion without turning prerequisites into a gate', () => {
-    const nonCreditLesson = catalogActivity('mcs:learn:mcs-foundations-signals')
+    const nonCreditLesson = {
+      ...catalogActivity('icu:practice:septic-ards-aki'),
+      id: 'fixture:learn:non-credit',
+      creditPolicy: 'non-credit' as const,
+      completionEvidenceAuthority: 'none' as const,
+    }
     const invalidCompletion = normalizedEnvelope([
       normalizedActivity(nonCreditLesson.id, {
         status: 'mastered',
@@ -272,21 +284,21 @@ describe('deterministic critical-care recommendations', () => {
       progress: { status: 'in-progress', competencyEvidenceIds: [] },
     })
 
-    const capstone = catalogActivity('mcs:assess:CAP-IMP-01')
+    const capstone = catalogActivity('icu:assess:septic-ards-aki')
     const unsupportedPrerequisites = normalizedEnvelope(
       capstone.prerequisiteActivityIds.map((activityId) =>
         normalizedActivity(activityId, { status: 'completed' }),
       ),
     )
     expect(
-      getCriticalCareRecommendations(criticalCareActivities, unsupportedPrerequisites, {
+      getCriticalCareRecommendations([capstone], unsupportedPrerequisites, {
         limit: 100,
       }).some((recommendation) => recommendation.activity.id === capstone.id),
     ).toBe(true)
   })
 
   it('keeps advanced activities eligible and deterministically applies learner preferences', () => {
-    const openCapstone = catalogActivity('mcs:assess:CAP-IMP-01')
+    const openCapstone = catalogActivity('icu:assess:septic-ards-aki')
     const pac = catalogActivity('hemodynamics:learn:pac-signal-validation')
     expect(
       getCriticalCareRecommendations([openCapstone, pac], empty, { limit: 2 }).map(

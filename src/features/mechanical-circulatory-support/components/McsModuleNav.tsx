@@ -31,8 +31,8 @@ export const mcsModuleNavItems: readonly ModuleNavItem[] = [
   },
   {
     href: `${mechanicalCirculatorySupportNavBase}/assess`,
-    title: 'Challenge',
-    description: `${mcsCapstoneScenarios.length} harder cases`,
+    title: 'Integrated cases',
+    description: `${mcsCapstoneScenarios.length} optional walkthroughs`,
   },
 ] as const
 

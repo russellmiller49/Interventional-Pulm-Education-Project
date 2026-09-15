@@ -1,3 +1,4 @@
+import { mcsPresentationTitle } from './casePresentation'
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import {
   pathwayTotalMinutes,
@@ -21,8 +22,14 @@ import { mcsCapstoneScenarios, mcsPracticeScenarios } from './scenarios'
  */
 
 export interface McsProgressView {
-  readonly completedLessonIds: readonly string[]
-  readonly masteredCaseIds: readonly string[]
+  /** Legacy inputs are accepted for compatibility and never used as learning progress. */
+  readonly completedLessonIds?: readonly string[]
+  readonly masteredCaseIds?: readonly string[]
+  readonly visitedLessonIds?: readonly string[]
+  readonly visitedCaseIds?: readonly string[]
+  readonly lastActivityId?: string | null
+  readonly lastSection?: 'learn' | 'practice' | 'assess'
+  readonly lastPhase?: string
 }
 
 export function mcsPathway(): LearningPathway {
@@ -31,7 +38,7 @@ export function mcsPathway(): LearningPathway {
 
 export function mcsWorkedSectionIds(progress: McsProgressView): ReadonlySet<string> {
   const order = new Set(mcsPathway().sections.map((section) => section.id))
-  return new Set(progress.completedLessonIds.filter((id) => order.has(id)))
+  return new Set((progress.visitedLessonIds ?? []).filter((id) => order.has(id)))
 }
 
 export function isMcsSectionWorked(progress: McsProgressView, sectionId: string): boolean {
@@ -59,13 +66,32 @@ export interface McsContinueLink {
 
 /** The one Continue every primary call to action renders. */
 export function nextIncompleteMcsSectionLink(progress: McsProgressView): McsContinueLink {
+  const last = progress.lastActivityId
+  const lastSection = mcsPathway().sections.find((section) => section.id === last)
+  if (last && progress.lastSection === 'learn' && lastSection)
+    return {
+      href: `${mcsLearnSectionHref(last)}&phase=${encodeURIComponent(progress.lastPhase ?? 'recognize')}`,
+      label: `Resume — ${lastSection.title}`,
+      section: lastSection,
+      state: 'resume',
+    }
+  const lastCase = [...mcsPracticeScenarios, ...mcsCapstoneScenarios].find(
+    (scenario) => scenario.id === last,
+  )
+  if (lastCase)
+    return {
+      href: `${mechanicalCirculatorySupportNavBase}/${lastCase.kind === 'capstone' ? 'assess' : 'practice'}?case=${encodeURIComponent(lastCase.id)}`,
+      label: `Resume — ${mcsPresentationTitle(lastCase)}`,
+      section: null,
+      state: 'resume',
+    }
   const next = resolveNextIncompleteMcsSection(progress)
   const worked = mcsWorkedSectionIds(progress)
   if (!next) {
     const first = mcsPathway().sections[0]
     return {
       href: mcsLearnSectionHref(first.id),
-      label: `Every section is worked through · revisit ${first.title}`,
+      label: `All topics visited · revisit ${first.title}`,
       section: null,
       state: 'complete',
     }
@@ -177,7 +203,7 @@ export function mcsGroupSummaryLine(group: McsPathwayGroup): string {
   if (group.cases.length > 0) {
     parts.push(`${group.cases.length} ${group.cases.length === 1 ? 'case' : 'cases'}`)
   }
-  if (group.capstone) parts.push('1 challenge')
+  if (group.capstone) parts.push('1 integrated case')
   parts.push(`${minutes} min`)
   return parts.join(' · ')
 }

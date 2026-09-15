@@ -67,7 +67,14 @@ describe('critical-care dashboard derivation', () => {
     const dashboard = deriveCriticalCareDashboard(
       readResult({
         version: 1,
-        activities: [progress(activity.id, { currentPhase: 'act', mode: 'guided' })],
+        activities: [
+          progress(activity.id, {
+            currentPhase: 'act',
+            mode: 'guided',
+            attempts: 0,
+            updatedAt: '1970-01-01T00:00:00.000Z',
+          }),
+        ],
         resume: {
           activityId: activity.id,
           pathname: activity.pathname,
@@ -75,7 +82,7 @@ describe('critical-care dashboard derivation', () => {
           mode: 'guided',
           phase: 'act',
           checkpointId: 'measurement-chain-checked',
-          payloadVersion: 'pac-signal-validation-v1',
+          payloadVersion: 'mcs-location-v1',
           updatedAt: '2026-07-22T12:00:00.000Z',
         },
         updatedAt: '2026-07-22T12:00:00.000Z',
@@ -88,59 +95,24 @@ describe('critical-care dashboard derivation', () => {
       pointer: { phase: 'act', checkpointId: 'measurement-chain-checked' },
     })
     expect(dashboard.recommendation?.activity.id).not.toBe(activity.id)
-    expect(dashboard.recent.map((item) => item.activity.id)).toEqual([activity.id])
-  })
-
-  it('does not invent recent chronology for legacy projections', () => {
-    const dashboard = deriveCriticalCareDashboard(
-      readResult({
-        version: 1,
-        activities: [
-          progress('mcs:practice:IABP-01', {
-            status: 'completed',
-            updatedAt: '1970-01-01T00:00:00.000Z',
-          }),
-        ],
-        updatedAt: '1970-01-01T00:00:00.000Z',
-      }),
-    )
-
-    expect(dashboard.audienceState).toBe('returning')
     expect(dashboard.recent).toEqual([])
-    expect(
-      dashboard.modules.find((item) => item.module.id === 'mechanical-circulatory-support'),
-    ).toMatchObject({ state: 'in-progress', completedActivities: 1, startedActivities: 1 })
   })
 
-  it('recalculates recommendations and summaries from authoritative evidence', () => {
-    const invalidCompletion = progress('mcs:learn:mcs-foundations-signals', {
-      status: 'mastered',
-      competencyEvidenceIds: ['signal-validation', 'critical-care-safety'],
-    })
-    const dashboard = deriveCriticalCareDashboard(
-      readResult({
-        version: 1,
-        activities: [invalidCompletion],
-        updatedAt: invalidCompletion.updatedAt,
-      }),
-    )
-
-    expect(dashboard.recommendation).toMatchObject({
-      activity: { id: 'mcs:learn:mcs-foundations-signals' },
-      progress: { status: 'in-progress', competencyEvidenceIds: [] },
-    })
-    expect(dashboard.recent[0]?.progress).toMatchObject({
-      status: 'in-progress',
-      competencyEvidenceIds: [],
-    })
-    expect(
-      dashboard.modules.find((item) => item.module.id === 'mechanical-circulatory-support'),
-    ).toMatchObject({
-      state: 'in-progress',
-      completedActivities: 0,
-      startedActivities: 1,
-    })
-  })
+  it.each(['completed', 'mastered'] as const)(
+    'does not turn historical MCS %s into visits or recommendations',
+    (status) => {
+      const historical = progress('mcs:practice:IABP-01', {
+        status,
+        bestScore: 99,
+        attempts: 4,
+        competencyEvidenceIds: ['critical-care-safety'],
+      })
+      const empty = { version: 1 as const, activities: [], updatedAt: historical.updatedAt }
+      expect(
+        deriveCriticalCareDashboard(readResult({ ...empty, activities: [historical] })),
+      ).toEqual(deriveCriticalCareDashboard(readResult(empty)))
+    },
+  )
 
   it('surfaces an incompatible-only state without treating it as learner progress', () => {
     const dashboard = deriveCriticalCareDashboard(
@@ -160,7 +132,7 @@ describe('critical-care dashboard derivation', () => {
     expect(dashboard.recommendation?.activity.id).toBe('hemodynamics:learn:why-measure')
   })
 
-  it('calculates module states and pathway milestones only from explicit completion', () => {
+  it('excludes historical MCS completion from module states and pathway milestones', () => {
     const completed = [
       progress('mcs:practice:IMP-01', { status: 'completed' }),
       progress('mcs:practice:IABP-01', { status: 'completed' }),
@@ -174,14 +146,14 @@ describe('critical-care dashboard derivation', () => {
     expect(
       modules.find((item) => item.module.id === 'mechanical-circulatory-support'),
     ).toMatchObject({
-      state: 'in-progress',
-      completedActivities: 2,
+      state: 'not-started',
+      completedActivities: 0,
       totalActivities: mcsActivityCount,
-      percentComplete: Math.round((2 / mcsActivityCount) * 100),
+      percentComplete: 0,
     })
     expect(pathways.find((item) => item.pathway.id === 'shock-and-perfusion')).toMatchObject({
-      state: 'in-progress',
-      completedActivities: 2,
+      state: 'not-started',
+      completedActivities: 0,
     })
   })
 

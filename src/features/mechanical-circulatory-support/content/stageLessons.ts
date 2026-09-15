@@ -41,9 +41,9 @@ import type { McsSpineStopId } from './supportSpine'
  * The section contract already authors everything the learner reads — the identification, the
  * prediction, the control and its completion predicate, the six readings to compare, the
  * four-level explanation, the transfer patient. The six phases become six steps in contract
- * order (seven where the section opens with the walk along the loop), the prediction step is
- * the gate, and the transfer's commitment is what records the section as worked. Nothing about
- * the contract changes; this adapter only says which of it each step shows, and where.
+ * order (seven where the section opens with the walk along the loop). Every task is open;
+ * optional answers and actual model work remain local to the session. This adapter chooses
+ * which teaching and controls each task recommends, without awarding completion.
  */
 
 /** The surfaces a step can open beside the monitor, which is always present. */
@@ -217,7 +217,7 @@ export function buildMcsStageLesson(sectionId: string): McsStageLesson {
       actionLabel,
       interaction,
       presentation: mcsTaskPresentation(sectionId, interaction),
-      gate: phase === 'recognize' || phase === 'predict' ? 'open' : 'after-prediction',
+      gate: 'open',
       surfaces: surfacesFor(phase, spec, contract, onMap),
       stopIds: spec.stopIds,
     })
@@ -412,12 +412,8 @@ export function mcsMountStepIndex(
   },
   requestedPhase: StagePhase,
 ): { readonly index: number; readonly clamped: boolean } {
-  if (lesson.introductory) return { index: 0, clamped: requestedPhase !== 'recognize' }
-  if (requestedPhase === 'recognize') return { index: 0, clamped: false }
-  if (requestedPhase === 'predict') {
-    return { index: Math.max(0, lesson.predictionStepIndex), clamped: false }
-  }
-  return { index: Math.max(0, lesson.predictionStepIndex), clamped: true }
+  const index = lesson.steps.findIndex((step) => step.phase === requestedPhase)
+  return { index: Math.max(0, index), clamped: index < 0 }
 }
 
 /** The story problems a section carries on its Observe and Explain steps. */

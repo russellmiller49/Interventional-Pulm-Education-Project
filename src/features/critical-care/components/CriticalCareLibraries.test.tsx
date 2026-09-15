@@ -82,7 +82,13 @@ describe('critical-care global libraries', () => {
     )
   })
 
-  it.each(['hemodynamics:practice:HD-01', 'ecmo:assess:vv-off-sweep-capstone'])(
+  it.each([
+    'hemodynamics:practice:HD-01',
+    'ecmo:assess:vv-off-sweep-capstone',
+    'mcs:assess:CAP-IMP-01',
+    'ventilation:practice:MV-01',
+    'crrt:assess:MASTERY-PRISMAX-01',
+  ])(
     'does not turn historical %s into a current visit, review suggestion, or resume',
     async (activityId) => {
       const activity = criticalCareActivities.find((item) => item.id === activityId)!
