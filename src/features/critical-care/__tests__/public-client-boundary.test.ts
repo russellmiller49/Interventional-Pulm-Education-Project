@@ -169,7 +169,7 @@ describe('critical-care public client data boundary', () => {
       version: 1 as const,
       activities: [
         {
-          activityId: 'hemodynamics:learn:pac-signal-validation',
+          activityId: 'mcs:learn:mcs-foundations-signals',
           status: 'in-progress' as const,
           attempts: 1,
           competencyEvidenceIds: [],
@@ -198,7 +198,7 @@ describe('critical-care public client data boundary', () => {
       version: 1 as const,
       activities: [
         {
-          activityId: 'hemodynamics:learn:pac-signal-validation',
+          activityId: 'mcs:learn:mcs-foundations-signals',
           status: 'completed' as const,
           attempts: 1,
           competencyEvidenceIds: [],
@@ -206,12 +206,12 @@ describe('critical-care public client data boundary', () => {
         },
       ],
       resume: {
-        activityId: 'hemodynamics:learn:pac-signal-validation',
-        pathname: '/icu-hemodynamics/learn',
-        query: { activity: 'pac-signal-validation' },
+        activityId: 'mcs:learn:mcs-foundations-signals',
+        pathname: '/mechanical-circulatory-support/learn',
+        query: { lesson: 'mcs-foundations-signals' },
         mode: 'guided' as const,
         phase: 'recognize' as const,
-        payloadVersion: 'hemodynamics-v1',
+        payloadVersion: 'mcs-progress-v1',
         updatedAt: '2026-07-22T09:00:00.000Z',
       },
       updatedAt: '2026-07-22T13:00:00.000Z',
@@ -222,7 +222,7 @@ describe('critical-care public client data boundary', () => {
     expect(reconciled.activities).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          activityId: 'hemodynamics:learn:pac-signal-validation',
+          activityId: 'mcs:learn:mcs-foundations-signals',
           status: 'completed',
         }),
         expect.objectContaining({

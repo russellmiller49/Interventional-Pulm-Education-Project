@@ -847,6 +847,7 @@ export function HemodynamicCaseActivity({
                 </ol>
               </details>
               <ScenarioTeachingDebrief
+                allowRevealWithoutFrame
                 scenarioTitle={definition.title}
                 decisionTrace={decisionTrace}
                 expertTrace={teachingArtifact.expertTrace}

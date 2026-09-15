@@ -64,12 +64,13 @@ describe('integrated ICU capstone progress boundary', () => {
       reason: 'foundation',
     })
 
+    // Historical HD completion no longer satisfies the hemodynamics preparation requirement.
     const cardiogenic = envelope(['hemodynamics:practice:HD-03', 'mcs:practice:IMP-03'])
     expect(getCriticalCareIcuScenarioRecommendation(cardiogenic)).toMatchObject({
       scenarioId: 'lv-cardiogenic',
       reason: 'focused-alignment',
       readiness: {
-        completedRequirementCount: 2,
+        completedRequirementCount: 1,
         totalRequirementCount: 2,
         eligibleForAssess: true,
         approvedGateRequirementCount: 0,

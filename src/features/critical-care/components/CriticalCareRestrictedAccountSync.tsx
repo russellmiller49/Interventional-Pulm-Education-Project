@@ -7,7 +7,7 @@ import { CRITICAL_CARE_PROGRESS_CHANGED_EVENT } from '@/features/learning-module
 import { hasSupabaseBrowserConfig, supabaseCookieBrowser } from '@/lib/supabase/browser'
 
 const SYNC_DEBOUNCE_MS = 400
-const restrictedModuleIds = ['cardiohelp-ecmo', 'icu-simulation'] as const
+const restrictedModuleIds = ['icu-simulation'] as const
 const restrictedActivities = criticalCareActivities.filter((activity) =>
   restrictedModuleIds.includes(activity.moduleId as (typeof restrictedModuleIds)[number]),
 )

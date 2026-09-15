@@ -17,6 +17,15 @@ import {
   type CriticalCareReadableStorage,
 } from './types'
 
+/** HD/ECMO keep historical envelopes, but current navigation lives in their module stores. */
+export function isHistoricalOnlyModule(moduleId: string): boolean {
+  return moduleId === 'icu-hemodynamics' || moduleId === 'cardiohelp-ecmo'
+}
+
+export function isHistoricalOnlyActivity(activityId: string): boolean {
+  return activityId.startsWith('hemodynamics:') || activityId.startsWith('ecmo:')
+}
+
 const MAX_NORMALIZED_COUNTER = 10_000
 
 const statusRank: Readonly<Record<CriticalCareActivityStatus, number>> = {
@@ -155,9 +164,13 @@ export function enforceProgressCollectionAuthority(
   progressItems: readonly CriticalCareActivityProgress[],
 ): readonly CriticalCareActivityProgress[] {
   const activityById = new Map(activities.map((activity) => [activity.id, activity]))
-  // MV's legacy attempts stay in storage and cannot become current visits or achievements.
+  // MV, HD and ECMO legacy attempts cannot become current visits or achievements.
   return progressItems
-    .filter((progress) => !progress.activityId.startsWith('ventilation:'))
+    .filter(
+      (progress) =>
+        !progress.activityId.startsWith('ventilation:') &&
+        !isHistoricalOnlyActivity(progress.activityId),
+    )
     .map((progress) => {
       const activity = activityById.get(progress.activityId)
       return activity ? enforceCriticalCareProgressAuthority(activity, progress) : progress

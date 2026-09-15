@@ -1,3 +1,4 @@
+import { isHistoricalOnlyModule, isHistoricalOnlyActivity } from './utils'
 import {
   upsertCriticalCareActivityProgress,
   withCriticalCareResumePointer,
@@ -77,12 +78,14 @@ function isComplete(status: string): boolean {
 function allowedModuleIds(
   activities: readonly CriticalCareActivityDefinition[],
 ): ReadonlySet<string> {
-  // MV and CRRT retain old account records without hydrating or publishing new completion claims.
+  // Self-paced modules retain old account records without new completion claims.
   return new Set(
     activities
       .filter(
         (activity) =>
-          activity.moduleId !== 'mechanical-ventilation' && activity.moduleId !== 'baxter-crrt',
+          activity.moduleId !== 'mechanical-ventilation' &&
+          activity.moduleId !== 'baxter-crrt' &&
+          !isHistoricalOnlyModule(activity.moduleId),
       )
       .map((activity) => activity.moduleId),
   )
@@ -194,9 +197,10 @@ export function mergeCriticalCareSubsetProgress(
 ): CriticalCareProgressEnvelope {
   let merged = fullEnvelope
   for (const activity of subsetEnvelope.activities) {
+    if (isHistoricalOnlyActivity(activity.activityId)) continue
     merged = upsertCriticalCareActivityProgress(merged, activity)
   }
-  return subsetEnvelope.resume
+  return subsetEnvelope.resume && !isHistoricalOnlyActivity(subsetEnvelope.resume.activityId)
     ? withCriticalCareResumePointer(merged, subsetEnvelope.resume)
     : merged
 }
