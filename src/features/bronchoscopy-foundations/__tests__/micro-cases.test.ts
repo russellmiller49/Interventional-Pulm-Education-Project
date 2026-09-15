@@ -8,7 +8,6 @@ import {
 import { BRONCH_SECTION_IDS } from '../content/pathway'
 import { BRONCH_SECTION_STAGE } from '../content/sectionIds'
 import { bronchItem, capstoneStageItems } from '../content/stageItems'
-import { createEmptyBronchRecord, withFirstAttempt } from '../engine/learnProgress'
 
 /** The sections the plan pairs a practice case to: every mechanism and application section. */
 const PAIRED_STAGES = new Set(['mechanism', 'application'])
@@ -48,33 +47,15 @@ describe('the practice case registry', () => {
     expect(bronchMicroCaseById.size).toBe(cases.length)
   })
 
-  it('keys every case on its own item in the bank, apart from the Learn and capstone keys', () => {
+  it('keeps each case on its own item, with the key earlier records used, apart from Learn and integrated cases', () => {
     const keys = cases.map((microCase) => microCaseAttemptKey(microCase))
     expect(new Set(keys).size).toBe(keys.length)
-    const capstoneIds = new Set(capstoneStageItems.map((entry) => entry.item.id))
+    const integratedIds = new Set(capstoneStageItems.map((entry) => entry.item.id))
     for (const microCase of cases) {
-      const key = microCaseAttemptKey(microCase)
-      expect(key).toBe(`practice:${microCase.stage.item.id}`)
+      expect(microCaseAttemptKey(microCase)).toBe(`practice:${microCase.stage.item.id}`)
       expect(bronchItem(microCase.stage.item.id)).toBe(microCase.stage.item)
-      expect(capstoneIds.has(microCase.stage.item.id)).toBe(false)
-      const written = withFirstAttempt(
-        createEmptyBronchRecord(),
-        key,
-        microCase.stage.item.choices[0].id,
-      )
-      expect(written.firstAttempts[key]).toBeDefined()
+      expect(integratedIds.has(microCase.stage.item.id)).toBe(false)
     }
-  })
-
-  it('keeps the first decision on a case and never rewrites it', () => {
-    const microCase = cases[0]
-    const key = microCaseAttemptKey(microCase)
-    const keyed = microCase.stage.item.correctChoiceIds[0]
-    const other = microCase.stage.item.choices.find((choice) => choice.id !== keyed)!.id
-    const first = withFirstAttempt(createEmptyBronchRecord(), key, other)
-    const second = withFirstAttempt(first, key, keyed)
-    expect(second.firstAttempts[key].choiceId).toBe(other)
-    expect(second.firstAttempts[key].correct).toBe(false)
   })
 
   it('marks every authored item as a draft awaiting subject-matter review, with one keyed choice', () => {

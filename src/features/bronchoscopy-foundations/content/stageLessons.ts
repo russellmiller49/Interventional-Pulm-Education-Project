@@ -71,13 +71,13 @@ export interface BronchStageLesson extends StageLessonBase<BronchStageStep> {
 }
 
 const CONTINUE = 'Continue'
-const COMMIT = 'Submit this answer'
+const COMMIT = 'Check this answer'
 
 /** The words the Now card uses for each Act, so the instruction and the card agree. */
 export const ACT_ACTION_LABELS = {
-  sort: 'Submit the set',
-  identify: 'Submit the names',
-  sequence: 'Submit the order',
+  sort: 'Check the set',
+  identify: 'Check the names',
+  sequence: 'Check the order',
   ledger: CONTINUE,
   report: CONTINUE,
   scenario: CONTINUE,
@@ -181,7 +181,7 @@ function buildInputs(section: BronchSectionDefinition): readonly StepInput[] {
       instruction:
         chunk.instruction ??
         (isCheck
-          ? 'Consider the situation and choose an answer. Feedback appears after you submit.'
+          ? 'Consider the situation and choose an answer to check, or open the explanation first. This question is optional.'
           : chunk.kind === 'debrief'
             ? 'Review the reasoning and the limits of this exercise before continuing.'
             : 'Read the explanation with its example, then continue when you are ready to apply it.'),

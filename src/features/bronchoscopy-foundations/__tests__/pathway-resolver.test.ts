@@ -5,16 +5,16 @@ import {
   bronchPathwayGroups,
   bronchSectionHref,
   bronchSectionLinkTarget,
-  nextIncompleteBronchSection,
+  nextBronchSection,
+  reviewedBronchSectionIds,
   validateBronchPhases,
-  workedBronchSectionIds,
 } from '../content/pathwayResolver'
 import { BRONCH_PHASES } from '../content/sectionIds'
 import {
-  createEmptyBronchRecord,
-  withSectionCompleted,
-  withSectionVisited,
-} from '../engine/learnProgress'
+  createEmptyBronchSelfPacedRecord,
+  withSectionOpened,
+  withSectionReviewed,
+} from '../engine/selfPacedProgress'
 
 describe('the one map', () => {
   it('flattens the grouped view back to the canonical order', () => {
@@ -38,9 +38,10 @@ describe('the one map', () => {
   })
 })
 
+/** Self-paced door (BF-01): where the learner left off, never answers or completion evidence. */
 describe('the one door', () => {
   it('sends a fresh learner to the first section', () => {
-    const next = nextIncompleteBronchSection(createEmptyBronchRecord())
+    const next = nextBronchSection(createEmptyBronchSelfPacedRecord())
     expect(next?.section.id).toBe(BRONCH_SECTION_IDS[0])
     expect(next?.index).toBe(0)
     expect(next?.total).toBe(BRONCH_SECTION_IDS.length)
@@ -48,25 +49,22 @@ describe('the one door', () => {
     expect(next?.href).toBe(bronchSectionHref(BRONCH_SECTION_IDS[0]))
   })
 
-  it('sends a learner to the first section not worked through, not the one opened last', () => {
+  it('resumes the section the learner was in unless they marked it reviewed', () => {
     const [first, second, third] = BRONCH_SECTION_IDS
-    let record = createEmptyBronchRecord()
-    record = withSectionCompleted(record, first)
-    record = withSectionCompleted(record, third)
-    record = withSectionVisited(record, third)
-    const next = nextIncompleteBronchSection(record)
-    expect(next?.section.id).toBe(second)
-    expect(next?.resumed).toBe(false)
-    expect([...workedBronchSectionIds(record)]).toEqual([first, third])
+    let record = withSectionOpened(createEmptyBronchSelfPacedRecord(), third)
+    expect(nextBronchSection(record)).toMatchObject({ section: { id: third }, resumed: true })
+    record = withSectionReviewed(record, third, true)
+    expect(nextBronchSection(record)).toMatchObject({ section: { id: first }, resumed: false })
+    record = withSectionReviewed(record, first, true)
+    expect(nextBronchSection(record)?.section.id).toBe(second)
+    expect([...reviewedBronchSectionIds(record)]).toEqual([first, third])
   })
 
-  it('marks the section opened last as resumed and returns null once everything is worked through', () => {
-    let record = createEmptyBronchRecord()
-    record = withSectionVisited(record, BRONCH_SECTION_IDS[0])
-    expect(nextIncompleteBronchSection(record)?.resumed).toBe(true)
-    for (const id of BRONCH_SECTION_IDS) record = withSectionCompleted(record, id)
-    expect(nextIncompleteBronchSection(record)).toBeNull()
-    expect(workedBronchSectionIds(record).size).toBe(BRONCH_SECTION_IDS.length)
+  it('returns null once every section is marked reviewed', () => {
+    let record = createEmptyBronchSelfPacedRecord()
+    for (const id of BRONCH_SECTION_IDS) record = withSectionReviewed(record, id, true)
+    expect(nextBronchSection(record)).toBeNull()
+    expect(reviewedBronchSectionIds(record).size).toBe(BRONCH_SECTION_IDS.length)
   })
 
   it('links every section through one typed target', () => {

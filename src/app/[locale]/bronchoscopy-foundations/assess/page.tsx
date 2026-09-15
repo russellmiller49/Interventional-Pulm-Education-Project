@@ -7,9 +7,9 @@ import { BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF } from '@/features/bronchoscopy-fo
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const handoffMetadata: Metadata = {
-  title: 'Assess · Bronchoscopy Foundations',
+  title: 'Integrated cases · Bronchoscopy Foundations',
   description:
-    'Eight bronchoscopy decisions on one airway model, made once, with the reasoning and the standard read at the end.',
+    'Eight bronchoscopy cases on one airway model that bring the sections together, with explanations available before and after answering.',
   robots: { index: false, follow: false, noarchive: true },
 }
 

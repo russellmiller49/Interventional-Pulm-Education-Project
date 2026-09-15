@@ -6,12 +6,9 @@ import {
   type BronchSectionId,
 } from '../src/features/bronchoscopy-foundations/content/pathway'
 import { CAPSTONE_CASES } from '../src/features/bronchoscopy-foundations/content/capstone'
-import { capstoneStageItem } from '../src/features/bronchoscopy-foundations/engine/caseStandard'
-import {
-  BRONCH_STORAGE_KEY,
-  createEmptyBronchRecord,
-  withSectionCompleted,
-} from '../src/features/bronchoscopy-foundations/engine/learnProgress'
+import { capstoneStageItem } from '../src/features/bronchoscopy-foundations/content/stageItems'
+import { BRONCH_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/learnProgress'
+import { BRONCH_SELF_PACED_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/selfPacedProgress'
 import { scopeControlId } from '../src/features/bronchoscopy-foundations/components/scope/types'
 
 // Opt in to the module's isolated local server; never write a test record on a deployed site.
@@ -21,6 +18,7 @@ test.setTimeout(120_000)
 test.use({ hasTouch: true })
 const base = '/en/bronchoscopy-foundations'
 const primary = (page: Page) => page.locator('[data-now-card] [data-now-primary]')
+const skip = (page: Page) => page.locator('[data-now-card] [data-now-skip]')
 const stage = (page: Page) => page.locator('[data-stage]')
 const ready = async (page: Page) => {
   await page.locator('[data-three-state]').scrollIntoViewIfNeeded()
@@ -84,8 +82,16 @@ async function setRange(page: Page, key: 'rotate' | 'deflect', value: number) {
   for (let at = current; direction * at < direction * value; at += direction * step)
     await slider.press(direction === 1 ? 'ArrowRight' : 'ArrowLeft')
 }
+/** The self-paced record (BF-01): location and section marks only. */
 async function record(page: Page) {
-  return page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), BRONCH_STORAGE_KEY)
+  return page.evaluate(
+    (key) => JSON.parse(localStorage.getItem(key) ?? 'null'),
+    BRONCH_SELF_PACED_STORAGE_KEY,
+  )
+}
+/** The earlier record's raw bytes; new sessions never write it. */
+async function earlierRecord(page: Page) {
+  return page.evaluate((key) => localStorage.getItem(key), BRONCH_STORAGE_KEY)
 }
 
 async function expectPaintedControlHead(page: Page) {
@@ -118,7 +124,7 @@ async function expectPaintedControlHead(page: Page) {
     .toBe(true)
 }
 
-test('one entry, Back review and reload preserve the first decision and its support', async ({
+test('one entry, explanation before an answer, Back review and a reload that restores no answer', async ({
   page,
 }) => {
   await expect(page.locator('[data-bronch-continue]')).toHaveAttribute(
@@ -137,23 +143,40 @@ test('one entry, Back review and reload preserve the first decision and its supp
   await page.locator('[data-now-back]').click()
   await expect(page.locator('[data-now-status]')).toContainText('looking back')
   await primary(page).click()
+  await expect(skip(page)).toHaveText('Continue without answering')
+  await page.locator('[data-show-explanation]').click()
+  await expect(page.locator('[data-explanation-reveal]')).toBeVisible()
+  await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
   const item = check.interaction.stage.item
   const wrong = item.choices.find((entry) => !item.correctChoiceIds.includes(entry.id))!
   await page.locator('[data-prediction-choices] input[value="' + wrong.id + '"]').check()
   await primary(page).click()
+  await expect(page.locator('[data-answer-verdict]')).toHaveAttribute(
+    'data-verdict-outcome',
+    'not-correct',
+  )
   const saved = await record(page)
-  expect(Object.values(saved.firstAttempts)).toEqual([
-    expect.objectContaining({ choiceId: wrong.id, correct: false, support: 'reviewed-teaching' }),
+  expect(saved).toMatchObject({ visitedSectionIds: ['shared-airway'], reviewedSectionIds: [] })
+  expect(Object.keys(saved).sort()).toEqual([
+    'lastSectionId',
+    'reviewLaterSectionIds',
+    'reviewedSectionIds',
+    'surveySnapshot',
+    'updatedAt',
+    'version',
+    'visitedSectionIds',
   ])
-  expect(saved.completedSectionIds).toEqual([])
+  expect(await earlierRecord(page)).toBeNull()
   await page.reload()
   await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[0].id)
   for (let index = 0; index < lesson.predictionStepIndex; index++) await primary(page).click()
-  await page
-    .locator('[data-prediction-choices] input[value="' + item.correctChoiceIds[0] + '"]')
-    .check()
-  await primary(page).click()
-  expect((await record(page)).firstAttempts).toEqual(saved.firstAttempts)
+  await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+  await expect(page.locator('[data-prediction-choices] input:checked')).toHaveCount(0)
+  await skip(page).click()
+  await expect(stage(page)).toHaveAttribute(
+    'data-stage',
+    lesson.steps[lesson.predictionStepIndex + 1].id,
+  )
 })
 
 async function pilotAction(page: Page, name: string) {
@@ -238,7 +261,6 @@ for (const viewport of [
       await page.getByRole('button', { name: 'Steering and suction', exact: true }).click()
       await page.screenshot({ path: info.outputPath('02-instrument.png') })
       await pilotContinue(page)
-      let first: unknown
       for (const step of lesson.steps.slice(1)) {
         await expect(stage(page)).toHaveAttribute('data-stage', step.id)
         if (step.interaction.kind === 'prediction') {
@@ -247,6 +269,7 @@ for (const viewport of [
           const teachingText = await page.locator('[data-pilot-teaching]').textContent()
           for (const denied of lesson.section.precommitDenyPatterns)
             expect(teachingText).not.toMatch(denied)
+          await expect(skip(page)).toHaveText('Continue without answering')
           const wrong = item.choices.find(
             (choice) => !item.correctChoiceIds.includes(choice.id),
           )!.id
@@ -258,7 +281,7 @@ for (const viewport of [
           )
           await expect(stage(page)).toHaveAttribute('data-stage', step.id)
           await page.screenshot({ path: info.outputPath('05-wrong-answer-feedback.png') })
-          first = (await record(page)).firstAttempts['five-controls-learn-v2:N03']
+          expect(await earlierRecord(page)).toBeNull()
           await pilotAction(page, 'Try this check again')
           await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
           await page.screenshot({ path: info.outputPath('06-check-retry.png') })
@@ -266,7 +289,6 @@ for (const viewport of [
             .locator('[data-prediction-choices] input[value="' + item.correctChoiceIds[0] + '"]')
             .check()
           await primary(page).click()
-          expect((await record(page)).firstAttempts['five-controls-learn-v2:N03']).toEqual(first)
         } else if (step.interaction.kind === 'scope-task') {
           if (step.learn?.id === 'bend') {
             await pilotAction(page, 'Watch the example')
@@ -290,7 +312,7 @@ for (const viewport of [
                 ),
               ).toBe(true)
             }
-            expect((await record(page)).completedSectionIds).toEqual([])
+            expect((await record(page)).reviewedSectionIds).toEqual([])
           }
           if (step.learn?.id === 'depth') {
             await pilotAction(page, 'Watch the example')
@@ -301,8 +323,8 @@ for (const viewport of [
             await page.locator('[data-three-state]').scrollIntoViewIfNeeded()
             await page.screenshot({ path: info.outputPath('03-real-engine-demonstration.png') })
             await pilotAction(page, 'Next demonstration movement')
-            expect((await record(page)).firstAttempts).toEqual({})
-            expect((await record(page)).completedSectionIds).toEqual([])
+            expect((await record(page)).reviewedSectionIds).toEqual([])
+            expect(await earlierRecord(page)).toBeNull()
           }
           if (step.learn?.demonstration) await pilotAction(page, 'Try with guidance')
 
@@ -342,6 +364,7 @@ for (const viewport of [
             await control(page, 'advance').press('Enter')
             await control(page, 'advance').press('Enter')
             await expect(primary(page)).toBeDisabled()
+            await expect(skip(page)).toHaveText('Continue without completing')
             await control(page, 'reset').click()
             await expect(page.locator('[data-readout="depthMm"] dd')).toContainText('0 mm')
           }
@@ -376,23 +399,19 @@ for (const viewport of [
         await pilotContinue(page)
       }
       await expect(page.locator('[data-section-completion]')).toBeVisible()
-      await page.screenshot({ path: info.outputPath('10-completion.png') })
-      const saved = await record(page)
-      expect(saved.sectionVersions['five-controls']).toBe(2)
-      expect(saved.sectionPerformance['five-controls-learn-v2']).toMatchObject({
-        unaided: false,
-        assistsUsed: ['guided-practice'],
-      })
-      expect(saved.sectionPerformance['five-controls-learn-v2'].inputModes).not.toContain(
-        'scripted',
+      await expect(page.locator('[data-section-completion]')).toHaveAttribute(
+        'data-reviewed',
+        'true',
       )
+      await page.screenshot({ path: info.outputPath('10-completion.png') })
+      expect((await record(page)).reviewedSectionIds).toEqual(['five-controls'])
+      expect(await earlierRecord(page)).toBeNull()
       await expect(page.locator('[data-section-completion] [data-next-section]')).toHaveAttribute(
         'data-next-section',
         'branch-entry',
       )
       await page.reload()
       await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[0].id)
-      expect((await record(page)).firstAttempts['five-controls-learn-v2:N03']).toEqual(first)
       expect(errors).toEqual([])
     },
   )
@@ -421,7 +440,7 @@ test('the pilot retains working controls and a text equivalent when WebGL is una
   await expect(schematic).toHaveAttribute('aria-label', /Depth 0 mm/)
   await expect(primary(page)).toBeEnabled()
   await page.screenshot({ path: info.outputPath('fallback-depth.png') })
-  expect((await record(page)).completedSectionIds).toEqual([])
+  expect((await record(page)).reviewedSectionIds).toEqual([])
 })
 
 test('the survey distinguishes entering from inspecting and refuses an unseen-airway claim', async ({
@@ -446,9 +465,25 @@ test('the survey distinguishes entering from inspecting and refuses an unseen-ai
     'not-observed',
   )
   await expect(primary(page)).toBeDisabled()
+  await expect(skip(page)).toHaveText('Continue without completing')
   await expect(page.locator('[data-scope-scene]')).toContainText(
     'Entering an airway is not inspecting it',
   )
+})
+
+test('a survey left without completing it saves no survey and claims nothing', async ({ page }) => {
+  const lesson = await openSection(page, 'systematic-survey')
+  for (let guard = 0; guard <= lesson.steps.length + 1; guard++) {
+    if (await page.locator('[data-section-completion]').count()) break
+    if (await skip(page).count()) await skip(page).click()
+    else await primary(page).click()
+  }
+  await expect(page.locator('[data-section-completion]')).toBeVisible()
+  await expect(page.locator('[data-completion-moved-past]')).toBeVisible()
+  const saved = await record(page)
+  expect(saved.reviewedSectionIds).toEqual(['systematic-survey'])
+  expect(saved.surveySnapshot).toBeNull()
+  expect(await earlierRecord(page)).toBeNull()
 })
 
 test('the report refuses unsupported claims and only opens Continue when every field is supported', async ({
@@ -458,6 +493,7 @@ test('the report refuses unsupported claims and only opens Continue when every f
   const interaction = lesson.steps.find((step) => step.interaction.kind === 'report')!.interaction
   if (interaction.kind !== 'report') throw new Error('Report expected')
   await expect(primary(page)).toHaveCount(0)
+  await expect(skip(page)).toHaveText('Continue without completing')
   const field = interaction.report.fields.find((entry) =>
     entry.options.some((option) => !option.supported),
   )!
@@ -478,62 +514,55 @@ test('the report refuses unsupported claims and only opens Continue when every f
   await expect(primary(page)).toBeEnabled()
 })
 
-test('Practice records the first answer and offers its paired lesson', async ({ page }) => {
+test('Practice explains before an answer, lets the learner try again, saves nothing and offers its paired lesson', async ({
+  page,
+}) => {
   await page.goto(base + '/practice')
   await page.locator('[data-next-case]').click()
   await expect(page.locator('[data-prediction-choices]')).toBeVisible()
-  await page.locator('[data-prediction-choices] input').first().check()
-  await page.getByRole('button', { name: 'Submit this answer' }).click()
-  await expect(page.locator('[data-answer-verdict]')).toHaveAttribute('data-revealed', 'true')
-  expect(Object.keys((await record(page)).firstAttempts)).toHaveLength(1)
   await expect(page.locator('a[href*="learn?section="]')).not.toHaveCount(0)
+  await page.getByRole('button', { name: 'Show the explanation' }).click()
+  await expect(page.locator('[data-explanation-reveal]')).toBeVisible()
+  await page.locator('[data-prediction-choices] input').first().check()
+  await page.getByRole('button', { name: 'Check my answer' }).click()
+  await expect(page.locator('[data-answer-verdict]')).toHaveAttribute('data-revealed', 'true')
+  await page.locator('[data-answer-again]').click()
+  await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+  expect(await record(page)).toBeNull()
+  expect(await earlierRecord(page)).toBeNull()
 })
 
-test('capstone with one unsafe critical decision does not meet the standard', async ({ page }) => {
+test('integrated cases open without the sections, give immediate safety feedback and keep no standard', async ({
+  page,
+}) => {
   await page.goto(base + '/assess')
-  await expect(page.locator('[data-capstone="locked"]')).toBeVisible()
-  await page.evaluate(
-    ({ key, completed }) => localStorage.setItem(key, JSON.stringify(completed)),
-    {
-      key: BRONCH_STORAGE_KEY,
-      completed: BRONCH_SECTION_IDS.reduce(
-        (record, id) => withSectionCompleted(record, id),
-        createEmptyBronchRecord(),
-      ),
-    },
+  await expect(page.locator('[data-integrated-case]')).toHaveCount(CAPSTONE_CASES.length)
+  await expect(page.locator('[data-prediction-choices]')).toHaveCount(CAPSTONE_CASES.length)
+  const entry = CAPSTONE_CASES.find((candidate) =>
+    capstoneStageItem(candidate.id).item.choices.some((choice) => choice.plausibility === 'unsafe'),
+  )!
+  const item = capstoneStageItem(entry.id).item
+  const card = page.locator('[data-integrated-case="' + entry.id + '"]')
+  await card.locator('[data-show-explanation]').click()
+  await expect(card.locator('[data-explanation-reveal]')).toBeVisible()
+  const unsafe = item.choices.find((option) => option.plausibility === 'unsafe')!
+  await card.locator('input[value="' + unsafe.id + '"]').check()
+  await card.locator('[data-check-answer]').click()
+  await expect(card.locator('[data-answer-verdict][role="alert"]')).toBeVisible()
+  await card.locator('[data-answer-again]').click()
+  await card.locator('input[value="' + item.correctChoiceIds[0] + '"]').check()
+  await card.locator('[data-check-answer]').click()
+  await expect(card.locator('[data-answer-verdict]')).toHaveAttribute(
+    'data-verdict-outcome',
+    'correct',
+  )
+  await expect(page.locator('[data-assess-landing]')).not.toContainText(
+    /Standard met|not yet met|decided once/i,
   )
   await page.reload()
-  await expect(page.locator('[data-capstone="deciding"]')).toBeVisible()
-  await expect(page.locator('[data-prediction-choices]')).toHaveCount(1)
-  for (const [index, entry] of CAPSTONE_CASES.entries()) {
-    const item = capstoneStageItem(entry.id).item
-    const choice =
-      index === 0
-        ? item.choices.find((option) => option.plausibility === 'unsafe')!.id
-        : item.correctChoiceIds[0]
-    await page
-      .locator('[data-capstone-case="' + entry.id + '"] input[value="' + choice + '"]')
-      .check()
-    await page.getByRole('button', { name: 'Submit this decision' }).click()
-    if (index === 0) await expect(page.locator('[data-answer-verdict][role="alert"]')).toBeVisible()
-    if (index === 1) {
-      await expect(
-        page.locator('[data-capstone-case="' + entry.id + '"] [data-answer-verdict]'),
-      ).toHaveAttribute('data-revealed', 'false')
-      await expect(page.locator('[data-case-pairing]')).toHaveCount(0)
-    }
-  }
-  await expect(page.locator('[data-capstone-debrief]')).toHaveAttribute(
-    'data-standard',
-    'not-yet-met',
-  )
-  await expect(page.locator('[data-capstone-standard]')).toContainText('Seven of eight')
-  await expect(page.locator('[data-case-pairing]')).toHaveCount(8)
-  await page.reload()
-  await expect(page.locator('[data-capstone-debrief]')).toHaveAttribute(
-    'data-standard',
-    'not-yet-met',
-  )
+  await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+  expect(await record(page)).toBeNull()
+  expect(await earlierRecord(page)).toBeNull()
 })
 
 for (const viewport of [
@@ -655,7 +684,8 @@ for (const id of ['pre-use-check', 'deterioration', 'honest-report'] as const) {
       await primary(page).click()
     }
     await expect(page.locator('[data-section-completion]')).toBeVisible()
-    expect((await record(page)).completedSectionIds).toContain(id)
+    expect((await record(page)).reviewedSectionIds).toContain(id)
+    expect(await earlierRecord(page)).toBeNull()
     await page.goto(base)
     await expect(page.locator('[data-bronch-continue]')).toHaveAttribute(
       'data-next-section',
@@ -669,7 +699,7 @@ test('missing teaching media is explicitly identified', async ({ page }) => {
   await page.route('**/*quiz*frames*.json', (route) => route.abort())
   await openSection(page, 'right-side')
   await expect(page.locator('[data-media-state="failed"]')).toBeVisible()
-  expect((await record(page)).completedSectionIds).toEqual([])
+  expect((await record(page)).reviewedSectionIds).toEqual([])
 })
 
 test('the course remains readable at 200 percent zoom', async ({ page }, info) => {

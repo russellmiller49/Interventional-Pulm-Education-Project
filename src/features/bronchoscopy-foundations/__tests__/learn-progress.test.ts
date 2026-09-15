@@ -5,20 +5,17 @@ import {
   capstoneStageItems,
   sectionAttemptKey,
 } from '../content/stageItems'
+import * as legacyModule from '../engine/learnProgress'
 import {
   BRONCH_STORAGE_KEY,
   createEmptyBronchRecord,
+  isSectionCompleted,
   parseBronchRecord,
   readBronchRecord,
-  withCapstoneDebriefViewed,
-  withFirstAttempt,
-  withSectionCompleted,
-  withSectionVisited,
-  writeBronchRecord,
 } from '../engine/learnProgress'
 
 const NOW = '2026-09-11T12:00:00.000Z'
-const LEGACY_KEY = 'ip-intro-bronchoscopy-progress-v1'
+const EARLIER_COURSE_KEY = 'ip-intro-bronchoscopy-progress-v1'
 
 /** The first section's prediction item: one keyed choice, and one that is not. */
 function firstPrediction() {
@@ -31,7 +28,12 @@ function firstPrediction() {
 
 beforeEach(() => localStorage.clear())
 
-describe('the module record', () => {
+/**
+ * BF-01 made this record read-only: the contract is now that it parses exactly as it was written,
+ * is never rewritten, and has no writer at all. The self-paced record is tested in
+ * `self-paced-progress.test.ts`.
+ */
+describe('the earlier module record, read-only', () => {
   it('refuses malformed storage, an unknown version and an extra key', () => {
     expect(parseBronchRecord('{')).toBeNull()
     expect(parseBronchRecord(null)).toBeNull()
@@ -70,59 +72,55 @@ describe('the module record', () => {
     expect(parsed?.firstAttempts[capstoneAttemptKey(capstone.id)]).toBeUndefined()
   })
 
-  it('writes a first attempt once and keeps the first decision', () => {
-    const { key, keyed, other } = firstPrediction()
-    const empty = createEmptyBronchRecord()
-    const first = withFirstAttempt(empty, key, other, NOW)
-    expect(first.firstAttempts[key]).toEqual({ choiceId: other, correct: false, at: NOW })
-    const again = withFirstAttempt(first, key, keyed, NOW)
-    expect(again).toBe(first)
-    const held = withFirstAttempt(empty, key, keyed, NOW)
-    expect(held.firstAttempts[key]).toEqual({ choiceId: keyed, correct: true, at: NOW })
-    // Unknown item, unknown choice: nothing is written.
-    expect(withFirstAttempt(empty, `${BRONCH_SECTION_IDS[0]}:nope`, 'a', NOW)).toBe(empty)
-    expect(withFirstAttempt(empty, key, 'not-a-choice', NOW)).toBe(empty)
-  })
-
-  it('records visits, completions and the debrief without duplicates', () => {
-    const [first] = BRONCH_SECTION_IDS
-    let record = withSectionVisited(createEmptyBronchRecord(), first, NOW)
-    expect(record.lastSectionId).toBe(first)
-    record = withSectionCompleted(record, first, null, NOW)
-    record = withSectionCompleted(record, first, null, NOW)
-    expect(record.completedSectionIds).toEqual([first])
-    const debriefed = withCapstoneDebriefViewed(record, NOW)
-    expect(debriefed.capstoneDebriefViewedAt).toBe(NOW)
-    expect(withCapstoneDebriefViewed(debriefed, '2027-01-01T00:00:00.000Z')).toBe(debriefed)
-  })
-
-  it('keeps the first performance summary of a section and ignores a later one', () => {
-    const [first] = BRONCH_SECTION_IDS
-    const assisted = { inputModes: ['keyboard'], assistsUsed: ['centerline'], unaided: false }
-    const unaided = { inputModes: ['gamepad'], assistsUsed: [], unaided: true }
-    let record = withSectionCompleted(createEmptyBronchRecord(), first, assisted, NOW)
-    record = withSectionCompleted(record, first, unaided, NOW)
-    expect(record.sectionPerformance[first]).toEqual(assisted)
-  })
-
-  it('round-trips through storage and never reads the earlier course’s record', () => {
+  it('reads a stored record without rewriting its bytes, and never reads the earlier course’s record', () => {
     // The earlier course's booleans were hand toggles (A20): seeding them leaves this record empty.
     localStorage.setItem(
-      LEGACY_KEY,
+      EARLIER_COURSE_KEY,
       JSON.stringify({ completed: Object.fromEntries(BRONCH_SECTION_IDS.map((id) => [id, true])) }),
     )
     expect(readBronchRecord()).toEqual(createEmptyBronchRecord())
     expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
 
     const { key, other } = firstPrediction()
-    const written = withFirstAttempt(
-      withSectionCompleted(createEmptyBronchRecord(), BRONCH_SECTION_IDS[0], null, NOW),
-      key,
-      other,
-      NOW,
-    )
-    expect(writeBronchRecord(written)).toBe(true)
-    expect(readBronchRecord()).toEqual(written)
-    expect(localStorage.getItem(LEGACY_KEY)).not.toBeNull()
+    const stored = JSON.stringify({
+      ...createEmptyBronchRecord(),
+      completedSectionIds: [BRONCH_SECTION_IDS[0]],
+      firstAttempts: {
+        [key]: { choiceId: other, correct: true, at: NOW, support: 'reviewed-teaching' },
+      },
+      updatedAt: NOW,
+    })
+    localStorage.setItem(BRONCH_STORAGE_KEY, stored)
+    expect(readBronchRecord().firstAttempts[key]).toEqual({
+      choiceId: other,
+      correct: false,
+      at: NOW,
+      support: 'reviewed-teaching',
+    })
+    expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBe(stored)
+    expect(localStorage.getItem(EARLIER_COURSE_KEY)).not.toBeNull()
+  })
+
+  it('keeps the lesson-version meaning of an earlier completion', () => {
+    const unversioned = { ...createEmptyBronchRecord(), completedSectionIds: ['five-controls'] }
+    expect(isSectionCompleted(unversioned, 'five-controls')).toBe(false)
+    expect(
+      isSectionCompleted(
+        { ...unversioned, sectionVersions: { 'five-controls': 2 } },
+        'five-controls',
+      ),
+    ).toBe(true)
+    expect(
+      isSectionCompleted(
+        { ...createEmptyBronchRecord(), completedSectionIds: ['pre-use-check'] },
+        'pre-use-check',
+      ),
+    ).toBe(true)
+  })
+
+  it('exports no writer of any kind', () => {
+    expect(
+      Object.keys(legacyModule).filter((name) => /^(with|write|save|record)/i.test(name)),
+    ).toEqual([])
   })
 })

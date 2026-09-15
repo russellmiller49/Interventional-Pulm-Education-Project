@@ -8,7 +8,7 @@ import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdi
 import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
 import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
-import { type NowCardModel } from '@/features/learning-module/stage/NowCard'
+import { type NowCardAction, type NowCardModel } from '@/features/learning-module/stage/NowCard'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { SectionsDrawer } from '@/features/learning-module/stage/SectionsDrawer'
 import { StageSourcesFooter } from '@/features/learning-module/stage/StageSourcesFooter'
@@ -29,7 +29,6 @@ import {
 } from '../scope/types'
 import { LOCAL_POLICY_BY_ID, LOCAL_POLICY_NOT_CONFIGURED } from '../../content/localPolicies'
 import { microCasesForSection } from '../../content/microCases'
-import { bronchLearnRecordId } from '../../content/lessonVersions'
 import { isBronchSectionId } from '../../content/sectionIds'
 import { benchTargetObservation } from '../../engine/scope/scopeBenchTarget'
 import {
@@ -54,18 +53,18 @@ import {
 import { bronchStageSources } from '../../content/stageSources'
 import { CAPSTONE_CASES } from '../../content/capstone'
 import {
-  readBronchRecord,
-  withFirstAttempt,
-  withSectionCompleted,
-  withSectionVisited,
-  withInspectionSnapshot,
-  writeBronchRecord,
-  type BronchSectionPerformance,
-} from '../../engine/learnProgress'
+  availableSurveySnapshot,
+  readBronchSelfPacedRecord,
+  withReviewLater,
+  withSectionOpened,
+  withSectionReviewed,
+  withSurveySnapshot,
+  writeBronchSelfPacedRecord,
+  type BronchSelfPacedRecord,
+} from '../../engine/selfPacedProgress'
 import { NEUTRAL_LOCATION_CAPTION, scopeLocationCaption } from '../../engine/scope/scopeCaption'
 import type { ScopeCase } from '../../engine/scope/scopeCase'
 import { scopeGoalStatuses } from '../../engine/scope/scopeGoalEvaluation'
-import { describeScopePerformance } from '../../engine/scope/scopeMetrics'
 import type { ScopeRuntimeState } from '../../engine/scope/scopeRuntime'
 import {
   deriveStageProgress,
@@ -76,7 +75,9 @@ import {
   type BronchStageSession,
 } from '../../engine/stageSession'
 import { BronchoscopyFoundationsModuleFrame } from '../BronchoscopyFoundationsModuleFrame'
+import { useBronchoscopyFoundationsRecord } from '../useBronchoscopyFoundationsRecord'
 import styles from './bronch-stage.module.css'
+import { BronchExplanation } from './BronchExplanation'
 import { BronchIdentifyControl } from './BronchIdentifyControl'
 import { BronchLedgerControl } from './BronchLedgerControl'
 import { BronchReportControl } from './BronchReportControl'
@@ -98,12 +99,17 @@ import { inspectionReport } from '../../engine/inspectionReport'
  * One section of the Bronchoscopy Foundations pathway on the lesson stage.
  *
  * The pane engine is the authority on the scope: a step's goals are predicates over its state and
- * the events since the step began. The host owns the commitments — which choice was committed,
- * which set was placed, which frame a scenario is on — and the view around them: the step the
- * learner is looking at when it is not the live one, the choice not yet committed, whether help is
- * open, and the Now card that makes every step one thing. Nothing about a commitment is
- * persisted; a reload starts the section at its first step, and the only things written are the
- * first attempts and the completion record, with how the scope was driven (A18).
+ * the events since the step began. The host owns this session's answers — which choice was
+ * checked, which set was placed, which frame a scenario is on — and the view around them: the step
+ * the learner is looking at when it is not the live one, the choice not yet checked, which
+ * explanations are open, and the Now card that makes every step one thing.
+ *
+ * Self-paced contract (BF-01): every question and activity is optional. The learner can open an
+ * explanation before answering, try again, go back to the teaching, or continue without answering
+ * or completing — and moving on never records that anything was done. Nothing about answers,
+ * attempts or assistance is persisted. The only writes are to the self-paced record: the section
+ * opened, the reviewed mark when the learner finishes (with undo), a review-later mark, and the
+ * lower-airway survey when the learner actually met its goals.
  */
 export function BronchStageHost({
   sectionId,
@@ -132,6 +138,29 @@ const DECISION_FRAMES = {
 function verdictFrames(item: ClinicalLearningItem) {
   return item.itemType === 'management-decision' ? DECISION_FRAMES : undefined
 }
+
+/** What the way on says for an activity that is not done; null where there is nothing to skip. */
+function skipLabel(kind: BronchStageStep['interaction']['kind'], last: boolean): string | null {
+  const verb = last ? 'Finish' : 'Continue'
+  switch (kind) {
+    case 'prediction':
+      return `${verb} without answering`
+    case 'sort':
+    case 'identify':
+    case 'sequence':
+      return `${verb} without checking`
+    case 'ledger':
+    case 'report':
+    case 'scenario':
+    case 'scope-task':
+    case 'observe':
+      return `${verb} without completing`
+    default:
+      return null
+  }
+}
+
+const EXPLANATION_NOTE = 'Opened without an answer. Nothing is recorded; you can still answer.'
 
 /** The control to spotlight for a goal not yet met. */
 function goalControlKey(test: ScopeGoalTest): ScopeControlKey | null {
@@ -201,8 +230,7 @@ function BronchStageSessionView({
   readonly onRestart: () => void
 }) {
   const router = useRouter()
-  const [initialRecord] = useState(readBronchRecord)
-  const recordRef = useRef(initialRecord)
+  const [initialRecord] = useState(readBronchSelfPacedRecord)
   const lesson = useMemo(() => {
     const base = bronchStageLesson(sectionId as BronchStageLesson['sectionId'])
     return {
@@ -210,7 +238,15 @@ function BronchStageSessionView({
       steps: base.steps.map(
         (step): BronchStageStep =>
           step.course?.learnerRecord
-            ? { ...step, interaction: { kind: 'report', report: inspectionReport(initialRecord) } }
+            ? {
+                ...step,
+                interaction: {
+                  kind: 'report',
+                  report: inspectionReport({
+                    inspectionSnapshot: availableSurveySnapshot(initialRecord),
+                  }),
+                },
+              }
             : step,
       ),
     }
@@ -223,6 +259,7 @@ function BronchStageSessionView({
   const [sortDraft, setSortDraft] = useState<Record<string, string>>({})
   const [identifyDraft, setIdentifyDraft] = useState<Record<string, string>>({})
   const [sequenceDraft, setSequenceDraft] = useState<Record<string, readonly string[]>>({})
+  const [explanationShown, setExplanationShown] = useState<Record<string, boolean>>({})
   const [viewIndex, setViewIndex] = useState<number | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const [spotlight, setSpotlight] = useState<{ stepId: string; key: string; count: number } | null>(
@@ -234,11 +271,16 @@ function BronchStageSessionView({
   const [pilotAttempts, setPilotAttempts] = useState<Record<string, boolean>>({})
   const [pilotHints, setPilotHints] = useState<Record<string, boolean>>({})
   const [storageFailed, setStorageFailed] = useState(false)
-  const saveRecord = useCallback((record: ReturnType<typeof readBronchRecord>) => {
-    recordRef.current = record
-    const failed = !writeBronchRecord(record)
-    queueMicrotask(() => setStorageFailed(failed))
-  }, [])
+  const saveRecord = useCallback(
+    (update: (record: BronchSelfPacedRecord) => BronchSelfPacedRecord) => {
+      const current = readBronchSelfPacedRecord()
+      const next = update(current)
+      if (next === current) return
+      const failed = !writeBronchSelfPacedRecord(next)
+      queueMicrotask(() => setStorageFailed(failed))
+    },
+    [],
+  )
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const nowFocusRef = useRef<HTMLDivElement>(null)
   const completionRecorded = useRef(false)
@@ -247,16 +289,15 @@ function BronchStageSessionView({
   const { commitments } = session
   const progress = deriveStageProgress(lesson, session)
   const liveIndex = progress.liveIndex
-  const heldIndex = Math.min(liveIndex, commitments.confirmed + 1)
-  const activeIndex = Math.max(0, Math.min(viewIndex ?? heldIndex, lesson.steps.length - 1))
+  const activeIndex = Math.max(0, Math.min(viewIndex ?? liveIndex, lesson.steps.length - 1))
   const activeStep = lesson.steps[activeIndex]
-  const lookingBack = viewIndex !== null && viewIndex < heldIndex
+  const lookingBack = viewIndex !== null && viewIndex < liveIndex
   const isLastStep = activeIndex === lesson.steps.length - 1
-  const performedIds = progress.performedIds
   const predictionCommitted = progress.predictionCommitted
   const finished = commitments.finished
   const interaction = activeStep.interaction
   const workDone = stepWorkDone(lesson, activeStep, activeIndex, session)
+  const explanationOpen = explanationShown[activeStep.id] === true
   const demonstration = useScopeDemonstration(activeStep, scopeCase)
   const hasDemonstration = !!(activeStep.learn?.demonstration ?? activeStep.course?.demonstration)
     ?.length
@@ -318,38 +359,33 @@ function BronchStageSessionView({
   }, [activeStep.phase])
 
   useEffect(() => {
-    saveRecord(withSectionVisited(recordRef.current, lesson.sectionId))
+    saveRecord((record) => withSectionOpened(record, lesson.sectionId))
   }, [lesson.sectionId, saveRecord])
-
-  const performance = useMemo((): BronchSectionPerformance | null => {
-    {
-      const states = lesson.steps
-        .filter((step) => step.interaction.kind === 'scope-task')
-        .flatMap((step) => (session.scope[step.id] ? [session.scope[step.id]] : []))
-      if (!states.length) return null
-      return {
-        inputModes: [...new Set(states.flatMap((state) => state.inputModes))],
-        assistsUsed: [
-          ...new Set(states.flatMap((state) => state.assistsUsed)),
-          'guided-practice',
-          ...(Object.values(pilotHints).some(Boolean) ? ['requested-hint'] : []),
-        ],
-        unaided: false,
-      }
-    }
-  }, [lesson.steps, session.scope, pilotHints])
 
   useEffect(() => {
     if (!finished || completionRecorded.current) return
     completionRecorded.current = true
-    let record = withSectionCompleted(recordRef.current, lesson.sectionId, performance)
-    if (lesson.sectionId === 'systematic-survey') {
-      const surveyStep = lesson.steps.find((step) => step.interaction.kind === 'scope-task')
-      const state = surveyStep ? session.scope[surveyStep.id] : undefined
-      if (state) record = withInspectionSnapshot(record, state.ledger)
-    }
-    saveRecord(record)
-  }, [finished, lesson.sectionId, lesson.steps, session.scope, performance, saveRecord])
+    const surveyStep =
+      lesson.sectionId === 'systematic-survey'
+        ? lesson.steps.find((step) => step.interaction.kind === 'scope-task')
+        : undefined
+    // The survey is saved only when its goals were met on the learner's own controls.
+    const surveyState =
+      surveyStep && commitments.performedIds.includes(surveyStep.id)
+        ? session.scope[surveyStep.id]
+        : undefined
+    saveRecord((record) => {
+      const reviewed = withSectionReviewed(record, lesson.sectionId, true)
+      return surveyState ? withSurveySnapshot(reviewed, surveyState.ledger) : reviewed
+    })
+  }, [
+    finished,
+    lesson.sectionId,
+    lesson.steps,
+    session.scope,
+    commitments.performedIds,
+    saveRecord,
+  ])
 
   /* ---------------------------------------------------------------- *
    * Progression
@@ -363,21 +399,20 @@ function BronchStageSessionView({
     [dispatch],
   )
 
+  /** Moves on without doing the step; on the last step, finishes. Records nothing about the step. */
+  function skipPast(index: number) {
+    demonstration.stop()
+    dispatch({ type: 'SKIP_PAST', index })
+    if (index === lesson.steps.length - 1) dispatch({ type: 'FINISH' })
+    setViewIndex(null)
+    setSpotlight(null)
+  }
+
   function commitChoice(step: BronchStageStep) {
     if (step.interaction.kind !== 'prediction') return
     const choiceId = pendingChoice[step.id]
     if (!choiceId) return
     dispatch({ type: 'COMMIT_CHOICE', stepId: step.id, choiceId })
-    const key = `${bronchLearnRecordId(lesson.sectionId)}:${step.interaction.stage.item.id}`
-    saveRecord(
-      withFirstAttempt(
-        recordRef.current,
-        key,
-        choiceId,
-        undefined,
-        pilotHints[step.id] ? 'reviewed-teaching' : 'learn-after-teaching',
-      ),
-    )
     setViewIndex(null)
   }
 
@@ -403,11 +438,19 @@ function BronchStageSessionView({
     dispatch({ type: 'COMMIT_SEQUENCE', stepId: step.id, order: sequenceOrder(step) })
   }
 
+  function retryStep(step: BronchStageStep) {
+    dispatch({ type: 'RETRY_STEP', stepId: step.id })
+    if (step.interaction.kind === 'prediction')
+      setPendingChoice((current) => ({ ...current, [step.id]: '' }))
+  }
+
+  function toggleExplanation(stepId: string) {
+    setExplanationShown((current) => ({ ...current, [stepId]: !current[stepId] }))
+  }
+
   function goBack() {
     const target = activeIndex - 1
-    if (target < 0 || !performedIds.has(lesson.steps[target].id)) return
-    if (activeStep.activity === 'independent-check' && !workDone)
-      setPilotHints((current) => ({ ...current, [activeStep.id]: true }))
+    if (target < 0 || target > commitments.confirmed) return
     setViewIndex(target)
   }
 
@@ -432,10 +475,14 @@ function BronchStageSessionView({
     setPilotAttempts((current) => ({ ...current, [activeStep.id]: true }))
   }
 
-  function retryPilotChoice() {
-    dispatch({ type: 'RETRY_LEARN_CHOICE', stepId: activeStep.id })
-    setPendingChoice((current) => ({ ...current, [activeStep.id]: '' }))
-  }
+  /** The nearest earlier teaching the learner has already been through, for "Review the teaching". */
+  const teachingIndex = (() => {
+    for (let index = Math.min(activeIndex - 1, commitments.confirmed); index >= 0; index -= 1) {
+      const step = lesson.steps[index]
+      if (step.activity === 'teaching' || step.activity === 'debrief') return index
+    }
+    return -1
+  })()
 
   /* ---------------------------------------------------------------- *
    * The answer on the map, the goals, the spotlight
@@ -463,7 +510,7 @@ function BronchStageSessionView({
         disabled: treeCommittedId !== undefined || lookingBack,
         hint:
           treeCommittedId === undefined
-            ? 'Choose the airway on the map, then submit your choice below.'
+            ? 'Choose the airway on the map, then check your answer below.'
             : undefined,
       }
     : undefined
@@ -511,7 +558,8 @@ function BronchStageSessionView({
   const stepPosition = `Part ${chunkIds.indexOf(activeStep.course!.id) + 1} of ${chunkIds.length} · ${activeStep.course!.title}`
   const lookInLine = undefined
   const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
-  const canGoBack = previousStep !== undefined && performedIds.has(previousStep.id) && !finished
+  const canGoBack =
+    previousStep !== undefined && activeIndex - 1 <= commitments.confirmed && !finished
   const showWhereAction =
     firstUnmetKey && !workDone && !lookingBack
       ? {
@@ -530,6 +578,13 @@ function BronchStageSessionView({
     onActivate: finish,
     icon: <ArrowRight aria-hidden="true" />,
   }
+  const skipText = skipLabel(interaction.kind, isLastStep)
+  const skipAction: NowCardAction | undefined =
+    skipText && !workDone && !lookingBack && !finished
+      ? { label: skipText, onActivate: () => skipPast(activeIndex) }
+      : undefined
+  const goalsReason =
+    'Continue opens once the goals are met. You can also continue without completing them.'
 
   const nowModel: NowCardModel = (() => {
     const base: NowCardModel = {
@@ -551,7 +606,7 @@ function BronchStageSessionView({
       return {
         ...base,
         status:
-          'Done. You are looking back at an earlier step. Your current activity and earlier responses are preserved during this review.',
+          'You are looking back at an earlier step. Your current activity and this session’s answers are kept while you review.',
         primary: {
           label: 'Return to the current task',
           onActivate: returnToLive,
@@ -560,7 +615,7 @@ function BronchStageSessionView({
       }
     }
     if (finished && isLastStep) {
-      return { ...base, status: 'Done. This section has been worked through.' }
+      return { ...base, status: 'You have reached the end of this section.' }
     }
     switch (interaction.kind) {
       case 'read':
@@ -574,27 +629,27 @@ function BronchStageSessionView({
           return {
             ...base,
             primary: isLastStep ? finishAction : continueAction,
-            ...(activeStep.learn || activeStep.course
-              ? { secondary: { label: 'Try this check again', onActivate: retryPilotChoice } }
-              : {}),
+            secondary: { label: 'Try this check again', onActivate: () => retryStep(activeStep) },
           }
         return {
           ...base,
-          status: false
-            ? 'The Simulator panel keeps its view while you decide. Its controls unlock once you submit your prediction.'
-            : undefined,
           primary: {
             label: activeStep.actionLabel,
             onActivate: () => commitChoice(activeStep),
             disabled: !pendingChoice[activeStep.id],
             disabledReason: interaction.stage.choiceAirways
-              ? 'Choose an airway on the airway map to enable this.'
-              : 'Choose one option to enable this.',
+              ? 'Choose an airway on the airway map to check your answer.'
+              : 'Choose one option to check your answer.',
           },
         }
       }
       case 'sort': {
-        if (commitments.sorts[activeStep.id]) return { ...base, primary: continueAction }
+        if (commitments.sorts[activeStep.id])
+          return {
+            ...base,
+            primary: continueAction,
+            secondary: { label: 'Try the set again', onActivate: () => retryStep(activeStep) },
+          }
         const remaining = interaction.sort.rows.filter((row) => !sortDraft[row.id]).length
         return {
           ...base,
@@ -602,12 +657,17 @@ function BronchStageSessionView({
             label: activeStep.actionLabel,
             onActivate: () => commitSort(activeStep),
             disabled: remaining > 0,
-            disabledReason: `${remaining} of ${interaction.sort.rows.length} still to place.`,
+            disabledReason: `${remaining} of ${interaction.sort.rows.length} still to place before checking.`,
           },
         }
       }
       case 'identify': {
-        if (commitments.identifies[activeStep.id]) return { ...base, primary: continueAction }
+        if (commitments.identifies[activeStep.id])
+          return {
+            ...base,
+            primary: continueAction,
+            secondary: { label: 'Try the names again', onActivate: () => retryStep(activeStep) },
+          }
         const remaining = interaction.identify.rows.filter((row) => !identifyDraft[row.id]).length
         return {
           ...base,
@@ -615,12 +675,17 @@ function BronchStageSessionView({
             label: activeStep.actionLabel,
             onActivate: () => commitIdentify(activeStep),
             disabled: remaining > 0,
-            disabledReason: `${remaining} of ${interaction.identify.rows.length} still to name.`,
+            disabledReason: `${remaining} of ${interaction.identify.rows.length} still to name before checking.`,
           },
         }
       }
       case 'sequence':
-        if (commitments.sequences[activeStep.id]) return { ...base, primary: continueAction }
+        if (commitments.sequences[activeStep.id])
+          return {
+            ...base,
+            primary: continueAction,
+            secondary: { label: 'Try the order again', onActivate: () => retryStep(activeStep) },
+          }
         return {
           ...base,
           primary: { label: activeStep.actionLabel, onActivate: () => commitSequence(activeStep) },
@@ -635,7 +700,7 @@ function BronchStageSessionView({
         return {
           ...base,
           status:
-            'Waiting for the accounting on this card. The step is done when the answer under the table holds.',
+            'Work through the accounting on this card, open the worked arithmetic, or continue without completing it.',
         }
       case 'report':
         if (workDone)
@@ -647,20 +712,28 @@ function BronchStageSessionView({
         return {
           ...base,
           status:
-            'Waiting for the report on this card: every field needs a statement the evidence supports.',
+            'Give each field a statement the evidence supports, open what it supports, or continue without completing the report.',
         }
       case 'scenario':
         if (workDone)
-          return { ...base, status: 'Done. Every frame decided.', primary: continueAction }
-        return { ...base, status: 'Waiting for the decision on this card.' }
+          return {
+            ...base,
+            status: 'Done. You worked the case to its end.',
+            primary: continueAction,
+          }
+        return {
+          ...base,
+          status:
+            'Decide on this card, open the reasoning for this observation, or continue without completing the case.',
+        }
       case 'scope-task':
         if (activeStep.learn || hasDemonstration) {
           if (demonstration.state || !practicing)
             return {
               ...base,
               status: demonstration.state
-                ? 'Demonstration only. These movements do not count toward your goals or record.'
-                : 'The example is available before any answer. You can also start your own attempt.',
+                ? 'Demonstration only. These movements are the example, not your own attempt.'
+                : 'The example is available before you try. You can also start your own attempt, or continue without it.',
               primary: demonstration.state
                 ? demonstration.finished
                   ? { label: 'Try with guidance', onActivate: beginPilotAttempt }
@@ -673,7 +746,7 @@ function BronchStageSessionView({
           return {
             ...base,
             status: workDone
-              ? (activeStep.learn?.success ?? 'Done. Every authored goal is met.')
+              ? (activeStep.learn?.success ?? 'Done. Every goal is met.')
               : activeScopeState?.events.includes('bench-advanced-off-target')
                 ? 'You advanced before centering the target. Reset this attempt, establish the aim, and keep it centered as you advance.'
                 : 'Use the controls beside the views. The goal checks the resulting movement or view; reset starts a fresh attempt.',
@@ -684,7 +757,7 @@ function BronchStageSessionView({
               : {
                   ...continueAction,
                   disabled: true,
-                  disabledReason: 'Complete the movement or view goals before continuing.',
+                  disabledReason: goalsReason,
                 },
             secondary: hasDemonstration
               ? { label: 'Replay the example', onActivate: demonstration.start }
@@ -695,7 +768,7 @@ function BronchStageSessionView({
           return {
             ...base,
             status: 'Done. Every goal on this card is met.',
-            primary: continueAction,
+            primary: isLastStep ? finishAction : continueAction,
           }
         return {
           ...base,
@@ -703,25 +776,26 @@ function BronchStageSessionView({
             ? 'The airway model could not be loaded. Reload the page to try again.'
             : !activeScopeState
               ? 'Loading the airway model…'
-              : 'Use the scope controls to complete the goals. The goals check the resulting view and recorded actions.',
+              : 'Use the scope controls to meet the goals. The goals check the resulting view and your own actions.',
           primary: {
             ...continueAction,
             disabled: true,
-            disabledReason: 'Complete the scope goals before continuing.',
+            disabledReason: goalsReason,
           },
           secondary: showWhereAction,
         }
       case 'observe':
-        if (workDone) return { ...base, status: 'Done.', primary: continueAction }
+        if (workDone)
+          return { ...base, status: 'Done.', primary: isLastStep ? finishAction : continueAction }
         return {
           ...base,
           status: !activeScopeState
             ? 'Loading the airway model…'
-            : 'Complete the goals using the scope controls.',
+            : 'Meet the goals using the scope controls.',
           primary: {
             ...continueAction,
             disabled: true,
-            disabledReason: 'Complete the observation goals before continuing.',
+            disabledReason: goalsReason,
           },
           secondary: showWhereAction,
         }
@@ -746,6 +820,16 @@ function BronchStageSessionView({
     </ul>
   )
 
+  function policiesLine(stage: BronchStageItem) {
+    return stage.localPolicyIds.length > 0 ? (
+      <p className={styles.figureCaption} data-item-policies>
+        Depends on local policy:{' '}
+        {stage.localPolicyIds.map((id) => LOCAL_POLICY_BY_ID.get(id)?.title ?? id).join(', ')}.{' '}
+        {LOCAL_POLICY_NOT_CONFIGURED}
+      </p>
+    ) : null
+  }
+
   function verdictFor(stage: BronchStageItem, choiceId: string) {
     return (
       <>
@@ -757,14 +841,23 @@ function BronchStageSessionView({
           theme="dark"
           frames={verdictFrames(stage.item)}
         />
-        {stage.localPolicyIds.length > 0 ? (
-          <p className={styles.figureCaption} data-item-policies>
-            Depends on local policy:{' '}
-            {stage.localPolicyIds.map((id) => LOCAL_POLICY_BY_ID.get(id)?.title ?? id).join(', ')}.{' '}
-            {LOCAL_POLICY_NOT_CONFIGURED}
-          </p>
-        ) : null}
+        {policiesLine(stage)}
       </>
+    )
+  }
+
+  function explanationToggle(step: BronchStageStep, label: string) {
+    const open = explanationShown[step.id] === true
+    return (
+      <button
+        type="button"
+        className={shellStyles.nowSecondary}
+        data-show-explanation
+        aria-expanded={open}
+        onClick={() => toggleExplanation(step.id)}
+      >
+        {open ? 'Hide the explanation' : label}
+      </button>
     )
   }
 
@@ -812,6 +905,25 @@ function BronchStageSessionView({
             ))}
           </fieldset>
         )}
+        <div className={styles.pilotButtons} data-question-help>
+          {explanationToggle(step, 'Show the explanation')}
+          {teachingIndex >= 0 ? (
+            <button
+              type="button"
+              className={shellStyles.nowSecondary}
+              data-review-teaching
+              onClick={() => setViewIndex(teachingIndex)}
+            >
+              Review the teaching
+            </button>
+          ) : null}
+        </div>
+        {explanationShown[step.id] ? (
+          <>
+            <BronchExplanation item={stage.item} note={EXPLANATION_NOTE} />
+            {policiesLine(stage)}
+          </>
+        ) : null}
       </>
     )
   }
@@ -829,86 +941,116 @@ function BronchStageSessionView({
         return predictionBody(activeStep)
       case 'sort':
         return (
-          <BronchSortControl
-            sort={interaction.sort}
-            draft={sortDraft}
-            committed={commitments.sorts[activeStep.id] ?? null}
-            onChange={(rowId, originId) =>
-              setSortDraft((current) => ({ ...current, [rowId]: originId }))
-            }
-          />
+          <>
+            {!commitments.sorts[activeStep.id]
+              ? explanationToggle(activeStep, 'Show the worked matches')
+              : null}
+            <BronchSortControl
+              sort={interaction.sort}
+              draft={sortDraft}
+              committed={commitments.sorts[activeStep.id] ?? null}
+              revealed={explanationOpen}
+              onChange={(rowId, originId) =>
+                setSortDraft((current) => ({ ...current, [rowId]: originId }))
+              }
+            />
+          </>
         )
       case 'identify':
         return (
-          <BronchIdentifyControl
-            identify={interaction.identify}
-            draft={identifyDraft}
-            committed={commitments.identifies[activeStep.id] ?? null}
-            onChange={(rowId, choiceId) =>
-              setIdentifyDraft((current) => ({ ...current, [rowId]: choiceId }))
-            }
-          />
+          <>
+            {!commitments.identifies[activeStep.id]
+              ? explanationToggle(activeStep, 'Show the names')
+              : null}
+            <BronchIdentifyControl
+              identify={interaction.identify}
+              draft={identifyDraft}
+              committed={commitments.identifies[activeStep.id] ?? null}
+              revealed={explanationOpen}
+              onChange={(rowId, choiceId) =>
+                setIdentifyDraft((current) => ({ ...current, [rowId]: choiceId }))
+              }
+            />
+          </>
         )
       case 'sequence':
         return (
-          <BronchSequenceControl
-            sequence={interaction.sequence}
-            order={sequenceOrder(activeStep)}
-            committed={commitments.sequences[activeStep.id] ?? null}
-            onChange={(order) =>
-              setSequenceDraft((current) => ({ ...current, [activeStep.id]: order }))
-            }
-          />
+          <>
+            {!commitments.sequences[activeStep.id]
+              ? explanationToggle(activeStep, 'Show the worked order')
+              : null}
+            <BronchSequenceControl
+              sequence={interaction.sequence}
+              order={sequenceOrder(activeStep)}
+              committed={commitments.sequences[activeStep.id] ?? null}
+              revealed={explanationOpen}
+              onChange={(order) =>
+                setSequenceDraft((current) => ({ ...current, [activeStep.id]: order }))
+              }
+            />
+          </>
         )
       case 'ledger':
         return (
-          <BronchLedgerControl
-            ledger={interaction.ledger}
-            commitment={ledgerCommitment(session, activeStep.id)}
-            onEntry={(rowId, mg) =>
-              dispatch({ type: 'LEDGER_ENTRY', stepId: activeStep.id, rowId, mg })
-            }
-            onTotal={(choiceId, plausibility) =>
-              dispatch({ type: 'LEDGER_TOTAL', stepId: activeStep.id, choiceId, plausibility })
-            }
-          />
+          <>
+            {!workDone ? explanationToggle(activeStep, 'Show the worked arithmetic') : null}
+            <BronchLedgerControl
+              ledger={interaction.ledger}
+              commitment={ledgerCommitment(session, activeStep.id)}
+              revealed={explanationOpen}
+              onEntry={(rowId, mg) =>
+                dispatch({ type: 'LEDGER_ENTRY', stepId: activeStep.id, rowId, mg })
+              }
+              onTotal={(choiceId, plausibility) =>
+                dispatch({ type: 'LEDGER_TOTAL', stepId: activeStep.id, choiceId, plausibility })
+              }
+            />
+          </>
         )
       case 'report':
         return (
-          <BronchReportControl
-            report={interaction.report}
-            commitment={reportCommitment(session, activeStep.id)}
-            onOption={(fieldId, optionId, supported) =>
-              dispatch({
-                type: 'REPORT_OPTION',
-                stepId: activeStep.id,
-                fieldId,
-                optionId,
-                supported,
-              })
-            }
-          />
+          <>
+            {!workDone ? explanationToggle(activeStep, 'Show what the evidence supports') : null}
+            <BronchReportControl
+              report={interaction.report}
+              commitment={reportCommitment(session, activeStep.id)}
+              revealed={explanationOpen}
+              onOption={(fieldId, optionId, supported) =>
+                dispatch({
+                  type: 'REPORT_OPTION',
+                  stepId: activeStep.id,
+                  fieldId,
+                  optionId,
+                  supported,
+                })
+              }
+            />
+          </>
         )
       case 'scenario':
         return (
-          <BronchScenarioControl
-            scenario={interaction.scenario}
-            integrated
-            baseline={
-              lesson.section.blocks.find((block) => block.role === 'normal-reference')?.body
-            }
-            commitment={scenarioCommitment(session, activeStep.id)}
-            onChoice={(frameId, choiceId, plausibility) =>
-              dispatch({
-                type: 'SCENARIO_CHOICE',
-                stepId: activeStep.id,
-                frameId,
-                choiceId,
-                plausibility,
-                frameCount: interaction.scenario.frames.length,
-              })
-            }
-          />
+          <>
+            {!workDone ? explanationToggle(activeStep, 'Show the reasoning') : null}
+            <BronchScenarioControl
+              scenario={interaction.scenario}
+              integrated
+              baseline={
+                lesson.section.blocks.find((block) => block.role === 'normal-reference')?.body
+              }
+              commitment={scenarioCommitment(session, activeStep.id)}
+              revealed={explanationOpen}
+              onChoice={(frameId, choiceId, plausibility) =>
+                dispatch({
+                  type: 'SCENARIO_CHOICE',
+                  stepId: activeStep.id,
+                  frameId,
+                  choiceId,
+                  plausibility,
+                  frameCount: interaction.scenario.frames.length,
+                })
+              }
+            />
+          </>
         )
       case 'scope-task':
       case 'observe':
@@ -938,17 +1080,20 @@ function BronchStageSessionView({
           predictionStep?.interaction.kind === 'prediction'
             ? predictionStep.interaction.stage
             : undefined
-        const chosenId = predictionStep ? commitments.choices[predictionStep.id] : undefined
+        if (!stage || !predictionStep) return null
+        const chosenId = commitments.choices[predictionStep.id]
         return (
-          <>
-            {stage && chosenId ? <div data-explain-recap>{verdictFor(stage, chosenId)}</div> : null}
-            {performance ? (
-              <p className={stageStyles.taskInstruction} data-scope-performance>
-                How the scope was driven on this section:{' '}
-                {describeScopePerformanceWords(performance)}.
-              </p>
-            ) : null}
-          </>
+          <div data-explain-recap>
+            {chosenId ? (
+              verdictFor(stage, chosenId)
+            ) : (
+              <BronchExplanation
+                item={stage.item}
+                heading="The reasoning behind the earlier question"
+                note="You continued without answering that question. Its reasoning is here to read."
+              />
+            )}
+          </div>
         )
       }
       default:
@@ -961,7 +1106,7 @@ function BronchStageSessionView({
    * ---------------------------------------------------------------- */
   const deciding =
     interaction.kind === 'prediction' && commitments.choices[activeStep.id] === undefined
-  // Controls belong to actual scope work. A pending independent response stays isolated.
+  // Controls belong to actual scope work. A question step has no scope controls to use.
   const scopeLive = interaction.kind === 'scope-task' || interaction.kind === 'observe'
   const controlsEnabled =
     !deciding && !lookingBack && !finished && scopeLive && !demonstration.state && practicing
@@ -970,9 +1115,9 @@ function BronchStageSessionView({
     : !practicing
       ? 'Watch the example or select Try with guidance to use the controls.'
       : finished
-        ? 'Lesson completed. Restart the section for new practice.'
+        ? 'You reached the end of this section. Restart the section to practice again.'
         : deciding
-          ? 'The controls are locked while you decide. Commit your answer to take them.'
+          ? 'The scope rests while this question is open. Its controls are used on the hands-on steps.'
           : !scopeLive && !lookingBack
             ? 'The scope rests on this step. Its controls open on the next hands-on step.'
             : undefined
@@ -1109,9 +1254,14 @@ function BronchStageSessionView({
     }
   })()
 
+  // Teaching that follows the section's question opens once the learner answered it or moved past it.
+  const teachingOpen =
+    predictionCommitted ||
+    (lesson.predictionStepIndex >= 0 && commitments.confirmed >= lesson.predictionStepIndex)
+
   const teaching = (
     <StageTeachingScope
-      value={{ phase: activeStep.phase, predictionCommitted, stepId: activeStep.id }}
+      value={{ phase: activeStep.phase, predictionCommitted: teachingOpen, stepId: activeStep.id }}
     >
       <BronchCourseTeaching
         lesson={lesson}
@@ -1121,12 +1271,18 @@ function BronchStageSessionView({
     </StageTeachingScope>
   )
 
+  const movedPastTitles = [
+    ...new Set(
+      progress.movedPastIds.map((id) => lesson.steps.find((step) => step.id === id)?.title ?? id),
+    ),
+  ]
+
   const completion =
     finished && isLastStep ? (
       <CompletionCard
         lesson={lesson}
         nextSectionId={nextSection && isBronchSectionId(nextSection.id) ? nextSection.id : null}
-        performance={performance}
+        movedPast={movedPastTitles}
       />
     ) : null
 
@@ -1159,6 +1315,10 @@ function BronchStageSessionView({
       </p>
       {lookInLine}
       {activeStep.rationale ? <p>{activeStep.rationale}</p> : null}
+      <p>
+        Every question and activity here is optional. You can open the explanation before answering,
+        try again, go back to the teaching, or continue without answering.
+      </p>
       {firstUnmetKey && !workDone ? (
         <button
           type="button"
@@ -1188,6 +1348,7 @@ function BronchStageSessionView({
           activity={demonstration.state ? 'demonstration' : (activeStep.activity ?? 'teaching')}
           header={header}
           model={nowModel}
+          skip={skipAction}
           teaching={teaching}
           workspace={simulator}
           response={nowBody}
@@ -1199,16 +1360,17 @@ function BronchStageSessionView({
             <>
               <p>
                 Professional education for supervised learning. Follow current device instructions,
-                local policy and supervising judgment. Reloading restarts an unfinished section;
-                completed work and first responses remain on this device. An unfinished scope
-                position is not saved.
+                local policy and supervising judgment. Reloading starts this section again from its
+                first step: answers and scope positions are not saved. Where you left off and the
+                sections you open or mark stay on this device.
               </p>
+              <ReviewLaterToggle sectionId={lesson.sectionId} />
               <StageSourcesFooter
                 count={stageSources.evidenceIds.length}
                 label="Sources for this section"
-                claimsVisible={!deciding}
+                claimsVisible
               >
-                <BronchSourceList records={stageSources.records} claimsVisible={!deciding} />
+                <BronchSourceList records={stageSources.records} />
               </StageSourcesFooter>
             </>
           }
@@ -1228,13 +1390,24 @@ function MediaWorkspaceInline({ stage }: { readonly stage: BronchStageItem }) {
   return <MediaWorkspace media={[stage.media]} caption="The image this decision is about." />
 }
 
-function describeScopePerformanceWords(performance: BronchSectionPerformance): string {
-  if (performance.assistsUsed.includes('guided-practice'))
-    return `${performance.inputModes.join(', ') || 'on-screen controls'} during guided screen-based learning, assisted by ${performance.assistsUsed.join(', ')}`
-  return describeScopePerformance({
-    inputModes: performance.inputModes as ScopeRuntimeState['inputModes'],
-    assistsUsed: performance.assistsUsed as ScopeRuntimeState['assistsUsed'],
-  })
+/** The learner's own review-later mark for this section. */
+function ReviewLaterToggle({ sectionId }: { readonly sectionId: BronchSectionId }) {
+  const { record, hydrated } = useBronchoscopyFoundationsRecord()
+  const on = record.reviewLaterSectionIds.includes(sectionId)
+  return (
+    <button
+      type="button"
+      className={shellStyles.nowSecondary}
+      aria-pressed={on}
+      disabled={!hydrated}
+      data-review-later-toggle={on}
+      onClick={() =>
+        writeBronchSelfPacedRecord(withReviewLater(readBronchSelfPacedRecord(), sectionId, !on))
+      }
+    >
+      Review this section later
+    </button>
+  )
 }
 
 function recapLines(
@@ -1244,60 +1417,67 @@ function recapLines(
   session: BronchStageSession,
 ): readonly string[] {
   const { commitments } = session
+  const movedPast = index <= commitments.confirmed && !commitments.performedIds.includes(step.id)
   switch (step.interaction.kind) {
     case 'prediction': {
       const chosen = commitments.choices[step.id]
       const label = step.interaction.stage.item.choices.find(
         (choice) => choice.id === chosen,
       )?.label
-      return label ? [`Committed: ${label}`] : []
+      return label ? [`Answered: ${label}`] : movedPast ? ['Moved on without answering.'] : []
     }
-    case 'sort': {
-      const answers = commitments.sorts[step.id]
-      if (!answers) return []
-      const held = step.interaction.sort.rows.filter((row) => answers[row.id] === row.origin).length
-      return [`Placed the set: ${held} of ${step.interaction.sort.rows.length} held.`]
-    }
-    case 'identify': {
-      const answers = commitments.identifies[step.id]
-      if (!answers) return []
-      const held = step.interaction.identify.rows.filter(
-        (row) => answers[row.id] === row.answerId,
-      ).length
-      return [`Named the views: ${held} of ${step.interaction.identify.rows.length} held.`]
-    }
-    case 'sequence': {
-      const order = commitments.sequences[step.id]
-      if (!order) return []
-      const held = order.filter(
-        (stepId, position) =>
-          step.interaction.kind === 'sequence' &&
-          step.interaction.sequence.steps[position]?.id === stepId,
-      ).length
-      return [`Ordered the steps: ${held} of ${order.length} in place.`]
-    }
+    case 'sort':
+      return commitments.sorts[step.id]
+        ? ['Placed the set and read the reasoning.']
+        : movedPast
+          ? ['Moved on without placing the set.']
+          : []
+    case 'identify':
+      return commitments.identifies[step.id]
+        ? ['Named the views and read the reasoning.']
+        : movedPast
+          ? ['Moved on without naming the views.']
+          : []
+    case 'sequence':
+      return commitments.sequences[step.id]
+        ? ['Ordered the steps and read the reasoning.']
+        : movedPast
+          ? ['Moved on without ordering the steps.']
+          : []
     case 'ledger':
       return ledgerCommitment(session, step.id).heldTotalChoiceId
         ? ['The statement the record allows.']
-        : []
+        : movedPast
+          ? ['Moved on without completing the accounting.']
+          : []
     case 'report': {
       const report = reportCommitment(session, step.id)
       const done = step.interaction.report.fields.filter((field) => report.chosen[field.id]).length
       return done
-        ? [`Report fields supported: ${done} of ${step.interaction.report.fields.length}.`]
-        : []
+        ? [
+            `Report fields filled from the evidence: ${done} of ${step.interaction.report.fields.length}.`,
+          ]
+        : movedPast
+          ? ['Moved on without completing the report.']
+          : []
     }
     case 'scenario': {
       const scenario = scenarioCommitment(session, step.id)
-      return scenario.done ? ['Every frame decided.'] : []
+      return scenario.done
+        ? ['Worked the case to its end.']
+        : movedPast
+          ? ['Moved on without completing the case.']
+          : []
     }
     case 'scope-task':
     case 'observe': {
       const state = session.scope[step.id]
-      if (!state) return []
-      return scopeGoalStatuses(step.interaction.goals, state)
-        .filter((status) => status.met)
-        .map((status) => status.goal.label)
+      const met = state
+        ? scopeGoalStatuses(step.interaction.goals, state)
+            .filter((status) => status.met)
+            .map((status) => status.goal.label)
+        : []
+      return movedPast ? [...met, 'Moved on before every goal was met.'] : met
     }
     case 'read':
     case 'explain':
@@ -1335,29 +1515,48 @@ function StepRecap({
 function CompletionCard({
   lesson,
   nextSectionId,
-  performance,
+  movedPast,
 }: {
   readonly lesson: BronchStageLesson
   readonly nextSectionId: BronchSectionId | null
-  readonly performance: BronchSectionPerformance | null
+  readonly movedPast: readonly string[]
 }) {
-  const capstoneCase = CAPSTONE_CASES.find((entry) => entry.pairedSectionId === lesson.sectionId)
+  const { record, hydrated } = useBronchoscopyFoundationsRecord()
+  const reviewed = record.reviewedSectionIds.includes(lesson.sectionId)
+  const integratedCase = CAPSTONE_CASES.find((entry) => entry.pairedSectionId === lesson.sectionId)
   const practiceCase = microCasesForSection(lesson.sectionId)[0]
   const { section } = lesson
   return (
     <section
       className={styles.completion}
       data-section-completion
-      aria-label="Section worked through"
+      data-reviewed={reviewed}
+      aria-label="End of section"
     >
-      <p className={styles.kicker}>Worked through</p>
-      <p>
-        This section is on your record as an activity completed. Nothing here is a mark; the first
-        decisions you made are kept as you made them.
+      <p className={styles.kicker}>End of section</p>
+      <p data-completion-reviewed>
+        {reviewed
+          ? 'This section is marked reviewed on this device.'
+          : 'This section is not marked reviewed.'}{' '}
+        The mark is yours to change; it records nothing about your answers.{' '}
+        <button
+          type="button"
+          className={styles.completionLink}
+          data-toggle-reviewed
+          disabled={!hydrated}
+          onClick={() =>
+            writeBronchSelfPacedRecord(
+              withSectionReviewed(readBronchSelfPacedRecord(), lesson.sectionId, !reviewed),
+            )
+          }
+        >
+          {reviewed ? 'Undo: not reviewed yet' : 'Mark as reviewed'}
+        </button>
       </p>
-      {performance ? (
-        <p data-completion-performance>
-          The scope was driven by {describeScopePerformanceWords(performance)}.
+      {movedPast.length > 0 ? (
+        <p data-completion-moved-past>
+          You moved on without completing: {movedPast.join('; ')}. Restart the section whenever you
+          want to try them.
         </p>
       ) : null}
       {section.physicalSkillNote ? (
@@ -1365,9 +1564,20 @@ function CompletionCard({
           <strong>What the app cannot see.</strong> {section.physicalSkillNote}
         </p>
       ) : null}
-      {capstoneCase ? (
+      <p data-completion-competence>
+        Self-paced online learning does not establish procedural competence.
+      </p>
+      {integratedCase ? (
         <p>
-          This idea returns in the capstone as <strong>{capstoneCase.presentationTitle}</strong>.
+          This idea also appears in the integrated case{' '}
+          <Link
+            className={styles.completionLink}
+            href={`${BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF}#case-${integratedCase.id}`}
+            data-paired-integrated-case={integratedCase.id}
+          >
+            {integratedCase.presentationTitle}
+          </Link>
+          .
         </p>
       ) : null}
       {practiceCase ? (
@@ -1400,7 +1610,7 @@ function CompletionCard({
             href={BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF}
             data-next-section="assess"
           >
-            Go to the capstone
+            Try the integrated cases
           </Link>
         )}
         <Link className={shellStyles.nowSecondary} href={BRONCHOSCOPY_FOUNDATIONS_NAV_BASE}>

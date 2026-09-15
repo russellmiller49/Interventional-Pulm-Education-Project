@@ -8,7 +8,7 @@ import {
 } from '../content/routes'
 import { BronchContinueCta, BronchStoredPathwayAccordion } from './hub/BronchPathwayAccordion'
 
-/** The registry owns the outline and the next incomplete lesson. */
+/** The registry owns the outline; the self-paced record says where the learner left off. */
 export function BronchoscopyFoundationsHub() {
   return (
     <div className="mx-auto grid w-full max-w-5xl gap-8 px-4 py-10 sm:px-6 lg:px-8">
@@ -32,20 +32,21 @@ export function BronchoscopyFoundationsHub() {
           {bronchCompositionLine()}
         </p>
         <p className="max-w-3xl leading-7">
-          Each lesson introduces its concepts and examples before asking you to apply them. Some use
-          an instrument workspace; others use airway images, a patient case or an examination
-          record. You can browse any lesson. Prerequisites guide preparation without locking the
-          course.
+          Each lesson teaches its concepts and examples before any question. Questions and
+          activities are optional: open the explanation first, try again, or continue without
+          answering. Some lessons use an instrument workspace; others use airway images, a patient
+          case or an examination record. You can open any lesson; prerequisites suggest an order and
+          never lock the course.
         </p>
-        <p className="text-sm leading-6 text-muted-foreground">
-          Screen activities prepare you for supervised learning. They do not establish clinical
-          competence, equipment readiness or physical hand skill. Models use one teaching anatomy
-          and authored geometry or scripted observations. Follow current device instructions and
-          local policy.
+        <p className="text-sm leading-6 text-muted-foreground" data-competence-statement>
+          Self-paced online learning does not establish procedural competence. Hand skill, equipment
+          readiness and clinical judgment are built under supervision. The models use one teaching
+          anatomy with authored geometry or scripted observations; follow current device
+          instructions and local policy.
         </p>
-        <p className="text-sm leading-6 text-muted-foreground">
-          Completed work and first responses stay on this device when storage is available.
-          Reloading an unfinished lesson restarts it; the scope position is not saved.
+        <p className="text-sm leading-6 text-muted-foreground" data-storage-statement>
+          This device keeps where you left off and the sections you open, mark reviewed or mark to
+          review later. Answers, attempts and scope positions are not saved, and nothing is scored.
         </p>
       </section>
       <section aria-labelledby="bronch-map-heading">
@@ -64,7 +65,7 @@ export function BronchoscopyFoundationsHub() {
           Practice short cases
         </Link>
         <Link className="min-h-11 py-3 text-primary" href={BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF}>
-          Assess your decisions
+          Integrated cases
         </Link>
         <Link className="min-h-11 py-3 text-primary" href={BRONCHOSCOPY_FOUNDATIONS_REFERENCE_HREF}>
           Reference, sources and model limits

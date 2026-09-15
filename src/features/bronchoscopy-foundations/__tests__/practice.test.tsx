@@ -5,12 +5,7 @@ import { axe } from 'jest-axe'
 import { BronchCaseActivity } from '../components/BronchCaseActivity'
 import { BronchoscopyFoundationsPracticeLanding } from '../components/BronchoscopyFoundationsPracticeLanding'
 import { bronchMicroCasesInPathwayOrder, microCaseAttemptKey } from '../content/microCases'
-import {
-  BRONCH_STORAGE_KEY,
-  createEmptyBronchRecord,
-  parseBronchRecord,
-  withFirstAttempt,
-} from '../engine/learnProgress'
+import { BRONCH_STORAGE_KEY, createEmptyBronchRecord } from '../engine/learnProgress'
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -42,15 +37,19 @@ beforeEach(() => localStorage.clear())
 afterEach(cleanup)
 
 const cases = () => bronchMicroCasesInPathwayOrder()
-const stored = () => parseBronchRecord(localStorage.getItem(BRONCH_STORAGE_KEY))
 
-function commitChoice(choiceId: string) {
+function choose(choiceId: string) {
   fireEvent.click(document.querySelector(`[data-prediction-choices] input[value="${choiceId}"]`)!)
+}
+
+function checkChoice(choiceId: string) {
+  choose(choiceId)
   fireEvent.click(document.querySelector('[data-now-primary]')!)
 }
 
+/** Self-paced contract (BF-01): explanation before an answer, try again, move on, nothing saved. */
 describe('a practice case', () => {
-  it('shows the situation, withholds the reasoning until a decision, then states it', () => {
+  it('shows the situation and states the outcome once an answer is checked', () => {
     const microCase = cases()[0]
     render(<BronchCaseActivity caseId={microCase.id} />)
 
@@ -64,80 +63,88 @@ describe('a practice case', () => {
     expect(document.querySelector('[data-case-verdict]')).toBeNull()
     expect(document.querySelector<HTMLButtonElement>('[data-now-primary]')?.disabled).toBe(true)
 
-    commitChoice(microCase.stage.item.correctChoiceIds[0])
+    checkChoice(microCase.stage.item.correctChoiceIds[0])
     expect(document.querySelector('[data-case-verdict]')).not.toBeNull()
     expect(document.querySelector('[data-answer-verdict]')).toHaveAttribute(
       'data-verdict-outcome',
       'correct',
     )
+    expect(localStorage.length).toBe(0)
   })
 
-  it('records the first decision once, and lets the learner answer again without rewriting it', () => {
+  it('opens the explanation before an answer, records nothing, and still lets the learner answer', () => {
     const microCase = cases()[0]
-    const key = microCaseAttemptKey(microCase)
+    const item = microCase.stage.item
+    render(<BronchCaseActivity caseId={microCase.id} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Show the explanation' }))
+    const reveal = document.querySelector('[data-explanation-reveal]')
+    expect(reveal).not.toBeNull()
+    expect(reveal?.textContent).toContain(item.explanation)
+    expect(
+      reveal?.querySelector(`[data-explanation-best="${item.correctChoiceIds[0]}"]`),
+    ).not.toBeNull()
+    expect(document.querySelector('[data-answer-verdict]')).toBeNull()
+    expect(document.querySelector('[data-prediction-choices]')).not.toBeNull()
+    checkChoice(item.correctChoiceIds[0])
+    expect(document.querySelector('[data-answer-verdict]')).not.toBeNull()
+    expect(localStorage.length).toBe(0)
+  })
+
+  it('lets the learner try again after a wrong answer, and keeps nothing', () => {
+    const microCase = cases()[0]
     const keyed = microCase.stage.item.correctChoiceIds[0]
     const other = microCase.stage.item.choices.find((choice) => choice.id !== keyed)!.id
     render(<BronchCaseActivity caseId={microCase.id} />)
 
-    commitChoice(other)
-    expect(stored()?.firstAttempts[key].choiceId).toBe(other)
-    expect(stored()?.firstAttempts[key].correct).toBe(false)
-
-    // Answering again is the point of this layer; the record is not.
+    checkChoice(other)
+    expect(document.querySelector('[data-answer-verdict]')).not.toHaveAttribute(
+      'data-verdict-outcome',
+      'correct',
+    )
     fireEvent.click(document.querySelector('[data-answer-again]')!)
     expect(document.querySelector('[data-case-verdict]')).toBeNull()
-    commitChoice(keyed)
+    checkChoice(keyed)
     expect(document.querySelector('[data-answer-verdict]')).toHaveAttribute(
       'data-verdict-outcome',
       'correct',
     )
-    expect(stored()?.firstAttempts[key].choiceId).toBe(other)
-    expect(stored()?.firstAttempts[key].correct).toBe(false)
+    expect(localStorage.length).toBe(0)
   })
 
-  it('tells a returning learner what they decided the first time', () => {
-    const microCase = cases()[0]
-    const keyed = microCase.stage.item.correctChoiceIds[0]
-    localStorage.setItem(
-      BRONCH_STORAGE_KEY,
-      JSON.stringify(
-        withFirstAttempt(createEmptyBronchRecord(), microCaseAttemptKey(microCase), keyed),
-      ),
-    )
-    render(<BronchCaseActivity caseId={microCase.id} />)
-    expect(document.querySelector('[data-first-decision]')?.textContent).toContain(
-      microCase.stage.item.choices.find((choice) => choice.id === keyed)!.label,
-    )
-  })
-
-  it('walks to the next case, and says so plainly on the last one', () => {
+  it('offers the next case before any answer, and says so plainly on the last one', () => {
     const all = cases()
     render(<BronchCaseActivity caseId={all[0].id} />)
-    commitChoice(all[0].stage.item.choices[0].id)
+    expect(document.querySelector('[data-nav-next-case]')).toHaveAttribute(
+      'data-nav-next-case',
+      all[1].id,
+    )
+    checkChoice(all[0].stage.item.choices[0].id)
     expect(document.querySelector('[data-next-case]')).toHaveAttribute('data-next-case', all[1].id)
     cleanup()
 
     render(<BronchCaseActivity caseId={all[all.length - 1].id} />)
-    commitChoice(all[all.length - 1].stage.item.choices[0].id)
+    expect(document.querySelector('[data-nav-next-case]')).toBeNull()
+    checkChoice(all[all.length - 1].stage.item.choices[0].id)
     expect(document.querySelector('[data-next-case]')).toBeNull()
     expect(screen.getByText(/Back to the case list/)).toBeInTheDocument()
   })
 
-  it('does not name the section, and so the idea, until the decision is made', () => {
+  it('names the section it draws on before any answer, so the idea can be reviewed', () => {
     const microCase = cases()[0]
     render(<BronchCaseActivity caseId={microCase.id} />)
-    expect(document.querySelector('[data-case-pairing]')).toBeNull()
-    commitChoice(microCase.stage.item.choices[0].id)
-    expect(document.querySelector('[data-case-pairing]')).not.toBeNull()
+    expect(document.querySelector('[data-case-pairing] a')).toHaveAttribute(
+      'href',
+      `/bronchoscopy-foundations/learn?section=${microCase.sectionId}`,
+    )
   })
 
-  it('lists the local policies a decision depends on only after it is made, and only when there are any', () => {
+  it('lists the local policies a decision depends on with the feedback or explanation, and only when there are any', () => {
     const withPolicies = cases().find((entry) => entry.stage.localPolicyIds.length > 0)
     const without = cases().find((entry) => entry.stage.localPolicyIds.length === 0)
     if (withPolicies) {
       render(<BronchCaseActivity caseId={withPolicies.id} />)
       expect(document.querySelector('[data-case-policies]')).toBeNull()
-      commitChoice(withPolicies.stage.item.choices[0].id)
+      fireEvent.click(screen.getByRole('button', { name: 'Show the explanation' }))
       const listed = [...document.querySelectorAll('[data-case-policies] [data-local-policy]')].map(
         (el) => el.getAttribute('data-local-policy'),
       )
@@ -146,7 +153,7 @@ describe('a practice case', () => {
     }
     if (without) {
       render(<BronchCaseActivity caseId={without.id} />)
-      commitChoice(without.stage.item.choices[0].id)
+      checkChoice(without.stage.item.choices[0].id)
       expect(document.querySelector('[data-case-policies]')).toBeNull()
     }
   })
@@ -173,41 +180,27 @@ describe('the practice landing', () => {
     expect(await axe(container)).toHaveNoViolations()
   })
 
-  it('moves the door past the cases already decided and marks them', () => {
+  it('marks nothing as decided and ignores answers stored by the earlier record', () => {
     const all = cases()
-    let record = createEmptyBronchRecord()
-    record = withFirstAttempt(record, microCaseAttemptKey(all[0]), all[0].stage.item.choices[0].id)
-    localStorage.setItem(BRONCH_STORAGE_KEY, JSON.stringify(record))
-
+    const earlier = JSON.stringify({
+      ...createEmptyBronchRecord(),
+      firstAttempts: {
+        [microCaseAttemptKey(all[0])]: {
+          choiceId: all[0].stage.item.choices[0].id,
+          correct: false,
+          at: '2026-09-12T00:00:00.000Z',
+        },
+      },
+      updatedAt: '2026-09-12T00:00:00.000Z',
+    })
+    localStorage.setItem(BRONCH_STORAGE_KEY, earlier)
     render(<BronchoscopyFoundationsPracticeLanding />)
     expect(document.querySelector('[data-practice-continue]')).toHaveAttribute(
       'data-next-case',
-      all[1].id,
+      all[0].id,
     )
-    expect(document.querySelector(`[data-practice-case-link="${all[0].id}"]`)).toHaveAttribute(
-      'data-decided',
-      'true',
-    )
-    expect(document.querySelector(`[data-practice-case-link="${all[1].id}"]`)).toHaveAttribute(
-      'data-decided',
-      'false',
-    )
-  })
-
-  it('sends a learner who has decided every case to the capstone', () => {
-    let record = createEmptyBronchRecord()
-    for (const microCase of cases()) {
-      record = withFirstAttempt(
-        record,
-        microCaseAttemptKey(microCase),
-        microCase.stage.item.choices[0].id,
-      )
-    }
-    localStorage.setItem(BRONCH_STORAGE_KEY, JSON.stringify(record))
-    render(<BronchoscopyFoundationsPracticeLanding />)
-    expect(document.querySelector('[data-practice-continue]')).toHaveAttribute(
-      'data-practice-continue',
-      'complete',
-    )
+    expect(document.querySelector('[data-decided]')).toBeNull()
+    expect(document.body.textContent).not.toMatch(/first decision|decided once|capstone/i)
+    expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBe(earlier)
   })
 })

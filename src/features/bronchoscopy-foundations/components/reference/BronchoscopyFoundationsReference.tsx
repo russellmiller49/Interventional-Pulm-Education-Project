@@ -259,6 +259,9 @@ export function BronchoscopyFoundationsReference() {
                     <strong>Limit.</strong> {source.limitation}
                   </>
                 ) : null}
+                {source.manifest.accessedDate ? (
+                  <span data-source-accessed> Accessed {source.manifest.accessedDate}.</span>
+                ) : null}
               </p>
             </li>
           ))}

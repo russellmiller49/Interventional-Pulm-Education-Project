@@ -1,6 +1,10 @@
 import { cleanup, fireEvent, screen } from '@testing-library/react'
 import { BRONCH_SECTION_IDS } from '../content/pathway'
-import { BRONCH_STORAGE_KEY, parseBronchRecord } from '../engine/learnProgress'
+import { BRONCH_STORAGE_KEY } from '../engine/learnProgress'
+import {
+  BRONCH_SELF_PACED_STORAGE_KEY,
+  parseBronchSelfPacedRecord,
+} from '../engine/selfPacedProgress'
 import { performFiveControlsLearn } from '../test-support/fiveControlsLearnHarness'
 import { SCOPE_RECIPES } from '../test-support/scopeRecipes'
 import {
@@ -66,6 +70,9 @@ afterEach(() => {
   jest.useRealTimers()
 })
 
+const selfPaced = () =>
+  parseBronchSelfPacedRecord(localStorage.getItem(BRONCH_SELF_PACED_STORAGE_KEY))
+
 it.each(BRONCH_SECTION_IDS)('walks the content-led %s lesson through real handlers', async (id) => {
   const { lesson } = await mountSection(id)
   expect(document.querySelector('[data-course-presentation]')).not.toBeNull()
@@ -85,6 +92,7 @@ it.each(BRONCH_SECTION_IDS)('walks the content-led %s lesson through real handle
           expect(document.querySelector('[data-course-teaching]')).toBeNull()
           expect(document.querySelector('[data-normal-airway-tour]')).toBeNull()
           expect(document.querySelector('[data-answer-verdict]')).toBeNull()
+          expect(document.querySelector('[data-show-explanation]')).not.toBeNull()
           commitById(keyedChoiceId(step))
           break
         case 'sort':
@@ -122,9 +130,8 @@ it.each(BRONCH_SECTION_IDS)('walks the content-led %s lesson through real handle
       await settle()
     }
   expect(document.querySelector('[data-section-completion]')).not.toBeNull()
-  expect(
-    parseBronchRecord(localStorage.getItem(BRONCH_STORAGE_KEY))?.completedSectionIds,
-  ).toContain(id)
+  expect(selfPaced()?.reviewedSectionIds).toContain(id)
+  expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
 })
 
 it('shows a storage failure without blocking learning', async () => {
@@ -132,7 +139,7 @@ it('shows a storage failure without blocking learning', async () => {
     throw new Error('Quota')
   })
   await mountSection('pre-use-check')
-  expect(screen.getByRole('alert')).toHaveTextContent('Progress could not be saved')
+  expect(screen.getByRole('alert')).toHaveTextContent('could not be saved')
   expect(nowPrimary()).not.toBeDisabled()
   fireEvent.click(nowPrimary()!)
   expect(currentStepId()).toContain('readiness')
@@ -150,19 +157,19 @@ it('isolates the protected exchange demonstration from the learner attempt and r
   for (let index = 1; index < practice.course!.demonstration!.length; index++)
     fireEvent.click(screen.getByRole('button', { name: 'Next demonstration movement' }))
   expect(document.querySelector('[data-demonstration-caption]')).toHaveTextContent(
-    'no learner credit',
+    'not your own attempt',
   )
-  const before = parseBronchRecord(localStorage.getItem(BRONCH_STORAGE_KEY))!
-  expect(before.completedSectionIds).toEqual([])
-  expect(before.firstAttempts).toEqual({})
-  expect(before.inspectionSnapshot).toBeNull()
+  expect(selfPaced()).toMatchObject({
+    visitedSectionIds: ['protected-accessories'],
+    reviewedSectionIds: [],
+    surveySnapshot: null,
+  })
+  expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
   fireEvent.click(screen.getByRole('button', { name: 'Try with guidance' }))
   expect(document.querySelector('[data-demonstration-caption]')).toBeNull()
   expect(nowPrimary()).toBeDisabled()
   expect(goalStates()).toContain('false')
   SCOPE_RECIPES['protected-accessories']!.act(scopePilot())
   expect(goalStates().every((state) => state === 'true')).toBe(true)
-  expect(parseBronchRecord(localStorage.getItem(BRONCH_STORAGE_KEY))!.completedSectionIds).toEqual(
-    [],
-  )
+  expect(selfPaced()?.reviewedSectionIds).toEqual([])
 })

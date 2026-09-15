@@ -40,8 +40,8 @@ export function BronchPilotTeaching({
       </section>
       {unit.orientation ? (
         <p className={styles.boundaryLine}>
-          Reloading starts an incomplete lesson at the beginning. First answers and completed lesson
-          records remain on this device.
+          Reloading starts this lesson again at the beginning. Answers are not saved; where you left
+          off and the sections you mark stay on this device.
         </p>
       ) : null}
       {!deciding ? (

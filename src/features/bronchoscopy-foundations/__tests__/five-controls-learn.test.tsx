@@ -1,15 +1,18 @@
 import { cleanup, fireEvent, screen } from '@testing-library/react'
 import { bronchStageLesson } from '../content/stageLessons'
 import { BRONCH_SECTION_IDS } from '../content/pathway'
-import { nextIncompleteBronchSection } from '../content/pathwayResolver'
-import { BRONCH_LEARN_VERSIONS } from '../content/lessonVersions'
+import { nextBronchSection } from '../content/pathwayResolver'
 import {
   BRONCH_STORAGE_KEY,
   createEmptyBronchRecord,
   isSectionCompleted,
   parseBronchRecord,
-  withSectionCompleted,
 } from '../engine/learnProgress'
+import {
+  BRONCH_SELF_PACED_STORAGE_KEY,
+  parseBronchSelfPacedRecord,
+  readBronchSelfPacedRecord,
+} from '../engine/selfPacedProgress'
 import { createScopeState, reduceScope } from '../engine/scope/scopeReducer'
 import { scopeGoalsMet } from '../engine/scope/scopeGoalEvaluation'
 import { bronchStageReducer, emptyBronchStageSession } from '../engine/stageSession'
@@ -69,9 +72,10 @@ afterEach(() => {
   cleanup()
   jest.useRealTimers()
 })
-const record = () => parseBronchRecord(localStorage.getItem(BRONCH_STORAGE_KEY))!
+const selfPaced = () =>
+  parseBronchSelfPacedRecord(localStorage.getItem(BRONCH_SELF_PACED_STORAGE_KEY))!
 
-test('orientation and depth teaching precede answers; demonstrations do not earn learner completion', async () => {
+test('orientation and depth teaching precede answers; demonstrations do not count as the learner’s work', async () => {
   const { lesson } = await mountSection('five-controls')
   expect(screen.getByRole('heading', { name: 'What each hand does' })).toBeVisible()
   expect(screen.getByRole('img', { name: /Flexible bronchoscope:/ })).toBeVisible()
@@ -86,8 +90,8 @@ test('orientation and depth teaching precede answers; demonstrations do not earn
   expect(controlsFieldset()).toBeDisabled()
   clickPrimary() // demonstration withdraw
   expect(document.querySelector('[data-readout="depthMm"] dd')).toHaveTextContent('0 mm')
-  expect(record().completedSectionIds).toEqual([])
-  expect(record().firstAttempts).toEqual({})
+  expect(selfPaced().reviewedSectionIds).toEqual([])
+  expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
   fireEvent.click(pilotButton('Replay the example'))
   fireEvent.click(pilotButton('Try with guidance'))
   expect(controlsFieldset()).not.toBeDisabled()
@@ -107,7 +111,7 @@ test('orientation and depth teaching precede answers; demonstrations do not earn
   expect(goalStates()).toEqual(['false'])
 })
 
-test('the complete real pilot keeps a wrong first answer, allows retry and records guided completion v2', async () => {
+test('the complete pilot keeps feedback in the session, allows retry and ends with the learner’s reviewed mark', async () => {
   const { lesson } = await mountSection('five-controls')
   await performFiveControlsLearn(lesson, lesson.predictionStepIndex)
   const check = lesson.steps[lesson.predictionStepIndex]
@@ -117,6 +121,8 @@ test('the complete real pilot keeps a wrong first answer, allows retry and recor
   )
   const raw = `${scannableText()} ${attributesText()}`
   for (const denied of lesson.section.precommitDenyPatterns) expect(raw).not.toMatch(denied)
+  expect(pilotButton('Continue without answering')).toBeDefined()
+  expect(pilotButton('Show the explanation')).toBeDefined()
   const wrong = otherChoiceId(check)
   commitById(wrong)
   expect(document.querySelector('[data-answer-verdict]')).toHaveAttribute(
@@ -124,42 +130,54 @@ test('the complete real pilot keeps a wrong first answer, allows retry and recor
     'not-correct',
   )
   expect(currentStepId()).toBe(check.id)
-  const first = record().firstAttempts['five-controls-learn-v2:N03']
-  expect(first.choiceId).toBe(wrong)
+  expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
   fireEvent.click(pilotButton('Try this check again'))
   expect(document.querySelector('[data-answer-verdict]')).toBeNull()
   commitById(keyedChoiceId(check))
-  expect(record().firstAttempts['five-controls-learn-v2:N03']).toEqual(first)
   clickPrimary()
   await settle()
   for (const step of lesson.steps.slice(lesson.predictionStepIndex + 1, -1))
     await performPilotStep(step)
   expect(document.querySelector('[data-pilot-cue]')).toBeNull()
   expect(document.querySelector('[data-demonstration-caption]')).toBeNull()
-  expect(record().completedSectionIds).toEqual([])
+  expect(selfPaced().reviewedSectionIds).toEqual([])
   fireEvent.click(control('advance')) // early depth is observed, not misdiagnosed grip/force
   expect(nowStatus()).toContain('advanced before centering')
   expect(nowPrimary()).toBeDisabled()
   fireEvent.click(pilotButton('Reset this attempt'))
   await performPilotStep(lesson.steps.at(-1)!) // no rotation needed for the changed target
-  expect(isSectionCompleted(record(), 'five-controls')).toBe(true)
-  expect(record().sectionVersions['five-controls']).toBe(BRONCH_LEARN_VERSIONS['five-controls'])
-  expect(record().sectionPerformance['five-controls-learn-v2']).toMatchObject({
-    unaided: false,
-    assistsUsed: ['guided-practice'],
-  })
+  expect(selfPaced().reviewedSectionIds).toEqual(['five-controls'])
   expect(document.querySelector('[data-next-section]')).toHaveAttribute(
     'data-next-section',
     'branch-entry',
   )
   expect(controlsFieldset()).toBeDisabled()
+  expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
   cleanup()
   await mountSection('five-controls')
   expect(currentStepId()).toBe(lesson.steps[0].id)
-  expect(record().firstAttempts['five-controls-learn-v2:N03']).toEqual(first)
+  expect(document.querySelector('[data-answer-verdict]')).toBeNull()
 })
 
-test('an unfinished reload and review preserve history without pretending to restore the task', async () => {
+test('every five-controls activity can be left without doing it, and nothing is claimed', async () => {
+  const { lesson } = await mountSection('five-controls')
+  for (
+    let guard = 0;
+    !document.querySelector('[data-section-completion]') && guard <= lesson.steps.length + 1;
+    guard++
+  ) {
+    const skip = document.querySelector<HTMLButtonElement>('[data-now-card] [data-now-skip]')
+    if (skip) fireEvent.click(skip)
+    else clickPrimary()
+    await settle()
+  }
+  expect(document.querySelector('[data-section-completion]')).not.toBeNull()
+  expect(document.querySelector('[data-completion-moved-past]')).not.toBeNull()
+  expect(selfPaced().reviewedSectionIds).toEqual(['five-controls'])
+  expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
+})
+
+test('an unfinished reload and review keep nothing and do not pretend to restore the task', async () => {
   const { lesson } = await mountSection('five-controls')
   await performFiveControlsLearn(lesson, 2)
   fireEvent.click(pilotButton('Back'))
@@ -170,29 +188,23 @@ test('an unfinished reload and review preserve history without pretending to res
   cleanup()
   await mountSection('five-controls')
   expect(currentStepId()).toBe(lesson.steps[0].id)
-  expect(record().completedSectionIds).toEqual([])
+  expect(selfPaced().reviewedSectionIds).toEqual([])
 })
 
-test('legacy completion remains historical and Start/Continue selects the revised pilot', () => {
+test('an earlier completion stays historical and does not choose the door', () => {
   const legacy = { ...createEmptyBronchRecord(), completedSectionIds: [...BRONCH_SECTION_IDS] }
   legacy.sectionPerformance['five-controls'] = {
     inputModes: ['keyboard'],
     assistsUsed: [],
     unaided: true,
   }
-  const loaded = parseBronchRecord(JSON.stringify(legacy))!
+  const stored = JSON.stringify(legacy)
+  localStorage.setItem(BRONCH_STORAGE_KEY, stored)
+  const loaded = parseBronchRecord(stored)!
   expect(loaded.completedSectionIds).toContain('five-controls')
   expect(isSectionCompleted(loaded, 'five-controls')).toBe(false)
-  expect(nextIncompleteBronchSection(loaded)?.section.id).toBe('five-controls')
-  const current = withSectionCompleted(loaded, 'five-controls', {
-    inputModes: ['pointer'],
-    assistsUsed: ['guided-practice'],
-    unaided: false,
-  })
-  expect(current.sectionPerformance['five-controls']).toEqual(
-    legacy.sectionPerformance['five-controls'],
-  )
-  expect(nextIncompleteBronchSection(current)?.section.id).toBe('honest-report')
+  expect(nextBronchSection(readBronchSelfPacedRecord())?.section.id).toBe(BRONCH_SECTION_IDS[0])
+  expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBe(stored)
 })
 
 test('every worked demonstration ends with the actual modeled goal achieved, without creating a learner record', () => {
@@ -206,21 +218,28 @@ test('every worked demonstration ends with the actual modeled goal achieved, wit
     expect(state.inputModes).toEqual(['scripted'])
   }
   expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
+  expect(localStorage.getItem(BRONCH_SELF_PACED_STORAGE_KEY)).toBeNull()
 })
 
-test('a requested transfer hint is disclosed as support and never upgrades the first check or completion', async () => {
+test('a requested transfer hint shows the cue and records nothing', async () => {
   const { lesson } = await mountSection('five-controls')
   await performFiveControlsLearn(lesson, lesson.steps.length - 1)
-  const first = record().firstAttempts
+  const before = localStorage.getItem(BRONCH_SELF_PACED_STORAGE_KEY)
   fireEvent.click(screen.getByRole('button', { name: 'Show a hint' }))
   expect(document.querySelector('[data-pilot-cue]')).toHaveTextContent('Compare the target')
-  expect(record().completedSectionIds).toEqual([])
+  expect(localStorage.getItem(BRONCH_SELF_PACED_STORAGE_KEY)).toBe(before)
   await performPilotStep(lesson.steps.at(-1)!)
-  expect(record().sectionPerformance['five-controls-learn-v2']).toMatchObject({
-    unaided: false,
-    assistsUsed: ['guided-practice', 'requested-hint'],
-  })
-  expect(record().firstAttempts).toEqual(first)
+  expect(Object.keys(selfPaced()).sort()).toEqual([
+    'lastSectionId',
+    'reviewLaterSectionIds',
+    'reviewedSectionIds',
+    'surveySnapshot',
+    'updatedAt',
+    'version',
+    'visitedSectionIds',
+  ])
+  expect(selfPaced().reviewedSectionIds).toEqual(['five-controls'])
+  expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
 })
 
 test('actual movement direction, zero travel, transfer geometry and scripted isolation are checked by the reducer', () => {

@@ -1,5 +1,7 @@
 # Core implementation acceptance report
 
+> **Superseded in part, 2026-09-14 (BF-01).** H6, H7, H9, A15, A16, A20 and A21 below describe the examination-era contract: actual work required to continue, a once-only capstone with a noncompensatory standard, immutable first decisions and completion records. The self-paced contract in the [BF-01 handoff](../gap-remediation/self-paced/BF-01-handoff.md) replaces those learner-facing rules; the engine, safety-feedback, report-refusal, survey-validity, source and media dispositions here are unchanged. This historical report is kept as evidence.
+
 The inherited module is now integrated with the seven-mode 3D scope pane and additional Blender props. Capstone answer timing, asset-load recovery, mobile viewport alignment and inspection/reporting safeguards have been verified. [Validation](validation.md) records exact commands and captures.
 
 **This is a core implementation report, not faculty release.** PASS means the named software/content contract has technical evidence in this build. It does not validate an item clinically or grant publication rights. BLOCKED below identifies missing human review or explicitly deferred optional scope; it is not an assertion that the core simulator cannot run.

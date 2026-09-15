@@ -1,5 +1,5 @@
 import { fireEvent, screen } from '@testing-library/react'
-import { readBronchRecord } from '../engine/learnProgress'
+import { availableSurveySnapshot, readBronchSelfPacedRecord } from '../engine/selfPacedProgress'
 import { inspectionReport } from '../engine/inspectionReport'
 import type { BronchStageLesson, BronchStageStep } from '../content/stageLessons'
 import { SCOPE_RECIPES } from './scopeRecipes'
@@ -29,7 +29,12 @@ export async function completeCourseStep(lesson: BronchStageLesson, authored: Br
   const step = authored.course?.learnerRecord
     ? {
         ...authored,
-        interaction: { kind: 'report' as const, report: inspectionReport(readBronchRecord()) },
+        interaction: {
+          kind: 'report' as const,
+          report: inspectionReport({
+            inspectionSnapshot: availableSurveySnapshot(readBronchSelfPacedRecord()),
+          }),
+        },
       }
     : authored
   if (step.course?.demonstration)

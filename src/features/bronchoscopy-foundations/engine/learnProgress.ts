@@ -1,25 +1,24 @@
 import { z } from 'zod'
 
 import { bronchItem } from '../content/stageItems'
-import { BRONCH_LEARN_VERSIONS, bronchLearnRecordId } from '../content/lessonVersions'
-import { AIRWAY_LABELS, type InspectionLedger } from '../components/scope/types'
+import { BRONCH_LEARN_VERSIONS } from '../content/lessonVersions'
+import { AIRWAY_LABELS } from '../components/scope/types'
 
 /**
- * The module's own record: which sections have been worked through on this device, where the
- * learner was last, the first decision recorded on every item they have committed, and — for a
- * section worked on the simulator — how it was driven (A18: the input modes and the assists used,
- * so a summary can say "keyboard, assisted (centerline lock)" rather than claim an unaided run).
+ * The course's earlier record, now read-only (BF-01, owner's self-paced decision of 2026-09-14).
  *
- * Nothing about a section in progress is stored. A reload starts a section at its first step and
- * asks its prediction again; what survives is the record of the outcome. First decisions are
- * write-once and their correctness is recomputed from the item bank at read time, never trusted
- * from storage.
+ * Until then this key held which sections had been worked through, the first decision on every
+ * committed item with its declared support, how the scope was driven, when the capstone debrief was
+ * seen and the finished survey. New sessions never write it — the module's only writer is
+ * `selfPacedProgress.ts` — and no stored byte is rewritten. The schema and parser stay so a stored
+ * record reads exactly as it was written, and so a finished survey saved under it can still feed
+ * the report exercise. No navigation, recommendation or learner-facing claim is derived from its
+ * completions, first attempts or performance summaries.
  *
- * The earlier course's record (`ip-intro-bronchoscopy-progress-v1`) is deliberately NOT read: its
- * booleans were hand toggles, and importing them would manufacture completion (A20).
+ * The earlier nine-module course's record (`ip-intro-bronchoscopy-progress-v1`) is not read either:
+ * its booleans were hand toggles (A20).
  */
 export const BRONCH_STORAGE_KEY = 'ip-bronchoscopy-foundations-v1'
-export const BRONCH_RECORD_CHANGED_EVENT = 'bronchoscopy-foundations-record-changed'
 
 const attemptKey = z.string().regex(/^[a-z0-9-]+:[A-Za-z0-9._-]+$/)
 
@@ -40,6 +39,31 @@ const performanceSchema = z
   })
   .strict()
 
+/** A finished lower-airway survey: what was identified, entered and declared, never a finding. */
+export const inspectionSnapshotSchema = z
+  .object({
+    sectionId: z.literal('systematic-survey'),
+    at: z.string().max(64),
+    rows: z
+      .array(
+        z
+          .object({
+            label: z.enum(AIRWAY_LABELS),
+            identified: z.boolean(),
+            ostiumVisualized: z.boolean(),
+            entered: z.boolean(),
+            distalViewObtained: z.boolean(),
+            inspected: z.enum(['no', 'declared', 'declared-without-view']),
+            limitation: z.enum(['not-safely-accessible', 'not-observed', 'entry-route']).nullable(),
+          })
+          .strict(),
+      )
+      .max(40),
+  })
+  .strict()
+
+export type BronchInspectionSnapshot = z.infer<typeof inspectionSnapshotSchema>
+
 const recordSchema = z
   .object({
     version: z.literal(1),
@@ -49,31 +73,7 @@ const recordSchema = z
     sectionPerformance: z.record(z.string().min(1).max(160), performanceSchema).default({}),
     sectionVersions: z.record(z.string().min(1).max(160), z.number().int().positive()).default({}),
     capstoneDebriefViewedAt: z.string().min(1).max(64).nullable().default(null),
-    inspectionSnapshot: z
-      .object({
-        sectionId: z.literal('systematic-survey'),
-        at: z.string().max(64),
-        rows: z
-          .array(
-            z
-              .object({
-                label: z.enum(AIRWAY_LABELS),
-                identified: z.boolean(),
-                ostiumVisualized: z.boolean(),
-                entered: z.boolean(),
-                distalViewObtained: z.boolean(),
-                inspected: z.enum(['no', 'declared', 'declared-without-view']),
-                limitation: z
-                  .enum(['not-safely-accessible', 'not-observed', 'entry-route'])
-                  .nullable(),
-              })
-              .strict(),
-          )
-          .max(40),
-      })
-      .strict()
-      .nullable()
-      .default(null),
+    inspectionSnapshot: inspectionSnapshotSchema.nullable().default(null),
     updatedAt: z.string().min(1).max(64),
   })
   .strict()
@@ -128,6 +128,7 @@ function cleanPerformance(
   return result
 }
 
+/** Parses in memory only; the stored string is never replaced by the parsed form. */
 export function parseBronchRecord(serialized: string | null | undefined): BronchRecord | null {
   if (!serialized) return null
   try {
@@ -145,130 +146,24 @@ export function parseBronchRecord(serialized: string | null | undefined): Bronch
   }
 }
 
-function storage(): Storage | null {
-  if (typeof window === 'undefined') return null
-  try {
-    return window.localStorage
-  } catch {
-    return null
-  }
-}
-
+/** Reads the earlier record, or an empty one. Never writes. */
 export function readBronchRecord(): BronchRecord {
-  const store = storage()
-  if (!store) return createEmptyBronchRecord()
+  if (typeof window === 'undefined') return createEmptyBronchRecord()
   try {
-    return parseBronchRecord(store.getItem(BRONCH_STORAGE_KEY)) ?? createEmptyBronchRecord()
+    return (
+      parseBronchRecord(window.localStorage.getItem(BRONCH_STORAGE_KEY)) ??
+      createEmptyBronchRecord()
+    )
   } catch {
     return createEmptyBronchRecord()
   }
 }
 
-export function writeBronchRecord(record: BronchRecord): boolean {
-  const store = storage()
-  if (!store) return false
-  try {
-    store.setItem(BRONCH_STORAGE_KEY, JSON.stringify(recordSchema.parse(record)))
-    window.dispatchEvent(new Event(BRONCH_RECORD_CHANGED_EVENT))
-    return true
-  } catch {
-    return false
-  }
-}
-
-export function withSectionVisited(
-  record: BronchRecord,
-  sectionId: string,
-  now = new Date().toISOString(),
-): BronchRecord {
-  if (record.lastSectionId === sectionId) return record
-  return { ...record, lastSectionId: sectionId, updatedAt: now }
-}
-
-export function withSectionCompleted(
-  record: BronchRecord,
-  sectionId: string,
-  performance: BronchSectionPerformance | null = null,
-  now = new Date().toISOString(),
-): BronchRecord {
-  const performanceKey = bronchLearnRecordId(sectionId)
-  return {
-    ...record,
-    completedSectionIds: record.completedSectionIds.includes(sectionId)
-      ? record.completedSectionIds
-      : [...record.completedSectionIds, sectionId],
-    lastSectionId: sectionId,
-    sectionPerformance:
-      performance && !record.sectionPerformance[performanceKey]
-        ? { ...record.sectionPerformance, [performanceKey]: performance }
-        : record.sectionPerformance,
-    sectionVersions: BRONCH_LEARN_VERSIONS[sectionId]
-      ? { ...record.sectionVersions, [sectionId]: BRONCH_LEARN_VERSIONS[sectionId] }
-      : record.sectionVersions,
-    updatedAt: now,
-  }
-}
-
-/** Write-once: a key that already holds a decision keeps it. */
-export function withFirstAttempt(
-  record: BronchRecord,
-  key: string,
-  choiceId: string,
-  now = new Date().toISOString(),
-  support?: BronchFirstAttempt['support'],
-): BronchRecord {
-  if (record.firstAttempts[key]) return record
-  const item = bronchItem(itemIdOfAttemptKey(key))
-  if (!item) return record
-  if (!item.choices.some((choice) => choice.id === choiceId)) return record
-  return {
-    ...record,
-    firstAttempts: {
-      ...record.firstAttempts,
-      [key]: {
-        choiceId,
-        correct: item.correctChoiceIds.includes(choiceId),
-        at: now,
-        ...(support ? { support } : {}),
-      },
-    },
-    updatedAt: now,
-  }
-}
-
-/** Saved only when the learner explicitly finishes the survey, never from a demonstration. */
-export function withInspectionSnapshot(
-  record: BronchRecord,
-  ledger: InspectionLedger,
-  now = new Date().toISOString(),
-): BronchRecord {
-  return {
-    ...record,
-    inspectionSnapshot: {
-      sectionId: 'systematic-survey',
-      at: now,
-      rows: Object.values(ledger).filter((row) => row !== undefined),
-    },
-    updatedAt: now,
-  }
-}
-
-export function withCapstoneDebriefViewed(
-  record: BronchRecord,
-  now = new Date().toISOString(),
-): BronchRecord {
-  if (record.capstoneDebriefViewedAt) return record
-  return { ...record, capstoneDebriefViewedAt: now, updatedAt: now }
-}
-
+/** How the earlier record read a completion: the section id at its then-current lesson version. */
 export function isSectionCompleted(record: BronchRecord, sectionId: string): boolean {
   return (
     record.completedSectionIds.includes(sectionId) &&
     (!BRONCH_LEARN_VERSIONS[sectionId] ||
       record.sectionVersions[sectionId] === BRONCH_LEARN_VERSIONS[sectionId])
   )
-}
-
-export function firstAttempt(record: BronchRecord, key: string): BronchFirstAttempt | undefined {
-  return record.firstAttempts[key]
 }

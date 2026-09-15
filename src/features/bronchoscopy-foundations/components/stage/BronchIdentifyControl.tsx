@@ -7,19 +7,22 @@ import styles from './bronch-stage.module.css'
 import { MediaFigure } from './MediaFigure'
 
 /**
- * Naming views: one image per row with a short list of names, committed as a set and read row
- * by row. The image carries no caption of its own — the name is what the learner supplies — and
- * the rationale afterwards is in landmarks and parentage.
+ * Naming views: one image per row with a short list of names, checked as a set and read row by
+ * row. The image carries no caption of its own — the name is what the learner supplies — and the
+ * rationale afterwards is in landmarks and parentage. The learner may open the names and their
+ * reasoning without answering (`revealed`); that records nothing.
  */
 export function BronchIdentifyControl({
   identify,
   draft,
   committed,
+  revealed = false,
   onChange,
 }: {
   readonly identify: BronchIdentify
   readonly draft: Readonly<Record<string, string>>
   readonly committed: Readonly<Record<string, string>> | null
+  readonly revealed?: boolean
   readonly onChange: (rowId: string, choiceId: string) => void
 }) {
   return (
@@ -66,6 +69,13 @@ export function BronchIdentifyControl({
             {committed ? (
               <p className={styles.verdict} data-identify-verdict={outcome}>
                 <strong>{outcome === 'held' ? 'Held.' : 'Did not hold.'}</strong> {row.rationale}
+              </p>
+            ) : revealed ? (
+              <p className={styles.verdict} data-identify-explanation>
+                <strong>
+                  Name: {row.choices.find((choice) => choice.id === row.answerId)?.label}.
+                </strong>{' '}
+                {row.rationale}
               </p>
             ) : null}
           </div>

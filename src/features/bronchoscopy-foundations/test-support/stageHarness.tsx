@@ -288,10 +288,16 @@ export function decideAllFrames(step: BronchStageStep) {
   for (let i = 0; i < step.interaction.scenario.frames.length; i += 1) decideFrame(step, 'best')
 }
 
-/** The whole document, hidden nodes included, with the answer fieldsets removed. */
+/**
+ * The whole document, hidden nodes included, with the answer fieldsets and the sources footer
+ * removed. Self-paced contract (BF-01): what each source is used for is always available, so it is
+ * teaching support rather than a pending question's surface.
+ */
 export function scannableText(): string {
   const clone = document.body.cloneNode(true) as HTMLElement
-  for (const node of clone.querySelectorAll('[data-prediction-choices], [data-tree-answer]'))
+  for (const node of clone.querySelectorAll(
+    '[data-prediction-choices], [data-tree-answer], [data-stage-sources]',
+  ))
     node.remove()
   for (const node of clone.querySelectorAll('script, style')) node.remove()
   return clone.textContent ?? ''
