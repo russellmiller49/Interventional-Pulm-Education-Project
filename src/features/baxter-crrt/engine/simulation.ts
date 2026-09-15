@@ -257,7 +257,8 @@ function downtimeReason(state: CrrtSimulationState): DowntimeReason | null {
   return null
 }
 
-function accessDysfunctionFraction(access: ConfiguredAccessState): number {
+/** The access term the filter model receives; exported so explanations read the same value. */
+export function accessDysfunctionFraction(access: ConfiguredAccessState): number {
   return clamp01(
     Math.max(
       access.accessConnected && access.returnConnected ? 0 : 1,

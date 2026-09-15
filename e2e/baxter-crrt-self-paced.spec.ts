@@ -146,3 +146,91 @@ test('compact legacy Assess supports keyboard surface navigation and a worked ex
   await page.screenshot({ path: info.outputPath('assess-mobile.png'), fullPage: true })
   await assertUngraded(page)
 })
+
+test('worked CRRT cases teach through explanation, an optional check and an actual run', async ({
+  page,
+}, info) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+
+  await page.goto('/en/baxter-crrt/practice?case=CRRT-05')
+  await expect(
+    page.getByRole('heading', { name: 'Understand this case', exact: true }),
+  ).toBeVisible()
+  const check = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: 'Try predicting · optional' }) })
+    .last()
+  await check.getByRole('button', { name: 'Show explanation', exact: true }).click()
+  await expect(
+    check.getByText('Worked explanation · no answer recorded.', { exact: true }),
+  ).toBeVisible()
+  await expect(check.getByRole('radio', { checked: true })).toHaveCount(0)
+  await check.getByRole('button', { name: 'Show hint', exact: true }).click()
+  await check.getByRole('radio', { name: 'It falls, because the blood is diluted' }).check()
+  await check.getByRole('button', { name: 'Check reasoning', exact: true }).click()
+  await expect(check.getByRole('status')).toContainText('Reasoning feedback')
+  await check.getByRole('button', { name: 'Try again', exact: true }).click()
+  await expect(check.getByRole('radio', { checked: true })).toHaveCount(0)
+  await assertUngraded(page)
+
+  const actions = page
+    .locator('section')
+    .filter({
+      has: page.getByRole('heading', { name: 'Choose and sequence clinical actions', exact: true }),
+    })
+    .last()
+  await expect(actions.getByText('Declare one split universally superior')).toHaveCount(0)
+  await actions
+    .getByRole('article')
+    .filter({ has: page.getByText('Complete the initial clinical assessment', { exact: true }) })
+    .getByRole('button')
+    .click()
+  await actions
+    .getByRole('article')
+    .filter({ hasText: 'Change the pre/post replacement split' })
+    .getByRole('button')
+    .click()
+  await page.getByRole('button', { name: '+1 hr', exact: true }).click()
+  await page.getByRole('button', { name: 'Explain this case', exact: true }).click()
+  const worked = page.getByRole('region', { name: 'Worked example', exact: true })
+  await expect(worked).toContainText('Modeled comparison')
+  await expect(worked).toContainText('Your run is at 1 hr. You performed the comparison actions.')
+  await noOverflow(page)
+  await page.screenshot({ path: info.outputPath('worked-crrt05-desktop.png'), fullPage: true })
+  await page.getByRole('tab', { name: 'Debrief', exact: true }).click()
+  await page.getByRole('button', { name: 'End run and review debrief', exact: true }).click()
+  await expect(page.getByText('Run reviewed', { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Expected and observed in this case', exact: true }),
+  ).toBeVisible()
+  await assertUngraded(page)
+
+  await page.goto('/en/baxter-crrt/practice?case=CRRT-15')
+  await page.getByRole('radio', { name: 'Return line', exact: true }).check()
+  await page.getByRole('button', { name: 'Check reasoning', exact: true }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Reasoning feedback' })).toContainText(
+    'Here return pressure did not change.',
+  )
+  await page.getByRole('button', { name: 'Explain this case', exact: true }).click()
+  await expect(
+    page.getByRole('region', { name: 'Pressure location comparison; horizontally scrollable' }),
+  ).toBeVisible()
+  await page.setViewportSize({ width: 390, height: 844 })
+  await noOverflow(page)
+  await page.screenshot({ path: info.outputPath('worked-crrt15-mobile.png'), fullPage: true })
+  await page.setViewportSize({ width: 1440, height: 900 })
+
+  await page.goto('/en/baxter-crrt/assess')
+  await page.getByRole('button', { name: 'Explain this case', exact: true }).click()
+  await expect(
+    page.getByRole('region', { name: 'Filter-loss domains; horizontally scrollable' }),
+  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Try predicting · optional' })).toHaveCount(0)
+  await page.screenshot({ path: info.outputPath('worked-crrt16-desktop.png'), fullPage: true })
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Explain this case', exact: true })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Worked example', exact: true })).toHaveCount(0)
+  await assertUngraded(page)
+  expect(errors).toEqual([])
+})

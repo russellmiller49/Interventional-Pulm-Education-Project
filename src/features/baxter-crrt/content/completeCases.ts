@@ -12,6 +12,7 @@ import {
   type SourceReference,
 } from './schema'
 import { BAXTER_CRRT_CONTENT_VERSION } from './versions'
+import { getCrrtWorkedCaseExample } from './workedCaseExamples'
 
 interface CaseNarrative {
   readonly id: CrrtCaseId
@@ -1205,14 +1206,21 @@ function removeInheritedTemplatePhysiology(
   return definition
 }
 
+/**
+ * CRRT-15 starts with no low-effective-flow term, so the former correction (set the term to 0.1,
+ * and 0.6 before that) created the contributor it claimed to relieve and slightly steepened the
+ * filter trend. The action keeps its one-hour observation and no longer changes filter risk; the
+ * dormant completion condition keeps its bound, which the untouched starting value meets.
+ */
 function customizeFilterPressureCase(definition: MutableRuntimeCrrtCase): MutableRuntimeCrrtCase {
-  const lowFlowAction = definition.interventions.find((intervention) =>
+  const check = definition.interventions.find((intervention) =>
     intervention.id.endsWith('action-safe-candidate'),
   )
-  const lowFlowEffect = lowFlowAction?.effects.find(
-    (effect) => effect.target === 'circuit.filter.lowEffectiveBloodFlowFraction',
-  )
-  if (lowFlowEffect?.valueType === 'number') lowFlowEffect.value = 0.1
+  if (check) {
+    check.effects = check.effects.filter(
+      (effect) => effect.target !== 'circuit.filter.lowEffectiveBloodFlowFraction',
+    )
+  }
 
   const lowFlowCondition = definition.successConditions.find(
     (condition) => condition.metric === 'circuit.filter.lowEffectiveBloodFlowFraction',
@@ -1222,6 +1230,90 @@ function customizeFilterPressureCase(definition: MutableRuntimeCrrtCase): Mutabl
     lowFlowCondition.value = 0.2
   }
 
+  return definition
+}
+
+/**
+ * CRRT-05's template hangs a source bag only for flows running at the start. Moving replacement
+ * before the filter then asked for a pre-filter flow with no bag, and the fluid model stopped every
+ * pump while the machine still read running. Hang the pre-filter source the split needs.
+ */
+function customizeReplacementSplitCase(definition: MutableRuntimeCrrtCase): MutableRuntimeCrrtCase {
+  const bags = definition.engineFixtureConfiguration.bags
+  if (bags.some((bag) => bag.flowTerm === 'pre-replacement')) return definition
+  const postFilterSource = bags.find((bag) => bag.flowTerm === 'post-replacement')
+  if (!postFilterSource) {
+    throw new Error('CRRT-05 requires its post-filter replacement source.')
+  }
+  definition.engineFixtureConfiguration.bags = bags.flatMap((bag) =>
+    bag === postFilterSource
+      ? [
+          {
+            ...postFilterSource,
+            id: 'pre-replacement-bag',
+            label: 'Synthetic pre-replacement source',
+            flowTerm: 'pre-replacement' as const,
+            sourceIds: [...postFilterSource.sourceIds],
+          },
+          bag,
+        ]
+      : [bag],
+  )
+  return definition
+}
+
+/**
+ * CRRT-02 worked cases replace generic goal, hint, reassessment and debrief copy with the
+ * case-specific teaching in `workedCaseExamples.ts`, so the case and its worked example agree.
+ */
+function applyWorkedCaseRevision(definition: MutableRuntimeCrrtCase): MutableRuntimeCrrtCase {
+  const example = getCrrtWorkedCaseExample(definition.id)
+  if (!example) return definition
+  const { revision } = example
+
+  definition.hiddenMechanism.summary = example.learningPoint
+  definition.hiddenMechanism.causalChain = [...revision.debrief.causalChain]
+  const goal = definition.goalOptions.find(
+    (option) => option.id === definition.hiddenMechanism.correctGoalOptionId,
+  )
+  if (!goal) throw new Error(`Missing goal option for ${definition.id}.`)
+  goal.label = revision.goal
+  if (revision.patientDescription) definition.patientDescription = revision.patientDescription
+  if (revision.visibleFindings) definition.visibleFindings = [...revision.visibleFindings]
+
+  const hints = [...definition.hintLadder].sort((left, right) => left.sequence - right.sequence)
+  if (hints.length !== revision.hints.length) {
+    throw new Error(`${definition.id} hint ladder no longer matches its worked-case hints.`)
+  }
+  hints.forEach((hint, index) => {
+    hint.text = revision.hints[index]
+  })
+
+  for (const [suffix, copy] of Object.entries(revision.interventions)) {
+    const matches = definition.interventions.filter(({ id }) => id.endsWith(suffix))
+    if (matches.length !== 1) {
+      throw new Error(`${definition.id} has no single intervention ending in ${suffix}.`)
+    }
+    const [intervention] = matches
+    if (copy.label) intervention.label = copy.label
+    if (copy.description) intervention.description = copy.description
+    if (copy.response) intervention.response = copy.response
+  }
+
+  const reassessments = definition.reassessmentOptions.filter(({ id }) =>
+    definition.requiredReassessmentIds.includes(id),
+  )
+  if (reassessments.length !== 1) {
+    throw new Error(`${definition.id} needs exactly one required reassessment option.`)
+  }
+  reassessments[0].label = revision.reassessmentLabel
+
+  definition.debrief.summary = revision.debrief.summary
+  definition.debrief.statedGoalReview = revision.goal
+  definition.debrief.predictionReview = example.learningPoint
+  definition.debrief.trendReview = revision.debrief.trendReview
+  definition.debrief.causalChain = [...revision.debrief.causalChain]
+  definition.debrief.transferQuestion = revision.debrief.transferQuestion
   return definition
 }
 
@@ -1663,14 +1755,18 @@ const adaptedCases = authoredNarratives
       : removeInheritedTemplatePhysiology(definition),
   )
   .map(ensureTimedResponse)
+  .map(applyWorkedCaseRevision)
 const adaptedCaseIds = new Set(adaptedCases.map((definition) => definition.id))
 const promotedCases = sourceCases
   .filter((definition) => !adaptedCaseIds.has(definition.id))
   .map(promoteExistingCase)
-  .map((definition) =>
-    definition.id === 'CRRT-15' ? customizeFilterPressureCase(definition) : definition,
-  )
+  .map((definition) => {
+    if (definition.id === 'CRRT-05') return customizeReplacementSplitCase(definition)
+    if (definition.id === 'CRRT-15') return customizeFilterPressureCase(definition)
+    return definition
+  })
   .map(ensureTimedResponse)
+  .map(applyWorkedCaseRevision)
 
 const parsedCases = runtimeCrrtCaseRegistrySchema.parse(
   [...promotedCases, ...adaptedCases]
