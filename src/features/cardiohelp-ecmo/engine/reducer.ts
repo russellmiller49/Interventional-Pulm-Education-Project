@@ -546,6 +546,11 @@ export function ecmoSimulationReducer(
     return createInitialSimulationState(action.scenarioId, action.mode ?? state.simulationMode)
   }
 
+  if (action.type === 'START_ACTIVITY') {
+    // Entry does not change time, physiology, prediction, credit, or action history.
+    return { ...state, scenario: { ...state.scenario, activityStarted: true, phase: 'act' } }
+  }
+
   if (action.type === 'COMMIT_PREDICTION') {
     const definition = getDefinition(state)
     const goal = action.goalId === definition.expectation.goalId
@@ -558,6 +563,7 @@ export function ecmoSimulationReducer(
           scenario: {
             ...state.scenario,
             phase: 'act',
+            activityStarted: true,
             prediction: { committed: true, ...action },
           },
         },

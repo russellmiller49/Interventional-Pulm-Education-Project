@@ -7,20 +7,13 @@ import {
 } from '@/features/critical-care/test-support/teachingPanelContract'
 
 import { ecmoFoundationSections } from '../content/foundationLessons'
-import { resolveEcmoModeText } from '../content/circuitSegments'
-import {
-  ecmoLocalizationRow,
-  ecmoLocalizationRowTextEquivalent,
-  ecmoLocalizationRows,
-} from '../content/localizationCards'
+import { ecmoLocalizationRow } from '../content/localizationCards'
 import { cardiohelpLearnLessonByScenarioId } from '../content/learnLessons'
 import { requireEcmoLearnPrediction } from '../content/learnPredictionItems'
 import {
   cardiohelpScenarioById,
   cardiohelpScenarios,
   predictionControls,
-  predictionDirections,
-  predictionGoals,
 } from '../content/scenarios'
 import { createInitialSimulationState, ecmoSimulationReducer } from '../engine'
 import type { EcmoSimulationState } from '../engine/types'
@@ -217,61 +210,41 @@ describe('B4: every pilot panel satisfies the teaching-panel contract', () => {
   })
 })
 
-describe('B4: no pilot panel leaks the authored answer before commitment', () => {
-  it.each(PILOT_IDS)('%s withholds the mechanism, the response, and the reflex', (id) => {
-    const { container } = render(<EcmoDrillTeachingPanel state={settled(id)} />)
+describe('B4: optional teaching and truthful responses', () => {
+  it.each(PILOT_IDS)(
+    '%s offers mechanism and response teaching without recording a prediction',
+    (id) => {
+      const state = settled(id)
+      const history = state.history
+      const { container } = render(<EcmoDrillTeachingPanel state={state} />)
+      expect(container.querySelector('[data-withheld-until-commitment]')).toBeNull()
+      for (const selector of [
+        '[data-drill-mechanism]',
+        '[data-drill-fitting-response]',
+        '[data-harmful-reflex]',
+      ]) {
+        expect(container.querySelector(selector)).not.toBeNull()
+      }
+      expect(container.querySelector('[data-committed-choice]')).toBeNull()
+      expect(state.scenario.prediction.committed).toBe(false)
+      expect(state.history).toBe(history)
+    },
+  )
 
-    expect(container.querySelector('[data-withheld-until-commitment]')).not.toBeNull()
-    expect(container.querySelector('[data-after-commitment]')).toBeNull()
-    for (const selector of [
-      '[data-drill-mechanism]',
-      '[data-drill-competing]',
-      '[data-drill-fitting-response]',
-      '[data-drill-domains]',
-      '[data-harmful-reflex]',
-      '[data-committed-choice]',
-    ]) {
-      expect(container.querySelector(selector)).toBeNull()
-    }
-  })
+  it.each(PILOT_IDS)(
+    '%s keeps device, circuit, and patient explanations distinct before an answer',
+    (id) => {
+      const state = settled(id)
+      const { container } = render(<EcmoDrillTeachingPanel state={state} />)
+      for (const domain of ['device', 'circuit-or-gas', 'patient']) {
+        expect(container.querySelector(`[data-domain="${domain}"]`)).not.toBeNull()
+      }
+      expect(container.querySelector('[data-committed-choice]')).toBeNull()
+      expect(state.scenario.prediction.committed).toBe(false)
+    },
+  )
 
-  it.each(PILOT_IDS)('%s prints none of the authored answer text before commitment', (id) => {
-    const { container } = render(<EcmoDrillTeachingPanel state={settled(id)} />)
-    const text = container.textContent ?? ''
-    const prediction = requireEcmoLearnPrediction(id)
-    const scenario = cardiohelpScenarioById.get(id)
-    if (!scenario) throw new Error(`No scenario ${id}`)
-
-    // Every authored choice label and rationale, the explanation, and the debrief causal chain.
-    for (const choice of prediction.item.choices) {
-      expect(text).not.toContain(choice.label)
-      if (choice.rationale) expect(text).not.toContain(choice.rationale)
-    }
-    expect(text).not.toContain(prediction.item.explanation)
-    for (const link of scenario.debrief.causalChain) expect(text).not.toContain(link)
-    for (const step of scenario.debrief.correctWorkflow) expect(text).not.toContain(step)
-
-    // The diagnosis itself, and the shape of sentence that states it. The first draft of these
-    // panels leaked exactly this way: not by quoting an authored string, but by ending a
-    // pre-commitment summary with "a recirculation state is active on this circuit".
-    expect(text).not.toContain(scenario.debrief.diagnosis)
-    expect(text).not.toMatch(/\bis active on this circuit\b/i)
-    expect(text).not.toMatch(/\bhas been corrected on this circuit\b/i)
-
-    // And the expectation's own triple, in the words the Practice surface uses for it.
-    const goalLabel = predictionGoals.find((goal) => goal.id === scenario.expectation.goalId)?.label
-    const controlLabel = predictionControls.find(
-      (control) => control.value === scenario.expectation.control,
-    )?.label
-    const directionLabel = predictionDirections.find(
-      (direction) => direction.value === scenario.expectation.direction,
-    )?.label
-    for (const label of [goalLabel, controlLabel, directionLabel]) {
-      if (label) expect(text).not.toContain(label)
-    }
-  })
-
-  it.each(PILOT_IDS)('%s opens the mechanism only once the engine holds a commitment', (id) => {
+  it.each(PILOT_IDS)('%s retains the mechanism after an optional prediction', (id) => {
     const { container } = render(<EcmoDrillTeachingPanel state={afterCommitment(settled(id))} />)
 
     expect(container.querySelector('[data-withheld-until-commitment]')).toBeNull()
@@ -313,7 +286,7 @@ describe('B4: no pilot panel leaks the authored answer before commitment', () =>
     expect(committed).not.toMatch(/correct|incorrect|right answer|well done/i)
   })
 
-  it('closes the mechanism again when the scenario is reloaded and the commitment is cleared', () => {
+  it('clears the response on reload while retaining the mechanism', () => {
     const state = ecmoSimulationReducer(afterCommitment(settled('vv-recirculation')), {
       type: 'LOAD_SCENARIO',
       scenarioId: 'vv-recirculation',
@@ -321,8 +294,9 @@ describe('B4: no pilot panel leaks the authored answer before commitment', () =>
     })
     expect(state.scenario.prediction.committed).toBe(false)
     const { container } = render(<EcmoDrillTeachingPanel state={state} />)
-    expect(container.querySelector('[data-withheld-until-commitment]')).not.toBeNull()
-    expect(container.querySelector('[data-drill-mechanism]')).toBeNull()
+    expect(container.querySelector('[data-withheld-until-commitment]')).toBeNull()
+    expect(container.querySelector('[data-drill-mechanism]')).not.toBeNull()
+    expect(container.querySelector('[data-committed-choice]')).toBeNull()
   })
 })
 
@@ -473,42 +447,19 @@ describe('R2: the circuit map and localization row inside the pilot drills', () 
     }
   })
 
-  it.each(PILOT_IDS)('%s reveals no localization content before a commitment', (id) => {
+  it.each(PILOT_IDS)('%s offers its applicable localization row without an answer', (id) => {
     const { container } = render(<EcmoDrillTeachingPanel state={settled(id)} />)
-
-    expect(container.querySelector('[data-localization-card]')).toBeNull()
-    expect(container.querySelector('[data-localization-row]')).toBeNull()
-    expect(container.querySelector('[data-circuit-implicated]')).toBeNull()
-    expect(container.querySelector('[data-implicated-caption]')).toBeNull()
-    expect(container.querySelector('[data-implicated-marker]')).toBeNull()
-    expect(container.querySelector('[data-segment-state="implicated"]')).toBeNull()
-
-    /*
-     * Attributes, accessible names and SVG description text included — an answer hidden in an
-     * `aria-label` or a `<title>` is still an answer.
-     *
-     * What is scanned for is the row as composed: its name, its signature, where it says the
-     * problem lives, the response, the reflex, and the prose equivalent that carries the shortlist.
-     * Individual cause items are deliberately not scanned. They are two-word clinical nouns —
-     * "Cannula position", "Volume state" — and the recirculation panel has always named several of
-     * them in its own model boundary, as a list of what the simulation does *not* represent.
-     * Failing on that would be reporting a leak where there is a coincidence of vocabulary, and the
-     * first version of this check did exactly that.
-     */
-    const serialised = `${container.innerHTML} ${container.textContent ?? ''}`
-    for (const row of ecmoLocalizationRows) {
-      expect(serialised).not.toContain(row.label)
-      expect(serialised).not.toContain(row.problemLocation)
-      expect(serialised).not.toContain(row.actionClass)
-      expect(serialised).not.toContain(row.harmfulReflex)
-      expect(serialised).not.toContain(row.modelBoundary)
-      for (const mode of ['vv', 'va'] as const) {
-        expect(serialised).not.toContain(resolveEcmoModeText(row.signature, mode))
-        expect(serialised).not.toContain(ecmoLocalizationRowTextEquivalent(mode, row.id))
-      }
-      // The shortlist as the card renders it, rather than any single item of it.
-      expect(serialised).not.toContain(row.causes.join('; '))
+    const plan = MAPPED_PILOTS[id as keyof typeof MAPPED_PILOTS]
+    if (plan?.rowId) {
+      const row = ecmoLocalizationRow(plan.rowId)
+      expect(container.querySelector(`[data-localization-row="${row.id}"]`)).not.toBeNull()
+      expect(container.textContent).toContain(row.problemLocation)
+      expect(container.textContent).toContain(row.modelBoundary)
+    } else {
+      expect(container.querySelector('[data-localization-row]')).toBeNull()
     }
+    expect(container.querySelector('[data-committed-choice]')).toBeNull()
+    expect(container.querySelector('[data-circuit-minimap]')).toBeNull()
   })
 
   it.each(Object.keys(MAPPED_PILOTS))('%s opens the row once the learner has committed', (id) => {
@@ -531,13 +482,19 @@ describe('R2: the circuit map and localization row inside the pilot drills', () 
     ).not.toBeNull()
   })
 
-  it.each(Object.keys(MAPPED_PILOTS))('%s closes both again when the scenario reloads', (id) => {
-    const reloaded = ecmoSimulationReducer(afterCommitment(settled(id)), {
-      type: 'LOAD_SCENARIO',
-      scenarioId: id,
-    })
-    const { container } = render(<EcmoDrillTeachingPanel state={reloaded} />)
-    expect(container.querySelector('[data-localization-row]')).toBeNull()
-    expect(container.querySelector('[data-circuit-implicated]')).toBeNull()
-  })
+  it.each(Object.keys(MAPPED_PILOTS))(
+    '%s retains the applicable teaching row on a fresh reload',
+    (id) => {
+      const reloaded = ecmoSimulationReducer(afterCommitment(settled(id)), {
+        type: 'LOAD_SCENARIO',
+        scenarioId: id,
+      })
+      const { container } = render(<EcmoDrillTeachingPanel state={reloaded} />)
+      const plan = MAPPED_PILOTS[id as keyof typeof MAPPED_PILOTS]
+      expect(Boolean(container.querySelector('[data-localization-row]'))).toBe(Boolean(plan.rowId))
+      expect(container.querySelector('[data-committed-choice]')).toBeNull()
+      expect(reloaded.scenario.prediction.committed).toBe(false)
+      expect(container.querySelector('[data-circuit-implicated]')).toBeNull()
+    },
+  )
 })

@@ -52,13 +52,11 @@ export function ecmoPathwaySectionKind(sectionId: string): EcmoPathwaySectionKin
  * drill list.
  */
 export function ecmoWorkedSectionIds(progress: ProgressV2): ReadonlySet<string> {
-  const worked = new Set<string>()
-  for (const id of progress.completedLearnLessonIds) {
-    if (ecmoPathwaySectionKind(id) === 'drill') worked.add(id)
-  }
-  for (const id of progress.completedFoundationSectionIds ?? []) {
-    if (ecmoPathwaySectionKind(id) === 'foundation-workspace') worked.add(id)
-  }
+  const worked = new Set(
+    (progress.visitedTopicIds ?? [])
+      .filter((id) => id.startsWith('learn:'))
+      .map((id) => id.split(':').slice(2).join(':')),
+  )
   return worked
 }
 
@@ -130,7 +128,13 @@ export function nextIncompleteSectionLink(
   track: SupportMode,
   progress: ProgressV2,
 ): EcmoNextSectionLink | null {
-  const next = resolveNextIncompleteSection(track, progress)
+  const saved = progress.lastLessonScenarioIdByMode[track]
+  const sections = criticalCareLearningPathway(MODULE_ID, track).sections
+  const savedIndex = sections.findIndex((section) => section.id === saved)
+  const next =
+    savedIndex >= 0
+      ? { section: sections[savedIndex], index: savedIndex, total: sections.length }
+      : resolveNextIncompleteSection(track, progress)
   if (!next) return null
   return {
     ...next,

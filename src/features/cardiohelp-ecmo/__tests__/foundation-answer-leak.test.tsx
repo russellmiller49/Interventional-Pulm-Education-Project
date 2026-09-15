@@ -5,7 +5,7 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { EcmoFoundationLessonActivity } from '../components/EcmoFoundationLessonActivity'
 import { ecmoFoundationLearningItemsFor } from '../content/foundationLearningItems'
 import type { SupportMode } from '../engine/types'
-import { answerLeakMatch, ANSWER_LEAK_MATCHERS } from '../test-support/answerLeakMatchers'
+import { answerLeakMatch } from '../test-support/answerLeakMatchers'
 
 /** Ordinary Learn teaching is available first. Only the explicitly unlabelled retrieval
  * task withholds locations in all DOM layers. Drill disclosure tests remain separate. */
@@ -58,40 +58,6 @@ const TRACKS: readonly SupportMode[] = ['vv', 'va']
  * the task pane; this item is now answered by pointing at the circuit, so the fieldset is the pins
  * on the drawing and its label is the legend it prints there.
  */
-function disclosureUnits(): readonly string[] {
-  const root = document.body.cloneNode(true) as HTMLElement
-  for (const choices of Array.from(root.querySelectorAll('[data-prediction-choices]'))) {
-    choices.remove()
-  }
-
-  const units: string[] = []
-  const push = (text: string | null | undefined) => {
-    for (const sentence of (text ?? '').split(/(?<=[.!?])\s+/)) {
-      if (sentence.trim().length > 0) units.push(sentence)
-    }
-  }
-
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
-  for (let node = walker.nextNode(); node; node = walker.nextNode()) push(node.textContent)
-  // Prose containers re-joined: a paragraph broken into several JSX text nodes must still be
-  // scanned as its sentences, or a leak written across an expression boundary would slip through.
-  for (const element of Array.from(root.querySelectorAll('p, li, desc, title, text'))) {
-    push(element.textContent)
-  }
-  for (const element of Array.from(root.querySelectorAll('[aria-label]'))) {
-    push(element.getAttribute('aria-label'))
-  }
-  return units
-}
-
-function expectNoLeak() {
-  for (const unit of disclosureUnits()) {
-    const matched = answerLeakMatch(unit)
-    if (matched) {
-      throw new Error(`leak (${matched.name}) in: "${unit.trim().slice(0, 160)}"`)
-    }
-  }
-}
 
 /** The diagnostic map's SVG, wherever its tabpanel currently stands. */
 function diagnosticSvg(): SVGSVGElement {
@@ -163,15 +129,7 @@ describe('ordinary teaching precedes the independent retrieval check', () => {
     },
   )
 
-  it.each(TRACKS)(
-    '%s: the predict phase, with the stem on screen, still discloses nothing',
-    (track) => {
-      mountLesson(track)
-      goToPredict()
-      expect(document.body.textContent).toMatch(/Where in the blood path does the circuit report/i)
-      expectNoLeak()
-    },
-  )
+  // ECMO-01: obsolete exam/deep-link restriction retired; replacement: self-paced.test.tsx.
 
   it('a direct URL begins with teaching and reconstructs no answer', () => {
     mountLesson('vv', 'act')
@@ -181,45 +139,9 @@ describe('ordinary teaching precedes the independent retrieval check', () => {
     expect(diagnosticPintFlag()).not.toBeNull()
   })
 
-  it.each(TRACKS)(
-    '%s: the diagnostic map withholds the channel placements, in every layer',
-    (track) => {
-      mountLesson(track)
-      goToPredict()
+  // ECMO-01: obsolete exam/deep-link restriction retired; replacement: self-paced.test.tsx.
 
-      // The hidden-but-mounted tabpanel is part of the disclosure surface: expectNoLeak() above
-      // already scanned it, and these are the structural halves of the same claim.
-      const svg = diagnosticSvg()
-      // No visible pInt marker placed on the drawing…
-      expect(diagnosticPintFlag()).toBeNull()
-      expect(
-        Array.from(svg.querySelectorAll('text')).filter((node) =>
-          /\bpInt\b/.test(node.textContent ?? ''),
-        ),
-      ).toHaveLength(0)
-      // …no Δp bracket spanning the membrane with the pInt − pArt formula…
-      expect(svg.querySelector('[data-delta-bracket]')).toBeNull()
-      // …and the accessible description does not walk the channels along the path.
-      const desc = svg.querySelector('desc')?.textContent ?? ''
-      expect(desc).not.toMatch(/\bpInt\b/)
-      expect(desc).not.toMatch(/\bpVen\b/)
-      expect(desc).not.toMatch(/\bpArt\b/)
-      expect(desc).toMatch(/committed/i)
-    },
-  )
-
-  it('selecting the Pressure-zone map tab before committing exposes nothing', () => {
-    mountLesson('vv')
-    goToPredict()
-
-    fireEvent.click(screen.getByRole('tab', { name: 'Pressure-zone map' }))
-    const panel = document.querySelector('#cardiohelp-diagnostic-view')
-    expect(panel).not.toBeNull()
-    expect(panel!.hasAttribute('hidden')).toBe(false)
-
-    expect(diagnosticPintFlag()).toBeNull()
-    expectNoLeak()
-  })
+  // ECMO-01: obsolete exam/deep-link restriction retired; replacement: self-paced.test.tsx.
 })
 
 describe('after commitment, the full location teaching returns', () => {
@@ -258,7 +180,7 @@ describe('after commitment, the full location teaching returns', () => {
       'pVen is reported on the drainage limb, pInt between pump and membrane, pArt after the membrane on the return limb.'
     const committedDesc =
       'Pump outflow passes pInt, a pre-oxygenator access point, and the membrane oxygenator.'
-    expect(ANSWER_LEAK_MATCHERS.some(({ pattern }) => pattern.test(committedPane))).toBe(true)
-    expect(ANSWER_LEAK_MATCHERS.some(({ pattern }) => pattern.test(committedDesc))).toBe(true)
+    expect(answerLeakMatch(committedPane)).not.toBeNull()
+    expect(answerLeakMatch(committedDesc)).not.toBeNull()
   })
 })

@@ -188,10 +188,6 @@ function stepRow(phase: Phase): HTMLLIElement {
   return row
 }
 
-function stepRowState(phase: Phase): string | null {
-  return stepRow(phase).getAttribute('data-step-state')
-}
-
 /** The one primary action of the Now card. */
 function nowPrimary(): HTMLButtonElement {
   const button = document.querySelector<HTMLButtonElement>('[data-now-card] [data-now-primary]')
@@ -650,27 +646,16 @@ describe('bounded actions', () => {
     expect(guidedAction('reveal-evolved-state')).toBeInTheDocument()
   })
 
-  it('offers no state-loading action before the prediction has been committed', () => {
+  it('opens real bounded actions without a prediction and leaves observations unperformed', () => {
     mount('vv-integration-capstone')
-
-    expect(document.querySelectorAll('[data-guided-action]')).toHaveLength(0)
-    expect(document.querySelector('[data-bounded-actions]')).toBeNull()
     continueTo('predict')
-    expect(document.querySelectorAll('[data-guided-action]')).toHaveLength(0)
-    // The Act row is locked and its button disabled, and the list says why. Clicking it
-    // uncommitted is a no-op: the transition itself consults the commitment. This was the
-    // reproduced bypass — a phase click used to unlock it.
-    expect(stepRowState('act')).toBe('locked')
+    expect(stepRow('act').querySelector('button')).toBeEnabled()
     fireEvent.click(stepRow('act').querySelector('button')!)
-    expect(currentPhase()).toBe('predict')
-    expect(document.querySelectorAll('[data-guided-action]')).toHaveLength(0)
-    expect(document.querySelector('[data-phase-lock-note]')).toHaveTextContent(
-      'The later steps unlock when you commit your prediction.',
-    )
-
-    commitAndContinue('vv-integration-capstone')
+    expect(currentPhase()).toBe('act')
     expect(document.querySelectorAll('[data-guided-action]').length).toBeGreaterThan(0)
     expect(document.querySelector('[data-phase-lock-note]')).toBeNull()
+    expect(document.querySelector('[data-comparison-result]')).toBeNull()
+    expect(clockIsRunning()).toBe(false)
   })
 
   /*
@@ -790,45 +775,28 @@ describe('the phase carried by the URL', () => {
     expect(document.querySelector('[data-ecmo-resumed-note]')).toBeNull()
   })
 
-  it('fails closed on a direct URL into a commitment-gated phase', () => {
+  it('restarts a direct explanation URL honestly and lets the learner open the explanation', () => {
     mount('vv-integration-capstone', 'vv', 'explain')
-
-    // The mount is clamped to predict: no commitment exists in this session and none is
-    // reconstructed from the URL, so the phase the URL asked for stays locked until one is made.
-    expect(currentPhase()).toBe('predict')
-    expect(stepRowState('explain')).toBe('locked')
-    expect(stepRow('explain').querySelector('button')).toBeDisabled()
+    expect(currentPhase()).toBe('recognize')
+    expect(stepRow('explain').querySelector('button')).toBeEnabled()
     expect(document.querySelectorAll('[data-guided-action]')).toHaveLength(0)
-    // And the note says what happened rather than pretending the URL was honoured.
-    const note = document.querySelector('[data-ecmo-resumed-note]')?.textContent ?? ''
-    expect(note).toContain('opened at the predict step')
-    expect(note).toContain('The explain step unlocks when you commit')
-
-    // Committing unlocks exactly what the learner asked for.
-    commitPredictionChoice('vv-integration-capstone')
-    continueTo('explain')
+    expect(document.querySelector('[data-ecmo-resumed-note]')).toHaveTextContent(
+      'Earlier choices, snapshots, and actions were not restored',
+    )
+    fireEvent.click(stepRow('explain').querySelector('button')!)
+    expect(currentPhase()).toBe('explain')
     expect(guidedAction('preview-recirculation-mechanism')).toBeInTheDocument()
   })
 
-  it('fails closed on a direct URL into the transfer phase', () => {
+  it('opens a transfer from a restarted link without inventing a response', () => {
     mount('vv-integration-capstone', 'vv', 'transfer')
-
-    expect(currentPhase()).toBe('predict')
-    expect(stepRowState('transfer')).toBe('locked')
-    expect(stepRow('transfer').querySelector('button')).toBeDisabled()
-    expect(document.querySelectorAll('[data-guided-action]')).toHaveLength(0)
-    expect(document.querySelector('[data-ecmo-resumed-note]')?.textContent).toContain(
-      'The transfer step unlocks when you commit',
-    )
-
-    commitPredictionChoice('vv-integration-capstone')
-    continueTo('transfer')
+    expect(currentPhase()).toBe('recognize')
+    expect(stepRow('transfer').querySelector('button')).toBeEnabled()
+    fireEvent.click(stepRow('transfer').querySelector('button')!)
+    expect(currentPhase()).toBe('transfer')
     expect(guidedAction('preview-recirculation-mechanism')).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', {
-        name: ecmoFoundationLessonRuntime('vv-integration-capstone').phases.transfer.objective,
-      }),
-    ).toBeInTheDocument()
+    expect(document.querySelector('[data-committed-choice]')).toBeNull()
+    expect(document.querySelector('[data-comparison-result]')).toBeNull()
   })
 
   it('still opens on the authored state, held, when resumed mid-lesson', () => {
@@ -905,9 +873,9 @@ describe('the phase carried by the URL', () => {
     // persists it — so the gated URL clamps to predict and the learner commits again.
     expect(loadedVariantId()).toBe('gas-source-before-change')
     expect(clockIsRunning()).toBe(false)
-    expect(currentPhase()).toBe('predict')
-    expect(stepRowState('explain')).toBe('locked')
-    expect(document.querySelector('[data-phase-lock-note]')).not.toBeNull()
+    expect(currentPhase()).toBe('recognize')
+    expect(stepRow('explain').querySelector('button')).toBeEnabled()
+    expect(document.querySelector('[data-phase-lock-note]')).toBeNull()
   })
 
   it('adds no history entry per phase, so leaving the lesson takes one step back', () => {
@@ -1016,7 +984,7 @@ describe('the stage shell around the section', () => {
     expect(currentPhase()).toBe('recognize')
     expect(loadedVariantId()).toBe('reference-circuit')
     expect(document.querySelectorAll('[data-guided-action]')).toHaveLength(0)
-    expect(document.querySelector('[data-phase-lock-note]')).not.toBeNull()
+    expect(document.querySelector('[data-phase-lock-note]')).toBeNull()
   })
 
   it('leaves for the hub on Save & exit', () => {
@@ -1182,7 +1150,7 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     },
   )
 
-  it('teaches locations before a deliberately unlabelled retrieval check', () => {
+  it('keeps learned locations available during optional retrieval', () => {
     mount('circuit-flow-path')
     expect(walkCard().textContent).toMatch(/Reported here.*drainage pressure/i)
     expect(circuitMap()).toHaveAttribute('data-location-disclosure', 'full')
@@ -1194,7 +1162,7 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     ).toHaveTextContent('Between pump and oxygenator')
     expect(ringedSensorSites()).toEqual(['pInt'])
     reachFoundationStep('circuit-flow-path', 'predict')
-    expect(circuitMap()).toHaveAttribute('data-location-disclosure', 'withheld')
+    expect(circuitMap()).toHaveAttribute('data-location-disclosure', 'full')
     expect(circuitMap()).toHaveAttribute('data-presentation-kind', 'none')
     expect(document.querySelector('[data-circuit-walk]')).toBeNull()
   })

@@ -36,7 +36,7 @@ import {
 } from '../../content/foundationLessonRuntime'
 import { ecmoSectionSpecById } from '../../content/sectionSpecs'
 import { ecmoStoryProblemsFor } from '../../content/storyProblems'
-import { persistFoundationSectionCompleted } from '../../engine/progress'
+import { persistTopicVisit } from '../../engine/progress'
 import type { SupportMode } from '../../engine/types'
 import {
   createEcmoFoundationSessionState,
@@ -54,6 +54,7 @@ import { EcmoStageSources } from '../shell/EcmoStageSources'
 import { FitWidthSurface } from '../FitWidthSurface'
 import { EcmoContextStrip, type EcmoContextStripLine } from '../shell/EcmoContextStrip'
 import { EcmoHelpDialog } from '../shell/EcmoHelpDialog'
+import { EcmoOptionalExplanation } from '../shell/EcmoOptionalExplanation'
 import { EcmoNowCard, type NowCardModel } from '../shell/EcmoNowCard'
 import { EcmoLookInLine } from '../shell/EcmoLookInLine'
 import { EcmoOtherAnswers, ECMO_VERDICT_FRAMES } from '../shell/EcmoOtherAnswers'
@@ -70,10 +71,7 @@ import {
 import { FoundationComparison } from '../teaching/FoundationComparison'
 import { type FoundationPressureSite } from '../teaching/CircuitFlowPathPanel'
 import { ecmoSensorSite, ecmoGasPathSegmentIds } from '../../content/circuitSegments'
-import {
-  buildFoundationStageLesson,
-  foundationCircuitLocationDisclosure,
-} from './adapters/foundationStageAdapter'
+import { buildFoundationStageLesson } from './adapters/foundationStageAdapter'
 import { FoundationStoryProblems } from './FoundationStoryProblems'
 import { SectionsDrawer } from './SectionsDrawer'
 import { StageLayout } from './StageLayout'
@@ -88,7 +86,7 @@ import { scrollTaskPaneToTop } from './scrollTaskPaneToTop'
 import { StageSourcesScope } from './StageSourcesScope'
 import { StageTeachingScope } from './StageTeachingScope'
 import { StepList } from './StepList'
-import { canEnterStep, mountStepIndex, type StagePhase, type StageSurfaceId } from './stageModel'
+import { type StagePhase, type StageSurfaceId } from './stageModel'
 import styles from './EcmoLessonStage.module.css'
 
 /**
@@ -96,12 +94,10 @@ import styles from './EcmoLessonStage.module.css'
  *
  * The session is the foundation reducer, mounted once, fed by every pane: a fault-free reference
  * circuit or an existing case loaded as a non-scored teaching preview, restored atomically. The six
- * authored phases become the six steps of the stage's one progression. Exactly one thing is
- * persisted, and only when the learner commits the transfer answer: this section's id, marking it
- * worked. Opening, reading, navigating, predicting and loading states write nothing.
- *
- * Commitment is the sole reveal authority: derived from the committed prediction choice and from
- * nothing else — not the step, not the URL, not the walk stop, not stored progress.
+ * authored phases organize the task outline. Only the visited topic and current location persist.
+ * Answers and model runs stay in this session; a link or refresh opens a fresh teaching model.
+ * Learners may reveal teaching, repeat an optional response, or leave any step without earning
+ * a performed action.
  */
 
 const FIXED_PATHWAY_COPY: Readonly<Record<SupportMode, string>> = {
@@ -125,6 +121,7 @@ const LOOKING_BACK =
   'You are looking back at an earlier step; nothing you have worked through is lost.'
 
 interface Progression {
+  readonly sectionReviewed: boolean
   readonly index: number
   readonly furthestPerformed: number
   readonly performedIds: readonly string[]
@@ -195,13 +192,7 @@ function FoundationStageSession({
   const focusedFoundation = Boolean(lesson.steps[0]?.foundationTask)
   // These teaching sequences restart at their first task on refresh/deep links. No demonstration,
   // answer, or performed step is reconstructed from a URL or historical completion record.
-  const mount = useMemo(
-    () =>
-      focusedFoundation
-        ? { index: 0, clamped: requestedPhase !== 'recognize' }
-        : mountStepIndex(lesson, requestedPhase),
-    [focusedFoundation, lesson, requestedPhase],
-  )
+  const mount = { index: 0, clamped: requestedPhase !== 'recognize' }
   const mountPhase = lesson.steps[mount.index]?.phase ?? 'recognize'
   const variants = ecmoFoundationVariants(runtime, supportMode)
   const primaryVariant = ecmoFoundationPrimaryVariant(runtime, supportMode)
@@ -214,9 +205,10 @@ function FoundationStageSession({
     ),
   )
   const [progression, setProgression] = useState<Progression>(() => ({
+    sectionReviewed: false,
     index: mount.index,
-    furthestPerformed: mount.index - 1,
-    performedIds: lesson.steps.slice(0, mount.index).map((step) => step.id),
+    furthestPerformed: -1,
+    performedIds: [],
     committedPredictionId: null,
     committedTransferId: null,
     storyCommittedByStepId: {},
@@ -271,7 +263,7 @@ function FoundationStageSession({
     ecmoMapAnswerTargets(activeStep.interaction.item.id) !== null
   const isLastStep = activeIndex === lesson.steps.length - 1
   const predictionCommitted = progression.committedPredictionId !== null
-  const finished = progression.committedTransferId !== null
+  const finished = progression.committedTransferId !== null || progression.sectionReviewed
   const sectionSpec = ecmoSectionSpecById.get(sectionId)
   const pathway = criticalCareLearningPathway('cardiohelp-ecmo', supportMode)
   const nextSection = nextPathwaySection(pathway, sectionId)
@@ -284,8 +276,12 @@ function FoundationStageSession({
     activityId: lesson.lifecycleActivityId,
     mode: 'guided',
     phase: activeStep.phase,
-    enabled: true,
+    enabled: false,
   })
+
+  useEffect(() => {
+    persistTopicVisit({ section: 'learn', scenarioId: sectionId, supportMode })
+  }, [sectionId, supportMode])
 
   const running = session.clockRunning
   useEffect(() => {
@@ -512,8 +508,27 @@ function FoundationStageSession({
       }))
       return
     }
-    if (!canEnterStep(lesson, next, activeIndex, predictionCommitted)) return
     enterStep(next, performedNow)
+  }
+
+  function skipStep() {
+    if (isLastStep) setProgression((current) => ({ ...current, sectionReviewed: true }))
+    else enterStep(activeIndex + 1, progression.performedIds)
+  }
+
+  function retryQuestion() {
+    setProgression((current) => ({
+      ...current,
+      sectionReviewed: false,
+      performedIds: current.performedIds.filter((id) => id !== activeStep.id),
+      committedPredictionId:
+        activeStep.interaction.kind === 'prediction' ? null : current.committedPredictionId,
+      committedTransferId:
+        activeStep.interaction.kind === 'transfer-item' ? null : current.committedTransferId,
+      storyCommittedByStepId: { ...current.storyCommittedByStepId, [activeStep.id]: '' },
+      choiceByStepId: { ...current.choiceByStepId, [activeStep.id]: '' },
+      attributionByStepId: { ...current.attributionByStepId, [activeStep.id]: {} },
+    }))
   }
 
   const selectedChoiceId = progression.choiceByStepId[activeStep.id] ?? null
@@ -562,8 +577,6 @@ function FoundationStageSession({
       performedIds: performedNow,
       furthestPerformed: Math.max(current.furthestPerformed, activeIndex),
     }))
-    // Committing the transfer answer is the one thing this section persists: the section is worked.
-    persistFoundationSectionCompleted(sectionId)
     lifecycleAnalytics.recordTransferCompleted()
     lifecycleAnalytics.recordActivityCompleted()
   }
@@ -577,11 +590,7 @@ function FoundationStageSession({
    * Back control, which steps one at a time and says what it is doing.
    */
   function selectStepRow(index: number) {
-    setProgression((current) => {
-      if (index === current.index) return current
-      if (!current.performedIds.includes(lesson.steps[index]?.id ?? '')) return current
-      return { ...current, review: current.review === index ? null : index }
-    })
+    goToStep(index)
   }
 
   /**
@@ -597,7 +606,6 @@ function FoundationStageSession({
   function goToStep(index: number) {
     const target = lesson.steps[index]
     if (!target || index === progression.index) return
-    if (!performedIds.has(target.id)) return
     enterStep(index, progression.performedIds)
   }
 
@@ -645,7 +653,7 @@ function FoundationStageSession({
   const lookInLine =
     !presentation && activeStep.lookIn ? <EcmoLookInLine location={activeStep.lookIn} /> : undefined
   const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
-  const canGoBack = previousStep !== undefined && performedIds.has(previousStep.id)
+  const canGoBack = previousStep !== undefined
   const lookingBack = activeIndex < progression.furthestEntered
   /** A step's own status line, with the looking-back reassurance appended when it applies. */
   const withLookingBack = (own: string) => (lookingBack ? `${own} ${LOOKING_BACK}` : own)
@@ -717,7 +725,7 @@ function FoundationStageSession({
           onActivate: advance,
         },
       }
-    if (focusedStory && !storyCommittedId)
+    if (focusedStory && !storyCommittedId && !savedComparison)
       return {
         ...base,
         primary: {
@@ -785,7 +793,7 @@ function FoundationStageSession({
       case 'transfer-item':
         if (focusedMapQuestion) return base
         return stepPerformed
-          ? { ...base, status: withLookingBack('Done. This section has been worked through.') }
+          ? { ...base, status: withLookingBack('This section is available to review at any time.') }
           : {
               ...base,
               primary: {
@@ -909,7 +917,7 @@ function FoundationStageSession({
                           </button>
                         ) : nextSection ? (
                           <div data-stage-completion>
-                            <p>Section worked through.</p>
+                            <p>Section reviewed.</p>
                             <button
                               type="button"
                               className={shellStyles.nowPrimary}
@@ -991,7 +999,7 @@ function FoundationStageSession({
   }
 
   /*
-   * Every step after the commitment can load a state. Transfer needs it too: the VV capstone's
+   * Every applicable teaching step can load its authored state. Transfer needs it too: the VV capstone's
    * transfer answer is "load the re-drainage preview and read it", which cannot happen if the
    * actions vanish when the transfer item appears.
    *
@@ -1007,10 +1015,7 @@ function FoundationStageSession({
    * control that looked like a control was the one that skipped the work.
    */
   const boundedActions =
-    !focusedFoundation &&
-    predictionCommitted &&
-    activeStep.phase !== 'recognize' &&
-    activeStep.phase !== 'predict' ? (
+    !focusedFoundation && activeStep.phase !== 'recognize' && activeStep.phase !== 'predict' ? (
       <details
         className={styles.boundedActionsPanel}
         open={activeStep.phase === 'act' || activeStep.phase === 'observe'}
@@ -1314,11 +1319,7 @@ function FoundationStageSession({
         circuitAutoScroll={false}
         circuitFit="pane"
         circuitViewPreference={circuitViewPreference}
-        locationDisclosure={foundationCircuitLocationDisclosure(
-          sectionId,
-          predictionCommitted,
-          foundationTask?.mapRetrieval,
-        )}
+        locationDisclosure="full"
         openSurfaces={openSurfaces}
         onToggleSurface={toggleSurface}
       />
@@ -1331,15 +1332,10 @@ function FoundationStageSession({
    *
    * A foundation panel is written as a whole lesson — the walk, the comparisons, the definitions,
    * the boundaries. Read all at once on the first step it is a wall (the R4 baseline measured a
-   * teaching pane holding twelve screens of it). Until the prediction is committed only the first
-   * block of the panel is shown, with one control that shows the rest; from the Act step on the
-   * whole panel renders. The choice is per step and is not persisted.
+   * teaching pane holding twelve screens of it). Each task selects its relevant blocks; the full
+   * teaching remains available without an answer.
    */
-  const teachingPreview =
-    !presentation &&
-    !focusedFoundation &&
-    !predictionCommitted &&
-    (activeStep.phase === 'recognize' || activeStep.phase === 'predict')
+  const teachingPreview = false
   const teachingExpanded = teachingPreview && progression.expandedTeachingStepId === activeStep.id
   const narrative =
     section && prose !== 'none' ? (
@@ -1450,7 +1446,7 @@ function FoundationStageSession({
             <h3 className={teachingStyles.heading}>Apply what you learned</h3>
             <p className="mt-3">
               This is a separate teaching case. Read its stated findings; the reference circuit is
-              not the case. Submit your own answer to reveal the reasoning.
+              not the case. Try an optional answer or open the explanation directly.
             </p>
             <p className="mt-2">
               Use Back to review earlier teaching. Earlier answers and completed comparisons remain
@@ -1497,7 +1493,7 @@ function FoundationStageSession({
             }
           >
             {nowBody}
-            {comparisonPlan && (!focusedStory || storyCommittedId) ? (
+            {comparisonPlan ? (
               <>
                 <p data-active-state-variant={activeVariant.id}>{activeVariant.label}</p>
                 <p data-teaching-run-note>
@@ -1532,6 +1528,51 @@ function FoundationStageSession({
                 ) : null}
               </>
             ) : null}
+            {focusedStory && comparisonPlan && !savedComparison ? (
+              <button
+                type="button"
+                className={shellStyles.nowSecondary}
+                onClick={() => runFocusedComparison(comparisonPlan)}
+              >
+                Run comparison without answering
+              </button>
+            ) : null}
+            <EcmoOptionalExplanation
+              key={activeStep.id}
+              onContinue={skipStep}
+              onRetry={retryQuestion}
+            >
+              {mapAnswerItem ? (
+                <>
+                  <p>{mapAnswerItem.explanation}</p>
+                  <ul>
+                    {mapAnswerItem.choices.map((choice) => (
+                      <li key={choice.id}>
+                        <strong>{choice.label}</strong> {choice.rationale}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : focusedStory ? (
+                <p>{focusedStory.item.explanation}</p>
+              ) : activeStep.interaction.kind === 'attribution' ? (
+                <ul>
+                  {activeStep.interaction.attribution.candidates.map((candidate) => (
+                    <li key={candidate.id}>
+                      <strong>{candidate.label}</strong> {candidate.rationale}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <>
+                  <p>{activeStep.rationale ?? activeStep.instruction}</p>
+                  <p>
+                    Use the teaching and source material on this page. Only running a comparison
+                    produces its Before / After result; moving on does not run it.
+                  </p>
+                </>
+              )}
+            </EcmoOptionalExplanation>
           </ActivityContent>
         </EcmoNowCard>
       </div>
@@ -1539,7 +1580,6 @@ function FoundationStageSession({
       {/* On the Act step the card carries these; rendering them here too would duplicate every id. */}
       {activeStep.interaction.kind === 'bounded-actions' ? null : boundedActions}
       {!focusedFoundation &&
-      predictionCommitted &&
       (activeStep.phase === 'observe' || activeStep.phase === 'explain') &&
       storyProblems.length > 0 ? (
         <FoundationStoryProblems
@@ -1586,19 +1626,14 @@ function FoundationStageSession({
           onSelect={selectStepRow}
         />
       </details>
-      {predictionCommitted || focusedFoundation ? null : (
-        <p className={shellStyles.nowStatus} data-phase-lock-note>
-          The later steps unlock when you commit your prediction.
-        </p>
-      )}
-      {finished && !focusedMapQuestion ? (
+      {finished && (!focusedMapQuestion || progression.sectionReviewed) ? (
         <section
           className={styles.completion}
           role="status"
           aria-live="polite"
           data-stage-completion
         >
-          <h3>Section worked through</h3>
+          <h3>Section reviewed</h3>
           <p>Continue to the next section to keep building on this.</p>
           {nextSection ? (
             <div className={styles.completionActions}>
@@ -1653,7 +1688,7 @@ function FoundationStageSession({
         focusedFoundation && mount.clamped
           ? 'This section restarted at its first teaching task. Answers and demonstrations are not restored by a link or refresh; historical completion is kept.'
           : mount.clamped
-            ? `This section takes a prediction before its later steps, so it opened at the predict step with a clean teaching state. The ${requestedPhase} step unlocks when you commit. Earlier choices, snapshots, and actions were not restored.`
+            ? `This section reopened at its first task with a fresh teaching state. Choose any task from the outline. Earlier choices, snapshots, and actions were not restored.`
             : mount.index > 0
               ? `Opened at the ${requestedPhase} step with a clean teaching state. Earlier choices, snapshots, and actions were not restored.`
               : undefined
@@ -1714,7 +1749,7 @@ function FoundationStageSession({
               <EcmoStageSources
                 sources={stageSources}
                 label="Sources for this section"
-                claimsVisible={predictionCommitted}
+                claimsVisible
               />
             </>
           }

@@ -11,7 +11,7 @@ import type { StagePhase } from './stageModel'
  * teaching blocks consult it to decide whether they are the focus, a collapsed earlier block, or
  * not yet due. With no provider — the render harness, a panel test, the offline preview — the scope
  * is null and every block renders as it always has. The four introductory foundations select an ordinary teaching block explicitly; their independent
- * case reasoning is mounted separately after commitment. Drill disclosure remains phase-gated.
+ * case reasoning is mounted separately. Drill explanations can always be opened.
  */
 export interface StageTeachingScopeValue {
   readonly phase: StagePhase
@@ -63,12 +63,8 @@ export type StageBlockVisibility = 'shown' | 'collapsed' | 'hidden'
  * Which drill teaching blocks are the focus at each phase.
  *
  * Recognize and Predict foreground the question and the live signals. Act and Observe keep the
- * signals open and fold the question away. Explain and Transfer foreground the post-commitment
- * blocks and fold the reading blocks. Boundaries say what the model leaves out of the mechanism,
- * so they are read once the mechanism is the learner's to read: absent until the prediction is
- * committed, reachable after it, and open only at Explain. Before commitment the air drill's
- * boundary named the clamp order and the VA mixing drill's named the mixing point, one disclosure
- * click from the question each was the answer to.
+ * signals open and fold the question away. Explain and Transfer foreground mechanism teaching.
+ * Other blocks and model boundaries remain available as disclosures without a prediction.
  */
 export function drillBlockVisibility(
   kind: DrillBlockKind,
@@ -89,10 +85,10 @@ export function drillBlockVisibility(
         ? 'shown'
         : phase === 'act' || phase === 'observe'
           ? 'collapsed'
-          : 'hidden'
+          : 'collapsed'
     case 'boundary':
       if (phase === 'explain') return 'shown'
-      return scope.predictionCommitted ? 'collapsed' : 'hidden'
+      return 'collapsed'
     default:
       return 'shown'
   }

@@ -11,18 +11,9 @@ import { ModelBoundary, TextEquivalent, styles } from '../shared'
 import { StageBlock } from '../StageBlock'
 
 /**
- * Structure shared by every live drill teaching panel.
- *
- * The panels answer a fixed set of questions in a fixed order, and the order is the teaching: a
- * learner is asked what is being decided, then which signals can be believed and where they were
- * taken, then what the pattern is — before any mechanism is named. That sequence is what stops the
- * panel becoming a label the learner reads instead of a circuit the learner reads.
- *
- * The split at `AfterCommitment` is the anti-leak boundary. Everything above it teaches how to
- * inspect the state; everything below it names a mechanism, a fitting response, or a harmful reflex,
- * and any of those before the learner has chosen would hand over the authored answer. The gate is
- * the engine's own `scenario.prediction.committed`, so it cannot drift away from what the learner
- * actually did.
+ * Live teaching primitives. The historical AfterCommitment wrapper now follows the teaching
+ * disclosure scope; explanations never require a prediction. CommittedChoice still reads only
+ * an actual engine response. Signal provenance and model boundaries are unchanged.
  */
 
 /* ------------------------------------------------------------------ *
@@ -384,23 +375,6 @@ export function AfterCommitment({
   readonly state: EcmoSimulationState
   readonly children: ReactNode
 }) {
-  if (!state.scenario.prediction.committed) {
-    return (
-      <section
-        className={styles.section}
-        aria-labelledby="drill-withheld-heading"
-        data-withheld-until-commitment
-      >
-        <h3 id="drill-withheld-heading" className={styles.heading}>
-          Held back until you commit
-        </h3>
-        <p className="mt-2">
-          The mechanism, the response that fits it, and the reflex to avoid are all held until you
-          have committed a prediction. Reading them first would answer the question for you.
-        </p>
-      </section>
-    )
-  }
   return (
     <StageBlock kind="after-commitment" heading="What explains it, and the response that fits">
       <div className="grid gap-4" data-after-commitment>

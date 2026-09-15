@@ -9,19 +9,9 @@ import {
 import { ecmoLocalizationRow, type EcmoLocalizationRowId } from './localizationCards'
 
 /**
- * What the circuit map is showing, and who is allowed to decide it.
- *
- * The map and the localization card have to reveal at the same instant. If the map lit the membrane
- * while the card was still withheld, a learner would read the answer off the picture — so both are
- * driven from one presentation value, and in a drill that value is derived from the engine's own
- * `scenario.prediction.committed` rather than from anything a caller passes in. That is the same
- * gate `AfterCommitment` reads, deliberately: a panel cannot be handed a truthy flag by a caller
- * that has not taken a commitment, and reloading a scenario clears the commitment and closes both
- * surfaces again without either of them knowing that reloading is a thing.
- *
- * Note this is *not* the gate the simulator's own diagnosis banner uses — that one waits for
- * `scenario.phase === 'complete'`. The asymmetry is intended: a committed learner has earned the
- * teaching, and the verdict surface answers a different question at a different moment.
+ * The map and localization card use one authored presentation. Labels and explanations remain
+ * available before an optional response. Presentation never changes engine state or credits an
+ * action; real sensor validity still determines which live measurements are interpretable.
  */
 
 /**
@@ -73,7 +63,7 @@ export type EcmoCircuitPresentationContext =
    * already prints beside every reading before a learner commits anything.
    */
   | { readonly kind: 'drill-orientation-scaffold' }
-  /** A fault drill. Neutral until the learner has committed; the row's segments after. */
+  /** A fault drill's authored localization row, available without a prediction. */
   | { readonly kind: 'drill-reveal'; readonly rowId: EcmoLocalizationRowId }
   /**
    * A foundation walk, standing at one stop.
@@ -106,9 +96,7 @@ export function deriveEcmoCircuitPresentation(
         sensorSiteIds: context.sensorSiteIds,
       }
     case 'drill-reveal':
-      return state.scenario.prediction.committed
-        ? { kind: 'implicated', rowId: context.rowId }
-        : { kind: 'neutral' }
+      return { kind: 'implicated', rowId: context.rowId }
   }
 }
 

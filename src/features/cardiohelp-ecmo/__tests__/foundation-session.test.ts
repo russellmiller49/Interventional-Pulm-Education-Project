@@ -75,7 +75,7 @@ describe('the restore-then-act sequence is gone', () => {
       'useReducer',
       'useState',
       'dispatch',
-      'persistFoundationSectionCompleted',
+      'persistTopicVisit',
       'localStorage',
       'sessionStorage',
     ]) {
@@ -151,11 +151,11 @@ describe('the restore-then-act sequence is gone', () => {
     const progressImports =
       hostSource.match(/import \{[^}]*\} from '\.\.\/\.\.\/engine\/progress'/g) ?? []
     expect(progressImports).toHaveLength(1)
-    expect(progressImports[0]).toContain('persistFoundationSectionCompleted')
+    expect(progressImports[0]).toContain('persistTopicVisit')
     expect(hostSource.match(/from '[^']*progress'/g)).toHaveLength(1)
 
     // Exactly one call site. The import mentions the name without parentheses, so this counts calls.
-    expect(hostSource.match(/persistFoundationSectionCompleted\(/g)).toHaveLength(1)
+    expect(hostSource.match(/persistTopicVisit\(/g)).toHaveLength(1)
 
     for (const forbidden of ['localStorage', 'sessionStorage', 'JSON.parse', 'JSON.stringify']) {
       expect(hostSource).not.toContain(forbidden)
@@ -167,11 +167,14 @@ describe('the restore-then-act sequence is gone', () => {
     // would leave a learner who finished everything permanently one section short of done.
     const commitTransfer = hostFunction('commitTransfer')
     expect(commitTransfer).toContain('committedTransferId: selectedChoiceId')
-    expect(commitTransfer).toContain('persistFoundationSectionCompleted(sectionId)')
+    expect(commitTransfer).not.toContain('persistTopicVisit')
+    expect(hostSource).toContain(
+      "persistTopicVisit({ section: 'learn', scenarioId: sectionId, supportMode })",
+    )
     // Wired to the transfer item's primary action, and to nothing else.
     expect(hostSource).toMatch(/case 'transfer-item':[\s\S]*?onActivate: commitTransfer/)
     for (const name of ['advance', 'enterStep', 'goToSection', 'selectStepRow']) {
-      expect(hostFunction(name)).not.toContain('persistFoundationSectionCompleted')
+      expect(hostFunction(name)).not.toContain('persistTopicVisit')
     }
   })
 
@@ -183,7 +186,7 @@ describe('the restore-then-act sequence is gone', () => {
     // The VV capstone's transfer step is "load the re-drainage preview and read it", which is
     // impossible if the action list disappears when the transfer item appears.
     expect(hostSource).toMatch(
-      /predictionCommitted\s+&&\s+activeStep\.phase !== 'recognize'\s+&&\s+activeStep\.phase !== 'predict'/,
+      /activeStep\.phase !== 'recognize'\s+&&\s+activeStep\.phase !== 'predict'/,
     )
     expect(hostSource).not.toMatch(/phase === 'act' \|\| phase === 'observe'\s*\?/)
   })

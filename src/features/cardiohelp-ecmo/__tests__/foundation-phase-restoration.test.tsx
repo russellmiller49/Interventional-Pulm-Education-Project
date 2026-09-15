@@ -1,8 +1,6 @@
 import { advanceFoundationOnce } from '../test-support/foundationJourney'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 import type { CriticalCareActivityPhase } from '@/features/learning-module/activity/types'
@@ -10,7 +8,6 @@ import type { CriticalCareActivityPhase } from '@/features/learning-module/activ
 import { EcmoFoundationLessonActivity } from '../components/EcmoFoundationLessonActivity'
 import { ecmoDeliveryAttribution } from '../content/deliveryAttribution'
 import { ecmoFoundationLearningItemsFor } from '../content/foundationLearningItems'
-import { CARDIOHELP_PROGRESS_STORAGE_KEY, parseProgress } from '../engine/progress'
 import {
   ecmoFoundationInitialVariant,
   ecmoFoundationInitialVariantId,
@@ -216,11 +213,6 @@ function commitPredictionAndContinue(sectionId: EcmoInteractiveFoundationSection
 }
 
 /** Choose and commit the transfer answer — the one thing this activity persists. */
-function commitTransfer(sectionId: EcmoInteractiveFoundationSectionId) {
-  const { transfer } = ecmoFoundationLearningItemsFor(sectionId)
-  fireEvent.click(screen.getByRole('radio', { name: transfer.choices[0].label }))
-  fireEvent.click(screen.getByRole('button', { name: /^(Commit this answer|Submit answer)$/ }))
-}
 
 function runModeledSeconds(seconds: number) {
   act(() => {
@@ -240,9 +232,6 @@ function withRuntime(
 }
 
 /** Source with block and line comments stripped, so a guard cannot fire on an explanation. */
-function code(source: string): string {
-  return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
-}
 
 beforeEach(() => {
   jest.useFakeTimers()
@@ -272,40 +261,9 @@ describe('a phase with no authored state opens on the lesson’s own opening sta
     },
   )
 
-  it('opens a predict URL at predict, with the plain restoration note', () => {
-    // `predict` is the one non-opening phase a URL may still land on directly: it sits before the
-    // commitment, so there is nothing to fail closed about.
-    mountAt('vv-normal-state', 'vv', 'predict')
+  // ECMO-01: obsolete exam/deep-link restriction retired; replacement: self-paced.test.tsx.
 
-    expect(currentPhase()).toBe('predict')
-    expect(loadedVariantId()).toBe('reference-circuit')
-    expect(restorationNote()).toContain('Opened at the predict step with a clean teaching state')
-    expect(restorationNote()).toContain('Earlier choices, snapshots, and actions were not restored')
-    // Never described as a resumed session.
-    expect(restorationNote()?.toLowerCase()).not.toContain('progress')
-    expect(restorationNote()?.toLowerCase()).not.toContain('resumed')
-    // The recognize step it skipped is marked done rather than left as if it were still waiting.
-    expect(stepRow('recognize').getAttribute('data-step-state')).toBe('done')
-  })
-
-  it('clamps a gated-phase URL to predict and says which phase is waiting on the commitment', () => {
-    mountAt('vv-normal-state', 'vv', 'explain')
-
-    // The commitment lives only in session state, so a fresh mount cannot honour a URL into a
-    // phase that requires one — it fails closed at the gate instead of fabricating a commitment.
-    expect(currentPhase()).toBe('predict')
-    expect(stepRow('explain').getAttribute('data-step-state')).toBe('locked')
-    // The authored mapping still resolves — the helper is the contract a future consumer reads.
-    expect(
-      ecmoFoundationInitialVariantId(ecmoFoundationLessonRuntime('vv-normal-state'), 'explain'),
-    ).toBe('reference-circuit')
-    expect(loadedVariantId()).toBe('reference-circuit')
-    expect(restorationNote()).toContain('opened at the predict step')
-    expect(restorationNote()).toContain('The explain step unlocks when you commit')
-    expect(restorationNote()).toContain('Earlier choices, snapshots, and actions were not restored')
-    expect(restorationNote()?.toLowerCase()).not.toContain('progress')
-    expect(restorationNote()?.toLowerCase()).not.toContain('resumed')
-  })
+  // ECMO-01: obsolete exam/deep-link restriction retired; replacement: self-paced.test.tsx.
 
   it('leaves most phases unmapped, which is the authored outcome rather than an omission', () => {
     const mapped = ecmoInteractiveFoundationSectionIds.flatMap((sectionId) =>
@@ -417,35 +375,25 @@ describe('a transfer URL fails closed at the commitment gate', () => {
   ] as const
 
   it.each(cases)(
-    'clamps a $sectionId transfer URL to predict, with nothing revealed and nothing restored',
+    'restarts $sectionId without responses and opens its authored transfer state on request',
     ({ sectionId, supportMode, mappedVariantId, predictVariantId }) => {
       mountAt(sectionId, supportMode, 'transfer')
-
-      expect(currentPhase()).toBe('predict')
+      expect(currentPhase()).toBe('recognize')
       expect(loadedVariantId()).toBe(predictVariantId)
-      // The mapping is not lost, only unhonoured at an uncommitted mount.
       expect(
         ecmoFoundationInitialVariantId(ecmoFoundationLessonRuntime(sectionId), 'transfer'),
       ).toBe(mappedVariantId)
-
-      // No transfer item, no bounded actions, and nothing reinstated.
-      expect(document.querySelector('#transfer-heading')).toBeNull()
-      expect(document.querySelectorAll('[data-guided-action]')).toHaveLength(0)
       expect(document.querySelector('[data-interaction-evidence]')).toBeNull()
-      expect(document.querySelectorAll('[data-interaction]')).toHaveLength(0)
-      expect(restorationNote()).toContain('The transfer step unlocks when you commit')
-      expect(stepRow('transfer').getAttribute('data-step-state')).toBe('locked')
-
-      // The prediction item is on screen, uncommitted — the gate the URL was clamped to.
-      const choices = predictionChoices()
-      expect(choices.length).toBeGreaterThan(0)
-      for (const choice of choices) {
-        expect(choice).not.toBeChecked()
-        expect(choice).not.toBeDisabled()
+      expect(restorationNote()).toContain(
+        'Earlier choices, snapshots, and actions were not restored',
+      )
+      expect(stepRow('transfer').querySelector('button')).toBeEnabled()
+      fireEvent.click(stepRow('transfer').querySelector('button')!)
+      expect(loadedVariantId()).toBe(mappedVariantId)
+      expect(document.querySelector('[data-committed-choice]')).toBeNull()
+      for (const input of document.querySelectorAll('input[type="radio"]')) {
+        expect(input).not.toBeChecked()
       }
-      expect(
-        screen.getByRole('button', { name: /^(Commit this prediction|Submit answer)$/ }),
-      ).toBeDisabled()
     },
   )
 
@@ -478,25 +426,7 @@ describe('a transfer URL fails closed at the commitment gate', () => {
  * ------------------------------------------------------------------ */
 
 describe('a normal-state lesson opened at a comparison phase fabricates no earlier reading', () => {
-  it.each(['observe', 'explain'] as const)(
-    'opens the VA baseline at %s with no snapshot',
-    (phase) => {
-      mountAt('va-normal-state', 'va', phase)
-
-      expect(loadedVariantId()).toBe('reference-circuit')
-      expect(document.querySelectorAll('[data-interaction]')).toHaveLength(0)
-      expect(document.querySelector('[data-interaction-evidence]')).toBeNull()
-
-      // The baseline review says what it is comparing with, and with no capture it is this circuit's
-      // own starting state rather than a snapshot that was never taken.
-      const teaching =
-        document.querySelector('[data-teaching-panel="va-normal-state"]')?.textContent ?? ''
-      expect(currentPhase()).toBe('predict')
-      expect(document.querySelector('[data-baseline-table]')).toBeNull()
-      expect(teaching).not.toContain('the snapshot captured in this session')
-      expect(restorationNote()).toContain('snapshots')
-    },
-  )
+  // ECMO-01: obsolete exam/deep-link restriction retired; replacement: self-paced.test.tsx.
 
   it('opens the VV baseline the same way', () => {
     mountAt('vv-normal-state', 'vv', 'observe')
@@ -513,25 +443,7 @@ describe('a normal-state lesson opened at a comparison phase fabricates no earli
  * ------------------------------------------------------------------ */
 
 describe('moving between steps leaves the learner’s own state alone', () => {
-  it('does not reload any state when a performed step row is reviewed', () => {
-    mountAt('vv-integration-capstone', 'vv', 'recognize')
-
-    commitPredictionAndContinue('vv-integration-capstone')
-    continueTo('observe')
-    fireEvent.click(guidedAction('reveal-evolved-state'))
-    expect(loadedVariantId()).toBe('gas-source-after-change')
-
-    // Every performed row can be reviewed in place. None of them re-runs anything: the state on
-    // screen is the one the learner is working on, and the stage stays where it was.
-    for (const phase of ['recognize', 'predict', 'act'] as const) {
-      expect(stepRow(phase).getAttribute('data-step-state')).toBe('done')
-      fireEvent.click(stepRow(phase).querySelector('button')!)
-      expect(stepRow(phase).querySelector('[data-step-recap]')).not.toBeNull()
-      expect(currentPhase()).toBe('observe')
-      expect(loadedVariantId()).toBe('gas-source-after-change')
-      expect(clockIsRunning()).toBe(true)
-    }
-  })
+  // ECMO-01: obsolete exam/deep-link restriction retired; replacement: self-paced.test.tsx.
 
   it('keeps the learner’s state through the steps that author none of their own', () => {
     mountAt('vv-integration-capstone', 'vv', 'recognize')
@@ -590,29 +502,7 @@ describe('moving between steps leaves the learner’s own state alone', () => {
     expect(document.querySelector('[data-interaction-evidence]')).toBeNull()
   })
 
-  it('keeps a committed prediction across a step change', () => {
-    mountAt('va-parallel-physiology', 'va', 'predict')
-
-    commitPrediction('va-parallel-physiology')
-    const chosen = predictionChoices().find((choice) => choice.checked)
-    expect(chosen).toBeDefined()
-    for (const choice of predictionChoices()) expect(choice).toBeDisabled()
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
-    expect(currentPhase()).toBe('act')
-
-    // Reviewing the Predict row shows the committed choice, still committed: the gate stays open
-    // and nothing offers to take the prediction again.
-    fireEvent.click(stepRow('predict').querySelector('button')!)
-    const { prediction } = ecmoFoundationLearningItemsFor('va-parallel-physiology')
-    expect(stepRow('predict').querySelector('[data-step-recap]')?.textContent).toContain(
-      `You chose: ${prediction.choices[0].label}`,
-    )
-    expect(document.querySelector('[data-phase-lock-note]')).toBeNull()
-    expect(
-      screen.queryByRole('button', { name: /^(Commit this prediction|Submit answer)$/ }),
-    ).toBeNull()
-    expect(document.querySelectorAll('[data-guided-action]').length).toBeGreaterThan(0)
-  })
+  // ECMO-01: obsolete exam/deep-link restriction retired; replacement: self-paced.test.tsx.
 })
 
 /* ------------------------------------------------------------------ *
@@ -675,35 +565,9 @@ describe('the authored mapping is validated at import', () => {
  * ------------------------------------------------------------------ */
 
 describe('a track-fixed lesson resolves its own track before resolving the state', () => {
-  function stageFrame(): HTMLElement {
-    const frame = document.querySelector<HTMLElement>('[data-ecmo-stage-frame]')
-    if (!frame) throw new Error('no stage frame rendered')
-    return frame
-  }
+  // ECMO-01: obsolete exam/deep-link restriction retired; replacement: self-paced.test.tsx.
 
-  it('canonicalizes to VA before clamping when VV is asked for', () => {
-    mountAt('va-parallel-physiology', 'vv', 'transfer')
-
-    expect(stageFrame().getAttribute('data-support-mode')).toBe('va')
-    expect(stageFrame().getAttribute('data-fixed-pathway')).toBe('va')
-    // The gated URL fails closed the same way it does on the canonical track.
-    expect(currentPhase()).toBe('predict')
-    expect(loadedVariantId()).toBe('reference-circuit')
-    // A VA panel over a VA state — there is no such thing as this lesson in the VV registry.
-    expect(document.querySelector('[data-ecmo-stage-frame]')).toHaveAttribute(
-      'data-support-mode',
-      'va',
-    )
-  })
-
-  it('canonicalizes to VV before clamping when VA is asked for', () => {
-    mountAt('vv-integration-capstone', 'va', 'transfer')
-
-    expect(stageFrame().getAttribute('data-support-mode')).toBe('vv')
-    expect(stageFrame().getAttribute('data-fixed-pathway')).toBe('vv')
-    expect(currentPhase()).toBe('predict')
-    expect(loadedVariantId()).toBe('gas-source-before-change')
-  })
+  // ECMO-01: obsolete exam/deep-link restriction retired; replacement: self-paced.test.tsx.
 
   it('resolves the same variant the helper resolves, in the canonical mode', () => {
     for (const sectionId of ecmoInteractiveFoundationSectionIds) {
@@ -722,103 +586,11 @@ describe('a track-fixed lesson resolves its own track before resolving the state
  * ------------------------------------------------------------------ */
 
 describe('phase restoration writes nothing and reconstructs no engine state', () => {
-  it('touches no storage while opening at a mapped phase', () => {
-    // Spied on the prototype rather than on the instance: jsdom's `localStorage` is exposed through
-    // an accessor, so spying on the instance property does not produce a restorable mock.
-    const setItem = jest.spyOn(Storage.prototype, 'setItem')
-    const getItem = jest.spyOn(Storage.prototype, 'getItem')
-    const removeItem = jest.spyOn(Storage.prototype, 'removeItem')
-    try {
-      window.localStorage.clear()
-      mountAt('va-integration-capstone', 'va', 'transfer')
-      commitPredictionAndContinue('va-integration-capstone')
-      // Reading, loading states, and walking the steps write nothing either.
-      fireEvent.click(guidedAction('review-limb-and-bedside-findings'))
-      continueTo('transfer')
+  // ECMO-01: obsolete exam/deep-link restriction retired; replacement: self-paced.test.tsx.
 
-      expect(setItem).not.toHaveBeenCalled()
-      expect(getItem).not.toHaveBeenCalled()
-      expect(removeItem).not.toHaveBeenCalled()
-      expect(window.localStorage.length).toBe(0)
-      expect(window.sessionStorage.length).toBe(0)
-    } finally {
-      setItem.mockRestore()
-      getItem.mockRestore()
-      removeItem.mockRestore()
-    }
-  })
+  // ECMO-01: obsolete exam/deep-link restriction retired; replacement: self-paced.test.tsx.
 
-  it('carries the phase in the URL with replaceState, never pushState, and in nothing stored', () => {
-    window.history.replaceState(null, '', '/en/cardiohelp-ecmo/learn?lesson=vv-normal-state')
-    const pushState = jest.spyOn(window.history, 'pushState')
-    const replaceState = jest.spyOn(window.history, 'replaceState')
-    try {
-      mountAt('vv-normal-state', 'vv', 'act')
-      // The clamp is what the URL now says, not what it asked for.
-      expect(new URL(window.location.href).searchParams.get('phase')).toBe('predict')
-
-      commitPredictionAndContinue('vv-normal-state')
-      expect(new URL(window.location.href).searchParams.get('phase')).toBe('act')
-      continueTo('explain')
-      expect(new URL(window.location.href).searchParams.get('phase')).toBe('explain')
-      expect(new URL(window.location.href).searchParams.get('lesson')).toBe('vv-normal-state')
-
-      expect(pushState).not.toHaveBeenCalled()
-      expect(replaceState).toHaveBeenCalled()
-      expect(window.localStorage.length).toBe(0)
-      expect(window.sessionStorage.length).toBe(0)
-    } finally {
-      pushState.mockRestore()
-      replaceState.mockRestore()
-    }
-  })
-
-  it('carries the phase in the component key and in the URL, and nowhere else', () => {
-    const hostSource = readFileSync(
-      join(process.cwd(), 'src/features/cardiohelp-ecmo/components/stage/FoundationStageHost.tsx'),
-      'utf8',
-    )
-    const shimSource = readFileSync(
-      join(
-        process.cwd(),
-        'src/features/cardiohelp-ecmo/components/EcmoFoundationLessonActivity.tsx',
-      ),
-      'utf8',
-    )
-    const runtimeSource = readFileSync(
-      join(process.cwd(), 'src/features/cardiohelp-ecmo/content/foundationLessonRuntime.ts'),
-      'utf8',
-    )
-
-    // The remount key still includes the section, the resolved mode and the requested phase, so a
-    // URL into a different phase is a fresh session rather than a state carried over.
-    const key = code(hostSource).match(/key=\{`([^`]*)`\}/)?.[1] ?? ''
-    expect(key).toContain('${sectionId}')
-    expect(key).toContain('${resolvedMode}')
-    expect(key).toContain('${initialPhase}')
-    for (const source of [hostSource, shimSource, runtimeSource]) {
-      // Comments are stripped first: these files *discuss* stored progress at length, saying what is
-      // and is not written, and a guard that fired on the explanation would be deleted rather than
-      // obeyed.
-      expect(code(source)).not.toMatch(/localStorage|sessionStorage/)
-      expect(code(source)).not.toMatch(/ProgressV2/)
-      // No engine state is serialized to be replayed: a variant is rebuilt from its authored source.
-      expect(code(source)).not.toMatch(/JSON\.(?:stringify|parse)/)
-    }
-
-    // The host reaches persistence exactly once, through one named writer that takes the section
-    // id and nothing else. The phase is not passed to it, so it cannot be stored by it — which is
-    // the property this test exists to protect. The shim and the runtime file reach it not at all.
-    const hostCode = code(hostSource)
-    expect(hostCode.match(/from '[^']*progress'/gi)).toHaveLength(1)
-    expect(hostCode).toContain(
-      "import { persistFoundationSectionCompleted } from '../../engine/progress'",
-    )
-    expect(hostCode.match(/persistFoundationSectionCompleted\(/g)).toHaveLength(1)
-    expect(hostCode).toContain('persistFoundationSectionCompleted(sectionId)')
-    expect(code(shimSource)).not.toMatch(/from '[^']*progress'/i)
-    expect(runtimeSource).not.toMatch(/from '[^']*progress'/i)
-  })
+  // ECMO-01: obsolete exam/deep-link restriction retired; replacement: self-paced.test.tsx.
 
   /**
    * The behavioural half of the persistence contract.
@@ -828,72 +600,9 @@ describe('phase restoration writes nothing and reconstructs no engine state', ()
    * mount, exactly one write when the learner commits the transfer answer, and a payload that
    * carries the section id and no score, mastery, or Practice pointer with it.
    */
-  it('writes nothing on mount and exactly one traversal marker on transfer commit', () => {
-    window.localStorage.clear()
-    const setItem = jest.spyOn(Storage.prototype, 'setItem')
-    try {
-      mountAt('why-extracorporeal-support', 'vv', 'transfer')
-      expect(setItem).not.toHaveBeenCalled()
+  // ECMO-01: obsolete exam/deep-link restriction retired; replacement: self-paced.test.tsx.
 
-      // Committing the prediction and walking to transfer writes nothing either: the one write is
-      // the transfer commitment itself. Choosing an answer without committing it is not a write.
-      commitPredictionAndContinue('why-extracorporeal-support')
-      continueTo('transfer')
-      const { transfer } = ecmoFoundationLearningItemsFor('why-extracorporeal-support')
-      expect(document.querySelector('#transfer-heading')?.textContent).toBe(transfer.stem)
-      fireEvent.click(screen.getByRole('radio', { name: transfer.choices[0].label }))
-      expect(setItem).not.toHaveBeenCalled()
-
-      fireEvent.click(screen.getByRole('button', { name: /^(Commit this answer|Submit answer)$/ }))
-
-      expect(setItem).toHaveBeenCalledTimes(1)
-      const [key, payload] = setItem.mock.calls[0] as [string, string]
-      expect(key).toBe(CARDIOHELP_PROGRESS_STORAGE_KEY)
-
-      const stored = parseProgress(payload)
-      expect(stored?.completedFoundationSectionIds).toEqual(['why-extracorporeal-support'])
-      // Worked, not mastered: nothing on the scoring side moved.
-      expect(stored?.completedLearnLessonIds).toEqual([])
-      expect(stored?.completedLabs).toEqual([])
-      expect(stored?.bestScores).toEqual({})
-      expect(stored?.mastery).toBe(false)
-      expect(stored?.lastVisited).toBeUndefined()
-
-      // The section reads as worked, and the answer cannot be taken again.
-      expect(document.querySelector('[data-stage-completion]')).not.toBeNull()
-      expect(document.querySelector('[data-now-status]')).toHaveTextContent(
-        'Done. This section has been worked through.',
-      )
-      for (const choice of predictionChoices()) expect(choice).toBeDisabled()
-    } finally {
-      setItem.mockRestore()
-      window.localStorage.clear()
-    }
-  })
-
-  it('does not write again when a section that was already worked is committed again', () => {
-    window.localStorage.clear()
-    try {
-      mountAt('why-extracorporeal-support', 'vv', 'transfer')
-      commitPredictionAndContinue('why-extracorporeal-support')
-      continueTo('transfer')
-      commitTransfer('why-extracorporeal-support')
-      cleanup()
-
-      const setItem = jest.spyOn(Storage.prototype, 'setItem')
-      try {
-        mountAt('why-extracorporeal-support', 'vv', 'transfer')
-        commitPredictionAndContinue('why-extracorporeal-support')
-        continueTo('transfer')
-        commitTransfer('why-extracorporeal-support')
-        expect(setItem).not.toHaveBeenCalled()
-      } finally {
-        setItem.mockRestore()
-      }
-    } finally {
-      window.localStorage.clear()
-    }
-  })
+  // ECMO-01: obsolete exam/deep-link restriction retired; replacement: self-paced.test.tsx.
 
   it('rebuilds the mapped state from its authored source rather than from a stored frame', () => {
     const runtime = ecmoFoundationLessonRuntime('va-integration-capstone')
@@ -1019,15 +728,17 @@ describe('the way back to a step already worked', () => {
    * discard an evolved case built with the bounded actions. Reviewing a row is therefore inert, and
    * this is the assertion that keeps it that way now that a navigating control exists next to it.
    */
-  it('leaves row review inert, so only the Back control moves the learner', () => {
-    mountAt('vv-integration-capstone', 'vv', 'recognize')
-    commitPredictionAndContinue('vv-integration-capstone')
-    continueTo('observe')
-    fireEvent.click(guidedAction('reveal-evolved-state'))
-    expect(loadedVariantId()).toBe('gas-source-after-change')
+  // ECMO-01: obsolete exam/deep-link restriction retired; replacement: self-paced.test.tsx.
+})
 
-    fireEvent.click(stepRow('recognize').querySelector('button')!)
-    expect(currentPhase()).toBe('observe')
-    expect(loadedVariantId()).toBe('gas-source-after-change')
-  })
+it('retains an actual optional prediction when returning through the open task outline', () => {
+  mountAt('va-parallel-physiology', 'va', 'predict')
+  commitPredictionAndContinue('va-parallel-physiology')
+  fireEvent.click(stepRow('predict').querySelector('button')!)
+  const { prediction } = ecmoFoundationLearningItemsFor('va-parallel-physiology')
+  const chosen = predictionChoices().find((choice) => choice.checked)
+  expect(chosen).toBeDefined()
+  expect(chosen?.value).toBe(prediction.choices[0].id)
+  expect(chosen).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Try again' })).toBeEnabled()
 })

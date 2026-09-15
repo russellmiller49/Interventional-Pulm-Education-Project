@@ -70,11 +70,12 @@ function planRows(state: EcmoSimulationState, scenario: ScenarioDefinition): rea
   const { prediction } = state.scenario
   const { expectation } = scenario
   const goalLabel = (id: string | null) =>
-    predictionGoals.find((goal) => goal.id === id)?.label ?? 'Not committed'
+    predictionGoals.find((goal) => goal.id === id)?.label ?? 'No prediction recorded'
   const controlLabel = (value: string | null) =>
-    predictionControls.find((control) => control.value === value)?.label ?? 'Not committed'
+    predictionControls.find((control) => control.value === value)?.label ?? 'No prediction recorded'
   const directionLabel = (value: string | null) =>
-    predictionDirections.find((direction) => direction.value === value)?.label ?? 'Not committed'
+    predictionDirections.find((direction) => direction.value === value)?.label ??
+    'No prediction recorded'
   return [
     {
       label: 'Immediate goal',
@@ -201,9 +202,6 @@ export function EcmoCaseDebrief({
   const reassessment = resolveScenarioReassessment(scenario)
   const submitted = state.scenario.reassessment
   const safetyEvents = describeSafetyEvents(scenario, outcome.criticalErrors)
-  const usedClues = (scenario.hints ?? []).filter((hint) =>
-    state.scenario.usedHintIds.includes(hint.id),
-  )
   const pairedLessonId = pairedLessonIdsForCase(scenario.id)[0]
   const pairedLesson = pairedLessonId
     ? cardiohelpLearnLessonByScenarioId.get(pairedLessonId)
@@ -221,7 +219,9 @@ export function EcmoCaseDebrief({
         until: all[index + 1]?.time ?? state.simulationTime,
       }))
     : state.history
-        .filter((entry) => entry.kind === 'action')
+        .filter(
+          (entry) => entry.kind === 'action' && !/prediction|reassessment|clue/i.test(entry.label),
+        )
         .map((entry, index, all) => ({
           id: entry.id,
           time: entry.time,
@@ -233,19 +233,23 @@ export function EcmoCaseDebrief({
 
   return (
     <div className={styles.debriefPanel} data-case-debrief>
-      <Block kicker="Debrief" heading="Your reasoning and the case's own">
+      <p>
+        This is the authored case explanation. It does not claim that you performed the actions
+        described.
+      </p>
+      <Block kicker="Case explanation" heading="Your reasoning and the case's own">
         <dl className={styles.planComparison}>
           {rows.map((row) => (
             <div key={row.label} data-matched={row.matched}>
               <dt>{row.label}</dt>
               <dd>
-                <span>You committed: {row.committed}</span>
+                <span>You recorded: {row.committed}</span>
                 {row.matched ? null : <span>Expected in this case: {row.expected}</span>}
               </dd>
             </div>
           ))}
         </dl>
-        {!planMatched && causeCorrected ? (
+        {state.scenario.prediction.committed && !planMatched && causeCorrected ? (
           <p role="note">
             Your later actions matched the path this case teaches. That is a recovery from the plan
             you committed, not a match of it.
@@ -319,14 +323,8 @@ export function EcmoCaseDebrief({
             </ul>
           </div>
         ) : (
-          <p>No safety stop appeared in this run.</p>
+          <p>No safety event is recorded. This is not a safety certification.</p>
         )}
-        {usedClues.length ? (
-          <p>
-            Clues used: {usedClues.map((hint) => hint.title).join(', ')}. They stay part of the
-            record of this run.
-          </p>
-        ) : null}
         {submitted ? (
           <ul className={styles.domainComparison}>
             <DomainComparison

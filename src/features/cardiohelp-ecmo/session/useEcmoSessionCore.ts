@@ -10,13 +10,11 @@ import {
 } from '@/features/learning-module/activity'
 import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 import { useRouter } from '@/i18n/navigation'
-import { recordSiteModuleEvent } from '@/lib/analytics'
 
 import { resolveGuidedLesson } from '../components/stage/adapters/drillStageAdapter'
 import { resolveScenarioDefinition } from '../components/PracticeCasePlayer'
 import {
   capstoneScenarioIdForMode,
-  isTrackCapstoneUnlocked,
   orderedCaseScenarioIds,
   orderedLessonScenarioIds,
 } from '../content/curriculum'
@@ -25,16 +23,14 @@ import {
   createDefaultProgress,
   createInitialSimulationState,
   ecmoSimulationReducer,
-  readProgress,
-  recordLearnLessonCompleted,
-  recordScenarioResult,
+  readLearningProgress,
+  recordTopicVisit,
   selectScenarioOutcome,
   setLastCaseForMode,
   setLastLessonForMode,
   setLastStation,
   setLastVisited,
-  withMastery,
-  writeProgress,
+  writeLearningProgress,
   type EcmoSimulationState,
   type GuidedLessonDefinition,
   type ModuleSection,
@@ -45,31 +41,10 @@ import {
   type SimulationMode,
   type SupportMode,
 } from '../engine'
-import {
-  REQUIRED_SCENARIO_IDS_BY_MODE,
-  capstoneUnlockedEvent,
-  guidedLessonLoadedEvent,
-  guidedWalkthroughCompletedEvent,
-  practiceScenarioLoadedEvent,
-  roundSubmittedEvents,
-  supportModeSelectedEvent,
-} from './ecmoSessionAnalytics'
-
 /**
- * The one simulation session behind every ECMO activity surface.
- *
- * Owns the reducer, the progress envelope and its writes, hydration from the URL and storage, the
- * one-second clock, the lifecycle analytics contract, the debrief reveal with its site events, the
- * track switch, and the scenario loaders. It owns no view state: which panel is highlighted, which
- * stage is expanded, whether help is open — those belong to the surface that renders the session,
- * and the surface hears about scenario loads through the two optional callbacks so it can reset
- * them. Keeping the two apart is what lets the Learn stage and the Practice activity be different
- * compositions over identical persistence, URL and analytics behaviour.
- *
- * Contracts preserved from the workbench this was lifted out of: the storage key and envelope are
- * untouched (`engine/progress.ts`), the `?lesson=` / `?case=` / `?track=` query names and the
- * `history.replaceState` sync are unchanged, and every site event is built by
- * `ecmoSessionAnalytics.ts` so the strict `/api/analytics` schema sees the same shapes.
+ * Shared ECMO simulation session: reducer, existing one-second clock, URL loaders and minimal
+ * local topic locations. Grading/lifecycle analytics are disabled for self-paced entry. Legacy
+ * records remain untouched inside the existing storage key. View state stays with each host.
  */
 
 export type EcmoActivityMode = 'guided' | 'practice' | 'challenge'
@@ -148,8 +123,6 @@ export function useEcmoSessionCore(options: EcmoSessionCoreOptions): EcmoSession
   const [semanticPhase, setSemanticPhase] = useState<CriticalCareActivityPhase>('recognize')
   const [hydrated, setHydrated] = useState(false)
   const [resumedFromStorage, setResumedFromStorage] = useState(false)
-  const recordedHintEvents = useRef({ activityId: '', ids: new Set<string>() })
-  const recordedSafetyEvents = useRef({ activityId: '', ids: new Set<string>() })
 
   const scenario = useMemo(
     () => resolveScenarioDefinition(state.scenario.scenarioId),
@@ -158,12 +131,7 @@ export function useEcmoSessionCore(options: EcmoSessionCoreOptions): EcmoSession
   const learnLesson = useMemo(() => resolveGuidedLesson(learnScenarioId), [learnScenarioId])
   const outcome = useMemo(() => selectScenarioOutcome(state), [state])
   const supportMode: SupportMode = section === 'assess' ? assessTrack : state.supportMode
-  const activityMode: EcmoActivityMode =
-    section === 'learn'
-      ? 'guided'
-      : section === 'assess' || state.simulationMode === 'challenge'
-        ? 'challenge'
-        : 'practice'
+  const activityMode: EcmoActivityMode = section === 'learn' ? 'guided' : 'practice'
   const lifecycleActivityId =
     section === 'learn' ? `ecmo:learn:${learnLesson.scenarioId}` : `ecmo:${section}:${scenario.id}`
   const lifecycleAnalytics = useCriticalCareActivityAnalytics({
@@ -171,7 +139,7 @@ export function useEcmoSessionCore(options: EcmoSessionCoreOptions): EcmoSession
     activityId: lifecycleActivityId,
     mode: activityMode,
     phase: semanticPhase,
-    enabled: hydrated,
+    enabled: false,
   })
   const catalogActivity = criticalCareActivityById.get(lifecycleActivityId)
 
@@ -184,8 +152,9 @@ export function useEcmoSessionCore(options: EcmoSessionCoreOptions): EcmoSession
 
   const persistProgress = useCallback((update: (current: ProgressV2) => ProgressV2) => {
     setProgress((current) => {
-      const next = update(current)
-      writeProgress(next)
+      const updated = update(current)
+      const next = updated.lastVisited ? recordTopicVisit(updated, updated.lastVisited) : updated
+      writeLearningProgress(next)
       return next
     })
   }, [])
@@ -204,26 +173,16 @@ export function useEcmoSessionCore(options: EcmoSessionCoreOptions): EcmoSession
         }),
       )
       syncUrl({ lesson: lesson.scenarioId, track: lesson.supportMode })
-      recordSiteModuleEvent(guidedLessonLoadedEvent(lesson))
       optionsRef.current.onLearnLessonLoaded?.(lesson, 'navigate', { requestedPhase: null })
     },
     [persistProgress, syncUrl],
   )
 
-  const attemptInProgress =
-    state.scenario.prediction.committed && state.scenario.phase !== 'complete'
+  const attemptInProgress = state.scenario.activityStarted && state.scenario.phase !== 'complete'
 
-  const currentSimulationMode = state.simulationMode
   const loadPracticeScenario = useCallback(
     (scenarioId: string, mode?: SimulationMode) => {
-      const resolvedMode = mode ?? currentSimulationMode
-      if (
-        section !== 'learn' &&
-        attemptInProgress &&
-        !window.confirm('This will discard your current case attempt. Start over?')
-      ) {
-        return
-      }
+      const resolvedMode = mode === 'challenge' ? 'guided' : (mode ?? 'guided')
       const definition = resolveScenarioDefinition(scenarioId)
       setResumedFromStorage(false)
       dispatch({ type: 'LOAD_SCENARIO', scenarioId: definition.id, mode: resolvedMode })
@@ -244,30 +203,13 @@ export function useEcmoSessionCore(options: EcmoSessionCoreOptions): EcmoSession
       } else {
         syncUrl({ case: definition.id, track: definition.supportMode })
       }
-      recordSiteModuleEvent(practiceScenarioLoadedEvent(definition, resolvedMode))
       optionsRef.current.onPracticeCaseLoaded?.(definition, 'navigate', { requestedPhase: null })
     },
-    [attemptInProgress, currentSimulationMode, persistProgress, section, syncUrl],
+    [persistProgress, section, syncUrl],
   )
 
-  const completeLearnLesson = useCallback(
-    (scenarioId: string) => {
-      const lessonSupportMode = resolveScenarioDefinition(scenarioId).supportMode
-      const wasUnlocked = isTrackCapstoneUnlocked(progress, lessonSupportMode)
-      const nowUnlocked = isTrackCapstoneUnlocked(
-        recordLearnLessonCompleted(progress, scenarioId),
-        lessonSupportMode,
-      )
-      persistProgress((current) => recordLearnLessonCompleted(current, scenarioId))
-      if (!wasUnlocked && nowUnlocked) {
-        recordSiteModuleEvent(capstoneUnlockedEvent(lessonSupportMode))
-      }
-      recordSiteModuleEvent(guidedWalkthroughCompletedEvent(scenarioId, lessonSupportMode))
-      lifecycleAnalytics.recordGoalMet()
-      lifecycleAnalytics.recordActivityCompleted()
-    },
-    [lifecycleAnalytics, persistProgress, progress],
-  )
+  // Visits are saved on entry. Finishing a step never creates a grade or a completion record.
+  const completeLearnLesson = useCallback(() => {}, [])
 
   const selectTrack = useCallback(
     (nextMode: SupportMode) => {
@@ -287,13 +229,12 @@ export function useEcmoSessionCore(options: EcmoSessionCoreOptions): EcmoSession
         setAssessTrack(nextMode)
         loadPracticeScenario(capstoneScenarioIdForMode(nextMode), 'challenge')
       }
-      recordSiteModuleEvent(supportModeSelectedEvent(nextMode, section))
     },
     [loadLearnScenario, loadPracticeScenario, progress, section, supportMode],
   )
 
   useEffect(() => {
-    const stored = readProgress()
+    const stored = readLearningProgress()
     setProgress(stored)
     const params = new URLSearchParams(window.location.search)
     const trackParam = parseTrack(params.get('track'))
@@ -349,7 +290,7 @@ export function useEcmoSessionCore(options: EcmoSessionCoreOptions): EcmoSession
       const track = trackParam ?? stored.lastVisited?.supportMode ?? 'vv'
       const capstoneId = capstoneScenarioIdForMode(track)
       setAssessTrack(track)
-      dispatch({ type: 'LOAD_SCENARIO', scenarioId: capstoneId, mode: 'challenge' })
+      dispatch({ type: 'LOAD_SCENARIO', scenarioId: capstoneId, mode: 'guided' })
       syncUrl({ track })
       optionsRef.current.onPracticeCaseLoaded?.(
         resolveScenarioDefinition(capstoneId),
@@ -357,6 +298,18 @@ export function useEcmoSessionCore(options: EcmoSessionCoreOptions): EcmoSession
         context,
       )
     }
+    const currentParams = new URLSearchParams(window.location.search)
+    const currentTrack = parseTrack(currentParams.get('track')) ?? 'vv'
+    const currentId =
+      currentParams.get(section === 'learn' ? 'lesson' : 'case') ??
+      capstoneScenarioIdForMode(currentTrack)
+    const visited = recordTopicVisit(stored, {
+      section,
+      scenarioId: currentId,
+      supportMode: currentTrack,
+    })
+    setProgress(visited)
+    writeLearningProgress(visited)
     setHydrated(true)
     // The hydration pass intentionally runs once per section mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -367,58 +320,12 @@ export function useEcmoSessionCore(options: EcmoSessionCoreOptions): EcmoSession
     return () => window.clearInterval(timer)
   }, [])
 
-  useEffect(() => {
-    if (!state.scenario.prediction.committed) return
-    lifecycleAnalytics.recordPredictionSubmitted()
-  }, [lifecycleAnalytics, state.scenario.prediction.committed])
-
-  useEffect(() => {
-    if (recordedHintEvents.current.activityId !== lifecycleActivityId) {
-      recordedHintEvents.current = { activityId: lifecycleActivityId, ids: new Set() }
-    }
-    for (const hintId of state.scenario.usedHintIds) {
-      if (recordedHintEvents.current.ids.has(hintId)) continue
-      recordedHintEvents.current.ids.add(hintId)
-      lifecycleAnalytics.recordHintUsed()
-    }
-  }, [lifecycleActivityId, lifecycleAnalytics, state.scenario.usedHintIds])
-
-  useEffect(() => {
-    if (recordedSafetyEvents.current.activityId !== lifecycleActivityId) {
-      recordedSafetyEvents.current = { activityId: lifecycleActivityId, ids: new Set() }
-    }
-    for (const error of state.scenario.criticalErrors) {
-      if (recordedSafetyEvents.current.ids.has(error)) continue
-      recordedSafetyEvents.current.ids.add(error)
-      lifecycleAnalytics.recordSafetyEvent()
-    }
-  }, [lifecycleActivityId, lifecycleAnalytics, state.scenario.criticalErrors])
-
   const revealDebrief = useCallback(() => {
-    if (section === 'learn' || state.scenario.phase === 'complete') return
-    lifecycleAnalytics.recordDebriefViewed()
-    if (outcome.mastery) lifecycleAnalytics.recordGoalMet()
-    lifecycleAnalytics.recordActivityCompleted(outcome.mastery)
-    dispatch({ type: 'REVEAL_DEBRIEF' })
-    setProgress((current) => {
-      const withResult = recordScenarioResult(current, {
-        scenarioId: scenario.id,
-        score: outcome.score,
-        criticalError: outcome.criticalErrors.length > 0,
-        completed: true,
-      })
-      // The stored mastery boolean retains its original VV meaning; VA mastery is derived by ID.
-      const next = withMastery(withResult, REQUIRED_SCENARIO_IDS_BY_MODE.vv)
-      writeProgress(next)
-      for (const event of roundSubmittedEvents({ current, next, scenario, outcome })) {
-        recordSiteModuleEvent(event)
-      }
-      return next
-    })
-  }, [lifecycleAnalytics, outcome, scenario, section, state.scenario.phase])
+    if (section !== 'learn') dispatch({ type: 'REVEAL_DEBRIEF' })
+  }, [section])
 
   const saveAndExit = useCallback(() => {
-    writeProgress(progress)
+    writeLearningProgress(progress)
     router.push(cardiohelpEcmoNavBase)
   }, [progress, router])
 

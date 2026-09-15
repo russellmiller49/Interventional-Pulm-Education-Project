@@ -129,12 +129,12 @@ describe('the composed activity renders that scope', () => {
   })
 
   it.each(supportedTracks(KEYED_SECTION))(
-    'circuit-flow-path / %s discloses in full once the prediction is committed',
+    'circuit-flow-path / %s retains named locations before and after an optional response',
     (track) => {
       mount(KEYED_SECTION, track)
       expect(renderedDisclosure()).toBe('full')
       reachFoundationStep(KEYED_SECTION, 'predict')
-      expect(renderedDisclosure()).toBe('withheld')
+      expect(renderedDisclosure()).toBe('full')
       commitPrediction(KEYED_SECTION)
       expect(renderedDisclosure()).toBe('full')
     },

@@ -116,7 +116,7 @@ it.each(['vv', 'va'] as const)(
     }
     expect(currentFoundationStep()).toBe('circuit-flow-path-gas-path')
     reachFoundationStep('circuit-flow-path', 'predict')
-    expect(document.querySelector('[data-location-disclosure="withheld"]')).not.toBeNull()
+    expect(document.querySelector('[data-location-disclosure="full"]')).not.toBeNull()
     expect(document.querySelector('[data-other-answers-panel]')).toBeNull()
     expect(document.querySelectorAll('[data-map-question-actions] button')).toHaveLength(1)
   },
@@ -153,8 +153,8 @@ it('keeps the single safety-gated clamp group outside optional 3D and its launch
   const { rerender } = render(
     <CircuitSchematic state={state} dispatch={dispatch} controlsEnabled />,
   )
-  expect(document.getElementById('cardiohelp-clamp-return')).toBeNull()
-  expect(document.querySelector('[data-circuit-controls-locked]')).not.toBeNull()
+  expect(document.getElementById('cardiohelp-clamp-return')).toBeEnabled()
+  expect(document.querySelector('[data-circuit-controls-locked]')).toBeNull()
   const committed = ecmoSimulationReducer(state, {
     type: 'COMMIT_PREDICTION',
     goalId: 'prevent-air-return',

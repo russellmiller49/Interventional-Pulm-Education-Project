@@ -119,7 +119,7 @@ export function EcmoCircuit3D({
   const { active: assetsLoading, progress: assetProgress } = useProgress()
   const closedClampCount =
     Number(state.circuit.drainageClampClosed) + Number(state.circuit.returnClampClosed)
-  const clampControlsEnabled = controlsEnabled && state.scenario.prediction.committed
+  const clampControlsEnabled = controlsEnabled
   const flowState =
     closedClampCount > 0 ? 'ISOLATED' : state.device.pumpRunning ? 'FLOWING' : 'PUMP STOPPED'
   const isVa = state.supportMode === 'va'

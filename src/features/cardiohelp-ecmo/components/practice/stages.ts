@@ -105,15 +105,23 @@ export function resolvePracticeStages(
   const supportEstablished =
     !clinicalCase?.initiationTargets || clinical?.supportStatus === 'on-ecmo'
   const manageComplete = causeCorrected && requiredApplied && supportEstablished
-  const workflowStage: EcmoPracticeStage = !planComplete
-    ? 'plan'
-    : reassessmentSubmitted
-      ? 'debrief'
-      : manageComplete
-        ? 'reassess'
-        : 'manage'
+  const workflowStage: EcmoPracticeStage = debriefRevealed
+    ? 'debrief'
+    : !planComplete && !state.scenario.activityStarted
+      ? 'plan'
+      : reassessmentSubmitted
+        ? 'debrief'
+        : manageComplete
+          ? 'reassess'
+          : 'manage'
   const currentStage: EcmoPracticeStage =
-    hasBrief && !briefAcknowledged && !planComplete ? 'brief' : workflowStage
+    hasBrief &&
+    !briefAcknowledged &&
+    !planComplete &&
+    !state.scenario.activityStarted &&
+    !debriefRevealed
+      ? 'brief'
+      : workflowStage
 
   const appliedCount = state.scenario.clinical?.appliedInterventions.length ?? 0
   const trajectory = state.scenario.clinical?.trajectory
@@ -175,10 +183,9 @@ export function resolvePracticeStages(
 /** A stage the learner may open: reached stages only, so nothing later than the current one. */
 export function stageReachable(
   stages: readonly StageDescriptor[],
-  currentStage: EcmoPracticeStage,
+  _currentStage: EcmoPracticeStage,
   candidate: EcmoPracticeStage,
 ): boolean {
-  const currentIndex = stages.findIndex((stage) => stage.id === currentStage)
   const candidateIndex = stages.findIndex((stage) => stage.id === candidate)
-  return candidateIndex !== -1 && candidateIndex <= currentIndex
+  return candidateIndex !== -1
 }

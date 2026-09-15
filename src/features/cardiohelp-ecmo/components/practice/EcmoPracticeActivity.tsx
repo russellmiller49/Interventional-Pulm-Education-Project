@@ -11,10 +11,9 @@ import { clinicalPracticeScenarioById } from '../../content/clinicalCases'
 import {
   cardiohelpCurriculum,
   curriculumUnitById,
-  nextRecommendedActivity,
+  orderedCaseScenarioIds,
   unitIdByCaseScenarioId,
 } from '../../content/curriculum'
-import { cardiohelpLearnLessonByScenarioId } from '../../content/learnLessons'
 import { predictionGoals } from '../../content/scenarios'
 import type { ScenarioOutcome } from '../../engine'
 import type {
@@ -62,27 +61,10 @@ import { surfaceForControl, surfaceForTarget, surfacesForStage } from './surface
 import styles from './EcmoPracticeActivity.module.css'
 
 /**
- * Practice cases and the Challenge capstones on the lean ECMO shell.
- *
- * Two layers. `EcmoPracticeActivity` is the connected surface: it owns the simulation session
- * through `useEcmoSessionCore` (reducer, progress, URL, clock, analytics) and hands everything to
- * `EcmoPracticeCaseView`, which is a plain function of that state. Tests and the render harness
- * mount the view with a built state and a recording dispatch, the way the old case player was
- * mounted; the route mounts the activity.
- *
- * One progression. The five stages of a case are read off engine state (`resolvePracticeStages`);
- * the only view state is which attempt has had its brief acknowledged, which reached stage the
- * learner is looking back at, and which surfaces they have opened on the current stage. Each is
- * keyed by the attempt, so a reload or a new case invalidates it without a reset effect.
- *
- * Exactly one stage panel is rendered. Unreached stages are disabled rows that show a number and a
- * name — the intervention cards and reassessment options of a later stage are not in the document
- * until the learner has earned the stage, which is also what closes the pre-commit leak the old
- * "open any step to inspect it" rail had.
- *
- * Masking derives from the activity mode. Before the debrief the header, the picker and the Now card
- * show the presentation — what the bedside shows — and never the scenario title, which names the
- * diagnosis. Challenge additionally hides unit names and offers no clues.
+ * Practice and integrated cases share the existing simulation session and one visible stage.
+ * Stages are freely navigable. Starting management initializes activity readiness, while engine
+ * facts still determine whether an action or observation actually occurred. Optional responses,
+ * clues and disclosures remain local to the current attempt; only topic visits persist.
  */
 
 const CASE_COLUMN_ID = 'ecmo-practice-case-column'
@@ -177,11 +159,11 @@ export function EcmoPracticeCaseView({
   onSaveAndExit,
   onReset,
   onStageChange,
-  onHintUsed,
   onNavigate,
 }: EcmoPracticeCaseViewProps) {
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [shownHintIds, setShownHintIds] = useState<readonly string[]>([])
   const [view, setView] = useState<{
     readonly attemptKey: string
     readonly briefAcknowledged: boolean
@@ -208,9 +190,8 @@ export function EcmoPracticeCaseView({
       ? attemptView.expanded.stage
       : currentStage
   const reviewing = activeStage !== currentStage
-  const challengeActive = activityMode === 'challenge'
   const debriefRevealed = facts.debriefRevealed
-  const showTeachingFeedback = !challengeActive || debriefRevealed
+  const showTeachingFeedback = true
 
   useEffect(() => {
     onStageChange?.(currentStage)
@@ -251,9 +232,9 @@ export function EcmoPracticeCaseView({
         }
       : null
 
-  const hints = challengeActive ? [] : (scenario.hints ?? [])
-  const usedHints = hints.filter((hint) => state.scenario.usedHintIds.includes(hint.id))
-  const nextHint = hints.find((hint) => !state.scenario.usedHintIds.includes(hint.id))
+  const hints = scenario.hints ?? []
+  const usedHints = hints.filter((hint) => shownHintIds.includes(hint.id))
+  const nextHint = hints.find((hint) => !shownHintIds.includes(hint.id))
   const latestHint = usedHints.at(-1)
   const activeGuidedTarget = latestHint?.target ?? null
   const activeGuidedControlId = latestHint?.controlId ?? null
@@ -301,6 +282,11 @@ export function EcmoPracticeCaseView({
 
   function showStage(stage: EcmoPracticeStage) {
     if (!stageReachable(stages, currentStage, stage)) return
+    if (stage === 'debrief') {
+      onReveal()
+      return
+    }
+    if (stage === 'manage' && !state.scenario.activityStarted) dispatch({ type: 'START_ACTIVITY' })
     updateView({ expanded: stage === currentStage ? null : { whenCurrent: currentStage, stage } })
   }
 
@@ -314,8 +300,7 @@ export function EcmoPracticeCaseView({
 
   function requestClue() {
     if (!nextHint) return
-    dispatch({ type: 'REQUEST_HINT', hintId: nextHint.id })
-    onHintUsed?.()
+    setShownHintIds((ids) => [...ids, nextHint.id])
     setHelpOpen(false)
     if (nextHint.focusId) {
       focusControl(nextHint.focusId)
@@ -328,15 +313,14 @@ export function EcmoPracticeCaseView({
   /* ------------------------------------------------------------------ *
    * Next step after the debrief
    * ------------------------------------------------------------------ */
-  const recommendedNext = debriefRevealed
-    ? nextRecommendedActivity(
-        {
-          completedLabs: [...new Set([...progress.completedLabs, scenario.id])],
-          completedLearnLessonIds: progress.completedLearnLessonIds,
-        },
-        supportMode,
-      )
-    : null
+  const orderedCases = orderedCaseScenarioIds(supportMode)
+  const nextCaseId = orderedCases[orderedCases.indexOf(scenario.id) + 1]
+  const recommendedNext =
+    section === 'assess'
+      ? null
+      : nextCaseId
+        ? { kind: 'case' as const, scenarioId: nextCaseId }
+        : { kind: 'capstone' as const }
   /*
    * Moving to the next case is a load, not a navigation.
    *
@@ -351,27 +335,19 @@ export function EcmoPracticeCaseView({
    * The href stays on the control either way so it is still a real link to open in a new tab.
    */
   const nextLink: EcmoCaseDebriefProps['nextLink'] = recommendedNext
-    ? recommendedNext.kind === 'lesson'
+    ? recommendedNext.kind === 'case'
       ? {
           href: {
-            pathname: `${cardiohelpEcmoNavBase}/learn`,
-            query: { lesson: recommendedNext.scenarioId, track: supportMode },
+            pathname: `${cardiohelpEcmoNavBase}/practice`,
+            query: { case: recommendedNext.scenarioId, track: supportMode },
           },
-          label: `Lesson · ${cardiohelpLearnLessonByScenarioId.get(recommendedNext.scenarioId)?.title ?? 'the next section'}`,
+          label: `Case · ${presentationLabel(recommendedNext.scenarioId)}`,
+          onSelect: () => onLoadScenario?.(recommendedNext.scenarioId),
         }
-      : recommendedNext.kind === 'case'
-        ? {
-            href: {
-              pathname: `${cardiohelpEcmoNavBase}/practice`,
-              query: { case: recommendedNext.scenarioId, track: supportMode },
-            },
-            label: `Case · ${presentationLabel(recommendedNext.scenarioId)}`,
-            onSelect: () => onLoadScenario?.(recommendedNext.scenarioId),
-          }
-        : {
-            href: { pathname: `${cardiohelpEcmoNavBase}/assess`, query: { track: supportMode } },
-            label: `${supportMode.toUpperCase()} challenge`,
-          }
+      : {
+          href: { pathname: `${cardiohelpEcmoNavBase}/assess`, query: { track: supportMode } },
+          label: `${supportMode.toUpperCase()} integrated case`,
+        }
     : null
 
   /* ------------------------------------------------------------------ *
@@ -384,7 +360,7 @@ export function EcmoPracticeCaseView({
   const nowModel = resolveNowCard({
     facts,
     activeStage,
-    activityMode: challengeActive ? 'challenge' : 'practice',
+    activityMode: 'practice',
     setting: clinicalCase?.setting,
     safety:
       state.scenario.criticalErrors.length > 0
@@ -428,15 +404,9 @@ export function EcmoPracticeCaseView({
   const unit = unitId ? curriculumUnitById.get(unitId) : undefined
   const unitNumber = unit ? trackUnits.findIndex((item) => item.id === unit.id) + 1 : null
   const unitLabel =
-    section === 'assess'
-      ? null
-      : unit && unitNumber
-        ? challengeActive
-          ? `Unit ${unitNumber}`
-          : `Unit ${unitNumber} · ${unit.title}`
-        : null
-  const kicker = `${section === 'assess' ? 'Challenge' : 'Practice'} · ${supportMode.toUpperCase()} track`
-  const title = debriefRevealed ? scenario.title : presentationTitle(scenario)
+    section === 'assess' ? null : unit && unitNumber ? `Unit ${unitNumber} · ${unit.title}` : null
+  const kicker = `${section === 'assess' ? 'Integrated case' : 'Practice'} · ${supportMode.toUpperCase()} track`
+  const title = scenario.title
   const meta = [
     caseKindLabel(scenario) ?? `${scenario.clinicalPhase} support`,
     ...(clinicalCase ? [clinicalCase.setting] : []),
@@ -447,7 +417,7 @@ export function EcmoPracticeCaseView({
     .filter((alarm) => alarm.active && alarm.source === 'device')
     .sort((a, b) => alarmRank(b.priority) - alarmRank(a.priority))[0]
   const contextLine: EcmoContextStripLine = {
-    mode: `${supportMode.toUpperCase()} ${section === 'assess' ? 'challenge' : 'practice'}`,
+    mode: `${supportMode.toUpperCase()} ${section === 'assess' ? 'integrated case' : 'practice'}`,
     flow: state.circuit.flowSensorConnected
       ? `${state.circuit.bloodFlow.toFixed(2)} L/min`
       : '-- · flow sensor disconnected',
@@ -508,18 +478,14 @@ export function EcmoPracticeCaseView({
               {caseUnits.map((unitItem) => {
                 const groupNumber = trackUnits.findIndex((item) => item.id === unitItem.id) + 1
                 return (
-                  <optgroup
-                    key={unitItem.id}
-                    label={
-                      challengeActive
-                        ? `Unit ${groupNumber}`
-                        : `Unit ${groupNumber} · ${unitItem.title}`
-                    }
-                  >
+                  <optgroup key={unitItem.id} label={`Unit ${groupNumber} · ${unitItem.title}`}>
                     {unitItem.caseScenarioIds.map((caseId) => (
                       <option key={caseId} value={caseId}>
-                        {presentationLabel(caseId)}
-                        {progress.completedLabs.includes(caseId) ? ' · worked through' : ''}
+                        {clinicalPracticeScenarioById.get(caseId)?.title ??
+                          presentationLabel(caseId)}
+                        {progress.visitedTopicIds?.includes(`practice:${supportMode}:${caseId}`)
+                          ? ' · visited'
+                          : ''}
                       </option>
                     ))}
                   </optgroup>
@@ -527,28 +493,6 @@ export function EcmoPracticeCaseView({
               })}
             </select>
           </label>
-          <div className={styles.coachingToggle} role="group" aria-label="Coaching">
-            <span>Coaching</span>
-            <div>
-              <button
-                type="button"
-                data-active={state.simulationMode === 'guided'}
-                aria-pressed={state.simulationMode === 'guided'}
-                onClick={() => onLoadScenario(scenario.id, 'guided')}
-              >
-                Standard practice
-              </button>
-              <button
-                type="button"
-                data-active={state.simulationMode === 'challenge'}
-                aria-pressed={state.simulationMode === 'challenge'}
-                onClick={() => onLoadScenario(scenario.id, 'challenge')}
-              >
-                Less coaching (harder)
-              </button>
-            </div>
-            <small>Changing the coaching mode starts this case over.</small>
-          </div>
         </div>
       </details>
     ) : undefined
@@ -638,7 +582,7 @@ export function EcmoPracticeCaseView({
             </ul>
           </div>
         ) : null}
-        {clinicalCase && !challengeActive ? (
+        {clinicalCase ? (
           <div className={playerStyles.clinicalDecisionPrompt} data-decision-prompt>
             <div>
               <strong>Your task</strong>
@@ -693,8 +637,6 @@ export function EcmoPracticeCaseView({
     column?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
   }, [activeStage, attemptKey, facts.reassessmentSubmitted, debriefRevealed])
 
-  const currentIndex = stages.findIndex((stage) => stage.id === currentStage)
-
   const helpDialog = (
     <EcmoHelpDialog
       open={helpOpen}
@@ -718,12 +660,7 @@ export function EcmoPracticeCaseView({
           {nowModel.primary.label}
         </button>
       ) : null}
-      {challengeActive ? (
-        <p className={styles.helpClue} data-help-clues="off">
-          Clues are off in Challenge. Read the console, the circuit and the patient; the debrief
-          compares your path with the one this case teaches.
-        </p>
-      ) : hints.length ? (
+      {hints.length ? (
         <div className={styles.helpClue} data-help-clues="on">
           <strong>Clues</strong>
           {usedHints.length ? (
@@ -735,10 +672,7 @@ export function EcmoPracticeCaseView({
               ))}
             </ol>
           ) : (
-            <p>
-              No clue used yet. Each clue you take is recorded in the debrief with the rest of your
-              reasoning.
-            </p>
+            <p>Hints are optional. Read one whenever it would help you explore this case.</p>
           )}
           {nextHint && !debriefRevealed ? (
             <button type="button" onClick={requestClue}>
@@ -763,7 +697,7 @@ export function EcmoPracticeCaseView({
         flowing
         section={section}
         stage={activeStage}
-        label={`CARDIOHELP ${section === 'assess' ? 'challenge' : 'practice'} case`}
+        label={`CARDIOHELP ${section === 'assess' ? 'integrated case' : 'practice'} case`}
         header={header}
         contextStrip={
           <EcmoContextStrip
@@ -836,21 +770,57 @@ export function EcmoPracticeCaseView({
                 <div className={styles.stagePanel} data-stage-panel={activeStage}>
                   {stagePanel}
                 </div>
+                <div className="my-4 flex flex-wrap gap-3" aria-label="Self-paced case navigation">
+                  {activeStage !== 'manage' ? (
+                    <button type="button" onClick={() => showStage('manage')}>
+                      Start guided activity
+                    </button>
+                  ) : null}
+                  {!debriefRevealed ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onReveal()
+                        updateView({ expanded: null })
+                      }}
+                    >
+                      Show explanation without answering
+                    </button>
+                  ) : null}
+                  <button type="button" onClick={() => setHelpOpen(true)}>
+                    Hint
+                  </button>
+                  <button type="button" onClick={onReset}>
+                    Try again
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (nextLink?.onSelect) nextLink.onSelect()
+                      else
+                        onNavigate?.(
+                          nextLink?.href ?? {
+                            pathname: `${cardiohelpEcmoNavBase}/learn`,
+                            query: { track: supportMode },
+                          },
+                        )
+                    }}
+                  >
+                    Continue to another topic
+                  </button>
+                </div>
               </EcmoNowCard>
             </div>
             <details className={styles.workflowMap}>
               <summary>Case workflow</summary>
               <nav aria-label="Practice workflow steps">
                 <ol className={styles.stageNav} data-stages={stages.length}>
-                  {stages.map((stage, index) => {
-                    const reached = index <= currentIndex
+                  {stages.map((stage) => {
                     const stateLabel = stage.complete
                       ? 'complete'
                       : stage.id === currentStage
                         ? 'current'
-                        : reached
-                          ? 'started'
-                          : 'pending'
+                        : 'available'
                     return (
                       <li key={stage.id}>
                         <button
@@ -859,13 +829,11 @@ export function EcmoPracticeCaseView({
                           data-state={stateLabel}
                           data-expanded={stage.id === activeStage}
                           aria-current={stage.id === currentStage ? 'step' : undefined}
-                          aria-disabled={reached ? undefined : true}
-                          disabled={!reached}
                           onClick={() => showStage(stage.id)}
                         >
                           <span>{stage.complete ? '✓' : stage.number}</span>
                           <strong>{stage.label}</strong>
-                          {reached ? <small>{stage.summary ?? stateLabel}</small> : null}
+                          <small>{stage.summary ?? stateLabel}</small>
                         </button>
                       </li>
                     )

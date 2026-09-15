@@ -27,7 +27,7 @@ function progressWith(...workedSectionIds: readonly string[]): ProgressV2 {
   )
   return {
     ...createDefaultProgress(),
-    completedLearnLessonIds: drills,
+    visitedTopicIds: [...drills, ...foundations].map((id) => `learn:vv:${id}`),
     ...(foundations.length > 0 ? { completedFoundationSectionIds: foundations } : {}),
   }
 }
