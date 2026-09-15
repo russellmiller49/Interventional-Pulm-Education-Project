@@ -8,6 +8,16 @@ Prepared 2026-09-15 by Codex (AI authoring assistant). This is a provenance and 
 - Read the latest HD-03, ECMO-02, MV-03, MCS-03 and SHARED-01-HD-ECMO handoffs and traced the findings against that code before editing.
 - No clinical position, recommendation, numerical threshold, model, question, release/publication constant, route, progress/storage implementation or self-paced behavior changed. No source gained reviewed/approved status. Device Intelligence and G02 are untouched. No new framework or dependency.
 
+### Scope correction before finalizing PR #225
+
+The owner clarified that Airway Stent Mechanics and ICU Simulation are outside the nine-module self-paced initiative and were not authorized by SHARED-02. Restored all three runtime files changed by the initial PR to freshly fetched `origin/main` at `e80a03c715e806b38dc623ac59f2dd169a77a6f8`:
+
+- `src/features/airway-stent-mechanics/components/learning-lab/AirwayStentLearningLab.tsx`
+- `src/features/icu-simulation/components/IcuSimulatorHub.tsx`
+- `src/features/icu-simulation/components/IcuSimulatorLab.tsx`
+
+`git diff --exit-code origin/main -- src/features/airway-stent-mechanics src/features/icu-simulation` is clean across both directories. Their unsupported review-label wording remains an observed, **out-of-scope** finding. No changes under either feature remain in this PR. All other SHARED-02 runtime/test corrections are unchanged from commit `93b1a024`.
+
 ## 1. GEF attribution
 
 ### Finding and evidence
@@ -47,25 +57,22 @@ The conflict's ID, context, handling, concept associations and `reviewStatus: 's
 
 ## 2. Review-state language
 
-Searched runtime components and content across the educational features, excluding Device Intelligence, for `Reviewed English`, `Reviewed-English`, release approval and comparable clinical-review claims. Traced the positive matches to their source/review records and current renderers. HD-03 already neutralized HD's fallback; BF and CRRT already use neutral fallback language. The supplied HD/MV/MCS review packets do not record human clinical approval; ICU evidence is pending, airway-stent clinical records are draft, and PI's date constant does not identify a human clinical reviewer.
+Searched runtime components and content across the educational features, excluding Device Intelligence, for `Reviewed English`, `Reviewed-English`, release approval and comparable clinical-review claims. Traced the positive matches to their source/review records and current renderers. HD-03 already neutralized HD's fallback; BF and CRRT already use neutral fallback language. The supplied HD/MV/MCS review packets do not record human clinical approval, and PI's date constant does not identify a human clinical reviewer. The broader search also observed wording in ICU Simulation and Airway Stent Mechanics; those findings remain outside the nine-module initiative and are not repaired here.
 
 ### Every changed fallback phrase
 
 Paths are relative to `src/features/`. Only the unsupported review adjective changed; the remaining sentence, locale condition and translation behavior are preserved (line wrapping changed through Prettier).
 
-| Component                                                                   | Exact phrase before                                      | Exact phrase after                              |
-| --------------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------- |
-| `cardiohelp-ecmo/components/CardiohelpModuleFrame.tsx`                      | `Reviewed English content fallback:`                     | `English content fallback:`                     |
-| `mechanical-ventilation/components/MechanicalVentilationModuleFrame.tsx`    | `Reviewed English content fallback:`                     | `English content fallback:`                     |
-| `peripheral-imaging/components/PeripheralImagingModuleFrame.tsx`            | `Reviewed English content fallback:`                     | `English content fallback:`                     |
-| `mechanical-circulatory-support/components/McsModuleFrame.tsx`              | `Reviewed-English fallback.`                             | `English fallback.`                             |
-| `mechanical-ventilation/components/MechanicalVentilationLab.tsx`            | `Reviewed-English fallback:`                             | `English fallback:`                             |
-| `icu-simulation/components/IcuSimulatorHub.tsx`                             | `Reviewed-English fallback:`                             | `English fallback:`                             |
-| `icu-simulation/components/IcuSimulatorLab.tsx`                             | `Reviewed-English fallback:`                             | `English fallback:`                             |
-| `airway-stent-mechanics/components/learning-lab/AirwayStentLearningLab.tsx` | `Reviewed English fallback · translation review pending` | `English fallback · translation review pending` |
-| `mechanical-ventilation/components/SourcesPanel.tsx`                        | `before the reviewed-English fallback is removed.`       | `before the English fallback is removed.`       |
+| Component                                                                | Exact phrase before                                | Exact phrase after                        |
+| ------------------------------------------------------------------------ | -------------------------------------------------- | ----------------------------------------- |
+| `cardiohelp-ecmo/components/CardiohelpModuleFrame.tsx`                   | `Reviewed English content fallback:`               | `English content fallback:`               |
+| `mechanical-ventilation/components/MechanicalVentilationModuleFrame.tsx` | `Reviewed English content fallback:`               | `English content fallback:`               |
+| `peripheral-imaging/components/PeripheralImagingModuleFrame.tsx`         | `Reviewed English content fallback:`               | `English content fallback:`               |
+| `mechanical-circulatory-support/components/McsModuleFrame.tsx`           | `Reviewed-English fallback.`                       | `English fallback.`                       |
+| `mechanical-ventilation/components/MechanicalVentilationLab.tsx`         | `Reviewed-English fallback:`                       | `English fallback:`                       |
+| `mechanical-ventilation/components/SourcesPanel.tsx`                     | `before the reviewed-English fallback is removed.` | `before the English fallback is removed.` |
 
-The old MV lab and airway-stent learning lab are retained components, not the current page entry points. Their rendered component suites were exercised; no route was added to expose them. The airway-stent fallback is a dormant branch while its clinical status is draft; the existing visible **English clinical draft fallback** branch remains unchanged. The two ICU strings were the same unsupported fallback claim found by the cross-feature search; their repair is text only.
+The old MV lab is a retained component, not the current page entry point. Its rendered component suite was exercised; no route was added to expose it. The final PR changes six fallback phrases in the scoped modules, plus the ten other review-status phrases listed below.
 
 ### Every other review-status phrase changed
 
@@ -90,7 +97,7 @@ The PI date constant and its visible **References · checked 2026-09-08** record
 
 - Learner-owned **reviewed** marks, thermodilution trace-review actions and progress records describe learner activity, not faculty review; unchanged.
 - Document-check dates, source identities, peer-reviewed article types, review requirements, and explicit **none recorded yet** lines remain. HD-03's dated AI document checks remain attributable checks, not human approval.
-- Airway-stent clinical-review status branches remain tied to their clinical status; current records are draft. They are not publication-derived claims, and this task does not promote them.
+- **Out of scope:** ICU Simulation retains `Reviewed-English fallback:` in its hub and active lab. Airway Stent Mechanics retains the dormant `Reviewed English fallback · translation review pending` branch in its old learning lab; its visible draft branch already says `English clinical draft fallback`. These observed unsupported review claims are not authorized for SHARED-02. Both feature directories now match current main exactly.
 - HD-03's shared `Versioned sources…` drawer description does not claim human review. The shared registry's clinical/device/model projection and the default `sme-review` metadata are unchanged. A queue status is not a clinical sign-off.
 - MCS-03's separate CP-measurand/IFU locator issues and shared-stage visibility question remain outside this GEF/fallback/title repair.
 
@@ -110,7 +117,7 @@ Local derived evidence: `/Users/russellmiller/Projects/Interventional-Pulm-Local
 
 ### Tests and checks
 
-`test-paths.json` records the exact targeted paths. The command was `node node_modules/jest/bin/jest.js <those paths> --runInBand --json --outputFile=…`, on clean main before edits and on the final code. An initial broader eight-feature run was stopped without a completed report and is **not counted** as verification; the bounded run below completed on both trees.
+`test-paths.json` records the exact targeted paths. The command was `node node_modules/jest/bin/jest.js <those paths> --runInBand --json --outputFile=…`, on clean main before edits, on the initial PR, and again after the scope correction (`targeted-scope-correction.json`). An initial broader eight-feature run was stopped without a completed report and is **not counted** as verification; the bounded run below completed on both trees.
 
 | Consumer                                                                                      | Suites |                                       Final tests |
 | --------------------------------------------------------------------------------------------- | -----: | ------------------------------------------------: |
@@ -120,14 +127,14 @@ Local derived evidence: `/Users/russellmiller/Projects/Interventional-Pulm-Local
 | ECMO: components, stage sources, self-paced                                                   |      3 |                                        171 passed |
 | MCS: components, module surfaces, MCS-03 source holds                                         |      3 |                                         53 passed |
 | PI: hub, release boundary                                                                     |      2 |                                         13 passed |
-| Airway stent: learning-lab shell and components                                               |      2 |                                         14 passed |
-| ICU Simulation: components                                                                    |      1 |                                         22 passed |
+| Restored-file compatibility only — Airway stent: learning-lab shell and components            |      2 |                                         14 passed |
+| Restored-file compatibility only — ICU Simulation: components                                 |      1 |                                         22 passed |
 | CRRT: scaffold                                                                                |      1 |                                          2 passed |
 | **Total**                                                                                     | **45** | **657 passed, 3 baseline failures; none skipped** |
 
-Baseline: 45 suites, 655 passed / 3 failed. Final: 45 suites, 657 passed / 3 failed. Two new provenance tests pin the unchanged GEF formulas, correct source resolution/locators, explicit uncertainty/no-review limitation, retained handling/status, rendered IDs and unchanged Master synthesis identity. Existing fallback assertions now require neutral English wording; negative assertions reject the old claim. No tests are disabled or weakened to conceal a failure.
+Baseline: 45 suites, 655 passed / 3 failed. After the scope correction: 45 suites, 657 passed / 3 failed. Of these, 42 suites / 621 passing tests cover the scoped modules and shared consumers; three unchanged suites / 36 tests verify the restored out-of-scope files only. These compatibility checks do not authorize changes to those modules. Two new provenance tests pin the unchanged GEF formulas, correct source resolution/locators, explicit uncertainty/no-review limitation, retained handling/status, rendered IDs and unchanged Master synthesis identity. Existing fallback assertions now require neutral English wording; negative assertions reject the old claim. No tests are disabled or weakened to conceal a failure.
 
-The same three tests fail with **byte-identical failure messages** on baseline and final (`failure-comparison.json`):
+The same three tests fail with **byte-identical failure messages** on baseline and final (`failure-comparison-scope-correction.json`):
 
 1. `critical-care/__tests__/accessibility.test.tsx`: existing CRRT pressure-image accessible-name expectation.
 2. `critical-care/__tests__/curriculum-sequencing.test.tsx`: expected CRRT case order omits the existing troubleshooting challenge.
@@ -135,26 +142,27 @@ The same three tests fail with **byte-identical failure messages** on baseline a
 
 Other checks:
 
-- `npm run type-check`: exit 0.
-- Changed-path ESLint on every changed TS/TSX file with `--max-warnings=0`: no errors, one existing `react-hooks/set-state-in-effect` warning at `IcuSimulatorLab.tsx:501`; strict exit 1. Re-ran ESLint on `git show origin/main:<path>` through `--stdin --stdin-filename`: **identical warning output**, including line and effect. The effect is untouched.
-- Changed-path Prettier check: clean. `git diff --check`: clean.
+- `npm run type-check` after the scope correction: exit 0 (`typecheck-scope-correction.log`). An initial concurrent run overlapped Next dev startup and reported TS6053 for generated `.next/dev/types` files while they were being regenerated (`typecheck-scope-correction-startup.log`); the rerun used the same source after startup settled, with no code/configuration workaround.
+- Changed-path ESLint after the scope correction: all 15 remaining TS/TSX paths pass with `--max-warnings=0` (exit 0; `lint-scope-correction.log`). The initial PR's strict lint warning was in the now-restored ICU file and is no longer part of the changed-path result; no effect or lint rule was modified.
+- Changed-path Prettier check after the scope correction: clean. `git diff --check`: clean.
 - Final source/conflict suite after formatting: passed.
 - No production build, full-repository suite, deployment, clinical review or human learner session was run.
 
 ### Browser checks
 
-Playwright Chromium against an isolated Next dev server on port 3118, dummy preview configuration and ephemeral localhost auth. API calls were fulfilled locally; external requests were blocked. `browser-final.json` combines the completed main run and the single corrected HD assertion recheck: **22 checks passed, zero page exceptions**.
+Playwright Chromium against an isolated Next dev server on port 3118, dummy preview configuration and ephemeral localhost auth. API calls were fulfilled locally; external requests were blocked. The post-correction rerun is recorded in `scope-correction/browser.json`: **22 checks passed, zero page exceptions** — 18 scoped checks and four checks that the restored ICU routes match main. The earlier browser reports are historical evidence only; their claim that ICU shows neutral wording is superseded.
 
 - MV hub: four console source profiles; open supporting references using keyboard; all source titles use the readable foreground. Desktop and phone screenshots; no phone page overflow.
 - MV-03 practice: the existing **Worked explanation · live case under modeling review** hold remains; source-card titles are readable.
-- English, Spanish and Simplified Chinese overview routes for MV, ECMO, MCS, PI and ICU: no English-route fallback banner, neutral fallback on both non-English routes. ICU's active sandbox also shows the neutral Spanish-route banner.
+- English, Spanish and Simplified Chinese overview routes for MV, ECMO, MCS and PI: no English-route fallback banner, neutral fallback on both non-English routes.
+- Restored-file compatibility only: ICU has no English-route fallback banner; Spanish/Chinese overview routes and the Spanish active sandbox again show current main's `Reviewed-English fallback:`. That wording remains out of scope.
 - HD derived-hemodynamics source footer: supplied synthesis class, unknown date and explicit no-clinical-review record remain. Source disclosure opens normally.
 - MV expiration-and-air-trapping lesson footer: source identities and existing no-clinical-review line remain visible.
 - Shared `cc.measurement.measurand` concept: both formulas, both textbook names, corrected printed/PDF locators and original handling remain visible.
 
 Harness corrections, not application defects: initial MV heading used `HAMILTON-C6` where the actual short name is `C6`; the English-route scan matched the MV publication checklist rather than a fallback banner; HD's summary includes a count, and CSS uppercases its class label in `innerText`; MV uses `activity=…` and an already-open footer rather than `unit=…` and the older disclosure. Corrected selectors/route/text inspection and reran affected checks. Intermediate reports are retained.
 
-Inspected screenshots: MV before, MV after desktop/mobile, MV case sources, ECMO fallback, HD source footer and GEF concept. No browser claim is made for dormant published branches or the old MV/stent lab entry points; their existing component tests cover the retained components. Safari/Firefox, screen readers, native zoom and every lesson/case were not exercised.
+Inspected screenshots: MV before, MV after desktop/mobile, MV case sources, ECMO fallback, HD source footer and GEF concept. After the scope correction, inspected fresh MV desktop/mobile and GEF captures plus the restored ICU fallback. No browser claim is made for dormant published branches or the old MV lab entry point; its existing component tests cover the retained component. The restored old stent lab has component-level compatibility coverage, with no new route or browser entry point. Safari/Firefox, screen readers, native zoom and every lesson/case were not exercised.
 
 ### Structured-module checks within this repair
 
@@ -178,5 +186,6 @@ Inspected screenshots: MV before, MV after desktop/mobile, MV case sources, ECMO
 - The textbook attribution is established, but the second textbook's missing factor of four remains unexplained. No erratum, underlying cited study or device convention was verified, and the conflict was not clinically adjudicated.
 - A named/dated human clinical review of these modules and this conflict remains unrecorded in the inspected evidence. Existing source/model holds from HD-03, ECMO-02, MV-03 and MCS-03 remain.
 - The shared duplicate Master ID, source-class projection, other conflicts/clarifications and review-queue metadata are not normalized by this task.
+- Unsupported review-label wording observed in Airway Stent Mechanics and ICU Simulation remains out of scope for the nine-module self-paced initiative. Those feature directories are restored to current `origin/main`.
 
 This delivers one bounded SHARED-02 PR. Do not merge or deploy it as part of this task. Do not begin G02 or modify Device Intelligence.

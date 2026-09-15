@@ -165,8 +165,8 @@ export function IcuSimulatorHub({ locale = 'en' }: { locale?: string }) {
 
       {locale !== 'en' ? (
         <p className={styles.languageFallback} role="status">
-          English fallback: this private preview remains English-first while localized clinical
-          review is pending.
+          Reviewed-English fallback: this private preview remains English-first while localized
+          clinical review is pending.
         </p>
       ) : null}
 

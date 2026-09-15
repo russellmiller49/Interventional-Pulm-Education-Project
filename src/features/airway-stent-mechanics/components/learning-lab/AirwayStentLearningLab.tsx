@@ -569,7 +569,7 @@ export function AirwayStentLearningLab({
                       data-no-handoff-translate
                     >
                       {clinicalModuleCopy.clinicalReviewStatus === 'reviewed'
-                        ? 'English fallback · translation review pending'
+                        ? 'Reviewed English fallback · translation review pending'
                         : 'English clinical draft fallback · translation review pending'}
                     </span>
                   ) : null}
