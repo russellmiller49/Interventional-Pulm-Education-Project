@@ -77,10 +77,13 @@ function isComplete(status: string): boolean {
 function allowedModuleIds(
   activities: readonly CriticalCareActivityDefinition[],
 ): ReadonlySet<string> {
-  // MV retains old account records without hydrating or publishing new completion claims.
+  // MV and CRRT retain old account records without hydrating or publishing new completion claims.
   return new Set(
     activities
-      .filter((activity) => activity.moduleId !== 'mechanical-ventilation')
+      .filter(
+        (activity) =>
+          activity.moduleId !== 'mechanical-ventilation' && activity.moduleId !== 'baxter-crrt',
+      )
       .map((activity) => activity.moduleId),
   )
 }

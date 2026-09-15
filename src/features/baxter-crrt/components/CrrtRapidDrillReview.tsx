@@ -58,10 +58,10 @@ export function CrrtRapidDrillReview() {
       data-reviewer-only="false"
       data-review-status="pending"
       data-learner-runnable="true"
-      data-scoring="cause-first"
-      data-analytics="allowlisted"
-      data-progress-write="learner-mode-only"
-      data-persistence="learner-mode-only"
+      data-scoring="none"
+      data-analytics="none"
+      data-progress-write="none"
+      data-persistence="none"
       data-correction-verification={state.correctionVerified ? 'reviewed' : 'not-reviewed'}
     >
       <header className={styles.header}>
@@ -128,8 +128,13 @@ export function CrrtRapidDrillReview() {
       </fieldset>
 
       {!state.faultRevealed ? (
+        <button type="button" onClick={() => dispatch({ type: 'REVEAL_EXAMPLE' })}>
+          Show explanation
+        </button>
+      ) : null}
+      {!state.faultRevealed ? (
         <p className={styles.hiddenState} role="status">
-          Submit a prediction to reveal the case signal and response sequence.
+          Try an optional prediction or show the worked explanation.
         </p>
       ) : (
         <>
@@ -139,7 +144,7 @@ export function CrrtRapidDrillReview() {
             <dl>
               <div>
                 <dt>Your prediction</dt>
-                <dd>{selectedPrediction?.label}</dd>
+                <dd>{selectedPrediction?.label ?? 'No prediction recorded'}</dd>
               </div>
               <div>
                 <dt>Recommended first response</dt>
@@ -170,9 +175,7 @@ export function CrrtRapidDrillReview() {
             <div className={styles.sequenceHeader}>
               <div>
                 <span>Cause-first sequence</span>
-                <h3 id="baxter-crrt-cause-first-sequence-heading">
-                  Complete each safety step in order
-                </h3>
+                <h3 id="baxter-crrt-cause-first-sequence-heading">Review the safety sequence</h3>
               </div>
               <strong>
                 {state.completedStepIds.length === 0
@@ -202,7 +205,7 @@ export function CrrtRapidDrillReview() {
                       ) : null}
                     </div>
                     {completed ? (
-                      <span className={styles.reviewed}>Complete</span>
+                      <span className={styles.reviewed}>Reviewed</span>
                     ) : (
                       <button
                         type="button"
@@ -222,7 +225,7 @@ export function CrrtRapidDrillReview() {
       <div className={styles.footer}>
         <p aria-live="polite">
           {state.faultRevealed
-            ? `Cause-first sequence worked through. Outcome: ${state.outcome}. Cause resolution ${state.correctionVerified ? 'verified' : 'not yet verified'}.`
+            ? 'Worked example available. Reviewing steps does not verify cause correction or perform a device action.'
             : 'No rapid-drill action has been recorded.'}
         </p>
         <button type="button" onClick={resetPreview}>

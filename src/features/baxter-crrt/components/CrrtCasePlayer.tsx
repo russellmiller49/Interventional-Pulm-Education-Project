@@ -12,41 +12,28 @@ import {
   ShieldAlert,
   Sparkles,
 } from 'lucide-react'
-import {
-  useEffect,
-  useRef,
-  useState,
-  type Dispatch,
-  type FormEvent,
-  type KeyboardEvent,
-} from 'react'
+import { useRef, useState, type Dispatch, type KeyboardEvent } from 'react'
 
 import type { CriticalCareActivityPhase } from '@/features/learning-module/activity'
 import { ActivityStepper } from '@/features/learning-module/components/ActivityStepper'
 
 import type { RuntimeCrrtCase } from '../content/schema'
 import { selectCrrtConsoleControls } from '../engine/consoleControls'
-import {
-  selectCrrtDebriefProjection,
-  selectCrrtLearningOutcome,
-  type CrrtLearningOutcome,
-} from '../engine/outcomes'
 import { selectSecondsUntilNextScheduledEvent } from '../engine/selectors'
 import { selectPrismaxPilotCaseOperationsDisplay } from '../engine/deviceAdapters/prismax'
 import type {
   CrrtLearningSessionAction,
   CrrtLearningSessionState,
-  CrrtPrecommitReasoningPhase,
-  CrrtPredictionCommitment,
   CrrtReasoningPhase,
 } from '../engine/learningSession'
+import { hasCrrtRunActivity } from '../engine/learningSession'
 import { crrtSoluteIds, type CrrtRoleLens } from '../engine/types'
 import { PrismaxPilotInterface, type PrismaxPilotCaseContext } from './PrismaxPilotInterface'
 import styles from './crrt-case-player.module.css'
 
 const reasoningStages = [
   { id: 'brief', label: 'Brief', detail: 'Read + Define', phases: ['read', 'define'] },
-  { id: 'plan', label: 'Plan', detail: 'Select + Predict', phases: ['select', 'predict'] },
+  { id: 'plan', label: 'Plan', detail: 'Worked example', phases: ['select', 'predict'] },
   { id: 'run', label: 'Run', detail: 'Act + Observe', phases: ['run'] },
   {
     id: 'debrief',
@@ -106,11 +93,6 @@ interface CrrtCasePlayerProps {
   readonly dispatch: Dispatch<CrrtLearningSessionAction>
   readonly onRoleChange: (roleLens: CrrtRoleLens) => void
   readonly onReset: () => void
-  readonly onPredictionCommitted?: () => void
-  readonly onHintUsed?: () => void
-  readonly onFirstSafeAction?: (interventionId: string) => void
-  readonly onReassessmentCommitted?: () => void
-  readonly onDebriefRevealed?: (outcome: CrrtLearningOutcome) => void
   /** Prefixes every authored DOM ID so multiple workflow instances can coexist. */
   readonly idNamespace?: string
   /** Standalone players retain the shared phase display; shell wrappers render it in ActivityShell. */
@@ -125,17 +107,15 @@ export function CrrtReasoningRibbon({ session }: { session: CrrtLearningSessionS
 
   return (
     <nav className={styles.reasoningRibbon} aria-label="CRRT case stages">
-      <span>Reasoning loop</span>
+      <span>Case guide</span>
       <ol>
         {reasoningStages.map(({ id, label, detail }, index) => (
           <li
             key={id}
-            data-status={
-              index < currentIndex ? 'complete' : index === currentIndex ? 'current' : 'pending'
-            }
+            data-status={index === currentIndex ? 'current' : 'available'}
             aria-current={index === currentIndex ? 'step' : undefined}
           >
-            <i>{index < currentIndex ? <Check aria-hidden="true" /> : index + 1}</i>
+            <i>{index + 1}</i>
             <span>
               <strong>{label}</strong>
               <small>{detail}</small>
@@ -189,8 +169,6 @@ function toggleId(current: readonly string[], id: string): string[] {
   return current.includes(id) ? current.filter((value) => value !== id) : [...current, id]
 }
 
-type CrrtPredictionFieldId = 'goal' | 'mechanism' | 'control' | 'response' | 'reassessment'
-
 const mobileSurfaces: readonly { readonly id: CrrtMobileSurface; readonly label: string }[] = [
   { id: 'case', label: 'Case' },
   { id: 'machine', label: 'Machine + circuit' },
@@ -214,11 +192,6 @@ function CrrtCasePlayerContent({
   dispatch,
   onRoleChange,
   onReset,
-  onPredictionCommitted,
-  onHintUsed,
-  onFirstSafeAction,
-  onReassessmentCommitted,
-  onDebriefRevealed,
   idNamespace,
   showSharedStepper = true,
 }: CrrtCasePlayerProps) {
@@ -234,31 +207,14 @@ function CrrtCasePlayerContent({
     title: visibleCaseTitle,
     pathway: session.experience,
   }
-  const [goalOptionId, setGoalOptionId] = useState('')
-  const [mechanismOptionId, setMechanismOptionId] = useState('')
-  const [controlOptionIds, setControlOptionIds] = useState<readonly string[]>([])
-  const [responseOptionId, setResponseOptionId] = useState('')
-  const [plannedReassessmentIds, setPlannedReassessmentIds] = useState<readonly string[]>([])
   const [actualReassessmentIds, setActualReassessmentIds] = useState<readonly string[]>([])
-  const [predictionSubmitAttempt, setPredictionSubmitAttempt] = useState(0)
   const [mobileSurface, setMobileSurface] = useState<CrrtMobileSurface>('case')
-  const [challengeFeedbackImmediate, setChallengeFeedbackImmediate] = useState(false)
+  const [exampleVisible, setExampleVisible] = useState(false)
   const mobileTabRefs = useRef<Partial<Record<CrrtMobileSurface, HTMLButtonElement>>>({})
-  const predictionValidationSummaryRef = useRef<HTMLDivElement>(null)
-  const goalSelectRef = useRef<HTMLSelectElement>(null)
-  const mechanismSelectRef = useRef<HTMLSelectElement>(null)
-  const controlCheckboxRef = useRef<HTMLInputElement>(null)
-  const responseSelectRef = useRef<HTMLSelectElement>(null)
-  const reassessmentCheckboxRef = useRef<HTMLInputElement>(null)
-  const outcome = selectCrrtLearningOutcome(session)
-  const debrief = session.debriefRevealed ? selectCrrtDebriefProjection(session) : null
+  const debrief = session.debriefRevealed ? definition.debrief : null
   const usedHintSet = new Set(session.usedHintIds)
   const performedSet = new Set(session.performedInterventionIds)
-  const completedRequiredActions = definition.requiredActionIds.filter((id) => performedSet.has(id))
-  const missedRequiredActions = definition.requiredActionIds.filter((id) => !performedSet.has(id))
-  const matchedAcceptedPaths = definition.acceptedAlternativePaths.filter((path) =>
-    outcome.matchedAcceptedPathIds.includes(path.id),
-  )
+  const hasRun = hasCrrtRunActivity(session)
   const firstTrend = session.simulation.trends[0]
   const latestTrend = session.simulation.trends.at(-1)
   const trendEvidenceRows =
@@ -318,98 +274,21 @@ function CrrtCasePlayerContent({
           }),
         ]
       : []
-  const unsafeActionIds = new Set(definition.unsafeActions.map((unsafe) => unsafe.actionId))
-  const nextHint = isMastery
-    ? undefined
-    : definition.hintLadder
-        .slice()
-        .sort((left, right) => left.sequence - right.sequence)
-        .find((hint) => !usedHintSet.has(hint.id))
-  const definedGoal = goalOptionId !== ''
-  const selectedMechanismAndControl =
-    definedGoal && mechanismOptionId !== '' && controlOptionIds.length > 0
-  const completePrediction =
-    selectedMechanismAndControl && responseOptionId !== '' && plannedReassessmentIds.length > 0
-  const canReassess = !session.reassessment.committed && !session.debriefRevealed
-  const timeControlsUnavailable = session.debriefRevealed
+  const nextHint = definition.hintLadder
+    .slice()
+    .sort((left, right) => left.sequence - right.sequence)
+    .find((hint) => !usedHintSet.has(hint.id))
+  const canReassess = hasRun && !session.reassessment.committed && !session.debriefRevealed
   const secondsUntilNextScheduledEvent = selectSecondsUntilNextScheduledEvent(session.simulation)
-  const predictionValidationAttempted = predictionSubmitAttempt > 0
-  const missingPredictionFields: readonly {
-    readonly id: CrrtPredictionFieldId
-    readonly label: string
-  }[] = [
-    ...(goalOptionId === '' ? [{ id: 'goal' as const, label: '1 · Goal' }] : []),
-    ...(mechanismOptionId === '' ? [{ id: 'mechanism' as const, label: '2 · Mechanism' }] : []),
-    ...(controlOptionIds.length === 0
-      ? [{ id: 'control' as const, label: '3 · Planned control' }]
-      : []),
-    ...(responseOptionId === ''
-      ? [{ id: 'response' as const, label: '4 · Expected response' }]
-      : []),
-    ...(plannedReassessmentIds.length === 0
-      ? [{ id: 'reassessment' as const, label: '5 · Reassessment plan' }]
-      : []),
-  ]
-  const goalInvalid = predictionValidationAttempted && goalOptionId === ''
-  const mechanismInvalid = predictionValidationAttempted && mechanismOptionId === ''
-  const controlInvalid = predictionValidationAttempted && controlOptionIds.length === 0
-  const responseInvalid = predictionValidationAttempted && responseOptionId === ''
-  const reassessmentInvalid = predictionValidationAttempted && plannedReassessmentIds.length === 0
-
-  useEffect(() => {
-    if (predictionSubmitAttempt > 0) predictionValidationSummaryRef.current?.focus()
-  }, [predictionSubmitAttempt])
-
-  function focusPredictionField(fieldId: CrrtPredictionFieldId) {
-    const fieldRefs = {
-      goal: goalSelectRef,
-      mechanism: mechanismSelectRef,
-      control: controlCheckboxRef,
-      response: responseSelectRef,
-      reassessment: reassessmentCheckboxRef,
-    } as const
-    fieldRefs[fieldId].current?.focus()
-  }
-
-  function enterPrecommitReasoningPhase(phase: CrrtPrecommitReasoningPhase) {
-    dispatch({ type: 'ENTER_PRECOMMIT_REASONING_PHASE', phase })
-  }
-
-  function commitPrediction(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (session.prediction) return
-    if (!completePrediction) {
-      setPredictionSubmitAttempt((attempt) => attempt + 1)
-      return
-    }
-    const prediction: CrrtPredictionCommitment = {
-      goalOptionId,
-      mechanismOptionId,
-      controlOptionIds,
-      responseOptionId,
-      reassessmentOptionIds: plannedReassessmentIds,
-    }
-    dispatch({ type: 'COMMIT_PREDICTION', prediction })
-    onPredictionCommitted?.()
-  }
-
   function performIntervention(interventionId: string) {
-    const firstSafeAction =
-      session.performedInterventionIds.length === 0 && !unsafeActionIds.has(interventionId)
     dispatch({ type: 'PERFORM_INTERVENTION', interventionId })
-    if (firstSafeAction) onFirstSafeAction?.(interventionId)
   }
-
   function commitReassessment() {
     if (actualReassessmentIds.length === 0 || !canReassess) return
     dispatch({ type: 'COMMIT_REASSESSMENT', optionIds: actualReassessmentIds })
-    onReassessmentCommitted?.()
   }
-
   function revealDebrief() {
-    if (session.debriefRevealed) return
     dispatch({ type: 'REVEAL_DEBRIEF' })
-    onDebriefRevealed?.(outcome)
   }
 
   function openPhase(phase: CriticalCareActivityPhase) {
@@ -462,6 +341,7 @@ function CrrtCasePlayerContent({
       <CrrtReasoningRibbon session={session} />
       {showSharedStepper ? (
         <ActivityStepper
+          completedPhases={[]}
           currentPhase={
             session.reasoningPhase === 'reflect' && session.debriefRevealed
               ? 'transfer'
@@ -518,42 +398,18 @@ function CrrtCasePlayerContent({
           </button>
         </div>
 
-        {isMastery ? (
-          <div
-            id={scopedId('crrt-mastery-boundary')}
-            className={styles.masteryBoundary}
-            role="note"
-            aria-labelledby={scopedId('crrt-mastery-boundary-heading')}
-          >
-            <Sparkles aria-hidden="true" />
-            <p>
-              <strong id={scopedId('crrt-mastery-boundary-heading')}>Challenge flow.</strong> Work
-              from the visible patient, prescription, circuit, pressure, and alert cues. Teaching
-              feedback is collected for the causal debrief, and Reset case starts a new run from the
-              beginning.
-            </p>
-            <ul>
-              {definition.learningObjectives.map((objective) => (
-                <li key={objective}>{objective}</li>
-              ))}
-            </ul>
-            <label>
-              <input
-                type="checkbox"
-                checked={challengeFeedbackImmediate}
-                onChange={(event) => setChallengeFeedbackImmediate(event.currentTarget.checked)}
-              />
-              <span>Show teaching notes after each action</span>
-            </label>
-          </div>
-        ) : null}
-
         <header className={styles.caseHeader}>
           <div>
             <span>Clinical case · {experienceLabel}</span>
             <h3>{visibleCaseTitle}</h3>
           </div>
-          <strong>Current run</strong>
+          <strong>
+            {session.debriefRevealed
+              ? 'Run ended'
+              : hasRun
+                ? 'Simulation in progress'
+                : 'Case ready to explore'}
+          </strong>
         </header>
 
         <div className={styles.syntheticNotice} role="note">
@@ -578,6 +434,14 @@ function CrrtCasePlayerContent({
             </div>
           </div>
           <p>{definition.patientDescription}</p>
+          <details>
+            <summary>What this case covers</summary>
+            <ul>
+              {definition.learningObjectives.map((objective) => (
+                <li key={objective}>{objective}</li>
+              ))}
+            </ul>
+          </details>
           <ul>
             {definition.visibleFindings.map((finding) => (
               <li key={finding}>{finding}</li>
@@ -590,285 +454,46 @@ function CrrtCasePlayerContent({
           aria-labelledby={scopedId('crrt-prediction-heading')}
         >
           <div className={styles.workflowHeading}>
-            {session.prediction ? (
-              <Check aria-hidden="true" />
-            ) : (
-              <BrainCircuit aria-hidden="true" />
-            )}
+            <BrainCircuit aria-hidden="true" />
             <div>
-              <span>Review · Plan · Predict</span>
-              <h4 id={scopedId('crrt-prediction-heading')}>Plan your approach before acting</h4>
+              <span>Clinical context</span>
+              <h4 id={scopedId('crrt-prediction-heading')}>Understand this case</h4>
             </div>
           </div>
-
-          {session.prediction ? (
-            <dl className={styles.predictionSummary}>
-              <div>
-                <dt>Goal</dt>
-                <dd>{selectedLabel(definition.goalOptions, session.prediction.goalOptionId)}</dd>
-              </div>
-              <div>
-                <dt>Mechanism</dt>
-                <dd>
-                  {selectedLabel(definition.mechanismOptions, session.prediction.mechanismOptionId)}
-                </dd>
-              </div>
-              <div>
-                <dt>Planned control</dt>
-                <dd>
-                  {session.prediction.controlOptionIds
-                    .map((id) => selectedLabel(definition.controlOptions, id))
-                    .join('; ')}
-                </dd>
-              </div>
-              <div>
-                <dt>Expected response</dt>
-                <dd>
-                  {selectedLabel(definition.responseOptions, session.prediction.responseOptionId)}
-                </dd>
-              </div>
-              <div>
-                <dt>Reassessment plan</dt>
-                <dd>
-                  {session.prediction.reassessmentOptionIds
-                    .map((id) => selectedLabel(definition.reassessmentOptions, id))
-                    .join('; ')}
-                </dd>
-              </div>
-            </dl>
-          ) : (
-            <form className={styles.predictionForm} noValidate onSubmit={commitPrediction}>
-              {predictionValidationAttempted && missingPredictionFields.length > 0 ? (
-                <div
-                  ref={predictionValidationSummaryRef}
-                  className={styles.predictionValidationSummary}
-                  role="alert"
-                  tabIndex={-1}
-                  aria-labelledby={scopedId('crrt-prediction-validation-heading')}
-                >
-                  <strong id={scopedId('crrt-prediction-validation-heading')}>
-                    Prediction not committed
-                  </strong>
-                  <p>Complete every required field, then commit the prediction again.</p>
-                  <ul>
-                    {missingPredictionFields.map((field) => (
-                      <li key={field.id}>{field.label}</li>
-                    ))}
-                  </ul>
-                  <button
-                    type="button"
-                    onClick={() => focusPredictionField(missingPredictionFields[0].id)}
-                  >
-                    Go to first missing field: {missingPredictionFields[0].label}
-                  </button>
-                </div>
-              ) : null}
-              <label>
-                <span id={scopedId('crrt-prediction-goal-label')}>1 · Goal</span>
-                <small
-                  id={scopedId('crrt-prediction-goal-instructions')}
-                  className={styles.predictionInstruction}
-                >
-                  Required. Choose one goal.
-                </small>
-                {goalInvalid ? (
-                  <small
-                    id={scopedId('crrt-prediction-goal-error')}
-                    className={styles.predictionFieldError}
-                  >
-                    Choose a goal before committing.
-                  </small>
-                ) : null}
-                <select
-                  ref={goalSelectRef}
-                  required
-                  value={goalOptionId}
-                  aria-labelledby={scopedId('crrt-prediction-goal-label')}
-                  aria-describedby={`${scopedId('crrt-prediction-goal-instructions')}${
-                    goalInvalid ? ` ${scopedId('crrt-prediction-goal-error')}` : ''
-                  }`}
-                  aria-invalid={goalInvalid ? 'true' : undefined}
-                  onFocus={() => enterPrecommitReasoningPhase('define')}
-                  onChange={(event) => {
-                    setGoalOptionId(event.target.value)
-                    enterPrecommitReasoningPhase('define')
-                  }}
-                >
-                  <option value="">Choose the exact goal…</option>
-                  {definition.goalOptions.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <span id={scopedId('crrt-prediction-mechanism-label')}>2 · Mechanism</span>
-                <small
-                  id={scopedId('crrt-prediction-mechanism-instructions')}
-                  className={styles.predictionInstruction}
-                >
-                  Required. Choose one mechanism.
-                </small>
-                {mechanismInvalid ? (
-                  <small
-                    id={scopedId('crrt-prediction-mechanism-error')}
-                    className={styles.predictionFieldError}
-                  >
-                    Choose a mechanism before committing.
-                  </small>
-                ) : null}
-                <select
-                  ref={mechanismSelectRef}
-                  required
-                  value={mechanismOptionId}
-                  aria-labelledby={scopedId('crrt-prediction-mechanism-label')}
-                  aria-describedby={`${scopedId('crrt-prediction-mechanism-instructions')}${
-                    mechanismInvalid ? ` ${scopedId('crrt-prediction-mechanism-error')}` : ''
-                  }`}
-                  aria-invalid={mechanismInvalid ? 'true' : undefined}
-                  onFocus={() => enterPrecommitReasoningPhase('select')}
-                  onChange={(event) => {
-                    setMechanismOptionId(event.target.value)
-                    enterPrecommitReasoningPhase('select')
-                  }}
-                >
-                  <option value="">Choose the mechanism…</option>
-                  {definition.mechanismOptions.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <fieldset
-                data-invalid={controlInvalid || undefined}
-                aria-describedby={`${scopedId('crrt-prediction-control-instructions')}${
-                  controlInvalid ? ` ${scopedId('crrt-prediction-control-error')}` : ''
-                }`}
-              >
-                <legend>3 · Planned control</legend>
-                <p
-                  id={scopedId('crrt-prediction-control-instructions')}
-                  className={styles.predictionInstruction}
-                >
-                  Required. Select at least one planned control.
-                </p>
-                {controlInvalid ? (
-                  <p
-                    id={scopedId('crrt-prediction-control-error')}
-                    className={styles.predictionFieldError}
-                  >
-                    Select a planned control before committing.
-                  </p>
-                ) : null}
-                {definition.controlOptions.map((option, index) => (
-                  <label key={option.id}>
-                    <input
-                      ref={index === 0 ? controlCheckboxRef : undefined}
-                      checked={controlOptionIds.includes(option.id)}
-                      type="checkbox"
-                      aria-describedby={`${scopedId('crrt-prediction-control-instructions')}${
-                        controlInvalid ? ` ${scopedId('crrt-prediction-control-error')}` : ''
-                      }`}
-                      aria-invalid={controlInvalid ? 'true' : undefined}
-                      onFocus={() => enterPrecommitReasoningPhase('select')}
-                      onChange={() => {
-                        setControlOptionIds(toggleId(controlOptionIds, option.id))
-                        enterPrecommitReasoningPhase('select')
-                      }}
-                    />
-                    <span>{option.label}</span>
-                  </label>
+          <p>
+            {selectedLabel(definition.goalOptions, definition.hiddenMechanism.correctGoalOptionId)}
+          </p>
+          <p>
+            Explore the controls, review a worked plan, or continue to another case at any time.
+          </p>
+          <button
+            type="button"
+            className={styles.commitButton}
+            onClick={() => setExampleVisible((visible) => !visible)}
+          >
+            {exampleVisible ? 'Hide worked plan' : 'Explain this case'}
+          </button>
+          {exampleVisible ? (
+            <section aria-label="Worked example">
+              <h5>Worked plan · example only</h5>
+              <p>{definition.hiddenMechanism.summary}</p>
+              <ol>
+                {definition.hiddenMechanism.causalChain.map((step) => (
+                  <li key={step}>{step}</li>
                 ))}
-              </fieldset>
-              <label>
-                <span id={scopedId('crrt-prediction-response-label')}>4 · Expected response</span>
-                <small
-                  id={scopedId('crrt-prediction-response-instructions')}
-                  className={styles.predictionInstruction}
-                >
-                  Required. Choose one expected response.
-                </small>
-                {responseInvalid ? (
-                  <small
-                    id={scopedId('crrt-prediction-response-error')}
-                    className={styles.predictionFieldError}
-                  >
-                    Choose an expected response before committing.
-                  </small>
-                ) : null}
-                <select
-                  ref={responseSelectRef}
-                  required
-                  value={responseOptionId}
-                  aria-labelledby={scopedId('crrt-prediction-response-label')}
-                  aria-describedby={`${scopedId('crrt-prediction-response-instructions')}${
-                    responseInvalid ? ` ${scopedId('crrt-prediction-response-error')}` : ''
-                  }`}
-                  aria-invalid={responseInvalid ? 'true' : undefined}
-                  onFocus={() => enterPrecommitReasoningPhase('predict')}
-                  onChange={(event) => {
-                    setResponseOptionId(event.target.value)
-                    enterPrecommitReasoningPhase('predict')
-                  }}
-                >
-                  <option value="">Choose immediate and delayed response…</option>
-                  {definition.responseOptions.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <fieldset
-                data-invalid={reassessmentInvalid || undefined}
-                aria-describedby={`${scopedId('crrt-prediction-reassessment-instructions')}${
-                  reassessmentInvalid ? ` ${scopedId('crrt-prediction-reassessment-error')}` : ''
-                }`}
-              >
-                <legend>5 · Reassessment plan</legend>
-                <p
-                  id={scopedId('crrt-prediction-reassessment-instructions')}
-                  className={styles.predictionInstruction}
-                >
-                  Required. Select at least one reassessment.
-                </p>
-                {reassessmentInvalid ? (
-                  <p
-                    id={scopedId('crrt-prediction-reassessment-error')}
-                    className={styles.predictionFieldError}
-                  >
-                    Select a reassessment before committing.
-                  </p>
-                ) : null}
-                {definition.reassessmentOptions.map((option, index) => (
-                  <label key={option.id}>
-                    <input
-                      ref={index === 0 ? reassessmentCheckboxRef : undefined}
-                      checked={plannedReassessmentIds.includes(option.id)}
-                      type="checkbox"
-                      aria-describedby={`${scopedId('crrt-prediction-reassessment-instructions')}${
-                        reassessmentInvalid
-                          ? ` ${scopedId('crrt-prediction-reassessment-error')}`
-                          : ''
-                      }`}
-                      aria-invalid={reassessmentInvalid ? 'true' : undefined}
-                      onFocus={() => enterPrecommitReasoningPhase('predict')}
-                      onChange={() => {
-                        setPlannedReassessmentIds(toggleId(plannedReassessmentIds, option.id))
-                        enterPrecommitReasoningPhase('predict')
-                      }}
-                    />
-                    <span>{option.label}</span>
-                  </label>
+              </ol>
+              <h5>What to reassess</h5>
+              <ul>
+                {definition.requiredReassessmentIds.map((id) => (
+                  <li key={id}>{selectedLabel(definition.reassessmentOptions, id)}</li>
                 ))}
-              </fieldset>
-              <button type="submit" className={styles.commitButton}>
-                Submit plan and prediction <ArrowRight aria-hidden="true" />
-              </button>
-            </form>
-          )}
+              </ul>
+              <p>
+                Viewing this plan records no answer, intervention, or observation. Clinical and
+                device review remains pending.
+              </p>
+            </section>
+          ) : null}
         </section>
 
         <section
@@ -893,8 +518,7 @@ function CrrtCasePlayerContent({
                 session.debriefRevealed ||
                 Boolean(missingPrerequisite) ||
                 (performed && !intervention.repeatable)
-              const showActionResponse =
-                performed && (!isMastery || challengeFeedbackImmediate || session.debriefRevealed)
+              const showActionResponse = performed
               return (
                 <article key={intervention.id} data-performed={performed}>
                   <div>
@@ -938,7 +562,7 @@ function CrrtCasePlayerContent({
               <button
                 key={option.seconds}
                 type="button"
-                disabled={timeControlsUnavailable}
+                disabled={session.debriefRevealed}
                 onClick={() => dispatch({ type: 'ADVANCE_TIME', seconds: option.seconds })}
               >
                 {option.label}
@@ -948,7 +572,7 @@ function CrrtCasePlayerContent({
               <button
                 type="button"
                 className={styles.nextEventButton}
-                disabled={timeControlsUnavailable}
+                disabled={session.debriefRevealed}
                 onClick={() =>
                   dispatch({ type: 'ADVANCE_TIME', seconds: secondsUntilNextScheduledEvent })
                 }
@@ -959,7 +583,7 @@ function CrrtCasePlayerContent({
           </div>
         </section>
 
-        {!isMastery ? (
+        {
           <section className={styles.hintSection} aria-labelledby={scopedId('crrt-hint-heading')}>
             <div className={styles.workflowHeading}>
               <Lightbulb aria-hidden="true" />
@@ -985,15 +609,14 @@ function CrrtCasePlayerContent({
               disabled={!nextHint || session.debriefRevealed}
               onClick={() => {
                 dispatch({ type: 'USE_HINT' })
-                onHintUsed?.()
               }}
             >
               <Lightbulb aria-hidden="true" />
               {nextHint ? `Reveal hint ${nextHint.sequence}` : 'All hints used'}
             </button>
-            <small>Revealed hints remain visible in the final reasoning trace.</small>
+            <small>Hints are optional teaching support.</small>
           </section>
-        ) : null}
+        }
 
         <section
           className={styles.reassessmentSection}
@@ -1003,14 +626,15 @@ function CrrtCasePlayerContent({
             <MessageSquareText aria-hidden="true" />
             <div>
               <span>Reassess</span>
-              <h4 id={scopedId('crrt-reassess-heading')}>
-                Compare your prediction with the observed response
-              </h4>
+              <h4 id={scopedId('crrt-reassess-heading')}>Review the observed response</h4>
             </div>
           </div>
+          {!hasRun ? (
+            <p>No run observations yet. Explore the simulation or review the worked plan.</p>
+          ) : null}
           {session.reassessment.committed ? (
             <p className={styles.completedNotice}>
-              <Check aria-hidden="true" /> Reassessment committed. Continue to causal debrief.
+              <Check aria-hidden="true" /> Reassessment recorded for this run.
             </p>
           ) : (
             <fieldset disabled={!canReassess}>
@@ -1038,13 +662,19 @@ function CrrtCasePlayerContent({
           )}
         </section>
 
-        {outcome.criticalErrorIds.length > 0 ? (
+        {session.criticalErrorIds.length > 0 ? (
           <div className={styles.criticalBanner} role="alert">
             <ShieldAlert aria-hidden="true" />
-            <p>
-              <strong>A required safety step was missed.</strong> Review the action sequence in the
-              debrief. This exercise feedback is not a clinical threshold or readiness decision.
-            </p>
+            <div>
+              <strong>Simulation safety notice</strong>
+              {session.criticalErrorIds.map((id) => (
+                <p key={id}>{selectedLabel(definition.criticalErrors, id)}</p>
+              ))}
+              <p>
+                Review the associated action and device warning. These case rules remain pending
+                clinical review.
+              </p>
+            </div>
           </div>
         ) : null}
       </div>
@@ -1062,12 +692,12 @@ function CrrtCasePlayerContent({
             <h4>PrisMax machine and circuit</h4>
           </div>
           <strong data-available={machineControlsEnabled}>
-            {machineControlsEnabled ? 'Machine actions available' : 'Run worked through'}
+            {machineControlsEnabled ? 'Machine actions available' : 'Run ended'}
           </strong>
         </div>
         <p className={styles.machineSurfaceIntro}>
           Explore the layout, circuit, setup, and Operations controls at any time. Machine, circuit,
-          and patient views update together; the five-part plan remains available on the Case tab.
+          and patient views update together. The worked plan is available on the Case tab.
         </p>
         <PrismaxPilotInterface
           state={session.interfaceState}
@@ -1131,7 +761,7 @@ function CrrtCasePlayerContent({
           </div>
           <div>
             <dt>Reassessment</dt>
-            <dd>{session.reassessment.committed ? 'Completed' : 'Required'}</dd>
+            <dd>{session.reassessment.committed ? 'Recorded for this run' : 'Not recorded'}</dd>
           </div>
         </dl>
       </section>
@@ -1155,22 +785,27 @@ function CrrtCasePlayerContent({
           <>
             {!session.reassessment.committed ? (
               <p>
-                You can open the debrief now. Any unrecorded prediction, action, or reassessment
-                will remain visible as missing attempt evidence.
+                Review the explanation at any time. Ending this run preserves only the actions and
+                observations you actually made in this session. Reset case opens a new run.
               </p>
             ) : null}
             <button type="button" className={styles.commitButton} onClick={revealDebrief}>
-              Reveal causal debrief <ArrowRight aria-hidden="true" />
+              End run and review debrief <ArrowRight aria-hidden="true" />
             </button>
           </>
         ) : debrief ? (
           <div className={styles.debriefBody}>
+            <h5>Worked debrief explanation</h5>
+            <p>This describes the example. Actual session observations are listed below.</p>
             <p className={styles.debriefSummary}>{debrief.summary}</p>
             <section className={styles.scoreCard} aria-label="Teaching debrief status">
               <div>
                 <span>Causal debrief</span>
-                <strong>Case worked through</strong>
-                <small>Compare your frame, actions, modeled consequences, and reassessment.</small>
+                <strong>{hasRun ? 'Run reviewed' : 'Example reviewed · no run performed'}</strong>
+                <small>
+                  Compare the teaching explanation with any actions and observations from this
+                  session.
+                </small>
               </div>
             </section>
 
@@ -1178,43 +813,13 @@ function CrrtCasePlayerContent({
               className={styles.attemptEvidence}
               aria-labelledby={scopedId('crrt-actual-attempt-evidence')}
             >
-              <h5 id={scopedId('crrt-actual-attempt-evidence')}>Actual attempt evidence</h5>
+              <h5 id={scopedId('crrt-actual-attempt-evidence')}>This session</h5>
               <dl className={styles.attemptEvidenceGrid}>
-                <div>
-                  <dt>Committed control plan</dt>
-                  <dd>
-                    {debrief.prediction
-                      ? debrief.prediction.controlOptionIds
-                          .map((id) => selectedLabel(definition.controlOptions, id))
-                          .join('; ')
-                      : 'No prediction recorded'}
-                  </dd>
-                </div>
                 <div>
                   <dt>Performed interventions</dt>
                   <dd>
                     {session.performedInterventionIds.length > 0
                       ? session.performedInterventionIds
-                          .map((id) => selectedLabel(definition.interventions, id))
-                          .join('; ')
-                      : 'None'}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Completed required actions</dt>
-                  <dd>
-                    {completedRequiredActions.length > 0
-                      ? completedRequiredActions
-                          .map((id) => selectedLabel(definition.interventions, id))
-                          .join('; ')
-                      : 'None'}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Missed required actions</dt>
-                  <dd>
-                    {missedRequiredActions.length > 0
-                      ? missedRequiredActions
                           .map((id) => selectedLabel(definition.interventions, id))
                           .join('; ')
                       : 'None'}
@@ -1230,40 +835,22 @@ function CrrtCasePlayerContent({
                       : 'None'}
                   </dd>
                 </div>
-                <div>
-                  <dt>Matched accepted path</dt>
-                  <dd>
-                    {matchedAcceptedPaths.length > 0
-                      ? matchedAcceptedPaths.map(({ label }) => label).join('; ')
-                      : outcome.matchedRequiredPath
-                        ? 'Required path'
-                        : 'None'}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Triggered educational critical errors</dt>
-                  <dd>
-                    {outcome.criticalErrorIds.length > 0
-                      ? outcome.criticalErrorIds
-                          .map((id) => selectedLabel(definition.criticalErrors, id))
-                          .join('; ')
-                      : 'None'}
-                  </dd>
-                </div>
               </dl>
 
               <h6>Recorded action timeline</h6>
               <ol className={styles.attemptTimeline}>
-                {debrief.timeline.map((entry) => {
-                  const referenceLabel = timelineReferenceLabel(definition, entry)
-                  return (
-                    <li key={entry.sequence}>
-                      <time>{formatSimulationTime(entry.atSeconds)}</time>
-                      <span>{timelineEventLabels[entry.type]}</span>
-                      {referenceLabel ? <small>{referenceLabel}</small> : null}
-                    </li>
-                  )
-                })}
+                {session.timeline
+                  .filter((entry) => entry.type !== 'hint-used')
+                  .map((entry) => {
+                    const referenceLabel = timelineReferenceLabel(definition, entry)
+                    return (
+                      <li key={entry.sequence}>
+                        <time>{formatSimulationTime(entry.atSeconds)}</time>
+                        <span>{timelineEventLabels[entry.type]}</span>
+                        {referenceLabel ? <small>{referenceLabel}</small> : null}
+                      </li>
+                    )
+                  })}
               </ol>
 
               <h6>Sampled pressure, dose, fluid, and laboratory evidence</h6>
@@ -1271,7 +858,7 @@ function CrrtCasePlayerContent({
                 <div
                   className={styles.trendEvidenceRegion}
                   role="region"
-                  aria-label="Actual attempt sampled trend evidence; horizontally scrollable"
+                  aria-label="Session sampled trends; horizontally scrollable"
                   tabIndex={0}
                 >
                   <table>
@@ -1320,41 +907,8 @@ function CrrtCasePlayerContent({
               </section>
             ) : null}
 
-            <dl className={styles.debriefGrid}>
-              <div>
-                <dt>Stated goal</dt>
-                <dd>{debrief.statedGoalReview}</dd>
-              </div>
-              <div>
-                <dt>Prediction</dt>
-                <dd>{debrief.predictionReview}</dd>
-              </div>
-              <div>
-                <dt>Action timeline</dt>
-                <dd>{debrief.actionTimelineReview}</dd>
-              </div>
-              <div>
-                <dt>Trends</dt>
-                <dd>{debrief.trendReview}</dd>
-              </div>
-              <div>
-                <dt>Required actions</dt>
-                <dd>{debrief.requiredActionsReview}</dd>
-              </div>
-              <div>
-                <dt>Critical errors</dt>
-                <dd>{debrief.criticalErrorsReview}</dd>
-              </div>
-              <div>
-                <dt>Accepted alternatives</dt>
-                <dd>{debrief.acceptedAlternativesReview}</dd>
-              </div>
-              <div>
-                <dt>Machine-navigation point</dt>
-                <dd>{debrief.machineNavigationPoint}</dd>
-              </div>
-            </dl>
-
+            <p>{debrief.trendReview}</p>
+            <p>{debrief.machineNavigationPoint}</p>
             <ol className={styles.causalChain}>
               {debrief.causalChain.map((step) => (
                 <li key={step}>{step}</li>

@@ -102,7 +102,7 @@ describe('bounded integration of the unchanged CRRT-14 engine case', () => {
       }),
     ).toBe(state)
   })
-  it('derives the run branch from the retained first valid plan, rejecting changed or forged callbacks', () => {
+  it('keeps a question response separate from the explicit simulator path choice and rejects forged evidence', () => {
     let run = finishOperation(createCrrtOperationalRun('integration'), 'integration-entry')
     run = finishOperation(run, 'integration-inspect')
     const base = createCrrtLearnAttempt('crrt-pressure-profile-integration', 'first')
@@ -135,7 +135,15 @@ describe('bounded integration of the unchanged CRRT-14 engine case', () => {
       identity: evidence,
       evidence: { ...evidence, reviewed: true, feedbackDisplayed: true },
     })
-    expect(next.run?.integrationPlan).toBe('defer')
+    expect(next.run?.integrationPlan).toBeUndefined()
+    const chosen = crrtLearnAttemptReducer(next, {
+      type: 'operation',
+      identity: crrtCurrentTaskIdentity(next),
+      action: { type: 'choose-plan', plan: 'defer' },
+    })
+    expect(chosen.run?.integrationPlan).toBe('defer')
+    expect(chosen.run?.session).toBe(next.run?.session)
+    expect(chosen.run?.snapshots).toBe(next.run?.snapshots)
     expect(next.evidence[0].response).toBe('defer')
   })
 })

@@ -3,6 +3,7 @@ import { axe } from 'jest-axe'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { BaxterCrrtLearn } from '../components/BaxterCrrtLearn'
 import { CrrtOperationalTool } from '../components/CrrtOperationalTools'
+import { readCrrtSelfPacedProgress } from '../selfPacedProgress'
 import { crrtOperationalTasks } from '../content/operationalLessons'
 import {
   createCrrtOperationalRun,
@@ -46,7 +47,7 @@ beforeEach(() => {
 })
 
 describe('rendered Batch B lessons', () => {
-  it('requires recorded observations and a real numeric answer, retains a wrong first answer, and completes only after reviewed transfer', async () => {
+  it('validates recorded observations and actual numeric feedback without persisting graded responses', async () => {
     writeProgress(recordLessonCompletion(createDefaultProgress(), 'crrt-prescription-dosing'))
     const view = render(<BaxterCrrtLearn initialLessonId="crrt-fluid-liberation" />)
     await waitFor(() =>
@@ -70,17 +71,8 @@ describe('rendered Batch B lessons', () => {
     expect(screen.queryByText(/Recorded balance:/)).not.toBeInTheDocument()
     fireEvent.change(input, { target: { value: '400' } })
     click('Check recorded balance')
-    await waitFor(() =>
-      expect(
-        readProgress().learnTaskHistory?.find((e) => e.taskId === 'recorded-balance'),
-      ).toMatchObject({
-        response: 'balance:400',
-        correct: false,
-        feedbackDisplayed: true,
-        reviewed: false,
-        inputs: { simulationSeconds: 14400 },
-      }),
-    )
+    expect(screen.getByRole('status')).toHaveTextContent('First answer: 400 mL')
+    expect(readProgress().learnTaskHistory).toBeUndefined()
     expect(await axe(view.container)).toHaveNoViolations()
     expect(readProgress().completedLessonIds).not.toContain('crrt-fluid-liberation')
     click('Review feedback and continue')
@@ -102,12 +94,9 @@ describe('rendered Batch B lessons', () => {
     click('Check reasoning')
     expect(readProgress().completedLessonIds).not.toContain('crrt-fluid-liberation')
     click('Review feedback and continue')
-    expect(readProgress().completedLessonIds).toEqual(
-      expect.arrayContaining(['crrt-prescription-dosing', 'crrt-fluid-liberation']),
-    )
-    expect(
-      readProgress().learnTaskHistory?.find((e) => e.taskId === 'recorded-balance'),
-    ).toMatchObject({ response: 'balance:400', correct: false, reviewed: true })
+    expect(readProgress().completedLessonIds).toEqual(['crrt-prescription-dosing'])
+    expect(readCrrtSelfPacedProgress().visitedLessonIds).toContain('crrt-fluid-liberation')
+    expect(readProgress().learnTaskHistory).toBeUndefined()
     expect(readProgress().bestSafeScores).toEqual({})
     expect(readProgress().completedLessonIds).not.toContain('crrt-anticoagulation')
   })

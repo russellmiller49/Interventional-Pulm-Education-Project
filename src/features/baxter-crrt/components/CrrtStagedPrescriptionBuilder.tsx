@@ -481,6 +481,7 @@ export interface CrrtStagedPrescriptionBuilderProps {
   readonly onPhaseChange?: (phase: 'predict' | 'act' | 'observe') => void
   readonly onCompletionEvidence?: (comparison: CrrtPrescriptionComparison) => void
   readonly guided?: boolean
+  readonly onRetry?: () => void
   readonly onComparisonSubmitted?: (comparison: CrrtPrescriptionComparison) => void
   readonly onComparisonFeedbackDisplayed?: (comparison: CrrtPrescriptionComparison) => void
   /**
@@ -499,6 +500,7 @@ export function CrrtStagedPrescriptionBuilder({
   onPhaseChange,
   onCompletionEvidence,
   onComparisonSubmitted,
+  onRetry,
   onComparisonFeedbackDisplayed,
   guided = false,
   initialStageId = 'goals',
@@ -507,6 +509,7 @@ export function CrrtStagedPrescriptionBuilder({
   const idPrefix = useId()
   const panelRef = useRef<HTMLDivElement>(null)
   const feedbackReported = useRef(false)
+  const [explanationVisible, setExplanationVisible] = useState(false)
   const [completionReported, setCompletionReported] = useState(false)
   const [interpretation, setInterpretation] = useState<
     CrrtPrescriptionComparison['response'] | null
@@ -801,6 +804,7 @@ export function CrrtStagedPrescriptionBuilder({
                             onChange={(event) => {
                               feedbackReported.current = false
                               setInterpretation(null)
+                              onRetry?.()
                               setSubmittedInterpretation(null)
                               setCompletionReported(false)
                               setModalityViewId(
@@ -1027,6 +1031,20 @@ export function CrrtStagedPrescriptionBuilder({
               {onCompletionEvidence || guided ? (
                 <section className={styles.consequenceSection} aria-label="Downtime comparison">
                   <h4>Interpret your downtime comparison</h4>
+                  <button
+                    type="button"
+                    onClick={() => setExplanationVisible((visible) => !visible)}
+                  >
+                    {explanationVisible ? 'Hide explanation' : 'Show explanation'}
+                  </button>
+                  {explanationVisible ? (
+                    <p>
+                      Worked explanation · no response recorded. Increased downtime reduces the
+                      time-averaged effluent proxy without changing the prescribed running flows.
+                      Less CRRT time also reduces projected net removal; external intake and urine
+                      continue.
+                    </p>
+                  ) : null}
                   <p>
                     Baseline: {initialConstruction.downtimeHours} hours downtime, projected{' '}
                     {baselineConsequences?.intensity.deliveredDoseMlPerKgHour.toFixed(3)} mL/kg/h.
@@ -1069,32 +1087,45 @@ export function CrrtStagedPrescriptionBuilder({
                     ))}
                   </fieldset>
                   {submittedInterpretation ? (
-                    <div role="status">
-                      <p>
-                        {submittedInterpretation === 'lower'
-                          ? 'That comparison is supported.'
-                          : 'Review the common time window.'}{' '}
-                        Increased downtime reduces the time-averaged effluent proxy without changing
-                        the prescribed running flows. Less CRRT time also reduces projected net
-                        removal; external intake and urine continue.
-                      </p>
+                    <div>
                       <button
                         type="button"
-                        disabled={!comparisonValid || completionReported}
                         onClick={() => {
-                          if (!comparisonValid || !validation.construction || completionReported)
-                            return
-                          setCompletionReported(true)
-                          onCompletionEvidence?.({
-                            baseline: initialConstruction,
-                            changed: validation.construction,
-                            response: submittedInterpretation,
-                            correct: submittedInterpretation === 'lower',
-                          })
+                          onRetry?.()
+                          setSubmittedInterpretation(null)
+                          setInterpretation(null)
+                          setCompletionReported(false)
                         }}
                       >
-                        Review comparison and continue
+                        Try again
                       </button>
+                      <div role="status">
+                        <p>
+                          {submittedInterpretation === 'lower'
+                            ? 'That comparison is supported.'
+                            : 'Review the common time window.'}{' '}
+                          Increased downtime reduces the time-averaged effluent proxy without
+                          changing the prescribed running flows. Less CRRT time also reduces
+                          projected net removal; external intake and urine continue.
+                        </p>
+                        <button
+                          type="button"
+                          disabled={!comparisonValid || completionReported}
+                          onClick={() => {
+                            if (!comparisonValid || !validation.construction || completionReported)
+                              return
+                            setCompletionReported(true)
+                            onCompletionEvidence?.({
+                              baseline: initialConstruction,
+                              changed: validation.construction,
+                              response: submittedInterpretation,
+                              correct: submittedInterpretation === 'lower',
+                            })
+                          }}
+                        >
+                          Review comparison and continue
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <button

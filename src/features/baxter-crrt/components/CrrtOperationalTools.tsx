@@ -494,14 +494,17 @@ export function CrrtRecordedBalanceQuestion({
   onSubmit,
   onFeedbackDisplayed,
   onContinue,
+  onRetry,
 }: {
   run: CrrtOperationalRun
   evidence?: CrrtLearnEvidence
   onSubmit: (response: string, correct: boolean, inputs: Readonly<Record<string, number>>) => void
   onFeedbackDisplayed: () => void
   onContinue: () => void
+  onRetry?: () => void
 }) {
   const [raw, setRaw] = useState('')
+  const [explanationVisible, setExplanationVisible] = useState(false)
   const value = crrtValidBalanceResponse(raw)
   const chart = crrtRecordedFluidChart(run.session)
   const expected = chart.balanceMl
@@ -511,6 +514,17 @@ export function CrrtRecordedBalanceQuestion({
   return (
     <section aria-label="Recorded balance calculation" className={styles.numericQuestion}>
       <h3>Recorded balance calculation</h3>
+      <button type="button" onClick={() => setExplanationVisible((visible) => !visible)}>
+        {explanationVisible ? 'Hide explanation' : 'Show explanation'}
+      </button>
+      {explanationVisible ? (
+        <p>
+          Worked calculation · no answer recorded.{' '}
+          {expected === null
+            ? 'Exact balance is unavailable because fluid attribution is unresolved.'
+            : `${number(chart.externalInputMl)} − ${number(chart.urineMl)} − ${number(chart.otherOutputMl)} − ${number(chart.removalMl)} + ${number(chart.additionalDeviceGainMl)} = ${number(expected)} mL in this run. Positive means gain.`}
+        </p>
+      ) : null}
       {evidence ? (
         <div role="status" className={styles.feedback}>
           <h3>{evidence.correct ? 'Balance accounted for' : 'Review the fluid accounting'}</h3>
@@ -525,7 +539,18 @@ export function CrrtRecordedBalanceQuestion({
             These are recorded interval totals. Recorded interruptions remain part of the patient
             ledger.
           </p>
-          <p>Your first response is retained. Review the explanation before continuing.</p>
+          <p>Review the calculation or continue to another topic.</p>
+          {onRetry ? (
+            <button
+              type="button"
+              onClick={() => {
+                onRetry()
+                setRaw('')
+              }}
+            >
+              Try again
+            </button>
+          ) : null}
           <button type="button" onClick={onContinue}>
             Review feedback and continue
           </button>
