@@ -15,7 +15,11 @@ export const ICU_HEMODYNAMICS_SAFETY_NOTICE = (
   </>
 )
 
-/** Overview | Learn | Practice | Assess — the critical-care navigation grammar. */
+/**
+ * Overview | Learn | Practice | Applied case. The fourth tab keeps the `/assess` address of the
+ * critical-care navigation grammar so saved links still work; since HD-01 it opens an optional
+ * applied case rather than a challenge.
+ */
 export const icuHemodynamicsModuleNavItems: readonly ModuleNavItem[] = [
   {
     title: 'Overview',
@@ -33,9 +37,9 @@ export const icuHemodynamicsModuleNavItems: readonly ModuleNavItem[] = [
     description: 'Eight clinical cases',
   },
   {
-    title: 'Assess',
+    title: 'Applied case',
     href: `${icuHemodynamicsNavBase}/assess`,
-    description: 'A harder case with less help',
+    description: 'An optional harder case, with help throughout',
   },
 ]
 

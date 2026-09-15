@@ -68,20 +68,29 @@ export function identifyComponents(mode: ComponentMode) {
   }
 }
 
-/** Walk through prerequisites using the visible controls, stopping at the independent item. */
+/**
+ * Walk forward to the section's question with the Now card's primary action — which, since HD-01,
+ * moves past a step whether or not its work was done. Nothing is answered or performed on the way.
+ */
 export function advanceToPrediction(sectionId: string) {
   const lesson = hemodynamicsStageLesson(sectionId)
   let remaining = 40
   while (currentStepId() !== lesson.steps[lesson.predictionStepIndex].id && remaining-- > 0) {
-    const step = lesson.steps.find((candidate) => candidate.id === currentStepId())!
-    if (step.interaction.kind === 'component-identification')
-      identifyComponents(step.interaction.mode)
     clickPrimary()
   }
   if (remaining <= 0) throw new Error('Prerequisite traversal did not reach the question')
 }
 
-/** Choose a prediction choice by its label and commit it. */
+/** The enabled Check control of the question on the Now card. */
+export function checkAnswer() {
+  const button = [
+    ...document.querySelectorAll<HTMLButtonElement>('[data-now-card] [data-question-check]'),
+  ].find((candidate) => !candidate.disabled)
+  if (!button) throw new Error(`No enabled Check control on step ${currentStepId()}`)
+  fireEvent.click(button)
+}
+
+/** Choose a prediction choice by its label and check it. */
 export function commitChoice(pattern: RegExp) {
   const labels = [...document.querySelectorAll<HTMLLabelElement>('[data-prediction-choices] label')]
   const label = labels.find((candidate) => pattern.test(candidate.textContent ?? ''))
@@ -91,7 +100,7 @@ export function commitChoice(pattern: RegExp) {
     )
   }
   fireEvent.click(label.querySelector('input')!)
-  clickPrimary()
+  checkAnswer()
 }
 
 export function goalStates(): readonly string[] {

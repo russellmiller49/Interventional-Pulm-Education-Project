@@ -6,14 +6,16 @@ import {
   hemodynamicsPathwayComposition,
   hemodynamicsPathwayGroups,
   hemodynamicsPathwaySections,
-  nextIncompleteHemodynamicsSection,
+  suggestedHemodynamicsSection,
 } from '../content/pathwayResolver'
 import { hemodynamicsSectionIds } from '../content/sectionSpecs'
+import { ICU_HEMODYNAMICS_LEARN_STORAGE_KEY } from '../engine/learnProgress'
 import {
-  createEmptyLearnRecord,
-  withSectionCompleted,
-  writeLearnRecord,
-} from '../engine/learnProgress'
+  createEmptySelfPacedRecord,
+  withSectionReviewed,
+  withSectionVisited,
+  writeSelfPacedRecord,
+} from '../engine/selfPacedProgress'
 import {
   HemodynamicsContinueCta,
   HemodynamicsPathwayAccordion,
@@ -48,33 +50,46 @@ jest.mock('@/i18n/navigation', () => ({
 beforeEach(() => localStorage.clear())
 afterEach(() => cleanup())
 
+function reviewed(...sectionIds: readonly string[]) {
+  return sectionIds.reduce(
+    (record, sectionId) => withSectionReviewed(record, sectionId, true),
+    createEmptySelfPacedRecord(),
+  )
+}
+
 /**
- * The one door: every entry surface resolves its Continue through `nextIncompleteHemodynamicsSection`,
- * counts are derived, and the grouped map is a presentation of the one order.
+ * The one door: every entry surface resolves its call to action through
+ * `suggestedHemodynamicsSection`, counts are derived, and the grouped map is a presentation of the
+ * one order. HD-01: the suggestion comes from where the learner was and what they marked reviewed —
+ * never from answers, old completions or scores — and it never gates a section.
  */
 describe('the resolver', () => {
   it('sends a fresh learner to section one', () => {
-    const next = nextIncompleteHemodynamicsSection(createEmptyLearnRecord())
+    const next = suggestedHemodynamicsSection(createEmptySelfPacedRecord())
     expect(next?.section.id).toBe(hemodynamicsSectionIds[0])
     expect(next?.section.id).toBe('why-measure')
     expect(next?.index).toBe(0)
     expect(next?.total).toBe(hemodynamicsSectionIds.length)
+    expect(next?.resumed).toBe(false)
   })
 
-  it('offers the first section not worked through, whatever was opened last', () => {
-    let record = createEmptyLearnRecord()
-    record = withSectionCompleted(record, 'why-measure')
-    record = withSectionCompleted(record, 'pressure-system')
-    record = withSectionCompleted(record, 'catheter-advancement')
-    expect(nextIncompleteHemodynamicsSection(record)?.section.id).toBe('waveform-interpretation')
+  it('offers the section the learner left, unless they marked it reviewed', () => {
+    let record = withSectionVisited(createEmptySelfPacedRecord(), 'why-measure')
+    record = withSectionVisited(record, 'pawp-capture')
+    expect(suggestedHemodynamicsSection(record)?.section.id).toBe('pawp-capture')
+    expect(suggestedHemodynamicsSection(record)?.resumed).toBe(true)
+    record = withSectionReviewed(record, 'pawp-capture', true)
+    expect(suggestedHemodynamicsSection(record)?.section.id).toBe('why-measure')
+    expect(suggestedHemodynamicsSection(record)?.resumed).toBe(false)
   })
 
-  it('resolves to nothing once every section is worked through', () => {
-    const record = hemodynamicsSectionIds.reduce(
-      (current, id) => withSectionCompleted(current, id),
-      createEmptyLearnRecord(),
-    )
-    expect(nextIncompleteHemodynamicsSection(record)).toBeNull()
+  it('otherwise offers the first section not marked reviewed', () => {
+    const record = reviewed('why-measure', 'pressure-system', 'catheter-advancement')
+    expect(suggestedHemodynamicsSection(record)?.section.id).toBe('waveform-interpretation')
+  })
+
+  it('resolves to nothing once every section is marked reviewed', () => {
+    expect(suggestedHemodynamicsSection(reviewed(...hemodynamicsSectionIds))).toBeNull()
   })
 
   it('derives every count', () => {
@@ -108,10 +123,10 @@ describe('the resolver', () => {
 })
 
 describe('the surfaces', () => {
-  it('open exactly the group holding the next section', () => {
-    let record = createEmptyLearnRecord()
-    record = withSectionCompleted(record, 'why-measure')
-    record = withSectionCompleted(record, 'pressure-system')
+  it('open exactly the group holding the suggested section, and say reviewed and opened in words', () => {
+    let record = reviewed('why-measure', 'pressure-system')
+    record = withSectionVisited(record, 'derived-hemodynamics')
+    record = withSectionReviewed(record, 'derived-hemodynamics', true)
     render(<HemodynamicsPathwayAccordion record={record} />)
     const open = [...document.querySelectorAll('[data-pathway-accordion] details')].filter(
       (details) => (details as HTMLDetailsElement).open,
@@ -119,7 +134,9 @@ describe('the surfaces', () => {
     expect(open).toHaveLength(1)
     expect(open[0].textContent).toMatch(/Identify the chamber from the waveform/)
     expect(open[0].querySelector('[data-recommended="true"]')?.textContent).toMatch(/Up next/)
-    expect(document.querySelectorAll('[data-kind="section"][data-complete="true"]')).toHaveLength(2)
+    expect(document.querySelectorAll('[data-kind="section"][data-reviewed="true"]')).toHaveLength(3)
+    expect(document.body.textContent).toMatch(/✓ reviewed/)
+    expect(document.body.textContent).not.toMatch(/worked through/)
     expect(document.querySelectorAll('[data-kind="section"]')).toHaveLength(
       hemodynamicsSectionIds.length,
     )
@@ -131,18 +148,33 @@ describe('the surfaces', () => {
     expect(screen.getByRole('link').getAttribute('data-next-section')).toBe('why-measure')
     unmount()
 
-    writeLearnRecord(withSectionCompleted(createEmptyLearnRecord(), 'why-measure'))
+    writeSelfPacedRecord(reviewed('why-measure'))
     const second = render(<HemodynamicsContinueCta />)
     expect(screen.getByRole('link').textContent).toMatch(/^Continue — Can this number be trusted\?/)
     second.unmount()
 
-    const every = hemodynamicsSectionIds.reduce(
-      (current, id) => withSectionCompleted(current, id),
-      createEmptyLearnRecord(),
-    )
-    writeLearnRecord(every)
+    writeSelfPacedRecord(withSectionVisited(reviewed('why-measure'), 'pressure-system'))
+    const third = render(<HemodynamicsContinueCta />)
+    expect(screen.getByRole('link').textContent).toMatch(/^Resume — Can this number be trusted\?/)
+    third.unmount()
+
+    writeSelfPacedRecord(reviewed(...hemodynamicsSectionIds))
     render(<HemodynamicsContinueCta />)
     expect(screen.getByRole('link').getAttribute('data-hemodynamics-continue')).toBe('complete')
+  })
+
+  it('does not turn a legacy completion into a current suggestion', () => {
+    localStorage.setItem(
+      ICU_HEMODYNAMICS_LEARN_STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        completedSectionIds: [...hemodynamicsSectionIds],
+        lastSectionId: 'pac-signal-validation',
+        updatedAt: '2026-09-01T00:00:00.000Z',
+      }),
+    )
+    render(<HemodynamicsContinueCta />)
+    expect(screen.getByRole('link').textContent).toMatch(/^Start — Why put a line in at all\?/)
   })
 
   it('renders the Overview and the Learn landing on the same door and map', () => {

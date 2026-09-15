@@ -68,24 +68,29 @@ const PLACE_QUESTIONS: readonly {
   { answerId: 'rv-normal', optionIds: ['wedge-normal', 'pa-normal', 'rv-normal', 'ra-normal'] },
 ]
 
-const REQUIRED_CORRECT = 5
-
+/**
+ * Where the drill is: which tracing, what is selected, and whether the answer was checked or shown.
+ *
+ * HD-01 removed the running correct count, the attempts count and the five-correct target. A learner
+ * names as many tracings as are useful, checks an answer, shows the labels without answering, or
+ * moves to another tracing at any time; nothing here decides whether they may move on.
+ */
 export interface RecognitionRecord {
   readonly index: number
   readonly selectedId: string | null
-  readonly revealed: boolean
-  readonly correctCount: number
-  readonly answered: number
+  readonly revealed: 'checked' | 'shown' | null
 }
 export const emptyRecognitionRecord = (): RecognitionRecord => ({
   index: 0,
   selectedId: null,
-  revealed: false,
-  correctCount: 0,
-  answered: 0,
+  revealed: null,
 })
 
 interface WaveformRecognitionDrillProps {
+  /**
+   * When given, the first checked answer marks the stage's "named a tracing" goal. Showing the labels
+   * without answering never does.
+   */
   readonly dispatch?: Dispatch<HemodynamicAction>
   /** `places` restricts the run to the four normal tracings; `all` is the full atlas. */
   readonly questionSet?: 'places' | 'all'
@@ -104,7 +109,7 @@ export function WaveformRecognitionDrill({
   const QUESTION_SET = questionSet === 'places' ? PLACE_QUESTIONS : QUESTIONS
   const [localRecord, setLocalRecord] = useState<RecognitionRecord>(emptyRecognitionRecord)
   const currentRecord = record ?? localRecord
-  const { index, selectedId, revealed, correctCount, answered } = currentRecord
+  const { index, selectedId, revealed } = currentRecord
   const updateRecord = onRecord ?? setLocalRecord
 
   const question = QUESTION_SET[index % QUESTION_SET.length]
@@ -116,35 +121,35 @@ export function WaveformRecognitionDrill({
 
   if (!answer) return null
 
-  const isCorrect = revealed && selectedId === answer.id
-  const complete = correctCount >= REQUIRED_CORRECT
+  const isCorrect = revealed === 'checked' && selectedId === answer.id
 
-  function submit() {
-    if (!enabled || !selectedId || revealed || !answer || complete) return
-    const next = correctCount + (selectedId === answer.id ? 1 : 0)
-    updateRecord({ ...currentRecord, revealed: true, answered: answered + 1, correctCount: next })
-    if (next === REQUIRED_CORRECT && correctCount < REQUIRED_CORRECT) {
-      dispatch?.({ type: 'VALIDATE_SIGNAL', check: 'waveform-recognition' })
-    }
+  function check() {
+    if (!enabled || !selectedId || revealed) return
+    updateRecord({ ...currentRecord, revealed: 'checked' })
+    dispatch?.({ type: 'VALIDATE_SIGNAL', check: 'waveform-recognition' })
+  }
+
+  function show() {
+    if (!enabled || revealed) return
+    updateRecord({ ...currentRecord, selectedId: null, revealed: 'shown' })
   }
 
   function nextQuestion() {
-    if (!enabled || complete) return
-    updateRecord({ ...currentRecord, index: index + 1, selectedId: null, revealed: false })
+    if (!enabled) return
+    updateRecord({ index: index + 1, selectedId: null, revealed: null })
   }
 
   return (
     <section className={styles.recognitionDrill} aria-labelledby="recognition-drill-heading">
       <header className={styles.atlasPanelHeader}>
         <div>
-          <span>Your attempt · question tracing</span>
+          <span>Optional practice · question tracing</span>
           <h3 id="recognition-drill-heading">Name the tracing</h3>
         </div>
         <p className={styles.drillScore} role="status" aria-live="polite">
-          <strong>{complete ? 'Pattern set worked through' : 'Compare the morphology'}</strong>
+          <strong>Tracing {index + 1}</strong>
           <span>
-            {correctCount} of {REQUIRED_CORRECT} correct · {answered} attempted. Correct responses
-            accumulate; an error does not reset the count.
+            Check an answer, show the labels, or move to another tracing whenever you like.
           </span>
         </p>
       </header>
@@ -156,24 +161,24 @@ export function WaveformRecognitionDrill({
       )}
 
       <WaveformAtlasFigure
-        key={`${question.answerId}-${revealed}`}
+        key={`${index}-${question.answerId}-${revealed ?? 'open'}`}
         entry={
           revealed
             ? answer
-            : // Withhold the identifying caption and labels until the learner commits.
+            : // Withhold the identifying caption and labels until the learner checks or shows them.
               { ...answer, label: 'Unidentified tracing', normalRange: null, insertionDepth: null }
         }
-        annotated={revealed}
+        annotated={revealed !== null}
         ecgLandmarks
         readable={questionSet === 'places'}
         figureDescription={
           revealed
             ? undefined
-            : `${unidentifiedTraceDescription(answer)} Axis 0–${answer.scaleMaxMmHg} mmHg. Identifying labels are withheld.`
+            : `${unidentifiedTraceDescription(answer)} Axis 0–${answer.scaleMaxMmHg} mmHg. Identifying labels are withheld until you check an answer or show them.`
         }
       />
 
-      <fieldset className={styles.drillOptions} disabled={revealed || !enabled || complete}>
+      <fieldset className={styles.drillOptions} disabled={revealed !== null || !enabled}>
         <legend>Which tracing is this?</legend>
         {options.map((option) => (
           <label key={option.id} data-state={revealed ? optionState(option.id) : undefined}>
@@ -195,26 +200,34 @@ export function WaveformRecognitionDrill({
       </fieldset>
 
       <div className={styles.drillControls}>
-        {!revealed && !complete ? (
-          <button type="button" disabled={!selectedId || !enabled} onClick={submit}>
-            Check answer
-          </button>
-        ) : !complete ? (
-          <button type="button" disabled={!enabled} onClick={nextQuestion}>
-            Next tracing
-          </button>
-        ) : (
-          <p>
-            Five correct responses recorded. This is completion of practice, not a clinical
-            proficiency standard.
-          </p>
-        )}
+        {!revealed ? (
+          <>
+            <button type="button" disabled={!selectedId || !enabled} onClick={check}>
+              Check answer
+            </button>
+            <button type="button" disabled={!enabled} onClick={show}>
+              Show the labels
+            </button>
+          </>
+        ) : null}
+        <button type="button" disabled={!enabled} onClick={nextQuestion}>
+          Next tracing
+        </button>
       </div>
 
       {revealed ? (
-        <div className={styles.drillFeedback} data-correct={isCorrect || undefined} role="status">
+        <div
+          className={styles.drillFeedback}
+          data-correct={isCorrect || undefined}
+          data-recognition-reveal={revealed}
+          role="status"
+        >
           <strong>
-            {isCorrect ? 'Pattern identified.' : `This is ${answer.label.toLowerCase()}.`}
+            {revealed === 'shown'
+              ? `Shown without an answer: ${answer.label.toLowerCase()}.`
+              : isCorrect
+                ? 'Pattern identified.'
+                : `This is ${answer.label.toLowerCase()}.`}
           </strong>
           <p>{answer.summary}</p>
           {/* The cues are a list, and say so: the same heading the atlas panel gives them. */}

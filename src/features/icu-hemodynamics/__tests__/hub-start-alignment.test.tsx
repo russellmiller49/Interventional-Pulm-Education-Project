@@ -7,8 +7,8 @@ import type { CriticalCareProgressReadResult } from '@/features/critical-care/pr
 
 import { IcuHemodynamicsOverviewV2 } from '../components/IcuHemodynamicsOverviewV2'
 import { firstPacLearningPathwaySectionId, pacLearningPathwaySections } from '../content'
-import { nextIncompleteHemodynamicsSection } from '../content/pathwayResolver'
-import { createEmptyLearnRecord } from '../engine/learnProgress'
+import { suggestedHemodynamicsSection } from '../content/pathwayResolver'
+import { createEmptySelfPacedRecord } from '../engine/selfPacedProgress'
 
 /**
  * H1.1 — the two surfaces a novice can arrive on must send them to the same place.
@@ -20,8 +20,8 @@ import { createEmptyLearnRecord } from '../engine/learnProgress'
  * here: advance the catheter".
  *
  * The flow rebuild (2026-09-05) replaced the module's hard-coded start link with one door: the
- * Continue call to action, resolved through `nextIncompleteHemodynamicsSection` over the stored
- * Learn record — which, for a fresh learner, is the pathway's first section. The hub still reads
+ * Continue call to action, resolved through `suggestedHemodynamicsSection` over the stored
+ * self-paced record — which, for a fresh learner, is the pathway's first section. The hub still reads
  * catalog seed order. So the two surfaces still validate their agreement rather than deriving it.
  *
  * These render both surfaces and compare them with each other rather than with a literal href, so
@@ -118,7 +118,7 @@ describe('hub and hemodynamics module entry agree on where a novice starts', () 
   it('sends them to the orientation question, which is the pathway’s first section', async () => {
     expect(firstPacLearningPathwaySectionId).toBe('why-measure')
     // The resolver the door uses agrees, for a learner with nothing recorded.
-    expect(nextIncompleteHemodynamicsSection(createEmptyLearnRecord())?.section.id).toBe(
+    expect(suggestedHemodynamicsSection(createEmptySelfPacedRecord())?.section.id).toBe(
       'why-measure',
     )
     expect(await hubStartHref()).toBe('/icu-hemodynamics/learn?activity=why-measure')

@@ -366,25 +366,37 @@ describe('H2 signal validity prevents a confident interpretation', () => {
         name: new RegExp(escape(challenge.commitment.choices[0]!.label.slice(0, 40))),
       }),
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this reading' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check this reading' }))
 
     expect(readout()).toHaveTextContent(NORMAL_WAVEFORM_INTERPRETATION_WITHHELD)
     expect(readout()).toHaveAttribute('data-withheld', 'true')
   })
 
-  it('withholds the reasoning until the learner commits', () => {
+  it('folds the reasoning until the learner checks a reading or opens it', () => {
     render(<NormalWaveformValidityChallenges />)
     const challenge = normalWaveformValidityChallenges[0]!
 
     expect(screen.queryByText(challenge.whyInterpretationIsWithheld)).not.toBeInTheDocument()
     expect(screen.queryByText(challenge.commitment.explanation)).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Commit this reading' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Check this reading' })).toBeDisabled()
 
     fireEvent.click(screen.getAllByRole('radio')[0]!)
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this reading' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check this reading' }))
 
     expect(screen.getByText(challenge.whyInterpretationIsWithheld)).toBeInTheDocument()
     expect(screen.getByText(challenge.commitment.explanation)).toBeInTheDocument()
+  })
+
+  it('opens the reasoning without a reading, and still names no chamber (HD-01)', () => {
+    render(<NormalWaveformValidityChallenges />)
+    const challenge = normalWaveformValidityChallenges[0]!
+    fireEvent.click(screen.getByRole('button', { name: 'Show the reasoning' }))
+    expect(screen.getByText(challenge.whyInterpretationIsWithheld)).toBeInTheDocument()
+    expect(screen.getByText(/Chamber readout/i).closest('p')).toHaveTextContent(
+      NORMAL_WAVEFORM_INTERPRETATION_WITHHELD,
+    )
+    expect(screen.getByRole('button', { name: 'Check this reading' })).toBeDisabled()
+    expect(screen.queryByText(/worked through/)).toBeNull()
   })
 
   it('does not gate the route: every station stays reachable and the merged order is unchanged', () => {

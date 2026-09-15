@@ -7,8 +7,9 @@ import { IcuHemodynamicsModuleFrameV2 } from '@/features/icu-hemodynamics/compon
 import { icuHemodynamicsNavBase } from '@/features/learning-module/moduleRoutes'
 
 export const metadata: Metadata = {
-  title: 'Challenge · ICU Hemodynamics Lab',
-  description: 'Work through a harder ICU hemodynamics case with a full teaching debrief.',
+  title: 'Applied case · ICU Hemodynamics Lab',
+  description:
+    'An optional harder ICU hemodynamics case, with help and a full teaching debrief available throughout.',
   robots: { index: false, follow: false, noarchive: true },
 }
 

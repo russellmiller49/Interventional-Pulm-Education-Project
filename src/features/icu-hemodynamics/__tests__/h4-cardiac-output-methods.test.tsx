@@ -962,7 +962,7 @@ describe('H4 method disagreement', () => {
     for (const scenario of unnamed) expect(scenario.openQuestionIds.length).toBeGreaterThan(0)
   })
 
-  it('shows both acquisitions before the decision, and reveals the reasoning only after commitment', () => {
+  it('shows both acquisitions before the decision, and folds the reasoning until a position is checked', () => {
     render(<CardiacOutputDisagreementLab />)
     const scenario = cardiacOutputComparisonScenarios[0]
     const card = screen
@@ -984,7 +984,7 @@ describe('H4 method disagreement', () => {
     expect(within(card).queryByText(new RegExp(scenario.whyNotAverage.slice(0, 40)))).toBeNull()
 
     fireEvent.click(within(card).getByRole('radio', { name: defensible.label }))
-    fireEvent.click(within(card).getByRole('button', { name: 'Commit this position' }))
+    fireEvent.click(within(card).getByRole('button', { name: 'Check this position' }))
     expect(within(card).getByText(/Defensible for this episode/i)).toBeInTheDocument()
     expect(
       within(card).getByText(new RegExp(scenario.whyNotAverage.slice(0, 40))),
@@ -1003,9 +1003,27 @@ describe('H4 method disagreement', () => {
     )!
 
     fireEvent.click(within(card).getByRole('radio', { name: averaging.label }))
-    fireEvent.click(within(card).getByRole('button', { name: 'Commit this position' }))
+    fireEvent.click(within(card).getByRole('button', { name: 'Check this position' }))
     expect(within(card).getByText(/This averages two unlike methods/i)).toBeInTheDocument()
     expect(within(card).queryByText(/Defensible for this episode/i)).toBeNull()
+  })
+
+  it('opens the reasoning before any position, and Try again clears a checked one (HD-01)', () => {
+    render(<CardiacOutputDisagreementLab />)
+    const scenario = cardiacOutputComparisonScenarios[0]
+    const card = screen
+      .getByRole('heading', { level: 3, name: scenario.title })
+      .closest('article') as HTMLElement
+    const defensible = scenario.options.find((option) => option.id === scenario.defensibleOptionId)!
+    fireEvent.click(within(card).getByRole('button', { name: 'Show the reasoning' }))
+    expect(within(card).getByText(/Shown without an answer/)).toBeInTheDocument()
+    expect(within(card).getByText(scenario.reportedResult)).toBeInTheDocument()
+    expect(within(card).queryByText(/Defensible for this episode/i)).toBeNull()
+    fireEvent.click(within(card).getByRole('radio', { name: defensible.label }))
+    fireEvent.click(within(card).getByRole('button', { name: 'Check this position' }))
+    expect(within(card).getByText(/Defensible for this episode/i)).toBeInTheDocument()
+    fireEvent.click(within(card).getByRole('button', { name: 'Try again' }))
+    expect(within(card).getByRole('radio', { name: defensible.label })).not.toBeChecked()
   })
 
   it('lets both results be withheld when both acquisitions are inadequate', () => {

@@ -115,7 +115,7 @@ const CHECK_WORDS: Readonly<Record<string, string>> = {
   [FAST_FLUSH_CHECK]: 'Run a fast flush on the pulmonary-artery line',
   [DYNAMIC_RESPONSE_CLASSIFIED_CHECK]: 'Read the flush response and say what it is',
   [DYNAMIC_RESPONSE_CORRECTED_CHECK]: 'Repair the line until the flush response is acceptable',
-  [WAVEFORM_RECOGNITION_CHECK]: 'Identify five tracings correctly in total',
+  [WAVEFORM_RECOGNITION_CHECK]: 'Name a tracing from its shape and check your answer',
   [CURRENT_RESPONSE_RECHECKED]: 'Flush the corrected line again and identify the current response',
   [PA_RETURN_CHECK]: 'Say whether the pulmonary-artery tracing has come back',
   'waveform-confirmed-ra': 'Confirm the right atrium from its tracing',

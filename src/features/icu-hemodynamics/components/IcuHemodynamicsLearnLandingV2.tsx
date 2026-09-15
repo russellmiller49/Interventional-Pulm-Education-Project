@@ -20,8 +20,9 @@ export function IcuHemodynamicsLearnLandingV2() {
         <p className="max-w-3xl text-base leading-7 text-muted-foreground">
           Follow one clinical or measurement question at a time, with the relevant tracing, anatomy,
           acquisition or calculation beside its controls. Move in order or open any section
-          directly; nothing is gated, and working through a section records that you took part — not
-          a claim about clinical readiness.
+          directly; nothing is gated. Questions are optional, with a hint and an explanation you can
+          open before answering, and any task can be left for later. Finishing a section marks it
+          reviewed on this device — not a claim about clinical readiness.
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <HemodynamicsContinueCta />

@@ -333,29 +333,26 @@ describe('WaveformRecognitionDrill', () => {
     expect(screen.getByText('Selected response')).toBeInTheDocument()
   })
 
-  it('signals the objective only after five correct identifications', () => {
+  // HD-01 replaced "signals the objective only after five correct identifications": the drill has no
+  // quota. A checked answer marks the practice goal; showing the labels never does.
+  it('marks the practice goal on a checked answer, never on showing the labels', () => {
     const dispatch = jest.fn()
     render(<WaveformRecognitionDrill dispatch={dispatch} />)
 
-    const answers = [
-      'Right ventricle',
-      'Pulmonary artery',
-      'Pulmonary capillary wedge',
-      'Pericardial constraint',
-      'Tricuspid regurgitation',
-    ]
-    for (const [position, answer] of answers.entries()) {
-      fireEvent.click(screen.getByRole('radio', { name: answer }))
-      fireEvent.click(screen.getByRole('button', { name: 'Check answer' }))
-      if (position < answers.length - 1) {
-        expect(dispatch).not.toHaveBeenCalled()
-        fireEvent.click(screen.getByRole('button', { name: 'Next tracing' }))
-      }
-    }
+    fireEvent.click(screen.getByRole('button', { name: 'Show the labels' }))
+    expect(screen.getByText(/Shown without an answer/)).toBeInTheDocument()
+    // Once shown, the options carry their reference labels and cannot be answered.
+    expect(screen.getByRole('radio', { name: /^Right ventricle/ })).toBeDisabled()
+    expect(dispatch).not.toHaveBeenCalled()
 
+    fireEvent.click(screen.getByRole('button', { name: 'Next tracing' }))
+    fireEvent.click(screen.getByRole('radio', { name: 'Right ventricle' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check answer' }))
+    expect(screen.getByText(/This is pulmonary artery/i)).toBeInTheDocument()
     expect(dispatch).toHaveBeenCalledWith({
       type: 'VALIDATE_SIGNAL',
       check: 'waveform-recognition',
     })
+    expect(document.body.textContent).not.toMatch(/of 5 correct|attempted/)
   })
 })

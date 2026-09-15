@@ -3,7 +3,6 @@
 import type { Route } from 'next'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { criticalCareActivityById } from '@/features/critical-care/content/activities'
 import { criticalCareReferences } from '@/features/critical-care/content/references'
 import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
 import { ReferenceDrawer } from '@/features/learning-module/components/ReferenceDrawer'
@@ -11,16 +10,8 @@ import { ScenarioFeedbackCard } from '@/features/learning-module/components/Scen
 import { ScenarioTeachingDebrief } from '@/features/learning-module/components/ScenarioTeachingDebrief'
 import { SimulationLaunchGate } from '@/features/learning-module/components/SimulationLaunchGate'
 import {
-  authoritativeCriticalCareCompetencyEvidence,
-  authoritativeCriticalCareStatus,
-  readCriticalCareProgress,
-  upsertCriticalCareActivityProgress,
   useCriticalCareActivityAnalytics,
-  withoutCriticalCareResumePointer,
-  writeCriticalCareProgress,
-  type CriticalCareActivityMode,
   type CriticalCareActivityPhase,
-  type CriticalCareActivityStatus,
 } from '@/features/learning-module/activity'
 import type {
   ScenarioDecisionTraceEntry,
@@ -38,19 +29,21 @@ import {
 } from '../content'
 import {
   createInitialHemodynamicState,
-  hasHemodynamicMastery,
   icuHemodynamicsReducer,
-  readIcuHemodynamicsProgress,
-  recordIcuHemodynamicsResult,
   thermodilutionAcceptedAverage,
-  writeIcuHemodynamicsProgress,
   type HemodynamicAction,
   type HemodynamicSimulationState,
 } from '../engine'
+import { updateSelfPacedRecord, withCaseOpened } from '../engine/selfPacedProgress'
 import { IcuHemodynamicsModuleFrameV2 } from './IcuHemodynamicsModuleFrameV2'
 import flowStyles from './stage/hemodynamics-flow.module.css'
 import { HemodynamicNativeWorkspace } from './HemodynamicNativeWorkspace'
 
+/**
+ * `challenge` is the case opened from the former Assess page (`/assess?start=1`). The value is kept
+ * so saved links, the authored seed and the activity identity stay stable; since HD-01 it is an
+ * optional applied case with the same help and feedback as Practice.
+ */
 type CaseMode = 'practice' | 'challenge'
 
 function seededCaseNumber(caseId: string, mode: CaseMode): number {
@@ -67,6 +60,43 @@ function requireValue<T>(value: T | undefined, message: string): T {
   return value
 }
 
+/**
+ * The transfer question after a case: what explains a line that settles slowly after a position
+ * change. Feedback for each option says why it does or does not account for the signal (HD-01 content
+ * batch: the two other options used to share one "reasonable cue" message). Pending faculty review.
+ */
+const TRANSFER_OPTIONS = [
+  {
+    id: 'overdamped-after-position-change',
+    label: 'An off-level, overdamped measurement chain that requires revalidation',
+    feedback:
+      'Best-supported interpretation. The off-level reference and the sluggish release identify a measurement-chain problem: re-level, then restore the dynamic response before reading pulse pressure.',
+  },
+  {
+    id: 'true-afterload-change',
+    label: 'A true acute rise in afterload; the pressure signal itself is already valid',
+    feedback:
+      'Not the best-supported reading. The fast-flush release tests the tubing and transducer, not the circulation, so a sluggish release points to the measurement chain whatever the patient is doing — and the transducer has moved with the patient. Revalidate the line before attributing the narrow pulse pressure to the patient.',
+  },
+  {
+    id: 'respiratory-change',
+    label: 'Respiratory variation alone, despite the abnormal fast-flush release',
+    feedback:
+      'Not the best-supported reading. Respiratory variation moves readings with the breath, but it does not explain a sluggish fast-flush release or a transducer that has moved off level. Revalidate the line first.',
+  },
+] as const
+
+/**
+ * One Practice case, or the applied case opened from the former Assess page.
+ *
+ * Self-paced (HD-01): every checkpoint opens at any point — a working frame is optional, actions do
+ * not wait for it, and the debrief and the transfer variant open without a final reassessment. What
+ * stays real is the simulation: interventions run through the reducer with its safety interrupts and
+ * bundled-credit refusal, the modeled response needs model time, and the transfer is marked done only
+ * when the line has actually been re-levelled and its flush response classified and corrected.
+ * Nothing about a run is written: no attempts, scores, hints, mastery or resume checkpoints. The only
+ * record is that the case was opened on this device.
+ */
 export function HemodynamicCaseActivity({
   caseId,
   mode,
@@ -85,10 +115,6 @@ export function HemodynamicCaseActivity({
   const section = mode === 'challenge' ? 'assess' : 'practice'
   const activityId =
     mode === 'challenge' ? 'hemodynamics:assess:masked-seeded' : `hemodynamics:practice:${caseId}`
-  const activity = requireValue(
-    criticalCareActivityById.get(activityId),
-    `Missing critical-care activity: ${activityId}`,
-  )
   const teachingArtifact = requireValue(
     hemodynamicTeachingArtifactByCaseId.get(caseId),
     `Missing hemodynamics teaching artifact: ${caseId}`,
@@ -104,18 +130,17 @@ export function HemodynamicCaseActivity({
   const [transferComplete, setTransferComplete] = useState(false)
   const [transferStarted, setTransferStarted] = useState(false)
   const [transferChoiceId, setTransferChoiceId] = useState<string | null>(null)
+  const [transferReasoningShown, setTransferReasoningShown] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
-  const [challengeFeedbackImmediate, setChallengeFeedbackImmediate] = useState(false)
+  const [holdFeedback, setHoldFeedback] = useState(false)
   const [feedbackEvents, setFeedbackEvents] = useState<readonly ScenarioFeedbackEvent[]>([])
   const [revealedFeedbackIds, setRevealedFeedbackIds] = useState<readonly string[]>([])
   const [decisionTrace, setDecisionTrace] = useState<readonly ScenarioDecisionTraceEntry[]>([])
   const [activeHardInterruptId, setActiveHardInterruptId] = useState<string | null>(null)
-  const attempt = useRef(1)
   const traceSequence = useRef(0)
   const feedbackSequence = useRef(0)
-  const legacyRecorded = useRef(false)
-  const recordedSafetyEvents = useRef(new Set<string>())
-  const lifecycleAnalytics = useCriticalCareActivityAnalytics({
+  // Automatic open/visible/phase lifecycle events only; no answer, hint, safety or outcome events.
+  useCriticalCareActivityAnalytics({
     moduleId: 'icu-hemodynamics',
     activityId,
     mode,
@@ -124,23 +149,13 @@ export function HemodynamicCaseActivity({
   const dispatch = (action: HemodynamicAction) => {
     setState((current) => icuHemodynamicsReducer(current, action))
   }
+  const balloonActive = state.catheter.balloonInflated || state.catheter.floatBalloonInflated
 
   useEffect(() => {
-    const envelope = readCriticalCareProgress(window.localStorage)
-    const existing = envelope.activities.find((item) => item.activityId === activityId)
-    attempt.current = (existing?.attempts ?? 0) + 1
-    if (envelope.resume?.activityId === activityId) {
-      const timer = window.setTimeout(
-        () =>
-          setMessage(
-            'Saved work was restored to the authored pre-prediction checkpoint; detailed interventions are not replayed without an exact safe contract.',
-          ),
-        0,
-      )
-      return () => window.clearTimeout(timer)
-    }
-    return undefined
-  }, [activityId])
+    updateSelfPacedRecord((current) =>
+      withCaseOpened(current, caseId, mode === 'challenge' ? 'applied' : 'practice'),
+    )
+  }, [caseId, mode])
 
   useEffect(() => {
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
@@ -154,40 +169,6 @@ export function HemodynamicCaseActivity({
     )
     return () => window.clearInterval(timer)
   }, [])
-
-  useEffect(() => {
-    if (!state.completed || !state.score || legacyRecorded.current) return
-    legacyRecorded.current = true
-    const legacy = readIcuHemodynamicsProgress()
-    writeIcuHemodynamicsProgress(
-      recordIcuHemodynamicsResult(legacy, {
-        caseId: state.caseId,
-        score: state.score,
-        criticalErrorCount: state.criticalErrors.length,
-      }),
-    )
-  }, [state.caseId, state.completed, state.criticalErrors.length, state.score])
-
-  useEffect(() => {
-    if (state.criticalErrors.length === 0) {
-      recordedSafetyEvents.current.clear()
-      return
-    }
-    for (const error of state.criticalErrors) {
-      if (recordedSafetyEvents.current.has(error)) continue
-      recordedSafetyEvents.current.add(error)
-      lifecycleAnalytics.recordSafetyEvent()
-    }
-  }, [lifecycleAnalytics, state.criticalErrors])
-
-  useEffect(() => {
-    if (
-      definition.requiredInterventionIds.length > 0 &&
-      definition.requiredInterventionIds.every((id) => state.completedInterventionIds.includes(id))
-    ) {
-      lifecycleAnalytics.recordGoalMet()
-    }
-  }, [definition.requiredInterventionIds, lifecycleAnalytics, state.completedInterventionIds])
 
   const referenceEntries = useMemo(() => {
     const directlyRelated = criticalCareReferences.filter((reference) =>
@@ -225,89 +206,28 @@ export function HemodynamicCaseActivity({
     [definition.sourceIds],
   )
 
-  function writeNormalizedProgress(
-    status: CriticalCareActivityStatus,
-    phaseForProgress: CriticalCareActivityPhase,
-    addHint = false,
-    markTricky = false,
-  ) {
-    const now = new Date().toISOString()
-    const envelope = readCriticalCareProgress(window.localStorage)
-    const existing = envelope.activities.find((item) => item.activityId === activityId)
-    const authoritativeStatus = authoritativeCriticalCareStatus(activity, status)
-    const done = authoritativeStatus === 'completed' || authoritativeStatus === 'mastered'
-    let updated = upsertCriticalCareActivityProgress(
-      envelope,
-      {
-        activityId,
-        status: authoritativeStatus,
-        currentPhase: phaseForProgress,
-        mode: mode satisfies CriticalCareActivityMode,
-        ...(state.score ? { bestScore: state.score.total } : {}),
-        attempts: Math.max(attempt.current, existing?.attempts ?? 0),
-        hintCount: (existing?.hintCount ?? 0) + (addHint ? 1 : 0),
-        ...(existing?.tricky || markTricky ? { tricky: true } : {}),
-        competencyEvidenceIds: authoritativeCriticalCareCompetencyEvidence(
-          activity,
-          done ? activity.competencyIds : [],
-        ),
-        updatedAt: now,
-      },
-      done
-        ? undefined
-        : {
-            activityId,
-            pathname: `/icu-hemodynamics/${section}`,
-            query: mode === 'challenge' ? { start: '1' } : { case: caseId },
-            mode,
-            // Detailed interventions are not replayed for this activity. The
-            // authored safe restore point is the beginning of Recognize, even
-            // when the learner had advanced farther in the live UI.
-            phase: 'recognize',
-            scenarioId: mode === 'challenge' ? 'masked-seeded' : caseId,
-            checkpointId: 'authored-pre-prediction',
-            payloadVersion: `hemodynamic-case-${definition.version}-v1`,
-            updatedAt: now,
-          },
-    )
-    if (done) updated = withoutCriticalCareResumePointer(updated, activityId)
-    const saved = writeCriticalCareProgress(window.localStorage, updated)
-    setMessage(
-      saved
-        ? done
-          ? 'This run was added to your personal history on this device.'
-          : 'Safe pre-prediction checkpoint saved on this device.'
-        : 'Progress could not be stored on this device.',
-    )
+  const objectives: Record<CriticalCareActivityPhase, string> = {
+    recognize: 'Read the patient and the available signals',
+    predict: 'Interpret the findings and choose a priority',
+    act: 'Choose an action and check the measurements',
+    observe: 'Compare the response and reassess',
+    explain: 'Review your reasoning and the modeled response',
+    transfer: 'Revalidate the changed signal',
   }
 
   function checkpoint(nextPhase: CriticalCareActivityPhase) {
     setPhase(nextPhase)
     setHintVisible(false)
-    writeNormalizedProgress('in-progress', nextPhase)
   }
 
   function selectPhase(nextPhase: CriticalCareActivityPhase) {
-    if (
-      state.catheter.balloonInflated ||
-      state.catheter.floatBalloonInflated ||
-      nextPhase === phase
-    )
-      return
-    if (
-      (nextPhase === 'act' && !state.predictionCommitted) ||
-      (nextPhase === 'observe' && !canObserve) ||
-      ((nextPhase === 'explain' || nextPhase === 'transfer') && !state.completed)
-    )
-      return
+    if (balloonActive || nextPhase === phase) return
     if (nextPhase === 'transfer') {
       beginTransfer()
       return
     }
     checkpoint(nextPhase)
-    setMessage(
-      `Opened the ${nextPhase} section directly. You can return to any earlier practice phase from the phase navigation.`,
-    )
+    setMessage(`Opened “${objectives[nextPhase]}”. Every checkpoint can be opened at any point.`)
   }
 
   function traceSystemState(): string {
@@ -330,17 +250,16 @@ export function HemodynamicCaseActivity({
     setDecisionTrace((current) => [...current, entry])
   }
 
-  function commitPrediction() {
-    setBaseline(state)
+  function recordWorkingFrame() {
+    if (!baseline) setBaseline(state)
     const mechanism =
       definition.mechanismOptions.find((item) => item.id === state.selectedMechanismId)?.label ??
       'No mechanism selected'
     const priority =
       definition.priorityOptions.find((item) => item.id === state.selectedPriorityId)?.label ??
       'No priority selected'
-    recordDecision(`Committed frame: ${mechanism}. Immediate priority: ${priority}.`)
+    recordDecision(`Recorded frame: ${mechanism}. Immediate priority: ${priority}.`)
     dispatch({ type: 'COMMIT_PREDICTION' })
-    lifecycleAnalytics.recordPredictionSubmitted()
     checkpoint('act')
   }
 
@@ -350,12 +269,8 @@ export function HemodynamicCaseActivity({
 
     const hardInterrupt = definition.safetyCriticalErrorIds.includes(selected.id)
     const authoredTiming = feedbackTimingForHemodynamicAction(selected, hardInterrupt)
-    const timing =
-      hardInterrupt || (mode === 'challenge' && challengeFeedbackImmediate)
-        ? authoredTiming
-        : mode === 'challenge'
-          ? 'debrief'
-          : authoredTiming
+    // Holding feedback is the learner's choice, offered on the applied case; safety interrupts ignore it.
+    const timing = hardInterrupt || !holdFeedback ? authoredTiming : 'debrief'
     feedbackSequence.current += 1
     const event: ScenarioFeedbackEvent = {
       id: `${caseId}-feedback-${feedbackSequence.current}`,
@@ -379,20 +294,18 @@ export function HemodynamicCaseActivity({
       setMessage(
         'Stopping here—the modeled action could cause immediate harm in this phenotype. The pre-action state is preserved.',
       )
-      writeNormalizedProgress('in-progress', 'act', false, true)
-      lifecycleAnalytics.recordSafetyEvent()
       return
     }
 
+    if (!baseline) setBaseline(state)
     dispatch({ type: 'APPLY_INTERVENTION', intervention: selected })
     if (timing === 'immediate') {
       setRevealedFeedbackIds((current) => [...new Set([...current, event.id])])
     }
-    writeNormalizedProgress('in-progress', 'act')
   }
 
   function observeModeledResponse() {
-    if (state.catheter.balloonInflated || state.catheter.floatBalloonInflated) return
+    if (balloonActive) return
     recordDecision('Paused to observe the modeled response before final reassessment.')
     setRevealedFeedbackIds((current) => [
       ...new Set([
@@ -406,18 +319,17 @@ export function HemodynamicCaseActivity({
   }
 
   function completeReassessment() {
-    if (state.catheter.balloonInflated || state.catheter.floatBalloonInflated) return
-    recordDecision('Committed the final whole-patient reassessment and opened the debrief.')
+    if (balloonActive) return
+    recordDecision('Recorded the final whole-patient reassessment and opened the debrief.')
     setState((current) => {
       const reassessed = icuHemodynamicsReducer(current, { type: 'REASSESS' })
       return icuHemodynamicsReducer(reassessed, { type: 'COMPLETE_CASE' })
     })
-    lifecycleAnalytics.recordDebriefViewed()
     checkpoint('explain')
   }
 
   function beginTransfer() {
-    if (state.catheter.balloonInflated || state.catheter.floatBalloonInflated) return
+    if (balloonActive) return
     if (transferStarted) {
       checkpoint('transfer')
       return
@@ -449,29 +361,25 @@ export function HemodynamicCaseActivity({
     checkpoint('transfer')
   }
 
+  const lineRevalidated =
+    Math.abs(state.measurementSystem.transducerLevelCm) <=
+      HEMODYNAMIC_CLINICAL_THRESHOLDS.signalValidation.transducerLevelToleranceCm &&
+    state.signalValidationChecks.includes('fast-flush') &&
+    state.signalValidationChecks.includes('dynamic-response-classified') &&
+    state.signalValidationChecks.includes('dynamic-response-corrected') &&
+    state.measurementSystem.artifact === 'none'
+
   function completeTransfer() {
-    const transferInteractionComplete =
-      transferChoiceId !== null &&
-      Math.abs(state.measurementSystem.transducerLevelCm) <=
-        HEMODYNAMIC_CLINICAL_THRESHOLDS.signalValidation.transducerLevelToleranceCm &&
-      state.signalValidationChecks.includes('fast-flush') &&
-      state.signalValidationChecks.includes('dynamic-response-classified') &&
-      state.signalValidationChecks.includes('dynamic-response-corrected') &&
-      state.measurementSystem.artifact === 'none'
-    if (!transferInteractionComplete) {
+    if (!transferStarted || !lineRevalidated) {
       setMessage(
-        'Interpret the new release trace, re-level the transducer, and restore the dynamic response in the workspace.',
+        'The line is not revalidated yet: re-level the transducer, run and classify the fast-flush trace, and restore the response in the workspace.',
       )
       return
     }
-    const mastered =
-      state.score !== null &&
-      transferChoiceId === 'overdamped-after-position-change' &&
-      hasHemodynamicMastery(state)
     setTransferComplete(true)
-    writeNormalizedProgress(mastered ? 'mastered' : 'completed', 'transfer')
-    lifecycleAnalytics.recordTransferCompleted()
-    lifecycleAnalytics.recordActivityCompleted(mastered)
+    setMessage(
+      'Line revalidated on the transfer variant: level, flush response classified and corrected.',
+    )
   }
 
   function reset() {
@@ -482,35 +390,17 @@ export function HemodynamicCaseActivity({
     setTransferComplete(false)
     setTransferStarted(false)
     setTransferChoiceId(null)
-    setChallengeFeedbackImmediate(false)
+    setTransferReasoningShown(false)
     setFeedbackEvents([])
     setRevealedFeedbackIds([])
     setDecisionTrace([])
     setActiveHardInterruptId(null)
     traceSequence.current = 0
     feedbackSequence.current = 0
-    legacyRecorded.current = false
     setMessage('Case reset to its original variation.')
   }
 
-  function showHint() {
-    if (mode === 'challenge') {
-      setMessage(
-        challengeFeedbackImmediate
-          ? 'Per-action teaching feedback is on for this challenge. References and evidence remain available throughout.'
-          : 'This challenge is currently deferring teaching feedback until the debrief. References and evidence remain available throughout.',
-      )
-      return
-    }
-    if (!hintVisible) {
-      writeNormalizedProgress('in-progress', phase, true)
-      lifecycleAnalytics.recordHintUsed()
-    }
-    setHintVisible(true)
-  }
-
-  function saveAndExit() {
-    writeNormalizedProgress('in-progress', phase)
+  function exitCase() {
     router.push(`/icu-hemodynamics/${section}` as Route)
   }
 
@@ -518,11 +408,6 @@ export function HemodynamicCaseActivity({
     state.completedInterventionIds.includes(id),
   ).length
   const average = thermodilutionAcceptedAverage(state.thermodilutionTrials)
-  const canObserve =
-    state.predictionCommitted &&
-    (definition.id === 'HD-08'
-      ? requiredCompleted === definition.requiredInterventionIds.length
-      : state.completedInterventionIds.length > 0)
   const visibleInterventions = definition.interventions
 
   let taskControls = null
@@ -534,14 +419,14 @@ export function HemodynamicCaseActivity({
             <input
               type="checkbox"
               className="mt-1"
-              checked={challengeFeedbackImmediate}
-              disabled={state.predictionCommitted}
-              onChange={(event) => setChallengeFeedbackImmediate(event.target.checked)}
+              checked={holdFeedback}
+              onChange={(event) => setHoldFeedback(event.target.checked)}
             />
             <span>
-              <strong className="block">Show teaching feedback as I work</strong>
+              <strong className="block">Hold teaching feedback until the debrief</strong>
               <span className="mt-1 block text-xs text-muted-foreground">
-                Off by default for an uninterrupted challenge. Safety interrupts always remain on.
+                Off by default: feedback appears as you act. Safety interrupts always appear, and
+                the debrief can be opened at any point.
               </span>
             </span>
           </label>
@@ -579,6 +464,10 @@ export function HemodynamicCaseActivity({
   } else if (phase === 'predict') {
     taskControls = (
       <div className="grid gap-3">
+        <p className="text-sm leading-6">
+          Recording a working frame is optional. It makes the comparison in the debrief more useful,
+          and you can go to the actions without it.
+        </p>
         <label className="grid gap-1 text-sm font-semibold">
           Suspected mechanism
           <select
@@ -613,9 +502,16 @@ export function HemodynamicCaseActivity({
           type="button"
           disabled={!state.selectedMechanismId || !state.selectedPriorityId}
           className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-          onClick={commitPrediction}
+          onClick={recordWorkingFrame}
         >
-          Commit mechanism and priority
+          Record mechanism and priority
+        </button>
+        <button
+          type="button"
+          className="min-h-11 rounded-xl border px-4 py-2.5 text-sm font-semibold"
+          onClick={() => checkpoint('act')}
+        >
+          Go to the actions without recording a frame
         </button>
       </div>
     )
@@ -663,9 +559,7 @@ export function HemodynamicCaseActivity({
         </div>
         <button
           type="button"
-          disabled={
-            !canObserve || state.catheter.balloonInflated || state.catheter.floatBalloonInflated
-          }
+          disabled={balloonActive}
           className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
           onClick={observeModeledResponse}
         >
@@ -692,9 +586,11 @@ export function HemodynamicCaseActivity({
           <div className="flex justify-between">
             <dt>Modeled response</dt>
             <dd>
-              {requiredCompleted === definition.requiredInterventionIds.length
-                ? 'Ready to observe'
-                : 'Continue the action sequence'}
+              {state.completedInterventionIds.length === 0
+                ? 'No action taken yet'
+                : requiredCompleted === definition.requiredInterventionIds.length
+                  ? 'Ready to observe'
+                  : 'Continue the action sequence'}
             </dd>
           </div>
           <div className="flex justify-between">
@@ -714,24 +610,19 @@ export function HemodynamicCaseActivity({
           className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
           onClick={completeReassessment}
         >
-          Commit final reassessment
+          Reassess and open the debrief
         </button>
       </div>
     )
   } else if (phase === 'explain') {
     taskControls = (
       <p className="rounded-xl border bg-muted p-3 text-sm leading-6">
-        Capture your working frame, compare the two reasoning traces, then choose the divergence
-        point you want to revisit. The transfer variant opens from the final debrief step.
+        Compare your decisions with the authored expert trace. Writing down your working frame first
+        is optional; the expert reasoning can also be opened directly.
       </p>
     )
   } else {
-    const transferInteractionComplete =
-      transferChoiceId !== null &&
-      Math.abs(state.measurementSystem.transducerLevelCm) <= 1 &&
-      state.signalValidationChecks.includes('dynamic-response-classified') &&
-      state.signalValidationChecks.includes('dynamic-response-corrected') &&
-      state.measurementSystem.artifact === 'none'
+    const chosen = TRANSFER_OPTIONS.find((option) => option.id === transferChoiceId)
     taskControls = (
       <div className="grid gap-2">
         <fieldset className="grid gap-2">
@@ -739,52 +630,73 @@ export function HemodynamicCaseActivity({
             After a patient-position change, the release trace returns slowly with little
             oscillation and pulse pressure narrows. What best explains the new signal?
           </legend>
-          {[
-            [
-              'overdamped-after-position-change',
-              'An off-level, overdamped measurement chain that requires revalidation',
-            ],
-            [
-              'true-afterload-change',
-              'A true acute rise in afterload; the pressure signal itself is already valid',
-            ],
-            [
-              'respiratory-change',
-              'Respiratory variation alone, despite the abnormal fast-flush release',
-            ],
-          ].map(([value, label]) => (
+          {TRANSFER_OPTIONS.map((option) => (
             <label
-              key={value}
+              key={option.id}
               className="flex min-h-11 items-start gap-3 rounded-xl border p-3 text-sm"
             >
               <input
                 type="radio"
                 name="case-transfer-interpretation"
-                checked={transferChoiceId === value}
-                onChange={() => {
-                  setTransferChoiceId(value)
-                  setMessage(
-                    value === 'overdamped-after-position-change'
-                      ? 'Best-supported interpretation. The off-level reference and sluggish release identify a measurement-chain problem.'
-                      : 'Reasonable cue to consider, but it does not explain the abnormal fast-flush release. The activity can still be completed after you review this feedback and repair the signal.',
-                  )
-                }}
+                checked={transferChoiceId === option.id}
+                onChange={() => setTransferChoiceId(option.id)}
               />
-              {label}
+              {option.label}
             </label>
           ))}
         </fieldset>
+        {chosen ? (
+          <p
+            role="status"
+            className="rounded-xl border p-3 text-sm leading-6"
+            data-transfer-feedback
+          >
+            {chosen.feedback}
+          </p>
+        ) : null}
+        <div className="flex flex-wrap gap-2">
+          {chosen ? (
+            <button
+              type="button"
+              className="min-h-11 rounded-xl border px-4 py-2.5 text-sm font-semibold"
+              onClick={() => setTransferChoiceId(null)}
+            >
+              Try again
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="min-h-11 rounded-xl border px-4 py-2.5 text-sm font-semibold"
+            aria-expanded={transferReasoningShown}
+            onClick={() => setTransferReasoningShown((current) => !current)}
+          >
+            {transferReasoningShown ? 'Hide the reasoning' : 'Show the reasoning'}
+          </button>
+        </div>
+        {transferReasoningShown ? (
+          <ul
+            className="grid gap-2 rounded-xl border p-3 text-sm leading-6"
+            data-transfer-reasoning
+          >
+            {TRANSFER_OPTIONS.map((option) => (
+              <li key={option.id}>
+                <strong>{option.label}.</strong> {option.feedback}
+              </li>
+            ))}
+          </ul>
+        ) : null}
         <p className="rounded-xl bg-muted p-3 text-xs leading-5">
-          Re-level, run and classify the live fast-flush trace, then restore the response in the
-          pressure-system workspace. The answer choice alone does not complete transfer.
+          The question is optional. What revalidates the line is the work in the pressure-system
+          workspace: re-level, run and classify the live fast-flush trace, then restore the
+          response.
         </p>
         <button
           type="button"
-          disabled={transferComplete || !transferInteractionComplete}
+          disabled={transferComplete || !lineRevalidated}
           className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
           onClick={completeTransfer}
         >
-          Complete transfer and keep the reasoning feedback
+          Confirm the line is revalidated
         </button>
       </div>
     )
@@ -794,14 +706,6 @@ export function HemodynamicCaseActivity({
     .filter((event) => revealedFeedbackIds.includes(event.id))
     .slice(-2)
 
-  const objectives: Record<CriticalCareActivityPhase, string> = {
-    recognize: 'Read the patient and the available signals',
-    predict: 'Interpret the findings and choose a priority',
-    act: 'Choose an action and check the measurements',
-    observe: 'Compare the response and reassess',
-    explain: 'Review your reasoning and the modeled response',
-    transfer: 'Revalidate the changed signal',
-  }
   const feedback = (
     <>
       {inlineFeedbackEvents.map((event) => (
@@ -827,7 +731,7 @@ export function HemodynamicCaseActivity({
     <section className={flowStyles.caseTask} aria-label="Current case task">
       <h2>{objectives[phase]}</h2>
       {taskControls}
-      {hintVisible && mode === 'practice' ? <p>{definition.guidedPrompt}</p> : null}
+      {hintVisible ? <p data-case-hint>{definition.guidedPrompt}</p> : null}
       {feedback}
     </section>
   )
@@ -845,39 +749,33 @@ export function HemodynamicCaseActivity({
         bandwidthClass="standard"
         estimatedSizeLabel="Under 2 MB after shared application assets"
         lightweightAlternativeHref={`/icu-hemodynamics/${section}`}
-        onSaveForLater={saveAndExit}
+        onSaveForLater={exitCase}
         theme="dark"
       >
         <div
           className={flowStyles.caseFlow}
           data-case-flow
           data-phase={phase}
-          data-feedback-mode={
-            mode === 'challenge' && !challengeFeedbackImmediate ? 'deferred' : 'immediate'
-          }
+          data-feedback-mode={holdFeedback ? 'deferred' : 'immediate'}
         >
           <header>
             <Link href={`/icu-hemodynamics/${section}` as Route}>
-              {mode === 'challenge' ? 'Challenge' : 'Practice'} · <span>{caseId}</span>
+              {mode === 'challenge' ? 'Applied case' : 'Practice'} · <span>{caseId}</span>
             </Link>
             <h1>{definition.title}</h1>
             <div className={flowStyles.caseActions}>
-              <button type="button" onClick={showHint}>
-                Help
-              </button>
               <button
                 type="button"
-                onClick={reset}
-                disabled={state.catheter.balloonInflated || state.catheter.floatBalloonInflated}
+                aria-expanded={hintVisible}
+                onClick={() => setHintVisible((current) => !current)}
               >
+                {hintVisible ? 'Hide help' : 'Help'}
+              </button>
+              <button type="button" onClick={reset} disabled={balloonActive}>
                 Reset case
               </button>
-              <button
-                type="button"
-                onClick={saveAndExit}
-                disabled={state.catheter.balloonInflated || state.catheter.floatBalloonInflated}
-              >
-                Save and exit
+              <button type="button" onClick={exitCase} disabled={balloonActive}>
+                Exit case
               </button>
               <ReferenceDrawer
                 entries={referenceEntries}
@@ -889,19 +787,14 @@ export function HemodynamicCaseActivity({
               />
             </div>
             <details>
-              <summary>Case checkpoints</summary>
+              <summary>Case checkpoints · open any of them</summary>
               <nav aria-label="Case checkpoints">
                 {(['recognize', 'predict', 'act', 'observe', 'explain', 'transfer'] as const).map(
                   (candidate) => (
                     <button
                       type="button"
                       key={candidate}
-                      disabled={
-                        state.catheter.balloonInflated ||
-                        (candidate === 'act' && !state.predictionCommitted) ||
-                        (candidate === 'observe' && !canObserve) ||
-                        ((candidate === 'explain' || candidate === 'transfer') && !state.completed)
-                      }
+                      disabled={balloonActive}
                       aria-current={candidate === phase ? 'step' : undefined}
                       onClick={() => selectPhase(candidate)}
                     >
@@ -931,6 +824,28 @@ export function HemodynamicCaseActivity({
           {phase === 'explain' ? (
             <section className={flowStyles.caseDebrief} aria-label="Case debrief">
               <h2>{objectives.explain}</h2>
+              {taskControls}
+              {!state.completed ? (
+                <p data-debrief-before-reassessment>
+                  The final reassessment has not been recorded. The decision trace shows what you
+                  have done so far, and the case keeps its state if you return to it.
+                </p>
+              ) : null}
+              <details data-expert-reasoning>
+                <summary>Open the authored expert reasoning now</summary>
+                <p>
+                  An authored example of cue use and timing, not the only acceptable path. Opening
+                  it records nothing.
+                </p>
+                <ol>
+                  {teachingArtifact.expertTrace.map((step) => (
+                    <li key={step.id}>
+                      <strong>{step.moment}.</strong> Cue: {step.cue} Read: {step.reasoning}{' '}
+                      Commitment: {step.commitment}
+                    </li>
+                  ))}
+                </ol>
+              </details>
               <ScenarioTeachingDebrief
                 scenarioTitle={definition.title}
                 decisionTrace={decisionTrace}
@@ -951,8 +866,17 @@ export function HemodynamicCaseActivity({
                 })}
                 onContinue={beginTransfer}
               />
-
-              <p>The case was worked through. This does not establish clinical competence.</p>
+              <div className={flowStyles.caseActions}>
+                {!state.completed ? (
+                  <button type="button" onClick={() => checkpoint('act')}>
+                    Return to the case
+                  </button>
+                ) : null}
+                <button type="button" onClick={beginTransfer} disabled={balloonActive}>
+                  Open the signal-transfer variant
+                </button>
+              </div>
+              <p>This debrief does not establish clinical competence.</p>
               <HemodynamicNativeWorkspace
                 state={state}
                 dispatch={dispatch}
@@ -965,7 +889,10 @@ export function HemodynamicCaseActivity({
               {phase === 'observe' && baseline ? (
                 <section className={flowStyles.comparison} aria-label="Retained case observations">
                   <h2>Before action and current response</h2>
-                  <p>Recorded at your interpretation; current values reflect the running model.</p>
+                  <p>
+                    Recorded before your first recorded frame or action; current values reflect the
+                    running model.
+                  </p>
                   <table>
                     <thead>
                       <tr>
@@ -1007,8 +934,8 @@ export function HemodynamicCaseActivity({
           )}
           {message ? <p role="status">{message}</p> : null}
           {transferComplete ? (
-            <p role="status">
-              Case worked through. Your history has been retained.{' '}
+            <p role="status" data-transfer-complete>
+              Transfer line revalidated in this visit. Nothing about the run is saved.{' '}
               <Link
                 href={
                   nextLearn

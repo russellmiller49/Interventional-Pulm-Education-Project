@@ -12,7 +12,11 @@ import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
 import { icuHemodynamicsNavBase } from '@/features/learning-module/moduleRoutes'
 import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
-import { NowCard, type NowCardModel } from '@/features/learning-module/stage/NowCard'
+import {
+  NowCard,
+  type NowCardAction,
+  type NowCardModel,
+} from '@/features/learning-module/stage/NowCard'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { SectionsDrawer } from '@/features/learning-module/stage/SectionsDrawer'
 import { StageSourcesFooter } from '@/features/learning-module/stage/StageSourcesFooter'
@@ -36,11 +40,10 @@ import { hemodynamicsPracticePairing } from '../../content/sectionSpecs'
 import { hemodynamicsStageLesson, type HemodynamicsStageStep } from '../../content/stageLessons'
 import { hemodynamicsStageSources } from '../../content/stageSources'
 import {
-  readLearnRecord,
-  withSectionCompleted,
+  updateSelfPacedRecord,
+  withSectionReviewed,
   withSectionVisited,
-  writeLearnRecord,
-} from '../../engine/learnProgress'
+} from '../../engine/selfPacedProgress'
 import {
   PA_RETURN_CHECK,
   WAVEFORM_RECOGNITION_CHECK,
@@ -50,7 +53,6 @@ import {
   stageWatchValue,
   type StageWatch,
 } from '../../engine/stageRuntime'
-import { derivedHemodynamicsSectionCompletion } from '../../engine/derivedEvaluation'
 import type { CatheterPosition, HemodynamicSimulationState } from '../../engine/types'
 import { CARDIAC_OUTPUT_PROVENANCE_CHOICES } from '../CardiacOutputMethodModel'
 import { CardiacOutputDisagreementLab } from '../CardiacOutputDisagreementLab'
@@ -65,6 +67,8 @@ import {
   positionWords,
   type CatheterMapAnswer,
 } from '../catheter-map/CatheterMap'
+import { useHemodynamicsSelfPacedRecord } from '../useHemodynamicsSelfPacedRecord'
+import { HemodynamicsExplanation, HemodynamicsQuestionBlock } from './HemodynamicsQuestion'
 import { HemodynamicsSimulatorPane } from './HemodynamicsSimulatorPane'
 import { HemodynamicsSourceList } from './HemodynamicsSourceList'
 import { HemodynamicsStoryProblems } from './HemodynamicsStoryProblems'
@@ -77,7 +81,9 @@ import { WaveformAtlasFigure } from '../WaveformAtlasFigure'
 import {
   deriveStageProgress,
   emptyCommitments,
-  stepWorkDone,
+  entryStateFor,
+  simulationWorkPerformed,
+  stepAnswered,
   WEDGE_PLAUSIBILITY_KEY,
   WEDGE_RETURN_KEY,
   type StageCommitments,
@@ -85,7 +91,7 @@ import {
 import { useHemodynamicsStageSession } from './useHemodynamicsStageSession'
 import styles from './hemodynamics-stage.module.css'
 import flowStyles from './hemodynamics-flow.module.css'
-import { HemodynamicsTaskDrafts, useHemodynamicsTaskDraft } from './HemodynamicsTaskDrafts'
+import { HemodynamicsTaskDrafts } from './HemodynamicsTaskDrafts'
 import { FlowPrerequisite, flowReadingParts, flowReadingTitle } from './FlowPrerequisite'
 import { hemodynamicsTaskPresentation } from '../../content/taskPresentation'
 
@@ -93,11 +99,17 @@ import { hemodynamicsTaskPresentation } from '../../content/taskPresentation'
  * One section of the hemodynamics pathway on the lesson stage.
  *
  * The engine is the authority on the hands-on work: a step's goals are predicates over its state.
- * The host owns the commitments — which choice was committed, which set was sorted, which stop of
- * the walk is current — and the view around them: the step the learner is looking at when it is
- * not the live one, the choice not yet committed, whether help is open, and the Now card that
- * makes every step one thing. Nothing about a commitment is persisted; a reload starts the
- * section at its first step, and the only thing written is the completion record.
+ * The host owns what the learner answered and where they are — the choices they checked, the
+ * explanations they opened, the step they are looking at — and the Now card that makes every step
+ * one thing. Nothing about an answer is persisted; a reload starts the section at its first step,
+ * and the only thing written is the self-paced record (sections opened, sections marked reviewed).
+ *
+ * Self-paced (HD-01): every step can be reached and left without an answer, a correct answer or its
+ * simulated actions. Questions are optional, with a hint and an explanation that opens before any
+ * answer; Try again clears an answer. Moving past a step never performs it — only goals the learner
+ * met on the simulator count, and a skipped step takes no before/after snapshot. What stays enforced
+ * is the simulation's own safety: while the balloon is up the learner cannot leave the step, go back,
+ * restart or change sections until it is down.
  */
 export function HemodynamicsStageHost({
   sectionId,
@@ -177,6 +189,22 @@ function walkPositionWords(index: number, total: number): string {
   return `${position} of ${count} stops in this walk.`
 }
 
+function withoutKey<T>(record: Readonly<Record<string, T>>, key: string): Record<string, T> {
+  const next = { ...record }
+  delete next[key]
+  return next
+}
+
+function toggled(list: readonly string[], key: string): readonly string[] {
+  return list.includes(key) ? list.filter((entry) => entry !== key) : [...list, key]
+}
+
+function snapshotRound(step: HemodynamicsStageStep): number | null {
+  if (step.interaction.kind === 'simulator-task') return step.interaction.round
+  if (step.interaction.kind === 'observe') return 0
+  return null
+}
+
 function HemodynamicsStageSession({
   sectionId,
   locale,
@@ -192,12 +220,15 @@ function HemodynamicsStageSession({
   const nextSection = nextPathwaySection(hemodynamicsPathway, sectionId)
   const pairing = hemodynamicsPracticePairing(sectionId)
   const stageSources = useMemo(() => hemodynamicsStageSources(lesson.sectionId), [lesson.sectionId])
+  const { record } = useHemodynamicsSelfPacedRecord()
 
   /* ---------------------------------------------------------------- *
-   * Commitments and view state
+   * Answers, movement and view state
    * ---------------------------------------------------------------- */
   const [commitments, setCommitments] = useState<StageCommitments>(emptyCommitments)
   const [pendingChoice, setPendingChoice] = useState<Record<string, string>>({})
+  const [hintsOpen, setHintsOpen] = useState<readonly string[]>([])
+  const [explanationsOpen, setExplanationsOpen] = useState<readonly string[]>([])
   const [sortDraft, setSortDraft] = useState<Record<string, string>>({})
   const [walkStopIndex, setWalkStopIndex] = useState(0)
   const [viewIndex, setViewIndex] = useState<number | null>(null)
@@ -209,19 +240,21 @@ function HemodynamicsStageSession({
   const [recognitionRecord, setRecognitionRecord] = useState(emptyRecognitionRecord)
   const [confirmedPlaces, setConfirmedPlaces] = useState<Set<string>>(() => new Set())
   const [placeNote, setPlaceNote] = useState<string | null>(null)
+  // In-session feedback state for the derived-hemodynamics drills. Nothing here gates a step.
+  const [derivedSeparated, setDerivedSeparated] = useState(false)
+  const [derivedDisagreementPreserved, setDerivedDisagreementPreserved] = useState(false)
+  const [derivedThresholdResolved, setDerivedThresholdResolved] = useState(false)
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const nowFocusRef = useRef<HTMLDivElement>(null)
   const focusedTask = useRef<string | null>(null)
 
-  const progress = deriveStageProgress(lesson, state, commitments)
+  const progress = deriveStageProgress(lesson, commitments)
   const liveIndex = progress.liveIndex
-  const heldIndex = Math.min(liveIndex, commitments.confirmed + 1)
-  const activeIndex = Math.max(0, Math.min(viewIndex ?? heldIndex, lesson.steps.length - 1))
+  const activeIndex = Math.max(0, Math.min(viewIndex ?? liveIndex, lesson.steps.length - 1))
   const activeStep = lesson.steps[activeIndex]
-  const lookingBack = viewIndex !== null && viewIndex < heldIndex
+  const lookingBack = viewIndex !== null && viewIndex < liveIndex
   const isLastStep = activeIndex === lesson.steps.length - 1
   const performedIds = progress.performedIds
-  const predictionCommitted = progress.predictionCommitted
   const finished = commitments.finished
   const interaction = activeStep.interaction
   const presentation = hemodynamicsTaskPresentation(lesson.sectionId, activeStep)
@@ -231,9 +264,17 @@ function HemodynamicsStageSession({
   const readingIndex = readingPositions[activeStep.id] ?? 0
   const readingPart = lookingBack ? undefined : readingParts[readingIndex]
   const [taskBaselines, setTaskBaselines] = useState<Record<string, HemodynamicSimulationState>>({})
-  const workDone = stepWorkDone(activeStep, activeIndex, state, commitments)
+  const performedNow = simulationWorkPerformed(
+    activeStep,
+    state,
+    commitments,
+    taskBaselines[activeStep.id],
+  )
+  const reviewed = record.reviewedSectionIds.includes(lesson.sectionId)
 
-  const analytics = useCriticalCareActivityAnalytics({
+  // Lifecycle analytics keep their automatic open/visible/phase events. HD-01 removed every call that
+  // reported an answer, a hint, a completion or a mastery; nothing here sends a learner's responses.
+  useCriticalCareActivityAnalytics({
     moduleId: 'icu-hemodynamics',
     activityId: lesson.lifecycleActivityId,
     mode: 'guided',
@@ -260,95 +301,139 @@ function HemodynamicsStageSession({
   }, [activeStep.phase, lesson.sectionId])
 
   useEffect(() => {
-    writeLearnRecord(withSectionVisited(readLearnRecord(), lesson.sectionId))
+    updateSelfPacedRecord((current) => withSectionVisited(current, lesson.sectionId))
   }, [lesson.sectionId])
 
-  const completionRecorded = useRef(false)
-  useEffect(() => {
-    if (!finished || completionRecorded.current) return
-    completionRecorded.current = true
-    writeLearnRecord(withSectionCompleted(readLearnRecord(), lesson.sectionId))
-    analytics.recordActivityCompleted()
-  }, [analytics, finished, lesson.sectionId])
+  /* ---------------------------------------------------------------- *
+   * Questions
+   * ---------------------------------------------------------------- */
+  const hintFor = (step: HemodynamicsStageStep) =>
+    `One idea from this section: ${lesson.spec.newConcept}${step.rationale ? ` ${step.rationale}` : ''}`
+
+  function checkChoice(key: string) {
+    const choiceId = pendingChoice[key]
+    if (!choiceId) return
+    setCommitments((current) => ({
+      ...current,
+      choices: { ...current.choices, [key]: choiceId },
+    }))
+  }
+
+  function tryAgain(key: string) {
+    setCommitments((current) => ({ ...current, choices: withoutKey(current.choices, key) }))
+    setPendingChoice((current) => withoutKey(current, key))
+  }
+
+  function toggleExplanation(key: string) {
+    setExplanationsOpen((current) => toggled(current, key))
+    setCommitments((current) =>
+      current.explanationsShown.includes(key)
+        ? current
+        : { ...current, explanationsShown: [...current.explanationsShown, key] },
+    )
+  }
+
+  function questionProps(key: string, step: HemodynamicsStageStep) {
+    return {
+      name: `hd-question-${key}`,
+      selectedId: pendingChoice[key] ?? null,
+      onSelect: (choiceId: string) =>
+        setPendingChoice((current) => ({ ...current, [key]: choiceId })),
+      checkedId: commitments.choices[key],
+      onCheck: () => checkChoice(key),
+      onTryAgain: () => tryAgain(key),
+      explanationOpen: explanationsOpen.includes(key),
+      onToggleExplanation: () => toggleExplanation(key),
+      hintOpen: hintsOpen.includes(key),
+      onToggleHint: () => setHintsOpen((current) => toggled(current, key)),
+      hint: hintFor(step),
+    }
+  }
+
+  function commitSort() {
+    if (interaction.kind !== 'sort') return
+    const placed = Object.fromEntries(
+      interaction.sort.rows.flatMap((row) =>
+        sortDraft[row.id] ? [[row.id, sortDraft[row.id]]] : [],
+      ),
+    )
+    if (Object.keys(placed).length === 0) return
+    setCommitments((current) => ({ ...current, sort: placed }))
+  }
 
   /* ---------------------------------------------------------------- *
-   * Progression
+   * Movement
    * ---------------------------------------------------------------- */
-  const enterForward = useCallback(
-    (index: number) => {
+  const openStep = useCallback(
+    (index: number, entry: HemodynamicSimulationState | null, mode: 'forward' | 'reenter') => {
       const step = lesson.steps[index]
       if (!step) return
-      const entry = step.entryState ? step.entryState() : state
-      if (step.entryState) load(entry)
-      setTaskBaselines((current) => (current[step.id] ? current : { ...current, [step.id]: entry }))
-      if (step.interaction.kind === 'simulator-task' || step.interaction.kind === 'observe') {
-        setSnapshots((current) =>
-          current[
-            `before:${step.interaction.kind === 'simulator-task' ? step.interaction.round : 0}`
-          ]
-            ? current
-            : {
-                ...current,
-                [`before:${step.interaction.kind === 'simulator-task' ? step.interaction.round : 0}`]:
-                  entry,
-              },
-        )
+      if (entry) load(entry)
+      const opened = entry ?? state
+      setTaskBaselines((current) =>
+        mode === 'reenter' || !current[step.id] ? { ...current, [step.id]: opened } : current,
+      )
+      const round = snapshotRound(step)
+      if (round !== null) {
+        setSnapshots((current) => {
+          const beforeKey = `before:${round}`
+          if (mode === 'forward' && current[beforeKey]) return current
+          const next = { ...current, [beforeKey]: opened }
+          if (mode === 'reenter') delete next[`after:${round}`]
+          return next
+        })
       }
     },
     [lesson.steps, load, state],
   )
 
-  const confirmThrough = useCallback(
+  /** Move past a step — performing it only if the learner's own simulation work on it is done. */
+  const continuePast = useCallback(
     (index: number) => {
       if (state.catheter.balloonInflated) return
+      const step = lesson.steps[index]
+      if (!step) return
+      const performed = simulationWorkPerformed(step, state, commitments, taskBaselines[step.id])
       setCommitments((current) => ({
         ...current,
         confirmed: Math.max(current.confirmed, index),
-        performedIds: [
-          ...current.performedIds,
-          ...lesson.steps
-            .slice(0, index + 1)
-            .map((step) => step.id)
-            .filter((id) => !current.performedIds.includes(id)),
-        ],
+        performedIds:
+          performed && !current.performedIds.includes(step.id)
+            ? [...current.performedIds, step.id]
+            : current.performedIds,
       }))
       setViewIndex(null)
       setSpotlight(null)
       setPlaceNote(null)
-      const step = lesson.steps[index]
-      if (
-        step &&
-        (step.interaction.kind === 'simulator-task' || step.interaction.kind === 'observe')
-      ) {
-        const round = step.interaction.kind === 'simulator-task' ? step.interaction.round : 0
+      const round = snapshotRound(step)
+      // A skipped step takes no "after" snapshot, so nothing reads an untouched state as a result.
+      if (performed && round !== null) {
         setSnapshots((current) => ({ ...current, [`after:${round}`]: state }))
       }
-      enterForward(index + 1)
+      const next = index + 1
+      if (next < lesson.steps.length) {
+        openStep(next, lesson.steps[next].entryState?.() ?? null, 'forward')
+      }
     },
-    [enterForward, lesson.steps, state],
+    [commitments, lesson.steps, openStep, state, taskBaselines],
   )
 
-  function commitChoice(step: HemodynamicsStageStep, key = step.id) {
-    const choiceId = pendingChoice[key]
-    if (!choiceId) return
-    setCommitments((current) => ({ ...current, choices: { ...current.choices, [key]: choiceId } }))
-    if (step.interaction.kind === 'prediction') {
-      analytics.recordPredictionSubmitted()
-      if (step.interaction.round === 1) analytics.recordTransferCompleted()
-    }
+  /** Open any step live: later ones are reached without doing the steps between; earlier ones restart. */
+  function moveTo(target: number) {
+    if (balloonActive) return
+    const index = Math.max(0, Math.min(target, lesson.steps.length - 1))
+    if (index === liveIndex && viewIndex === null) return
+    const entry = entryStateFor(lesson, index, liveIndex)
+    setCommitments((current) => ({ ...current, confirmed: index - 1 }))
     setViewIndex(null)
-  }
-
-  function commitSort(step: HemodynamicsStageStep) {
-    if (step.interaction.kind !== 'sort') return
-    if (step.interaction.sort.rows.some((row) => !sortDraft[row.id])) return
-    setCommitments((current) => ({ ...current, sort: { ...sortDraft } }))
+    setSpotlight(null)
+    setPlaceNote(null)
+    openStep(index, entry, index > liveIndex ? 'forward' : 'reenter')
   }
 
   function goBack() {
-    const target = activeIndex - 1
-    if (balloonActive || target < 0 || !performedIds.has(lesson.steps[target].id)) return
-    setViewIndex(target)
+    if (balloonActive || activeIndex <= 0) return
+    setViewIndex(activeIndex - 1)
   }
 
   function returnToLive() {
@@ -366,19 +451,23 @@ function HemodynamicsStageSession({
 
   function finish() {
     if (state.catheter.balloonInflated) return
+    const performed = simulationWorkPerformed(
+      activeStep,
+      state,
+      commitments,
+      taskBaselines[activeStep.id],
+    )
     setCommitments((current) => ({
       ...current,
       confirmed: Math.max(current.confirmed, activeIndex),
-      performedIds: [
-        ...current.performedIds,
-        ...lesson.steps
-          .slice(0, activeIndex + 1)
-          .map((step) => step.id)
-          .filter((id) => !current.performedIds.includes(id)),
-      ],
+      performedIds:
+        performed && !current.performedIds.includes(activeStep.id)
+          ? [...current.performedIds, activeStep.id]
+          : current.performedIds,
       finished: true,
     }))
-    analytics.recordDebriefViewed()
+    setViewIndex(null)
+    updateSelfPacedRecord((current) => withSectionReviewed(current, lesson.sectionId, true))
   }
 
   /* ---------------------------------------------------------------- *
@@ -407,24 +496,29 @@ function HemodynamicsStageSession({
 
   const locationItem =
     interaction.kind === 'prediction' && interaction.mapTargets ? interaction : null
-  const locationCommitted = locationItem ? commitments.choices[activeStep.id] !== undefined : false
+  const locationAnswered = locationItem ? commitments.choices[activeStep.id] !== undefined : false
+  const locationShown = locationItem ? commitments.explanationsShown.includes(activeStep.id) : false
+  const locationRevealed = locationAnswered || locationShown
+
+  const keyedStops = (): readonly RouteStopId[] => {
+    if (!locationItem) return []
+    const keyed = locationItem.mapTargets!.find(
+      (target) => target.choiceId === locationItem.item.correctChoiceIds[0],
+    )
+    return keyed && !isOffMapTarget(keyed) ? [keyed.stopId] : []
+  }
 
   const stops: readonly RouteStopId[] = walkStop
     ? [walkStop]
     : locationItem
-      ? locationCommitted
-        ? (() => {
-            const keyed = locationItem.mapTargets!.find(
-              (target) => target.choiceId === locationItem.item.correctChoiceIds[0],
-            )
-            return keyed && !isOffMapTarget(keyed) ? [keyed.stopId] : []
-          })()
+      ? locationRevealed
+        ? keyedStops()
         : []
       : activeStep.stops
 
   const mapCaption = walkStop
     ? `You are here: ${routeStop(walkStop).title.toLowerCase()}. ${walkPositionWords(walkStopIndex, interaction.kind === 'walk' ? interaction.stops.length : 0)}`
-    : locationItem && !locationCommitted
+    : locationItem && !locationRevealed
       ? 'Where is the tip? Choose a place below.'
       : interaction.kind === 'simulator-task' &&
           lesson.sectionId === 'catheter-advancement' &&
@@ -433,7 +527,7 @@ function HemodynamicsStageSession({
         : catheterMapCaption(stops)
 
   const tipVisible =
-    (activeStep.chamberLabel === 'shown' || locationCommitted) &&
+    (activeStep.chamberLabel === 'shown' || locationRevealed) &&
     activeStep.surface !== 'recognition'
 
   const confirmPlaceOnMap = (choiceId: string) => {
@@ -465,13 +559,13 @@ function HemodynamicsStageSession({
             isOffMapTarget(target) ? null : target.stopId,
           ]),
         ),
-        selectedChoiceId: locationCommitted
+        selectedChoiceId: locationAnswered
           ? commitments.choices[activeStep.id]
           : (pendingChoice[activeStep.id] ?? null),
         onSelect: (choiceId) =>
           setPendingChoice((current) => ({ ...current, [activeStep.id]: choiceId })),
-        disabled: locationCommitted || lookingBack,
-        revealed: locationCommitted
+        disabled: locationAnswered,
+        revealed: locationAnswered
           ? { keyedChoiceId: locationItem.item.correctChoiceIds[0] }
           : undefined,
       }
@@ -487,7 +581,7 @@ function HemodynamicsStageSession({
           ),
           selectedChoiceId: null,
           onSelect: confirmPlaceOnMap,
-          disabled: workDone,
+          disabled: performedNow,
           confirmed: confirmedPlaces,
           hint: 'After each move, wait for the tracing to settle, then confirm the place it says. A place is confirmed only when the tracing matches it.',
         }
@@ -563,22 +657,29 @@ function HemodynamicsStageSession({
    * The Now card
    * ---------------------------------------------------------------- */
   const stepPosition = `Task ${activeStep.ordinal} of ${lesson.steps.length}`
-  const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
-  const canGoBack =
-    previousStep !== undefined && performedIds.has(previousStep.id) && !finished && !balloonActive
+  const canGoBack = activeIndex > 0 && !balloonActive
   const showWhereAction =
-    firstUnmetKey && !workDone && !lookingBack
+    firstUnmetKey && !performedNow && !lookingBack
       ? {
           label: spotlight?.stepId === activeStep.id ? 'Highlight it again' : 'Show me where',
           onActivate: showWhere,
           icon: <LocateFixed aria-hidden="true" />,
         }
       : undefined
-  const continueAction = {
-    label: 'Continue',
-    onActivate: () => confirmThrough(activeIndex),
-    icon: <ArrowRight aria-hidden="true" />,
-  }
+  const moveOn = (label: string): NowCardAction =>
+    isLastStep
+      ? {
+          label: interaction.kind === 'explain' ? activeStep.actionLabel : 'Finish the section',
+          onActivate: finish,
+          icon: <ArrowRight aria-hidden="true" />,
+        }
+      : {
+          label,
+          onActivate: () => continuePast(activeIndex),
+          icon: <ArrowRight aria-hidden="true" />,
+        }
+  const optionalTaskStatus =
+    'These actions are optional. Continuing without them records nothing about them.'
 
   const nowModel: NowCardModel = (() => {
     const base: NowCardModel = {
@@ -586,7 +687,7 @@ function HemodynamicsStageSession({
       heading: activeStep.title,
       body: activeStep.instruction,
       why: activeStep.rationale,
-      ...(canGoBack && previousStep
+      ...(canGoBack
         ? {
             back: {
               label: 'Back to previous task',
@@ -611,29 +712,39 @@ function HemodynamicsStageSession({
         },
       }
     if (lookingBack) {
+      const canRedo =
+        (interaction.kind === 'simulator-task' ||
+          interaction.kind === 'observe' ||
+          interaction.kind === 'walk') &&
+        !performedIds.has(activeStep.id)
       return {
         ...base,
         status:
-          'Reviewing an earlier step. The monitor shows the current live state, not a historical snapshot. Controls are paused; your recorded work is retained.',
+          'Reviewing an earlier step. The monitor shows the current live state, not a historical snapshot. Controls are paused; answers you checked in this visit are kept.',
         primary: {
-          label: `Return to step ${heldIndex + 1}`,
+          label: `Return to step ${liveIndex + 1}`,
           onActivate: returnToLive,
           icon: <ArrowRight aria-hidden="true" />,
         },
+        ...(canRedo
+          ? { secondary: { label: 'Do this task now', onActivate: () => moveTo(activeIndex) } }
+          : {}),
       }
     }
     if (finished && isLastStep) {
-      return { ...base, status: 'Done. This section has been worked through.' }
+      return {
+        ...base,
+        status: reviewed
+          ? 'Section finished and marked reviewed on this device.'
+          : 'Section finished.',
+      }
     }
     switch (interaction.kind) {
       case 'read':
-        return {
-          ...base,
-          primary: { label: activeStep.actionLabel, onActivate: () => confirmThrough(activeIndex) },
-        }
+        return { ...base, primary: moveOn(activeStep.actionLabel) }
       case 'walk': {
         if (commitments.walkDone) {
-          return { ...base, status: 'Every stop visited.', primary: continueAction }
+          return { ...base, status: 'Every stop visited.', primary: moveOn('Continue') }
         }
         const last = walkStopIndex >= interaction.stops.length - 1
         return {
@@ -658,120 +769,79 @@ function HemodynamicsStageSession({
         }
       }
       case 'prediction': {
-        const committed = commitments.choices[activeStep.id] !== undefined
-        if (committed) {
-          return {
-            ...base,
-            primary: isLastStep
-              ? {
-                  label: 'Finish the section',
-                  onActivate: finish,
-                  icon: <ArrowRight aria-hidden="true" />,
-                }
-              : continueAction,
-          }
+        if (commitments.choices[activeStep.id] !== undefined) {
+          return { ...base, primary: moveOn('Continue') }
         }
         return {
           ...base,
           status: activeStep.questionTraceId
-            ? 'The question is the authored tracing and vignette on this card. Labels and feedback appear after submission.'
-            : interaction.round === 0
-              ? 'Select an interpretation from the evidence in this task. Feedback follows your answer.'
-              : undefined,
-          primary: {
-            label: activeStep.actionLabel,
-            onActivate: () => commitChoice(activeStep),
-            disabled: !pendingChoice[activeStep.id],
-            disabledReason: interaction.mapTargets
-              ? 'Choose a place on the catheter map to enable this.'
-              : 'Choose one option to enable this.',
-          },
+            ? 'The question is the authored tracing and vignette on this card. Its labels appear when you check an answer or open the explanation.'
+            : 'Optional question. Check an answer, open the explanation, or continue without answering.',
+          primary: moveOn('Continue without answering'),
         }
       }
-      case 'sort': {
-        if (commitments.sort) return { ...base, primary: continueAction }
-        const remaining = interaction.sort.rows.filter((row) => !sortDraft[row.id]).length
-        return {
-          ...base,
-          primary: {
-            label: activeStep.actionLabel,
-            onActivate: () => commitSort(activeStep),
-            disabled: remaining > 0,
-            disabledReason: `${remaining} of ${interaction.sort.rows.length} still to place.`,
-          },
-        }
-      }
-      case 'simulator-task':
-        if (workDone) {
-          return {
-            ...base,
-            status:
-              activeStep.surface === 'recognition'
-                ? 'Five correct responses recorded in total.'
-                : 'Done. The required actions and observations are recorded.',
-            primary: continueAction,
-          }
-        }
-        return {
-          ...base,
-          status:
-            activeStep.surface === 'recognition'
-              ? 'Answer the question tracing below. Five correct responses in total complete this practice set.'
-              : 'Complete the observation and actions below. This step is done when every item below is met.',
-          secondary: showWhereAction,
-        }
-      case 'observe':
-        if (workDone) {
-          return {
-            ...base,
-            status: 'Done.',
-            primary: { ...continueAction, label: activeStep.actionLabel },
-          }
-        }
-        return {
-          ...base,
-          status:
-            goals.length > 0 && !goalsMetNow.every(Boolean)
-              ? 'Complete the observation and actions below.'
-              : 'Commit to each question below.',
-          secondary: showWhereAction,
-        }
-      case 'explain':
-        return {
-          ...base,
-          primary: isLastStep
-            ? {
-                label: activeStep.actionLabel,
-                onActivate: finish,
-                icon: <ArrowRight aria-hidden="true" />,
-              }
-            : {
-                label: activeStep.actionLabel,
-                onActivate: () => confirmThrough(activeIndex),
-                icon: <ArrowRight aria-hidden="true" />,
-              },
-        }
-      case 'component-identification':
-        return workDone
-          ? {
-              ...base,
-              status:
-                'All five components identified; first responses and assisted retries are recorded separately.',
-              primary: continueAction,
-            }
+      case 'sort':
+        return commitments.sort || commitments.sortShown
+          ? { ...base, primary: moveOn('Continue') }
           : {
               ...base,
               status:
-                'Select numbered regions in Identify the atrial component. Each component needs a recorded selection.',
+                'Optional sort. Place any rows and check them, open the worked sort, or continue without sorting.',
+              primary: moveOn('Continue without sorting'),
             }
+      case 'simulator-task':
+        if (activeStep.surface === 'recognition') {
+          return {
+            ...base,
+            status: 'Optional practice. Name tracings for as long as it is useful, then continue.',
+            primary: moveOn('Continue'),
+          }
+        }
+        return performedNow
+          ? {
+              ...base,
+              status: 'Done. The actions on this step are recorded for this visit.',
+              primary: moveOn('Continue'),
+            }
+          : {
+              ...base,
+              status: optionalTaskStatus,
+              primary: moveOn('Continue without these actions'),
+              secondary: showWhereAction,
+            }
+      case 'observe':
+        if (goals.length === 0) {
+          return {
+            ...base,
+            status: 'Read the observation below. Any question on it is optional.',
+            primary: moveOn(activeStep.actionLabel),
+          }
+        }
+        return performedNow
+          ? { ...base, status: 'Done.', primary: moveOn(activeStep.actionLabel) }
+          : {
+              ...base,
+              status: `${optionalTaskStatus} The questions below are optional too.`,
+              primary: moveOn('Continue without these actions'),
+              secondary: showWhereAction,
+            }
+      case 'explain':
+        return { ...base, primary: moveOn(activeStep.actionLabel) }
+      case 'component-identification':
+        return {
+          ...base,
+          status: 'Optional practice. Check a component, show it, or move on at any point.',
+          primary: moveOn('Continue'),
+        }
       case 'provenance-drill':
       case 'derived-workbench':
       case 'derived-transfer':
       case 'disagreement':
-        if (workDone) return { ...base, status: 'Done.', primary: continueAction }
         return {
           ...base,
-          status: 'Work through the activity below. Its recorded evidence enables Continue.',
+          status:
+            'Optional practice. Check your reasoning or open it directly, then continue when ready.',
+          primary: moveOn('Continue'),
         }
       default:
         return base
@@ -785,7 +855,9 @@ function HemodynamicsStageSession({
     ? waveformAtlasById.get(activeStep.questionTraceId)
     : undefined
   const traceRevealed =
-    interaction.kind !== 'prediction' || Boolean(commitments.choices[activeStep.id])
+    interaction.kind !== 'prediction' ||
+    commitments.choices[activeStep.id] !== undefined ||
+    commitments.explanationsShown.includes(activeStep.id)
   const questionFigure = traceEntry ? (
     <WaveformAtlasFigure
       entry={
@@ -804,32 +876,43 @@ function HemodynamicsStageSession({
       figureDescription={
         traceRevealed
           ? undefined
-          : `${unidentifiedTraceDescription(traceEntry)} Axis 0–${traceEntry.scaleMaxMmHg} mmHg. Mechanism labels are withheld.`
+          : `${unidentifiedTraceDescription(traceEntry)} Axis 0–${traceEntry.scaleMaxMmHg} mmHg. Mechanism labels appear when you check an answer or open the explanation.`
       }
     />
   ) : null
+
+  const predictionBody = (step: HemodynamicsStageStep) => {
+    if (step.interaction.kind !== 'prediction') return null
+    const item = step.interaction.item
+    const chosen = item.choices.find((choice) => choice.id === pendingChoice[step.id])
+    return (
+      <HemodynamicsQuestionBlock
+        item={item}
+        {...questionProps(step.id, step)}
+        frames={verdictFrames(item)}
+        choicesElsewhere={
+          step.interaction.mapTargets ? (
+            <p className={stageStyles.taskInstruction} data-map-answer-note>
+              Choose a place on the catheter map above.
+              {chosen ? ` Chosen: ${chosen.label}.` : ''}
+            </p>
+          ) : undefined
+        }
+      />
+    )
+  }
+
   const nowBody: ReactNode = (() => {
     if (lookingBack) {
-      /*
-       * Looking back at a committed prediction shows the verdict again — the rationale, the
-       * distinction and the other answers — rather than a one-line "You chose". The reasoning is
-       * what a learner goes back for.
-       */
-      const committedId =
-        interaction.kind === 'prediction' ? commitments.choices[activeStep.id] : undefined
-      if (interaction.kind === 'prediction' && committedId) {
-        return (
-          <AnswerVerdict
-            item={interaction.item}
-            choiceId={committedId}
-            outcome="stated"
-            timing="immediate-after-commit"
-            theme="dark"
-            frames={verdictFrames(interaction.item)}
-          />
-        )
-      }
-      return <StepRecap step={activeStep} lesson={lesson} commitments={commitments} state={state} />
+      if (interaction.kind === 'prediction') return predictionBody(activeStep)
+      return (
+        <StepRecap
+          step={activeStep}
+          commitments={commitments}
+          performed={performedIds.has(activeStep.id)}
+          state={state}
+        />
+      )
     }
     switch (interaction.kind) {
       case 'walk': {
@@ -874,115 +957,93 @@ function HemodynamicsStageSession({
                 <li key={line}>{line}</li>
               ))}
             </ul>
+            <button
+              type="button"
+              className={shellStyles.nowSecondary}
+              data-skip-task
+              disabled={balloonActive}
+              onClick={() => continuePast(activeIndex)}
+            >
+              Continue without finishing the walk
+            </button>
           </section>
         )
       }
-      case 'prediction': {
-        const committedId = commitments.choices[activeStep.id]
-        if (committedId) {
-          return (
-            <AnswerVerdict
-              item={interaction.item}
-              choiceId={committedId}
-              outcome="stated"
-              timing="immediate-after-commit"
-              theme="dark"
-              frames={verdictFrames(interaction.item)}
-            />
-          )
-        }
-        if (interaction.mapTargets) {
-          const chosen = interaction.item.choices.find((c) => c.id === pendingChoice[activeStep.id])
-          return (
-            <p className={stageStyles.taskInstruction} data-map-answer-note>
-              Choose a place on the catheter map above.
-              {chosen ? ` Chosen: ${chosen.label}.` : ''}
-            </p>
-          )
-        }
-        const selected = pendingChoice[activeStep.id] ?? null
+      case 'prediction':
+        return predictionBody(activeStep)
+      case 'derived-workbench':
         return (
-          <fieldset className={stageStyles.choiceList} data-prediction-choices>
-            <legend>{interaction.item.stem}</legend>
-            {orderChoices(interaction.item.id, interaction.item.choices).map((choice) => (
-              <label
-                key={choice.id}
-                className={stageStyles.choice}
-                data-selected={selected === choice.id}
-              >
-                <input
-                  type="radio"
-                  name={`hd-prediction-${activeStep.id}`}
-                  value={choice.id}
-                  checked={selected === choice.id}
-                  onChange={() =>
-                    setPendingChoice((current) => ({ ...current, [activeStep.id]: choice.id }))
-                  }
-                />
-                <span>{choice.label}</span>
-              </label>
-            ))}
-          </fieldset>
-        )
-      }
-      case 'derived-workbench': {
-        const completion = derivedHemodynamicsSectionCompletion({
-          signalValidationChecks: state.signalValidationChecks,
-          measuredCalculatedSeparated: commitments.derivedSeparated,
-          disagreementPreservedWithoutAveraging: commitments.derivedDisagreementPreserved,
-          thresholdContextResolved: commitments.derivedThresholdResolved,
-        })
-        const rows: readonly { readonly label: string; readonly met: boolean }[] = [
-          {
-            label: 'Name every input one calculation depends on',
-            met: completion.dependencyChainValidated,
-          },
-          {
-            label: 'Withhold a value for the input that makes it unreadable',
-            met: completion.withheldForValidity,
-          },
-          {
-            label: 'Keep the values that input does not touch',
-            met: completion.selectiveInvalidationPreserved,
-          },
-          {
-            label: 'Trace a flow-dependent value to the method that produced it',
-            met: completion.flowMethodTraced,
-          },
-          {
-            label: 'Keep a two-method disagreement without averaging it',
-            met: completion.disagreementPreservedWithoutAveraging,
-          },
-          {
-            label: 'Read a boundary inside its context, not as a universal number',
-            met: completion.thresholdContextResolved,
-          },
-        ]
-        return (
-          <ul className={stageStyles.taskList} data-step-goals aria-label="What to do">
-            {rows.map((row) => (
-              <li key={row.label} data-met={row.met}>
-                {row.met ? <Check aria-hidden="true" /> : <Circle aria-hidden="true" />}
-                <span>{row.label}</span>
+          <ul className={stageStyles.taskList} data-step-goals-optional aria-label="Things to try">
+            {[
+              'Name every input one calculation depends on',
+              'Withhold a value for the input that makes it unreadable',
+              'Keep the values that input does not touch',
+              'Trace a flow-dependent value to the method that produced it',
+              'Keep a two-method disagreement without averaging it',
+              'Read a boundary inside its context, not as a universal number',
+            ].map((label) => (
+              <li key={label}>
+                <Circle aria-hidden="true" />
+                <span>{label}</span>
               </li>
             ))}
           </ul>
         )
-      }
-      case 'sort':
+      case 'sort': {
+        const checked = commitments.sort !== null
+        const placed = interaction.sort.rows.filter((row) => sortDraft[row.id]).length
         return (
-          <QuestionSortControl
-            sort={interaction.sort}
-            draft={sortDraft}
-            committed={commitments.sort}
-            onChange={(rowId, originId) =>
-              setSortDraft((current) => ({ ...current, [rowId]: originId }))
-            }
-          />
+          <>
+            <QuestionSortControl
+              sort={interaction.sort}
+              draft={sortDraft}
+              committed={commitments.sort}
+              shown={commitments.sortShown && !checked}
+              onChange={(rowId, originId) =>
+                setSortDraft((current) => ({ ...current, [rowId]: originId }))
+              }
+            />
+            <div className={stageStyles.completionActions} data-question-actions>
+              {checked ? (
+                <button
+                  type="button"
+                  className={shellStyles.nowSecondary}
+                  data-question-try-again
+                  onClick={() => setCommitments((current) => ({ ...current, sort: null }))}
+                >
+                  Try again
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className={shellStyles.nowSecondary}
+                    data-question-check
+                    disabled={placed === 0}
+                    onClick={commitSort}
+                  >
+                    Check placements
+                  </button>
+                  <button
+                    type="button"
+                    className={shellStyles.nowSecondary}
+                    data-question-explanation-toggle
+                    aria-expanded={commitments.sortShown}
+                    onClick={() =>
+                      setCommitments((current) => ({ ...current, sortShown: !current.sortShown }))
+                    }
+                  >
+                    {commitments.sortShown ? 'Hide the worked sort' : 'Show the worked sort'}
+                  </button>
+                </>
+              )}
+            </div>
+          </>
         )
+      }
       case 'simulator-task':
       case 'observe': {
-        const wedgeCommitments = interaction.kind === 'observe' ? interaction.commitments : []
+        const wedgeQuestions = interaction.kind === 'observe' ? interaction.commitments : []
         const provenance = interaction.kind === 'observe' && interaction.provenance
         return (
           <>
@@ -1008,19 +1069,19 @@ function HemodynamicsStageSession({
             {interaction.kind === 'observe' && lesson.runtime.comparison === 'ventricle-artery' ? (
               <VentricleArtery state={state} />
             ) : null}
-            {wedgeCommitments.includes('plausibility') ? (
-              <CommitmentBlock
-                title="Is the stored value plausible?"
-                item={pawpPlausibilityCommitment}
-                stepKey={`${activeStep.id}:${WEDGE_PLAUSIBILITY_KEY}`}
-                pendingChoice={pendingChoice}
-                setPendingChoice={setPendingChoice}
-                committedId={commitments.choices[`${activeStep.id}:${WEDGE_PLAUSIBILITY_KEY}`]}
-                onCommit={() =>
-                  commitChoice(activeStep, `${activeStep.id}:${WEDGE_PLAUSIBILITY_KEY}`)
-                }
-                disabled={lookingBack}
-              />
+            {wedgeQuestions.includes('plausibility') ? (
+              <section
+                className={styles.commitment}
+                data-commitment={`${activeStep.id}:${WEDGE_PLAUSIBILITY_KEY}`}
+                aria-label="Is the stored value plausible?"
+              >
+                <p className={styles.kicker}>Is the stored value plausible?</p>
+                <HemodynamicsQuestionBlock
+                  item={pawpPlausibilityCommitment}
+                  {...questionProps(`${activeStep.id}:${WEDGE_PLAUSIBILITY_KEY}`, activeStep)}
+                  frames={verdictFrames(pawpPlausibilityCommitment)}
+                />
+              </section>
             ) : null}
             {goals.some((goal) => goal.type === 'reassessed') ? (
               <div className={styles.returnCheck} data-reassess>
@@ -1046,46 +1107,32 @@ function HemodynamicsStageSession({
                 onConfirm={() => dispatch({ type: 'VALIDATE_SIGNAL', check: PA_RETURN_CHECK })}
               />
             ) : null}
-            {wedgeCommitments.includes('return') ? (
+            {wedgeQuestions.includes('return') ? (
               <>
-                <div className={styles.returnCheck} data-return-check>
-                  <p>
-                    <strong>Has the pulmonary-artery tracing come back?</strong> Look at the
-                    monitor: the notch, the diastolic run-off, the pulsatility.
-                  </p>
-                  <button
-                    type="button"
-                    className={shellStyles.nowSecondary}
-                    disabled={
-                      state.signalValidationChecks.includes(PA_RETURN_CHECK) ||
-                      state.catheter.position !== 'pa' ||
-                      state.catheter.balloonInflated ||
-                      state.catheter.forcedSafetyRecovery
-                    }
-                    onClick={() => dispatch({ type: 'VALIDATE_SIGNAL', check: PA_RETURN_CHECK })}
-                  >
-                    {state.signalValidationChecks.includes(PA_RETURN_CHECK)
-                      ? 'The artery is back — confirmed'
-                      : 'The artery is back'}
-                  </button>
-                </div>
-                <CommitmentBlock
-                  title="And if it had not come back?"
-                  item={pawpRecoveryCommitment}
-                  stepKey={`${activeStep.id}:${WEDGE_RETURN_KEY}`}
-                  pendingChoice={pendingChoice}
-                  setPendingChoice={setPendingChoice}
-                  committedId={commitments.choices[`${activeStep.id}:${WEDGE_RETURN_KEY}`]}
-                  onCommit={() => commitChoice(activeStep, `${activeStep.id}:${WEDGE_RETURN_KEY}`)}
-                  disabled={lookingBack}
+                <ReturnCheck
+                  state={state}
+                  onConfirm={() => dispatch({ type: 'VALIDATE_SIGNAL', check: PA_RETURN_CHECK })}
                 />
+                <section
+                  className={styles.commitment}
+                  data-commitment={`${activeStep.id}:${WEDGE_RETURN_KEY}`}
+                  aria-label="And if it had not come back?"
+                >
+                  <p className={styles.kicker}>And if it had not come back?</p>
+                  <HemodynamicsQuestionBlock
+                    item={pawpRecoveryCommitment}
+                    {...questionProps(`${activeStep.id}:${WEDGE_RETURN_KEY}`, activeStep)}
+                    frames={verdictFrames(pawpRecoveryCommitment)}
+                  />
+                </section>
               </>
             ) : null}
             {provenance ? (
-              <ProvenanceCommitment
-                resolved={commitments.provenanceResolved}
+              <ProvenanceQuestion
                 onResolved={() =>
-                  setCommitments((current) => ({ ...current, provenanceResolved: true }))
+                  setCommitments((current) =>
+                    current.provenanceResolved ? current : { ...current, provenanceResolved: true },
+                  )
                 }
               />
             ) : null}
@@ -1107,25 +1154,28 @@ function HemodynamicsStageSession({
         return (
           <>
             {/*
-              The prediction's verdict, again, in full.
-
-              Several Explain instructions begin "Read the reasoning" or "Read what changed and
-              why", and this step used to render one line — "Correct. You predicted: …" — with
-              the reasoning two steps back on a card the learner had left. The verdict is the
-              reasoning: the rationale, how to distinguish it, and why the other answers do not
-              fit. It comes first, so the instruction's first sentence is the first thing on the
-              card.
+              The prediction's reasoning, again, in full: the verdict when the learner answered,
+              and the explanation when they moved on without answering. Several Explain
+              instructions begin "Read the reasoning", so the reasoning comes first either way.
             */}
-            {predictionItem && chosenId ? (
-              <div data-explain-recap>
-                <AnswerVerdict
-                  item={predictionItem}
-                  choiceId={chosenId}
-                  outcome="stated"
-                  timing="immediate-after-commit"
-                  theme="dark"
-                  frames={verdictFrames(predictionItem)}
-                />
+            {predictionItem ? (
+              <div data-explain-recap={chosenId ? 'answered' : 'not-answered'}>
+                {chosenId ? (
+                  <AnswerVerdict
+                    item={predictionItem}
+                    choiceId={chosenId}
+                    outcome="stated"
+                    timing="immediate-after-commit"
+                    theme="dark"
+                    frames={verdictFrames(predictionItem)}
+                  />
+                ) : (
+                  <HemodynamicsExplanation
+                    item={predictionItem}
+                    heading="The reasoning"
+                    note="The question earlier in this section was not answered. Here is its reasoning; nothing is recorded."
+                  />
+                )}
               </div>
             ) : null}
             {lesson.runtime.comparison === 'ventricle-artery' ? (
@@ -1141,6 +1191,11 @@ function HemodynamicsStageSession({
                 ) : null}
                 <BeforeAfter before={before} after={after} watch={lesson.runtime.watch} />
               </>
+            ) : lesson.runtime.watch.length > 0 ? (
+              <p className={styles.dockNote} data-before-after-absent>
+                There is no before-and-after table here because the hands-on step for this part was
+                not done in this visit. Nothing was changed on the simulator to compare.
+              </p>
             ) : null}
             {round === 0 ? <HemodynamicsStoryProblems sectionId={lesson.sectionId} /> : null}
           </>
@@ -1155,24 +1210,20 @@ function HemodynamicsStageSession({
    * Panes
    * ---------------------------------------------------------------- */
   /*
-   * Whether the docks can be operated, and the line on the simulator that says why not.
-   *
-   * Both notes are derived from the same two predicates that disable the docks, so the simulator
-   * cannot go dead without saying so. It used to: the note covered the locked prediction and not
-   * the look-back, so a learner who pressed Back met greyed controls and nothing on the simulator
-   * explaining them. The monitor's own alarm acknowledgement stays live in both states, and
-   * neither note claims otherwise.
+   * Whether the docks can be operated, and the line on the simulator that says why not. Only looking
+   * back pauses them; an unanswered question never does (HD-01). The monitor's own alarm
+   * acknowledgement and the balloon's deflate stay live throughout.
    */
-  const deciding =
-    interaction.kind === 'prediction' && commitments.choices[activeStep.id] === undefined
-  const controlsEnabled = !deciding && !lookingBack
-  const lockedReason = deciding
-    ? 'The controls are locked while you decide. Submit your answer to unlock them.'
+  const controlsEnabled = !lookingBack
+  const pausedReason = lookingBack
+    ? 'The controls are paused while you look back at an earlier step. Return to the live step to take them.'
     : undefined
-  const pausedReason =
-    !deciding && lookingBack
-      ? 'The controls are paused while you look back at an earlier step. Return to the live step to take them.'
-      : undefined
+  // A question may keep its own case-specific reasoning folded until the learner checks an answer or
+  // opens the explanation. Nothing else — no other step, source or teaching block — waits on it.
+  const revealOpen =
+    interaction.kind !== 'prediction' ||
+    commitments.choices[activeStep.id] !== undefined ||
+    commitments.explanationsShown.includes(activeStep.id)
 
   const extraSurface: ReactNode = (() => {
     switch (interaction.kind) {
@@ -1198,10 +1249,8 @@ function HemodynamicsStageSession({
         return (
           <div className={styles.surfaceCard} data-surface="provenance-drill">
             <DerivedProvenanceDrill
-              separated={commitments.derivedSeparated}
-              onSeparated={() =>
-                setCommitments((current) => ({ ...current, derivedSeparated: true }))
-              }
+              separated={derivedSeparated}
+              onSeparated={() => setDerivedSeparated(true)}
             />
           </div>
         )
@@ -1212,14 +1261,10 @@ function HemodynamicsStageSession({
               focused
               dispatch={dispatch}
               checks={state.signalValidationChecks}
-              disagreementPreserved={commitments.derivedDisagreementPreserved}
-              onDisagreementPreserved={() =>
-                setCommitments((current) => ({ ...current, derivedDisagreementPreserved: true }))
-              }
-              thresholdContextResolved={commitments.derivedThresholdResolved}
-              onThresholdContextResolved={() =>
-                setCommitments((current) => ({ ...current, derivedThresholdResolved: true }))
-              }
+              disagreementPreserved={derivedDisagreementPreserved}
+              onDisagreementPreserved={() => setDerivedDisagreementPreserved(true)}
+              thresholdContextResolved={derivedThresholdResolved}
+              onThresholdContextResolved={() => setDerivedThresholdResolved(true)}
             />
           </div>
         )
@@ -1227,28 +1272,12 @@ function HemodynamicsStageSession({
         return (
           <div className={styles.surfaceCard} data-surface="derived-transfer">
             <DerivedTransferComparison />
-            {!commitments.derivedTransferDone ? (
-              <button
-                type="button"
-                className={shellStyles.nowSecondary}
-                onClick={() =>
-                  setCommitments((current) => ({ ...current, derivedTransferDone: true }))
-                }
-              >
-                I have chosen and read the comparison
-              </button>
-            ) : null}
           </div>
         )
       case 'disagreement':
         return (
           <div className={styles.surfaceCard} data-surface="disagreement">
-            <CardiacOutputDisagreementLab
-              progressive
-              onDisagreementResolved={() =>
-                setCommitments((current) => ({ ...current, disagreementResolved: true }))
-              }
-            />
+            <CardiacOutputDisagreementLab progressive />
           </div>
         )
       default:
@@ -1265,7 +1294,6 @@ function HemodynamicsStageSession({
       anatomy={activeStep.anatomy}
       flushLine={activeStep.flushLine}
       controlsEnabled={controlsEnabled}
-      lockedReason={lockedReason}
       pausedReason={pausedReason}
       chamberLabel={tipVisible ? 'shown' : 'withheld'}
       stops={stops}
@@ -1300,7 +1328,7 @@ function HemodynamicsStageSession({
     <StageTeachingScope
       value={{
         phase: activeStep.phase,
-        predictionCommitted: predictionCommitted && !deciding,
+        predictionCommitted: revealOpen,
         stepId: activeStep.id,
       }}
     >
@@ -1317,8 +1345,8 @@ function HemodynamicsStageSession({
 
   const completionLead =
     pairing.kind === 'mechanism-match'
-      ? 'The reasoning has been worked through. Apply it to the paired case in Practice, starting fresh with less prompting.'
-      : 'The reasoning has been worked through. A case in this part of the pathway is ready in Practice.'
+      ? 'Apply it to the paired case in Practice, starting fresh, or continue to the next section.'
+      : 'A case in this part of the pathway is ready in Practice whenever it is useful.'
 
   const task = (
     <>
@@ -1364,8 +1392,8 @@ function HemodynamicsStageSession({
       </div>
       {activeIndex === 0 ? (
         <p className={styles.dockNote}>
-          Reload or Restart section returns to the first step. Your stored section history is
-          retained; individual selections and the live patient are not restored after reload.
+          Reload or Restart section returns to the first step. The sections you opened or marked
+          reviewed stay on this device; answers, actions and the live patient are not saved.
         </p>
       ) : null}
       {activeIndex === 0 ? (
@@ -1378,33 +1406,45 @@ function HemodynamicsStageSession({
         </details>
       ) : null}
       <details className={flowStyles.taskMap}>
-        <summary>Tasks in this section · review recorded work</summary>
+        <summary>Tasks in this section · open any task</summary>
         <ol data-step-list>
-          {lesson.steps.map((step, index) => (
-            <li
-              key={step.id}
-              data-step-state={
-                finished
+          {lesson.steps.map((step, index) => {
+            const rowState =
+              index === activeIndex
+                ? 'current'
+                : performedIds.has(step.id)
                   ? 'done'
-                  : index === activeIndex
-                    ? 'current'
-                    : performedIds.has(step.id)
-                      ? 'done'
+                  : stepAnswered(step, commitments)
+                    ? 'answered'
+                    : index <= commitments.confirmed
+                      ? 'passed'
                       : 'upcoming'
-              }
-            >
-              <button
-                type="button"
-                aria-current={index === activeIndex ? 'step' : undefined}
-                disabled={balloonActive || !performedIds.has(step.id)}
-                onClick={() => setViewIndex(index)}
-              >
-                {step.ordinal}.{' '}
-                {index <= heldIndex || performedIds.has(step.id) ? step.title : 'Upcoming task'}
-                {performedIds.has(step.id) ? ' · worked through' : ''}
-              </button>
-            </li>
-          ))}
+            const suffix =
+              rowState === 'done'
+                ? ' · done'
+                : rowState === 'answered'
+                  ? ' · answered'
+                  : rowState === 'passed'
+                    ? ' · moved on'
+                    : ''
+            return (
+              <li key={step.id} data-step-state={rowState}>
+                <button
+                  type="button"
+                  aria-current={index === activeIndex ? 'step' : undefined}
+                  disabled={balloonActive || index === activeIndex}
+                  onClick={() => {
+                    if (index < liveIndex) setViewIndex(index)
+                    else if (index === liveIndex) returnToLive()
+                    else moveTo(index)
+                  }}
+                >
+                  {step.ordinal}. {step.title}
+                  {suffix}
+                </button>
+              </li>
+            )
+          })}
         </ol>
       </details>
       {finished ? (
@@ -1414,8 +1454,25 @@ function HemodynamicsStageSession({
           aria-live="polite"
           data-stage-completion
         >
-          <h3>Section worked through</h3>
+          <h3>Section finished</h3>
           <p>{completionLead}</p>
+          <p data-reviewed-state={reviewed ? 'reviewed' : 'not-reviewed'}>
+            {reviewed
+              ? 'Marked reviewed on this device. Nothing about your answers is saved.'
+              : 'Not marked reviewed.'}{' '}
+            <button
+              type="button"
+              className={shellStyles.nowSecondary}
+              data-reviewed-toggle
+              onClick={() =>
+                updateSelfPacedRecord((current) =>
+                  withSectionReviewed(current, lesson.sectionId, !reviewed),
+                )
+              }
+            >
+              {reviewed ? 'Undo: not reviewed yet' : 'Mark as reviewed'}
+            </button>
+          </p>
           {pairing.kind === 'next-in-unit' ? (
             <p data-practice-pairing-note>It applies a different mechanism from this section.</p>
           ) : null}
@@ -1454,7 +1511,7 @@ function HemodynamicsStageSession({
                 className={shellStyles.nowSecondary}
                 onClick={() => router.push(`${icuHemodynamicsNavBase}/assess`)}
               >
-                Go to the challenge
+                Open the applied case
               </button>
             )}
           </div>
@@ -1495,6 +1552,10 @@ function HemodynamicsStageSession({
       </p>
       <p>{activeStep.instruction}</p>
       {activeStep.rationale ? <p>{activeStep.rationale}</p> : null}
+      <p>
+        Every task in this section is optional: open any of them from Tasks in this section, and
+        continue without answering or acting whenever you like.
+      </p>
       {showWhereAction ? (
         <button
           type="button"
@@ -1551,12 +1612,9 @@ function HemodynamicsStageSession({
               <StageSourcesFooter
                 count={stageSources.evidenceIds.length}
                 label="Sources for this section"
-                claimsVisible={predictionCommitted && !deciding}
+                claimsVisible={revealOpen}
               >
-                <HemodynamicsSourceList
-                  records={stageSources.records}
-                  claimsVisible={predictionCommitted && !deciding}
-                />
+                <HemodynamicsSourceList records={stageSources.records} claimsVisible={revealOpen} />
               </StageSourcesFooter>
             </footer>
             {helpDialog}
@@ -1570,77 +1628,6 @@ function HemodynamicsStageSession({
 /* ------------------------------------------------------------------ *
  * Pieces
  * ------------------------------------------------------------------ */
-
-function CommitmentBlock({
-  title,
-  item,
-  stepKey,
-  pendingChoice,
-  setPendingChoice,
-  committedId,
-  onCommit,
-  disabled,
-}: {
-  readonly title: string
-  readonly item: Parameters<typeof AnswerVerdict>[0]['item']
-  readonly stepKey: string
-  readonly pendingChoice: Record<string, string>
-  readonly setPendingChoice: (
-    update: (current: Record<string, string>) => Record<string, string>,
-  ) => void
-  readonly committedId: string | undefined
-  readonly onCommit: () => void
-  readonly disabled: boolean
-}) {
-  const selected = pendingChoice[stepKey] ?? null
-  return (
-    <section className={styles.commitment} data-commitment={stepKey} aria-label={title}>
-      <p className={styles.kicker}>{title}</p>
-      {committedId ? (
-        <AnswerVerdict
-          item={item}
-          choiceId={committedId}
-          outcome="stated"
-          timing="immediate-after-commit"
-          theme="dark"
-          frames={verdictFrames(item)}
-        />
-      ) : (
-        <>
-          <fieldset className={stageStyles.choiceList} data-prediction-choices disabled={disabled}>
-            <legend>{item.stem}</legend>
-            {orderChoices(item.id, item.choices).map((choice) => (
-              <label
-                key={choice.id}
-                className={stageStyles.choice}
-                data-selected={selected === choice.id}
-              >
-                <input
-                  type="radio"
-                  name={`hd-commit-${stepKey}`}
-                  value={choice.id}
-                  checked={selected === choice.id}
-                  onChange={() =>
-                    setPendingChoice((current) => ({ ...current, [stepKey]: choice.id }))
-                  }
-                />
-                <span>{choice.label}</span>
-              </label>
-            ))}
-          </fieldset>
-          <button
-            type="button"
-            className={shellStyles.nowSecondary}
-            disabled={!selected || disabled}
-            onClick={onCommit}
-          >
-            Commit this answer
-          </button>
-        </>
-      )}
-    </section>
-  )
-}
 
 function ReturnCheck({
   state,
@@ -1673,23 +1660,17 @@ function ReturnCheck({
   )
 }
 
-function ProvenanceCommitment({
-  resolved,
-  onResolved,
-}: {
-  readonly resolved: boolean
-  readonly onResolved: () => void
-}) {
-  const [selected, setSelected] = useHemodynamicsTaskDraft<string | null>(
-    'provenance:selected',
-    null,
-  )
-  const [committed, setCommitted] = useHemodynamicsTaskDraft<string | null>(
-    'provenance:committed',
-    null,
-  )
-  const [first, setFirst] = useHemodynamicsTaskDraft<string | null>('provenance:first', null)
-  const choice = CARDIAC_OUTPUT_PROVENANCE_CHOICES.find((candidate) => candidate.id === committed)
+/**
+ * Which Fick result was measured: an optional question with its reasoning available before any
+ * answer. Checking an answer or opening the reasoning opens the method model beside it; neither
+ * requires the best-supported reading, and nothing is kept once the step changes.
+ */
+function ProvenanceQuestion({ onResolved }: { readonly onResolved: () => void }) {
+  const [selected, setSelected] = useState<string | null>(null)
+  const [checked, setChecked] = useState<string | null>(null)
+  const [shown, setShown] = useState(false)
+  const choice = CARDIAC_OUTPUT_PROVENANCE_CHOICES.find((candidate) => candidate.id === checked)
+  const best = CARDIAC_OUTPUT_PROVENANCE_CHOICES.find((candidate) => candidate.isDefensible)!
   return (
     <section
       className={styles.commitment}
@@ -1697,7 +1678,11 @@ function ProvenanceCommitment({
       aria-label="Which result was measured?"
     >
       <p className={styles.kicker}>Which result was measured?</p>
-      <fieldset className={stageStyles.choiceList} data-prediction-choices disabled={resolved}>
+      <fieldset
+        className={stageStyles.choiceList}
+        data-prediction-choices
+        disabled={checked !== null}
+      >
         <legend>
           Two Fick results are on record for the same patient in the same hour. One had oxygen
           uptake measured by expired-gas analysis over the sampling interval; the other used a
@@ -1713,7 +1698,7 @@ function ProvenanceCommitment({
               type="radio"
               name="hd-provenance"
               value={candidate.id}
-              checked={selected === candidate.id}
+              checked={(checked ?? selected) === candidate.id}
               onChange={() => setSelected(candidate.id)}
             />
             <span>{candidate.label}</span>
@@ -1727,31 +1712,56 @@ function ProvenanceCommitment({
           role="status"
         >
           <strong>{choice.isDefensible ? 'Correct.' : 'Not correct.'}</strong> {choice.why}
+          {choice.isDefensible ? '' : ` ${best.why}`}
+        </p>
+      ) : shown ? (
+        <p className={stageStyles.taskInstruction} data-provenance-outcome="shown" role="status">
+          <strong>Shown without an answer.</strong> {best.label} {best.why}
         </p>
       ) : null}
-      {first && first !== committed ? (
-        <p data-first-commitment>
-          First answer:{' '}
-          {CARDIAC_OUTPUT_PROVENANCE_CHOICES.find((candidate) => candidate.id === first)?.label}.
-          The current answer follows feedback.
-        </p>
-      ) : null}
-      {!resolved ? (
-        <button
-          type="button"
-          className={shellStyles.nowSecondary}
-          disabled={!selected}
-          onClick={() => {
-            if (!selected) return
-            setCommitted(selected)
-            setFirst((prior) => prior ?? selected)
-            const candidate = CARDIAC_OUTPUT_PROVENANCE_CHOICES.find((c) => c.id === selected)
-            if (candidate?.isDefensible) onResolved()
-          }}
-        >
-          {committed ? 'Commit again' : 'Commit this answer'}
-        </button>
-      ) : null}
+      <div className={stageStyles.completionActions} data-question-actions>
+        {checked ? (
+          <button
+            type="button"
+            className={shellStyles.nowSecondary}
+            data-question-try-again
+            onClick={() => {
+              setChecked(null)
+              setSelected(null)
+            }}
+          >
+            Try again
+          </button>
+        ) : (
+          <>
+            <button
+              type="button"
+              className={shellStyles.nowSecondary}
+              data-question-check
+              disabled={!selected}
+              onClick={() => {
+                if (!selected) return
+                setChecked(selected)
+                onResolved()
+              }}
+            >
+              Check this reading
+            </button>
+            <button
+              type="button"
+              className={shellStyles.nowSecondary}
+              data-question-explanation-toggle
+              aria-expanded={shown}
+              onClick={() => {
+                setShown((current) => !current)
+                onResolved()
+              }}
+            >
+              {shown ? 'Hide the reasoning' : 'Show the reasoning'}
+            </button>
+          </>
+        )}
+      </div>
     </section>
   )
 }
@@ -1848,59 +1858,61 @@ function BeforeAfter({
   )
 }
 
+/**
+ * What an earlier step holds, said honestly: the actions only if the learner performed them, and a
+ * plain line when they moved on without doing so. A check mark is never drawn for work not done.
+ */
 function recapLines(
-  step: HemodynamicsStageStep | undefined,
+  step: HemodynamicsStageStep,
   commitments: StageCommitments,
+  performed: boolean,
   state: HemodynamicSimulationState,
-): readonly string[] {
-  if (!step) return []
+): readonly { readonly text: string; readonly met: boolean }[] {
   switch (step.interaction.kind) {
-    case 'prediction': {
-      const choice = step.interaction.item.choices.find(
-        (c) => c.id === commitments.choices[step.id],
-      )
-      return choice ? [`You chose: ${choice.label}`] : ['Answer recorded.']
-    }
     case 'walk':
-      return step.interaction.stops.map((stopId) => routeStop(stopId).title)
+      return performed
+        ? step.interaction.stops.map((stopId) => ({ text: routeStop(stopId).title, met: true }))
+        : [{ text: 'Moved on without finishing the walk.', met: false }]
     case 'sort':
       return commitments.sort
-        ? [`${Object.keys(commitments.sort).length} questions placed.`]
-        : ['Placed.']
+        ? [{ text: `${Object.keys(commitments.sort).length} questions placed.`, met: true }]
+        : [{ text: 'Not sorted.', met: false }]
     case 'simulator-task':
-      return step.interaction.goals.map(stageGoalLabel)
     case 'observe':
-      return [
-        ...step.interaction.goals.map(stageGoalLabel),
-        ...(step.interaction.commitments.length > 0 ? ['Committed to the questions.'] : []),
-      ]
+      return performed
+        ? step.interaction.goals.map((goal) => ({ text: stageGoalLabel(goal), met: true }))
+        : [
+            {
+              text: 'Moved on without doing these actions. Nothing was recorded for them.',
+              met: false,
+            },
+          ]
     case 'explain':
-      return [`The tip: ${positionWords(state.catheter.position)}.`]
+      return [{ text: `The tip: ${positionWords(state.catheter.position)}.`, met: false }]
     default:
-      return step.expectedResponse ?? []
+      return (step.expectedResponse ?? []).map((text) => ({ text, met: false }))
   }
 }
 
 function StepRecap({
   step,
-  lesson,
   commitments,
+  performed,
   state,
 }: {
   readonly step: HemodynamicsStageStep
-  readonly lesson: ReturnType<typeof hemodynamicsStageLesson>
   readonly commitments: StageCommitments
+  readonly performed: boolean
   readonly state: HemodynamicSimulationState
 }) {
-  void lesson
-  const lines = recapLines(step, commitments, state)
+  const lines = recapLines(step, commitments, performed, state)
   if (lines.length === 0) return null
   return (
     <ul className={stageStyles.taskList} data-step-review>
       {lines.map((line) => (
-        <li key={line} data-met="true">
-          <Check aria-hidden="true" />
-          <span>{line}</span>
+        <li key={line.text} data-met={line.met}>
+          {line.met ? <Check aria-hidden="true" /> : <Circle aria-hidden="true" />}
+          <span>{line.text}</span>
         </li>
       ))}
     </ul>

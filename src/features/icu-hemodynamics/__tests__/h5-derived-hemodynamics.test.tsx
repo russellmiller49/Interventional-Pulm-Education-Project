@@ -682,7 +682,7 @@ describe('H5 threshold context', () => {
     fireEvent.click(
       screen.getByLabelText(/Report the coherent episode’s values with their method named/),
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this position' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check this position' }))
     expect(screen.getAllByText('Withheld').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Available').length).toBeGreaterThan(0)
     expect(screen.getAllByText(/calculated using bolus thermodilution/i).length).toBeGreaterThan(0)
@@ -785,21 +785,19 @@ describe('H5 station surfaces', () => {
     ] as const) {
       fireEvent.change(screen.getByLabelText(label), { target: { value } })
     }
-    fireEvent.click(screen.getByRole('button', { name: 'Commit these classifications' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check these classifications' }))
     expect(onSeparated).not.toHaveBeenCalled()
     expect(screen.getByText(/This value is calculated\./)).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('SVR on the flowsheet'), {
       target: { value: 'calculated' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Commit these classifications' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check these classifications' }))
     expect(onSeparated).toHaveBeenCalledTimes(1)
-    expect(document.querySelector('[data-first-attempt-record]')).toHaveTextContent(
-      'SVR on the flowsheet: Measured',
-    )
+    expect(document.querySelector('[data-first-attempt-record]')).toBeNull()
   })
 
-  it('hides the coherent episode results until the chain and the method are committed', () => {
+  it('folds the coherent episode results, and earns the chain and the method only when checked', () => {
     const dispatch = jest.fn()
     render(
       <DerivedEpisodeWorkbench
@@ -816,14 +814,14 @@ describe('H5 station surfaces', () => {
     for (const label of ['Mean pulmonary artery pressure', 'Mean PAWP', 'Cardiac output']) {
       fireEvent.click(screen.getByRole('checkbox', { name: label }))
     }
-    fireEvent.click(screen.getByRole('button', { name: 'Commit the dependency chain' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check the dependency chain' }))
     expect(dispatch).toHaveBeenCalledWith({
       type: 'VALIDATE_SIGNAL',
       check: DERIVED_SECTION_CHECKS.dependencyChain,
     })
 
     fireEvent.click(screen.getByRole('radio', { name: 'Bolus thermodilution' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Commit the method' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check the method' }))
     expect(dispatch).toHaveBeenCalledWith({
       type: 'VALIDATE_SIGNAL',
       check: DERIVED_SECTION_CHECKS.methodTraced,
@@ -846,7 +844,7 @@ describe('H5 station surfaces', () => {
     expect(screen.getAllByText(/calculated using bolus thermodilution/i).length).toBeGreaterThan(0)
 
     fireEvent.click(screen.getByLabelText(/As a cohort finding from acute inferior MI/))
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this position' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check this position' }))
     expect(onThresholdContextResolved).toHaveBeenCalledTimes(1)
   })
 
@@ -873,7 +871,7 @@ describe('H5 station surfaces', () => {
     for (const label of [/SVR = 80/, /PAPi = \(PASP/, /CI = CO/]) {
       fireEvent.change(screen.getByLabelText(label), { target: { value: 'calculate' } })
     }
-    fireEvent.click(screen.getByRole('button', { name: 'Commit these decisions' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check these decisions' }))
     expect(dispatch).toHaveBeenCalledWith({
       type: 'VALIDATE_SIGNAL',
       check: DERIVED_SECTION_CHECKS.withheldForValidity,
@@ -913,7 +911,7 @@ describe('H5 station surfaces', () => {
         target: { value: 'required-input-invalid-pawp' },
       })
     }
-    fireEvent.click(screen.getByRole('button', { name: 'Commit these decisions' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check these decisions' }))
     expect(dispatch).toHaveBeenCalledWith({
       type: 'VALIDATE_SIGNAL',
       check: DERIVED_SECTION_CHECKS.withheldForValidity,
@@ -925,14 +923,14 @@ describe('H5 station surfaces', () => {
     expect(screen.getAllByText(/should remain available/i).length).toBeGreaterThan(0)
   })
 
-  it('keeps the transfer evaluations hidden until a position is committed', () => {
+  it('keeps the transfer evaluations folded until a position is checked', () => {
     render(<DerivedTransferComparison />)
     expect(screen.getAllByText(/As printed on the sheet, before any validity reading/).length).toBe(
       2,
     )
     expect(screen.queryByText(/Evaluated ·/)).not.toBeInTheDocument()
     fireEvent.click(screen.getByLabelText(/Blend the two episodes/))
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this position' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check this position' }))
     expect(screen.getByText(/This averages or blends unlike quantities/)).toBeInTheDocument()
     expect(screen.getAllByText(/Evaluated ·/).length).toBe(2)
   })
@@ -959,8 +957,8 @@ describe('H5 station surfaces', () => {
  *
  * Two of these decisions carry completion evidence awarded only for the defensible option. Locking
  * every commitment permanently meant a learner who answered wrong held that answer until they reset
- * the activity. The contract below is: the first attempt and its feedback survive until the learner
- * explicitly reconsiders, a defensible answer stays locked because there is nothing to recover from,
+ * the activity. The contract below is: the answer and its feedback stay until the learner asks to
+ * try again, a defensible answer stays locked because there is nothing to recover from,
  * and reconsidering never silently swaps the wrong answer for the right one.
  */
 describe('H5 decision recovery', () => {
@@ -980,8 +978,8 @@ describe('H5 decision recovery', () => {
     )
   }
 
-  const RECONSIDER = 'Reconsider and commit again'
-  const COMMIT = 'Commit this position'
+  const RECONSIDER = 'Try again'
+  const COMMIT = 'Check this position'
 
   it('does not award disagreement preservation for averaging, and offers a way back', () => {
     const onDisagreementPreserved = jest.fn()
@@ -992,7 +990,7 @@ describe('H5 decision recovery', () => {
     fireEvent.click(screen.getByRole('button', { name: COMMIT }))
 
     expect(onDisagreementPreserved).not.toHaveBeenCalled()
-    // The first attempt and its feedback stay put until the learner asks to change them.
+    // The answer and its feedback stay put until the learner asks to try again.
     expect(screen.getByText(/This averages or blends unlike quantities/)).toBeInTheDocument()
     expect(screen.getByLabelText(/Average the two flows to 4.85/)).toBeChecked()
     expect(screen.getByRole('button', { name: RECONSIDER })).toBeInTheDocument()
@@ -1052,7 +1050,7 @@ describe('H5 decision recovery', () => {
 
     fireEvent.click(screen.getByRole('button', { name: RECONSIDER }))
     expect(screen.getByLabelText(/Blend the two episodes/)).not.toBeChecked()
-    // The comparison was earned by committing once; reconsidering does not hide it again.
+    // Once opened, trying again does not hide the comparison.
     expect(screen.getAllByText(/Evaluated ·/).length).toBe(2)
 
     fireEvent.click(screen.getByLabelText(/Report the coherent episode’s values/))
@@ -1346,5 +1344,62 @@ describe('H5 non-regression', () => {
     expect(copy).not.toMatch(/\btitrate\b[^.]*\bto\b[^.]*\d/i)
     // "not a mandate to give fluid" is the boundary statement itself; an instruction is banned.
     expect(copy).not.toMatch(/(?<!mandate to )\bgive fluids?\b/i)
+  })
+})
+
+/**
+ * HD-01: every reasoning on the station can be opened before an answer, and opening it awards nothing —
+ * no check is dispatched and no defensible position is recorded.
+ */
+describe('H5 self-paced reasoning (HD-01)', () => {
+  function renderWorkbench(dispatch: jest.Mock) {
+    render(
+      <DerivedEpisodeWorkbench
+        dispatch={dispatch}
+        checks={[]}
+        disagreementPreserved={false}
+        onDisagreementPreserved={jest.fn()}
+        thresholdContextResolved={false}
+        onThresholdContextResolved={jest.fn()}
+      />,
+    )
+  }
+
+  it('opens the chain, the method and the evaluated results without an answer, earning nothing', () => {
+    const dispatch = jest.fn()
+    renderWorkbench(dispatch)
+    fireEvent.click(screen.getByRole('button', { name: 'Show the chain' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Show the method' }))
+    expect(screen.getAllByText('Shown without an answer.')).toHaveLength(2)
+    fireEvent.click(screen.getByRole('button', { name: 'Show the evaluated results' }))
+    expect(screen.getByText('Results · Bolus thermodilution')).toBeInTheDocument()
+    expect(dispatch).not.toHaveBeenCalled()
+    expect(document.querySelector('[data-first-attempt-record]')).toBeNull()
+  })
+
+  it('shows the selective-invalidation decisions without earning withholding or preservation', () => {
+    const dispatch = jest.fn()
+    renderWorkbench(dispatch)
+    fireEvent.click(screen.getByRole('tab', { name: 'The stored wedge is not interpretable' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Show the decisions' }))
+    expect(screen.getAllByText(/is withheld for the invalid wedge/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/survives: its own inputs are valid/).length).toBeGreaterThan(0)
+    expect(dispatch).not.toHaveBeenCalled()
+  })
+
+  it('shows the classifications without separating anything', () => {
+    const onSeparated = jest.fn()
+    render(<DerivedProvenanceDrill separated={false} onSeparated={onSeparated} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Show the classifications' }))
+    expect(screen.getAllByText(/This value is calculated\./).length).toBeGreaterThan(0)
+    expect(onSeparated).not.toHaveBeenCalled()
+  })
+
+  it('opens a decision’s reasoning and the transfer evaluations without a position', () => {
+    render(<DerivedTransferComparison />)
+    fireEvent.click(screen.getByRole('button', { name: 'Show the reasoning' }))
+    expect(screen.getByText('Shown without an answer.')).toBeInTheDocument()
+    expect(screen.getAllByText(/Evaluated ·/)).toHaveLength(2)
+    expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull()
   })
 })

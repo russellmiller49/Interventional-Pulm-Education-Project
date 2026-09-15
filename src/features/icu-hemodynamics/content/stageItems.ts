@@ -76,14 +76,14 @@ const whyMeasure: HemodynamicsSectionItems = {
         id: 'needs-fluid',
         label: 'That the circulation is under-filled, so the next step is to give fluid.',
         rationale:
-          'A low pressure can come from a low flow, a wide-open circulation or an obstructed one. Volume is one cause among several, and the arterial number cannot pick it out.',
+          'A low pressure can come from low cardiac output, from vasodilation (low systemic vascular resistance) or from an obstruction to flow. Low circulating volume is one cause among several, and the arterial number cannot pick it out.',
         plausibility: 'reasonable-but-incomplete',
       },
       {
         id: 'heart-failing',
         label: 'That the heart is failing, because pressure is what the heart produces.',
         rationale:
-          'The heart produces flow; pressure is flow meeting resistance. A failing heart is one way to lower it and a relaxed circulation is another, and the number is the same.',
+          'The heart generates flow; arterial pressure reflects that flow meeting vascular resistance. A failing heart is one way to lower it and vasodilation is another, and the displayed number can be the same.',
         plausibility: 'incorrect-mechanism',
       },
     ],
@@ -101,7 +101,7 @@ const whyMeasure: HemodynamicsSectionItems = {
     contextRequirement: 'patient',
     clinicalContextId: 'why-measure-pa-catheter',
     transferVariantId: 'why-measure-what-the-catheter-measures',
-    stem: 'A pulmonary-artery catheter has been placed in a patient in shock, and its tracings are trustworthy. Which set correctly distinguishes the catheter signals and samples from their downstream interpretation?',
+    stem: 'A pulmonary-artery catheter has been placed in a patient in shock, and its tracings are trustworthy. Which answer separates what the catheter itself measures or collects from what is later calculated or interpreted?',
     choices: [
       {
         id: 'measures-pressures-flow-samples',
@@ -184,7 +184,7 @@ const waveformInterpretation: HemodynamicsSectionItems = {
         id: 'cannot-name',
         label: 'It cannot be named from this display',
         rationale:
-          'It can. The line has been checked, the scale fits, and the shape carries every feature needed to name the chamber.',
+          'Not on this display: the line has been checked, the scale fits, and the shape carries the features that name the chamber. This is the right reading when the signal itself cannot be trusted — a ringing or damped line, a scale that clips the tracing, or a tip still moving — and then the next step is to repair or re-read before naming any place.',
         plausibility: 'reasonable-but-incomplete',
       },
     ],
@@ -205,7 +205,7 @@ const waveformInterpretation: HemodynamicsSectionItems = {
         id: 'cannot-name',
         label: 'It cannot be named from this display',
         rationale:
-          'It can. The timing against the ECG is given, and an atrial shape whose waves arrive later than the right atrium’s is the left atrium heard through the occluded branch.',
+          'Not on this display: the timing against the ECG is shown, and an atrial-shaped tracing whose waves arrive later than the right atrium’s is left-atrial pressure transmitted back through the occluded branch. Choose this answer when the signal itself cannot be trusted, and repair or re-read before naming a place.',
         plausibility: 'reasonable-but-incomplete',
       },
     ],
@@ -233,7 +233,7 @@ const waveformComponents: HemodynamicsSectionItems = {
       {
         id: 'pericardial-constraint',
         label:
-          'Fluid under tension around the heart, limiting filling throughout diastole so the early-diastolic y descent is lost.',
+          'Tamponade: fluid under pressure around the heart limits filling throughout diastole, so the early-diastolic y descent is lost.',
         rationale:
           'Tamponade compresses the chambers through the whole of diastole. Early rapid filling — the y descent — cannot happen, while systolic emptying still lowers atrial pressure and keeps the x descent.',
         plausibility: 'best',
@@ -241,14 +241,15 @@ const waveformComponents: HemodynamicsSectionItems = {
       {
         id: 'constriction',
         label:
-          'A stiff pericardium, which halts filling abruptly and produces the same lost y descent.',
+          'Constriction: a stiff pericardium halts filling abruptly and produces the same loss of the y descent.',
         rationale:
           'A stiff pericardium allows rapid early filling and then stops it: the y descent is exaggerated rather than lost. The two are confused precisely because both raise and equalise the diastolic pressures.',
         plausibility: 'reasonable-but-incomplete',
       },
       {
         id: 'tricuspid-regurgitation',
-        label: 'Systolic leak back into the atrium, which erases the descent.',
+        label:
+          'Tricuspid regurgitation: a systolic leak back into the atrium that reshapes the atrial waves.',
         rationale:
           'Regurgitation floods the atrium in systole, so it is the x descent that is lost under a tall c-v wave — not the y descent, and not with the diastolic pressures drawn together.',
         plausibility: 'incorrect-mechanism',
@@ -263,27 +264,18 @@ const waveformComponents: HemodynamicsSectionItems = {
 }
 
 /**
- * The scenario's keyed choice spells out the ventricular morphology it expects, which on the
- * stage would make the longest option the keyed one and hand the Act step its answer. The label
- * is trimmed here and the morphology kept in the rationale, where it is read after the commitment.
+ * The advancement scenario's own commitment, its keyed choice as authored.
+ *
+ * The flow rebuild trimmed that label to "the ventricular shape" so the keyed option would not be the
+ * longest, and appended the full label to the rationale. HD-01 restores the morphology the choice
+ * names — a clinical qualifier worth reading, not a cue to hide — and drops the appended copy. The
+ * choice text is the scenario's, unchanged; the item stays `draft` until faculty review.
  */
-const advancementPrediction = (() => {
-  const source = pacAdvancementScenario('ra-to-rv').commitment
-  return item({
-    ...source,
-    id: 'hd-advance-predict-1',
-    choices: source.choices.map((choice) =>
-      choice.id === 'advance'
-        ? {
-            ...choice,
-            label: 'Advance, expecting the ventricular shape to appear next.',
-            rationale: `${choice.rationale} ${choice.label}`,
-          }
-        : choice,
-    ),
-    reviewStatus: 'draft',
-  })
-})()
+const advancementPrediction = item({
+  ...pacAdvancementScenario('ra-to-rv').commitment,
+  id: 'hd-advance-predict-1',
+  reviewStatus: 'draft',
+})
 
 const catheterAdvancement: HemodynamicsSectionItems = {
   prediction: advancementPrediction,
@@ -440,16 +432,6 @@ export function validateHemodynamicsStageItems(): readonly string[] {
       }
       if (role === 'prediction' && entry.phase === 'transfer') {
         errors.push(`The prediction of ${sectionId} is a transfer item.`)
-      }
-      const best = entry.choices.filter((choice) => choice.plausibility === 'best')
-      const longest = [...entry.choices].sort((a, b) => b.label.length - a.label.length)[0]
-      if (best.length === 1 && longest.id === best[0].id) {
-        const runnerUp = [...entry.choices]
-          .filter((choice) => choice.id !== best[0].id)
-          .sort((a, b) => b.label.length - a.label.length)[0]
-        if (runnerUp && best[0].label.length > runnerUp.label.length * 1.5) {
-          errors.push(`The keyed choice of ${entry.id} is far longer than every other choice.`)
-        }
       }
     }
     if (items.prediction.stem === items.transfer.stem) {

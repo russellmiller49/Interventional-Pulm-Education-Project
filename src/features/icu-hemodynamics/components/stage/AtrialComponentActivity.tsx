@@ -6,7 +6,6 @@ import {
   componentNames,
   componentOrder,
   componentRegions,
-  componentIdentificationComplete,
   componentSelectionCorrect,
   type ComponentMode,
   type ComponentSelection,
@@ -43,13 +42,21 @@ export function AtrialComponentDemonstration() {
       </p>
       <p className={styles.dockNote}>
         Idealized landmarks from the existing morphology model. Exact timing and visibility vary
-        with rhythm, conduction and signal transmission. Viewing this reference earns no
-        identification credit.
+        with rhythm, conduction and signal transmission. This is a labeled reference, not a
+        selection of yours.
       </p>
     </section>
   )
 }
 
+/**
+ * Optional practice: find each atrial component on a numbered, frozen tracing.
+ *
+ * HD-01 (self-paced): any component can be checked, shown without an answer, retried or skipped, in
+ * any order. Nothing tallies answers or retries, and nothing here decides
+ * whether the learner may move on. A checked region is kept for this session only, so a look-back
+ * shows it again; showing a component records no selection.
+ */
 export function AtrialComponentActivity({
   mode,
   selections,
@@ -64,31 +71,26 @@ export function AtrialComponentActivity({
   const group = useId()
   const [index, setIndex] = useState(0)
   const [pending, setPending] = useState<number | null>(null)
-  const [revealed, setRevealed] = useState(false)
+  const [revealed, setRevealed] = useState<'checked' | 'shown' | null>(null)
   const component = componentOrder[index]
   const regions = componentRegions(mode)
   const expected = regions.find((region) => region.component === component)!
-  const previous = selections.find((selection) => selection.component === component)
-  const complete = componentIdentificationComplete(selections, mode)
-  const correct = previous ? componentSelectionCorrect(previous, mode) : false
-  const independentCorrect = selections.filter(
-    (selection) =>
-      !selection.assisted && selection.attempts === 1 && componentSelectionCorrect(selection, mode),
-  ).length
+  const checked = selections.find((selection) => selection.component === component)
+  const correct = checked ? componentSelectionCorrect(checked, mode) : false
 
-  function submit() {
-    if (!enabled || pending === null || revealed) return
+  function goTo(next: number) {
+    setIndex(Math.max(0, Math.min(next, componentOrder.length - 1)))
+    setPending(null)
+    setRevealed(null)
+  }
+
+  function check() {
+    if (!enabled || pending === null) return
     onChange([
       ...selections.filter((selection) => selection.component !== component),
-      {
-        component,
-        firstRegion: previous?.firstRegion ?? pending,
-        selectedRegion: pending,
-        attempts: (previous?.attempts ?? 0) + 1,
-        assisted: Boolean(previous),
-      },
+      { component, selectedRegion: pending },
     ])
-    setRevealed(true)
+    setRevealed('checked')
   }
 
   return (
@@ -98,13 +100,13 @@ export function AtrialComponentActivity({
       data-component-activity={mode}
     >
       <p className={styles.kicker}>
-        {mode === 'guided' ? 'Guided attempt' : 'New application example'} · frozen right atrium ·
-        sinus rhythm
+        {mode === 'guided' ? 'Guided practice' : 'Practice with renumbered regions'} · frozen right
+        atrium · sinus rhythm
       </p>
       <h3>Identify the atrial component</h3>
       <p>
-        The numbered regions use the trace’s existing landmarks. Select a region below; no
-        pixel-precision grading is used.
+        The numbered regions use the trace’s existing landmarks. Select a region and check it, or
+        show where the component is. Work through the components in any order.
       </p>
       <WaveformAtlasFigure
         entry={componentExample(mode)}
@@ -114,8 +116,14 @@ export function AtrialComponentActivity({
         showLegend={false}
         figureDescription={`Frozen right-atrial pressure in mmHg and synchronized ECG. ${regions.map((region) => `Region ${region.number}: ${region.description}.`).join(' ')}`}
       />
-      <fieldset className={styles.choiceGroup} disabled={!enabled || revealed || complete}>
-        <legend>Find the {componentNames[component]}</legend>
+      <fieldset
+        className={styles.choiceGroup}
+        disabled={!enabled || revealed !== null}
+        data-component-position={index + 1}
+      >
+        <legend>
+          Find the {componentNames[component]} · component {index + 1} of {componentOrder.length}
+        </legend>
         {regions.map((region) => (
           <label key={region.number}>
             <input
@@ -130,78 +138,86 @@ export function AtrialComponentActivity({
           </label>
         ))}
       </fieldset>
-      {!revealed && !complete ? (
-        <button
-          type="button"
-          className={styles.dockButton}
-          disabled={!enabled || pending === null}
-          onClick={submit}
-        >
-          Check component
-        </button>
+      {revealed === null ? (
+        <div className={styles.componentTabs}>
+          <button
+            type="button"
+            className={styles.dockButton}
+            disabled={!enabled || pending === null}
+            onClick={check}
+          >
+            Check component
+          </button>
+          <button
+            type="button"
+            className={styles.dockButton}
+            disabled={!enabled}
+            onClick={() => setRevealed('shown')}
+          >
+            Show this component
+          </button>
+        </div>
       ) : null}
-      {revealed && previous ? (
-        <div className={styles.dockVerdict} role="status">
-          <strong>{correct ? 'Component identified.' : 'Compare the timing.'}</strong>
+      {revealed ? (
+        <div className={styles.dockVerdict} role="status" data-component-reveal={revealed}>
+          <strong>
+            {revealed === 'shown'
+              ? 'Shown without an answer.'
+              : correct
+                ? 'Component identified.'
+                : 'Compare the timing.'}
+          </strong>
           <p>
             Region {expected.number} marks the {componentNames[component]}.{' '}
             {expected.annotation.description}
           </p>
-          <p>
-            {previous.assisted
-              ? 'Assisted retry recorded; the first selection is retained.'
-              : mode === 'guided'
-                ? 'Guided response recorded.'
-                : 'First response recorded.'}
-          </p>
-          {!complete ? (
+          <div className={styles.componentTabs}>
             <button
               className={styles.dockButton}
               type="button"
               disabled={!enabled}
               onClick={() => {
-                if (correct) setIndex((current) => Math.min(current + 1, componentOrder.length - 1))
                 setPending(null)
-                setRevealed(false)
+                setRevealed(null)
               }}
             >
-              {correct ? 'Next component' : 'Retry with feedback'}
+              Try again
             </button>
-          ) : null}
+          </div>
         </div>
       ) : null}
-      <p role="status" data-component-progress>
-        {selections.filter((selection) => componentSelectionCorrect(selection, mode)).length} of 5
-        components identified.{' '}
-        {mode === 'independent'
-          ? `${independentCorrect} correct on first response without feedback; ${selections.filter((selection) => selection.selectedRegion !== null && selection.assisted).length} assisted.`
-          : 'Guided work is separate from independent responses.'}
-      </p>
-      {complete ? (
-        <p>
-          Identification exercise worked through. This records selections in this session, not
-          clinical competence. Continue in Steps.
-        </p>
-      ) : null}
-      <button
-        type="button"
-        className={styles.dockButton}
-        disabled={!enabled}
-        onClick={() => {
-          // Restart current selections while retaining first-response evidence across resets.
-          onChange(
-            selections.map((selection) => ({ ...selection, selectedRegion: null, assisted: true })),
-          )
-          setIndex(0)
-          setPending(null)
-          setRevealed(false)
-        }}
-      >
-        Reset this exercise
-      </button>
+      <div className={styles.componentTabs} aria-label="Move between components">
+        <button
+          type="button"
+          className={styles.dockButton}
+          disabled={!enabled || index === 0}
+          onClick={() => goTo(index - 1)}
+        >
+          Previous component
+        </button>
+        <button
+          type="button"
+          className={styles.dockButton}
+          disabled={!enabled || index === componentOrder.length - 1}
+          onClick={() => goTo(index + 1)}
+        >
+          Next component
+        </button>
+        <button
+          type="button"
+          className={styles.dockButton}
+          disabled={!enabled}
+          onClick={() => {
+            onChange([])
+            goTo(0)
+          }}
+        >
+          Clear this exercise
+        </button>
+      </div>
       <p className={styles.dockNote}>
-        Reset clears current selections. Earlier first responses are retained; answering those
-        components again counts as assisted practice.
+        Optional practice. Checked regions stay for this visit only; nothing about them is saved,
+        and you can continue in Steps at any point.
       </p>
     </section>
   )
