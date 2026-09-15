@@ -237,7 +237,13 @@ describe('vv-series-physiology panel', () => {
       <EcmoFoundationTeachingPanel sectionId="vv-series-physiology" state={state} />,
     )
     const text = container.textContent ?? ''
-    expect(text).toMatch(/each case sets where this starts/i)
+    // ECMO-03 (2026-09-15): the share rises with speed only in a case authored with established
+    // recirculation. On the reference circuit this section opens on it stays at its baseline at every
+    // speed (engine runs in ecmo03-sources-and-model-range.test.tsx), so the panel now says both.
+    expect(text).toMatch(
+      /takes the recirculating share the cannula relationship starts at from the authored case/i,
+    )
+    expect(text).toMatch(/on the reference circuit it stays at its baseline at every speed/i)
     expect(text).toMatch(/more flow than (it|the case) opened with raises/i)
     // The direction is the teaching object; the coefficient is not a bedside quantity.
     expect(text).toMatch(/the direction is the teaching object here, not the size/i)

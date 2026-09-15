@@ -1,4 +1,11 @@
-import { BookOpen, ExternalLink, FileWarning, FlaskConical, ShieldCheck } from 'lucide-react'
+import {
+  BookOpen,
+  ExternalLink,
+  FileText,
+  FileWarning,
+  FlaskConical,
+  ShieldCheck,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import {
@@ -11,6 +18,7 @@ import {
   ecmoSourceClasses,
   type EcmoSourceClass,
 } from '../content/evidenceResolver'
+import { ECMO_MODULE_REVIEW_LINE, ecmoSourceReviewMetadata } from '../content/sourceReviewMetadata'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoSourceList } from './evidence/EcmoSourceList'
 import evidenceStyles from './evidence/evidence.module.css'
@@ -24,12 +32,17 @@ import evidenceStyles from './evidence/evidence.module.css'
  * a circuit-walk stop or a localization row. Grouping by source class keeps the boundary the panel's
  * introduction draws — manual versus curriculum versus simplified model — visible in the structure
  * and not only in the badges.
+ *
+ * Publication and review are separate facts. The publication flag says whether the module is
+ * listed; it has never been evidence that anyone reviewed it, and no clinical or device review is
+ * recorded, so the review line is the same whichever way the flag is set.
  */
 
 const sourceIcons: Readonly<Record<EcmoSourceClass, LucideIcon>> = {
   manufacturer: ShieldCheck,
   'clinical-guidance': ExternalLink,
   textbook: BookOpen,
+  'supplied-curriculum': FileText,
   'educational-model': FlaskConical,
 }
 
@@ -39,6 +52,7 @@ export function SourcesPanel({
   publicationStatus: CardiohelpEcmoPublicationStatus
 }) {
   const published = publicationStatus === 'published'
+  const ifuCheck = ecmoSourceReviewMetadata('ifu-us-2025-scope')?.checks[0]
   return (
     <section className={styles.sourcesSection} aria-labelledby="sources-heading">
       <div className={styles.sectionTitleRow}>
@@ -46,8 +60,8 @@ export function SourcesPanel({
           <span className={styles.kicker}>Clinical review & source notes</span>
           <h2 id="sources-heading">Evidence boundary and review status</h2>
         </div>
-        <span className={styles.draftBadge}>
-          {published ? 'PUBLISHED' : 'UNLISTED REVIEW · REVIEW REQUIRED'}
+        <span className={styles.draftBadge} data-review-status>
+          {published ? 'PUBLISHED' : 'UNLISTED DRAFT'} · {ECMO_MODULE_REVIEW_LINE}
         </span>
       </div>
 
@@ -56,9 +70,11 @@ export function SourcesPanel({
         <div>
           <strong>The device manual and ECMO curriculum answer different questions.</strong>
           <p>
-            The current U.S. IFU governs this facsimile’s console behavior. Its labeled indication
-            is partial cardiopulmonary bypass or temporary surgical circulatory bypass for less than
-            six hours—not prolonged ECMO management. Adult VV and peripheral VA physiology and
+            This facsimile’s console behavior follows the U.S. IFU, revision{' '}
+            {cardiohelpDeviceProfile.ifuRevision}, issued {cardiohelpDeviceProfile.ifuDate}; whether
+            a later revision exists has not been checked. Its labeled indication is partial
+            cardiopulmonary bypass or temporary surgical circulatory bypass for less than six
+            hours—not prolonged ECMO management. Adult VV and peripheral VA physiology and
             management reasoning come from the supplied textbook chapters and mode-specific ELSO
             guidance. Every response curve is labeled simulated and is not a patient digital twin.
           </p>
@@ -77,6 +93,10 @@ export function SourcesPanel({
           </dd>
         </div>
         <div>
+          <dt>IFU document check</dt>
+          <dd>{ifuCheck ? `${ifuCheck.on}; currency not checked` : 'None recorded'}</dd>
+        </div>
+        <div>
           <dt>Software</dt>
           <dd>≥ {cardiohelpDeviceProfile.minimumSoftwareVersion}</dd>
         </div>
@@ -90,9 +110,11 @@ export function SourcesPanel({
         </div>
         <div>
           <dt>Publication</dt>
-          <dd>
-            {published ? 'Public release' : 'Unlisted draft; clinical and device review pending'}
-          </dd>
+          <dd>{published ? 'Public release' : 'Unlisted draft'}</dd>
+        </div>
+        <div>
+          <dt>Clinical and device review</dt>
+          <dd>None recorded</dd>
         </div>
       </dl>
 

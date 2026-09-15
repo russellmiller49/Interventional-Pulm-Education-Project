@@ -295,7 +295,7 @@ const recirculationAdjustedFlow: CriticalCareDerivedValueGuide = {
       id: 'ecmo.adjusted-flow.model-quantity',
       kind: 'educational-model-boundary',
       statement:
-        'This simulation derives the adjusted flow from a modeled recirculation fraction rather than from a measurement. Because that fraction rises once the circuit is asked for more flow than the case opened with, this value can fall while the displayed L/min rises.',
+        'This simulation derives the adjusted flow from a modeled recirculation fraction rather than from a measurement. In a case that opens with established recirculation, that fraction rises once the circuit is asked for more flow than the case opened with, so this value can fall while the displayed L/min rises. On the reference circuit the fraction stays at its baseline, so this value rises with flow.',
       appliesWhen:
         'Inside this simulation only. It is not a quantity the console computes or displays.',
       evidenceIds: ['bounded-educational-model'],

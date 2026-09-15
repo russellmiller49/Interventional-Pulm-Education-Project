@@ -698,7 +698,12 @@ export interface ScenarioDefinition {
 
 export interface EvidenceReference {
   id: string
-  sourceClass: 'manufacturer' | 'clinical-guidance' | 'textbook' | 'educational-model'
+  sourceClass:
+    | 'manufacturer'
+    | 'clinical-guidance'
+    | 'textbook'
+    | 'supplied-curriculum'
+    | 'educational-model'
   title: string
   citation: string
   pages?: string

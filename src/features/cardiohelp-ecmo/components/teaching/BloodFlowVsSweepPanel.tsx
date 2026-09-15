@@ -122,7 +122,14 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
                 flow here does not produce a modeled saturation increase or establish better tissue
                 perfusion.
               </p>
-            ) : null}
+            ) : (
+              <p className="mt-2 text-sm leading-6" data-local-model-boundary="saturation-ceiling">
+                In this model patient saturation rises with the flow left after re-drainage only
+                until it stops at 100, which the reference circuit reaches at about 4000 rpm. Above
+                that, more speed still raises flow and pulls harder on the drainage limb, with no
+                further modeled saturation change.
+              </p>
+            )}
           </section>
         </FoundationTeachingBlock>
         <FoundationTeachingBlock id="control-sweep" title="Review sweep-gas flow">
@@ -136,9 +143,10 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
             </p>
             <p className="mt-2 text-sm leading-6">{ecmoControlKnob('sweep').doesNotMove}</p>
             <p className="mt-2 text-sm leading-6" data-local-model-boundary="sweep-linearity">
-              The model uses a straight-line sweep response with no plateau. Real clearance also
-              depends on blood flow, membrane function, and gas delivery. Read the direction, not
-              the slope.
+              The model uses a straight-line sweep response down to a fixed lower bound: PaCO₂ stops
+              at 20 mmHg, which the reference circuit reaches at about 7.5 L/min, and more sweep
+              changes nothing past that. Real clearance also depends on blood flow, membrane
+              function, and gas delivery. Read the direction, not the slope.
             </p>
             <p className="mt-2 text-sm font-semibold leading-6">
               Rapid CO₂ correction can cause harm. The comparison demonstrates a relationship, not a
@@ -294,11 +302,13 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
 
         <ModelBoundary>
           <span data-local-model-boundary="sweep-linearity">
-            PaCO₂ responds to sweep as a straight line in this simulation, by construction. There is
-            no plateau and no diminishing return, because none is modeled. Real CO₂ removal shows
-            diminishing returns and becomes limited by blood flow through the membrane, membrane
-            performance, and the remaining gas-side gradient — so read the direction here, not the
-            slope.
+            PaCO₂ responds to sweep as a straight line in this simulation, by construction, until it
+            stops at a fixed lower bound of 20 mmHg — about 7.5 L/min of sweep on the reference
+            circuit. Past that bound more sweep changes nothing here; before it there is no
+            diminishing return, because none is modeled. The bound is a limit of this simulation,
+            not a physiological plateau. Real CO₂ removal shows diminishing returns and becomes
+            limited by blood flow through the membrane, membrane performance, and the remaining
+            gas-side gradient — so read the direction here, not the slope.
           </span>
         </ModelBoundary>
 

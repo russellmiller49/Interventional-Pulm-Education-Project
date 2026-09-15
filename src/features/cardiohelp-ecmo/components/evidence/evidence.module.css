@@ -101,6 +101,10 @@
   --evidence-hue: #ffbd63;
 }
 
+.badge[data-source-class='supplied-curriculum'] {
+  --evidence-hue: #f0a6c8;
+}
+
 .badge[data-source-class='educational-model'] {
   --evidence-hue: #ca9dff;
 }
@@ -131,6 +135,19 @@
 
 .citation {
   color: var(--evidence-muted);
+}
+
+/* Date, revision, document checks and the review line: one fact per line, read after the reference. */
+.dating {
+  margin: 0;
+  color: var(--evidence-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.item.footnote .dating {
+  display: block;
+  font-size: inherit;
 }
 
 .key {

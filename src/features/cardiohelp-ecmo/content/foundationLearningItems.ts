@@ -346,7 +346,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
         ],
         correctChoiceIds: ['sweep'],
         explanation:
-          'The three adjustments have different principal effects: speed acts on blood flow; sweep flow and sweep-gas oxygen fraction act on the gas side. The comparisons in this section are run from the same starting point, one at a time, so each response can be attributed to the control that produced it.',
+          'The three adjustments have different principal effects: speed acts on blood flow; sweep flow and sweep-gas oxygen fraction act on the gas side. The comparisons in this section are run from the same starting point, one at a time, so each response can be attributed to the control that produced it. After the sweep comparison, read PaCO₂ and pH: they move while circuit flow stays where it was. After the speed comparison, read circuit flow and PaCO₂: flow rises and PaCO₂ holds. If carbon dioxide keeps climbing with sweep already set, check the gas path itself, the source connection and the sweep actually delivered, before changing anything on the blood side.',
         evidenceIds: [...coreSources, 'elso-adult-vv-2021'],
         reviewStatus: 'draft',
       },
