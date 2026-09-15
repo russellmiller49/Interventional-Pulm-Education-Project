@@ -116,7 +116,7 @@ describe('the self-paced record (BF-01)', () => {
     expect(readBronchSelfPacedRecord()).toEqual(createEmptyBronchSelfPacedRecord())
   })
 
-  it('keeps the learner’s finished survey, and reads one saved under the earlier record without rewriting it', () => {
+  it('keeps the learner’s finished survey and leaves one saved under the earlier record unused and unchanged', () => {
     const ledger = surveyLedger()
     const own = withSurveySnapshot(createEmptyBronchSelfPacedRecord(), ledger, NOW)
     expect(own.surveySnapshot?.rows).toEqual(Object.values(ledger))
@@ -129,9 +129,10 @@ describe('the self-paced record (BF-01)', () => {
       updatedAt: NOW,
     })
     localStorage.setItem(BRONCH_STORAGE_KEY, earlier)
-    expect(availableSurveySnapshot(createEmptyBronchSelfPacedRecord())?.rows).toEqual(
-      Object.values(ledger),
-    )
+    // BF-03: a historical survey is not the learner's own and never stands in for it.
+    expect(availableSurveySnapshot(createEmptyBronchSelfPacedRecord())).toBeNull()
+    expect(availableSurveySnapshot(own)).toBe(own.surveySnapshot)
+    expect(readBronchSelfPacedRecord().surveySnapshot).toBeNull()
     expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBe(earlier)
   })
 
