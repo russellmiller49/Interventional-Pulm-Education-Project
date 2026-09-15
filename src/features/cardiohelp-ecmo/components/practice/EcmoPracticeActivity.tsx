@@ -6,7 +6,7 @@ import { CirclePause, CirclePlay, Clock3, Lightbulb, StepForward } from 'lucide-
 import { useRouter } from '@/i18n/navigation'
 import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 
-import { caseKindLabel, presentationTitle } from '../../content/casePresentation'
+import { caseKindLabel } from '../../content/casePresentation'
 import { clinicalPracticeScenarioById } from '../../content/clinicalCases'
 import {
   cardiohelpCurriculum,
@@ -341,7 +341,7 @@ export function EcmoPracticeCaseView({
             pathname: `${cardiohelpEcmoNavBase}/practice`,
             query: { case: recommendedNext.scenarioId, track: supportMode },
           },
-          label: `Case · ${presentationLabel(recommendedNext.scenarioId)}`,
+          label: `Case · ${caseLabel(recommendedNext.scenarioId)}`,
           onSelect: () => onLoadScenario?.(recommendedNext.scenarioId),
         }
       : {
@@ -481,8 +481,7 @@ export function EcmoPracticeCaseView({
                   <optgroup key={unitItem.id} label={`Unit ${groupNumber} · ${unitItem.title}`}>
                     {unitItem.caseScenarioIds.map((caseId) => (
                       <option key={caseId} value={caseId}>
-                        {clinicalPracticeScenarioById.get(caseId)?.title ??
-                          presentationLabel(caseId)}
+                        {caseLabel(caseId)}
                         {progress.visitedTopicIds?.includes(`practice:${supportMode}:${caseId}`)
                           ? ' · visited'
                           : ''}
@@ -913,9 +912,9 @@ function alarmRank(priority: EcmoContextStripLine['alarm']['priority']): number 
   return priority === 'high' ? 3 : priority === 'medium' ? 2 : priority === 'low' ? 1 : 0
 }
 
-function presentationLabel(caseId: string): string {
+function caseLabel(caseId: string): string {
   const definition = clinicalPracticeScenarioById.get(caseId)
-  return definition ? presentationTitle(definition) : 'a case in this unit'
+  return definition ? definition.title : 'a case in this unit'
 }
 
 /** The surface a prompted machine task's control sits on, as a guided target. */

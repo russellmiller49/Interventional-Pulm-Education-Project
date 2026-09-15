@@ -12,7 +12,6 @@ import { ArrowRight, ChevronDown, HeartPulse, Wind } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 
-import { presentationTitle } from '../content/casePresentation'
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
 import { orderedCaseScenarioIds } from '../content/curriculum'
 import { cardiohelpDeviceProfile, cardiohelpEcmoPublicationStatus } from '../content/deviceProfile'
@@ -45,9 +44,8 @@ interface SavedActivityLink {
  * without it a learner who stopped mid-case would have no way back to it from here.
  *
  * Returns null for a Learn pointer (the pathway already covers that), and for a case id that is no
- * longer in the registry rather than labelling a link with a raw identifier. The case is named by
- * its presentation: a saved-work link is read before the case is reopened, so it may not carry the
- * diagnosis.
+ * longer in the registry rather than labelling a link with a raw identifier. The existing case
+ * title keeps the saved link consistent with the catalog and case header.
  */
 function savedActivityLink(progress: ProgressV2): SavedActivityLink | null {
   const lastVisited = progress.lastVisited
@@ -66,7 +64,7 @@ function savedActivityLink(progress: ProgressV2): SavedActivityLink | null {
   return {
     pathname: `${cardiohelpEcmoNavBase}/practice`,
     query: { case: lastVisited.scenarioId, track: lastVisited.supportMode },
-    label: presentationTitle(clinicalCase),
+    label: clinicalCase.title,
   }
 }
 
@@ -188,7 +186,7 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
           <p>
             The CARDIOHELP console lab teaches adult VV and peripheral VA ECMO on a simulated
             circuit: one ordered pathway of short sections per track, a clinical case after each
-            mechanism, and one open challenge at the end.
+            mechanism, and an integrated case with explanations available at any time.
           </p>
           <div className={styles.hubEntryActions}>
             {next ? (
@@ -213,7 +211,7 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
             ) : (
               <p className={styles.hubTrackDone} data-ecmo-continue="complete">
                 Every section of the {track.toUpperCase()} track has been visited. Revisit any of
-                them below, or take the challenge.
+                them below, or open the integrated case.
               </p>
             )}
           </div>

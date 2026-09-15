@@ -9,7 +9,7 @@ const handoffMetadata: Metadata = {
   title: 'ECMO Management · CARDIOHELP console lab',
   description:
     cardiohelpEcmoPublicationStatus === 'published'
-      ? 'Reviewed step-by-step learning and independent adult VV and peripheral VA ECMO console, circuit, sweep, pressure-reasoning, and troubleshooting practice.'
+      ? 'Self-paced adult VV and peripheral VA ECMO console, circuit, sweep, pressure-reasoning, and troubleshooting lessons with optional practice.'
       : 'Unlisted testing version of the step-by-step adult VV and peripheral VA ECMO console, circuit, sweep, pressure-reasoning, and troubleshooting lab.',
   robots: {
     index: false,

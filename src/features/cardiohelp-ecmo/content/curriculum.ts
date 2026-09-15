@@ -14,9 +14,8 @@ import { clinicalPracticeScenarioById } from './clinicalCases'
  * capstone prerequisites. Lessons are referenced by their drill scenario id
  * (a guided lesson's `scenarioId`), cases by their clinical scenario id.
  *
- * A unit's title and summary are read on the hub before any of its drills is opened, so they name
- * what the learner will see and read — never a fault, its mechanism or the move that answers it.
- * `learn-precommit-leak.test.ts` holds each unit to the deny patterns of the drills it lists.
+ * Units are open navigation: names can identify the mechanism taught in a worked lesson.
+ * Suggested order never requires a prediction or completion of earlier lessons (ECMO-02).
  */
 export interface CurriculumUnit {
   id: string
@@ -91,9 +90,9 @@ export const cardiohelpCurriculum: Readonly<Record<SupportMode, readonly Curricu
     {
       id: 'vv-7-capstone',
       supportMode: 'vv',
-      title: 'Integration challenge',
+      title: 'VV integrated case',
       summary:
-        'One presentation, four explanations, and no prompting. Every drill on the track comes first.',
+        'One presentation and four explanations. Review the earlier lessons if useful, or open this case directly and reveal the reasoning at any time.',
       lessonScenarioIds: [],
       caseScenarioIds: [],
       capstoneScenarioId: 'vv-off-sweep-capstone',
@@ -164,9 +163,9 @@ export const cardiohelpCurriculum: Readonly<Record<SupportMode, readonly Curricu
     {
       id: 'va-7-capstone',
       supportMode: 'va',
-      title: 'Integration challenge',
+      title: 'VA integrated case',
       summary:
-        'The same unchanged flow, with a second circulation to blame, and no prompting. Every drill on the track comes first.',
+        'Compare the circuit and both circulations. Review the earlier lessons if useful, or open this case directly and reveal the reasoning at any time.',
       lessonScenarioIds: [],
       caseScenarioIds: [],
       capstoneScenarioId: 'va-mixed-circulation-capstone',

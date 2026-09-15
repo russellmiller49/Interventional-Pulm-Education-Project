@@ -16,19 +16,10 @@ import { ecmoSectionSpec } from '../content/sectionSpecs'
 import type { GuidedWalkthroughStep, SupportMode } from '../engine/types'
 
 /**
- * I3a — nothing a learner reads before a drill's prediction may carry that drill's answer.
- *
- * Every drill spec names the phrases that are its answer (`precommitDenyPatterns`): the fault, the
- * mechanism, the move, the reflex. The surfaces a learner reads before committing are the pathway
- * row that names the section, the lesson header, the observe step, and — because the chain of
- * transfers runs one drill into the next — the previous lesson's transfer step. Each of those is
- * held here to the deny patterns of the drill it opens onto. Curriculum units are read on the hub
- * before any of their drills, so a unit is held to the patterns of every drill it lists.
- *
- * Signal words are allowed. pVen, flow, sweep, chatter and saturation are what the learner is asked
- * to read; the deny patterns name diagnoses and moves, not readings.
- *
- * Pure content: nothing renders. The registries are read exactly as the stage reads them.
+ * ECMO-02: course names and objectives are teaching, not answer-security surfaces. The
+ * remaining deny patterns describe only the local optional observation/prediction variation.
+ * ECMO-01 rendered self-paced tests pin direct reveal, retry and skipping without an answer.
+ * Registry identity, authored transfer setup and duration checks remain here.
  */
 
 const TRACKS: readonly SupportMode[] = ['vv', 'va']
@@ -108,49 +99,32 @@ describe('the registries validate and cover every drill', () => {
   })
 })
 
-describe('the pathway row that names a drill does not answer it', () => {
+describe('named lessons stay aligned with the open shared pathway', () => {
   it.each(drills.map((drill) => [drill.scenarioId, drill] as const))(
-    '%s: title, rail label and description are clean',
+    '%s: lesson title, objective and catalog retain the same teaching identity',
     (_id, drill) => {
-      expectClean(drill.patterns, [
-        { where: 'pathway.title', text: drill.section.title },
-        { where: 'pathway.shortTitle', text: drill.section.shortTitle },
-        { where: 'pathway.description', text: drill.section.description },
-      ])
+      const lesson = cardiohelpLearnLessonByScenarioId.get(drill.scenarioId)
+      expect(lesson?.title).toBe(drill.section.title)
+      expect(lesson?.learningObjectives).toEqual([ecmoSectionSpec(drill.scenarioId).objective])
+      expect(criticalCareActivityById.get(drill.section.activityId)?.title).toBe(
+        drill.section.title,
+      )
+      expect(drill.section.shortTitle.trim().length).toBeGreaterThan(0)
     },
   )
 
-  it('names every section without a digit, on both tracks', () => {
-    for (const track of TRACKS) {
-      for (const section of criticalCareLearningPathway('cardiohelp-ecmo', track).sections) {
-        expect(`${section.id}: ${section.title}`).not.toMatch(/\d/)
-        expect(`${section.id}: ${section.shortTitle}`).not.toMatch(/\d/)
-        expect(`${section.id}: ${section.description}`).not.toMatch(/\d/)
-      }
-    }
-  })
-})
-
-describe('the lesson header does not answer the drill', () => {
-  it.each(drills.map((drill) => [drill.scenarioId, drill] as const))(
-    '%s: title and objective are clean',
-    (_id, drill) => {
-      const lesson = cardiohelpLearnLessonByScenarioId.get(drill.scenarioId)
-      if (!lesson) throw new Error(`No lesson for ${drill.scenarioId}`)
-      expectClean(drill.patterns, [
-        { where: 'lesson.title', text: lesson.title },
-        ...lesson.learningObjectives.map((text) => ({ where: 'lesson.objective', text })),
-      ])
-    },
-  )
-
-  it.each(drills.map((drill) => [drill.scenarioId, drill] as const))(
-    '%s: is titled by its pathway row and states the section spec objective, once',
-    (_id, drill) => {
-      const lesson = cardiohelpLearnLessonByScenarioId.get(drill.scenarioId)
-      if (!lesson) throw new Error(`No lesson for ${drill.scenarioId}`)
-      expect(lesson.title).toBe(drill.section.title)
-      expect(lesson.learningObjectives).toEqual([ecmoSectionSpec(drill.scenarioId).objective])
+  it.each([
+    ['vv', 'preload-drainage-collapse', /drainage insufficiency/i],
+    ['vv', 'afterload-return-obstruction', /return obstruction/i],
+    ['vv', 'afterload-oxygenator-resistance', /oxygenator resistance/i],
+    ['vv', 'vv-recirculation', /recirculation/i],
+    ['vv', 'gas-source-interruption', /sweep-gas interruption/i],
+    ['va', 'va-differential-hypoxemia', /differential hypoxemia/i],
+    ['va', 'va-lv-loading', /ventricular loading/i],
+  ] as const)(
+    '%s / %s names the concept taught without an answer commitment',
+    (track, id, topic) => {
+      expect(sectionOf(track, id).title).toMatch(topic)
     },
   )
 })
@@ -252,21 +226,17 @@ describe('the previous lesson’s transfer step does not answer the drill it ope
   })
 })
 
-describe('a curriculum unit does not answer any drill it lists', () => {
-  const units = TRACKS.flatMap((track) => cardiohelpCurriculum[track])
-
-  it.each(units.map((unit) => [unit.id, unit] as const))(
-    '%s: title and summary are clean',
-    (_id, unit) => {
-      const patterns = unit.lessonScenarioIds.flatMap(
-        (scenarioId) => ecmoDrillSpec(scenarioId).precommitDenyPatterns,
+describe('curriculum summaries advertise optional integrated cases', () => {
+  it.each(TRACKS)(
+    '%s retains its case identity without prerequisites or independence claims',
+    (track) => {
+      const unit = cardiohelpCurriculum[track].find((item) => item.capstoneScenarioId)!
+      expect(unit.title).toBe(`${track.toUpperCase()} integrated case`)
+      expect(unit.summary).toMatch(/open this case directly/i)
+      expect(unit.summary).toMatch(/reveal the reasoning at any time/i)
+      expect(unit.summary).not.toMatch(
+        /no prompting|comes first|required|independent|mastery|exam/i,
       )
-      expectClean(patterns, [
-        { where: 'unit.title', text: unit.title },
-        { where: 'unit.summary', text: unit.summary },
-      ])
-      // The id carries the unit's ordinal; the learner reads only the title and the summary.
-      expect(`${unit.title} ${unit.summary}`).not.toMatch(/\d/)
     },
   )
 })

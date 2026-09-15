@@ -401,13 +401,9 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
     trackId: 'vv',
     arcSentence:
       'Understand the support, trace the circuit, learn the normal state, then work what goes wrong',
-    /**
-     * Every title and description on both ECMO pathways names the presentation — what the learner
-     * sees on the console, the circuit and the patient — never the fault, its mechanism, the best
-     * action or the reflex to resist. The section is the pre-commit surface a learner reads first;
-     * its name reaching the answer would settle the drill's prediction before it was asked.
-     * `learn-precommit-leak.test.ts` holds every row to its drill's deny patterns.
-     */
+    // Named topics remain visible throughout self-paced learning. The pathway is the shared
+    // source for catalog, outline, lesson-header and next-link titles; optional prediction
+    // does not hide this map or require diagnosis-neutral lesson names (ECMO-02).
     sections: [
       {
         id: 'why-extracorporeal-support',
@@ -481,8 +477,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'preload-drainage-collapse',
-        shortTitle: 'Flow falls',
-        title: 'Flow falls and the drainage line judders',
+        shortTitle: 'Drainage insufficiency',
+        title: 'Drainage insufficiency: falling flow and line chatter',
         minutes: 10,
         description:
           'A run that was steady is not any more. Read the flow, the drainage pressure and the line before you decide which side of the pump to look at.',
@@ -491,8 +487,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'afterload-return-obstruction',
-        shortTitle: 'Pressures rise',
-        title: 'Two pressures rise together as flow falls',
+        shortTitle: 'Return obstruction',
+        title: 'Return obstruction: rising post-pump pressures',
         minutes: 10,
         description:
           'Both post-pump pressures have climbed and the flow has fallen with nothing touched. Read the pair and the gradient between them before deciding where the load sits.',
@@ -501,8 +497,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'afterload-oxygenator-resistance',
-        shortTitle: 'Pressures separate',
-        title: 'One pressure pulls away from the other',
+        shortTitle: 'Oxygenator resistance',
+        title: 'Oxygenator resistance: a widening pressure gradient',
         minutes: 10,
         description:
           'The pressures either side of the membrane no longer move together. Trend the gap at similar flow, and decide whether one reading is enough to act on.',
@@ -511,8 +507,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'vv-recirculation',
-        shortTitle: 'Flow up, patient worse',
-        title: 'Flow is up and the patient is worse',
+        shortTitle: 'VV recirculation',
+        title: 'VV recirculation: circuit flow and patient oxygenation',
         minutes: 10,
         description:
           'The display says more, the patient says less. Compare the saturation coming back into the circuit with the patient’s own before deciding what the flow number is worth.',
@@ -521,8 +517,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'acute-hypercapnia',
-        shortTitle: 'Acute CO₂ rise',
-        title: 'CO₂ climbing, pH falling, patient struggling',
+        shortTitle: 'Acute hypercapnia',
+        title: 'Acute hypercapnia: sweep and the acid–base picture',
         minutes: 8,
         description:
           'Read the gas, the pH, the bicarbonate and the work of breathing together, then decide which control reaches the problem and how fast to move it.',
@@ -531,8 +527,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'compensated-hypercapnia',
-        shortTitle: 'High CO₂, steady',
-        title: 'High CO₂, normal pH, comfortable patient',
+        shortTitle: 'Compensated hypercapnia',
+        title: 'Compensated hypercapnia: interpreting CO₂ with pH',
         minutes: 8,
         description:
           'The overnight team wants to know what to do about the CO₂. Read the whole acid–base picture and the phase of the run before deciding whether any setting should move.',
@@ -541,8 +537,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'gas-source-interruption',
-        shortTitle: 'Sats fall, flow holds',
-        title: 'Gas transfer falls while flow holds',
+        shortTitle: 'Sweep-gas interruption',
+        title: 'Sweep-gas interruption: gas transfer with stable blood flow',
         minutes: 10,
         description:
           'Nothing on the pressure display has moved, and the patient is getting worse. Decide which path to trace.',
@@ -561,8 +557,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'transport-power-loss',
-        shortTitle: 'On battery',
-        title: 'On battery, mid-transport',
+        shortTitle: 'Transport power loss',
+        title: 'Power loss during transport: battery support',
         minutes: 8,
         description:
           'The supply has dropped out on the move and the console has changed over to its own reserve. Decide what that reserve buys, and what securing support means here.',
@@ -659,8 +655,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'va-preload-drainage-collapse',
-        shortTitle: 'Flow falls',
-        title: 'Flow falls on VA, and the patient’s pressure follows',
+        shortTitle: 'Drainage insufficiency',
+        title: 'VA drainage insufficiency: falling flow and pressure',
         minutes: 10,
         description:
           'Flow swings, the drainage pressure has moved, the line is juddering, and this time the patient’s pressure is falling with the flow. Read the circuit and the patient together before deciding what any move is for.',
@@ -669,8 +665,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'va-afterload-arterial-return-obstruction',
-        shortTitle: 'Pressures rise',
-        title: 'Two pressures rise together on the arterial side',
+        shortTitle: 'Return obstruction',
+        title: 'VA arterial return obstruction: rising circuit pressures',
         minutes: 10,
         description:
           'Both post-pump pressures have climbed as flow fell, while the patient’s own arterial line on its own monitor has not. Read the circuit pressures beside that line before deciding where the load sits.',
@@ -679,8 +675,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'va-afterload-oxygenator-resistance',
-        shortTitle: 'Pressures separate',
-        title: 'One pressure pulls away from the other, on VA',
+        shortTitle: 'Oxygenator resistance',
+        title: 'VA oxygenator resistance: a widening pressure gradient',
         minutes: 10,
         description:
           'The pressures either side of the membrane have separated at an unchanged speed. Trend the gap at similar flow, then reassess the territories the circuit supplies.',
@@ -689,8 +685,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'va-differential-hypoxemia',
-        shortTitle: 'Two saturations',
-        title: 'Right arm low, groin fine, circuit reassuring',
+        shortTitle: 'Differential hypoxemia',
+        title: 'Differential hypoxemia: right-arm and femoral oxygenation',
         minutes: 12,
         description:
           'One saturation from the right arm, one from the groin, one from blood leaving the membrane, and they disagree. Say what each sample reports before deciding whether the console can change any of them.',
@@ -699,8 +695,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'va-lv-loading',
-        shortTitle: 'Flat pulse',
-        title: 'Flow and pressure look fine; the pulse has gone flat',
+        shortTitle: 'LV loading',
+        title: 'VA left ventricular loading: interpreting low pulsatility',
         minutes: 10,
         description:
           'The flow and the mean pressure are acceptable, and the arterial trace under them is nearly flat. Decide what those two numbers establish about the heart, and which signals do.',
@@ -709,8 +705,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'va-acute-hypercapnia',
-        shortTitle: 'Acute CO₂ rise',
-        title: 'CO₂ climbing on VA',
+        shortTitle: 'Acute hypercapnia',
+        title: 'Acute hypercapnia on VA: sweep and patient reassessment',
         minutes: 8,
         description:
           'Read the gas, the pH and the work of breathing together with the circulation and the right arm. Decide which control reaches the CO₂, and which checks it does not replace.',
@@ -719,8 +715,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'va-gas-source-interruption',
-        shortTitle: 'Sats fall, flow holds',
-        title: 'Gas transfer falls while arterial flow holds',
+        shortTitle: 'Sweep-gas interruption',
+        title: 'VA sweep-gas interruption: gas transfer with stable flow',
         minutes: 10,
         description:
           'Nothing on the pressure display has moved, the arterial flow continues, and both saturations are falling. Decide which path to trace, and what to sample.',
@@ -739,8 +735,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'va-transport-power-loss',
-        shortTitle: 'On battery',
-        title: 'On battery, mid-transport, on VA',
+        shortTitle: 'Transport power loss',
+        title: 'VA power loss during transport: battery support',
         minutes: 8,
         description:
           'The supply has dropped out on the move and the console has changed over to its own reserve, on a circuit the circulation depends on. Decide what that reserve buys and what securing support means here.',

@@ -1,15 +1,10 @@
 import type { ScenarioDefinition } from '../engine/types'
 
 /**
- * What a Practice case is called before its debrief.
- *
- * A scenario's `title` names its diagnosis ("Occult hemorrhage with drainage insufficiency"), which
- * is the answer to the plan the learner is about to commit. Every surface that shows the case
- * before the debrief — the header, the case picker, the "Next" links, the Now card, the help
- * dialog — shows the presentation instead: the authored `presentationTitle` where one exists, else
- * the clinical case's patient label, which is already written from the bedside ("Patient with new
- * low flow, tachycardia, and hypotension"), else a neutral line for the capstones. The diagnosis
- * title returns in the debrief, where it belongs.
+ * Presentation-oriented wording for an optional local prediction variation. Main outlines,
+ * pickers, resume and next links use `scenario.title`, matching the shared catalog. A named
+ * learning case may state its mechanism; this helper must never impose a debrief-only title
+ * or explanation rule (ECMO-02).
  */
 export function presentationTitle(scenario: ScenarioDefinition): string {
   return (
@@ -24,7 +19,7 @@ export function presentationSummary(scenario: ScenarioDefinition): string {
   return (
     scenario.clinicalCase?.openingNarrative ??
     scenario.challengeBrief?.presentation ??
-    'The diagnosis and the corrective steps stay hidden until the debrief. Use everything on screen to commit your plan.'
+    'Explore the findings, try an optional prediction, or open the explanation at any time.'
   )
 }
 

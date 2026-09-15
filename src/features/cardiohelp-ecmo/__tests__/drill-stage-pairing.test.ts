@@ -1,5 +1,4 @@
 import { buildDrillStageLesson } from '../components/stage/adapters/drillStageAdapter'
-import { presentationTitle } from '../content/casePresentation'
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
 import { pairedCaseForLesson } from '../content/curriculum'
 import { cardiohelpLearnLessons } from '../content/learnLessons'
@@ -8,8 +7,8 @@ import { cardiohelpLearnLessons } from '../content/learnLessons'
  * I3f — what the stage hands the completion card, for all twenty drills.
  *
  * The card reads `practicePairing` and nothing else, so the adapter has to carry the kind the
- * mechanism map resolved, the case it named, and the case's presentation title — never `title`,
- * which is the diagnosis the case exists to have the learner reach.
+ * mechanism map resolved, the case it named, and the case's existing title. Named learning cases remain findable
+ * before the optional prediction or explanation is opened (ECMO-02).
  */
 describe('the drill stage carries the mechanism pairing to the completion card', () => {
   it.each(cardiohelpLearnLessons.map((lesson) => [lesson.scenarioId, lesson] as const))(
@@ -27,9 +26,8 @@ describe('the drill stage carries the mechanism pairing to the completion card',
       expect(stage.practicePairing).toEqual({
         kind: pairing.kind,
         caseId: clinical.id,
-        title: presentationTitle(clinical),
+        title: clinical.title,
       })
-      expect(stage.practicePairing?.title).not.toBe(clinical.title)
     },
   )
 
