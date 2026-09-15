@@ -79,14 +79,16 @@ export function ScopeOpticalView({
         </group>
       ) : (
         <>
-          {state.place !== 'larynx' ? (
-            <AirwaySurface
-              stlUrl={TEACHING_LUMEN_URL}
-              transform={identity}
-              mode="bronch"
-              dracoDecoderPath={DRACO_DECODER_PATH}
-            />
-          ) : null}
+          {/* The trachea is visible through the subglottis before the tip enters it,
+              and stays visible on withdrawal. A location change must not mount or
+              remove the downstream anatomy. This does not alter the capped source
+              inlet or resolve its separate, pending surface-junction review. */}
+          <AirwaySurface
+            stlUrl={TEACHING_LUMEN_URL}
+            transform={identity}
+            mode="bronch"
+            dracoDecoderPath={DRACO_DECODER_PATH}
+          />
           {view.mode === 'larynx-entry' ? <LarynxLumen assets={assets} state={state} /> : null}
           {view.mode === 'tube' ? <TubeModel assets={assets} state={state} /> : null}
           {view.mode === 'accessory' ? (

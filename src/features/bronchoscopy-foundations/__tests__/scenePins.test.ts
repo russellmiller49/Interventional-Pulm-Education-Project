@@ -8,6 +8,7 @@ import { OPTICAL_ASPECT, OPTICAL_FOV_DEG } from '../engine/scope/scopeOstia'
 import { ScopeDriver, teachingCase } from '../test-support/teachingCase'
 import type { ScopeViewSpec } from '../components/scope/types'
 import { createScopeState } from '../engine/scope/scopeReducer'
+import { section as larynxSection } from '../content/sections/larynx-and-entry'
 import larynx from '../../../../public/bronchoscopy-foundations/anatomy/larynx/larynx.json'
 
 const view: ScopeViewSpec = {
@@ -88,6 +89,45 @@ test('authored larynx pose follows the asset path and uses a right-handed camera
   const frame = scopeOpticalFrame(driver.state.pose!)
   const right = new Vector3(...frame.forward).cross(new Vector3(...frame.up))
   expect(right.distanceTo(new Vector3(...frame.right))).toBeLessThan(1e-6)
+})
+
+test('the larynx handoff bounds existing frame change and restores position and controls on return', () => {
+  if (larynxSection.act.kind !== 'scope-lab') throw new Error('Larynx scope activity required')
+  for (const rotation of [-90, 0, 90, 180]) {
+    for (const deflection of [-10, 0, 10]) {
+      const driver = new ScopeDriver(larynxSection.act.view)
+      driver.send({ type: 'tick', seconds: 3 })
+      driver.send({ type: 'advance', mm: 44.75 })
+      driver.send({ type: 'set-rotation', deg: rotation })
+      driver.send({ type: 'set-deflection', deg: deflection })
+      expect(driver.state.place).toBe('larynx')
+      const approach = scopeOpticalFrame(driver.state.pose!)
+      driver.send({ type: 'advance', mm: 0.25 })
+      expect(driver.state.place).toBe('airway')
+      expect(driver.state.engine?.edgeId).toBe(teachingCase().originEdge.get('TR'))
+      const crossing = scopeOpticalFrame(driver.state.pose!)
+      expect(
+        new Vector3(...approach.position).distanceTo(new Vector3(...crossing.position)),
+      ).toBeCloseTo(0.25, 4)
+      for (const axis of ['forward', 'up', 'right'] as const) {
+        // The pre-BF-02 authored and transported frames have the same tangent but
+        // a 2.662-degree roll offset. Bound that existing offset, not an invented
+        // exact match. This is a software regression bound, not anatomical approval.
+        expect(new Vector3(...approach[axis]).angleTo(new Vector3(...crossing[axis]))).toBeLessThan(
+          (3 * Math.PI) / 180,
+        )
+      }
+      driver.send({ type: 'advance', mm: -0.25 })
+      expect(driver.state.place).toBe('larynx')
+      const returned = scopeOpticalFrame(driver.state.pose!)
+      for (const key of ['position', 'forward', 'up', 'right'] as const)
+        expect(
+          new Vector3(...returned[key]).distanceTo(new Vector3(...approach[key])),
+        ).toBeLessThan(0.0001)
+      expect(driver.state.inputs.rotationDeg).toBe(rotation)
+      expect(driver.state.inputs.deflectionDeg).toBe(deflection)
+    }
+  }
 })
 
 test('bench rotation changes its optical frame without manufacturing airway entry', () => {
