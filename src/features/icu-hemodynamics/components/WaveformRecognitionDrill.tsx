@@ -1,216 +1,272 @@
 'use client'
 
-import { useMemo, useState, type Dispatch } from 'react'
+import { useId, useState } from 'react'
 
-import { waveformAtlasById, waveformAtlasEntries } from '../content/waveformAtlas'
-import { unidentifiedTraceDescription } from '../content/introductoryTeaching'
-import type { HemodynamicAction } from '../engine'
-import { WaveformAtlasFigure } from './WaveformAtlasFigure'
+import { NORMAL_WAVEFORM_INTERPRETATION_WITHHELD } from '../content/normalWaveformValidityChallenges'
+import {
+  recognitionPracticeExampleById,
+  recognitionPracticeExamples,
+  recognitionReadingById,
+  recognitionReadings,
+  type RecognitionPracticeExample,
+  type RecognitionReading,
+} from '../content/recognitionPractice'
+import { WaveformAtlasFigure, type WaveformFigureFault } from './WaveformAtlasFigure'
 import styles from './icu-hemodynamics.module.css'
 
 /**
- * Question order and distractors are authored rather than randomized, so the drill is
- * deterministic across server and client renders and the difficulty ramp is intentional.
- */
-const QUESTIONS: readonly { readonly answerId: string; readonly optionIds: readonly string[] }[] = [
-  {
-    answerId: 'rv-normal',
-    optionIds: ['ra-normal', 'rv-normal', 'pa-normal', 'wedge-normal'],
-  },
-  {
-    answerId: 'pa-normal',
-    optionIds: ['rv-normal', 'pa-normal', 'wedge-hybrid', 'ra-normal'],
-  },
-  {
-    answerId: 'wedge-normal',
-    optionIds: ['wedge-normal', 'ra-normal', 'wedge-overwedged', 'pa-normal'],
-  },
-  {
-    answerId: 'ra-tamponade',
-    optionIds: [
-      'ra-normal',
-      'ra-tamponade',
-      'ra-tricuspid-regurgitation',
-      'ra-atrial-fibrillation',
-    ],
-  },
-  {
-    answerId: 'ra-tricuspid-regurgitation',
-    optionIds: ['ra-cannon-a-wave', 'ra-tricuspid-regurgitation', 'ra-normal', 'ra-tamponade'],
-  },
-  {
-    answerId: 'wedge-large-v-wave',
-    optionIds: ['pa-normal', 'wedge-large-v-wave', 'wedge-normal', 'wedge-hybrid'],
-  },
-  {
-    answerId: 'ra-atrial-fibrillation',
-    optionIds: ['ra-atrial-fibrillation', 'ra-normal', 'ra-cannon-a-wave', 'ra-tamponade'],
-  },
-  {
-    answerId: 'wedge-overwedged',
-    optionIds: ['wedge-normal', 'wedge-overwedged', 'wedge-hybrid', 'ra-normal'],
-  },
-]
-
-/**
- * The four places only, for the section that teaches naming a place from its shape. The
- * abnormal patterns belong to the section after it, which reads the waves inside a named place.
- */
-const PLACE_QUESTIONS: readonly {
-  readonly answerId: string
-  readonly optionIds: readonly string[]
-}[] = [
-  { answerId: 'rv-normal', optionIds: ['ra-normal', 'rv-normal', 'pa-normal', 'wedge-normal'] },
-  { answerId: 'pa-normal', optionIds: ['rv-normal', 'pa-normal', 'wedge-normal', 'ra-normal'] },
-  { answerId: 'wedge-normal', optionIds: ['wedge-normal', 'ra-normal', 'rv-normal', 'pa-normal'] },
-  { answerId: 'ra-normal', optionIds: ['pa-normal', 'wedge-normal', 'ra-normal', 'rv-normal'] },
-  { answerId: 'pa-normal', optionIds: ['pa-normal', 'rv-normal', 'ra-normal', 'wedge-normal'] },
-  { answerId: 'rv-normal', optionIds: ['wedge-normal', 'pa-normal', 'rv-normal', 'ra-normal'] },
-]
-
-/**
- * Where the drill is: which tracing, what is selected, and whether the answer was checked or shown.
+ * Where the learner is in the recognition practice: which tracing is open, and what they have done
+ * with it on this visit.
  *
- * HD-01 removed the running correct count, the attempts count and the five-correct target. A learner
- * names as many tracings as are useful, checks an answer, shows the labels without answering, or
- * moves to another tracing at any time; nothing here decides whether they may move on.
+ * HD-02 (self-paced): the tracing changes only when the learner picks another one, so the trace they
+ * are inspecting stays put while they try a reading, open the hint, show the labels or compare it.
+ * Nothing here is saved, counted or sent to the simulation, and nothing decides whether the learner
+ * may move on.
  */
 export interface RecognitionRecord {
-  readonly index: number
-  readonly selectedId: string | null
-  readonly revealed: 'checked' | 'shown' | null
+  readonly exampleId: string
+  readonly selected: RecognitionReading | null
+  readonly checked: boolean
+  readonly labelsShown: boolean
+  readonly hintShown: boolean
+  readonly compareShown: boolean
 }
-export const emptyRecognitionRecord = (): RecognitionRecord => ({
-  index: 0,
-  selectedId: null,
-  revealed: null,
-})
+
+export function emptyRecognitionRecord(
+  exampleId: string = recognitionPracticeExamples[0].id,
+): RecognitionRecord {
+  return {
+    exampleId,
+    selected: null,
+    checked: false,
+    labelsShown: false,
+    hintShown: false,
+    compareShown: false,
+  }
+}
+
+function figureFault(example: RecognitionPracticeExample): WaveformFigureFault | undefined {
+  const fault = example.displayFault?.fault
+  if (!fault) return undefined
+  return {
+    levelOffsetMmHg: fault.levelOffsetMmHg,
+    scaleMaxMmHg: fault.scaleMaxMmHg,
+    artifact: fault.artifact,
+    dampingRatio: fault.dampingRatio,
+    naturalFrequencyHz: fault.naturalFrequencyHz,
+  }
+}
+
+function sentenceCase(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
 
 interface WaveformRecognitionDrillProps {
-  /**
-   * When given, the first checked answer marks the stage's "named a tracing" goal. Showing the labels
-   * without answering never does.
-   */
-  readonly dispatch?: Dispatch<HemodynamicAction>
-  /** `places` restricts the run to the four normal tracings; `all` is the full atlas. */
-  readonly questionSet?: 'places' | 'all'
   readonly enabled?: boolean
   readonly record?: RecognitionRecord
   readonly onRecord?: (record: RecognitionRecord) => void
 }
 
 export function WaveformRecognitionDrill({
-  dispatch,
-  questionSet = 'all',
   enabled = true,
   record,
   onRecord,
 }: WaveformRecognitionDrillProps) {
-  const QUESTION_SET = questionSet === 'places' ? PLACE_QUESTIONS : QUESTIONS
-  const [localRecord, setLocalRecord] = useState<RecognitionRecord>(emptyRecognitionRecord)
-  const currentRecord = record ?? localRecord
-  const { index, selectedId, revealed } = currentRecord
-  const updateRecord = onRecord ?? setLocalRecord
+  const headingId = useId()
+  const compareHeadingId = useId()
+  const groupName = useId()
+  const [localRecord, setLocalRecord] = useState<RecognitionRecord>(() => emptyRecognitionRecord())
+  const current = record ?? localRecord
+  const update = onRecord ?? setLocalRecord
 
-  const question = QUESTION_SET[index % QUESTION_SET.length]
-  const answer = waveformAtlasById.get(question.answerId)
-  const options = useMemo(
-    () => question.optionIds.flatMap((id) => waveformAtlasById.get(id) ?? []),
-    [question.optionIds],
-  )
+  const example =
+    recognitionPracticeExampleById.get(current.exampleId) ?? recognitionPracticeExamples[0]
+  const index = recognitionPracticeExamples.indexOf(example)
+  const total = recognitionPracticeExamples.length
+  const partner = recognitionPracticeExampleById.get(example.compareWithId)!
+  const reading = recognitionReadingById.get(example.reading)!
+  const revealed = current.checked || current.labelsShown
+  const matches = current.checked && current.selected === example.reading
 
-  if (!answer) return null
-
-  const isCorrect = revealed === 'checked' && selectedId === answer.id
-
-  function check() {
-    if (!enabled || !selectedId || revealed) return
-    updateRecord({ ...currentRecord, revealed: 'checked' })
-    dispatch?.({ type: 'VALIDATE_SIGNAL', check: 'waveform-recognition' })
+  function open(exampleId: string) {
+    if (enabled) update(emptyRecognitionRecord(exampleId))
   }
 
-  function show() {
-    if (!enabled || revealed) return
-    updateRecord({ ...currentRecord, selectedId: null, revealed: 'shown' })
+  function patch(next: Partial<RecognitionRecord>) {
+    if (enabled) update({ ...current, ...next })
   }
 
-  function nextQuestion() {
-    if (!enabled) return
-    updateRecord({ index: index + 1, selectedId: null, revealed: null })
+  function optionState(optionId: RecognitionReading): 'correct' | 'incorrect' | undefined {
+    if (optionId === example.reading) return 'correct'
+    if (optionId === current.selected) return 'incorrect'
+    return undefined
   }
+
+  const headline = !current.checked
+    ? `Shown without an answer: this is ${reading.sentence}.`
+    : matches
+      ? `That matches: this is ${reading.sentence}.`
+      : `Not this one: this is ${reading.sentence}.`
+
+  const mismatchNote = (() => {
+    if (!current.checked || matches || current.selected === null) return null
+    if (example.displayFault) {
+      return 'The shape still looks like a place, but on this display it cannot be trusted to name one.'
+    }
+    if (current.selected === 'cannot-name') {
+      return 'No display fault is drawn on this model tracing, so its shape can name the place.'
+    }
+    if (current.selected === partner.reading) {
+      const confusion = recognitionReadingById.get(partner.reading)!.sentence
+      return `${sentenceCase(confusion)} is the easy confusion here. ${example.contrast}`
+    }
+    return 'Read the shape against the labels now drawn on it, then compare it with the tracing it is most easily confused with.'
+  })()
 
   return (
-    <section className={styles.recognitionDrill} aria-labelledby="recognition-drill-heading">
+    <section
+      className={styles.recognitionDrill}
+      aria-labelledby={headingId}
+      data-recognition-example={example.id}
+    >
       <header className={styles.atlasPanelHeader}>
         <div>
-          <span>Optional practice · question tracing</span>
-          <h3 id="recognition-drill-heading">Name the tracing</h3>
+          <span>Optional practice · model tracings</span>
+          <h3 id={headingId}>Name the tracing</h3>
         </div>
-        <p className={styles.drillScore} role="status" aria-live="polite">
-          <strong>Tracing {index + 1}</strong>
-          <span>
-            Check an answer, show the labels, or move to another tracing whenever you like.
-          </span>
+        <p className={styles.recognitionPosition} role="status" aria-live="polite">
+          <strong>
+            Tracing {index + 1} of {total}
+          </strong>
+          <span>Nothing here is saved or counted.</span>
         </p>
       </header>
-      {index >= QUESTION_SET.length ||
-      QUESTION_SET.slice(0, index).some((candidate) => candidate.answerId === question.answerId) ? (
-        <p>Repeated practice · this reference pattern has appeared earlier.</p>
-      ) : (
-        <p>Identify this tracing; it is the sole question example.</p>
-      )}
+      <p className={styles.recognitionIntro}>
+        Pick any tracing. Try a reading with the labels hidden, or show the labels and explanation
+        straight away, then compare it with the tracing it is most easily confused with. Repeat any
+        tracing, and continue in Steps whenever you like.
+      </p>
+
+      <div className={styles.recognitionPicker} role="group" aria-label="Suggested tracings">
+        {recognitionPracticeExamples.map((candidate, candidateIndex) => (
+          <button
+            key={candidate.id}
+            type="button"
+            aria-pressed={candidate.id === example.id}
+            disabled={!enabled}
+            onClick={() => open(candidate.id)}
+          >
+            Tracing {candidateIndex + 1}
+          </button>
+        ))}
+      </div>
 
       <WaveformAtlasFigure
-        key={`${index}-${question.answerId}-${revealed ?? 'open'}`}
+        key={example.id}
         entry={
           revealed
-            ? answer
-            : // Withhold the identifying caption and labels until the learner checks or shows them.
-              { ...answer, label: 'Unidentified tracing', normalRange: null, insertionDepth: null }
+            ? example.entry
+            : // The labels, range and depth stay hidden until the learner checks a reading or shows them.
+              {
+                ...example.entry,
+                label: 'Unidentified tracing',
+                normalRange: null,
+                insertionDepth: null,
+              }
         }
-        annotated={revealed !== null}
+        annotated={revealed}
         ecgLandmarks
-        readable={questionSet === 'places'}
+        readable
+        fault={figureFault(example)}
         figureDescription={
           revealed
-            ? undefined
-            : `${unidentifiedTraceDescription(answer)} Axis 0–${answer.scaleMaxMmHg} mmHg. Identifying labels are withheld until you check an answer or show them.`
+            ? example.displayFault
+              ? `${example.entry.label}. ${example.displayFault.figureTextEquivalent}`
+              : undefined
+            : `${example.unlabelledDescription} Axis 0–${example.entry.scaleMaxMmHg} mmHg. The labels are hidden until you check a reading or show them.`
         }
       />
 
-      <fieldset className={styles.drillOptions} disabled={revealed !== null || !enabled}>
-        <legend>Which tracing is this?</legend>
-        {options.map((option) => (
+      {current.hintShown && !revealed ? (
+        <p className={styles.drillHint} role="note" data-recognition-hint>
+          <strong>Hint:</strong> {example.hint}
+        </p>
+      ) : null}
+
+      <fieldset className={styles.drillOptions} disabled={!enabled || revealed}>
+        <legend>Optional try: which reading does this tracing support?</legend>
+        {recognitionReadings.map((option) => (
           <label key={option.id} data-state={revealed ? optionState(option.id) : undefined}>
             <input
               type="radio"
-              name={`recognition-${index}`}
+              name={groupName}
               value={option.id}
-              checked={selectedId === option.id}
-              onChange={() => updateRecord({ ...currentRecord, selectedId: option.id })}
+              checked={current.selected === option.id}
+              onChange={() => patch({ selected: option.id })}
             />
             <span>{option.label}</span>
-            {revealed && option.id === answer.id ? (
-              <span className={styles.optionStateText}>Reference tracing</span>
-            ) : revealed && option.id === selectedId ? (
-              <span className={styles.optionStateText}>Selected response</span>
+            {revealed && option.id === example.reading ? (
+              <span className={styles.optionStateText}>Labelled reading</span>
+            ) : current.checked && option.id === current.selected ? (
+              <span className={styles.optionStateText}>Your reading</span>
             ) : null}
           </label>
         ))}
       </fieldset>
 
-      <div className={styles.drillControls}>
-        {!revealed ? (
+      <div className={styles.drillControls} role="group" aria-label="Practice actions">
+        {revealed ? (
           <>
-            <button type="button" disabled={!selectedId || !enabled} onClick={check}>
-              Check answer
+            <button
+              type="button"
+              aria-expanded={current.compareShown}
+              disabled={!enabled}
+              onClick={() => patch({ compareShown: !current.compareShown })}
+            >
+              {current.compareShown ? 'Hide the comparison' : 'Compare with another tracing'}
             </button>
-            <button type="button" disabled={!enabled} onClick={show}>
-              Show the labels
+            <button type="button" disabled={!enabled} onClick={() => open(example.id)}>
+              Try this tracing again
             </button>
           </>
-        ) : null}
-        <button type="button" disabled={!enabled} onClick={nextQuestion}>
+        ) : (
+          <>
+            <button
+              type="button"
+              disabled={!enabled || current.selected === null}
+              onClick={() => patch({ checked: true })}
+            >
+              Check answer
+            </button>
+            <button
+              type="button"
+              aria-expanded={current.hintShown}
+              disabled={!enabled}
+              onClick={() => patch({ hintShown: !current.hintShown })}
+            >
+              {current.hintShown ? 'Hide the hint' : 'Hint'}
+            </button>
+            <button
+              type="button"
+              disabled={!enabled}
+              onClick={() => patch({ labelsShown: true, selected: null })}
+            >
+              Show the labels and explanation
+            </button>
+          </>
+        )}
+        <button
+          type="button"
+          disabled={!enabled || index === 0}
+          onClick={() => open(recognitionPracticeExamples[index - 1].id)}
+        >
+          Previous tracing
+        </button>
+        <button
+          type="button"
+          disabled={!enabled}
+          onClick={() => open(recognitionPracticeExamples[(index + 1) % total].id)}
+        >
           Next tracing
         </button>
       </div>
@@ -218,37 +274,83 @@ export function WaveformRecognitionDrill({
       {revealed ? (
         <div
           className={styles.drillFeedback}
-          data-correct={isCorrect || undefined}
-          data-recognition-reveal={revealed}
+          data-correct={matches || undefined}
+          data-recognition-reveal={current.checked ? 'checked' : 'shown'}
           role="status"
         >
-          <strong>
-            {revealed === 'shown'
-              ? `Shown without an answer: ${answer.label.toLowerCase()}.`
-              : isCorrect
-                ? 'Pattern identified.'
-                : `This is ${answer.label.toLowerCase()}.`}
-          </strong>
-          <p>{answer.summary}</p>
-          {/* The cues are a list, and say so: the same heading the atlas panel gives them. */}
-          <h4>What identifies it</h4>
-          <ul>
-            {answer.recognitionCues.map((cue) => (
-              <li key={cue}>{cue}</li>
-            ))}
-          </ul>
-          {answer.pitfall ? <p className={styles.drillPitfall}>{answer.pitfall}</p> : null}
+          <strong>{headline}</strong>
+          {mismatchNote ? <p>{mismatchNote}</p> : null}
+          <p className={styles.drillOrigin} data-recognition-origin={example.origin}>
+            {example.originNote}
+          </p>
+          {example.displayFault ? (
+            <>
+              <p>{NORMAL_WAVEFORM_INTERPRETATION_WITHHELD}.</p>
+              <dl className={styles.recognitionFaultFacts}>
+                <div>
+                  <dt>What you see</dt>
+                  <dd>{example.displayFault.whatYouSee}</dd>
+                </div>
+                <div>
+                  <dt>Why no chamber can be named</dt>
+                  <dd>{example.displayFault.whyInterpretationIsWithheld}</dd>
+                </div>
+                <div>
+                  <dt>Repair or re-read first</dt>
+                  <dd>{example.displayFault.repairFirst}</dd>
+                </div>
+              </dl>
+            </>
+          ) : (
+            <>
+              <p>{example.entry.summary}</p>
+              {/* The cues are a list, and say so: the same heading the atlas panel gives them. */}
+              <h4>What identifies it</h4>
+              <ul>
+                {example.entry.recognitionCues.map((cue) => (
+                  <li key={cue}>{cue}</li>
+                ))}
+              </ul>
+              {example.entry.pitfall ? (
+                <p className={styles.drillPitfall}>{example.entry.pitfall}</p>
+              ) : null}
+            </>
+          )}
         </div>
       ) : null}
+
+      {revealed && current.compareShown ? (
+        <section
+          className={styles.recognitionCompare}
+          aria-labelledby={compareHeadingId}
+          data-recognition-compare={partner.id}
+        >
+          <h4 id={compareHeadingId}>Compare: {partner.entry.label}</h4>
+          <p>{example.contrast}</p>
+          <WaveformAtlasFigure
+            entry={partner.entry}
+            annotated={partner.displayFault === undefined}
+            ecgLandmarks
+            readable
+            showLegend={false}
+            scaleMaxMmHg={example.entry.scaleMaxMmHg}
+            fault={figureFault(partner)}
+          />
+          <p className={styles.drillOrigin} data-recognition-origin={partner.origin}>
+            {partner.originNote}
+          </p>
+          <button type="button" disabled={!enabled} onClick={() => open(partner.id)}>
+            Open the comparison tracing
+          </button>
+        </section>
+      ) : null}
+
+      <p className={styles.atlasBoundary} role="note">
+        Every tracing here is drawn by this module’s waveform model, the same one behind the live
+        monitor. None is a patient recording or a calibrated device trace. Once its labels are
+        shown, each tracing says whether it is a reference, a model variant or a display fault drawn
+        onto a normal tracing.
+      </p>
     </section>
   )
-
-  function optionState(optionId: string): 'correct' | 'incorrect' | undefined {
-    if (!answer) return undefined
-    if (optionId === answer.id) return 'correct'
-    if (optionId === selectedId) return 'incorrect'
-    return undefined
-  }
 }
-
-export const waveformRecognitionEntryCount = waveformAtlasEntries.length

@@ -46,7 +46,6 @@ import {
 } from '../../engine/selfPacedProgress'
 import {
   PA_RETURN_CHECK,
-  WAVEFORM_RECOGNITION_CHECK,
   stageGoalLabel,
   stageGoalMet,
   stageWatchLabels,
@@ -613,7 +612,6 @@ function HemodynamicsStageSession({
       case 'frozen':
         return 'freeze'
       case 'check':
-        if (unmet.id === WAVEFORM_RECOGNITION_CHECK) return null
         return unmet.id.startsWith('waveform-confirmed')
           ? 'advance'
           : unmet.id === 'fast-flush'
@@ -790,13 +788,6 @@ function HemodynamicsStageSession({
               primary: moveOn('Continue without sorting'),
             }
       case 'simulator-task':
-        if (activeStep.surface === 'recognition') {
-          return {
-            ...base,
-            status: 'Optional practice. Name tracings for as long as it is useful, then continue.',
-            primary: moveOn('Continue'),
-          }
-        }
         return performedNow
           ? {
               ...base,
@@ -827,10 +818,18 @@ function HemodynamicsStageSession({
             }
       case 'explain':
         return { ...base, primary: moveOn(activeStep.actionLabel) }
+      case 'recognition-practice':
+        return {
+          ...base,
+          status:
+            'Optional practice. Try, show or compare tracings for as long as it is useful, then continue.',
+          primary: moveOn('Continue'),
+        }
       case 'component-identification':
         return {
           ...base,
-          status: 'Optional practice. Check a component, show it, or move on at any point.',
+          status:
+            'Optional practice. Check a component, show it, switch numbering, or move on at any point.',
           primary: moveOn('Continue'),
         }
       case 'provenance-drill':
@@ -1231,14 +1230,16 @@ function HemodynamicsStageSession({
         return (
           <AtrialComponentActivity
             key={activeStep.id}
-            mode={interaction.mode}
-            selections={commitments.componentSelections[activeStep.id] ?? []}
-            onChange={(selections) =>
+            selections={{
+              guided: commitments.componentSelections[`${activeStep.id}:guided`],
+              independent: commitments.componentSelections[`${activeStep.id}:independent`],
+            }}
+            onChange={(numbering, selections) =>
               setCommitments((current) => ({
                 ...current,
                 componentSelections: {
                   ...current.componentSelections,
-                  [activeStep.id]: selections,
+                  [`${activeStep.id}:${numbering}`]: selections,
                 },
               }))
             }

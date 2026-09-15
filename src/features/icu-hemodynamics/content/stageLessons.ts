@@ -113,7 +113,10 @@ export type HemodynamicsStageInteraction =
   | { readonly kind: 'derived-workbench' }
   | { readonly kind: 'derived-transfer' }
   | { readonly kind: 'disagreement' }
-  | { readonly kind: 'component-identification'; readonly mode: 'guided' | 'independent' }
+  /** HD-02: optional practice naming and comparing model tracings. Never simulation work. */
+  | { readonly kind: 'recognition-practice' }
+  /** One atrial-component practice; its renumbered repeat is a choice inside the activity. */
+  | { readonly kind: 'component-identification' }
 
 export interface HemodynamicsStageStep extends StageStepBase<HemodynamicsStageInteraction> {
   /** The control surface the simulator pane opens beside the monitor for this step. */
@@ -509,12 +512,12 @@ function waveformInterpretationSteps(runtime: SectionRuntime): readonly StepInpu
     },
     {
       phase: 'act',
-      title: 'Name tracings from their shape',
+      title: 'Name and compare tracings',
       instruction:
-        'Name the question tracing from its shape. Check an answer, show the labels, or move to another tracing for as long as the practice is useful. Repeated examples are labeled as repeated practice.',
+        'Optional practice with model tracings. Pick any tracing and try a reading with its labels hidden, or show the labels and explanation straight away. Then compare it with the tracing it is most easily confused with. Repeat a tracing, or move on, whenever you like.',
       lookIn: { pane: 'simulator', landmark: 'Name the tracing' },
       actionLabel: CONTINUE,
-      interaction: { kind: 'simulator-task', goals: runtime.actGoals, round: 0 },
+      interaction: { kind: 'recognition-practice' },
       surface: 'recognition',
     },
     {
@@ -572,25 +575,14 @@ function waveformComponentsSteps(): readonly StepInput[] {
     },
     {
       phase: 'act',
-      title: 'Guided component identification',
+      title: 'Find the atrial components',
       instruction:
-        'For each named component, select the numbered region on the frozen tracing. The region choices also describe timing against the ECG. Check a region, show the component, or move to another component, in any order.',
+        'Optional practice on the frozen normal right-atrial tracing. For each named wave or descent, select its numbered region and check it, or show where it is, in any order; the region choices also describe timing against the ECG. Open the labelled reference whenever you like, and switch to the renumbered repeat, a model variant of the same tracing, for another try.',
       lookIn: { pane: 'simulator', landmark: 'Identify the atrial component' },
       actionLabel: CONTINUE,
-      interaction: { kind: 'component-identification', mode: 'guided' },
+      interaction: { kind: 'component-identification' },
       surface: 'component-identification',
-      teaching: 'attempt',
-    },
-    {
-      phase: 'act',
-      title: 'Practice with renumbered components',
-      instruction:
-        'Repeat identification with a changed mean pressure and renumbered regions, using the same normal atrial morphology. This is additional practice, not an independent transfer specimen. Work through as many components as are useful.',
-      lookIn: { pane: 'simulator', landmark: 'Identify the atrial component' },
-      actionLabel: CONTINUE,
-      interaction: { kind: 'component-identification', mode: 'independent' },
-      surface: 'component-identification',
-      teaching: 'attempt',
+      teaching: 'components',
     },
     {
       phase: 'recognize',

@@ -2,6 +2,7 @@
 
 import { useId, useState } from 'react'
 import {
+  RENUMBERED_MEAN_SHIFT_MMHG,
   componentExample,
   componentNames,
   componentOrder,
@@ -49,33 +50,43 @@ export function AtrialComponentDemonstration() {
   )
 }
 
+const NUMBERINGS: readonly { readonly mode: ComponentMode; readonly label: string }[] = [
+  { mode: 'guided', label: 'Numbered in order' },
+  { mode: 'independent', label: 'Renumbered repeat · model variant' },
+]
+
 /**
  * Optional practice: find each atrial component on a numbered, frozen tracing.
  *
  * HD-01 (self-paced): any component can be checked, shown without an answer, retried or skipped, in
- * any order. Nothing tallies answers or retries, and nothing here decides
- * whether the learner may move on. A checked region is kept for this session only, so a look-back
- * shows it again; showing a component records no selection.
+ * any order. Nothing tallies answers or retries, and nothing here decides whether the learner may
+ * move on.
+ *
+ * HD-02 folded the separate renumbered activity into this one as an optional repeat: the same normal
+ * model tracing, moved up and renumbered, and labelled a model variant rather than a new example. The
+ * labelled reference is one disclosure away at any time. Checked regions are kept per numbering for
+ * this visit only, so a look-back or a change of numbering shows them again; showing a component or
+ * opening the reference records no selection.
  */
 export function AtrialComponentActivity({
-  mode,
   selections,
   onChange,
   enabled,
 }: {
-  readonly mode: ComponentMode
-  readonly selections: readonly ComponentSelection[]
-  readonly onChange: (selections: readonly ComponentSelection[]) => void
+  readonly selections: Readonly<Partial<Record<ComponentMode, readonly ComponentSelection[]>>>
+  readonly onChange: (mode: ComponentMode, selections: readonly ComponentSelection[]) => void
   readonly enabled: boolean
 }) {
   const group = useId()
+  const [mode, setMode] = useState<ComponentMode>('guided')
   const [index, setIndex] = useState(0)
   const [pending, setPending] = useState<number | null>(null)
   const [revealed, setRevealed] = useState<'checked' | 'shown' | null>(null)
   const component = componentOrder[index]
   const regions = componentRegions(mode)
   const expected = regions.find((region) => region.component === component)!
-  const checked = selections.find((selection) => selection.component === component)
+  const modeSelections = selections[mode] ?? []
+  const checked = modeSelections.find((selection) => selection.component === component)
   const correct = checked ? componentSelectionCorrect(checked, mode) : false
 
   function goTo(next: number) {
@@ -84,10 +95,16 @@ export function AtrialComponentActivity({
     setRevealed(null)
   }
 
+  function changeNumbering(next: ComponentMode) {
+    if (!enabled || next === mode) return
+    setMode(next)
+    goTo(0)
+  }
+
   function check() {
     if (!enabled || pending === null) return
-    onChange([
-      ...selections.filter((selection) => selection.component !== component),
+    onChange(mode, [
+      ...modeSelections.filter((selection) => selection.component !== component),
       { component, selectedRegion: pending },
     ])
     setRevealed('checked')
@@ -100,15 +117,37 @@ export function AtrialComponentActivity({
       data-component-activity={mode}
     >
       <p className={styles.kicker}>
-        {mode === 'guided' ? 'Guided practice' : 'Practice with renumbered regions'} · frozen right
-        atrium · sinus rhythm
+        {NUMBERINGS.find((numbering) => numbering.mode === mode)!.label} · frozen right atrium ·
+        sinus rhythm
       </p>
       <h3>Identify the atrial component</h3>
       <p>
         The numbered regions use the trace’s existing landmarks. Select a region and check it, or
         show where the component is. Work through the components in any order.
       </p>
+      <div className={styles.componentTabs} role="group" aria-label="Numbering">
+        {NUMBERINGS.map((numbering) => (
+          <button
+            key={numbering.mode}
+            type="button"
+            className={styles.dockButton}
+            aria-pressed={mode === numbering.mode}
+            disabled={!enabled}
+            onClick={() => changeNumbering(numbering.mode)}
+          >
+            {numbering.label}
+          </button>
+        ))}
+      </div>
+      {mode === 'independent' ? (
+        <p className={styles.dockNote} data-component-variant-note>
+          Model variant: the same normal right-atrial model tracing moved up{' '}
+          {RENUMBERED_MEAN_SHIFT_MMHG} mmHg, with its regions numbered in a different order. It is
+          another try on one morphology, not a new patient recording.
+        </p>
+      ) : null}
       <WaveformAtlasFigure
+        key={mode}
         entry={componentExample(mode)}
         beats={2}
         ecgLandmarks
@@ -208,13 +247,29 @@ export function AtrialComponentActivity({
           className={styles.dockButton}
           disabled={!enabled}
           onClick={() => {
-            onChange([])
+            onChange(mode, [])
             goTo(0)
           }}
         >
           Clear this exercise
         </button>
       </div>
+      <details data-component-compare>
+        <summary>Compare with the labelled reference</summary>
+        <WaveformAtlasFigure
+          entry={waveformAtlasById.get('ra-normal')!}
+          beats={2}
+          ecgLandmarks
+          readable
+          showLegend={false}
+        />
+        <p className={styles.dockNote}>
+          The reference right atrium with its a, c, x, v and y labels, on the same axis.
+          {mode === 'independent'
+            ? ` The practice tracing sits ${RENUMBERED_MEAN_SHIFT_MMHG} mmHg higher; every landmark keeps the same timing.`
+            : null}
+        </p>
+      </details>
       <p className={styles.dockNote}>
         Optional practice. Checked regions stay for this visit only; nothing about them is saved,
         and you can continue in Steps at any point.

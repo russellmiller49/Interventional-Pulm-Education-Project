@@ -32,8 +32,8 @@ import type { HemodynamicsTaskPresentation } from '../../content/taskPresentatio
 /**
  * The simulator pane: the monitor, the controls the step opens, and the catheter map.
  *
- * Live/procedural tasks retain the unscaled monitor and current control dock. Atlas identification
- * uses a focused question tracing. Its state is explicitly separate from the live patient.
+ * Live/procedural tasks retain the unscaled monitor and current control dock. Recognition practice
+ * uses focused model tracings. Its state is explicitly separate from the live patient.
  */
 export function HemodynamicsSimulatorPane({
   state,
@@ -187,8 +187,6 @@ export function HemodynamicsSimulatorPane({
         return (
           <div className={styles.surfaceCard} data-surface="recognition">
             <WaveformRecognitionDrill
-              dispatch={controlsEnabled ? dispatch : undefined}
-              questionSet="places"
               enabled={controlsEnabled}
               record={recognitionRecord}
               onRecord={onRecognitionRecord}

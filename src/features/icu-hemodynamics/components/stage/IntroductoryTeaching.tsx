@@ -202,8 +202,9 @@ export function IntroductoryTeaching({
             delay and must not be assigned right-atrial timing without qualification.
           </p>
           <p>
-            Select each component in the frozen demonstration. The next activity asks for actual
-            selections on numbered regions.
+            Select each component in the frozen demonstration. The next activity lets you find them
+            on numbered regions, with an optional renumbered repeat and the labelled reference one
+            click away.
           </p>
         </section>
       )
@@ -234,11 +235,13 @@ export function IntroductoryTeaching({
           </p>
           <p className={styles.dockNote}>
             The labeled examples above illustrate altered atrial contraction. The later questions
-            use different specimens and clinical vignettes.
+            use different model tracings and clinical vignettes.
           </p>
           <details>
             <summary>Browse other abnormal patterns</summary>
-            <p>The full atlas is available when reviewing the explanation after your answer.</p>
+            <p>
+              The full atlas opens in Teaching once you check an answer or show the explanation.
+            </p>
           </details>
         </section>
       )
@@ -248,8 +251,8 @@ export function IntroductoryTeaching({
           <h3>Your attempt</h3>
           <p>
             Use the signal or vignette in this task. For a tracing question, check its units and
-            timing against the ECG. Submit your interpretation using the stated patient context; the
-            example’s labels and feedback appear after your response.
+            timing against the ECG, then weigh your reading against the stated patient context. The
+            example’s labels and feedback appear when you check an answer or open the explanation.
           </p>
           <p>
             Review an earlier teaching step with Back if needed. The live monitor remains at its
