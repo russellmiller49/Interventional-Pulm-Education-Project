@@ -98,7 +98,7 @@ describe('critical-care legacy progress adapters', () => {
     expect(storage.setItem).not.toHaveBeenCalled()
   })
 
-  it('projects current and V1 hemodynamics records through the existing pure parsers', () => {
+  it('reads historical HD scores without completion authority in the self-paced catalog', () => {
     const partialStorage = new ReadOnlyFixtureStorage({
       [ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY]:
         partialLegacyProgressFixtures[ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY],
@@ -125,7 +125,7 @@ describe('critical-care legacy progress adapters', () => {
     const migrated = readHemodynamicsLegacyProgress(legacyStorage, criticalCareActivities)
 
     expect(activity(migrated, 'hemodynamics:practice:HD-01')).toMatchObject({
-      status: 'completed',
+      status: 'in-progress',
       attempts: 1,
       bestScore: 75,
     })
@@ -140,7 +140,7 @@ describe('critical-care legacy progress adapters', () => {
       criticalCareActivities,
     )
     expect(activity(fallbackFromCorruptCurrent, 'hemodynamics:practice:HD-01')?.status).toBe(
-      'completed',
+      'in-progress',
     )
     expect(fallbackFromCorruptCurrent.sources).toEqual(
       expect.arrayContaining([
@@ -162,7 +162,7 @@ describe('critical-care legacy progress adapters', () => {
       }),
       criticalCareActivities,
     )
-    expect(activity(mastered, 'hemodynamics:practice:HD-01')?.status).toBe('mastered')
+    expect(activity(mastered, 'hemodynamics:practice:HD-01')?.status).toBe('in-progress')
   })
 
   it('recognizes both ventilation legacy formats without projecting attempts, scores or resume', () => {
@@ -237,7 +237,7 @@ describe('critical-care legacy progress adapters', () => {
       }),
       criticalCareActivities,
     )
-    expect(activity(mastered, 'ecmo:assess:vv-off-sweep-capstone')?.status).toBe('completed')
+    expect(activity(mastered, 'ecmo:assess:vv-off-sweep-capstone')?.status).toBe('in-progress')
 
     const migratedV1 = readEcmoLegacyProgress(
       new ReadOnlyFixtureStorage({
@@ -246,7 +246,7 @@ describe('critical-care legacy progress adapters', () => {
       criticalCareActivities,
     )
     expect(activity(migratedV1, 'ecmo:practice:clinical-vv-initiation-ards')).toMatchObject({
-      status: 'completed',
+      status: 'in-progress',
       attempts: 1,
       bestScore: 84,
     })

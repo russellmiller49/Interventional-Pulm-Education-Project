@@ -25,6 +25,8 @@ export interface ScenarioTeachingDebriefProps {
     readonly title: string
     readonly citation: string
   }[]
+  /** Educational disclosure only; never records simulator evidence or an action. */
+  readonly allowRevealWithoutFrame?: boolean
   readonly onContinue: () => void
 }
 
@@ -44,14 +46,16 @@ export function ScenarioTeachingDebrief({
   conceptIds,
   evidence,
   onContinue,
+  allowRevealWithoutFrame = false,
 }: ScenarioTeachingDebriefProps) {
   const headingId = useId()
   const frameId = useId()
+  const [teachingRevealed, setTeachingRevealed] = useState(false)
   const [frameDraft, setFrameDraft] = useState('')
   const [capturedFrame, setCapturedFrame] = useState<string | null>(null)
   const [divergence, setDivergence] = useState<string | null>(null)
 
-  if (capturedFrame === null) {
+  if (capturedFrame === null && !teachingRevealed) {
     return (
       <section className="mx-auto grid max-w-3xl gap-5 p-5 sm:p-7" aria-labelledby={headingId}>
         <div>
@@ -85,6 +89,15 @@ export function ScenarioTeachingDebrief({
           Capture this frame and reveal the trace
           <ArrowRight className="size-4" aria-hidden="true" />
         </button>
+        {allowRevealWithoutFrame ? (
+          <button
+            type="button"
+            onClick={() => setTeachingRevealed(true)}
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-sky-300/40 px-4 text-sm font-bold text-sky-100"
+          >
+            Show the teaching without recording a frame
+          </button>
+        ) : null}
       </section>
     )
   }
@@ -100,7 +113,7 @@ export function ScenarioTeachingDebrief({
         </h2>
         <div className="mt-4 rounded-2xl border border-white/15 bg-white/5 p-4">
           <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-            Your captured frame
+            {capturedFrame === null ? 'No working frame recorded' : 'Your captured frame'}
           </p>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-100">
             {capturedFrame}

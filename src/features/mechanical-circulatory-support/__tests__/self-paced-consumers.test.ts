@@ -111,21 +111,21 @@ it.each(['merged', 'public'] as const)(
     expect(window.localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)).toBe(before[1])
   },
 )
-it('preserves a supported non-MCS normalized selection in both readers', () => {
+it('preserves an explicit CRRT selection in both readers', () => {
   recordCriticalCareActivitySelection(window.localStorage, {
-    activityId: 'ecmo:practice:clinical-vv-initiation-ards',
+    activityId: 'crrt:practice:CRRT-13',
     mode: 'practice',
-    query: { case: 'clinical-vv-initiation-ards', track: 'vv' },
-    payloadVersion: 'ecmo-selection-v1',
+    query: { case: 'CRRT-13' },
+    payloadVersion: 'crrt-selection-v1',
   })
   const before = window.localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)
   expect(getCriticalCareResumeTarget(window.localStorage)?.pointer.activityId).toBe(
-    'ecmo:practice:clinical-vv-initiation-ards',
+    'crrt:practice:CRRT-13',
   )
   expect(
     readPublicCriticalCareProgress(criticalCareActivities, window.localStorage).envelope.resume
       ?.activityId,
-  ).toBe('ecmo:practice:clinical-vv-initiation-ards')
+  ).toBe('crrt:practice:CRRT-13')
   expect(window.localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)).toBe(before)
 })
 
@@ -133,14 +133,17 @@ it('orders the current MCS location after an older non-MCS resume without assign
   recordCriticalCareActivitySelection(
     window.localStorage,
     {
-      activityId: 'ecmo:practice:clinical-vv-initiation-ards',
+      activityId: 'crrt:practice:CRRT-13',
       mode: 'practice',
-      query: { case: 'clinical-vv-initiation-ards', track: 'vv' },
-      payloadVersion: 'ecmo-selection-v1',
+      query: { case: 'CRRT-13' },
+      payloadVersion: 'crrt-selection-v1',
     },
     '2026-07-22T12:00:00.000Z',
   )
   const before = window.localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)
+  expect(getCriticalCareResumeTarget(window.localStorage)?.pointer.activityId).toBe(
+    'crrt:practice:CRRT-13',
+  )
   recordMcsVisit('IABP-02', 'practice', 'iabp')
   for (const result of [
     readMergedCriticalCareProgress(window.localStorage),

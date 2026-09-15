@@ -72,7 +72,12 @@ describe('critical-care shared shell convergence', () => {
     expect(screen.getByText('Mechanical Circulatory Support')).toBeInTheDocument()
     expect(screen.getByText('IABP, Impella, and durable LVAD device labs')).toBeInTheDocument()
     expect(screen.getByText('unlisted preview')).toBeInTheDocument()
-    expectNavigationGrammar('Mechanical circulatory support module sections', 'Learn')
+    expectNavigationGrammar('Mechanical circulatory support module sections', 'Learn', [
+      'Overview',
+      'Learn',
+      'Practice',
+      'Integrated cases',
+    ])
   })
 
   it('uses the ECMO Management identity without dropping player header controls', () => {

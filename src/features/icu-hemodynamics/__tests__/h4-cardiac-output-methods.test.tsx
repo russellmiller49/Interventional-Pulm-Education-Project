@@ -1251,7 +1251,7 @@ describe('H4 completion and non-regression', () => {
     expect(activity?.completionRuleId).toBe('hemodynamics:completion:learn-existing')
     expect(activity?.competencyIds).toEqual(['signal-validation', 'hemodynamic-reassessment'])
     expect(activity?.estimatedMinutes).toBe(18)
-    expect(activity?.prerequisiteActivityIds).toEqual(['hemodynamics:learn:pawp-capture'])
+    expect(activity?.prerequisiteActivityIds).toEqual([])
     expect(activity?.curriculumStage).toBe('mechanism')
     expect(activity?.stageOrder).toBe(4)
     // Scoring and mastery are section-level, and this station carries no mastery rule of its own.

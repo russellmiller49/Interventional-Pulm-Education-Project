@@ -1,5 +1,9 @@
 # MCS-01 — Open mechanism exploration and optional cases
 
+The [SHARED-01 follow-up](#shared-01-follow-up--2026-09-15) records the current
+integration scope and validation for PR #217. Earlier sections retain the original
+MCS-01 implementation evidence.
+
 ## Scope and implementation brief
 
 The owner's MCS-01 prompt and v2 `LEARNING_DESIGN_BRIEF.md` authorize self-paced
@@ -28,7 +32,7 @@ No answer, action, score, assistance, or attempt events are written. Reload open
 the saved topic/phase or case with baseline model state; it does not replay work.
 Unparseable/future envelopes remain unchanged, with no saved resume update.
 
-### Required shared integration slice
+### Initial shared integration slice
 
 Only MCS catalog definitions and MCS filtering/projection in existing critical-care
 progress readers need shared edits. Module-local policy marks MCS noncredit,
@@ -48,7 +52,7 @@ scoring functions remain compatibility-only. H8 model/device restrictions, H9
 honest progress, H10 clinical language, H11 scope, and H12 real interaction checks
 still apply. No new three-pane layout or assistance dashboard is introduced.
 
-## Executed evidence
+## Initial implementation evidence
 
 - Baseline: `npx --no-install jest --runInBand src/features/mechanical-circulatory-support 'src/app/\[locale\]/mechanical-circulatory-support'`:
   **32 suites, 745 tests passed**; `/tmp/mcs-01-baseline-jest.log`.
@@ -157,7 +161,7 @@ Inspected screenshots: `mcs01-learn-desktop.png`, `mcs01-integrated-desktop.png`
 `mcs01-learn-390.png`, `mcs01-case-320.png`. Narrow companion screenshots and
 `mcs01-browser-full.json` are in the same local evidence folder.
 
-Not run: whole-repository tests, full production/embedded-training-app build,
+At the initial handoff, not run: whole-repository tests, full production/embedded-training-app build,
 publication/deployment, backend mutations, native browser 200% zoom, screen-reader
 or human usability matrix, device IFU/recall refresh, clinical approval. Route
 compilation was exercised in the development browser; it is not a production-build
@@ -246,7 +250,7 @@ needed for this PR's self-paced operation.
 | H11  | PASS: only MCS, the required four shared production consumers and targeted tests; no Device Intelligence edits                |
 | H12  | PASS for executed rendered/browser checks; human/assistive-technology and native zoom matrix not run                          |
 
-## Changed paths
+## Initial changed paths
 
 - `docs/gap-remediation/self-paced/MCS-01-handoff.md`
 - `docs/gap-remediation/self-paced/MCS-01-question-ledger.md`
@@ -304,3 +308,152 @@ needed for this PR's self-paced operation.
 - `src/features/mechanical-circulatory-support/engine/types.ts`
 - `src/features/mechanical-circulatory-support/test-support/mcsStage.tsx`
 - `src/features/mechanical-circulatory-support/test-support/mcsWorkbench.tsx`
+
+## SHARED-01 follow-up — 2026-09-15
+
+### Base, scope and merge
+
+This updates existing PR #217 and `codex/mcs-01`, starting from its pushed commit
+`2ce038c1a478e9fe789307dc919748e17a9b67c1`. SHARED-01 PR #215 was verified merged;
+`origin/main` was fetched at `6aa515947fd56b1d27da392c76d06539c8274f42` and merged
+normally into the existing branch. No rebase or force push is used. The baseline
+checks use a complete detached checkout of that exact base at
+`/tmp/mcs01-shared215-base`, with installed dependencies linked and no copied
+local authoring inputs or secrets.
+
+The only textual merge conflict was `account-sync.test.ts`. Both branch-specific
+expectations were obsolete: MCS-01 expected historical ECMO completion and
+SHARED-01 expected historical MCS completion. The combined expectation excludes
+**MCS, ECMO, HD, MV and CRRT**. ICU remains the unaffected account/graded consumer.
+Generic graded tests now use actual ICU activities or explicit test-only
+fixtures, without restoring any converted module's grading authority.
+
+This follow-up implements the owner's explicitly scoped shared integration:
+
+- Full, public and restricted progress readers exclude all five converted
+  modules' normalized historical activity rows. MCS resume comes only from its
+  validated module-store location, even when normalized history has a newer date.
+- Raw dashboard and recommendation inputs reject historical completion, scores,
+  attempts and help/competency records before catalog downgrading could turn them
+  into false visits. Current MCS/CRRT adapter visits remain ungraded in-progress
+  navigation, with no invented visit chronology. MCS lesson, practice and
+  integrated-case locations retain their exact route, device and phase.
+- CRRT's existing explicit shared selection pointers remain supported alongside
+  its module-store visits. HD, ECMO and MV historical pointers remain inert.
+- Raw personal-history and assumed-concept readers exclude converted historical
+  records from recent activity, retry suggestions, encountered concepts and
+  Continue. Historical export and stored values remain available. Current MCS
+  navigation continues through its module and full/public dashboard readers.
+- Public and full account GET, hydration, projection and POST exclude all five
+  converted modules. Mixed subset reconciliation preserves historical rows and
+  unrelated ICU navigation; MCS visits are never uploaded as coarse completion
+  or copied back over normalized historical grades. Actual public and restricted
+  sync mounts read old account data without POSTing or rewriting stored JSON.
+- Catalog authority remains noncredit/no completion evidence/no mastery/no
+  prerequisites for all five converted modules. ICU authority remains unchanged;
+  ICU preparation/recommendations receive no historical HD or MCS completion.
+
+No module engines, source teaching, route infrastructure, schemas, dependencies,
+backend data or Device Intelligence are changed by this follow-up. The incoming
+SHARED-01 HD explanation changes and shared `ScenarioTeachingDebrief` behavior
+remain identical to the updated base. The one learning-module change beyond that
+base is a targeted MCS navigation-label consumer test. CRRT's only module-local
+change is replacing an obsolete MCS fixture with ICU in its compatibility test.
+MCS-02 is not started; PR #217 remains open for review.
+
+### Integration failures resolved separately from the base
+
+Early combined checks exposed outdated graded MCS fixtures in account sync,
+monotonic merge, recommendation, dashboard and public subset tests; catalog and
+ICU readiness assertions that still counted MCS; and an artificial MCS resume
+payload in the hub test. Tests now assert the combined policy or use an unaffected
+fixture. A first filter also rejected CRRT's supported explicit selection
+pointer; it was corrected and its existing consumer test retained.
+
+The first complete combined run had **269 suites / 5,063 tests: 264 suites and
+5,058 tests passed; five tests failed**. In addition to the three reproduced base
+failures below, it exposed two integration expectations: the shared shell still
+expected the MCS “Challenge” label, and an MCS compatibility test used historical
+ECMO selection as an unaffected resume. The shell now expects “Integrated cases”
+for MCS only; the compatibility test uses a real CRRT selection and verifies it
+exists before a newer MCS location replaces it.
+
+### Final verification
+
+| Check                                     | Updated base `6aa51594`                                         | Combined MCS-01 branch                                            |
+| ----------------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Complete requested suite set              | 267 suites: 264 passed, 3 failed; 5,053 passed / 3 failed tests | 269 suites: 266 passed, 3 failed; 5,060 passed / 3 failed tests   |
+| Remaining integration failures            | —                                                               | **0**; the three remaining failures also fail on the updated base |
+| Final focused shared boundary run         | —                                                               | 16 suites / 127 tests passed                                      |
+| Type-check (8 GB heap)                    | Passed                                                          | Passed                                                            |
+| Full production build                     | Passed                                                          | Passed                                                            |
+| Scoped ESLint, formatting and diff checks | —                                                               | Passed                                                            |
+
+The final complete run has no skipped tests or runtime-error suites. It covers all
+MCS, HD, ECMO, CRRT, MV, critical-care and learning-module tests plus MCS routes,
+including the corrected shared shell and MCS/CRRT selection assertions.
+
+Type-check resource note: the combined checkout's post-build default-heap run
+terminated at Node's roughly 4 GB heap limit. The earlier pre-build type-check
+passed. Final type-checks on both the updated base and combined branch passed
+with `NODE_OPTIONS=--max-old-space-size=8192 npm run type-check`; no TypeScript
+configuration, dependency or source workaround was introduced. The default-heap
+failure is retained in `mcs01-shared215-final-typecheck.log`, separately from the
+successful `*-typecheck-8gb.log` results.
+
+The same complete suite selector was used on the updated base and combined branch:
+
+```sh
+npx jest --runInBand src/features/mechanical-circulatory-support src/features/icu-hemodynamics src/features/cardiohelp-ecmo src/features/baxter-crrt src/features/mechanical-ventilation src/features/critical-care src/features/learning-module 'src/app/\[locale\]/mechanical-circulatory-support' --json --outputFile=<evidence.json>
+```
+
+The base invocation used the repository's `npm test --` wrapper, which adds
+`--passWithNoTests`; it executed 267 suites with no empty-run result. The final
+combined invocation called Jest directly. Both builds ran the canonical
+`npm run build`: both embedded training applications, Contentlayer, critical-care
+and cardiac asset validation, `next build --webpack`, and standalone preparation.
+No deployment or backend mutation was performed. Original Chromium evidence
+above was not rerun or relabeled as new browser evidence.
+
+### Failures reproduced on updated base
+
+- `critical-care/__tests__/accessibility.test.tsx`: the CRRT circuit diagram does
+  not expose the image label expected by the existing test.
+- `critical-care/__tests__/curriculum-sequencing.test.tsx`: the authored-order
+  expectation omits the existing “PrisMax troubleshooting challenge” row.
+- `critical-care/__tests__/learner-copy.test.ts`: the existing cross-module static
+  scan flags clinical terminology and technical/provenance captions. The base
+  has 24 flagged captions and MCS-01 has 21; no newly flagged caption is introduced.
+
+These three failures were reproduced at `6aa51594`, not inferred from the earlier
+MCS baseline. Their tests and unrelated runtime are preserved. They remain a
+separate cross-module maintenance slice and are not repaired by restoring grades.
+
+Evidence logs and JSON results are preserved outside Git in
+`/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/mcs-01-shared215-2026-09-15`.
+
+### Follow-up paths beyond the merged base and prior MCS implementation
+
+- `src/features/baxter-crrt/__tests__/selfPacedConsumers.test.ts`
+- `src/features/critical-care/__tests__/dashboard.test.ts`
+- `src/features/critical-care/__tests__/public-client-boundary.test.ts`
+- `src/features/critical-care/components/AssumedConceptStrip.tsx`
+- `src/features/critical-care/components/CriticalCareHistoricalSync.test.tsx`
+- `src/features/critical-care/components/CriticalCareHub.test.tsx`
+- `src/features/critical-care/components/CriticalCareLibraries.test.tsx`
+- `src/features/critical-care/components/CriticalCareProgressView.tsx`
+- `src/features/critical-care/dashboard.ts`
+- `src/features/critical-care/progress/__tests__/account-sync.test.ts`
+- `src/features/critical-care/progress/__tests__/hd-ecmo-self-paced.test.ts`
+- `src/features/critical-care/progress/__tests__/integrated.test.ts`
+- `src/features/critical-care/progress/__tests__/merge-recommendation.test.ts`
+- `src/features/critical-care/progress/accountSync.ts`
+- `src/features/critical-care/progress/index.ts`
+- `src/features/critical-care/progress/publicAccountSync.ts`
+- `src/features/critical-care/progress/publicClient.ts`
+- `src/features/critical-care/progress/recommendation.ts`
+- `src/features/critical-care/progress/utils.ts`
+- `src/features/critical-care/publicDashboard.ts`
+- `src/features/learning-module/__tests__/criticalCareShellConvergence.test.tsx`
+- `src/features/mechanical-circulatory-support/__tests__/self-paced-consumers.test.ts`
+- `docs/gap-remediation/self-paced/MCS-01-handoff.md`

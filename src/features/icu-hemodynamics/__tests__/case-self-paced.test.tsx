@@ -119,6 +119,18 @@ describe('a hemodynamic case, self-paced', () => {
     openCheckpoint(/Review your reasoning/)
     expect(document.querySelector('[data-debrief-before-reassessment]')).not.toBeNull()
     expect(document.querySelector('[data-expert-reasoning]')).not.toBeNull()
+    const beforeReveal = localStorage.getItem(ICU_HEMODYNAMICS_SELF_PACED_STORAGE_KEY)
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Show the teaching without recording a frame' }),
+    )
+    expect(
+      screen.getByRole('heading', { name: '2. Expert reasoning contrast' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('No working frame recorded')).toBeInTheDocument()
+    expect(screen.queryByText('Your captured frame')).not.toBeInTheDocument()
+    expect(localStorage.getItem(ICU_HEMODYNAMICS_SELF_PACED_STORAGE_KEY)).toBe(beforeReveal)
+    expect(document.querySelector('[data-debrief-before-reassessment]')).not.toBeNull()
+
     expect(screen.getByRole('button', { name: 'Open the signal-transfer variant' })).toBeEnabled()
 
     expect(localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)).toBeNull()

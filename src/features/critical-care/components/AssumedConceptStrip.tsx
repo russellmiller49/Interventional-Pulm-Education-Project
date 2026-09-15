@@ -7,6 +7,7 @@ import { readCriticalCareProgress } from '@/features/learning-module/activity'
 
 import { criticalCareActivityById } from '../content/activities'
 import { criticalCareConceptById, type CriticalCareConcept } from '../content/concepts'
+import { isHistoricalNormalizedActivity } from '../progress/utils'
 import { ConceptSidePanel } from './ConceptSidePanel'
 
 const GLOBAL_DISMISS_KEY = 'critical-care-assumed-concepts-hidden-v1'
@@ -60,7 +61,9 @@ export function AssumedConceptStrip({
     const globallyHidden = window.localStorage.getItem(GLOBAL_DISMISS_KEY) === '1'
     const activityHidden = readDismissedActivityIds().includes(activityId)
     const progress = readCriticalCareProgress(window.localStorage)
-    const engagedActivities = progress.activities.filter((item) => item.status !== 'not-started')
+    const engagedActivities = progress.activities.filter(
+      (item) => item.status !== 'not-started' && !isHistoricalNormalizedActivity(item.activityId),
+    )
     const engagedConceptIds = new Set(
       engagedActivities.flatMap(
         (item) => criticalCareActivityById.get(item.activityId)?.teachesConceptIds ?? [],

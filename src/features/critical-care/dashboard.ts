@@ -1,3 +1,4 @@
+import { isCurrentProgressActivity, isCurrentProgressResume } from './progress/utils'
 import {
   criticalCareActivities,
   criticalCareActivityById,
@@ -103,7 +104,7 @@ function authoritativeProgressMap(
   return new Map(
     progress.flatMap((item) => {
       const activity = activityById.get(item.activityId)
-      return activity && activity.moduleId !== 'mechanical-ventilation'
+      return activity && isCurrentProgressActivity(item)
         ? [[item.activityId, enforceCriticalCareProgressAuthority(activity, item)] as const]
         : []
     }),
@@ -209,6 +210,7 @@ function recentActivities(
   return progress
     .filter(
       (item) =>
+        isCurrentProgressActivity(item) &&
         item.updatedAt !== LEGACY_PROGRESS_EPOCH &&
         Number.isFinite(Date.parse(item.updatedAt)) &&
         criticalCareActivityById.has(item.activityId),
@@ -259,9 +261,10 @@ function recommendedActivity(
 export function deriveCriticalCareDashboard(
   readResult: CriticalCareProgressReadResult,
 ): CriticalCareDashboardModel {
-  const resolvedResume = readResult.envelope.resume
-    ? resolveCriticalCareResumePointer(readResult.envelope.resume, publicCatalogActivities)
-    : null
+  const resolvedResume =
+    readResult.envelope.resume && isCurrentProgressResume(readResult.envelope.resume)
+      ? resolveCriticalCareResumePointer(readResult.envelope.resume, publicCatalogActivities)
+      : null
   const resume = resolvedResume
     ? {
         ...resolvedResume,
@@ -279,7 +282,8 @@ export function deriveCriticalCareDashboard(
           : {}),
       }
     : null
-  const hasProgress = readResult.envelope.activities.length > 0 || resume !== null
+  const hasProgress =
+    readResult.envelope.activities.some(isCurrentProgressActivity) || resume !== null
   const audienceState: CriticalCareDashboardAudienceState = hasProgress
     ? 'returning'
     : readResult.notices.length > 0
