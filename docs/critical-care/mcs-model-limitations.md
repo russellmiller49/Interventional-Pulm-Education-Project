@@ -4,6 +4,12 @@
 **Branch:** `claude/mcs-m0-m1-common-model-2026-08-04`
 **Scope:** `mcs-foundations-signals`, `mcs-foundations-mechanisms`, the standardized pathway cards
 
+**September 15, 2026 recheck:** [MCS-02 matched unloading examples and source
+holds](../gap-remediation/self-paced/MCS-02-handoff.md) records current engine
+replays, including IMP-01/IMP-03 and an afterload comparison at matched P8 settings
+and times. The original observations below remain historical evidence; MCS-02
+does not recalibrate the model or close clinical/source review.
+
 Everything below was established by running the engine, not by assumption. The command that produces
 the numbers is:
 

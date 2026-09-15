@@ -48,6 +48,8 @@ The extension notation `test.ts[x]` means inspect the actual existing `.test.ts`
 | EBUS-01 | [EBUS-01 handoff — test-contract migration](EBUS-01-handoff.md#test-contract-migration) |
 | BBT-01  | [BBT-01 handoff — test-contract migration](BBT-01-handoff.md#test-contract-migration)   |
 | BBT-02  | [BBT-02 handoff — test-contract migration](BBT-02-handoff.md#test-contract-migration)   |
+| BF-01   | [BF-01 handoff — test-contract migration](BF-01-handoff.md#test-contract-migration)     |
+| BF-03   | [BF-03 handoff — test-contract migration](BF-03-handoff.md#test-contract-migration)     |
 | HD-01   | [HD-01 handoff — test-contract migration](HD-01-handoff.md#test-contract-migration)     |
 | HD-02   | [HD-02 handoff — test-contract migration](HD-02-handoff.md#test-contract-migration)     |
 | HD-03   | [HD-03 handoff — test-contract migration](HD-03-handoff.md#test-contract-migration)     |

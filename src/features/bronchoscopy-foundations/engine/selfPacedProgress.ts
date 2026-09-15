@@ -2,11 +2,7 @@ import { z } from 'zod'
 
 import type { InspectionLedger } from '../components/scope/types'
 import { isBronchSectionId } from '../content/sectionIds'
-import {
-  inspectionSnapshotSchema,
-  readBronchRecord,
-  type BronchInspectionSnapshot,
-} from './learnProgress'
+import { inspectionSnapshotSchema, type BronchInspectionSnapshot } from './learnProgress'
 
 /**
  * The module's only learner record under the self-paced contract (BF-01).
@@ -184,11 +180,14 @@ export function withSurveySnapshot(
 }
 
 /**
- * The finished survey the report exercise may use: this record's, or else one saved under the
- * earlier record, read without rewriting it.
+ * The finished survey the report exercise may use: only this record's, saved when the learner met
+ * the survey's goals on their own controls. A survey saved under the earlier record stays on the
+ * device unread (BF-03). That record saved it with a section completion that never separated the
+ * learner's commands from a start state or a scripted path, so it cannot stand in for the learner's
+ * own survey.
  */
 export function availableSurveySnapshot(
   record: BronchSelfPacedRecord,
 ): BronchInspectionSnapshot | null {
-  return record.surveySnapshot ?? readBronchRecord().inspectionSnapshot
+  return record.surveySnapshot
 }

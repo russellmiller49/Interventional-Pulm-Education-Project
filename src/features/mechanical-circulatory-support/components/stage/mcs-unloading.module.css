@@ -1,0 +1,104 @@
+.comparison {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.controls button {
+  border: 1px solid var(--stage-line, #40616a);
+  border-radius: 0.5rem;
+  padding: 0.65rem;
+  background: var(--stage-panel, #10262b);
+  color: inherit;
+  font: inherit;
+}
+
+.settings button[aria-pressed='true'] {
+  border-color: #71e1e5;
+  background: #163d44;
+}
+
+.examples {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+  gap: 1rem;
+}
+
+.example {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--stage-line, #40616a);
+  border-radius: 0.75rem;
+}
+
+.example table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.example caption {
+  text-align: left;
+  padding: 0.75rem 0;
+}
+
+.example th,
+.example td {
+  border-bottom: 1px solid var(--stage-line, #40616a);
+  padding: 0.5rem 0.3rem;
+  text-align: right;
+}
+
+.example th:first-child {
+  text-align: left;
+  width: 50%;
+}
+
+.example th {
+  overflow-wrap: normal;
+}
+
+.example td {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+.example small {
+  display: block;
+  font-weight: normal;
+}
+
+.example summary {
+  cursor: pointer;
+}
+
+.warning {
+  border-left: 3px solid #ffbf62;
+  padding-left: 0.75rem;
+}
+
+.comparison h4 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.controls button:focus-visible {
+  outline: 3px solid #71e1e5;
+  outline-offset: 3px;
+}

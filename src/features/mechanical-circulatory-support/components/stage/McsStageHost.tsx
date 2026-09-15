@@ -272,6 +272,7 @@ function McsStageSession({
 
   const activeIndex = Math.min(progression.index, lesson.steps.length - 1)
   const activeStep = lesson.steps[activeIndex]
+  const unloadingExample = activeStep.presentation === 'unloading-comparison'
   const performedIds = useMemo(() => new Set(progression.performedIds), [progression.performedIds])
   const stepPerformed = performedIds.has(activeStep.id)
   const isLastStep = activeIndex === lesson.steps.length - 1
@@ -1532,14 +1533,20 @@ function McsStageSession({
   const task = (
     <>
       <p className={styles.footnote} data-session-identity>
-        {lookingBack
-          ? 'Captured review'
-          : progression.transferLoaded
-            ? 'Transfer patient'
-            : teachingStep
-              ? 'Guided reference'
-              : 'Current exercise'}{' '}
-        · seed {state.seed} · {state.timeSeconds.toFixed(2)} simulated seconds.
+        {unloadingExample ? (
+          'Provided model comparison · observation times are shown with each example.'
+        ) : (
+          <>
+            {lookingBack
+              ? 'Captured review'
+              : progression.transferLoaded
+                ? 'Transfer patient'
+                : teachingStep
+                  ? 'Guided reference'
+                  : 'Current exercise'}{' '}
+            · seed {state.seed} · {state.timeSeconds.toFixed(2)} simulated seconds.
+          </>
+        )}
       </p>
       <div ref={nowFocusRef} tabIndex={-1} data-now-focus>
         <NowCard
@@ -1585,76 +1592,80 @@ function McsStageSession({
           ) : null}
         </NowCard>
       </div>
-      <section className={styles.block} data-full-exploration>
-        <button
-          type="button"
-          aria-expanded={explorationOpen}
-          onClick={() => setExplorationOpen((open) => !open)}
-        >
-          Explore all supported controls
-        </button>
-        {explorationOpen ? (
-          <>
-            <p>
-              Changes apply to the current simulated patient. These controls extend the suggested
-              exercise. Reset this section to restore its starting configuration; current answers
-              and captures then clear.
+      {!unloadingExample ? (
+        <>
+          <section className={styles.block} data-full-exploration>
+            <button
+              type="button"
+              aria-expanded={explorationOpen}
+              onClick={() => setExplorationOpen((open) => !open)}
+            >
+              Explore all supported controls
+            </button>
+            {explorationOpen ? (
+              <>
+                <p>
+                  Changes apply to the current simulated patient. These controls extend the
+                  suggested exercise. Reset this section to restore its starting configuration;
+                  current answers and captures then clear.
+                </p>
+                <fieldset disabled={lookingBack}>
+                  <McsControls
+                    state={state}
+                    dispatch={(action) => {
+                      if (lookingBack) return
+                      const next = mcsReducer(liveState, action)
+                      sendModel({ type: 'RESTORE_TEACHING_STATE', state: next })
+                      setProgression((current) => ({
+                        ...current,
+                        capturedAfter: null,
+                        comparisons: {},
+                      }))
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const observed = advanceMcsSimulation(liveState, MCS_OBSERVATION_SECONDS)
+                      sendModel({ type: 'RESTORE_TEACHING_STATE', state: observed })
+                      setProgression((current) => ({ ...current, capturedAfter: observed }))
+                      setPlaybackRunning(false)
+                    }}
+                  >
+                    Observe and capture 8 simulated seconds
+                  </button>
+                </fieldset>
+                {lookingBack ? <p>{LOOKING_BACK}</p> : null}
+              </>
+            ) : null}
+          </section>
+          <details className={styles.block}>
+            <summary>Display playback</summary>
+            <button
+              type="button"
+              className={shellStyles.nowSecondary}
+              disabled={lookingBack || pendingTimingIdentification}
+              onClick={() => setPlaybackRunning((running) => !running)}
+            >
+              {playbackRunning ? 'Pause display playback' : 'Play display playback'}
+            </button>
+            <button
+              type="button"
+              disabled={lookingBack || pendingTimingIdentification}
+              onClick={() => {
+                setPlaybackRunning(false)
+                sendModel({ type: 'TICK', seconds: 60 / liveState.patient.heartRateBpm })
+              }}
+            >
+              Step one cardiac cycle
+            </button>
+            <p className={styles.footnote}>
+              Playback changes the model clock; it does not stop device support. Captured
+              comparisons stay fixed.
             </p>
-            <fieldset disabled={lookingBack}>
-              <McsControls
-                state={state}
-                dispatch={(action) => {
-                  if (lookingBack) return
-                  const next = mcsReducer(liveState, action)
-                  sendModel({ type: 'RESTORE_TEACHING_STATE', state: next })
-                  setProgression((current) => ({
-                    ...current,
-                    capturedAfter: null,
-                    comparisons: {},
-                  }))
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  const observed = advanceMcsSimulation(liveState, MCS_OBSERVATION_SECONDS)
-                  sendModel({ type: 'RESTORE_TEACHING_STATE', state: observed })
-                  setProgression((current) => ({ ...current, capturedAfter: observed }))
-                  setPlaybackRunning(false)
-                }}
-              >
-                Observe and capture 8 simulated seconds
-              </button>
-            </fieldset>
-            {lookingBack ? <p>{LOOKING_BACK}</p> : null}
-          </>
-        ) : null}
-      </section>
-      <details className={styles.block}>
-        <summary>Display playback</summary>
-        <button
-          type="button"
-          className={shellStyles.nowSecondary}
-          disabled={lookingBack || pendingTimingIdentification}
-          onClick={() => setPlaybackRunning((running) => !running)}
-        >
-          {playbackRunning ? 'Pause display playback' : 'Play display playback'}
-        </button>
-        <button
-          type="button"
-          disabled={lookingBack || pendingTimingIdentification}
-          onClick={() => {
-            setPlaybackRunning(false)
-            sendModel({ type: 'TICK', seconds: 60 / liveState.patient.heartRateBpm })
-          }}
-        >
-          Step one cardiac cycle
-        </button>
-        <p className={styles.footnote}>
-          Playback changes the model clock; it does not stop device support. Captured comparisons
-          stay fixed.
-        </p>
-      </details>
+          </details>
+        </>
+      ) : null}
       {!lesson.introductory &&
       (activeStep.phase === 'observe' || activeStep.phase === 'explain') &&
       stories.length > 0 ? (

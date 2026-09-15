@@ -27,7 +27,9 @@ export function McsTaskPresentation({
       data-presentation={kind}
       data-explaining={explaining || undefined}
     >
-      {explaining ? (
+      {kind === 'unloading-comparison' ? (
+        explanation
+      ) : explaining ? (
         <>
           {decision}
           {explanation}
