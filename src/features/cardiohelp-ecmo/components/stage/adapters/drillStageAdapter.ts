@@ -1,7 +1,6 @@
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import { pathwaySectionIndex } from '@/features/learning-module/curriculum/types'
 
-import { presentationTitle } from '../../../content/casePresentation'
 import { ecmoDrillSpecs } from '../../../content/drillSpecs'
 import { clinicalPracticeScenarioById } from '../../../content/clinicalCases'
 import { pairedCaseForLesson } from '../../../content/curriculum'
@@ -161,7 +160,7 @@ function resolvePracticePairing(scenarioId: string): StageLesson['practicePairin
   if (pairing.kind === 'none') return undefined
   const clinical = clinicalPracticeScenarioById.get(pairing.caseId)
   if (!clinical) return undefined
-  return { kind: pairing.kind, caseId: clinical.id, title: presentationTitle(clinical) }
+  return { kind: pairing.kind, caseId: clinical.id, title: clinical.title }
 }
 
 export function buildDrillStageLesson(

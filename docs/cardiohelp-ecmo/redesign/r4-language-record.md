@@ -99,3 +99,37 @@ forward in time".
 - **`sectionSpecs.ts` no longer carries the approved ladder's wording verbatim** for three
   objectives and one concept. The file header records the departure and points here. The
   discriminations themselves are unchanged.
+
+## ECMO-02 decision — September 15, 2026
+
+The owner's self-paced brief supersedes the R4 rule that hid mechanisms in all navigation
+labels. The fourteen existing diagnosis-based Practice catalog titles are retained. The
+module outline, saved-work links and next-case links now use those same scenario titles;
+lesson headers and rail labels continue to derive from the shared learning pathway. Sixteen
+lesson titles now name the existing topic explicitly. A local optional prediction variation
+may retain its presentation-oriented wording, with the ECMO-01 explanation available without
+an answer. This does not restore an examination mode or change a clinical claim.
+
+The two integrated-case unit summaries no longer promise “no prompting” or say every drill
+comes first. Their links, titles and metadata use integrated-case/self-paced wording. IDs,
+track identity, legacy Assess routes, optional-question behavior and the merged SHARED-01
+progress authority remain intact. Existing concept associations are explicitly retained where
+title keyword inference would otherwise have changed them.
+
+The clinician-language scanner retains three **exact, file-specific** ECMO exceptions:
+
+- `PumpPressureZonesPanel.tsx`: “assessment of drainage” is clinical evaluation of a circuit
+  problem, not a learner examination.
+- `WhyExtracorporealSupportPanel.tsx`: “assessment and treatment” concerns the underlying
+  clinical cause.
+- `EcmoCaseDebrief.tsx`: “This is not a safety certification” denies certification and must not
+  be removed as though it awards one.
+
+Each exception is tied to the full existing passage and one term in `learner-copy.test.ts`.
+Changed claims or additional grading/developer jargon still fail; accessible labels are
+scanned. Clinical reassessment remains valid terminology. Findings outside ECMO remain visible
+and were not waived in this slice. The original R4 findings above and the pre-change tests at
+`905372be` remain historical evidence; they are not the current self-paced naming contract.
+
+See [ECMO-02 handoff](../../gap-remediation/self-paced/ECMO-02-handoff.md) for executed evidence,
+contract changes, scope and continuing clinical/source holds.

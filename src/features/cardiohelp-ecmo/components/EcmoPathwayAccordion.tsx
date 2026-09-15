@@ -6,7 +6,6 @@ import { Link } from '@/i18n/navigation'
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 
-import { presentationTitle } from '../content/casePresentation'
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
 import {
   ecmoPathwayGroups,
@@ -24,7 +23,7 @@ import { useStoredProgress } from './useStoredProgress'
  * Seven units, each a native `<details>`; only the unit holding the learner's next section opens
  * on load, so a fresh learner sees seven headings and one open run rather than seventeen chips at
  * once. Every count in a summary is derived from the registries. Section chips carry the worked
- * state in words as well as in state, and case chips name the presentation, never the diagnosis.
+ * state in words as well as in state, and case chips use the same named topics as the catalog and case header.
  *
  * This is a view of the one sequence, not a second one: flattening the groups reproduces the
  * pathway (`pathway-resolver.test.ts`), and the "Up next" chip is the same section the Continue
@@ -110,7 +109,7 @@ export function EcmoPathwayAccordion({
                     }}
                   >
                     <BookOpenCheck aria-hidden="true" />
-                    Case · {definition ? presentationTitle(definition) : 'a case in this unit'}
+                    Case · {definition ? definition.title : 'a case in this unit'}
                     {done ? ' ✓ visited' : ''}
                   </Link>
                 )
@@ -122,7 +121,7 @@ export function EcmoPathwayAccordion({
                   data-complete={completedCases.has(group.capstoneScenarioId)}
                   href={{ pathname: `${cardiohelpEcmoNavBase}/assess`, query: { track } }}
                 >
-                  <ArrowRight aria-hidden="true" /> Open the {track.toUpperCase()} challenge
+                  <ArrowRight aria-hidden="true" /> Open the {track.toUpperCase()} integrated case
                   {completedCases.has(group.capstoneScenarioId) ? ' ✓ visited' : ''}
                 </Link>
               ) : null}
@@ -156,7 +155,7 @@ export function summaryLine(
     group.caseScenarioIds.length > 0
       ? `${group.caseScenarioIds.length} case${group.caseScenarioIds.length === 1 ? '' : 's'}`
       : group.capstoneScenarioId
-        ? 'the challenge'
+        ? 'integrated case'
         : null
   return [span, sectionCount, caseCount, `${minutes} min`].filter(Boolean).join(' · ')
 }

@@ -584,7 +584,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     id: 'vv-off-sweep-capstone',
     family: 'capstone',
     stationId: 'assessment',
-    title: 'VV off-sweep integration challenge',
+    title: 'VV off-sweep integrated case',
     summary: 'Demonstrate the correct separation sequence without reducing circuit blood flow.',
     clinicalPhase: 'weaning',
     initialState: {
@@ -1092,7 +1092,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     supportMode: 'va',
     family: 'capstone',
     stationId: 'assessment',
-    title: 'VA mixed-circulation integration challenge',
+    title: 'VA mixed-circulation integrated case',
     summary:
       'Integrate circuit, right-arm, lower-body, pulsatility, lung, and perfusion observations without applying a VV off-sweep sequence.',
     clinicalPhase: 'maintenance',

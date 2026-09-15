@@ -834,6 +834,60 @@ const ecmoLessonSeedRows: readonly EcmoLessonSeedRow[] = [
   ['va-integration-capstone', 'va', 'integration', 2, 'advanced'],
 ]
 
+// Preserve the merged concept associations when editing navigational titles (ECMO-02).
+// The generic title keyword inference otherwise changes which concepts these lessons advertise.
+const ecmoLessonConceptIds: Readonly<Record<string, readonly string[]>> = {
+  'afterload-oxygenator-resistance': [
+    'cc.flow.pressure-gradient',
+    'cc.flow.resistance-and-impedance',
+    'cc.membrane.gas-exchange',
+    'cc.membrane.resistance-and-aging',
+    'cc.device.source-active-component-destination',
+  ],
+  'vv-recirculation': [
+    'cc.perfusion.oxygen-content',
+    'cc.perfusion.oxygen-delivery-extraction',
+    'cc.device.source-active-component-destination',
+    'cc.circuit.pressure-zones',
+    'cc.membrane.gas-exchange',
+  ],
+  'acute-hypercapnia': [
+    'cc.ventilation.breath-variables',
+    'cc.ventilation.patient-device-interaction',
+    'cc.device.source-active-component-destination',
+    'cc.circuit.pressure-zones',
+    'cc.membrane.gas-exchange',
+  ],
+  'gas-source-interruption': [
+    'cc.flow.pressure-gradient',
+    'cc.flow.resistance-and-impedance',
+    'cc.device.source-active-component-destination',
+    'cc.circuit.pressure-zones',
+    'cc.membrane.gas-exchange',
+  ],
+  'va-afterload-oxygenator-resistance': [
+    'cc.flow.pressure-gradient',
+    'cc.flow.resistance-and-impedance',
+    'cc.membrane.gas-exchange',
+    'cc.membrane.resistance-and-aging',
+    'cc.device.source-active-component-destination',
+  ],
+  'va-acute-hypercapnia': [
+    'cc.ventilation.breath-variables',
+    'cc.ventilation.patient-device-interaction',
+    'cc.device.source-active-component-destination',
+    'cc.circuit.pressure-zones',
+    'cc.membrane.gas-exchange',
+  ],
+  'va-gas-source-interruption': [
+    'cc.perfusion.oxygen-content',
+    'cc.perfusion.oxygen-delivery-extraction',
+    'cc.flow.pressure-gradient',
+    'cc.flow.resistance-and-impedance',
+    'cc.device.source-active-component-destination',
+  ],
+}
+
 const ecmoLessonSeeds: readonly ActivitySeed[] = ecmoLessonSeedRows.map(
   ([sourceId, track, curriculumStage, stageOrder, difficulty]) => {
     const section = ecmoPathwaySectionForSeed(track, sourceId)
@@ -841,6 +895,7 @@ const ecmoLessonSeeds: readonly ActivitySeed[] = ecmoLessonSeedRows.map(
       sourceId,
       title: section.title,
       description: section.description,
+      teachesConceptIds: ecmoLessonConceptIds[sourceId],
       estimatedMinutes: section.minutes,
       track,
       difficulty,
@@ -921,7 +976,12 @@ const ecmoLearnActivityIdsByTrack: Readonly<Record<EcmoTrack, readonly string[]>
 const ecmoAssessSeeds: readonly ActivitySeed[] = [
   {
     sourceId: 'vv-off-sweep-capstone',
-    title: 'VV integrated case',
+    title: 'VV off-sweep integrated case',
+    teachesConceptIds: [
+      'cc.circuit.recirculation',
+      'cc.device.preload-afterload-dependence',
+      'cc.troubleshooting.localize-before-intervene',
+    ],
     description:
       'Explore the VV integrated case at your own pace, with optional questions and explanations available on request.',
     track: 'vv',

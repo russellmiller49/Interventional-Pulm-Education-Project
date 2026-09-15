@@ -5,7 +5,6 @@ import { criticalCareLearningPathway } from '@/features/critical-care/content/le
 
 import { CardiohelpHub } from '../components/CardiohelpHub'
 import { EcmoPathwayAccordion, summaryLine } from '../components/EcmoPathwayAccordion'
-import { presentationTitle } from '../content/casePresentation'
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
 import { ecmoPathwayGroups, ecmoPathwaySectionKind } from '../content/pathwayResolver'
 import { CARDIOHELP_PROGRESS_STORAGE_KEY, createDefaultProgress } from '../engine/progress'
@@ -13,7 +12,7 @@ import type { ProgressV2, SupportMode } from '../engine/types'
 
 /**
  * One map (skill principle 12): seven units as native disclosures, one open at a time on load, every
- * count derived, every section once, cases named by presentation.
+ * count derived, every section once, cases named by their existing teaching topics.
  */
 
 jest.mock('@/i18n/navigation', () => ({
@@ -87,7 +86,7 @@ describe.each(TRACKS)('the %s pathway accordion', (track) => {
     )
   })
 
-  it('lists every section exactly once, in canonical order, and every case by presentation', () => {
+  it('lists every section exactly once, in canonical order, and every case by its catalog title', () => {
     const { container } = render(
       <EcmoPathwayAccordion track={track} progress={createDefaultProgress()} />,
     )
@@ -100,8 +99,7 @@ describe.each(TRACKS)('the %s pathway accordion', (track) => {
       for (const caseId of group.caseScenarioIds) {
         const definition = clinicalPracticeScenarioById.get(caseId)!
         const chip = container.querySelector(`a[data-kind="case"][href*="case=${caseId}"]`)
-        expect(chip?.textContent).toContain(presentationTitle(definition))
-        expect(chip?.textContent).not.toContain(definition.title)
+        expect(chip?.textContent).toContain(definition.title)
       }
     }
   })
@@ -122,6 +120,30 @@ describe.each(TRACKS)('the %s pathway accordion', (track) => {
 })
 
 describe('the hub browses the map in place', () => {
+  it.each(TRACKS)('names the %s saved case consistently without reading legacy scores', (track) => {
+    const group = ecmoPathwayGroups(track).find((item) => item.caseScenarioIds.length > 0)!
+    const scenario = clinicalPracticeScenarioById.get(group.caseScenarioIds[0])!
+    const historical = { bestScores: { [scenario.id]: 100 }, completedScenarios: [scenario.id] }
+    window.localStorage.setItem(
+      CARDIOHELP_PROGRESS_STORAGE_KEY,
+      JSON.stringify({
+        ...historical,
+        selfPaced: {
+          visitedTopicIds: [`practice:${track}:${scenario.id}`],
+          lastVisited: { section: 'practice', supportMode: track, scenarioId: scenario.id },
+        },
+      }),
+    )
+    render(<CardiohelpHub />)
+    expect(
+      screen.getByRole('link', { name: `Return to your saved work: ${scenario.title}` }),
+    ).toHaveAttribute('href', `/cardiohelp-ecmo/practice?case=${scenario.id}&track=${track}`)
+    const stored = JSON.parse(window.localStorage.getItem(CARDIOHELP_PROGRESS_STORAGE_KEY)!)
+    expect(stored.bestScores).toEqual(historical.bestScores)
+    expect(stored.completedScenarios).toEqual(historical.completedScenarios)
+    expect(screen.queryByText(/mastered|score|prerequisite|no prompting/i)).not.toBeInTheDocument()
+  })
+
   it('reveals the accordion under the browse button and keeps the composition line', () => {
     const { container } = render(<CardiohelpHub />)
     const toggle = screen.getByRole('button', { name: /^Browse all \d+ sections$/ })
