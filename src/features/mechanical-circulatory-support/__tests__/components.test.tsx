@@ -317,9 +317,9 @@ describe('Mechanical Circulatory Support learner interface', () => {
     expect(global.fetch).not.toHaveBeenCalled()
   })
 
-  it('shows the reviewed-English fallback on non-English routes', () => {
+  it('shows the English fallback on non-English routes', () => {
     render(<McsWorkbench section="practice" locale="es" />)
-    expect(screen.getByText(/Reviewed-English fallback/i)).toBeInTheDocument()
+    expect(screen.getByText(/English fallback/i)).toBeInTheDocument()
   })
 
   describe('the module front door (M0/M1)', () => {

@@ -306,6 +306,54 @@ describe('source-conflict provenance', () => {
       criticalCareSourceConflictById.get('conflict.hemodynamics.gef-formula')?.positions,
     ).toHaveLength(2)
   })
+
+  it('attributes each unchanged GEF position to the textbook that actually states it', () => {
+    const conflict = criticalCareSourceConflictById.get('conflict.hemodynamics.gef-formula')!
+    expect(conflict.positions.map(({ claim, evidenceIds }) => ({ claim, evidenceIds }))).toEqual([
+      {
+        claim: 'GEF = (4 × stroke volume) / global end-diastolic volume',
+        evidenceIds: ['advanced-hemodynamic-monitoring-2021'],
+      },
+      {
+        claim: 'GEF = stroke volume / global end-diastolic volume',
+        evidenceIds: ['hemodynamic-monitoring-icu-2016'],
+      },
+    ])
+    for (const position of conflict.positions) {
+      const source = criticalCareEvidenceById.get(position.evidenceIds[0])!
+      expect(source.title).toBe(position.source)
+      expect(source.limitation).toMatch(/Supplied textbook/)
+      expect(source.limitation).toMatch(/clinical review of this conflict is not recorded/)
+    }
+    expect(conflict.positions[0].locator).toMatch(/printed pages 62.*113.*PDF pages 72 and 119/)
+    expect(conflict.positions[1].locator).toBe('printed page 25, section 2.2.5; PDF page 43')
+    expect(criticalCareEvidenceById.get('hemodynamic-monitoring-icu-2016')!.limitation).toMatch(
+      /intentional or an editorial omission is not established/,
+    )
+    expect(conflict.reviewStatus).toBe('sme-review')
+    expect(conflict.handling).toBe(
+      'Name the device or source convention alongside the displayed value. Do not choose one formula silently.',
+    )
+  })
+
+  it('renders the GEF sources without crediting the unrelated Master synthesis', () => {
+    const conflict = criticalCareSourceConflictById.get('conflict.hemodynamics.gef-formula')!
+    const { container } = render(<HeldDisagreement conflict={conflict} />)
+    const positions = [...container.querySelectorAll('[data-conflict-position]')]
+    expect(positions).toHaveLength(2)
+    positions.forEach((position, index) => {
+      expect(position.textContent).toContain(conflict.positions[index].source)
+      expect(position.textContent).toContain(conflict.positions[index].locator)
+      expect(position.querySelector('[data-evidence-ids]')?.textContent).toContain(
+        conflict.positions[index].evidenceIds[0],
+      )
+    })
+    expect(container.textContent).not.toContain('master-hemodynamics-reference')
+    // Existing uses of the synthesis keep its HD-03 identity and limits.
+    expect(criticalCareEvidenceById.get('master-hemodynamics-reference')!.citation).toMatch(
+      /names no author, publisher, date, or references/,
+    )
+  })
 })
 
 describe('shared evidence renderers', () => {

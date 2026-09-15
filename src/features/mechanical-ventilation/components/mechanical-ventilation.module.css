@@ -2764,6 +2764,8 @@
 }
 
 .sourcesSection {
+  /* This panel also mounts in the dark module shell, where --navy is a background color. */
+  --navy: var(--ink);
   padding: clamp(1rem, 2vw, 1.5rem);
   margin-top: 1rem;
 }

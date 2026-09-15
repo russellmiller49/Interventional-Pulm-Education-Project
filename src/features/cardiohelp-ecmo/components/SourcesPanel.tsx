@@ -47,7 +47,7 @@ export function SourcesPanel({
           <h2 id="sources-heading">Evidence boundary and review status</h2>
         </div>
         <span className={styles.draftBadge}>
-          {published ? 'PUBLISHED · REVIEW APPROVED' : 'UNLISTED REVIEW · REVIEW REQUIRED'}
+          {published ? 'PUBLISHED' : 'UNLISTED REVIEW · REVIEW REQUIRED'}
         </span>
       </div>
 
@@ -91,7 +91,7 @@ export function SourcesPanel({
         <div>
           <dt>Publication</dt>
           <dd>
-            {published ? 'Reviewed release' : 'Unlisted draft; clinical and device review pending'}
+            {published ? 'Public release' : 'Unlisted draft; clinical and device review pending'}
           </dd>
         </div>
       </dl>

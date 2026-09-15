@@ -13,7 +13,6 @@ import {
   PERIPHERAL_IMAGING_PRACTICE_HREF,
 } from '../content/routes'
 import { PERIPHERAL_IMAGING_RELEASE_STAGE } from '../content/release'
-import { REVIEWED_ON } from '../data/sources'
 import styles from './peripheral-imaging-module.module.css'
 
 /**
@@ -62,13 +61,13 @@ export const PERIPHERAL_IMAGING_SAFETY_NOTICE = (
  * site, so the label says so rather than implying an account is required.
  *
  * Keep it to a few words. The shared frame renders this badge `white-space: nowrap`, so a long
- * label does not wrap — it widens the document and every section under it. The review date and
- * the education-only boundary are already stated in the safety notice and the references.
+ * label does not wrap — it widens the document and every section under it. Publication alone
+ * does not establish clinical review; the education-only boundary remains in the safety notice.
  */
 const releaseLabel =
   PERIPHERAL_IMAGING_RELEASE_STAGE === 'unlisted-preview'
     ? 'In development · direct link'
-    : `Reviewed ${REVIEWED_ON}`
+    : 'Public release'
 
 /**
  * Shared shell for the hub and every section page: module identity row, section nav, and the
@@ -102,8 +101,8 @@ export function PeripheralImagingModuleFrame({
         {locale !== 'en' ? (
           <div className={styles.englishFallback} role="note">
             <Languages aria-hidden="true" />
-            Reviewed English content fallback: Spanish and Simplified Chinese clinical translations
-            are not yet approved for this module.
+            English content fallback: Spanish and Simplified Chinese clinical translations are not
+            yet approved for this module.
           </div>
         ) : null}
         {children}

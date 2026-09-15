@@ -847,12 +847,13 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(dispatch).toHaveBeenCalledTimes(2)
   })
 
-  it('shows an explicit reviewed-English fallback on non-English routes', async () => {
+  it('shows an explicit English fallback on non-English routes', async () => {
     render(<CardiohelpWorkbench section="learn" locale="es" />)
     await waitFor(() => {
-      expect(screen.getByText(/Reviewed English content fallback/i)).toBeInTheDocument()
+      expect(screen.getByText(/English content fallback/i)).toBeInTheDocument()
     })
     expect(document.querySelector('[data-presentation="guided-device"]')).not.toBeNull()
+    expect(screen.queryByText(/Reviewed[- ]English/i)).not.toBeInTheDocument()
     expect(document.querySelector('#cardiohelp-console')).not.toBeNull()
   })
 

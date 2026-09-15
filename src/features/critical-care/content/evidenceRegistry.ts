@@ -147,10 +147,35 @@ const integratedEvidenceRecords: readonly CriticalCareEvidenceRecord[] = ICU_EVI
   }),
 )
 
+// These supplied textbooks support the shared GEF conflict, not the HD module's Master synthesis.
+// Document identity and formula locations were checked for SHARED-02; no clinical approval follows.
+const sourceConflictEvidenceRecords: readonly CriticalCareEvidenceRecord[] = [
+  {
+    id: 'advanced-hemodynamic-monitoring-2021',
+    title: 'Advanced Hemodynamic Monitoring: Basics and New Horizons',
+    citation:
+      'Kirov MY, Kuzkov VV, Saugel B, editors. Advanced Hemodynamic Monitoring: Basics and New Horizons. Springer Nature Switzerland; 2021. Table 7.1, p. 62; section 12.3.2, p. 113.',
+    limitation:
+      'Supplied textbook. Cited only for the GEF formula as printed at these locations. Document attribution is established; clinical review of this conflict is not recorded.',
+    claimType: 'clinical',
+    sourceRegistry: 'hemodynamics',
+  },
+  {
+    id: 'hemodynamic-monitoring-icu-2016',
+    title: 'Hemodynamic Monitoring in the ICU',
+    citation:
+      'Giraud R, Bendjelid K. Hemodynamic Monitoring in the ICU. Springer International Publishing Switzerland; 2016. Section 2.2.5, p. 25.',
+    limitation:
+      'Supplied textbook. Cited for the GEF ratio described in section 2.2.5. Whether the missing factor of four is intentional or an editorial omission is not established by the supplied copy; clinical review of this conflict is not recorded.',
+    claimType: 'clinical',
+    sourceRegistry: 'hemodynamics',
+  },
+]
+
 const aggregateBoundaryRecords: readonly CriticalCareEvidenceRecord[] = [
   {
     id: 'mechanical-ventilation-source-boundary',
-    title: 'Mechanical ventilation reviewed source boundary',
+    title: 'Mechanical ventilation source boundary',
     citation:
       'Mapped to the module-authoritative manufacturer, clinical-reference, and educational-model registry.',
     limitation:
@@ -191,6 +216,7 @@ const registryRecords = [
   ...crrtReferenceRecords,
   ...integratedEvidenceRecords,
   ...aggregateBoundaryRecords,
+  ...sourceConflictEvidenceRecords,
 ] as const
 
 const evidenceById = new Map<string, CriticalCareEvidenceRecord>()

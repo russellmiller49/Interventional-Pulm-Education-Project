@@ -42,7 +42,7 @@ export function BaxterCrrtModuleFrame({
           title="CRRT"
           subtitle="PrisMax console lab"
           releaseLabel={
-            baxterCrrtReleaseStage === 'published' ? 'Reviewed release' : 'Unlisted preview'
+            baxterCrrtReleaseStage === 'published' ? 'Public release' : 'Unlisted preview'
           }
           activeHref={activeHref}
           navItems={baxterCrrtModuleNavItems}
