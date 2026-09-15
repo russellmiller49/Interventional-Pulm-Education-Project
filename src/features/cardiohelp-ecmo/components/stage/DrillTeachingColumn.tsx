@@ -18,25 +18,24 @@ import styles from './EcmoLessonStage.module.css'
 export function DrillTeachingColumn({
   state,
   step,
-  predictionCommitted,
 }: {
   readonly state: EcmoSimulationState
   readonly step: StageStep
-  readonly predictionCommitted: boolean
 }) {
   const scenarioId = state.scenario.scenarioId
   const scenario = cardiohelpScenarioById.get(scenarioId)
   const hasPanel = hasEcmoDrillTeachingPanel(scenarioId)
   return (
     <div className={styles.teachingColumn} data-pane="teaching">
-      <StageTeachingScope value={{ phase: step.phase, predictionCommitted, stepId: step.id }}>
+      <StageTeachingScope
+        value={{
+          phase: step.phase,
+          predictionCommitted: state.scenario.prediction.committed,
+          stepId: step.id,
+        }}
+      >
         {hasPanel ? <EcmoDrillTeachingPanel state={state} /> : null}
-        <DrillStepTeaching
-          scenario={scenario}
-          step={step}
-          predictionCommitted={predictionCommitted}
-          hasAuthoredPanel={hasPanel}
-        />
+        <DrillStepTeaching scenario={scenario} step={step} hasAuthoredPanel={hasPanel} />
       </StageTeachingScope>
     </div>
   )

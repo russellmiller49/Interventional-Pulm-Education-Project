@@ -7,21 +7,11 @@ import styles from './EcmoLessonStage.module.css'
 
 export type StepRowState = 'done' | 'current' | 'next' | 'locked'
 
-/**
- * The single progression.
- *
- * One ordered list, one `aria-current="step"`. A performed row collapses to its ordinal, phase and
- * title with a recap of what it changed; the current row is marked; the next row is reachable once
- * the current one is performed; everything further shows its ordinal and phase only — never its
- * title, because several titles name the fitting action and the list sits beside the prediction.
- * Selecting a performed row reviews it in place; nothing here re-runs an action.
- */
+/** Open task outline. A done marker reflects an actual performed interaction, never a skip. */
 export function StepList({
   lesson,
   currentIndex,
-  furthestPerformedIndex,
   performedStepIds,
-  predictionCommitted,
   reviewIndex,
   recapFor,
   onSelect,
@@ -40,15 +30,7 @@ export function StepList({
       {lesson.steps.map((step, index) => {
         const performed = performedStepIds.has(step.id)
         const current = index === currentIndex
-        const gated = step.gate === 'after-prediction' && !predictionCommitted
-        const reached = index <= furthestPerformedIndex + 1 && !gated
-        const rowState: StepRowState = performed
-          ? 'done'
-          : current
-            ? 'current'
-            : reached
-              ? 'next'
-              : 'locked'
+        const rowState: StepRowState = performed ? 'done' : current ? 'current' : 'next'
         const reviewing = reviewIndex === index && performed
         const recap = reviewing ? recapFor(index) : []
         return (
@@ -63,7 +45,6 @@ export function StepList({
               className={styles.stepButton}
               aria-current={current ? 'step' : undefined}
               aria-expanded={performed ? reviewing : undefined}
-              disabled={rowState === 'locked' || rowState === 'next'}
               onClick={() => onSelect(index)}
             >
               <span className={styles.stepOrdinal} aria-hidden="true">
@@ -78,11 +59,7 @@ export function StepList({
                   steps show their title; unreached ones would otherwise paint the fitting action
                   beside the question that asks for it.
                 */}
-                {rowState === 'locked' && !step.foundationTask ? (
-                  <span className={styles.stepTitle}>Step {step.ordinal}</span>
-                ) : (
-                  <span className={styles.stepTitle}>{step.title}</span>
-                )}
+                <span className={styles.stepTitle}>{step.title}</span>
               </span>
             </button>
             {reviewing ? (

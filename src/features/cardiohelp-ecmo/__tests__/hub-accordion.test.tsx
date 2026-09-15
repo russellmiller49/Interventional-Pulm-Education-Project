@@ -48,7 +48,7 @@ function progressWith(worked: readonly string[]): ProgressV2 {
   const foundations = worked.filter((id) => ecmoPathwaySectionKind(id) === 'foundation-workspace')
   return {
     ...createDefaultProgress(),
-    completedLearnLessonIds: drills,
+    visitedTopicIds: [...drills, ...foundations].map((id) => `learn:vv:${id}`),
     ...(foundations.length > 0 ? { completedFoundationSectionIds: foundations } : {}),
   }
 }
@@ -140,7 +140,10 @@ describe('the hub browses the map in place', () => {
     const vv = criticalCareLearningPathway('cardiohelp-ecmo', 'vv').sections
     window.localStorage.setItem(
       CARDIOHELP_PROGRESS_STORAGE_KEY,
-      JSON.stringify(progressWith(vv.slice(0, 8).map((section) => section.id))),
+      JSON.stringify({
+        ...createDefaultProgress(),
+        selfPaced: progressWith(vv.slice(0, 8).map((section) => section.id)),
+      }),
     )
     const { container } = render(<CardiohelpHub />)
     fireEvent.click(screen.getByRole('button', { name: /^Browse all \d+ sections$/ }))

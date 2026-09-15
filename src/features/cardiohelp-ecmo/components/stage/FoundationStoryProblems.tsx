@@ -5,6 +5,7 @@ import { Play } from 'lucide-react'
 
 import { ChoiceReasoningFeedback } from '@/features/learning-module/components/ChoiceReasoningFeedback'
 
+import { EcmoOptionalExplanation } from '../shell/EcmoOptionalExplanation'
 import { ECMO_VERDICT_FRAMES } from '../shell/EcmoOtherAnswers'
 
 import { orderChoices } from '../../content/choiceOrder'
@@ -153,6 +154,20 @@ export function FoundationStoryProblems({
                 />
               </div>
             )}
+            <EcmoOptionalExplanation
+              key={story.id}
+              onRetry={() => {
+                setCommitted((current) => ({ ...current, [story.id]: '' }))
+                setSelected((current) => ({ ...current, [story.id]: '' }))
+              }}
+            >
+              <p>{story.item.explanation}</p>
+            </EcmoOptionalExplanation>
+            {!committedChoice ? (
+              <button type="button" onClick={() => onRun(story.runGuidedActionId)}>
+                Run comparison without answering
+              </button>
+            ) : null}
           </article>
         )
       })}

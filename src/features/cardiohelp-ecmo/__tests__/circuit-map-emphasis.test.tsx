@@ -168,18 +168,19 @@ describe('what the map is asked to mark', () => {
     }
   })
 
-  it('marks an implicated row’s segments, and only after the engine records a commitment', () => {
+  it('marks the same implicated segments before and after an optional prediction', () => {
     const before = deriveEcmoCircuitPresentation(settledDrill('preload-drainage-collapse'), {
       kind: 'drill-reveal',
       rowId: 'drainage-limitation',
     })
-    expect(circuitMapEmphasisTargets(before, 'vv', { sensorFlagsDrawn: true })).toEqual([])
+    expect(before).toEqual({ kind: 'implicated', rowId: 'drainage-limitation' })
 
     const after = deriveEcmoCircuitPresentation(
       afterCommitment(settledDrill('preload-drainage-collapse')),
       { kind: 'drill-reveal', rowId: 'drainage-limitation' },
     )
     const targets = circuitMapEmphasisTargets(after, 'vv', { sensorFlagsDrawn: true })
+    expect(targets).toEqual(circuitMapEmphasisTargets(before, 'vv', { sensorFlagsDrawn: true }))
     expect(
       targets.filter((target) => target.role === 'segment').map((target) => target.id),
     ).toEqual([...ecmoLocalizationRow('drainage-limitation').implicatedSegmentIds])
@@ -466,7 +467,7 @@ describe('the circuit walk, marked on the real map', () => {
     )
   })
 
-  it('rings the teaching site first, and removes all emphasis during unlabelled retrieval', () => {
+  it('rings the teaching site first and keeps ordinary labels during optional retrieval', () => {
     mountSection('circuit-flow-path')
     expect(document.querySelector('[data-map-emphasis-role="sensor-site"]')).not.toBeNull()
     expect(document.querySelector('#cardiohelp-circuit-panel')).toHaveAttribute(
@@ -477,7 +478,7 @@ describe('the circuit walk, marked on the real map', () => {
     expect(document.querySelector('[data-map-emphasis]')).toBeNull()
     expect(document.querySelector('#cardiohelp-circuit-panel')).toHaveAttribute(
       'data-location-disclosure',
-      'withheld',
+      'full',
     )
     fireEvent.click(document.querySelector('[data-now-back]')!)
     expect(document.querySelector('#cardiohelp-circuit-panel')).toHaveAttribute(
@@ -531,16 +532,15 @@ describe('the circuit walk, marked on the real map', () => {
  * ------------------------------------------------------------------ */
 
 describe('a drill, marked on the real map once the learner has committed', () => {
-  it('marks nothing before commitment, then the row’s places, on the real stage', async () => {
+  it('marks the row on the real stage without a prediction, and retains it afterwards', async () => {
     await mountDrill('preload-drainage-collapse')
-    expect(document.querySelector('[data-map-emphasis]')).toBeNull()
-    expect(document.querySelector('[data-map-emphasis-caption]')).toBeNull()
+    expect(document.querySelector('[data-map-emphasis]')).not.toBeNull()
+    expect(document.querySelector('[data-map-emphasis-caption]')).not.toBeNull()
     expect(document.querySelector('svg[data-map-frame]')?.getAttribute('data-map-frame')).toBe(
       'whole',
     )
-
     readStep(/Inspect the starting pattern/i)
-    expect(document.querySelector('[data-map-emphasis]')).toBeNull()
+    expect(document.querySelector('[data-map-emphasis]')).not.toBeNull()
     answerPredictionAndAdvance('preload-drainage-collapse')
 
     await waitFor(() =>
@@ -582,15 +582,15 @@ describe('a drill, marked on the real map once the learner has committed', () =>
     }
   })
 
-  it('never leaks the row’s places before commitment, on any drill with a row', () => {
+  it('offers the accurate teaching row before a prediction on every applicable drill', () => {
     for (const [scenarioId, spec] of Object.entries(ecmoDrillSpecs)) {
       if (!spec.localizationRowId) continue
       const presentation = deriveEcmoCircuitPresentation(settledDrill(scenarioId), {
         kind: 'drill-reveal',
         rowId: spec.localizationRowId,
       })
-      expect(`${scenarioId}: ${presentation.kind}`).toBe(`${scenarioId}: neutral`)
-      expect(circuitMapEmphasisCaption(presentation, 'vv')).toBeNull()
+      expect(presentation).toEqual({ kind: 'implicated', rowId: spec.localizationRowId })
+      expect(circuitMapEmphasisCaption(presentation, 'vv')).toMatch(/^Implicated on this map:/)
     }
   })
 })

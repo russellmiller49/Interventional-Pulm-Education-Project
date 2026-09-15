@@ -24,11 +24,11 @@ jest.mock('@/i18n/navigation', () => ({
 
 const expectedSections = ['Overview', 'Learn', 'Practice', 'Challenge']
 
-function expectNavigationGrammar(name: string, activeSection: string) {
+function expectNavigationGrammar(name: string, activeSection: string, sections = expectedSections) {
   const navigation = screen.getByRole('navigation', { name })
   const links = within(navigation).getAllByRole('link')
 
-  expect(links.map((link) => link.querySelector('strong')?.textContent)).toEqual(expectedSections)
+  expect(links.map((link) => link.querySelector('strong')?.textContent)).toEqual(sections)
   expect(within(navigation).getByRole('link', { name: new RegExp(activeSection) })).toHaveAttribute(
     'aria-current',
     'page',
@@ -94,7 +94,12 @@ describe('critical-care shared shell convergence', () => {
     expect(screen.getByText('CARDIOHELP console lab')).toBeInTheDocument()
     expect(screen.getByText('Unlisted tester access')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Track toggle' })).toBeInTheDocument()
-    expectNavigationGrammar('ECMO Management module sections', 'Practice')
+    expectNavigationGrammar('ECMO Management module sections', 'Practice', [
+      'Overview',
+      'Learn',
+      'Practice',
+      'Integrated cases',
+    ])
   })
 
   it('preserves CRRT release and progress contracts on the dark V2 shell', () => {

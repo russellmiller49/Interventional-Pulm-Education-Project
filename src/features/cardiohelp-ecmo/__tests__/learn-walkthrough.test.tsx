@@ -216,19 +216,19 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     performAndAdvance(/Advance 1 second and inspect the response/i)
     // The data-driven Explain step sits between the response and the transfer.
     readStep(/I have read what explains it/i)
+    fireEvent.click(screen.getByRole('button', { name: 'Start guided activity' }))
     // The transfer step carries the constant title: the step changes, its name does not, and it
     // never announces the next drill's diagnosis.
     expect(screen.getByRole('heading', { name: ECMO_TRANSFER_STEP_TITLE })).toBeInTheDocument()
     const progressBefore = window.localStorage.getItem('cardiohelp-ecmo-progress-v1')
-    expect(progressBefore ?? '').not.toContain('"acute-hypercapnia"')
+    expect(JSON.parse(progressBefore!).completedLearnLessonIds).toBeUndefined()
 
     fireEvent.click(screen.getByRole('button', { name: 'Blood parameters' }))
 
     await waitFor(() => {
       const stored = JSON.parse(window.localStorage.getItem('cardiohelp-ecmo-progress-v1') ?? '{}')
-      expect(stored.data?.completedLearnLessonIds ?? stored.completedLearnLessonIds).toContain(
-        'acute-hypercapnia',
-      )
+      expect(stored.selfPaced.visitedTopicIds).toContain('learn:vv:acute-hypercapnia')
+      expect(stored.completedLearnLessonIds).toBeUndefined()
     })
     // I3f: acute-hypercapnia teaches sweep against a CO₂ load, and its unit's one case is the
     // gas-path disconnection — a different mechanism. The mechanism map therefore offers that case

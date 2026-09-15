@@ -1,12 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { CriticalCareRestrictedAccountSync } from '@/features/critical-care/components/CriticalCareRestrictedAccountSync'
-
+/** Self-paced ECMO keeps topic locations locally; legacy grading sync is no longer mounted here. */
 export default function CardiohelpEcmoLayout({ children }: { children: ReactNode }) {
-  return (
-    <>
-      {children}
-      <CriticalCareRestrictedAccountSync />
-    </>
-  )
+  return children
 }

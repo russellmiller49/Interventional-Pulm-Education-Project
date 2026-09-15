@@ -326,3 +326,84 @@ export function withMastery(
 ): ProgressV2 {
   return { ...progress, mastery: calculateMastery(progress, requiredScenarioIds) }
 }
+
+/** Self-paced state shares the existing key, leaving every legacy field untouched. */
+export function parseLearningProgress(serialized: string | null): ProgressV2 {
+  const empty = createDefaultProgress()
+  try {
+    const saved = JSON.parse(serialized ?? '{}')?.selfPaced
+    if (!saved || typeof saved !== 'object') return empty
+    const visitedTopicIds = parseStringArray(saved.visitedTopicIds)
+    const lastVisited = parseLastVisited(saved.lastVisited)
+    const lessons = parseScenarioIdByMode(saved.lastLessonScenarioIdByMode)
+    const cases = parseScenarioIdByMode(saved.lastCaseScenarioIdByMode)
+    if (!visitedTopicIds || lastVisited === null || !lessons || !cases) return empty
+    return {
+      ...empty,
+      visitedTopicIds,
+      ...(lastVisited ? { lastVisited } : {}),
+      lastLessonScenarioIdByMode: lessons,
+      lastCaseScenarioIdByMode: cases,
+    }
+  } catch {
+    return empty
+  }
+}
+
+export function readLearningProgress(): ProgressV2 {
+  try {
+    return parseLearningProgress(window.localStorage.getItem(CARDIOHELP_PROGRESS_STORAGE_KEY))
+  } catch {
+    return createDefaultProgress()
+  }
+}
+
+export function writeLearningProgress(progress: ProgressV2): void {
+  if (typeof window === 'undefined') return
+  try {
+    const raw = window.localStorage.getItem(CARDIOHELP_PROGRESS_STORAGE_KEY)
+    const legacy = raw === null ? {} : JSON.parse(raw)
+    // Unknown or malformed records are kept in place, never replaced with guessed data.
+    if (!legacy || typeof legacy !== 'object' || Array.isArray(legacy)) return
+    window.localStorage.setItem(
+      CARDIOHELP_PROGRESS_STORAGE_KEY,
+      JSON.stringify({
+        ...legacy,
+        selfPaced: {
+          visitedTopicIds: progress.visitedTopicIds ?? [],
+          lastVisited: progress.lastVisited,
+          lastLessonScenarioIdByMode: progress.lastLessonScenarioIdByMode,
+          lastCaseScenarioIdByMode: progress.lastCaseScenarioIdByMode,
+        },
+      }),
+    )
+  } catch {
+    /* Optional local progress must not interrupt learning. */
+  }
+}
+
+export function recordTopicVisit(progress: ProgressV2, visit: LastVisitedActivity): ProgressV2 {
+  const topicId = `${visit.section}:${visit.supportMode}:${visit.scenarioId}`
+  return {
+    ...progress,
+    lastVisited: visit,
+    visitedTopicIds: [...new Set([...(progress.visitedTopicIds ?? []), topicId])],
+    ...(visit.section === 'learn'
+      ? {
+          lastLessonScenarioIdByMode: {
+            ...progress.lastLessonScenarioIdByMode,
+            [visit.supportMode]: visit.scenarioId,
+          },
+        }
+      : {
+          lastCaseScenarioIdByMode: {
+            ...progress.lastCaseScenarioIdByMode,
+            [visit.supportMode]: visit.scenarioId,
+          },
+        }),
+  }
+}
+
+export function persistTopicVisit(visit: LastVisitedActivity): void {
+  writeLearningProgress(recordTopicVisit(readLearningProgress(), visit))
+}

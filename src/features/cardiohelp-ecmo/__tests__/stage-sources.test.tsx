@@ -146,7 +146,6 @@ describe('the set the stage footer cites', () => {
       <DrillStepTeaching
         scenario={cardiohelpScenarioById.get(scenarioId)}
         step={explain}
-        predictionCommitted
         hasAuthoredPanel={false}
       />,
     )
@@ -246,16 +245,16 @@ describe('where the stage puts them', () => {
     expect(renderedIds(details as ParentNode)).toEqual([...expected])
   })
 
-  it('names the sources before the prediction and says what they are cited for after it', () => {
+  it('shows source titles, supported claims, and limits without a response', () => {
     const { container } = mount('why-extracorporeal-support')
     const details = () => container.querySelector('[data-stage-sources]')
 
     // Before: titles and references, no claim and no limit — a record's supports sentence names
     // the mechanism it is registered for, which is the thing the prediction is asking about.
-    expect(details()).toHaveAttribute('data-stage-sources-claims', 'false')
-    expect(details()?.querySelector('[data-citation-supports]')).toBeNull()
-    expect(details()?.querySelector('[data-citation-limit]')).toBeNull()
-    expect(details()?.querySelector('[data-stage-sources-note]')).not.toBeNull()
+    expect(details()).toHaveAttribute('data-stage-sources-claims', 'true')
+    expect(details()?.querySelector('[data-citation-supports]')).not.toBeNull()
+    expect(details()?.querySelector('[data-citation-limit]')).not.toBeNull()
+    expect(details()?.querySelector('[data-stage-sources-note]')).toBeNull()
     // The titles are there either way, so provenance is never withheld outright.
     expect(details()?.querySelectorAll('[data-citation-title]').length).toBeGreaterThan(0)
 

@@ -202,7 +202,7 @@ describe('the rendered introductory teaching journey', () => {
     expect(screen.queryByRole('button', { name: 'Continue' })).toBeNull()
     expect(
       document.querySelector('[data-step-id="pump-and-pressure-zones-observe"] button'),
-    ).toBeDisabled()
+    ).toBeEnabled()
     expect(document.querySelector('[data-foundation-comparison]')).toHaveAttribute(
       'data-comparison-complete',
       'false',
@@ -255,15 +255,22 @@ describe('the rendered introductory teaching journey', () => {
       reachFoundationStep(section, taskId)
       expect(primary()).toHaveTextContent('Submit answer')
       expect(primary()).toBeDisabled()
-      expect(document.querySelector('[data-foundation-comparison]')).toBeNull()
+      expect(document.querySelector('[data-foundation-comparison]')).toHaveAttribute(
+        'data-comparison-complete',
+        'false',
+      )
       submitFoundationAnswer()
       expect(primary()).not.toHaveTextContent('Continue')
       fireEvent.click(primary())
       expect(primary()).toHaveTextContent('Continue')
     }
     reachFoundationStep(section, 'transfer')
-    expect(writes).not.toHaveBeenCalled()
-    expect(window.localStorage.getItem(CARDIOHELP_PROGRESS_STORAGE_KEY)).toBe(payload)
+    expect(writes).toHaveBeenCalledTimes(1)
+    const { selfPaced, ...legacy } = JSON.parse(
+      window.localStorage.getItem(CARDIOHELP_PROGRESS_STORAGE_KEY)!,
+    )
+    expect(legacy).toEqual(JSON.parse(payload))
+    expect(selfPaced.visitedTopicIds).toContain(`learn:vv:${section}`)
     for (let i = 0; i < 3; i++) fireEvent.click(document.querySelector('[data-now-back]')!)
     expect(currentFoundationStep()).toBe(`${section}-predict`)
     expect(document.querySelector(`input[value="${firstAnswer}"]`)).toBeChecked()
@@ -274,7 +281,7 @@ describe('the rendered introductory teaching journey', () => {
     expect(stored.scenarioAttempts).toEqual(history.scenarioAttempts)
     expect(stored.bestScores).toEqual(history.bestScores)
     expect(stored.criticalErrorStatus).toEqual(history.criticalErrorStatus)
-    expect(stored.completedFoundationSectionIds).toEqual([section])
+    expect(stored.completedFoundationSectionIds).toBeUndefined()
   })
 
   it('track changes and fresh links start with teaching and fresh comparison state', () => {

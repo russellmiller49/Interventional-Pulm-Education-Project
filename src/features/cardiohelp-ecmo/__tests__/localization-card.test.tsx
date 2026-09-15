@@ -196,13 +196,13 @@ describe('ECMO localization card — one revealed row', () => {
 })
 
 describe('ECMO drill localization gate', () => {
-  it('renders nothing at all before the learner commits', () => {
+  it('renders the teaching row without a prediction', () => {
     const state = settled(VV_DRILL)
     expect(state.scenario.prediction.committed).toBe(false)
     const { container } = render(
       <EcmoDrillLocalization state={state} rowId="drainage-limitation" />,
     )
-    expect(container.innerHTML).toBe('')
+    expect(container.querySelector('[data-localization-row="drainage-limitation"]')).not.toBeNull()
   })
 
   it('renders the row once the engine has recorded a commitment', () => {
@@ -230,7 +230,7 @@ describe('ECMO drill localization gate', () => {
     expect(container.querySelector('[data-row-va-variation]')).not.toBeNull()
   })
 
-  it('closes again when the scenario is reloaded', () => {
+  it('keeps teaching available on reload without restoring a prediction', () => {
     const reloaded = ecmoSimulationReducer(afterCommitment(settled(VV_DRILL)), {
       type: 'LOAD_SCENARIO',
       scenarioId: VV_DRILL,
@@ -239,6 +239,6 @@ describe('ECMO drill localization gate', () => {
     const { container } = render(
       <EcmoDrillLocalization state={reloaded} rowId="drainage-limitation" />,
     )
-    expect(container.innerHTML).toBe('')
+    expect(container.querySelector('[data-localization-row="drainage-limitation"]')).not.toBeNull()
   })
 })

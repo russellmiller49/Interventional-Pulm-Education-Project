@@ -57,7 +57,7 @@ function savedActivityLink(progress: ProgressV2): SavedActivityLink | null {
     return {
       pathname: `${cardiohelpEcmoNavBase}/assess`,
       query: { track: lastVisited.supportMode },
-      label: `${lastVisited.supportMode.toUpperCase()} challenge`,
+      label: `${lastVisited.supportMode.toUpperCase()} integrated case`,
     }
   }
 
@@ -200,10 +200,7 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
                 <ArrowRight aria-hidden="true" />
                 <span>
                   <strong>
-                    {progress.lastVisited ||
-                    progress.completedFoundationSectionIds?.length ||
-                    progress.completedLabs.length ||
-                    progress.completedLearnLessonIds.length
+                    {progress.lastVisited || progress.visitedTopicIds?.length
                       ? 'Continue'
                       : 'Start'}{' '}
                     — {next.section.title}
@@ -215,7 +212,7 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
               </Link>
             ) : (
               <p className={styles.hubTrackDone} data-ecmo-continue="complete">
-                Every section of the {track.toUpperCase()} track is worked through. Revisit any of
+                Every section of the {track.toUpperCase()} track has been visited. Revisit any of
                 them below, or take the challenge.
               </p>
             )}
@@ -315,17 +312,17 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
                 Practice
               </Link>
               <span>
-                clinical cases that apply what each section taught — commit a plan, manage,
-                reassess, debrief — {orderedCaseScenarioIds(track).length} cases per track.
+                self-paced clinical cases with optional predictions, simulator actions, and
+                explanations — {orderedCaseScenarioIds(track).length} cases per track.
               </span>
             </li>
             <li>
               <Link href={{ pathname: `${cardiohelpEcmoNavBase}/assess`, query: { track } }}>
-                Challenge
+                Integrated cases
               </Link>
               <span>
-                one harder case per track, open from the start, with less prompting and the same
-                causal debrief.
+                one integrated case per track. Start, use a hint, read the explanation, or move on
+                at any time.
               </span>
             </li>
           </ol>

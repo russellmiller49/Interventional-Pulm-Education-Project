@@ -197,7 +197,7 @@ describe('the pressure-zone map names the chattering limb', () => {
     expect(screen.queryByText('DRAINAGE CHATTER')).not.toBeInTheDocument()
   })
 
-  it('names a sign, not a diagnosis, before the learner has committed', () => {
+  it('names the live sign and pattern without requiring a prediction', () => {
     const state = chatteringState()
     expect(state.scenario.prediction.committed).toBe(false)
 
@@ -207,8 +207,8 @@ describe('the pressure-zone map names the chattering limb', () => {
     // The observe step asks the learner to see the chatter, so the cue is theirs to read. What must
     // not appear is the pattern it points to.
     expect(screen.getByText('DRAINAGE CHATTER')).toBeInTheDocument()
-    expect(screen.queryByText(/Preload-limited drainage pattern/i)).not.toBeInTheDocument()
-    expect(screen.getByText(/withheld until reassessment and reveal/i)).toBeInTheDocument()
+    expect(screen.getByText(/Preload-limited drainage pattern/i)).toBeInTheDocument()
+    expect(state.scenario.prediction.committed).toBe(false)
   })
 })
 

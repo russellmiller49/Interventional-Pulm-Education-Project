@@ -261,7 +261,7 @@ export function CircuitSchematic({
   // A pressure pattern is a comparison across zones, so it needs zones that are reporting. On a
   // stopped circuit the model's intercepts are not measurements and must not be read as a pattern.
   const pressuresInterpretable = isInterpretable(state.circuit.readouts.pVen)
-  const diagnosisRevealed = state.scenario.phase === 'complete'
+  const diagnosisRevealed = pressuresInterpretable
   const isVa = state.supportMode === 'va'
   const supportModeLabel = isVa ? 'VA' : 'VV'
   const returnVesselLabel = isVa ? 'femoral artery' : 'femoral vein'
@@ -291,10 +291,7 @@ export function CircuitSchematic({
    * below is, so this component still never has to know which case is loaded; every other VA
    * lesson draws the cue as it always has.
    */
-  const mixingCueWithheld =
-    isVa &&
-    state.scenario.activeFaults.includes('differential-hypoxemia') &&
-    !state.scenario.prediction.committed
+  const mixingCueWithheld = false
   const postPumpPath = geometry.postPumpLimb
   const returnLimbPath = geometry.returnLimb
   /*
@@ -353,7 +350,7 @@ export function CircuitSchematic({
       : ''
   }${emphasisCaption ? ` ${emphasisCaption}` : ''}`
   const resistancePattern = !diagnosisRevealed
-    ? 'Pattern label withheld until reassessment and reveal'
+    ? 'Pressure pattern unavailable'
     : state.scenario.activeFaults.includes('oxygenator-resistance') ||
         state.scenario.correctedFaults.includes('oxygenator-resistance')
       ? 'Oxygenator resistance pattern'

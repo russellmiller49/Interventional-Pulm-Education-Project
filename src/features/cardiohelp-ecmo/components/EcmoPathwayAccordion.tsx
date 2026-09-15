@@ -42,7 +42,11 @@ export function EcmoPathwayAccordion({
   const groups = ecmoPathwayGroups(track)
   const order = criticalCareLearningPathway('cardiohelp-ecmo', track).sections
   const worked = ecmoWorkedSectionIds(progress)
-  const completedCases = new Set(progress.completedLabs)
+  const completedCases = new Set(
+    (progress.visitedTopicIds ?? [])
+      .filter((id) => !id.startsWith('learn:'))
+      .map((id) => id.split(':').slice(2).join(':')),
+  )
   const next = nextIncompleteSectionLink(track, progress)
   const nextSectionId = next?.section.id ?? null
   const openUnitId =
@@ -86,7 +90,7 @@ export function EcmoPathwayAccordion({
                   >
                     <GraduationCap aria-hidden="true" />
                     {section.title}
-                    {done ? ' ✓ worked through' : ''}
+                    {done ? ' ✓ visited' : ''}
                     {isNext ? <em>Up next</em> : null}
                   </Link>
                 )
@@ -107,7 +111,7 @@ export function EcmoPathwayAccordion({
                   >
                     <BookOpenCheck aria-hidden="true" />
                     Case · {definition ? presentationTitle(definition) : 'a case in this unit'}
-                    {done ? ' ✓ worked through' : ''}
+                    {done ? ' ✓ visited' : ''}
                   </Link>
                 )
               })}
@@ -119,7 +123,7 @@ export function EcmoPathwayAccordion({
                   href={{ pathname: `${cardiohelpEcmoNavBase}/assess`, query: { track } }}
                 >
                   <ArrowRight aria-hidden="true" /> Open the {track.toUpperCase()} challenge
-                  {completedCases.has(group.capstoneScenarioId) ? ' ✓ worked through' : ''}
+                  {completedCases.has(group.capstoneScenarioId) ? ' ✓ visited' : ''}
                 </Link>
               ) : null}
             </div>

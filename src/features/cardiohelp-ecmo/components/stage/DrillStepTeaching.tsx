@@ -77,42 +77,20 @@ function KnobStrip({ strip }: { readonly strip: EcmoKnobStrip }) {
  * Six drills carry an authored live teaching panel whose post-commitment blocks are their Explain.
  * The other fourteen used to show a card saying no panel had been written. This renders what every
  * scenario already carries — its diagnosis, causal chain, the response that fits and its safety
- * notes — once the prediction is committed and the step has moved past it. Before commitment it
- * says what to read and nothing about why, so the pane beside the question cannot answer it.
+ * notes. All teaching is available without a prediction; no answer or simulator action is recorded
+ * by this component.
  */
 export function DrillStepTeaching({
   scenario,
   step,
-  predictionCommitted,
   hasAuthoredPanel,
 }: {
   readonly scenario: ScenarioDefinition | undefined
   readonly step: StageStep
-  readonly predictionCommitted: boolean
   readonly hasAuthoredPanel: boolean
 }) {
   const sourcesCollectedElsewhere = useStageSourcesCollected()
   if (!scenario) return null
-
-  if (!predictionCommitted || step.phase === 'recognize' || step.phase === 'predict') {
-    if (hasAuthoredPanel) return null
-    return (
-      <section
-        className={teachingStyles.section}
-        aria-labelledby="drill-reading-note-heading"
-        data-drill-reading-note
-      >
-        <h3 id="drill-reading-note-heading" className={teachingStyles.heading}>
-          Read before you decide
-        </h3>
-        <p className="mt-2">
-          Use the panels this step opened and compare the readings the instruction names. What
-          explains the pattern, the response that fits it, and the reflex to avoid are held here
-          until you have committed a prediction.
-        </p>
-      </section>
-    )
-  }
 
   const spec = ecmoDrillSpecs[scenario.id]
   const knobStrip = spec ? <KnobStrip strip={spec.controlPanel} /> : null

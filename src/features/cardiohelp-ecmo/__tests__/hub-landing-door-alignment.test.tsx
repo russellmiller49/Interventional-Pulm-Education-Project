@@ -63,10 +63,13 @@ function seedProgress(worked: readonly string[]): void {
   const foundations = worked.filter((id) => ecmoPathwaySectionKind(id) === 'foundation-workspace')
   const progress: ProgressV2 = {
     ...createDefaultProgress(),
-    completedLearnLessonIds: drills,
+    visitedTopicIds: [...drills, ...foundations].map((id) => `learn:vv:${id}`),
     ...(foundations.length > 0 ? { completedFoundationSectionIds: foundations } : {}),
   }
-  window.localStorage.setItem(CARDIOHELP_PROGRESS_STORAGE_KEY, JSON.stringify(progress))
+  window.localStorage.setItem(
+    CARDIOHELP_PROGRESS_STORAGE_KEY,
+    JSON.stringify({ ...createDefaultProgress(), selfPaced: progress }),
+  )
 }
 
 /** The `?lesson=` a surface's primary call to action points at. */
@@ -154,7 +157,7 @@ describe('the hub and the Learn landing resolve the same next section', () => {
     for (const container of [hub.container, landing.container]) {
       const cta = primaryCta(container)
       expect(cta.tagName).toBe('P')
-      expect(cta.textContent).toMatch(/worked through/i)
+      expect(cta.textContent).toMatch(/visited/i)
     }
   })
 })
@@ -284,6 +287,6 @@ describe('the grouped view presents the whole pathway', () => {
     const worked = container.querySelector('[data-kind="section"][data-complete="true"]')
 
     expect(worked).not.toBeNull()
-    expect(worked?.textContent).toContain('worked through')
+    expect(worked?.textContent).toContain('visited')
   })
 })

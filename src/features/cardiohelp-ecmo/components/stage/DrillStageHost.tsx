@@ -25,6 +25,8 @@ import {
   type EcmoSessionLoadContext,
   type EcmoSessionLoadReason,
 } from '../../session/useEcmoSessionCore'
+import { EcmoOptionalExplanation } from '../shell/EcmoOptionalExplanation'
+import { advanceSimulation } from '../PracticeCasePlayer'
 import { CardiohelpConsole } from '../CardiohelpConsole'
 import { CardiohelpModuleFrame } from '../CardiohelpModuleFrame'
 import { FitWidthSurface } from '../FitWidthSurface'
@@ -47,13 +49,7 @@ import { ecmoTaskPresentation } from './activityPresentation'
 import { scrollTaskPaneToTop } from './scrollTaskPaneToTop'
 import { StageSourcesScope } from './StageSourcesScope'
 import { StepList } from './StepList'
-import {
-  STAGE_PHASES,
-  canEnterStep,
-  type StageLesson,
-  type StagePhase,
-  type StageSurfaceId,
-} from './stageModel'
+import { STAGE_PHASES, type StageLesson, type StagePhase, type StageSurfaceId } from './stageModel'
 import styles from './EcmoLessonStage.module.css'
 
 /**
@@ -68,6 +64,7 @@ import styles from './EcmoLessonStage.module.css'
  */
 
 interface Progression {
+  readonly sectionReviewed: boolean
   readonly index: number
   readonly furthestPerformed: number
   readonly performedIds: readonly string[]
@@ -91,6 +88,7 @@ interface Progression {
 }
 
 const INITIAL_PROGRESSION: Progression = {
+  sectionReviewed: false,
   index: 0,
   furthestPerformed: -1,
   performedIds: [],
@@ -201,7 +199,9 @@ export function DrillStageHost({
    * That is read off the engine rather than copied into state, so nothing has to watch for it;
    * moving on records it, and the step list shows it as done from the same predicate.
    */
-  const autoPerformed = simulatorTask?.satisfied === true
+  const autoPerformed =
+    simulatorTask?.satisfied === true &&
+    (activeStep.interaction.kind !== 'transfer-scenario' || state.scenario.activityStarted)
   const recordedIds = progression.performedIds
   const performedIds = useMemo(
     () => new Set(autoPerformed ? [...recordedIds, activeStep.id] : recordedIds),
@@ -212,7 +212,7 @@ export function DrillStageHost({
     ? Math.max(progression.furthestPerformed, activeIndex)
     : progression.furthestPerformed
   const predictionCommitted = predictionPerformed(lesson, [...performedIds])
-  const finished = isLastStep && stepPerformed
+  const finished = (isLastStep && stepPerformed) || progression.sectionReviewed
 
   const helpControlId: GuidedControlId | null =
     simulatorTask?.controlId ??
@@ -231,9 +231,8 @@ export function DrillStageHost({
     : null
   /*
    * What the pressure-zone map marks for this drill: the implicated places of its localization
-   * row, once the prediction is committed and not before. The derivation consults the engine's own
-   * commitment flag, the same gate the localization card reveals through, so the map and the card
-   * cannot disagree. A drill with no row — the startup tour, the CO₂ drills, the bubble and power
+   * row. Teaching remains available before an optional prediction; this does not record an answer
+   * or a performed action. A drill with no row — the startup tour, the CO₂ drills, the bubble and power
    * drills — marks nothing, and says so through the absence of a caption rather than through a
    * marker that would have to mean "nowhere".
    */
@@ -257,7 +256,6 @@ export function DrillStageHost({
           scenarioId: nextStep.interaction.scenarioId,
           mode: 'guided',
         })
-        for (const action of nextStep.interaction.setupActions) dispatch(action)
       }
       setSemanticPhase(nextStep.phase)
       setProgression((current) => ({
@@ -274,6 +272,29 @@ export function DrillStageHost({
     },
     [dispatch, lesson, setSemanticPhase],
   )
+
+  function startTransfer() {
+    if (activeStep.interaction.kind !== 'transfer-scenario' || state.scenario.activityStarted)
+      return
+    dispatch({ type: 'START_ACTIVITY' })
+    for (const action of activeStep.interaction.setupActions) {
+      if (action.type === 'TICK') advanceSimulation(dispatch, action.seconds ?? 1)
+      else dispatch(action)
+    }
+  }
+
+  function skipStep() {
+    if (isLastStep) setProgression((current) => ({ ...current, sectionReviewed: true }))
+    else enterStep(activeIndex + 1, progression.performedIds)
+  }
+
+  function retryPrediction() {
+    setProgression((current) => ({
+      ...current,
+      performedIds: current.performedIds.filter((id) => id !== activeStep.id),
+      choiceByStepId: { ...current.choiceByStepId, [activeStep.id]: '' },
+    }))
+  }
 
   const recordPerformed = useCallback(
     (stepId: string): readonly string[] =>
@@ -294,19 +315,8 @@ export function DrillStageHost({
   const advance = useCallback(() => {
     const performedNow = stepPerformed ? recordPerformed(activeStep.id) : recordedIds
     const next = activeIndex + 1
-    const furthest = stepPerformed ? Math.max(furthestPerformed, activeIndex) : furthestPerformed
-    if (!canEnterStep(lesson, next, furthest, predictionPerformed(lesson, performedNow))) return
     enterStep(next, performedNow)
-  }, [
-    activeIndex,
-    activeStep.id,
-    enterStep,
-    furthestPerformed,
-    lesson,
-    recordPerformed,
-    recordedIds,
-    stepPerformed,
-  ])
+  }, [activeIndex, activeStep.id, enterStep, recordPerformed, recordedIds, stepPerformed])
 
   const performStep = useCallback(() => {
     if (stepPerformed) return
@@ -438,11 +448,7 @@ export function DrillStageHost({
 
   /** Selecting a row reviews it in place. See the foundation host's note on why this is not navigation. */
   function selectStepRow(index: number) {
-    setProgression((current) => {
-      if (index === current.index) return current
-      if (!current.performedIds.includes(lesson.steps[index]?.id ?? '')) return current
-      return { ...current, review: current.review === index ? null : index }
-    })
+    goToStep(index)
   }
 
   /**
@@ -455,7 +461,6 @@ export function DrillStageHost({
   function goToStep(index: number) {
     const target = lesson.steps[index]
     if (!target || index === activeIndex) return
-    if (!performedIds.has(target.id)) return
     enterStep(index, progression.performedIds)
   }
 
@@ -475,7 +480,7 @@ export function DrillStageHost({
       : undefined
 
   const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
-  const canGoBack = previousStep !== undefined && performedIds.has(previousStep.id)
+  const canGoBack = previousStep !== undefined
   const lookingBack = activeIndex < progression.furthestEntered
 
   /*
@@ -507,8 +512,16 @@ export function DrillStageHost({
           }
         : {}),
     }
+    if (activeStep.interaction.kind === 'transfer-scenario' && !state.scenario.activityStarted) {
+      return {
+        ...base,
+        primary: { label: 'Start guided activity', onActivate: startTransfer },
+        status:
+          'New clinical situation. Start to initialize its authored event; no prediction is required.',
+      }
+    }
     if (finished) {
-      return { ...base, status: 'Done. This section has been worked through.' }
+      return { ...base, status: 'Section reviewed. You can return to any activity.' }
     }
     if (stepPerformed) {
       return {
@@ -595,11 +608,6 @@ export function DrillStageHost({
               theme="dark"
               onContinue={undefined}
             />
-            {/*
-              The item's sources used to sit under the verdict. They are in the footer now, with
-              the rest of the drill's, and unfolded there the moment this verdict appears — which
-              is the commitment the claims were waiting for.
-            */}
           </>
         )
       }
@@ -696,13 +704,7 @@ export function DrillStageHost({
     />
   )
 
-  const teaching = (
-    <DrillTeachingColumn
-      state={state}
-      step={activeStep}
-      predictionCommitted={predictionCommitted}
-    />
-  )
+  const teaching = <DrillTeachingColumn state={state} step={activeStep} />
 
   /*
    * What the completion card offers depends on what the unit holds. Only a case that applies the
@@ -712,10 +714,10 @@ export function DrillStageHost({
   const pairing = lesson.practicePairing
   const completionLead =
     pairing?.kind === 'mechanism-match'
-      ? 'The reasoning has been worked through. Apply it to the paired clinical case in Practice, starting fresh with less prompting.'
+      ? 'You can review this section at any time. Apply it to the paired clinical case in Practice, starting fresh with less prompting.'
       : pairing?.kind === 'next-in-unit'
-        ? 'The reasoning has been worked through. The next case in this unit is ready in Practice, starting fresh with less prompting.'
-        : 'The reasoning has been worked through. Continue to the next section to keep building on this.'
+        ? 'You can review this section at any time. The next case in this unit is ready in Practice, starting fresh with less prompting.'
+        : 'You can review this section at any time. Continue to the next section to keep building on this.'
 
   const task = (
     <>
@@ -732,6 +734,37 @@ export function DrillStageHost({
             }
           >
             {nowBody}
+            <EcmoOptionalExplanation
+              key={activeStep.id}
+              onContinue={skipStep}
+              onRetry={activeStep.interaction.kind === 'prediction' ? retryPrediction : undefined}
+            >
+              {activeStep.interaction.kind === 'prediction' ? (
+                <>
+                  <p>{activeStep.interaction.item.explanation}</p>
+                  <ul>
+                    {activeStep.interaction.item.choices.map((choice) => (
+                      <li key={choice.id}>
+                        <strong>{choice.label}</strong> {choice.rationale}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <>
+                  <p>{activeStep.rationale ?? activeStep.instruction}</p>
+                  <p>
+                    Expected response in this teaching example; viewing it performs no simulator
+                    action.
+                  </p>
+                  <ul>
+                    {activeStep.expectedResponse?.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </EcmoOptionalExplanation>
           </ActivityContent>
         </EcmoNowCard>
       </div>
@@ -773,7 +806,7 @@ export function DrillStageHost({
           aria-live="polite"
           data-stage-completion
         >
-          <h3>Section worked through</h3>
+          <h3>Section reviewed</h3>
           <p>{completionLead}</p>
           {pairing?.kind === 'next-in-unit' ? (
             <p data-practice-pairing-note>It applies a different mechanism from this lesson.</p>
@@ -833,7 +866,7 @@ export function DrillStageHost({
       onSaveAndExit={core.saveAndExit}
       resumedNote={
         progression.clampedFrom
-          ? `This section takes a prediction before its later steps, so it opened at its first step. The ${progression.clampedFrom} phase is reached by working forward; nothing earlier was restored.`
+          ? `This section reopened at its first step with a fresh simulation. Choose any task from the outline; previous answers and actions were not restored.`
           : undefined
       }
     />
@@ -902,7 +935,7 @@ export function DrillStageHost({
               <EcmoStageSources
                 sources={stageSources}
                 label="Sources for this lesson"
-                claimsVisible={predictionCommitted}
+                claimsVisible
               />
             </>
           }

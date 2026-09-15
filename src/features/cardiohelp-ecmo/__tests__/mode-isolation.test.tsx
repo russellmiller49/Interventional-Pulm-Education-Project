@@ -4,7 +4,6 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 
 import { CardiohelpWorkbench } from '../components/CardiohelpWorkbench'
-import { presentationTitle } from '../content/casePresentation'
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
 import { CircuitAndMonitors } from '../components/CircuitAndMonitors'
 import { createInitialSimulationState } from '../engine'
@@ -94,7 +93,7 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
       expect(screen.getByRole('button', { name: /Begin case/i })).toBeInTheDocument()
     })
     fireEvent.click(screen.getByRole('button', { name: /Begin case/i }))
-    expect(screen.getByRole('button', { name: 'Commit before action' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Compare this prediction' })).toBeDisabled()
 
     const vvControl = screen.getByLabelText('First priority')
     expect(
@@ -113,12 +112,8 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
     // The picker names cases by presentation, and only the VA track's cases are offered.
     const vvInitiation = clinicalPracticeScenarioById.get('clinical-vv-initiation-ards')!
     const vaInitiation = clinicalPracticeScenarioById.get('va-clinical-initiation-shock')!
-    expect(
-      screen.queryByRole('option', { name: presentationTitle(vvInitiation) }),
-    ).not.toBeInTheDocument()
-    expect(
-      screen.getByRole('option', { name: presentationTitle(vaInitiation) }),
-    ).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: vvInitiation.title })).not.toBeInTheDocument()
+    expect(document.querySelector(`option[value="${vaInitiation.id}"]`)).toBeInTheDocument()
   })
 
   it('reloads a clean walkthrough when the track changes and never scores Learn', async () => {

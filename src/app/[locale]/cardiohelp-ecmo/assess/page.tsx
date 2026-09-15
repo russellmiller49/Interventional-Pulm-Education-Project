@@ -5,9 +5,9 @@ import { CardiohelpWorkbench } from '@/features/cardiohelp-ecmo/components/Cardi
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const handoffMetadata: Metadata = {
-  title: 'Challenge · ECMO Management · CARDIOHELP console lab',
+  title: 'Integrated cases · ECMO Management · CARDIOHELP console lab',
   description:
-    'Harder CARDIOHELP-i cases for adult VV and peripheral VA ECMO, open from the start.',
+    'Self-paced CARDIOHELP-i integrated cases for adult VV and peripheral VA ECMO, open from the start.',
   robots: {
     index: false,
     follow: false,

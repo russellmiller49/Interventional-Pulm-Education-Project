@@ -88,7 +88,7 @@ describe('CARDIOHELP ECMO routes', () => {
     )
     expect((await learnMetadata({ params })).title).toMatch(/^Learn ·/)
     expect((await practiceMetadata({ params })).title).toMatch(/^Practice ·/)
-    expect((await assessMetadata({ params })).title).toMatch(/^Challenge ·/)
+    expect((await assessMetadata({ params })).title).toMatch(/^Integrated cases ·/)
   })
 
   it.each(['en', 'es', 'zh-CN'])('renders the hub with the %s locale', async (locale) => {

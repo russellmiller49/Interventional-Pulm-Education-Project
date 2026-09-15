@@ -40,8 +40,8 @@ export function resolveNowCard(input: NowCardInput): NowCardModel {
 
   if (input.safety && input.safety.labels.length > 0 && !facts.debriefRevealed) {
     return {
-      kicker: 'Stopped for safety',
-      heading: 'This path would harm a real patient',
+      kicker: 'Safety feedback',
+      heading: 'Review this safety event',
       body: [...input.safety.labels, input.safety.lastResponse ?? ''].filter(Boolean).join(' '),
       tone: 'safety',
       primary: { label: 'Restart this case from the beginning', onActivate: actions.restart },
@@ -59,14 +59,14 @@ export function resolveNowCard(input: NowCardInput): NowCardModel {
          * ("it" for the panel, "it" for the circuit) and a spatial claim about a pane that may not
          * be beside anything at a narrow width.
          */
-        body: `${input.setting ? `${input.setting}. ` : ''}Read the clinical brief and its measurements, then begin the case to record your plan. The working simulation opens when you reach management.`,
+        body: `${input.setting ? `${input.setting}. ` : ''}Read the clinical brief and its measurements, then explore the activity or view its explanation. The working simulation opens when you reach management.`,
         primary: { label: 'Begin case', onActivate: actions.beginCase },
       }
     case 'plan':
       return {
         kicker,
-        heading: 'Commit your plan before touching anything',
-        body: 'Choose the immediate goal, your first move, and the response you expect. The plan you commit is what the debrief compares against; later actions do not rewrite it.',
+        heading: 'Consider a plan (optional)',
+        body: 'Try a prediction to compare with the case explanation, start the guided activity, or read the explanation directly.',
       }
     case 'manage': {
       if (input.pendingMachineTask) {
@@ -150,15 +150,17 @@ export function resolveNowCard(input: NowCardInput): NowCardModel {
       if (!facts.debriefRevealed) {
         return {
           kicker,
-          heading: 'Your reassessment is recorded',
-          body: 'Reveal the debrief to compare what you recorded with the response this case teaches, the causal chain and the sources.',
+          heading: facts.reassessmentSubmitted
+            ? 'Your reassessment is recorded'
+            : 'Review the case explanation',
+          body: 'Reveal the case explanation, causal chain and sources. Any responses you recorded remain separate from the teaching example.',
           primary: { label: 'Reveal causal debrief', onActivate: actions.reveal },
         }
       }
       return {
         kicker,
         heading: 'Compare your reasoning with the path this case teaches',
-        body: 'Your committed plan, your actions and the modeled response are laid out below with their sources. Then pick up the next recommended step.',
+        body: 'The case explanation and any actions you performed are shown below with their sources. Viewing this page does not perform the activity.',
         primary:
           input.nextLabel && actions.next
             ? { label: `Next: ${input.nextLabel}`, onActivate: actions.next }

@@ -347,16 +347,14 @@ describe('critical-care public client data boundary', () => {
     expect(publicSource).not.toContain('private capstone')
   })
 
-  it('mounts the restricted sync leaf only from restricted route layouts', () => {
-    const publicLayout = readFileSync(join(sourceRoot, 'app/[locale]/layout.tsx'), 'utf8')
-    const restrictedLayouts = [
-      'app/[locale]/cardiohelp-ecmo/layout.tsx',
-      'app/[locale]/icu-simulation/layout.tsx',
-    ].map((file) => readFileSync(join(sourceRoot, file), 'utf8'))
-
-    expect(publicLayout).not.toContain('CriticalCareRestrictedAccountSync')
-    for (const source of restrictedLayouts) {
-      expect(source).toContain('CriticalCareRestrictedAccountSync')
-    }
+  it('keeps the graded sync leaf out of self-paced ECMO while preserving the ICU mount', () => {
+    const source = (file: string) => readFileSync(join(sourceRoot, file), 'utf8')
+    expect(source('app/[locale]/layout.tsx')).not.toContain('CriticalCareRestrictedAccountSync')
+    expect(source('app/[locale]/cardiohelp-ecmo/layout.tsx')).not.toContain(
+      'CriticalCareRestrictedAccountSync',
+    )
+    expect(source('app/[locale]/icu-simulation/layout.tsx')).toContain(
+      'CriticalCareRestrictedAccountSync',
+    )
   })
 })

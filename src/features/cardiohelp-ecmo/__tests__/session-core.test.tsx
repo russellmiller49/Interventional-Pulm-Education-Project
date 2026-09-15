@@ -8,10 +8,10 @@ import { clinicalPracticeScenarios } from '../content/clinicalCases'
 import { orderedCaseScenarioIds } from '../content/curriculum'
 import {
   createDefaultProgress,
-  readProgress,
+  readLearningProgress as readProgress,
   recordScenarioResult,
   setLastCaseForMode,
-  writeProgress,
+  writeLearningProgress as writeProgress,
   type ProgressV2,
 } from '../engine'
 import {
@@ -246,7 +246,7 @@ describe('ECMO session core', () => {
     setUrl('/en/cardiohelp-ecmo/practice')
   })
 
-  it('hydrates a Practice case from the URL, canonicalises the query, and writes nothing', () => {
+  it('hydrates a Practice case from the URL, canonicalises the query, and saves only its location', () => {
     setUrl('/en/cardiohelp-ecmo/practice?track=vv&case=clinical-vv-tension-pneumothorax')
     const onPracticeCaseLoaded = jest.fn()
     const { result } = renderHook(() =>
@@ -263,7 +263,8 @@ describe('ECMO session core', () => {
       'hydrate',
       { requestedPhase: null },
     )
-    expect(window.localStorage.getItem('cardiohelp-ecmo-progress-v1')).toBeNull()
+    expect(readProgress().scenarioAttempts).toEqual({})
+    expect(readProgress().lastVisited?.scenarioId).toBe('clinical-vv-tension-pneumothorax')
   })
 
   it('records the last case, the visit pointer and the load event when a case is opened', () => {
@@ -283,12 +284,7 @@ describe('ECMO session core', () => {
       supportMode: 'vv',
     })
     expect(window.location.search).toBe('?case=clinical-vv-occult-hemorrhage&track=vv')
-    expect(recordSiteModuleEventMock).toHaveBeenCalledWith(
-      practiceScenarioLoadedEvent(
-        resolveScenarioDefinition('clinical-vv-occult-hemorrhage'),
-        'guided',
-      ),
-    )
+    expect(recordSiteModuleEventMock).not.toHaveBeenCalled()
     expect(onPracticeCaseLoaded).toHaveBeenLastCalledWith(
       expect.objectContaining({ id: 'clinical-vv-occult-hemorrhage' }),
       'navigate',
@@ -313,22 +309,18 @@ describe('ECMO session core', () => {
     expect(result.current.supportMode).toBe('va')
     expect(result.current.state.scenario.scenarioId).toBe(orderedCaseScenarioIds('va')[0])
     expect(window.location.search).toContain('track=va')
-    expect(recordSiteModuleEventMock).toHaveBeenCalledWith(
-      supportModeSelectedEvent('va', 'practice'),
-    )
+    expect(recordSiteModuleEventMock).not.toHaveBeenCalled()
   })
 
-  it('records the round and emits the quiz_submitted event when the debrief is revealed', () => {
+  it('opens the explanation without creating a result or a quiz event', () => {
     const { result } = renderHook(() => useEcmoSessionCore({ section: 'practice' }))
     const scenarioId = result.current.state.scenario.scenarioId
-    const stationId = result.current.scenario.stationId
     act(() => {
       result.current.revealDebrief()
     })
-    expect(readProgress().completedLabs).toContain(scenarioId)
-    expect(recordSiteModuleEventMock).toHaveBeenCalledWith(
-      expect.objectContaining({ eventType: 'quiz_submitted', section: `vv:${stationId}` }),
-    )
+    expect(readProgress().completedLabs).not.toContain(scenarioId)
+    expect(readProgress().scenarioAttempts).toEqual({})
+    expect(recordSiteModuleEventMock).not.toHaveBeenCalled()
   })
 
   it('hydrates a Learn lesson from the URL and names the guided catalog activity', () => {
@@ -349,13 +341,13 @@ describe('ECMO session core', () => {
     expect(window.location.search).toBe('?lesson=preload-drainage-collapse&track=vv')
   })
 
-  it('hydrates the Challenge capstone for the requested track in challenge mode', () => {
+  it('hydrates the Challenge capstone for the requested track with optional coaching', () => {
     setUrl('/en/cardiohelp-ecmo/assess?track=va')
     const { result } = renderHook(() => useEcmoSessionCore({ section: 'assess' }))
     expect(result.current.state.scenario.scenarioId).toBe('va-mixed-circulation-capstone')
-    expect(result.current.state.simulationMode).toBe('challenge')
+    expect(result.current.state.simulationMode).toBe('guided')
     expect(result.current.supportMode).toBe('va')
-    expect(result.current.activityMode).toBe('challenge')
+    expect(result.current.activityMode).toBe('practice')
     expect(window.location.search).toBe('?track=va')
   })
 

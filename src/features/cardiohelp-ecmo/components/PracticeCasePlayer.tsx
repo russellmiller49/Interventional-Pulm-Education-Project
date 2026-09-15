@@ -127,7 +127,7 @@ export function PredictionPanel({
       <div className={styles.workflowHeading}>
         <span>{stageNumber}</span>
         <div>
-          <h3 id="prediction-heading">Commit your initial clinical plan</h3>
+          <h3 id="prediction-heading">Optional clinical prediction</h3>
           <p>Name the goal, first move, and expected physiologic effect for later comparison.</p>
         </div>
       </div>
@@ -190,7 +190,7 @@ export function PredictionPanel({
         }}
       >
         {committed ? <CheckCircle2 aria-hidden="true" /> : <Target aria-hidden="true" />}
-        {committed ? 'Prediction committed' : 'Commit before action'}
+        {committed ? 'Prediction recorded' : 'Compare this prediction'}
       </button>
     </section>
   )

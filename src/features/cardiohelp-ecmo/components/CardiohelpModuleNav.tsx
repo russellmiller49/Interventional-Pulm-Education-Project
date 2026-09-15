@@ -5,9 +5,7 @@ import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 import type { ModuleNavItem } from '@/features/learning-module/types'
 
 export const cardiohelpModuleNavItems: readonly ModuleNavItem[] = [
-  // The four titles are pinned by `criticalCareShellConvergence.test.tsx`, which keeps the module
-  // shells reading alike. Only the descriptions carry module vocabulary, and they now use the same
-  // word for a pathway entry that the landing, the rail and the hub use: section.
+  // Existing route identities; former Assess is an optional integrated case.
   {
     href: cardiohelpEcmoNavBase,
     title: 'Overview',
@@ -25,8 +23,8 @@ export const cardiohelpModuleNavItems: readonly ModuleNavItem[] = [
   },
   {
     href: `${cardiohelpEcmoNavBase}/assess`,
-    title: 'Challenge',
-    description: 'Harder cases · open now',
+    title: 'Integrated cases',
+    description: 'Self-paced case exploration',
   },
 ]
 

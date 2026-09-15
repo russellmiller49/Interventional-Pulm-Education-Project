@@ -5,7 +5,7 @@ import { useMemo, useSyncExternalStore } from 'react'
 import {
   CARDIOHELP_PROGRESS_STORAGE_KEY,
   createDefaultProgress,
-  parseProgress,
+  parseLearningProgress,
 } from '../engine/progress'
 import type { ProgressV2 } from '../engine/types'
 
@@ -18,7 +18,7 @@ import type { ProgressV2 } from '../engine/types'
  * setState-in-effect: the snapshot is the raw stored string (stable between writes), the server
  * snapshot is empty, and the parsed envelope is memoised on the string.
  *
- * `parseProgress` still owns validation and the version envelope; this hook only decides when to
+ * `parseLearningProgress` reads only the self-paced location and visits; this hook only decides when to
  * ask it.
  */
 const listeners = new Set<() => void>()
@@ -55,7 +55,7 @@ export function useStoredProgress(): { readonly progress: ProgressV2; readonly h
     () => false,
   )
   const progress = useMemo(
-    () => (hydrated ? (parseProgress(raw) ?? createDefaultProgress()) : createDefaultProgress()),
+    () => (hydrated ? parseLearningProgress(raw) : createDefaultProgress()),
     [raw, hydrated],
   )
   return { progress, hydrated }
