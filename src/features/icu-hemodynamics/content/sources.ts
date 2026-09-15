@@ -4,16 +4,29 @@ import { HEMODYNAMIC_CLINICAL_THRESHOLDS as thresholds } from './clinicalThresho
 
 export interface HemodynamicsSource {
   id: string
+  /**
+   * The registry's identifier string for the record. It means different things on different records
+   * (an internal revision, a capture date, an edition and chapter, a document number, the module
+   * version), so it is never shown to learners as a document version. What each one means, and the
+   * document's actual dates and checks, are in `sourceReviewMetadata.ts`.
+   */
   version: string
   title: string
   citation: string
-  year: number
+  /** Publication year where one is established; null when the document states no date. */
+  year: number | null
+  /**
+   * What kind of document this is. Since HD-03 a published textbook chapter, a single-author online
+   * chapter and a supplied synthesis of unknown authorship no longer share one class.
+   */
   sourceType:
     | 'guideline'
     | 'review'
     | 'original-research'
+    | 'textbook-chapter'
     | 'manufacturer-labeling'
-    | 'reference-package'
+    | 'online-commentary'
+    | 'supplied-synthesis'
     | 'workflow-manual'
     | 'educational-model'
   url?: string
@@ -64,8 +77,8 @@ export const hemodynamicsSources: readonly HemodynamicsSource[] = [
     version: '2021.1',
     title: 'The contemporary pulmonary artery catheter. Part 1',
     citation:
-      'Bootsma IT, et al. The contemporary pulmonary artery catheter. Part 1: placement and waveform analysis. J Clin Monit Comput. 2021.',
-    year: 2021,
+      'Bootsma IT, et al. The contemporary pulmonary artery catheter. Part 1: placement and waveform analysis. J Clin Monit Comput. 2022;36:5–15. doi:10.1007/s10877-021-00662-8.',
+    year: 2022,
     sourceType: 'review',
     url: 'https://link.springer.com/article/10.1007/s10877-021-00662-8',
     suppliedFilename: 's10877-021-00662-8.pdf',
@@ -77,8 +90,8 @@ export const hemodynamicsSources: readonly HemodynamicsSource[] = [
     version: '2021.1',
     title: 'The contemporary pulmonary artery catheter. Part 2',
     citation:
-      'Bootsma IT, et al. The contemporary pulmonary artery catheter. Part 2: measurements, limitations, and clinical applications. J Clin Monit Comput. 2021.',
-    year: 2021,
+      'Bootsma IT, et al. The contemporary pulmonary artery catheter. Part 2: measurements, limitations, and clinical applications. J Clin Monit Comput. 2022;36:17–31. doi:10.1007/s10877-021-00673-5.',
+    year: 2022,
     sourceType: 'review',
     url: 'https://doi.org/10.1007/s10877-021-00673-5',
     suppliedFilename: '10877_2021_Article_673.pdf',
@@ -179,15 +192,16 @@ export const hemodynamicsSources: readonly HemodynamicsSource[] = [
     id: 'emcrit-rhc-supplied-2026',
     version: 'supplied-2026-07-23',
     title: 'Right heart catheterization (RHC)',
-    citation: 'EMCrit Project. Right heart catheterization (RHC). User-supplied PDF capture.',
-    year: 2026,
-    sourceType: 'reference-package',
+    citation:
+      'Farkas J. Right heart catheterization (RHC). Internet Book of Critical Care, EMCrit Project. Web chapter with a byline dated August 26, 2024; user-supplied browser PDF capture made July 23, 2026.',
+    year: 2024,
+    sourceType: 'online-commentary',
     url: 'https://emcrit.org/ibcc/rhc/',
     suppliedFilename: 'Right heart catheterization (RHC) - EMCrit Project.pdf',
     intendedUse:
       'Conceptual cross-check for PA-versus-RV morphology, PA-to-wedge transition, rough catheter-depth context, and pressure leveling.',
     limitation:
-      'Used as a clinical and visual reference only. The module uses original explanatory text and original deterministic SVG traces.',
+      'A single-author online textbook chapter; the site says it presents its authors’ opinions, and it is not a guideline. Used as a clinical and visual cross-check only. The module uses original explanatory text and original deterministic SVG traces.',
   },
   {
     id: 'clinical-hemodynamics-waveforms',
@@ -196,7 +210,7 @@ export const hemodynamicsSources: readonly HemodynamicsSource[] = [
     citation:
       'Ragosta M, Kennedy JLW. Normal Waveforms, Artifacts, and Pitfalls. In: Ragosta M, ed. Textbook of Clinical Hemodynamics. 3rd ed. Elsevier; 2025:15–49. doi:10.1016/B978-0-443-11642-1.00002-2.',
     year: 2025,
-    sourceType: 'reference-package',
+    sourceType: 'textbook-chapter',
     url: 'https://www.sciencedirect.com/book/9780443116421/textbook-of-clinical-hemodynamics',
     suppliedFilename: 'Normal physiology and waveforms.pdf',
     intendedUse:
@@ -235,26 +249,28 @@ export const hemodynamicsSources: readonly HemodynamicsSource[] = [
     id: 'master-hemodynamics-reference',
     version: 'supplied-2026-07',
     title: 'Master Hemodynamics and Hemodynamic Monitoring Reference',
-    citation: 'User-supplied educational reference package.',
-    year: 2026,
-    sourceType: 'reference-package',
+    citation:
+      'Master Reference: Clinical Hemodynamics & Hemodynamic Monitoring. User-supplied synthesis document; it names no author, publisher, date, or references.',
+    year: null,
+    sourceType: 'supplied-synthesis',
     suppliedFilename: 'Master_Hemodynamics_and_Hemodynamic_Monitoring_Reference.docx',
     intendedUse: 'Curriculum scope, equations, case concepts, and terminology cross-check.',
     limitation:
-      'Where definitions conflict, current guidelines govern; the older 3-WU pre-capillary threshold is not used.',
+      'A synthesis of unknown authorship, not a primary or guideline source, so no clinical statement here should rest on it alone. Where it differs from current guidance the guidance governs: it classifies pre-capillary physiology with a 3 WU PVR boundary, which this module does not use.',
   },
   {
     id: 'monitor-workflow-supplied',
     version: 'workflow-only-1',
-    title: 'Supplied bedside-monitor workflow manuals',
-    citation: 'User-supplied monitor and cardiac-output workflow reference files.',
-    year: 2021,
+    title: 'Supplied patient-monitor manuals',
+    citation:
+      'Philips. IntelliVue Patient Monitor MX750/850 Instructions for Use, release N, part number 453564861711, July 2019, with addendum 453564885151 (September 2019); and IntelliVue Configuration Guide, monitor release H.0, part number 4535 642 29201, October 2010. User-supplied PDF files.',
+    year: 2019,
     sourceType: 'workflow-manual',
     suppliedFilename: 'fdacovideuas_137229.pdf; 51414b09bd404c5ba256ae4501365f69.pdf',
     intendedUse:
-      'Generic workflow concepts such as zeroing, wedge capture, and cardiac-output trial review.',
+      'Generic workflow concepts from the 2019 instructions for use, such as zeroing, wedge capture, and cardiac-output trial review.',
     limitation:
-      'No screenshots, branding, proprietary layout, or exact vendor visual design are reproduced.',
+      'One manufacturer’s monitor releases from 2019 and 2010; the configuration guide lists settings, not procedures. Current monitor instructions govern. No screenshots, branding, proprietary layout, or exact vendor visual design are reproduced.',
   },
   {
     id: 'icu-hemodynamics-model-v1',

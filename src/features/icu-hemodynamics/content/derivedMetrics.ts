@@ -827,7 +827,8 @@ export const derivedThresholdContexts: readonly DerivedThresholdContext[] = Obje
     population: 'This educational simulation only.',
     intendedUse: 'Deterministic alarm behavior inside the module.',
     notUniversal: 'An alarm boundary this simulator uses carries no clinical authority.',
-    evidenceIds: ['pac-derived-part-2-2021', 'icu-hemodynamics-model-v1'],
+    // HD-03: the PAC review formerly cited here states neither figure, so only the model is cited.
+    evidenceIds: ['icu-hemodynamics-model-v1'],
   },
   {
     id: 'sv-adult-reference-interval',

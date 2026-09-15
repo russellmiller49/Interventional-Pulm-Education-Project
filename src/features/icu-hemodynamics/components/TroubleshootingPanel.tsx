@@ -9,6 +9,7 @@ import {
   type ArtifactDefinition,
   type ArtifactId,
 } from '../content/troubleshootingAtlas'
+import { hemodynamicsSourceClassLabel } from '../content/sourceReviewMetadata'
 import { hemodynamicsSourceById } from '../content/sources'
 import {
   createNormalPulmonaryArteryWaveform,
@@ -435,6 +436,7 @@ export function TroubleshootingPanel({ state, dispatch }: TroubleshootingPanelPr
           <ul>
             {sources.map((source) => (
               <li key={source.id}>
+                {hemodynamicsSourceClassLabel(source)}:{' '}
                 {source.url ? (
                   <a href={source.url} target="_blank" rel="noreferrer">
                     {source.title}

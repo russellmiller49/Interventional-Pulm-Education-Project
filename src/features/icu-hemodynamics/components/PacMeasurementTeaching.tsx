@@ -17,6 +17,7 @@ import {
   type DerivedMetricId,
   type DerivedMetricRecord,
 } from '../content'
+import { hemodynamicsSourceClassLabel } from '../content/sourceReviewMetadata'
 import styles from './icu-hemodynamics.module.css'
 
 /**
@@ -162,7 +163,11 @@ function MetricDetail({ metric }: { readonly metric: DerivedMetricRecord }) {
       <ul className={styles.measurementTeachingAudit}>
         {metric.evidenceIds.map((evidenceId) => {
           const source = hemodynamicsSourceById.get(evidenceId)
-          return <li key={evidenceId}>{source ? source.citation : evidenceId}</li>
+          return (
+            <li key={evidenceId}>
+              {source ? `${hemodynamicsSourceClassLabel(source)}: ${source.citation}` : evidenceId}
+            </li>
+          )
         })}
         {metric.sourceLimitations.map((limitation) => (
           <li key={limitation}>{limitation}</li>
