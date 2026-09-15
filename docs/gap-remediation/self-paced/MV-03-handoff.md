@@ -237,3 +237,76 @@ Documents:
 - `docs/gap-remediation/self-paced/README.md`
 - `docs/gap-remediation/self-paced/implementation-plan.md`
 - `docs/gap-remediation/self-paced/test-contracts.md`
+
+## Integration with current origin/main (2026-09-15)
+
+This section records bringing PR #224 up to date with merged main. It is an integration follow-up only: no MV-03 runtime, content, test or review decision changed, and the next Mechanical Ventilation slice was not started.
+
+### Merge
+
+- **Main integrated:** `origin/main` at `f9673cb50e87be2aca85cf837c1cda8b6830d3a0` (merge of PR #223, MCS-03, which follows PR #222, ECMO-02).
+- **Method:** `git merge --no-ff origin/main` into `claude/mv-03`, giving merge commit `ffe9c53a`. No rebase, no force-push; the PR commit `dbf1d4c3` stays in history. This documentation is a separate commit.
+- **Conflicts:** one. The executed-migrations table in `test-contracts.md` gained an MCS-03 row on main and an MV-03 row here. Both rows are kept, MCS-03 first.
+- **Auto-merged:** `README.md`. It keeps the MCS-03 handoff entry and every other existing entry alongside MV-03's.
+- **Preservation check:** every non-empty line of main's `README.md` and `test-contracts.md` is present after the merge (0 missing, no conflict markers). Main has no ECMO-02 README entry or test-contract row to preserve. `ECMO-02-handoff.md`, `MCS-03-handoff.md`, `MCS-03-claim-review-queue.json` and `MCS-03-observation-guide.md` arrived unchanged. Main did not change `implementation-plan.md`, so the MV-03 update there stands.
+
+### MV-03 files after integration
+
+- `git diff dbf1d4c3 ffe9c53a` over `src/features/mechanical-ventilation`, `docs/gap-remediation/mv`, this handoff and the review packet lists **no file**. The merge brought 41 files from main (ECMO, MCS, shared critical-care activities, pathways and tests, and documents), none of them MV files.
+- Against current main the branch differs in the same 22 MV-03 paths. Nothing under `src/features/device-intelligence` differs. The MV simulation, physics, runtime cases, `source-cases.v1.json` and the case-activity component that renders the MV-03 hold are identical to main.
+
+### Tests: current main versus the merged branch
+
+Command, run on each tree: `node node_modules/jest/bin/jest.js --runInBand src/features/mechanical-ventilation 'src/app/\[locale\]/mechanical-ventilation' src/features/critical-care src/features/learning-module --json`. Current main ran in a detached worktree at `f9673cb5` with this worktree's `node_modules` linked; the worktree was removed afterwards.
+
+| Tree                     | Suites                   | Tests                                     | MV + MV routes                    |
+| ------------------------ | ------------------------ | ----------------------------------------- | --------------------------------- |
+| Current main `f9673cb5`  | 73 (70 passed, 3 failed) | 1,051 (1,048 passed, 3 failed, 0 skipped) | 32 suites / 683 tests, all passed |
+| Merged branch `ffe9c53a` | 76 (73 passed, 3 failed) | 1,078 (1,075 passed, 3 failed, 0 skipped) | 35 suites / 710 tests, all passed |
+
+- **Added on the branch:** exactly `mv03-question-teaching` (18), `mv03-source-identity` (5) and `mv03-review-packet` (4). No suite was removed and no suite changed its test count.
+- **Failures:** three, each **pre-existing on current main** with an identical payload once ANSI codes and stack frames are stripped. None is introduced by the merged branch, and no failure on main passes on the branch.
+  - `critical-care/__tests__/accessibility.test.tsx` · keeps color-coded circuit, pressure, alarm, and trend states readable without color
+  - `critical-care/__tests__/curriculum-sequencing.test.tsx` · renders CRRT cases in authored station order, not alphabetically by title
+  - `critical-care/__tests__/learner-copy.test.ts` · keeps static component copy free of grading and software-internal labels
+- **Learner-copy note:** main changed this test (exact-passage exceptions for three ECMO passages). Its failure payload is identical on main and on the merged branch, so the MV-03 copy adds no finding.
+- **Checks:** `tsc --noEmit -p .` exit 0. ESLint `--max-warnings=0` on the 14 TS/TSX files that differ from main: exit 0. Prettier on all 21 added or modified files: clean. `git diff --check origin/main`: clean. A first lint attempt listed files with `mapfile`, which macOS bash 3.2 lacks, so it checked zero files; it is not counted, and the results above are from the rerun.
+
+### Browser checks rerun on the merged tree
+
+Playwright Chromium ran the same `mv03-browser-check.cjs` against `next dev --webpack --port 3123` (the `claude-mv` launch entry in this worktree). `/api/*` was fulfilled locally, external hosts were blocked (none attempted), and the six legacy MV storage keys were seeded. **Result: 11 scenarios and 8 layout checks passed, with 0 page errors and 0 console errors.**
+
+| Requested check                            | Covered by                                                                                                                                                                                                                               |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Explanation before answering               | Review item 20, review item 28 and starting-concepts item 4 open the explanation with no choice selected                                                                                                                                 |
+| Hint before answering                      | Review item 20 and Applications item 7                                                                                                                                                                                                   |
+| Harmful-choice safety explanation          | Review item 20 (a repeated rate increase) and review item 28 (a higher rate and a higher alarm limit)                                                                                                                                    |
+| Wrong answer, feedback, Try again          | Review item 14: "does not fit" with its reason, Try again, then the fitting choice                                                                                                                                                       |
+| Continue without a correct answer          | Review item 20: Continue after Try again with no choice; review item 13: Continue by keyboard                                                                                                                                            |
+| Worked expiratory-time comparison          | Review item 13: no radios, four data rows, every reading explained                                                                                                                                                                       |
+| Oxygenation-versus-CO₂ comparison          | Review item 18 and starting-concepts item 7                                                                                                                                                                                              |
+| Reload with no fabricated current response | Reload returns to item 1 with no explanation open and nothing stored                                                                                                                                                                     |
+| 390 px width                               | No horizontal overflow; the last column of both tables ends at 337 px of 390                                                                                                                                                             |
+| Live MV-03 hold visible                    | `practice?case=MV-03&device=hamilton-c6&mode=practice` shows "Worked explanation · live case under modeling review"                                                                                                                      |
+| Legacy MV storage unchanged                | All six legacy keys byte-identical. Writes were transient `lswt-*` probes and `mechanical-ventilation-self-paced-v1` from the lesson visit (MV-01 location record, asserted free of response data); the course-check pages wrote nothing |
+
+Also passed: the source lists on the hub, lesson footer and Applications page, and the 1024×768 layouts.
+
+### Not rerun
+
+- Full `npm test` and a production build.
+- The repository's Playwright end-to-end specs.
+- The `cardiohelp-ecmo` and `mechanical-circulatory-support` module suites. They share no file with MV-03; the shared critical-care suites, including main's new `ecmo-catalog` test, were run.
+- Safari and Firefox, screen readers, and the es and zh routes.
+- The in-app browser, whose pane was hidden.
+- Screenshot inspection of the merged-tree run; the layout assertions stand in for it.
+- Review-packet regeneration, which was not needed because no quoted content changed.
+- Faculty or clinical review.
+
+### Holds confirmed
+
+- **Review packet:** all 19 decisions (10 question items, 9 source-identity items) are still `NOT REVIEWED`, with reviewer, role, date and reviewed version null. Content version `mv-03-2026-09-15` is unchanged.
+- **Live MV-03 case:** still excluded behind the MV-01 hold (confirmed in the browser above).
+- **Device Intelligence:** untouched; no file differs from main.
+
+Evidence, outside Git: `/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/mv-03-self-paced-2026-09-15/integration-2026-09-15/`. It holds `main-head.txt`, `main-jest.{json,log}`, `merged-head.txt`, `merged-jest.{json,log}`, `failure-comparison-merged-vs-main.txt`, the tsc, ESLint, Prettier and diff-check logs, the changed-file lists, and `browser/` with the script and report.
