@@ -208,20 +208,23 @@ it('viewing the demonstration or showing a component records no selection and pe
 it('lets a retry replace the checked region, and counts neither first responses nor retries', () => {
   let observed: readonly ComponentSelection[] = []
   function Harness() {
-    const [selections, setSelections] = useState<readonly ComponentSelection[]>([])
+    const [selections, setSelections] = useState<
+      Partial<Record<'guided' | 'independent', readonly ComponentSelection[]>>
+    >({})
     return (
       <AtrialComponentActivity
-        mode="independent"
         enabled
         selections={selections}
-        onChange={(next) => {
+        onChange={(numbering, next) => {
           observed = next
-          setSelections(next)
+          setSelections((current) => ({ ...current, [numbering]: next }))
         }}
       />
     )
   }
   render(<Harness />)
+  // HD-02: the renumbered practice is a repeat inside the one activity, not a separate step.
+  fireEvent.click(screen.getByRole('button', { name: 'Renumbered repeat · model variant' }))
   fireEvent.click(screen.getByRole('radio', { name: /^Region 1/ })) // v, while asked for a
   fireEvent.click(screen.getByRole('button', { name: 'Check component' }))
   expect(observed).toEqual([{ component: 'a', selectedRegion: 1 }])
@@ -255,14 +258,14 @@ it('uses the abnormal question trace, protects its solution, and restores identi
   ).toBeInTheDocument()
 })
 
-it('moves between tracings freely, never counts correct answers, and marks practice only on a checked answer', () => {
-  const dispatch = jest.fn()
-  render(<WaveformRecognitionDrill questionSet="places" dispatch={dispatch} />)
+// HD-02 replaced "marks practice only on a checked answer": the practice sends nothing to the
+// simulation and has no stage goal to mark.
+it('moves between tracings freely, never counts answers, and marks nothing', () => {
+  render(<WaveformRecognitionDrill />)
   // Move on without answering, then show the labels without answering.
   fireEvent.click(screen.getByRole('button', { name: 'Next tracing' }))
-  fireEvent.click(screen.getByRole('button', { name: 'Show the labels' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Show the labels and explanation' }))
   expect(document.querySelector('[data-recognition-reveal="shown"]')).not.toBeNull()
-  expect(dispatch).not.toHaveBeenCalled()
   fireEvent.click(screen.getByRole('button', { name: 'Next tracing' }))
   // A wrong answer gets feedback, not a count.
   const wrong = [...document.querySelectorAll<HTMLLabelElement>('fieldset label')].find((label) =>
@@ -271,7 +274,6 @@ it('moves between tracings freely, never counts correct answers, and marks pract
   fireEvent.click(wrong.querySelector('input')!)
   fireEvent.click(screen.getByRole('button', { name: 'Check answer' }))
   expect(document.querySelector('[data-recognition-reveal="checked"]')).not.toBeNull()
-  expect(dispatch).toHaveBeenCalledWith({ type: 'VALIDATE_SIGNAL', check: 'waveform-recognition' })
   expect(document.body.textContent).not.toMatch(/of 5 correct|attempted|five correct/i)
   expect(screen.getByRole('button', { name: 'Next tracing' })).toBeEnabled()
 })

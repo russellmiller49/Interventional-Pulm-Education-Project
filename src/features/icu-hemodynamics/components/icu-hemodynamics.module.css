@@ -4699,7 +4699,7 @@
   align-items: flex-start;
   justify-content: space-between;
 }
-.drillScore {
+.recognitionPosition {
   display: grid;
   margin: 0;
   padding: 0.35rem 0.6rem;
@@ -4708,14 +4708,49 @@
   background: #e1f4ee;
   text-align: center;
 }
-.drillScore strong {
+.recognitionPosition strong {
   color: #17655d;
   font-size: 0.95rem;
 }
-.drillScore span {
+.recognitionPosition span {
   color: #3d7a71;
   font-size: 0.63rem;
   font-weight: 700;
+}
+.recognitionIntro {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+.recognitionPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.recognitionPicker button {
+  min-height: 2.25rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid #9fcfc4;
+  border-radius: 999px;
+  color: #17655d;
+  background: #fff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.recognitionPicker button[aria-pressed='true'] {
+  border-color: #17655d;
+  color: #fff;
+  background: #17655d;
+}
+.recognitionPicker button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.recognitionPicker button:focus-visible {
+  outline: 3px solid #f0b64a;
+  outline-offset: 2px;
 }
 .drillOptions {
   display: grid;
@@ -4818,6 +4853,74 @@
   border-radius: 0.5rem;
   background: #fff8ea;
   color: #6b4409;
+}
+.drillControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.drillHint {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px dashed #9fcfc4;
+  border-radius: 0.55rem;
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.79rem;
+  line-height: 1.5;
+}
+.drillOrigin {
+  padding: 0.4rem 0.55rem;
+  border-left: 3px solid #17655d;
+  background: #eef7f4;
+  font-size: 0.76rem;
+}
+.recognitionFaultFacts {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.4rem 0 0;
+}
+.recognitionFaultFacts dt {
+  color: var(--navy);
+  font-size: 0.77rem;
+  font-weight: 750;
+}
+.recognitionFaultFacts dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.77rem;
+  line-height: 1.45;
+}
+.recognitionCompare {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #cfe0dc;
+  border-radius: 0.6rem;
+  background: #fff;
+}
+.recognitionCompare h4 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 0.82rem;
+}
+.recognitionCompare p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.recognitionCompare button {
+  justify-self: start;
+  min-height: 2.4rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid #17655d;
+  border-radius: 0.6rem;
+  color: #17655d;
+  background: #fff;
+  font-size: 0.8rem;
+  font-weight: 750;
+  cursor: pointer;
 }
 
 /*

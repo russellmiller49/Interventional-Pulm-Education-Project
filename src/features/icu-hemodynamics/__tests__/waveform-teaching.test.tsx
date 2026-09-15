@@ -307,52 +307,47 @@ describe('WedgeValidityPanel', () => {
 })
 
 describe('WaveformRecognitionDrill', () => {
-  it('withholds the identity of the tracing until the learner commits', () => {
+  it('withholds the identity of the tracing until the learner checks a reading or shows the labels', () => {
     render(<WaveformRecognitionDrill />)
     expect(screen.getByText('Unidentified tracing')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Check answer' })).toBeDisabled()
   })
 
-  it('reveals the teaching for the correct tracing after an answer', () => {
+  it('reveals the teaching for the tracing after an answer', () => {
     render(<WaveformRecognitionDrill />)
     fireEvent.click(screen.getByRole('radio', { name: 'Right ventricle' }))
     fireEvent.click(screen.getByRole('button', { name: 'Check answer' }))
 
-    expect(screen.getByText('Pattern identified.')).toBeInTheDocument()
-    expect(screen.getByText('Reference tracing')).toBeInTheDocument()
+    expect(screen.getByText('That matches: this is the right ventricle.')).toBeInTheDocument()
+    expect(screen.getByText('Labelled reading')).toBeInTheDocument()
     expect(screen.getByText(/Diastole slopes UP/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Next tracing' })).toBeInTheDocument()
   })
 
-  it('names the right answer when the learner is wrong', () => {
+  it('names the tracing when the learner is wrong', () => {
     render(<WaveformRecognitionDrill />)
     fireEvent.click(screen.getByRole('radio', { name: 'Pulmonary artery' }))
     fireEvent.click(screen.getByRole('button', { name: 'Check answer' }))
-    expect(screen.getByText(/This is right ventricle/i)).toBeInTheDocument()
-    expect(screen.getByText('Reference tracing')).toBeInTheDocument()
-    expect(screen.getByText('Selected response')).toBeInTheDocument()
+    expect(screen.getByText(/Not this one: this is the right ventricle/i)).toBeInTheDocument()
+    expect(screen.getByText('Labelled reading')).toBeInTheDocument()
+    expect(screen.getByText('Your reading')).toBeInTheDocument()
   })
 
-  // HD-01 replaced "signals the objective only after five correct identifications": the drill has no
-  // quota. A checked answer marks the practice goal; showing the labels never does.
-  it('marks the practice goal on a checked answer, never on showing the labels', () => {
-    const dispatch = jest.fn()
-    render(<WaveformRecognitionDrill dispatch={dispatch} />)
+  // HD-02 replaced "marks the practice goal on a checked answer, never on showing the labels": the
+  // practice is no longer a stage goal and sends nothing to the simulation. Showing the labels records
+  // no reading, and nothing counts answers.
+  it('shows the labels without an answer and counts nothing', () => {
+    render(<WaveformRecognitionDrill />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Show the labels' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Show the labels and explanation' }))
     expect(screen.getByText(/Shown without an answer/)).toBeInTheDocument()
     // Once shown, the options carry their reference labels and cannot be answered.
     expect(screen.getByRole('radio', { name: /^Right ventricle/ })).toBeDisabled()
-    expect(dispatch).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByRole('button', { name: 'Next tracing' }))
     fireEvent.click(screen.getByRole('radio', { name: 'Right ventricle' }))
     fireEvent.click(screen.getByRole('button', { name: 'Check answer' }))
-    expect(screen.getByText(/This is pulmonary artery/i)).toBeInTheDocument()
-    expect(dispatch).toHaveBeenCalledWith({
-      type: 'VALIDATE_SIGNAL',
-      check: 'waveform-recognition',
-    })
+    expect(screen.getByText(/Not this one: this is the pulmonary artery/i)).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/of 5 correct|attempted/)
   })
 })

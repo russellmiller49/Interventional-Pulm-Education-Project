@@ -52,18 +52,25 @@ export function componentRegions(mode: ComponentMode) {
   }))
 }
 
+/** How far the renumbered repeat moves the reference right atrium up. Its only change of trace. */
+export const RENUMBERED_MEAN_SHIFT_MMHG = 2
+
 export function componentExample(mode: ComponentMode): WaveformAtlasEntry {
   const source = waveformAtlasById.get('ra-normal')!
   return {
     ...source,
-    // A baseline translation of the same authored normal model, not a new disease shape.
+    // A baseline translation of the same authored normal model, not a new disease shape or a new
+    // patient: the learner sees it labelled a model variant (HD-02).
     trace:
       source.trace.kind === 'atrial' && mode === 'independent'
-        ? { ...source.trace, meanMmHg: source.trace.meanMmHg + 2 }
+        ? { ...source.trace, meanMmHg: source.trace.meanMmHg + RENUMBERED_MEAN_SHIFT_MMHG }
         : source.trace,
     normalRange: null,
     insertionDepth: null,
-    label: mode === 'guided' ? 'Guided example · right atrium' : 'New example · right atrium',
+    label:
+      mode === 'guided'
+        ? 'Numbered in order · right atrium'
+        : 'Model variant · right atrium, renumbered',
     annotations: componentRegions(mode).map((region) => ({
       ...region.annotation,
       id: `region-${region.number}`,

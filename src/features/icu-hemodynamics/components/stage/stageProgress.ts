@@ -33,6 +33,7 @@ export interface StageCommitments {
   /** Whether the provenance question was answered or its explanation opened (unlocks the method model). */
   readonly provenanceResolved: boolean
   readonly finished: boolean
+  /** `stepId:numbering` → the regions checked in this visit, one list per numbering (HD-02). */
   readonly componentSelections: Readonly<Record<string, readonly ComponentSelection[]>>
 }
 

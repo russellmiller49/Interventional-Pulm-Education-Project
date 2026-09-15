@@ -31,7 +31,6 @@ import type {
  * effect.
  */
 export const PA_RETURN_CHECK = 'pa-waveform-return-confirmed'
-export const WAVEFORM_RECOGNITION_CHECK = 'waveform-recognition'
 export const DYNAMIC_RESPONSE_CLASSIFIED_CHECK = 'dynamic-response-classified'
 export const DYNAMIC_RESPONSE_CORRECTED_CHECK = 'dynamic-response-corrected'
 export const FAST_FLUSH_CHECK = 'fast-flush'
@@ -115,7 +114,6 @@ const CHECK_WORDS: Readonly<Record<string, string>> = {
   [FAST_FLUSH_CHECK]: 'Run a fast flush on the pulmonary-artery line',
   [DYNAMIC_RESPONSE_CLASSIFIED_CHECK]: 'Read the flush response and say what it is',
   [DYNAMIC_RESPONSE_CORRECTED_CHECK]: 'Repair the line until the flush response is acceptable',
-  [WAVEFORM_RECOGNITION_CHECK]: 'Name a tracing from its shape and check your answer',
   [CURRENT_RESPONSE_RECHECKED]: 'Flush the corrected line again and identify the current response',
   [PA_RETURN_CHECK]: 'Say whether the pulmonary-artery tracing has come back',
   'waveform-confirmed-ra': 'Confirm the right atrium from its tracing',
@@ -433,12 +431,14 @@ const runtimes: Readonly<Record<HemodynamicsSectionId, SectionRuntime>> = {
     sectionId: 'waveform-interpretation',
     initial: () => cleanState(520, 'ra'),
     predictionEntry: () => cleanState(520, 'rv'),
-    actGoals: [{ type: 'check', id: WAVEFORM_RECOGNITION_CHECK }],
+    // HD-02: the recognition practice is not simulation work, so the section sets no act goal, and
+    // with nothing changed on the simulator there is no before-and-after table to offer.
+    actGoals: [],
     observeGoals: [],
     transferEntry: () =>
       reduceAll(ventilatedWedgeState(521), [{ type: 'SET_CATHETER_POSITION', position: 'wedge' }]),
     transferGoals: [],
-    watch: ['position'],
+    watch: [],
     walkPositions: ['ra', 'rv', 'pa', 'wedge'],
   },
   'waveform-components': {
@@ -448,7 +448,8 @@ const runtimes: Readonly<Record<HemodynamicsSectionId, SectionRuntime>> = {
     observeGoals: [],
     transferEntry: null,
     transferGoals: [],
-    watch: ['rap'],
+    // No step of this section changes the simulator, so there is nothing to compare (HD-02).
+    watch: [],
   },
   'catheter-advancement': {
     sectionId: 'catheter-advancement',
