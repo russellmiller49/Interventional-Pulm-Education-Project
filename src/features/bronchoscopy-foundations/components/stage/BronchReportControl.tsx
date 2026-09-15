@@ -10,16 +10,19 @@ import { MediaFigure } from './MediaFigure'
 /**
  * The report builder: each field of the record filled from what the evidence shows. An option
  * the evidence does not support is refused with the reason and the field stays open (A08: normal,
- * not assessed, not safely accessible and not examined are four different statements). The step
- * is done when every field holds a supported statement.
+ * not assessed, not safely accessible and not examined are four different statements). The
+ * activity is done when every field holds a supported statement. The learner may open what the
+ * evidence supports for every field without choosing (`revealed`); that records nothing.
  */
 export function BronchReportControl({
   report,
   commitment,
+  revealed = false,
   onOption,
 }: {
   readonly report: BronchReport
   readonly commitment: ReportCommitment
+  readonly revealed?: boolean
   readonly onOption: (fieldId: string, optionId: string, supported: boolean) => void
 }) {
   return (
@@ -79,6 +82,17 @@ export function BronchReportControl({
             {chosenOption ? (
               <p className={styles.verdict} data-report-verdict="held">
                 <strong>Held.</strong> {chosenOption.rationale}
+              </p>
+            ) : revealed ? (
+              <p className={styles.verdict} data-report-explanation>
+                {field.options
+                  .filter((option) => option.supported)
+                  .map((option) => (
+                    <span key={option.id}>
+                      <strong>The evidence supports: {option.label}.</strong>{' '}
+                      {option.rationale}{' '}
+                    </span>
+                  ))}
               </p>
             ) : null}
           </div>

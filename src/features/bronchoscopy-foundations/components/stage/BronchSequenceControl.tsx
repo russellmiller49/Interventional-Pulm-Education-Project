@@ -11,18 +11,21 @@ export function initialSequenceOrder(sequence: BronchSequence): readonly string[
 }
 
 /**
- * Putting steps in order: moved up and down one at a time, committed as one order and read step
- * by step. A misplaced step the section marks critical is named as a safety error.
+ * Putting steps in order: moved up and down one at a time, checked as one order and read step by
+ * step. A misplaced step the section marks critical is named as a safety error. The learner may
+ * open the worked order without arranging anything (`revealed`); that records nothing.
  */
 export function BronchSequenceControl({
   sequence,
   order,
   committed,
+  revealed = false,
   onChange,
 }: {
   readonly sequence: BronchSequence
   readonly order: readonly string[]
   readonly committed: readonly string[] | null
+  readonly revealed?: boolean
   readonly onChange: (order: readonly string[]) => void
 }) {
   const shown = committed ?? order
@@ -98,6 +101,20 @@ export function BronchSequenceControl({
         <p className={styles.verdict} data-sequence-rationale>
           {sequence.rationale}
         </p>
+      ) : revealed ? (
+        <section className={styles.row} data-sequence-explanation aria-label="The worked order">
+          <p className={styles.kicker}>The worked order</p>
+          <ol>
+            {sequence.steps.map((step) => (
+              <li key={step.id}>
+                <strong>{step.label}.</strong>
+                {critical.has(step.id) ? ' Misplacing this step is a safety error.' : ''}{' '}
+                {step.detail}
+              </li>
+            ))}
+          </ol>
+          <p className={styles.verdict}>{sequence.rationale}</p>
+        </section>
       ) : null}
     </div>
   )

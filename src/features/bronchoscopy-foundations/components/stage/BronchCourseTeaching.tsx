@@ -5,7 +5,6 @@ import { TEACHING_TREE, airwayDisplayName } from '../../content/airwayTree'
 import { scopeControl } from '../../content/controlPanel'
 import { useBronchoscopyFoundationsRecord } from '../useBronchoscopyFoundationsRecord'
 import { BRONCH_SECTION_IDS } from '../../content/sectionIds'
-import { isSectionCompleted } from '../../engine/learnProgress'
 import { MonitorPanel } from './MonitorPanel'
 import { GRAMMAR_TREND_RULE, BRONCH_GRAMMAR } from '../../content/grammar'
 import { fiveControlsLearnInputs } from '../../content/fiveControlsLearn'
@@ -304,40 +303,30 @@ function TubeGeometryFigure() {
   )
 }
 
+/** What this self-paced course keeps on the device (BF-01): marks, never answers or grades. */
 function LearningRecordSummary() {
   const { record } = useBronchoscopyFoundationsRecord()
-  const completed = BRONCH_SECTION_IDS.filter((id) => isSectionCompleted(record, id)).length
-  const attempts = Object.entries(record.firstAttempts)
-  const afterTeaching = attempts.filter(
-    ([, value]) => value.support === 'learn-after-teaching',
-  ).length
-  const reviewed = attempts.filter(([, value]) => value.support === 'reviewed-teaching').length
-  const assessments = attempts.filter(([key]) => key.startsWith('capstone:')).length
-  const supported = Object.values(record.sectionPerformance).filter(
-    (value) => !value.unaided || value.assistsUsed.length > 0,
-  ).length
   return (
     <section className={styles.worked} data-learning-record-summary>
-      <h3>Your available learning record</h3>
+      <h3>What this course keeps on this device</h3>
       <ul>
         <li>
-          {completed} of {BRONCH_SECTION_IDS.length} sections have current completion evidence on
-          this device.
+          {record.visitedSectionIds.length} of {BRONCH_SECTION_IDS.length} sections opened.
         </li>
         <li>
-          {afterTeaching} first responses followed Learn teaching; {reviewed} followed an explicit
-          return to teaching during the check.
+          {record.reviewedSectionIds.length} marked reviewed by you;{' '}
+          {record.reviewLaterSectionIds.length} marked to review later.
         </li>
-        <li>{supported} saved scope activity records disclose assistance.</li>
         <li>
-          {assessments} first capstone responses are recorded under the assessment’s
-          independent-answer policy.
+          {record.surveySnapshot
+            ? 'A lower-airway survey you finished, kept for the report exercise.'
+            : 'No finished lower-airway survey.'}
         </li>
       </ul>
       <p>
-        Historical responses without a support label remain historical; missing labels do not
-        establish independence. Repeating a question does not replace its first response. Neither
-        course participation nor answer accuracy establishes physical or clinical competence.
+        Answers, hints, retries and scope attempts are not saved, and nothing here is a grade.
+        Records kept by an earlier version of this course stay on this device unchanged and are not
+        used. Self-paced online learning does not establish procedural competence.
       </p>
     </section>
   )

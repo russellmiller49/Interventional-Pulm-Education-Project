@@ -54,8 +54,13 @@ afterEach(() => {
   jest.useRealTimers()
 })
 
-/** Worked instruction is intentionally visible. Pending checks replace it, including the DOM and accessibility attributes. */
-describe('pending independent checks withhold worked solutions (rendered)', () => {
+/**
+ * Worked instruction is intentionally visible. A question opens on the question — a predict-before-
+ * reveal moment — and its worked solution appears only when the learner asks for the explanation or
+ * checks an answer. Self-paced contract (BF-01): the explanation and the way on are always offered,
+ * and the sources, with what each is used for, stay available throughout.
+ */
+describe('questions open on the question; worked solutions appear only on request (rendered)', () => {
   it.each(BRONCH_SECTION_IDS.filter((id) => id !== 'five-controls'))('%s', async (sectionId) => {
     const { lesson } = await mountSection(sectionId)
     expect(document.querySelector('[data-course-teaching]')).not.toBeNull()
@@ -65,8 +70,15 @@ describe('pending independent checks withhold worked solutions (rendered)', () =
       expect(document.querySelector('[data-normal-airway-tour]')).toBeNull()
       expect(document.querySelector('[data-worked-example]')).toBeNull()
       expect(document.querySelector('[data-answer-verdict]')).toBeNull()
+      expect(document.querySelector('[data-explanation-reveal]')).toBeNull()
       expect(document.querySelector('[data-new-concept]')).toBeNull()
       expect(document.querySelector('[data-lit="true"]')).toBeNull()
+      expect(document.querySelector('[data-show-explanation]')).not.toBeNull()
+      expect(document.querySelector('[data-now-skip]')).not.toBeNull()
+      expect(document.querySelector('[data-stage-sources]')).toHaveAttribute(
+        'data-stage-sources-claims',
+        'true',
+      )
       const pending = `${scannableText()} ${attributesText()}`
       // The section's deny patterns guard its first question; changed checks additionally inspect all rationale surfaces.
       if (check.interaction.kind === 'prediction' && check.interaction.round === 0)

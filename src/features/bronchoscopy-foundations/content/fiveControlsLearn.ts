@@ -364,9 +364,9 @@ export function fiveControlsLearnInputs(): readonly StepInput[] {
       phase: 'predict',
       title: 'Explain what rotation changes',
       instruction:
-        'Use what you observed to answer this short learning check. Your first answer is retained; you can retry after feedback.',
+        'Use what you observed to answer this optional check, or open the explanation first. You can try again after feedback or continue without answering.',
       lookIn: { pane: 'steps', landmark: 'the answer choices on this card' },
-      actionLabel: 'Submit this answer',
+      actionLabel: 'Check this answer',
       interaction: {
         kind: 'prediction',
         stage: bronchSectionItems('five-controls').prediction,

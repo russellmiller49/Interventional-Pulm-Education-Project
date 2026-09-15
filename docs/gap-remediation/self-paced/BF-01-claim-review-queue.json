@@ -1,0 +1,663 @@
+{
+  "queue": "BF-01 transcript-derived and undated claim review",
+  "preparedOn": "2026-09-14",
+  "preparedBy": "AI authoring assistant (Claude) at the owner's request",
+  "statement": "Nothing in this queue is clinical approval. Every item is NOT REVIEWED: no reviewer, role, date or reviewed version is recorded, and an empty decision is not approval. The assistant selected claims, located every surface that uses them, and read the cited source locations that are available locally. It is not a reviewer. Proposed wording is a proposal only; no content, test or source file was changed in this batch.",
+  "module": "bronchoscopy-foundations",
+  "baseCommit": "034648ad",
+  "decisionValues": ["NOT REVIEWED", "APPROVE AS SCOPED", "REVISE", "REJECT", "UNCERTAIN"],
+  "howToRecordADecision": "Replace NOT REVIEWED only with your own decision, name, role, the actual review date and the commit or content version you reviewed. A decision covers that item's claim and listed surfaces only, not a learner and not the module. A later wording change to a listed surface re-opens the item.",
+  "selectionRule": "Candidates were every teaching block, prediction item, transfer item, act payload, practice case and capstone case whose sourceRefs include a lecture transcript (T01–T16) or another source whose manifest year is null (U5, U8, U11, U12), or whose claimClass is transcript-source or review-flag: 148 elements, found by a structural walk of BRONCH_SECTIONS and CAPSTONE_CASES at the base commit. Candidates were ranked first by priority (airway and sedation decisions, then device handling, then sampling risk) and then by how consequentially the course uses the claim (a keyed best answer, an option marked unsafe, a scenario frame decision or a critical capstone case over a teaching statement, and a safety teaching block over an incidental mention). Each item is one claim, with the surfaces that use it grouped. Undated U-sources: U8 supports the ventilator-cycling items (R29), a mechanism interpretation without an unsafe keyed option, ranked below the ten selected; U5 is cited only by a radiation-policy block and one practice case outside the three priorities; U11 and U12 are not cited by current section or capstone content.",
+  "transcriptFiles": "Transcript text was read from the registered Markdown transcripts in Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/. All sixteen files' SHA-256 values match Intro_courses/bronchoscopy_foundations_v2/Transcript_Source_Index_v2.json. The index records every transcript as automated, with audio/video not reviewed, slides unavailable and speaker identity not verified.",
+  "notAvailableForChecking": [
+    "S1 Introduction to Bronchoscopy, second edition (no local PDF found in Interventional-Pulm-Local-Data)",
+    "S2 Introduction to Flexible Bronchoscopy Training Manual, first edition (no local PDF found)",
+    "S3 Faculty Development Program Training Manual (no local PDF found)",
+    "U8 HAMILTON-C1 ventilation modes and product documentation (no local copy found)",
+    "Lecture recordings and slides for T01–T16 (not reviewed; transcript times are approximate)"
+  ],
+  "items": [
+    {
+      "id": "BF-01-C01",
+      "topic": "Cumulative topical anesthetic record across the team",
+      "priority": "airway-sedation",
+      "surfaces": [
+        {
+          "sectionId": "sedation-and-monitoring",
+          "practiceCaseId": "C14",
+          "elementKind": "practice-case",
+          "elementId": "C14",
+          "use": "Keyed best answer: pause dose-dependent decisions until the unreported administration's drug, route, amount and time are known. Three options are marked unsafe: copying the last line, subtracting from a remembered maximum, and leaving the report off the record."
+        },
+        {
+          "sectionId": "sedation-and-monitoring",
+          "elementKind": "prediction-item",
+          "elementId": "Q19",
+          "use": "Keyed best answer: state the known subtotal and keep the unmeasured preparation-area administration open. Two options are marked unsafe: totals that count the unmeasured administration as zero, or that treat the subtotal as room for a further dose."
+        },
+        {
+          "sectionId": "sedation-and-monitoring",
+          "elementKind": "transfer-item",
+          "elementId": "sedation-and-monitoring-transfer",
+          "use": "Management-decision transfer with two options marked unsafe. It applies the same unknown-stays-unknown record rule (confirmed by keyword check, not re-read in full)."
+        },
+        {
+          "sectionId": "sedation-and-monitoring",
+          "elementKind": "ledger-act",
+          "elementId": "shared-topical-ledger",
+          "use": "Ledger activity: measured lines are converted using their own concentrations, and unknown rows stay unknown (confirmed by keyword check)."
+        },
+        {
+          "sectionId": "sedation-and-monitoring",
+          "elementKind": "teaching-block",
+          "elementId": "common-errors",
+          "use": "Common-errors block (claim class transcript-source, R13) naming the error of counting an unknown administration as zero (confirmed by keyword check)."
+        }
+      ],
+      "claimClass": "transcript-source",
+      "sourceRefs": ["T07, 00:15:17–00:18:10", "T07, 00:16:41–00:18:10", "S1, PDF 71–74"],
+      "reviewItemIds": ["R13"],
+      "reviewItemDispositions": { "R13": "adopt_with_boundary" },
+      "learnerWordingSource": {
+        "file": "src/features/bronchoscopy-foundations/content/sections/sedation-and-monitoring.ts",
+        "element": "practice C14, item explanation"
+      },
+      "learnerWording": "the reported administration has no concentration or volume, so it can be entered neither as lidocaine nor as zero. Different local anesthetics cannot be summed as interchangeable milligrams",
+      "intendedTeachingPoint": "Topical anesthetic exposure is counted across every clinician and every preparation. Milligrams come from each line's own concentration. An administration with no recorded amount stays unknown, not zero. Arithmetic never supplies a permissible further dose: the limit comes from the approved policy.",
+      "sourceCheck": {
+        "checkedOn": "2026-09-14",
+        "checkedBy": "AI authoring assistant (Claude)",
+        "documentRead": "Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/UCSD/SedationBronchoscopy_KVN.md (T07)",
+        "locationRead": "Timestamped paragraphs 00:15:17 through 00:18:10, which contain the narrower cited span 00:16:41–00:18:10. S1 PDF 71–74 was not read (no local copy). T07 00:22:46–00:25:10, cited only by the common-errors block for other rows, was not read.",
+        "finding": "The span supports these points: keep the total lidocaine dose in view; use the lowest sufficient dose; know the concentration so milligrams per millilitre are known (the lecture gives the conversion for two common strengths); and the anesthesia team may also give lidocaine or other topical anesthetics during the case, which the operator needs to know about. It also names two alternative topical agents with a narrower therapeutic window. At this location the span does not state the course's decisive record rules: that an administration with no recorded amount stays open rather than counting as zero, that dose-dependent decisions pause until it is resolved, or that different local anesthetics cannot be summed as interchangeable milligrams. Those come from the course's R13 boundary and its own reasoning. The lecture gives no cumulative limit the course could use.",
+        "supportStatus": "partially-supported"
+      },
+      "limitation": "Automated lecture transcript; the recording and slides were not reviewed and times are approximate. The worked volumes and concentrations in Q19 and C14 are authored teaching numbers, not lecture content. The approved cumulative limit is the local policy topical_anesthetic_policy, which has no configured value.",
+      "recommendation": "hold",
+      "proposedWording": null,
+      "decisionNeeded": "Bronchoscopy faculty, with a pharmacist or the sedation-policy owner, need to decide three things. (1) Confirm the record rule that an administration with no amount stays unknown and dose-dependent decisions pause. (2) Decide how the course should describe combined exposure to more than one local anesthetic: the current sentence says only what cannot be done (sum raw milligrams) and does not say how such exposures are weighed together. (3) Decide whether Q19, C14, the transfer item and the common-errors block should keep the transcript-source label, since the decisive rule is not in T07 at the cited span; if not, relabel them synthesis.",
+      "hold": "Held: the sentence about different local anesthetics, and the transcript-source label on these surfaces, pending decisions (2) and (3). Not held: the lecture-supported points (all-team accounting, concentration-to-milligram conversion, lowest sufficient dose).",
+      "changeInThisBatch": "none",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null
+      }
+    },
+    {
+      "id": "BF-01-C02",
+      "topic": "Scope withdrawal versus endotracheal tube removal at the end of an inspection",
+      "priority": "airway-sedation",
+      "surfaces": [
+        {
+          "sectionId": "larynx-and-entry",
+          "elementKind": "transfer-item",
+          "elementId": "Q17",
+          "use": "Keyed best answer: look below the tube tip on withdrawal, and record the larynx and the tube-covered trachea as not assessed. One option is marked unsafe: asking the airway team to draw the tube back as the scope comes out so the larynx can be recorded. Claim class synthesis; linked to R08."
+        },
+        {
+          "sectionId": "larynx-and-entry",
+          "elementKind": "teaching-block",
+          "elementId": "entry-and-withdrawal",
+          "use": "Teaching statement (claim class transcript-source): entry and withdrawal are two looks, and a tube, a supraglottic airway, deep anesthesia, secretions or urgency can prevent a meaningful laryngeal examination, which the report names as a limitation."
+        }
+      ],
+      "claimClass": "synthesis",
+      "sourceRefs": [
+        "T11, 00:43:45",
+        "T11, 00:18:56–00:21:13",
+        "S2, PDF 161–163",
+        "S1, PDF 155–158",
+        "S1, PDF 51–65"
+      ],
+      "reviewItemIds": ["R08"],
+      "reviewItemDispositions": { "R08": "ambiguous_transcript" },
+      "learnerWordingSource": {
+        "file": "src/features/bronchoscopy-foundations/content/sections/larynx-and-entry.ts",
+        "element": "transfer Q17, rationale of the option marked unsafe"
+      },
+      "learnerWording": "Removing or repositioning an established airway is a separate airway decision for the airway team, not a way to finish an inspection. Withdrawing the bronchoscope is not withdrawing the endotracheal tube; the unseen larynx is documented as a limitation.",
+      "intendedTeachingPoint": "Withdrawing the bronchoscope is a planned second look; it is not removal of an endotracheal tube. An airway is never changed to complete an inspection, and what was never in view is recorded as not assessed.",
+      "sourceCheck": {
+        "checkedOn": "2026-09-14",
+        "checkedBy": "AI authoring assistant (Claude)",
+        "documentRead": "Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/Loma_Linda/4-BIP-Airway inspection_anatomy.md (T11)",
+        "locationRead": "Paragraphs 00:42:50 through 00:44:35 around the single cited time 00:43:45, and paragraphs 00:18:56 through 00:21:13. S1 and S2 pages were not read (no local copies).",
+        "finding": "At 00:43:45 the narrator says that as the exam concludes and the operator is about to 'extubate', a quick look back at the subglottic space and cricoid can find subglottic narrowing missed on entry because of coughing, and that in intubated cases the immediate subglottic space cannot be evaluated. The words do not make clear whether 'extubate' means removing the bronchoscope or an endotracheal tube, which matches R08. At 00:18:56–00:21:13 the narrator describes cough on crossing the glottis, a pause in the mid-distal trachea, and a tube under general anesthesia usually ending in the mid trachea. The spans support two points: withdrawal as a second look at the subglottis in a patient without a tube, and a tube preventing immediate subglottic evaluation. They do not address asking an airway team to reposition or remove a tube, a second look below the tube tip, or recording the larynx as not assessed; the unsafe classification is the course's R08 boundary. Also noticed, outside this claim: the entry-and-withdrawal block says no fixed waiting interval is required, while at 00:19:46 the narrator suggests a short fixed pause.",
+        "supportStatus": "partially-supported"
+      },
+      "limitation": "Automated transcript; the ambiguous word can only be resolved from the recording, which was not reviewed. The keyed Q17 decision is labeled synthesis, so it does not claim lecture origin; the unsupported parts are conservative course boundaries.",
+      "recommendation": "keep",
+      "proposedWording": null,
+      "decisionNeeded": "Bronchoscopy faculty: (1) confirm that Q17's option asking for the tube to be drawn back is correctly classed as unsafe for a ventilated ICU patient; (2) verify the recording at 00:43:45 before any course text quotes the lecture's word; (3) separately, confirm the entry-and-withdrawal sentence about no fixed waiting interval, which differs from the narrator's suggested pause.",
+      "hold": null,
+      "changeInThisBatch": "none",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null
+      }
+    },
+    {
+      "id": "BF-01-C03",
+      "topic": "Scope in an endotracheal tube: size check, ventilation watch and alarm limits",
+      "priority": "airway-sedation",
+      "surfaces": [
+        {
+          "sectionId": "scope-in-a-tube",
+          "practiceCaseId": "mc-alarm-limits",
+          "elementKind": "practice-case",
+          "elementId": "mc-alarm-limits",
+          "use": "Keyed best answer: reassess the patient, then go back in with a pause point agreed with the respiratory therapist and the alarms as set. Two options are marked unsafe: going back in with the alarm limits raised, and giving more sedation on the grounds that the initial cough set off the alarms. Claim class synthesis; R31."
+        },
+        {
+          "sectionId": "scope-in-a-tube",
+          "elementKind": "prediction-item",
+          "elementId": "Q26",
+          "use": "Mechanism interpretation: the cross-section left around the scope is geometry, not a forecast of delivered volume. One option is marked unsafe: treating the figure as a guarantee of adequate ventilation. Claim class synthesis; R31."
+        },
+        {
+          "sectionId": "scope-in-a-tube",
+          "elementKind": "teaching-block",
+          "elementId": "fitting-is-not-ventilating",
+          "use": "Teaching statement (synthesis, R31): a scope that fits can still obstruct, so ventilation is watched; a high-pressure alarm is not automatically coughing."
+        },
+        {
+          "sectionId": "scope-in-a-tube",
+          "elementKind": "transfer-item",
+          "elementId": "scope-in-a-tube-transfer",
+          "use": "Management-decision transfer with two options marked unsafe; applies diameter versus ventilation (confirmed by keyword check). R31."
+        },
+        {
+          "sectionId": "pre-use-check",
+          "elementKind": "transfer-item",
+          "elementId": "Q13",
+          "use": "Mechanism interpretation (claim class transcript-source) on scope diameter and ventilation through a tube (confirmed by keyword check). R31."
+        },
+        {
+          "sectionId": "icu-physiology",
+          "practiceCaseId": "C17",
+          "elementKind": "practice-case",
+          "elementId": "C17",
+          "use": "Management decision (claim class transcript-source) with two options marked unsafe, in a ventilated patient with the scope in the tube; also cites undated U8 and links R29 and R30 (confirmed by keyword check)."
+        },
+        {
+          "capstoneCaseId": "C09",
+          "elementKind": "capstone-case",
+          "elementId": "C09",
+          "use": "Capstone management decision paired to scope-in-a-tube (not critical) with two options marked unsafe; mentions ventilation and alarms (confirmed by keyword check). R31."
+        }
+      ],
+      "claimClass": "synthesis",
+      "sourceRefs": [
+        "T15, 00:16:23–00:21:18",
+        "T15, 00:16:23–00:22:00",
+        "T15, 00:02:49–00:04:03",
+        "S1, PDF 155–158",
+        "U8, ventilation modes"
+      ],
+      "reviewItemIds": ["R31", "R29", "R30"],
+      "reviewItemDispositions": {
+        "R31": "qualify",
+        "R29": "externally_corrected",
+        "R30": "source_fidelity"
+      },
+      "learnerWordingSource": {
+        "file": "src/features/bronchoscopy-foundations/content/sections/scope-in-a-tube.ts",
+        "element": "practice mc-alarm-limits, rationale of the option to go back in with alarm limits raised"
+      },
+      "learnerWording": "Reassessing first is sound, but raised limits hide the next loss of ventilation instead of preventing it, and they can change the ventilator’s high-pressure protective behavior, which depends on the device and is read with the respiratory therapist.",
+      "intendedTeachingPoint": "A scope that fits the tube can still obstruct ventilation. Ventilation is watched on the ventilator and at the patient. A deteriorating reading is reassessed, and alarm limits are not raised to finish a procedure.",
+      "sourceCheck": {
+        "checkedOn": "2026-09-14",
+        "checkedBy": "AI authoring assistant (Claude)",
+        "documentRead": "Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/Loma_Linda/8-BIP-ICU bronch-1-common scenarios.md (T15)",
+        "locationRead": "Paragraphs 00:02:49 through 00:04:03, and 00:16:23 through the paragraph beginning at 00:22:00. U8 (undated manufacturer documentation, cited by C17) and S1 were not read (no local copies).",
+        "finding": "The spans support the following. A bronchoscope in an endotracheal tube adds obstruction, raising airway resistance and intrinsic PEEP depending on the scope-tube match, and lavage compounds the loss of gas exchange. The lecture case used a scope-tube difference the narrator calls too small, with hypoventilation under pressure control, and the narrator's size rule is explicitly not a hard rule. The actual cause of the case arrest was a tension pneumothorax, with hypoventilation and a primary cardiac event also possible (R30). At 00:22:00 (inside Q26's span, just outside the mc-alarm-limits span) the narrator mentions peak-pressure alarms only while explaining earlier cycling. Nothing here says alarm limits should be kept or not raised, or that raised limits change a ventilator's high-pressure protective behavior; the alarm-limit rule is the course's R31 boundary, and the device behavior has no support in this source. The narrator presents fixed ventilator mode, oxygen and expiratory-time advice for every ICU bronchoscopy; the course deliberately does not carry it (R31).",
+        "supportStatus": "partially-supported"
+      },
+      "limitation": "Automated transcript of one lecture case. The claim about device-dependent alarm behavior would need ventilator instructions for use or a device source; none is cited for it, and U8 (cited elsewhere) is undated and not available locally.",
+      "recommendation": "hold",
+      "proposedWording": null,
+      "decisionNeeded": "A critical-care bronchoscopy faculty member, with a respiratory therapist or ventilator device expert: (1) confirm, or remove, the clause that raised high-pressure alarm limits can change the ventilator's protective behavior; it is device-dependent and has no source cited; (2) confirm that alarm limits are not raised to finish a procedure. Faculty: (3) confirm that the lecture's fixed ventilator settings stay out of the course.",
+      "hold": "Held: the device-behavior clause in the mc-alarm-limits rationale, pending decision (1). Not held: the teaching that a size check does not guarantee ventilation, which the lecture supports in substance.",
+      "changeInThisBatch": "none",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null
+      }
+    },
+    {
+      "id": "BF-01-C04",
+      "topic": "Airway threat before blood loss in significant airway bleeding",
+      "priority": "airway-sedation",
+      "surfaces": [
+        {
+          "sectionId": "bleeding-priorities",
+          "elementKind": "teaching-block",
+          "elementId": "breathing-before-circulation",
+          "use": "Safety teaching statement (claim class transcript-source): preventing airway obstruction and protecting the working lung come first; no fixed expectorated volume defines safety; specialist and airway support are called while stabilization proceeds."
+        },
+        {
+          "sectionId": "bleeding-priorities",
+          "scenarioId": "left-upper-lobe-bleed",
+          "elementKind": "scenario-frame",
+          "elementId": "blood-at-the-carina",
+          "use": "Scenario frame decision: once blood has spread, the keyed move is to say so and, with the supervisor, clear the airway to the other lung. Two options are marked unsafe: holding off suction so a clot can form, and instilling an agent while waiting at the bleeding segment."
+        }
+      ],
+      "claimClass": "transcript-source",
+      "sourceRefs": [
+        "T05, 00:00:00–00:01:19",
+        "T05, 00:07:24–00:11:36",
+        "T16, 00:06:15–00:12:12",
+        "T09, 00:26:02–00:32:24"
+      ],
+      "reviewItemIds": ["R34"],
+      "reviewItemDispositions": { "R34": "context_specific" },
+      "learnerWordingSource": {
+        "file": "src/features/bronchoscopy-foundations/content/sections/bleeding-priorities.ts",
+        "element": "teaching block breathing-before-circulation, body"
+      },
+      "learnerWording": "The hemoptysis lectures put clinical impact first: blood can threaten ventilation and oxygenation before blood loss produces circulatory collapse. The first priority is preventing airway obstruction and protecting the lung that still works.",
+      "intendedTeachingPoint": "In significant airway bleeding the immediate threat is to breathing. Protecting the airway and the working lung comes before completing the diagnosis, and help is called early.",
+      "sourceCheck": {
+        "checkedOn": "2026-09-14",
+        "checkedBy": "AI authoring assistant (Claude)",
+        "documentRead": "Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/UCSD/Management of Hemoptysis UCSD course.md (T05); Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/Loma_Linda/9-BIP-ICU bronch-2-selected scenarios.md (T16); Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/Loma_Linda/2-BIP-Approach to bronchoscopy.md (T09)",
+        "locationRead": "T05 paragraphs 00:00:00 through 00:01:19 and 00:07:24 through 00:11:36; T16 paragraphs 00:06:15 through 00:12:12; T09 paragraphs 00:25:10 through 00:33:41. The scenario's other references (T05 00:15:03–00:17:07; S1 PDF 138–143 and 138–140; S3 PDF 56) were not read.",
+        "finding": "Supported at these locations. T05 defines life-threatening bleeding by the risk of airway obstruction or instability, says small volumes can kill by asphyxiation rather than blood loss, and at 00:07:24 names airway protection the top priority. T16 at 00:06:15 says volume matters less than clinical impact, and at 00:09:35 that death comes from asphyxiation, with securing the airway as the first step. T09 at 00:26:02–00:26:41 says to clear and protect the good lung before going after the source. Only partly supported: calling specialist and airway support while stabilization proceeds (the lectures describe multidisciplinary options but do not say it this way). The lectures' operational specifics (tube choice and size, positioning, isolation devices, topical agents) are not carried by the block.",
+        "supportStatus": "supported-at-location"
+      },
+      "limitation": "Automated transcripts from two lecture collections, not reviewed against recordings. The supervisor-led clearing in the scenario frame is course design built on this principle.",
+      "recommendation": "keep",
+      "proposedWording": null,
+      "decisionNeeded": "Bronchoscopy faculty: confirm the block as an attributed summary of the lectures. The institution's bleeding response (local policy bleeding_rescue) supplies the escalation steps the course defers to.",
+      "hold": null,
+      "changeInThisBatch": "none",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null
+      }
+    },
+    {
+      "id": "BF-01-C05",
+      "topic": "Suction path check and a blocked working channel",
+      "priority": "device-handling",
+      "surfaces": [
+        {
+          "sectionId": "pre-use-check",
+          "elementKind": "prediction-item",
+          "elementId": "N02",
+          "use": "Keyed best answer: trace the suction path from the tip to the vacuum source, one connection at a time, before insertion. Two options are marked unsafe: turning the vacuum up until the tip draws, and confirming the source setting then beginning. Claim class transcript-source."
+        },
+        {
+          "sectionId": "pre-use-check",
+          "elementKind": "teaching-block",
+          "elementId": "suction-is-a-path",
+          "use": "Teaching statement (claim class transcript-source, R42): suction is a physical path; suction being requested is not material moving; a blocked channel is cleared by the device-approved process, not forceful flushing, with the lecture's withdraw-and-clear method attributed."
+        },
+        {
+          "sectionId": "pre-use-check",
+          "elementKind": "teaching-block",
+          "elementId": "common-errors",
+          "use": "Common-errors block (synthesis, R02 and R42) with suction and vacuum corrections (confirmed by keyword check)."
+        },
+        {
+          "sectionId": "poor-return",
+          "scenarioId": "lingular-lavage",
+          "elementKind": "scenario-frame",
+          "elementId": "no-return",
+          "use": "Scenario frame decision reusing the path check during a lavage: the keyed move checks channel, valve, trap, tubing and vacuum source first; two options marked unsafe. The scenario cites other sources (T13, T15, S1), not T10 or T14."
+        }
+      ],
+      "claimClass": "transcript-source",
+      "sourceRefs": ["T10, 00:09:41–00:10:15", "T14, 00:03:51–00:04:33", "S1, PDF 98–99"],
+      "reviewItemIds": ["R42", "R02"],
+      "reviewItemDispositions": { "R42": "qualify", "R02": "device_specific" },
+      "learnerWordingSource": {
+        "file": "src/features/bronchoscopy-foundations/content/sections/pre-use-check.ts",
+        "element": "teaching block suction-is-a-path, body"
+      },
+      "learnerWording": "Suction being requested is not material moving: a pressed valve or a live vacuum indicator does not prove aspiration. The response is a reasoned check along the path, not more vacuum.",
+      "intendedTeachingPoint": "Suction runs along a physical path. A pressed valve or a live indicator does not prove flow at the tip. A failed check is traced and corrected, or the equipment replaced, before insertion rather than compensated for with more vacuum.",
+      "sourceCheck": {
+        "checkedOn": "2026-09-14",
+        "checkedBy": "AI authoring assistant (Claude)",
+        "documentRead": "Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/Loma_Linda/3-BIP-Bronchoscope.md (T10); Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/Loma_Linda/7-BIP-therapeutic techs, tools.md (T14)",
+        "locationRead": "T10 paragraphs 00:09:28 through the paragraph beginning at 00:10:15; T14 paragraphs 00:03:51 through the paragraph beginning at 00:04:33. S1 PDF 98–99 was not read (no local copy).",
+        "finding": "T10 at 00:09:41 covers the light source and processor connection. The paragraph beginning at 00:10:15, the end of the cited span, names the suction valve connecting to wall suction through tubing, the one-way working-channel port, and suction tubing among the supplies. T14 at 00:03:51–00:04:33 says thick secretions can pack the working channel so that suction seems to be happening while nothing moves, and that the channel is then cleared by coming out and flushing it outside the patient; it also says the scope can be flushed in the patient. Supported: parts of the suction path; that apparent suction can be no flow when the channel is blocked; and withdrawing to clear a blocked channel, which the block attributes correctly. Not supported at these locations: a collection trap as part of the path; a tip-to-source trace as a pre-use check; more vacuum being the wrong response, or able to draw mucosa onto the tip; and avoiding forceful flushing into a distal airway. That last point is the course's R42 boundary, narrower than the lecture's remark about flushing in the patient.",
+        "supportStatus": "partially-supported"
+      },
+      "limitation": "Automated transcripts; the T10 content that matters begins at the cited end time. The pre-use check sequence may rest on S1 PDF 98–99, which could not be checked.",
+      "recommendation": "keep",
+      "proposedWording": null,
+      "decisionNeeded": "Device/IFU expert for the scope in use (local policy scope_ifu): confirm the pre-use suction check and the approved method for clearing a blocked channel, including whether flushing in the patient is permitted. Bronchoscopy faculty: confirm that turning the vacuum up is correctly classed as unsafe in N02, and check S1 PDF 98–99 for the path-check sequence. If S1 does not support it, relabel N02 and suction-is-a-path from transcript-source to synthesis.",
+      "hold": null,
+      "changeInThisBatch": "none",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null
+      }
+    },
+    {
+      "id": "BF-01-C06",
+      "topic": "Darkness as a cue during scope advancement",
+      "priority": "device-handling",
+      "surfaces": [
+        {
+          "sectionId": "view-loss",
+          "elementKind": "teaching-block",
+          "elementId": "darkness-not-a-direction",
+          "use": "Safety teaching statement (claim class review-flag, R04): reports the lecture's darkness cue and forward-progress emphasis, then qualifies it. Advance gently only along a patent path identified from visible anatomical boundaries; lost path, resistance, bleeding or patient change override forward progress."
+        },
+        {
+          "sectionId": "larynx-and-entry",
+          "elementKind": "teaching-block",
+          "elementId": "darkness-above-the-glottis",
+          "use": "Safety teaching statement (claim class review-flag, R04): applies the same qualification at the larynx and adds that a dark space reached by aiming at the arytenoid region is not the glottic opening."
+        }
+      ],
+      "claimClass": "review-flag",
+      "sourceRefs": ["T11, 00:06:39–00:08:43", "S2, PDF 106–107", "S2, PDF 46", "S3, PDF 81"],
+      "reviewItemIds": ["R04"],
+      "reviewItemDispositions": { "R04": "qualify" },
+      "learnerWordingSource": {
+        "file": "src/features/bronchoscopy-foundations/content/sections/view-loss.ts",
+        "element": "teaching block darkness-not-a-direction, body"
+      },
+      "learnerWording": "One inspection lecture uses darkness as a cue toward the open lumen and stresses smooth progress through the upper airway.",
+      "intendedTeachingPoint": "Darkness alone is not a direction. The scope advances gently only along a path identified from visible anatomy, and stops for a lost path, resistance, bleeding or a change in the patient.",
+      "sourceCheck": {
+        "checkedOn": "2026-09-14",
+        "checkedBy": "AI authoring assistant (Claude)",
+        "documentRead": "Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/Loma_Linda/4-BIP-Airway inspection_anatomy.md (T11)",
+        "locationRead": "Paragraphs 00:06:39 through 00:08:43. S2 PDF 106–107 and 46, and S3 PDF 81, were not read (no local copies).",
+        "finding": "The lecture statement the course reports is at this location. For transnasal and transoral entry the narrator advises following the darkness when lost, urges steady and consistent forward movement ('always consistent forward progress'), and tells novices to watch the video screen for continuous orientation. The course's word 'smooth' is not the narrator's: the lecture stresses consistent forward movement. The qualifying rule is not in the lecture; it is the R04 review decision and is labeled review-flag. The larynx block's sentence about a dark space reached by aiming at the arytenoid region is not in this span, where the arytenoids appear only in topical-anesthesia advice at 00:08:43; that sentence rests on the S2/S3 pages, which could not be checked.",
+        "supportStatus": "supported-at-location"
+      },
+      "limitation": "Automated transcript; the course's attribution paraphrases the lecture rather than quoting it. The qualification itself is a review decision, not a source statement.",
+      "recommendation": "narrow",
+      "proposedWording": "One inspection lecture uses darkness as a cue toward the open lumen and urges consistent forward progress through the upper airway.",
+      "decisionNeeded": "Bronchoscopy faculty: (1) accept or reject the proposed attribution wording, which states the lecture's emphasis as the narrator gave it, so learners see exactly what the review flag qualifies; (2) confirm the R04 qualifying rule; (3) check S2 PDF 106–107 and S3 PDF 81 for the arytenoid-region sentence in darkness-above-the-glottis.",
+      "hold": null,
+      "changeInThisBatch": "none",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null
+      }
+    },
+    {
+      "id": "BF-01-C07",
+      "topic": "How control-section rotation reaches the tip",
+      "priority": "device-handling",
+      "surfaces": [
+        {
+          "sectionId": "branch-entry",
+          "elementKind": "prediction-item",
+          "elementId": "Q14",
+          "use": "Keyed best answer: loosen the grip, let the shaft run in a smooth line, then retest a small turn. One option is marked unsafe: pushing the scope farther in to straighten the curve before turning again. Claim class transcript-source; R03."
+        }
+      ],
+      "claimClass": "transcript-source",
+      "sourceRefs": ["T10, 00:06:57–00:09:28", "T11, 00:01:47–00:05:01", "S1, PDF 89–93"],
+      "reviewItemIds": ["R03"],
+      "reviewItemDispositions": { "R03": "qualify" },
+      "learnerWordingSource": {
+        "file": "src/features/bronchoscopy-foundations/content/sections/branch-entry.ts",
+        "element": "prediction Q14, item explanation"
+      },
+      "learnerWording": "Rotation reaches the tip only along the shaft. A hard insertion-hand grip and a bowed shaft absorb the rotation, so the control section turns while the image barely moves",
+      "intendedTeachingPoint": "Rotation from the control section reaches the tip only through a shaft that runs smoothly. When the image does not follow a turn, the fix is the shaft course and grip, retested with a small isolated turn; forward force does not fix it.",
+      "sourceCheck": {
+        "checkedOn": "2026-09-14",
+        "checkedBy": "AI authoring assistant (Claude)",
+        "documentRead": "Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/Loma_Linda/3-BIP-Bronchoscope.md (T10); Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/Loma_Linda/4-BIP-Airway inspection_anatomy.md (T11)",
+        "locationRead": "T10 paragraphs 00:06:57 through 00:09:28; T11 paragraphs 00:01:47 through the paragraph beginning at 00:05:01. S1 PDF 89–93 was not read (no local copy).",
+        "finding": "Supported at these locations. There are three basic motions. The dominant hand advances the insertion tube and stabilizes it against the tube or the face. Rotation of the control body should come from the wrist rather than from twisting the scope. The scope should stay relatively straight, or at most in a smooth arc, because excessive bending and twisting stop rotation from reaching the tip efficiently (T11, paragraph at 00:05:01). Not supported at these locations: that a hard insertion-hand grip absorbs rotation; the retest-with-a-small-turn step; and that pushing the scope in is unsafe because it drives the tip forward. These may rest on S1 PDF 89–93, which could not be checked, or be course synthesis. The narrator's handedness, circle and elbow coaching is qualified by R03, and Q14 does not grade it.",
+        "supportStatus": "partially-supported"
+      },
+      "limitation": "Automated transcripts built around one demonstrated operator's posture. Other R03-linked surfaces citing the same spans (five-controls and branch-entry blocks and practice cases) were not opened for this item.",
+      "recommendation": "keep",
+      "proposedWording": null,
+      "decisionNeeded": "Bronchoscopy faculty: confirm the grip mechanism in Q14, or locate it in S1 PDF 89–93. If it is course synthesis, relabel Q14 from transcript-source to synthesis. No device or local-policy decision is needed.",
+      "hold": null,
+      "changeInThisBatch": "none",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null
+      }
+    },
+    {
+      "id": "BF-01-C08",
+      "topic": "Keeping a wedge that is containing bleeding after sampling",
+      "priority": "sampling-risk",
+      "surfaces": [
+        {
+          "sectionId": "bleeding-priorities",
+          "elementKind": "prediction-item",
+          "elementId": "Q27",
+          "use": "Keyed best answer: stop sampling, announce the site and keep the tip wedged in the sampled segment. Two options are marked unsafe: withdrawing to the lobar bronchus to see where the blood goes, and suctioning repeatedly until the view clears. Claim class transcript-source; R34."
+        },
+        {
+          "sectionId": "bleeding-priorities",
+          "scenarioId": "left-upper-lobe-bleed",
+          "elementKind": "scenario-frame",
+          "elementId": "wedge-holding",
+          "use": "Scenario frame decision: keep the tip wedged and watch the patient, leaving the next step to the supervisor. Two options are marked unsafe: withdrawing to complete the survey checklist, and turning the sampled side up."
+        },
+        {
+          "capstoneCaseId": "C06",
+          "elementKind": "capstone-case",
+          "elementId": "C06",
+          "use": "Critical capstone case paired to bleeding-priorities (synthesis, R34). Keyed answer: keep the wedge, stop sampling and call for help. Three options are marked unsafe, including withdrawing for suction and continuous suction through the wedge."
+        },
+        {
+          "sectionId": "bleeding-priorities",
+          "elementKind": "teaching-block",
+          "elementId": "what-the-scope-is-doing",
+          "use": "Teaching statement (claim class transcript-source, R34) about a wedged scope containing bleeding (confirmed by keyword check)."
+        },
+        {
+          "sectionId": "view-loss",
+          "elementKind": "teaching-block",
+          "elementId": "scope-holding-a-bleed",
+          "use": "Teaching statement (claim class transcript-source, R34): a red field with the tip wedged after sampling is not handled with the view-recovery routine."
+        },
+        {
+          "sectionId": "bleeding-priorities",
+          "elementKind": "transfer-item",
+          "elementId": "bleeding-priorities-transfer",
+          "use": "Management-decision transfer (synthesis, R34) with two options marked unsafe, about wedging and withdrawal (confirmed by keyword check)."
+        }
+      ],
+      "claimClass": "transcript-source",
+      "sourceRefs": [
+        "T09, 00:25:10–00:33:41",
+        "T09, 00:26:02–00:32:24",
+        "T06, 00:11:25–00:12:57",
+        "T16, 00:06:15–00:12:12",
+        "S1, PDF 138–143"
+      ],
+      "reviewItemIds": ["R34"],
+      "reviewItemDispositions": { "R34": "context_specific" },
+      "learnerWordingSource": {
+        "file": "src/features/bronchoscopy-foundations/content/sections/bleeding-priorities.ts",
+        "element": "prediction Q27, item explanation"
+      },
+      "learnerWording": "With an effective wedge containing the bleed, unnecessary withdrawal can release blood into airways that are still clear, so the tip stays wedged while sampling stops, the site is announced and help comes early.",
+      "intendedTeachingPoint": "After sampling, a red view with the tip wedged in the sampled segment may mean the scope is containing a bleed. The wedge is kept while sampling stops and help is called, and the supervisor's bleeding plan decides the next steps.",
+      "sourceCheck": {
+        "checkedOn": "2026-09-14",
+        "checkedBy": "AI authoring assistant (Claude)",
+        "documentRead": "Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/Loma_Linda/2-BIP-Approach to bronchoscopy.md (T09); Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/UCSD/Patient Selection and the Alphabet Soup (BAL-EBBX-TBBX-Brushing)  2025-07-09.md (T06); Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/Loma_Linda/9-BIP-ICU bronch-2-selected scenarios.md (T16)",
+        "locationRead": "T09 paragraphs 00:25:10 through 00:33:41 (contains 00:26:02–00:32:24); T06 paragraphs 00:11:25 through 00:12:57; T16 paragraphs 00:06:15 through 00:12:12. S1 PDF 138–143 was not read (no local copy).",
+        "finding": "Supported at these locations. T09 says the first goal in procedure-related bleeding is preventing asphyxiation, then isolating and controlling the bleed. For a peripheral bleed after transbronchial biopsy, the most important step is to wedge the scope into the target segmental airway immediately, which isolates the bleed, then wait and reassess. For a contained peripheral bleed, clearing the other lung may not be needed. T06 at 00:12:19–00:12:57 describes a fully wedged scope as tamponading and isolating the airway, notes blood can leak out if the scope slips, and also describes an unwedged sampling position some operators use. T16 covers the same airway-first sequence for massive bleeding. Not stated at these locations, though they follow from the isolation logic: that repeated or continuous suction through the wedge can disrupt a forming clot (the course's R42 boundary), and the unsafe classification of withdrawing to look. The lectures' topical agents, waiting times and escalation devices are not carried (R32, R33, R37).",
+        "supportStatus": "supported-at-location"
+      },
+      "limitation": "Automated transcripts. The course's cases assume sampling with the tip wedged, while T06 describes unwedged sampling as an alternative some faculty use. Bedside positioning is supported by T05 (read for BF-01-C04), not by the spans cited here.",
+      "recommendation": "keep",
+      "proposedWording": null,
+      "decisionNeeded": "Bronchoscopy faculty: (1) confirm the wedge-keeping decision as keyed in Q27, the wedge-holding frame and critical capstone C06, and the unsafe classification of repeated or continuous suction through the wedge; (2) confirm the course does not imply that sampling must always be done wedged. Local bleeding-response owner (bleeding_rescue): define the suction, positioning and escalation steps the course defers to the supervisor's plan.",
+      "hold": null,
+      "changeInThisBatch": "none",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null
+      }
+    },
+    {
+      "id": "BF-01-C09",
+      "topic": "Suction before a lavage when secretions impair breathing",
+      "priority": "sampling-risk",
+      "surfaces": [
+        {
+          "sectionId": "poor-return",
+          "elementKind": "transfer-item",
+          "elementId": "Q22",
+          "use": "Keyed best answer: clear the secretions now, then record the sequence and the specimen's limitations. One option is marked unsafe: leaving obstructing secretions until the lavage is collected, to keep the specimen uncontaminated. Claim class review-flag; R21."
+        },
+        {
+          "sectionId": "washing-and-lavage",
+          "elementKind": "sequence-act",
+          "elementId": "planned-lavage",
+          "use": "Sequence activity (critical steps confirm-site, reassess, next-or-stop): the record step includes any necessary suction or biopsy before the lavage."
+        }
+      ],
+      "claimClass": "review-flag",
+      "sourceRefs": ["T13, 00:09:31–00:10:19", "T15, 00:32:53–00:39:19", "S1, PDF 118–120"],
+      "reviewItemIds": ["R21"],
+      "reviewItemDispositions": { "R21": "qualify" },
+      "learnerWordingSource": {
+        "file": "src/features/bronchoscopy-foundations/content/sections/poor-return.ts",
+        "element": "transfer Q22, item explanation"
+      },
+      "learnerWording": "Avoiding unnecessary proximal suction protects the specimen; clearing secretions that obstruct the airway and impair breathing protects the patient, and the patient comes first.",
+      "intendedTeachingPoint": "Unnecessary proximal suction before a contamination-sensitive lavage is avoided, but necessary airway clearance comes first. The record then states the sequence, so the result is read with that limitation.",
+      "sourceCheck": {
+        "checkedOn": "2026-09-14",
+        "checkedBy": "AI authoring assistant (Claude)",
+        "documentRead": "Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/Loma_Linda/6-BIP-Diagnostic techs and tools.md (T13); Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/Loma_Linda/8-BIP-ICU bronch-1-common scenarios.md (T15)",
+        "locationRead": "T13 paragraphs 00:09:31 through 00:15:33 (contains 00:09:31–00:10:19); T15 paragraphs 00:32:53 through 00:39:19. S1 PDF 118–120 was not read (no local copy).",
+        "finding": "The lecture statement the item qualifies is supported. T13 at 00:09:31–00:10:19 says not to suction on the way to the target bronchus, so proximal material does not contaminate the channel, and calls heavy prior suction a common novice mistake that makes the lavage not a clean one. T15 at 00:34:11–00:35:55 repeats no suction before the target as the first component of a proper lavage. In its case (00:38:30–00:39:19) it reads a sample collected after repeated central suction as a wash rather than a lavage when interpreting results. Neither lecture says that necessary airway clearance takes priority, or that the sequence and limitation are recorded: both state the no-suction rule without an exception. The exception is the R21 qualification, and the item's review-flag label says so.",
+        "supportStatus": "partially-supported"
+      },
+      "limitation": "Automated transcripts. The T15 span also contains culture-interpretation content that this item does not use and the course does not carry (R25, R26). Capstone C16 and the specimen-pathway block quality-travels-with-the-result also link R21 and cite T15; they were not opened for this item.",
+      "recommendation": "keep",
+      "proposedWording": null,
+      "decisionNeeded": "Bronchoscopy faculty: confirm the airway-clearance-first exception as keyed in Q22. BAL protocol owner (local policy bal_protocol), with the laboratory: decide whether and how a lavage collected after necessary central suction is sent and labeled.",
+      "hold": null,
+      "changeInThisBatch": "none",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null
+      }
+    },
+    {
+      "id": "BF-01-C10",
+      "topic": "Persistent low lavage return after the technical checks",
+      "priority": "sampling-risk",
+      "surfaces": [
+        {
+          "sectionId": "poor-return",
+          "practiceCaseId": "mc-low-return-after-checks",
+          "elementKind": "practice-case",
+          "elementId": "mc-low-return-after-checks",
+          "use": "Keyed best answer: weigh the value and safety of further lavage and record the attempt as limited. One option is marked unsafe: continuing to instill aliquots until return reaches the protocol's aim. Claim class transcript-source; R24."
+        },
+        {
+          "sectionId": "poor-return",
+          "elementKind": "teaching-block",
+          "elementId": "two-more-causes",
+          "use": "Teaching statement (claim class transcript-source): completes the low-return differential after leak, airway collapse under suction and suction-path faults, and states that neither further cause is answered by more saline or more suction."
+        },
+        {
+          "sectionId": "poor-return",
+          "scenarioId": "lingular-lavage",
+          "elementKind": "scenario-frame",
+          "elementId": "collapse",
+          "use": "Scenario frame decision: release suction and reassess tip depth before recovering. Two options are marked unsafe: holding suction on longer, and instilling the next aliquot with suction unchanged."
+        },
+        {
+          "sectionId": "poor-return",
+          "scenarioId": "lingular-lavage",
+          "elementKind": "scenario-frame",
+          "elementId": "tolerance",
+          "use": "Scenario frame decision: stop instilling, tell the team and assess breathing and sedation when tolerance changes short of the planned volume. Three options are marked unsafe."
+        },
+        {
+          "sectionId": "poor-return",
+          "elementKind": "teaching-block",
+          "elementId": "protocol",
+          "use": "Local-policy statement (R22, R24): the lavage protocol decides volumes and return criteria (confirmed by keyword check)."
+        }
+      ],
+      "claimClass": "transcript-source",
+      "sourceRefs": [
+        "T13, 00:11:58–00:15:33",
+        "T13, 00:10:19–00:14:42",
+        "T06, 00:01:45",
+        "T15, 00:32:53–00:39:19",
+        "S1, PDF 119–120",
+        "U6, BAL technique and return qualifications"
+      ],
+      "reviewItemIds": ["R24", "R22"],
+      "reviewItemDispositions": {
+        "R24": "exclude_operational_detail",
+        "R22": "externally_clarified"
+      },
+      "learnerWordingSource": {
+        "file": "src/features/bronchoscopy-foundations/content/sections/poor-return.ts",
+        "element": "practice mc-low-return-after-checks, item explanation"
+      },
+      "learnerWording": "persistent low return suggests a sampling limitation such as the disease or a dependent segment. The response is to weigh the value and safety of further lavage with the supervisor and record a limited attempt",
+      "intendedTeachingPoint": "Once leak, airway collapse and the suction path are excluded, persistent low return is a sampling limitation. It is not a target the patient must be pushed to meet, and the attempt is recorded as limited.",
+      "sourceCheck": {
+        "checkedOn": "2026-09-14",
+        "checkedBy": "AI authoring assistant (Claude)",
+        "documentRead": "Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/Loma_Linda/6-BIP-Diagnostic techs and tools.md (T13); Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/UCSD/Patient Selection and the Alphabet Soup (BAL-EBBX-TBBX-Brushing)  2025-07-09.md (T06); Interventional-Pulm-Local-Data/Intro_courses/Transcripts/Bronchoscopy_Video_Transcripts/Loma_Linda/8-BIP-ICU bronch-1-common scenarios.md (T15)",
+        "locationRead": "T13 paragraphs 00:09:31 through 00:15:33; T06 paragraphs 00:01:32 through 00:01:45; T15 paragraphs 00:32:53 through 00:39:19, and 00:18:02 for context. S1 PDF 119–120 was not read (no local copy). U6 was not read (dated source; not the subject of this check).",
+        "finding": "Supported: T13 at 00:12:53–00:14:42 lists causes of poor return. These are dependent segments (especially in ventilated patients), older age and obstructive lung disease with early small-airway collapse trapping fluid, and over-suction or going too distal; it also advises suctioning only until just before the airway collapses. T06 at 00:01:45 describes a lavage diagram with mild suction trauma where the scope is wedged, and does not address low return. Not supported at these locations: stopping or weighing further lavage and recording a limited attempt, or classing more aliquots toward a return target as unsafe. Instead, T13 and T15 present a minimum instilled volume and a minimum recovery as markers of an adequate lavage, and mention elevating the segment and external chest compression as rare aids. The course deliberately does not carry these as thresholds or routine maneuvers (R22, R24). For the tolerance frame: the point that lavage reduces gas exchange is stated in T15 at 00:18:02, which the scenario does not cite, and the scenario's cited transcript spans do not state it.",
+        "supportStatus": "partially-supported"
+      },
+      "limitation": "Automated transcripts. The course's stop-and-record response departs from the lecture's emphasis on reaching recovery targets. That departure is the course's review decision (R22, R24), not something a source says.",
+      "recommendation": "keep",
+      "proposedWording": null,
+      "decisionNeeded": "Bronchoscopy faculty: confirm the keyed response in mc-low-return-after-checks and the unsafe classification of instilling toward the protocol's return aim. BAL protocol owner (local policy bal_protocol): set the volume, return and stopping criteria the course defers to. Faculty: decide whether the tolerance frame should also cite the lecture location where lavage's effect on gas exchange is stated, or rely on S1; this is a citation question, not a wording change.",
+      "hold": null,
+      "changeInThisBatch": "none",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null
+      }
+    }
+  ]
+}

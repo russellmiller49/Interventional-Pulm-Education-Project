@@ -8,35 +8,35 @@ import { bronchPathwaySections } from '../../content/pathway'
 import {
   bronchPathwayGroups,
   bronchSectionLinkTarget,
-  nextIncompleteBronchSection,
-  workedBronchSectionIds,
+  nextBronchSection,
+  reviewedBronchSectionIds,
   type BronchPathwayGroup,
 } from '../../content/pathwayResolver'
 import { BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF } from '../../content/routes'
-import type { BronchRecord } from '../../engine/learnProgress'
+import type { BronchSelfPacedRecord } from '../../engine/selfPacedProgress'
 import styles from '../bronchoscopy-foundations-hub.module.css'
 import { useBronchoscopyFoundationsRecord } from '../useBronchoscopyFoundationsRecord'
-import { BRONCH_LEARN_VERSIONS } from '../../content/lessonVersions'
 
 /**
  * One map of the pathway, shared by the hub and the Learn landing.
  *
  * The procedure phases as native `<details>`, one per contiguous run of the canonical order; only
  * the group holding the learner's next section opens on load. Every count in a summary is derived
- * from the registry. Section chips carry the worked state in words as well as in state. Flattening
- * the groups reproduces the canonical order, and the "Up next" chip is the same section the
- * Continue call to action resolves to.
+ * from the registry. Section chips carry the learner's own marks in words as well as in state —
+ * reviewed, opened, review later — and never an answer or a completion. Flattening the groups
+ * reproduces the canonical order, and the "Up next" chip is the section the Continue call to action
+ * resolves to.
  */
 export function BronchPathwayAccordion({
   record,
   id,
 }: {
-  readonly record: BronchRecord
+  readonly record: BronchSelfPacedRecord
   readonly id?: string
 }) {
   const groups = bronchPathwayGroups()
-  const worked = workedBronchSectionIds(record)
-  const next = nextIncompleteBronchSection(record)
+  const reviewed = reviewedBronchSectionIds(record)
+  const next = nextBronchSection(record)
   const nextId = next?.section.id ?? null
   const openIndex = Math.max(
     0,
@@ -63,25 +63,25 @@ export function BronchPathwayAccordion({
             <p className={styles.groupBody}>{group.description}</p>
             <div className={styles.chipRow}>
               {group.sections.map((section) => {
-                const done = worked.has(section.id)
+                const isReviewed = reviewed.has(section.id)
+                const visited = record.visitedSectionIds.includes(section.id)
+                const later = record.reviewLaterSectionIds.includes(section.id)
                 const isNext = section.id === nextId
                 return (
                   <Link
                     key={section.id}
                     className={styles.chip}
                     data-kind="section"
-                    data-complete={done}
+                    data-reviewed={isReviewed}
+                    data-visited={visited}
+                    data-review-later={later || undefined}
                     data-recommended={isNext}
                     href={bronchSectionLinkTarget(section.id)}
                   >
                     <GraduationCap aria-hidden="true" />
                     {section.title}
-                    {done ? ' ✓ worked through' : ''}
-                    {!done &&
-                    record.completedSectionIds.includes(section.id) &&
-                    BRONCH_LEARN_VERSIONS[section.id] ? (
-                      <em>Updated lesson · earlier record retained</em>
-                    ) : null}
+                    {isReviewed ? ' ✓ reviewed' : visited ? ' · opened' : ''}
+                    {later ? <em>Review later</em> : null}
                     {isNext ? <em>Up next</em> : null}
                   </Link>
                 )
@@ -116,13 +116,14 @@ export function BronchStoredPathwayAccordion({ id }: { readonly id?: string }) {
 /**
  * The one door: the primary call to action on every entry surface.
  *
- * Resolves through `nextIncompleteBronchSection` and nothing else. A fresh learner is sent to
- * section one; a learner part-way through, to the first section they have not worked through,
- * whether or not it is the one they opened last; a learner who has finished, to the capstone.
+ * Resolves through `nextBronchSection` and nothing else. A fresh learner is sent to section one; a
+ * returning learner back to the section they were in unless they marked it reviewed, otherwise to
+ * the first section not marked reviewed; a learner who has marked every section, to the
+ * integrated cases.
  */
 export function BronchContinueCta({ className }: { readonly className?: string }) {
   const { record, hydrated } = useBronchoscopyFoundationsRecord()
-  const next = nextIncompleteBronchSection(record)
+  const next = nextBronchSection(record)
   if (!next) {
     return (
       <Link
@@ -130,13 +131,13 @@ export function BronchContinueCta({ className }: { readonly className?: string }
         className={className ?? styles.continue}
         data-bronch-continue="complete"
       >
-        <span>Every section worked through — open the capstone</span>
+        <span>Every section marked reviewed — try the integrated cases</span>
         <ArrowRight aria-hidden="true" />
       </Link>
     )
   }
-  const fresh = record.completedSectionIds.length === 0 && !next.resumed
-  const verb = fresh ? 'Start' : next.resumed ? 'Resume' : 'Continue'
+  const fresh = record.visitedSectionIds.length === 0 && !next.resumed
+  const verb = next.resumed ? 'Resume' : fresh ? 'Start' : 'Continue'
   return (
     <Link
       href={bronchSectionLinkTarget(next.section.id)}

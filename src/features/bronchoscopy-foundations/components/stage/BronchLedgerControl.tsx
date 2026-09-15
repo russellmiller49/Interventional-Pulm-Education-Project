@@ -18,18 +18,21 @@ const TOLERANCE_MG = 0.5
 /**
  * The shared accounting table (drill D19): each measured line is concentration × volume, entered
  * by the learner in milligrams; an unknown line has no number and says why. The question under
- * the table is what the record allows you to state. The keyed answer completes the step; an
- * unsafe answer is refused and the table stays open; any other answer shows its reasoning and
- * the question is asked again. The first answer is the one kept (A10, A27).
+ * the table is what the record allows you to state. The keyed answer completes the activity; an
+ * unsafe answer is refused with its reasoning and the table stays open; any other answer shows its
+ * reasoning and the question stays open (A10, A27). The learner may open the worked arithmetic and
+ * the reasoning for every answer without entering anything (`revealed`); that records nothing.
  */
 export function BronchLedgerControl({
   ledger,
   commitment,
+  revealed = false,
   onEntry,
   onTotal,
 }: {
   readonly ledger: BronchLedger
   readonly commitment: LedgerCommitment
+  readonly revealed?: boolean
   readonly onEntry: (rowId: string, mg: number) => void
   readonly onTotal: (choiceId: string, plausibility: Plausibility) => void
 }) {
@@ -129,7 +132,7 @@ export function BronchLedgerControl({
         <legend>{ledger.totalPrompt}</legend>
         {!entered ? (
           <p className={styles.verdict} role="status">
-            Enter the milligrams for every measured line first.
+            Enter the milligrams for every measured line to answer, or open the worked arithmetic.
           </p>
         ) : null}
         {orderChoices(ledger.id, ledger.totalChoices).map((choice) => (
@@ -173,9 +176,46 @@ export function BronchLedgerControl({
                 : 'Not the answer the record allows.'}
           </strong>{' '}
           {last.rationale}
-          {lastOutcome === 'other' ? ' Answer again.' : ''}
+          {lastOutcome === 'other' ? ' Answer again if you like.' : ''}
           {lastOutcome === 'refused' ? ' The table stays open.' : ''}
         </p>
+      ) : null}
+      {revealed && !held ? (
+        <section className={styles.row} data-ledger-explanation aria-label="The worked arithmetic">
+          <p className={styles.kicker}>The worked arithmetic</p>
+          <ul>
+            {ledger.rows.map((row) =>
+              row.kind === 'measured' ? (
+                <li key={row.id}>
+                  {row.label}: {row.concentrationMgPerMl} mg/mL × {row.volumeMl} mL ={' '}
+                  {ledgerRowMg(row.concentrationMgPerMl, row.volumeMl)} mg
+                </li>
+              ) : (
+                <li key={row.id}>
+                  {row.label}: not known from the record. {row.reason}
+                </li>
+              ),
+            )}
+          </ul>
+          <ul>
+            {ledger.totalChoices.map((choice) => (
+              <li
+                key={choice.id}
+                data-ledger-explanation-choice={choice.id}
+                data-best={choice.plausibility === 'best' ? 'true' : undefined}
+                data-unsafe={choice.plausibility === 'unsafe' ? 'true' : undefined}
+              >
+                <strong>{choice.label}</strong>
+                {choice.plausibility === 'best'
+                  ? ' What the record allows.'
+                  : choice.plausibility === 'unsafe'
+                    ? ' Unsafe.'
+                    : ''}{' '}
+                {choice.rationale}
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
     </div>
   )

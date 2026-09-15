@@ -1,5 +1,7 @@
 # Faculty and asset review packet
 
+> **Superseded in part, 2026-09-14 (BF-01).** The owner's self-paced decision retired the once-only capstone, its seven-of-eight / critical / unsafe standard, first-decision records and completion evidence. The eight cases are now optional integrated cases at the same address, and questions throughout can be explained before answering, retried or left. Walkthrough steps 1 and 6 below describe the earlier behavior. See [BF-01 handoff](../gap-remediation/self-paced/BF-01-handoff.md) for the current contract and the claim review queue. The content, anatomy, media, local-policy and release decisions in this packet still stand.
+
 The core module is ready for content and anatomy review in its unlisted preview. This packet records what a reviewer must decide; it is not approval. No reviewer, rights holder, release date or publication permission has been inferred.
 
 ## Material to review

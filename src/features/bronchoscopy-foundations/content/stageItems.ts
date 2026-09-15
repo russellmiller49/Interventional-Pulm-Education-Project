@@ -129,6 +129,20 @@ export const capstoneStageItems: readonly BronchStageItem[] = CAPSTONE_CASES.map
   stageItem(entry.item, { activityId: CAPSTONE_ACTIVITY_ID, phase: 'predict' }),
 )
 
+const CAPSTONE_STAGE_BY_CASE_ID: ReadonlyMap<string, BronchStageItem> = new Map(
+  capstoneStageItems.map((entry) => [entry.item.id, entry] as const),
+)
+
+/**
+ * The stage item behind an integrated case (the former capstone), by the case id, which is also its
+ * item id. The ids and the activity id stay as they were so earlier records keep their meaning.
+ */
+export function capstoneStageItem(caseId: string): BronchStageItem {
+  const stage = CAPSTONE_STAGE_BY_CASE_ID.get(caseId)
+  if (!stage) throw new Error(`No integrated-case item for case ${caseId}`)
+  return stage
+}
+
 /** Every item the course can record a first decision on, by item id. */
 export const BRONCH_ITEM_BY_ID: ReadonlyMap<string, ClinicalLearningItem> = new Map(
   [

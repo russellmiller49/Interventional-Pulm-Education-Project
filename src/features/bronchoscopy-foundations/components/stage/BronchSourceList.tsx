@@ -9,17 +9,15 @@ import { TRANSCRIPT_SENTENCE } from '../../data/sources'
 
 /**
  * The footnote list: one small line per source with its kind, its reference, the places the
- * section cites in it, an open link where there is one and a copy control. What each source was
- * used for, and its limit, appear only when the caller says the claims may be shown — a use
- * sentence can name the mechanism a prediction asks about. A transcript always carries the fixed
- * transcript sentence.
+ * section cites in it, an open link where there is one and a copy control, then what the source was
+ * used for, its limit and, for an external source, the date it was accessed. Self-paced contract
+ * (BF-01): these lines are always available — sources are teaching support, not an answer to be
+ * withheld. A transcript always carries the fixed transcript sentence.
  */
 export function BronchSourceList({
   records,
-  claimsVisible,
 }: {
   readonly records: readonly BronchStageSourceRecord[]
-  readonly claimsVisible: boolean
 }) {
   const [copied, setCopied] = useState<string | null>(null)
   return (
@@ -57,12 +55,13 @@ export function BronchSourceList({
               </button>
             </span>
             {transcript ? <small>{TRANSCRIPT_SENTENCE}</small> : null}
-            {claimsVisible ? (
-              <ul className={shellStyles.sourceClaims} data-source-claims>
-                <li>Used for: {source.usedFor}</li>
-                <li>Limit: {source.limitation}</li>
-              </ul>
-            ) : null}
+            <ul className={shellStyles.sourceClaims} data-source-claims>
+              <li>Used for: {source.usedFor}</li>
+              <li>Limit: {source.limitation}</li>
+              {source.manifest.accessedDate ? (
+                <li data-source-accessed>Accessed: {source.manifest.accessedDate}</li>
+              ) : null}
+            </ul>
           </li>
         )
       })}

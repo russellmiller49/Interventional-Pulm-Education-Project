@@ -560,7 +560,7 @@ export function ScopePaneFrame(
       >
         {view.physicalControlLabels
           ? lastMode === 'scripted'
-            ? 'Demonstration · no learner credit'
+            ? 'Demonstration · not your own attempt'
             : `Screen-based learning · ${lastMode ?? 'no input yet'} · not a physical-skills assessment`
           : describeScopePerformance(state)}
       </p>

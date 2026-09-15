@@ -6,13 +6,19 @@ import { Link } from '@/i18n/navigation'
 import type { CoursePresentation } from '../../content/courseFlow'
 import styles from './course-flow.module.css'
 
-/** Module-local presentation only. All activity state and handlers belong to BronchStageHost. */
+/**
+ * Module-local presentation only. All activity state and handlers belong to BronchStageHost.
+ *
+ * `skip` is the self-paced way on (BF-01): "Continue without answering" and its siblings, offered
+ * whenever the current activity is not done. It moves the learner on and records nothing.
+ */
 export function BronchCourseLayout({
   stepId,
   presentation,
   activity,
   header,
   model,
+  skip,
   teaching,
   workspace,
   response,
@@ -27,6 +33,7 @@ export function BronchCourseLayout({
   readonly activity: string
   readonly header: ReactNode
   readonly model: NowCardModel
+  readonly skip?: NowCardAction
   readonly teaching: ReactNode
   readonly workspace: ReactNode
   readonly response: ReactNode
@@ -49,8 +56,8 @@ export function BronchCourseLayout({
       <header className={styles.courseHeader}>{header}</header>
       {storageFailed ? (
         <p role="alert" className={styles.storageFailure}>
-          Progress could not be saved on this device. You can continue this session, but first
-          responses and completed work may be lost when you leave.
+          Your place in the course could not be saved on this device. You can keep learning; where
+          you left off and the sections you marked may not be remembered when you leave.
         </p>
       ) : null}
       <section data-now-card aria-labelledby={`${id}-title`} className={styles.lesson}>
@@ -85,6 +92,7 @@ export function BronchCourseLayout({
           <div className={styles.actions}>
             {model.back ? <Action action={{ ...model.back, label: 'Back' }} back /> : <span />}
             <div className={styles.forward}>
+              {skip ? <Action action={skip} skip /> : null}
               {model.secondary ? <Action action={model.secondary} /> : null}
               {model.primary ? (
                 <Action action={model.primary} primary reasonId={`${id}-reason`} />
@@ -108,18 +116,21 @@ function Action({
   action,
   primary = false,
   back = false,
+  skip = false,
   reasonId,
 }: {
   readonly action: NowCardAction
   readonly primary?: boolean
   readonly back?: boolean
+  readonly skip?: boolean
   readonly reasonId?: string
 }) {
   const props = {
     className: primary ? styles.primary : styles.secondary,
     'data-now-primary': primary || undefined,
-    'data-now-secondary': (!primary && !back) || undefined,
+    'data-now-secondary': (!primary && !back && !skip) || undefined,
     'data-now-back': back || undefined,
+    'data-now-skip': skip || undefined,
   }
   return action.href && !action.disabled ? (
     <Link href={action.href} {...props}>

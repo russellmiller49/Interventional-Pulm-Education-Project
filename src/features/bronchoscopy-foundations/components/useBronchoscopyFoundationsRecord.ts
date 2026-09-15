@@ -3,15 +3,15 @@
 import { useSyncExternalStore } from 'react'
 
 import {
-  BRONCH_RECORD_CHANGED_EVENT,
-  BRONCH_STORAGE_KEY,
-  createEmptyBronchRecord,
-  parseBronchRecord,
-  type BronchRecord,
-} from '../engine/learnProgress'
+  BRONCH_SELF_PACED_CHANGED_EVENT,
+  BRONCH_SELF_PACED_STORAGE_KEY,
+  createEmptyBronchSelfPacedRecord,
+  parseBronchSelfPacedRecord,
+  type BronchSelfPacedRecord,
+} from '../engine/selfPacedProgress'
 
 /**
- * The module record as an external store.
+ * The module's self-paced record as an external store.
  *
  * The server pass and the hydrating client render both read the empty record — which resolves to
  * section one, exactly what the server rendered — and the stored record replaces it once React is
@@ -19,41 +19,41 @@ import {
  * yields the same object. The store re-reads when the stage writes, so a hub open in another tab
  * follows.
  */
-const EMPTY = createEmptyBronchRecord()
+const EMPTY = createEmptyBronchSelfPacedRecord()
 let cachedRaw: string | null | undefined
-let cachedRecord: BronchRecord = EMPTY
+let cachedRecord: BronchSelfPacedRecord = EMPTY
 
-function readSnapshot(): BronchRecord {
+function readSnapshot(): BronchSelfPacedRecord {
   let raw: string | null = null
   try {
-    raw = window.localStorage.getItem(BRONCH_STORAGE_KEY)
+    raw = window.localStorage.getItem(BRONCH_SELF_PACED_STORAGE_KEY)
   } catch {
     raw = null
   }
   if (raw !== cachedRaw) {
     cachedRaw = raw
-    cachedRecord = raw === null ? EMPTY : (parseBronchRecord(raw) ?? EMPTY)
+    cachedRecord = raw === null ? EMPTY : (parseBronchSelfPacedRecord(raw) ?? EMPTY)
   }
   return cachedRecord
 }
 
 function subscribe(onChange: () => void): () => void {
-  window.addEventListener(BRONCH_RECORD_CHANGED_EVENT, onChange)
+  window.addEventListener(BRONCH_SELF_PACED_CHANGED_EVENT, onChange)
   window.addEventListener('storage', onChange)
   return () => {
-    window.removeEventListener(BRONCH_RECORD_CHANGED_EVENT, onChange)
+    window.removeEventListener(BRONCH_SELF_PACED_CHANGED_EVENT, onChange)
     window.removeEventListener('storage', onChange)
   }
 }
 
-function serverSnapshot(): BronchRecord {
+function serverSnapshot(): BronchSelfPacedRecord {
   return EMPTY
 }
 
 const noSubscription = () => () => {}
 
 export function useBronchoscopyFoundationsRecord(): {
-  readonly record: BronchRecord
+  readonly record: BronchSelfPacedRecord
   readonly hydrated: boolean
 } {
   const record = useSyncExternalStore(subscribe, readSnapshot, serverSnapshot)

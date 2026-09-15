@@ -468,7 +468,7 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
         {
           command: { type: 'accessory-move', to: 'in-channel' },
           caption:
-            'The protected brush returns into the channel. This playback supplies no learner credit.',
+            'The protected brush returns into the channel. This playback is the example, not your own attempt.',
         },
       ],
     },

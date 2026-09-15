@@ -7,21 +7,25 @@ import { createScopeState, reduceScope } from './scope/scopeReducer'
 import type { ScopeRuntimeState } from './scope/scopeRuntime'
 
 /**
- * Everything a learner has committed or done on a section.
+ * Everything a learner has answered or done on a section, for this session only.
  *
- * Nothing here is persisted. A reload starts the section at its first step; the completion record
- * and the first attempts are the only things written, and they are written by the host. The step
- * the learner is on is derived from these commitments every render (`deriveStageProgress`), never
- * stored, so the step list, the Now card and the record cannot disagree.
+ * Nothing here is persisted and nothing here is a grade. A reload starts the section at its first
+ * step. The step the learner is on is derived from how far they have moved (`confirmed`), never
+ * stored, so the Now card and the step recap cannot disagree.
+ *
+ * Self-paced contract (BF-01): moving past a step and doing it are separate facts. `CONFIRM_THROUGH`
+ * moves past a step whose work is done and records that it was done; `SKIP_PAST` moves past any
+ * step and records nothing — no answer, no placed set, no met goal. Finishing needs only that the
+ * learner has moved past every step.
  *
  * The scope runs through the pane engine's pure reducer, one state per step that shows a scope
  * view (an Act and its Observe have different starts). Every learner action reaches the engine as
- * a command with its input mode, so the record can say how the section was driven (A18).
+ * a command with its input mode.
  */
 export interface LedgerCommitment {
   /** Row id → the milligrams the learner entered. */
   readonly entries: Readonly<Record<string, number>>
-  /** The first total chosen, kept as made. */
+  /** The first total chosen in this session, used only for its rationale ordering. */
   readonly firstTotalChoiceId: string | null
   /** The last total chosen, for its rationale. */
   readonly lastTotalChoiceId: string | null
@@ -39,7 +43,7 @@ export interface ReportCommitment {
 export interface ScenarioCommitment {
   /** Zero-based frame the scenario is on; equal to the frame count once done. */
   readonly frameIndex: number
-  /** Frame id → the first choice made on it, kept as made. */
+  /** Frame id → the first choice made on it in this session. */
   readonly firstChoices: Readonly<Record<string, string>>
   /** Frame id → the last choice made on it, for its rationale. */
   readonly lastChoices: Readonly<Record<string, string>>
@@ -47,7 +51,7 @@ export interface ScenarioCommitment {
 }
 
 export interface BronchCommitments {
-  /** Step id → the committed choice id, for prediction steps. */
+  /** Step id → the checked choice id, for prediction steps. */
   readonly choices: Readonly<Record<string, string>>
   readonly sorts: Readonly<Record<string, Readonly<Record<string, string>>>>
   readonly identifies: Readonly<Record<string, Readonly<Record<string, string>>>>
@@ -55,11 +59,11 @@ export interface BronchCommitments {
   readonly ledgers: Readonly<Record<string, LedgerCommitment>>
   readonly reports: Readonly<Record<string, ReportCommitment>>
   readonly scenarios: Readonly<Record<string, ScenarioCommitment>>
-  /** The highest step the learner has explicitly moved past. */
+  /** The highest step the learner has moved past, whether or not its work was done. */
   readonly confirmed: number
   /**
-   * The steps whose work was done when the learner moved past them. Sticky on purpose: a later
-   * command to the scope cannot un-perform an earlier step.
+   * The steps the learner actually answered or did. Sticky on purpose: a later command to the scope
+   * cannot un-perform an earlier step. A step moved past with `SKIP_PAST` is never in it.
    */
   readonly performedIds: readonly string[]
   readonly finished: boolean
@@ -93,7 +97,8 @@ export type BronchStageAction =
       readonly scopeCase: ScopeCase | null
     }
   | { readonly type: 'COMMIT_CHOICE'; readonly stepId: string; readonly choiceId: string }
-  | { readonly type: 'RETRY_LEARN_CHOICE'; readonly stepId: string }
+  /** Clears an answered question, sort, naming set or order so the learner can try it again. */
+  | { readonly type: 'RETRY_STEP'; readonly stepId: string }
   | {
       readonly type: 'COMMIT_SORT'
       readonly stepId: string
@@ -132,7 +137,10 @@ export type BronchStageAction =
       readonly plausibility: Plausibility
       readonly frameCount: number
     }
+  /** Move past the next step once its work is done, recording that it was done. */
   | { readonly type: 'CONFIRM_THROUGH'; readonly index: number }
+  /** Move past the next step without doing it. Records nothing about the step. */
+  | { readonly type: 'SKIP_PAST'; readonly index: number }
   | { readonly type: 'FINISH' }
 
 export function emptyCommitments(): BronchCommitments {
@@ -183,6 +191,15 @@ export function scenarioCommitment(
   return session.commitments.scenarios[stepId] ?? EMPTY_SCENARIO
 }
 
+/**
+ * Whether the learner drove this scope state at all. A goal the untouched start state already
+ * meets is not the learner's work, so a met goal only counts once a learner command has reached
+ * the engine (a scripted demonstration runs on its own state and is refused here anyway).
+ */
+export function learnerActedOnScope(state: ScopeRuntimeState): boolean {
+  return state.inputModes.some((mode) => mode !== 'scripted')
+}
+
 /** Whether a step's own work is done, regardless of whether the learner has moved past it. */
 export function stepWorkDone(
   lesson: BronchStageLesson,
@@ -201,7 +218,7 @@ export function stepWorkDone(
     case 'scope-task':
     case 'observe': {
       const state = session.scope[step.id]
-      return state ? scopeGoalsMet(interaction.goals, state) : false
+      return state ? learnerActedOnScope(state) && scopeGoalsMet(interaction.goals, state) : false
     }
     case 'sort':
       return commitments.sorts[step.id] !== undefined
@@ -226,6 +243,19 @@ function withPerformed(commitments: BronchCommitments, stepId: string): BronchCo
   if (commitments.performedIds.includes(stepId)) return commitments
   return { ...commitments, performedIds: [...commitments.performedIds, stepId] }
 }
+
+function withoutKey<T>(record: Readonly<Record<string, T>>, key: string): Record<string, T> {
+  const next = { ...record }
+  delete next[key]
+  return next
+}
+
+const RETRYABLE: ReadonlySet<BronchStageStep['interaction']['kind']> = new Set([
+  'prediction',
+  'sort',
+  'identify',
+  'sequence',
+])
 
 export function bronchStageReducer(lesson: BronchStageLesson) {
   return (session: BronchStageSession, action: BronchStageAction): BronchStageSession => {
@@ -268,22 +298,29 @@ export function bronchStageReducer(lesson: BronchStageLesson) {
           ),
         }
       }
-      case 'RETRY_LEARN_CHOICE': {
+      case 'RETRY_STEP': {
         const index = lesson.steps.findIndex((step) => step.id === action.stepId)
         const step = lesson.steps[index]
-        if (
-          !(step?.learn || step?.course) ||
-          step.interaction.kind !== 'prediction' ||
-          commitments.finished
-        )
-          return session
-        const choices = { ...commitments.choices }
-        delete choices[action.stepId]
+        if (!step || !RETRYABLE.has(step.interaction.kind) || commitments.finished) return session
+        const kind = step.interaction.kind
         return {
           ...session,
           commitments: {
             ...commitments,
-            choices,
+            choices:
+              kind === 'prediction'
+                ? withoutKey(commitments.choices, action.stepId)
+                : commitments.choices,
+            sorts:
+              kind === 'sort' ? withoutKey(commitments.sorts, action.stepId) : commitments.sorts,
+            identifies:
+              kind === 'identify'
+                ? withoutKey(commitments.identifies, action.stepId)
+                : commitments.identifies,
+            sequences:
+              kind === 'sequence'
+                ? withoutKey(commitments.sequences, action.stepId)
+                : commitments.sequences,
             performedIds: commitments.performedIds.filter((id) => id !== action.stepId),
             confirmed: Math.min(commitments.confirmed, index - 1),
           },
@@ -411,23 +448,16 @@ export function bronchStageReducer(lesson: BronchStageLesson) {
           !stepWorkDone(lesson, current, action.index, session)
         )
           return session
-        let next: BronchCommitments = {
-          ...commitments,
-          confirmed: Math.max(commitments.confirmed, action.index),
-        }
-        const probe: BronchStageSession = { ...session, commitments: next }
-        for (let index = 0; index <= action.index && index < lesson.steps.length; index += 1) {
-          const step = lesson.steps[index]
-          if (stepWorkDone(lesson, step, index, probe)) next = withPerformed(next, step.id)
-        }
-        return { ...session, commitments: next }
+        const moved: BronchCommitments = { ...commitments, confirmed: action.index }
+        return { ...session, commitments: withPerformed(moved, current.id) }
+      }
+      case 'SKIP_PAST': {
+        if (action.index !== commitments.confirmed + 1 || !lesson.steps[action.index])
+          return session
+        return { ...session, commitments: { ...commitments, confirmed: action.index } }
       }
       case 'FINISH':
-        if (
-          (lesson.steps[0]?.learn || lesson.steps[0]?.course) &&
-          !lesson.steps.every((step) => commitments.performedIds.includes(step.id))
-        )
-          return session
+        if (commitments.confirmed < lesson.steps.length - 1) return session
         return { ...session, commitments: { ...commitments, finished: true } }
       default:
         return session
@@ -436,43 +466,41 @@ export function bronchStageReducer(lesson: BronchStageLesson) {
 }
 
 export interface StageProgress {
-  readonly furthestPerformedIndex: number
+  /** The steps the learner answered or did, exactly; not a contiguous prefix. */
   readonly performedIds: ReadonlySet<string>
-  /** The step the learner should be on: the first not yet performed, held back by Continue. */
+  /** Activities the learner moved past without answering or doing them, in step order. */
+  readonly movedPastIds: readonly string[]
+  /** The step the learner is on: the one after the furthest step moved past. */
   readonly liveIndex: number
   readonly predictionCommitted: boolean
   readonly transferCommitted: boolean
 }
 
-/**
- * Where the learner is, from the commitments. A step counts as performed once its work was done
- * and the learner pressed Continue on it (or committed, for a prediction); the reducer records
- * that moment, so a later command cannot un-perform it. The live step is the first not yet
- * performed. The prediction gate is a property of the commitments, not of the index.
- */
+/** Where the learner is, from the commitments. */
 export function deriveStageProgress(
   lesson: BronchStageLesson,
   session: BronchStageSession,
 ): StageProgress {
-  const performedIds = new Set<string>()
-  let furthest = -1
-  for (let index = 0; index < lesson.steps.length; index += 1) {
-    const step = lesson.steps[index]
-    if (!session.commitments.performedIds.includes(step.id)) break
-    performedIds.add(step.id)
-    furthest = index
-  }
+  const { commitments } = session
+  const performedIds = new Set(commitments.performedIds)
+  const movedPastIds = lesson.steps
+    .filter(
+      (step, index) =>
+        index <= commitments.confirmed &&
+        step.interaction.kind !== 'read' &&
+        step.interaction.kind !== 'explain' &&
+        !performedIds.has(step.id),
+    )
+    .map((step) => step.id)
   const predictionStep = lesson.steps[lesson.predictionStepIndex]
   const transferStep = lesson.steps[lesson.transferStepIndex]
   return {
-    furthestPerformedIndex: furthest,
     performedIds,
-    liveIndex: Math.min(furthest + 1, lesson.steps.length - 1),
+    movedPastIds,
+    liveIndex: Math.min(commitments.confirmed + 1, lesson.steps.length - 1),
     predictionCommitted: predictionStep
-      ? session.commitments.choices[predictionStep.id] !== undefined
+      ? commitments.choices[predictionStep.id] !== undefined
       : false,
-    transferCommitted: transferStep
-      ? session.commitments.choices[transferStep.id] !== undefined
-      : false,
+    transferCommitted: transferStep ? commitments.choices[transferStep.id] !== undefined : false,
   }
 }

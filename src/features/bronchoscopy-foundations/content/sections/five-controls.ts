@@ -72,7 +72,7 @@ export const section: BronchSectionDefinition = {
     {
       objectiveId: 'M05-O2',
       subtask:
-        'Predicts what turning the control section does to the image and the bending plane, then uses rotation, deflection, advancement and withdrawal, and suction one at a time at the bench; the hands are observed at the faculty stations.',
+        'Watches each control demonstrated, may predict what turning the control section does to the image and the bending plane, and tries rotation, deflection, advancement and withdrawal, and suction one at a time at the bench; handling the real instrument is learned under supervision, outside this online module.',
       evidence: 'observed-physical-skill-required',
     },
   ],
@@ -82,7 +82,8 @@ export const section: BronchSectionDefinition = {
   clinicalQuestion:
     'When one control at the bronchoscope moves, what changes at the tip and in the image?',
   recognizeTitle: 'The bronchoscope tip on a bench',
-  objective: 'Learn how each basic movement changes the bronchoscope tip and the image.',
+  objective:
+    'See how each control changes the bronchoscope tip and the image, by watching it demonstrated and trying one control at a time.',
   why: 'Novices often advance, rotate and bend at once, then cannot tell which movement changed the view. Knowing what each control does on its own is what makes a later movement deliberate.',
   newConcept:
     'Aiming the tip takes two controls working together: shaft rotation turns the camera and the plane the tip bends in, and distal deflection bends the tip within that plane; insertion changes depth, not aim.',

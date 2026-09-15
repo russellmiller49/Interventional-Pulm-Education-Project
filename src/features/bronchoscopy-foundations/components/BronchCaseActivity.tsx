@@ -10,32 +10,27 @@ import shellStyles from '@/features/learning-module/stage/lesson-shell.module.cs
 import { Link } from '@/i18n/navigation'
 
 import { LOCAL_POLICIES, LOCAL_POLICY_NOT_CONFIGURED } from '../content/localPolicies'
-import {
-  bronchMicroCaseById,
-  bronchMicroCasesInPathwayOrder,
-  microCaseAttemptKey,
-} from '../content/microCases'
+import { bronchMicroCaseById, bronchMicroCasesInPathwayOrder } from '../content/microCases'
 import { bronchSection } from '../content/pathway'
 import { bronchSectionLinkTarget } from '../content/pathwayResolver'
 import { BRONCHOSCOPY_FOUNDATIONS_PRACTICE_HREF, bronchCaseLinkTarget } from '../content/routes'
-import { readBronchRecord, withFirstAttempt, writeBronchRecord } from '../engine/learnProgress'
 import styles from './bronchoscopy-foundations-module.module.css'
-import { useBronchoscopyFoundationsRecord } from './useBronchoscopyFoundationsRecord'
+import { BronchExplanation } from './stage/BronchExplanation'
 
 /**
  * One practice case: the situation, one decision, the reasoning.
  *
- * The learner may answer as often as they like — this is the layer where trying a reading and
- * finding out is the point. Only the first decision is written to the record, and it is never
- * rewritten, so a later reading cannot quietly replace what they thought at first sight. After the
- * decision the case says which local policies its answer depends on, because the course holds no
- * institution's numbers and never calculates for a patient.
+ * Self-paced contract (BF-01): check an answer, open the explanation before answering, try again,
+ * move to another case or review the section the case draws on — in any order. Nothing is written
+ * to storage. The local policies an answer depends on are named with the feedback or the
+ * explanation, because the course holds no institution's numbers and never calculates for a
+ * patient.
  */
 export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
   const microCase = bronchMicroCaseById.get(caseId)
-  const { record, hydrated } = useBronchoscopyFoundationsRecord()
   const [selected, setSelected] = useState<string | null>(null)
   const [committed, setCommitted] = useState<string | null>(null)
+  const [explanationOpen, setExplanationOpen] = useState(false)
 
   if (!microCase) {
     return (
@@ -50,22 +45,10 @@ export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
   const position = order.findIndex((entry) => entry.id === microCase.id)
   const previous = position > 0 ? order[position - 1] : null
   const next = position >= 0 && position < order.length - 1 ? order[position + 1] : null
-  const attemptKey = microCaseAttemptKey(microCase)
-  const firstAttempt = record.firstAttempts[attemptKey]
   const section = bronchSection(microCase.sectionId)
   const policies = LOCAL_POLICIES.filter((policy) =>
     microCase.stage.localPolicyIds.includes(policy.id),
   )
-
-  const firstChoiceLabel = firstAttempt
-    ? (item.choices.find((choice) => choice.id === firstAttempt.choiceId)?.label ?? null)
-    : null
-
-  function commit() {
-    if (!selected) return
-    setCommitted(selected)
-    writeBronchRecord(withFirstAttempt(readBronchRecord(), attemptKey, selected))
-  }
 
   return (
     <article className="grid gap-5" data-practice-case={microCase.id}>
@@ -81,13 +64,6 @@ export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
         <p>{microCase.situation}</p>
       </section>
 
-      {hydrated && firstAttempt && !committed ? (
-        <p className="text-sm text-muted-foreground" data-first-decision>
-          Your first decision here was <strong>{firstChoiceLabel}</strong>. It stays on your record
-          as you made it; answering again changes nothing but your own reading.
-        </p>
-      ) : null}
-
       {committed ? (
         <div className="grid gap-4" data-case-verdict>
           <AnswerVerdict
@@ -98,19 +74,6 @@ export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
             theme="dark"
             explanationHeading="The takeaway"
           />
-          {policies.length > 0 ? (
-            <section className={styles.teachingCard} data-case-policies>
-              <p className={styles.kicker}>Depends on local policy</p>
-              <ul>
-                {policies.map((policy) => (
-                  <li key={policy.id} data-local-policy={policy.id}>
-                    {policy.title}
-                  </li>
-                ))}
-              </ul>
-              <p>{LOCAL_POLICY_NOT_CONFIGURED}</p>
-            </section>
-          ) : null}
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
@@ -121,7 +84,7 @@ export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
                 setSelected(null)
               }}
             >
-              <RotateCcw aria-hidden="true" /> Answer it again
+              <RotateCcw aria-hidden="true" /> Try again
             </button>
             {next ? (
               <Link
@@ -162,32 +125,61 @@ export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
               </label>
             ))}
           </fieldset>
-          <div>
+          <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
               className={shellStyles.nowPrimary}
               data-now-primary
               disabled={!selected}
-              onClick={commit}
+              onClick={() => {
+                if (selected) setCommitted(selected)
+              }}
             >
-              Submit this answer <ArrowRight aria-hidden="true" />
+              Check my answer <ArrowRight aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className={shellStyles.nowSecondary}
+              data-show-explanation
+              aria-expanded={explanationOpen}
+              onClick={() => setExplanationOpen((open) => !open)}
+            >
+              {explanationOpen ? 'Hide the explanation' : 'Show the explanation'}
             </button>
           </div>
+          {explanationOpen ? (
+            <BronchExplanation
+              item={item}
+              note="Opened without an answer. Nothing is recorded; you can still choose and check an answer."
+            />
+          ) : null}
         </div>
       )}
 
-      {committed ? (
-        <p className="text-sm text-muted-foreground" data-case-pairing>
-          This case uses the idea from{' '}
-          <Link
-            className="font-semibold text-primary"
-            href={bronchSectionLinkTarget(microCase.sectionId)}
-          >
-            {section.title}
-          </Link>
-          .
-        </p>
+      {(committed || explanationOpen) && policies.length > 0 ? (
+        <section className={styles.teachingCard} data-case-policies>
+          <p className={styles.kicker}>Depends on local policy</p>
+          <ul>
+            {policies.map((policy) => (
+              <li key={policy.id} data-local-policy={policy.id}>
+                {policy.title}
+              </li>
+            ))}
+          </ul>
+          <p>{LOCAL_POLICY_NOT_CONFIGURED}</p>
+        </section>
       ) : null}
+
+      <p className="text-sm text-muted-foreground" data-case-pairing>
+        This case uses the idea from{' '}
+        <Link
+          className="font-semibold text-primary"
+          href={bronchSectionLinkTarget(microCase.sectionId)}
+        >
+          {section.title}
+        </Link>
+        . Review it whenever it helps.
+      </p>
 
       <nav className="flex flex-wrap items-center gap-4 text-sm" aria-label="Practice cases">
         {previous ? (
@@ -201,6 +193,15 @@ export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
         <Link className="font-semibold text-primary" href={BRONCHOSCOPY_FOUNDATIONS_PRACTICE_HREF}>
           All cases
         </Link>
+        {next ? (
+          <Link
+            className="inline-flex items-center gap-1 font-semibold text-primary"
+            href={bronchCaseLinkTarget(next.id)}
+            data-nav-next-case={next.id}
+          >
+            {next.presentationTitle} <ArrowRight aria-hidden="true" />
+          </Link>
+        ) : null}
       </nav>
     </article>
   )

@@ -17,15 +17,17 @@ import {
 import styles from './bronchoscopy-foundations-module.module.css'
 
 /**
- * Overview | Learn | Practice | Assess | Reference — the navigation grammar the critical-care
- * modules share, with one more door: the tables, the template, the glossary and the sources a
- * learner wants beside the procedure rather than inside a section.
+ * Overview | Learn | Practice | Integrated cases | Reference — the navigation grammar the
+ * critical-care modules share, with one more door: the tables, the template, the glossary and the
+ * sources a learner wants beside the procedure rather than inside a section. The fourth tab was
+ * Assess, the eight-case capstone; the owner's self-paced decision (BF-01) retired the capstone
+ * standard, and the same address now opens the integrated cases.
  */
 export const bronchoscopyFoundationsModuleNavItems: readonly ModuleNavItem[] = [
   {
     title: 'Overview',
     href: BRONCHOSCOPY_FOUNDATIONS_NAV_BASE,
-    description: 'Pathway map and progress',
+    description: 'Pathway map and where you left off',
   },
   {
     title: 'Learn',
@@ -38,9 +40,9 @@ export const bronchoscopyFoundationsModuleNavItems: readonly ModuleNavItem[] = [
     description: 'Short cases, one decision each',
   },
   {
-    title: 'Assess',
+    title: 'Integrated cases',
     href: BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF,
-    description: 'The eight-case capstone',
+    description: 'Eight cases that combine the sections',
   },
   {
     title: 'Reference',
@@ -111,8 +113,8 @@ export function BronchoscopyFoundationsModuleFrame({
         {locale !== 'en' ? (
           <div className={styles.englishFallback} role="note">
             <Languages aria-hidden="true" />
-            Reviewed English content fallback: Spanish and Simplified Chinese clinical translations
-            are not yet approved for this module.
+            English content fallback: Spanish and Simplified Chinese clinical translations are not
+            yet approved for this module.
           </div>
         ) : null}
         {children}

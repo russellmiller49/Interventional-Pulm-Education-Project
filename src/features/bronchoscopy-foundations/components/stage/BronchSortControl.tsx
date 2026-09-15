@@ -6,19 +6,22 @@ import type { BronchSort } from '../../content/types'
 import styles from './bronch-stage.module.css'
 
 /**
- * An attribution sort: statements placed into a small set of origins, committed as a set and
- * read row by row in words. Before the commitment nothing says which origin is keyed; after it,
- * each row says whether the placement held and why.
+ * An attribution sort: statements placed into a small set of origins, checked as a set and read
+ * row by row in words. After a check each row says whether the placement held and why. The learner
+ * may also open the worked matches without placing anything (`revealed`); that shows each row's
+ * origin and reasoning and records nothing.
  */
 export function BronchSortControl({
   sort,
   draft,
   committed,
+  revealed = false,
   onChange,
 }: {
   readonly sort: BronchSort
   readonly draft: Readonly<Record<string, string>>
   readonly committed: Readonly<Record<string, string>> | null
+  readonly revealed?: boolean
   readonly onChange: (rowId: string, originId: string) => void
 }) {
   const base = useId()
@@ -63,6 +66,13 @@ export function BronchSortControl({
             {committed ? (
               <p className={styles.verdict} data-sort-verdict={outcome}>
                 <strong>{outcome === 'held' ? 'Held.' : 'Did not hold.'}</strong> {row.rationale}
+              </p>
+            ) : revealed ? (
+              <p className={styles.verdict} data-sort-explanation>
+                <strong>
+                  Belongs with: {sort.origins.find((origin) => origin.id === row.origin)?.label}.
+                </strong>{' '}
+                {row.rationale}
               </p>
             ) : null}
           </div>

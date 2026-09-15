@@ -1,6 +1,6 @@
 import type { LearningPathwaySection } from '@/features/learning-module/curriculum/types'
 
-import { isSectionCompleted, type BronchRecord } from '../engine/learnProgress'
+import type { BronchSelfPacedRecord } from '../engine/selfPacedProgress'
 import { bronchPathwaySections, BRONCH_SECTION_IDS } from './pathway'
 import { BRONCHOSCOPY_FOUNDATIONS_LEARN_HREF } from './routes'
 import { BRONCH_PHASES, type BronchPhase, type BronchPhaseId } from './sectionIds'
@@ -9,9 +9,11 @@ import { BRONCH_PHASES, type BronchPhase, type BronchPhaseId } from './sectionId
  * The one door.
  *
  * Every primary "Continue" on every entry surface — the hub, the Learn landing, the pathway
- * accordion's "Up next" — resolves through `nextIncompleteBronchSection`, which walks the canonical
- * order and returns the first section without a completed record. A fresh learner lands on section
- * one. Counts come from the registry at render; nothing here is written down.
+ * accordion's "Up next" — resolves through `nextBronchSection`: the section the learner was last
+ * in, unless they marked it reviewed; otherwise the first section in the canonical order they have
+ * not marked reviewed. A fresh learner lands on section one. The course keeps no answers or
+ * completion evidence, so none is read; the earlier record's completions are not converted.
+ * Counts come from the registry at render; nothing here is written down.
  */
 export function bronchSectionHref(sectionId: string): string {
   return `${BRONCHOSCOPY_FOUNDATIONS_LEARN_HREF}?section=${sectionId}`
@@ -34,10 +36,15 @@ export interface BronchNextSection {
   readonly resumed: boolean
 }
 
-export function nextIncompleteBronchSection(record: BronchRecord): BronchNextSection | null {
-  const index = bronchPathwaySections.findIndex(
-    (section) => !isSectionCompleted(record, section.id),
+export function nextBronchSection(record: BronchSelfPacedRecord): BronchNextSection | null {
+  const reviewed = new Set(record.reviewedSectionIds)
+  const lastIndex = bronchPathwaySections.findIndex(
+    (section) => section.id === record.lastSectionId,
   )
+  const index =
+    lastIndex >= 0 && !reviewed.has(bronchPathwaySections[lastIndex].id)
+      ? lastIndex
+      : bronchPathwaySections.findIndex((section) => !reviewed.has(section.id))
   if (index < 0) return null
   const section = bronchPathwaySections[index]
   return {
@@ -49,10 +56,12 @@ export function nextIncompleteBronchSection(record: BronchRecord): BronchNextSec
   }
 }
 
-export function workedBronchSectionIds(record: BronchRecord): ReadonlySet<string> {
+/** The sections the learner marked reviewed, in the canonical order. */
+export function reviewedBronchSectionIds(record: BronchSelfPacedRecord): ReadonlySet<string> {
+  const reviewed = new Set(record.reviewedSectionIds)
   return new Set(
     bronchPathwaySections
-      .filter((section) => isSectionCompleted(record, section.id))
+      .filter((section) => reviewed.has(section.id))
       .map((section) => section.id),
   )
 }
