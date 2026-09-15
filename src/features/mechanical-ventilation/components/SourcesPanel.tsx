@@ -46,7 +46,7 @@ export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
         </div>
         <span className={styles.draftBadge}>
           {mechanicalVentilationPublicationStatus === 'published'
-            ? 'PUBLISHED · REVIEW APPROVED'
+            ? 'PUBLISHED'
             : mechanicalVentilationPublicationStatus === 'tester-preview'
               ? 'UNLISTED · REVIEWER PREVIEW'
               : 'DRAFT · REVIEW REQUIRED'}
@@ -114,7 +114,7 @@ export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
           <dt>Publication</dt>
           <dd>
             {mechanicalVentilationPublicationStatus === 'published'
-              ? 'Reviewed public release'
+              ? 'Public release'
               : mechanicalVentilationPublicationStatus === 'tester-preview'
                 ? 'Unlisted public tester preview'
                 : 'Authenticated draft'}
@@ -240,7 +240,7 @@ export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
           </li>
           <li>
             <span aria-hidden="true">□</span> Clinical translations receive independent review
-            before the reviewed-English fallback is removed.
+            before the English fallback is removed.
           </li>
           <li>
             <span aria-hidden="true">□</span> Faculty confirms high-risk actions remain

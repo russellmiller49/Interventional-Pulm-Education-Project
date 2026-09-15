@@ -58,14 +58,14 @@ export const criticalCareSourceConflicts: readonly CriticalCareSourceConflict[] 
       {
         claim: 'GEF = (4 × stroke volume) / global end-diastolic volume',
         source: 'Advanced Hemodynamic Monitoring: Basics and New Horizons',
-        locator: 'pages 62, 113, and 121–122',
-        evidenceIds: ['master-hemodynamics-reference'],
+        locator: 'printed pages 62 (Table 7.1) and 113 (section 12.3.2); PDF pages 72 and 119',
+        evidenceIds: ['advanced-hemodynamic-monitoring-2021'],
       },
       {
         claim: 'GEF = stroke volume / global end-diastolic volume',
         source: 'Hemodynamic Monitoring in the ICU',
-        locator: 'page 24',
-        evidenceIds: ['master-hemodynamics-reference'],
+        locator: 'printed page 25, section 2.2.5; PDF page 43',
+        evidenceIds: ['hemodynamic-monitoring-icu-2016'],
       },
     ],
     handling:

@@ -58,7 +58,7 @@ import styles from './mechanical-ventilation.module.css'
 const MODULE_ID = 'mechanical-ventilation'
 const publicationBadge =
   mechanicalVentilationPublicationStatus === 'published'
-    ? { Icon: BadgeCheck, label: 'Reviewed release' }
+    ? { Icon: BadgeCheck, label: 'Public release' }
     : mechanicalVentilationPublicationStatus === 'tester-preview'
       ? { Icon: EyeOff, label: 'Unlisted tester preview' }
       : { Icon: LockKeyhole, label: 'Authenticated draft' }
@@ -364,8 +364,8 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
         <div className={styles.languageFallback} role="status">
           <Languages aria-hidden="true" />
           <p>
-            <strong>Reviewed-English fallback:</strong> Clinical simulation copy remains in English
-            on this route until an independent translation review is complete.
+            <strong>English fallback:</strong> Clinical simulation copy remains in English on this
+            route until an independent translation review is complete.
           </p>
         </div>
       ) : null}
