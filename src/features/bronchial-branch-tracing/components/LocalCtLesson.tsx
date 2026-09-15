@@ -10,6 +10,8 @@ import type { CtLesson, CtViewerState } from '../content/ct-types'
 import { BASE_PATH, LESSONS, SOURCE, lessonAfter, ORIENTATION_CONTRACT } from '../content/lessons'
 import { parentViewTask } from '../content/local-teaching'
 import { CtViewpointComparison } from './CtViewpointComparison'
+import { JunctionFeedback } from './JunctionFeedback'
+import { junctionFeedbackPacket } from '../content/junction-feedback'
 import { CourseOutline } from './CourseOutline'
 import { LOCAL_DRAFT_ALIASES } from '../engine/local-draft-migration'
 import { orientationName, sameOrientation, STANDARD_ORIENTATION } from '../geometry/orientation'
@@ -763,6 +765,16 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                           </button>
                         ))}
                       </div>
+                      <JunctionFeedback
+                        key={`${exercise.id}.${attempts.length}`}
+                        exercise={exercise}
+                        marks={reviewAttempt !== null ? attempts[reviewAttempt].marks : s.marks}
+                        packet={junctionFeedbackPacket(exercise.spec.checkpointId)}
+                        onGoToSlice={(slice) => {
+                          setPlaying(false)
+                          goToSlice(slice)
+                        }}
+                      />
                       <p>{exercise.explanation}</p>
                     </>
                   )}
@@ -781,7 +793,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                   </button>
                 </div>
               )}
-              {s.phase === 'compare' && parentRequired && (
+              {s.phase === 'compare' && !sameLumen && (
                 <details>
                   <summary>Replay CT walkthrough (optional)</summary>
                   {walkthrough}
