@@ -177,11 +177,11 @@ export const defaultPatientState: PatientState = {
 
 /**
  * The scenario runtime a reference circuit carries: everything scored is empty and stays empty.
- * The prediction is marked committed so no surface offers a prediction step for a circuit that
- * poses no question.
+ * A reference circuit carries no prediction: showing a teaching model never invents an answer.
  */
 function createReferenceRuntime(profileId: string): ScenarioRuntime {
   return {
+    activityStarted: false,
     scenarioId: profileId,
     family: 'orientation',
     baselineRpmSetpoint:
@@ -193,7 +193,7 @@ function createReferenceRuntime(profileId: string): ScenarioRuntime {
     activeFaults: [],
     correctedFaults: [],
     injectedTimedFaultIds: [],
-    prediction: { committed: true, goalId: null, control: null, direction: null },
+    prediction: { committed: false, goalId: null, control: null, direction: null },
     reassessment: null,
     credit: { goal: false, control: false, direction: false, cause: false, reassessment: false },
     penalties: 0,
@@ -209,6 +209,7 @@ function createReferenceRuntime(profileId: string): ScenarioRuntime {
 
 function createScenarioRuntime(definition: ScenarioDefinition): ScenarioRuntime {
   return {
+    activityStarted: false,
     scenarioId: definition.id,
     family: definition.family,
     baselineRpmSetpoint:

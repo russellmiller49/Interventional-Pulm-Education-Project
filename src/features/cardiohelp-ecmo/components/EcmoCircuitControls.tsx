@@ -52,12 +52,8 @@ export function EcmoCircuitControls({
 }) {
   const closedClampCount =
     Number(state.circuit.drainageClampClosed) + Number(state.circuit.returnClampClosed)
-  const clampControlsEnabled = controlsEnabled && state.scenario.prediction.committed
-  if (!state.scenario.prediction.committed) {
-    return (
-      <p data-circuit-controls-locked>Record your prediction before using the bedside controls.</p>
-    )
-  }
+  // Protective controls depend on the live/read-only surface, never a learning response.
+  const clampControlsEnabled = controlsEnabled
   const flowState =
     closedClampCount > 0 ? 'ISOLATED' : state.device.pumpRunning ? 'FLOWING' : 'PUMP STOPPED'
   return (
@@ -122,7 +118,7 @@ export function EcmoCircuitControls({
         <strong>{flowState}</strong>
         <span>
           {!clampControlsEnabled
-            ? 'Commit your prediction for this case before using the circuit isolation controls.'
+            ? 'This is a read-only teaching view. Open the guided activity to use circuit controls.'
             : closedClampCount === 0
               ? 'Both circuit clamps are open.'
               : `${closedClampCount} clamp${closedClampCount === 1 ? '' : 's'} closed; forward flow is stopped.`}

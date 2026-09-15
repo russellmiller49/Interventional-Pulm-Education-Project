@@ -504,6 +504,8 @@ export interface ScenarioHint {
 }
 
 export interface ScenarioRuntime {
+  /** Explicit scenario entry; never an answer or a performed intervention. */
+  activityStarted: boolean
   scenarioId: string
   family: ScenarioFamily
   /**
@@ -716,6 +718,8 @@ export interface LastVisitedActivity {
 }
 
 export interface ProgressV2 {
+  /** Self-paced topic visits; independent of all legacy completion/score fields. */
+  visitedTopicIds?: readonly string[]
   version: 2
   lastStation: ScenarioDefinition['stationId']
   completedLabs: readonly string[]
@@ -748,6 +752,7 @@ export interface ProgressV2 {
 
 export type SimulationAction =
   | { type: 'LOAD_SCENARIO'; scenarioId: string; mode?: SimulationMode }
+  | { type: 'START_ACTIVITY' }
   | { type: 'TICK'; seconds?: number }
   | { type: 'SET_PAUSED'; paused: boolean }
   | { type: 'STEP' }
