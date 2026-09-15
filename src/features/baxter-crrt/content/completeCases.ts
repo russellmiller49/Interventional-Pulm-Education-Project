@@ -787,7 +787,7 @@ function rewriteLearnerFacingString(value: string): string {
       ['pending clinical review', 'requires clinical verification'],
       ['pending independent review', 'requires independent verification'],
       ['pending review', 'under review'],
-      ['review-pending', 'simulated'],
+      ['review-pending', 'pending clinical review'],
       ['protected pilot', 'clinical curriculum'],
       ['Protected pilot', 'Clinical curriculum'],
       ['three-case pilot', 'v1 curriculum'],
@@ -830,8 +830,6 @@ function rewriteLearnerFacingString(value: string): string {
     .replace(/\bSynthetic\b/g, 'Simulated')
     .replace(/\bcandidate\b/g, 'option')
     .replace(/\bCandidate\b/g, 'Option')
-    .replace(/\breviewer\b/g, 'learner')
-    .replace(/\bReviewer\b/g, 'Learner')
     .replace(/\bdeterministic\b/g, 'scheduled')
     .replace(/\bcanonical\b/g, 'shared')
     .replace(/\bdevice adapter\b/g, 'device interface')
@@ -842,8 +840,14 @@ function rewriteLearnerFacingString(value: string): string {
     .replace(/\ba option\b/g, 'an option')
     .replace(/\ba assessment\b/g, 'an assessment')
     .replace(/\ban mechanical\b/g, 'a mechanical')
+    .replace(/\bAn positional\b/g, 'A positional')
     .replace(/\ban resistance\b/g, 'a resistance')
     .replace(/\brequired required\b/g, 'required')
+    .replace(/^The reviewer first defines the option (.+)\.$/, 'Define the $1.')
+    .replace(
+      /^The reviewer reassesses (.+) before interpreting the option path\.$/,
+      'Reassess $1 before interpreting the response.',
+    )
 }
 
 function rewriteLearnerFacingStrings(value: unknown): unknown {
@@ -851,7 +855,23 @@ function rewriteLearnerFacingStrings(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(rewriteLearnerFacingStrings)
   if (value !== null && typeof value === 'object') {
     return Object.fromEntries(
-      Object.entries(value).map(([key, nested]) => [key, rewriteLearnerFacingStrings(nested)]),
+      Object.entries(value).map(([key, nested]) => [
+        key,
+        // Wording is presentation only. Source records, review facts and simulation inputs
+        // must never be promoted or rewritten by a prose substitution.
+        [
+          'sourceBasis',
+          'reviewStatus',
+          'engineFixtureConfiguration',
+          'engineModelConfiguration',
+          'initialPatient',
+          'initialAccess',
+          'initialPrescription',
+          'effects',
+        ].includes(key)
+          ? nested
+          : rewriteLearnerFacingStrings(nested),
+      ]),
     )
   }
   return value
@@ -964,7 +984,7 @@ function buildAdaptedCase(narrative: CaseNarrative): MutableRuntimeCrrtCase {
   cloned.visibleFindings = [
     narrative.openingFinding,
     'The displayed values are synthetic teaching calibration, not patient-care targets.',
-    'Before acting, predict the expected machine and patient response and identify what you will reassess.',
+    'The worked plan explains the expected machine and patient response and what to reassess.',
   ]
   cloned.contentVersion = BAXTER_CRRT_CONTENT_VERSION
   cloned.engineModelConfiguration.version = BAXTER_CRRT_CONTENT_VERSION
@@ -1142,7 +1162,7 @@ function buildAdaptedCase(narrative: CaseNarrative): MutableRuntimeCrrtCase {
     if (existingSourceIds.has(sourceId)) continue
     const source = sourceById.get(sourceId)
     if (!source) throw new Error(`Missing source ${sourceId} for ${narrative.id}.`)
-    cloned.sourceBasis.push(learnerWording({ ...source }) as SourceReference)
+    cloned.sourceBasis.push({ ...source })
     existingSourceIds.add(sourceId)
   }
   const syntheticSource = cloned.sourceBasis.find((source) => source.id === syntheticId)
@@ -1433,7 +1453,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
     learningObjectives: [
       'Verify protocol identity, version, contraindication review, and responsible team before use.',
       'Recognize when no applicable protocol is available and stop for escalation.',
-      'Keep medication-specific instructions outside this general educational module.',
+      'Medication-specific instructions require the current authorized local protocol.',
     ],
     goal: 'Verify an applicable authorized protocol before enabling an anticoagulation workflow',
     mechanism:

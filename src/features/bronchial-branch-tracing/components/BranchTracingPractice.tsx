@@ -6,7 +6,7 @@ import { useRouter } from '@/i18n/navigation'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
 import { draftSignature, readCtDraft, writeCtDraft, freshRouteView } from '../engine/ct-draft'
 import { parsePracticeDraft, type PracticeDraft } from '../engine/practice-draft'
-import { browserStorage } from '../engine/progress'
+import { browserStorage } from '../engine/selfPacedProgress'
 import { CtProgressiveMap } from './CtBranchMap'
 import { CtRouteAttemptHistory } from './CtRouteAttemptHistory'
 import type { CtViewerState } from '../content/ct-types'
@@ -31,11 +31,11 @@ import {
   emptyTraceWork,
   traceComplete,
   junctionReady,
-  lastUnlocked,
+  reachableThrough,
+  referenceIndex,
   validCtMark,
   validBranch,
 } from '../engine/ct-session'
-import { saveCtAttempt } from '../engine/progress'
 import { ModuleFrame } from './ModuleFrame'
 import { NativeCtViewer } from './NativeCtViewer'
 import {
@@ -55,6 +55,11 @@ const RealCtExplorer = dynamic(() => import('./RealCtExplorer').then((m) => m.Re
   ssr: false,
   loading: () => <p>Loading CT explorer…</p>,
 })
+
+/**
+ * Practice and the former Assess address share one self-paced route host. `assess` keeps its
+ * address and its four-route set; it no longer withholds references or labels work independent.
+ */
 export function BranchTracingPractice({ mode }: { mode: 'practice' | 'assess' }) {
   const [started, setStarted] = useState(false),
     [explorer, setExplorer] = useState(false)
@@ -81,36 +86,35 @@ export function BranchTracingPractice({ mode }: { mode: 'practice' | 'assess' })
     )
   return (
     <ModuleFrame section={mode}>
-      <main className={styles.overview}>
+      <main className={styles.overview} data-route-set-landing={mode}>
         <div className={styles.eyebrow}>
-          BRANCH TRACING / {mode === 'practice' ? 'PRACTICE' : 'ASSESS'}
+          BRANCH TRACING / {mode === 'practice' ? 'PRACTICE' : 'MORE ROUTES'}
           <span>Real CT · 0.5 mm</span>
         </div>
         <h1 className={styles.pageTitle}>
           {mode === 'practice'
             ? 'Trace to a nodule in a named segment'
-            : 'Record an independent CT interpretation'}
+            : 'Trace four more routes to simulated nodules'}
         </h1>
         <p className={styles.subtitle}>
           {mode === 'practice'
-            ? 'Start with one coached route. Compare each junction immediately, or choose a mixed set.'
-            : 'Plan four airway approaches to simulated nodules.'}{' '}
-          {mode === 'practice'
-            ? 'Feedback follows each recorded junction.'
-            : 'Reference comparisons remain hidden until you submit the set.'}
+            ? 'Start with one route, or choose a mixed set.'
+            : 'Four further routes in the same teaching CT, with the same reference and help as Practice.'}{' '}
+          Show the reference at any junction, check what you marked, or continue without recording.
         </p>
         <div className={styles.introGrid}>
           <section>
             <h2>Follow the airway toward the target</h2>
             <p>
-              Inspect the target nodule, then start in the trachea. Work through every modeled fork
-              in order, selecting a daughter and marking the continuing lumen before opening the
-              next junction. Start with standard axial CT and turn or reflect it yourself while
-              comparing the paired virtual bronchoscopy.
+              Inspect the target nodule, then start in the trachea. At each modeled fork, select a
+              daughter and mark the continuing lumen, then check the junction to compare it. Start
+              with standard axial CT and turn or reflect it yourself while comparing the paired
+              virtual bronchoscopy.
             </p>
             <p>
               Record the patient-space course and whether the distal airway can be followed toward
-              the nodule. You may revisit your interpretations before submitting the set.
+              the nodule. You can compare every route with the reference whenever you like, with or
+              without a recorded interpretation.
             </p>
             {mode === 'practice' && (
               <label className={styles.courseChoice}>
@@ -143,22 +147,22 @@ export function BranchTracingPractice({ mode }: { mode: 'practice' | 'assess' })
                 setStarted(true)
               }}
             >
-              {mode === 'practice' ? 'Start CT practice' : 'Start CT interpretation'}
+              {mode === 'practice' ? 'Start CT practice' : 'Start the route set'}
             </button>
           </section>
           <TargetCtPreview traceId={ids[0]} />
         </div>
         <p className={styles.notice}>
           These authored nodule targets share one teaching CT. Source-derived comparisons support
-          self-review; clinical case labels and camera checkpoints are awaiting faculty review. No
-          automated clinical grade or pass threshold is assigned.
+          self-review; clinical case labels and camera checkpoints are awaiting faculty review.
+          Nothing here is scored and there is no pass threshold.
         </p>
         {mode === 'practice' && (
           <section className={styles.source}>
             <h2>Explore the CT and airway freely</h2>
             <p>
               The original whole-volume preview and matched exterior/virtual airway viewer remain
-              available for ungraded exploration.
+              available for free exploration.
             </p>
             <button onClick={() => setExplorer((v) => !v)}>
               {explorer ? 'Close CT explorer' : 'Open CT and airway explorer'}
@@ -181,6 +185,7 @@ function CtPracticeSession({
   onExit: () => void
 }) {
   const router = useRouter()
+  const setName = mode === 'practice' ? 'Practice' : 'More routes'
   const draftKey = `${mode}.${ids.join('.')}`
   const signature = useMemo(() => draftSignature([mode, ids.map(traceById)]), [mode, ids])
   const [loaded] = useState(() =>
@@ -209,6 +214,7 @@ function CtPracticeSession({
   const [junctions, setJunctions] = useState<boolean[]>(
     () => resume?.work.recorded ?? emptyTraceWork(traceById(ids[0])).recorded,
   )
+  const [reached, setReached] = useState(resume?.work.reached ?? 0)
   const [drafts, setDrafts] = useState<PracticeDraft['drafts']>(resume?.drafts ?? {})
   const [course, setCourse] = useState<Course | ''>(resume?.work.course ?? '')
   const [targetRelation, setTargetRelation] = useState<TargetRelation | ''>(
@@ -229,6 +235,8 @@ function CtPracticeSession({
   )
   const [submitted, setSubmitted] = useState(resume?.submitted ?? false),
     [saveFailed, setSaveFailed] = useState(false)
+  // Junction references the learner chose to show, per trace. Transient; records nothing.
+  const [shownRefs, setShownRefs] = useState<Record<string, number[]>>({})
   const trace = traceById(ids[index])
   const onViewChange = useCallback(
     (view: CtViewerState) =>
@@ -255,6 +263,7 @@ function CtPracticeSession({
         hints,
         orientation,
         alignment,
+        reached,
       },
       drafts: drafts,
       responses,
@@ -277,6 +286,7 @@ function CtPracticeSession({
       hints,
       orientation,
       alignment,
+      reached,
       responses,
       firstOrientations,
       submitted,
@@ -291,6 +301,8 @@ function CtPracticeSession({
   const target = targetForTrace(trace)
   const routeDone = traceComplete(trace, { marks, branches, recorded: junctions })
   const stationDone = Boolean(junctions[active])
+  const shown = new Set(shownRefs[trace.id] ?? [])
+  const referenceShown = shown.has(active)
   const taskTop = useRef<HTMLDivElement>(null)
   const teachingTop = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -298,7 +310,7 @@ function CtPracticeSession({
     resetPaneScroll(teachingTop.current)
   }, [active, index, alignment, stationDone])
   const stationTask = Boolean(alignment) && !routeDone
-  const maxActive = alignment ? lastUnlocked(junctions) : 0
+  const maxActive = alignment ? reachableThrough(junctions, reached) : 0
   const ready =
     Boolean(alignment) &&
     routeDone &&
@@ -310,8 +322,24 @@ function CtPracticeSession({
     setActive(i)
     setLevelRequest((v) => v + 1)
   }
-  const recorded = responses.every(Boolean)
+  function skipJunction() {
+    if (!alignment || stationDone || active >= trace.checkpoints.length - 1) return
+    setReached((current) => Math.max(current, active + 1))
+    setActive(active + 1)
+    setLevelRequest((v) => v + 1)
+  }
+  function toggleReference() {
+    setShownRefs((current) => {
+      const list = current[trace.id] ?? []
+      return {
+        ...current,
+        [trace.id]: list.includes(active) ? list.filter((i) => i !== active) : [...list, active],
+      }
+    })
+  }
+  const recordedCount = responses.filter(Boolean).length
   const recordedResponse = responses[index]
+  const lastTrace = index === ids.length - 1
   const dirty =
     !recordedResponse ||
     !alignment ||
@@ -321,8 +349,8 @@ function CtPracticeSession({
       JSON.stringify(marks.map((m) => m && [m.slice, m.pixel])) ||
     JSON.stringify(recordedResponse.branches) !== JSON.stringify(branches) ||
     recordedResponse.course !== course ||
-    recordedResponse.hints !== hints ||
     recordedResponse.targetRelation !== targetRelation
+  const upToDate = Boolean(recordedResponse) && !dirty
 
   function restore(i: number, response: CtResponse | null) {
     const draft = drafts[ids[i]],
@@ -333,9 +361,10 @@ function CtPracticeSession({
     setMarks(response?.marks ?? draft?.marks ?? empty.marks)
     setBranches(response?.branches ?? draft?.branches ?? empty.branches)
     setJunctions(response ? response.marks.map(() => true) : (draft?.recorded ?? empty.recorded))
+    setReached(draft?.reached ?? 0)
     setCourse(response?.course ?? draft?.course ?? '')
     setTargetRelation(response?.targetRelation ?? draft?.targetRelation ?? '')
-    setHints(response?.hints ?? draft?.hints ?? 0)
+    setHints(draft?.hints ?? 0)
     setOrientation(response?.orientation.used ?? draft?.orientation ?? STANDARD_ORIENTATION)
     setAlignment(response?.orientation ?? draft?.alignment ?? null)
   }
@@ -352,23 +381,23 @@ function CtPracticeSession({
         hints,
         orientation,
         alignment,
+        reached,
       },
     }))
     restore(i, responses[i])
   }
   function record() {
     if (!ready || !alignment) return
+    // The learner's own interpretation for comparison; no hint use or score is stored.
     const response: CtResponse = {
       orientation: { first: alignment.first, used: { ...orientation } },
       marks: marks as CtMark[],
       branches: [...branches],
       course: course as Course,
-      hints,
       targetRelation: targetRelation as TargetRelation,
     }
     const next = responses.map((r, i) => (i === index ? response : r))
     setResponses(next)
-    if (!saveCtAttempt(`${mode}.${trace.id}`, hints)) setSaveFailed(true)
     if (index < ids.length - 1) restore(index + 1, next[index + 1])
   }
 
@@ -378,7 +407,7 @@ function CtPracticeSession({
       version: VERSION,
       mode,
       sourceCaseCount: 1,
-      assessment: 'Ungraded CT route planning toward simulated nodules',
+      activity: 'Self-paced CT route planning toward simulated nodules; not scored',
       nomenclatureVersion: 'nomenclature-v1',
       branchRouteVersion: 'branch-tracing-decisions/v1',
       junctionAttempts: attempts,
@@ -415,16 +444,17 @@ function CtPracticeSession({
   }
   if (submitted)
     return (
-      <div className={styles.debrief}>
-        <h1>CT interpretation debrief</h1>
+      <div className={styles.debrief} data-route-comparison>
+        <h1>Compare your routes with the reference</h1>
         <p>
-          You recorded {ids.length} {ids.length === 1 ? 'route' : 'routes'} toward{' '}
-          {ids.length === 1 ? 'a simulated nodule' : 'simulated nodules'}. Compare each marked lumen
-          with the source-derived path, then inspect the distal airway–nodule relationship.
+          {recordedCount} of {ids.length} {ids.length === 1 ? 'route has' : 'routes have'} a
+          recorded interpretation. Compare each marked lumen with the source-derived path, then
+          inspect the distal airway–nodule relationship. A route without a recorded interpretation
+          shows the reference only.
         </p>
         <p className={styles.small}>
-          ○ Your trace · ＋ Source-derived comparison. These are interpretations within one CT; no
-          clinical accuracy grade is assigned.
+          ○ Your trace · ＋ Source-derived comparison. These are interpretations within one CT;
+          nothing is scored.
         </p>
         {saveFailed && (
           <p role="status">
@@ -434,49 +464,56 @@ function CtPracticeSession({
         )}
         <div className={styles.tabs}>
           <button onClick={exportWorksheet}>Export your CT worksheet</button>
-          {mode === 'practice' && (
-            <button onClick={() => setSubmitted(false)}>Review and retry these junctions</button>
-          )}
-          <button onClick={onExit}>Return to {mode === 'practice' ? 'Practice' : 'Assess'}</button>
+          <button onClick={() => setSubmitted(false)}>Review and retry these junctions</button>
+          <button onClick={onExit}>Return to {setName}</button>
         </div>
-        {ids.map((id, i) => (
-          <section key={id} className={styles.ctDebriefRow}>
-            <div>
-              <h2>
-                Target {i + 1} · {targetForTrace(traceById(id)).segment.code}
-              </h2>
-              <p>{COURSE_OPTIONS[responses[i]!.course]}</p>
-              <CtOrientationFeedback trace={traceById(id)} {...responses[i]!.orientation} />
-              <CtTargetFeedback value={responses[i]!.targetRelation} />
-              <p>
-                {responses[i]!.marks.filter((m) => m.pixel === null).length} checkpoints marked
-                unresolved.{' '}
-                {responses[i]!.hints > 0 ? 'Tracing reminder used.' : 'No tracing reminder used.'}
-              </p>
-              <p>
-                Start with the parent lumen and examine continuity toward each mark. A difference
-                from the centerline is a reason to inspect the image, not an automatic wrong answer.
-              </p>
-            </div>
-            <DebriefViewer id={id} response={responses[i]!} />
-          </section>
-        ))}
+        {ids.map((id, i) => {
+          const response = responses[i]
+          return (
+            <section key={id} className={styles.ctDebriefRow}>
+              <div>
+                <h2>
+                  Target {i + 1} · {targetForTrace(traceById(id)).segment.code}
+                </h2>
+                {response ? (
+                  <>
+                    <p>{COURSE_OPTIONS[response.course]}</p>
+                    <CtOrientationFeedback trace={traceById(id)} {...response.orientation} />
+                    <CtTargetFeedback value={response.targetRelation} />
+                    <p>
+                      {response.marks.filter((m) => m.pixel === null).length} checkpoints marked
+                      unresolved.
+                    </p>
+                    <p>
+                      Start with the parent lumen and examine continuity toward each mark. A
+                      difference from the centerline is a reason to inspect the image, not an
+                      automatic wrong answer.
+                    </p>
+                  </>
+                ) : (
+                  <p>
+                    No interpretation recorded for this route. The reference trace is shown for
+                    study; nothing is marked as yours.
+                  </p>
+                )}
+              </div>
+              <DebriefViewer id={id} response={response} />
+            </section>
+          )
+        })}
       </div>
     )
   return (
     <CtRouteWorkspace
       section={mode}
       stageId={`ct-${index}`}
-      label="Independent CT tracing"
+      label="CT route tracing"
       header={
         <SectionHeader
-          kicker={mode === 'practice' ? 'Practice · Real CT' : 'Assess · CT worksheet'}
+          kicker={mode === 'practice' ? 'Practice · Real CT' : 'More routes · Real CT'}
           title={`Trace ${index + 1} of ${ids.length}`}
           sectionsControl={<CourseOutline />}
-          meta={[
-            `Target: ${target.segment.code}`,
-            mode === 'practice' ? 'Feedback after each junction' : 'Feedback after submission',
-          ]}
+          meta={[`Target: ${target.segment.code}`, 'Reference available at every junction']}
           onRestart={() => {
             if (writeCtDraft(browserStorage(), draftKey, signature, snapshot)) onExit()
             else setExitWarning(true)
@@ -491,7 +528,7 @@ function CtPracticeSession({
           }}
           resumedNote={
             saveFailed
-              ? 'Browser storage is unavailable. Work continues, but progress cannot be saved.'
+              ? 'Browser storage is unavailable. Work continues, but your draft cannot be saved.'
               : loaded.notice || undefined
           }
         />
@@ -500,14 +537,14 @@ function CtPracticeSession({
         <div className={styles.context}>
           <span>{target.segment.name} · choose the CT orientation</span>
           <span>Native 0.5 mm axial slices</span>
-          <span>One source CT · ungraded</span>
+          <span>One source CT · not scored</span>
         </div>
       }
       task={
         <div ref={taskTop}>
           <NowCard
             model={{
-              kicker: `Interpretation ${index + 1}`,
+              kicker: `Route ${index + 1}`,
               heading: !alignment
                 ? 'Choose the CT orientation'
                 : stationTask
@@ -516,7 +553,7 @@ function CtPracticeSession({
                     : 'Distal nodule approach'
                   : 'Describe the completed route',
               body: alignment
-                ? `Plan an airway approach to the nodule in ${target.segment.code}. Select and mark every daughter branch in order, then record the distal airway–nodule relationship.`
+                ? `Plan an airway approach to the nodule in ${target.segment.code}. Select and mark each daughter branch, check the junction to compare it, then record the distal airway–nodule relationship. You can show the reference or continue without recording at any point.`
                 : 'Standard axial is a valid tracing display. Patient directions remain attached to the image if you choose to rotate or reflect it. Record the display you choose.',
               primary: {
                 label: !alignment
@@ -527,12 +564,12 @@ function CtPracticeSession({
                         ? 'Inspect the distal airway–nodule relationship'
                         : 'Continue to the next division'
                       : trace.checkpoints[active].decision
-                        ? mode === 'practice'
-                          ? 'Check this junction'
-                          : 'Record this junction'
+                        ? 'Check this junction'
                         : 'Record nodule approach'
-                    : recorded && !dirty
-                      ? 'Submit all CT interpretations'
+                    : upToDate
+                      ? lastTrace
+                        ? 'Compare all routes'
+                        : 'Next route'
                       : 'Record CT interpretation',
                 onActivate: () => {
                   if (!alignment) {
@@ -546,6 +583,7 @@ function CtPracticeSession({
                     if (stationDone) selectActive(active + 1)
                     else if (junctionReady(trace, active, marks, branches)) {
                       const key = `${trace.id}.${trace.checkpoints[active].id}`
+                      // The learner's own response at this fork, kept for review and retry only.
                       setAttempts((current) => ({
                         ...current,
                         [key]: [
@@ -553,20 +591,16 @@ function CtPracticeSession({
                           {
                             mark: marks[active]!,
                             branch: branches[active],
-                            hints,
                             orientation: { ...orientation },
-                            support: current[key]?.length
-                              ? 'after-comparison'
-                              : mode === 'practice'
-                                ? 'coached'
-                                : 'independent',
                           },
                         ],
                       }))
                       setJunctions((values) => values.map((v, i) => (i === active ? true : v)))
                     }
-                  } else if (recorded && !dirty) setSubmitted(true)
-                  else record()
+                  } else if (upToDate) {
+                    if (lastTrace) setSubmitted(true)
+                    else open(index + 1)
+                  } else record()
                 },
                 disabled:
                   !imageReady ||
@@ -574,15 +608,24 @@ function CtPracticeSession({
                     ? false
                     : stationTask
                       ? !stationDone && !junctionReady(trace, active, marks, branches)
-                      : !ready),
-                disabledReason: !alignment
+                      : !upToDate && !ready),
+                disabledReason: !imageReady
                   ? 'Wait for the CT image to load.'
                   : !routeDone
-                    ? 'Select a daughter (or uncertainty) and mark its lumen (or unresolved lumen).'
+                    ? 'To check, select a daughter (or uncertainty) and mark its lumen (or unresolved lumen). You can also continue without recording.'
                     : !targetViewed[trace.id]
-                      ? 'Use Show target to inspect the nodule and its adjacent CT before submitting the distal interpretation.'
-                      : 'Describe the course and airway–nodule relationship.',
+                      ? 'To record the distal interpretation, use Show target to inspect the nodule and its adjacent CT. You can also move on without recording.'
+                      : 'To record, describe the course and airway–nodule relationship. You can also move on without recording.',
               },
+              secondary:
+                stationTask && !stationDone && active < trace.checkpoints.length - 1
+                  ? { label: 'Continue without recording', onActivate: skipJunction }
+                  : !upToDate
+                    ? {
+                        label: lastTrace ? 'Compare all routes' : 'Next route without recording',
+                        onActivate: () => (lastTrace ? setSubmitted(true) : open(index + 1)),
+                      }
+                    : undefined,
             }}
           />
           <div className={styles.routeResponses}>
@@ -594,7 +637,7 @@ function CtPracticeSession({
                     active={active}
                     choice={branches[active]}
                     recorded={stationDone}
-                    reveal={mode === 'practice' && stationDone}
+                    reveal={stationDone || referenceShown}
                     onChange={
                       !stationDone
                         ? (value) => {
@@ -607,33 +650,31 @@ function CtPracticeSession({
                     }
                   />
                 )}
+                {stationTask && !stationDone && (
+                  <button aria-pressed={referenceShown} onClick={toggleReference}>
+                    Show reference for this junction
+                  </button>
+                )}
                 <p role="status">
                   {stationDone
-                    ? mode === 'practice'
-                      ? 'Junction recorded. Compare the model reference with the CT before continuing.'
-                      : 'Junction response recorded. Comparison follows submission of the set.'
-                    : marks[active]
-                      ? 'Lumen response recorded. Record this junction to continue.'
-                      : 'Lumen mark needed in the CT tracing stack.'}
+                    ? 'Junction recorded. Compare the model reference with the CT before continuing.'
+                    : referenceShown
+                      ? 'Reference shown. Choosing a branch and placing a mark are still yours to do, or continue without recording.'
+                      : marks[active]
+                        ? 'Lumen response placed. Check this junction to compare.'
+                        : 'Lumen mark needed in the CT tracing stack to check this junction.'}
                 </p>
-                {mode === 'practice' && stationDone && (
-                  <>
-                    <button
-                      onClick={() => {
-                        setMarks((values) => values.map((v, i) => (i === active ? null : v)))
-                        setBranches((values) => values.map((v, i) => (i === active ? null : v)))
-                        setJunctions((values) => values.map((v, i) => (i === active ? false : v)))
-                        setResponses((values) => values.map((v, i) => (i === index ? null : v)))
-                      }}
-                    >
-                      Retry this junction
-                    </button>
-                    <p>
-                      First response and retries are retained separately:{' '}
-                      {attempts[`${trace.id}.${trace.checkpoints[active].id}`]?.length ?? 0}{' '}
-                      recorded attempts.
-                    </p>
-                  </>
+                {stationDone && (
+                  <button
+                    onClick={() => {
+                      setMarks((values) => values.map((v, i) => (i === active ? null : v)))
+                      setBranches((values) => values.map((v, i) => (i === active ? null : v)))
+                      setJunctions((values) => values.map((v, i) => (i === active ? false : v)))
+                      setResponses((values) => values.map((v, i) => (i === index ? null : v)))
+                    }}
+                  >
+                    Retry this junction
+                  </button>
                 )}
                 <button onClick={() => setAlignment(null)}>Revise orientation</button>
                 <CtRouteAttemptHistory
@@ -654,24 +695,21 @@ function CtPracticeSession({
                 )}
               </>
             )}
-            {mode === 'practice' && (
-              <div className={styles.hints}>
-                <button disabled={hints > 0} onClick={() => setHints(1)}>
-                  Tracing reminder
-                </button>
-                {hints > 0 && (
-                  <p>
-                    Follow the walls from Start through neighboring planes. The next airway
-                    checkpoint may lie cranially or caudally.
-                  </p>
-                )}
-              </div>
-            )}
+            <div className={styles.hints}>
+              <button disabled={hints > 0} onClick={() => setHints(1)}>
+                Tracing reminder
+              </button>
+              {hints > 0 && (
+                <p>
+                  Follow the walls from Start through neighboring planes. The next airway checkpoint
+                  may lie cranially or caudally.
+                </p>
+              )}
+            </div>
             <div className={styles.checkpoints}>
               {ids.map((id, i) => (
                 <button
                   key={id}
-                  disabled={i > furthest}
                   aria-current={i === index ? 'step' : undefined}
                   onClick={() => open(i)}
                 >
@@ -679,6 +717,9 @@ function CtPracticeSession({
                   {responses[i] ? ' · recorded' : ''}
                 </button>
               ))}
+              <button onClick={() => setSubmitted(true)}>
+                Compare all routes with the reference
+              </button>
             </div>
           </div>
 
@@ -698,18 +739,14 @@ function CtPracticeSession({
           recorded={junctions}
           active={active}
           onReview={selectActive}
-          reveal={mode === 'practice'}
+          reveal
           branches={branches}
         />
       }
       teaching={
         <div ref={teachingTop} className={styles.teaching}>
           {alignment && <CtJunctionTeaching trace={trace} active={active} />}
-          <h2>
-            {mode === 'practice'
-              ? 'Trace with feedback at each junction'
-              : 'Trace without the reference'}
-          </h2>
+          <h2>Trace with a reference at each junction</h2>
           <p>
             Use <strong>Show target</strong> to inspect the simulated nodule in the{' '}
             <strong>
@@ -720,7 +757,7 @@ function CtPracticeSession({
           <p>
             Use Start to find the trachea, then follow the air column through every fork. At each
             junction, select the branch you would follow and mark its lumen on Current junction CT.
-            Record the junction before continuing.
+            Check the junction to compare it, or show the reference first.
           </p>
           <p>
             After the distal checkpoint, inspect adjacent slices toward the nodule. Record what the
@@ -741,10 +778,8 @@ function CtPracticeSession({
           </p>
           <p className={styles.small}>
             Each junction is presented on the source route, even if your preceding choice differs.
-            Your recorded choices remain unchanged.{' '}
-            {mode === 'practice'
-              ? 'Compare each junction after recording it.'
-              : 'Branch comparisons and reference marks are withheld until the whole set is submitted.'}
+            Your recorded choices remain unchanged. Showing a reference never places or moves a
+            mark.
           </p>
           <CtAirwayGuide trace={trace} active={active} pending />
         </div>
@@ -761,10 +796,8 @@ function CtPracticeSession({
               current[trace.id] ? current : { ...current, [trace.id]: true },
             )
           }
-          scopeAvailable={mode === 'practice' && stationDone}
-          referenceThrough={
-            mode === 'practice' ? lastUnlocked(junctions) - (routeDone ? 0 : 1) : -1
-          }
+          scopeAvailable={stationDone || referenceShown}
+          referenceThrough={referenceIndex(junctions, shown)}
           marks={marks}
           active={active}
           levelRequest={levelRequest}
@@ -776,7 +809,7 @@ function CtPracticeSession({
           onMark={
             alignment && !stationDone
               ? (mark) => {
-                  if (active === lastUnlocked(junctions) && validCtMark(mark, trace, active))
+                  if (active <= maxActive && validCtMark(mark, trace, active))
                     setMarks((current) => current.map((m, i) => (i === active ? mark : m)))
                 }
               : undefined
@@ -795,10 +828,9 @@ function CtPracticeSession({
                   : 'Describe the airway course and distal relationship, then record the interpretation.'}
             </p>
             <p>
-              {mode === 'practice'
-                ? 'Each recorded junction reveals a model comparison for coaching.'
-                : 'Reference comparisons stay hidden until all interpretations are submitted.'}{' '}
-              Help preserves your answers.
+              Each checked junction shows a model comparison. Show reference for this junction
+              displays it without recording anything, and Continue without recording moves on.
+              Nothing is scored. Help preserves your answers.
             </p>
           </HelpDialog>
           <HelpDialog
@@ -816,20 +848,21 @@ function CtPracticeSession({
           <a href={SOURCE.url} target="_blank" rel="noreferrer">
             {SOURCE.title}
           </a>
-          <span>CT/source comparison · no clinical pass threshold</span>
+          <span>CT/source comparison · self-paced, not scored</span>
         </div>
       }
     />
   )
 }
-function DebriefViewer({ id, response }: { id: string; response: CtResponse }) {
+function DebriefViewer({ id, response }: { id: string; response: CtResponse | null }) {
+  const trace = traceById(id)
   const [active, setActive] = useState(0)
-  const [orientation, setOrientation] = useState(response.orientation.used)
+  const [orientation, setOrientation] = useState(response?.orientation.used ?? STANDARD_ORIENTATION)
   return (
     <>
       <NativeCtViewer
-        trace={traceById(id)}
-        marks={response.marks}
+        trace={trace}
+        marks={response?.marks ?? trace.checkpoints.map(() => null)}
         active={active}
         onActive={setActive}
         orientation={orientation}
@@ -837,10 +870,10 @@ function DebriefViewer({ id, response }: { id: string; response: CtResponse }) {
         revealed
       />
       <CtBranchDecision
-        trace={traceById(id)}
+        trace={trace}
         active={active}
-        choice={response.branches[active]}
-        recorded
+        choice={response?.branches[active] ?? null}
+        recorded={Boolean(response)}
         reveal
       />
     </>

@@ -267,7 +267,7 @@ describe('critical-care legacy progress adapters', () => {
     expect(migratedV1.resume).toBeUndefined()
   })
 
-  it('projects strict CRRT lessons, practice, attempts, hints, and fail-closed mastery', () => {
+  it('preserves strict historical CRRT records without projecting grades or completion', () => {
     const completed = readCrrtLegacyProgress(
       new ReadOnlyFixtureStorage({
         [BAXTER_CRRT_PROGRESS_STORAGE_KEY]:
@@ -275,16 +275,7 @@ describe('critical-care legacy progress adapters', () => {
       }),
       criticalCareActivities,
     )
-    expect(activity(completed, 'crrt:learn:crrt-indications-modality')).toMatchObject({
-      status: 'in-progress',
-      competencyEvidenceIds: [],
-    })
-    expect(activity(completed, 'crrt:practice:CRRT-01')).toMatchObject({
-      status: 'completed',
-      attempts: 2,
-      bestScore: 76,
-      hintCount: 1,
-    })
+    expect(completed.activities).toEqual([])
     expect(completed.resume).toBeUndefined()
 
     const mastered = readCrrtLegacyProgress(
@@ -294,15 +285,10 @@ describe('critical-care legacy progress adapters', () => {
       }),
       criticalCareActivities,
     )
-    expect(activity(mastered, 'crrt:assess:MASTERY-PRISMAX-01')).toMatchObject({
-      status: 'mastered',
-      attempts: 1,
-      bestScore: 93,
-      hintCount: 0,
-    })
+    expect(mastered.activities).toEqual([])
   })
 
-  it('round-trips the lowercase CRRT practice IDs written by the runtime into canonical catalog IDs', () => {
+  it('retains legacy lowercase CRRT practice records without deriving current visits', () => {
     const values: Record<string, string> = {}
     const storage = {
       getItem: (key: string) => values[key] ?? null,
@@ -324,12 +310,8 @@ describe('critical-care legacy progress adapters', () => {
     expect(writeCrrtProgress(written, storage)).toBe(true)
 
     const projected = readCrrtLegacyProgress(storage, criticalCareActivities)
-    expect(activity(projected, 'crrt:practice:CRRT-13')).toMatchObject({
-      status: 'completed',
-      attempts: 1,
-      bestScore: 82,
-      hintCount: 1,
-    })
+    expect(projected.activities).toEqual([])
+    expect(values[BAXTER_CRRT_PROGRESS_STORAGE_KEY]).toBe(JSON.stringify(written))
   })
 
   it('uses ICU coarse progress and validated semantic-session metadata without copying commands', () => {

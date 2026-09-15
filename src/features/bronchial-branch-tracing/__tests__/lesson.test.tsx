@@ -1,8 +1,10 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { CRITICAL_CARE_PROGRESS_STORAGE_KEY } from '@/features/learning-module/activity/progress'
 import { BranchTracingLesson } from '../components/BranchTracingLesson'
 import { traceById } from '../geometry/native-ct'
 import { LESSONS } from '../content/lessons'
-import { completedLessons, readProgress } from '../engine/progress'
+import { DRAFT_PREFIX } from '../engine/ct-draft'
+import { readSelfPacedRecord } from '../engine/selfPacedProgress'
 import { axe } from 'jest-axe'
 
 jest.mock('@/i18n/navigation', () => ({
@@ -29,6 +31,12 @@ beforeEach(() => {
     disconnect() {}
   }
 })
+const lesson = LESSONS.find((l) => l.id === 'variants-limits')!
+type StoredAttempt = { branch: unknown; hints?: number; support?: string }
+const session = () =>
+  JSON.parse(localStorage.getItem(`${DRAFT_PREFIX}learn.${lesson.id}`)!).value.session
+const storedAttempts = () => Object.values(session().junctionHistory).flat() as StoredAttempt[]
+const reviewed = () => readSelfPacedRecord(localStorage).record.reviewedLessonIds
 function imageReady() {
   document.querySelectorAll('image').forEach((image) => fireEvent.load(image))
 }
@@ -95,8 +103,10 @@ function markLevels(id: string, wrong = false) {
       )
   }
 }
-it('requires every real branch response, withholds each junction comparison until recording, retains a wrong choice and requires a complete changed transfer', async () => {
-  const lesson = LESSONS.find((l) => l.id === 'variants-limits')!
+// BBT-01 superseded "requires every real branch response … requires a complete changed transfer"
+// and its shared-envelope participation checks: recording still needs every real part, but it is
+// the learner's choice, and finishing writes only the self-paced reviewed note.
+it('records a route when the learner chooses to, keeps a wrong choice as placed, and finishes with a note rather than a result', async () => {
   render(<BranchTracingLesson requestedId={lesson.id} />)
   await screen.findByRole('button', { name: 'Trace this airway' })
   imageReady()
@@ -106,9 +116,19 @@ it('requires every real branch response, withholds each junction comparison unti
   orient(lesson.prediction)
   expect(screen.queryByRole('button', { name: 'Record trace' })).not.toBeInTheDocument()
   markLevels(lesson.prediction, true)
+  const prediction = traceById(lesson.prediction)
+  const wrongEdge = prediction.checkpoints[0].decision!.options.find(
+    (o) => o.sourceEdgeId !== prediction.checkpoints[0].sourceEdgeId,
+  )!.sourceEdgeId
+  expect(
+    session().junctionHistory[`${prediction.id}.${prediction.checkpoints[0].id}`][0].branch,
+  ).toBe(wrongEdge)
   fireEvent.click(screen.getByRole('button', { name: 'Record trace' }))
   expect(document.querySelector('[data-ct-reference]')).not.toBeNull()
   expect(screen.getByRole('button', { name: 'Reveal CT comparison' })).toBeDisabled()
+  expect(
+    screen.getByRole('button', { name: 'Show the comparison without recording' }),
+  ).toBeEnabled()
   fireEvent.change(screen.getByRole('combobox', { name: 'Airway course' }), {
     target: { value: 'cranial' },
   })
@@ -126,7 +146,7 @@ it('requires every real branch response, withholds each junction comparison unti
   expect(screen.getByRole('button', { name: 'Use this orientation' })).toBeInTheDocument()
   orient(lesson.transfer)
   expect(screen.queryByRole('button', { name: 'Compare new trace' })).not.toBeInTheDocument()
-  expect(completedLessons(readProgress())).toEqual([])
+  expect(reviewed()).toEqual([])
   markLevels(lesson.transfer)
   fireEvent.change(screen.getByRole('combobox', { name: 'Airway course' }), {
     target: { value: 'uncertain' },
@@ -134,43 +154,91 @@ it('requires every real branch response, withholds each junction comparison unti
   expect(screen.getByRole('button', { name: 'Compare new trace' })).toBeDisabled()
   relation('different-structure')
   fireEvent.click(screen.getByRole('button', { name: 'Compare new trace' }))
-  expect(completedLessons(readProgress())).toEqual([])
+  expect(reviewed()).toEqual([])
   fireEvent.click(screen.getByRole('button', { name: 'Finish lesson' }))
-  await waitFor(() => expect(completedLessons(readProgress())).toEqual([lesson.id]))
-  const first = readProgress().activities.find((a) =>
-    a.activityId.endsWith('prediction.trace.first'),
-  )!
-  expect(first.bestScore).toBeUndefined()
+  await waitFor(() => expect(reviewed()).toEqual([lesson.id]))
+  expect(screen.getByText(/You recorded both routes/)).toBeVisible()
+  const history = session().junctionHistory
+  expect(storedAttempts().every((a) => a.hints === undefined && a.support === undefined)).toBe(true)
+  expect(session().prediction.hints).toBeUndefined()
+  expect(localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)).toBeNull()
   fireEvent.click(screen.getByRole('button', { name: 'Restart lesson' }))
-  expect(readProgress().activities.find((a) => a.activityId === first.activityId)).toEqual(first)
-  expect(readProgress().activities.some((a) => a.status === 'mastered')).toBe(false)
-  expect(JSON.stringify(readProgress())).not.toMatch(/pixel|marks|course|sourceHu/)
-})
-it('retains the first recorded trace and hint count across reload before comparison', async () => {
-  const view = render(
-    <BranchTracingLesson requestedId={LESSONS.find((l) => l.id === 'variants-limits')!.id} />,
+  expect(session().junctionHistory).toEqual(history)
+  expect(JSON.stringify(readSelfPacedRecord(localStorage).record)).not.toMatch(
+    /pixel|marks|course|sourceHu|hint|score|support/,
   )
+})
+// BBT-01 superseded "retains the first recorded trace and hint count": hint use is in-session help
+// state only and is never written to a response or a progress record.
+it('restores the recorded trace across reload and never records hint use', async () => {
+  const view = render(<BranchTracingLesson requestedId={lesson.id} />)
   await screen.findByRole('button', { name: 'Trace this airway' })
   imageReady()
   fireEvent.click(screen.getByRole('button', { name: 'Trace this airway' }))
-  orient(LESSONS.find((l) => l.id === 'variants-limits')!.prediction)
+  orient(lesson.prediction)
   fireEvent.click(screen.getByRole('button', { name: 'Tracing reminder' }))
-  markLevels(LESSONS.find((l) => l.id === 'variants-limits')!.prediction)
+  markLevels(lesson.prediction)
   fireEvent.click(screen.getByRole('button', { name: 'Record trace' }))
-  const first = readProgress().activities.find((a) =>
-    a.activityId.endsWith('prediction.trace.first'),
-  )!
-  expect(first.hintCount).toBe(1)
+  expect(session().hints).toBe(1)
+  expect(storedAttempts().length).toBeGreaterThan(0)
+  expect(storedAttempts().every((a) => a.hints === undefined)).toBe(true)
   view.unmount()
-  render(<BranchTracingLesson requestedId={LESSONS.find((l) => l.id === 'variants-limits')!.id} />)
+  render(<BranchTracingLesson requestedId={lesson.id} />)
   await screen.findByRole('button', { name: 'Reveal CT comparison' })
-  expect(readProgress().activities.find((a) => a.activityId === first.activityId)).toEqual(first)
-  expect(completedLessons(readProgress())).toEqual([])
+  expect(reviewed()).toEqual([])
+  expect(localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)).toBeNull()
+})
+it('shows a junction reference without recording, continues past junctions and both traces, and finishes with nothing recorded', async () => {
+  const trace = traceById(lesson.prediction)
+  render(<BranchTracingLesson requestedId={lesson.id} />)
+  await screen.findByRole('button', { name: 'Trace this airway' })
+  imageReady()
+  fireEvent.click(screen.getByRole('button', { name: 'Trace this airway' }))
+  imageReady()
+  fireEvent.click(screen.getByRole('button', { name: 'Use this orientation' }))
+  imageReady()
+  fireEvent.click(screen.getByRole('button', { name: 'Go to response slice' }))
+  imageReady()
+  expect(document.querySelector('[data-ct-reference="1"]')).toBeNull()
+  fireEvent.click(screen.getByRole('button', { name: 'Show reference for this junction' }))
+  imageReady()
+  expect(document.querySelector('[data-ct-reference="1"]')).not.toBeNull()
+  expect(document.querySelector('[data-branch-comparison]')).not.toBeNull()
+  expect(screen.queryByLabelText('Your mark 1')).toBeNull()
+  expect(session()).toMatchObject({
+    marks: trace.checkpoints.map(() => null),
+    recorded: trace.checkpoints.map(() => false),
+    junctionHistory: {},
+  })
+  for (let i = 0; i < trace.checkpoints.length - 1; i++) {
+    fireEvent.click(screen.getByRole('button', { name: 'Continue without recording' }))
+    imageReady()
+  }
+  expect(screen.getAllByText('Distal nodule approach').length).toBeGreaterThan(0)
+  expect(session()).toMatchObject({ active: trace.checkpoints.length - 1, junctionHistory: {} })
+  fireEvent.click(screen.getByRole('button', { name: 'Continue without recording this trace' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Show the comparison without recording' }))
+  imageReady()
+  expect(screen.getByText('No interpretation recorded for this trace')).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: 'Review the relationship' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Trace another airway' }))
+  imageReady()
+  fireEvent.click(screen.getByRole('button', { name: 'Finish without recording' }))
+  expect(screen.getByRole('heading', { name: 'Lesson finished' })).toBeVisible()
+  expect(
+    screen.getByText(/You moved through both routes without recording an interpretation/),
+  ).toBeVisible()
+  expect(session()).toMatchObject({
+    prediction: null,
+    transfer: null,
+    complete: true,
+    junctionHistory: {},
+  })
+  expect(reviewed()).toEqual([lesson.id])
+  expect(localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)).toBeNull()
 })
 it('has no automated accessibility violations in orientation and before comparison', async () => {
-  const { container } = render(
-    <BranchTracingLesson requestedId={LESSONS.find((l) => l.id === 'variants-limits')!.id} />,
-  )
+  const { container } = render(<BranchTracingLesson requestedId={lesson.id} />)
   await screen.findByRole('button', { name: 'Trace this airway' })
   expect(await axe(container)).toHaveNoViolations()
   fireEvent.click(screen.getByRole('button', { name: 'Trace this airway' }))

@@ -3,7 +3,6 @@
 import { Fragment, useEffect, useReducer, useRef, useState } from 'react'
 import { LessonShell, NowCard } from '@/features/learning-module/stage'
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
-import { useCriticalCareActivityAnalytics } from '@/features/learning-module/activity'
 import { baxterCrrtNavBase } from '@/features/learning-module/moduleRoutes'
 import { Link, useRouter } from '@/i18n/navigation'
 import type { CrrtFoundationTask } from '../content/foundationLessons'
@@ -20,7 +19,6 @@ import { CrrtSourceDating } from './CrrtSourceDating'
 import { baxterCrrtLearnLessons, baxterCrrtLearnLessonById } from '../content/learnLessons'
 import type { BaxterCrrtLearnLessonId } from '../content/learnerRegistry'
 import { baxterCrrtLearnerFacingSourceById } from '../content/learnerSourceMap'
-import { recordCriticalCareActivitySelection } from '@/features/critical-care/progress/selection'
 import type { CrrtPrescriptionComparison } from '../foundationModel'
 import type { PressureLocalizationPrediction } from '../pressureLocalizationLabModel'
 import { CRRT_FOUNDATION_CONSTRUCTION } from '../foundationModel'
@@ -30,12 +28,7 @@ import {
   crrtLearnAttemptReducer,
 } from '../learnController'
 import { sameCrrtLearnIdentity, type CrrtLearnEvidence } from '../learnEvidence'
-import {
-  readProgress,
-  recordLearnTaskEvidence,
-  recordLessonCompletion,
-  writeProgress,
-} from '../engine/progress'
+import { recordCrrtVisit } from '../selfPacedProgress'
 import { CrrtFoundationToolView } from './CrrtFoundationTools'
 import { CrrtPressureLocalizationLab } from './CrrtPressureLocalizationLab'
 import { CrrtStagedPrescriptionBuilder } from './CrrtStagedPrescriptionBuilder'
@@ -58,9 +51,6 @@ export function CrrtFoundationLesson({
       `learn-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
     ),
   )
-  const [priorCompletion, setPriorCompletion] = useState(false)
-  const [hydrated, setHydrated] = useState(false)
-  const [reviewIndex, setReviewIndex] = useState<number | null>(null)
   const [guidedResult, setGuidedResult] = useState<{
     identity: ReturnType<typeof crrtCurrentTaskIdentity>
     response: string
@@ -78,18 +68,7 @@ export function CrrtFoundationLesson({
   })
   useEffect(() => {
     active.current = true
-    const timer = window.setTimeout(() => {
-      setPriorCompletion(readProgress().completedLessonIds.includes(lessonId))
-      setHydrated(true)
-      recordCriticalCareActivitySelection(window.localStorage, {
-        activityId: `crrt:learn:${lessonId}`,
-        mode: 'guided',
-        query: { lesson: lessonId },
-        payloadVersion: 'crrt-selection-v1',
-      })
-    }, 0)
     return () => {
-      window.clearTimeout(timer)
       active.current = false
     }
   }, [lessonId])
@@ -104,20 +83,14 @@ export function CrrtFoundationLesson({
       : guidedResponse
   const lesson = baxterCrrtLearnLessonById.get(lessonId)!
   const evidence = attempt.evidence.find((e) => sameCrrtLearnIdentity(e, activeIdentity))
-  const analytics = useCriticalCareActivityAnalytics({
-    moduleId: 'baxter-crrt',
-    activityId: `crrt:learn:${lessonId}`,
-    mode: 'guided',
-    phase: attempt.finished
-      ? 'transfer'
-      : evidence?.feedbackDisplayed
-        ? 'explain'
-        : task.kind === 'question'
-          ? 'predict'
-          : 'recognize',
-    enabled: hydrated,
-  })
+  useEffect(() => {
+    recordCrrtVisit({ section: 'learn', id: lessonId, taskId: task.id })
+  }, [lessonId, task.id])
 
+  function continueTopic() {
+    dispatch({ type: 'continue', identity: activeIdentity })
+    setGuidedResult(null)
+  }
   function acceptEvidence(incoming: CrrtLearnEvidence) {
     if (!active.current || !sameCrrtLearnIdentity(identityRef.current, incoming)) return false
     if (!operationReady) return false
@@ -135,7 +108,6 @@ export function CrrtFoundationLesson({
     )
       return true
     dispatch({ type: 'evidence', evidence: incoming })
-    writeProgress(recordLearnTaskEvidence(readProgress(), incoming))
     return true
   }
   function applyOperation(action: CrrtOperationalAction) {
@@ -151,11 +123,6 @@ export function CrrtFoundationLesson({
     if (incoming && !acceptEvidence(incoming)) return
     dispatch(action)
     setGuidedResult(null)
-    if (attempt.taskIndex === tasks.length - 1) {
-      writeProgress(recordLessonCompletion(readProgress(), lessonId))
-      analytics.recordGoalMet()
-      analytics.recordActivityCompleted()
-    }
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
     document
       .getElementById('crrt-current-task')
@@ -218,7 +185,6 @@ export function CrrtFoundationLesson({
   const pathway = criticalCareLearningPathway('baxter-crrt')
   const next =
     pathway.sections[pathway.sections.findIndex((section) => section.id === lessonId) + 1]
-  const displayedTask = reviewIndex === null ? task : tasks[reviewIndex]
   return (
     <div className={styles.foundation} data-foundation-lesson={lessonId}>
       <LessonShell
@@ -233,7 +199,7 @@ export function CrrtFoundationLesson({
                 <Link href={baxterCrrtNavBase}>Overview</Link> ·{' '}
                 <Link href={`${baxterCrrtNavBase}/learn`}>Learn</Link> ·{' '}
                 <Link href={`${baxterCrrtNavBase}/practice`}>Practice</Link> ·{' '}
-                <Link href={`${baxterCrrtNavBase}/assess`}>Assess</Link>
+                <Link href={`${baxterCrrtNavBase}/assess`}>Challenge</Link>
               </nav>
               <h1>{lesson.title}</h1>
             </div>
@@ -262,34 +228,33 @@ export function CrrtFoundationLesson({
         contextStrip={
           <p className={styles.context}>
             Education only · synthetic examples · PrisMax AW8035 / 2.xx. Use current manufacturer
-            instructions and local protocol for patient care.{' '}
-            {priorCompletion ? 'Prior completion retained. ' : ''}This visit starts a new exercise;
-            saved responses remain in history, but in-progress controls are not restored.
+            instructions and local protocol for patient care. Topics visited and your location stay
+            on this device. Each visit starts a fresh simulation; answers and controls are not
+            saved. Historical records remain unchanged.
           </p>
         }
         footer={
           <p className={styles.footer}>
-            Education only · completion records worked-through exercises, not independent device
-            competence. <Link href={`${baxterCrrtNavBase}/practice`}>Practice</Link> ·{' '}
-            <Link href={`${baxterCrrtNavBase}/assess`}>Assess</Link>
+            Education only · exploring a topic does not establish device competence.{' '}
+            <Link href={`${baxterCrrtNavBase}/practice`}>Practice</Link> ·{' '}
+            <Link href={`${baxterCrrtNavBase}/assess`}>Challenge</Link>
           </p>
         }
       >
         <div className={styles.readingSurface} id="crrt-current-task" tabIndex={-1}>
           <details className={styles.map}>
             <summary>
-              Lesson tasks · {attempt.completedTaskIds.length} of {tasks.length} worked through
+              Lesson tasks · {attempt.taskIndex + 1} of {tasks.length}
             </summary>
             <ol>
               {tasks.map((item, index) => (
                 <li key={item.id}>
                   <button
                     type="button"
-                    disabled={index > attempt.taskIndex && !attempt.finished}
-                    aria-current={
-                      index === attempt.taskIndex && reviewIndex === null ? 'step' : undefined
-                    }
-                    onClick={() => setReviewIndex(index)}
+                    aria-current={index === attempt.taskIndex ? 'step' : undefined}
+                    onClick={() => {
+                      dispatch({ type: 'navigate', taskIndex: index })
+                    }}
                   >
                     {item.title}
                     {attempt.completedTaskIds.includes(item.id) ? ' · reviewed' : ''}
@@ -298,33 +263,12 @@ export function CrrtFoundationLesson({
               ))}
             </ol>
           </details>
-          {reviewIndex !== null ? (
-            <section className={styles.review}>
-              <h2>Review · {displayedTask.title}</h2>
-              {displayedTask.teaching.map((p) => (
-                <p key={p}>{p}</p>
-              ))}
-              {attempt.evidence
-                .filter((e) => e.taskId === displayedTask.id)
-                .map((e) => (
-                  <p key={e.taskId}>
-                    First response:{' '}
-                    {displayedTask.choices?.find((c) => c.id === e.response)?.label ?? e.response}.{' '}
-                    {displayedTask.choices?.find((c) => c.id === e.response)?.feedback} Feedback{' '}
-                    {e.reviewed ? 'reviewed' : 'not yet reviewed'}.
-                  </p>
-                ))}
-              <p>Reviewing does not rerun the exercise or change its recorded response.</p>
-              <button type="button" onClick={() => setReviewIndex(null)}>
-                Return to current task
-              </button>
-            </section>
-          ) : attempt.finished ? (
+          {attempt.finished ? (
             <NowCard
               model={{
-                kicker: 'Lesson reviewed',
-                heading: 'Current lesson work recorded',
-                body: 'Your responses and reviewed feedback have been saved separately from prior completion history.',
+                kicker: 'Continue learning',
+                heading: 'End of this lesson',
+                body: 'Continue, revisit a topic, or repeat an exercise. Only your location and topics visited are saved.',
                 primary: {
                   label: next ? `Continue to ${next.title}` : 'Continue to practice',
                   onActivate: () =>
@@ -332,7 +276,7 @@ export function CrrtFoundationLesson({
                       ? onNavigate(next.id as BaxterCrrtLearnLessonId)
                       : router.push(`${baxterCrrtNavBase}/practice`),
                 },
-                secondary: { label: 'Repeat with a new attempt', onActivate: onRestart },
+                secondary: { label: 'Repeat lesson', onActivate: onRestart },
               }}
             />
           ) : (
@@ -367,7 +311,7 @@ export function CrrtFoundationLesson({
                   ),
                   primary:
                     task.kind === 'read'
-                      ? { label: 'Continue', onActivate: () => finish() }
+                      ? { label: 'Continue', onActivate: continueTopic }
                       : task.kind === 'guided' && task.tool !== 'known-pressure'
                         ? {
                             label: 'Review observations and continue',
@@ -390,6 +334,11 @@ export function CrrtFoundationLesson({
                         : undefined,
                 }}
               >
+                {task.kind !== 'read' ? (
+                  <button type="button" onClick={continueTopic}>
+                    Continue without this exercise
+                  </button>
+                ) : null}
                 {task.teaching.length ? (
                   <div className={styles.teaching}>
                     {task.teaching.map((p) => (
@@ -420,6 +369,7 @@ export function CrrtFoundationLesson({
                 ) : null}
                 {task.kind === 'numeric' && attempt.run ? (
                   <CrrtRecordedBalanceQuestion
+                    onRetry={() => dispatch({ type: 'retry', identity: activeIdentity })}
                     run={attempt.run}
                     evidence={evidence}
                     onSubmit={(response, correct, inputs) =>
@@ -446,19 +396,17 @@ export function CrrtFoundationLesson({
                     task={task}
                     ready={operationReady}
                     evidence={evidence}
+                    onRetry={() => dispatch({ type: 'retry', identity: activeIdentity })}
                     onSubmit={(response) => {
                       const choice = task.choices!.find((c) => c.id === response)!
-                      if (
-                        acceptEvidence({
-                          ...activeIdentity,
-                          mode: 'independent',
-                          response,
-                          correct: choice.correct,
-                          feedbackDisplayed: false,
-                          reviewed: false,
-                        })
-                      )
-                        analytics.recordPredictionSubmitted()
+                      acceptEvidence({
+                        ...activeIdentity,
+                        mode: 'independent',
+                        response,
+                        correct: choice.correct,
+                        feedbackDisplayed: false,
+                        reviewed: false,
+                      })
                     }}
                     onFeedbackDisplayed={() =>
                       evidence && acceptEvidence({ ...evidence, feedbackDisplayed: true })
@@ -470,11 +418,11 @@ export function CrrtFoundationLesson({
                 ) : null}
                 {task.tool === 'known-pressure' ? (
                   <CrrtPressureLocalizationLab
+                    onRetry={() => dispatch({ type: 'retry', identity: activeIdentity })}
                     initialSite="return-line"
                     lockedPlacement
                     onPredictionCommitted={(prediction) => {
                       acceptEvidence(pressureEvidence(prediction, false))
-                      analytics.recordPredictionSubmitted()
                     }}
                     onFeedbackDisplayed={(prediction) =>
                       acceptEvidence(pressureEvidence(prediction, true))
@@ -486,6 +434,7 @@ export function CrrtFoundationLesson({
                 ) : null}
                 {task.tool === 'builder' ? (
                   <CrrtStagedPrescriptionBuilder
+                    onRetry={() => dispatch({ type: 'retry', identity: activeIdentity })}
                     guided
                     initialConstruction={CRRT_FOUNDATION_CONSTRUCTION}
                     onComparisonSubmitted={(comparison) =>
@@ -536,13 +485,13 @@ export function CrrtFoundationLesson({
             ) : null}
             <p>
               Printed filtration-fraction and blood-flow expressions remain withheld under
-              CONFLICT-001 and CONFLICT-002. Nonzero makeup retains the unresolved attribution gate.
-              Citrate dosing and operating sequences require the current reviewed local protocol and
-              exact manufacturer instructions.
+              CONFLICT-001 and CONFLICT-002. The contribution of nonzero makeup to the fluid ledger
+              remains unresolved. Citrate dosing and operating sequences require the current
+              reviewed local protocol and exact manufacturer instructions.
             </p>
             {lessonId === 'crrt-prescription-dosing' ? (
               <details onToggle={(event) => setFreeBuilderOpen(event.currentTarget.open)}>
-                <summary>Separate free calculation reference · no lesson credit</summary>
+                <summary>Free calculation reference</summary>
                 {freeBuilderOpen ? <CrrtStagedPrescriptionBuilder /> : null}
               </details>
             ) : null}
@@ -560,6 +509,7 @@ function QuestionTask({
   onSubmit,
   onFeedbackDisplayed,
   onContinue,
+  onRetry,
 }: {
   task: CrrtFoundationTask
   ready?: boolean
@@ -567,15 +517,17 @@ function QuestionTask({
   onSubmit: (response: string) => void
   onFeedbackDisplayed: () => void
   onContinue: () => void
+  onRetry: () => void
 }) {
   const [choiceId, setChoiceId] = useState<string | null>(null)
+  const [explanationVisible, setExplanationVisible] = useState(false)
   const choice = task.choices!.find((c) => c.id === evidence?.response)
   useEffect(() => {
     if (choice && evidence && !evidence.feedbackDisplayed) onFeedbackDisplayed()
   }, [choice, evidence, onFeedbackDisplayed])
   return (
     <section className={styles.question} aria-label="Application check">
-      <h3>Application check</h3>
+      <h3>Optional application check</h3>
       <fieldset disabled={Boolean(evidence)}>
         <legend>{task.question}</legend>
         {task.choices!.map((option) => (
@@ -590,16 +542,35 @@ function QuestionTask({
           </label>
         ))}
       </fieldset>
+      <button type="button" onClick={() => setExplanationVisible((visible) => !visible)}>
+        {explanationVisible ? 'Hide explanation' : 'Show explanation'}
+      </button>
+      {explanationVisible ? (
+        <div className={styles.feedback}>
+          <p>Worked explanation · no answer recorded.</p>
+          {task.choices!.map((option) => (
+            <p key={option.id}>
+              <strong>{option.label}</strong> {option.feedback}
+            </p>
+          ))}
+        </div>
+      ) : null}
       {choice ? (
         <div role="status" className={styles.feedback}>
-          <h3>{choice.correct ? 'Supported interpretation' : 'Review the reasoning'}</h3>
+          <h3>Reasoning feedback</h3>
           <p>{choice.feedback}</p>
-          <p>
-            Your first response is retained. Continue to the next example after reviewing this
-            explanation.
-          </p>
           <button type="button" onClick={onContinue}>
             Review feedback and continue
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onRetry()
+              setChoiceId(null)
+              setExplanationVisible(false)
+            }}
+          >
+            Try again
           </button>
         </div>
       ) : (
@@ -611,6 +582,12 @@ function QuestionTask({
           Check reasoning
         </button>
       )}
+      {!ready ? (
+        <p>
+          This run has no recorded observations for this question yet. Review the explanation,
+          continue, or perform the preceding simulation actions.
+        </p>
+      ) : null}
     </section>
   )
 }

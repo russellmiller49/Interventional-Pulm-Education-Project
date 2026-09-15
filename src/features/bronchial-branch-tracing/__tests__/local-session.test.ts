@@ -45,7 +45,10 @@ it('uses existing native CT intervals and leaves source routes unchanged', () =>
   }
   expect(JSON.stringify(traceById('central-right'))).toBe(before)
 })
-it('gates phase transitions, permits off-center lumen marks without grading, and preserves first attempts through retries and restart', () => {
+// BBT-01 superseded "gates phase transitions … preserves first attempts": checking still needs real
+// marks, but no attempt records hint use or a guided/independent label, and moving on never waits
+// on the parent view or an opening choice.
+it('keeps the real preconditions for checking, stores marks exactly without hints or support labels, and moves on without an opening choice', () => {
   let s = emptyLocalSession(exercises)
   expect(reduce(s, { type: 'check' })).toBe(s)
   expect(reduce(s, { type: 'begin' })).toBe(s)
@@ -55,36 +58,83 @@ it('gates phase transitions, permits off-center lumen marks without grading, and
   s = reduce(s, { type: 'hint', level: 2 })
   expect(s.marks).toEqual(before.marks)
   expect(s.phase).toBe('attempt')
+  expect(reduce(s, { type: 'check' })).toBe(s)
   expect(reduce(s, { type: 'mark', mark: { slice: 239, pixel: [5, 8] } })).toBe(s)
   expect(reduce(s, { type: 'mark', mark: { slice: 387, pixel: [NaN, 8] } })).toBe(s)
-  s = reduce(s, { type: 'hint', level: 3 })
   s = answer(s)
   expect(localReady(s, exercises[0])).toBe(true)
   s = reduce(s, { type: 'check' })
-  const first = JSON.stringify(s.history[exercises[0].id][0])
+  const checked = s.history[exercises[0].id][0]
+  const first = JSON.stringify(checked)
+  expect(checked.support).toBe('not-recorded')
+  expect(checked.hints).toBeUndefined()
+  expect(checked.marks.map((m) => m.pixel)).toEqual(exercises[0].answerPoints.map(() => [5, 8]))
   expect(s.phase).toBe('compare')
   expect(reduce(s, { type: 'mark', mark: { slice: 387, pixel: null } })).toBe(s)
   s = reduce(s, { type: 'retry' })
-  expect(s.hints).toBe(3)
-  expect(s.history[exercises[0].id][0].hints).toBe(3)
+  expect(s.hints).toBe(2)
   s = answer(s)
   s = reduce(s, { type: 'check' })
   expect(s.history[exercises[0].id]).toHaveLength(2)
   expect(JSON.stringify(s.history[exercises[0].id][0])).toBe(first)
-  expect(reduce(s, { type: 'next' })).toBe(s)
+  const skippedParent = reduce(s, { type: 'next' })
+  expect(skippedParent).toMatchObject({ exercise: 1, phase: 'attempt', viewAnswers: {} })
   s = reduce(s, { type: 'parent-view' })
+  // The display explanation still precedes the transform; it asks for no answer.
+  expect(s.orientationGuide).toBe('direction')
   expect(reduce(s, { type: 'next' })).toBe(s)
   expect(reduce(s, { type: 'view-answer', value: 'unresolved' })).toBe(s)
   s = reduce(s, { type: 'demonstrate-orientation' })
-  s = reduce(s, { type: 'orientation-response', value: 'display' })
   s = reduce(s, { type: 'finish-orientation' })
-  s = reduce(s, { type: 'view-answer', value: 'unresolved' })
+  expect(s.orientationGuide).toBeNull()
   s = reduce(s, { type: 'next' })
   expect(s.exercise).toBe(1)
   expect(s.phase).toBe('attempt')
   expect(s.hints).toBe(0)
+  expect(s.viewAnswers).toEqual({})
   s = reduce(s, { type: 'restart' })
   expect(JSON.stringify(s.history[exercises[0].id][0])).toBe(first)
+})
+it('continue without marking discards unplaced responses, creates no attempt, keeps the parent-view teaching and resumes at any position', () => {
+  const finishGuide = (state: ReturnType<typeof emptyLocalSession>) =>
+    state.orientationGuide === 'direction'
+      ? reduce(reduce(state, { type: 'demonstrate-orientation' }), { type: 'finish-orientation' })
+      : state
+  expect(reduce(emptyLocalSession(exercises), { type: 'skip' })).toEqual(
+    emptyLocalSession(exercises),
+  )
+  let s = reduce(reduce(emptyLocalSession(exercises), { type: 'focus-airway' }), { type: 'begin' })
+  s = reduce(s, {
+    type: 'mark',
+    mark: { slice: exercises[0].answerPoints[0].slice, pixel: [5, 8] },
+  })
+  s = reduce(s, { type: 'skip' })
+  expect(s.phase).toBe('parent-view')
+  expect(s.marks.every((mark) => mark === null)).toBe(true)
+  expect(s.history).toEqual({})
+  expect(parseLocalSession(s, exercises)).not.toBeNull()
+  s = reduce(finishGuide(s), { type: 'next' })
+  expect(s).toMatchObject({ exercise: 1, phase: 'attempt' })
+  expect(parseLocalSession(s, exercises)).toEqual(s)
+  s = finishGuide(reduce(s, { type: 'skip' }))
+  expect(s.phase).toBe('parent-view')
+  const done = reduce(s, { type: 'next' })
+  expect(done).toMatchObject({ phase: 'complete', viewAnswer: null, history: {} })
+  expect(parseLocalSession(done, exercises)).toEqual(done)
+  // Only a comparison needs a checked attempt behind it.
+  expect(parseLocalSession({ ...s, phase: 'compare' }, exercises)).toBeNull()
+})
+it('same-lumen intervals move on without a mark and never record one', () => {
+  const warmup = LESSONS[0].exercises!.map(localExercise)
+  const step = (s: ReturnType<typeof emptyLocalSession>, a: Parameters<typeof reduce>[1]) =>
+    localSessionReducer(warmup, s, a)
+  let s = step(step(emptyLocalSession(warmup), { type: 'focus-airway' }), { type: 'begin' })
+  s = step(s, { type: 'skip' })
+  expect(s).toMatchObject({ exercise: 1, phase: 'attempt' })
+  s = step(s, { type: 'skip' })
+  expect(s).toMatchObject({ phase: 'complete', history: {} })
+  expect(s.marks.every((mark) => mark === null)).toBe(true)
+  expect(parseLocalSession(s, warmup)).toEqual(s)
 })
 it('keeps both warm-up intervals and restart standard, even after learning a tracing preset', () => {
   const warmup = LESSONS[0].exercises!.map(localExercise)
@@ -107,8 +157,9 @@ it('keeps both warm-up intervals and restart standard, even after learning a tra
   expect(s.orientationGuide).toBe('context')
   expect(s.history).toEqual(history)
 })
+// BBT-01 superseded "gates comprehension": the What-changed check became a direct comparison.
 it.each(['mirror', 'rul', 'upper-division'] as const)(
-  'teaches %s before tracing, gates comprehension, and preserves the first response',
+  'explains %s before transforming the display and leaves the comparison without an answer',
   (preset) => {
     const exercise = LESSONS.flatMap((l) => l.exercises ?? [])
       .map(localExercise)
@@ -131,17 +182,16 @@ it.each(['mirror', 'rul', 'upper-division'] as const)(
           ? { top: 'L', right: 'P', bottom: 'R', left: 'A' }
           : { top: 'R', right: 'A', bottom: 'L', left: 'P' },
     )
-    s = step(s, { type: 'orientation-response', value: 'anatomy' })
-    expect(step(s, { type: 'finish-orientation' })).toBe(s)
     expect(parseLocalSession(s, [exercise])).toEqual(s)
     s = step(s, { type: 'orientation', value: STANDARD_ORIENTATION })
     expect(s.orientation).toEqual(STANDARD_ORIENTATION)
-    s = step(s, { type: 'orientation-response', value: 'display' })
     expect(s.orientationGuide).toBe('compare')
     s = step(s, { type: 'finish-orientation' })
     expect(s.orientationGuide).toBeNull()
     expect(s.orientation).toEqual(STANDARD_ORIENTATION)
-    expect(s.orientationResponses[preset]).toEqual(['anatomy', 'display'])
+    expect(s.taughtPresets).toEqual([preset])
+    expect(s.orientationResponses).toEqual({})
+    expect(s.history).toEqual({})
     expect(emptyLocalSession([exercise], {}, s.taughtPresets).orientationGuide).toBeNull()
     expect(step(s, { type: 'restart' }).orientationResponses).toEqual(s.orientationResponses)
   },

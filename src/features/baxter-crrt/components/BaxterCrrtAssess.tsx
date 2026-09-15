@@ -8,19 +8,8 @@ import { Link, useRouter } from '@/i18n/navigation'
 
 import { getBaxterCrrtCase } from '../content/completeCases'
 import { baxterCrrtMasteryManifest } from '../content/mastery'
-import {
-  createCrrtLearningSession,
-  crrtLearningSessionReducer,
-  type CrrtLearningOutcome,
-} from '../engine'
-import {
-  createDefaultProgress,
-  readProgress,
-  recordCaseResult,
-  setProgressContext,
-  writeProgress,
-  type BaxterCrrtProgressV3,
-} from '../engine/progress'
+import { createCrrtLearningSession, crrtLearningSessionReducer } from '../engine'
+import { recordCrrtVisit } from '../selfPacedProgress'
 import type { CrrtRoleLens } from '../engine/types'
 import { BaxterCrrtModuleFrame } from './BaxterCrrtModuleFrame'
 import { CrrtActivityWorkspace } from './CrrtActivityWorkspace'
@@ -31,8 +20,6 @@ const capstoneCase = getBaxterCrrtCase('CRRT-16')
 
 export function BaxterCrrtAssess({ locale = 'en' }: { readonly locale?: string }) {
   const router = useRouter()
-  const [progress, setProgress] = useState<BaxterCrrtProgressV3>(createDefaultProgress)
-  const [hydrated, setHydrated] = useState(false)
   const [roleLens, setRoleLens] = useState<CrrtRoleLens>('integrated')
   const [session, dispatch] = useReducer(
     crrtLearningSessionReducer,
@@ -48,10 +35,7 @@ export function BaxterCrrtAssess({ locale = 'en' }: { readonly locale?: string }
 
   useEffect(() => {
     const hydrationTimer = window.setTimeout(() => {
-      const stored = readProgress()
-      setProgress(stored)
-      setRoleLens(stored.lastRoleLens)
-      setHydrated(true)
+      recordCrrtVisit({ section: 'assess', id: baxterCrrtMasteryManifest.id })
     }, 0)
     return () => window.clearTimeout(hydrationTimer)
   }, [])
@@ -67,47 +51,17 @@ export function BaxterCrrtAssess({ locale = 'en' }: { readonly locale?: string }
     })
   }, [roleLens])
 
-  function persist(next: BaxterCrrtProgressV3) {
-    setProgress(next)
-    if (hydrated) writeProgress(next)
-  }
-
   function chooseRole(nextRole: CrrtRoleLens) {
     setRoleLens(nextRole)
-    if (!hydrated) return
-    persist(
-      setProgressContext(progress, {
-        device: baxterCrrtMasteryManifest.deviceId,
-        roleLens: nextRole,
-        station: 'anticoagulation-complications-liberation',
-      }),
-    )
-  }
-
-  function recordDebrief(outcome: CrrtLearningOutcome) {
-    if (!outcome.scored || outcome.score === null) return
-    persist(
-      recordCaseResult(progress, {
-        caseId: baxterCrrtMasteryManifest.id,
-        device: baxterCrrtMasteryManifest.deviceId,
-        roleLens: session.roleLens,
-        pathway: 'mastery',
-        score: outcome.score,
-        criticalError: outcome.criticalErrorIds.length > 0,
-        hintCount: session.usedHintIds.length,
-        reassessmentCompleted: outcome.reassessmentComplete,
-        masteryCompleted: outcome.mastery,
-      }),
-    )
   }
 
   const assessmentTaskRules = (
     <div className={styles.assessmentTaskRules}>
       <strong>Challenge flow</strong>
       <ul>
-        <li>Use the five-part plan when it helps organize your working frame.</li>
+        <li>Open Explain this case for a worked plan at any time.</li>
         <li>Use patient, prescription, circuit, pressure, and alert cues together.</li>
-        <li>Open any phase directly; unrecorded work remains visible in the causal debrief.</li>
+        <li>Use hints, explore the simulation, or continue without answering.</li>
       </ul>
       <small>Educational simulation only; not patient-specific device or treatment guidance.</small>
     </div>
@@ -121,15 +75,10 @@ export function BaxterCrrtAssess({ locale = 'en' }: { readonly locale?: string }
         progressLabel="Challenge · personal history stays local"
         onReset={() => dispatch({ type: 'RESET', attempt: session.attempt + 1 })}
         onSaveAndExit={() => {
-          writeProgress(progress)
           router.push(baxterCrrtNavBase)
         }}
         currentTaskExtras={assessmentTaskRules}
-        nextRecommendation={
-          session.debriefRevealed ? (
-            <Link href={baxterCrrtNavBase}>Next recommended · Review CRRT history</Link>
-          ) : null
-        }
+        nextRecommendation={<Link href={baxterCrrtNavBase}>Continue to CRRT topics</Link>}
       >
         <section className={styles.casePlayerSection} aria-labelledby="capstone-heading">
           <div className={styles.casePlayerHeading}>
@@ -144,7 +93,6 @@ export function BaxterCrrtAssess({ locale = 'en' }: { readonly locale?: string }
             dispatch={dispatch}
             onRoleChange={chooseRole}
             onReset={() => dispatch({ type: 'RESET', attempt: session.attempt + 1 })}
-            onDebriefRevealed={recordDebrief}
             idNamespace="assess-prismax"
             showSharedStepper={false}
           />

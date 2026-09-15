@@ -6,7 +6,10 @@ import type { CtJunctionAttempt, CtTrace } from '../content/ct-types'
 import { STANDARD_ORIENTATION } from '../geometry/orientation'
 import { NativeCtViewer } from './NativeCtViewer'
 
-/** Read-only snapshots, separate from the editable response and its reveal state. */
+/**
+ * Read-only snapshots of the learner's own responses at this junction, for comparison with the
+ * current one. No hint use, support label or first-response status is shown.
+ */
 export function CtRouteAttemptHistory({
   trace,
   active,
@@ -22,16 +25,10 @@ export function CtRouteAttemptHistory({
   return (
     <>
       <details>
-        <summary>First response and retries · {attempts.length} recorded</summary>
+        <summary>Your responses at this junction · {attempts.length}</summary>
         {attempts.map((item, i) => (
           <p key={i}>
-            {i === 0 ? 'First response (preserved)' : `Retry ${i}`} ·{' '}
-            {item.support === 'after-comparison'
-              ? 'supported after comparison'
-              : item.support === 'legacy-unknown'
-                ? 'earlier support not recorded'
-                : item.support}{' '}
-            · hint level {item.hints}.{' '}
+            Response {i + 1} · {item.mark.pixel ? 'lumen marked' : 'lumen unresolved'}.{' '}
             <button onClick={() => setReview(i)}>Inspect response {i + 1}</button>
           </p>
         ))}

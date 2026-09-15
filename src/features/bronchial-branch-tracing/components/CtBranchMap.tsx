@@ -211,7 +211,7 @@ export function CtLocalRouteMap({
       >
         {reviewing && attempt && (
           <>
-            <p>Reviewing preserves the current task and all first responses.</p>
+            <p>Reviewing does not change the current task or your saved marks.</p>
             <NativeCtViewer
               key={reviewing.id}
               trace={reviewing.trace}

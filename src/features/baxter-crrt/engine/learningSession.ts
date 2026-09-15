@@ -424,6 +424,24 @@ function canModifyRun(state: CrrtLearningSessionState): boolean {
   return !state.debriefRevealed
 }
 
+/** Opening a dialog or editing an uncommitted draft does not perform a run action. */
+export function hasCrrtRunActivity(state: CrrtLearningSessionState): boolean {
+  return state.timeline.some(
+    (entry) =>
+      entry.type === 'intervention-performed' ||
+      entry.type === 'time-advanced' ||
+      (entry.type === 'device-action' &&
+        [
+          'COMMIT_PRESCRIPTION',
+          'START_PRIME',
+          'COMPLETE_PRIME',
+          'COMPLETE_SETUP_STEP',
+          'START_TREATMENT',
+          'END_TREATMENT',
+        ].includes(entry.referenceId ?? '')),
+  )
+}
+
 function applyNumberOperation(current: number, effect: NumericCaseEffect): number {
   let next: number
   switch (effect.operation) {
@@ -831,7 +849,7 @@ export function crrtLearningSessionReducer(
       })
     }
     case 'USE_HINT': {
-      if (state.experience === 'mastery' || state.debriefRevealed) return state
+      if (state.debriefRevealed) return state
       const nextHint = state.caseDefinition.hintLadder
         .slice()
         .sort((left, right) => left.sequence - right.sequence)
@@ -844,7 +862,7 @@ export function crrtLearningSessionReducer(
       }
     }
     case 'COMMIT_REASSESSMENT': {
-      if (state.debriefRevealed || state.reassessment.committed) {
+      if (state.debriefRevealed || state.reassessment.committed || !hasCrrtRunActivity(state)) {
         return state
       }
       const validIds = optionIds(state.caseDefinition.reassessmentOptions)

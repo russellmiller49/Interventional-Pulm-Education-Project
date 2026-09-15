@@ -23,10 +23,11 @@ export function ModuleFrame({
     return () => observer.disconnect()
   }, [])
   const items = [
-    { href: BASE_PATH, title: 'Overview', description: 'The course and your progress' },
+    { href: BASE_PATH, title: 'Overview', description: 'The course and where you left off' },
     { href: `${BASE_PATH}/learn`, title: 'Learn', description: 'Trace real CT' },
-    { href: `${BASE_PATH}/practice`, title: 'Practice', description: 'Coached CT tracing' },
-    { href: `${BASE_PATH}/assess`, title: 'Assess', description: 'Independent interpretation' },
+    { href: `${BASE_PATH}/practice`, title: 'Practice', description: 'Route to a chosen segment' },
+    // The former Assess address stays; it now opens four more routes with references available.
+    { href: `${BASE_PATH}/assess`, title: 'More routes', description: 'Four further CT routes' },
   ]
   return (
     <div

@@ -1,14 +1,17 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import { criticalCareActivityById } from '@/features/critical-care/content/activities'
 import {
-  useCriticalCareActivityAnalytics,
   type CriticalCareActivityMode,
   type CriticalCareActivityPhase,
 } from '@/features/learning-module/activity'
-import { ActivityShell } from '@/features/learning-module/components/ActivityShell'
+import type { ActivityShellProps } from '@/features/learning-module/components/ActivityShell'
+import { ActivityChrome } from '@/features/learning-module/components/ActivityChrome'
+import { AssumedConceptStrip } from '@/features/critical-care/components/AssumedConceptStrip'
+import { NativeWorkbenchFrame } from '@/features/learning-module/components/NativeWorkbenchFrame'
+import frameStyles from '@/features/learning-module/components/learning-module-v2.module.css'
 import { DebriefPanel } from '@/features/learning-module/components/DebriefPanel'
 import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
 import { PatientContextBar } from '@/features/learning-module/components/PatientContextBar'
@@ -20,9 +23,33 @@ import { Link } from '@/i18n/navigation'
 
 import { baxterCrrtMasteryManifest } from '../content/mastery'
 import { getBaxterCrrtDeviceProfile } from '../content/deviceProfiles'
-import { selectCrrtLearningOutcome } from '../engine/outcomes'
 import type { CrrtLearningSessionState, CrrtReasoningPhase } from '../engine/learningSession'
 import styles from './baxter-crrt.module.css'
+
+/** Keep the native CRRT layout without inferring completed phases from navigation. */
+function CrrtWorkspaceShell({
+  activityId,
+  assumedConceptIds = [],
+  patientContext,
+  viewport,
+  currentTask,
+  ...chrome
+}: ActivityShellProps) {
+  return (
+    <ActivityChrome {...chrome} layout="native-workbench" showProgressStepper={false}>
+      <div className={frameStyles.activityFrameStack}>
+        {activityId && assumedConceptIds.length > 0 ? (
+          <AssumedConceptStrip activityId={activityId} conceptIds={assumedConceptIds} />
+        ) : null}
+        <NativeWorkbenchFrame
+          patientContext={patientContext}
+          viewport={viewport}
+          currentTask={currentTask}
+        />
+      </div>
+    </ActivityChrome>
+  )
+}
 
 const semanticPhaseByCrrtPhase: Readonly<Record<CrrtReasoningPhase, CriticalCareActivityPhase>> = {
   read: 'recognize',
@@ -46,7 +73,7 @@ const taskByReasoningPhase: Readonly<
   read: {
     objective: 'Build a patient–prescription–circuit problem representation.',
     requiredAction:
-      'Review the patient, access, circuit, current prescription, delivered therapy, pressure pattern, and active alert before choosing a goal.',
+      'Review the patient, access, circuit, current prescription, delivered therapy, pressure pattern, and active alert or open Explain this case for a worked plan.',
   },
   define: {
     objective: 'Define the patient-centered treatment and safety goal.',
@@ -56,12 +83,11 @@ const taskByReasoningPhase: Readonly<
   select: {
     objective: 'Localize the mechanism and choose a bounded control plan.',
     requiredAction:
-      'Select the mechanism and at least one planned control that directly addresses the patient and circuit problem.',
+      'Review the mechanism and controls in Explain this case. No answer is required to use the simulation.',
   },
   predict: {
-    objective: 'Commit the expected response and reassessment before acting.',
-    requiredAction:
-      'Choose the immediate and delayed response you expect, select a reassessment plan, then submit the five-part plan.',
+    objective: 'Compare a worked plan with the clinical findings.',
+    requiredAction: 'Open Explain this case, explore a control, or continue to another topic.',
   },
   run: {
     objective: 'Perform the planned patient, circuit, or equipment actions.',
@@ -140,7 +166,6 @@ export function CrrtActivityWorkspace({
   const definition = session.caseDefinition
   const deviceProfile = getBaxterCrrtDeviceProfile(session.simulation.deviceId)
   const title = definition.title
-  const outcome = selectCrrtLearningOutcome(session)
   const task = taskByReasoningPhase[session.reasoningPhase]
   const patient = session.simulation.patient
   const prescription = session.simulation.prescription
@@ -153,15 +178,7 @@ export function CrrtActivityWorkspace({
       : `crrt:practice:${definition.id}`
   const catalogActivity = criticalCareActivityById.get(activityId)
   const [helpState, setHelpState] = useState({ activityId, visible: false })
-  const recordedHints = useRef({ activityId: '', ids: new Set<string>() })
-  const recordedSafetyEvents = useRef({ activityId: '', ids: new Set<string>() })
   const helpVisible = helpState.activityId === activityId && helpState.visible
-  const lifecycleAnalytics = useCriticalCareActivityAnalytics({
-    moduleId: 'baxter-crrt',
-    activityId,
-    mode,
-    phase: crrtSemanticActivityPhase(session),
-  })
   const sourceEntries = definition.sourceBasis.map((source) => ({
     id: source.id,
     title: source.sourceTitle,
@@ -171,83 +188,16 @@ export function CrrtActivityWorkspace({
   const sourceTitles = [...new Set(definition.sourceBasis.map((source) => source.sourceTitle))]
   const evidenceEntries = sourceEntries
 
-  useEffect(() => {
-    if (!session.prediction) return
-    lifecycleAnalytics.recordPredictionSubmitted()
-  }, [lifecycleAnalytics, session.prediction])
-
-  useEffect(() => {
-    if (recordedHints.current.activityId !== activityId) {
-      recordedHints.current = { activityId, ids: new Set() }
-    }
-    if (session.usedHintIds.length === 0) recordedHints.current.ids.clear()
-    for (const hintId of session.usedHintIds) {
-      if (recordedHints.current.ids.has(hintId)) continue
-      recordedHints.current.ids.add(hintId)
-      lifecycleAnalytics.recordHintUsed()
-    }
-  }, [activityId, lifecycleAnalytics, session.usedHintIds])
-
-  useEffect(() => {
-    if (recordedSafetyEvents.current.activityId !== activityId) {
-      recordedSafetyEvents.current = { activityId, ids: new Set() }
-    }
-    if (outcome.criticalErrorIds.length === 0) recordedSafetyEvents.current.ids.clear()
-    for (const error of outcome.criticalErrorIds) {
-      if (recordedSafetyEvents.current.ids.has(error)) continue
-      recordedSafetyEvents.current.ids.add(error)
-      lifecycleAnalytics.recordSafetyEvent()
-    }
-  }, [activityId, lifecycleAnalytics, outcome.criticalErrorIds])
-
-  useEffect(() => {
-    if (outcome.mastery) lifecycleAnalytics.recordGoalMet()
-  }, [lifecycleAnalytics, outcome.mastery])
-
-  useEffect(() => {
-    if (!session.debriefRevealed) return
-    lifecycleAnalytics.recordDebriefViewed()
-    lifecycleAnalytics.recordActivityCompleted(outcome.mastery)
-  }, [lifecycleAnalytics, outcome.mastery, session.debriefRevealed])
-
   function focusRestoredActivity() {
     document.getElementById('crrt-activity-viewport')?.focus({ preventScroll: true })
   }
 
   function showHelp() {
-    if (!helpVisible && mode !== 'challenge') lifecycleAnalytics.recordHintUsed()
     setHelpState({ activityId, visible: true })
   }
 
-  function openActivityPhase(phase: CriticalCareActivityPhase) {
-    const destination: Readonly<
-      Record<
-        CriticalCareActivityPhase,
-        { readonly surface: 'case' | 'patient' | 'debrief'; readonly targetSuffix: string }
-      >
-    > = {
-      recognize: { surface: 'case', targetSuffix: '-crrt-case-findings' },
-      predict: { surface: 'case', targetSuffix: '-crrt-prediction-heading' },
-      act: { surface: 'case', targetSuffix: '-crrt-actions-heading' },
-      observe: {
-        surface: 'patient',
-        targetSuffix: '-baxter-crrt-mobile-panel-patient',
-      },
-      explain: { surface: 'debrief', targetSuffix: '-crrt-debrief-heading' },
-      transfer: { surface: 'debrief', targetSuffix: '-crrt-transfer-question' },
-    }
-    const next = destination[phase]
-    document
-      .querySelector<HTMLButtonElement>(`[id$="-baxter-crrt-mobile-tab-${next.surface}"]`)
-      ?.click()
-    const target =
-      document.querySelector<HTMLElement>(`[id$="${next.targetSuffix}"]`) ??
-      document.querySelector<HTMLElement>('[id$="-crrt-debrief-heading"]')
-    target?.scrollIntoView?.({ block: 'start', behavior: 'smooth' })
-  }
-
   return (
-    <ActivityShell
+    <CrrtWorkspaceShell
       layout="native-workbench"
       activityId={activityId}
       assumedConceptIds={catalogActivity?.assumedConceptIds}
@@ -262,8 +212,6 @@ export function CrrtActivityWorkspace({
       phase={crrtSemanticActivityPhase(session)}
       mode={mode}
       progressLabel={progressLabel}
-      stepperAriaLabel="CRRT shared activity phases"
-      onPhaseSelect={openActivityPhase}
       theme="dark"
       patientContext={
         <>
@@ -356,8 +304,8 @@ export function CrrtActivityWorkspace({
               ? definition.visibleFindings.slice(0, 4)
               : definition.learningObjectives
           }
-          hint={mode === 'challenge' ? undefined : definition.hintLadder[0]?.text}
-          mode={mode}
+          hint={definition.hintLadder[0]?.text}
+          mode="practice"
           hintVisible={helpVisible}
           onHintRequested={showHelp}
         >
@@ -410,8 +358,8 @@ export function CrrtActivityWorkspace({
                 {
                   label: 'Safety review',
                   result:
-                    outcome.criticalErrorIds.length === 0
-                      ? 'No safety stop appeared in this run'
+                    session.criticalErrorIds.length === 0
+                      ? 'Review device warnings and prerequisites for each action'
                       : 'Revisit the safety event and the cue that preceded it',
                 },
                 {

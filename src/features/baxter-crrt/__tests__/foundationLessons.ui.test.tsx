@@ -8,6 +8,7 @@ import {
   recordLessonCompletion,
   writeProgress,
 } from '../engine/progress'
+import { readCrrtSelfPacedProgress } from '../selfPacedProgress'
 import { crrtFoundationTasks } from '../content/foundationLessons'
 
 jest.mock('@/features/critical-care/analytics', () => ({ recordCriticalCareEvent: jest.fn() }))
@@ -86,7 +87,7 @@ describe('rendered CRRT introductory pathway', () => {
     fireEvent.click(button(/Continue to Predicted consequences/))
     expect(await axe(view.container)).toHaveNoViolations()
   })
-  it('teaches before a changed-case decision, records a wrong first response and waits for review', async () => {
+  it('teaches before a changed-case decision, keeps wrong-response feedback in-session and allows review', async () => {
     render(<BaxterCrrtLearn initialLessonId="crrt-indications-modality" />)
     expect(
       screen.getByRole('heading', { name: 'Two treatment goals, one blood circuit' }),
@@ -98,11 +99,10 @@ describe('rendered CRRT introductory pathway', () => {
     const current = crrtFoundationTasks['crrt-indications-modality']![3]
     expect(screen.queryByText(current.choices![0].feedback)).not.toBeInTheDocument()
     answer(/Fluid removal alone/)
-    await waitFor(() =>
-      expect(readProgress().learnTaskHistory?.find((e) => e.taskId === 'goals-case')).toMatchObject(
-        { response: 'fluid-only', correct: false, feedbackDisplayed: true, reviewed: false },
-      ),
+    expect(screen.getByRole('status')).toHaveTextContent(
+      current.choices!.find((choice) => choice.id === 'fluid-only')!.feedback,
     )
+    expect(readProgress().learnTaskHistory).toBeUndefined()
     expect(readProgress().completedLessonIds).toEqual([])
     reviewedAnswer()
     expect(
@@ -111,12 +111,8 @@ describe('rendered CRRT introductory pathway', () => {
     answer(/Solute support and zero net CRRT removal/)
     expect(readProgress().completedLessonIds).toEqual([])
     reviewedAnswer()
-    expect(readProgress().completedLessonIds).toContain('crrt-indications-modality')
-    expect(readProgress().learnTaskHistory?.find((e) => e.taskId === 'goals-case')).toMatchObject({
-      response: 'fluid-only',
-      correct: false,
-      reviewed: true,
-    })
+    expect(readCrrtSelfPacedProgress().visitedLessonIds).toContain('crrt-indications-modality')
+    expect(readProgress().learnTaskHistory).toBeUndefined()
   })
   it('restarts all transient state on navigation, history, repeat and reload while retaining history', async () => {
     writeProgress(recordLessonCompletion(createDefaultProgress(), 'crrt-prescription-dosing'))
@@ -125,12 +121,11 @@ describe('rendered CRRT introductory pathway', () => {
     next()
     modalities()
     answer(/most mechanisms/)
-    await waitFor(() =>
-      expect(readProgress().learnTaskHistory?.some((e) => e.taskId === 'goals-case')).toBe(true),
-    )
-    const firstAttempt = readProgress().learnTaskHistory!.at(-1)!.attemptId
+    expect(readProgress().learnTaskHistory).toBeUndefined()
     openLesson('crrt-prescription-dosing')
-    await waitFor(() => expect(screen.getByText(/Prior completion retained/)).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText(/Historical records remain unchanged/)).toBeInTheDocument(),
+    )
     expect(
       screen.getByRole('heading', { name: 'One example, one denominator, one interval' }),
     ).toBeVisible()
@@ -146,7 +141,7 @@ describe('rendered CRRT introductory pathway', () => {
     next()
     modalities()
     answer(/Solute\/acid-base support and fluid management/)
-    expect(readProgress().learnTaskHistory!.at(-1)!.attemptId).not.toBe(firstAttempt)
+    expect(readProgress().learnTaskHistory).toBeUndefined()
     fireEvent.click(button('Restart lesson'))
     expect(
       screen.getByRole('heading', { name: 'Two treatment goals, one blood circuit' }),
@@ -155,7 +150,7 @@ describe('rendered CRRT introductory pathway', () => {
     view.unmount()
     render(<BaxterCrrtLearn initialLessonId="crrt-indications-modality" />)
     expect(readProgress()).toEqual(saved)
-    expect(screen.getByText(/This visit starts a new exercise/)).toBeVisible()
+    expect(screen.getByText(/Each visit starts a fresh simulation/)).toBeVisible()
     expect(screen.queryByText('Lesson selection restored')).not.toBeInTheDocument()
   })
   it('walks the circuit, links sensors and formulas, reviews known consequences, then accepts uncertainty', () => {
@@ -207,15 +202,11 @@ describe('rendered CRRT introductory pathway', () => {
         }),
       )
     fireEvent.click(button('Commit prediction'))
-    expect(readProgress().learnTaskHistory?.find((e) => e.taskId === 'known-fault')).toMatchObject({
-      feedbackDisplayed: false,
-      reviewed: false,
-    })
+    expect(readProgress().learnTaskHistory).toBeUndefined()
+    expect(screen.getByText(/Prediction submitted/)).toBeVisible()
     fireEvent.click(button('Reveal pressure pattern'))
-    expect(readProgress().learnTaskHistory?.find((e) => e.taskId === 'known-fault')).toMatchObject({
-      feedbackDisplayed: true,
-      reviewed: false,
-    })
+    expect(screen.getByRole('heading', { name: /Obstruction at Return line/i })).toBeVisible()
+    expect(readProgress().learnTaskHistory).toBeUndefined()
     fireEvent.click(button('Review pressure comparison and continue'))
     expect(
       screen.queryByText(/The access pressure became more negative while/),
@@ -224,7 +215,7 @@ describe('rendered CRRT introductory pathway', () => {
     reviewedAnswer()
     answer(/Assess the patient and inspect the return path/)
     reviewedAnswer()
-    expect(readProgress().completedLessonIds).toContain('crrt-circuit-pressures')
+    expect(readCrrtSelfPacedProgress().visitedLessonIds).toContain('crrt-circuit-pressures')
   })
   it('connects membrane mechanisms, constrained modality paths and isolated fluid comparisons', () => {
     render(<BaxterCrrtLearn initialLessonId="crrt-solute-transport" />)
@@ -241,9 +232,9 @@ describe('rendered CRRT introductory pathway', () => {
     reviewedAnswer()
     answer(/More water crosses the membrane with convective/)
     reviewedAnswer()
-    expect(readProgress().completedLessonIds).toContain('crrt-solute-transport')
+    expect(readCrrtSelfPacedProgress().visitedLessonIds).toContain('crrt-solute-transport')
   })
-  it('requires a valid entered comparison and reviewed interpretation before prescription completion', () => {
+  it('requires a valid entered comparison and reviewed interpretation for actual comparison evidence while navigation remains optional', () => {
     render(<BaxterCrrtLearn initialLessonId="crrt-prescription-dosing" />)
     expect(screen.getByText('21.875 mL/kg/h')).toBeVisible()
     next()
@@ -258,13 +249,8 @@ describe('rendered CRRT introductory pathway', () => {
     fireEvent.click(button(/Continue to Predicted consequences/))
     fireEvent.click(screen.getByRole('radio', { name: /projected average dose fell/ }))
     fireEvent.click(button('Check comparison'))
-    expect(
-      readProgress().learnTaskHistory?.find((e) => e.taskId === 'downtime-comparison'),
-    ).toMatchObject({
-      feedbackDisplayed: true,
-      reviewed: false,
-      inputs: { weightKg: 80, downtimeHours: 6 },
-    })
+    expect(screen.getByText(/That comparison is supported/)).toBeVisible()
+    expect(readProgress().learnTaskHistory).toBeUndefined()
     expect(readProgress().completedLessonIds).not.toContain('crrt-prescription-dosing')
     fireEvent.click(button('Review comparison and continue'))
     next()
@@ -272,6 +258,6 @@ describe('rendered CRRT introductory pathway', () => {
     reviewedAnswer()
     answer(/^\+600 mL/)
     reviewedAnswer()
-    expect(readProgress().completedLessonIds).toContain('crrt-prescription-dosing')
+    expect(readCrrtSelfPacedProgress().visitedLessonIds).toContain('crrt-prescription-dosing')
   })
 })

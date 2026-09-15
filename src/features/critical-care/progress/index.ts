@@ -116,7 +116,10 @@ export function mergeCriticalCareProgress(
       activities,
       legacy.flatMap((result) => result.activities),
     ),
-    ...enforceProgressCollectionAuthority(activities, normalized?.activities ?? []),
+    ...enforceProgressCollectionAuthority(
+      activities,
+      (normalized?.activities ?? []).filter((item) => !item.activityId.startsWith('crrt:')),
+    ),
   ])
   const activityOrder = [
     ...(normalized?.activities.map((activity) => activity.activityId) ?? []),

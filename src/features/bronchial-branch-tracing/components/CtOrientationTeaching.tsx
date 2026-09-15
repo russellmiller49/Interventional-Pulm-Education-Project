@@ -63,15 +63,6 @@ export const orientationActionLabel = (trace: CtTrace) =>
       ? 'Rotate 90° counterclockwise'
       : 'Rotate 90° clockwise'
 
-export const ORIENTATION_CHECK_FEEDBACK = {
-  display:
-    'Correct. The airway is unchanged; only the CT display orientation changed. It remains a cross-section. Continue when ready.',
-  anatomy:
-    'The airway anatomy has not changed. Compare the same lumen in both displays, then try again.',
-  bronchoscopy:
-    'This remains a CT cross-section. A bronchoscope looks along the lumen. Try the check again.',
-}
-
 export function CtOrientationTeaching({
   trace,
   guide,
@@ -80,7 +71,6 @@ export function CtOrientationTeaching({
   guide?: {
     step: NonNullable<LocalSession['orientationGuide']>
     orientation: CtOrientation
-    response?: 'display' | 'anatomy' | 'bronchoscopy'
     onAction: (action: LocalAction) => void
   }
 }) {
@@ -152,31 +142,31 @@ export function CtOrientationTeaching({
             <p>
               {trace.preset === 'mirror'
                 ? 'With reflection, R and L exchange sides while A stays at the top. The patient has not moved.'
-                : 'All four direction markers turn with the CT.'}
+                : 'All four direction markers turn with the CT. The patient has not moved.'}
             </p>
+            {/* BBT-01 replaced the "What changed?" check with this direct comparison: it repeated
+                the sentence above for one extra click. The three teaching points stay visible. */}
+            <dl className={styles.orientationComparison} data-orientation-comparison>
+              <div>
+                <dt>Changed</dt>
+                <dd>Only the CT display: where the patient directions sit on your screen.</dd>
+              </div>
+              <div>
+                <dt>Unchanged</dt>
+                <dd>The patient, the CT slice and the airway you are following.</dd>
+              </div>
+              <div>
+                <dt>Still a cross-section</dt>
+                <dd>
+                  Both copies are CT slices across the airway. A bronchoscope looks along the lumen
+                  instead.
+                </dd>
+              </div>
+            </dl>
             <p>
               The parent direction and camera roll must be re-established as the airway turns. These
-              buttons step between displays without animation; repeating them does not record a
-              tracing attempt.
+              buttons step between displays without animation and change only the display.
             </p>
-            <fieldset className={styles.orientationCheck}>
-              <legend>What changed? · Ungraded check</legend>
-              {(
-                [
-                  ['anatomy', 'The patient’s airway anatomy'],
-                  ['display', 'Only the CT display orientation'],
-                  ['bronchoscopy', 'The CT became a bronchoscopic image'],
-                ] as const
-              ).map(([value, label]) => (
-                <button
-                  key={value}
-                  aria-pressed={guide.response === value}
-                  onClick={() => guide.onAction({ type: 'orientation-response', value })}
-                >
-                  {label}
-                </button>
-              ))}
-            </fieldset>
           </>
         )}
       </section>
@@ -219,19 +209,17 @@ export function CtOrientationTeaching({
 
 export function CtOrientationFeedback({
   trace,
-  first,
   used,
 }: {
   trace: CtTrace
-  first: CtOrientation
+  first?: CtOrientation
   used: CtOrientation
 }) {
   return (
     <p>
-      <strong>Orientation:</strong> first choice {orientationName(first).toLowerCase()}; recorded{' '}
-      {orientationName(used).toLowerCase()}. The book convention for this region is{' '}
-      {orientationName(orientationFor(trace.preset)).toLowerCase()}. This compares a display
-      convention, not bronchoscopy competence.
+      <strong>Display:</strong> you traced in {orientationName(used).toLowerCase()}. The book
+      convention for this region is {orientationName(orientationFor(trace.preset)).toLowerCase()};
+      standard axial is also a valid tracing display.
     </p>
   )
 }

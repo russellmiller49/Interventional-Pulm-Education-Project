@@ -3,7 +3,6 @@
 import { BookOpenCheck, ChevronRight, ClipboardCheck, ShieldAlert } from 'lucide-react'
 import { useEffect, useReducer, useState } from 'react'
 
-import { recordCriticalCareActivitySelection } from '@/features/critical-care/progress/selection'
 import { baxterCrrtNavBase } from '@/features/learning-module/moduleRoutes'
 import { Link, useRouter } from '@/i18n/navigation'
 
@@ -16,35 +15,14 @@ import {
   getBaxterCrrtCaseCatalogEntry,
 } from '../content/curriculum'
 import type { CrrtCaseId } from '../content/schema'
-import {
-  createCrrtLearningSession,
-  crrtLearningSessionReducer,
-  type CrrtLearningOutcome,
-} from '../engine'
-import {
-  createDefaultProgress,
-  readProgress,
-  recordCaseResult,
-  setProgressContext,
-  writeProgress,
-  type BaxterCrrtProgressStation,
-  type BaxterCrrtProgressV3,
-} from '../engine/progress'
+import { createCrrtLearningSession, crrtLearningSessionReducer } from '../engine'
+import { readCrrtSelfPacedProgress, recordCrrtVisit } from '../selfPacedProgress'
 import type { CrrtRoleLens } from '../engine/types'
 import { BaxterCrrtModuleFrame } from './BaxterCrrtModuleFrame'
 import { CrrtActivityWorkspace } from './CrrtActivityWorkspace'
 import { CrrtCasePlayer } from './CrrtCasePlayer'
 import { CrrtRapidDrillReview } from './CrrtRapidDrillReview'
 import styles from './baxter-crrt.module.css'
-
-const stationIdByNumber: Readonly<Record<number, BaxterCrrtProgressStation>> = {
-  1: 'define-goal',
-  2: 'build-prescription',
-  3: 'setup-start',
-  4: 'monitor-dose-fluid',
-  5: 'pressures-troubleshooting',
-  6: 'anticoagulation-complications-liberation',
-}
 
 function validPracticeCaseId(value: string | undefined): value is CrrtCaseId {
   return value !== undefined && (baxterCrrtPracticeCaseIds as readonly string[]).includes(value)
@@ -61,7 +39,7 @@ export function BaxterCrrtPractice({
   const firstCaseId = validPracticeCaseId(initialCaseId) ? initialCaseId : baxterCrrtCoreCaseIds[0]
   const [selectedCaseId, setSelectedCaseId] = useState<CrrtCaseId>(firstCaseId)
   const [roleLens, setRoleLens] = useState<CrrtRoleLens>('integrated')
-  const [progress, setProgress] = useState<BaxterCrrtProgressV3>(createDefaultProgress)
+  const [progress, setProgress] = useState(() => readCrrtSelfPacedProgress(null))
   const [hydrated, setHydrated] = useState(false)
   const [session, dispatch] = useReducer(
     crrtLearningSessionReducer,
@@ -80,27 +58,15 @@ export function BaxterCrrtPractice({
   const selectedIsAdditional = baxterCrrtAdditionalCaseIds.includes(selectedCaseId)
   const nextRecommendedCase =
     baxterCrrtCoreCaseIds.find(
-      (caseId) =>
-        caseId !== selectedCaseId &&
-        !progress.completedPracticeCaseIds.includes(caseId.toLowerCase()),
+      (caseId) => caseId !== selectedCaseId && !progress.visitedCaseIds.includes(caseId),
     ) ?? null
 
   useEffect(() => {
     const hydrationTimer = window.setTimeout(() => {
-      const stored = readProgress()
+      recordCrrtVisit({ section: 'practice', id: firstCaseId })
+      const stored = readCrrtSelfPacedProgress()
       setProgress(stored)
-      setRoleLens(stored.lastRoleLens)
       setHydrated(true)
-      if (validPracticeCaseId(initialCaseId)) {
-        recordCriticalCareActivitySelection(window.localStorage, {
-          activityId: `crrt:practice:${firstCaseId}`,
-          mode: 'practice',
-          query: { case: firstCaseId },
-          scenarioId: firstCaseId,
-          deviceId: 'prismax-aw8035-2xx',
-          payloadVersion: 'crrt-selection-v1',
-        })
-      }
     }, 0)
     return () => window.clearTimeout(hydrationTimer)
   }, [firstCaseId, initialCaseId])
@@ -116,65 +82,16 @@ export function BaxterCrrtPractice({
     })
   }, [roleLens, selectedDefinition])
 
-  function persist(next: BaxterCrrtProgressV3) {
-    setProgress(next)
-    if (hydrated) writeProgress(next)
-  }
-
   function chooseCase(caseId: CrrtCaseId) {
     if (!(baxterCrrtPracticeCaseIds as readonly string[]).includes(caseId)) return
     setSelectedCaseId(caseId)
-    recordCriticalCareActivitySelection(window.localStorage, {
-      activityId: `crrt:practice:${caseId}`,
-      mode: 'practice',
-      query: { case: caseId },
-      scenarioId: caseId,
-      deviceId: 'prismax-aw8035-2xx',
-      payloadVersion: 'crrt-selection-v1',
-    })
-    const entry = getBaxterCrrtCaseCatalogEntry(caseId)
-    if (!hydrated) return
-    persist(
-      setProgressContext(progress, {
-        device: 'prismax-aw8035-2xx',
-        roleLens,
-        station: stationIdByNumber[entry.station],
-      }),
-    )
+
+    recordCrrtVisit({ section: 'practice', id: caseId })
+    setProgress(readCrrtSelfPacedProgress())
   }
 
   function chooseRole(nextRole: CrrtRoleLens) {
     setRoleLens(nextRole)
-    if (!hydrated) return
-    persist(
-      setProgressContext(progress, {
-        device: 'prismax-aw8035-2xx',
-        roleLens: nextRole,
-        station: stationIdByNumber[selectedCatalogEntry.station],
-      }),
-    )
-  }
-
-  function recordDebrief(outcome: CrrtLearningOutcome) {
-    if (!outcome.scored || outcome.score === null) return
-    const next = recordCaseResult(progress, {
-      caseId: session.caseDefinition.id.toLowerCase(),
-      device: 'prismax-aw8035-2xx',
-      roleLens: session.roleLens,
-      pathway: 'practice',
-      score: outcome.score,
-      criticalError: outcome.criticalErrorIds.length > 0,
-      hintCount: session.usedHintIds.length,
-      reassessmentCompleted: outcome.reassessmentComplete,
-      masteryCompleted: false,
-    })
-    persist(
-      setProgressContext(next, {
-        device: 'prismax-aw8035-2xx',
-        roleLens: session.roleLens,
-        station: stationIdByNumber[selectedCatalogEntry.station],
-      }),
-    )
   }
 
   return (
@@ -190,7 +107,6 @@ export function BaxterCrrtPractice({
         resumed={validPracticeCaseId(initialCaseId)}
         onReset={() => dispatch({ type: 'RESET', attempt: session.attempt + 1 })}
         onSaveAndExit={() => {
-          writeProgress(progress)
           router.push(baxterCrrtNavBase)
         }}
         currentTaskExtras={
@@ -209,12 +125,10 @@ export function BaxterCrrtPractice({
                   <optgroup key={unit.id} label={`${unit.station}. ${unit.title}`}>
                     {unit.coreCaseIds.map((caseId) => {
                       const entry = getBaxterCrrtCaseCatalogEntry(caseId)
-                      const complete = progress.completedPracticeCaseIds.includes(
-                        caseId.toLowerCase(),
-                      )
+                      const complete = progress.visitedCaseIds.includes(caseId)
                       return (
                         <option key={caseId} value={caseId}>
-                          {complete ? 'Worked through · ' : ''}
+                          {complete ? 'Visited · ' : ''}
                           {entry.title}
                         </option>
                       )
@@ -279,7 +193,6 @@ export function BaxterCrrtPractice({
             dispatch={dispatch}
             onRoleChange={chooseRole}
             onReset={() => dispatch({ type: 'RESET', attempt: session.attempt + 1 })}
-            onDebriefRevealed={recordDebrief}
             idNamespace="practice-prismax"
             showSharedStepper={false}
           />
