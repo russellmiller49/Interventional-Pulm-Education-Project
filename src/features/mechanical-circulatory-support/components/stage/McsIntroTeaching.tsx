@@ -6,6 +6,7 @@ import type { McsSimulationState } from '../../engine/types'
 import { activePathways } from '../teaching/selectors'
 import { PathwayGraphic } from '../teaching/shared'
 import { McsCapturedResults } from './McsCapturedResults'
+import { McsUnloadingComparison } from './McsUnloadingComparison'
 import styles from './mcs-stage.module.css'
 
 export function McsIntroTeaching({
@@ -55,7 +56,8 @@ export function McsIntroTeaching({
       ) : null}
       {introduction.visual === 'pathways' ? <McsPathwayTour /> : null}
       {introduction.id === 'inlet-outlet' ? <McsPumpCutaway /> : null}
-      {introduction.visual === 'impella'
+      {introduction.id === 'unloading-example' ? <McsUnloadingComparison /> : null}
+      {introduction.visual === 'impella' && introduction.id !== 'unloading-example'
         ? activePathways(state).map((pathway) => (
             <PathwayGraphic key={pathway.id} pathway={pathway} />
           ))
@@ -140,61 +142,34 @@ export function McsIntroTeaching({
           </dl>
         </div>
       ) : null}
-      {before &&
-      (introduction.id === 'unloading-example' || introduction.id === 'afterload-example') ? (
+      {before && introduction.id === 'afterload-example' ? (
         <McsCapturedResults
           before={before}
           after={state}
           providedExample={state.actionIds.length === 0}
-          signals={
-            introduction.visual === 'impella'
-              ? [
-                  {
-                    key: 'leftDeviceFlowLMin',
-                    label: 'Pump estimate',
-                    unit: 'L/min',
-                    digits: 2,
-                    level: 'device-display',
-                  },
-                  {
-                    key: 'lvedvMl',
-                    label: 'Modeled LV volume',
-                    unit: 'mL',
-                    digits: 0,
-                    level: 'volume',
-                  },
-                  {
-                    key: 'pcwpMmHg',
-                    label: 'Wedge pressure',
-                    unit: 'mm Hg',
-                    digits: 0,
-                    level: 'pressure',
-                  },
-                ]
-              : [
-                  {
-                    key: 'deviceFlowLMin',
-                    label: 'Pump estimate',
-                    unit: 'L/min',
-                    digits: 2,
-                    level: 'device-display',
-                  },
-                  {
-                    key: 'pumpPowerW',
-                    label: 'Electrical pump power',
-                    unit: 'W',
-                    digits: 1,
-                    level: 'device-display',
-                  },
-                  {
-                    key: 'mapMmHg',
-                    label: 'Mean arterial pressure',
-                    unit: 'mm Hg',
-                    digits: 0,
-                    level: 'pressure',
-                  },
-                ]
-          }
+          signals={[
+            {
+              key: 'deviceFlowLMin',
+              label: 'Pump estimate',
+              unit: 'L/min',
+              digits: 2,
+              level: 'device-display',
+            },
+            {
+              key: 'pumpPowerW',
+              label: 'Electrical pump power',
+              unit: 'W',
+              digits: 1,
+              level: 'device-display',
+            },
+            {
+              key: 'mapMmHg',
+              label: 'Mean arterial pressure',
+              unit: 'mm Hg',
+              digits: 0,
+              level: 'pressure',
+            },
+          ]}
         />
       ) : null}
       <p className={styles.footnote}>

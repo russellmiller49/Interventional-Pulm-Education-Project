@@ -5,6 +5,7 @@ export type McsPresentationKind =
   | 'mechanism-comparison'
   | 'timing-lab'
   | 'pump-loading-lab'
+  | 'unloading-comparison'
   | 'parameter-reader'
   | 'patient-case'
 
@@ -25,6 +26,8 @@ export function mcsTaskPresentation(
   sectionId: string,
   interaction: McsStageInteraction,
 ): McsPresentationKind {
+  if (interaction.kind === 'teaching' && interaction.introduction.id === 'unloading-example')
+    return 'unloading-comparison'
   const kind = sections[sectionId]
   if (!kind) throw new Error(`Missing MCS presentation: ${sectionId}`)
   if (interaction.kind === 'transfer') return 'patient-case'

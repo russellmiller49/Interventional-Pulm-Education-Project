@@ -147,17 +147,12 @@ export const mcsIntroductions: Readonly<Record<string, readonly McsIntroduction[
       title: 'Guided example: ventricular unloading',
       visual: 'impella',
       instruction:
-        'Set the teaching CP pump from P5 to P6 using Performance level. Compare the captured flow and LV volume after eight simulated seconds. This is a bounded demonstration, not a dosing protocol.',
+        'Compare the filled and underfilled examples below at matched times. Read the explanation, replay the comparison, try P8, or Continue. No answer or model action is required.',
       setupActions: [{ type: 'SET_IMPELLA_CONTROL', control: 'performanceLevel', value: 5 }],
       paragraphs: [
-        'Unloading means reducing the volume and pressure burden on the LV by removing blood through the pump route. The expected response here is more pump flow with less modeled LV volume. Read the actual captured changes; volume and pressure are distinct quantities.',
+        'Unloading reduces the volume and pressure burden on the LV by removing blood through the pump route. In this model, the size of the response depends on filling and support. Read volume and pressure separately; neither must fall at every setting change.',
         'The next exercise resets this aligned baseline and introduces a simulated too-deep condition separately. A flow change alone cannot diagnose position. Clinical position requires appropriate imaging and device-specific interpretation.',
       ],
-      allowedControls: ['control:impella-left-level'],
-      isSatisfied: (state) =>
-        state.device.kind === 'impella' &&
-        state.device.left.performanceLevel === 6 &&
-        state.actionIds.includes('impella:left:set-level'),
     },
   ],
   'lvad-parameters-assessment': [
