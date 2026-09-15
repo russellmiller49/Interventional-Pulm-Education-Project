@@ -37,7 +37,7 @@ export function McsSourceList({
           <span data-source-title>{source.title}</span>
           <small data-source-reference>
             {' '}
-            — {source.citation} ({source.year})
+            — {source.citation} ({source.year ?? 'date not stated'})
           </small>
           {source.url ? (
             <>

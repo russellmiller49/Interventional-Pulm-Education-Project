@@ -21,37 +21,32 @@ manage a patient. Nothing observed here should ever be reported as a judgement a
 **In scope:** the guided drill **Learn** route — the three-pane workspace (live simulator ·
 teaching · current task) and these six drills:
 
-| #   | Scenario id                  | Lesson title, as the lesson header shows it              | Pathway rail label     | Task |
-| --- | ---------------------------- | -------------------------------------------------------- | ---------------------- | ---- |
-| 1   | `startup-sensor-orientation` | Meet the console, the circuit, and the external controls | Console tour           | 1    |
-| 2   | `preload-drainage-collapse`  | Flow falls and the drainage line judders                 | Flow falls             | —    |
-| 3   | `vv-recirculation`           | Flow is up and the patient is worse                      | Flow up, patient worse | 2    |
-| 4   | `gas-source-interruption`    | Gas transfer falls while flow holds                      | Sats fall, flow holds  | 3    |
-| 5   | `arterial-bubble-stop`       | Bubble alarm: the pump stopped itself                    | Pump stopped           | 4    |
-| 6   | `va-differential-hypoxemia`  | Right arm low, groin fine, circuit reassuring            | Two saturations        | 5    |
+| #   | Scenario id                  | Lesson title, as the lesson header shows it                 | Pathway rail label     | Task |
+| --- | ---------------------------- | ----------------------------------------------------------- | ---------------------- | ---- |
+| 1   | `startup-sensor-orientation` | Meet the console, the circuit, and the external controls    | Console tour           | 1    |
+| 2   | `preload-drainage-collapse`  | Drainage insufficiency: falling flow and line chatter       | Drainage insufficiency | —    |
+| 3   | `vv-recirculation`           | VV recirculation: circuit flow and patient oxygenation      | VV recirculation       | 2    |
+| 4   | `gas-source-interruption`    | Sweep-gas interruption: gas transfer with stable blood flow | Sweep-gas interruption | 3    |
+| 5   | `arterial-bubble-stop`       | Bubble alarm: the pump stopped itself                       | Pump stopped           | 4    |
+| 6   | `va-differential-hypoxemia`  | Differential hypoxemia: right-arm and femoral oxygenation   | Differential hypoxemia | 5    |
 
 Open each lesson directly:
 `/cardiohelp-ecmo/learn?lesson=<scenario id>&track=vv` — and `&track=va` for row 6.
 
-> ### You open the lesson, and **do not read the lesson title aloud**
+> ### ECMO-02 update — September 15, 2026
 >
-> As of R4 every lesson is presentation-named: the title says what the learner will see on the
-> console, the circuit and the patient — "Flow is up and the patient is worse" — and no longer the
-> mechanism, the move, or the ordering the task asks for. (Before R4 four of the six titles stated
-> the answer outright; that is why this packet was built the way it is, and the rule stands.)
+> Lesson titles may be read aloud and used to find a topic. Named mechanisms are teaching,
+> not answer leakage. The table above follows the current lesson header and pathway label.
+> The owner’s self-paced brief supersedes the former title-concealment instruction; a learner
+> may open explanations, retry, skip or leave without answering. Observe whether those actions
+> help the learner, without interpreting help or prior topic knowledge as failure.
 >
-> The participant sheet still names no lesson at all, because a title read aloud is a frame put in
-> the participant's ear before they have looked at anything, and the sheet's own task wording is
-> written to overlap with no title. **Before each task you open the lesson yourself**, from the
-> table above, and hand the screen over with it already loaded. Say "here's the next one" — not the
-> title. The title is visible in the lesson header once the lesson is open, which is unavoidable and
-> fine; what matters is that you do not put it in the participant's ear before they have looked at
-> the circuit.
+> This is a naming/entry update only, not a new pilot or clinical approval. The original B5
+> preparation materials remain in Git at `905372be`; historical observations are unchanged.
+> The remaining protocol below is historical preparation and needs a separate self-paced
+> usability review before a new human session. No session is authorized or claimed here.
 >
-> Task 6 changes the viewport rather than the lesson, and runs on whichever lesson is already open.
->
-> Row 2 (`preload-drainage-collapse`) has no task of its own. It is the optional contrast case in
-> §8, task 2 — open it only if you use that contrast.
+> Task 6 changes the viewport rather than the lesson. Row 2 remains the optional contrast in §8.
 
 **Out of scope:** Practice, Assess, the ten foundation lesson panels, and the fourteen drills that
 have no live teaching panel yet. Those fourteen show an explicit "no live teaching panel for this

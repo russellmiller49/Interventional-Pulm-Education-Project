@@ -186,11 +186,14 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       digits: 0,
       level: 'device-display',
     },
-    isWorkSatisfied: (state) =>
-      state.device.kind === 'iabp' && state.device.running && state.device.triggerSource !== 'ecg',
+    // The predicate used to require leaving ECG triggering, which rewarded this model's own rating of
+    // triggers in atrial fibrillation — a rating the supplied Cardiosave material contradicts
+    // (MCS-03-05). It keeps only the genuine prerequisite, a running balloon: the exercise is a
+    // comparison on the trace, whichever trigger it ends on.
+    isWorkSatisfied: (state) => state.device.kind === 'iabp' && state.device.running,
     requiredActionIds: ['iabp:set-trigger'],
     requiredActionLabel:
-      'Change the simulated trigger source and compare assisted-beat timing against the arterial waveform.',
+      'Try the trigger sources and read each assisted beat on the arterial waveform. Read the synchrony figure as this model’s output only: in atrial fibrillation it rates pressure triggering above ECG triggering, which the supplied Cardiosave operating instructions do not support.',
     item: item({
       id: 'mcs-iabp-trigger-transfer-1',
       activityId: 'mcs:learn:iabp-timing-triggering',
@@ -214,8 +217,8 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
           label:
             'Keep ECG triggering, because an electrical signal stays reliable when the pressure trace does not',
           rationale:
-            'Signal reliability depends on rhythm and signal quality; no source is universally superior.',
-          plausibility: 'incorrect-mechanism',
+            'The supplied Cardiosave material recommends ECG triggering for arrhythmias when the R wave is reliable and advises against pressure triggering in a sustained irregular rhythm, so keeping ECG is where that console family starts. What this leaves out is the check: no trigger is reliable by category, and the timing still has to be read beat by beat on the arterial trace.',
+          plausibility: 'reasonable-but-incomplete',
         },
         {
           id: 'increase-ratio',
@@ -228,8 +231,12 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       ],
       correctChoiceIds: ['compare-trigger-to-waveform'],
       explanation:
-        'The transfer introduces rhythm irregularity. The learner must change the trigger and then verify the mechanical timing on the actual pressure trace.',
-      evidenceIds: iabpEvidence,
+        'The transfer introduces an irregular rhythm. A trigger is judged by whether inflation and deflation still land in the right places on the arterial trace, beat by beat. The modeled synchrony figure does not settle that: in atrial fibrillation it rates pressure triggering above ECG triggering, which the supplied Cardiosave material advises against, and the model does not represent R-wave quality or a console’s own handling of an irregular rhythm. Those, with the console’s instructions, are what to check.',
+      evidenceIds: [
+        ...iabpEvidence,
+        'getinge-cardiosave-hybrid-operating-instructions',
+        'getinge-cardiosave-troubleshooting-strategies',
+      ],
       reviewStatus: 'draft',
     }),
   },
@@ -405,7 +412,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
           label:
             'Reduce support temporarily, reassess filling and position, and address the cause first',
           rationale:
-            'This limits ongoing suction while preserving a structured patient–position–device evaluation.',
+            'The supplied Impella CP instructions for use give this order for a suction alarm: reduce the performance level by one or two levels, make sure the patient has adequate volume, check the pump position with imaging, and evaluate right ventricular function, then return slowly to the previous level once suction has resolved.',
           plausibility: 'best',
         },
         {
@@ -425,7 +432,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       ],
       correctChoiceIds: ['reduce-and-diagnose'],
       explanation:
-        'The transfer deliberately creates underfilling at high support. The learner must make a real pump-level adjustment and identify the loading mechanism.',
+        'The transfer creates underfilling at high support. In this model a one- or two-level reduction leaves the suction pattern in place while effective flow and mean pressure fall; reducing further clears it only by trading it for a low-flow alarm, and restoring filling clears both. Lowering the level is the first step, not the whole response. The model does not show the rest of the evaluation — volume status, the pump position on imaging and right ventricular function — and those are what to reassess before returning to the previous level.',
       evidenceIds: impellaEvidence,
       reviewStatus: 'draft',
     }),
@@ -495,11 +502,17 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
   },
   {
     lessonId: 'lvad-alarms-emergencies',
-    title: 'Transfer emergency: high power with worsening perfusion',
+    // MCS-03-08: the setup switches on only the high-power pattern, which in this model raises power
+    // without moving modeled flow. The context and stem used to say effective flow and perfusion
+    // worsen, which the patient on screen does not show.
+    title: 'Transfer emergency: high power with an unchanged flow display',
     contextItems: [
       { label: 'Device', value: 'Durable continuous-flow LVAD' },
-      { label: 'Change', value: 'Power rises while effective flow and perfusion worsen' },
-      { label: 'Concern', value: 'Pump thrombosis or flow obstruction pattern' },
+      { label: 'Change', value: 'Power rises; the displayed and effective flows barely move' },
+      {
+        label: 'Concern',
+        value: 'Pump thrombosis or flow obstruction pattern, which this model does not diagnose',
+      },
       { label: 'Boundary', value: 'Urgent MCS-team and bedside evaluation required' },
     ],
     setupDevice: 'lvad',
@@ -516,13 +529,13 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       clinicalContextId: 'mcs-transfer-lvad-high-power-low-flow',
       visualAssetIds: ['mcs-monitor', 'mcs-lvad-controls'],
       transferVariantId: 'mcs-lvad-high-power-perfusion-decline',
-      stem: 'LVAD power rises while effective flow and perfusion worsen. Which response best respects the emergency and device boundary?',
+      stem: 'At an unchanged speed, LVAD power rises and a high-power alarm appears while the displayed flow and the effective flow barely move. Which response best respects the emergency and device boundary?',
       choices: [
         {
           id: 'preserve-power-escalate',
           label: 'Preserve verified power, reassess the patient, and escalate to the support team',
           rationale:
-            'High power with worsening perfusion may indicate a time-critical pump or flow-path problem that requires specialist evaluation.',
+            'A rising power signature may indicate a time-critical pump or flow-path problem that requires specialist evaluation, even while the flow display looks unchanged.',
           plausibility: 'best',
         },
         {
@@ -543,7 +556,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       ],
       correctChoiceIds: ['preserve-power-escalate'],
       explanation:
-        'The transfer separates a high-power emergency from ordinary low-flow loading changes and requires a real escalation action.',
+        'The transfer separates a high-power pattern from an ordinary loading change. In this model the pattern raises power without reducing modeled flow, so neither the flow display nor the effective flow says the pump is safe, and the model does not establish a diagnosis. The bedside perfusion picture, the power sources, the controller trend and focused imaging are what the responsible team reconciles; in a time-critical pattern the response is to keep verified power connected and escalate rather than wait for the numbers to move.',
       evidenceIds: lvadEvidence,
       reviewStatus: 'draft',
     }),
@@ -580,7 +593,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
           id: 'name-rv-limitation-first',
           label: 'Name right-sided delivery as the limit and evaluate right-sided support',
           rationale:
-            'A rising RAP with a falling PAPi and only modest LV filling pressure indicates a delivery problem upstream of the left heart rather than at LV unloading. Adding left-sided support to an RV-limited circulation raises the displayed number without raising effective systemic flow.',
+            'A rising RAP with a falling PAPi and only modest LV filling pressure indicates a delivery problem upstream of the left heart rather than at LV unloading. Adding left-sided support to an RV-limited circulation raises effective systemic flow only a little and leaves the suction pattern in place.',
           plausibility: 'best',
         },
         {
@@ -610,7 +623,9 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       explanation:
         'The transfer keeps the presenting number — low output — and moves the limiting problem upstream. Device selection follows the limiting problem; it is not a fixed ranking of devices by support magnitude. Actual device choice, timing, and escalation remain team decisions under current instructions and local protocol.',
       evidenceIds: [...bedsideEvidence, 'ishlt-durable-mcs-2023'],
-      reviewStatus: 'sme-review',
+      // MCS-03-07: the best option said left-sided escalation adds no effective flow here; the model
+      // adds a little and the suction pattern stays. Reworded, so draft until a reviewer reads it.
+      reviewStatus: 'draft',
     }),
   },
 ] as const

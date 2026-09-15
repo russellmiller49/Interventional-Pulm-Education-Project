@@ -289,9 +289,9 @@ describe('B5: the facilitator guide names the lessons the learner actually sees'
     expect(row?.title).toBe(cardiohelpLearnLessonByScenarioId.get(scenarioId)?.title)
   })
 
-  it('warns that the titles themselves name the mechanism', () => {
-    // Correcting the table puts the answer into the facilitator's hands, which is where it belongs
-    // — but only if the guide says so, because the obvious next move is to read it out.
-    expect(facilitatorGuide).toMatch(/do not read the lesson title aloud/i)
+  it('documents self-paced titles and preserves the historical pilot boundary', () => {
+    expect(facilitatorGuide).toMatch(/Lesson titles may be read aloud/)
+    expect(facilitatorGuide).toMatch(/not a new pilot or clinical approval/)
+    expect(facilitatorGuide).toMatch(/no human session has been run/i)
   })
 })

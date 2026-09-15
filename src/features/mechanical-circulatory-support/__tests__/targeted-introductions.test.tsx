@@ -332,9 +332,17 @@ describe('real model and feature-local policy', () => {
       ),
     ).toBe(false)
     const transfer = mcsLessonTransferByLessonId.get('iabp-timing-triggering')!
+    // MCS-03-05 changed this contract. It used to assert that ending on ECG triggering left the
+    // transfer work undone, which rewarded the model's atrial-fibrillation trigger rating against the
+    // supplied Cardiosave material. The genuine prerequisite — a running balloon — is still held.
     expect(
       transfer.isWorkSatisfied?.(
         mcsReducer(aligned, { type: 'SET_IABP_CONTROL', control: 'triggerSource', value: 'ecg' }),
+      ),
+    ).toBe(true)
+    expect(
+      transfer.isWorkSatisfied?.(
+        mcsReducer(aligned, { type: 'SET_IABP_CONTROL', control: 'running', value: false }),
       ),
     ).toBe(false)
   })

@@ -244,6 +244,9 @@ describe('the items ask one kind of question', () => {
     'mcs-impella-afterload-transfer-1',
     'mcs-impella-suction-transfer-1',
     'mcs-lvad-emergency-transfer-1',
+    // MCS-03-07: its best-option rationale said left-sided support raises no effective flow in an
+    // RV-limited circulation; the model raises it a little. Reworded, so draft again.
+    'mcs-device-selection-integration-transfer-1',
   ]
   const MOVE =
     /^(raise|lower|keep|disconnect|increase|reduce|give|switch|re-time|retime|whatever)\b/i
