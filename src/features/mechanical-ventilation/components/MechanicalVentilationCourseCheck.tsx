@@ -8,11 +8,16 @@ import {
   ventilationUnitQuestions,
 } from '../content/learningQuestions'
 import { ventilationUnitById } from '../content/learningCurriculum'
+import { ventilationQuestionTeachingById } from '../content/questionTeaching'
 import { VentilationReinforcement } from './VentilationReinforcement'
+import { VentilationWorkedComparison } from './VentilationWorkedComparison'
 import { VentilationLearningSources } from './VentilationLearningVisuals'
 import styles from './ventilation-course.module.css'
 
-/** Saved placement/final URLs now offer optional applications without reading old answers. */
+/**
+ * Saved placement, final and review URLs open optional questions and worked comparisons. Nothing
+ * chosen here is saved or read back, and none of it controls access to the lessons.
+ */
 export function MechanicalVentilationCourseCheck({
   kind,
 }: {
@@ -28,6 +33,7 @@ export function MechanicalVentilationCourseCheck({
   const question = questions[index]
   const unit = ventilationUnitById.get(question.unitId)!
   const best = question.choices.find((choice) => choice.id === question.correctId)!
+  const teaching = ventilationQuestionTeachingById.get(question.id)
   return (
     <div className={styles.course}>
       <div className={styles.lessonShell}>
@@ -40,8 +46,8 @@ export function MechanicalVentilationCourseCheck({
                 : 'Worked applications'}
           </h1>
           <p>
-            Try any question, use a hint, or open the explanation. These examples do not determine
-            access to the lessons.
+            Try a question, open its explanation before answering, or read a worked comparison.
+            Nothing you choose here is saved, and none of it controls access to the lessons.
           </p>
           <Link href="/mechanical-ventilation/learn">Open any lesson</Link>
         </header>
@@ -55,20 +61,36 @@ export function MechanicalVentilationCourseCheck({
             {questions.map((item, i) => (
               <option key={item.id} value={i}>
                 {i + 1}. {ventilationUnitById.get(item.unitId)?.title}
+                {ventilationQuestionTeachingById.get(item.id)?.presentation === 'worked-comparison'
+                  ? ' (worked comparison)'
+                  : ''}
               </option>
             ))}
           </select>
         </label>
         <section className={styles.card}>
-          <VentilationReinforcement
-            key={question.id}
-            id={question.id}
-            purpose={'Apply ' + unit.title.toLowerCase() + ' to a short authored case.'}
-            prompt={question.prompt}
-            choices={question.choices}
-            hint={unit.explanation}
-            explanation={best.label + '. ' + best.rationale}
-          />
+          {teaching?.presentation === 'worked-comparison' ? (
+            <VentilationWorkedComparison
+              key={question.id}
+              question={question}
+              teaching={teaching}
+            />
+          ) : (
+            <VentilationReinforcement
+              key={question.id}
+              id={question.id}
+              purpose={
+                teaching?.purpose ??
+                'Apply ' + unit.title.toLowerCase() + ' to a short authored case.'
+              }
+              prompt={question.prompt}
+              choices={question.choices}
+              hint={teaching?.hint ?? unit.explanation}
+              explanation={teaching?.explanation ?? best.label + '. ' + best.rationale}
+              nextCheck={teaching?.nextCheck}
+              bestChoiceId={question.correctId}
+            />
+          )}
           <div className={styles.actions}>
             <button
               type="button"
@@ -91,7 +113,7 @@ export function MechanicalVentilationCourseCheck({
               Review {unit.title}
             </Link>
           </div>
-          <VentilationLearningSources evidenceIds={question.evidenceIds} />
+          <VentilationLearningSources evidenceIds={teaching?.evidenceIds ?? question.evidenceIds} />
         </section>
         <Link href="/mechanical-ventilation/practice">Explore the live cases</Link>
       </div>

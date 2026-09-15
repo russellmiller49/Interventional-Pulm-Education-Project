@@ -1,6 +1,11 @@
 'use client'
 
-import { ventilationEvidenceById } from '../content/evidence'
+import {
+  VENTILATION_CLINICAL_REVIEW_LINE,
+  ventilationEvidenceById,
+  ventilationSourceClassLabel,
+  ventilationSourceIdentityLine,
+} from '../content/evidence'
 import styles from './ventilation-course.module.css'
 
 /**
@@ -50,10 +55,8 @@ export function VentilationLearningSources({
         {evidenceIds.map((id) => {
           const source = ventilationEvidenceById.get(id)
           return source ? (
-            <li key={id}>
-              <strong>
-                {source.sourceClass === 'guideline' ? 'Guideline' : 'Clinical reference'} ·{' '}
-              </strong>
+            <li key={id} data-evidence-id={id}>
+              <strong>{ventilationSourceClassLabel[source.sourceClass]} · </strong>
               {source.sourceUrl ? (
                 <a href={source.sourceUrl} target="_blank" rel="noreferrer">
                   {source.title}
@@ -63,17 +66,21 @@ export function VentilationLearningSources({
               )}
               <p>{source.citation}</p>
               <p>{source.limitations}</p>
-              {source.reviewedAt && (
-                <p>Source checked {source.reviewedAt}; independent clinical sign-off pending.</p>
-              )}
+              {source.identity ? <p>{ventilationSourceIdentityLine(source.identity)}</p> : null}
+              <p>
+                {source.reviewedAt
+                  ? `Source checked ${source.reviewedAt}; independent clinical sign-off pending.`
+                  : VENTILATION_CLINICAL_REVIEW_LINE}
+              </p>
             </li>
           ) : null
         })}
       </ul>
       <p className={styles.muted}>
-        Examples and questions were authored for this course on September 5, 2026. Their distractors
-        adapt the supplied casebook and existing lesson rationales. They are not patient data or
-        prevalence estimates.
+        The questions were authored for this course on September 5, 2026, and the explanations for
+        ten of them were revised on September 15, 2026. They draw on the lesson rationales and on a
+        supplied case set that names no author. They are not patient data or prevalence estimates,
+        and no clinical review of them is recorded yet.
       </p>
     </details>
   )

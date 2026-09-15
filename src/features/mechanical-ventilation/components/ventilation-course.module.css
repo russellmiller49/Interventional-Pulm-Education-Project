@@ -861,3 +861,18 @@
   font-size: 0.78rem;
   color: var(--muted);
 }
+
+/* Worked comparisons (MV-03): the title reads as a caption, and four short numeric columns stay on
+   screen at phone width instead of scrolling the key column out of view. */
+.comparisonTable caption {
+  caption-side: top;
+  text-align: left;
+  font-weight: 650;
+  padding: 0 0 8px;
+}
+@media (max-width: 600px) {
+  .comparisonTable td,
+  .comparisonTable th {
+    padding: 8px 6px;
+  }
+}

@@ -194,24 +194,6 @@ export function hasFocusedGuidance(
     )
   )
 }
-export function scoreVentilationQuestions(
-  questions: readonly VentilationQuestion[],
-  answers: Readonly<Record<string, VentilationAnswer>>,
-) {
-  const correct = questions.filter((item) => answers[item.id]?.choiceId === item.correctId).length
-  const answered = questions.filter((item) => answers[item.id]).length
-  const safe = questions.every(
-    (item) => !item.choices.find((choice) => choice.id === answers[item.id]?.choiceId)?.unsafe,
-  )
-  return {
-    correct,
-    answered,
-    total: questions.length,
-    safe,
-    passed: answered === questions.length && correct / questions.length >= 0.8 && safe,
-  }
-}
-
 /** Immutable first commitment: later review cannot rewrite first-attempt evidence. */
 export function commitVentilationAnswer(
   answers: Readonly<Record<string, VentilationAnswer>>,

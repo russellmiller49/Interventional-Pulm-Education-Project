@@ -1,0 +1,1887 @@
+{
+  "packet": "MV-03 educational-content review packet: explanatory ventilation feedback and casebook source identities",
+  "module": "mechanical-ventilation",
+  "preparedOn": "2026-09-15",
+  "preparedBy": "AI authoring assistant (Claude) at the owner's request; not a clinical reviewer",
+  "contentVersion": "mv-03-2026-09-15",
+  "baseCommit": "905372bed4f0bbb150234df8ab31a658f31294ff",
+  "notClinicalApproval": "Nothing in this packet is clinical approval. Every decision is NOT REVIEWED. Passing tests show the wording is what this packet quotes, not that it is correct.",
+  "reviewScope": "Faculty and respiratory-therapist collaborators review high-consequence explanations, safety explanations and source identities; not item difficulty or any pass threshold.",
+  "howToRecordADecision": "Set reviewerDecision.status to ACCEPTED or CHANGES REQUESTED with a named human reviewer, role, ISO date and reviewedVersion equal to contentVersion. Any later wording change fails the packet test until the quoted wording is updated, which reopens review.",
+  "carriedHolds": [
+    "The live case MV-03 stays excluded from public practice pending faculty/RT review of paired-breath intrinsic-PEEP measurement and settling (MV-01). This batch does not touch it.",
+    "MV-02's quantitative PEEP-comparison interpretation remains pending review."
+  ],
+  "documents": {
+    "dyssynchrony": {
+      "location": "OneDrive 03_Education_Teaching/critical_care_references_old_version/Mechanical_ventilation/Patient-Ventilator Dyssynchrony.pdf",
+      "sha256": "7a20508d1d8b761b38ed91972bbecbad73fc6c53f9d51f126f97497305dc2229",
+      "pages": 16,
+      "printedIdentity": "Elvira-Markela Antonogiannaki, Dimitris Georgopoulos, Evangelia Akoumianaki. Korean J Crit Care Med 2017 November 32(4):307-322; https://doi.org/10.4266/kjccm.2017.00535.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude); locator search by a subagent of the same assistant"
+    },
+    "ch53": {
+      "location": "OneDrive 03_Education_Teaching/Books/Principles of Mechanical Ventilation_Tobin_3e/Chapter 53. Fighting the Ventilator.pdf",
+      "sha256": "48f35d1f7e9914fc5c54b28d798f7bbb463f9035d9328b0b080c2a6e9ac5460a",
+      "pages": 37,
+      "printedIdentity": "Principles and Practice of Mechanical Ventilation, 3e > Chapter 53. Fighting the Ventilator. Martin J. Tobin; Amal Jubran; Franco Laghi. Web print dated 7/18/2018.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude); locator search by a subagent of the same assistant"
+    },
+    "ch54": {
+      "location": "OneDrive 03_Education_Teaching/Books/Principles of Mechanical Ventilation_Tobin_3e/Chapter 54. Psychological Problems in the Ventilated Patient.pdf",
+      "sha256": "f973b6c7417d184c22a7eec22f93c4100ce3006ba7d64a4803ecb515278fef36",
+      "pages": 19,
+      "printedIdentity": "Principles and Practice of Mechanical Ventilation, 3e > Chapter 54. Psychological Problems in the Ventilated Patient. Yoanna Skrobik. Web print dated 7/18/2018.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude); locator search by a subagent of the same assistant"
+    },
+    "ch55": {
+      "location": "OneDrive 03_Education_Teaching/Books/Principles of Mechanical Ventilation_Tobin_3e/Chapter 55. Addressing Respiratory Discomfort in the Ventilated Patient.pdf",
+      "sha256": "aa5ffc304b152140f700f6df444b5d4dae7b187b571236932e461a9697bc3fcc",
+      "pages": 26,
+      "printedIdentity": "Principles and Practice of Mechanical Ventilation, 3e > Chapter 55. Addressing Respiratory Discomfort in the Ventilated Patient. Robert B. Banzett; Thomas Similowski; Robert Brown. Web print dated 7/18/2018.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude); locator search by a subagent of the same assistant"
+    },
+    "fullText": {
+      "location": "Local-Data private-references/critical-care-full-textbooks/Mechanical_Ventilation/Principles-and-Practice-of-Mechanical-Ventilation-3E-2012-PDF-pdf.pdf",
+      "sha256": "e678ea8db8a18480653367b52deafea7847e52f38f1cd7e1fe4a2e2d0674dbac",
+      "pages": 1585,
+      "printedIdentity": "Principles and Practice of Mechanical Ventilation, Third Edition. Editor Martin J. Tobin, MD. Copyright 2013 by The McGraw-Hill Companies. ISBN 978-0-07-176678-4 (e-book); print ISBN 978-0-07-173626-8. The file name says 2012; the copyright page says 2013.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude); locator search by a subagent of the same assistant"
+    },
+    "casebookDocx": {
+      "location": "OneDrive 03_Education_Teaching/critical_care_references_old_version/Mechanical_ventilation/mechanical_ventilation_simulator_casebook.docx",
+      "sha256": "ad8207d9394c4d416d66a9b8f135d9a3d89fa0a183a2cfc6b3d7adfa255bcd5b",
+      "pages": null,
+      "printedIdentity": "Word document titled \"Virtual Mechanical Ventilation Simulator Casebook\", subject \"Fifteen mechanical ventilation physiology and dyssynchrony simulation cases\". Core properties: creator \"OpenAI\", description \"generated by python-docx\", created and modified 2013-12-23T23:15:00Z (a library default, not a real date); file system date 2026-07-16. Six top-level sections, the last \"6. Source notes and references\" listing references [1]-[8]. Contains scoring, examination-version and credit guidance. No person, date or reviewer is named; a Word document has no fixed pagination.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude); locator search by a subagent of the same assistant"
+    },
+    "casebookJson": {
+      "location": "~/Downloads/mechanical_ventilation_simulator_cases.json",
+      "sha256": "de53a9308f4127358376bfa54a7fc29524b6f0652e9185a8a861de3958dd2883",
+      "pages": null,
+      "printedIdentity": "JSON titled \"Virtual Mechanical Ventilation Simulator Case Set\". Its cases and sources arrays are deep-equal to the registered src/features/mechanical-ventilation/content/source-cases.v1.json (SHA-256 53225988c2a5a1b6f0036ec1751dc928dd16ed54c8c545f014a09b61968ffca2), which differs only in serialization.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude); locator search by a subagent of the same assistant"
+    },
+    "transcripts": {
+      "location": "Local-Data private-references/clinical-language-sources/Critical_Care_Transcripts/Critical_Care_transcripts_cleaned.md",
+      "sha256": "303ed40e9f4ed226e0593ba58d107e5880b0c5bf42bcad5f722a14ddac4d1dc2",
+      "pages": null,
+      "printedIdentity": "Opens \"Critical Care webinars and podcasts\": a timestamped podcast and webinar collection. No match to the case set's lecture list (case-based NIV, ARDS, severe asthma, waveform interpretation, respiratory mechanics, troubleshooting) was established; it never mentions intrinsic PEEP or auto-PEEP. File-name searches of Local-Data, ~/Downloads and OneDrive found no other ventilation transcript set.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude); locator search by a subagent of the same assistant"
+    }
+  },
+  "questionItems": [
+    {
+      "id": "expiration-and-air-trapping:check",
+      "file": "src/features/mechanical-ventilation/content/learningQuestions.ts",
+      "teachingFile": "src/features/mechanical-ventilation/content/questionTeaching.ts",
+      "surfaces": ["/mechanical-ventilation/learn?entry=review"],
+      "disposition": "replace",
+      "presentation": "worked-comparison",
+      "concept": "Expiratory time against a slowly emptying lung: how rate and inspiratory time decide the time left to exhale",
+      "combinedWith": [],
+      "unchangedForLegacyRecords": {
+        "prompt": "An obstructive patient still has outward flow when each new inspiration begins. What would shortening expiration tend to do?",
+        "correctId": "0",
+        "choices": [
+          {
+            "id": "0",
+            "label": "Increase the opportunity for gas trapping",
+            "unsafe": false
+          },
+          {
+            "id": "1",
+            "label": "Increase the time available for gas release",
+            "unsafe": false
+          },
+          {
+            "id": "2",
+            "label": "Reduce resistance in the tube and airways",
+            "unsafe": false
+          }
+        ]
+      },
+      "changedWording": [
+        {
+          "field": "purpose",
+          "previous": "Apply does the breath have time to finish? to a short authored case.",
+          "current": "See how a setting decides the time the lung has to empty, before judging whether a change helps."
+        },
+        {
+          "field": "hint",
+          "previous": "Resistance and compliance influence how quickly the respiratory system empties. Expiratory flow still present when the next breath starts suggests incomplete emptying. The resulting intrinsic PEEP is additional to the set PEEP; a valid expiratory hold can help assess it.",
+          "current": null
+        },
+        {
+          "field": "explanation",
+          "previous": "Increase the opportunity for gas trapping. There is less time to empty a system that is already emptying slowly.",
+          "current": "Outward flow at the start of each breath means this lung has not finished emptying. For mandatory breaths, a higher rate shortens the cycle and the loss comes out of expiration; a longer inspiratory time at the same rate does the same. Less expiratory time leaves more volume behind, so the next breath starts higher and trapped volume and intrinsic PEEP can rise. More expiratory time or less obstruction helps the lung empty, although in severe obstruction flow can persist even with a long expiration."
+        },
+        {
+          "field": "nextCheck",
+          "previous": null,
+          "current": "After any change in rate or inspiratory time, look at expiratory flow at the moment the next breath starts; in a passive patient, a valid expiratory hold measures the intrinsic PEEP."
+        },
+        {
+          "field": "choices[0].rationale",
+          "previous": "There is less time to empty a system that is already emptying slowly.",
+          "current": "Outward flow at the next breath already shows incomplete emptying. Less expiratory time leaves more of each breath behind, so trapped volume and intrinsic PEEP can rise."
+        },
+        {
+          "field": "choices[1].rationale",
+          "previous": "Shorter expiration reduces, rather than increases, the available emptying interval.",
+          "current": "Shortening expiration means less time for gas release by definition. The reading is tempting because more breaths per minute can feel like more gas out, but each exhalation gets shorter."
+        },
+        {
+          "field": "choices[2].rationale",
+          "previous": "Changing time does not itself remove an obstructing load.",
+          "current": "Timing and obstruction are separate levers. Shortening expiration leaves the obstruction in place; treating the obstruction is what lets gas leave faster."
+        }
+      ],
+      "safetyExplanations": [],
+      "comparison": {
+        "id": "rate-and-expiratory-time",
+        "title": "Set rate, inspiratory time and the time left to exhale",
+        "caption": "Arithmetic for mandatory breaths: cycle length is 60 seconds divided by the rate, and expiration gets what remains after inspiration. A patient who triggers extra breaths shortens the cycle further.",
+        "columns": [
+          "Set rate (/min)",
+          "Cycle length (s)",
+          "Inspiratory time (s)",
+          "Expiratory time (s)"
+        ],
+        "rows": [
+          ["12", "5.0", "1.0", "4.0"],
+          ["20", "3.0", "1.0", "2.0"],
+          ["30", "2.0", "1.0", "1.0"],
+          ["20", "3.0", "1.5", "1.5"]
+        ]
+      },
+      "evidenceIds": ["tobin-3e-copd", "tobin-3e-setting-ventilator"],
+      "sourceLocators": [
+        {
+          "statement": "Expiratory flow that has not returned to zero when the next breath starts indicates incomplete emptying",
+          "evidenceId": "tobin-3e-monitoring",
+          "pdfPage": "16",
+          "section": "Aid with Diagnosis",
+          "finding": "supports",
+          "note": "Flow that never reaches zero suggests intrinsic PEEP, to be confirmed by occlusion."
+        },
+        {
+          "statement": "Expiratory flow that has not returned to zero when the next breath starts indicates incomplete emptying",
+          "evidenceId": "tobin-3e-copd",
+          "pdfPage": "4",
+          "section": "Dynamic Hyperinflation and Intrinsic PEEP",
+          "finding": "supports",
+          "note": "Flow present at end-exhalation means the next breath starts above relaxation volume."
+        },
+        {
+          "statement": "Shorter expiratory time at unchanged mechanics increases dynamic hyperinflation and intrinsic PEEP",
+          "evidenceId": "tobin-3e-copd",
+          "pdfPage": "3",
+          "section": "Dynamic Hyperinflation and Intrinsic PEEP",
+          "finding": "supports",
+          "note": "Hyperinflation results when exhalation time is shorter than emptying requires."
+        },
+        {
+          "statement": "Shorter expiratory time at unchanged mechanics increases dynamic hyperinflation and intrinsic PEEP",
+          "evidenceId": "tobin-3e-setting-ventilator",
+          "pdfPage": "17",
+          "section": "Minimizing Dynamic Hyperinflation",
+          "finding": "supports",
+          "note": "End-expiratory volume depends on the time constant and on tidal volume relative to expiratory time; worked example at a rate of 20."
+        },
+        {
+          "statement": "Shorter expiratory time at unchanged mechanics increases dynamic hyperinflation and intrinsic PEEP",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "pdfPage": "23-24",
+          "section": "Setting of Inspiratory Flow",
+          "finding": "narrows",
+          "note": "In patients who trigger breaths, higher flow raised their own rate; timing arithmetic from settings fits passive, mandatory breathing. The comparison caption says so."
+        },
+        {
+          "statement": "Timing and obstruction are separate levers; relieving obstruction improves emptying",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "pdfPage": "16",
+          "section": "Dynamic Hyperinflation",
+          "finding": "partly supports",
+          "note": "Lists treating airway narrowing, a larger tube, less ventilation and a shorter I:E as ways to lower intrinsic PEEP; no sentence says timing leaves resistance unchanged, so the absolute wording was avoided."
+        },
+        {
+          "statement": "Lengthening expiration always stops trapping",
+          "evidenceId": "tobin-3e-copd",
+          "pdfPage": "4",
+          "section": "Dynamic Hyperinflation and Intrinsic PEEP (figure)",
+          "finding": "narrows",
+          "note": "Flow persisted even with a 6-second exhalation; the explanation says flow can persist with a long expiration."
+        }
+      ],
+      "notChecked": [
+        "Figure images in chapters 5 and 31 were not read.",
+        "The rate table is authored arithmetic, not taken from a source."
+      ],
+      "unresolvedQuestions": [
+        "The original option \"Increase the time available for gas release\" restates the stem in reverse. Should a later batch write a new stem and options? That needs new ids so saved records keep their meaning; this batch shows the item as a worked comparison instead."
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "expiration-and-air-trapping:transfer",
+      "file": "src/features/mechanical-ventilation/content/learningQuestions.ts",
+      "teachingFile": "src/features/mechanical-ventilation/content/questionTeaching.ts",
+      "surfaces": ["/mechanical-ventilation/learn?entry=review"],
+      "disposition": "rewrite",
+      "presentation": "question",
+      "concept": "Set PEEP against total PEEP: an expiratory hold reads what the lung holds, including intrinsic PEEP",
+      "combinedWith": [],
+      "unchangedForLegacyRecords": {
+        "prompt": "A valid expiratory hold shows pressure above set PEEP. What does that difference represent in this passive example?",
+        "correctId": "2",
+        "choices": [
+          {
+            "id": "0",
+            "label": "Extra pressure chosen on the PEEP control",
+            "unsafe": false
+          },
+          {
+            "id": "1",
+            "label": "The flow-resistive peak during inspiration",
+            "unsafe": false
+          },
+          {
+            "id": "2",
+            "label": "Intrinsic pressure remaining after expiration",
+            "unsafe": false
+          }
+        ]
+      },
+      "changedWording": [
+        {
+          "field": "purpose",
+          "previous": "Apply does the breath have time to finish? to a short authored case.",
+          "current": "Separate the PEEP you set from the pressure the lung actually holds at end-expiration."
+        },
+        {
+          "field": "hint",
+          "previous": "Resistance and compliance influence how quickly the respiratory system empties. Expiratory flow still present when the next breath starts suggests incomplete emptying. The resulting intrinsic PEEP is additional to the set PEEP; a valid expiratory hold can help assess it.",
+          "current": "During an expiratory hold the valves close and flow stops. With nothing flowing, which pressure does the airway reading come to match?"
+        },
+        {
+          "field": "explanation",
+          "previous": "Intrinsic pressure remaining after expiration. Intrinsic PEEP is pressure additional to set PEEP from incomplete emptying under these conditions.",
+          "current": "An expiratory hold closes the circuit at end-expiration. Once flow stops, airway pressure equilibrates with alveolar pressure, so the reading is total PEEP. Set PEEP is only the baseline the ventilator applies; the excess is intrinsic PEEP, from volume still trapped because expiration did not finish. For example, set PEEP 5 cmH₂O with a hold reading of 12 cmH₂O means intrinsic PEEP of about 7 cmH₂O. The number is interpretable only when the patient makes no inspiratory or expiratory effort during the hold and the pressure has had time to plateau, and it can underestimate trapping behind airways that close completely."
+        },
+        {
+          "field": "nextCheck",
+          "previous": null,
+          "current": "Compare it with the expiratory flow trace: flow still present when the next breath starts is the waveform sign of the same trapped volume."
+        },
+        {
+          "field": "choices[0].rationale",
+          "previous": "The set PEEP is only the selected baseline; the excess was measured, not selected.",
+          "current": "The PEEP control sets the baseline the ventilator applies, and it has not changed. The console may display the higher total PEEP after the hold, but the excess was measured, not selected."
+        },
+        {
+          "field": "choices[1].rationale",
+          "previous": "That describes a different phase and comparison.",
+          "current": "Peak pressure belongs to inspiration, when gas flows through the airways; its resistive part is the peak-to-plateau difference. An end-expiratory hold has no flow, so it contains no resistive pressure."
+        },
+        {
+          "field": "choices[2].rationale",
+          "previous": "Intrinsic PEEP is pressure additional to set PEEP from incomplete emptying under these conditions.",
+          "current": "With flow stopped at end-expiration, the reading reflects pressure in the alveoli. The excess over set PEEP is intrinsic PEEP from gas that had not left before the next breath was due."
+        }
+      ],
+      "safetyExplanations": [],
+      "comparison": null,
+      "evidenceIds": [
+        "tobin-3e-peep",
+        "tobin-3e-setting-ventilator",
+        "tobin-3e-monitoring",
+        "tobin-3e-copd"
+      ],
+      "sourceLocators": [
+        {
+          "statement": "An end-expiratory hold in a passive patient reads total PEEP; intrinsic PEEP is total minus set PEEP",
+          "evidenceId": "tobin-3e-peep",
+          "pdfPage": "7-8",
+          "section": "Assessment of Respiratory Mechanics",
+          "finding": "supports",
+          "note": "The end-expiratory occlusion plateau is total PEEP; intrinsic PEEP is total minus applied PEEP."
+        },
+        {
+          "statement": "An end-expiratory hold in a passive patient reads total PEEP; intrinsic PEEP is total minus set PEEP",
+          "evidenceId": "tobin-3e-setting-ventilator",
+          "pdfPage": "17",
+          "section": "Minimizing Dynamic Hyperinflation",
+          "finding": "supports",
+          "note": "The value is meaningless with active expiration or inspiratory trigger efforts."
+        },
+        {
+          "statement": "An end-expiratory hold in a passive patient reads total PEEP; intrinsic PEEP is total minus set PEEP",
+          "evidenceId": "tobin-3e-monitoring",
+          "pdfPage": "10",
+          "section": "Random Error",
+          "finding": "supports",
+          "note": "The patient must not resist; expiratory muscle activity overstates intrinsic PEEP."
+        },
+        {
+          "statement": "An end-expiratory hold in a passive patient reads total PEEP; intrinsic PEEP is total minus set PEEP",
+          "evidenceId": "tobin-3e-copd",
+          "pdfPage": "11-12",
+          "section": "Intrinsic and External PEEP",
+          "finding": "narrows",
+          "note": "The plateau can take several seconds, the method is impractical when most breaths are triggered, and it misses airways that close completely; the explanation adds the last two conditions."
+        },
+        {
+          "statement": "An end-expiratory hold in a passive patient reads total PEEP; intrinsic PEEP is total minus set PEEP",
+          "evidenceId": "tobin-3e-monitoring",
+          "pdfPage": "16",
+          "section": "Aid with Diagnosis",
+          "finding": "narrows",
+          "note": "The displayed occlusion pressure is labeled intrinsic PEEP without subtracting set PEEP (external PEEP implicitly zero)."
+        },
+        {
+          "statement": "Expiratory flow that has not returned to zero when the next breath starts indicates incomplete emptying",
+          "evidenceId": "tobin-3e-monitoring",
+          "pdfPage": "16",
+          "section": "Aid with Diagnosis",
+          "finding": "supports",
+          "note": "Flow that never reaches zero suggests intrinsic PEEP, to be confirmed by occlusion."
+        }
+      ],
+      "notChecked": ["The 5 / 12 / 7 cmH2O example is illustrative arithmetic."],
+      "unresolvedQuestions": [
+        "Are the passive-hold conditions and the \"can underestimate trapping behind airways that close completely\" caveat right for learners at this level?",
+        "Chapter 48 labels the displayed occlusion pressure intrinsic PEEP without subtracting set PEEP. Does the module's total-minus-set convention match the consoles it simulates?"
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "expiration-and-air-trapping:placement",
+      "file": "src/features/mechanical-ventilation/content/learningQuestions.ts",
+      "teachingFile": "src/features/mechanical-ventilation/content/questionTeaching.ts",
+      "surfaces": ["/mechanical-ventilation/learn?entry=placement"],
+      "disposition": "rewrite",
+      "presentation": "question",
+      "concept": "Which control change takes time from expiration and worsens trapping",
+      "combinedWith": [],
+      "unchangedForLegacyRecords": {
+        "prompt": "Outward flow has not ended when the next inspiration starts. Which change could aggravate this pattern?",
+        "correctId": "2",
+        "choices": [
+          {
+            "id": "0",
+            "label": "Giving more time for expiration",
+            "unsafe": false
+          },
+          {
+            "id": "1",
+            "label": "Reducing a reversible airway obstruction",
+            "unsafe": false
+          },
+          {
+            "id": "2",
+            "label": "Delivering mandatory breaths more frequently",
+            "unsafe": false
+          }
+        ]
+      },
+      "changedWording": [
+        {
+          "field": "purpose",
+          "previous": "Apply does the breath have time to finish? to a short authored case.",
+          "current": "Link a control change to the time the lung has to empty; the idea returns in every obstructive case."
+        },
+        {
+          "field": "hint",
+          "previous": "Resistance and compliance influence how quickly the respiratory system empties. Expiratory flow still present when the next breath starts suggests incomplete emptying. The resulting intrinsic PEEP is additional to the set PEEP; a valid expiratory hold can help assess it.",
+          "current": "Each cycle is split between inspiration and expiration. Which change takes time away from expiration?"
+        },
+        {
+          "field": "explanation",
+          "previous": "Delivering mandatory breaths more frequently. More frequent breaths can shorten expiration and worsen trapping.",
+          "current": "Expiratory flow that has not reached zero when the next breath starts means the lung is still emptying. Delivering mandatory breaths more often shortens each cycle; with inspiratory time unchanged, the time comes out of expiration and more gas stays behind. At a rate of 20 with a 1.0-second inspiratory time, expiration has 2.0 seconds; at 30 it has 1.0 second. The other two changes help emptying, one by adding time and the other by letting gas leave faster."
+        },
+        {
+          "field": "nextCheck",
+          "previous": null,
+          "current": "After a rate or inspiratory-time change, recheck whether expiratory flow reaches zero before the next breath; in a passive patient, measure intrinsic PEEP with a valid expiratory hold."
+        },
+        {
+          "field": "choices[0].rationale",
+          "previous": "More emptying time can help rather than aggravate incomplete emptying.",
+          "current": "This works in the other direction. More expiratory time lets a slowly emptying lung get closer to its resting volume before the next breath."
+        },
+        {
+          "field": "choices[1].rationale",
+          "previous": "Reducing resistance can improve emptying.",
+          "current": "This also helps emptying. Lower resistance lets gas leave faster, so more of the breath empties in the same expiratory time."
+        },
+        {
+          "field": "choices[2].rationale",
+          "previous": "More frequent breaths can shorten expiration and worsen trapping.",
+          "current": "More frequent breaths shorten each cycle. With inspiratory time unchanged, expiration absorbs the loss and more volume stays trapped."
+        }
+      ],
+      "safetyExplanations": [],
+      "comparison": null,
+      "evidenceIds": ["tobin-3e-copd", "tobin-3e-setting-ventilator"],
+      "sourceLocators": [
+        {
+          "statement": "Expiratory flow that has not returned to zero when the next breath starts indicates incomplete emptying",
+          "evidenceId": "tobin-3e-copd",
+          "pdfPage": "4",
+          "section": "Dynamic Hyperinflation and Intrinsic PEEP",
+          "finding": "supports",
+          "note": "Flow present at end-exhalation means the next breath starts above relaxation volume."
+        },
+        {
+          "statement": "Shorter expiratory time at unchanged mechanics increases dynamic hyperinflation and intrinsic PEEP",
+          "evidenceId": "tobin-3e-copd",
+          "pdfPage": "3",
+          "section": "Dynamic Hyperinflation and Intrinsic PEEP",
+          "finding": "supports",
+          "note": "Hyperinflation results when exhalation time is shorter than emptying requires."
+        },
+        {
+          "statement": "Shorter expiratory time at unchanged mechanics increases dynamic hyperinflation and intrinsic PEEP",
+          "evidenceId": "tobin-3e-setting-ventilator",
+          "pdfPage": "17",
+          "section": "Minimizing Dynamic Hyperinflation",
+          "finding": "supports",
+          "note": "End-expiratory volume depends on the time constant and on tidal volume relative to expiratory time; worked example at a rate of 20."
+        },
+        {
+          "statement": "Shorter expiratory time at unchanged mechanics increases dynamic hyperinflation and intrinsic PEEP",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "pdfPage": "23-24",
+          "section": "Setting of Inspiratory Flow",
+          "finding": "narrows",
+          "note": "In patients who trigger breaths, higher flow raised their own rate; timing arithmetic from settings fits passive, mandatory breathing. The comparison caption says so."
+        },
+        {
+          "statement": "Timing and obstruction are separate levers; relieving obstruction improves emptying",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "pdfPage": "16",
+          "section": "Dynamic Hyperinflation",
+          "finding": "partly supports",
+          "note": "Lists treating airway narrowing, a larger tube, less ventilation and a shorter I:E as ways to lower intrinsic PEEP; no sentence says timing leaves resistance unchanged, so the absolute wording was avoided."
+        }
+      ],
+      "notChecked": ["The 20 and 30 breaths/min timing example is authored arithmetic."],
+      "unresolvedQuestions": [],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "high-peak-pressure-integration:transfer",
+      "file": "src/features/mechanical-ventilation/content/learningQuestions.ts",
+      "teachingFile": "src/features/mechanical-ventilation/content/questionTeaching.ts",
+      "surfaces": ["/mechanical-ventilation/learn?entry=review"],
+      "disposition": "rewrite",
+      "presentation": "question",
+      "concept": "Dynamic hyperinflation as a circulatory emergency, and why raising the rate or the alarm limit makes it worse",
+      "combinedWith": [],
+      "unchangedForLegacyRecords": {
+        "prompt": "Another patient has high pressure, persistent expiratory flow at the next breath, and worsening hypotension. What is the most appropriate priority?",
+        "correctId": "0",
+        "choices": [
+          {
+            "id": "0",
+            "label": "Urgent bedside support and assessment of incomplete emptying",
+            "unsafe": false
+          },
+          {
+            "id": "1",
+            "label": "A higher mandatory rate to correct gas exchange promptly",
+            "unsafe": true
+          },
+          {
+            "id": "2",
+            "label": "A higher alarm limit while awaiting the next routine review",
+            "unsafe": true
+          }
+        ]
+      },
+      "changedWording": [
+        {
+          "field": "purpose",
+          "previous": "Apply one alarm, different patients to a short authored case.",
+          "current": "Recognize trapped gas that has become a circulatory problem, and why the quick fixes on the console make it worse."
+        },
+        {
+          "field": "hint",
+          "previous": "Use the patient’s stability first, then valid pressure comparisons, expiratory flow, and effort. Ask which finding supports your explanation and which competing explanation remains. Reassess after an action using the same discriminating signals.",
+          "current": "Three findings arrive together. Which one explains the other two, and what does trapped volume do to blood returning to the heart?"
+        },
+        {
+          "field": "explanation",
+          "previous": "Urgent bedside support and assessment of incomplete emptying. The pattern raises concern for dynamic hyperinflation affecting circulation. Respond under the local emergency protocol.",
+          "current": "Expiratory flow still present when the next breath starts shows incomplete emptying. As trapped volume builds, pressure in the chest rises, venous return and right-ventricular filling fall, and blood pressure can drop sharply. High airway pressure and hypotension with that flow pattern make dynamic hyperinflation the leading explanation, while other causes of high pressure with hypotension, such as tension pneumothorax, stay on the list. Treat it as a bedside emergency: get help, support the patient and assess emptying under your local emergency protocol."
+        },
+        {
+          "field": "nextCheck",
+          "previous": null,
+          "current": "Reassess the same signals after each action: whether expiratory flow now reaches zero before the next breath, whether intrinsic PEEP falls and whether blood pressure recovers."
+        },
+        {
+          "field": "choices[0].rationale",
+          "previous": "The pattern raises concern for dynamic hyperinflation affecting circulation. Respond under the local emergency protocol.",
+          "current": "Flow still leaving at the next breath, rising pressure and falling blood pressure together point to trapped volume affecting the circulation. Getting help and assessing emptying treats the likely cause while the patient is supported."
+        },
+        {
+          "field": "choices[1].rationale",
+          "previous": "Shortening expiration may worsen trapping and circulatory compromise.",
+          "current": "Tempting when gas exchange looks like the problem, but more breaths per minute shorten each expiration, and this patient is already failing to empty."
+        },
+        {
+          "field": "choices[1].safety",
+          "previous": null,
+          "current": "A higher rate shortens every expiration, so more gas is trapped, pressure in the chest rises further and blood pressure can fall further. Correcting CO₂ is not the immediate threat here."
+        },
+        {
+          "field": "choices[2].rationale",
+          "previous": "Changing an alarm boundary does not treat an unstable patient.",
+          "current": "An alarm limit changes when the ventilator warns you, not what is happening in the chest."
+        },
+        {
+          "field": "choices[2].safety",
+          "previous": null,
+          "current": "Raising the limit silences a warning while trapped volume and hypotension continue, and a routine review is too slow for an unstable patient."
+        }
+      ],
+      "safetyExplanations": [
+        {
+          "choiceId": "1",
+          "label": "A higher mandatory rate to correct gas exchange promptly",
+          "current": "A higher rate shortens every expiration, so more gas is trapped, pressure in the chest rises further and blood pressure can fall further. Correcting CO₂ is not the immediate threat here."
+        },
+        {
+          "choiceId": "2",
+          "label": "A higher alarm limit while awaiting the next routine review",
+          "current": "Raising the limit silences a warning while trapped volume and hypotension continue, and a routine review is too slow for an unstable patient."
+        }
+      ],
+      "comparison": null,
+      "evidenceIds": ["tobin-3e-copd", "tobin-3e-fighting-ventilator"],
+      "sourceLocators": [
+        {
+          "statement": "Expiratory flow that has not returned to zero when the next breath starts indicates incomplete emptying",
+          "evidenceId": "tobin-3e-monitoring",
+          "pdfPage": "16",
+          "section": "Aid with Diagnosis",
+          "finding": "supports",
+          "note": "Flow that never reaches zero suggests intrinsic PEEP, to be confirmed by occlusion."
+        },
+        {
+          "statement": "Dynamic hyperinflation can cause hypotension by impairing venous return",
+          "evidenceId": "tobin-3e-copd",
+          "pdfPage": "4",
+          "section": "Dynamic Hyperinflation and Intrinsic PEEP",
+          "finding": "supports",
+          "note": "Hyperinflation impairs venous return and right-ventricular filling and can sharply reduce cardiac output. The phrase \"intrathoracic pressure\" was not found on this page."
+        },
+        {
+          "statement": "Increasing ventilation when emptying is incomplete can worsen circulation and may not lower CO2",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "pdfPage": "17",
+          "section": "Dynamic Hyperinflation",
+          "finding": "supports",
+          "note": "In a described case, blood pressure fell each time ventilation was briefly increased."
+        },
+        {
+          "statement": "A brief disconnection from the ventilator is described as a diagnostic step",
+          "evidenceId": "tobin-3e-copd",
+          "pdfPage": "11",
+          "section": "Intrinsic and External PEEP",
+          "finding": "supports",
+          "note": "Described in the chapter; not added to learner text (see unresolved questions)."
+        },
+        {
+          "statement": "An apnea trial is described as a diagnostic step",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "pdfPage": "17",
+          "section": "Dynamic Hyperinflation",
+          "finding": "supports",
+          "note": "Described in the chapter; not added to learner text (see unresolved questions)."
+        },
+        {
+          "statement": "Raising or silencing an alarm limit does not treat the cause",
+          "evidenceId": "tobin-3e-monitoring",
+          "pdfPage": "19",
+          "section": "Provide Alarms",
+          "finding": "partly supports",
+          "note": "An alarm reflects a change in the ventilator or the patient; causes are listed. Nothing on raising limits."
+        },
+        {
+          "statement": "Raising or silencing an alarm limit does not treat the cause",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "pdfPage": "1-2, 30",
+          "section": "Introduction / Initial Assessment; Summary",
+          "finding": "partly supports",
+          "note": "Ventilate the patient first, separating ventilator from patient causes, then look for the cause systematically."
+        },
+        {
+          "statement": "Raising or silencing an alarm limit does not treat the cause",
+          "evidenceId": "none",
+          "pdfPage": null,
+          "section": null,
+          "finding": "does not address",
+          "note": "No registered chapter discusses raising or silencing an alarm limit; the safety note is authored reasoning."
+        }
+      ],
+      "notChecked": [
+        "\"Tension pneumothorax stays on the list\" was not checked at a locator.",
+        "The explanation says pressure in the chest rises; the cited page describes impaired venous return and right-ventricular filling but the phrase was not found there."
+      ],
+      "unresolvedQuestions": [
+        "Should the explanation name the brief disconnection or apnea trial that chapters 31 (p11) and 53 (p17) describe? It was not added to learner text.",
+        "The alarm-limit safety note is authored reasoning with no registered source. Keep, reword or source it?"
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "ventilation-and-co2:final",
+      "file": "src/features/mechanical-ventilation/content/learningQuestions.ts",
+      "teachingFile": "src/features/mechanical-ventilation/content/questionTeaching.ts",
+      "surfaces": ["/mechanical-ventilation/assess"],
+      "disposition": "rewrite",
+      "presentation": "question",
+      "concept": "Breath count is not effective ventilation, and oxygen fraction does not clear CO₂",
+      "combinedWith": [],
+      "unchangedForLegacyRecords": {
+        "prompt": "A patient with rising CO₂ has a high total rate and persistent outward flow before every new breath. Which interpretation is most defensible?",
+        "correctId": "1",
+        "choices": [
+          {
+            "id": "0",
+            "label": "A high rate proves adequate CO₂ clearance",
+            "unsafe": false
+          },
+          {
+            "id": "1",
+            "label": "Incomplete emptying may limit effective ventilation",
+            "unsafe": false
+          },
+          {
+            "id": "2",
+            "label": "A higher oxygen fraction will directly clear the CO₂",
+            "unsafe": false
+          }
+        ]
+      },
+      "changedWording": [
+        {
+          "field": "purpose",
+          "previous": "Apply what will change the co₂? to a short authored case.",
+          "current": "Keep breath count, effective ventilation and oxygen fraction apart when CO₂ is rising."
+        },
+        {
+          "field": "hint",
+          "previous": "Alveolar ventilation is the portion of ventilation reaching gas-exchanging lung. CO₂ also depends on production. A rate change alters breath timing promptly, but a blood-gas response takes time; in obstruction, more rate may worsen trapping instead of improving effective ventilation.",
+          "current": "CO₂ leaves with gas that reaches exchanging lung and then gets out. What does the expiratory trace say about how much gets out before each breath?"
+        },
+        {
+          "field": "explanation",
+          "previous": "Incomplete emptying may limit effective ventilation. The expiratory pattern means a further rate increase could worsen trapping.",
+          "current": "CO₂ is set by its production relative to alveolar ventilation, not by the number of breaths. Here flow is still outward when each breath starts, so every breath begins from a larger trapped volume. Adding rate would shorten expiration further and add to trapping, and the expected fall in CO₂ may not follow. Oxygen fraction acts on oxygenation, not on CO₂ clearance."
+        },
+        {
+          "field": "nextCheck",
+          "previous": null,
+          "current": "Compare exhaled tidal volume and total rate with expiratory flow at each breath start, and measure intrinsic PEEP with a valid hold when the patient is passive."
+        },
+        {
+          "field": "choices[0].rationale",
+          "previous": "Rate alone does not establish effective alveolar ventilation.",
+          "current": "Rate counts breaths, not the gas that reaches exchanging lung and leaves it. A high rate with incomplete emptying can coexist with rising CO₂."
+        },
+        {
+          "field": "choices[1].rationale",
+          "previous": "The expiratory pattern means a further rate increase could worsen trapping.",
+          "current": "Outward flow at every breath start shows incomplete emptying. More rate would shorten expiration further, so the expected fall in CO₂ may not follow."
+        },
+        {
+          "field": "choices[2].rationale",
+          "previous": "Oxygen fraction is not a direct control of alveolar ventilation.",
+          "current": "Oxygen fraction sets how much oxygen each breath carries; it does not increase alveolar ventilation, so it cannot clear CO₂. In some patients with COPD, extra oxygen can even raise CO₂."
+        }
+      ],
+      "safetyExplanations": [],
+      "comparison": null,
+      "evidenceIds": ["tobin-3e-setting-ventilator", "tobin-3e-copd"],
+      "sourceLocators": [
+        {
+          "statement": "PaCO2 is set by CO2 production relative to alveolar ventilation",
+          "evidenceId": "tobin-3e-setting-ventilator",
+          "pdfPage": "16",
+          "section": "Minute Ventilation",
+          "finding": "supports",
+          "note": "CO2 production, minute ventilation and the dead-space fraction together set PaCO2 (equation shown as an image, not read)."
+        },
+        {
+          "statement": "PaCO2 is set by CO2 production relative to alveolar ventilation",
+          "evidenceId": "tobin-3e-copd",
+          "pdfPage": "9",
+          "section": "Goals of Ventilator Assistance",
+          "finding": "supports",
+          "note": "The ventilator lowers CO2 mainly by raising alveolar ventilation."
+        },
+        {
+          "statement": "Increasing ventilation when emptying is incomplete can worsen circulation and may not lower CO2",
+          "evidenceId": "tobin-3e-copd",
+          "pdfPage": "10",
+          "section": "Intrinsic and External PEEP",
+          "finding": "partly supports",
+          "note": "Reducing minute ventilation is the key correction even with hypercapnia; the chapter does not say PaCO2 may fail to fall."
+        },
+        {
+          "statement": "Increasing ventilation when emptying is incomplete can worsen circulation and may not lower CO2",
+          "evidenceId": "unregistered:tobin-3e-chapter-30-severe-asthma",
+          "pdfPage": "11",
+          "section": "Gas Exchange: Hypercapnia",
+          "finding": "supports",
+          "note": "Added ventilation can be offset by dead space from worsening hyperinflation. Chapter 30 is not a registered source."
+        },
+        {
+          "statement": "FiO2 acts on oxygenation, not on alveolar ventilation",
+          "evidenceId": "tobin-3e-copd",
+          "pdfPage": "6",
+          "section": "Deterioration of Gas Exchange",
+          "finding": "narrows",
+          "note": "Supplemental oxygen can raise PaCO2 in some patients with COPD; the caveat was added to two items."
+        }
+      ],
+      "notChecked": [
+        "Chapter 30 is not a registered source; its identity was not separately recorded."
+      ],
+      "unresolvedQuestions": [
+        "\"The expected fall in CO2 may not follow\" rests on unregistered chapter 30 (p11). Register that chapter or soften the sentence?"
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "oxygenation-response:transfer",
+      "file": "src/features/mechanical-ventilation/content/learningQuestions.ts",
+      "teachingFile": "src/features/mechanical-ventilation/content/questionTeaching.ts",
+      "surfaces": ["/mechanical-ventilation/learn?entry=review"],
+      "disposition": "combine",
+      "presentation": "worked-comparison",
+      "concept": "A control changes its own variable: FiO₂ is an oxygenation lever, distinct from PEEP and from ventilation",
+      "combinedWith": ["ventilation-and-co2:placement"],
+      "unchangedForLegacyRecords": {
+        "prompt": "FiO₂ is increased with PEEP unchanged. Which statement describes what was directly changed?",
+        "correctId": "1",
+        "choices": [
+          {
+            "id": "0",
+            "label": "The pressure maintained between breaths",
+            "unsafe": false
+          },
+          {
+            "id": "1",
+            "label": "The oxygen fraction in inspired gas",
+            "unsafe": false
+          },
+          {
+            "id": "2",
+            "label": "The effective volume clearing CO₂",
+            "unsafe": false
+          }
+        ]
+      },
+      "changedWording": [
+        {
+          "field": "purpose",
+          "previous": "Apply did oxygenation improve at a cost? to a short authored case.",
+          "current": "Name what a single control changes directly, and keep the patient’s response as a separate observation."
+        },
+        {
+          "field": "hint",
+          "previous": "FiO₂ changes oxygen concentration at the airway. PEEP changes end-expiratory pressure and may help maintain aerated lung; it can also overdistend lung or affect circulation. Improved saturation is one result, not the whole reassessment.",
+          "current": null
+        },
+        {
+          "field": "explanation",
+          "previous": "The oxygen fraction in inspired gas. FiO₂ changes concentration; improved blood oxygenation remains a patient response to assess.",
+          "current": "Raising FiO₂ changes one thing directly: the oxygen fraction of every breath, on the oxygenation side. Whether saturation or PaO₂ improves is the patient’s response, which you still check. It is not the pressure between breaths, which is PEEP and did not change, and it is not the ventilation that clears CO₂, which belongs to the other column."
+        },
+        {
+          "field": "nextCheck",
+          "previous": null,
+          "current": "Watch saturation or PaO₂ for the response and read CO₂ separately; in some patients with COPD, extra oxygen can raise CO₂ indirectly."
+        },
+        {
+          "field": "choices[0].rationale",
+          "previous": "That describes the PEEP setting, which was unchanged.",
+          "current": "That is PEEP, and the stem keeps PEEP unchanged. PEEP and FiO₂ are both oxygenation levers, which is why they are easy to confuse."
+        },
+        {
+          "field": "choices[1].rationale",
+          "previous": "FiO₂ changes concentration; improved blood oxygenation remains a patient response to assess.",
+          "current": "FiO₂ changes the oxygen concentration of every breath. Whether blood oxygen improves is a patient response that still has to be checked."
+        },
+        {
+          "field": "choices[2].rationale",
+          "previous": "Changing oxygen fraction does not directly increase alveolar ventilation.",
+          "current": "Tidal volume, rate, emptying and dead space set CO₂ clearance. Changing the oxygen fraction does not increase alveolar ventilation."
+        }
+      ],
+      "safetyExplanations": [],
+      "comparison": {
+        "id": "oxygenation-and-co2-axes",
+        "title": "Two gas-exchange questions: oxygenation and CO₂ clearance",
+        "caption": "Main levers only. The columns interact: lung volume and tidal volume also affect oxygenation.",
+        "columns": ["Aspect", "Oxygenation", "CO₂ clearance"],
+        "rows": [
+          [
+            "Main ventilator levers",
+            "FiO₂; PEEP, which keeps lung open and reduces shunt",
+            "Tidal volume and total rate, and whether each breath empties"
+          ],
+          [
+            "Patient factors",
+            "Shunt and ventilation–perfusion mismatch",
+            "Dead space and CO₂ production"
+          ],
+          ["What you read", "Saturation, PaO₂", "PaCO₂"],
+          [
+            "Not changed directly",
+            "Raising FiO₂ does not increase alveolar ventilation",
+            "Raising rate or tidal volume does not add oxygen to the inspired gas"
+          ]
+        ]
+      },
+      "evidenceIds": ["tobin-3e-setting-ventilator", "tobin-3e-peep", "tobin-3e-copd"],
+      "sourceLocators": [
+        {
+          "statement": "Oxygenation depends mainly on FiO2 and on lung volume held open by PEEP, separate from the ventilation controls",
+          "evidenceId": "tobin-3e-setting-ventilator",
+          "pdfPage": "9",
+          "section": "Fractional Inspired Oxygen Concentration",
+          "finding": "supports",
+          "note": "PaO2 is raised by FiO2 or by a higher lung volume that re-expands collapsed units; lung volume and tidal volume are oxygenation levers too, which the comparison caption states."
+        },
+        {
+          "statement": "Oxygenation depends mainly on FiO2 and on lung volume held open by PEEP, separate from the ventilation controls",
+          "evidenceId": "tobin-3e-peep",
+          "pdfPage": "5",
+          "section": "Effect in Hypoxemic Respiratory Failure",
+          "finding": "supports",
+          "note": "PEEP recruits lung and lowers shunt."
+        },
+        {
+          "statement": "Oxygenation depends mainly on FiO2 and on lung volume held open by PEEP, separate from the ventilation controls",
+          "evidenceId": "tobin-3e-setting-ventilator",
+          "pdfPage": "16",
+          "section": "Minute Ventilation",
+          "finding": "supports",
+          "note": "Minute ventilation follows from tidal volume and rate."
+        },
+        {
+          "statement": "FiO2 acts on oxygenation, not on alveolar ventilation",
+          "evidenceId": "tobin-3e-copd",
+          "pdfPage": "6",
+          "section": "Deterioration of Gas Exchange",
+          "finding": "narrows",
+          "note": "Supplemental oxygen can raise PaCO2 in some patients with COPD; the caveat was added to two items."
+        }
+      ],
+      "notChecked": [
+        "Whether raising FiO2 changes CO2 through effects other than alveolar ventilation was checked only at chapter 31 p6."
+      ],
+      "unresolvedQuestions": ["Is the COPD caveat in the next check worded appropriately?"],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "ventilation-and-co2:check",
+      "file": "src/features/mechanical-ventilation/content/learningQuestions.ts",
+      "teachingFile": "src/features/mechanical-ventilation/content/questionTeaching.ts",
+      "surfaces": ["/mechanical-ventilation/learn?entry=review"],
+      "disposition": "rewrite",
+      "presentation": "question",
+      "concept": "Rising CO₂ with acceptable saturation: work from the determinants of CO₂, not the oxygen numbers",
+      "combinedWith": [],
+      "unchangedForLegacyRecords": {
+        "prompt": "CO₂ is rising while saturation remains acceptable. Which assessment best addresses the CO₂ problem?",
+        "correctId": "0",
+        "choices": [
+          {
+            "id": "0",
+            "label": "Delivered ventilation, emptying, and metabolic demand",
+            "unsafe": false
+          },
+          {
+            "id": "1",
+            "label": "Oxygen concentration and the saturation alarm limit",
+            "unsafe": false
+          },
+          {
+            "id": "2",
+            "label": "Airway cuff pressure and the humidity setting",
+            "unsafe": false
+          }
+        ]
+      },
+      "changedWording": [
+        {
+          "field": "purpose",
+          "previous": "Apply what will change the co₂? to a short authored case.",
+          "current": "Work the CO₂ problem with the quantities that set CO₂, even when the oxygen numbers look reassuring."
+        },
+        {
+          "field": "hint",
+          "previous": "Alveolar ventilation is the portion of ventilation reaching gas-exchanging lung. CO₂ also depends on production. A rate change alters breath timing promptly, but a blood-gas response takes time; in obstruction, more rate may worsen trapping instead of improving effective ventilation.",
+          "current": "Saturation and CO₂ answer different questions. Which quantities decide how much CO₂ leaves the lung each minute?"
+        },
+        {
+          "field": "explanation",
+          "previous": "Delivered ventilation, emptying, and metabolic demand. CO₂ reflects effective alveolar ventilation relative to production. Emptying constrains a rate change.",
+          "current": "Arterial CO₂ reflects CO₂ production relative to alveolar ventilation, the part of each minute’s ventilation that reaches gas-exchanging lung. So the check has three parts: whether the breaths are delivered as set (exhaled tidal volume and total rate), whether the lung empties before the next breath and whether CO₂ production has risen. Acceptable saturation shows oxygen transfer is adequate on the current settings; it says nothing about whether ventilation is keeping up with CO₂."
+        },
+        {
+          "field": "nextCheck",
+          "previous": null,
+          "current": "Check exhaled tidal volume against the setting, then expiratory flow at the next breath start, before changing rate or tidal volume."
+        },
+        {
+          "field": "choices[0].rationale",
+          "previous": "CO₂ reflects effective alveolar ventilation relative to production. Emptying constrains a rate change.",
+          "current": "These are what set CO₂: the gas actually delivered, whether it can leave before the next breath and how much CO₂ the patient produces."
+        },
+        {
+          "field": "choices[1].rationale",
+          "previous": "Those primarily concern oxygenation and monitoring, not CO₂ clearance.",
+          "current": "Tempting because the oxygen numbers are in front of you, but they describe oxygenation and when the monitor warns. Neither changes CO₂ removal."
+        },
+        {
+          "field": "choices[2].rationale",
+          "previous": "These matter in ventilator care, but they do not address the described gas-exchange question as directly.",
+          "current": "Both matter in ventilator care, and a large cuff leak can lower delivered volume, but measuring delivery is how you would find that; they are not where the CO₂ question starts."
+        }
+      ],
+      "safetyExplanations": [],
+      "comparison": null,
+      "evidenceIds": ["tobin-3e-setting-ventilator", "tobin-3e-copd"],
+      "sourceLocators": [
+        {
+          "statement": "PaCO2 is set by CO2 production relative to alveolar ventilation",
+          "evidenceId": "tobin-3e-setting-ventilator",
+          "pdfPage": "16",
+          "section": "Minute Ventilation",
+          "finding": "supports",
+          "note": "CO2 production, minute ventilation and the dead-space fraction together set PaCO2 (equation shown as an image, not read)."
+        },
+        {
+          "statement": "PaCO2 is set by CO2 production relative to alveolar ventilation",
+          "evidenceId": "tobin-3e-copd",
+          "pdfPage": "9",
+          "section": "Goals of Ventilator Assistance",
+          "finding": "supports",
+          "note": "The ventilator lowers CO2 mainly by raising alveolar ventilation."
+        },
+        {
+          "statement": "FiO2 acts on oxygenation, not on alveolar ventilation",
+          "evidenceId": "tobin-3e-setting-ventilator",
+          "pdfPage": "9",
+          "section": "Fractional Inspired Oxygen Concentration",
+          "finding": "partly supports",
+          "note": "FiO2 is one of two main levers for PaO2."
+        },
+        {
+          "statement": "Acceptable saturation says nothing about whether ventilation keeps up with CO2",
+          "evidenceId": "none",
+          "pdfPage": null,
+          "section": null,
+          "finding": "does not address",
+          "note": "No locator found; the sentence follows from the separation of the two axes (S8, S10)."
+        }
+      ],
+      "notChecked": ["The PaCO2 equation in chapter 5 is an image and was not read."],
+      "unresolvedQuestions": [
+        "Is \"a large cuff leak can lower delivered volume\" an appropriate aside in the rationale for the cuff-and-humidity option?"
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "ventilation-and-co2:placement",
+      "file": "src/features/mechanical-ventilation/content/learningQuestions.ts",
+      "teachingFile": "src/features/mechanical-ventilation/content/questionTeaching.ts",
+      "surfaces": ["/mechanical-ventilation/learn?entry=placement"],
+      "disposition": "combine",
+      "presentation": "worked-comparison",
+      "concept": "Oxygenation and CO₂ clearance are separate questions with separate levers",
+      "combinedWith": ["oxygenation-response:transfer"],
+      "unchangedForLegacyRecords": {
+        "prompt": "Saturation is acceptable, but CO₂ rises. What most directly addresses the underlying physiologic question?",
+        "correctId": "2",
+        "choices": [
+          {
+            "id": "0",
+            "label": "The FiO₂ setting compared with the oxygen alarm",
+            "unsafe": false
+          },
+          {
+            "id": "1",
+            "label": "The mode label compared with the device brand",
+            "unsafe": false
+          },
+          {
+            "id": "2",
+            "label": "Alveolar ventilation relative to metabolic production",
+            "unsafe": false
+          }
+        ]
+      },
+      "changedWording": [
+        {
+          "field": "purpose",
+          "previous": "Apply what will change the co₂? to a short authored case.",
+          "current": "Separate the two gas-exchange questions before choosing a control: oxygenation and CO₂ clearance."
+        },
+        {
+          "field": "hint",
+          "previous": "Alveolar ventilation is the portion of ventilation reaching gas-exchanging lung. CO₂ also depends on production. A rate change alters breath timing promptly, but a blood-gas response takes time; in obstruction, more rate may worsen trapping instead of improving effective ventilation.",
+          "current": null
+        },
+        {
+          "field": "explanation",
+          "previous": "Alveolar ventilation relative to metabolic production. CO₂ depends on effective ventilation and production; examine delivery and emptying.",
+          "current": "These two findings sit on different axes. Acceptable saturation says oxygen transfer is adequate on the current FiO₂ and PEEP. Rising CO₂ says alveolar ventilation is not keeping up with CO₂ production. The CO₂ question is answered from the CO₂ column — delivered tidal volume and rate, emptying, dead space and production — not from oxygen settings or alarm limits."
+        },
+        {
+          "field": "nextCheck",
+          "previous": null,
+          "current": "Read exhaled tidal volume, total rate and expiratory flow at the next breath start, then trend CO₂ on blood gases."
+        },
+        {
+          "field": "choices[0].rationale",
+          "previous": "Those concern oxygenation and monitoring rather than CO₂ removal.",
+          "current": "Both sit on the oxygenation side. They can look reassuring while CO₂ climbs."
+        },
+        {
+          "field": "choices[1].rationale",
+          "previous": "Names alone do not establish effective ventilation.",
+          "current": "Names identify a mode or a console. They do not show how much gas reaches exchanging lung or leaves it."
+        },
+        {
+          "field": "choices[2].rationale",
+          "previous": "CO₂ depends on effective ventilation and production; examine delivery and emptying.",
+          "current": "CO₂ is set by production relative to alveolar ventilation, so delivered volume, total rate, emptying and dead space are what to examine."
+        }
+      ],
+      "safetyExplanations": [],
+      "comparison": {
+        "id": "oxygenation-and-co2-axes",
+        "title": "Two gas-exchange questions: oxygenation and CO₂ clearance",
+        "caption": "Main levers only. The columns interact: lung volume and tidal volume also affect oxygenation.",
+        "columns": ["Aspect", "Oxygenation", "CO₂ clearance"],
+        "rows": [
+          [
+            "Main ventilator levers",
+            "FiO₂; PEEP, which keeps lung open and reduces shunt",
+            "Tidal volume and total rate, and whether each breath empties"
+          ],
+          [
+            "Patient factors",
+            "Shunt and ventilation–perfusion mismatch",
+            "Dead space and CO₂ production"
+          ],
+          ["What you read", "Saturation, PaO₂", "PaCO₂"],
+          [
+            "Not changed directly",
+            "Raising FiO₂ does not increase alveolar ventilation",
+            "Raising rate or tidal volume does not add oxygen to the inspired gas"
+          ]
+        ]
+      },
+      "evidenceIds": ["tobin-3e-setting-ventilator", "tobin-3e-peep", "tobin-3e-copd"],
+      "sourceLocators": [
+        {
+          "statement": "Oxygenation depends mainly on FiO2 and on lung volume held open by PEEP, separate from the ventilation controls",
+          "evidenceId": "tobin-3e-setting-ventilator",
+          "pdfPage": "9",
+          "section": "Fractional Inspired Oxygen Concentration",
+          "finding": "supports",
+          "note": "PaO2 is raised by FiO2 or by a higher lung volume that re-expands collapsed units; lung volume and tidal volume are oxygenation levers too, which the comparison caption states."
+        },
+        {
+          "statement": "Oxygenation depends mainly on FiO2 and on lung volume held open by PEEP, separate from the ventilation controls",
+          "evidenceId": "tobin-3e-peep",
+          "pdfPage": "5",
+          "section": "Effect in Hypoxemic Respiratory Failure",
+          "finding": "supports",
+          "note": "PEEP recruits lung and lowers shunt."
+        },
+        {
+          "statement": "Oxygenation depends mainly on FiO2 and on lung volume held open by PEEP, separate from the ventilation controls",
+          "evidenceId": "tobin-3e-setting-ventilator",
+          "pdfPage": "16",
+          "section": "Minute Ventilation",
+          "finding": "supports",
+          "note": "Minute ventilation follows from tidal volume and rate."
+        },
+        {
+          "statement": "PaCO2 is set by CO2 production relative to alveolar ventilation",
+          "evidenceId": "tobin-3e-setting-ventilator",
+          "pdfPage": "16",
+          "section": "Minute Ventilation",
+          "finding": "supports",
+          "note": "CO2 production, minute ventilation and the dead-space fraction together set PaCO2 (equation shown as an image, not read)."
+        },
+        {
+          "statement": "FiO2 acts on oxygenation, not on alveolar ventilation",
+          "evidenceId": "tobin-3e-copd",
+          "pdfPage": "6",
+          "section": "Deterioration of Gas Exchange",
+          "finding": "narrows",
+          "note": "Supplemental oxygen can raise PaCO2 in some patients with COPD; the caveat was added to two items."
+        },
+        {
+          "statement": "The two sets of controls interact",
+          "evidenceId": "unregistered:tobin-3e-chapter-37-gas-exchange",
+          "pdfPage": "8",
+          "section": null,
+          "finding": "narrows",
+          "note": "High PEEP can increase dead space. Not added to the comparison; chapter 37 is not a registered source. \"Mean airway pressure\" was not found in any chapter searched and is not used."
+        }
+      ],
+      "notChecked": [
+        "Mean airway pressure is not used because no registered chapter was located for it."
+      ],
+      "unresolvedQuestions": [
+        "Review the comparison table as a whole; it is labeled \"main levers only\".",
+        "The original option \"The mode label compared with the device brand\" is implausible; it is explained, not rewritten, to keep saved records meaningful."
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "breathing-with-support:transfer",
+      "file": "src/features/mechanical-ventilation/content/learningQuestions.ts",
+      "teachingFile": "src/features/mechanical-ventilation/content/questionTeaching.ts",
+      "surfaces": ["/mechanical-ventilation/learn?entry=review"],
+      "disposition": "rewrite",
+      "presentation": "question",
+      "concept": "Breath delivery is not oxygen transfer: shunt and ventilation–perfusion mismatch",
+      "combinedWith": [],
+      "unchangedForLegacyRecords": {
+        "prompt": "A patient receives regular supported breaths, but oxygen transfer remains poor. Which interpretation best explains this possibility?",
+        "correctId": "0",
+        "choices": [
+          {
+            "id": "0",
+            "label": "Gas movement and oxygen transfer are different steps",
+            "unsafe": false
+          },
+          {
+            "id": "1",
+            "label": "Regular breath timing confirms effective oxygen transfer",
+            "unsafe": false
+          },
+          {
+            "id": "2",
+            "label": "Outward gas movement prevents oxygen from reaching blood",
+            "unsafe": false
+          }
+        ]
+      },
+      "changedWording": [
+        {
+          "field": "purpose",
+          "previous": "Apply follow one supported breath to a short authored case.",
+          "current": "Separate a ventilator that is delivering breaths from a lung that is exchanging gas; this is the first form of the oxygenation-versus-ventilation distinction."
+        },
+        {
+          "field": "hint",
+          "previous": "A ventilator helps move gas into the respiratory system. A signal starts inspiration, support is delivered, inspiration ends, and gas flows out. Moving gas supports breathing; oxygen transfer and CO₂ removal still depend on the patient’s lungs and circulation.",
+          "current": "The ventilator can only deliver gas to the airways. What has to happen after the gas arrives for oxygen to reach the blood?"
+        },
+        {
+          "field": "explanation",
+          "previous": "Gas movement and oxygen transfer are different steps. Ventilation moves gas; transfer into blood also depends on the lung and circulation.",
+          "current": "A ventilator moves gas in and out of the airways. Oxygen reaches the blood only in lung units that receive that gas and are also perfused. When units are collapsed or flooded, blood passes them without picking up oxygen (shunt), and poorly matched units add to the deficit. In respiratory failure on the ventilator, this ventilation–perfusion problem, rather than breath delivery, is the usual cause of hypoxemia, so regular timing shows delivery, not adequate oxygen transfer."
+        },
+        {
+          "field": "nextCheck",
+          "previous": null,
+          "current": "Read the oxygenation levers and response — FiO₂, PEEP, saturation or PaO₂ — separately from breath delivery; the oxygenation section compares them directly."
+        },
+        {
+          "field": "choices[0].rationale",
+          "previous": "Ventilation moves gas; transfer into blood also depends on the lung and circulation.",
+          "current": "Delivering breaths moves gas to the airways; oxygen transfer also needs lung units that are both ventilated and perfused. Either step can fail while the other works."
+        },
+        {
+          "field": "choices[1].rationale",
+          "previous": "Timing describes breath delivery, not whether oxygen reaches the blood.",
+          "current": "Tempting because the ventilator looks as if it is doing its job, but timing describes delivery only. Collapsed or flooded lung can receive regular breaths and still not transfer oxygen."
+        },
+        {
+          "field": "choices[2].rationale",
+          "previous": "Expiration is a normal part of breathing; it is not itself evidence of failed oxygen transfer.",
+          "current": "Expiration happens in every breath, including in patients whose oxygenation is normal, so it cannot explain why this patient’s oxygen transfer is poor."
+        }
+      ],
+      "safetyExplanations": [],
+      "comparison": null,
+      "evidenceIds": ["tobin-3e-setting-ventilator", "tobin-3e-fighting-ventilator"],
+      "sourceLocators": [
+        {
+          "statement": "Regular breath delivery does not ensure oxygen transfer; shunt and ventilation-perfusion mismatch drive hypoxemia",
+          "evidenceId": "tobin-3e-setting-ventilator",
+          "pdfPage": "9",
+          "section": "Defining Therapeutic End Points (subsection not confirmed)",
+          "finding": "supports",
+          "note": "Hypoxemia in lung failure is usually severe ventilation-perfusion mismatch, separate from pump failure."
+        },
+        {
+          "statement": "Regular breath delivery does not ensure oxygen transfer; shunt and ventilation-perfusion mismatch drive hypoxemia",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "pdfPage": "13-14",
+          "section": "Acute Hypoxemia",
+          "finding": "partly supports",
+          "note": "Table 53-2 lists causes of worsening oxygenation on the ventilator."
+        },
+        {
+          "statement": "Regular breath delivery does not ensure oxygen transfer; shunt and ventilation-perfusion mismatch drive hypoxemia",
+          "evidenceId": "unregistered:tobin-3e-chapter-37-gas-exchange",
+          "pdfPage": "2",
+          "section": "Nature of Gas Exchange in Disease States",
+          "finding": "supports",
+          "note": "On the ventilator hypoventilation is controlled; ventilation-perfusion mismatch and shunt drive hypoxemia. Chapter 37 is not a registered source."
+        },
+        {
+          "statement": "Oxygenation depends mainly on FiO2 and on lung volume held open by PEEP, separate from the ventilation controls",
+          "evidenceId": "tobin-3e-peep",
+          "pdfPage": "5",
+          "section": "Effect in Hypoxemic Respiratory Failure",
+          "finding": "supports",
+          "note": "PEEP recruits lung and lowers shunt."
+        }
+      ],
+      "notChecked": [
+        "The chapter 5 p9 subsection heading was not confirmed.",
+        "Chapter 37 is not a registered source."
+      ],
+      "unresolvedQuestions": [],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "ventilation-and-co2:transfer",
+      "file": "src/features/mechanical-ventilation/content/learningQuestions.ts",
+      "teachingFile": "src/features/mechanical-ventilation/content/questionTeaching.ts",
+      "surfaces": ["/mechanical-ventilation/learn?entry=review"],
+      "disposition": "rewrite",
+      "presentation": "question",
+      "concept": "Two clocks: breath timing changes at once and arterial CO₂ later, so check delivery and emptying before escalating",
+      "combinedWith": [],
+      "unchangedForLegacyRecords": {
+        "prompt": "The rate has just changed. Breath timing changes promptly, but a blood-gas response is not yet available. What is the best next interpretation?",
+        "correctId": "2",
+        "choices": [
+          {
+            "id": "0",
+            "label": "The rate change has already failed to affect CO₂",
+            "unsafe": false
+          },
+          {
+            "id": "1",
+            "label": "A repeat rate increase is needed immediately",
+            "unsafe": true
+          },
+          {
+            "id": "2",
+            "label": "Mechanical effects need review before judging gas exchange",
+            "unsafe": false
+          }
+        ]
+      },
+      "changedWording": [
+        {
+          "field": "purpose",
+          "previous": "Apply what will change the co₂? to a short authored case.",
+          "current": "Keep two clocks apart: the breath changes on the next cycle, the blood gas later."
+        },
+        {
+          "field": "hint",
+          "previous": "Alveolar ventilation is the portion of ventilation reaching gas-exchanging lung. CO₂ also depends on production. A rate change alters breath timing promptly, but a blood-gas response takes time; in obstruction, more rate may worsen trapping instead of improving effective ventilation.",
+          "current": "Which effects of the change can you verify on the screen now, and which need time before they mean anything?"
+        },
+        {
+          "field": "explanation",
+          "previous": "Mechanical effects need review before judging gas exchange. First observe delivery and emptying, then assess gas exchange after an appropriate clinical interval.",
+          "current": "A rate change alters breath timing on the next cycle, but arterial CO₂ moves to its new level more slowly, so an early or missing blood gas cannot show whether the change worked. What can be checked now is mechanical: whether the new rate is delivered, whether exhaled tidal volume held and whether expiratory flow still reaches zero before each breath. Judge CO₂ on a blood gas taken after an appropriate interval, then decide whether a further change is needed."
+        },
+        {
+          "field": "nextCheck",
+          "previous": null,
+          "current": "Confirm delivered rate and exhaled volume, look at end-expiratory flow for new trapping, then plan when to repeat the blood gas."
+        },
+        {
+          "field": "choices[0].rationale",
+          "previous": "A prompt mechanical change and a later gas response occur on different time scales.",
+          "current": "Breath timing changed at once, but CO₂ takes longer to settle, so no result yet is not evidence that the change failed."
+        },
+        {
+          "field": "choices[1].rationale",
+          "previous": "Escalating before checking delivery and emptying can cause harm; no failure has yet been established.",
+          "current": "Tempting when CO₂ is the goal, but nothing yet shows the first change was insufficient."
+        },
+        {
+          "field": "choices[1].safety",
+          "previous": null,
+          "current": "Stacking a second rate increase before the first has settled, and before checking emptying, can create trapping and hypotension while the CO₂ benefit is still unknown."
+        },
+        {
+          "field": "choices[2].rationale",
+          "previous": "First observe delivery and emptying, then assess gas exchange after an appropriate clinical interval.",
+          "current": "Delivery and emptying can be checked now; gas exchange is judged on a blood gas taken after an appropriate interval."
+        }
+      ],
+      "safetyExplanations": [
+        {
+          "choiceId": "1",
+          "label": "A repeat rate increase is needed immediately",
+          "current": "Stacking a second rate increase before the first has settled, and before checking emptying, can create trapping and hypotension while the CO₂ benefit is still unknown."
+        }
+      ],
+      "comparison": null,
+      "evidenceIds": ["tobin-3e-setting-ventilator", "tobin-3e-copd"],
+      "sourceLocators": [
+        {
+          "statement": "Arterial CO2 reaches its new level more slowly than breath timing changes",
+          "evidenceId": "none",
+          "pdfPage": null,
+          "section": null,
+          "finding": "does not address",
+          "note": "No statement or interval in the five registered chapters or in chapters 30 and 37; chapter 37 p16 gives a steady-state time for PaO2 on 100% oxygen, not PaCO2. The supplied case set's design notes say blood gases update more slowly than waveforms; that is not a clinical source."
+        },
+        {
+          "statement": "Increasing ventilation when emptying is incomplete can worsen circulation and may not lower CO2",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "pdfPage": "17",
+          "section": "Dynamic Hyperinflation",
+          "finding": "supports",
+          "note": "In a described case, blood pressure fell each time ventilation was briefly increased."
+        },
+        {
+          "statement": "Shorter expiratory time at unchanged mechanics increases dynamic hyperinflation and intrinsic PEEP",
+          "evidenceId": "tobin-3e-copd",
+          "pdfPage": "3",
+          "section": "Dynamic Hyperinflation and Intrinsic PEEP",
+          "finding": "supports",
+          "note": "Hyperinflation results when exhalation time is shorter than emptying requires."
+        }
+      ],
+      "notChecked": [
+        "No interval for the blood-gas response was located, and none is stated to learners."
+      ],
+      "unresolvedQuestions": [
+        "The two-clock claim (the blood gas lags breath timing) has no locator in any registered chapter and also appears in the existing unit explanation. A source or faculty wording is needed."
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    }
+  ],
+  "sourceIdentityItems": [
+    {
+      "evidenceId": "casebook-source-1",
+      "previous": {
+        "title": "Casebook source 1",
+        "sourceClass": "clinical-reference",
+        "citation": "Antonogiannaki EM, Georgopoulos D, Akoumianaki E. Patient-Ventilator Dyssynchrony. Korean J Crit Care Med. 2017;32(4):307-322.",
+        "pages": null,
+        "supports": [
+          "Definitions, waveform recognition, causes, and corrective strategies for trigger, flow, cycling, reverse-triggering, and assist-level dyssynchrony."
+        ],
+        "limitations": "Citation and stated use are preserved from the supplied casebook. Verify current source availability and local applicability during clinical review."
+      },
+      "current": {
+        "title": "Case-set reference 1: Patient–Ventilator Dyssynchrony",
+        "sourceClass": "clinical-reference",
+        "citation": "Antonogiannaki EM, Georgopoulos D, Akoumianaki E. Patient-Ventilator Dyssynchrony. Korean J Crit Care Med. 2017;32(4):307-322.",
+        "pages": null,
+        "supports": [
+          "Definitions, waveform recognition, causes, and corrective strategies for trigger, flow, cycling, reverse-triggering, and assist-level dyssynchrony."
+        ],
+        "limitations": "The same review as the separately listed Antonogiannaki 2017 record, cited again by the supplied case set. The stated use is the case set’s own description.",
+        "identity": {
+          "status": "checked-against-supplied-file",
+          "checkedOn": "2026-09-15",
+          "note": "Same article as the registered Antonogiannaki 2017 review; the supplied PDF matches the journal, pages and DOI.",
+          "sameWorkAs": "antonogiannaki-dyssynchrony-2017"
+        }
+      },
+      "documentsChecked": ["dyssynchrony", "casebookDocx"],
+      "unresolved": [],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "evidenceId": "casebook-source-2",
+      "previous": {
+        "title": "Casebook source 2",
+        "sourceClass": "clinical-reference",
+        "citation": "Tobin MJ, Jubran A, Laghi F. Chapter 53: Fighting the Ventilator. In: Principles and Practice of Mechanical Ventilation, 3rd ed.",
+        "pages": null,
+        "supports": [
+          "Emergency approach, peak-versus-plateau reasoning, airway/circuit problems, dynamic hyperinflation, and acute deterioration."
+        ],
+        "limitations": "Citation and stated use are preserved from the supplied casebook. Verify current source availability and local applicability during clinical review."
+      },
+      "current": {
+        "title": "Case-set reference 2: Fighting the Ventilator",
+        "sourceClass": "clinical-reference",
+        "citation": "Tobin MJ, Jubran A, Laghi F. Chapter 53: Fighting the Ventilator. In: Principles and Practice of Mechanical Ventilation, 3rd ed.",
+        "pages": null,
+        "supports": [
+          "Emergency approach, peak-versus-plateau reasoning, airway/circuit problems, dynamic hyperinflation, and acute deterioration."
+        ],
+        "limitations": "The same chapter as the separately listed Tobin 3rd edition chapter 53 record, cited again by the supplied case set. The stated use is the case set’s own description.",
+        "identity": {
+          "status": "checked-against-supplied-file",
+          "checkedOn": "2026-09-15",
+          "note": "Same chapter as the registered Tobin chapter 53 record; the supplied chapter PDF names the three authors cited.",
+          "sameWorkAs": "tobin-3e-fighting-ventilator"
+        }
+      },
+      "documentsChecked": ["ch53", "fullText", "casebookDocx"],
+      "unresolved": [],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "evidenceId": "casebook-source-3",
+      "previous": {
+        "title": "Casebook source 3",
+        "sourceClass": "clinical-reference",
+        "citation": "Skrobik Y. Chapter 54: Psychological Problems in the Ventilated Patient. In: Principles and Practice of Mechanical Ventilation, 3rd ed.",
+        "pages": null,
+        "supports": [
+          "Delirium, communication barriers, anxiety, reorientation, and nonpharmacologic management."
+        ],
+        "limitations": "Citation and stated use are preserved from the supplied casebook. Verify current source availability and local applicability during clinical review."
+      },
+      "current": {
+        "title": "Case-set reference 3: Psychological Problems in the Ventilated Patient",
+        "sourceClass": "clinical-reference",
+        "citation": "Skrobik Y. Chapter 54: Psychological Problems in the Ventilated Patient. In: Principles and Practice of Mechanical Ventilation, 3rd ed.",
+        "pages": null,
+        "supports": [
+          "Delirium, communication barriers, anxiety, reorientation, and nonpharmacologic management."
+        ],
+        "limitations": "Textbook chapter cited by the supplied case set for patient-centered cases. The stated use is the case set’s own description and has not been checked against the chapter text.",
+        "identity": {
+          "status": "checked-against-supplied-file",
+          "checkedOn": "2026-09-15",
+          "note": "The 19-page chapter PDF names Yoanna Skrobik as author of chapter 54. The 3rd edition’s copyright page gives McGraw-Hill, 2013, with Martin J. Tobin as editor."
+        }
+      },
+      "documentsChecked": ["ch54", "fullText", "casebookDocx"],
+      "unresolved": [],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "evidenceId": "casebook-source-4",
+      "previous": {
+        "title": "Casebook source 4",
+        "sourceClass": "clinical-reference",
+        "citation": "Banzett RB, Similowski T, Brown R. Chapter 55: Addressing Respiratory Discomfort in the Ventilated Patient. In: Principles and Practice of Mechanical Ventilation, 3rd ed.",
+        "pages": null,
+        "supports": [
+          "Dyspnea assessment, air hunger versus effort, patient-centered ventilation, and minimizing reflexive deep sedation."
+        ],
+        "limitations": "Citation and stated use are preserved from the supplied casebook. Verify current source availability and local applicability during clinical review."
+      },
+      "current": {
+        "title": "Case-set reference 4: Addressing Respiratory Discomfort in the Ventilated Patient",
+        "sourceClass": "clinical-reference",
+        "citation": "Banzett RB, Similowski T, Brown R. Chapter 55: Addressing Respiratory Discomfort in the Ventilated Patient. In: Principles and Practice of Mechanical Ventilation, 3rd ed.",
+        "pages": null,
+        "supports": [
+          "Dyspnea assessment, air hunger versus effort, patient-centered ventilation, and minimizing reflexive deep sedation."
+        ],
+        "limitations": "Textbook chapter cited by the supplied case set for patient-centered cases. The stated use is the case set’s own description and has not been checked against the chapter text.",
+        "identity": {
+          "status": "checked-against-supplied-file",
+          "checkedOn": "2026-09-15",
+          "note": "The 26-page chapter PDF names Robert B. Banzett, Thomas Similowski and Robert Brown as authors of chapter 55. The 3rd edition’s copyright page gives McGraw-Hill, 2013, with Martin J. Tobin as editor."
+        }
+      },
+      "documentsChecked": ["ch55", "fullText", "casebookDocx"],
+      "unresolved": [],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "evidenceId": "casebook-source-5",
+      "previous": {
+        "title": "Casebook source 5",
+        "sourceClass": "clinical-reference",
+        "citation": "Ventilation transcripts supplied by the user: case-based NIV, ARDS, severe asthma, waveform interpretation, respiratory mechanics, and troubleshooting lectures.",
+        "pages": null,
+        "supports": [
+          "Practical case staging, learner prompts, and bedside waveform teaching patterns."
+        ],
+        "limitations": "Citation and stated use are preserved from the supplied casebook. Verify current source availability and local applicability during clinical review."
+      },
+      "current": {
+        "title": "Case-set reference 5: ventilation lecture transcripts (not identified)",
+        "sourceClass": "supplied-transcripts",
+        "citation": "Ventilation transcripts supplied by the user: case-based NIV, ARDS, severe asthma, waveform interpretation, respiratory mechanics, and troubleshooting lectures.",
+        "pages": null,
+        "supports": [
+          "Practical case staging, learner prompts, and bedside waveform teaching patterns."
+        ],
+        "limitations": "The case set names no speaker, course, date or file, so what these transcripts say cannot be checked. No statement in this module should rest on them alone.",
+        "identity": {
+          "status": "not-identified",
+          "checkedOn": "2026-09-15",
+          "note": "The case set gives only a topic list. A search of the supplied reference folders found no transcript set that matches it."
+        }
+      },
+      "documentsChecked": ["casebookDocx", "transcripts"],
+      "unresolved": [
+        "Owner: identify the transcripts (speaker, course, date, file), or confirm they are unavailable."
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "evidenceId": "casebook-source-6",
+      "previous": {
+        "title": "Casebook source 6",
+        "sourceClass": "educational-model",
+        "citation": "van Diepen A, et al. A Model-Based Approach to Synthetic Data Set Generation for Patient-Ventilator Waveforms for Machine Learning and Educational Use. arXiv:2103.15684 (2021).",
+        "pages": null,
+        "supports": [
+          "Support for a physiology-based patient-plus-ventilator model that can generate realistic asynchrony waveforms across disease archetypes."
+        ],
+        "limitations": "Citation and stated use are preserved from the supplied casebook. Verify current source availability and local applicability during clinical review."
+      },
+      "current": {
+        "title": "Case-set reference 6: A Model-Based Approach to Synthetic Data Set Generation for Patient-Ventilator Waveforms for Machine Learning and Educational Use",
+        "sourceClass": "modeling-preprint",
+        "citation": "van Diepen A, et al. A Model-Based Approach to Synthetic Data Set Generation for Patient-Ventilator Waveforms for Machine Learning and Educational Use. arXiv:2103.15684 (2021).",
+        "pages": null,
+        "supports": [
+          "Support for a physiology-based patient-plus-ventilator model that can generate realistic asynchrony waveforms across disease archetypes."
+        ],
+        "limitations": "A preprint about computational respiratory models, cited by the supplied case set for simulator design. It does not validate this module’s model or its teaching values.",
+        "identity": {
+          "status": "as-cited-not-checked",
+          "note": "Cited by the case set as arXiv:2103.15684 (2021). No copy is available locally and no link was followed, so authors, version and any later publication were not checked."
+        }
+      },
+      "documentsChecked": ["casebookDocx"],
+      "unresolved": [
+        "Not available locally and no link was followed. Confirm authors, version and any journal publication before any statement relies on it."
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "evidenceId": "casebook-source-7",
+      "previous": {
+        "title": "Casebook source 7",
+        "sourceClass": "educational-model",
+        "citation": "Hennigs C, et al. Validation of a Computational Respiratory System Model for Mechanical Ventilation. arXiv:2607.06210 (2026 preprint).",
+        "pages": null,
+        "supports": [
+          "Context-of-use, calibration, physiologic plausibility, population testing, and emergent-behavior validation framework."
+        ],
+        "limitations": "Citation and stated use are preserved from the supplied casebook. Verify current source availability and local applicability during clinical review."
+      },
+      "current": {
+        "title": "Case-set reference 7: Validation of a Computational Respiratory System Model for Mechanical Ventilation",
+        "sourceClass": "modeling-preprint",
+        "citation": "Hennigs C, et al. Validation of a Computational Respiratory System Model for Mechanical Ventilation. arXiv:2607.06210 (2026 preprint).",
+        "pages": null,
+        "supports": [
+          "Context-of-use, calibration, physiologic plausibility, population testing, and emergent-behavior validation framework."
+        ],
+        "limitations": "A preprint about computational respiratory models, cited by the supplied case set for simulator design. It does not validate this module’s model or its teaching values.",
+        "identity": {
+          "status": "as-cited-not-checked",
+          "note": "Cited by the case set as a 2026 preprint, arXiv:2607.06210. No copy is available locally and no link was followed, so authors, version and any later publication were not checked."
+        }
+      },
+      "documentsChecked": ["casebookDocx"],
+      "unresolved": [
+        "Not available locally and no link was followed. Confirm authors, version and any journal publication before any statement relies on it.",
+        "The identifier arXiv:2607.06210 implies July 2026; confirm the preprint exists as cited."
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "evidenceId": "casebook-source-8",
+      "previous": {
+        "title": "Casebook source 8",
+        "sourceClass": "educational-model",
+        "citation": "Rixner M, et al. Patient-specific prediction of regional lung mechanics in ARDS patients with physics-based models: A validation study. arXiv:2408.14607 (2024).",
+        "pages": null,
+        "supports": [
+          "Optional advanced modeling of heterogeneous regional mechanics and patient-specific responses."
+        ],
+        "limitations": "Citation and stated use are preserved from the supplied casebook. Verify current source availability and local applicability during clinical review."
+      },
+      "current": {
+        "title": "Case-set reference 8: Patient-specific prediction of regional lung mechanics in ARDS patients with physics-based models",
+        "sourceClass": "modeling-preprint",
+        "citation": "Rixner M, et al. Patient-specific prediction of regional lung mechanics in ARDS patients with physics-based models: A validation study. arXiv:2408.14607 (2024).",
+        "pages": null,
+        "supports": [
+          "Optional advanced modeling of heterogeneous regional mechanics and patient-specific responses."
+        ],
+        "limitations": "A preprint about computational respiratory models, cited by the supplied case set for simulator design. It does not validate this module’s model or its teaching values.",
+        "identity": {
+          "status": "as-cited-not-checked",
+          "note": "Cited by the case set as arXiv:2408.14607 (2024). No copy is available locally and no link was followed, so authors, version and any later publication were not checked."
+        }
+      },
+      "documentsChecked": ["casebookDocx"],
+      "unresolved": [
+        "Not available locally and no link was followed. Confirm authors, version and any journal publication before any statement relies on it."
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "evidenceId": "supplied-casebook-2026",
+      "previous": {
+        "title": "Virtual Mechanical Ventilation Simulator Casebook",
+        "sourceClass": "curriculum",
+        "citation": "Virtual Mechanical Ventilation Simulator Casebook: fifteen physiology, dyssynchrony, troubleshooting, and patient-centered cases. Supplied by the course author, July 2026.",
+        "pages": "1-36",
+        "supports": [
+          "Case structure, learning objectives, expected actions, unsafe actions, and debriefs",
+          "Equation-of-motion, gas-exchange, waveform, validation, and scoring blueprint",
+          "Tutorial, assessment, rapid-response, and randomized teaching patterns"
+        ],
+        "limitations": "Curriculum source rather than independent validation. Device-specific settings are normalized through bounded educational profiles and remain draft pending review."
+      },
+      "current": {
+        "title": "Virtual Mechanical Ventilation Simulator Casebook",
+        "sourceClass": "curriculum",
+        "citation": "Virtual Mechanical Ventilation Simulator Casebook. Supplied Word document: fifteen cases, simulator design notes and eight references. No author, date or reviewer is stated. The registered JSON case set holds the same fifteen cases and eight references.",
+        "pages": null,
+        "supports": [
+          "Fifteen case scenarios: objectives, starting state, expected and unsafe actions, hint ladders and debriefs",
+          "Simulator design notes: physiology state, waveform signatures and the slower timing of blood-gas updates"
+        ],
+        "limitations": "A supplied synthesis, not a clinical source or independent validation: its clinical statements need their own sources. Its scoring and examination guidance is not used by this self-paced module. Device-specific settings are normalized through bounded educational profiles and remain draft pending review.",
+        "identity": {
+          "status": "checked-against-supplied-file",
+          "checkedOn": "2026-09-15",
+          "note": "The supplied document names no author, date or reviewer, and its file properties record software rather than a person as its creator."
+        }
+      },
+      "documentsChecked": ["casebookDocx", "casebookJson"],
+      "unresolved": [
+        "Owner: confirm who supplied or generated the case set. The earlier registry said \"supplied by the course author, July 2026\" and \"pages 1-36\"; neither could be confirmed from the file.",
+        "Its scoring, examination-version and credit guidance is not used by the self-paced module; confirm nothing else should be withdrawn from its stated supports."
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    }
+  ],
+  "relatedRegistryChanges": [
+    {
+      "evidenceId": "tobin-3e-setting-ventilator",
+      "previousCitation": "Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 5.",
+      "currentCitation": "Holets SR, Hubmayr RD. Setting the Ventilator. In: Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 5.",
+      "identity": {
+        "status": "checked-against-supplied-file",
+        "checkedOn": "2026-09-15",
+        "note": "The 30-page chapter PDF names Steven R. Holets and Rolf D. Hubmayr. The 3rd edition’s copyright page gives McGraw-Hill, 2013, with Martin J. Tobin as editor."
+      }
+    },
+    {
+      "evidenceId": "tobin-3e-peep",
+      "previousCitation": "Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 10.",
+      "currentCitation": "Navalesi P, Maggiore SM. Positive End-Expiratory Pressure. In: Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 10.",
+      "identity": {
+        "status": "checked-against-supplied-file",
+        "checkedOn": "2026-09-15",
+        "note": "The 75-page chapter PDF names Paolo Navalesi and Salvatore Maurizio Maggiore. The 3rd edition’s copyright page gives McGraw-Hill, 2013, with Martin J. Tobin as editor."
+      }
+    },
+    {
+      "evidenceId": "tobin-3e-copd",
+      "previousCitation": "Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 31.",
+      "currentCitation": "Laghi F. Mechanical Ventilation in Chronic Obstructive Pulmonary Disease. In: Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 31.",
+      "identity": {
+        "status": "checked-against-supplied-file",
+        "checkedOn": "2026-09-15",
+        "note": "The 33-page chapter PDF names Franco Laghi. The 3rd edition’s copyright page gives McGraw-Hill, 2013, with Martin J. Tobin as editor."
+      }
+    },
+    {
+      "evidenceId": "tobin-3e-monitoring",
+      "previousCitation": "Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 48.",
+      "currentCitation": "Jubran A, Tobin MJ. Monitoring during Mechanical Ventilation. In: Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 48.",
+      "identity": {
+        "status": "checked-against-supplied-file",
+        "checkedOn": "2026-09-15",
+        "note": "The 36-page chapter PDF names Amal Jubran and Martin J. Tobin. The 3rd edition’s copyright page gives McGraw-Hill, 2013, with Martin J. Tobin as editor."
+      }
+    },
+    {
+      "evidenceId": "tobin-3e-fighting-ventilator",
+      "previousCitation": "Tobin MJ, Jubran A, Laghi F. Fighting the Ventilator. In: Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 53.",
+      "currentCitation": "Tobin MJ, Jubran A, Laghi F. Fighting the Ventilator. In: Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 53.",
+      "identity": {
+        "status": "checked-against-supplied-file",
+        "checkedOn": "2026-09-15",
+        "note": "The 37-page chapter PDF names Martin J. Tobin, Amal Jubran and Franco Laghi. The 3rd edition’s copyright page gives McGraw-Hill, 2013, with Martin J. Tobin as editor."
+      }
+    },
+    {
+      "evidenceId": "antonogiannaki-dyssynchrony-2017",
+      "previousCitation": "Antonogiannaki E-M, Georgopoulos D, Akoumianaki E. Patient–Ventilator Dyssynchrony. Korean J Crit Care Med. 2017;32(4):307-322. doi:10.4266/kjccm.2017.00535.",
+      "currentCitation": "Antonogiannaki E-M, Georgopoulos D, Akoumianaki E. Patient–Ventilator Dyssynchrony. Korean J Crit Care Med. 2017;32(4):307-322. doi:10.4266/kjccm.2017.00535.",
+      "identity": {
+        "status": "checked-against-supplied-file",
+        "checkedOn": "2026-09-15",
+        "note": "The 16-page article PDF prints the three authors, Korean J Crit Care Med 2017;32(4):307–322 and the cited DOI."
+      }
+    }
+  ],
+  "openQuestions": [
+    "Chapters 30 (severe asthma) and 37 (gas exchange) of the same edition supported two statements but are not registered sources. Register them, or keep the dependent sentences softened?",
+    "The remaining 36 short-case items keep the MV-01 generic purpose and hint. Later batches should continue in this packet format.",
+    "The hub sources panel still prints a \"PUBLISHED · REVIEW APPROVED\" literal for a published status and a \"reviewed-English fallback\" checklist line; neither was changed here."
+  ]
+}

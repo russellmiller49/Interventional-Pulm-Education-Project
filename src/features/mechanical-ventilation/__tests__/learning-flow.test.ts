@@ -24,11 +24,11 @@ import {
   nextVentilationUnit,
   parseVentilationLearningProgress,
   requiredUnitQuestionIds,
-  scoreVentilationQuestions,
   unitReadyToComplete,
   ventilationReviewQueue,
   type VentilationAnswer,
 } from '../engine/learningProgress'
+import * as learningProgressModule from '../engine/learningProgress'
 
 const now = '2026-09-05T01:00:00.000Z'
 const answer = (choiceId: string, reviewed = true): VentilationAnswer => ({
@@ -85,7 +85,9 @@ describe('ventilation curriculum alignment', () => {
       for (const id of unit.caseIds) expect(ids).toContain(id)
   })
 
-  it('keeps final questions distinct and balances keys across the complete set', () => {
+  // MV-03 supersedes key-position balancing and the fixed three-choice count: neither is a teaching
+  // purpose. Identities and prompts stay distinct, and every choice keeps its explanation.
+  it('keeps question identities and prompts distinct and explains every choice', () => {
     const questions = [
       ...ventilationUnitQuestions,
       ...ventilationPlacementQuestions,
@@ -93,11 +95,11 @@ describe('ventilation curriculum alignment', () => {
     ]
     expect(new Set(questions.map((q) => q.id)).size).toBe(questions.length)
     expect(new Set(questions.map((q) => q.prompt)).size).toBe(questions.length)
-    const first = questions.filter((q) => q.correctId === '0').length / questions.length
-    expect(first).toBeLessThan(0.4)
     for (const question of questions) {
-      expect(question.choices).toHaveLength(3)
+      expect(question.choices.length).toBeGreaterThanOrEqual(2)
+      expect(question.choices.some((choice) => choice.id === question.correctId)).toBe(true)
       expect(question.choices.every((choice) => choice.rationale.length > 25)).toBe(true)
+      for (const choice of question.choices) if (choice.safety) expect(choice.unsafe).toBe(true)
     }
   })
 })
@@ -191,17 +193,22 @@ describe('learning evidence and restoration', () => {
     expect(hasFocusedGuidance({ ...progress, placement: lowConfidence }, 'breath')).toBe(false)
   })
 
-  it('prevents an unsafe answer from passing even with high accuracy', () => {
-    const answers = Object.fromEntries(
-      ventilationFinalQuestions.map((q) => [q.id, answer(q.correctId)]),
+  // MV-03 supersedes the 80%/unsafe pass rule: a potentially harmful choice is explained, never
+  // weighted. A legacy final-history record still parses unchanged, read-only.
+  it('grades no question set and weights no potentially harmful choice', () => {
+    expect(Object.keys(learningProgressModule)).not.toContain('scoreVentilationQuestions')
+    expect(ventilationFinalQuestions.some((q) => q.choices.some((choice) => choice.unsafe))).toBe(
+      true,
     )
-    const unsafe = ventilationFinalQuestions.find((q) => q.choices.some((choice) => choice.unsafe))!
-    answers[unsafe.id] = answer(unsafe.choices.find((choice) => choice.unsafe)!.id)
-    const score = scoreVentilationQuestions(ventilationFinalQuestions, answers)
-    expect(score.correct).toBe(ventilationFinalQuestions.length - 1)
-    expect(score.passed).toBe(false)
-    expect(score.safe).toBe(false)
-    expect(scoreVentilationQuestions(ventilationFinalQuestions, {}).passed).toBe(false)
+    const legacy = {
+      ...emptyVentilationLearningProgress(),
+      finalHistory: [
+        { score: 9, total: ventilationFinalQuestions.length, safe: false, completedAt: now },
+      ],
+    }
+    expect(parseVentilationLearningProgress(JSON.stringify(legacy)).finalHistory).toEqual(
+      legacy.finalHistory,
+    )
   })
 
   it('queues uncertainty immediately, schedules correct retrieval, and retains original evidence', () => {
