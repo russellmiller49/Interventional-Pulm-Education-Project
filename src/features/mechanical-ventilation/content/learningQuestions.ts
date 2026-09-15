@@ -5,14 +5,21 @@ export interface VentilationQuestion {
   readonly unitId: string
   readonly objective: VentilationObjective
   readonly prompt: string
-  readonly choices: readonly { id: string; label: string; rationale: string; unsafe?: boolean }[]
+  /** `unsafe` marks an authored, potentially harmful choice; `safety` explains the harm in the stated case. Neither grades anything. */
+  readonly choices: readonly {
+    id: string
+    label: string
+    rationale: string
+    unsafe?: boolean
+    safety?: string
+  }[]
   readonly correctId: string
   readonly provenance: 'authored-teaching-case'
   readonly authoredAt: '2026-09-05'
   readonly evidenceIds: readonly string[]
 }
 
-type Option = readonly [label: string, rationale: string, unsafe?: boolean]
+type Option = readonly [label: string, rationale: string, unsafe?: boolean, safety?: string]
 function q(
   unitId: string,
   kind: string,
@@ -28,11 +35,12 @@ function q(
     objective: unit.objective,
     prompt,
     correctId: String(correct),
-    choices: options.map(([label, rationale, unsafe], index) => ({
+    choices: options.map(([label, rationale, unsafe, safety], index) => ({
       id: String(index),
       label,
       rationale,
       ...(unsafe ? { unsafe } : {}),
+      ...(safety ? { safety } : {}),
     })),
     provenance: 'authored-teaching-case',
     authoredAt: '2026-09-05',
@@ -70,15 +78,15 @@ export const ventilationUnitQuestions: readonly VentilationQuestion[] = [
     [
       [
         'Gas movement and oxygen transfer are different steps',
-        'Ventilation moves gas; transfer into blood also depends on the lung and circulation.',
+        'Delivering breaths moves gas to the airways; oxygen transfer also needs lung units that are both ventilated and perfused. Either step can fail while the other works.',
       ],
       [
         'Regular breath timing confirms effective oxygen transfer',
-        'Timing describes breath delivery, not whether oxygen reaches the blood.',
+        'Tempting because the ventilator looks as if it is doing its job, but timing describes delivery only. Collapsed or flooded lung can receive regular breaths and still not transfer oxygen.',
       ],
       [
         'Outward gas movement prevents oxygen from reaching blood',
-        'Expiration is a normal part of breathing; it is not itself evidence of failed oxygen transfer.',
+        'Expiration happens in every breath, including in patients whose oxygenation is normal, so it cannot explain why this patient’s oxygen transfer is poor.',
       ],
     ],
   ),
@@ -287,15 +295,15 @@ export const ventilationUnitQuestions: readonly VentilationQuestion[] = [
     [
       [
         'Increase the opportunity for gas trapping',
-        'There is less time to empty a system that is already emptying slowly.',
+        'Outward flow at the next breath already shows incomplete emptying. Less expiratory time leaves more of each breath behind, so trapped volume and intrinsic PEEP can rise.',
       ],
       [
         'Increase the time available for gas release',
-        'Shorter expiration reduces, rather than increases, the available emptying interval.',
+        'Shortening expiration means less time for gas release by definition. The reading is tempting because more breaths per minute can feel like more gas out, but each exhalation gets shorter.',
       ],
       [
         'Reduce resistance in the tube and airways',
-        'Changing time does not itself remove an obstructing load.',
+        'Timing and obstruction are separate levers. Shortening expiration leaves the obstruction in place; treating the obstruction is what lets gas leave faster.',
       ],
     ],
   ),
@@ -307,15 +315,15 @@ export const ventilationUnitQuestions: readonly VentilationQuestion[] = [
     [
       [
         'Extra pressure chosen on the PEEP control',
-        'The set PEEP is only the selected baseline; the excess was measured, not selected.',
+        'The PEEP control sets the baseline the ventilator applies, and it has not changed. The console may display the higher total PEEP after the hold, but the excess was measured, not selected.',
       ],
       [
         'The flow-resistive peak during inspiration',
-        'That describes a different phase and comparison.',
+        'Peak pressure belongs to inspiration, when gas flows through the airways; its resistive part is the peak-to-plateau difference. An end-expiratory hold has no flow, so it contains no resistive pressure.',
       ],
       [
         'Intrinsic pressure remaining after expiration',
-        'Intrinsic PEEP is pressure additional to set PEEP from incomplete emptying under these conditions.',
+        'With flow stopped at end-expiration, the reading reflects pressure in the alveoli. The excess over set PEEP is intrinsic PEEP from gas that had not left before the next breath was due.',
       ],
     ],
   ),
@@ -388,15 +396,15 @@ export const ventilationUnitQuestions: readonly VentilationQuestion[] = [
     [
       [
         'The pressure maintained between breaths',
-        'That describes the PEEP setting, which was unchanged.',
+        'That is PEEP, and the stem keeps PEEP unchanged. PEEP and FiO₂ are both oxygenation levers, which is why they are easy to confuse.',
       ],
       [
         'The oxygen fraction in inspired gas',
-        'FiO₂ changes concentration; improved blood oxygenation remains a patient response to assess.',
+        'FiO₂ changes the oxygen concentration of every breath. Whether blood oxygen improves is a patient response that still has to be checked.',
       ],
       [
         'The effective volume clearing CO₂',
-        'Changing oxygen fraction does not directly increase alveolar ventilation.',
+        'Tidal volume, rate, emptying and dead space set CO₂ clearance. Changing the oxygen fraction does not increase alveolar ventilation.',
       ],
     ],
   ),
@@ -408,15 +416,15 @@ export const ventilationUnitQuestions: readonly VentilationQuestion[] = [
     [
       [
         'Delivered ventilation, emptying, and metabolic demand',
-        'CO₂ reflects effective alveolar ventilation relative to production. Emptying constrains a rate change.',
+        'These are what set CO₂: the gas actually delivered, whether it can leave before the next breath and how much CO₂ the patient produces.',
       ],
       [
         'Oxygen concentration and the saturation alarm limit',
-        'Those primarily concern oxygenation and monitoring, not CO₂ clearance.',
+        'Tempting because the oxygen numbers are in front of you, but they describe oxygenation and when the monitor warns. Neither changes CO₂ removal.',
       ],
       [
         'Airway cuff pressure and the humidity setting',
-        'These matter in ventilator care, but they do not address the described gas-exchange question as directly.',
+        'Both matter in ventilator care, and a large cuff leak can lower delivered volume, but measuring delivery is how you would find that; they are not where the CO₂ question starts.',
       ],
     ],
   ),
@@ -428,16 +436,17 @@ export const ventilationUnitQuestions: readonly VentilationQuestion[] = [
     [
       [
         'The rate change has already failed to affect CO₂',
-        'A prompt mechanical change and a later gas response occur on different time scales.',
+        'Breath timing changed at once, but CO₂ takes longer to settle, so no result yet is not evidence that the change failed.',
       ],
       [
         'A repeat rate increase is needed immediately',
-        'Escalating before checking delivery and emptying can cause harm; no failure has yet been established.',
+        'Tempting when CO₂ is the goal, but nothing yet shows the first change was insufficient.',
         true,
+        'Stacking a second rate increase before the first has settled, and before checking emptying, can create trapping and hypotension while the CO₂ benefit is still unknown.',
       ],
       [
         'Mechanical effects need review before judging gas exchange',
-        'First observe delivery and emptying, then assess gas exchange after an appropriate clinical interval.',
+        'Delivery and emptying can be checked now; gas exchange is judged on a blood gas taken after an appropriate interval.',
       ],
     ],
   ),
@@ -591,17 +600,19 @@ export const ventilationUnitQuestions: readonly VentilationQuestion[] = [
     [
       [
         'Urgent bedside support and assessment of incomplete emptying',
-        'The pattern raises concern for dynamic hyperinflation affecting circulation. Respond under the local emergency protocol.',
+        'Flow still leaving at the next breath, rising pressure and falling blood pressure together point to trapped volume affecting the circulation. Getting help and assessing emptying treats the likely cause while the patient is supported.',
       ],
       [
         'A higher mandatory rate to correct gas exchange promptly',
-        'Shortening expiration may worsen trapping and circulatory compromise.',
+        'Tempting when gas exchange looks like the problem, but more breaths per minute shorten each expiration, and this patient is already failing to empty.',
         true,
+        'A higher rate shortens every expiration, so more gas is trapped, pressure in the chest rises further and blood pressure can fall further. Correcting CO₂ is not the immediate threat here.',
       ],
       [
         'A higher alarm limit while awaiting the next routine review',
-        'Changing an alarm boundary does not treat an unstable patient.',
+        'An alarm limit changes when the ventilator warns you, not what is happening in the chest.',
         true,
+        'Raising the limit silences a warning while trapped volume and hypotension continue, and a routine review is too slow for an unstable patient.',
       ],
     ],
   ),
@@ -676,12 +687,15 @@ export const ventilationPlacementQuestions: readonly VentilationQuestion[] = [
     [
       [
         'Giving more time for expiration',
-        'More emptying time can help rather than aggravate incomplete emptying.',
+        'This works in the other direction. More expiratory time lets a slowly emptying lung get closer to its resting volume before the next breath.',
       ],
-      ['Reducing a reversible airway obstruction', 'Reducing resistance can improve emptying.'],
+      [
+        'Reducing a reversible airway obstruction',
+        'This also helps emptying. Lower resistance lets gas leave faster, so more of the breath empties in the same expiratory time.',
+      ],
       [
         'Delivering mandatory breaths more frequently',
-        'More frequent breaths can shorten expiration and worsen trapping.',
+        'More frequent breaths shorten each cycle. With inspiratory time unchanged, expiration absorbs the loss and more volume stays trapped.',
       ],
     ],
   ),
@@ -727,15 +741,15 @@ export const ventilationPlacementQuestions: readonly VentilationQuestion[] = [
     [
       [
         'The FiO₂ setting compared with the oxygen alarm',
-        'Those concern oxygenation and monitoring rather than CO₂ removal.',
+        'Both sit on the oxygenation side. They can look reassuring while CO₂ climbs.',
       ],
       [
         'The mode label compared with the device brand',
-        'Names alone do not establish effective ventilation.',
+        'Names identify a mode or a console. They do not show how much gas reaches exchanging lung or leaves it.',
       ],
       [
         'Alveolar ventilation relative to metabolic production',
-        'CO₂ depends on effective ventilation and production; examine delivery and emptying.',
+        'CO₂ is set by production relative to alveolar ventilation, so delivered volume, total rate, emptying and dead space are what to examine.',
       ],
     ],
   ),
@@ -763,7 +777,7 @@ export const ventilationPlacementQuestions: readonly VentilationQuestion[] = [
   ),
 ]
 
-/** A distinct mixed set; answers and explanatory surfaces stay hidden until the last commit. */
+/** A distinct mixed set of worked applications. The `:final` ids are kept for saved records; nothing here is a final check. */
 export const ventilationFinalQuestions: readonly VentilationQuestion[] = [
   q(
     'modes-and-breath-delivery',
@@ -896,15 +910,15 @@ export const ventilationFinalQuestions: readonly VentilationQuestion[] = [
     [
       [
         'A high rate proves adequate CO₂ clearance',
-        'Rate alone does not establish effective alveolar ventilation.',
+        'Rate counts breaths, not the gas that reaches exchanging lung and leaves it. A high rate with incomplete emptying can coexist with rising CO₂.',
       ],
       [
         'Incomplete emptying may limit effective ventilation',
-        'The expiratory pattern means a further rate increase could worsen trapping.',
+        'Outward flow at every breath start shows incomplete emptying. More rate would shorten expiration further, so the expected fall in CO₂ may not follow.',
       ],
       [
         'A higher oxygen fraction will directly clear the CO₂',
-        'Oxygen fraction is not a direct control of alveolar ventilation.',
+        'Oxygen fraction sets how much oxygen each breath carries; it does not increase alveolar ventilation, so it cannot clear CO₂. In some patients with COPD, extra oxygen can even raise CO₂.',
       ],
     ],
   ),

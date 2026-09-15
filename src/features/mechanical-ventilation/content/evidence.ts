@@ -2,15 +2,57 @@ import { mechanicalVentilationSource } from './schema'
 import { ventilatorDeviceSources } from './deviceProfiles'
 import type { VentilatorDeviceId } from '../engine/types'
 
+export type VentilationSourceClass =
+  | 'manufacturer'
+  | 'curriculum'
+  | 'clinical-reference'
+  | 'educational-model'
+  | 'guideline'
+  | 'supplied-transcripts'
+  | 'modeling-preprint'
+
+/** One learner-facing name per class, shared by every source surface so the names cannot drift. */
+export const ventilationSourceClassLabel: Readonly<Record<VentilationSourceClass, string>> = {
+  manufacturer: 'Manufacturer source',
+  curriculum: 'Supplied case set, author not stated',
+  guideline: 'Clinical guideline',
+  'clinical-reference': 'Clinical reference',
+  'educational-model': 'Teaching model built for this simulation',
+  'supplied-transcripts': 'Supplied lecture transcripts, not identified',
+  'modeling-preprint': 'Modeling preprint',
+}
+
+/**
+ * What is known about a source's identity, and how it is known. A document check confirms what a
+ * file is; it is not a clinical review of how this module uses the source.
+ */
+export interface VentilationSourceIdentity {
+  readonly status: 'checked-against-supplied-file' | 'as-cited-not-checked' | 'not-identified'
+  /** ISO date of the document check, when one was made. */
+  readonly checkedOn?: string
+  readonly note: string
+  /** Another registry record for the same work. */
+  readonly sameWorkAs?: string
+}
+
+const identityStatusLabel: Readonly<Record<VentilationSourceIdentity['status'], string>> = {
+  'checked-against-supplied-file': 'Identity checked against the supplied file',
+  'as-cited-not-checked': 'Identity as cited, not checked',
+  'not-identified': 'Identity not established',
+}
+
+export function ventilationSourceIdentityLine(identity: VentilationSourceIdentity): string {
+  const checked = identity.checkedOn ? ` (${identity.checkedOn})` : ''
+  return `${identityStatusLabel[identity.status]}${checked}: ${identity.note}`
+}
+
+export const VENTILATION_CLINICAL_REVIEW_LINE =
+  'Clinical review of how this module uses it: none recorded yet.'
+
 export interface VentilationEvidenceReference {
   id: string
   deviceId?: VentilatorDeviceId
-  sourceClass:
-    | 'manufacturer'
-    | 'curriculum'
-    | 'clinical-reference'
-    | 'educational-model'
-    | 'guideline'
+  sourceClass: VentilationSourceClass
   reviewedAt?: string
   title: string
   citation: string
@@ -18,6 +60,116 @@ export interface VentilationEvidenceReference {
   pages?: string
   supports: readonly string[]
   limitations: string
+  identity?: VentilationSourceIdentity
+}
+
+const TOBIN_3E =
+  'In: Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013.'
+const TOBIN_3E_IDENTITY =
+  'The 3rd edition’s copyright page gives McGraw-Hill, 2013, with Martin J. Tobin as editor.'
+
+const PREPRINT_LIMITATIONS =
+  'A preprint about computational respiratory models, cited by the supplied case set for simulator design. It does not validate this module’s model or its teaching values.'
+
+type CasebookReference = Pick<
+  VentilationEvidenceReference,
+  'title' | 'sourceClass' | 'limitations'
+> & {
+  readonly identity: VentilationSourceIdentity
+}
+
+/**
+ * The eight references printed in the supplied case set, named from the files that could be found.
+ * Citation and stated use stay exactly as the case set prints them.
+ */
+const casebookReferences: Readonly<Record<number, CasebookReference>> = {
+  1: {
+    title: 'Case-set reference 1: Patient–Ventilator Dyssynchrony',
+    sourceClass: 'clinical-reference',
+    limitations:
+      'The same review as the separately listed Antonogiannaki 2017 record, cited again by the supplied case set. The stated use is the case set’s own description.',
+    identity: {
+      status: 'checked-against-supplied-file',
+      checkedOn: '2026-09-15',
+      note: 'Same article as the registered Antonogiannaki 2017 review; the supplied PDF matches the journal, pages and DOI.',
+      sameWorkAs: 'antonogiannaki-dyssynchrony-2017',
+    },
+  },
+  2: {
+    title: 'Case-set reference 2: Fighting the Ventilator',
+    sourceClass: 'clinical-reference',
+    limitations:
+      'The same chapter as the separately listed Tobin 3rd edition chapter 53 record, cited again by the supplied case set. The stated use is the case set’s own description.',
+    identity: {
+      status: 'checked-against-supplied-file',
+      checkedOn: '2026-09-15',
+      note: 'Same chapter as the registered Tobin chapter 53 record; the supplied chapter PDF names the three authors cited.',
+      sameWorkAs: 'tobin-3e-fighting-ventilator',
+    },
+  },
+  3: {
+    title: 'Case-set reference 3: Psychological Problems in the Ventilated Patient',
+    sourceClass: 'clinical-reference',
+    limitations:
+      'Textbook chapter cited by the supplied case set for patient-centered cases. The stated use is the case set’s own description and has not been checked against the chapter text.',
+    identity: {
+      status: 'checked-against-supplied-file',
+      checkedOn: '2026-09-15',
+      note: `The 19-page chapter PDF names Yoanna Skrobik as author of chapter 54. ${TOBIN_3E_IDENTITY}`,
+    },
+  },
+  4: {
+    title: 'Case-set reference 4: Addressing Respiratory Discomfort in the Ventilated Patient',
+    sourceClass: 'clinical-reference',
+    limitations:
+      'Textbook chapter cited by the supplied case set for patient-centered cases. The stated use is the case set’s own description and has not been checked against the chapter text.',
+    identity: {
+      status: 'checked-against-supplied-file',
+      checkedOn: '2026-09-15',
+      note: `The 26-page chapter PDF names Robert B. Banzett, Thomas Similowski and Robert Brown as authors of chapter 55. ${TOBIN_3E_IDENTITY}`,
+    },
+  },
+  5: {
+    title: 'Case-set reference 5: ventilation lecture transcripts (not identified)',
+    sourceClass: 'supplied-transcripts',
+    limitations:
+      'The case set names no speaker, course, date or file, so what these transcripts say cannot be checked. No statement in this module should rest on them alone.',
+    identity: {
+      status: 'not-identified',
+      checkedOn: '2026-09-15',
+      note: 'The case set gives only a topic list. A search of the supplied reference folders found no transcript set that matches it.',
+    },
+  },
+  6: {
+    title:
+      'Case-set reference 6: A Model-Based Approach to Synthetic Data Set Generation for Patient-Ventilator Waveforms for Machine Learning and Educational Use',
+    sourceClass: 'modeling-preprint',
+    limitations: PREPRINT_LIMITATIONS,
+    identity: {
+      status: 'as-cited-not-checked',
+      note: 'Cited by the case set as arXiv:2103.15684 (2021). No copy is available locally and no link was followed, so authors, version and any later publication were not checked.',
+    },
+  },
+  7: {
+    title:
+      'Case-set reference 7: Validation of a Computational Respiratory System Model for Mechanical Ventilation',
+    sourceClass: 'modeling-preprint',
+    limitations: PREPRINT_LIMITATIONS,
+    identity: {
+      status: 'as-cited-not-checked',
+      note: 'Cited by the case set as a 2026 preprint, arXiv:2607.06210. No copy is available locally and no link was followed, so authors, version and any later publication were not checked.',
+    },
+  },
+  8: {
+    title:
+      'Case-set reference 8: Patient-specific prediction of regional lung mechanics in ARDS patients with physics-based models',
+    sourceClass: 'modeling-preprint',
+    limitations: PREPRINT_LIMITATIONS,
+    identity: {
+      status: 'as-cited-not-checked',
+      note: 'Cited by the case set as arXiv:2408.14607 (2024). No copy is available locally and no link was followed, so authors, version and any later publication were not checked.',
+    },
+  },
 }
 
 export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
@@ -82,22 +234,24 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
     sourceClass: 'curriculum',
     title: 'Virtual Mechanical Ventilation Simulator Casebook',
     citation:
-      'Virtual Mechanical Ventilation Simulator Casebook: fifteen physiology, dyssynchrony, troubleshooting, and patient-centered cases. Supplied by the course author, July 2026.',
-    pages: '1-36',
+      'Virtual Mechanical Ventilation Simulator Casebook. Supplied Word document: fifteen cases, simulator design notes and eight references. No author, date or reviewer is stated. The registered JSON case set holds the same fifteen cases and eight references.',
     supports: [
-      'Case structure, learning objectives, expected actions, unsafe actions, and debriefs',
-      'Equation-of-motion, gas-exchange, waveform, validation, and scoring blueprint',
-      'Tutorial, assessment, rapid-response, and randomized teaching patterns',
+      'Fifteen case scenarios: objectives, starting state, expected and unsafe actions, hint ladders and debriefs',
+      'Simulator design notes: physiology state, waveform signatures and the slower timing of blood-gas updates',
     ],
     limitations:
-      'Curriculum source rather than independent validation. Device-specific settings are normalized through bounded educational profiles and remain draft pending review.',
+      'A supplied synthesis, not a clinical source or independent validation: its clinical statements need their own sources. Its scoring and examination guidance is not used by this self-paced module. Device-specific settings are normalized through bounded educational profiles and remain draft pending review.',
+    identity: {
+      status: 'checked-against-supplied-file',
+      checkedOn: '2026-09-15',
+      note: 'The supplied document names no author, date or reviewer, and its file properties record software rather than a person as its creator.',
+    },
   },
   {
     id: 'tobin-3e-setting-ventilator',
     sourceClass: 'clinical-reference',
     title: 'Principles and Practice of Mechanical Ventilation: Setting the Ventilator',
-    citation:
-      'Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 5.',
+    citation: `Holets SR, Hubmayr RD. Setting the Ventilator. ${TOBIN_3E} Chapter 5.`,
     pages: 'Supplied chapter PDF, 30 pages',
     supports: [
       'Breath-variable reasoning for ventilator settings',
@@ -105,13 +259,17 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
     ],
     limitations:
       'Textbook chapter supplied by the course author. It supports clinical concepts, not the fidelity of any training-console workflow.',
+    identity: {
+      status: 'checked-against-supplied-file',
+      checkedOn: '2026-09-15',
+      note: `The 30-page chapter PDF names Steven R. Holets and Rolf D. Hubmayr. ${TOBIN_3E_IDENTITY}`,
+    },
   },
   {
     id: 'tobin-3e-peep',
     sourceClass: 'clinical-reference',
     title: 'Principles and Practice of Mechanical Ventilation: Positive End-Expiratory Pressure',
-    citation:
-      'Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 10.',
+    citation: `Navalesi P, Maggiore SM. Positive End-Expiratory Pressure. ${TOBIN_3E} Chapter 10.`,
     pages: 'Supplied chapter PDF, 75 pages',
     supports: [
       'PEEP effects on recruitment and oxygenation',
@@ -119,13 +277,17 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
     ],
     limitations:
       'Textbook chapter supplied by the course author. The lesson uses bounded responses and does not prescribe patient-specific PEEP.',
+    identity: {
+      status: 'checked-against-supplied-file',
+      checkedOn: '2026-09-15',
+      note: `The 75-page chapter PDF names Paolo Navalesi and Salvatore Maurizio Maggiore. ${TOBIN_3E_IDENTITY}`,
+    },
   },
   {
     id: 'tobin-3e-copd',
     sourceClass: 'clinical-reference',
     title: 'Principles and Practice of Mechanical Ventilation: Mechanical Ventilation in COPD',
-    citation:
-      'Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 31.',
+    citation: `Laghi F. Mechanical Ventilation in Chronic Obstructive Pulmonary Disease. ${TOBIN_3E} Chapter 31.`,
     pages: 'Supplied chapter PDF, 33 pages',
     supports: [
       'Expiratory flow limitation, dynamic hyperinflation, and intrinsic PEEP',
@@ -134,13 +296,17 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
     ],
     limitations:
       'Textbook chapter supplied by the course author. Quantitative patient response remains an educational approximation.',
+    identity: {
+      status: 'checked-against-supplied-file',
+      checkedOn: '2026-09-15',
+      note: `The 33-page chapter PDF names Franco Laghi. ${TOBIN_3E_IDENTITY}`,
+    },
   },
   {
     id: 'tobin-3e-monitoring',
     sourceClass: 'clinical-reference',
     title: 'Principles and Practice of Mechanical Ventilation: Monitoring',
-    citation:
-      'Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 48.',
+    citation: `Jubran A, Tobin MJ. Monitoring during Mechanical Ventilation. ${TOBIN_3E} Chapter 48.`,
     pages: 'Supplied chapter PDF, 36 pages',
     supports: [
       'Measurement validation and interpretation of airway pressure and flow',
@@ -149,13 +315,17 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
     ],
     limitations:
       'Textbook chapter supplied by the course author. Monitoring examples do not validate the generated waveform morphology.',
+    identity: {
+      status: 'checked-against-supplied-file',
+      checkedOn: '2026-09-15',
+      note: `The 36-page chapter PDF names Amal Jubran and Martin J. Tobin. ${TOBIN_3E_IDENTITY}`,
+    },
   },
   {
     id: 'tobin-3e-fighting-ventilator',
     sourceClass: 'clinical-reference',
     title: 'Principles and Practice of Mechanical Ventilation: Fighting the Ventilator',
-    citation:
-      'Tobin MJ, Jubran A, Laghi F. Fighting the Ventilator. In: Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 53.',
+    citation: `Tobin MJ, Jubran A, Laghi F. Fighting the Ventilator. ${TOBIN_3E} Chapter 53.`,
     pages: 'Supplied chapter PDF, 37 pages',
     supports: [
       'Concurrent stabilization and mechanism localization during acute deterioration',
@@ -164,6 +334,11 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
     ],
     limitations:
       'Textbook chapter supplied by the course author. Emergency actions remain recognition-and-priority exercises governed by local protocols.',
+    identity: {
+      status: 'checked-against-supplied-file',
+      checkedOn: '2026-09-15',
+      note: `The 37-page chapter PDF names Martin J. Tobin, Amal Jubran and Franco Laghi. ${TOBIN_3E_IDENTITY}`,
+    },
   },
   {
     id: 'antonogiannaki-dyssynchrony-2017',
@@ -179,19 +354,22 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
     ],
     limitations:
       'Narrative review. It supports bedside recognition concepts but does not validate automated scoring or synthetic patient response.',
+    identity: {
+      status: 'checked-against-supplied-file',
+      checkedOn: '2026-09-15',
+      note: 'The 16-page article PDF prints the three authors, Korean J Crit Care Med 2017;32(4):307–322 and the cited DOI.',
+    },
   },
-  ...mechanicalVentilationSource.sources.map((source) => ({
-    id: `casebook-source-${source.id}`,
-    sourceClass:
-      source.id === 6 || source.id === 7 || source.id === 8
-        ? ('educational-model' as const)
-        : ('clinical-reference' as const),
-    title: `Casebook source ${source.id}`,
-    citation: source.citation,
-    supports: [source.use],
-    limitations:
-      'Citation and stated use are preserved from the supplied casebook. Verify current source availability and local applicability during clinical review.',
-  })),
+  ...mechanicalVentilationSource.sources.map((source): VentilationEvidenceReference => {
+    const reference = casebookReferences[source.id]
+    if (!reference) throw new Error(`Unclassified casebook source ${source.id}`)
+    return {
+      id: `casebook-source-${source.id}`,
+      ...reference,
+      citation: source.citation,
+      supports: [source.use],
+    }
+  }),
   {
     id: 'bounded-ventilation-model',
     sourceClass: 'educational-model',

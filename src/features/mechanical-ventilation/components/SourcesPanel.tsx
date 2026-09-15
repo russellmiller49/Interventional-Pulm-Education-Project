@@ -3,19 +3,14 @@ import { BookOpen, FileCheck2, FileWarning, FlaskConical, ShieldCheck } from 'lu
 import {
   getVentilatorDeviceProfile,
   mechanicalVentilationPublicationStatus,
+  VENTILATION_CLINICAL_REVIEW_LINE,
   ventilationEvidence,
+  ventilationSourceClassLabel,
+  ventilationSourceIdentityLine,
   ventilatorDeviceSources,
 } from '../content'
 import type { VentilatorDeviceId } from '../engine'
 import styles from './mechanical-ventilation.module.css'
-
-const sourceLabels = {
-  manufacturer: 'Manufacturer source',
-  curriculum: 'Supplied curriculum',
-  guideline: 'Clinical guideline',
-  'clinical-reference': 'Casebook clinical source',
-  'educational-model': 'Educational model',
-} as const
 
 const sourceIcons = {
   guideline: FileCheck2,
@@ -23,6 +18,8 @@ const sourceIcons = {
   curriculum: BookOpen,
   'clinical-reference': FileCheck2,
   'educational-model': FlaskConical,
+  'supplied-transcripts': FileWarning,
+  'modeling-preprint': FlaskConical,
 } as const
 
 export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
@@ -191,7 +188,7 @@ export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
             return (
               <article key={reference.id}>
                 <span>
-                  <Icon aria-hidden="true" /> {sourceLabels[reference.sourceClass]}
+                  <Icon aria-hidden="true" /> {ventilationSourceClassLabel[reference.sourceClass]}
                 </span>
                 <h3>{reference.title}</h3>
                 <p>{reference.citation}</p>
@@ -201,6 +198,10 @@ export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
                 <p>
                   <strong>Boundary:</strong> {reference.limitations}
                 </p>
+                {reference.identity ? (
+                  <p data-source-identity>{ventilationSourceIdentityLine(reference.identity)}</p>
+                ) : null}
+                <p>{VENTILATION_CLINICAL_REVIEW_LINE}</p>
               </article>
             )
           })}

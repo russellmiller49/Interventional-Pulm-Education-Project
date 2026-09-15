@@ -3,6 +3,27 @@
 import { useState } from 'react'
 import styles from './ventilation-course.module.css'
 
+export interface VentilationReinforcementChoice {
+  readonly id: string
+  readonly label: string
+  readonly rationale?: string
+  /** Why this choice could harm the patient in the stated case. An explanation, never a grade. */
+  readonly safety?: string
+}
+
+export function VentilationSafetyNote({ text }: { readonly text: string }) {
+  return (
+    <p className={`${styles.notice} ${styles.warning}`} data-safety-note>
+      <strong>Potential harm in this case: </strong>
+      {text}
+    </p>
+  )
+}
+
+export function choiceFitLabel(choiceId: string, bestChoiceId: string) {
+  return choiceId === bestChoiceId ? 'This fits the case. ' : 'This does not fit the case. '
+}
+
 /** Optional, transient feedback. Revealing never submits a choice or performs an experiment. */
 export function VentilationReinforcement({
   id,
@@ -11,14 +32,20 @@ export function VentilationReinforcement({
   choices,
   explanation,
   hint,
+  nextCheck,
+  bestChoiceId,
   onChoose,
 }: {
   id: string
   purpose: string
   prompt: string
-  choices: readonly { id: string; label: string; rationale?: string }[]
+  choices: readonly VentilationReinforcementChoice[]
   explanation: string
   hint: string
+  /** The next observation worth making, shown with the explanation. */
+  nextCheck?: string
+  /** The reading the explanation supports; used only to say whether a compared choice fits. */
+  bestChoiceId?: string
   onChoose?: (id: string) => void
 }) {
   const [selected, setSelected] = useState<string | null>(null)
@@ -94,20 +121,33 @@ export function VentilationReinforcement({
         <div className={styles.feedback} data-reinforcement-explanation>
           <h3>Explanation</h3>
           {compared && choice ? (
-            <p>
-              <strong>Your choice: {choice.label}. </strong>
-              {choice.rationale}
-            </p>
+            <>
+              <p data-compared-choice={choice.id}>
+                <strong>Your choice: {choice.label}. </strong>
+                {bestChoiceId ? choiceFitLabel(choice.id, bestChoiceId) : null}
+                {choice.rationale}
+              </p>
+              {choice.safety ? <VentilationSafetyNote text={choice.safety} /> : null}
+            </>
           ) : null}
           <p>{explanation}</p>
+          {nextCheck ? (
+            <p>
+              <strong>What to check next: </strong>
+              {nextCheck}
+            </p>
+          ) : null}
           <details>
             <summary>Compare the possibilities</summary>
             {choices.map((item) =>
               item.rationale ? (
-                <p key={item.id}>
-                  <strong>{item.label}. </strong>
-                  {item.rationale}
-                </p>
+                <div key={item.id}>
+                  <p>
+                    <strong>{item.label}. </strong>
+                    {item.rationale}
+                  </p>
+                  {item.safety ? <VentilationSafetyNote text={item.safety} /> : null}
+                </div>
               ) : null,
             )}
           </details>
