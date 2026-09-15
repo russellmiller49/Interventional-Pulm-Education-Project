@@ -28,6 +28,10 @@ import {
   hemodynamicTeachingArtifactByCaseId,
 } from '../content'
 import {
+  HEMODYNAMICS_CLINICAL_REVIEW_LINE,
+  hemodynamicsSourceSummary,
+} from '../content/sourceReviewMetadata'
+import {
   createInitialHemodynamicState,
   icuHemodynamicsReducer,
   thermodilutionAcceptedAverage,
@@ -197,7 +201,7 @@ export function HemodynamicCaseActivity({
               {
                 id: source.id,
                 title: source.title,
-                sourceLabel: `${source.citation} · version ${source.version}. Intended use: ${source.intendedUse}`,
+                sourceLabel: `${hemodynamicsSourceSummary(source)} Intended use: ${source.intendedUse} ${HEMODYNAMICS_CLINICAL_REVIEW_LINE}`,
                 limitation: source.limitation ?? 'Educational use only; not patient-specific.',
               },
             ]
@@ -860,7 +864,7 @@ export function HemodynamicCaseActivity({
                         {
                           id: source.id,
                           title: source.title,
-                          citation: `${source.citation} · version ${source.version}`,
+                          citation: hemodynamicsSourceSummary(source),
                         },
                       ]
                     : []

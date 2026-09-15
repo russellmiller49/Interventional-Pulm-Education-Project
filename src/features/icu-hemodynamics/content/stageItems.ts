@@ -117,7 +117,8 @@ const whyMeasure: HemodynamicsSectionItems = {
           'The resistance the heart pumps against, since that is what the catheter is placed to find.',
         rationale:
           'Resistance is calculated from a pressure difference and a flow. It is only as good as the pressures and the flow measurement it was built from.',
-        plausibility: 'reasonable-but-incomplete',
+        // HD-03-05: was 'reasonable-but-incomplete'. The catheter does not measure resistance.
+        plausibility: 'incorrect-mechanism',
       },
       {
         id: 'measures-responsiveness',

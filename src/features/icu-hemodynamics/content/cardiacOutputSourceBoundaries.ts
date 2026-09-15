@@ -74,7 +74,8 @@ const claimTopicsBySourceId: ReadonlyMap<string, readonly CardiacOutputClaimTopi
     'esc-ers-ph-2022',
     ['fick-versus-thermodilution-framing', 'repeated-cardiac-output-measurement'] as const,
   ],
-  // "Generic workflow concepts such as zeroing, wedge capture, and cardiac-output trial review."
+  // "Generic workflow concepts from the 2019 instructions for use, such as zeroing, wedge capture,
+  //  and cardiac-output trial review."
   ['monitor-workflow-supplied', ['cardiac-output-trial-review-workflow'] as const],
   // "Links ventricular loading, vascular resistance/compliance, volume, PEEP, and signal-system
   //  effects to coherent simulated trends." — the module's own model, and the only record whose

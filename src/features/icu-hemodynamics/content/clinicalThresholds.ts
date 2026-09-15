@@ -14,9 +14,13 @@ export const HEMODYNAMIC_CLINICAL_THRESHOLDS = {
     elevatedPvrWoodUnits: 2,
   },
   cardiacIndexAlarm: {
-    /** Educational warning boundary; evidence: pac-derived-part-2-2021. */
+    /**
+     * Educational simulator warning boundary; evidence: icu-hemodynamics-model-v1. Until HD-03 this
+     * cited pac-derived-part-2-2021, which states neither this figure nor the critical boundary
+     * (checked 2026-09-15). Where the two numbers should be sourced from awaits review (HD-03-04).
+     */
     lowLMinM2: 2.2,
-    /** Educational critical-alarm boundary; evidence: pac-derived-part-2-2021. */
+    /** Educational simulator critical-alarm boundary; evidence: icu-hemodynamics-model-v1. */
     criticalLowLMinM2: 1.8,
   },
   pulsePressureVariation: {

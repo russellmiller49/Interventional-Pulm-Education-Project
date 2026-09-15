@@ -1,0 +1,835 @@
+{
+  "queue": "HD-03-B1",
+  "title": "ICU Hemodynamics sources and consequential explanations: first HD-03 batch",
+  "status": "NOT REVIEWED. No reviewer decision is recorded. An empty decision, a draft label or an sme-review label is not approval.",
+  "preparedOn": "2026-09-15",
+  "preparedBy": "AI authoring assistant (Claude), at the owner's request, for prompt HD-03 of the v2 self-paced action pack. The assistant located the learner wording, read the locally available source documents for identity and at locators, and recorded what they say. It is not a reviewer and made no clinical judgement for the module.",
+  "module": "icu-hemodynamics",
+  "moduleContentVersion": "1.0.0-preview.1",
+  "baseCommit": "42b46dcb",
+  "branch": "claude/hd-03",
+  "decisionValues": ["NOT REVIEWED", "APPROVE AS SCOPED", "REVISE", "REJECT", "UNCERTAIN"],
+  "categories": [
+    "signal-validity",
+    "direct-versus-derived",
+    "invalid-input-handling",
+    "wedge-safety",
+    "numerical-definition"
+  ],
+  "claimKinds": [
+    "measurement-physics",
+    "measurement-convention",
+    "interpretation-rule",
+    "diagnostic-definition",
+    "model-condition",
+    "treatment-target",
+    "device-safety"
+  ],
+  "findingValues": ["supports", "partly supports", "does not address", "conflicts"],
+  "howToRecordADecision": "Replace NOT REVIEWED only with your own decision, name, role, the actual review date and the commit or content version you reviewed. A decision covers that item's scope: the accuracy and safety of the explanation and of any simulated consequence, not a learner and not the module. Record required changes and disagreement in their fields. A later wording change re-opens the item. A hemodynamics faculty member or bedside educator is the intended reviewer.",
+  "historicalExternalOpinion": "The 2026 external gap report (R00) said the module's guideline-class thresholds 'check out' (mPAP >20 / PAWP ≤15 / PVR >2 WU per ESC/ERS 2022; PPV 13%; CI 2.2 and 1.8). That is historical external opinion, not verification. Nothing in this queue relies on it, and item HD-03-04 found that the source cited for CI 2.2 and 1.8 does not contain them.",
+  "sourceDocumentsChecked": [
+    {
+      "sourceRecordId": "pac-waveforms-part-1-2021",
+      "localCopy": "OneDrive-Personal/03_Education_Teaching/critical_care_references_old_version/Hemodynamics/Contemporary Pulmonary Artery Catheter Review_part_1.pdf",
+      "sha256": "569227bda6346d55486c7178e642f9b524ebd856c367d87a347a034f19fc2180",
+      "pages": 11,
+      "identityAsPrinted": "Bootsma IT, et al. J Clin Monit Comput (2022) 36:5–15; published online 10 February 2021; doi 10.1007/s10877-021-00662-8. Printed page = PDF page + 4.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude)"
+    },
+    {
+      "sourceRecordId": "pac-derived-part-2-2021",
+      "localCopy": "OneDrive-Personal/03_Education_Teaching/critical_care_references_old_version/Hemodynamics/Contemporary Pulmonary Artery Catheter Review_part_2.pdf",
+      "sha256": "3553d1060a3db0d8826f15b6fdf70af8d1eb73f43ad64e17d8adea8d0afcdc5c",
+      "pages": 15,
+      "identityAsPrinted": "Bootsma IT, et al. J Clin Monit Comput (2022) 36:17–31; published online 1 March 2021; doi 10.1007/s10877-021-00673-5. Printed page = PDF page + 16.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude)"
+    },
+    {
+      "sourceRecordId": "pac-review-2014",
+      "localCopy": "OneDrive-Personal/03_Education_Teaching/critical_care_references_old_version/Hemodynamics/Pulmonary artery catheter.pdf",
+      "sha256": "81b071dc24309fdb5c0bfdc08f9dddbc796b0092a0cfc85b88fa19c79c9d6aca",
+      "pages": 13,
+      "identityAsPrinted": "Whitener S, Konoske R, Mark JB. Best Pract Res Clin Anaesthesiol 28 (2014) 323–335; doi 10.1016/j.bpa.2014.08.003. Issue number not printed on page 1; download stamp 19 July 2026.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude)"
+    },
+    {
+      "sourceRecordId": "clinical-hemodynamics-waveforms",
+      "localCopy": "OneDrive-Personal/03_Education_Teaching/critical_care_references_old_version/Hemodynamics/Textbook of hemodynamics/Normal physiology and waveforms.pdf",
+      "sha256": "e16c9c5ffadfacb65d106fa4da38cdefd14d7051a8481b7ad3c798316924895b",
+      "pages": 35,
+      "identityAsPrinted": "Ragosta M, Kennedy JLW. Chapter 2, Normal Waveforms, Artifacts, and Pitfalls. Elsevier chapter file with a 19 July 2026 download stamp; no publication date in the file. Printed page = PDF page + 14.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude)"
+    },
+    {
+      "sourceRecordId": "emcrit-rhc-supplied-2026",
+      "localCopy": "OneDrive-Personal/03_Education_Teaching/critical_care_references_old_version/Hemodynamics/Right heart catheterization (RHC) - EMCrit Project.pdf",
+      "sha256": "38ca78fd85de67001255fa3115ad706d07dcccab76fffb00f434266524158795",
+      "pages": 41,
+      "identityAsPrinted": "Right heart catheterization (RHC), byline 'August 26, 2024 by Josh Farkas'; browser print header 7/23/26 10:33 AM; https://emcrit.org/ibcc/rhc/. No update history. Page 41 footer: the IBCC is an online textbook by Josh Farkas (Farkas Medical LLC) and the site gives its authors' opinions. It does not describe itself as a guideline or as peer reviewed.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude)"
+    },
+    {
+      "sourceRecordId": "master-hemodynamics-reference",
+      "localCopy": "OneDrive-Personal/03_Education_Teaching/critical_care_references_old_version/Hemodynamics/Master_Hemodynamics_and_Hemodynamic_Monitoring_Reference.docx",
+      "sha256": "98c2dfa970b7123375936f55b415a629e97b025053c1300a0969ef04af4085bf",
+      "pages": null,
+      "identityAsPrinted": "Heading 'MASTER REFERENCE — Clinical Hemodynamics & Hemodynamic Monitoring — A unified technical, physiologic, disease-specific, and procedural knowledge document'. No author, publisher, date or reference list in the text. docProps/core.xml: dc:creator 'OpenAI', created and modified 2013-12-23T23:15:00Z, revision 1. File date in the folder 2026-07-19.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude)"
+    },
+    {
+      "sourceRecordId": "monitor-workflow-supplied",
+      "localCopy": "~/Downloads/fdacovideuas_137229.pdf",
+      "sha256": "20a6eb333dcee4c7a5c28f50c298c7fe071ded63b23a08e356283c9c7e55314b",
+      "pages": 583,
+      "identityAsPrinted": "Philips Medizin Systeme Boeblingen GmbH. Instructions for Use, IntelliVue Patient Monitor MX750/850, Release N with Software Revision N.0x.xx; Part Number 453564861711, Published in Germany 07/2019 (PDF p560); addendum Part Number 453564885151, 09/19, covering MX100/X3, MX400-800 and MX750/MX850 (pp561–567). Nothing in the text refers to an emergency use authorization; the file name is the only link.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude)"
+    },
+    {
+      "sourceRecordId": "monitor-workflow-supplied",
+      "localCopy": "~/Downloads/51414b09bd404c5ba256ae4501365f69.pdf",
+      "sha256": "c3aacfa309f9300b65d21bb5323e4a39d22efa4f1a374e8e44164039d4207953",
+      "pages": 316,
+      "identityAsPrinted": "Philips IntelliVue Configuration Guide for MX800, MP2–MP90, MP5T/MP5SC, X2 and Cableless Measurements, monitor release H.0 (software H.0x.xx); Part Number 4535 642 29201, Printed in Germany 10/2010. Configuration-mode settings only; no zeroing, wedge or cardiac-output procedures.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude)"
+    }
+  ],
+  "notAvailableForChecking": [
+    {
+      "sourceRecordId": "esc-ers-ph-2022",
+      "note": "Neither the full 2022 ESC/ERS guideline nor the linked ESC 'Essential messages' summary is local; no URL was fetched."
+    },
+    { "sourceRecordId": "ssc-sepsis-2026", "note": "Not local; no URL was fetched." },
+    {
+      "sourceRecordId": "arterial-pressure-five-step-2020",
+      "note": "Not local (open access at PMC); no URL was fetched."
+    },
+    { "sourceRecordId": "edwards-swan-ganz-ifu-2023", "note": "Not local; no URL was fetched." },
+    { "sourceRecordId": "cvp-measurement-2017", "note": "Not local." }
+  ],
+  "items": [
+    {
+      "id": "HD-03-01",
+      "gapIds": ["HD-03", "HD-05"],
+      "category": "signal-validity",
+      "claimKind": "measurement-physics",
+      "topic": "Size and direction of a transducer-level error",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/icu-hemodynamics/content/pressureSystemValidity.ts",
+          "locator": "Pressure system section, validity check 'Level', What it establishes",
+          "excerpt": "A transducer 10 cm too low reads about 7.4 mmHg high; 10 cm too high reads about 7.4 mmHg low."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/pressureSystemValidity.ts",
+          "locator": "Pressure system section, validity check 'Level', What it does not establish",
+          "excerpt": "Leveling changes the offset, not the shape."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/troubleshootingAtlas.ts",
+          "locator": "Troubleshooting atlas, 'Zero or level error', numbers teaching",
+          "excerpt": "A transducer 10 cm too low reads approximately 7.4 mmHg high; 10 cm too high reads approximately 7.4 mmHg low. Pulse pressure is unchanged."
+        }
+      ],
+      "learnerWording": "“A transducer 10 cm too low reads about 7.4 mmHg high; 10 cm too high reads about 7.4 mmHg low.” “Leveling changes the offset, not the shape.” Atlas: the same figure with “Pulse pressure is unchanged.”",
+      "visual": "Troubleshooting atlas zero/level comparison: the same PA waveform shifted by a constant offset.",
+      "intendedTeachingPoint": "An off-level transducer shifts every sample by a fixed amount without changing the waveform, and a fixed offset matters most for small pressures.",
+      "sourceRecordIds": [
+        "arterial-pressure-five-step-2020",
+        "clinical-hemodynamics-waveforms",
+        "emcrit-rhc-supplied-2026"
+      ],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "clinical-hemodynamics-waveforms",
+          "location": "Ragosta ch. 2, p. 16 (PDF 2), 'Calibration, Balancing, and Zeroing'; p. 15 (PDF 1)",
+          "finding": "partly supports",
+          "note": "A transducer above the zero point reads low and below reads high; the error matters most for the lower, diastolic pressures. Reference at mid-chest at the sternal angle (4th intercostal space). No mmHg-per-cm figure; 'zeroing' is used for both leveling and zeroing; nothing on offset versus shape."
+        },
+        {
+          "sourceRecordId": "emcrit-rhc-supplied-2026",
+          "location": "IBCC RHC capture p. 10, 'zeroing the catheter & verification'",
+          "finding": "partly supports",
+          "note": "Zero at the mid-axillary line; as a check, the sternal manubrium about 5 cm above the right atrium reads about +4 mmHg (proportionate to the module's figure). Treats leveling and zeroing as one step; no 7.4 mmHg figure."
+        },
+        {
+          "sourceRecordId": "pac-waveforms-part-1-2021",
+          "location": "Bootsma Part 1, §2.1 Zeroing and §2.2 Leveling, p. 7 (PDF 3)",
+          "finding": "partly supports",
+          "note": "Not cited by these surfaces. Separate zeroing and leveling sections; phlebostatic axis about 5 cm below the sternal angle supine; above underestimates, below overestimates, in proportion to column height. No number."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "The direction of the error is supported by three local documents. None of them states 7.4 mmHg per 10 cm. The figure is consistent with converting a 10 cm water column to mmHg (about 0.74 mmHg per cm); that is the assistant's arithmetic, not a source locator.",
+        "notChecked": "Saugel 2020, the registered source for hydrostatic error, was not available."
+      },
+      "clinicalQuestion": "Keep the 7.4 mmHg per 10 cm figure and its 'about'/'approximately' wording, and name the source that should carry it. The documents place the reference level differently (phlebostatic axis about 5 cm below the sternal angle; mid-chest at the 4th intercostal space; mid-axillary line): is 'the institutional phlebostatic reference' the right teaching phrase?",
+      "hold": "The figure stays at registered-claim depth until a reviewer names its source.",
+      "changeInThisBatch": "None to wording or numbers.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "HD-03-02",
+      "gapIds": ["HD-03", "HD-05"],
+      "category": "signal-validity",
+      "claimKind": "measurement-convention",
+      "topic": "Fast-flush response and what damping does to systolic, diastolic and mean",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/icu-hemodynamics/content/pressureSystemValidity.ts",
+          "locator": "Pressure system section, validity check 'Dynamic response', What you check",
+          "excerpt": "prompt return with one or two rapidly decaying oscillations, a sluggish rounded return, or persistent ringing."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/normalWaveformValidityChallenges.ts",
+          "locator": "Waveform interpretation, display problem 'Overdamped measurement system', Why no chamber can be named (also practice tracing 6)",
+          "excerpt": "so systolic reads low and diastolic reads high while the mean stays relatively preserved."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/normalWaveformValidityChallenges.ts",
+          "locator": "Same display problem, Repair or re-read first",
+          "excerpt": "then classify the fast-flush release before interpreting anything but the mean."
+        }
+      ],
+      "learnerWording": "“Perform a fast flush from a confirmed, safe position and watch the release: prompt return with one or two rapidly decaying oscillations, a sluggish rounded return, or persistent ringing.” Overdamped: “systolic reads low and diastolic reads high while the mean stays relatively preserved.” Repair: “…classify the fast-flush release before interpreting anything but the mean.”",
+      "visual": "Model-drawn overdamped PA display (rounded upstroke, blunted peak, narrowed pulse pressure, notch largely lost).",
+      "intendedTeachingPoint": "The flush release tells you whether the system can reproduce rapid pressure change; an overdamped system under-reads systolic and over-reads diastolic, so shape-dependent readings wait for repair.",
+      "sourceRecordIds": [
+        "arterial-pressure-five-step-2020",
+        "clinical-hemodynamics-waveforms",
+        "monitor-workflow-supplied"
+      ],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "pac-waveforms-part-1-2021",
+          "location": "Bootsma Part 1, §2.5.1 Damping, p. 11 (PDF 7)",
+          "finding": "supports",
+          "note": "Not cited by these surfaces. Repeated fast-flush test; optimal damping shows 1.5–2 oscillations, more means underdamped, fewer overdamped; underdamped over-reads systolic and/or under-reads diastolic, overdamped the reverse. Nothing on the mean."
+        },
+        {
+          "sourceRecordId": "clinical-hemodynamics-waveforms",
+          "location": "Ragosta ch. 2, pp. 15–16 (Fig. 2.1) and pp. 33–34 'Common Errors and Artifacts'",
+          "finding": "partly supports",
+          "note": "Overdamping loses the notch and reads systolic low and diastolic high; underdamping the opposite. No fast-flush test; nothing on the mean or pulse pressure."
+        },
+        {
+          "sourceRecordId": "emcrit-rhc-supplied-2026",
+          "location": "IBCC RHC capture pp. 16–17",
+          "finding": "partly supports",
+          "note": "Same directions; no fast-flush test or oscillation count."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "Directions of error are supported. 'One or two' oscillations approximates Part 1's 1.5–2. No checked document states that the mean is relatively preserved.",
+        "notChecked": "Saugel 2020 (the registered source for fast-flush patterns) was not available."
+      },
+      "clinicalQuestion": "Is 'one or two rapidly decaying oscillations' an acceptable teaching rendering? Is 'the mean stays relatively preserved' supported, and by which source? The recognition practice's repair advice ('before interpreting anything but the mean') depends on it.",
+      "hold": "The mean-preserved statement and the repair advice that relies on it are held at authored-claim depth.",
+      "changeInThisBatch": "None.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "HD-03-03",
+      "gapIds": ["HD-03", "HD-05"],
+      "category": "invalid-input-handling",
+      "claimKind": "interpretation-rule",
+      "topic": "A display fault withholds the chamber reading until repair or re-read",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/icu-hemodynamics/content/normalWaveformValidityChallenges.ts",
+          "locator": "Waveform interpretation, all seven display problems and practice tracing 6: the withheld line",
+          "excerpt": "Chamber interpretation withheld — this display cannot support one"
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/normalWaveformValidityChallenges.ts",
+          "locator": "Display problem 'Transducer below the reference level', best-supported reading",
+          "excerpt": "Nothing yet. The morphology identifies the compartment, but the value carries a hydrostatic offset until the transducer is re-levelled and zeroed."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/components/WaveformRecognitionDrill.tsx",
+          "locator": "Name and compare tracings, display-fault explanation heading",
+          "excerpt": "<dt>Repair or re-read first</dt>"
+        }
+      ],
+      "learnerWording": "“Chamber interpretation withheld — this display cannot support one.” Level fault: “Nothing yet. The morphology identifies the compartment, but the value carries a hydrostatic offset until the transducer is re-levelled and zeroed.” Each fault then lists What you see, Why no chamber can be named, and Repair or re-read first.",
+      "visual": "Seven model-drawn faulted displays (off level, mislabelled channel, range mismatch, overdamped, underdamped ringing, catheter motion, reading away from end expiration).",
+      "intendedTeachingPoint": "'Cannot be read from this display' is a real answer; the next step is the repair or re-read, not an interpretation.",
+      "sourceRecordIds": [
+        "monitor-workflow-supplied",
+        "arterial-pressure-five-step-2020",
+        "clinical-hemodynamics-waveforms",
+        "emcrit-rhc-supplied-2026"
+      ],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "clinical-hemodynamics-waveforms",
+          "location": "Ragosta ch. 2, Box 2.1, pp. 16–17; catheter whip pp. 33 and 35",
+          "finding": "partly supports",
+          "note": "Confirm zero and scale, check fidelity and look for artifacts as part of interpretation; recheck the zero when a result does not fit or will drive a decision. No explicit rule to withhold a reading until repair."
+        },
+        {
+          "sourceRecordId": "monitor-workflow-supplied",
+          "location": "IntelliVue MX750/850 IFU, ch. 13 'Monitoring Invasive Pressure', zeroing pp. 248–250 including 'Troubleshooting the Zero'",
+          "finding": "partly supports",
+          "note": "Device zeroing workflow only; says nothing about withholding interpretation."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "The withhold rule is the module's authored synthesis, consistent with the checked sources' instruction to confirm zero, scale and fidelity before interpreting. The seven display problems carry reviewStatus 'sme-review' with no reviewer, date or record anywhere in the repository.",
+        "notChecked": "Saugel 2020 not available."
+      },
+      "clinicalQuestion": "Is 'withhold the chamber interpretation until the fault is repaired or the tracing re-read' the right teaching rule for each of the seven faults, and for which faults may the mean still be read? Replace the unattributed 'sme-review' status with an attributable decision.",
+      "hold": "The 'sme-review' label is treated as not reviewed.",
+      "changeInThisBatch": "None.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "HD-03-04",
+      "gapIds": ["HD-03", "HD-05"],
+      "category": "numerical-definition",
+      "claimKind": "model-condition",
+      "topic": "Simulator cardiac-index alarm boundaries (2.2 and 1.8) and the sepsis case's initial MAP target",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/icu-hemodynamics/content/derivedMetrics.ts",
+          "locator": "Cardiac index teaching panel and derived workbench, boundary classified 'Simulation parameter'",
+          "excerpt": "This simulator warns below ${thresholds.cardiacIndexAlarm.lowLMinM2} L/min/m² and alarms below ${thresholds.cardiacIndexAlarm.criticalLowLMinM2} L/min/m²."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/derivedMetrics.ts",
+          "locator": "Same boundary, where it must not travel",
+          "excerpt": "An alarm boundary this simulator uses carries no clinical authority."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/cases.ts",
+          "locator": "Septic shock practice case, guided prompt (a treatment target, kept separate from alarms)",
+          "excerpt": "The initial modeled MAP target is around ${mapLowThresholdMmHg} mmHg; individualize after serial perfusion review."
+        }
+      ],
+      "learnerWording": "“This simulator warns below 2.2 L/min/m² and alarms below 1.8 L/min/m².” “An alarm boundary this simulator uses carries no clinical authority.” Septic shock case: “The initial modeled MAP target is around 65 mmHg; individualize after serial perfusion review.”",
+      "visual": "Bedside monitor cardiac-index alarm in the simulator.",
+      "intendedTeachingPoint": "An alarm boundary in a teaching simulator is a model condition, not a diagnostic definition or a treatment target.",
+      "sourceRecordIds": [
+        "icu-hemodynamics-model-v1",
+        "pac-derived-part-2-2021",
+        "emcrit-rhc-supplied-2026",
+        "ssc-sepsis-2026"
+      ],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "pac-derived-part-2-2021",
+          "location": "Bootsma Part 2, whole article; Table 1 p. 18; Table 2 p. 23",
+          "finding": "conflicts",
+          "note": "Cited for these boundaries until this batch, but neither 2.2 nor 1.8 appears anywhere. Table 1 gives CI 2.5–4.0 L/min/m²; Table 2 describes cardiogenic shock as reduced cardiac index with no number."
+        },
+        {
+          "sourceRecordId": "emcrit-rhc-supplied-2026",
+          "location": "IBCC RHC capture p. 3, 'rapid reference > normal values'",
+          "finding": "partly supports",
+          "note": "Gives the same numbers as diagnostic suggestions of cardiogenic shock (CI below 1.8 without support, below 2.2 with support) in an online commentary — a different kind of claim from a simulator alarm."
+        },
+        {
+          "sourceRecordId": "ssc-sepsis-2026",
+          "location": "Not available",
+          "finding": "does not address",
+          "note": "The registered source for the initial MAP target could not be checked."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "The cited review does not contain the alarm figures. The numbers match an online commentary's cardiogenic-shock criteria, which is a likely but unconfirmed origin. The learner wording already classifies them as simulation parameters without clinical authority.",
+        "notChecked": "The 2026 Surviving Sepsis Campaign text (initial MAP target)."
+      },
+      "historicalExternalOpinion": "R00 listed 'CI 2.2 and 1.8' among thresholds that 'check out'. Historical opinion; the cited source does not contain them.",
+      "clinicalQuestion": "Keep 2.2 and 1.8 as simulator alarm boundaries? If so, should the teaching say they echo cardiogenic-shock criteria with and without support (with a source the reviewer accepts), or should the model use boundaries that do not look like a definition? Separately, is 'initial modeled MAP target around 65 mmHg; individualize after serial perfusion review' an accurate statement of the 2026 Surviving Sepsis guidance?",
+      "hold": "Numbers, alarm behavior and learner wording unchanged pending the decision.",
+      "changeInThisBatch": "pac-derived-part-2-2021 removed from the alarm-boundary context's evidence (it now cites only icu-hemodynamics-model-v1); constant comments in clinicalThresholds.ts corrected. Previous evidence: ['pac-derived-part-2-2021', 'icu-hemodynamics-model-v1'].",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "HD-03-05",
+      "gapIds": ["HD-03", "HD-05"],
+      "category": "direct-versus-derived",
+      "claimKind": "interpretation-rule",
+      "topic": "The catheter measures pressures, temperature and samples; resistance is calculated",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/icu-hemodynamics/content/stageItems.ts",
+          "locator": "Why measure section, optional question hd-why-transfer-1, option measures-resistance",
+          "excerpt": "The resistance the heart pumps against, since that is what the catheter is placed to find."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/stageItems.ts",
+          "locator": "Same option, feedback",
+          "excerpt": "Resistance is calculated from a pressure difference and a flow."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/questionSort.ts",
+          "locator": "Why measure section, question sort row 'cardiac-output'",
+          "excerpt": "Thermodilution derives cardiac output from the temperature–time curve and injection information."
+        }
+      ],
+      "learnerWording": "Option: “The resistance the heart pumps against, since that is what the catheter is placed to find.” Feedback: “Resistance is calculated from a pressure difference and a flow. It is only as good as the pressures and the flow measurement it was built from.” Sort row: “Thermodilution derives cardiac output from the temperature–time curve and injection information…”",
+      "visual": "None (optional question with explanation available before answering).",
+      "intendedTeachingPoint": "Separate what the catheter transduces or samples from what is calculated; a resistance is only as valid as its pressures and flow.",
+      "sourceRecordIds": ["pac-review-2014", "esicm-shock-2025", "icu-hemodynamics-model-v1"],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "pac-derived-part-2-2021",
+          "location": "Bootsma Part 2, Table 1, p. 18; §3.1, p. 19",
+          "finding": "supports",
+          "note": "Not cited by the question. SVR and PVR are tabulated as formulas of pressures and cardiac output; directly transduced pressures and SvO2 have no equation. Thermodilution cardiac output is calculated from the temperature–time curve (modified Stewart–Hamilton)."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "The option states a false measurement claim, and its own feedback says so, yet it was graded 'reasonable-but-incomplete' (shown as partly right). The supporting locator is in a record the question does not cite.",
+        "notChecked": "Whitener 2014 and ESICM 2025, which the question cites, were not read for this point."
+      },
+      "clinicalQuestion": "Confirm the regrade to 'incorrect-mechanism'. Should the question also cite the Part 2 review, which carries the locator? Does the sort row that classes cardiac output as a clinical measurement read clearly beside this item (HD-01 ledger row 29)?",
+      "hold": "No clinical hold; the regrade awaits confirmation. The sort-row rewrite proposal from HD-01 is carried unchanged.",
+      "changeInThisBatch": "measures-resistance regraded from 'reasonable-but-incomplete' to 'incorrect-mechanism'. Label, feedback, key, explanation and review status ('draft') unchanged. This was HD-01's pending proposal; it is applied here because the source check confirms the option is not a measurement.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "HD-03-06",
+      "gapIds": ["HD-03"],
+      "category": "direct-versus-derived",
+      "claimKind": "measurement-convention",
+      "topic": "Direct Fick requires a measured oxygen uptake",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/icu-hemodynamics/components/CardiacOutputMethodModel.tsx",
+          "locator": "Thermodilution series, provenance question (renders on the step card and in the method model)",
+          "excerpt": "Only the result whose oxygen uptake was measured is direct Fick. The other is an estimate, and it moves in direct proportion to the substituted figure."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/components/CardiacOutputMethodModel.tsx",
+          "locator": "Same question, reasoning for the defensible choice",
+          "excerpt": "Direct Fick is named for its numerator."
+        }
+      ],
+      "learnerWording": "“Only the result whose oxygen uptake was measured is direct Fick. The other is an estimate, and it moves in direct proportion to the substituted figure.” “Direct Fick is named for its numerator.”",
+      "visual": "Method model comparing two episodes with identical specimens, one with measured and one with substituted oxygen uptake.",
+      "intendedTeachingPoint": "Good specimens settle the denominator; only a measured oxygen uptake makes the result direct Fick.",
+      "sourceRecordIds": ["pac-derived-part-2-2021", "esc-ers-ph-2022"],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "pac-derived-part-2-2021",
+          "location": "Bootsma Part 2, §3.1 Intermittent cardiac output measurements, p. 19",
+          "finding": "partly supports",
+          "note": "Direct Fick with oxygen uptake measured by respirometry; technically demanding and rarely used. Assumed or estimated oxygen uptake is not mentioned. The same section also calls Fick the 'gold standard for indirect CO determinations', an inconsistency in the source's own terms."
+        },
+        {
+          "sourceRecordId": "esc-ers-ph-2022",
+          "location": "Not available",
+          "finding": "does not address",
+          "note": "Registered for direct-Fick versus thermodilution framing; not checked."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "The measured-uptake definition is supported. The contrast with a substituted uptake is the module's synthesis, not stated in the checked document.",
+        "notChecked": "ESC/ERS 2022 text."
+      },
+      "clinicalQuestion": "Confirm that a calculation with an assumed or substituted oxygen uptake should be taught as an estimate and never as direct Fick, and name the source. The question renders twice on one step (HD-01 ledger row 21, combine proposal): keep one?",
+      "hold": "The substituted-uptake contrast stays at authored-claim depth.",
+      "changeInThisBatch": "None.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "HD-03-07",
+      "gapIds": ["HD-03"],
+      "category": "invalid-input-handling",
+      "claimKind": "interpretation-rule",
+      "topic": "A mixed-compartment (false) wedge value is not a PAWP and must not feed PVR",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/icu-hemodynamics/content/troubleshootingAtlas.ts",
+          "locator": "Troubleshooting atlas, 'False wedge from incomplete occlusion', numbers teaching",
+          "excerpt": "It is not a valid PAWP and must not be entered into PVR or other derived calculations."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/troubleshootingAtlas.ts",
+          "locator": "Same entry, why it matters",
+          "excerpt": "A falsely elevated PAWP can misclassify pre-capillary physiology as post-capillary disease and redirect treatment toward an unsupported mechanism."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/troubleshootingAtlas.ts",
+          "locator": "Same entry, actions",
+          "excerpt": "compare a wedged-tip sample with a simultaneous systemic arterial saturation; low systemic saturation limits discrimination."
+        }
+      ],
+      "learnerWording": "“The displayed value is a mixture of PA and wedge compartments. It is not a valid PAWP and must not be entered into PVR or other derived calculations.” “A falsely elevated PAWP can misclassify pre-capillary physiology as post-capillary disease…” “…compare a wedged-tip sample with a simultaneous systemic arterial saturation…”",
+      "visual": "Atlas figure of residual PA pulsatility on an atrial-type contour; the live capstone labels its PAWP invalid.",
+      "intendedTeachingPoint": "An invalid input is rejected before any derived number is calculated from it; the confirmation is physiological, not cosmetic.",
+      "sourceRecordIds": [
+        "clinical-hemodynamics-waveforms",
+        "pac-waveforms-part-1-2021",
+        "pac-review-2014"
+      ],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "clinical-hemodynamics-waveforms",
+          "location": "Ragosta ch. 2, p. 35 (hybrid tracing); p. 25 and Fig. 2.37 p. 40 (oximetry)",
+          "finding": "supports",
+          "note": "Incomplete occlusion mixes PA and wedge waveforms and reads falsely high; in pulmonary hypertension it can suggest decompensated heart failure or mitral stenosis. Wedge-position saturation above 90% is the strongest confirmation. A hybrid trace may still show a and v waves. Nothing on PVR."
+        },
+        {
+          "sourceRecordId": "emcrit-rhc-supplied-2026",
+          "location": "IBCC RHC capture pp. 25–26",
+          "finding": "supports",
+          "note": "Not cited by this entry. Under-wedging reads falsely high and makes PVR falsely low; a wedge sample should be within 5% of systemic saturation. Over-wedging: steadily rising trace, wedge above PA diastolic, or wedge at under 1–1.5 mL."
+        },
+        {
+          "sourceRecordId": "pac-waveforms-part-1-2021",
+          "location": "Bootsma Part 1, §2.5.3 Overwedging and underwedging, pp. 11–12",
+          "finding": "partly supports",
+          "note": "Criteria for overwedging (above PA diastolic, rising until deflation, non-pulsatile, wedging under 1.5 mL)."
+        },
+        {
+          "sourceRecordId": "pac-review-2014",
+          "location": "Whitener 2014, p. 332",
+          "finding": "does not address",
+          "note": "Only notes that a sample drawn while wedged is arterialized."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "The rejection rule and the misclassification risk are supported. Sources state the oximetry confirmation differently (above 90%; within 5% of systemic); the module gives no number.",
+        "notChecked": "Whether the derived evaluator's withholding covers every mixed-compartment case in the cases."
+      },
+      "clinicalQuestion": "Confirm the teaching. Should the oximetry confirmation carry a number, and which? Should the 'residual PA pulsatility' cue add that a hybrid trace can still show a and v waves?",
+      "hold": "None beyond review.",
+      "changeInThisBatch": "None.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "HD-03-08",
+      "gapIds": ["HD-03", "HD-05"],
+      "category": "wedge-safety",
+      "claimKind": "device-safety",
+      "topic": "Balloon inflation, prompt deflation, and what to do when the PA waveform does not return",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/icu-hemodynamics/content/pawpCaptureSequence.ts",
+          "locator": "PAWP capture section, sequence step 4 'Commit'",
+          "excerpt": "Inflate only from a confirmed pulmonary-artery position, to the volume specified by the manufacturer for the catheter in use, and never with liquid."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/pawpCaptureSequence.ts",
+          "locator": "Sequence step 7 'Deflate'",
+          "excerpt": "Deflate promptly and deliberately, as a step of its own. Occlusion is brief; nothing about the value obtained is a reason to keep it inflated."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/pawpCaptureSequence.ts",
+          "locator": "Sequence step 9 'Continue?'",
+          "excerpt": "treat the signal and the catheter position as unsafe: stop, do not flush or manipulate the catheter, and escalate."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/troubleshootingAtlas.ts",
+          "locator": "Troubleshooting atlas, 'Spontaneous wedge', actions",
+          "excerpt": "When permitted, withdraw slowly until a clear PA waveform returns."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/troubleshootingAtlas.ts",
+          "locator": "Troubleshooting atlas, 'Overwedging', warning",
+          "excerpt": "Stop inflation immediately. Allow passive balloon deflation. Do not flush."
+        }
+      ],
+      "learnerWording": "Commit: “Inflate only from a confirmed pulmonary-artery position, to the volume specified by the manufacturer for the catheter in use, and never with liquid.” Deflate: “Deflate promptly and deliberately… Occlusion is brief…” Continue?: if the PA waveform did not return, “stop, do not flush or manipulate the catheter, and escalate.” Atlas: spontaneous wedge “When permitted, withdraw slowly until a clear PA waveform returns.”; overwedging “Stop inflation immediately. Allow passive balloon deflation. Do not flush.”",
+      "visual": "Live simulator: balloon inflation blocks every exit, the reducer refuses a flush while wedged or balloon-up, and a 10-second automatic release (a simulator rail, not the learner's deflation).",
+      "intendedTeachingPoint": "Occlusion is a brief, deliberate act that ends by the learner's own deflation and is confirmed by a returning PA waveform.",
+      "sourceRecordIds": [
+        "edwards-swan-ganz-ifu-2023",
+        "monitor-workflow-supplied",
+        "pac-review-2014",
+        "pac-waveforms-part-1-2021",
+        "emcrit-rhc-supplied-2026"
+      ],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "pac-waveforms-part-1-2021",
+          "location": "Bootsma Part 1, p. 6 (insertion); §2.3.4 Wedge position, p. 8; §2.5.3, pp. 11–12",
+          "finding": "partly supports",
+          "note": "Balloon takes 1.5 mL of air. Once wedged, deflate and do not advance; the PA waveform should reappear, and if not, retract about 2 cm. Inflating when migrated distally may rupture a small vessel. No time limit; nothing on liquid or flushing."
+        },
+        {
+          "sourceRecordId": "pac-review-2014",
+          "location": "Whitener 2014, pp. 325, 327–328",
+          "finding": "partly supports",
+          "note": "1.5 mL of air; a catheter left wedged or in a small branch can cause infarction or PA rupture."
+        },
+        {
+          "sourceRecordId": "emcrit-rhc-supplied-2026",
+          "location": "IBCC RHC capture p. 10; pp. 23–24; p. 13",
+          "finding": "partly supports",
+          "note": "1.5 mL of air; PA rupture is the main major complication, avoid unneeded wedges; wedging at under 1 mL means too distal."
+        },
+        {
+          "sourceRecordId": "monitor-workflow-supplied",
+          "location": "IntelliVue MX750/850 IFU, 'Measuring Pulmonary Artery Wedge Pressure' pp. 256–257, 'Editing the Wedge' p. 257, warnings p. 258",
+          "finding": "partly supports",
+          "note": "Monitor prompts inflation and deflation and stores the trace. Warning: prolonged inflation can cause pulmonary hemorrhage or infarction, so inflate minimally; if PAWP mean exceeds PA systolic, deflate and report. P. 256 equates wedge pressure with LV end-diastolic pressure, a device-manual simplification the module does not adopt."
+        },
+        {
+          "sourceRecordId": "edwards-swan-ganz-ifu-2023",
+          "location": "Not available",
+          "finding": "does not address",
+          "note": "Registered for balloon-inflation and placement safeguards; not checked."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "Brief occlusion, deflation and confirming PA return are supported. 'Never with liquid' and the no-flush rules were not found in any checked document (the catheter IFU was unavailable). Step 9's 'do not … manipulate the catheter' differs from Part 1's 'retract about 2 cm' and from the atlas's 'withdraw slowly when permitted'.",
+        "notChecked": "Edwards Swan-Ganz IFU DOC-0222632A."
+      },
+      "clinicalQuestion": "When the PA waveform does not return after deflation, should a learner be taught to stop and escalate without manipulating the catheter, or to withdraw about 2 cm / slowly when permitted? Make step 9 and the atlas agree. Confirm 'never with liquid' and the no-flush rules against the current catheter IFU.",
+      "hold": "Both instructions stay as authored; the difference is recorded, not resolved. Simulator interlocks are unchanged.",
+      "changeInThisBatch": "None.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "HD-03-09",
+      "gapIds": ["HD-03"],
+      "category": "wedge-safety",
+      "claimKind": "measurement-convention",
+      "topic": "Reading the wedge: end expiration, mean versus end-diastolic point, relation to PA diastolic",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/icu-hemodynamics/content/pawpCaptureSequence.ts",
+          "locator": "PAWP capture, outcome 'Atrial morphology with late a and v waves', next action",
+          "excerpt": "Read at end expiration — the end-diastolic point if you are estimating left ventricular end-diastolic pressure, the mean if that is the value you want, and not the two interchangeably."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/pawpCaptureSequence.ts",
+          "locator": "Sequence step 3 'Predict'",
+          "excerpt": "the mean typically sits a little below pulmonary-artery diastolic pressure"
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/pawpCaptureSequence.ts",
+          "locator": "Sequence step 6 'Plausible?'",
+          "excerpt": "In sinus rhythm that includes the a wave; in atrial fibrillation it does not"
+        }
+      ],
+      "learnerWording": "“Read at end expiration — the end-diastolic point if you are estimating left ventricular end-diastolic pressure, the mean if that is the value you want, and not the two interchangeably.” “…the mean typically sits a little below pulmonary-artery diastolic pressure…” “In sinus rhythm that includes the a wave; in atrial fibrillation it does not…”",
+      "visual": "Model-drawn wedge tracing with a and v waves after the QRS and T.",
+      "intendedTeachingPoint": "Name which wedge value you are reading and read it at end expiration; a plausible wedge sits just below PA diastolic.",
+      "sourceRecordIds": ["clinical-hemodynamics-waveforms", "pac-review-2014"],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "clinical-hemodynamics-waveforms",
+          "location": "Ragosta ch. 2, p. 21 (end expiration); pp. 24–26 (wedge waveform, West zones, PEEP)",
+          "finding": "partly supports",
+          "note": "End expiration; mean PCWP about 0–5 mmHg below PA diastolic unless PVR is raised; no a wave in atrial fibrillation; only zone 3 reflects LA pressure. Reports only the mean; with large v waves the nadir of the x descent best predicts LVEDP."
+        },
+        {
+          "sourceRecordId": "pac-review-2014",
+          "location": "Whitener 2014, pp. 329–330",
+          "finding": "partly supports",
+          "note": "End-expiratory values in spontaneous and mechanical ventilation; monitors display the mean; the a-wave peak best estimates LVEDP; a wave lost in atrial fibrillation."
+        },
+        {
+          "sourceRecordId": "pac-waveforms-part-1-2021",
+          "location": "Bootsma Part 1, §2.3.4 p. 8; §2.4 p. 10; §2.6.1 p. 12",
+          "finding": "partly supports",
+          "note": "Not cited by these surfaces. PAWP at the end of the a wave or before the QRS at end expiration, ideally the mean of three readings; West zone 3 required. Compares PAWP with mean PA pressure; a wedge above PA diastolic suggests a non-zone-3 position or overwedging."
+        },
+        {
+          "sourceRecordId": "emcrit-rhc-supplied-2026",
+          "location": "IBCC RHC capture pp. 23–27",
+          "finding": "supports",
+          "note": "Not cited by these surfaces. End expiration (peak on spontaneous breathing, trough on the ventilator); end diastole about the mean of the a wave; in atrial fibrillation use the c wave; PA diastolic about 1–4 mmHg above the wedge."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "End expiration, the relation to PA diastolic and the atrial-fibrillation statement are supported. Where the end-diastolic point sits is placed differently in each source (end of the a wave or before the QRS; a-wave peak; about the a-wave mean; x-descent nadir with large v waves). The module does not name it.",
+        "notChecked": "Roger 2017 (CVP end-expiratory technique)."
+      },
+      "clinicalQuestion": "Should the module name where the end-diastolic point is read, and if so which convention? Should atrial-fibrillation guidance (one source: use the c wave) be added?",
+      "hold": "None beyond review.",
+      "changeInThisBatch": "None.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "HD-03-10",
+      "gapIds": ["HD-03", "HD-05"],
+      "category": "numerical-definition",
+      "claimKind": "diagnostic-definition",
+      "topic": "Pulmonary hypertension hemodynamic definition and the supplied synthesis's older PVR boundary",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/icu-hemodynamics/content/derivedMetrics.ts",
+          "locator": "PVR teaching panel and derived workbench, boundary classified 'Diagnostic definition'",
+          "excerpt": "contributes to the pre-capillary definition only together with mPAP above"
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/cases.ts",
+          "locator": "Pre-capillary pulmonary hypertension practice case, debrief",
+          "excerpt": "The model uses >${pulmonaryHypertensionThresholds.elevatedPvrWoodUnits} WU, not the historical 3-WU threshold."
+        },
+        {
+          "file": "src/features/icu-hemodynamics/content/sources.ts",
+          "locator": "Source list, Master reference record, limit",
+          "excerpt": "it classifies pre-capillary physiology with a 3 WU PVR boundary, which this module does not use."
+        }
+      ],
+      "learnerWording": "“A resting PVR above 2 WU contributes to the pre-capillary definition only together with mPAP above 20 mmHg and PAWP at or below 15 mmHg.” “A diagnostic definition is not a treatment target…” Case debrief: “The model uses >2 WU, not the historical 3-WU threshold.” Source limit on the supplied synthesis: “…it classifies pre-capillary physiology with a 3 WU PVR boundary, which this module does not use.”",
+      "visual": "None.",
+      "intendedTeachingPoint": "The current hemodynamic definition combines mPAP, PAWP and PVR; it classifies physiology and is not a treatment target.",
+      "sourceRecordIds": [
+        "esc-ers-ph-2022",
+        "pac-derived-part-2-2021",
+        "master-hemodynamics-reference"
+      ],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "esc-ers-ph-2022",
+          "location": "Not available (the registered link is the ESC 'Essential messages' summary)",
+          "finding": "does not address",
+          "note": "The guideline carrying PVR >2 WU could not be checked."
+        },
+        {
+          "sourceRecordId": "pac-derived-part-2-2021",
+          "location": "Bootsma Part 2, §7.6 Pulmonary hypertension, pp. 25–26; §7.3 p. 25; Table 1 p. 18",
+          "finding": "partly supports",
+          "note": "mPAP above 20 mmHg at rest (updated from ≥25) and PAWP ≤15 mmHg separating pre-capillary physiology, which does not exclude HFpEF. No PVR boundary in Wood units (normal PVR under 250 dyn·s·cm⁻⁵ only). §7.3 calls LV failure more likely at PAWP ≥15, overlapping at exactly 15."
+        },
+        {
+          "sourceRecordId": "emcrit-rhc-supplied-2026",
+          "location": "IBCC RHC capture p. 3",
+          "finding": "partly supports",
+          "note": "Not cited here. 'Greater than 20' defines PH; PVR normal 0.3–2.0 WU; no PVR or PAWP definition threshold."
+        },
+        {
+          "sourceRecordId": "master-hemodynamics-reference",
+          "location": "Document text, PH classification table and chapter classification lines (docx; no page numbers)",
+          "finding": "conflicts",
+          "note": "Uses PVR ≥3 WU for pre-capillary or combined physiology, as the module's limitation says."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "mPAP and PAWP components are supported by Part 2; the 2 WU component rests on the registered guideline claim only. The supplied synthesis's 3 WU boundary is confirmed in its text.",
+        "notChecked": "2022 ESC/ERS guideline text, including the statement that treatment evidence is less certain between 2 and 3 WU."
+      },
+      "historicalExternalOpinion": "R00 said 'mPAP >20 / PAWP ≤15 / PVR >2 WU per ESC/ERS 2022' checks out. Historical opinion, not verification.",
+      "clinicalQuestion": "Confirm PVR >2 WU and the 2–3 WU treatment-uncertainty statement against the full 2022 ESC/ERS guideline and record the section. Is 'historical 3-WU threshold' the right description?",
+      "hold": "The 2 WU component stays at registered-claim depth.",
+      "changeInThisBatch": "The supplied synthesis is re-classed from 'reference-package' to 'supplied-synthesis', its citation now states that it names no author, publisher, date or references, and its limitation is reworded with the same 3 WU substance. Previous limitation: 'Where definitions conflict, current guidelines govern; the older 3-WU pre-capillary threshold is not used.'",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "notes": null
+      }
+    }
+  ]
+}

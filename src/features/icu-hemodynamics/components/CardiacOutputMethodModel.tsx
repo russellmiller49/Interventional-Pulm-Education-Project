@@ -14,6 +14,7 @@ import {
   CARDIAC_OUTPUT_VERIFICATION_NOTE,
   cardiacOutputOpenMethodQuestions,
 } from '../content/cardiacOutputSourceBoundaries'
+import { hemodynamicsSourceClassLabel } from '../content/sourceReviewMetadata'
 import { hemodynamicsSourceById } from '../content/sources'
 import styles from './icu-hemodynamics.module.css'
 
@@ -219,7 +220,11 @@ function MethodDetail({ method }: { readonly method: CardiacOutputMethod }) {
       <ul className={styles.measurementTeachingAudit}>
         {method.evidenceIds.map((evidenceId) => {
           const source = hemodynamicsSourceById.get(evidenceId)
-          return <li key={evidenceId}>{source ? source.citation : evidenceId}</li>
+          return (
+            <li key={evidenceId}>
+              {source ? `${hemodynamicsSourceClassLabel(source)}: ${source.citation}` : evidenceId}
+            </li>
+          )
         })}
         {method.sourceLimitations.map((limitation) => (
           <li key={limitation}>{limitation}</li>

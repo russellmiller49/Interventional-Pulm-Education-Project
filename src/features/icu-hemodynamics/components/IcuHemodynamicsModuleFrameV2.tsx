@@ -81,8 +81,8 @@ export function IcuHemodynamicsModuleFrameV2({
         {locale !== 'en' ? (
           <div className={styles.englishFallback} role="note">
             <Languages aria-hidden="true" />
-            Reviewed English content fallback: Spanish and Simplified Chinese clinical translations
-            are not yet approved for this module.
+            English content fallback: Spanish and Simplified Chinese clinical translations are not
+            yet approved for this module.
           </div>
         ) : null}
         {children}
