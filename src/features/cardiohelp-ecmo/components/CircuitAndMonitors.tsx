@@ -1249,9 +1249,10 @@ export function GasBlenderPanel({
         </small>
         <small className={styles.controlBoundary} data-local-model-boundary="sweep-linearity">
           Model boundary: in this simulation PaCO₂ responds to sweep as a straight line by
-          construction, with no plateau and no diminishing return. Real CO₂ removal shows
-          diminishing returns and becomes limited by blood flow through the membrane, membrane
-          performance, and the remaining gas-side gradient. Read the direction, not the slope.
+          construction, down to a fixed lower bound of 20 mmHg; past that bound more sweep changes
+          nothing, and before it there is no diminishing return. Real CO₂ removal shows diminishing
+          returns and becomes limited by blood flow through the membrane, membrane performance, and
+          the remaining gas-side gradient. Read the direction, not the slope.
         </small>
       </label>
 

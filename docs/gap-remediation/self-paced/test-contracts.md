@@ -55,6 +55,7 @@ The extension notation `test.ts[x]` means inspect the actual existing `.test.ts`
 | HD-03   | [HD-03 handoff — test-contract migration](HD-03-handoff.md#test-contract-migration)     |
 | MCS-03  | [MCS-03 handoff — test-contract migration](MCS-03-handoff.md#test-contract-migration)   |
 | MV-03   | [MV-03 handoff — test-contract migration](MV-03-handoff.md#test-contract-migration)     |
+| ECMO-03 | [ECMO-03 handoff — test-contract migration](ECMO-03-handoff.md#test-contract-migration) |
 
 ## Record format for each implementation PR
 

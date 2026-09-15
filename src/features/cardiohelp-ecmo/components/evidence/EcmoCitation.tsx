@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import type { EcmoResolvedCitation } from '../../content/evidenceResolver'
+import { ECMO_SOURCE_REVIEW_LINE } from '../../content/sourceReviewMetadata'
 import styles from './evidence.module.css'
 
 /**
@@ -12,6 +13,11 @@ import styles from './evidence.module.css'
  * "Supports" line states a claim this surface takes from the source — the caller's claim when it
  * gave one, otherwise what the record itself supports. The registry id is carried only by the
  * `data-evidence-id` attribute; nothing a learner reads contains it.
+ *
+ * Under the reference sit the document's own date and revision, then each dated document check,
+ * then the review line — on separate lines, so a date someone opened the file is never read as the
+ * date it was issued, and a check is never read as clinical review. A compact card keeps only the
+ * date line; the full card and the stage footnote keep all of them.
  *
  * Copying is feature-detected. The Clipboard API is absent in some embedded and older browsers and
  * its promise rejects when the page has not been granted the permission, so both paths reveal a
@@ -65,6 +71,7 @@ export function EcmoCitation({
   const supports = supportsVisible ? allSupports : []
   // The limitation is a caveat about the source, not a claim it supports, so it survives the gate.
   const limitVisible = (showLimitations ?? !compact) && citation.limitations.length > 0
+  const checkDetailVisible = footnote || !compact
 
   const revealFallback = () => {
     setFallbackVisible(true)
@@ -115,6 +122,31 @@ export function EcmoCitation({
         {citation.citation}
         {citation.pages ? ` Pages ${citation.pages}.` : ''}
       </p>
+      <p className={styles.dating} data-citation-published>
+        <span className={styles.key}>Date: </span>
+        {citation.published}
+        {citation.publishedBasis ? ` (${citation.publishedBasis})` : ''}
+      </p>
+      {citation.revision ? (
+        <p className={styles.dating} data-citation-revision>
+          <span className={styles.key}>Revision: </span>
+          {citation.revision}
+        </p>
+      ) : null}
+      {checkDetailVisible
+        ? citation.checks.map((check) => (
+            <p key={`${check.on}:${check.what}`} className={styles.dating} data-citation-check>
+              <span className={styles.key}>Document checked: </span>
+              {check.on}, {check.by ?? 'checker not recorded'}
+              {footnote ? '' : `. ${check.what}`}
+            </p>
+          ))
+        : null}
+      {checkDetailVisible && citation.sourceClass !== 'unregistered' ? (
+        <p className={styles.dating} data-citation-review>
+          {ECMO_SOURCE_REVIEW_LINE}
+        </p>
+      ) : null}
       {supports.map((entry) => (
         <p key={entry} className={styles.supports} data-citation-supports>
           <span className={styles.key}>Supports: </span>

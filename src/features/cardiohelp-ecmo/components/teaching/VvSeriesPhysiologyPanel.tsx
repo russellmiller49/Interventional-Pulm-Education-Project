@@ -253,8 +253,9 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
             </p>
             <p className="text-2xl font-semibold">{circuit.recirculationFraction.toFixed(3)}</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              Each case sets where this starts. Asking the circuit for more flow than it opened with
-              raises it from there.
+              In a case that opens with established recirculation, asking the circuit for more flow
+              than it opened with raises this. On the reference circuit it stays at its baseline at
+              every speed.
             </p>
           </div>
           <div className="rounded-xl border p-3" data-series-signal="native-cardiac-output">
@@ -471,12 +472,14 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
 
         <ModelBoundary>
           This simulation takes the recirculating share the cannula relationship starts at from the
-          authored case. Asking the circuit for more flow than the case opened with raises that
-          share, so the flow left after re-drainage falls while the displayed L/min keeps rising —
-          the direction is the teaching object here, not the size of the change. Lowering the speed
-          does not move the share back below the authored value, because turning a pump down does
-          not reposition a cannula. Cannula position and volume state, which set recirculation at
-          the bedside, are not modeled at all.
+          authored case. The reference circuit has no established recirculation, so its share stays
+          at the baseline whatever the speed. In a case that opens with established recirculation,
+          asking the circuit for more flow than the case opened with raises that share, so the flow
+          left after re-drainage falls while the displayed L/min keeps rising — the direction is the
+          teaching object here, not the size of the change. Lowering the speed does not move the
+          share back below the authored value, because turning a pump down does not reposition a
+          cannula. Cannula position and volume state, which set recirculation at the bedside, are
+          not modeled at all.
         </ModelBoundary>
       </section>
 

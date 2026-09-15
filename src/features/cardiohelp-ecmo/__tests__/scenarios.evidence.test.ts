@@ -80,8 +80,16 @@ describe('CARDIOHELP ECMO scenario and evidence registries', () => {
     for (const scenario of cardiohelpScenarios) {
       expect(validateEvidenceIds(scenario.evidenceIds)).toBe(true)
     }
+    // ECMO-03 (2026-09-15): the supplied case curriculum is an unpublished author's draft, not the
+    // simulation model, so it has its own class. The boundary between the classes is unchanged.
     expect(new Set(cardiohelpEvidence.map((item) => item.sourceClass))).toEqual(
-      new Set(['manufacturer', 'clinical-guidance', 'textbook', 'educational-model']),
+      new Set([
+        'manufacturer',
+        'clinical-guidance',
+        'textbook',
+        'supplied-curriculum',
+        'educational-model',
+      ]),
     )
   })
 

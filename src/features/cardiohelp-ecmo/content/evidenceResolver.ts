@@ -1,5 +1,6 @@
 import type { EvidenceReference } from '../engine/types'
 import { cardiohelpEvidence, evidenceById } from './evidence'
+import { ecmoSourceReviewMetadata, type EcmoSourceCheck } from './sourceReviewMetadata'
 
 /**
  * One resolver for every place this module cites a source.
@@ -18,11 +19,15 @@ import { cardiohelpEvidence, evidenceById } from './evidence'
 
 export type EcmoSourceClass = EvidenceReference['sourceClass']
 
-/** Registry order for grouped rendering: the device first, then guidance, teaching, the model. */
+/**
+ * Registry order for grouped rendering: the device first, then guidance, teaching, the supplied
+ * case curriculum, the model.
+ */
 export const ecmoSourceClasses: readonly EcmoSourceClass[] = [
   'manufacturer',
   'clinical-guidance',
   'textbook',
+  'supplied-curriculum',
   'educational-model',
 ]
 
@@ -31,6 +36,7 @@ export const ecmoSourceClassLabels: Readonly<Record<EcmoSourceClass, string>> = 
   manufacturer: 'Manufacturer behavior',
   'clinical-guidance': 'ECMO clinical guidance',
   textbook: 'Textbook teaching',
+  'supplied-curriculum': 'Supplied case curriculum, unpublished',
   'educational-model': 'Simplified educational model',
 }
 
@@ -62,6 +68,14 @@ export interface EcmoResolvedCitation {
   /** The caller's claim for this id when one was given, otherwise what the record itself supports. */
   readonly supports: readonly string[]
   readonly limitations: string
+  /** The document's own date phrase. Never the date anyone checked it. */
+  readonly published: string
+  /** Where that date comes from, or why there is none. */
+  readonly publishedBasis: string
+  /** Revision, edition or software applicability, when the document has one. */
+  readonly revision?: string
+  /** Dated document checks, in the order they were made. None of them is clinical review. */
+  readonly checks: readonly EcmoSourceCheck[]
   /** One line a learner can paste into a reference list. */
   readonly copyText: string
 }
@@ -103,6 +117,9 @@ export function unregisteredEcmoCitation(id: string): EcmoResolvedCitation {
     sourceClassLabel: ECMO_UNREGISTERED_SOURCE_LABEL,
     supports: [],
     limitations: '',
+    published: 'Not stated',
+    publishedBasis: '',
+    checks: [],
     copyText: ECMO_UNREGISTERED_SOURCE_TITLE,
   }
 }
@@ -132,6 +149,7 @@ export function resolveEcmoCitation(
   }
   const href = ecmoEvidenceHref(record)
   const claimed = claimsFor(options.claims, id)
+  const dating = ecmoSourceReviewMetadata(record.id)
   const resolved = {
     id: record.id,
     title: record.title,
@@ -144,6 +162,10 @@ export function resolveEcmoCitation(
     ...(href ? { href } : {}),
     supports: claimed.length > 0 ? claimed : record.supports,
     limitations: record.limitations,
+    published: dating?.published ?? 'Not stated',
+    publishedBasis: dating?.publishedBasis ?? '',
+    ...(dating?.revision ? { revision: dating.revision } : {}),
+    checks: dating?.checks ?? [],
   }
   return { ...resolved, copyText: ecmoCitationCopyText(resolved) }
 }

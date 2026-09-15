@@ -1,0 +1,677 @@
+{
+  "queueId": "ECMO-03",
+  "module": "cardiohelp-ecmo",
+  "preparedOn": "2026-09-15",
+  "preparedBy": "AI authoring assistant (Claude), at the owner's request",
+  "status": "Nothing in this queue is clinical or device approval. Every decision is NOT REVIEWED until a named reviewer fills it in.",
+  "baseCommit": "e80a03c715e806b38dc623ac59f2dd169a77a6f8",
+  "moduleContentVersion": "cardiohelp-ecmo ecmo-03 2026-09-15",
+  "decisionValues": ["NOT REVIEWED", "APPROVE AS SCOPED", "REVISE", "REJECT", "UNCERTAIN"],
+  "categories": [
+    "review-status",
+    "source-identity",
+    "source-discrepancy",
+    "model-boundary",
+    "question-feedback"
+  ],
+  "claimKinds": [
+    "module-review-status",
+    "device-labeling",
+    "textbook",
+    "clinical-guidance",
+    "supplied-curriculum",
+    "model-behavior"
+  ],
+  "findingValues": [
+    "verified-at-locator",
+    "verified-identity-only",
+    "discrepancy-in-document",
+    "not-available-locally",
+    "no-review-record",
+    "model-contradicts-copy",
+    "model-boundary-unstated",
+    "model-matches-copy"
+  ],
+  "sourceDocumentsChecked": [
+    {
+      "documentId": "cardiohelp-system-ifu-rev-2.3",
+      "location": "Interventional-Pulm-Local-Data/device-manuals/critical-care/CARDIOHELP System IFU.pdf",
+      "sha256": "f6f56ff4018b5f1a1a342173e1c2a383e50faf53645935a4b26cd7247b491d4b",
+      "pages": 212,
+      "identityAsPrinted": "Instructions for Use, CARDIOHELP System. Revision 2.3, issue date 2025-01; applies to CARDIOHELP-i software release 03.04.10.00 or higher. Copyright Maquet Cardiopulmonary GmbH. Footer: Instructions for Use | 2.3 | en | 09. Printed page numbers equal PDF page numbers.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude)",
+      "method": "pdftotext at the pages named in each item"
+    },
+    {
+      "documentId": "ecmo-book-chapter-files",
+      "location": "Owner's OneDrive, 03_Education_Teaching/Books/The ECMO Book/ (Chapter 9, 16, 17 and 18 PDFs). A combined 320-page file with the same chapters is at Interventional-Pulm-Local-Data/private-references/critical-care-full-textbooks/ECMO/The ECMO book.pdf (sha256 5bf4d14960746f40b753bcd501da68582d54f1572c7d9d0e0dd25d27a2a76c06).",
+      "sha256": "chapter 9 c2862428685a752891b8c8579a19ef1be07922bc68fc981d6e5e07eb4d1b0cbc; chapter 16 439d56d7409a2eae1ba447b48aa9b7e403a78d1923e24be479ae6e6e522797d9; chapter 17 81d95a78fea7244010f5bbfe1255e7fec323c7e831e092d3d4d4d1813a1f2d7b; chapter 18 2c1c4077c45a912625d062d59738f7a7117b8e389d57204406ed5693dd51f6d2",
+      "pages": 32,
+      "identityAsPrinted": "Elsevier ClinicalKey chapter downloads of The ECMO Book. No editor, edition, ISBN or publication year is printed; only download watermarks carry a copyright line.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude)",
+      "method": "pdfinfo page counts, pdftotext printed page numbers, text search for ISBN, editor, edition and copyright lines, keyword counts"
+    },
+    {
+      "documentId": "ecmo-cases-docx",
+      "location": "Owner's OneDrive, 03_Education_Teaching/critical_care_references_old_version/ECMO/ECMO CASES.docx",
+      "sha256": "c79ca364c4bbe8f605fe4143e7ae5e3816ceca7a5a591e5b6d3fed097fd1d589",
+      "pages": 45,
+      "identityAsPrinted": "Word document properties: creator the course author; created and last modified 2026-07-16; 45 pages; 11,499 words; no title.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude)",
+      "method": "docProps/core.xml and docProps/app.xml only; the body was not read"
+    },
+    {
+      "documentId": "engine-replay-2026-09-15",
+      "location": "Interventional-Pulm-Local-Data/renders/output/ecmo-03-self-paced-2026-09-15/model-replay-baseline.json",
+      "sha256": "cc727e54d508b0902655bc459a4bb878ce34a00e3afe066b021a58f2312b987e",
+      "pages": 0,
+      "identityAsPrinted": "Scratch script driving the module's own reducer at base e80a03c7: VV and VA reference circuits across pump speed, sweep and sweep-gas oxygen fraction; both story problems run as the activity runs them; the VV recirculation and acute hypercapnia drills. One STEP per simulated second.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude)",
+      "method": "esbuild bundle of the scratch script, node; values pinned in ecmo03-sources-and-model-range.test.tsx"
+    }
+  ],
+  "sourcesNotAvailableLocally": [
+    "elso-adult-vv-2021 (Tonna et al., ASAIO J 2021)",
+    "elso-adult-va-2021 (Lorusso et al., ASAIO J 2021)",
+    "elso-dual-circulation-2024 (Badulak et al., Intensive Care Med 2024, and its correction)",
+    "elso-maastricht-nomenclature-2019 (Broman et al., Crit Care 2019)",
+    "elso-neuro-monitoring-2024 (Cho et al., Crit Care 2024)",
+    "elso-circuit-2022 (Gajkowski et al., ASAIO J 2022)"
+  ],
+  "items": [
+    {
+      "id": "ECMO-03-01",
+      "category": "review-status",
+      "claimKind": "module-review-status",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/cardiohelp-ecmo/components/SourcesPanel.tsx",
+          "locator": "Hub, Evidence boundary and review status: status badge and device profile",
+          "excerpt": "{published ? 'Published' : 'Unlisted draft'} · {ECMO_MODULE_REVIEW_LINE}"
+        },
+        {
+          "file": "src/features/cardiohelp-ecmo/content/sourceReviewMetadata.ts",
+          "locator": "Module review line",
+          "excerpt": "export const ECMO_MODULE_REVIEW_LINE = 'Clinical and device review: none recorded'"
+        }
+      ],
+      "learnerWording": "Unlisted draft · Clinical and device review: none recorded. Publication: Unlisted draft. Clinical and device review: None recorded.",
+      "previousWording": "UNLISTED REVIEW · REVIEW REQUIRED; Publication: Unlisted draft; clinical and device review pending. With the publication flag set to published, the same panel printed PUBLISHED · REVIEW APPROVED and Reviewed release.",
+      "intendedTeachingPoint": "A learner can see that no clinical or device review of this module is recorded, whatever its publication status.",
+      "sourceRecordIds": [],
+      "sourceLocations": [
+        {
+          "sourceRecordId": null,
+          "documentId": null,
+          "repositoryPath": "src/features/cardiohelp-ecmo/content/deviceProfile.ts",
+          "location": "cardiohelpEcmoPublicationStatus",
+          "finding": "no-review-record",
+          "note": "The old badge read only this two-value publication flag. No reviewer, role, date or reviewed content version exists anywhere in the repository."
+        }
+      ],
+      "modelOutput": "Not applicable.",
+      "unresolvedDisagreement": "None about the wording. How an attributable review would be shown, once one exists, is left to the owner; nothing was built for it.",
+      "clinicalQuestion": "Owner: confirm that publication status and review status stay separate statements on the hub.",
+      "questionDisposition": "No question involved.",
+      "hold": "Nothing may be shown as reviewed or approved until a named reviewer, role, date and reviewed version are recorded.",
+      "changeInThisBatch": "Badge and profile rows rewritten; the review line no longer depends on the publication flag.",
+      "contentVersion": "cardiohelp-ecmo ecmo-03 2026-09-15",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null
+      }
+    },
+    {
+      "id": "ECMO-03-02",
+      "category": "source-identity",
+      "claimKind": "device-labeling",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/cardiohelp-ecmo/content/evidence.ts",
+          "locator": "ifu-us-2025-scope citation and limitation",
+          "excerpt": "Maquet Cardiopulmonary GmbH. CARDIOHELP System Instructions for Use (U.S.). Revision 2.3, issue date 2025-01; for CARDIOHELP-i software release 03.04.10.00 or higher."
+        },
+        {
+          "file": "src/features/cardiohelp-ecmo/content/evidence.ts",
+          "locator": "ifu-us-2025-scope limitation",
+          "excerpt": "The U.S. indication in revision 2.3 (page 13) is partial cardiopulmonary bypass or temporary circulatory bypass during open surgical procedures, for periods of less than six hours."
+        },
+        {
+          "file": "src/features/cardiohelp-ecmo/components/SourcesPanel.tsx",
+          "locator": "Hub scope paragraph",
+          "excerpt": "whether a later revision exists has not been checked"
+        }
+      ],
+      "learnerWording": "Maquet Cardiopulmonary GmbH. CARDIOHELP System Instructions for Use (U.S.). Revision 2.3, issue date 2025-01; for CARDIOHELP-i software release 03.04.10.00 or higher. Date: Issue date 2025-01 (printed on page 2 of the supplied document). Revision: Revision 2.3, for CARDIOHELP-i software release 03.04.10.00 or higher. Hub: This facsimile’s console behavior follows the U.S. IFU, revision 2.3, issued January 2025; whether a later revision exists has not been checked.",
+      "previousWording": "Getinge. CARDIOHELP-i Instructions for Use. Revision 2.3; software 03.04.10.00 or higher. January 2025. Limitation: The current U.S. labeling covers partial cardiopulmonary bypass or temporary surgical circulatory bypass for less than six hours. Hub: The current U.S. IFU governs this facsimile’s console behavior.",
+      "intendedTeachingPoint": "The console facsimile follows one identified labeling revision whose indication is short-term surgical bypass, not prolonged ECMO.",
+      "sourceRecordIds": ["ifu-us-2025-scope", "ifu-console-workflow"],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "ifu-us-2025-scope",
+          "documentId": "cardiohelp-system-ifu-rev-2.3",
+          "repositoryPath": null,
+          "location": "PDF page 2, Validity of this document",
+          "finding": "verified-at-locator",
+          "note": "Revision 2.3, issue date 2025-01; applies to CARDIOHELP-i software release 03.04.10.00 or higher. The copyright holder and manufacturer printed is Maquet Cardiopulmonary GmbH; contact addresses are at getinge.com."
+        },
+        {
+          "sourceRecordId": "ifu-us-2025-scope",
+          "documentId": "cardiohelp-system-ifu-rev-2.3",
+          "repositoryPath": null,
+          "location": "Page 13, section 2.1.1 Indications for Use",
+          "finding": "verified-at-locator",
+          "note": "Periods lasting less than 6 hours, for partial cardiopulmonary bypass during open surgical procedures on the heart or great vessels, or temporary circulatory bypass around a planned disruption of the circulatory pathway for open surgical procedures on the aorta or vena cava. Section 2.1.4 gives a surgical environment."
+        },
+        {
+          "sourceRecordId": "ifu-us-2025-scope",
+          "documentId": "cardiohelp-system-ifu-rev-2.3",
+          "repositoryPath": null,
+          "location": "Pages 29 and 90",
+          "finding": "verified-at-locator",
+          "note": "The document instructs use of the Cardiopulmonary Support thApp only."
+        },
+        {
+          "sourceRecordId": "ifu-console-workflow",
+          "documentId": "cardiohelp-system-ifu-rev-2.3",
+          "repositoryPath": null,
+          "location": "Registered pages 30, 35-58, 71-96, 111-158, 196-205",
+          "finding": "verified-identity-only",
+          "note": "The ranges fall inside the 212-page document. The paraphrased console behavior was not compared with them page by page."
+        }
+      ],
+      "modelOutput": "Not applicable (identity and labeling scope).",
+      "unresolvedDisagreement": "The registry named Getinge as the author; the document prints Maquet Cardiopulmonary GmbH. Whether revision 2.3 is the current U.S. revision is unknown. The shared critical-care device-profile record cardiohelp-i-us-2025 in src/features/critical-care/content/evidenceRegistry.ts still reads Getinge … January 2025 and was not edited in this module-local batch.",
+      "clinicalQuestion": "Device educator: is revision 2.3 (issue date 2025-01) the labeling the console facsimile should follow, and is a later U.S. revision in use?",
+      "questionDisposition": "No question involved.",
+      "hold": "Console-behavior paraphrases stay scoped to revision 2.3, with no claim that it is current.",
+      "changeInThisBatch": "Citations, the scope limitation and the hub sentence corrected; separate date, revision and document-check lines added wherever these records are shown.",
+      "contentVersion": "cardiohelp-ecmo ecmo-03 2026-09-15",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null
+      }
+    },
+    {
+      "id": "ECMO-03-03",
+      "category": "source-discrepancy",
+      "claimKind": "device-labeling",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/cardiohelp-ecmo/content/evidence.ts",
+          "locator": "ifu-anomaly-boundary limitation",
+          "excerpt": "page 136 calls the pressure-drop alarm low priority, while page 165 lists it among medium-priority messages. Neither value is encoded here pending device review."
+        }
+      ],
+      "learnerWording": "The supplied instructions do not give one bubble size or one pressure-drop alarm priority. Page 20 warns that bubbles of 5 mm or less can also stop the pump or trigger backflow prevention, while the technical data on page 199 list a pump stop for bubbles of 5 mm or more; page 136 calls the pressure-drop alarm low priority, while page 165 lists it among medium-priority messages. Neither value is encoded here pending device review.",
+      "previousWording": "The supplied IFU is internally inconsistent on a bubble-size threshold and on pressure-drop alarm priority. Those values are intentionally not encoded pending device review.",
+      "intendedTeachingPoint": "The simulator triggers a bubble event by scenario and shows the pressure drop as a trend, because the labeling does not settle either number.",
+      "sourceRecordIds": ["ifu-anomaly-boundary"],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "ifu-anomaly-boundary",
+          "documentId": "cardiohelp-system-ifu-rev-2.3",
+          "repositoryPath": null,
+          "location": "Page 20, bubble monitoring warning",
+          "finding": "discrepancy-in-document",
+          "note": "With an activated intervention, microbubbles of 5 mm or less can also cause the pump to stop or trigger backflow prevention."
+        },
+        {
+          "sourceRecordId": "ifu-anomaly-boundary",
+          "documentId": "cardiohelp-system-ifu-rev-2.3",
+          "repositoryPath": null,
+          "location": "Page 199, 14.4 Sensors",
+          "finding": "discrepancy-in-document",
+          "note": "Backflow prevention and pump stop (with activated intervention) for air bubbles of 5 mm diameter or more."
+        },
+        {
+          "sourceRecordId": "ifu-anomaly-boundary",
+          "documentId": "cardiohelp-system-ifu-rev-2.3",
+          "repositoryPath": null,
+          "location": "Page 136, 6.2.5 Pressure Drop Monitoring",
+          "finding": "discrepancy-in-document",
+          "note": "Outside the warning limits the console generates a low-priority alarm."
+        },
+        {
+          "sourceRecordId": "ifu-anomaly-boundary",
+          "documentId": "cardiohelp-system-ifu-rev-2.3",
+          "repositoryPath": null,
+          "location": "Pages 163-166, 9.3.2 Medium Priority and 9.3.3 Low Priority",
+          "finding": "discrepancy-in-document",
+          "note": "Pressure drop above limit is listed on page 165, inside the medium-priority list that begins on page 163; the low-priority list begins on page 166. The message appears nowhere else in pages 150-212."
+        }
+      ],
+      "modelOutput": "Neither a bubble size nor a pressure-drop alarm priority is encoded. Clinical case copy states that no universal pressure-drop alarm priority or exchange threshold is set.",
+      "unresolvedDisagreement": "Whether pages 20 and 199 conflict (a warning that smaller bubbles can also trigger versus a detection specification) or are complementary, and which priority the console software actually applies to a pressure-drop alarm.",
+      "clinicalQuestion": "Device educator: which bubble size and pressure-drop alarm priority does the revision 2.3 console apply, and should either be taught?",
+      "questionDisposition": "No question involved.",
+      "hold": "Neither value is encoded or taught.",
+      "changeInThisBatch": "The limitation now says what each page states, instead of calling the document internally inconsistent. No behavior changed.",
+      "contentVersion": "cardiohelp-ecmo ecmo-03 2026-09-15",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null
+      }
+    },
+    {
+      "id": "ECMO-03-04",
+      "category": "source-identity",
+      "claimKind": "textbook",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/cardiohelp-ecmo/content/sourceReviewMetadata.ts",
+          "locator": "ECMO Book identity and date lines",
+          "excerpt": "The file prints no editor, edition, ISBN or publication year."
+        },
+        {
+          "file": "src/features/cardiohelp-ecmo/content/sourceReviewMetadata.ts",
+          "locator": "ECMO Book date phrase",
+          "excerpt": "const ECMO_BOOK_PUBLISHED = 'Not stated in the supplied chapter file'"
+        }
+      ],
+      "learnerWording": "Date: Not stated in the supplied chapter file (no publication year is printed; the creation date in the file metadata is not a publication date). Document checked: 2026-09-15, AI authoring assistant (Claude).",
+      "previousWording": "No date, publisher or check line; citations such as Chapter 9: Components, Sensors, and Circuit Access. (unchanged).",
+      "intendedTeachingPoint": "Textbook teaching is identified as chapters of one book whose edition and year are unknown here.",
+      "sourceRecordIds": ["ecmo-book-ch9", "ecmo-book-ch16", "ecmo-book-ch17", "ecmo-book-ch18"],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "ecmo-book-ch9",
+          "documentId": "ecmo-book-chapter-files",
+          "repositoryPath": null,
+          "location": "Chapter 9 file, 11 pages, printed pages from 92",
+          "finding": "verified-at-locator",
+          "note": "Registered range 92-101 lies inside the chapter."
+        },
+        {
+          "sourceRecordId": "ecmo-book-ch16",
+          "documentId": "ecmo-book-chapter-files",
+          "repositoryPath": null,
+          "location": "Chapter 16 file, 3 pages, printed pages 170-172",
+          "finding": "verified-at-locator",
+          "note": "Matches the registered range."
+        },
+        {
+          "sourceRecordId": "ecmo-book-ch17",
+          "documentId": "ecmo-book-chapter-files",
+          "repositoryPath": null,
+          "location": "Chapter 17 file, 9 pages, printed pages from 173",
+          "finding": "verified-at-locator",
+          "note": "Registered range 173-180 lies inside the chapter. Keyword presence only: recirculation 3, preload 8, afterload 13 mentions."
+        },
+        {
+          "sourceRecordId": "ecmo-book-ch18",
+          "documentId": "ecmo-book-chapter-files",
+          "repositoryPath": null,
+          "location": "Chapter 18 file, 9 pages, printed pages 182-189",
+          "finding": "verified-at-locator",
+          "note": "Matches the registered range. Keyword presence only: CO2 53, oxygen-fraction or blender terms 9, separation or trial-off terms 6 mentions."
+        },
+        {
+          "sourceRecordId": "ecmo-book-ch9",
+          "documentId": "ecmo-book-chapter-files",
+          "repositoryPath": null,
+          "location": "All four chapter files, text search",
+          "finding": "verified-identity-only",
+          "note": "No ISBN, editor, edition or copyright line is printed apart from ClinicalKey download watermarks."
+        }
+      ],
+      "modelOutput": "Not applicable.",
+      "unresolvedDisagreement": "Editors, edition and publication year are not in the supplied files. The passages were not re-read against each registered supported statement.",
+      "clinicalQuestion": "Faculty: confirm the edition and year, and whether each registered statement is supported on the cited pages.",
+      "questionDisposition": "No question involved.",
+      "hold": "Publication date shown as not stated; supported statements unchanged and unverified.",
+      "changeInThisBatch": "Separate identity, date and document-check lines added; citations unchanged.",
+      "contentVersion": "cardiohelp-ecmo ecmo-03 2026-09-15",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null
+      }
+    },
+    {
+      "id": "ECMO-03-05",
+      "category": "source-identity",
+      "claimKind": "supplied-curriculum",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/cardiohelp-ecmo/content/evidence.ts",
+          "locator": "attached-ecmo-case-curriculum citation",
+          "excerpt": "citation: 'Unpublished case curriculum supplied by the course author (Word document).'"
+        },
+        {
+          "file": "src/features/cardiohelp-ecmo/content/evidenceResolver.ts",
+          "locator": "Source class label",
+          "excerpt": "'supplied-curriculum': 'Supplied case curriculum, unpublished'"
+        }
+      ],
+      "learnerWording": "Supplied case curriculum, unpublished. ECMO CASES clinical simulation curriculum draft. Unpublished case curriculum supplied by the course author (Word document). Date: Not published (an unpublished draft; its document properties record creation and last change on 2026-07-16).",
+      "previousWording": "Class: Simplified educational model. Citation: Unpublished 30-case curriculum supplied by the course author; reviewed July 2026.",
+      "intendedTeachingPoint": "The Practice cases' presentations come from an unpublished author's draft, not from independent evidence and not from the simulation model.",
+      "sourceRecordIds": ["attached-ecmo-case-curriculum"],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "attached-ecmo-case-curriculum",
+          "documentId": "ecmo-cases-docx",
+          "repositoryPath": null,
+          "location": "docProps/core.xml and docProps/app.xml",
+          "finding": "verified-identity-only",
+          "note": "Creator the course author; created and last modified 2026-07-16; 45 pages; 11,499 words. The body was not read and the cases were not counted."
+        },
+        {
+          "sourceRecordId": "attached-ecmo-case-curriculum",
+          "documentId": null,
+          "repositoryPath": "src/features/cardiohelp-ecmo/content/evidence.ts",
+          "location": "Former citation text",
+          "finding": "no-review-record",
+          "note": "No reviewer, role or date stood behind reviewed July 2026."
+        }
+      ],
+      "modelOutput": "Not applicable.",
+      "unresolvedDisagreement": "The 30-case count and any July 2026 review are unverified. The shared critical-care registry still projects this record as model-behavior, as it did before the class change.",
+      "clinicalQuestion": "Owner: was the curriculum reviewed, by whom and when? If it was, record that review; if not, the draft label stands.",
+      "questionDisposition": "No question involved.",
+      "hold": "Every Practice case citing the curriculum stays draft.",
+      "changeInThisBatch": "New source class and label; reviewed July 2026 removed from the citation.",
+      "contentVersion": "cardiohelp-ecmo ecmo-03 2026-09-15",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null
+      }
+    },
+    {
+      "id": "ECMO-03-06",
+      "category": "source-identity",
+      "claimKind": "clinical-guidance",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/cardiohelp-ecmo/content/sourceReviewMetadata.ts",
+          "locator": "Date basis for the six guidance and nomenclature records",
+          "excerpt": "'year in the registered citation; the document was not available locally to check'"
+        }
+      ],
+      "learnerWording": "Date: 2021 (year in the registered citation; the document was not available locally to check). The same form for 2019, 2022 and 2024 records.",
+      "previousWording": "No date line; the year appeared only inside the citation text.",
+      "intendedTeachingPoint": "Guidance records show their year and say plainly that the document itself was not checked here.",
+      "sourceRecordIds": [
+        "elso-adult-vv-2021",
+        "elso-adult-va-2021",
+        "elso-dual-circulation-2024",
+        "elso-maastricht-nomenclature-2019",
+        "elso-neuro-monitoring-2024",
+        "elso-circuit-2022"
+      ],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "elso-adult-vv-2021",
+          "documentId": null,
+          "repositoryPath": null,
+          "location": "Registered citation and DOI",
+          "finding": "not-available-locally",
+          "note": "No local copy; no URL fetched."
+        },
+        {
+          "sourceRecordId": "elso-adult-va-2021",
+          "documentId": null,
+          "repositoryPath": null,
+          "location": "Registered citation and DOI",
+          "finding": "not-available-locally",
+          "note": "No local copy; the interim status in the title is as registered."
+        },
+        {
+          "sourceRecordId": "elso-dual-circulation-2024",
+          "documentId": null,
+          "repositoryPath": null,
+          "location": "Registered citation, DOI and correction DOI",
+          "finding": "not-available-locally",
+          "note": "No local copy; the endorsement named in the title was not checked."
+        },
+        {
+          "sourceRecordId": "elso-maastricht-nomenclature-2019",
+          "documentId": null,
+          "repositoryPath": null,
+          "location": "Registered citation and DOI",
+          "finding": "not-available-locally",
+          "note": "No local copy."
+        },
+        {
+          "sourceRecordId": "elso-neuro-monitoring-2024",
+          "documentId": null,
+          "repositoryPath": null,
+          "location": "Registered citation and DOI",
+          "finding": "not-available-locally",
+          "note": "No local copy."
+        },
+        {
+          "sourceRecordId": "elso-circuit-2022",
+          "documentId": null,
+          "repositoryPath": null,
+          "location": "Registered citation and DOI",
+          "finding": "not-available-locally",
+          "note": "No local copy."
+        }
+      ],
+      "modelOutput": "Not applicable.",
+      "unresolvedDisagreement": "Publication years, DOIs, guideline status and the supported statements are as registered and unverified. No recommendation strength is shown or claimed anywhere in the module.",
+      "clinicalQuestion": "Faculty: supply or confirm each document, and whether each registered supported statement is accurate.",
+      "questionDisposition": "No question involved.",
+      "hold": "Years shown as registered; no strength, currency or endorsement claim.",
+      "changeInThisBatch": "Date lines stating their basis added; citations unchanged.",
+      "contentVersion": "cardiohelp-ecmo ecmo-03 2026-09-15",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null
+      }
+    },
+    {
+      "id": "ECMO-03-07",
+      "category": "model-boundary",
+      "claimKind": "model-behavior",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/cardiohelp-ecmo/components/teaching/BloodFlowVsSweepPanel.tsx",
+          "locator": "Blood flow versus sweep, model boundary",
+          "excerpt": "PaCO₂ responds to sweep as a straight line in this simulation, by construction, until it stops at a fixed lower bound of 20 mmHg — about 7.5 L/min of sweep on the reference circuit."
+        },
+        {
+          "file": "src/features/cardiohelp-ecmo/components/teaching/BloodFlowVsSweepPanel.tsx",
+          "locator": "Blood flow versus sweep, Review sweep-gas flow block",
+          "excerpt": "PaCO₂ stops at 20 mmHg, which the reference circuit reaches at about 7.5 L/min, and more sweep changes nothing past that."
+        },
+        {
+          "file": "src/features/cardiohelp-ecmo/components/CircuitAndMonitors.tsx",
+          "locator": "Gas blender sweep control, model boundary",
+          "excerpt": "down to a fixed lower bound of 20 mmHg; past that bound more sweep changes nothing, and before it there is no diminishing return."
+        },
+        {
+          "file": "src/features/cardiohelp-ecmo/content/storyProblems.ts",
+          "locator": "Story problem: the doubled sweep, explanation",
+          "excerpt": "until it stops at a fixed lower bound. A doubled sweep on this circuit is already past the sweep that reaches that bound"
+        }
+      ],
+      "learnerWording": "PaCO₂ responds to sweep as a straight line in this simulation, by construction, until it stops at a fixed lower bound of 20 mmHg — about 7.5 L/min of sweep on the reference circuit. Past that bound more sweep changes nothing here; before it there is no diminishing return, because none is modeled. The bound is a limit of this simulation, not a physiological plateau.",
+      "previousWording": "Panel: PaCO₂ responds to sweep as a straight line in this simulation, by construction. There is no plateau and no diminishing return, because none is modeled. Foundation block: The model uses a straight-line sweep response with no plateau. Console: … as a straight line by construction, with no plateau and no diminishing return. Story: … as a straight line in this simulation, by construction; real removal shows diminishing returns …",
+      "intendedTeachingPoint": "Sweep moves the carbon dioxide axis; the simulation shows the direction, and its bound is a model limit rather than physiology.",
+      "sourceRecordIds": ["bounded-educational-model", "ecmo-book-ch18"],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "bounded-educational-model",
+          "documentId": "engine-replay-2026-09-15",
+          "repositoryPath": "src/features/cardiohelp-ecmo/engine/simulation.ts",
+          "location": "patientTargets: PaCO₂ target 76 − 7.5 × sweep, clamped to 20-100 mmHg; approached at 1.4 mmHg per second",
+          "finding": "model-contradicts-copy",
+          "note": "VV reference after 120 s: sweep 4 → 46, 6 → 31, 7 → 23.5, and 7.5, 8, 10, 12 and 15 L/min → 20 mmHg; pH 7.70 at the bound. After the 12-second story run every sweep from about 7 L/min reads 29.2. The acute hypercapnia drill reaches 20 from about 7.25 L/min. The sweep slider runs to 15 L/min."
+        }
+      ],
+      "modelOutput": "PaCO₂ falls linearly with sweep to a hard floor of 20 mmHg; the doubled-sweep story run ends at 29.2 mmHg (pH 7.56) and settles to 20.",
+      "unresolvedDisagreement": "Whether a straight line with a hard 20 mmHg floor is a fair teaching curve, and whether a pH of 7.70 at the floor should be reachable from the console.",
+      "clinicalQuestion": "Faculty: keep the straight-line-then-floor model with this wording, or ask for a bounded engine change in a separate reviewed task?",
+      "questionDisposition": "ecmo.foundation.blood-flow-versus-sweep.story.doubled-sweep: keep as reinforcement; stem, choices and key unchanged; the explanation's model boundary rewritten.",
+      "hold": "Engine unchanged; only the description of its bound corrected.",
+      "changeInThisBatch": "Four learner surfaces now name the 20 mmHg bound and no longer claim there is no plateau.",
+      "contentVersion": "cardiohelp-ecmo ecmo-03 2026-09-15",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null
+      }
+    },
+    {
+      "id": "ECMO-03-08",
+      "category": "model-boundary",
+      "claimKind": "model-behavior",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/cardiohelp-ecmo/components/teaching/BloodFlowVsSweepPanel.tsx",
+          "locator": "Blood flow versus sweep, Review pump speed block (VV)",
+          "excerpt": "In this model patient saturation rises with the flow left after re-drainage only until it stops at 100, which the reference circuit reaches at about 4000 rpm."
+        },
+        {
+          "file": "src/features/cardiohelp-ecmo/content/storyProblems.ts",
+          "locator": "Story problem: speed for a climbing CO₂, explanation",
+          "excerpt": "Its modeled saturation also has a fixed ceiling, reached on this circuit a little above the speed this change sets; past it, more speed raises flow and pulls harder on the drainage limb with no further modeled saturation change."
+        }
+      ],
+      "learnerWording": "In this model patient saturation rises with the flow left after re-drainage only until it stops at 100, which the reference circuit reaches at about 4000 rpm. Above that, more speed still raises flow and pulls harder on the drainage limb, with no further modeled saturation change.",
+      "previousWording": "No ceiling named. The story's own sentence, flow rises immediately and the saturation may nudge upward, is kept.",
+      "intendedTeachingPoint": "More pump speed is not more benefit without limit: past the modeled ceiling only flow and drainage suction change.",
+      "sourceRecordIds": ["bounded-educational-model", "ecmo-book-ch17"],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "bounded-educational-model",
+          "documentId": "engine-replay-2026-09-15",
+          "repositoryPath": "src/features/cardiohelp-ecmo/engine/simulation.ts",
+          "location": "patientTargets: target SpO₂ 82 + 4 × recirculation-adjusted flow × sweep-gas oxygen fraction, clamped to 65-100",
+          "finding": "model-boundary-unstated",
+          "note": "VV reference after 60 s: 3200 rpm → flow 4.05, SpO₂ 96.9; 3600 → 4.56, 98.8; 4000 → 5.06, 100; 4500 → 5.70, 100; 5000 → 6.33, 100. Pre-oxygenator saturation 77.5 from 4000 rpm; displayed drainage pressure −35 → −40 mmHg. Raised-speed story: SpO₂ 96.9 → 98.8, PaCO₂ 46 at every speed. VA reference: right radial 96 and femoral 98.5 at every speed."
+        }
+      ],
+      "modelOutput": "SpO₂ reaches 100 at about 4000 rpm on the VV reference and stays there to 5000 rpm while flow rises from 5.06 to 6.33 L/min.",
+      "unresolvedDisagreement": "The saturation response is linear to a hard ceiling. Whether the free console should let the reference circuit run far past the ceiling with no other modeled consequence is a model question.",
+      "clinicalQuestion": "Faculty: is naming the ceiling enough, or should the reference circuit's upper speed range be annotated or bounded in a separate reviewed task?",
+      "questionDisposition": "ecmo.foundation.blood-flow-versus-sweep.story.raised-speed: keep as reinforcement; the explanation's model boundary extended. Its unsafe choice (keep raising speed until the carbon dioxide moves) agrees with the model.",
+      "hold": "Engine unchanged.",
+      "changeInThisBatch": "The VV pump-speed block and the raised-speed story name the ceiling.",
+      "contentVersion": "cardiohelp-ecmo ecmo-03 2026-09-15",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null
+      }
+    },
+    {
+      "id": "ECMO-03-09",
+      "category": "question-feedback",
+      "claimKind": "model-behavior",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/cardiohelp-ecmo/content/foundationLearningItems.ts",
+          "locator": "Blood flow versus sweep, prediction explanation",
+          "excerpt": "After the sweep comparison, read PaCO₂ and pH: they move while circuit flow stays where it was. After the speed comparison, read circuit flow and PaCO₂: flow rises and PaCO₂ holds. If carbon dioxide keeps climbing with sweep already set, check the gas path itself, the source connection and the sweep actually delivered, before changing anything on the blood side."
+        }
+      ],
+      "learnerWording": "The three adjustments have different principal effects: speed acts on blood flow; sweep flow and sweep-gas oxygen fraction act on the gas side. The comparisons in this section are run from the same starting point, one at a time, so each response can be attributed to the control that produced it. After the sweep comparison, read PaCO₂ and pH: they move while circuit flow stays where it was. After the speed comparison, read circuit flow and PaCO₂: flow rises and PaCO₂ holds. If carbon dioxide keeps climbing with sweep already set, check the gas path itself, the source connection and the sweep actually delivered, before changing anything on the blood side.",
+      "previousWording": "The explanation ended at: … so each response can be attributed to the control that produced it.",
+      "intendedTeachingPoint": "The optional control prediction points at what to read in the real comparisons and at a sensible next check, rather than only announcing the principal control.",
+      "sourceRecordIds": ["ecmo-book-ch18", "elso-adult-vv-2021", "bounded-educational-model"],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "bounded-educational-model",
+          "documentId": "engine-replay-2026-09-15",
+          "repositoryPath": null,
+          "location": "VV reference sweep and speed runs",
+          "finding": "model-matches-copy",
+          "note": "Sweep 4 → 6 L/min lowers PaCO₂ 46 → 31 with circuit flow 4.05 unchanged; +400 rpm raises flow 4.05 → 4.56 with PaCO₂ 46 unchanged. The section's guided actions are +1 L/min sweep and +200 rpm from the same reference."
+        }
+      ],
+      "modelOutput": "PaCO₂ moves only with sweep; flow moves only with speed, on the reference circuit.",
+      "unresolvedDisagreement": "The two story problems repeat this prediction's contrast with a real run. Whether the section still needs the prediction question is a teaching decision. The reassessment sentence repeats the section's transfer teaching and is not an independently sourced protocol.",
+      "clinicalQuestion": "Faculty or owner: keep the prediction question, combine it into the raised-speed story, or remove it; and confirm that checking the gas path before changing the blood side is the intended reassessment.",
+      "questionDisposition": "ecmo.foundation.sweep.prediction: keep as the one optional control prediction before the comparisons; explanation extended, stem, choices and key unchanged. ecmo.foundation.sweep.transfer: keep unchanged; its explanation already names the gas-path connection to inspect. Neither is required to run a comparison or continue.",
+      "hold": "Draft; question ids, stems, choices and keys unchanged.",
+      "changeInThisBatch": "Explanation extended with what to read after each comparison and the next check.",
+      "contentVersion": "cardiohelp-ecmo ecmo-03 2026-09-15",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null
+      }
+    },
+    {
+      "id": "ECMO-03-10",
+      "category": "model-boundary",
+      "claimKind": "model-behavior",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/cardiohelp-ecmo/components/teaching/VvSeriesPhysiologyPanel.tsx",
+          "locator": "VV series physiology, recirculating share card",
+          "excerpt": "In a case that opens with established recirculation, asking the circuit for more flow than it opened with raises this. On the reference circuit it stays at its baseline at every speed."
+        },
+        {
+          "file": "src/features/cardiohelp-ecmo/components/teaching/VvSeriesPhysiologyPanel.tsx",
+          "locator": "VV series physiology, mixture model boundary",
+          "excerpt": "The reference circuit has no established recirculation, so its share stays at the baseline whatever the speed."
+        },
+        {
+          "file": "src/features/cardiohelp-ecmo/content/ecmoValueGuides.ts",
+          "locator": "Recirculation-adjusted flow, model boundary",
+          "excerpt": "On the reference circuit the fraction stays at its baseline, so this value rises with flow."
+        }
+      ],
+      "learnerWording": "In a case that opens with established recirculation, asking the circuit for more flow than it opened with raises this. On the reference circuit it stays at its baseline at every speed.",
+      "previousWording": "Card: Each case sets where this starts. Asking the circuit for more flow than it opened with raises it from there. Value guide: Because that fraction rises once the circuit is asked for more flow than the case opened with, this value can fall while the displayed L/min rises.",
+      "intendedTeachingPoint": "Displayed flow and useful flow part company only when recirculation is established; on the reference circuit more speed raises both.",
+      "sourceRecordIds": ["bounded-educational-model", "ecmo-book-ch17"],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "bounded-educational-model",
+          "documentId": "engine-replay-2026-09-15",
+          "repositoryPath": "src/features/cardiohelp-ecmo/engine/simulation.ts",
+          "location": "deriveRecirculationFraction: baseline 0.08 unless the recirculation fault is active; established 0.48 rising with demanded flow",
+          "finding": "model-contradicts-copy",
+          "note": "VV reference 2000-5000 rpm: share 0.08 throughout, adjusted flow 2.33 → 5.82 L/min. VV recirculation drill from its opening speed +0, +250, +500, +1000, +1500 rpm: share 0.48 → 0.70, displayed flow 4.81 → 6.33, adjusted flow 2.50 → 1.90, SpO₂ 92.0 → 89.6, pre-oxygenator 82.7 → 88.9."
+        }
+      ],
+      "modelOutput": "The share rises with speed only in a case authored with established recirculation.",
+      "unresolvedDisagreement": "The share is authored per case and rises with demanded flow by a fixed exponent; cannula position and volume state are not modeled.",
+      "clinicalQuestion": "Faculty: is a speed-driven rise in the recirculating share a fair teaching example for VV recirculation?",
+      "questionDisposition": "ecmo.learn.vv-recirculation.prediction: keep unchanged. Its figures (4.8 L/min displayed, about 2.5 L/min on its first circuit, drainage 83 against returned 99) match the drill run.",
+      "hold": "Engine unchanged.",
+      "changeInThisBatch": "The card sentence, the mixture model boundary and the value-guide statement now separate the reference circuit from a recirculation case.",
+      "contentVersion": "cardiohelp-ecmo ecmo-03 2026-09-15",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null
+      }
+    }
+  ]
+}

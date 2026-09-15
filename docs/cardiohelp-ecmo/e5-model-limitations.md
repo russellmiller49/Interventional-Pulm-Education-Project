@@ -315,3 +315,49 @@ patient/cannula/drainage cause itself is corrected, so the reduction never reads
 **What did not change.** A2 recirculation is untouched — displayed flow still rises while effective
 flow falls, under its own separately-named guard. The cross-surface causal-consistency claim for
 drainage collapse no longer needs the `authoredContextDifference` exception it used to carry.
+
+---
+
+# Bounds the copy now names (ECMO-03, 2026-09-15)
+
+Found while running the model across the ranges the flow and gas lessons discuss. No engine change was
+made: the learner copy was corrected, the values are pinned in
+`__tests__/ecmo03-sources-and-model-range.test.tsx`, and each item is held for faculty in
+`docs/gap-remediation/self-paced/ECMO-03-claim-review-queue.json` (ECMO-03-07, -08 and -10). Raw runs:
+`Interventional-Pulm-Local-Data/renders/output/ecmo-03-self-paced-2026-09-15/model-replay-baseline.json`.
+
+## 10. PaCO₂ stops at 20 mmHg
+
+`patientTargets` sets the PaCO₂ target to 76 − 7.5 × sweep and clamps it to 20–100 mmHg. On the VV
+reference circuit the floor is reached at about 7.5 L/min (the acute hypercapnia drill reaches it from
+about 7.25 L/min), while the sweep slider runs to 15 L/min. Three surfaces said the sweep response had
+"no plateau"; they now name the bound as a limit of the simulation. After a 12-second run every sweep
+from about 7 L/min reads the same 29.2 mmHg, because the approach rate (1.4 mmHg per modeled second)
+limits the change first.
+
+| Sweep (L/min)            | 4    | 6    | 7    | 7.5  | 8    | 15   |
+| ------------------------ | ---- | ---- | ---- | ---- | ---- | ---- |
+| PaCO₂ after 120 s (mmHg) | 46   | 31   | 23.5 | 20   | 20   | 20   |
+| pH after 120 s           | 7.36 | 7.53 | 7.65 | 7.70 | 7.70 | 7.70 |
+
+## 11. VV saturation stops at 100
+
+The SpO₂ target is 82 + 4 × recirculation-adjusted flow × sweep-gas oxygen fraction, clamped to
+65–100. On the VV reference circuit (oxygen fraction 1.0) it reaches 100 at about 4000 rpm.
+Pre-oxygenator saturation stops at 77.5 at the same point, while flow and drainage suction keep rising.
+
+| rpm, VV reference (60 s) | 3200 | 3600 | 4000 | 4500 | 5000 |
+| ------------------------ | ---- | ---- | ---- | ---- | ---- |
+| circuit flow (L/min)     | 4.05 | 4.56 | 5.06 | 5.70 | 6.33 |
+| SpO₂                     | 96.9 | 98.8 | 100  | 100  | 100  |
+| pre-oxygenator           | 74.6 | 76.4 | 77.5 | 77.5 | 77.5 |
+| displayed pVen (mmHg)    | −35  | −36  | −37  | −39  | −40  |
+
+VA regional saturations do not depend on flow at all (right radial 96, femoral 98.5 from 2500 to
+5000 rpm), which the pump-speed block already stated.
+
+On the reference circuit the recirculating share is the baseline 0.08 at every speed. It rises with
+speed only in a case authored with established recirculation: in the VV recirculation drill it goes
+0.48 → 0.70 from the opening speed to 5000 rpm, displayed flow 4.81 → 6.33 L/min, adjusted flow
+2.50 → 1.90 L/min and SpO₂ 92.0 → 89.6. The VV series card and the adjusted-flow value guide used to
+say the share rises in every case; they now say which.
