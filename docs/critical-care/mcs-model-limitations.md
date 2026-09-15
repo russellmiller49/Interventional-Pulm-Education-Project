@@ -10,6 +10,14 @@ replays, including IMP-01/IMP-03 and an afterload comparison at matched P8 setti
 and times. The original observations below remain historical evidence; MCS-02
 does not recalibrate the model or close clinical/source review.
 
+**September 15, 2026, MCS-03:** the [MCS-03 handoff](../gap-remediation/self-paced/MCS-03-handoff.md)
+and its claim queue add two held model/source disagreements, neither recalibrated. In atrial
+fibrillation the balloon-pump trigger rating favors pressure triggering, which the supplied
+Cardiosave material advises against (MCS-03-05). The Impella CP model reference ceiling is the
+4.3 L/min peak systolic figure rather than the 3.7 L/min maximum mean flow, and the model's mean
+pump flow at P-9 exceeds 3.7 (MCS-03-01). The durable-pump high-power pattern (§2 below) is now
+described correctly in the LVAD emergency transfer (MCS-03-08).
+
 Everything below was established by running the engine, not by assumption. The command that produces
 the numbers is:
 

@@ -268,8 +268,9 @@ export const mcsSupportPathwayCards: readonly McsSupportPathwayCard[] = Object.f
         id: 'mcs.pathway.impella-55.maximum-flow',
         productName: 'Impella 5.5 with SmartAssist',
         valueText: '5.5 L/min',
-        measurand: 'Product-reported maximum flow',
-        condition: 'Device specification for this labeling revision; not a guaranteed patient flow',
+        measurand: 'Maximum mean flow',
+        condition:
+          'Device specification for the Impella 5.5, a different pump from the Impella CP figures above; not a guaranteed patient flow',
         evidenceIds: ['fda-impella-55-labeling', 'jnj-impella-55-current'],
       },
     ],

@@ -32,7 +32,8 @@ export const impellaAnatomyVariants: readonly ImpellaAnatomyVariant[] = [
     asset: 'impella55',
     supportSide: 'left',
     modeledReferenceFlowLMin: 5.5,
-    productFlowFraming: 'Product-reported mean flow of 5.5 L/min; not a guaranteed maximum.',
+    productFlowFraming:
+      'Maximum mean flow of 5.5 L/min in the device specification; actual flow remains loading-dependent.',
     access: 'Surgical axillary-graft or direct-aortic route; the access boundary is authored.',
     pathway: 'Left ventricle → transvalvular pump → ascending aorta',
     teachingBoundary: 'Active LV-support physiology and placement track.',

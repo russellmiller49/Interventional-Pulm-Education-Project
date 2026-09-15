@@ -1,0 +1,1023 @@
+{
+  "queue": "MCS-03-B1",
+  "title": "Mechanical Circulatory Support: consequential teaching and source holds, first MCS-03 batch",
+  "status": "NOT REVIEWED. No reviewer decision is recorded. An empty decision, a draft label or an sme-review label is not approval.",
+  "preparedOn": "2026-09-15",
+  "preparedBy": "AI authoring assistant (Claude), at the owner's request, for prompt MCS-03 of the v2 self-paced action pack. The assistant located the learner wording, read the locally supplied documents for identity and at locators, replayed the model, and recorded what each says. It is not a reviewer and made no clinical judgement for the module.",
+  "module": "mechanical-circulatory-support",
+  "moduleContentVersion": "1.0.0-preview.1",
+  "baseCommit": "905372be",
+  "branch": "claude/mcs-03",
+  "decisionValues": ["NOT REVIEWED", "APPROVE AS SCOPED", "REVISE", "REJECT", "UNCERTAIN"],
+  "deviceFamilies": ["iabp", "microaxial", "durable-lvad", "cross-family"],
+  "categories": [
+    "manufacturer-measurand",
+    "source-disagreement",
+    "device-revision",
+    "model-source-disagreement",
+    "model-copy-contradiction",
+    "safety-response",
+    "source-identity"
+  ],
+  "claimKinds": [
+    "device-specification",
+    "source-statement",
+    "device-operation",
+    "device-safety",
+    "interpretation-rule",
+    "source-identity"
+  ],
+  "findingValues": ["supports", "partly supports", "does not address", "conflicts"],
+  "howToRecordADecision": "Replace NOT REVIEWED only with your own decision, name, role, the actual review date and the commit or content version you reviewed. A decision covers that item's scope: the accuracy and safety of the explanation and of any simulated consequence, not a learner and not the module. Record required changes and disagreement in their fields. A later wording or model change re-opens the item. MCS or device collaborators decide these items; the assistant that prepared the queue may not.",
+  "modelReplay": {
+    "how": "The real reducer in learn mode, seed 417, 0.2 s ticks, 8 s settling after setup and 8 s after each change, as scripts/critical-care/dump-mcs-signals.ts builds its rows. The replay scripts were scratch files; their outputs are kept outside Git at Interventional-Pulm-Local-Data/renders/output/mcs-03-2026-09-15/ (mcs03-replay-baseline.json, mcs03-replay-suction-baseline.json). The observations each item relies on are pinned in src/features/mechanical-circulatory-support/__tests__/mcs03-source-holds.test.tsx, so a model change re-opens the item.",
+    "note": "All values are authored-model outputs, not clinical targets or patient observations. Flows in L/min, pressures in mm Hg."
+  },
+  "sourceDocumentsChecked": [
+    {
+      "documentId": "impella-cp-ifu-rev-v",
+      "localCopy": "Interventional-Pulm-Local-Data/device-manuals/critical-care/Product Manual for Impella CP with SmartAssist - 0048-9007 rV IFU.pdf",
+      "sha256": "84f07fe97c0e85f1e6e42e96689d00505b48abe076279469cde025464590bacd",
+      "pages": 285,
+      "identityAsPrinted": "Impella CP with SmartAssist for use during cardiogenic shock and high-risk PCI. Instructions for Use and Clinical Reference Manual (United States only). Abiomed, Inc. February 2026. Document No. 0048-9007 rV. Cover shows V11.1.",
+      "checkedOn": "2026-09-15"
+    },
+    {
+      "documentId": "impella-55-ifu-rev-l",
+      "localCopy": "Interventional-Pulm-Local-Data/device-manuals/critical-care/Product Manual for Impella 5.5 with SmartAssist with Relocated Sidearm (10003049 rL).pdf",
+      "sha256": "635aab4ab3743d53ebf9e5099dc4477d4ccff45b46392969b789edd9a17be57e",
+      "pages": 261,
+      "identityAsPrinted": "Impella 5.5 with SmartAssist for use during cardiogenic shock. Instructions for Use and Clinical Reference Manual (United States only). Abiomed, Inc. February 2026. Document No. 10003049 rL. The file name adds 'with Relocated Sidearm'.",
+      "checkedOn": "2026-09-15"
+    },
+    {
+      "documentId": "impella-rp-ifu-rev-n",
+      "localCopy": "Interventional-Pulm-Local-Data/device-manuals/critical-care/Product Manual for Impella RP Heart Pump 0046-9062 rN.pdf",
+      "sha256": "aeea6701e0b3f88c3d13637abcb31fa34bc33dfc97fb7184cf27b40f95c18ea5",
+      "pages": 134,
+      "identityAsPrinted": "Impella RP System with the Automated Impella Controller. Instructions for Use & Clinical Reference Manual (United States only). Abiomed, Inc. April 2024. Document No. 0046-9062 Rev. N. The document names the Impella RP System, not the Impella RP Flex.",
+      "checkedOn": "2026-09-15"
+    },
+    {
+      "documentId": "cardiosave-hybrid-operating-instructions",
+      "localCopy": "Interventional-Pulm-Local-Data/device-manuals/critical-care/Cardiosave-Hybrid-with-Transport-Module-Docked-1.pdf",
+      "sha256": "d04891c04fcd9960ccec9036d56d2098ba9b403a6d534b748c5b5eb18eaace88",
+      "pages": 214,
+      "identityAsPrinted": "CARDIOSAVE Hybrid Operating Instructions, English, 0070-00-0638-01. © Copyright 2015 Datascope Corp. Registered in this batch as getinge-cardiosave-hybrid-operating-instructions.",
+      "checkedOn": "2026-09-15"
+    },
+    {
+      "documentId": "cardiosave-troubleshooting-strategies",
+      "localCopy": "Interventional-Pulm-Local-Data/device-manuals/critical-care/cardiosave troubleshooting strategies booklet_us.pdf",
+      "sha256": "98fe5bc2fc0e6927c527e79212236a7f10eaee6eaae5944837555d836940c468",
+      "pages": 36,
+      "identityAsPrinted": "Cardiosave Troubleshooting Strategies. MCA00002553 REVA. Copyright 2025 Datascope Corp. Registered in this batch as getinge-cardiosave-troubleshooting-strategies.",
+      "checkedOn": "2026-09-15"
+    },
+    {
+      "documentId": "cardiosave-quick-reference-d00-outside-us",
+      "localCopy": "Interventional-Pulm-Local-Data/device-manuals/critical-care/iab_insertion-cardiosave_iabp-d.00_d-90175-en.pdf",
+      "sha256": "29e4f1f5b9486df78ae87f596f5e980a1db9664b61f8436bbd93da433c43b529",
+      "pages": 60,
+      "identityAsPrinted": "IAB Insertion / Cardiosave IABP Operation Quick Reference Guide, Cardiosave IABP software D.00/D.01. For use outside the US only. Not registered: an outside-US abbreviated guide, used only as corroboration.",
+      "checkedOn": "2026-09-15"
+    },
+    {
+      "documentId": "case-based-device-therapy-2021",
+      "localCopy": "Interventional-Pulm-Local-Data/private-references/critical-care-full-textbooks/Mechanical_Circulatory_Support/Case-Based Device Therapy for Heart Failure.pdf",
+      "sha256": "c014ff47a8c0cf48d7549457a971ca96ccc7c36a104889c1a78e8065ad1387a2",
+      "pages": 336,
+      "identityAsPrinted": "Birgersdotter-Green U, Adler E, editors. Case-Based Device Therapy for Heart Failure. © Springer Nature Switzerland AG 2021. ISBN 978-3-030-70037-9; eBook ISBN 978-3-030-70038-6; https://doi.org/10.1007/978-3-030-70038-6. Chapter 'Temporary Mechanical Circulatory Support', Daniel Walters and Ryan Reeves, from page 23.",
+      "checkedOn": "2026-09-15"
+    },
+    {
+      "documentId": "bedside-mcs-synthesis-docx",
+      "localCopy": "OneDrive-Personal/03_Education_Teaching/critical_care_references_old_version/Mechanical_supprt/Bedside_Mechanical_Circulatory_Support_Reference.docx",
+      "sha256": "d3c1cbd9d09428f9fca410b1eb11f23079cf155b49d18557c3eb7054d5fa439d",
+      "pages": null,
+      "identityAsPrinted": "File properties: title 'Mechanical Circulatory Support at the Bedside', creator 'OpenAI', created and modified 2013-12-23T23:15:00Z. About 9,660 words. The opening says it was prepared from four supplied chapters (Mechanical Circulatory Support; Anesthesia and Postoperative Care; Intensive Care Unit Management of Patients on Mechanical Circulatory Support; Mechanical Support in Cardiogenic Shock) and that manufacturer and ELSO pages were checked. No author, publisher, date or reference list. The copy is outside Local-Data and was not moved.",
+      "checkedOn": "2026-09-15"
+    },
+    {
+      "documentId": "master-hemodynamics-synthesis-docx",
+      "localCopy": "OneDrive-Personal/03_Education_Teaching/critical_care_references_old_version/Hemodynamics/Master_Hemodynamics_and_Hemodynamic_Monitoring_Reference.docx",
+      "sha256": "98c2dfa970b7123375936f55b415a629e97b025053c1300a0969ef04af4085bf",
+      "pages": null,
+      "identityAsPrinted": "File properties: title 'Master Hemodynamics and Hemodynamic Monitoring Reference', creator 'OpenAI', created and modified 2013-12-23T23:15:00Z. About 31,000 words, headed 'MASTER REFERENCE'. No author, publisher, date or reference list. Consistent with the HD-03 identity check of the same file.",
+      "checkedOn": "2026-09-15"
+    }
+  ],
+  "notAvailableForChecking": [
+    {
+      "sourceRecordId": "fda-impella-cp-labeling",
+      "note": "The FDA PMA P140003 index was not opened; no URL was fetched in MCS-03."
+    },
+    {
+      "sourceRecordId": "jnj-impella-cp-current",
+      "note": "Web page. MCS-02 recorded retrieving it on 2026-09-15; not re-fetched here."
+    },
+    {
+      "sourceRecordId": "fda-impella-55-labeling",
+      "note": "The registered FDA-hosted 2020 IFU is not local and was not fetched. The supplied rL document was read instead."
+    },
+    { "sourceRecordId": "jnj-impella-55-current", "note": "Web page; not fetched." },
+    {
+      "sourceRecordId": "fda-impella-rp-labeling",
+      "note": "Registered FDA link not fetched. The supplied Impella RP rN document was read instead."
+    },
+    {
+      "sourceRecordId": "jnj-impella-rp-current",
+      "note": "Web page for the Impella RP Flex; not fetched."
+    },
+    {
+      "sourceRecordId": "fda-impella-cp-2026-recall",
+      "note": "Not fetched; the registry statement is not verified."
+    },
+    {
+      "sourceRecordId": "fda-impella-rp-2026-recall",
+      "note": "Not fetched; which right-sided product it applies to is not verified."
+    },
+    { "sourceRecordId": "fda-impella-controller-2025-recall", "note": "Not fetched." },
+    {
+      "sourceRecordId": "fda-heartmate3-ifu",
+      "note": "No HeartMate 3 instructions for use were found in Local-Data or by a filename search; not fetched."
+    },
+    { "sourceRecordId": "fda-heartmate3-pma-current", "note": "Not fetched." },
+    { "sourceRecordId": "fda-heartmate-mpu-2025-recall", "note": "Not fetched." },
+    { "sourceRecordId": "fda-heartmate-power-cord-2025-recall", "note": "Not fetched." },
+    { "sourceRecordId": "ishlt-hfsa-acute-mcs-2023", "note": "Not local; not fetched." },
+    { "sourceRecordId": "ishlt-durable-mcs-2023", "note": "Not local; not fetched." },
+    { "sourceRecordId": "getinge-iabp-current", "note": "Web page; not fetched." }
+  ],
+  "items": [
+    {
+      "id": "MCS-03-01",
+      "gapIds": ["MCS-03", "MCS-04"],
+      "deviceFamily": "microaxial",
+      "category": "manufacturer-measurand",
+      "claimKind": "device-specification",
+      "topic": "Impella CP flow figures as three measurands (kept separate from MCS-03-02)",
+      "deviceProfile": "impella-biventricular-family-v2; left variant cp",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/critical-care/content/measurementClarifications.ts",
+          "locator": "Shared clarification record, maximum mean flow quantity locator",
+          "excerpt": "Table 9.15 pump metrics, page 272; same figure in the narrative, page 26"
+        },
+        {
+          "file": "src/features/critical-care/content/measurementClarifications.ts",
+          "locator": "Shared clarification record, peak systolic flow condition",
+          "excerpt": "At performance level P-9; explicitly not a maximum mean flow"
+        },
+        {
+          "file": "src/features/critical-care/content/measurementClarifications.ts",
+          "locator": "Shared clarification record, teaching point",
+          "excerpt": "“Maximum flow” is uninterpretable until the measurand and the reporting condition are named."
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/impellaVariants.ts",
+          "locator": "Impella variant preview, CP flow framing",
+          "excerpt": "Peak flow up to 4.3 L/min; actual flow remains loading-dependent."
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/components/ImpellaVariantPreview.tsx",
+          "locator": "Impella variant preview, model reference ceiling row (4.3 for CP)",
+          "excerpt": "<dt>Model reference ceiling</dt>"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/sources.ts",
+          "locator": "Source list, CP affected-unit removal notice",
+          "excerpt": "FDA Class I recall communication, updated July 2, 2026."
+        }
+      ],
+      "learnerWording": "Pathway card and teaching panel: 3.7 L/min maximum mean flow; up to 4.3 L/min peak flow rate at systole at P-9; 3.8 ± 0.6 L/min average flow observed during support; teaching point “Maximum flow” is uninterpretable until the measurand and the reporting condition are named. Variant preview: “Peak flow up to 4.3 L/min; actual flow remains loading-dependent.” with “Model reference ceiling 4.3 L/min before loading, pressure, position, and suction effects”.",
+      "intendedTeachingPoint": "A maximum mean flow, a peak systolic flow and an observed study average are different quantities; none substitutes for another, and none is a patient target.",
+      "sourceRecordIds": [
+        "fda-impella-cp-labeling",
+        "jnj-impella-cp-current",
+        "fda-impella-cp-2026-recall"
+      ],
+      "sharedRecordIds": ["clarification.mcs.impella-cp-flow-measurands"],
+      "sourceLocations": [
+        {
+          "sourceRecordId": null,
+          "documentId": "impella-cp-ifu-rev-v",
+          "location": "PDF p. 26 (printed 3.4), 'Impella CP with SmartAssist Catheter'",
+          "finding": "supports",
+          "note": "Says the catheter delivers up to a maximum mean of 3.7 L/min from the left ventricle into the aorta."
+        },
+        {
+          "sourceRecordId": null,
+          "documentId": "impella-cp-ifu-rev-v",
+          "location": "PDF p. 77 (printed 5.25), Table 5.3 'P-level Flow Rates'",
+          "finding": "supports",
+          "note": "Mean flow rate column: P-9 3.3–3.7 L/min at 46,000 rpm. Footnote: peak flow rate at systole up to 4.3 L/min at P-9. Flow can vary with suction or incorrect positioning."
+        },
+        {
+          "sourceRecordId": null,
+          "documentId": "impella-cp-ifu-rev-v",
+          "location": "PDF p. 165 (printed 6.73), clinical evidence section",
+          "finding": "supports",
+          "note": "Average flow during support 3.8 ± 0.6 L/min in the studied population."
+        },
+        {
+          "sourceRecordId": null,
+          "documentId": "impella-cp-ifu-rev-v",
+          "location": "PDF p. 272 (printed 9.15), Table 9.15 'Impella CP with SmartAssist Catheter Parameters'; PDF p. 1 cover",
+          "finding": "supports",
+          "note": "Maximum Mean Flow 3.7 L/min; speed range 0 to 46,000 rpm. The cover shows V11.1, as the shared record says."
+        },
+        {
+          "sourceRecordId": "fda-impella-cp-labeling",
+          "documentId": null,
+          "location": "Registry record cited as evidence by the shared clarification",
+          "finding": "does not address",
+          "note": "The shared record's text names revision V, but its evidence ids point to the FDA PMA index and the J&J product page, neither opened here. The rV document itself is not a registered source."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "All three quantities and their conditions are in the supplied February 2026 revision V at the shared record's locators. Its page numbers are PDF page indices; the printed pages are 3.4, 5.25, 6.73 and 9.15.",
+        "notChecked": "Whether revision V is the current revision for a local device; the FDA PMA index; the J&J page (not re-fetched); the July 2026 affected-unit removal notice."
+      },
+      "modelOutput": "CP at P-9 in the default learn patient: left pump flow 3.85, native 2.89, effective 6.74, MAP 108. The variant preview gives the CP model reference ceiling as 4.3 L/min. The model's mean pump flow at P-9 is above the 3.7 L/min maximum mean flow, and its ceiling equals the peak systolic figure.",
+      "unresolvedDisagreement": "The manufacturer measurands are verified at locators, and the model's CP ceiling is the peak systolic figure used as a mean-flow reference. That model/measurand disagreement is the one MCS-02 left open; it is held, not recalibrated.",
+      "missingAndReassess": "No question asks a learner to use these figures. A learner reading a CP flow display still needs the measurand, the performance level, position, filling and afterload before comparing it with any labeled figure; the model shows none of the labeled figures as a patient flow.",
+      "clinicalQuestion": "Should the CP model reference ceiling stay at 4.3 L/min (peak systolic) or move toward the 3.7 L/min maximum mean flow in a separate bounded engine task, and is revision V the document the module should cite?",
+      "questionDisposition": "No question depends on these figures. The pathway-card clarification is kept as a worked explanation.",
+      "hold": "Model reference ceiling and P-9 mean flow; current-revision applicability; the July 2026 removal notice.",
+      "changeInThisBatch": "None to the shared record or the model. Kept as its own item, separate from MCS-03-02. Proposal for a serialized shared slice: add printed page and table numbers to the locators and register the rV document as the evidence record.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "disagreement": null
+      }
+    },
+    {
+      "id": "MCS-03-02",
+      "gapIds": ["MCS-03"],
+      "deviceFamily": "microaxial",
+      "category": "source-disagreement",
+      "claimKind": "source-statement",
+      "topic": "A textbook chapter's two Impella CP flows (kept separate from MCS-03-01)",
+      "deviceProfile": "impella-biventricular-family-v2; left variant cp",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/critical-care/content/sourceConflicts.ts",
+          "locator": "Shared conflict record, first position",
+          "excerpt": "Impella CP flow up to 3.8 L/min"
+        },
+        {
+          "file": "src/features/critical-care/content/sourceConflicts.ts",
+          "locator": "Shared conflict record, first position locator",
+          "excerpt": "device table, page 26"
+        },
+        {
+          "file": "src/features/critical-care/content/sourceConflicts.ts",
+          "locator": "Shared conflict record, second position",
+          "excerpt": "Impella CP flow up to 3.5 L/min"
+        },
+        {
+          "file": "src/features/critical-care/content/sourceConflicts.ts",
+          "locator": "Shared conflict record, second position locator",
+          "excerpt": "narrative, page 27"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/sources.ts",
+          "locator": "Source list, Case-Based Device Therapy record, limit",
+          "excerpt": "up to 3.8 L/min in its device table (printed page 26)"
+        }
+      ],
+      "learnerWording": "Held disagreement on the left microaxial pathway card: “A textbook states two different Impella CP flows” — up to 3.8 L/min (device table, page 26) and up to 3.5 L/min (narrative, page 27); do not average them or use either as the current specification.",
+      "intendedTeachingPoint": "A single source can contradict itself; a textbook figure is not a device specification.",
+      "sourceRecordIds": ["case-based-device-therapy-hf"],
+      "sharedRecordIds": ["conflict.mcs.impella-cp-textbook-flow"],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "case-based-device-therapy-hf",
+          "documentId": "case-based-device-therapy-2021",
+          "location": "PDF p. 32 (printed 26), Walters and Reeves, Table 3 'Percutaneous mechanical support device characteristics'",
+          "finding": "supports",
+          "note": "Impella CP row: continuous axial, femoral artery, Flow (L/min) 'Up to 3.8'. Mean or peak not stated."
+        },
+        {
+          "sourceRecordId": "case-based-device-therapy-hf",
+          "documentId": "case-based-device-therapy-2021",
+          "location": "PDF p. 33 (printed 27), narrative",
+          "finding": "supports",
+          "note": "Says the Impella 2.5 and Impella CP can provide up to 2.5 and 3.5 L/min of flow respectively. Mean or peak not stated."
+        },
+        {
+          "sourceRecordId": "case-based-device-therapy-hf",
+          "documentId": "case-based-device-therapy-2021",
+          "location": "PDF p. 4 (copyright page) and p. 5 (contents)",
+          "finding": "conflicts",
+          "note": "Springer 2021, editors Birgersdotter-Green and Adler, chapter by Walters and Reeves from p. 23. The registry said 'Owner-licensed private authoring source, reviewed July 2026', year 2026."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "Both statements are in the chapter at the shared record's page numbers, which are printed pages. Neither figure is named as a mean or a peak, and neither matches a revision V figure: 3.8 coincides numerically with the observed average but is stated as an 'up to' flow.",
+        "notChecked": "Later editions of the textbook."
+      },
+      "modelOutput": "Not applicable to a statement about what a textbook says. For contrast, CP at P-9 in the model gives 3.85 L/min mean pump flow (MCS-03-01).",
+      "unresolvedDisagreement": "The chapter disagrees with itself and with the labeled measurands. It stays a documented inconsistency: not averaged, not reconciled, and not a specification.",
+      "missingAndReassess": "Nothing a learner is asked to do rests on either figure. The card already directs device specifications to current device-revision labeling.",
+      "clinicalQuestion": "Is it still useful to show learners this textbook inconsistency beside the manufacturer measurands, or should the conflict record be retired once labeling is the only specification source?",
+      "questionDisposition": "No question depends on it; the held disagreement is kept as teaching disclosure.",
+      "hold": "Whether the conflict remains learner-facing.",
+      "changeInThisBatch": "Module registry identity corrected from the file: authors, editors, publisher, year 2021; the limit now names the printed pages and the revision V comparison. The shared conflict record is unchanged; its page 26 and 27 locators are verified as printed pages.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "disagreement": null
+      }
+    },
+    {
+      "id": "MCS-03-03",
+      "gapIds": ["MCS-03"],
+      "deviceFamily": "microaxial",
+      "category": "manufacturer-measurand",
+      "claimKind": "device-specification",
+      "topic": "Impella 5.5 flow named as two different measurands on two surfaces",
+      "deviceProfile": "impella-biventricular-family-v2; left variant 55",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/mechanical-circulatory-support/content/supportPathways.ts",
+          "locator": "Left microaxial pathway card, Impella 5.5 product reference condition",
+          "excerpt": "Device specification for the Impella 5.5, a different pump from the Impella CP figures above; not a guaranteed patient flow"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/impellaVariants.ts",
+          "locator": "Impella variant preview, 5.5 flow framing",
+          "excerpt": "Maximum mean flow of 5.5 L/min in the device specification; actual flow remains loading-dependent."
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/sources.ts",
+          "locator": "Source list, Impella 5.5 labeling record, used for",
+          "excerpt": "5.5 L/min is the maximum mean flow in the device specification, not a guaranteed patient flow."
+        }
+      ],
+      "learnerWording": "Before: the pathway card called 5.5 L/min a “Product-reported maximum flow”, while the variant preview said “Product-reported mean flow of 5.5 L/min; not a guaranteed maximum.” and the source record called it “a product-reported mean-flow reference, not a guaranteed patient-flow maximum.” After: “Maximum mean flow” on all three.",
+      "intendedTeachingPoint": "The Impella 5.5 figure is a device specification with a named measurand, not a patient flow or a target.",
+      "sourceRecordIds": ["fda-impella-55-labeling", "jnj-impella-55-current"],
+      "sharedRecordIds": [],
+      "sourceLocations": [
+        {
+          "sourceRecordId": null,
+          "documentId": "impella-55-ifu-rev-l",
+          "location": "PDF p. 21 (printed 3.3), catheter description",
+          "finding": "supports",
+          "note": "Says the catheter delivers up to a maximum mean of 5.5 L/min from the left ventricle into the aorta."
+        },
+        {
+          "sourceRecordId": null,
+          "documentId": "impella-55-ifu-rev-l",
+          "location": "PDF p. 250 (printed 9.15), Table 9.15 'Impella 5.5 with SmartAssist Catheter Parameters'",
+          "finding": "supports",
+          "note": "Flow-Maximum 5.5 L/min; speed range 0 to 33,000 rpm."
+        },
+        {
+          "sourceRecordId": "fda-impella-55-labeling",
+          "documentId": null,
+          "location": "Registered FDA-hosted 2020 IFU",
+          "finding": "does not address",
+          "note": "Not local and not fetched; the registered document was not opened."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "The supplied February 2026 revision L names 5.5 L/min a maximum mean flow. The two module surfaces contradicted each other, and the preview's 'not a guaranteed maximum' contradicted the document.",
+        "notChecked": "The registered 2020 document; whether revision L is current for a local device."
+      },
+      "modelOutput": "5.5 at P-9 in the default learn patient: left pump flow 4.82, native 2.59, effective 7.41, MAP 116. The variant preview gives the model reference ceiling as 5.5 L/min. Unlike CP, the modeled mean flow stays below the labeled maximum mean.",
+      "unresolvedDisagreement": "None left on the measurand. The registered citation still points to a document that was not checked.",
+      "missingAndReassess": "No question depends on the figure. A displayed 5.5 flow still needs position, filling and afterload before it says anything about the patient.",
+      "clinicalQuestion": "Is 'Maximum mean flow' the right label for the 5.5 figure, and should the registry cite revision L rather than the 2020 FDA-hosted document?",
+      "questionDisposition": "No question depends on the figure.",
+      "hold": "Registered revision versus supplied revision.",
+      "changeInThisBatch": "Corrected on the pathway card, the variant preview and the source record. Test contract: the m0-m1 measurand list now expects 'Maximum mean flow' for the 5.5 figure and checks uniqueness per pump instead of across all five figures.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "disagreement": null
+      }
+    },
+    {
+      "id": "MCS-03-04",
+      "gapIds": ["MCS-03"],
+      "deviceFamily": "microaxial",
+      "category": "device-revision",
+      "claimKind": "device-specification",
+      "topic": "Impella RP flow figure and which right-sided product is being taught",
+      "deviceProfile": "impella-biventricular-family-v2; right variant rp",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/mechanical-circulatory-support/content/supportPathways.ts",
+          "locator": "Right microaxial pathway card, product reference measurand",
+          "excerpt": "Product-framed flow"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/impellaVariants.ts",
+          "locator": "Impella variant preview, RP flow framing",
+          "excerpt": "Product information frames flow up to 4.0 L/min; actual and modeled flow remain loading-dependent."
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/sources.ts",
+          "locator": "Source list, RP product page record",
+          "excerpt": "Impella RP Flex with SmartAssist product information"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/sources.ts",
+          "locator": "Source list, RP sensor recall record",
+          "excerpt": "FDA Class I recall Z-1471-2026, posted February 27, 2026."
+        }
+      ],
+      "learnerWording": "Card: Impella RP, “Up to 4.0 L/min”, “Product-framed flow”, “Product information framing for the device family; delivered flow remains loading-dependent”. Preview: “Product information frames flow up to 4.0 L/min; actual and modeled flow remain loading-dependent.” Source list: the RP Flex product page and a February 2026 RP sensor recall.",
+      "intendedTeachingPoint": "Right-sided pump flow is a pulmonary delivery with its own device figure; it is never added to left-sided flow.",
+      "sourceRecordIds": [
+        "fda-impella-rp-labeling",
+        "jnj-impella-rp-current",
+        "fda-impella-rp-2026-recall"
+      ],
+      "sharedRecordIds": [],
+      "sourceLocations": [
+        {
+          "sourceRecordId": null,
+          "documentId": "impella-rp-ifu-rev-n",
+          "location": "PDF p. 125 (printed 8.18), Table 8.15 'Impella Catheter Parameters'",
+          "finding": "partly supports",
+          "note": "Flow-Maximum 4.0 L/min; speed range 0 to 33,000 rpm."
+        },
+        {
+          "sourceRecordId": null,
+          "documentId": "impella-rp-ifu-rev-n",
+          "location": "PDF p. 68 (printed 5.20), Table 5.4 'P-Level Flow Rates' and 'Suction'",
+          "finding": "partly supports",
+          "note": "P-9 flow 3.9–4.4 L/min; flow depends on preload and afterload. The P-level table's upper range is above the parameter table's 4.0 maximum. Suction: displayed flow may be higher than actual; decrease the P-level as needed at P-7 to P-9."
+        },
+        {
+          "sourceRecordId": "jnj-impella-rp-current",
+          "documentId": "impella-rp-ifu-rev-n",
+          "location": "PDF p. 3, title page",
+          "finding": "conflicts",
+          "note": "The supplied document is the Impella RP System (April 2024, Rev. N). The registered product page is for the Impella RP Flex, a different product."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "A 4.0 L/min maximum is in the supplied Impella RP document, but that document is not the RP Flex product the registered page describes, and its own P-level table runs above 4.0.",
+        "notChecked": "RP Flex labeling; the registered FDA document; which product the February 2026 recall covers."
+      },
+      "modelOutput": "CP P-9 with RP P-9 in the default learn patient: RP flow 3.50, left 3.83, effective 6.72, RAP 8. RP flow is not added to effective systemic flow. The preview gives the RP model reference ceiling as 4.0 L/min.",
+      "unresolvedDisagreement": "Product identity (Impella RP versus RP Flex), the measurand of 4.0 (parameter maximum versus a P-9 range to 4.4), and recall applicability are all unresolved.",
+      "missingAndReassess": "No question depends on the figure. Right-sided delivery still has to be read against RAP, PVR and left-heart handling.",
+      "clinicalQuestion": "Which right-sided product and revision is the module teaching, and how should its flow figure be labeled?",
+      "questionDisposition": "No question depends on the figure.",
+      "hold": "Product identity, measurand label and recall applicability.",
+      "changeInThisBatch": "None.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "disagreement": null
+      }
+    },
+    {
+      "id": "MCS-03-05",
+      "gapIds": ["MCS-03", "MCS-01"],
+      "deviceFamily": "iabp",
+      "category": "model-source-disagreement",
+      "claimKind": "device-operation",
+      "topic": "Which trigger works in atrial fibrillation, and internal triggering with a beating heart",
+      "deviceProfile": "iabp-counterpulsation-neutral-v1 (neutral facsimile informed by Cardiosave reference material)",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
+          "locator": "IABP timing transfer, option assume-ecg",
+          "excerpt": "Keep ECG triggering, because an electrical signal stays reliable when the pressure trace does not"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
+          "locator": "IABP timing transfer, option assume-ecg rationale (rewritten)",
+          "excerpt": "The supplied Cardiosave material recommends ECG triggering for arrhythmias when the R wave is reliable"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/engine/model.ts",
+          "locator": "computeIabpSupport, trigger quality in atrial fibrillation",
+          "excerpt": "? device.triggerSource === 'pressure'"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/scenarios.ts",
+          "locator": "Guided case IABP-02 title; capstone CAP-IABP-01 starting trigger",
+          "excerpt": "Irregular rhythm, unreliable trigger"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/scenarios.ts",
+          "locator": "CAP-IABP-01 initial device",
+          "excerpt": "triggerSource: 'internal',"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/components/teaching/IabpTimingTriggeringPanel.tsx",
+          "locator": "Timing panel, trigger and synchrony section, atrial fibrillation boundary (new)",
+          "excerpt": "In atrial fibrillation this model rates pressure triggering above ECG triggering."
+        }
+      ],
+      "learnerWording": "Transfer stem: “With an irregular rhythm, some assisted beats are mistimed. What is the most defensible way to evaluate a trigger change?” Best: “Select the most reliable trigger available and verify the timing on the trace”. Before this batch, “Keep ECG triggering…” was graded a wrong mechanism (“no source is universally superior”) and the optional exercise was satisfied only once the trigger was no longer ECG, including internal triggering.",
+      "intendedTeachingPoint": "A trigger is judged by where inflation and deflation land on the arterial trace, beat by beat, in whatever rhythm the patient has.",
+      "sourceRecordIds": [
+        "getinge-cardiosave-hybrid-operating-instructions",
+        "getinge-cardiosave-troubleshooting-strategies",
+        "getinge-iabp-current",
+        "mcs-educational-model-v1"
+      ],
+      "sharedRecordIds": [],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "getinge-cardiosave-hybrid-operating-instructions",
+          "documentId": "cardiosave-hybrid-operating-instructions",
+          "location": "Printed p. vi (PDF 16), Warnings",
+          "finding": "conflicts",
+          "note": "Pressure triggering is not recommended with sustained irregular rhythms or tachyarrhythmias. Do not remain in internal trigger mode when the patient is generating a cardiac output. The model rates pressure triggering best in atrial fibrillation and clears its trigger alarm."
+        },
+        {
+          "sourceRecordId": "getinge-cardiosave-hybrid-operating-instructions",
+          "documentId": "cardiosave-hybrid-operating-instructions",
+          "location": "Printed p. 2-18 (PDF 104), 'Dysrhythmias while in pressure trigger'",
+          "finding": "partly supports",
+          "note": "In pressure trigger the console detects atrial fibrillation and deflates earlier automatically; the user should not adjust deflation. The model represents no such console compensation."
+        },
+        {
+          "sourceRecordId": "getinge-cardiosave-troubleshooting-strategies",
+          "documentId": "cardiosave-troubleshooting-strategies",
+          "location": "Printed p. 3 (PDF 5), ECG and pressure triggers",
+          "finding": "conflicts",
+          "note": "ECG: preferred trigger with a reliable R wave; recommended for patients with arrhythmias. Pressure: backup trigger; not recommended for irregular rhythms such as atrial fibrillation."
+        },
+        {
+          "sourceRecordId": "getinge-cardiosave-troubleshooting-strategies",
+          "documentId": "cardiosave-troubleshooting-strategies",
+          "location": "Printed p. 5 (PDF 7), internal trigger",
+          "finding": "conflicts",
+          "note": "Asynchronous, 80 bpm (40–120); typically on bypass with no QRS, or in CPR when compressions give too little pulse pressure. Do not remain in internal trigger when the patient is generating a cardiac output. The capstone opens on internal triggering in a patient with output."
+        },
+        {
+          "sourceRecordId": null,
+          "documentId": "cardiosave-quick-reference-d00-outside-us",
+          "location": "PDF p. 19, 'Cardiosave Triggers'",
+          "finding": "supports",
+          "note": "Outside-US guide: internal trigger only when there is no mechanical cardiac cycle; ECG the trigger of choice with an adequate R wave; pressure the trigger of choice with a regular rhythm when the R wave is inadequate."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "The supplied Cardiosave material consistently prefers ECG triggering in arrhythmia, advises against pressure triggering in sustained irregular rhythm, and reserves internal triggering for the absence of a cardiac cycle. The model's atrial fibrillation coefficients rank these the other way round for ECG and pressure.",
+        "notChecked": "Other consoles; the Cardiosave B.17 material the device profile names; the current US IFU revision; the registered Getinge web page."
+      },
+      "modelOutput": "Atrial fibrillation transfer setup: ECG 50% synchrony with the trigger-unreliable alarm, effective 3.51, MAP 67; pressure 74%, no alarm, effective 3.60, MAP 69; internal 40% with the alarm, effective 3.48. Sinus reference: ECG 100%, pressure 90%, internal 62%. Coefficients in computeIabpSupport: atrial fibrillation pressure 0.74, ECG 0.5, internal 0.4. The IABP-02 signal (synchrony at least 60) and CAP-IABP-01 signal (at least 65) are reachable in this rhythm only with pressure triggering.",
+      "unresolvedDisagreement": "The model rewards pressure triggering in atrial fibrillation and clears the alarm; the supplied manufacturer material advises the opposite for that console family. Not recalibrated: an engine change needs its own reviewed task.",
+      "missingAndReassess": "The model does not represent R-wave quality, a console's automatic handling of an irregular rhythm, or asynchronous internal inflation against native beats. What to check: the R wave, the console's own instructions and irregular-rhythm handling, and inflation and deflation landmarks beat by beat on the arterial trace.",
+      "clinicalQuestion": "Should the model's trigger reliability in atrial fibrillation change (a separate engine task)? Should IABP-02 and CAP-IABP-01 keep a trigger change as their way to useful timing, and should CAP-IABP-01 open on internal triggering? Is 'partly right' the right reading of keeping ECG triggering?",
+      "questionDisposition": "mcs-iabp-trigger-transfer-1: keep as reinforcement; rewritten (assume-ecg regraded from incorrect-mechanism to reasonable-but-incomplete with a source-based rationale; exercise label and explanation name the model limit). The IABP-02 and CAP-IABP-01 predictions are kept; their worked explanations gain the model limit.",
+      "hold": "Model trigger coefficients; IABP-02 and CAP-IABP-01 signals and starting state; the regrade itself.",
+      "changeInThisBatch": "Transfer: the work predicate no longer requires a non-ECG trigger and keeps only the genuine prerequisite of a running balloon (a trigger change still counts as the optional exercise, whichever trigger it ends on); assume-ecg regraded; label and explanation rewritten; two Cardiosave documents registered and cited. Timing panel: a model boundary beside the synchrony figure whenever the rhythm is atrial fibrillation. IABP-02 and CAP-IABP-01: a model-limit line in the worked explanation. Engine, success signals and starting states unchanged.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "disagreement": null
+      }
+    },
+    {
+      "id": "MCS-03-06",
+      "gapIds": ["MCS-03"],
+      "deviceFamily": "microaxial",
+      "category": "safety-response",
+      "claimKind": "device-safety",
+      "topic": "First response to a suction pattern at high support",
+      "deviceProfile": "impella-biventricular-family-v2; left variant cp",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
+          "locator": "Suction transfer stem",
+          "excerpt": "At high support, preload falls and a suction pattern appears with lower effective flow. What is the safest immediate simulated response?"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
+          "locator": "Suction transfer, best option",
+          "excerpt": "Reduce support temporarily, reassess filling and position, and address the cause first"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
+          "locator": "Suction transfer, best option rationale (rewritten)",
+          "excerpt": "The supplied Impella CP instructions for use give this order for a suction alarm"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
+          "locator": "Suction transfer, explanation (rewritten)",
+          "excerpt": "In this model a one- or two-level reduction leaves the suction pattern in place"
+        }
+      ],
+      "learnerWording": "Before: rationale “This limits ongoing suction while preserving a structured patient–position–device evaluation.”; explanation “The learner must make a real pump-level adjustment and identify the loading mechanism.” After: the IFU order, and what the model does after a reduction.",
+      "intendedTeachingPoint": "Escalating through suction is unsafe; a reduction is a first step while the cause of underfilling is found and corrected.",
+      "sourceRecordIds": [
+        "fda-impella-cp-labeling",
+        "mcs-bedside-reference-supplied",
+        "mcs-educational-model-v1"
+      ],
+      "sharedRecordIds": [],
+      "sourceLocations": [
+        {
+          "sourceRecordId": null,
+          "documentId": "impella-cp-ifu-rev-v",
+          "location": "PDF p. 236 (printed 7.17), 'Suction with the Impella CP with SmartAssist Catheter'",
+          "finding": "supports",
+          "note": "For a Suction or Impella Flow Reduced alarm: reduce the P-level by one or two; ensure adequate volume; check positioning with imaging and reposition slightly; evaluate RV function by invasive hemodynamics and/or echocardiography; once resolved, slowly resume the previous level. In AUTO mode the controller itself reduces speed to resolve suction."
+        },
+        {
+          "sourceRecordId": null,
+          "documentId": "impella-rp-ifu-rev-n",
+          "location": "PDF p. 68 (printed 5.20), 'Suction'",
+          "finding": "supports",
+          "note": "For the right-sided pump: decrease the P-level as needed to resolve suction at P-7 to P-9; the displayed flow may be higher than actual."
+        },
+        {
+          "sourceRecordId": "mcs-educational-model-v1",
+          "documentId": null,
+          "location": "Model replay of the transfer setup (this batch)",
+          "finding": "partly supports",
+          "note": "Reducing one or two levels keeps the suction alarm; four or more levels down clears it with a low-flow alarm; restoring filling clears both. The model has no AUTO mode and no position or imaging feedback."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "The best option matches the first step of the supplied CP instructions, which continue with volume, imaging and RV function. The previous rationale claimed the reduction limits suction, which the model does not show at one or two levels.",
+        "notChecked": "Other revisions; local protocol."
+      },
+      "modelOutput": "Setup (CP P-8, preload 55%): left 1.87, native 2.04, effective 3.91, MAP 61–63; suction and hemolysis-risk alarms. P-6: effective 3.57, MAP 58, suction persists plus low flow. P-5: 3.40, MAP 55, suction persists. P-4: 3.31, MAP 54, low-flow alarm only. P-3: 3.11; P-2: 2.89. P-8 with preload 85%: effective 5.71, MAP 89, no alarm. P-6 then preload 85%: 5.22, no alarm; back to P-8: 5.72, no alarm.",
+      "unresolvedDisagreement": "In the model a one- or two-level reduction does not clear suction, while the instructions list it first and describe AUTO mode resolving suction by reducing speed. Whether the model's suction threshold is a fair teaching example is for review.",
+      "missingAndReassess": "The model cannot show volume status, pump position on imaging or right ventricular function. Those are what to reassess before returning to the previous level; a lower alarm burden after a large reduction is not a resolved cause.",
+      "clinicalQuestion": "Are the stated order and the model's response to a reduction an accurate teaching example? Should the transfer show restoring filling as the step that clears the pattern?",
+      "questionDisposition": "mcs-impella-suction-transfer-1: keep as reinforcement (it contrasts escalation, a purge explanation and a structured reduction); rationale and explanation rewritten; still draft.",
+      "hold": "The model's suction response to a reduction; wording of the new rationale and explanation.",
+      "changeInThisBatch": "Best-option rationale and explanation rewritten to the IFU order and the replayed model. Options, key and required action unchanged.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "disagreement": null
+      }
+    },
+    {
+      "id": "MCS-03-07",
+      "gapIds": ["MCS-03"],
+      "deviceFamily": "microaxial",
+      "category": "model-copy-contradiction",
+      "claimKind": "interpretation-rule",
+      "topic": "Left-sided escalation in a right-limited circulation",
+      "deviceProfile": "impella-biventricular-family-v2; left variant cp, right variant rp",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
+          "locator": "Integration transfer stem",
+          "excerpt": "Output is low, RAP is rising and PAPi falling, and PCWP is only modestly elevated. Which reasoning best selects the next mechanism?"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
+          "locator": "Integration transfer, best option rationale (corrected sentence)",
+          "excerpt": "Adding left-sided support to an RV-limited circulation raises effective systemic flow only a little and leaves the suction pattern in place."
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/sectionLearningContracts.ts",
+          "locator": "Integration prediction explanation (unchanged, consistent)",
+          "excerpt": "raises the displayed number more than it raises effective systemic delivery"
+        }
+      ],
+      "learnerWording": "Before: “Adding left-sided support to an RV-limited circulation raises the displayed number without raising effective systemic flow.” After: “…raises effective systemic flow only a little and leaves the suction pattern in place.”",
+      "intendedTeachingPoint": "Device selection follows the limiting problem: left-sided escalation cannot fix delivery that fails upstream of the left heart.",
+      "sourceRecordIds": [
+        "mcs-bedside-reference-supplied",
+        "ishlt-hfsa-acute-mcs-2023",
+        "ishlt-durable-mcs-2023",
+        "mcs-educational-model-v1"
+      ],
+      "sharedRecordIds": [],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "mcs-educational-model-v1",
+          "documentId": null,
+          "location": "Model replay of the transfer setup (this batch)",
+          "finding": "conflicts",
+          "note": "The previous sentence said effective flow does not rise; the model adds 0.17 L/min at P-8 with suction persisting."
+        },
+        {
+          "sourceRecordId": "mcs-educational-model-v1",
+          "documentId": null,
+          "location": "docs/critical-care/mcs-model-limitations.md §1",
+          "finding": "supports",
+          "note": "The model's PAPi numerator tracks RV contractility only. The transfer uses PAPi to name a patient phenotype, which the limitation allows, not as a response signal."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "The absolute was not true of the model the learner is using; the neighbouring prediction item already said it correctly.",
+        "notChecked": "The guidelines and the bedside synthesis at a locator for this sentence."
+      },
+      "modelOutput": "Setup (RV contractility 0.32, preload 85%, CP at its default level): left 0.43, native 2.12, effective 2.56, RAP 18, PCWP 17, PAPi 0.50; suction, low-flow and hemolysis-risk alarms. Left P-8: left 0.64 (+0.21), native 2.09, effective 2.73 (+0.17); suction persists. Right pump P-7 instead: right 2.14, left 1.47, effective 3.72 (+1.16), RAP 16, PAPi 0.60; low-flow alarm only.",
+      "unresolvedDisagreement": "None left in the sentence. The PAPi rise with the right pump comes only from the falling RAP (a known model limitation) and is not used as teaching here.",
+      "missingAndReassess": "The model does not establish which device the team should choose. What to reassess: RV function on imaging and hemodynamics, pulmonary vascular resistance and volume status.",
+      "clinicalQuestion": "Is 'a small effective gain with suction persisting' the right teaching statement for left-sided escalation in a right-limited circulation?",
+      "questionDisposition": "mcs-device-selection-integration-transfer-1: keep as reinforcement (it contrasts naming the limit, escalation, counterpulsation and waiting); best rationale corrected; status sme-review to draft.",
+      "hold": "Wording of the corrected sentence.",
+      "changeInThisBatch": "One sentence of the best-option rationale corrected; status set to draft. Test contract: stage-learner-review's draft-transfer list now includes this item.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "disagreement": null
+      }
+    },
+    {
+      "id": "MCS-03-08",
+      "gapIds": ["MCS-03", "MCS-04"],
+      "deviceFamily": "durable-lvad",
+      "category": "model-copy-contradiction",
+      "claimKind": "device-safety",
+      "topic": "High-power pattern: the transfer said flow worsens; the model shows it unchanged",
+      "deviceProfile": "durable-cf-lvad-v1 (neutral HeartMate 3-concept facsimile)",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
+          "locator": "LVAD emergency transfer stem (rewritten)",
+          "excerpt": "At an unchanged speed, LVAD power rises and a high-power alarm appears while the displayed flow and the effective flow barely move."
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
+          "locator": "LVAD emergency transfer, context (rewritten)",
+          "excerpt": "Pump thrombosis or flow obstruction pattern, which this model does not diagnose"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/sectionSpecs.ts",
+          "locator": "LVAD alarms section, transfer task title",
+          "excerpt": "Power rising while the flow display holds"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/supportPathways.ts",
+          "locator": "Durable LVAD pathway card, obstruction constraint (unchanged)",
+          "excerpt": "Pump thrombosis, inflow or outflow graft obstruction, and suction events all reduce delivered flow and change the relationship between power, speed, and flow."
+        }
+      ],
+      "learnerWording": "Before: title “Transfer emergency: high power with worsening perfusion”; context “Power rises while effective flow and perfusion worsen”; stem “LVAD power rises while effective flow and perfusion worsen.”; task title “Power rising while perfusion worsens”. The setup switches on only the high-power pattern.",
+      "intendedTeachingPoint": "A rising power signature is urgent even while the flow display looks unchanged: preserve verified power, reassess the patient and escalate.",
+      "sourceRecordIds": [
+        "mcs-bedside-reference-supplied",
+        "ishlt-durable-mcs-2023",
+        "fda-heartmate3-ifu",
+        "mcs-educational-model-v1"
+      ],
+      "sharedRecordIds": [],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "mcs-educational-model-v1",
+          "documentId": null,
+          "location": "docs/critical-care/mcs-model-limitations.md §2, and the model replay (this batch)",
+          "finding": "conflicts",
+          "note": "The pattern raises power without changing modeled flow, so the previous stem described a patient the model does not produce. The section's prediction item already teaches the unchanged display correctly."
+        },
+        {
+          "sourceRecordId": "fda-heartmate3-ifu",
+          "documentId": null,
+          "location": "Registered HeartMate 3 IFU",
+          "finding": "does not address",
+          "note": "Not available locally; not fetched."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "A local contradiction between the transfer text and the model output, repaired in wording. The clinical response and options are unchanged.",
+        "notChecked": "A primary source for the card's statement that pump thrombosis reduces delivered flow."
+      },
+      "modelOutput": "LVAD baseline: power 4.90 W, displayed flow 3.77, effective 6.30, MAP 103, no alarm. Transfer setup (high-power pattern): power 7.70 W, displayed 3.78, effective 6.31, MAP 103, lvad-high-power alarm.",
+      "unresolvedDisagreement": "The pathway card says pump thrombosis reduces delivered flow (clinical framing, no source checked), while the model's pattern does not reduce flow; the alarm panel already says obstruction and hemolysis are not modeled. The card is unchanged and held.",
+      "missingAndReassess": "The model does not establish a diagnosis. What the team reconciles: the bedside perfusion picture, the power sources, the controller trend and focused imaging.",
+      "clinicalQuestion": "Is the reworded transfer the right teaching example, and should the card's thrombosis sentence be sourced or qualified for this model?",
+      "questionDisposition": "mcs-lvad-emergency-transfer-1: keep as reinforcement (a safety contrast: preserve power and escalate, disconnect power, defer to the controller); title, context, stem, best rationale and explanation reworded; still draft. mcs-lvad-high-power-predict-1: keep unchanged (already consistent with the model).",
+      "hold": "The card's thrombosis sentence; wording of the rewritten transfer.",
+      "changeInThisBatch": "Transfer title, context, stem, best-option rationale and explanation reworded to the model output; section task title reworded. Options, key, setup and escalation action unchanged.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "disagreement": null
+      }
+    },
+    {
+      "id": "MCS-03-09",
+      "gapIds": ["MCS-03"],
+      "deviceFamily": "durable-lvad",
+      "category": "device-revision",
+      "claimKind": "device-safety",
+      "topic": "Durable LVAD speed bounds, authorization, labeling revision and power-path notices",
+      "deviceProfile": "durable-cf-lvad-v1 (neutral HeartMate 3-concept facsimile)",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/mechanical-circulatory-support/content/deviceProfiles.ts",
+          "locator": "Durable LVAD profile, pump speed bound (shown under 'Control bounds and alarm model')",
+          "excerpt": "minimum: 4600,"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/deviceProfiles.ts",
+          "locator": "Durable LVAD profile, speed authorization",
+          "excerpt": "Explicit simulated authorized-personnel order required."
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/sources.ts",
+          "locator": "Source list, HeartMate 3 IFU record (year shown as 2026)",
+          "excerpt": "FDA PMA P160054/S008 labeling, document 100168999.A (October 2018)."
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/sources.ts",
+          "locator": "Source list, mobile power unit notice",
+          "excerpt": "FDA Class I recall communication, current April 24, 2025."
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
+          "locator": "LVAD emergency transfer, disconnect-power rationale",
+          "excerpt": "Stopping a continuous-flow pump can cause immediate hemodynamic collapse and retrograde flow."
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/components/McsSourcesPanel.tsx",
+          "locator": "Evidence and model card, profile check line (reworded)",
+          "excerpt": "Labeling sources last checked"
+        }
+      ],
+      "learnerWording": "Controls: “Pump speed 4600–6200 rpm”; authorization “Explicit simulated authorized-personnel order required.”; labeling anchor “P160054/S008 IFU teaching anchor; current PMA supplement/local-IFU reconciliation remains pending”; source list shows the S008 document (October 2018) with year 2026; two 2025 power-system notices.",
+      "intendedTeachingPoint": "Durable pump speed is prescribed and changed only by authorized personnel; stopping the pump is dangerous.",
+      "sourceRecordIds": [
+        "fda-heartmate3-ifu",
+        "fda-heartmate3-pma-current",
+        "fda-heartmate-mpu-2025-recall",
+        "fda-heartmate-power-cord-2025-recall",
+        "ishlt-durable-mcs-2023",
+        "mcs-educational-model-v1"
+      ],
+      "sharedRecordIds": [],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "fda-heartmate3-ifu",
+          "documentId": null,
+          "location": "Registered HeartMate 3 IFU (P160054/S008)",
+          "finding": "does not address",
+          "note": "No HeartMate 3 IFU in Local-Data or found by filename search; not fetched. The registry year (2026) differs from its own citation date (October 2018)."
+        },
+        {
+          "sourceRecordId": "mcs-educational-model-v1",
+          "documentId": null,
+          "location": "engine/reducer.ts SET_LVAD_CONTROL, speed guard",
+          "finding": "supports",
+          "note": "A speed change is refused until the simulated authorization is set; the 4600–6200 rpm bounds are model bounds with no device source checked."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "No supplied HeartMate 3 evidence, so nothing about the device revision, speed range or notices could be verified.",
+        "notChecked": "HeartMate 3 labeling of any revision; the PMA supplement index; both 2025 notices."
+      },
+      "modelOutput": "Learn LVAD baseline (the harness labels it 5200 rpm): power 4.90 W, displayed flow 3.77, effective 6.30, MAP 103. The reducer refuses a speed change until the simulated authorization is set.",
+      "unresolvedDisagreement": "The speed range, labeling revision and power-path notices are unsourced locally, and the registry year contradicts its own citation. The interlock is intact.",
+      "missingAndReassess": "No question asks for a speed change. Emergency and power-path handling at the bedside rests on the local LVAD program and the current device instructions, which the module does not reproduce.",
+      "clinicalQuestion": "Which HeartMate 3 labeling revision should the module anchor to? Do the displayed model speed bounds need a label or a source? Should the S008 record's year be corrected?",
+      "questionDisposition": "LVAD speed-authorization interlock and the disconnect-power contrasts are kept as they are.",
+      "hold": "Everything in this item pending supplied HeartMate 3 evidence.",
+      "changeInThisBatch": "Only the evidence card line: 'Reviewed' became 'Labeling sources last checked … no clinical review is recorded' (shared with MCS-03-10). Bounds, interlock, registry dates and notices unchanged.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "disagreement": null
+      }
+    },
+    {
+      "id": "MCS-03-10",
+      "gapIds": ["MCS-03"],
+      "deviceFamily": "cross-family",
+      "category": "source-identity",
+      "claimKind": "source-identity",
+      "topic": "Two supplied syntheses cited as primary evidence across all three device families",
+      "deviceProfile": "All three MCS device profiles",
+      "learnerSurfaces": [
+        {
+          "file": "src/features/mechanical-circulatory-support/content/sources.ts",
+          "locator": "Source list, bedside reference citation (rewritten)",
+          "excerpt": "It names no author, publisher, date or reference list and describes itself as a synthesis of four supplied chapters"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/sources.ts",
+          "locator": "Source list, Master reference citation (rewritten)",
+          "excerpt": "Registered locator pp. 39–41, not checked: the document has no fixed pagination."
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
+          "locator": "Evidence shared by the transfer items",
+          "excerpt": "const bedsideEvidence = ['mcs-bedside-reference-supplied', 'ishlt-hfsa-acute-mcs-2023']"
+        },
+        {
+          "file": "src/features/mechanical-circulatory-support/components/McsSourcesPanel.tsx",
+          "locator": "Evidence and model card, device profile check line",
+          "excerpt": "no clinical review is recorded"
+        }
+      ],
+      "learnerWording": "Before: “User-supplied critical-care bedside reference, reviewed July 2026.” (2026) and “User-supplied educational reference package, pp. 39–41.” (2026); profile line “Reviewed 2026-07-19”; intro “current FDA labeling”.",
+      "intendedTeachingPoint": "A learner can see what kind of document a teaching statement rests on, including when its authorship and date are unknown.",
+      "sourceRecordIds": ["mcs-bedside-reference-supplied", "master-hemodynamics-reference"],
+      "sharedRecordIds": [],
+      "sourceLocations": [
+        {
+          "sourceRecordId": "mcs-bedside-reference-supplied",
+          "documentId": "bedside-mcs-synthesis-docx",
+          "location": "docProps/core.xml and opening text",
+          "finding": "conflicts",
+          "note": "Creator OpenAI, created and modified 2013-12-23; prepared from four supplied chapters; no author, date or reference list. The registry said 'reviewed July 2026' and gave 2026."
+        },
+        {
+          "sourceRecordId": "master-hemodynamics-reference",
+          "documentId": "master-hemodynamics-synthesis-docx",
+          "location": "docProps/core.xml and heading",
+          "finding": "conflicts",
+          "note": "Creator OpenAI, created and modified 2013-12-23; no author, date or reference list. The registry gave 2026 and page locators the document cannot carry."
+        }
+      ],
+      "sourceCheck": {
+        "on": "2026-09-15",
+        "by": "AI authoring assistant (Claude)",
+        "result": "Both supplied Word documents are syntheses whose authorship and sources are not stated. Their dates are not stated; the 2013 file dates are not a publication date.",
+        "notChecked": "The four chapters the bedside synthesis names; which module statements trace to a primary source."
+      },
+      "modelOutput": "Not applicable: a source-identity finding with no model behavior.",
+      "unresolvedDisagreement": "Most transfer items and several pathway cards cite the bedside synthesis as their first evidence. Which of their statements have a primary source is not established.",
+      "missingAndReassess": "A reviewer needs the primary source for each safety statement that currently rests on either synthesis.",
+      "clinicalQuestion": "Which statements resting on these syntheses need a primary source before the teaching is called reviewed?",
+      "questionDisposition": "No question changes; the evidence lines they show change.",
+      "hold": "Every claim whose only evidence is one of these syntheses.",
+      "changeInThisBatch": "Citations, dates and limits for both records rewritten from the files; source year may be null and renders as 'date not stated'; evidence card says labeling currency is not verified, gives the notice check date with 'no later check is recorded', and replaces 'Reviewed' with 'Labeling sources last checked … no clinical review is recorded'. Source types and the shared evidence-registry projection's classes unchanged.",
+      "contentVersion": "1.0.0-preview.1",
+      "reviewerDecision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedContentVersion": null,
+        "requiredChanges": null,
+        "disagreement": null
+      }
+    }
+  ]
+}

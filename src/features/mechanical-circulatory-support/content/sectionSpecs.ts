@@ -474,7 +474,7 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       act: 'Switch on the high-power pattern',
       observe: 'Compare power with the flow display',
       explain: 'The signal the flow display does not carry',
-      transfer: 'Power rising while perfusion worsens',
+      transfer: 'Power rising while the flow display holds',
     },
     stepLocations: {
       recognize: { ...IN_STEPS.choices, ...ALSO_ON_SIMULATOR('the alarm band on the monitor') },

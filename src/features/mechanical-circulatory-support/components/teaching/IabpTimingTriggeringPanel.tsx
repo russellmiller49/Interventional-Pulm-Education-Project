@@ -270,6 +270,18 @@ export function IabpTimingTriggeringPanel({
           value of it.
         </ModelBoundary>
 
+        {state.patient.rhythm === 'atrial-fibrillation' ? (
+          <ModelBoundary>
+            <span data-trigger-source-hold>
+              In atrial fibrillation this model rates pressure triggering above ECG triggering. The
+              supplied Cardiosave material recommends ECG triggering for arrhythmias, warns against
+              pressure triggering in a sustained irregular rhythm, and says not to keep internal
+              triggering while the heart generates an output. Read the synchrony figure here as this
+              model’s output, not as a guide to choosing a trigger.
+            </span>
+          </ModelBoundary>
+        ) : null}
+
         <AlarmBand
           alarms={alarms}
           disclosed={disclosed}

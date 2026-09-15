@@ -185,6 +185,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     debrief: [
       'An irregular rhythm reduces trigger reliability and time available for counterpulsation.',
       'The waveform—not the selected mode alone—confirms useful timing.',
+      'Model limit held for faculty review: in atrial fibrillation this model rates pressure triggering above ECG triggering. The supplied Cardiosave material recommends ECG triggering for arrhythmias and warns against pressure triggering in a sustained irregular rhythm, so check a trigger choice against the console’s own instructions and the trace, not against the modeled synchrony figure.',
     ],
     sourceIds: [...commonSources, 'getinge-iabp-current'],
     evidenceSourceIds: [...commonSources, 'getinge-iabp-current'],
@@ -646,6 +647,7 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
     debrief: [
       'Rapid irregular rhythm narrows the counterpulsation window and exposes trigger limitations.',
       'Both inflation and deflation landmarks must be confirmed on the live waveform.',
+      'Model limit held for faculty review: this case opens on internal triggering, which the supplied Cardiosave instructions say not to keep while the patient generates a cardiac output, and in atrial fibrillation this model rates pressure triggering above ECG triggering, which the same material advises against. Check a trigger choice against the console’s own instructions and the trace, not against the modeled synchrony figure.',
     ],
     sourceIds: [...commonSources, 'getinge-iabp-current'],
     evidenceSourceIds: [...commonSources, 'getinge-iabp-current'],
