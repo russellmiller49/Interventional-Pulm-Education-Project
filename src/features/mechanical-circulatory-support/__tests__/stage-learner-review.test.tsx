@@ -169,7 +169,7 @@ describe('the card keeps its promises', () => {
     )
     expect(document.querySelector('[data-before-after]')?.textContent).toContain('Observed change')
     expect(document.querySelector('[data-before-after-labels]')).toBeNull()
-    expect(nowPrimary()?.textContent).toBe('Record observation')
+    expect(nowPrimary()?.textContent).toBe('Continue')
   })
 })
 

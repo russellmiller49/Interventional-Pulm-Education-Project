@@ -14,6 +14,7 @@ import { Link } from '@/i18n/navigation'
 import { criticalCareCatalogActivityHref } from '../content/activityRoutes'
 import type { CriticalCarePublicClientCatalog } from '../content/publicCatalogTypes'
 import { CRITICAL_CARE_INTEGRATED_OUTCOMES_STORAGE_KEY } from '../progress/types'
+import { isHistoricalNormalizedActivity } from '../progress/utils'
 
 interface ProgressState {
   readonly envelope: CriticalCareProgressEnvelope
@@ -76,7 +77,11 @@ export function CriticalCareProgressView({
     const byId = new Map(catalog.activities.map((activity) => [activity.id, activity]))
     return (progress?.envelope.activities ?? []).flatMap((item) => {
       const activity = byId.get(item.activityId)
-      return activity && item.status !== 'not-started' ? [{ activity, progress: item }] : []
+      return activity &&
+        !isHistoricalNormalizedActivity(item.activityId) &&
+        item.status !== 'not-started'
+        ? [{ activity, progress: item }]
+        : []
     })
   }, [catalog.activities, progress])
   const tricky = engaged.filter(
@@ -141,7 +146,8 @@ export function CriticalCareProgressView({
             </button>
           </div>
 
-          {progress.envelope.resume ? (
+          {progress.envelope.resume &&
+          !isHistoricalNormalizedActivity(progress.envelope.resume.activityId) ? (
             <section className="mt-10 rounded-3xl border border-primary/30 bg-primary/5 p-6">
               <p className="text-xs font-semibold uppercase tracking-wide text-primary">Continue</p>
               {catalog.activities

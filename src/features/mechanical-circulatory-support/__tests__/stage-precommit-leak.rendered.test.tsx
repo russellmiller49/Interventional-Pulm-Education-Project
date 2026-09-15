@@ -1,233 +1,65 @@
-/**
- * The composed document, scanned before the commitment.
- *
- * Each section is mounted on the real stage and read at two moments — on entry, and at the
- * prediction step reached the way a learner reaches it — and every text node, every prose
- * container re-split into sentences, and every accessible name is held to the section's deny
- * patterns and to the sentences of its keyed answers. The one excused surface is the choice
- * fieldset itself, which has to name the answers. Hidden DOM counts: a sentence that is in the
- * document but folded is a sentence a curious learner can open.
- */
-import { fireEvent } from '@testing-library/react'
-
+// MCS-01 replaces answer-security assertions. Historical assertions remain at the baseline commit.
+import { fireEvent, screen, within } from '@testing-library/react'
 jest.mock('@/i18n/navigation', () =>
-  jest
-    .requireActual<
-      typeof import('../test-support/mcsWorkbenchStubs')
-    >('../test-support/mcsWorkbenchStubs')
-    .navigationModule(),
+  jest.requireActual('../test-support/mcsWorkbenchStubs').navigationModule(),
 )
 jest.mock('../components/McsAnatomy3D', () =>
-  jest
-    .requireActual<
-      typeof import('../test-support/mcsWorkbenchStubs')
-    >('../test-support/mcsWorkbenchStubs')
-    .anatomyModule(),
+  jest.requireActual('../test-support/mcsWorkbenchStubs').anatomyModule(),
 )
-
-import { mcsSectionLearningContracts } from '../content/sectionLearningContracts'
-import { mcsSectionSpec } from '../content/sectionSpecs'
-import { buildMcsStageLesson } from '../content/stageLessons'
-import { mcsMapAnswerSectionIds } from '../content/mapAnswerTargets'
+import { buildMcsStageLesson, mcsStageLessonIds } from '../content/stageLessons'
 import {
-  answerIdentification,
-  commitPrediction,
-  continueStep,
-  currentStepId,
   mountSection,
+  nowCard,
+  nowPrimary,
   setupMcsStage,
-  stepRowStates,
   teardownMcsStage,
-  walkTheLoop,
 } from '../test-support/mcsStage'
+import { readMcsLearningProgress } from '../engine/learningProgress'
 
-jest.setTimeout(60_000)
-
-const sections = mcsSectionLearningContracts.map(
-  (contract) => [contract.sectionId, contract] as const,
+beforeEach(setupMcsStage)
+afterEach(teardownMcsStage)
+it.each(mcsStageLessonIds)(
+  '%s exposes the explanation without answering or performing work',
+  (id) => {
+    mountSection(id, 'predict')
+    expect(nowPrimary()).toBeEnabled()
+    fireEvent.click(within(nowCard()).getByRole('button', { name: 'Show explanation' }))
+    expect(document.querySelector('[data-provided-explanation]')).toBeInTheDocument()
+    expect(document.querySelector('[data-verdict]')).toBeNull()
+    expect(document.querySelectorAll('input[type="radio"]:checked')).toHaveLength(0)
+    expect(document.querySelector('[data-phase-lock-note]')).toBeNull()
+    expect(document.querySelector('[data-source-claims]')).toBeInTheDocument()
+    expect(readMcsLearningProgress().visitedLessonIds).toEqual([id])
+  },
 )
-
-/**
- * The sentences a section must not say before the commitment: its own deny patterns, and the
- * sentences of the keyed identification and prediction answers and their rationales. Phrases
- * under three words are dropped so a two-word label cannot fire on ordinary prose.
- */
-function denySetFor(sectionId: string): { patterns: RegExp[]; phrases: string[] } {
-  const contract = mcsSectionLearningContracts.find(
-    (candidate) => candidate.sectionId === sectionId,
-  )!
-  const spec = mcsSectionSpec(sectionId)
-  const best = contract.predictionItem.choices.find((choice) => choice.plausibility === 'best')
-  const phrases = [
-    ...(best ? sentences(best.rationale) : []),
-    ...sentences(contract.predictionItem.explanation),
-    ...sentences(contract.commonMisinterpretation),
-    ...contract.recognizeOptions
-      .filter((option) => option.correct)
-      .flatMap((option) => sentences(option.feedback)),
-  ].filter((phrase) => phrase.split(/\s+/).length >= 3)
-  return { patterns: [...spec.precommitDenyPatterns], phrases }
-}
-
-function sentences(text: string): string[] {
-  return text
-    .split(/(?<=[.!?])\s+/)
-    .map((sentence) => sentence.trim())
-    .filter(Boolean)
-}
-
-/** Every unit of disclosure in the document, with the answer control removed first. */
-function disclosureUnits(): string[] {
-  const clone = document.body.cloneNode(true) as HTMLElement
-  for (const excused of clone.querySelectorAll('[data-prediction-choices]')) excused.remove()
-  const units: string[] = []
-  const walker = document.createTreeWalker(clone, NodeFilter.SHOW_TEXT)
-  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-    const text = node.textContent?.trim()
-    if (text) units.push(text)
-  }
-  for (const container of clone.querySelectorAll(
-    'p, li, dd, dt, td, th, desc, title, text, h1, h2, h3, h4, summary',
-  )) {
-    units.push(...sentences(container.textContent ?? ''))
-  }
-  for (const labelled of clone.querySelectorAll('[aria-label]')) {
-    const label = labelled.getAttribute('aria-label')?.trim()
-    if (label) units.push(label)
-  }
-  return units
-}
-
-function leaks(sectionId: string): string[] {
-  const { patterns, phrases } = denySetFor(sectionId)
-  const units = disclosureUnits()
-  const found: string[] = []
-  for (const unit of units) {
-    for (const pattern of patterns) {
-      if (pattern.test(unit)) found.push(`${pattern} ← "${unit.slice(0, 120)}"`)
-    }
-    for (const phrase of phrases) {
-      if (unit.includes(phrase)) found.push(`phrase ← "${unit.slice(0, 120)}"`)
-    }
-  }
-  return [...new Set(found)]
-}
-
-function stepListLeaks(sectionId: string): string[] {
-  const lesson = buildMcsStageLesson(sectionId)
-  const found: string[] = []
-  const rows = [...document.querySelectorAll('[data-step-list] li')]
-  if (rows.length !== lesson.steps.length) found.push(`step list has ${rows.length} rows`)
-  rows.forEach((row, index) => {
-    if (index <= lesson.predictionStepIndex) return
-    if (row.getAttribute('data-step-state') !== 'locked')
-      found.push(`row ${index + 1} is not locked`)
-    if (row.textContent?.includes(lesson.steps[index].title)) {
-      found.push(`row ${index + 1} prints its title before it is reached`)
-    }
-  })
-  return found
-}
-
-function driveToPrediction(sectionId: string): void {
-  if (mcsSectionSpec(sectionId).walksTheLoop) walkTheLoop()
-  answerIdentification(sectionId)
-  continueStep()
-}
-
-beforeEach(() => {
-  setupMcsStage()
+it.each(mcsStageLessonIds)('%s offers all supported controls before answering', (id) => {
+  mountSection(id, 'predict')
+  fireEvent.click(screen.getByRole('button', { name: 'Explore all supported controls' }))
+  expect(screen.getByRole('slider', { name: 'Preload' })).toBeEnabled()
+  expect(
+    screen.getByRole('button', { name: 'Observe and capture 8 simulated seconds' }),
+  ).toBeEnabled()
+  expect(document.querySelectorAll('input[type="radio"]:checked')).toHaveLength(0)
+})
+it.each(mcsStageLessonIds)('%s never calls a skipped experiment a captured observation', (id) => {
+  mountSection(id, 'observe')
+  expect(document.querySelector('[data-no-observation]')).toBeInTheDocument()
+  expect(document.querySelector('[data-captured-results]')).toBeNull()
+  expect(nowPrimary()).toBeEnabled()
 })
 
-afterEach(() => {
-  teardownMcsStage()
-})
-
-describe('the rendered pre-commitment scan', () => {
-  it.each(sections)('%s says nothing withheld on entry', (sectionId) => {
-    mountSection(sectionId)
-    expect(leaks(sectionId)).toEqual([])
-    expect(stepListLeaks(sectionId)).toEqual([])
+it('opens an unvisited earlier task as fresh exploration from a transfer deep link', () => {
+  const id = 'iabp-timing-triggering'
+  mountSection(id, 'transfer')
+  const lesson = buildMcsStageLesson(id)
+  const step = lesson.steps.find((step) => step.interaction.kind === 'action')!
+  const map = screen.getByRole('list', { name: 'All lesson tasks' })
+  fireEvent.click(within(map).getByRole('button', { name: new RegExp(step.title) }))
+  expect(document.querySelector('[data-session-identity]')).not.toHaveTextContent('Captured review')
+  expect(screen.getByRole('slider', { name: 'Inflation vs notch' })).toBeEnabled()
+  expect(document.querySelectorAll('input[type="radio"]:checked')).toHaveLength(0)
+  fireEvent.change(screen.getByRole('slider', { name: 'Inflation vs notch' }), {
+    target: { value: '0' },
   })
-
-  it.each(sections)(
-    '%s says nothing withheld at the prediction, with the stem on screen',
-    (sectionId) => {
-      mountSection(sectionId)
-      driveToPrediction(sectionId)
-      expect(currentStepId()).toBe(`${sectionId}-predict`)
-      expect(leaks(sectionId)).toEqual([])
-      expect(stepListLeaks(sectionId)).toEqual([])
-      // Opening the folded teaching does not change the answer.
-      const reveal = document.querySelector<HTMLButtonElement>('[data-teaching-reveal]')
-      if (reveal) fireEvent.click(reveal)
-      for (const details of document.querySelectorAll('details')) details.setAttribute('open', '')
-      expect(leaks(sectionId)).toEqual([])
-    },
-  )
-
-  it.each(sections)('%s lights nothing on the map that answers a place question', (sectionId) => {
-    mountSection(sectionId)
-    if (mcsMapAnswerSectionIds().includes(sectionId)) {
-      expect(document.querySelector('[data-map-emphasis-target]')).toBeNull()
-      expect(document.querySelector('[data-map-emphasis-caption]')).toBeNull()
-      expect(document.querySelector('[data-map-answer-marking-label]')).toBeNull()
-    }
-    driveToPrediction(sectionId)
-    expect(stepRowStates().filter((state) => state === 'current')).toHaveLength(1)
-  })
-
-  /*
-   * The controls and the three-dimensional view are not offered before the commitment.
-   *
-   * The controls' labels name what sections ask the learner to predict; that was found on the
-   * first leak pass. The three-dimensional view was found on the learner-review round: its pathway
-   * summary prints "Nothing enters it" and "bypassing the right ventricle" — the second and sixth
-   * sections' identifications, in the words of their own deny patterns — and its text equivalent
-   * prints the engine's causal explanation of the state on screen. The scan above never opened it,
-   * because the surface is unmounted while closed; this pins that there is nothing to open.
-   */
-  it.each(sections)(
-    '%s offers neither the controls nor the three-dimensional view before the commitment',
-    (sectionId) => {
-      mountSection(sectionId)
-      driveToPrediction(sectionId)
-      expect(document.querySelector('[data-surface="controls"]')).toBeNull()
-      expect(document.querySelector('[data-surface="anatomy"]')).toBeNull()
-      commitPrediction(sectionId)
-      // Controls remain absent on the feedback screen; each action task mounts its permitted set.
-      expect(document.querySelector('[data-surface="controls"]')).toBeNull()
-      expect(document.querySelector('[data-surface="anatomy"]')).not.toBeNull()
-    },
-  )
-
-  it('withholds the monitor causality and the target text before the commitment', () => {
-    mountSection('lvad-parameters-assessment')
-    driveToPrediction('lvad-parameters-assessment')
-    expect(document.body.textContent).toContain('Withheld for now')
-    expect(document.querySelector('[data-monitor-highlight-note]')).toBeNull()
-  })
-
-  it('covers the flow account on the section whose prediction is what it will show', () => {
-    mountSection('mcs-foundations-signals')
-    expect(document.querySelector('[data-flow-account-withheld]')).toBeNull()
-    driveToPrediction('mcs-foundations-signals')
-    expect(document.querySelector('[data-context-line]')?.textContent).toContain(
-      'covered until you commit',
-    )
-    expect(document.querySelector('[data-series="effective-flow"]')).toBeNull()
-    expect(document.querySelector('[data-flow-account-withheld]')).toBeInTheDocument()
-  })
-
-  it('has a deny set that fires on the keyed answers, so an empty scan means something', () => {
-    for (const [sectionId, contract] of sections) {
-      const { patterns, phrases } = denySetFor(sectionId)
-      const best = contract.predictionItem.choices.find((choice) => choice.plausibility === 'best')!
-      const answerText = [best.label, best.rationale, contract.predictionItem.explanation].join(' ')
-      const fires =
-        patterns.some((pattern) => pattern.test(answerText)) ||
-        phrases.some((phrase) => answerText.includes(phrase))
-      expect(fires).toBe(true)
-    }
-  })
+  expect(screen.getByRole('slider', { name: 'Inflation vs notch' })).toHaveValue('0')
 })

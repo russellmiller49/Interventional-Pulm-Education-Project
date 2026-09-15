@@ -19,7 +19,7 @@ class MemoryStorage {
 }
 
 describe('critical-care explicit activity selection', () => {
-  it('gives a selected MCS case an exact, bounded global Continue target', () => {
+  it('leaves historical normalized MCS selection intact without using it for current Continue', () => {
     const storage = new MemoryStorage()
     expect(
       recordCriticalCareActivitySelection(
@@ -36,17 +36,10 @@ describe('critical-care explicit activity selection', () => {
       ),
     ).toBe(true)
 
-    expect(getCriticalCareResumeTarget(storage)).toMatchObject({
-      href: '/mechanical-circulatory-support/practice?case=IMP-02',
-      pointer: {
-        activityId: 'mcs:practice:IMP-02',
-        scenarioId: 'IMP-02',
-        deviceId: 'impella',
-      },
-    })
-    expect(deriveCriticalCareDashboard(readMergedCriticalCareProgress(storage)).resume?.href).toBe(
-      '/mechanical-circulatory-support/practice?case=IMP-02',
-    )
+    const before = JSON.stringify([...storage.values])
+    expect(getCriticalCareResumeTarget(storage)).toBeNull()
+    expect(deriveCriticalCareDashboard(readMergedCriticalCareProgress(storage)).resume).toBeNull()
+    expect(JSON.stringify([...storage.values])).toBe(before)
   })
 
   it('gives selected CRRT lessons and cases exact global Continue targets without changing V3', () => {

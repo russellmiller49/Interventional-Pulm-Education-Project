@@ -124,6 +124,90 @@ async function expectPaintedControlHead(page: Page) {
     .toBe(true)
 }
 
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 900, height: 800 },
+  { width: 390, height: 844 },
+]) {
+  test(`larynx transition stays visible on approach, crossing and return at ${viewport.width}px`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize(viewport)
+    await openSection(page, 'larynx-and-entry')
+    await primary(page).click()
+    await primary(page).click()
+    await ready(page)
+    // The learner reaches the real controls without a control-identification answer.
+    await expect(page.locator('[data-prediction-choices]')).toHaveCount(0)
+    await expect(control(page, 'advance')).toBeEnabled()
+    await expect(skip(page)).toHaveText('Continue without completing')
+    const optical = page.locator('[data-view-signal]')
+
+    async function painted(name: string) {
+      await optical.scrollIntoViewIfNeeded()
+      // Read actual pixels, not the readiness flag: the old renderer reports "ready"
+      // and "clear" even when no downstream anatomy is mounted and the view is black.
+      await expect
+        .poll(
+          async () => {
+            const { data, info } = await sharp(await optical.screenshot())
+              .removeAlpha()
+              .raw()
+              .toBuffer({ resolveWithObject: true })
+            let tissue = 0,
+              count = 0
+            for (let y = Math.floor(info.height * 0.2); y < info.height * 0.8; y++) {
+              for (let x = Math.floor(info.width * 0.2); x < info.width * 0.8; x++) {
+                const at = (y * info.width + x) * info.channels
+                if (data[at] > 40 && data[at] > data[at + 1] * 1.15) tissue++
+                count++
+              }
+            }
+            return tissue / count
+          },
+          { timeout: 5000, message: name + ': visible mucosal surface in the optical view' },
+        )
+        .toBeGreaterThan(0.1)
+      await testInfo.attach(name, { body: await optical.screenshot(), contentType: 'image/png' })
+    }
+
+    async function approach() {
+      await control(page, 'reset').click()
+      // Reduced motion pauses the authored breath. Three genuine Step clicks put
+      // it in inspiration; the next fourteen 3 mm advances end at 42 mm.
+      for (let i = 0; i < 3; i++) await control(page, 'step').click()
+      for (let i = 0; i < 14; i++) await control(page, 'advance').press('Enter')
+      await expect(page.locator('[data-scope-place]')).toHaveAttribute('data-scope-place', 'larynx')
+    }
+
+    await approach()
+    await painted('approach-42mm')
+    await control(page, 'advance').press('Enter')
+    await expect(page.locator('[data-scope-place]')).toHaveCount(0)
+    await painted('crossing-45mm')
+    await control(page, 'advance').press('Enter')
+    await painted('trachea-48mm')
+    await control(page, 'withdraw').press('Enter')
+    await control(page, 'withdraw').press('Enter')
+    await painted('return-42mm')
+    // Rotation and deflection retain their meaning on both sides of the handoff.
+    await setRange(page, 'rotate', 30)
+    await setRange(page, 'deflect', 10)
+    await painted('return-rotated-deflected')
+    await approach()
+    await painted('repeat-approach-42mm')
+    await expect(page.locator('[data-view-signal]')).toHaveAttribute('data-view-signal', 'clear')
+    expect(await earlierRecord(page)).toBeNull()
+    expect((await record(page)).reviewedSectionIds).toEqual([])
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true)
+    await skip(page).click()
+    await expect(page.locator('[data-scope-place]')).toHaveCount(0)
+    expect(await earlierRecord(page)).toBeNull()
+  })
+}
+
 test('one entry, explanation before an answer, Back review and a reload that restores no answer', async ({
   page,
 }) => {

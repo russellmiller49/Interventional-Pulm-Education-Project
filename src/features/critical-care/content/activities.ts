@@ -1,3 +1,4 @@
+import { mcsSelfPacedActivity } from '@/features/mechanical-circulatory-support/content/selfPacedCatalog'
 import {
   VENTILATION_FINAL_CHECK_ID,
   ventilationLearningUnits,
@@ -172,6 +173,13 @@ function defineActivities(
   const moduleDefinition = criticalCareModuleById.get(moduleId)
   if (!moduleDefinition) throw new Error(`Unknown critical-care module: ${moduleId}`)
 
+  const selfPaced = [
+    'mechanical-ventilation',
+    'baxter-crrt',
+    'icu-hemodynamics',
+    'cardiohelp-ecmo',
+  ].includes(moduleId)
+
   return seeds.map((seed) => {
     const id = `${moduleDefinition.activityIdPrefix}:${section}:${seed.sourceId}`
     const governance = activityGovernance(moduleId, section, seed)
@@ -188,8 +196,7 @@ function defineActivities(
       title: seed.title,
       description,
       kind:
-        (moduleId === 'mechanical-ventilation' || moduleId === 'baxter-crrt') &&
-        section === 'assess'
+        selfPaced && section === 'assess'
           ? 'practice-case'
           : section === 'learn'
             ? seed.sourceId === 'pac-signal-validation'
@@ -204,10 +211,7 @@ function defineActivities(
       query: activityQuery(moduleId, section, seed),
       pathwayIds: seed.pathwayIds,
       competencyIds: seed.competencyIds,
-      prerequisiteActivityIds:
-        moduleId === 'mechanical-ventilation' || moduleId === 'baxter-crrt'
-          ? []
-          : (seed.prerequisiteActivityIds ?? []),
+      prerequisiteActivityIds: selfPaced ? [] : (seed.prerequisiteActivityIds ?? []),
       teachesConceptIds: seed.teachesConceptIds ?? conceptMetadata.teachesConceptIds,
       assumedConceptIds: seed.assumedConceptIds ?? conceptMetadata.assumedConceptIds,
       estimatedMinutes:
@@ -216,9 +220,7 @@ function defineActivities(
       curriculumStage: seed.curriculumStage,
       stageOrder: seed.stageOrder,
       completionRuleId: `${moduleDefinition.activityIdPrefix}:completion:${section}-existing`,
-      ...(section === 'assess' &&
-      moduleId !== 'mechanical-ventilation' &&
-      moduleId !== 'baxter-crrt'
+      ...(section === 'assess' && !selfPaced
         ? {
             masteryRuleId: `${moduleDefinition.activityIdPrefix}:mastery:existing-assessment`,
           }
@@ -230,14 +232,8 @@ function defineActivities(
       reviewStatus: governance.reviewStatus,
       evidenceIds: seed.evidenceIds,
       contentVersion: contentVersionByModule[moduleId],
-      creditPolicy:
-        moduleId === 'mechanical-ventilation' || moduleId === 'baxter-crrt'
-          ? 'non-credit'
-          : governance.creditPolicy,
-      completionEvidenceAuthority:
-        moduleId === 'mechanical-ventilation' || moduleId === 'baxter-crrt'
-          ? 'none'
-          : governance.completionEvidenceAuthority,
+      creditPolicy: selfPaced ? 'non-credit' : governance.creditPolicy,
+      completionEvidenceAuthority: selfPaced ? 'none' : governance.completionEvidenceAuthority,
     }) as CriticalCareActivityDefinition
   })
 }
@@ -454,9 +450,9 @@ const hemodynamicsCaseSeeds: readonly ActivitySeed[] = [
 const hemodynamicsAssessSeeds: readonly ActivitySeed[] = [
   {
     sourceId: 'masked-seeded',
-    title: 'HD-07 pressure-equalization challenge',
+    title: 'HD-07 pressure-equalization applied case',
     description:
-      'A harder HD-07 hemodynamics case with less help. Teaching feedback comes at the end so you can work through it uninterrupted.',
+      'Explore the HD-07 applied case at your own pace, with optional questions and expert reasoning available on request.',
     competencyIds: [
       'signal-validation',
       'shock-mechanism',
@@ -925,7 +921,9 @@ const ecmoLearnActivityIdsByTrack: Readonly<Record<EcmoTrack, readonly string[]>
 const ecmoAssessSeeds: readonly ActivitySeed[] = [
   {
     sourceId: 'vv-off-sweep-capstone',
-    title: 'VV integration challenge',
+    title: 'VV integrated case',
+    description:
+      'Explore the VV integrated case at your own pace, with optional questions and explanations available on request.',
     track: 'vv',
     difficulty: 'advanced',
     curriculumStage: 'integration',
@@ -938,7 +936,9 @@ const ecmoAssessSeeds: readonly ActivitySeed[] = [
   },
   {
     sourceId: 'va-mixed-circulation-capstone',
-    title: 'Unseen capstone: VA mixed-circulation mismatch',
+    title: 'VA mixed-circulation integrated case',
+    description:
+      'Explore the VA integrated case at your own pace, with optional questions and explanations available on request.',
     track: 'va',
     difficulty: 'advanced',
     curriculumStage: 'integration',
@@ -1295,9 +1295,15 @@ export const criticalCareActivities: readonly CriticalCareActivityDefinition[] =
   ...defineActivities('mechanical-ventilation', 'learn', ventilationLearnSeeds),
   ...defineActivities('mechanical-ventilation', 'practice', ventilationCaseSeeds),
   ...defineActivities('mechanical-ventilation', 'assess', ventilationAssessSeeds),
-  ...defineActivities('mechanical-circulatory-support', 'learn', mcsLessonSeeds),
-  ...defineActivities('mechanical-circulatory-support', 'practice', mcsPracticeSeeds),
-  ...defineActivities('mechanical-circulatory-support', 'assess', mcsAssessSeeds),
+  ...defineActivities('mechanical-circulatory-support', 'learn', mcsLessonSeeds).map(
+    mcsSelfPacedActivity,
+  ),
+  ...defineActivities('mechanical-circulatory-support', 'practice', mcsPracticeSeeds).map(
+    mcsSelfPacedActivity,
+  ),
+  ...defineActivities('mechanical-circulatory-support', 'assess', mcsAssessSeeds).map(
+    mcsSelfPacedActivity,
+  ),
   ...defineActivities('cardiohelp-ecmo', 'learn', ecmoLessonSeeds),
   ...defineActivities('cardiohelp-ecmo', 'practice', ecmoPracticeSeeds),
   ...defineActivities('cardiohelp-ecmo', 'assess', ecmoAssessSeeds),

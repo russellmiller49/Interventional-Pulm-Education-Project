@@ -296,7 +296,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       reviewStatus: 'draft',
     }),
     predictionReasoning:
-      'Apply the pathway you have just studied to a separate IABP handover. This records your interpretation, not a treatment response.',
+      'Apply the pathway to a separate IABP handover. This records your interpretation, not a treatment response.',
     actionMode: 'inspect-only',
     actionInstruction:
       'Do not change any control in this section. Open all three readings in turn — arterial pressure, filling pressures, then device and effective flow — and read each one as an answer to its own question.',
@@ -589,7 +589,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       contextRequirement: 'patient',
       clinicalContextId: 'mcs-iabp-early-inflation',
       visualAssetIds: ['mcs-arterial-waveform'],
-      stem: 'You have identified the timing relationship in a changed example. What does correcting inflation establish about native flow and adequacy of support?',
+      stem: 'In this changed timing example, what does correcting inflation establish about native flow and adequacy of support?',
       choices: [
         {
           id: 'synchrony-and-modest-flow',
@@ -1657,7 +1657,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     commonMisinterpretation:
       'Reading a rising displayed pump flow as evidence that escalation worked, when effective systemic delivery moved a fraction as far and the suction never cleared.',
     reassessmentPrompt:
-      'You have named the limiting problem. What would have to appear on reassessment for you to change that judgement?',
+      'What would have to appear on reassessment to change the interpretation of the limiting problem?',
     transferContext:
       'The same low output, with a rising right atrial pressure and a falling pulmonary pulsatility ratio, and left-sided support under consideration.',
     transferPrompt:

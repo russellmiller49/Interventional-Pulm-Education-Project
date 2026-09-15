@@ -24,18 +24,22 @@ export function McsTaskControls({
   if (!controls.length)
     return (
       <p data-task-controls-locked>
-        No device or patient adjustment is part of this task. Use the Read or Select buttons in this
-        task when requested.
+        No adjustment is suggested for this task. Explore all supported controls below if you want
+        to vary the model.
       </p>
     )
   return (
     <section className={styles.block} data-task-controls aria-label="Controls for this task">
       {controls.map((control) => {
-        const condition =
-          control.id === 'control:patient-svr' ||
-          control.id === 'control:patient-rv-contractility' ||
-          control.id === 'control:lvad-thrombosis' ||
-          control.id === 'control:impella-left-position'
+        const meaning =
+          control.id === 'control:patient-svr' || control.id === 'control:patient-rv-contractility'
+            ? 'Simulated patient condition'
+            : control.id === 'control:lvad-thrombosis' ||
+                control.id === 'control:impella-left-position'
+              ? 'Model fault'
+              : control.id === 'control:impella-right-enable'
+                ? 'Simulated device configuration'
+                : 'Device setting'
         const range = (
           label: string,
           value: number,
@@ -62,9 +66,7 @@ export function McsTaskControls({
         )
         return (
           <div key={control.id}>
-            <p className={styles.kicker}>
-              {condition ? 'Simulated patient condition / fault' : 'Device setting'}
-            </p>
+            <p className={styles.kicker}>{meaning}</p>
             {control.id === 'control:patient-rv-contractility'
               ? range(
                   'RV contractility',
@@ -236,9 +238,9 @@ export function McsTaskControls({
         )
       })}
       <p className={styles.footnote}>
-        These are the permitted controls for this task. Patient properties and fault selectors
-        create experimental conditions; they are not bedside treatments. Captures use the session
-        model time, not a clinical stabilization interval.
+        These controls focus the suggested exercise. All supported controls remain available below.
+        Patient properties and fault selectors create experimental conditions; they are not bedside
+        treatments. Captures use the session model time, not a clinical stabilization interval.
       </p>
     </section>
   )

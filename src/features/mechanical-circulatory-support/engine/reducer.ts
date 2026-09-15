@@ -24,18 +24,78 @@ function refresh(state: McsSimulationState): McsSimulationState {
 }
 
 export function isMcsActionIdPermitted(state: McsSimulationState, actionId: string): boolean {
-  if (!state.scenario) return true
-  return (
-    state.scenario.permittedActionIds.includes(actionId) ||
-    (actionId.startsWith('patient:') &&
-      state.scenario.permittedActionIds.includes('patient:adjust'))
+  return mcsActionUnavailableReason(state, actionId) === null
+}
+
+/** Scenario allowlists are teaching focus, not model capabilities. Unknown controls fail closed. */
+export function mcsActionUnavailableReason(
+  state: McsSimulationState,
+  actionId: string,
+): string | null {
+  if (['inspect:arterial', 'inspect:preload', 'inspect:device', 'team:escalate'].includes(actionId))
+    return null
+  if (
+    [
+      'patient:adjust',
+      'patient:set-preload',
+      'patient:set-svr',
+      'patient:set-rv',
+      'patient:set-pvr',
+      'patient:set-rhythm',
+      'patient:set-tamponade',
+      'patient:heartRateBpm',
+      'patient:leftVentricularContractility',
+      'patient:peepCmH2O',
+      'patient:aorticInsufficiencySeverity',
+    ].includes(actionId)
   )
+    return null
+  if (['device:select:iabp', 'device:select:impella', 'device:select:lvad'].includes(actionId))
+    return state.scenario
+      ? 'Open Mechanism Studio to compare a different device; this case retains its support pathway.'
+      : null
+  const supported: Record<McsSimulationState['deviceKind'], readonly string[]> = {
+    iabp: [
+      'iabp:set-ratio',
+      'iabp:set-trigger',
+      'iabp:set-inflation',
+      'iabp:set-deflation',
+      'iabp:set-running',
+    ],
+    impella: [
+      'impella:set-left-variant',
+      'impella:enable-left',
+      'impella:enable-right',
+      ...['left', 'right'].flatMap((side) =>
+        ['level', 'position', 'purge', 'running'].map(
+          (control) => `impella:${side}:set-${control}`,
+        ),
+      ),
+    ],
+    lvad: [
+      'lvad:authorize-speed',
+      'lvad:set-speed',
+      'lvad:set-power',
+      'lvad:set-thrombosis',
+      'lvad:set-controller',
+      'lvad:set-running',
+    ],
+  }
+  if (!supported[state.device.kind].includes(actionId))
+    return 'This control is not supported by the selected device model.'
+  if (state.device.kind === 'impella') {
+    if (actionId.startsWith('impella:left:') && !state.device.left.enabled)
+      return 'Enable left-sided support before adjusting that pump.'
+    if (actionId.startsWith('impella:right:') && !state.device.right.enabled)
+      return 'Enable right-sided support before adjusting that pump.'
+  }
+  return null
 }
 
 function actionNotPermitted(state: McsSimulationState): McsSimulationState {
   return {
     ...state,
-    responseMessage: 'That action is outside the permitted controls for this station.',
+    responseMessage: 'That control is unavailable in the current device configuration.',
   }
 }
 
@@ -122,7 +182,7 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
     case 'TICK':
       return advanceMcsSimulation(state, action.seconds)
     case 'SELECT_DEVICE': {
-      if (state.scenario && state.scenario.device !== action.device) return state
+      if (state.scenario) return state
       const next = createInitialMcsState(state.section, action.device, null, state.seed)
       return {
         ...next,
@@ -166,7 +226,7 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
       }
     }
     case 'SELECT_PREDICTION':
-      return state.predictionCommitted ? state : { ...state, selectedPredictionId: action.id }
+      return { ...state, selectedPredictionId: action.id, predictionCommitted: false }
     case 'COMMIT_PREDICTION':
       if (!state.selectedPredictionId) {
         return { ...state, responseMessage: 'Choose a mechanism before committing.' }
@@ -303,7 +363,7 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
       if (!isMcsActionIdPermitted(state, lvadActionId(action.control)))
         return actionNotPermitted(state)
       let criticalErrors = state.criticalErrors
-      if (state.scenario && action.control === 'speedRpm' && !state.device.speedChangeAuthorized) {
+      if (action.control === 'speedRpm' && !state.device.speedChangeAuthorized) {
         criticalErrors = unique(criticalErrors, 'lvad-unauthorized-speed-change')
         return {
           ...state,
@@ -341,10 +401,9 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
         responseMessage: `Reassessment: effective flow ${state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min, MAP ${state.metrics.mapMmHg}, RAP ${state.metrics.rapMmHg}, PCWP ${state.metrics.pcwpMmHg} mm Hg.`,
       }
     case 'COMPLETE': {
-      const score = calculateMcsScore(state)
       return {
         ...state,
-        score,
+        score: null,
         completed: true,
         scenarioPhase: 'debrief',
         responseMessage:

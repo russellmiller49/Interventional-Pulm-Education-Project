@@ -247,7 +247,7 @@ describe('the map-answer rule', () => {
 })
 
 describe('one door', () => {
-  const fresh = { completedLessonIds: [], masteredCaseIds: [] }
+  const fresh = { visitedLessonIds: [], visitedCaseIds: [] }
 
   it('sends a fresh learner to section one, a returning one to the first incomplete, and a finished one back to one', () => {
     const order = mcsPathway().sections.map((section) => section.id)
@@ -255,10 +255,10 @@ describe('one door', () => {
       state: 'start',
       section: { id: order[0] },
     })
-    const returning = { completedLessonIds: [order[0], order[1], order[3]], masteredCaseIds: [] }
+    const returning = { visitedLessonIds: [order[0], order[1], order[3]], visitedCaseIds: [] }
     expect(resolveNextIncompleteMcsSection(returning)?.id).toBe(order[2])
     expect(nextIncompleteMcsSectionLink(returning).label).toMatch(/^Continue — /)
-    const finished = { completedLessonIds: order, masteredCaseIds: [] }
+    const finished = { visitedLessonIds: order, visitedCaseIds: [] }
     expect(nextIncompleteMcsSectionLink(finished)).toMatchObject({
       state: 'complete',
       section: null,
@@ -308,16 +308,18 @@ describe('one door', () => {
       expect(mcsGroupSummaryLine(group)).toMatch(/min$/)
     }
     expect(mcsGroupSummaryLine(groups[1])).toBe(
-      'Sections 3–4 · 2 sections · 3 cases · 1 challenge · 24 min',
+      'Sections 3–4 · 2 sections · 3 cases · 1 integrated case · 24 min',
     )
   })
 })
 
-describe('presentation before diagnosis', () => {
-  it('names every case by what the learner sees, never by the scenario title', () => {
+describe('meaningful case titles', () => {
+  it('shows the clinical topic and labels former challenges as integrated walkthroughs', () => {
     for (const scenario of [...mcsPracticeScenarios, ...mcsCapstoneScenarios]) {
-      expect(mcsPresentationTitle(scenario)).not.toBe(scenario.title)
-      expect(mcsPresentationTitle(scenario)).not.toMatch(/\d/)
+      expect(mcsPresentationTitle(scenario)).toBe(
+        scenario.title.replace(/ challenge$/i, ' integrated walkthrough'),
+      )
+      expect(mcsPresentationTitle(scenario).length).toBeGreaterThan(10)
     }
   })
 
@@ -328,9 +330,10 @@ describe('presentation before diagnosis', () => {
         continue
       }
       expect(lesson.practicePairing).toBeDefined()
-      expect(lesson.practicePairing?.title).not.toMatch(
-        /thrombosis|hypertension|malposition|late deflation/i,
-      )
+      const scenario = [...mcsPracticeScenarios, ...mcsCapstoneScenarios].find(
+        (s) => s.id === lesson.practicePairing?.caseId,
+      )!
+      expect(lesson.practicePairing?.title).toBe(mcsPresentationTitle(scenario))
     }
   })
 })

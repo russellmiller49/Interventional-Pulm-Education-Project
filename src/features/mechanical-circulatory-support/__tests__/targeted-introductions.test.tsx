@@ -55,20 +55,23 @@ function reachAct(id: string) {
 }
 
 describe('targeted introductions through the actual host', () => {
-  it.each(Object.keys(mcsIntroductions))('%s teaches before a fresh independent question', (id) => {
-    mountSection(id)
-    const teaching = document.querySelector('[data-intro-teaching]')!
-    expect(teaching.textContent).toContain(mcsIntroductions[id][0].paragraphs[0])
-    expect(document.querySelector('[data-prediction-choices]')).toBeNull()
-    expect(document.querySelector('[data-surface="anatomy"]')).not.toBeNull()
-    expect(document.querySelector('[data-stage-completion]')).toBeNull()
-    completeIntroductorySteps(id)
-    expect(currentStepId()).toBe(`${id}-recognize`)
-    expect(document.querySelector('[data-intro-teaching]')).toBeNull()
-    expect(document.querySelector('[data-identify-feedback]')).toBeNull()
-    expect(document.querySelector('[data-surface="anatomy"]')).toBeNull()
-    expect(storedLessonIds()).toEqual([])
-  })
+  it.each(Object.keys(mcsIntroductions))(
+    '%s offers introductory teaching and an optional question',
+    (id) => {
+      mountSection(id)
+      const teaching = document.querySelector('[data-intro-teaching]')!
+      expect(teaching.textContent).toContain(mcsIntroductions[id][0].paragraphs[0])
+      expect(document.querySelector('[data-prediction-choices]')).toBeNull()
+      expect(document.querySelector('[data-surface="anatomy"]')).not.toBeNull()
+      expect(document.querySelector('[data-stage-completion]')).toBeNull()
+      completeIntroductorySteps(id)
+      expect(currentStepId()).toBe(`${id}-recognize`)
+      expect(document.querySelector('[data-intro-teaching]')).toBeNull()
+      expect(document.querySelector('[data-identify-feedback]')).toBeNull()
+      expect(document.querySelector('[data-surface="anatomy"]')).not.toBeNull()
+      expect(storedLessonIds()).toEqual([])
+    },
+  )
 
   it('retains all three actual engine results in reverse order ending on IABP', () => {
     const id = 'mcs-foundations-mechanisms'
@@ -108,24 +111,24 @@ describe('targeted introductions through the actual host', () => {
     )
   })
 
-  it('requires too deep, supports a model reset, and never credits the unloading demo as malposition', () => {
+  it('allows either placement fault and resets the model without claiming completion', () => {
     const id = 'impella-unloading-placement'
     mountSection(id)
     reachAct(id)
-    expect(nowPrimary()).toBeDisabled()
+    expect(nowPrimary()).toBeEnabled()
     const placement = screen.getByRole('combobox', { name: 'Placement state' })
     fireEvent.change(placement, { target: { value: 'too-shallow' } })
-    expect(nowPrimary()).toBeDisabled()
+    expect(nowPrimary()).toBeEnabled()
     fireEvent.change(placement, { target: { value: 'too-deep' } })
     expect(nowPrimary()).toBeEnabled()
     fireEvent.click(screen.getByRole('button', { name: 'Reset this model exercise' }))
     expect(placement).toHaveValue('correct')
-    expect(nowPrimary()).toBeDisabled()
+    expect(nowPrimary()).toBeEnabled()
     expect(storedLessonIds()).toEqual([])
     expect(document.querySelector('[data-stage-completion]')).toBeNull()
   })
 
-  it('requires an actual observed direction and preserves the first response', () => {
+  it('compares an optional direction against actual captured readings', () => {
     const id = 'lvad-parameters-assessment'
     mountSection(id)
     reachAct(id)
@@ -133,9 +136,9 @@ describe('targeted introductions through the actual host', () => {
     continueStep()
     const row = document.querySelector('[data-signal="deviceFlowLMin"]')!
     expect(row.textContent).toContain('decreased')
-    expect(nowPrimary()).toBeDisabled()
+    expect(nowPrimary()).toBeEnabled()
     fireEvent.click(within(nowCard()).getByRole('radio', { name: 'Increased' }))
-    fireEvent.click(nowPrimary()!)
+    fireEvent.click(within(nowCard()).getByRole('button', { name: 'Compare answer' }))
     expect(document.querySelector('[data-observation-feedback]')).toHaveAttribute(
       'data-correct',
       'false',
@@ -181,8 +184,12 @@ describe('targeted introductions through the actual host', () => {
     fireEvent.click(
       within(observation).getByRole('button', { name: 'Record transfer observation' }),
     )
-    expect(storedLessonIds()).toEqual([id])
+    expect(storedLessonIds()).toEqual([])
     expect(document.querySelector('[data-transfer-observation-feedback]')).not.toBeNull()
+    fireEvent.click(within(nowCard()).getByRole('button', { name: 'Try again' }))
+    expect(document.querySelector('[data-transfer-observation-feedback]')).toBeNull()
+    expect(within(observation).getByRole('radio', { name: 'Increased' })).toBeEnabled()
+    expect(document.querySelectorAll('input[type="radio"]:checked')).toHaveLength(0)
   })
 
   it('keeps existing completion and attempt history across direct-link entry and a remount', () => {
@@ -194,12 +201,11 @@ describe('targeted introductions through the actual host', () => {
     }
     writeMcsProgress(previous)
     const first = mountSection('impella-unloading-placement', 'transfer')
-    expect(currentStepId()).toBe('impella-unloading-placement-inlet-outlet')
-    completeIntroductorySteps('impella-unloading-placement')
+    expect(currentStepId()).toBe('impella-unloading-placement-transfer')
     first.unmount()
     mountSection('impella-unloading-placement', 'act')
-    expect(currentStepId()).toBe('impella-unloading-placement-inlet-outlet')
-    expect(readMcsProgress()).toEqual(previous)
+    expect(currentStepId()).toBe('impella-unloading-placement-act')
+    expect(readMcsProgress()).toMatchObject(previous)
     expect(document.querySelector('[data-stage-completion]')).toBeNull()
   })
 })
@@ -270,7 +276,7 @@ describe('real model and feature-local policy', () => {
     ).toEqual([])
   })
 
-  it('intersects scenario permissions even if a task grants an action', () => {
+  it('opens supported patient changes despite old case permissions and preserves scenario topology', () => {
     const scenario = mcsPracticeScenarios[0]
     const state = createInitialMcsState('practice', scenario.device, scenario)
     const restricted = {
@@ -282,8 +288,8 @@ describe('real model and feature-local policy', () => {
         restricted,
         { type: 'SET_PATIENT_CONTROL', control: 'preloadPercent', value: 180 },
         ['patient:set-preload'],
-      ),
-    ).toBe(restricted)
+      ).patient.preloadPercent,
+    ).toBe(145)
     expect(
       applyMcsLearningAction(restricted, { type: 'SELECT_DEVICE', device: 'lvad' }, [
         'device:select:lvad',

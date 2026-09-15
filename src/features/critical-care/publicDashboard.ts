@@ -1,3 +1,4 @@
+import { isCurrentProgressActivity, isCurrentProgressResume } from './progress/utils'
 import { criticalCareCatalogActivityHref } from './content/activityRoutes'
 import type { CriticalCarePublicClientCatalog } from './content/publicCatalogTypes'
 import { getCriticalCareRecommendations } from './progress/recommendation'
@@ -79,7 +80,7 @@ function authoritativeProgressMap(
   return new Map(
     progress.flatMap((item) => {
       const activity = activityById.get(item.activityId)
-      return activity
+      return activity && isCurrentProgressActivity(item)
         ? [[item.activityId, enforceCriticalCareProgressAuthority(activity, item)] as const]
         : []
     }),
@@ -189,6 +190,7 @@ function recentActivities(
   return progress
     .filter(
       (item) =>
+        isCurrentProgressActivity(item) &&
         item.updatedAt !== LEGACY_PROGRESS_EPOCH &&
         Number.isFinite(Date.parse(item.updatedAt)) &&
         activityById.has(item.activityId),
@@ -197,7 +199,7 @@ function recentActivities(
     .slice(0, 3)
     .flatMap((item) => {
       const activity = activityById.get(item.activityId)
-      return activity
+      return activity && isCurrentProgressActivity(item)
         ? [
             {
               activity,
@@ -233,9 +235,10 @@ export function derivePublicCriticalCareDashboard(
   catalog: CriticalCarePublicClientCatalog,
   readResult: CriticalCareProgressReadResult,
 ): CriticalCareDashboardModel {
-  const resolvedResume = readResult.envelope.resume
-    ? resolveCriticalCareResumePointer(readResult.envelope.resume, catalog.activities)
-    : null
+  const resolvedResume =
+    readResult.envelope.resume && isCurrentProgressResume(readResult.envelope.resume)
+      ? resolveCriticalCareResumePointer(readResult.envelope.resume, catalog.activities)
+      : null
   const resume = resolvedResume
     ? {
         ...resolvedResume,
@@ -252,7 +255,8 @@ export function derivePublicCriticalCareDashboard(
           : {}),
       }
     : null
-  const hasProgress = readResult.envelope.activities.length > 0 || resume !== null
+  const hasProgress =
+    readResult.envelope.activities.some(isCurrentProgressActivity) || resume !== null
   const audienceState: CriticalCareDashboardAudienceState = hasProgress
     ? 'returning'
     : readResult.notices.length > 0

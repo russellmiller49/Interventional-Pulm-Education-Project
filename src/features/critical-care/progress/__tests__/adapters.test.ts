@@ -98,7 +98,7 @@ describe('critical-care legacy progress adapters', () => {
     expect(storage.setItem).not.toHaveBeenCalled()
   })
 
-  it('projects current and V1 hemodynamics records through the existing pure parsers', () => {
+  it('reads historical HD scores without completion authority in the self-paced catalog', () => {
     const partialStorage = new ReadOnlyFixtureStorage({
       [ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY]:
         partialLegacyProgressFixtures[ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY],
@@ -125,7 +125,7 @@ describe('critical-care legacy progress adapters', () => {
     const migrated = readHemodynamicsLegacyProgress(legacyStorage, criticalCareActivities)
 
     expect(activity(migrated, 'hemodynamics:practice:HD-01')).toMatchObject({
-      status: 'completed',
+      status: 'in-progress',
       attempts: 1,
       bestScore: 75,
     })
@@ -140,7 +140,7 @@ describe('critical-care legacy progress adapters', () => {
       criticalCareActivities,
     )
     expect(activity(fallbackFromCorruptCurrent, 'hemodynamics:practice:HD-01')?.status).toBe(
-      'completed',
+      'in-progress',
     )
     expect(fallbackFromCorruptCurrent.sources).toEqual(
       expect.arrayContaining([
@@ -162,7 +162,7 @@ describe('critical-care legacy progress adapters', () => {
       }),
       criticalCareActivities,
     )
-    expect(activity(mastered, 'hemodynamics:practice:HD-01')?.status).toBe('mastered')
+    expect(activity(mastered, 'hemodynamics:practice:HD-01')?.status).toBe('in-progress')
   })
 
   it('recognizes both ventilation legacy formats without projecting attempts, scores or resume', () => {
@@ -188,38 +188,24 @@ describe('critical-care legacy progress adapters', () => {
     }
   })
 
-  it('safely projects permissive MCS V1 data without invoking its browser store', () => {
-    const partial = readMcsLegacyProgress(
-      new ReadOnlyFixtureStorage({
-        [MCS_PROGRESS_STORAGE_KEY]: partialLegacyProgressFixtures[MCS_PROGRESS_STORAGE_KEY],
-      }),
-      criticalCareActivities,
-    )
-    expect(activity(partial, 'mcs:learn:mcs-foundations-signals')).toMatchObject({
-      status: 'in-progress',
-      competencyEvidenceIds: [],
-    })
-    expect(activity(partial, 'mcs:practice:IMP-01')).toMatchObject({
-      status: 'in-progress',
-      attempts: 0,
-      bestScore: 55,
-    })
-    expect(partial.resume).toMatchObject({
-      activityId: 'mcs:practice:IMP-01',
-      deviceId: 'impella',
-    })
-
-    const mastered = readMcsLegacyProgress(
-      new ReadOnlyFixtureStorage({
-        [MCS_PROGRESS_STORAGE_KEY]: masteredLegacyProgressFixtures[MCS_PROGRESS_STORAGE_KEY],
-      }),
-      criticalCareActivities,
-    )
-    expect(activity(mastered, 'mcs:assess:CAP-IMP-01')).toMatchObject({
-      status: 'mastered',
-      attempts: 0,
-      bestScore: 91,
-    })
+  it('reads historical MCS records without projecting grades, completion or old resume', () => {
+    for (const fixture of [
+      partialLegacyProgressFixtures,
+      completedLegacyProgressFixtures,
+      masteredLegacyProgressFixtures,
+    ]) {
+      if (!fixture[MCS_PROGRESS_STORAGE_KEY]) continue // This fixture covers other modules only.
+      const storage = new ReadOnlyFixtureStorage({
+        [MCS_PROGRESS_STORAGE_KEY]: fixture[MCS_PROGRESS_STORAGE_KEY],
+      })
+      const before = JSON.stringify(storage.values)
+      const result = readMcsLegacyProgress(storage, criticalCareActivities)
+      expect(result.status).toBe('valid')
+      expect(result.activities).toEqual([])
+      expect(result.resume).toBeUndefined()
+      expect(JSON.stringify(storage.values)).toBe(before)
+      expect(storage.setItem).not.toHaveBeenCalled()
+    }
   })
 
   it('maps ECMO lesson, clinical-case, and capstone IDs to their catalog sections', () => {
@@ -251,7 +237,7 @@ describe('critical-care legacy progress adapters', () => {
       }),
       criticalCareActivities,
     )
-    expect(activity(mastered, 'ecmo:assess:vv-off-sweep-capstone')?.status).toBe('completed')
+    expect(activity(mastered, 'ecmo:assess:vv-off-sweep-capstone')?.status).toBe('in-progress')
 
     const migratedV1 = readEcmoLegacyProgress(
       new ReadOnlyFixtureStorage({
@@ -260,7 +246,7 @@ describe('critical-care legacy progress adapters', () => {
       criticalCareActivities,
     )
     expect(activity(migratedV1, 'ecmo:practice:clinical-vv-initiation-ards')).toMatchObject({
-      status: 'completed',
+      status: 'in-progress',
       attempts: 1,
       bestScore: 84,
     })

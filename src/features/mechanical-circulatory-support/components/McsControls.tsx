@@ -88,6 +88,16 @@ const patientControls: readonly {
   },
 ]
 
+const patientConditionLabels = [
+  'Preload',
+  'Heart rate',
+  'SVR',
+  'LV contractility',
+  'RV contractility',
+  'PVR',
+  'Aortic insufficiency',
+]
+
 export function RangeControl({
   label,
   value,
@@ -122,6 +132,9 @@ export function RangeControl({
           {value.toFixed(step < 1 ? 1 : 0)} <small>{unit}</small>
         </output>
       </span>
+      <small>
+        {patientConditionLabels.includes(label) ? 'Simulated patient condition' : 'Device setting'}
+      </small>
       <input
         aria-label={label}
         type="range"
@@ -220,8 +233,11 @@ function ImpellaPumpControls({
               ? controlProps('control:impella-left-position', highlightControl)
               : {})}
           >
-            <span>Placement state</span>
+            <span>
+              Placement state <small>Model fault / position condition</small>
+            </span>
             <select
+              aria-label="Placement state"
               value={pump.position}
               disabled={disabled(actionId('position'))}
               onChange={(event) =>
@@ -243,8 +259,11 @@ function ImpellaPumpControls({
         ) : null}
         {!hideUnavailable || !disabled(actionId('purgeState')) ? (
           <label className={styles.selectControl}>
-            <span>Purge-system state</span>
+            <span>
+              Purge-system state <small>Model fault</small>
+            </span>
             <select
+              aria-label="Purge-system state"
               value={pump.purgeState}
               disabled={disabled(actionId('purgeState'))}
               onChange={(event) =>
@@ -303,8 +322,13 @@ export function McsControls({
         </div>
         <span className={styles.liveBadge}>Controls available</span>
       </header>
+      <p>
+        Patient-condition controls change the simulated physiology. Device settings change support.
+        Fault selectors create an experimental problem; they do not simulate its clinical treatment.
+        Reset restores the starting patient and device state.
+      </p>
       <details open className={styles.controlGroup}>
-        <summary>Patient conditions</summary>
+        <summary>Simulated patient conditions</summary>
         <div className={styles.controlGrid}>
           {patientControls.map((control) =>
             !hideUnavailable || !unavailable(patientActionId(control.id)) ? (
@@ -356,7 +380,7 @@ export function McsControls({
               />
               <span>
                 <strong>Pericardial constraint</strong>
-                <small>Selected obstruction fault</small>
+                <small>Model fault</small>
               </span>
             </label>
           ) : null}
@@ -473,7 +497,9 @@ export function McsControls({
               {!hideUnavailable ||
               !(unavailable('impella:enable-left') && unavailable('impella:set-left-variant')) ? (
                 <label className={styles.selectControl}>
-                  <span>Left-sided support</span>
+                  <span>
+                    Left-sided support <small>Simulated device configuration</small>
+                  </span>
                   <select
                     aria-label="Left-sided Impella configuration"
                     value={state.device.left.enabled ? state.device.left.variant : 'off'}
@@ -507,7 +533,9 @@ export function McsControls({
                   className={styles.selectControl}
                   {...controlProps('control:impella-right-enable', highlightControl)}
                 >
-                  <span>Right-sided support</span>
+                  <span>
+                    Right-sided support <small>Simulated device configuration</small>
+                  </span>
                   <select
                     aria-label="Right-sided Impella configuration"
                     value={state.device.right.enabled ? 'rp' : 'off'}
@@ -531,6 +559,12 @@ export function McsControls({
               into the pulmonary artery and is displayed separately—it is never added directly to
               systemic flow.
             </p>
+            {!state.device.left.enabled ? (
+              <p>
+                Left pump controls are unavailable while left-sided support is off. Enable it above
+                to explore that pump.
+              </p>
+            ) : null}
             {state.device.left.enabled ? (
               <ImpellaPumpControls
                 side="left"
@@ -540,6 +574,12 @@ export function McsControls({
                 dispatch={dispatch}
                 highlightControl={highlightControl}
               />
+            ) : null}
+            {!state.device.right.enabled ? (
+              <p>
+                Right pump controls are unavailable while right-sided support is off. Enable it
+                above to explore that pump.
+              </p>
             ) : null}
             {state.device.right.enabled ? (
               <ImpellaPumpControls
@@ -635,7 +675,7 @@ export function McsControls({
                 />
                 <span>
                   <strong>Controller fault</strong>
-                  <small>Selected device fault</small>
+                  <small>Model fault</small>
                 </span>
               </label>
             ) : null}
@@ -658,7 +698,7 @@ export function McsControls({
                 />
                 <span>
                   <strong>High-power / thrombosis pattern</strong>
-                  <small>Selected obstruction fault</small>
+                  <small>Model fault</small>
                 </span>
               </label>
             ) : null}

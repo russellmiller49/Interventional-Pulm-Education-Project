@@ -147,19 +147,15 @@ describe('MCS M5 — patient controls', () => {
     expect(metricTile('AV OPENING')).toBe(beforeAv)
   })
 
-  it('closes every patient slider on a case that permits no patient adjustment', async () => {
-    // LVAD-03 is the power emergency: inspect, power, and escalation only.
+  it('keeps supported patient conditions available in the power emergency case', async () => {
     await renderWorkbench({ section: 'practice', initialActivityId: 'LVAD-03' })
-
-    for (const [label] of patientSliders) {
-      expect(within(controlsCard()).queryByRole('slider', { name: label })).not.toBeInTheDocument()
-    }
+    for (const [label] of patientSliders)
+      expect(within(controlsCard()).getByRole('slider', { name: label })).toBeEnabled()
+    expect(within(controlsCard()).getByRole('combobox', { name: 'Rhythm' })).toBeEnabled()
     expect(
-      within(controlsCard()).queryByRole('combobox', { name: 'Rhythm' }),
-    ).not.toBeInTheDocument()
-    expect(
-      within(controlsCard()).queryByRole('checkbox', { name: /Pericardial constraint/ }),
-    ).not.toBeInTheDocument()
+      within(controlsCard()).getByRole('checkbox', { name: /Pericardial constraint/ }),
+    ).toBeEnabled()
+    expect(screen.getByRole('slider', { name: 'Pump speed' })).toBeDisabled()
   })
 
   it('opens the pericardial-constraint fault only on the capstone that asks for it', async () => {
@@ -413,19 +409,12 @@ describe('MCS M5 — durable LVAD controls', () => {
     expect(screen.getByText(/CRITICAL · High-power pattern/)).toBeInTheDocument()
   })
 
-  it('closes the LVAD controls a case does not permit', async () => {
+  it('opens supported LVAD settings and model faults while retaining speed authorization', async () => {
     await renderWorkbench({ section: 'practice', initialActivityId: 'LVAD-02' })
-
-    // LVAD-02 permits the authorized speed path but not the power switch or the fault toggles.
-    expect(
-      within(controlsCard()).getByRole('checkbox', { name: /Authorized-personnel order/ }),
-    ).toBeEnabled()
-    expect(
-      within(controlsCard()).queryByRole('checkbox', { name: /Approved power path/ }),
-    ).not.toBeInTheDocument()
-    expect(
-      within(controlsCard()).queryByRole('checkbox', { name: /Controller fault/ }),
-    ).not.toBeInTheDocument()
+    for (const name of [/Authorized-personnel order/, /Approved power path/, /Controller fault/]) {
+      expect(within(controlsCard()).getByRole('checkbox', { name })).toBeEnabled()
+    }
+    expect(screen.getByRole('slider', { name: 'Pump speed' })).toBeDisabled()
   })
 })
 
@@ -557,17 +546,11 @@ describe('MCS M5 — the synchronized monitor and anatomy surfaces', () => {
     expect(container.querySelectorAll('canvas')).toHaveLength(0)
   })
 
-  it('withholds and restores the monitor causal callout with the route rules', async () => {
+  it('explains the current model before an integrated-case prediction or action', async () => {
     await renderWorkbench({ section: 'assess', initialActivityId: 'CAP-IABP-01' })
-    expect(screen.getByText('Challenge mode:')).toBeInTheDocument()
-    expect(
-      screen.getByText(/Causal coaching is withheld until you complete the reassessment\./),
-    ).toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('checkbox', { name: /Show teaching notes after each action/ }))
-
-    fireEvent.click(screen.getByRole('button', { name: 'Escalate to shock/MCS team' }))
     expect(screen.getByText('Why the display changed:')).toBeInTheDocument()
+    expect(screen.queryByText(/Causal coaching is withheld/)).toBeNull()
+    expect(document.querySelectorAll('input[type="radio"]:checked')).toHaveLength(0)
   })
 })
 

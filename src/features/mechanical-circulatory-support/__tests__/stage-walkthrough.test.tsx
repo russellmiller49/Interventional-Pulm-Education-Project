@@ -43,7 +43,6 @@ import {
   performTransferWork,
   predictionRadios,
   setupMcsStage,
-  stepRowStates,
   storedLessonIds,
   teardownMcsStage,
   walkTheLoop,
@@ -64,32 +63,18 @@ afterEach(() => {
 })
 
 describe('the stage: one progression per section', () => {
-  it.each(sections)(
-    '%s opens on its first step with everything past the prediction locked',
-    (sectionId) => {
-      mountSection(sectionId)
-      const lesson = buildMcsStageLesson(sectionId)
-      expect(currentStepId()).toBe(lesson.steps[0].id)
-      const states = stepRowStates()
-      expect(states).toHaveLength(lesson.steps.length)
-      expect(states[0]).toBe('current')
-      for (let index = lesson.predictionStepIndex + 1; index < states.length; index += 1) {
-        expect(states[index]).toBe('locked')
-      }
-      // A locked row shows its ordinal and phase only.
-      const rows = [...document.querySelectorAll('[data-step-list] li')]
-      for (let index = lesson.predictionStepIndex + 1; index < rows.length; index += 1) {
-        expect(rows[index].textContent).toContain(`Step ${index + 1}`)
-        expect(rows[index].textContent).not.toContain(lesson.steps[index].title)
-      }
-      expect(
-        screen.getByText(/later steps unlock when you commit your prediction/i),
-      ).toBeInTheDocument()
-    },
-  )
+  it.each(sections)('%s opens on its first step with every named task available', (sectionId) => {
+    mountSection(sectionId)
+    const lesson = buildMcsStageLesson(sectionId)
+    expect(currentStepId()).toBe(lesson.steps[0].id)
+    const navigation = screen.getByRole('list', { name: 'All lesson tasks' })
+    for (const step of lesson.steps)
+      expect(within(navigation).getByRole('button', { name: step.title })).toBeEnabled()
+    expect(document.querySelector('[data-phase-lock-note]')).toBeNull()
+  })
 
   it.each(sections)(
-    '%s runs its steps in order and records the section once, at the end',
+    '%s runs actual exercises in order without recording graded completion',
     (sectionId) => {
       mountSection(sectionId)
       const lesson = buildMcsStageLesson(sectionId)
@@ -111,7 +96,7 @@ describe('the stage: one progression per section', () => {
 
       // Predict: nothing past it is reachable until the commitment.
       expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex].id)
-      expect(nowPrimary()).toBeDisabled()
+      expect(nowPrimary()).toBeEnabled()
       commitPrediction(sectionId)
       const verdict = document.querySelector('[data-verdict] [data-verdict-outcome]')
       expect(verdict).toHaveAttribute('data-verdict-outcome', 'correct')
@@ -121,10 +106,10 @@ describe('the stage: one progression per section', () => {
 
       // Act: the primary waits for the section's own predicate, then a visible control satisfies it.
       expect(currentStepId()).toBe(`${sectionId}-act`)
-      expect(nowPrimary()).toBeDisabled()
+      expect(nowPrimary()).toBeEnabled()
       performAction(sectionId)
       expect(nowPrimary()).not.toBeDisabled()
-      expect(nowStatus()).toMatch(/^Done\./)
+      expect(nowStatus()).toMatch(/Optional activity/)
       continueStep()
 
       // Observe: the readings captured on entry to Act beside the live ones.
@@ -144,7 +129,7 @@ describe('the stage: one progression per section', () => {
       expect(document.querySelector('[data-causal-ladder-summary]')).toBeInTheDocument()
       if (spec.walksTheLoop) {
         expect(document.querySelector('[data-control-panel-sort]')).toBeInTheDocument()
-        expect(nowPrimary()).toBeDisabled()
+        expect(nowPrimary()).toBeEnabled()
         commitSort()
         expect(document.querySelectorAll('[data-sort-outcome]')).toHaveLength(7)
       }
@@ -159,12 +144,12 @@ describe('the stage: one progression per section', () => {
         'data-verdict-outcome',
         'correct',
       )
-      expect(document.querySelector('[data-stage-completion]')).toBeNull()
+      expect(document.querySelector('[data-stage-completion]')).toBeInTheDocument()
       performTransferWork(sectionId)
       expect(document.querySelector('[data-transfer-work]')).toHaveAttribute('data-met', 'true')
       expect(document.querySelector('[data-stage-completion]')).toBeInTheDocument()
-      expect(storedLessonIds()).toEqual([sectionId])
-      expect(nowStatus()).toMatch(/worked through/i)
+      expect(storedLessonIds()).toEqual([])
+      expect(nowStatus()).toMatch(/Optional activity/i)
     },
   )
 })
@@ -214,13 +199,13 @@ describe('the stage: verdicts, Back, sources, help', () => {
     expect(currentStepId()).toBe('lvad-parameters-assessment-act')
   })
 
-  it('cites every source once, in the footer, with the claims folded until the commitment', () => {
+  it('cites every source once, in the footer, with source claims available before any answer', () => {
     mountSection('impella-suction-purge-rv')
     const footer = document.querySelector('[data-stage-sources]')
-    expect(footer).toHaveAttribute('data-stage-sources-claims', 'false')
+    expect(footer).toHaveAttribute('data-stage-sources-claims', 'true')
     expect(document.querySelectorAll('[data-mcs-source-list]')).toHaveLength(1)
-    expect(document.querySelector('[data-source-claims]')).toBeNull()
-    expect(document.querySelector('[data-stage-sources-note]')).toBeInTheDocument()
+    expect(document.querySelector('[data-source-claims]')).toBeInTheDocument()
+    expect(document.querySelector('[data-stage-sources-note]')).toBeNull()
     answerIdentification('impella-suction-purge-rv')
     continueStep()
     commitPrediction('impella-suction-purge-rv')
@@ -270,8 +255,7 @@ describe('the stage: verdicts, Back, sources, help', () => {
   it('moves to the next section from the completion card through the router', () => {
     mountSection('mcs-foundations-signals')
     workThroughSection('mcs-foundations-signals')
-    const completion = document.querySelector('[data-stage-completion]') as HTMLElement
-    fireEvent.click(within(completion).getByRole('button', { name: /Continue to next section/ }))
+    fireEvent.click(nowPrimary()!)
     expect(mockRouterPush).toHaveBeenCalledWith({
       pathname: '/mechanical-circulatory-support/learn',
       query: { lesson: 'mcs-foundations-mechanisms' },
@@ -284,14 +268,14 @@ describe('the stage: verdicts, Back, sources, help', () => {
     const pairing = document.querySelector('[data-practice-pairing]')
     expect(pairing).toHaveAttribute('data-practice-pairing', 'next-in-unit')
     expect(pairing?.textContent).toMatch(/different mechanism/)
-    expect(pairing?.textContent).not.toMatch(/power interruption/i)
+    expect(pairing?.textContent).toMatch(/power interruption/i)
   })
 
   it('mounts a selected later-phase URL at its reference without invented work', () => {
     mountSection('iabp-timing-triggering', 'explain')
-    expect(currentStepId()).toBe('iabp-timing-triggering-normal-beat')
+    expect(currentStepId()).toBe('iabp-timing-triggering-explain')
     expect(document.querySelector('[data-stage-resumed-note]')?.textContent).toMatch(
-      /starts with its reference and guided examples/i,
+      /authored starting model/i,
     )
     expect(storedLessonIds()).toEqual([])
   })
