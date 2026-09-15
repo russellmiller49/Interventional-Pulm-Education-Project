@@ -1,0 +1,1370 @@
+{
+  "queue": "MV-SAFETY-01 review queue: immediate safety feedback for the remaining potentially harmful ventilation choices",
+  "module": "mechanical-ventilation",
+  "preparedOn": "2026-09-15",
+  "preparedBy": "AI authoring assistant (Claude) at the owner’s request; not a clinical reviewer",
+  "contentVersion": "mv-safety-01-2026-09-15",
+  "baseCommit": "e80a03c715e806b38dc623ac59f2dd169a77a6f8",
+  "inventorySource": "docs/gap-remediation/self-paced/MV-03-handoff.md, “Next slice” item 2: ten authored potentially harmful choices across six items with no safety explanation. The three MV-03 safety notes are outside this queue and unchanged.",
+  "notClinicalApproval": "Nothing here is clinical approval. Every decision is NOT REVIEWED. A passing test shows the wording is what this queue quotes, not that it is correct.",
+  "reviewScope": "Faculty and respiratory-therapist collaborators review each safety note’s clinical accuracy, its source locators and the held decision; not item difficulty or any threshold.",
+  "howToRecordADecision": "Set reviewerDecision.status to ACCEPTED or CHANGES REQUESTED with a named human reviewer, role, ISO date and reviewedVersion equal to contentVersion. Changing any quoted wording fails the queue test until the queue is regenerated, which reopens review.",
+  "statusValues": [
+    "supported-feedback-added",
+    "already-adequate",
+    "held-for-source-review",
+    "held-for-faculty-RT-review"
+  ],
+  "statusMeaning": {
+    "supported-feedback-added": "Registered, checked sources support the harm the note states; the note is live and NOT REVIEWED.",
+    "already-adequate": "The existing rationale already explains the harm in the stated case; nothing added.",
+    "held-for-source-review": "No sufficient source found; nothing added; a source decision is needed.",
+    "held-for-faculty-RT-review": "The harm depends on a clinical or device-practice judgment that documents do not settle; nothing added."
+  },
+  "findingValues": [
+    "supports",
+    "partly supports",
+    "narrows",
+    "does not address",
+    "conflicts",
+    "not checked"
+  ],
+  "sourceClasses": {
+    "checked-published-source": "A registered textbook chapter whose supplied file was read in place and whose identity was checked against that file (MV-03). A locator shows what the page says, not clinical review of this module’s wording.",
+    "checked-manufacturer-source": "A registered manufacturer manual whose local file matches the registered SHA-256. It describes that device only.",
+    "unregistered-published-source": "A chapter of the same checked textbook that is not a registered source of this module. Recorded for the reviewer; not counted as support.",
+    "authored-course-content": "Wording already in this module. Written for the course and not independently sourced or clinically reviewed; used for consistency, never as support.",
+    "supplied-uncertain-provenance": "The supplied case set, whose Word original names no author, date or reviewer. Shows intent only; never support.",
+    "model-behavior": "What this module’s bounded simulation does. Consistency only; cannot support a clinical claim.",
+    "unverified-citation": "A registered citation whose text was not available locally and was not read in this slice.",
+    "faculty-rt-judgment-required": "A decision only an attributable faculty member or respiratory therapist can make; no document settles it.",
+    "none": "No source was found for the statement."
+  },
+  "summary": {
+    "supported-feedback-added": [
+      "MV-SAFETY-01-01",
+      "MV-SAFETY-01-02",
+      "MV-SAFETY-01-03",
+      "MV-SAFETY-01-04",
+      "MV-SAFETY-01-05",
+      "MV-SAFETY-01-06",
+      "MV-SAFETY-01-07",
+      "MV-SAFETY-01-09",
+      "MV-SAFETY-01-10"
+    ],
+    "already-adequate": [],
+    "held-for-source-review": [],
+    "held-for-faculty-RT-review": ["MV-SAFETY-01-08"]
+  },
+  "openQuestions": [
+    "Chapter 53’s “may die in minutes” is written about a patient suddenly fighting the ventilator whose cause is not found. Seven notes apply that time course to new hypoxemia with hypotension. Accept, or soften?",
+    "Register Tobin chapter 44 (Barotrauma and Bronchopleural Fistula) for the link between hypotension and tension pneumothorax, or accept chapter 53’s partial support (items 09 and 10)?",
+    "“Calling for help” rests on course wording and the unchecked AARC 2024 guideline (item 03). Check the guideline, or accept it as course wording?",
+    "One faculty/RT decision on alarm-limit teaching can resolve item 08 and the MV-03 alarm-limit note together."
+  ],
+  "carriedHolds": [
+    "The live case MV-03 stays excluded from public practice pending faculty/RT review of paired-breath intrinsic-PEEP measurement and settling (MV-01). Untouched here.",
+    "MV-02’s quantitative PEEP-comparison interpretation remains pending review.",
+    "All 19 MV-03 review-packet decisions remain NOT REVIEWED; that packet is unchanged."
+  ],
+  "documents": {
+    "ch5": {
+      "location": "OneDrive 03_Education_Teaching/Books/Principles of Mechanical Ventilation_Tobin_3e/Chapter 5. Setting the Ventilator.pdf",
+      "registeredAs": "tobin-3e-setting-ventilator",
+      "sha256": "c1c79c1504d1a2170b7895c94dd409b4ae9b47c04995c68178ff422dc243a50b",
+      "pages": 30,
+      "printedIdentity": "Principles and Practice of Mechanical Ventilation, 3e > Chapter 5. Setting the Ventilator. Steven R. Holets; Rolf D. Hubmayr. Web print dated 7/18/2018.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude), pages extracted and read in place"
+    },
+    "ch10": {
+      "location": "OneDrive 03_Education_Teaching/Books/Principles of Mechanical Ventilation_Tobin_3e/Chapter 10. Positive End Expiratory Pressure.pdf",
+      "registeredAs": "tobin-3e-peep",
+      "sha256": "bd76e4f2c46167fce7fc755ae549b6b448481a1a9f59edec340f65caf16c54f1",
+      "pages": 75,
+      "printedIdentity": "Principles and Practice of Mechanical Ventilation, 3e > Chapter 10. Positive End-Expiratory Pressure. Paolo Navalesi; Salvatore Maurizio Maggiore. Web print dated 7/18/2018.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude), pages extracted and read in place"
+    },
+    "ch48": {
+      "location": "OneDrive 03_Education_Teaching/Books/Principles of Mechanical Ventilation_Tobin_3e/Chapter 48. Monitoring during Mechanical Ventilation.pdf",
+      "registeredAs": "tobin-3e-monitoring",
+      "sha256": "f41b2faaf5ab2945b3f43e2daa7c8ad9bc0438935b80353de4e8a023b6957469",
+      "pages": 36,
+      "printedIdentity": "Principles and Practice of Mechanical Ventilation, 3e > Chapter 48. Monitoring during Mechanical Ventilation. Amal Jubran; Martin J. Tobin. Web print dated 7/18/2018.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude), pages extracted and read in place"
+    },
+    "ch53": {
+      "location": "OneDrive 03_Education_Teaching/Books/Principles of Mechanical Ventilation_Tobin_3e/Chapter 53. Fighting the Ventilator.pdf",
+      "registeredAs": "tobin-3e-fighting-ventilator",
+      "sha256": "48f35d1f7e9914fc5c54b28d798f7bbb463f9035d9328b0b080c2a6e9ac5460a",
+      "pages": 37,
+      "printedIdentity": "Principles and Practice of Mechanical Ventilation, 3e > Chapter 53. Fighting the Ventilator. Martin J. Tobin; Amal Jubran; Franco Laghi. Web print dated 7/18/2018.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude), pages extracted and read in place"
+    },
+    "ch36": {
+      "location": "OneDrive 03_Education_Teaching/Books/Principles of Mechanical Ventilation_Tobin_3e/Chapter 36. Effect of Mechanical Ventilation on Heart–Lung Interactions.pdf",
+      "registeredAs": "unregistered",
+      "sha256": "5086722aa929c94caee47ce0bb020ebc55b3a1397d156aeecfd4975f3137c253",
+      "pages": 42,
+      "printedIdentity": "Chapter 36 of the same edition. Not a registered source of this module; searched only.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude), pages extracted and read in place"
+    },
+    "ch41": {
+      "location": "OneDrive 03_Education_Teaching/Books/Principles of Mechanical Ventilation_Tobin_3e/Chapter 41. Complications Associated with Mechanical Ventilation.pdf",
+      "registeredAs": "unregistered",
+      "sha256": "96132a525421d79e4f6afaa03b01a759dcbf9fda1cc95681a903e0a8c59d55b6",
+      "pages": 35,
+      "printedIdentity": "Chapter 41 of the same edition. Not a registered source of this module; searched only.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude), pages extracted and read in place"
+    },
+    "ch44": {
+      "location": "OneDrive 03_Education_Teaching/Books/Principles of Mechanical Ventilation_Tobin_3e/Chapter 44. Barotrauma and Bronchopleural Fistula.pdf",
+      "registeredAs": "unregistered",
+      "sha256": "4aa0741c374c3d013467af9d7a5318b323e24b9477046cc6927c5b2061f496a3",
+      "pages": 48,
+      "printedIdentity": "Principles and Practice of Mechanical Ventilation, 3e > Chapter 44. Barotrauma and Bronchopleural Fistula. Andrew M. Luks; David J. Pierson. Web print dated 7/18/2018. Not a registered source of this module.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude), pages extracted and read in place"
+    },
+    "hamiltonOps": {
+      "location": "~/Downloads/HAMILTON-C6_ops-manual_v1.2.x_en_10197564.00 (1).pdf (the registered file name plus \" (1)\")",
+      "registeredAs": "hamilton-c6-manual-1.2.x",
+      "sha256": "5de5eeffee986633ffeaf40fc80dd63fd975b23ad1645ea3b975273f3d511f78",
+      "matchesRegisteredSha256": true,
+      "printedIdentity": "Hamilton Medical HAMILTON-C6 Operator’s Manual, software 1.2.x, document 10197564/00. Page numbers below are PDF pages.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude); located by a subagent of the same assistant, cited pages re-extracted except where a locator says otherwise"
+    },
+    "pb980Ops": {
+      "location": "~/Downloads/PB980_OperatorsManual_US_EN_PT00128079A00.pdf",
+      "registeredAs": "pb980-operators-manual",
+      "sha256": "a8fd1043af297f65625780cd761140cdf237e012bb2c2291575201d79c1fd948",
+      "matchesRegisteredSha256": true,
+      "printedIdentity": "Puritan Bennett 980 Series Ventilator Operator’s Manual, PT00128079A00. Page numbers below are PDF pages.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude); located by a subagent of the same assistant, cited pages re-extracted except where a locator says otherwise"
+    },
+    "evitaIfu31n": {
+      "location": "OneDrive 03_Education_Teaching/critical_care_references_old_version/ventilator manuals/9513888_1_enUS.pdf",
+      "registeredAs": "evita-v800-v600-ifu-3.1n",
+      "sha256": "8c4c65aadd7267d181c694947b9602278f511746af25001ceb220f3be09e8151",
+      "matchesRegisteredSha256": true,
+      "printedIdentity": "Dräger Evita V800/V600 instructions for use, software 3.1n, 9513888 edition 1. Page numbers below are PDF pages.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude); located by a subagent of the same assistant, cited pages re-extracted except where a locator says otherwise"
+    },
+    "aveaOps": {
+      "location": "~/Downloads/viasys-avea-operator-manual.pdf",
+      "registeredAs": "avea-operators-manual-rev-m",
+      "sha256": "b696af6019c51bc81e5c88d8fca04de8803e8c44bf203f366113ad773480171d",
+      "matchesRegisteredSha256": true,
+      "printedIdentity": "AVEA ventilator operator’s manual, L2786 Rev. M. Page numbers below are PDF pages.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude); located by a subagent of the same assistant, cited pages re-extracted except where a locator says otherwise"
+    },
+    "caseSet": {
+      "location": "src/features/mechanical-ventilation/content/source-cases.v1.json (hash-pinned in content-registry.test.ts)",
+      "registeredAs": "supplied-casebook-2026",
+      "sha256": "53225988c2a5a1b6f0036ec1751dc928dd16ed54c8c545f014a09b61968ffca2",
+      "printedIdentity": "The registered supplied case set: fifteen cases with unsafe actions, hints and debriefs. Names no author, date or reviewer.",
+      "checkedOn": "2026-09-15",
+      "checkedBy": "AI authoring assistant (Claude), pages extracted and read in place"
+    }
+  },
+  "items": [
+    {
+      "id": "MV-SAFETY-01-01",
+      "questionId": "oxygenation-response:check",
+      "choiceId": "0",
+      "status": "supported-feedback-added",
+      "surface": {
+        "route": "/mechanical-ventilation/learn?entry=review",
+        "picker": "Revisit a concept, item 17",
+        "where": "Under “Potential harm in this case”: after Show explanation, inside “Compare the possibilities”; and directly below the choice after Compare my choice."
+      },
+      "unchangedForLegacyRecords": {
+        "prompt": "After PEEP increases, saturation rises but arterial pressure falls. Which response best fits the combined observations?",
+        "correctId": "2",
+        "choice": {
+          "id": "0",
+          "label": "Accept the change because saturation improved",
+          "rationale": "This overlooks a potentially important circulatory cost.",
+          "unsafe": true
+        }
+      },
+      "learnerFacingSafety": {
+        "previous": null,
+        "current": "Higher PEEP raises pressure in the chest, which can reduce venous return and cardiac output; the falling arterial pressure is the warning that this may be happening. Oxygen reaching the tissues depends on cardiac output as well as saturation, so it can fall while saturation rises, and accepting the change on saturation alone keeps that PEEP in place."
+      },
+      "teachingPoint": "An oxygenation gain from higher PEEP is judged with its circulatory cost: falling arterial pressure warns that cardiac output may be lower, and oxygen delivery can fall while saturation rises.",
+      "sourceLocators": [
+        {
+          "statement": "A rise in intrathoracic pressure from PEEP can lower cardiac output, largely by reducing venous return",
+          "evidenceId": "tobin-3e-peep",
+          "sourceClass": "checked-published-source",
+          "document": "ch10",
+          "pdfPage": "2",
+          "section": "Overview of Pertinent Pathophysiology",
+          "finding": "supports",
+          "note": "With poor left-ventricular function, cardiac output is relatively insensitive to lower venous return; the notes say “can”."
+        },
+        {
+          "statement": "Positive airway pressure lowers cardiac output by reducing cardiac filling",
+          "evidenceId": "tobin-3e-peep",
+          "sourceClass": "checked-published-source",
+          "document": "ch10",
+          "pdfPage": "17",
+          "section": "Effect on Venous Return",
+          "finding": "supports",
+          "note": "Stated for positive airway pressure generally, not only PEEP."
+        },
+        {
+          "statement": "A fall in cardiac output with PEEP is inevitable",
+          "evidenceId": "tobin-3e-peep",
+          "sourceClass": "checked-published-source",
+          "document": "ch10",
+          "pdfPage": "17",
+          "section": "Effect on Venous Return",
+          "finding": "narrows",
+          "note": "The effect depends strongly on intravascular volume and volume expansion can restore cardiac output; neither note says the fall is inevitable."
+        },
+        {
+          "statement": "A PEEP-induced rise in arterial oxygen content can be accompanied by a fall in oxygen delivery because cardiac output falls",
+          "evidenceId": "tobin-3e-peep",
+          "sourceClass": "checked-published-source",
+          "document": "ch10",
+          "pdfPage": "19",
+          "section": "Effect on Oxygen Delivery",
+          "finding": "supports",
+          "note": "The same section reports patients with severe ARDS in whom higher PEEP raised cardiac output and oxygen delivery, so the direction depends on the patient; the notes say “can” and “may”."
+        },
+        {
+          "statement": "A falling arterial pressure after a PEEP increase is the bedside warning to weigh the circulatory cost",
+          "evidenceId": "tobin-3e-peep",
+          "sourceClass": "checked-published-source",
+          "document": "ch10",
+          "pdfPage": "2, 17, 19",
+          "section": "as above",
+          "finding": "partly supports",
+          "note": "The chapter gives the mechanism and its effect on oxygen delivery; treating the blood-pressure fall as the bedside warning is this module’s reasoning."
+        }
+      ],
+      "otherMaterialConsulted": [
+        {
+          "material": "content/learningCurriculum.ts, unit oxygenation-response: explanation (PEEP can also overdistend lung or affect circulation) and worked example (saturation improves, blood pressure falls; judge benefit and cost together)",
+          "sourceClass": "authored-course-content",
+          "use": "The note stays within what the unit already teaches."
+        },
+        {
+          "material": "components/teaching/oxygenation.tsx panel header: every oxygenation action is a trade, read both columns",
+          "sourceClass": "authored-course-content",
+          "use": "Same framing on the lesson surface."
+        },
+        {
+          "material": "source-cases.v1.json MV-01 unsafe action: continuing to raise PEEP despite worsening compliance and hypotension",
+          "sourceClass": "supplied-uncertain-provenance",
+          "use": "Shows the supplied case set intends the same point. Not support."
+        },
+        {
+          "material": "MV-01 higher-PEEP state assigns lower arterial pressure (docs/gap-remediation/mv/MV-02-peep-investigation.md)",
+          "sourceClass": "model-behavior",
+          "use": "Consistency only; model behavior cannot support a clinical claim."
+        }
+      ],
+      "evidenceSearched": [],
+      "decisionNeeded": null,
+      "notChecked": [
+        "No source states how large a blood-pressure fall matters; the note gives no threshold.",
+        "Unregistered chapter 36 (heart–lung interactions) was extracted and searched for oxygen-delivery wording without a usable locator; it was not read in full."
+      ],
+      "reviewQuestions": [
+        "Is naming reduced venous return and cardiac output, without overdistension, the right depth for this item?"
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "MV-SAFETY-01-02",
+      "questionId": "oxygenation-response:final",
+      "choiceId": "1",
+      "status": "supported-feedback-added",
+      "surface": {
+        "route": "/mechanical-ventilation/assess",
+        "picker": "Worked applications, item 2",
+        "where": "Under “Potential harm in this case”: after Show explanation, inside “Compare the possibilities”; and directly below the choice after Compare my choice."
+      },
+      "unchangedForLegacyRecords": {
+        "prompt": "A patient’s oxygen saturation rises after a pressure adjustment, while perfusion worsens. What best describes this response?",
+        "correctId": "0",
+        "choice": {
+          "id": "1",
+          "label": "A successful change demonstrated by the saturation",
+          "rationale": "That interpretation overlooks the worsening perfusion.",
+          "unsafe": true
+        }
+      },
+      "learnerFacingSafety": {
+        "previous": null,
+        "current": "Worsening perfusion means less blood may be carrying oxygen to the tissues. A pressure change that raises saturation can also lower cardiac output, and oxygen delivery depends on both, so it can fall even as saturation improves. Calling the change a success on saturation alone would keep, or build on, a setting that may be reducing oxygen delivery."
+      },
+      "teachingPoint": "Worsening perfusion after a pressure change that raises saturation means oxygen delivery may be falling, so saturation alone cannot show the change succeeded.",
+      "sourceLocators": [
+        {
+          "statement": "Positive airway pressure lowers cardiac output by reducing cardiac filling",
+          "evidenceId": "tobin-3e-peep",
+          "sourceClass": "checked-published-source",
+          "document": "ch10",
+          "pdfPage": "17",
+          "section": "Effect on Venous Return",
+          "finding": "supports",
+          "note": "Stated for positive airway pressure generally, not only PEEP."
+        },
+        {
+          "statement": "A rise in intrathoracic pressure from PEEP can lower cardiac output, largely by reducing venous return",
+          "evidenceId": "tobin-3e-peep",
+          "sourceClass": "checked-published-source",
+          "document": "ch10",
+          "pdfPage": "2",
+          "section": "Overview of Pertinent Pathophysiology",
+          "finding": "supports",
+          "note": "With poor left-ventricular function, cardiac output is relatively insensitive to lower venous return; the notes say “can”."
+        },
+        {
+          "statement": "A fall in cardiac output with PEEP is inevitable",
+          "evidenceId": "tobin-3e-peep",
+          "sourceClass": "checked-published-source",
+          "document": "ch10",
+          "pdfPage": "17",
+          "section": "Effect on Venous Return",
+          "finding": "narrows",
+          "note": "The effect depends strongly on intravascular volume and volume expansion can restore cardiac output; neither note says the fall is inevitable."
+        },
+        {
+          "statement": "A PEEP-induced rise in arterial oxygen content can be accompanied by a fall in oxygen delivery because cardiac output falls",
+          "evidenceId": "tobin-3e-peep",
+          "sourceClass": "checked-published-source",
+          "document": "ch10",
+          "pdfPage": "19",
+          "section": "Effect on Oxygen Delivery",
+          "finding": "supports",
+          "note": "The same section reports patients with severe ARDS in whom higher PEEP raised cardiac output and oxygen delivery, so the direction depends on the patient; the notes say “can” and “may”."
+        }
+      ],
+      "otherMaterialConsulted": [
+        {
+          "material": "content/learningCurriculum.ts, unit oxygenation-response: checklist (check blood pressure and perfusion; compare the benefit with the patient’s tolerance)",
+          "sourceClass": "authored-course-content",
+          "use": "The note stays within what the unit already teaches."
+        },
+        {
+          "material": "source-cases.v1.json MV-01 unsafe action: ignoring plateau pressure after an apparently successful SpO2 response",
+          "sourceClass": "supplied-uncertain-provenance",
+          "use": "Shows the supplied case set intends the same point. Not support."
+        },
+        {
+          "material": "MV-01 higher-PEEP state assigns lower arterial pressure (MV-02 investigation)",
+          "sourceClass": "model-behavior",
+          "use": "Consistency only; model behavior cannot support a clinical claim."
+        }
+      ],
+      "evidenceSearched": [],
+      "decisionNeeded": null,
+      "notChecked": [
+        "The stem does not say which pressure was adjusted or in which direction; the note relies on chapter 10’s findings for PEEP and positive airway pressure.",
+        "No perfusion measure or threshold is named."
+      ],
+      "reviewQuestions": [
+        "The stem’s “pressure adjustment” is unspecified. Is generalizing chapter 10 acceptable, or should the note name PEEP?"
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "MV-SAFETY-01-03",
+      "questionId": "safety-reassessment-and-human-factors:check",
+      "choiceId": "1",
+      "status": "supported-feedback-added",
+      "surface": {
+        "route": "/mechanical-ventilation/learn?entry=review",
+        "picker": "Revisit a concept, item 25",
+        "where": "Under “Potential harm in this case”: after Show explanation, inside “Compare the possibilities”; and directly below the choice after Compare my choice."
+      },
+      "unchangedForLegacyRecords": {
+        "prompt": "A patient develops an alarm, new hypoxemia, hypotension, and asymmetric breath sounds. Which priority best fits?",
+        "correctId": "0",
+        "choice": {
+          "id": "1",
+          "label": "Finish waveform classification before calling for help",
+          "rationale": "This delays stabilization of a deteriorating patient.",
+          "unsafe": true
+        }
+      },
+      "learnerFacingSafety": {
+        "previous": null,
+        "current": "New hypoxemia with hypotension can be fatal within minutes if the cause is not found and treated, and asymmetric breath sounds point to causes found at the bedside, such as a pneumothorax or a tube that has moved into the right main bronchus. Classifying the waveform before calling for help delays the support and bedside checks this patient needs now."
+      },
+      "teachingPoint": "New hypoxemia and hypotension with asymmetric breath sounds is time-critical: support and bedside checks for a pneumothorax or tube position come before classifying the waveform.",
+      "sourceLocators": [
+        {
+          "statement": "A ventilated patient in sudden distress may die within minutes if the cause is not found and fixed, so diagnosis and management proceed together",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "1",
+          "section": "Fighting the Ventilator: Introduction",
+          "finding": "supports",
+          "note": "Written about a patient suddenly fighting the ventilator; the notes apply it to new hypoxemia with hypotension, which is an inference (queue open question 1)."
+        },
+        {
+          "statement": "Ensuring adequate ventilation takes precedence over diagnosis",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "1",
+          "section": "Fighting the Ventilator: Introduction",
+          "finding": "supports",
+          "note": "Disconnection and manual ventilation are described as both treatment and a diagnostic step; the notes do not name that step."
+        },
+        {
+          "statement": "Hypoxia can be rapidly lethal",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "2",
+          "section": "Initial Assessment",
+          "finding": "supports",
+          "note": "The pulse oximeter reading is noted first for that reason."
+        },
+        {
+          "statement": "Auscultation can suggest a pneumothorax or a tube that has moved into the right main bronchus",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "3",
+          "section": "Initial Assessment",
+          "finding": "supports",
+          "note": "The chapter says “right main-stem bronchus”."
+        },
+        {
+          "statement": "Sudden distress on the ventilator is an emergency: ventilation first, while the cause is found and corrected",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "30",
+          "section": "Summary",
+          "finding": "supports",
+          "note": ""
+        },
+        {
+          "statement": "Calling for help is part of the first response to an unstable ventilated patient",
+          "evidenceId": "aarc-assessment-2024",
+          "sourceClass": "unverified-citation",
+          "document": null,
+          "pdfPage": null,
+          "section": null,
+          "finding": "not checked",
+          "note": "The unit that teaches “summon help” cites this guideline, but its text was not available locally and no URL was fetched. Chapter 53 has the physician “or staff” ventilate the patient and does not discuss calling for help. The notes’ harm rests on delay, not on who is called."
+        }
+      ],
+      "otherMaterialConsulted": [
+        {
+          "material": "content/learningCurriculum.ts, unit safety-reassessment-and-human-factors: explanation (summon help and support oxygenation and ventilation while the cause is localized under local protocol) and example (do not wait for a perfect waveform analysis)",
+          "sourceClass": "authored-course-content",
+          "use": "“Calling for help” in the note is this unit’s wording."
+        },
+        {
+          "material": "components/teaching/safety.tsx, patient checks: listening for air entry on both sides settles more of the differential in seconds than any waveform",
+          "sourceClass": "authored-course-content",
+          "use": "Same priority on the lesson surface."
+        },
+        {
+          "material": "source-cases.v1.json MV-14 hint: this patient is too unstable for a delayed diagnosis",
+          "sourceClass": "supplied-uncertain-provenance",
+          "use": "Shows the supplied case set intends the same point. Not support."
+        },
+        {
+          "material": "Case MV-14 (sudden loss of compliance: tension pneumothorax) models progressive hypotension",
+          "sourceClass": "model-behavior",
+          "use": "Consistency only; model behavior cannot support a clinical claim."
+        }
+      ],
+      "evidenceSearched": [],
+      "decisionNeeded": null,
+      "notChecked": [
+        "The AARC 2024 guideline text.",
+        "Chapter 53’s time course is written about a patient suddenly fighting the ventilator; applying it to this stem is an inference."
+      ],
+      "reviewQuestions": [
+        "Should “calling for help” carry a checked source (for example the AARC 2024 guideline), or stay course wording?"
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "MV-SAFETY-01-04",
+      "questionId": "safety-reassessment-and-human-factors:check",
+      "choiceId": "2",
+      "status": "supported-feedback-added",
+      "surface": {
+        "route": "/mechanical-ventilation/learn?entry=review",
+        "picker": "Revisit a concept, item 25",
+        "where": "Under “Potential harm in this case”: after Show explanation, inside “Compare the possibilities”; and directly below the choice after Compare my choice."
+      },
+      "unchangedForLegacyRecords": {
+        "prompt": "A patient develops an alarm, new hypoxemia, hypotension, and asymmetric breath sounds. Which priority best fits?",
+        "correctId": "0",
+        "choice": {
+          "id": "2",
+          "label": "Acknowledge the alarm and observe for improvement",
+          "rationale": "Acknowledgment does not treat the cause of instability.",
+          "unsafe": true
+        }
+      },
+      "learnerFacingSafety": {
+        "previous": null,
+        "current": "Acknowledging the alarm changes only the warning; the hypoxemia, hypotension and asymmetric breath sounds are still there. Possible causes such as a pneumothorax or a displaced tube have to be found and treated, and in a patient this unstable, minutes spent watching for improvement can be fatal."
+      },
+      "teachingPoint": "Acknowledging an alarm changes the warning, not the patient; unstable findings with asymmetric breath sounds need their cause found and treated now, not watched.",
+      "sourceLocators": [
+        {
+          "statement": "An alarm reflects a change in ventilator performance or in the patient; an abrupt rise in peak pressure can arise with endotracheal obstruction",
+          "evidenceId": "tobin-3e-monitoring",
+          "sourceClass": "checked-published-source",
+          "document": "ch48",
+          "pdfPage": "19",
+          "section": "Provide Alarms",
+          "finding": "partly supports",
+          "note": "Supports reading an alarm as a warning of change and obstruction as a cause; says nothing about acknowledging, silencing or re-setting an alarm."
+        },
+        {
+          "statement": "On these consoles, acknowledging an alarm mutes its sound while the condition continues",
+          "evidenceId": "hamilton-c6-manual-1.2.x",
+          "sourceClass": "checked-manufacturer-source",
+          "document": "hamiltonOps",
+          "pdfPage": "202",
+          "section": "9.1.3 Temporarily silencing an alarm",
+          "finding": "partly supports",
+          "note": "The stem names no device and does not say how the alarm was acknowledged."
+        },
+        {
+          "statement": "Acknowledging, documenting or silencing an alarm leaves its cause untreated",
+          "evidenceId": "none",
+          "sourceClass": "none",
+          "document": null,
+          "pdfPage": null,
+          "section": null,
+          "finding": "does not address",
+          "note": "No registered textbook chapter discusses acknowledging or documenting an alarm. The statement is definitional; the harm each note names rests on chapter 53’s time course."
+        },
+        {
+          "statement": "A ventilated patient in sudden distress may die within minutes if the cause is not found and fixed, so diagnosis and management proceed together",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "1",
+          "section": "Fighting the Ventilator: Introduction",
+          "finding": "supports",
+          "note": "Written about a patient suddenly fighting the ventilator; the notes apply it to new hypoxemia with hypotension, which is an inference (queue open question 1)."
+        },
+        {
+          "statement": "When death appears imminent, rapid bedside checks look for airway obstruction by passing a suction catheter, a dislodged tube and a pneumothorax",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "1",
+          "section": "Figure 53-1 caption",
+          "finding": "supports",
+          "note": "The same caption says a more detailed examination and review of monitored variables follow when death is not imminent."
+        },
+        {
+          "statement": "Auscultation can suggest a pneumothorax or a tube that has moved into the right main bronchus",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "3",
+          "section": "Initial Assessment",
+          "finding": "supports",
+          "note": "The chapter says “right main-stem bronchus”."
+        }
+      ],
+      "otherMaterialConsulted": [
+        {
+          "material": "content/learningCurriculum.ts, unit safety-reassessment-and-human-factors: analogy (acknowledging a doorbell does not deal with why it rang) and explanation (acknowledgment does not itself correct physiology)",
+          "sourceClass": "authored-course-content",
+          "use": "The note stays within what the unit already teaches."
+        },
+        {
+          "material": "content/learningExperiments.ts, safety round 1 rationale: acknowledgment changes alarm handling, not its cause",
+          "sourceClass": "authored-course-content",
+          "use": "Same point in the lesson rounds."
+        }
+      ],
+      "evidenceSearched": [],
+      "decisionNeeded": null,
+      "notChecked": [
+        "No registered source discusses “observe for improvement” as a strategy; the harm rests on chapter 53’s time course."
+      ],
+      "reviewQuestions": [],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "MV-SAFETY-01-05",
+      "questionId": "safety-reassessment-and-human-factors:placement",
+      "choiceId": "1",
+      "status": "supported-feedback-added",
+      "surface": {
+        "route": "/mechanical-ventilation/learn?entry=placement",
+        "picker": "Explore the starting concepts, item 8",
+        "where": "Under “Potential harm in this case”: after Show explanation, inside “Compare the possibilities”; and directly below the choice after Compare my choice."
+      },
+      "unchangedForLegacyRecords": {
+        "prompt": "A ventilated patient suddenly becomes hypoxemic and hypotensive during a high-pressure alarm. What is the best initial priority?",
+        "correctId": "0",
+        "choice": {
+          "id": "1",
+          "label": "Alarm acknowledgment and documentation alone",
+          "rationale": "These do not support a deteriorating patient.",
+          "unsafe": true
+        }
+      },
+      "learnerFacingSafety": {
+        "previous": null,
+        "current": "Acknowledging the alarm and writing it down do nothing to support the patient or find the cause. A high-pressure alarm with sudden hypoxemia and hypotension can come from an obstructed airway or a pneumothorax, and without bedside support and a search for the cause the patient may die within minutes."
+      },
+      "teachingPoint": "Acknowledging and documenting a high-pressure alarm neither supports an unstable patient nor finds a cause such as an obstructed airway or a pneumothorax.",
+      "sourceLocators": [
+        {
+          "statement": "An alarm reflects a change in ventilator performance or in the patient; an abrupt rise in peak pressure can arise with endotracheal obstruction",
+          "evidenceId": "tobin-3e-monitoring",
+          "sourceClass": "checked-published-source",
+          "document": "ch48",
+          "pdfPage": "19",
+          "section": "Provide Alarms",
+          "finding": "partly supports",
+          "note": "Supports reading an alarm as a warning of change and obstruction as a cause; says nothing about acknowledging, silencing or re-setting an alarm."
+        },
+        {
+          "statement": "A high airway pressure with desaturation can come from airway obstruction, and a rise in peak with a proportional rise in plateau from a pneumothorax; a suspected tension pneumothorax with imminent death is decompressed at once",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "2",
+          "section": "Initial Assessment",
+          "finding": "supports",
+          "note": "The chapter names needle decompression; the notes name no technique and leave it to local emergency practice."
+        },
+        {
+          "statement": "A ventilated patient in sudden distress may die within minutes if the cause is not found and fixed, so diagnosis and management proceed together",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "1",
+          "section": "Fighting the Ventilator: Introduction",
+          "finding": "supports",
+          "note": "Written about a patient suddenly fighting the ventilator; the notes apply it to new hypoxemia with hypotension, which is an inference (queue open question 1)."
+        },
+        {
+          "statement": "Acknowledging, documenting or silencing an alarm leaves its cause untreated",
+          "evidenceId": "none",
+          "sourceClass": "none",
+          "document": null,
+          "pdfPage": null,
+          "section": null,
+          "finding": "does not address",
+          "note": "No registered textbook chapter discusses acknowledging or documenting an alarm. The statement is definitional; the harm each note names rests on chapter 53’s time course."
+        }
+      ],
+      "otherMaterialConsulted": [
+        {
+          "material": "content/learningCurriculum.ts, unit safety-reassessment-and-human-factors: explanation (acknowledgment, documentation and communication do not themselves correct physiology)",
+          "sourceClass": "authored-course-content",
+          "use": "The note stays within what the unit already teaches."
+        },
+        {
+          "material": "content/sectionSpecs.ts, safety section new concept: neither an acknowledged alarm nor a written plan is a reassessment",
+          "sourceClass": "authored-course-content",
+          "use": "Same point on the lesson surface."
+        }
+      ],
+      "evidenceSearched": [],
+      "decisionNeeded": null,
+      "notChecked": ["Chapter 53 lists the causes; it does not discuss documentation."],
+      "reviewQuestions": [],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "MV-SAFETY-01-06",
+      "questionId": "safety-reassessment-and-human-factors:placement",
+      "choiceId": "2",
+      "status": "supported-feedback-added",
+      "surface": {
+        "route": "/mechanical-ventilation/learn?entry=placement",
+        "picker": "Explore the starting concepts, item 8",
+        "where": "Under “Potential harm in this case”: after Show explanation, inside “Compare the possibilities”; and directly below the choice after Compare my choice."
+      },
+      "unchangedForLegacyRecords": {
+        "prompt": "A ventilated patient suddenly becomes hypoxemic and hypotensive during a high-pressure alarm. What is the best initial priority?",
+        "correctId": "0",
+        "choice": {
+          "id": "2",
+          "label": "Detailed waveform analysis before bedside evaluation",
+          "rationale": "This delays assessment and stabilization.",
+          "unsafe": true
+        }
+      },
+      "learnerFacingSafety": {
+        "previous": null,
+        "current": "In a patient this unstable, securing ventilation comes before diagnosis. Dangerous causes of a high-pressure alarm with hypoxemia and hypotension, such as an obstructed or displaced tube or a pneumothorax, are checked at the bedside by passing a suction catheter, checking the tube and examining the chest; detailed waveform analysis first spends minutes the patient may not have."
+      },
+      "teachingPoint": "With a high-pressure alarm, hypoxemia and hypotension, ventilation support and rapid bedside checks of the airway, tube and chest come before detailed waveform analysis.",
+      "sourceLocators": [
+        {
+          "statement": "Ensuring adequate ventilation takes precedence over diagnosis",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "1",
+          "section": "Fighting the Ventilator: Introduction",
+          "finding": "supports",
+          "note": "Disconnection and manual ventilation are described as both treatment and a diagnostic step; the notes do not name that step."
+        },
+        {
+          "statement": "When death appears imminent, rapid bedside checks look for airway obstruction by passing a suction catheter, a dislodged tube and a pneumothorax",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "1",
+          "section": "Figure 53-1 caption",
+          "finding": "supports",
+          "note": "The same caption says a more detailed examination and review of monitored variables follow when death is not imminent."
+        },
+        {
+          "statement": "A high airway pressure with desaturation can come from airway obstruction, and a rise in peak with a proportional rise in plateau from a pneumothorax; a suspected tension pneumothorax with imminent death is decompressed at once",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "2",
+          "section": "Initial Assessment",
+          "finding": "supports",
+          "note": "The chapter names needle decompression; the notes name no technique and leave it to local emergency practice."
+        },
+        {
+          "statement": "Looking at the screen is part of the first response",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "1",
+          "section": "Fighting the Ventilator: Introduction",
+          "finding": "narrows",
+          "note": "The physician quickly scans the monitors for clues, so the note objects only to detailed analysis before bedside evaluation, not to a glance at the screen."
+        },
+        {
+          "statement": "A ventilated patient in sudden distress may die within minutes if the cause is not found and fixed, so diagnosis and management proceed together",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "1",
+          "section": "Fighting the Ventilator: Introduction",
+          "finding": "supports",
+          "note": "Written about a patient suddenly fighting the ventilator; the notes apply it to new hypoxemia with hypotension, which is an inference (queue open question 1)."
+        }
+      ],
+      "otherMaterialConsulted": [
+        {
+          "material": "components/teaching/safety.tsx, circuit and patient checks: kinks, water and disconnections are found with your hands, not on a screen; if the circuit cannot be excluded quickly, ventilate by hand",
+          "sourceClass": "authored-course-content",
+          "use": "The note stays within what the lesson panel already teaches."
+        },
+        {
+          "material": "content/learningCurriculum.ts, unit safety-reassessment-and-human-factors: boundary (emergency procedures and manual ventilation need trained supervision and local protocol)",
+          "sourceClass": "authored-course-content",
+          "use": "Why the note names checks but no technique."
+        }
+      ],
+      "evidenceSearched": [],
+      "decisionNeeded": null,
+      "notChecked": [
+        "The bedside checks are named as chapter 53 names them; how they are performed follows local protocol and supervision, as the unit’s boundary says."
+      ],
+      "reviewQuestions": [
+        "Is naming the suction-catheter check appropriate in learner copy, or should the note stop at “checking the airway and tube”?"
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "MV-SAFETY-01-07",
+      "questionId": "safety-reassessment-and-human-factors:final",
+      "choiceId": "1",
+      "status": "supported-feedback-added",
+      "surface": {
+        "route": "/mechanical-ventilation/assess",
+        "picker": "Worked applications, item 5",
+        "where": "Under “Potential harm in this case”: after Show explanation, inside “Compare the possibilities”; and directly below the choice after Compare my choice."
+      },
+      "unchangedForLegacyRecords": {
+        "prompt": "After an intervention, the alarm becomes quieter but the patient remains hypoxemic and distressed. Which next step best assesses success?",
+        "correctId": "0",
+        "choice": {
+          "id": "1",
+          "label": "Record completion because the sound has diminished",
+          "rationale": "Alarm behavior alone does not demonstrate resolution.",
+          "unsafe": true
+        }
+      },
+      "learnerFacingSafety": {
+        "previous": null,
+        "current": "Persistent hypoxemia and distress mean the problem has not resolved, and hypoxemia can be rapidly lethal. Recording completion because the alarm is quieter can stop the search for the cause and the escalation this patient still needs."
+      },
+      "teachingPoint": "A quieter alarm is not a response: persistent hypoxemia and distress mean the cause is still active, so the search and escalation continue.",
+      "sourceLocators": [
+        {
+          "statement": "Hypoxia can be rapidly lethal",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "2",
+          "section": "Initial Assessment",
+          "finding": "supports",
+          "note": "The pulse oximeter reading is noted first for that reason."
+        },
+        {
+          "statement": "Sudden distress on the ventilator is an emergency: ventilation first, while the cause is found and corrected",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "30",
+          "section": "Summary",
+          "finding": "supports",
+          "note": ""
+        },
+        {
+          "statement": "A response to treatment is judged from physiologic variables followed over time",
+          "evidenceId": "tobin-3e-monitoring",
+          "sourceClass": "checked-published-source",
+          "document": "ch48",
+          "pdfPage": "19",
+          "section": "Assessment of Trends",
+          "finding": "partly supports",
+          "note": "The chapter’s examples are vasopressor titration and neuromuscular blockade; it does not discuss alarm sound."
+        },
+        {
+          "statement": "Silencing mutes the audible alarm for a short time and the alarm sounds again if the problem is unresolved",
+          "evidenceId": "hamilton-c6-manual-1.2.x",
+          "sourceClass": "checked-manufacturer-source",
+          "document": "hamiltonOps",
+          "pdfPage": "202",
+          "section": "9.1.3 Temporarily silencing an alarm",
+          "finding": "supports",
+          "note": "Muted for two minutes on this device; the note gives no duration because the stem names no ventilator."
+        }
+      ],
+      "otherMaterialConsulted": [
+        {
+          "material": "content/sectionSpecs.ts, safety section new concept and objective: which finding would show an intervention helped, and which only show it was performed",
+          "sourceClass": "authored-course-content",
+          "use": "The note stays within what the section already teaches."
+        },
+        {
+          "material": "content/learningExperiments.ts, safety round 2 rationale: alarm sound is not a substitute for patient findings",
+          "sourceClass": "authored-course-content",
+          "use": "Same point in the lesson rounds."
+        }
+      ],
+      "evidenceSearched": [],
+      "decisionNeeded": null,
+      "notChecked": [
+        "“Escalation” is course wording; no registered source names an escalation pathway."
+      ],
+      "reviewQuestions": [],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "MV-SAFETY-01-08",
+      "questionId": "safety-reassessment-and-human-factors:final",
+      "choiceId": "2",
+      "status": "held-for-faculty-RT-review",
+      "surface": {
+        "route": "/mechanical-ventilation/assess",
+        "picker": "Worked applications, item 5",
+        "where": "No safety note. The choice keeps its existing rationale after Compare my choice and inside “Compare the possibilities”."
+      },
+      "unchangedForLegacyRecords": {
+        "prompt": "After an intervention, the alarm becomes quieter but the patient remains hypoxemic and distressed. Which next step best assesses success?",
+        "correctId": "0",
+        "choice": {
+          "id": "2",
+          "label": "Raise the alarm limit to match the current display",
+          "rationale": "Changing the monitoring boundary does not correct the cause.",
+          "unsafe": true
+        }
+      },
+      "learnerFacingSafety": {
+        "previous": null,
+        "current": null
+      },
+      "teachingPoint": "Proposed, not shown to learners: re-setting an alarm limit to the current abnormal reading while hypoxemia and distress persist stops the alarm warning at that value and treats nothing.",
+      "sourceLocators": [
+        {
+          "statement": "An alarm reflects a change in ventilator performance or in the patient; an abrupt rise in peak pressure can arise with endotracheal obstruction",
+          "evidenceId": "tobin-3e-monitoring",
+          "sourceClass": "checked-published-source",
+          "document": "ch48",
+          "pdfPage": "19",
+          "section": "Provide Alarms",
+          "finding": "partly supports",
+          "note": "Supports reading an alarm as a warning of change and obstruction as a cause; says nothing about acknowledging, silencing or re-setting an alarm."
+        },
+        {
+          "statement": "Re-setting an alarm limit to the current abnormal reading while hypoxemia and distress persist stops the alarm warning at that value and treats nothing",
+          "evidenceId": "none",
+          "sourceClass": "none",
+          "document": null,
+          "pdfPage": null,
+          "section": null,
+          "finding": "does not address",
+          "note": "No registered chapter or manual describes this situation. The manuals support setting limits for the patient and warn against extreme limits; none addresses re-setting a limit around an unresolved abnormality."
+        },
+        {
+          "statement": "Alarm limits are set for the individual patient; limits too high or too low defeat the purpose of the alarm",
+          "evidenceId": "hamilton-c6-manual-1.2.x",
+          "sourceClass": "checked-manufacturer-source",
+          "document": "hamiltonOps",
+          "pdfPage": "202",
+          "section": "9.1 Responding to alarms",
+          "finding": "supports",
+          "note": "Supports the principle; does not address re-setting a limit while an abnormality persists."
+        },
+        {
+          "statement": "Setting a limit to OFF or an extreme value can stop the alarm from activating",
+          "evidenceId": "pb980-operators-manual",
+          "sourceClass": "checked-manufacturer-source",
+          "document": "pb980Ops",
+          "pdfPage": "30",
+          "section": "Safety information: warnings",
+          "finding": "supports",
+          "note": "Repeated on PDF pages 148 and 188 (located by the subagent; not re-extracted)."
+        },
+        {
+          "statement": "Extreme alarm limits may render the alarm system useless and put the patient at risk",
+          "evidenceId": "evita-v800-v600-ifu-3.1n",
+          "sourceClass": "checked-manufacturer-source",
+          "document": "evitaIfu31n",
+          "pdfPage": "186",
+          "section": "9.5.2 Setting the alarm limits (WARNING)",
+          "finding": "supports",
+          "note": ""
+        },
+        {
+          "statement": "Matching alarm limits to the current display is harmful in itself",
+          "evidenceId": "hamilton-c6-manual-1.2.x",
+          "sourceClass": "checked-manufacturer-source",
+          "document": "hamiltonOps",
+          "pdfPage": "105",
+          "section": "5.6 Setting alarm limits",
+          "finding": "narrows",
+          "note": "An Auto function sets alarm limits around the current monitored values (SpO₂-related limits excepted); Evita (PDF page 187) sets several volume and rate limits from current measured values. Whether matching the display harms depends on the patient still being hypoxemic and distressed, and on which limit."
+        },
+        {
+          "statement": "Raising a high-pressure limit changes only the warning",
+          "evidenceId": "hamilton-c6-manual-1.2.x",
+          "sourceClass": "checked-manufacturer-source",
+          "document": "hamiltonOps",
+          "pdfPage": "106, 216",
+          "section": "5.6 Setting alarm limits; alarm table: High pressure",
+          "finding": "narrows",
+          "note": "When delivered pressure reaches the high Pressure alarm limit the device aborts the breath and reduces pressure to PEEP, and the limit is coupled to Plimit (PDF pages 93 and 109, located by the subagent and not re-extracted); so raising it can change delivery as well as the warning."
+        },
+        {
+          "statement": "Raising a high-pressure limit changes only the warning",
+          "evidenceId": "pb980-operators-manual",
+          "sourceClass": "checked-manufacturer-source",
+          "document": "pb980Ops",
+          "pdfPage": "188, 216",
+          "section": "Alarms introduction; HIGH CIRCUIT PRESSURE",
+          "finding": "narrows",
+          "note": "The high peak pressure limit limits breath delivery by truncating inspiration."
+        },
+        {
+          "statement": "Raising a high-pressure limit changes only the warning",
+          "evidenceId": "tobin-3e-setting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch5",
+          "pdfPage": "20",
+          "section": "Asynchrony between the Patient’s Effort and Machine-Delivered Breaths",
+          "finding": "narrows",
+          "note": "Peak pressure exceeding the alarm (safety) limit ends inspiratory flow and can leave ventilation insufficient."
+        },
+        {
+          "statement": "Raising an alarm limit is never the right action",
+          "evidenceId": "avea-operators-manual-rev-m",
+          "sourceClass": "checked-manufacturer-source",
+          "document": "aveaOps",
+          "pdfPage": "87",
+          "section": "LOW Vte alarm table (volume guarantee)",
+          "finding": "narrows",
+          "note": "Lists raising the high pressure limit as one action for a low exhaled-volume alarm in volume guarantee. Located by the subagent; not re-extracted."
+        }
+      ],
+      "otherMaterialConsulted": [
+        {
+          "material": "MV-03 safety note on “A higher alarm limit while awaiting the next routine review” (high-peak-pressure-integration:transfer), NOT REVIEWED, with the open packet question “Keep, reword or source it?”",
+          "sourceClass": "authored-course-content",
+          "use": "Not used as support: it is unreviewed and carries its own source question."
+        },
+        {
+          "material": "content/learningCurriculum.ts, controls-and-goals check rationale: an alarm limit signals a boundary",
+          "sourceClass": "authored-course-content",
+          "use": "Consistent with the proposed point; not support."
+        }
+      ],
+      "evidenceSearched": [
+        "Tobin 3rd edition, registered chapters 48 (Provide Alarms, PDF page 19), 53 (pages 1–3 and 30) and 5 (page 20), and unregistered chapters 41 and 44: searched for “alarm”. None discusses re-setting a limit.",
+        "Registered manufacturer manuals with matching hashes: HAMILTON-C6 operator’s manual and quick guide; Evita V800/V600 instructions for use 3.1n and 3n, pocket guide and product information; PB980 operator’s and service manuals and brochure; AVEA operator’s manual and modes guide. Searched for how limits are set, what the high-pressure limit does and what alarm silence does.",
+        "The registered AARC 2024 guideline: text not available locally; not read.",
+        "The registered HAMILTON-C6 INTELLiVENT-ASV manual: not found on this machine."
+      ],
+      "decisionNeeded": "Faculty/RT decisions on: (1) which alarm and limit the stem means, since it names none; (2) wording that separates re-setting limits around verified, acceptable readings, which the HAMILTON-C6 and Evita manuals provide as an automatic function, from widening a limit around an unresolved abnormality; (3) whether to say that on several registered ventilators the high-pressure limit also caps or ends the breath, so raising it changes ventilation as well as the warning; (4) whether this choice and the MV-03 alarm-limit note should share one sourced wording. Until then no safety note is added and the existing rationale stays.",
+      "notChecked": [
+        "No source was found that describes harm from re-setting a limit in the stated situation.",
+        "Pages located by the subagent and not re-extracted: HAMILTON-C6 93 and 109; AVEA 87; PB980 148."
+      ],
+      "reviewQuestions": [],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "MV-SAFETY-01-09",
+      "questionId": "high-peak-pressure-integration:final",
+      "choiceId": "0",
+      "status": "supported-feedback-added",
+      "surface": {
+        "route": "/mechanical-ventilation/assess",
+        "picker": "Worked applications, item 10",
+        "where": "Under “Potential harm in this case”: after Show explanation, inside “Compare the possibilities”; and directly below the choice after Compare my choice."
+      },
+      "unchangedForLegacyRecords": {
+        "prompt": "A new high-pressure alarm occurs with abrupt hypotension and asymmetric breath sounds. Which next priority is most appropriate?",
+        "correctId": "1",
+        "choice": {
+          "id": "0",
+          "label": "Wait for a relaxed plateau before requesting assistance",
+          "rationale": "A deteriorating patient cannot wait for a perfect mechanics measurement.",
+          "unsafe": true
+        }
+      },
+      "learnerFacingSafety": {
+        "previous": null,
+        "current": "A high-pressure alarm with abrupt hypotension and asymmetric breath sounds raises concern for a tension pneumothorax, and a patient this unstable may die within minutes if the cause is not treated. A plateau is worth measuring when possible, but waiting for a relaxed one before asking for help delays the support and treatment that come first."
+      },
+      "teachingPoint": "High pressure, abrupt hypotension and asymmetric breath sounds raise concern for a tension pneumothorax; help and support come before waiting for a relaxed plateau.",
+      "sourceLocators": [
+        {
+          "statement": "A high airway pressure with desaturation can come from airway obstruction, and a rise in peak with a proportional rise in plateau from a pneumothorax; a suspected tension pneumothorax with imminent death is decompressed at once",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "2",
+          "section": "Initial Assessment",
+          "finding": "supports",
+          "note": "The chapter names needle decompression; the notes name no technique and leave it to local emergency practice."
+        },
+        {
+          "statement": "Auscultation can suggest a pneumothorax or a tube that has moved into the right main bronchus",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "3",
+          "section": "Initial Assessment",
+          "finding": "supports",
+          "note": "The chapter says “right main-stem bronchus”."
+        },
+        {
+          "statement": "High pressure, abrupt hypotension and asymmetric breath sounds together raise concern for a tension pneumothorax",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "2-3",
+          "section": "Initial Assessment",
+          "finding": "partly supports",
+          "note": "Registered pages give pneumothorax as a cause of raised peak and plateau, auscultation as its clue and immediate decompression for a suspected tension pneumothorax; they do not link hypotension to it."
+        },
+        {
+          "statement": "Tension pneumothorax presents with respiratory distress, hypotension and signs of cardiovascular collapse",
+          "evidenceId": "unregistered:tobin-3e-chapter-44-barotrauma",
+          "sourceClass": "unregistered-published-source",
+          "document": "ch44",
+          "pdfPage": "26-27",
+          "section": "Tension pneumothorax presentation",
+          "finding": "supports",
+          "note": "Same edition, not a registered source of this module (queue open question 2). Recorded, not counted as support."
+        },
+        {
+          "statement": "A ventilated patient in sudden distress may die within minutes if the cause is not found and fixed, so diagnosis and management proceed together",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "1",
+          "section": "Fighting the Ventilator: Introduction",
+          "finding": "supports",
+          "note": "Written about a patient suddenly fighting the ventilator; the notes apply it to new hypoxemia with hypotension, which is an inference (queue open question 1)."
+        },
+        {
+          "statement": "Measuring a plateau is part of evaluating a high-pressure alarm",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "2",
+          "section": "Initial Assessment",
+          "finding": "narrows",
+          "note": "The chapter advises an end-inspiratory occlusion “if possible” when the high-pressure alarm sounds, so the note keeps the plateau and objects only to waiting for it before help."
+        }
+      ],
+      "otherMaterialConsulted": [
+        {
+          "material": "content/learningCurriculum.ts, unit safety-reassessment-and-human-factors example: a high-pressure alarm with falling blood pressure and new asymmetric breath sounds; do not wait for a perfect waveform analysis",
+          "sourceClass": "authored-course-content",
+          "use": "The note stays within what the unit already teaches."
+        },
+        {
+          "material": "content/runtimeCases.ts, decompress-pneumothorax intervention: treat suspected tension pneumothorax immediately according to local emergency practice",
+          "sourceClass": "authored-course-content",
+          "use": "Same point in the practice case."
+        },
+        {
+          "material": "source-cases.v1.json MV-14 unsafe action: waiting for a chest radiograph in the unstable branch",
+          "sourceClass": "supplied-uncertain-provenance",
+          "use": "Shows the supplied case set intends the same point. Not support."
+        },
+        {
+          "material": "Case MV-14 models progressive hypotension until decompression",
+          "sourceClass": "model-behavior",
+          "use": "Consistency only; model behavior cannot support a clinical claim."
+        }
+      ],
+      "evidenceSearched": [],
+      "decisionNeeded": null,
+      "notChecked": [
+        "Decompression technique is not named in the note; it belongs to local emergency practice."
+      ],
+      "reviewQuestions": [
+        "Register chapter 44, or accept chapter 53’s partial support for linking hypotension to tension pneumothorax?"
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "MV-SAFETY-01-10",
+      "questionId": "high-peak-pressure-integration:final",
+      "choiceId": "2",
+      "status": "supported-feedback-added",
+      "surface": {
+        "route": "/mechanical-ventilation/assess",
+        "picker": "Worked applications, item 10",
+        "where": "Under “Potential harm in this case”: after Show explanation, inside “Compare the possibilities”; and directly below the choice after Compare my choice."
+      },
+      "unchangedForLegacyRecords": {
+        "prompt": "A new high-pressure alarm occurs with abrupt hypotension and asymmetric breath sounds. Which next priority is most appropriate?",
+        "correctId": "1",
+        "choice": {
+          "id": "2",
+          "label": "Silence the alarm while waiting for spontaneous resolution",
+          "rationale": "Acknowledgment does not treat the cause of instability.",
+          "unsafe": true
+        }
+      },
+      "learnerFacingSafety": {
+        "previous": null,
+        "current": "Silencing only mutes the alarm for a short time and treats nothing. High pressure, abrupt hypotension and asymmetric breath sounds together raise concern for a tension pneumothorax, which needs recognition and treatment rather than waiting; left untreated, a patient this unstable may die within minutes."
+      },
+      "teachingPoint": "Silencing an alarm only mutes it; suspected tension pneumothorax needs recognition and treatment, not waiting.",
+      "sourceLocators": [
+        {
+          "statement": "Silencing mutes the audible alarm for a short time and the alarm sounds again if the problem is unresolved",
+          "evidenceId": "hamilton-c6-manual-1.2.x",
+          "sourceClass": "checked-manufacturer-source",
+          "document": "hamiltonOps",
+          "pdfPage": "202",
+          "section": "9.1.3 Temporarily silencing an alarm",
+          "finding": "supports",
+          "note": "Muted for two minutes on this device; the note gives no duration because the stem names no ventilator."
+        },
+        {
+          "statement": "Silencing mutes the audible alarm for a short time and the alarm condition continues",
+          "evidenceId": "evita-v800-v600-ifu-3.1n",
+          "sourceClass": "checked-manufacturer-source",
+          "document": "evitaIfu31n",
+          "pdfPage": "184",
+          "section": "Activating temporary alarm silence",
+          "finding": "supports",
+          "note": "Acoustic signals suppressed for at most two minutes; optical signals continue."
+        },
+        {
+          "statement": "Manufacturers warn against pausing an audible alarm when patient safety could be compromised",
+          "evidenceId": "pb980-operators-manual",
+          "sourceClass": "checked-manufacturer-source",
+          "document": "pb980Ops",
+          "pdfPage": "191",
+          "section": "Audio Paused Key",
+          "finding": "supports",
+          "note": "A warning printed beside the two-minute audio pause."
+        },
+        {
+          "statement": "Manufacturers warn against pausing an audible alarm when the patient is left unattended",
+          "evidenceId": "hamilton-c6-manual-1.2.x",
+          "sourceClass": "checked-manufacturer-source",
+          "document": "hamiltonOps",
+          "pdfPage": "34",
+          "section": "Monitoring and alarms (safety information)",
+          "finding": "partly supports",
+          "note": "About leaving the patient unattended; the stem does not say the patient is unattended."
+        },
+        {
+          "statement": "A high airway pressure with desaturation can come from airway obstruction, and a rise in peak with a proportional rise in plateau from a pneumothorax; a suspected tension pneumothorax with imminent death is decompressed at once",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "2",
+          "section": "Initial Assessment",
+          "finding": "supports",
+          "note": "The chapter names needle decompression; the notes name no technique and leave it to local emergency practice."
+        },
+        {
+          "statement": "Auscultation can suggest a pneumothorax or a tube that has moved into the right main bronchus",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "3",
+          "section": "Initial Assessment",
+          "finding": "supports",
+          "note": "The chapter says “right main-stem bronchus”."
+        },
+        {
+          "statement": "High pressure, abrupt hypotension and asymmetric breath sounds together raise concern for a tension pneumothorax",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "2-3",
+          "section": "Initial Assessment",
+          "finding": "partly supports",
+          "note": "Registered pages give pneumothorax as a cause of raised peak and plateau, auscultation as its clue and immediate decompression for a suspected tension pneumothorax; they do not link hypotension to it."
+        },
+        {
+          "statement": "Tension pneumothorax presents with respiratory distress, hypotension and signs of cardiovascular collapse",
+          "evidenceId": "unregistered:tobin-3e-chapter-44-barotrauma",
+          "sourceClass": "unregistered-published-source",
+          "document": "ch44",
+          "pdfPage": "26-27",
+          "section": "Tension pneumothorax presentation",
+          "finding": "supports",
+          "note": "Same edition, not a registered source of this module (queue open question 2). Recorded, not counted as support."
+        },
+        {
+          "statement": "A ventilated patient in sudden distress may die within minutes if the cause is not found and fixed, so diagnosis and management proceed together",
+          "evidenceId": "tobin-3e-fighting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch53",
+          "pdfPage": "1",
+          "section": "Fighting the Ventilator: Introduction",
+          "finding": "supports",
+          "note": "Written about a patient suddenly fighting the ventilator; the notes apply it to new hypoxemia with hypotension, which is an inference (queue open question 1)."
+        }
+      ],
+      "otherMaterialConsulted": [
+        {
+          "material": "Existing rationale for this choice: acknowledgment does not treat the cause of instability",
+          "sourceClass": "authored-course-content",
+          "use": "Unchanged; the note adds the case-specific harm."
+        },
+        {
+          "material": "source-cases.v1.json MV-14 visible findings: absent breath sounds on one side, falling SpO2, rapidly progressive hypotension",
+          "sourceClass": "supplied-uncertain-provenance",
+          "use": "Shows the supplied case set intends the same point. Not support."
+        },
+        {
+          "material": "Case MV-14 models progressive hypotension until decompression",
+          "sourceClass": "model-behavior",
+          "use": "Consistency only; model behavior cannot support a clinical claim."
+        }
+      ],
+      "evidenceSearched": [],
+      "decisionNeeded": null,
+      "notChecked": [
+        "The stem names no ventilator; silence durations differ by device and the note gives none."
+      ],
+      "reviewQuestions": [
+        "Register chapter 44, or accept chapter 53’s partial support for linking hypotension to tension pneumothorax?"
+      ],
+      "reviewerDecision": {
+        "status": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedVersion": null,
+        "notes": null
+      }
+    }
+  ]
+}
