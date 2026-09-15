@@ -6,12 +6,12 @@ import { ArrowRight } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 
 import { nextIncompleteMcsSectionLink, type McsContinueLink } from '../content/pathwayResolver'
-import { readMcsProgress } from '../engine'
+import { readMcsLearningProgress } from '../engine/learningProgress'
 import styles from './mechanical-circulatory-support.module.css'
 
 const FRESH: McsContinueLink = nextIncompleteMcsSectionLink({
-  completedLessonIds: [],
-  masteredCaseIds: [],
+  visitedLessonIds: [],
+  visitedCaseIds: [],
 })
 
 /**
@@ -28,7 +28,7 @@ export function McsContinueCta({ className }: { readonly className?: string }) {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setLink(nextIncompleteMcsSectionLink(readMcsProgress()))
+      setLink(nextIncompleteMcsSectionLink(readMcsLearningProgress()))
       setResolved(true)
     }, 0)
     return () => window.clearTimeout(timer)

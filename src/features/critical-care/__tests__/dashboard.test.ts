@@ -91,7 +91,7 @@ describe('critical-care dashboard derivation', () => {
     expect(dashboard.recent.map((item) => item.activity.id)).toEqual([activity.id])
   })
 
-  it('does not invent recent chronology for legacy projections', () => {
+  it('does not invent recent chronology or MCS completion for legacy projections', () => {
     const dashboard = deriveCriticalCareDashboard(
       readResult({
         version: 1,
@@ -109,7 +109,7 @@ describe('critical-care dashboard derivation', () => {
     expect(dashboard.recent).toEqual([])
     expect(
       dashboard.modules.find((item) => item.module.id === 'mechanical-circulatory-support'),
-    ).toMatchObject({ state: 'in-progress', completedActivities: 1, startedActivities: 1 })
+    ).toMatchObject({ state: 'in-progress', completedActivities: 0, startedActivities: 1 })
   })
 
   it('recalculates recommendations and summaries from authoritative evidence', () => {

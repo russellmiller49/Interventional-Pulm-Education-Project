@@ -118,7 +118,9 @@ export function mergeCriticalCareProgress(
     ),
     ...enforceProgressCollectionAuthority(
       activities,
-      (normalized?.activities ?? []).filter((item) => !item.activityId.startsWith('crrt:')),
+      (normalized?.activities ?? []).filter(
+        (item) => !item.activityId.startsWith('crrt:') && !item.activityId.startsWith('mcs:'),
+      ),
     ),
   ])
   const activityOrder = [
@@ -131,7 +133,9 @@ export function mergeCriticalCareProgress(
     return activity ? [activity] : []
   })
   const resumeCandidates: CriticalCareResumePointer[] = [
-    ...(normalized?.resume ? [normalized.resume] : []),
+    ...(normalized?.resume && !normalized.resume.activityId.startsWith('mcs:')
+      ? [normalized.resume]
+      : []),
     ...legacy.flatMap((result) => (result.resume ? [result.resume] : [])),
   ]
   const resolvedResume = newestValidCriticalCareResume(

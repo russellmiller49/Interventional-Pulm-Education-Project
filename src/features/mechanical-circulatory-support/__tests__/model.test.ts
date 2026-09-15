@@ -7,6 +7,7 @@ import {
   deriveIabpCycleState,
   hasMcsMastery,
   mcsReducer,
+  mcsActionUnavailableReason,
   nextIabpBalloonMorph,
   totalMcsCirculatingVolume,
 } from '../engine'
@@ -468,26 +469,24 @@ describe('MCS deterministic circulation and device adapters', () => {
     expect(hasMcsMastery(state)).toBe(false)
   })
 
-  it('enforces scenario permissions without blocking reassessment', () => {
+  it('opens supported patient controls without blocking reassessment', () => {
     const definition = mcsPracticeScenarios[0]
     let state = createInitialMcsState('practice', 'iabp', definition)
     state = mcsReducer(state, { type: 'INSPECT', id: 'arterial' })
     state = mcsReducer(state, { type: 'SELECT_PREDICTION', id: definition.correctPredictionId })
     state = mcsReducer(state, { type: 'COMMIT_PREDICTION' })
-    const preload = state.patient.preloadPercent
     state = mcsReducer(state, {
       type: 'SET_PATIENT_CONTROL',
       control: 'preloadPercent',
       value: 140,
     })
-    expect(state.patient.preloadPercent).toBe(preload)
-    expect(state.responseMessage).toMatch(/outside the permitted controls/i)
+    expect(state.patient.preloadPercent).toBe(140)
     state = mcsReducer(state, { type: 'REASSESS' })
     expect(state.reassessed).toBe(true)
     expect(state.responseMessage).toMatch(/Reassessment: effective flow/i)
   })
 
-  it('has a no-critical-error mastery path for the first IABP practice case', () => {
+  it('has a no-critical-error model path for the first IABP practice case', () => {
     const definition = mcsPracticeScenarios[0]
     let state = createInitialMcsState('practice', 'iabp', definition)
     state = mcsReducer(state, { type: 'INSPECT', id: 'arterial' })
@@ -498,12 +497,12 @@ describe('MCS deterministic circulation and device adapters', () => {
     state = mcsReducer(state, { type: 'REASSESS' })
     state = mcsReducer(state, { type: 'COMPLETE' })
     expect(state.criticalErrors).toEqual([])
-    expect(state.score?.total).toBeGreaterThanOrEqual(80)
-    expect(hasMcsMastery(state)).toBe(true)
+    expect(state.score).toBeNull()
+    expect(state.completed).toBe(true)
   })
 
   it.each(mcsPracticeScenarios.map((scenario) => [scenario.id, scenario] as const))(
-    'has at least one safe mastery path for %s',
+    'has at least one safe model path for %s',
     (_id, definition) => {
       let state = createInitialMcsState('practice', definition.device, definition)
       for (const actionId of definition.requiredActionIds.filter((id) =>
@@ -607,8 +606,19 @@ describe('MCS deterministic circulation and device adapters', () => {
       state = mcsReducer(state, { type: 'REASSESS' })
       state = mcsReducer(state, { type: 'COMPLETE' })
       expect(state.criticalErrors).toEqual([])
-      expect(state.score?.total).toBeGreaterThanOrEqual(80)
-      expect(hasMcsMastery(state)).toBe(true)
+      expect(state.score).toBeNull()
+      expect(state.completed).toBe(true)
     },
   )
 })
+
+it.each(['iabp', 'impella', 'lvad'] as const)(
+  '%s rejects unsupported control IDs instead of bypassing model restrictions',
+  (device) => {
+    const state = createInitialMcsState('practice', device)
+    expect(mcsActionUnavailableReason(state, 'device:select:unknown')).toMatch(/not supported/)
+    expect(mcsActionUnavailableReason(state, 'patient:unknown')).toMatch(/not supported/)
+    if (device !== 'lvad')
+      expect(mcsActionUnavailableReason(state, 'lvad:set-speed')).toMatch(/not supported/)
+  },
+)

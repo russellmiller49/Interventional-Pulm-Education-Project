@@ -1,3 +1,4 @@
+import { mcsSelfPacedActivity } from '@/features/mechanical-circulatory-support/content/selfPacedCatalog'
 import {
   VENTILATION_FINAL_CHECK_ID,
   ventilationLearningUnits,
@@ -1295,9 +1296,15 @@ export const criticalCareActivities: readonly CriticalCareActivityDefinition[] =
   ...defineActivities('mechanical-ventilation', 'learn', ventilationLearnSeeds),
   ...defineActivities('mechanical-ventilation', 'practice', ventilationCaseSeeds),
   ...defineActivities('mechanical-ventilation', 'assess', ventilationAssessSeeds),
-  ...defineActivities('mechanical-circulatory-support', 'learn', mcsLessonSeeds),
-  ...defineActivities('mechanical-circulatory-support', 'practice', mcsPracticeSeeds),
-  ...defineActivities('mechanical-circulatory-support', 'assess', mcsAssessSeeds),
+  ...defineActivities('mechanical-circulatory-support', 'learn', mcsLessonSeeds).map(
+    mcsSelfPacedActivity,
+  ),
+  ...defineActivities('mechanical-circulatory-support', 'practice', mcsPracticeSeeds).map(
+    mcsSelfPacedActivity,
+  ),
+  ...defineActivities('mechanical-circulatory-support', 'assess', mcsAssessSeeds).map(
+    mcsSelfPacedActivity,
+  ),
   ...defineActivities('cardiohelp-ecmo', 'learn', ecmoLessonSeeds),
   ...defineActivities('cardiohelp-ecmo', 'practice', ecmoPracticeSeeds),
   ...defineActivities('cardiohelp-ecmo', 'assess', ecmoAssessSeeds),

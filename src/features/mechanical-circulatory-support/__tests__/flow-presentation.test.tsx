@@ -43,11 +43,12 @@ it.each(mcsStageLessonIds)(
 it('switches only the conceptual mechanism drawing without changing the patient or recording work', () => {
   mountSection('mcs-foundations-mechanisms')
   const before = document.querySelector('[data-session-identity]')?.textContent
+  const storedBefore = window.localStorage.getItem('interventionalpulm:mcs-progress:v1')
   fireEvent.click(screen.getByRole('button', { name: 'Existing durable LVAD' }))
   expect(document.querySelector('[data-pathway="durable-continuous-flow-lvad"]')).not.toBeNull()
   fireEvent.click(screen.getByRole('button', { name: 'LV-to-aorta microaxial pump' }))
   expect(document.querySelector('[data-session-identity]')?.textContent).toBe(before)
-  expect(window.localStorage.getItem('interventionalpulm:mcs-progress:v1')).toBeNull()
+  expect(window.localStorage.getItem('interventionalpulm:mcs-progress:v1')).toBe(storedBefore)
 })
 
 it('repeats one captured mechanism without erasing the other two', () => {
@@ -95,7 +96,7 @@ it('opens Practice on a choice of exploration or clinical cases with no earned c
 })
 
 it.each([...mcsPracticeScenarios, ...mcsCapstoneScenarios])(
-  '$id keeps neutral case identity and optional anatomy out of the pending answer',
+  '$id shows clinical identity and teaching before an optional answer',
   (scenario) => {
     render(
       <McsWorkbench
@@ -106,15 +107,14 @@ it.each([...mcsPracticeScenarios, ...mcsCapstoneScenarios])(
     expect(
       screen.getAllByRole('heading', { name: mcsPresentationTitle(scenario) }).length,
     ).toBeGreaterThan(0)
-    expect(screen.queryByRole('heading', { name: scenario.title })).toBeNull()
     expect(document.querySelector('[data-case-observations]')).not.toBeNull()
-    expect(document.querySelector('[data-case-identity]')?.textContent).not.toContain(
+    expect(document.querySelector('[data-case-identity]')?.textContent).toContain(
       scenario.learningObjectives[0],
     )
     expect(screen.getByRole('button', { name: 'Optional three-dimensional view' })).toHaveAttribute(
       'aria-expanded',
       'false',
     )
-    expect(screen.queryByText(/Why the display changed/)).toBeNull()
+    expect(screen.getByText(/Why the display changed/)).toBeInTheDocument()
   },
 )

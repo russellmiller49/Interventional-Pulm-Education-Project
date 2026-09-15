@@ -307,7 +307,7 @@ export type McsAction =
   | { type: 'LOAD_SCENARIO'; scenario: McsScenarioDefinition }
   | { type: 'RESET'; seed?: number }
   | { type: 'INSPECT'; id: string }
-  | { type: 'SELECT_PREDICTION'; id: string }
+  | { type: 'SELECT_PREDICTION'; id: string | null }
   | { type: 'COMMIT_PREDICTION' }
   | { type: 'SET_RHYTHM'; rhythm: McsRhythm }
   | { type: 'SET_PATIENT_CONTROL'; control: McsPatientControl; value: number }

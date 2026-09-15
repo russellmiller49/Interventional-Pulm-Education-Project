@@ -1,84 +1,44 @@
 'use client'
 
-import type { Dispatch, ReactNode } from 'react'
-import { Check, Eye, RotateCcw, ShieldAlert } from 'lucide-react'
-
+import { useState, type Dispatch, type ReactNode } from 'react'
+import { Eye, RotateCcw, ShieldAlert } from 'lucide-react'
 import type { McsAction, McsSimulationState } from '../engine'
-import { isMcsActionIdPermitted } from '../engine'
-import styles from './mechanical-circulatory-support.module.css'
 import { mcsPresentationTitle } from '../content/casePresentation'
-
-const deviceLabels: Readonly<Record<McsSimulationState['deviceKind'], string>> = {
-  iabp: 'Counterpulsation — a balloon in the descending thoracic aorta, moving no blood of its own',
-  impella:
-    'Microaxial pump — left ventricle to aorta, and where fitted vena cava to pulmonary artery',
-  lvad: 'Durable continuous flow — left ventricular apex to ascending aorta',
-}
-
-const phases = ['inspect', 'predict', 'adjust', 'observe', 'reassess', 'debrief'] as const
-const phaseTargetIds: Readonly<Record<(typeof phases)[number], string>> = {
-  inspect: 'mcs-case-inspect',
-  predict: 'mcs-case-predict',
-  adjust: 'mcs-case-actions',
-  observe: 'mcs-case-response',
-  reassess: 'mcs-case-actions',
-  debrief: 'mcs-case-actions',
-}
-
-function jumpToPhase(phase: (typeof phases)[number]) {
-  document.getElementById(phaseTargetIds[phase])?.focus({ preventScroll: false })
-}
+import styles from './mechanical-circulatory-support.module.css'
 
 export function McsCaseWorkflow({
   state,
   dispatch,
   observations,
   controls,
-  showChallengeFeedback,
-  onShowChallengeFeedbackChange,
 }: {
-  observations?: ReactNode
-  controls?: ReactNode
   state: McsSimulationState
   dispatch: Dispatch<McsAction>
-  showChallengeFeedback: boolean
-  onShowChallengeFeedbackChange: (show: boolean) => void
+  observations?: ReactNode
+  controls?: ReactNode
 }) {
+  const [hintVisible, setHintVisible] = useState(false)
   const scenario = state.scenario
-  if (!scenario) {
+  if (!scenario)
     return (
       <section className={styles.workflowCard} aria-label="Mechanism Studio instructions">
-        <span className={styles.kicker}>OPEN WORKSPACE · NOT A PATIENT CASE</span>
+        <span className={styles.kicker}>OPEN EXPLORATION</span>
         <h2>Mechanism Studio</h2>
         <p>
-          This is a free workspace, not a patient case: there is no presentation, no
-          permitted-action list, and no debrief. Start with one device and baseline physiology,
-          change one setting or loading condition, and compare native flow, device flow, effective
-          flow, ventricular loading, pressure, and alarms.
+          Start with one device and reference physiology. Change a setting or simulated condition,
+          then compare native flow, device flow, effective flow, ventricular loading, pressure, and
+          alarms.
         </p>
-        <ol className={styles.studioPrompts}>
-          <li>
-            <strong>Predict</strong>
-            <span>Which signal should move first?</span>
-          </li>
-          <li>
-            <strong>Change</strong>
-            <span>Move one bounded control.</span>
-          </li>
-          <li>
-            <strong>Reconcile</strong>
-            <span>Explain every pressure and flow change—not only the desired one.</span>
-          </li>
-        </ol>
+        <p>
+          Reset restores the reference patient and device configuration and clears current actions.
+          Display playback changes model time; it does not turn off device support.
+        </p>
         <div className={styles.studioWorkspace}>
           {observations}
           {controls}
         </div>
       </section>
     )
-  }
-
-  const currentPhaseIndex = phases.indexOf(state.scenarioPhase)
   return (
     <section
       className={styles.workflowCard}
@@ -88,25 +48,22 @@ export function McsCaseWorkflow({
       <header>
         <div>
           <span className={styles.kicker}>
-            {state.section === 'assess' ? 'CHALLENGE' : state.section.toUpperCase()} · {scenario.id}
+            {scenario.kind === 'capstone' ? 'OPTIONAL INTEGRATED WALKTHROUGH' : 'GUIDED CASE'} ·{' '}
+            {scenario.id}
           </span>
-          <h2 id="case-workflow-heading">
-            {state.completed ? scenario.title : mcsPresentationTitle(scenario)}
-          </h2>
+          <h2 id="case-workflow-heading">{mcsPresentationTitle(scenario)}</h2>
         </div>
         <button
           type="button"
           className={styles.resetButton}
-          onClick={() => dispatch({ type: 'RESET' })}
+          onClick={() => {
+            setHintVisible(false)
+            dispatch({ type: 'RESET' })
+          }}
         >
           <RotateCcw aria-hidden="true" /> Reset
         </button>
       </header>
-      {/*
-       * What makes this a case rather than a workspace, stated where the learner arrives. Every
-       * field is read from the case definition, so the block cannot describe a case the runtime
-       * does not have.
-       */}
       <dl className={styles.caseIdentity} data-case-identity>
         <div>
           <dt>Patient problem</dt>
@@ -114,93 +71,55 @@ export function McsCaseWorkflow({
         </div>
         <div>
           <dt>Support pathway</dt>
-          <dd>{deviceLabels[scenario.device]}</dd>
+          <dd>
+            {scenario.device === 'iabp'
+              ? 'IABP counterpulsation'
+              : scenario.device === 'impella'
+                ? 'Microaxial support'
+                : 'Durable continuous-flow LVAD'}
+          </dd>
         </div>
         <div>
           <dt>Your role</dt>
           <dd>
-            {state.section === 'assess'
-              ? 'Work it independently. Routine teaching is held back until the debrief; safety interruptions still appear immediately.'
-              : 'Work it with coaching available. The response and the debrief explain what happened as you go.'}
+            Explore the simulated conditions, compare observations, and open the explanation
+            whenever useful. Predictions and actions are optional.
           </dd>
         </div>
         <div>
-          <dt>Immediate goal</dt>
-          <dd>
-            {state.completed
-              ? scenario.learningObjectives[0]
-              : 'Explain what the observations establish and what still needs assessment.'}
-          </dd>
-        </div>
-        <div>
-          <dt>What makes this one different</dt>
-          <dd>{mcsPresentationTitle(scenario)}</dd>
+          <dt>Topic</dt>
+          <dd>{scenario.learningObjectives[0]}</dd>
         </div>
       </dl>
-      <ol className={styles.phaseRail} aria-label="Case reasoning sequence">
-        {phases.map((phase, index) => (
-          <li
-            key={phase}
-            data-current={phase === state.scenarioPhase}
-            data-complete={currentPhaseIndex > index || state.completed}
-          >
-            <button type="button" onClick={() => jumpToPhase(phase)}>
-              <span>{index + 1}</span>
-              <strong>{phase}</strong>
-            </button>
-          </li>
+      <nav className={styles.caseActions} aria-label="Case sections">
+        {['inspect', 'predict', 'response', 'actions'].map((part) => (
+          <a key={part} href={`#mcs-case-${part}`}>
+            {part === 'actions' ? 'Explanation and next steps' : part}
+          </a>
         ))}
-      </ol>
-
+      </nav>
       <div className={styles.caseObservation} data-case-observations>
         {observations}
       </div>
-      <div id="mcs-case-inspect" className={styles.workflowStep} tabIndex={-1}>
-        <div>
-          <span>01</span>
-          <div>
-            <h3>Inspect before you diagnose</h3>
-            <p>Open at least one signal set so the later actions have an observable anchor.</p>
-          </div>
-        </div>
+      <section id="mcs-case-inspect" className={styles.workflowStep} tabIndex={-1}>
+        <h3>Inspect the current readings</h3>
+        <p>These buttons read the simulated signals. Inspection does not change the patient.</p>
         <div className={styles.inspectButtons}>
-          <button
-            type="button"
-            disabled={!isMcsActionIdPermitted(state, 'inspect:arterial')}
-            data-complete={state.inspectedIds.includes('inspect:arterial')}
-            onClick={() => dispatch({ type: 'INSPECT', id: 'arterial' })}
-          >
-            <Eye aria-hidden="true" /> Arterial waveform
-          </button>
-          <button
-            type="button"
-            disabled={!isMcsActionIdPermitted(state, 'inspect:preload')}
-            data-complete={state.inspectedIds.includes('inspect:preload')}
-            onClick={() => dispatch({ type: 'INSPECT', id: 'preload' })}
-          >
-            <Eye aria-hidden="true" /> Filling & RV
-          </button>
-          <button
-            type="button"
-            disabled={!isMcsActionIdPermitted(state, 'inspect:device')}
-            data-complete={state.inspectedIds.includes('inspect:device')}
-            onClick={() => dispatch({ type: 'INSPECT', id: 'device' })}
-          >
-            <Eye aria-hidden="true" /> Device display
-          </button>
+          {(['arterial', 'preload', 'device'] as const).map((id, index) => (
+            <button
+              key={id}
+              type="button"
+              data-complete={state.inspectedIds.includes(`inspect:${id}`)}
+              onClick={() => dispatch({ type: 'INSPECT', id })}
+            >
+              <Eye aria-hidden="true" />
+              {['Arterial waveform', 'Filling & RV', 'Device display'][index]}
+            </button>
+          ))}
         </div>
-      </div>
-
-      <fieldset
-        id="mcs-case-predict"
-        className={styles.predictionFieldset}
-        disabled={state.predictionCommitted}
-        tabIndex={-1}
-      >
-        <legend>
-          <span>02</span>
-          <strong>{scenario.predictionPrompt}</strong>
-        </legend>
+      </section>
+      <fieldset id="mcs-case-predict" className={styles.predictionFieldset} tabIndex={-1}>
+        <legend>Optional prediction: {scenario.predictionPrompt}</legend>
         {scenario.predictionOptions.map((option) => (
           <label key={option.id}>
             <input
@@ -212,77 +131,56 @@ export function McsCaseWorkflow({
             <span>{option.label}</span>
           </label>
         ))}
-        <button
-          type="button"
-          disabled={state.predictionCommitted || !state.selectedPredictionId}
-          onClick={() => dispatch({ type: 'COMMIT_PREDICTION' })}
-        >
-          {state.predictionCommitted ? (
-            <>
-              <Check aria-hidden="true" /> Prediction committed
-            </>
-          ) : (
-            <>
-              <Check aria-hidden="true" /> Record initial frame
-            </>
-          )}
-        </button>
+        <div className={styles.caseActions}>
+          <button
+            type="button"
+            disabled={!state.selectedPredictionId}
+            onClick={() => dispatch({ type: 'COMMIT_PREDICTION' })}
+          >
+            Compare prediction
+          </button>
+          <button type="button" onClick={() => setHintVisible(true)}>
+            Hint
+          </button>
+          <button type="button" onClick={() => dispatch({ type: 'COMPLETE' })}>
+            Show explanation
+          </button>
+          <button type="button" onClick={() => dispatch({ type: 'SELECT_PREDICTION', id: null })}>
+            Try prediction again
+          </button>
+        </div>
       </fieldset>
-
-      {state.section === 'practice' && state.predictionCommitted && !state.completed ? (
+      {hintVisible || state.predictionCommitted ? (
         <aside className={styles.guidedPrompt}>
-          <strong>Practice cue</strong>
-          <span>{scenario.guidedPrompt}</span>
+          <strong>{state.predictionCommitted ? 'Prediction explanation' : 'Hint'}</strong>
+          <p>{scenario.guidedPrompt || scenario.debrief[0]}</p>
+          {state.predictionCommitted ? (
+            <p>
+              {
+                scenario.predictionOptions.find(
+                  (option) => option.id === scenario.correctPredictionId,
+                )?.label
+              }
+            </p>
+          ) : null}
         </aside>
       ) : null}
       <section className={styles.casePermittedActions}>
-        <h3>Permitted actions</h3>
+        <h3>Explore the supported controls</h3>
         <p>
-          The initial interpretation is optional in this case engine. Permitted safety actions
-          remain available while you inspect.
+          Change one variable at a time, then inspect the response. Reset restores this case’s
+          initial patient and device configuration and clears current actions and answers.
         </p>
         {controls}
       </section>
-      {state.section === 'assess' && !state.completed ? (
-        <aside className={styles.assessPrompt}>
-          <span>Work from the visible cues; routine teaching is collected for the debrief.</span>
-          <label>
-            <input
-              type="checkbox"
-              checked={showChallengeFeedback}
-              onChange={(event) => onShowChallengeFeedbackChange(event.currentTarget.checked)}
-            />
-            <span>Show teaching notes after each action</span>
-          </label>
-        </aside>
-      ) : null}
-
-      {state.completed ||
-      (state.actionIds.some((id) => !id.startsWith('inspect:')) &&
-        (state.section === 'practice' || showChallengeFeedback)) ? (
-        <div
-          id="mcs-case-response"
-          className={styles.responseStatus}
-          role="status"
-          aria-live="polite"
-          tabIndex={-1}
-        >
-          <strong>Simulation response</strong>
-          <span>{state.responseMessage}</span>
-        </div>
-      ) : (
-        <div id="mcs-case-response" className={styles.responseStatus} tabIndex={-1}>
-          <strong>Routine teaching deferred</strong>
-          <span>
-            The patient, device, waveforms, and alarms still change in real time. Safety
-            interruptions remain immediate.
-          </span>
-        </div>
-      )}
+      <div id="mcs-case-response" className={styles.responseStatus} role="status" tabIndex={-1}>
+        <strong>Current model response</strong>
+        <span>{state.responseMessage}</span>
+        <span>{state.causalExplanation}</span>
+      </div>
       <div id="mcs-case-actions" className={styles.caseActions} tabIndex={-1}>
         <button
           type="button"
-          disabled={!isMcsActionIdPermitted(state, 'team:escalate')}
           onClick={() => dispatch({ type: 'ESCALATE' })}
           data-complete={state.escalated}
         >
@@ -296,11 +194,10 @@ export function McsCaseWorkflow({
           Reassess response
         </button>
         <button type="button" onClick={() => dispatch({ type: 'COMPLETE' })}>
-          Open causal debrief
+          Open worked explanation
         </button>
       </div>
-
-      {state.criticalErrors.length > 0 ? (
+      {state.criticalErrors.length ? (
         <div className={styles.criticalErrors} role="alert">
           <ShieldAlert aria-hidden="true" />
           <div>
@@ -311,11 +208,14 @@ export function McsCaseWorkflow({
           </div>
         </div>
       ) : null}
-
-      {state.completed && state.score ? (
-        <section className={styles.debriefCard}>
+      {state.completed ? (
+        <section className={styles.debriefCard} data-worked-explanation>
           <div>
-            <h3>Review the causal chain and the cues that changed</h3>
+            <h3>Worked case explanation</h3>
+            <p>
+              Authored teaching for this case. Viewing it does not perform an action or establish a
+              successful outcome in your run.
+            </p>
             <ul>
               {scenario.debrief.map((item) => (
                 <li key={item}>{item}</li>
@@ -323,12 +223,28 @@ export function McsCaseWorkflow({
             </ul>
             <h4>Signals to reconcile</h4>
             <ul>
-              {scenario.successCriteria.map((criterion) => (
-                <li key={criterion.label}>{criterion.label}</li>
+              {scenario.successCriteria.map((item) => (
+                <li key={item.label}>{item.label}</li>
               ))}
             </ul>
-            <h4>Deferred simulation response</h4>
-            <p>{state.responseMessage}</p>
+            <h4>Actions performed in this run</h4>
+            {state.actionIds.length ? (
+              <ul>
+                {state.actionIds.map((id) => (
+                  <li key={id}>{id}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>No actions performed.</p>
+            )}
+            <p>
+              {state.selectedPredictionId
+                ? `Your prediction: ${scenario.predictionOptions.find((option) => option.id === state.selectedPredictionId)?.label}`
+                : 'No prediction submitted.'}
+            </p>
+            <button type="button" onClick={() => dispatch({ type: 'RESET' })}>
+              Try again from the case baseline
+            </button>
           </div>
         </section>
       ) : null}

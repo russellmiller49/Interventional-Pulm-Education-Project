@@ -111,7 +111,7 @@ describe('MCS M5 — workbench initialization and route resolution', () => {
 
     // No scenario is loaded, so the workspace is the studio rather than a fabricated challenge.
     expect(screen.getByRole('region', { name: 'Choose your practice' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Open challenge' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Open integrated case' })).toBeEnabled()
     expect(getCriticalCareResumeTarget(window.localStorage)).toBeNull()
   })
 
@@ -160,10 +160,12 @@ describe('MCS M5 — workbench initialization and route resolution', () => {
     )
   })
 
-  it('creates no resume target from a deep-linked Challenge', async () => {
+  it('saves an integrated case location without requiring an answer', async () => {
     await renderWorkbench({ section: 'assess', initialActivityId: 'CAP-IMP-01' })
 
-    expect(getCriticalCareResumeTarget(window.localStorage)).toBeNull()
+    expect(getCriticalCareResumeTarget(window.localStorage)?.href).toBe(
+      '/mechanical-circulatory-support/assess?case=CAP-IMP-01',
+    )
   })
 
   it('keeps every Challenge open regardless of stored history', async () => {
@@ -171,14 +173,18 @@ describe('MCS M5 — workbench initialization and route resolution', () => {
     await renderWorkbench({ section: 'assess' })
 
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Open challenge' })).toBeEnabled(),
+      expect(screen.getByRole('button', { name: 'Open integrated case' })).toBeEnabled(),
     )
   })
 
-  it('writes no progress merely from mounting a route', async () => {
+  it('records only a visit when mounting a case', async () => {
     await renderWorkbench({ section: 'practice', initialActivityId: 'IABP-02' })
 
-    expect(readStoredProgressRaw()).toBeNull()
+    expect(readStoredProgressRaw()).toMatchObject({
+      version: 1,
+      selfPaced: { visitedCaseIds: ['IABP-02'] },
+    })
+    expect(readStoredProgressRaw()?.completedCaseIds).toBeUndefined()
   })
 })
 

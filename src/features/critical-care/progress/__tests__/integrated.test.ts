@@ -57,7 +57,7 @@ describe('integrated ICU capstone progress boundary', () => {
     expect(CRITICAL_CARE_INTEGRATED_OUTCOMES_MAX_COURSES).toBe(icuScenarioFamilies.length)
   })
 
-  it('starts at the authored foundation scenario and changes recommendation with focused completion', () => {
+  it('uses focused completion without counting historical MCS scores as a prerequisite', () => {
     // The entry point is the single-dominant-mechanism scenario, not the longest multisystem one.
     expect(getCriticalCareIcuScenarioRecommendation(envelope())).toMatchObject({
       scenarioId: 'hemorrhagic',
@@ -69,7 +69,7 @@ describe('integrated ICU capstone progress boundary', () => {
       scenarioId: 'lv-cardiogenic',
       reason: 'focused-alignment',
       readiness: {
-        completedRequirementCount: 2,
+        completedRequirementCount: 1,
         totalRequirementCount: 2,
         eligibleForAssess: true,
         approvedGateRequirementCount: 0,

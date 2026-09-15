@@ -17,7 +17,7 @@ import { mcsVerdictFrames } from './McsStageHost'
 import styles from './mcs-stage.module.css'
 
 /**
- * The story problems: predict, commit, then run the colleague's change and read four values.
+ * Optional predictions and worked examples run on an independent model.
  *
  * Commitment is view-state for the mount only — nothing here is recorded. The run happens on a
  * separate copy of the circulation, built from the story's own starting point, so the section's
@@ -37,8 +37,8 @@ export function McsStoryProblems({ stories }: { readonly stories: readonly McsSt
       <h3 id="story-problems-heading">Story problems</h3>
       <p className={styles.storyIntro}>
         Two constructed illustrations, each sixty seconds. A colleague does one thing for a reason
-        that sounds sensible. Predict what happens, commit, then run the same change on a separate
-        copy of the circulation and read the values.
+        that sounds sensible. Try an optional prediction or view the worked example directly. Run
+        the provided change on a separate copy of the circulation and compare the values.
       </p>
       {stories.map((story) => (
         <StoryCard
@@ -54,6 +54,11 @@ export function McsStoryProblems({ stories }: { readonly stories: readonly McsSt
             )
           }
           onRun={() => setRan((current) => ({ ...current, [story.id]: true }))}
+          onRetry={() => {
+            setSelected((current) => ({ ...current, [story.id]: '' }))
+            setCommitted((current) => ({ ...current, [story.id]: '' }))
+            setRan((current) => ({ ...current, [story.id]: false }))
+          }}
         />
       ))}
     </section>
@@ -68,6 +73,7 @@ function StoryCard({
   onSelect,
   onCommit,
   onRun,
+  onRetry,
 }: {
   readonly story: McsStoryProblem
   readonly selectedId: string | null
@@ -76,7 +82,9 @@ function StoryCard({
   readonly onSelect: (choiceId: string) => void
   readonly onCommit: () => void
   readonly onRun: () => void
+  readonly onRetry: () => void
 }) {
+  const [hintVisible, setHintVisible] = useState(false)
   const run = useMemo(() => (ran ? runMcsStory(story) : null), [ran, story])
   const committedChoice = story.item.choices.find((choice) => choice.id === committedId)
   const legendId = `${story.id}-stem`
@@ -92,7 +100,7 @@ function StoryCard({
       <h4>{story.title}</h4>
       <fieldset
         className={stageStyles.choiceList}
-        disabled={committedId !== null}
+        disabled={Boolean(committedId)}
         aria-labelledby={legendId}
         data-story-choices
       >
@@ -124,52 +132,72 @@ function StoryCard({
             explanation={story.item.explanation}
             evidenceIds={story.item.evidenceIds}
           />
-          {ran && run ? (
-            <div className={styles.storyRun} data-story-run>
-              <dl className={styles.storyReadings}>
-                {story.readings.map((reading) => (
-                  <div key={reading}>
-                    <dt>{MCS_STORY_READING_LABELS[reading]}</dt>
-                    <dd>
-                      {(run.before.metrics[reading] as number).toFixed(1)} →{' '}
-                      {(run.after.metrics[reading] as number).toFixed(1)}{' '}
-                      <small>{MCS_STORY_READING_UNITS[reading]}</small>
-                    </dd>
-                  </div>
-                ))}
-                {story.alarmId ? (
-                  <div>
-                    <dt>The alarm</dt>
-                    <dd data-story-alarm>
-                      {alarmState(run.before)} → {alarmState(run.after)}
-                    </dd>
-                  </div>
-                ) : null}
-              </dl>
-              <p className={styles.storyAxis} data-story-axis-verdict>
-                {story.axisVerdict}
-              </p>
-            </div>
-          ) : (
-            <button
-              type="button"
-              className={shellStyles.nowSecondary}
-              onClick={onRun}
-              data-story-run-button
-            >
-              Run it on a copy of the circulation
-            </button>
-          )}
         </div>
       ) : (
         <button
           type="button"
           className={shellStyles.nowPrimary}
-          disabled={selectedId === null}
+          disabled={!selectedId}
           onClick={onCommit}
           data-story-commit
         >
-          Commit this prediction
+          Compare prediction
+        </button>
+      )}{' '}
+      <div className={styles.optionalActions}>
+        <button type="button" onClick={() => setHintVisible(true)}>
+          Hint
+        </button>
+        {hintVisible ? <p>{story.axisVerdict}</p> : null}
+        <button type="button" onClick={onRun}>
+          Show explanation and worked example
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setHintVisible(false)
+            onRetry()
+          }}
+        >
+          Try again
+        </button>
+      </div>
+      {ran ? <p>{story.item.explanation}</p> : null}
+      <p>Provided example on a separate model; no action is applied to your current patient.</p>
+      {ran && run ? (
+        <div className={styles.storyRun} data-story-run>
+          <dl className={styles.storyReadings}>
+            {story.readings.map((reading) => (
+              <div key={reading}>
+                <dt>{MCS_STORY_READING_LABELS[reading]}</dt>
+                <dd>
+                  {(run.before.metrics[reading] as number).toFixed(1)} →{' '}
+                  {(run.after.metrics[reading] as number).toFixed(1)}{' '}
+                  <small>{MCS_STORY_READING_UNITS[reading]}</small>
+                </dd>
+              </div>
+            ))}
+            {story.alarmId ? (
+              <div>
+                <dt>The alarm</dt>
+                <dd data-story-alarm>
+                  {alarmState(run.before)} → {alarmState(run.after)}
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+          <p className={styles.storyAxis} data-story-axis-verdict>
+            {story.axisVerdict}
+          </p>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className={shellStyles.nowSecondary}
+          onClick={onRun}
+          data-story-run-button
+        >
+          Run it on a copy of the circulation
         </button>
       )}
     </article>

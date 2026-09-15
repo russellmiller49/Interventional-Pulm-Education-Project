@@ -528,7 +528,7 @@ describe('the guided-section count is derived, not written down', () => {
 
     const practiceItem = mcsModuleNavItems.find((item) => item.title === 'Practice')
     expect(practiceItem?.description).toContain(String(mcsPracticeScenarios.length))
-    const challengeItem = mcsModuleNavItems.find((item) => item.title === 'Challenge')
+    const challengeItem = mcsModuleNavItems.find((item) => item.title === 'Integrated cases')
     expect(challengeItem?.description).toContain(String(mcsCapstoneScenarios.length))
   })
 })

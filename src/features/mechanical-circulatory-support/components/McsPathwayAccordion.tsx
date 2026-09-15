@@ -14,10 +14,10 @@ import {
   resolveNextIncompleteMcsSection,
   type McsProgressView,
 } from '../content/pathwayResolver'
-import { readMcsProgress } from '../engine'
+import { readMcsLearningProgress } from '../engine/learningProgress'
 import styles from './mechanical-circulatory-support.module.css'
 
-const FRESH_PROGRESS: McsProgressView = { completedLessonIds: [], masteredCaseIds: [] }
+const FRESH_PROGRESS: McsProgressView = { visitedLessonIds: [], visitedCaseIds: [] }
 
 /**
  * The one map: the pathway as its five groups, each a disclosure, the one holding the learner's
@@ -37,7 +37,7 @@ export function McsPathwayAccordion({
 }) {
   const groups = mcsPathwayGroups()
   const worked = mcsWorkedSectionIds(progress)
-  const mastered = new Set(progress.masteredCaseIds)
+  const visited = new Set(progress.visitedCaseIds)
   const next = resolveNextIncompleteMcsSection(progress)
 
   return (
@@ -64,7 +64,7 @@ export function McsPathwayAccordion({
                   <li
                     key={section.id}
                     data-kind="section"
-                    data-complete={done}
+                    data-visited={done}
                     data-recommended={recommended || undefined}
                   >
                     <Link href={mcsLearnSectionHref(section.id)}>
@@ -74,15 +74,13 @@ export function McsPathwayAccordion({
                       </span>
                       <span className={styles.pathwayChipTitle}>{section.title}</span>
                       <span className={styles.pathwayChipDescription}>{section.description}</span>
-                      {done ? (
-                        <span className={styles.pathwayChipDone}>✓ worked through</span>
-                      ) : null}
+                      {done ? <span className={styles.pathwayChipDone}>visited</span> : null}
                     </Link>
                   </li>
                 )
               })}
               {group.cases.map((scenario) => (
-                <li key={scenario.id} data-kind="case" data-complete={mastered.has(scenario.id)}>
+                <li key={scenario.id} data-kind="case" data-visited={visited.has(scenario.id)}>
                   <Link
                     href={`${mechanicalCirculatorySupportNavBase}/practice?case=${encodeURIComponent(scenario.id)}`}
                   >
@@ -90,14 +88,14 @@ export function McsPathwayAccordion({
                     <span className={styles.pathwayChipTitle}>
                       {mcsPresentationTitle(scenario)}
                     </span>
-                    {mastered.has(scenario.id) ? (
-                      <span className={styles.pathwayChipDone}>✓ worked through</span>
+                    {visited.has(scenario.id) ? (
+                      <span className={styles.pathwayChipDone}>visited</span>
                     ) : null}
                   </Link>
                 </li>
               ))}
               {group.capstone ? (
-                <li data-kind="capstone" data-complete={mastered.has(group.capstone.id)}>
+                <li data-kind="capstone" data-visited={visited.has(group.capstone.id)}>
                   <Link
                     href={`${mechanicalCirculatorySupportNavBase}/assess?case=${encodeURIComponent(group.capstone.id)}`}
                   >
@@ -140,7 +138,7 @@ export function McsStoredPathwayAccordion({ id }: { readonly id?: string }) {
   const [hydrated, setHydrated] = useState(false)
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setProgress(readMcsProgress())
+      setProgress(readMcsLearningProgress())
       setHydrated(true)
     }, 0)
     return () => window.clearTimeout(timer)

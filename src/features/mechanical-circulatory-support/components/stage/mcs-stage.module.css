@@ -734,3 +734,23 @@
 .readableMap [data-circulation-map] > div:first-of-type {
   min-width: 680px;
 }
+
+.optionalActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-block: 1rem;
+}
+.optionalActions button {
+  border: 1px solid #487078;
+  border-radius: 0.5rem;
+  padding: 0.55rem 0.85rem;
+  text-align: left;
+}
+.optionalActions button:disabled {
+  opacity: 0.5;
+}
+.optionalActions button:focus-visible {
+  outline: 2px solid #77e1e5;
+  outline-offset: 3px;
+}

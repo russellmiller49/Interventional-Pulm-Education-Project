@@ -392,11 +392,11 @@ export function inspectInCase(actionId: keyof typeof CASE_INSPECT_BUTTONS): void
 
 export function commitCasePrediction(optionLabel: string): void {
   chooseRadio(optionLabel)
-  fireEvent.click(screen.getByRole('button', { name: /Record initial frame/ }))
+  fireEvent.click(screen.getByRole('button', { name: /Compare prediction/ }))
 }
 
 export function openCausalDebrief(): void {
-  fireEvent.click(screen.getByRole('button', { name: 'Open causal debrief' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Open worked explanation' }))
 }
 
 export function reassessCase(): void {

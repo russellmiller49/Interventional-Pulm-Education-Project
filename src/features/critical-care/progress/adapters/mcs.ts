@@ -1,4 +1,11 @@
-import type { CriticalCareActivityDefinition } from '@/features/learning-module/activity'
+import {
+  parseMcsLearningProgress,
+  type McsLearningProgress,
+} from '@/features/mechanical-circulatory-support/engine/learningProgress'
+import type {
+  CriticalCareActivityDefinition,
+  CriticalCareActivityPhase,
+} from '@/features/learning-module/activity'
 import type { McsProgressV1 } from '@/features/mechanical-circulatory-support/engine/progress'
 
 import type {
@@ -7,7 +14,6 @@ import type {
   CriticalCareReadableStorage,
 } from '../types'
 import {
-  activityModeForSection,
   findCatalogActivity,
   isRecord,
   isStableLegacyId,
@@ -31,6 +37,7 @@ export const MCS_PROGRESS_STORAGE_KEY = 'interventionalpulm:mcs-progress:v1' as 
 interface ParsedMcsSource {
   readonly report: CriticalCareProgressSourceReport
   readonly progress?: McsProgressV1
+  readonly current?: McsLearningProgress
 }
 
 function parseStringList(value: unknown): readonly string[] | null {
@@ -149,7 +156,11 @@ function parseMcsSource(storage: CriticalCareReadableStorage | null): ParsedMcsS
   }
   const progress = safeParseMcsProgress(json.value)
   return progress
-    ? { report: sourceReport(read, 'valid', { detectedVersion }), progress }
+    ? {
+        report: sourceReport(read, 'valid', { detectedVersion }),
+        progress,
+        current: parseMcsLearningProgress(json.value.selfPaced),
+      }
     : {
         report: sourceReport(read, 'corrupt', {
           issue: 'invalid-shape',
@@ -158,57 +169,13 @@ function parseMcsSource(storage: CriticalCareReadableStorage | null): ParsedMcsS
       }
 }
 
-function projectMcsProgress(
-  progress: McsProgressV1,
-  activities: readonly CriticalCareActivityDefinition[],
-): CriticalCareLegacyProgressResult['activities'] {
-  const sourceIds = new Set([
-    ...progress.completedLessonIds,
-    ...progress.completedCaseIds,
-    ...progress.masteredCaseIds,
-    ...progress.completedCapstoneIds,
-    ...Object.keys(progress.bestScores),
-    ...(progress.lastActivityId ? [progress.lastActivityId] : []),
-  ])
-  return mergeProjectedActivities(
-    [...sourceIds].map((sourceId) => {
-      const section = findCatalogActivity(activities, ACTIVITY_PREFIX, 'learn', sourceId)
-        ? 'learn'
-        : findCatalogActivity(activities, ACTIVITY_PREFIX, 'assess', sourceId)
-          ? 'assess'
-          : 'practice'
-      const activity = findCatalogActivity(activities, ACTIVITY_PREFIX, section, sourceId)
-      const mastered =
-        progress.masteredCaseIds.includes(sourceId) ||
-        progress.completedCapstoneIds.includes(sourceId)
-      const completed =
-        progress.completedLessonIds.includes(sourceId) ||
-        progress.completedCaseIds.includes(sourceId)
-      const inProgress =
-        progress.lastActivityId === sourceId || progress.bestScores[sourceId] !== undefined
-      if (!mastered && !completed && !inProgress) return null
-      return projectActivityProgress(activity, {
-        status: mastered ? 'mastered' : completed ? 'completed' : 'in-progress',
-        ...(progress.lastActivityId === sourceId ? { currentPhase: 'recognize' as const } : {}),
-        mode: activityModeForSection(section),
-        ...(progress.bestScores[sourceId] === undefined
-          ? {}
-          : { bestScore: progress.bestScores[sourceId] }),
-        // The V1 store never recorded attempt counts. Keep zero rather than
-        // manufacturing an exact count from completion.
-        attempts: 0,
-      })
-    }),
-  )
-}
-
 export function readMcsLegacyProgress(
   storage: CriticalCareReadableStorage | null,
   activities: readonly CriticalCareActivityDefinition[],
 ): CriticalCareLegacyProgressResult {
   const parsed = parseMcsSource(storage)
   if (!parsed.progress) return legacyAdapterResult(MODULE_ID, [parsed.report], [])
-  const progress = parsed.progress
+  const progress = parsed.current ?? parseMcsLearningProgress(undefined)
   const resumeActivity = progress.lastActivityId
     ? findCatalogActivity(
         activities,
@@ -218,16 +185,36 @@ export function readMcsLegacyProgress(
       )
     : undefined
   const resume = makeLegacyResumePointer(resumeActivity, {
-    mode: activityModeForSection(progress.lastSection),
-    phase: 'recognize',
-    payloadVersion: 'mcs-progress-v1',
+    mode: 'guided',
+    phase: progress.lastPhase as CriticalCareActivityPhase,
+    payloadVersion: 'mcs-location-v1',
     ...(progress.lastActivityId ? { scenarioId: progress.lastActivityId } : {}),
     deviceId: progress.lastDevice,
   })
   return legacyAdapterResult(
     MODULE_ID,
     [parsed.report],
-    projectMcsProgress(progress, activities),
-    resume,
+    mergeProjectedActivities([
+      ...progress.visitedLessonIds.map((id) =>
+        projectActivityProgress(findCatalogActivity(activities, ACTIVITY_PREFIX, 'learn', id), {
+          status: 'in-progress',
+          mode: 'guided',
+        }),
+      ),
+      ...progress.visitedCaseIds.map((id) =>
+        projectActivityProgress(
+          findCatalogActivity(
+            activities,
+            ACTIVITY_PREFIX,
+            id.startsWith('CAP-') ? 'assess' : 'practice',
+            id,
+          ),
+          { status: 'in-progress', mode: 'guided' },
+        ),
+      ),
+    ]),
+    resume && progress.locationUpdatedAt
+      ? { ...resume, updatedAt: progress.locationUpdatedAt }
+      : resume,
   )
 }

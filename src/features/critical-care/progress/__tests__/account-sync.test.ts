@@ -157,7 +157,7 @@ describe('critical-care coarse account sync projection', () => {
     ).toBeNull()
   })
 
-  it('projects legacy MCS and ECMO progress while retaining CRRT records without completion claims', () => {
+  it('projects legacy ECMO progress while retaining historical MCS and CRRT without completion claims', () => {
     const values = {
       ...partialLegacyProgressFixtures,
       ...completedLegacyProgressFixtures,
@@ -178,9 +178,12 @@ describe('critical-care coarse account sync projection', () => {
     )
 
     expect(projected?.modules.map((module) => module.moduleId)).toEqual(
-      expect.arrayContaining(['mechanical-circulatory-support', 'cardiohelp-ecmo']),
+      expect.arrayContaining(['cardiohelp-ecmo']),
     )
     expect(projected?.modules.map((module) => module.moduleId)).not.toContain('baxter-crrt')
+    expect(projected?.modules.map((module) => module.moduleId)).not.toContain(
+      'mechanical-circulatory-support',
+    )
   })
 
   it('hydrates only explicitly completed sections without inventing partial identities', () => {
