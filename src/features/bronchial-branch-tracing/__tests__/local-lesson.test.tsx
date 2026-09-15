@@ -271,3 +271,68 @@ it('retains keyboard marking, an open outline with a next-lesson link, save for 
   )
   expect(await axe(container)).toHaveNoViolations()
 })
+// BBT-02: the comparison explains where each mark sits against the model locators, where the
+// paths diverge and what to revisit; uncertainty starts guidance; naming is shown on request.
+it('gives junction feedback from the learner’s own marks, navigates to revisit slices, guides an unresolved response and names on request without recording', async () => {
+  render(<BranchTracingLesson requestedId="continuity" />)
+  await begin('continuity')
+  const rmsb = localExercise(LESSONS.find((l) => l.id === 'continuity')!.exercises![0])
+  click(/^A · RMSB · slice 387/)
+  const image = screen.getByRole('group', { name: /^CT image\./ })
+  // Ten cursor steps toward screen-left (patient right) from the crop centre, then place the mark.
+  fireEvent.keyDown(image, { key: 'ArrowLeft', shiftKey: true })
+  fireEvent.keyDown(image, { key: 'ArrowLeft', shiftKey: true })
+  fireEvent.keyDown(image, { key: 'Enter' })
+  ready()
+  expect(screen.getByRole('heading', { name: '2. A · RMSB placed' })).toBeVisible()
+  const placed = draft('continuity').marks[0]
+  expect(placed.slice).toBe(387)
+  expect(placed.pixel[0]).toBeLessThan(rmsb.trace.cropCenter[0])
+  click(/^B · LMSB · slice 387/)
+  click('Lumen unresolved here')
+  click('Check my tracing')
+  await screen.findByRole('heading', { name: 'Review the image evidence' })
+  const feedback = document.querySelector('[data-junction-feedback]') as HTMLElement
+  const items = feedback.querySelectorAll('li[data-mark-status]')
+  expect([...items].map((li) => li.getAttribute('data-mark-status'))).toEqual([
+    'nearest-intended',
+    'unresolved',
+  ])
+  expect(items[0]).toHaveTextContent(
+    /Your mark is \d+\.\d mm from the RMSB model locator; the nearest other model airway on this slice, LMSB, is \d+\.\d mm away\./,
+  )
+  expect(within(feedback).getByRole('heading', { name: 'Uncertain? Start here' })).toBeVisible()
+  expect(
+    within(feedback).getByText(/Within this interval the evidence is the side of the midline/),
+  ).toBeVisible()
+  expect(within(feedback).getByRole('heading', { name: 'Slices to revisit' })).toBeVisible()
+  click('Go to slice 392')
+  expect(screen.getByRole('slider', { name: 'CT slice' })).toHaveValue('392')
+  // The learner's marks are untouched by the comparison, the navigation and the naming aid.
+  expect(draft('continuity').marks[0]).toEqual(placed)
+  expect(draft('continuity').marks[1]).toEqual({ slice: 387, pixel: null })
+  const attempts = Object.values(draft('continuity').history)[0] as { marks: unknown[] }[]
+  expect(attempts).toHaveLength(1)
+  expect(attempts[0].marks[0]).toEqual(placed)
+  click('Show the names')
+  expect(within(feedback).getByRole('status')).toHaveTextContent(
+    /RMSB lies on the patient's right.*Nothing is recorded/,
+  )
+  click('LMSB · left main bronchus')
+  expect(within(feedback).getByRole('status')).toHaveTextContent(
+    /LMSB is the daughter on the patient's left/,
+  )
+  expect(draft('continuity').history).toEqual({ [rmsb.id]: attempts })
+  expect(feedback.textContent).not.toMatch(/\b(score|grade|pass|fail|incorrect|wrong|correct)\b/i)
+  expect(screen.getByRole('button', { name: 'Redo branch marks (optional)' })).toBeVisible()
+  expect(screen.getByText('Replay CT walkthrough (optional)')).toBeVisible()
+  expect(localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)).toBeNull()
+  // A second example (junction-6) keeps the replay available and its own packet.
+  click('Study the parent view')
+  reflect()
+  click('Next example: LLL')
+  recordLocal('continuity', 1)
+  await screen.findByRole('heading', { name: 'Review the image evidence' })
+  expect(screen.getByText(/The model node sits at about slice 321/)).toBeVisible()
+  expect(screen.getByText('Replay CT walkthrough (optional)')).toBeVisible()
+})

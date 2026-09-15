@@ -1382,6 +1382,7 @@
 .localInstructions button,
 .walkthrough button,
 .answerGuidance button,
+.junctionFeedback button,
 .mapChoices button {
   color: #effcfc;
   background: #1c3b47;
@@ -1858,4 +1859,37 @@
   .routeTask :global([data-now-card]) {
     position: static;
   }
+}
+
+.junctionFeedback h3 {
+  margin: 0.8rem 0 0.25rem;
+  font-size: 0.9rem;
+}
+.junctionFeedback h4 {
+  margin: 0.6rem 0 0.2rem;
+  font-size: 0.82rem;
+}
+.junctionFeedback ul {
+  margin: 0.2rem 0;
+  padding-left: 1.1rem;
+}
+.junctionFeedback li {
+  margin: 0.3rem 0;
+}
+.junctionFeedback details {
+  margin-top: 0.7rem;
+}
+.revisitList li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.revisitControls,
+.namingChoices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.namingTry {
+  margin-top: 0.5rem;
 }
