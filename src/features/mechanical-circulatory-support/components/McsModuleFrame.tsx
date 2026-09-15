@@ -66,8 +66,8 @@ export function McsModuleFrame({
             <div className={styles.englishFallback} role="note" data-no-handoff-translate>
               <Languages aria-hidden="true" />
               <span>
-                <strong>Reviewed-English fallback.</strong> Localized clinical content remains
-                pending until specialty review is complete.
+                <strong>English fallback.</strong> Localized clinical content remains pending until
+                specialty review is complete.
               </span>
             </div>
           ) : null}

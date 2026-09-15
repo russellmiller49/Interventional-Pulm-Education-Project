@@ -91,7 +91,7 @@
         {
           "file": "src/features/cardiohelp-ecmo/components/SourcesPanel.tsx",
           "locator": "Hub, Evidence boundary and review status: status badge and device profile",
-          "excerpt": "{published ? 'Published' : 'Unlisted draft'} · {ECMO_MODULE_REVIEW_LINE}"
+          "excerpt": "{published ? 'PUBLISHED' : 'UNLISTED DRAFT'} · {ECMO_MODULE_REVIEW_LINE}"
         },
         {
           "file": "src/features/cardiohelp-ecmo/content/sourceReviewMetadata.ts",
@@ -99,8 +99,8 @@
           "excerpt": "export const ECMO_MODULE_REVIEW_LINE = 'Clinical and device review: none recorded'"
         }
       ],
-      "learnerWording": "Unlisted draft · Clinical and device review: none recorded. Publication: Unlisted draft. Clinical and device review: None recorded.",
-      "previousWording": "UNLISTED REVIEW · REVIEW REQUIRED; Publication: Unlisted draft; clinical and device review pending. With the publication flag set to published, the same panel printed PUBLISHED · REVIEW APPROVED and Reviewed release.",
+      "learnerWording": "UNLISTED DRAFT · Clinical and device review: none recorded. Publication: Unlisted draft. Clinical and device review: None recorded. With the flag set to published: PUBLISHED · Clinical and device review: none recorded, and Publication: Public release.",
+      "previousWording": "UNLISTED REVIEW · REVIEW REQUIRED; Publication: Unlisted draft; clinical and device review pending. With the publication flag set to published, the same panel printed PUBLISHED · REVIEW APPROVED and Reviewed release. SHARED-02 (PR #225) had since replaced those two published-state phrases with PUBLISHED and Public release on main; this batch keeps that vocabulary and removes the remaining dependence of the review line on the flag.",
       "intendedTeachingPoint": "A learner can see that no clinical or device review of this module is recorded, whatever its publication status.",
       "sourceRecordIds": [],
       "sourceLocations": [

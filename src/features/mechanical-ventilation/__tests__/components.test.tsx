@@ -152,9 +152,10 @@ describe('multi-device mechanical ventilation learner interface', () => {
     expect(screen.getByRole('button', { name: /Assess the patient at the bedside/i })).toBeEnabled()
   })
 
-  it('keeps non-English routes on an explicit reviewed-English fallback', () => {
+  it('keeps non-English routes on an explicit English fallback', () => {
     render(<MechanicalVentilationLab locale="es" />)
-    expect(screen.getByText('Reviewed-English fallback:')).toBeInTheDocument()
+    expect(screen.getByText('English fallback:')).toBeInTheDocument()
+    expect(screen.queryByText(/Reviewed[- ]English/i)).not.toBeInTheDocument()
     expect(
       screen.getByRole('heading', { name: /Mechanical ventilation Learn & Practice simulator/i }),
     ).toBeInTheDocument()

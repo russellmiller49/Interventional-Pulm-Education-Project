@@ -377,6 +377,7 @@ export const ventilationUnitQuestions: readonly VentilationQuestion[] = [
         'Accept the change because saturation improved',
         'This overlooks a potentially important circulatory cost.',
         true,
+        'Higher PEEP raises pressure in the chest, which can reduce venous return and cardiac output; the falling arterial pressure is the warning that this may be happening. Oxygen reaching the tissues depends on cardiac output as well as saturation, so it can fall while saturation rises, and accepting the change on saturation alone keeps that PEEP in place.',
       ],
       [
         'Treat the saturation reading as unreliable',
@@ -544,11 +545,13 @@ export const ventilationUnitQuestions: readonly VentilationQuestion[] = [
         'Finish waveform classification before calling for help',
         'This delays stabilization of a deteriorating patient.',
         true,
+        'New hypoxemia with hypotension can be fatal within minutes if the cause is not found and treated, and asymmetric breath sounds point to causes found at the bedside, such as a pneumothorax or a tube that has moved into the right main bronchus. Classifying the waveform before calling for help delays the support and bedside checks this patient needs now.',
       ],
       [
         'Acknowledge the alarm and observe for improvement',
         'Acknowledgment does not treat the cause of instability.',
         true,
+        'Acknowledging the alarm changes only the warning; the hypoxemia, hypotension and asymmetric breath sounds are still there. Possible causes such as a pneumothorax or a displaced tube have to be found and treated, and in a patient this unstable, minutes spent watching for improvement can be fatal.',
       ],
     ],
   ),
@@ -767,11 +770,13 @@ export const ventilationPlacementQuestions: readonly VentilationQuestion[] = [
         'Alarm acknowledgment and documentation alone',
         'These do not support a deteriorating patient.',
         true,
+        'Acknowledging the alarm and writing it down do nothing to support the patient or find the cause. A high-pressure alarm with sudden hypoxemia and hypotension can come from an obstructed airway or a pneumothorax, and without bedside support and a search for the cause the patient may die within minutes.',
       ],
       [
         'Detailed waveform analysis before bedside evaluation',
         'This delays assessment and stabilization.',
         true,
+        'In a patient this unstable, securing ventilation comes before diagnosis. Dangerous causes of a high-pressure alarm with hypoxemia and hypotension, such as an obstructed or displaced tube or a pneumothorax, are checked at the bedside by passing a suction catheter, checking the tube and examining the chest; detailed waveform analysis first spends minutes the patient may not have.',
       ],
     ],
   ),
@@ -813,6 +818,7 @@ export const ventilationFinalQuestions: readonly VentilationQuestion[] = [
         'A successful change demonstrated by the saturation',
         'That interpretation overlooks the worsening perfusion.',
         true,
+        'Worsening perfusion means less blood may be carrying oxygen to the tissues. A pressure change that raises saturation can also lower cardiac output, and oxygen delivery depends on both, so it can fall even as saturation improves. Calling the change a success on saturation alone would keep, or build on, a setting that may be reducing oxygen delivery.',
       ],
       [
         'A conflicting pattern best explained by sensor failure',
@@ -874,6 +880,7 @@ export const ventilationFinalQuestions: readonly VentilationQuestion[] = [
         'Record completion because the sound has diminished',
         'Alarm behavior alone does not demonstrate resolution.',
         true,
+        'Persistent hypoxemia and distress mean the problem has not resolved, and hypoxemia can be rapidly lethal. Recording completion because the alarm is quieter can stop the search for the cause and the escalation this patient still needs.',
       ],
       [
         'Raise the alarm limit to match the current display',
@@ -972,6 +979,7 @@ export const ventilationFinalQuestions: readonly VentilationQuestion[] = [
         'Wait for a relaxed plateau before requesting assistance',
         'A deteriorating patient cannot wait for a perfect mechanics measurement.',
         true,
+        'A high-pressure alarm with abrupt hypotension and asymmetric breath sounds raises concern for a tension pneumothorax, and a patient this unstable may die within minutes if the cause is not treated. A plateau is worth measuring when possible, but waiting for a relaxed one before asking for help delays the support and treatment that come first.',
       ],
       [
         'Coordinate urgent bedside support and cause localization',
@@ -981,6 +989,7 @@ export const ventilationFinalQuestions: readonly VentilationQuestion[] = [
         'Silence the alarm while waiting for spontaneous resolution',
         'Acknowledgment does not treat the cause of instability.',
         true,
+        'Silencing only mutes the alarm for a short time and treats nothing. High pressure, abrupt hypotension and asymmetric breath sounds together raise concern for a tension pneumothorax, which needs recognition and treatment rather than waiting; left untreated, a patient this unstable may die within minutes.',
       ],
     ],
   ),

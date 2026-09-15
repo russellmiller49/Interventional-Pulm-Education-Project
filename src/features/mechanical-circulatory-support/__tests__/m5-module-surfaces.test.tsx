@@ -230,13 +230,14 @@ describe('MCS M5 — module chrome on every route', () => {
     }
   })
 
-  it('shows the reviewed-English fallback only on a non-English route', async () => {
+  it('shows the English fallback only on a non-English route', async () => {
     const english = await renderWorkbench({ section: 'practice' })
-    expect(screen.queryByText(/Reviewed-English fallback/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/English fallback/)).not.toBeInTheDocument()
     english.unmount()
 
     await renderWorkbench({ section: 'practice', locale: 'es' })
-    expect(screen.getByText(/Reviewed-English fallback/)).toBeInTheDocument()
+    expect(screen.getByText(/English fallback/)).toBeInTheDocument()
+    expect(screen.queryByText(/Reviewed[- ]English/i)).not.toBeInTheDocument()
   })
 })
 

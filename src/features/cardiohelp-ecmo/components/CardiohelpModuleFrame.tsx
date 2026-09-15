@@ -32,7 +32,7 @@ export function CardiohelpModuleFrame({
   children,
 }: CardiohelpModuleFrameProps) {
   const releaseLabel =
-    cardiohelpEcmoPublicationStatus === 'published' ? 'Reviewed release' : 'Unlisted tester access'
+    cardiohelpEcmoPublicationStatus === 'published' ? 'Public release' : 'Unlisted tester access'
 
   return (
     <HandoffContent>
@@ -79,8 +79,8 @@ export function CardiohelpModuleFrame({
           {locale !== 'en' ? (
             <div className={styles.englishFallback} data-no-handoff-translate={true} role="note">
               <Languages aria-hidden="true" />
-              Reviewed English content fallback: Spanish and Simplified Chinese clinical
-              translations are not yet approved.
+              English content fallback: Spanish and Simplified Chinese clinical translations are not
+              yet approved.
             </div>
           ) : null}
           {children}
