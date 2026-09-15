@@ -2,6 +2,8 @@
 
 > **Superseded in part, 2026-09-14 (BF-01).** The owner's self-paced decision retired the once-only capstone, its seven-of-eight / critical / unsafe standard, first-decision records and completion evidence. The eight cases are now optional integrated cases at the same address, and questions throughout can be explained before answering, retried or left. Walkthrough steps 1 and 6 below describe the earlier behavior. See [BF-01 handoff](../gap-remediation/self-paced/BF-01-handoff.md) for the current contract and the claim review queue. The content, anatomy, media, local-policy and release decisions in this packet still stand.
 
+> **Superseded in part, 2026-09-15 (BF-03).** The "Completion wording" row's current disposition is now: this course issues no completion record and keeps no answers; the closing section says so, and a survey saved by the earlier course no longer feeds the report exercise. Supervised procedural readiness and any observed skills evaluation stay outside this self-paced product; walkthrough step 7 describes that boundary, not a requirement. The assembled evidence and open holds for a release review are in the [BF-03 release review packet](../gap-remediation/bf/BF-03-release-review-packet.md), and the learner usability path is in the [BF-03 session plan](../gap-remediation/bf/BF-03-usability-session-plan.md). This packet's decision rows are otherwise unchanged and still pending.
+
 The core module is ready for content and anatomy review in its unlisted preview. This packet records what a reviewer must decide; it is not approval. No reviewer, rights holder, release date or publication permission has been inferred.
 
 ## Material to review

@@ -2,15 +2,18 @@ import { SIMULATOR_LANDMARKS, STEPS_LANDMARKS, TEACHING_LANDMARKS } from '../lan
 import type { BronchSectionDefinition } from '../types'
 
 /**
- * M18 — What finishing the course establishes. The closing section: the learner reads a trainee's
+ * M18 — What a training record can show. The closing section: the learner reads a trainee's
  * file record by record — course completion, knowledge responses, simulated navigation, observed
  * physical skill, supervised clinical performance, self-confidence — and decides which claim each
  * can carry. Knowledge spec §18.4 and §21 (S2 PDF 67–69, 100–109, 116–117; S3 PDF 17–18, 26–28,
  * 35–42; T08), with the transfer drawn from §5.5 and §17.7 (T11, T15).
  *
- * Finishing the course establishes one thing — that its learning activities were completed. Seed
- * Q12's key is that sentence, carried by the block "Four claims, and who makes each", not a
- * learner item.
+ * The fellow's file is constructed for teaching and comes from another online course, not this one.
+ * Under the owner's self-paced decision this course issues no completion record and keeps no
+ * answers; it keeps the sections a learner opens and marks reviewed, on that device (BF-03). Seed
+ * Q12's key — that finishing the course establishes its learning activities were completed —
+ * described the earlier course; the block "Four claims, and who makes each" now teaches that a
+ * course record shows at most completion and says that this course issues none.
  */
 const FILE_HEADING = 'What this fellow’s file holds'
 const CLAIMS_HEADING = 'Four claims, and who makes each'
@@ -64,7 +67,7 @@ export const section: BronchSectionDefinition = {
   newConcept:
     'A record supports only the claim its own evidence can carry, in the setting where that evidence was gathered: finished activities show completion, not the hands.',
   incrementSentence:
-    'This section adds one idea to the honest report: a training record, like a procedure note, claims only what was actually seen, and this course sees activities, answers and the model, never the hands.',
+    'This section adds one idea to the honest report: a training record, like a procedure note, claims only what was actually seen. This course sees the model and the choices made on its pages, keeps none of them as a record, and never sees the hands.',
   harmfulReflex:
     'Treating finished sections, an unassisted simulator log or high confidence as readiness to start on patients before a faculty observer has watched the hands.',
   anchor: {
@@ -104,7 +107,7 @@ export const section: BronchSectionDefinition = {
   modelBoundary:
     'The fellow, the file and the sessions in this section are constructed for teaching. The airway map shows the one anatomy profile of the course’s teaching model, which has no patient, no tube and no ventilator.',
   physicalSkillNote:
-    'Integrating indication, safety, inspection, sampling and reporting in one simulated case is a hand and team skill, run in person with faculty outside this course. The app does not see that case.',
+    'Integrating indication, safety, inspection, sampling and reporting in one simulated case is a hand and team skill that a training program may observe in person. It is not part of this self-paced course, which neither runs nor requires it, and the app does not see it.',
   localPolicyIds: [],
   reviewItemIds: ['R06'],
 
@@ -123,11 +126,11 @@ export const section: BronchSectionDefinition = {
       kind: 'signals',
       role: 'signals',
       heading: FILE_HEADING,
-      body: 'These records are the whole file at the time of the request.',
+      body: 'These records are the whole file at the time of the request. They come from an online course that issues a completion record and saves answers; this self-paced course does neither.',
       pointsLabel: 'In the file',
       points: [
         'The course record: every section finished',
-        'Committed answers with their explanations; most of the decisions held',
+        'Answers saved by that course, with the fellow’s explanations; most of them well reasoned',
         'The simulator log: every segmental airway reached in the model’s one anatomy profile, with no assist and keyboard input',
         'The self-rating: very confident about airway inspection',
       ],
@@ -139,10 +142,10 @@ export const section: BronchSectionDefinition = {
       kind: 'after-commitment',
       role: 'normal-reference',
       heading: CLAIMS_HEADING,
-      body: 'A training program keeps four claims distinct, because each rests on different evidence and supports a different decision.\n\nFinishing this course establishes the first: that its learning activities were completed. It does not establish competence, readiness for a clinical task, or privileges. How many observations readiness needs, and to what standard, is set by the training program.',
+      body: 'A training program keeps four claims distinct, because each rests on different evidence and supports a different decision.\n\nA course record can establish at most the first: that its learning activities were completed. This self-paced course issues no such record; the sections it keeps as opened or marked reviewed on your device are your own notes. No course record establishes competence, readiness for a clinical task, or privileges. How many observations readiness needs, and to what standard, is set by the training program.',
       pointsLabel: 'The claim, and who makes it',
       points: [
-        'Learning activities completed: issued by this course.',
+        'Learning activities completed: issued by a course that keeps a completion record. This self-paced course does not issue one.',
         'Performance observed in a specified simulation: documented when a faculty observer watches a named task in a named setting.',
         'Readiness for a specified supervised clinical task: a faculty judgment from reviewed evidence, such as observed performance in more than one simulated setting without an unresolved critical error, with a task-specific plan for the first patient procedures.',
         'Independent-practice privileges: granted by the institution’s credentialing process, never by a course or an app.',
@@ -187,7 +190,7 @@ export const section: BronchSectionDefinition = {
       kind: 'after-commitment',
       role: 'mechanism',
       heading: 'Where this course sits',
-      body: 'One lecture series this course draws on runs as a sequence: preparation with embedded questions, a hands-on session, then apprenticeship. This course keeps that progression and adds reference access and targeted remediation. It is the preparation; the hands-on session and the apprenticeship follow it.',
+      body: 'One lecture series this course draws on runs as a sequence: preparation with embedded questions, a hands-on session, then apprenticeship. This self-paced course covers only the preparation, with optional questions, reference access and links back to the teaching. Hands-on sessions and supervised practice belong to a training program; this course neither runs nor requires them, and it does not record them.',
       claimClass: 'transcript-source',
       sourceRefs: [
         { sourceId: 'T08', location: { kind: 'time-span', start: '00:00:03', end: '00:02:20' } },
@@ -296,7 +299,8 @@ export const section: BronchSectionDefinition = {
         {
           id: 'completion',
           label: 'Course completion',
-          definition: 'Learning activities opened and finished: the record this course issues.',
+          definition:
+            'Learning activities opened and finished: the record a course issues when it keeps one.',
         },
         {
           id: 'knowledge',
@@ -406,7 +410,7 @@ export const section: BronchSectionDefinition = {
     id: 'N12',
     itemType: 'management-decision',
     situation:
-      'A first-year fellow has finished every section of this course and asks to start airway inspections on patients next week. The file holds four records: the course’s completion record; committed answers, whose decisions mostly held; a simulator log showing every segmental airway reached in the model’s one anatomy profile, with no assist and keyboard input; and a self-rating of very confident.',
+      'A first-year fellow has finished every section of an online introductory course and asks to start airway inspections on patients next week. The file holds four records: that course’s completion record; answers saved by that course, with explanations, most of them well reasoned; a simulator log showing every segmental airway reached in the model’s one anatomy profile, with no assist and keyboard input; and a self-rating of very confident.',
     stem: 'What does this file support?',
     choices: [
       {

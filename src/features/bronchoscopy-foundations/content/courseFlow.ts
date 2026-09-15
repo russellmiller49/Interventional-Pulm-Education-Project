@@ -638,10 +638,10 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     practice(
       'Distinguish the kinds of learning evidence',
       'case',
-      'Match each evidence statement to the claim it can support. Keep online participation, independent answers, physical skill and supervised clinical performance separate.',
+      'Match each evidence statement to the claim it can support. Keep online participation, saved answers, physical skill and supervised clinical performance separate.',
     ),
     check('check', 'Interpret a learner’s available evidence'),
-    teach('supervised-next', 'Plan the next supervised learning task', [
+    teach('supervised-next', 'Turn feedback into a next practice objective', [
       'manual-tools',
       'what-evidence-shows',
       'next-objective',

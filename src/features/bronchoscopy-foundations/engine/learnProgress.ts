@@ -11,9 +11,10 @@ import { AIRWAY_LABELS } from '../components/scope/types'
  * committed item with its declared support, how the scope was driven, when the capstone debrief was
  * seen and the finished survey. New sessions never write it — the module's only writer is
  * `selfPacedProgress.ts` — and no stored byte is rewritten. The schema and parser stay so a stored
- * record reads exactly as it was written, and so a finished survey saved under it can still feed
- * the report exercise. No navigation, recommendation or learner-facing claim is derived from its
- * completions, first attempts or performance summaries.
+ * record reads exactly as it was written; the survey schema is shared with the self-paced record.
+ * No navigation, recommendation or learner-facing claim is derived from its completions, first
+ * attempts, performance summaries or finished survey: since BF-03 that survey no longer feeds the
+ * report exercise either, and no module code reads this record at run time.
  *
  * The earlier nine-module course's record (`ip-intro-bronchoscopy-progress-v1`) is not read either:
  * its booleans were hand toggles (A20).
