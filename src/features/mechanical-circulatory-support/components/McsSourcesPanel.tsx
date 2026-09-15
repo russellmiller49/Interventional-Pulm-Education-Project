@@ -14,16 +14,17 @@ export function McsSourcesPanel() {
         <span className={styles.kicker}>EVIDENCE & MODEL CARD</span>
         <h2 id="mcs-sources-heading">Source-backed, bounded, and revision-aware</h2>
         <p>
-          Clinical concepts are linked to the supplied reference, society guidelines, current FDA
-          labeling, and manufacturer update material. Directional outputs are educational estimates.
+          Clinical concepts are linked to supplied syntheses, society guidelines, FDA labeling
+          records, and manufacturer material. Whether a labeling record is the current revision for
+          a local device has not been verified here. Directional outputs are educational estimates.
         </p>
       </div>
       <aside className={styles.safetyReview} aria-label="Current FDA safety-review flags">
         <strong>Current safety-review flags</strong>
         <p>
-          This preview records {safetyNotices.length} relevant FDA device notices found during the
-          July 19, 2026 review. They do not replace affected-unit checks, current instructions, or a
-          new recall sweep at content freeze and immediately before publication.
+          This preview records {safetyNotices.length} relevant FDA device notices from a July 19,
+          2026 check; no later check is recorded. They do not replace affected-unit checks, current
+          instructions, or a new recall sweep at content freeze and immediately before publication.
         </p>
         <ul>
           {safetyNotices.map((source) => (
@@ -51,8 +52,8 @@ export function McsSourcesPanel() {
                 <dd>{profile.labelingRevision}</dd>
               </div>
               <div>
-                <dt>Reviewed</dt>
-                <dd>{profile.reviewedAt}</dd>
+                <dt>Labeling sources last checked</dt>
+                <dd>{profile.reviewedAt}; no clinical review is recorded</dd>
               </div>
             </dl>
             <ul>
@@ -85,7 +86,7 @@ export function McsSourcesPanel() {
           {mcsSources.map((source) => (
             <article key={source.id}>
               <span>
-                {source.sourceType.replaceAll('-', ' ')} · {source.year}
+                {source.sourceType.replaceAll('-', ' ')} · {source.year ?? 'date not stated'}
               </span>
               <h3>{source.title}</h3>
               <p>{source.citation}</p>

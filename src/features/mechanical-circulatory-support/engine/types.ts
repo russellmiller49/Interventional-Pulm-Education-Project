@@ -187,7 +187,8 @@ export interface McsSource {
     | 'fda-safety-notice'
     | 'reference-package'
     | 'educational-model'
-  year: number
+  /** Null when the document states no date; the display then says so rather than inventing one. */
+  year: number | null
   url?: string
   suppliedFilename?: string
   intendedUse: string

@@ -4,36 +4,40 @@ export const mcsSources: readonly McsSource[] = [
   {
     id: 'case-based-device-therapy-hf',
     title: 'Case-Based Device Therapy for Heart Failure',
-    citation: 'Owner-licensed private authoring source, reviewed July 2026.',
+    citation:
+      'Walters D, Reeves R. Temporary mechanical circulatory support. In: Birgersdotter-Green U, Adler E, eds. Case-Based Device Therapy for Heart Failure. Cham: Springer Nature Switzerland; 2021. Chapter from page 23. Owner-licensed private copy.',
     sourceType: 'reference-package',
-    year: 2026,
+    year: 2021,
     intendedUse:
       'Authoring context for device-therapy cases. Registered so its two internally inconsistent Impella CP flow statements can be cited as a documented source conflict rather than referenced by an unresolvable identifier.',
     limitation:
-      'This source contradicts itself on Impella CP maximum flow (table page 26 versus narrative page 27) and neither figure matches current device labeling. Never use it as the source of a device specification.',
+      'This chapter gives two different Impella CP flows: up to 3.8 L/min in its device table (printed page 26) and 3.5 L/min in its narrative (printed page 27). Neither is named as a mean or a peak, and neither matches the flow figures in the supplied February 2026 US instructions for use (revision V). Never use it as the source of a device specification.',
   },
   {
     id: 'mcs-bedside-reference-supplied',
     title: 'Bedside Mechanical Circulatory Support Reference',
-    citation: 'User-supplied critical-care bedside reference, reviewed July 2026.',
+    citation:
+      'Supplied Word document headed “Mechanical Circulatory Support at the Bedside”. It names no author, publisher, date or reference list and describes itself as a synthesis of four supplied chapters; its file properties name OpenAI as the creator.',
     sourceType: 'reference-package',
-    year: 2026,
+    year: null,
     suppliedFilename: 'Bedside_Mechanical_Circulatory_Support_Reference.docx',
     intendedUse:
       'Whole-patient review, supported-chamber and circuit-path checks, loading-condition troubleshooting, device-flow interpretation, and escalation boundaries.',
     limitation:
-      'Educational bedside framework only; current manufacturer instructions, imaging, local policy, and the responsible shock or MCS team remain authoritative.',
+      'A synthesis whose authorship and underlying sources are not stated, so no clinical statement should rest on it alone. Educational bedside framework only; current manufacturer instructions, imaging, local policy, and the responsible shock or MCS team remain authoritative.',
   },
   {
     id: 'master-hemodynamics-reference',
     title: 'Master Hemodynamics and Hemodynamic Monitoring Reference',
-    citation: 'User-supplied educational reference package, pp. 39–41.',
+    citation:
+      'Supplied Word document headed “Master Reference”, on clinical hemodynamics and hemodynamic monitoring. It names no author, publisher, date or reference list; its file properties name OpenAI as the creator. Registered locator pp. 39–41, not checked: the document has no fixed pagination.',
     sourceType: 'reference-package',
-    year: 2026,
+    year: null,
     suppliedFilename: 'Master_Hemodynamics_and_Hemodynamic_Monitoring_Reference.docx',
     intendedUse:
       'Temporary MCS mechanisms, IABP timing, Impella unloading, device comparison, and response/warning patterns.',
-    limitation: 'Durable LVAD operations require separate current guidance and labeling.',
+    limitation:
+      'A synthesis whose authorship and underlying sources are not stated, so no clinical statement should rest on it alone. Durable LVAD operations require separate current guidance and labeling.',
   },
   {
     id: 'ishlt-hfsa-acute-mcs-2023',
@@ -76,6 +80,30 @@ export const mcsSources: readonly McsSource[] = [
       'Visual placement check: balloon in the descending thoracic aorta, cranial tip distal to the left subclavian artery, and caudal end above the renal arteries.',
     limitation:
       'Manufacturer education does not replace the current catheter IFU or local imaging confirmation.',
+  },
+  {
+    id: 'getinge-cardiosave-hybrid-operating-instructions',
+    title: 'CARDIOSAVE Hybrid Operating Instructions',
+    citation:
+      'Datascope Corp. CARDIOSAVE Hybrid Operating Instructions, English, 0070-00-0638-01. © 2015. Supplied PDF; trigger warnings on printed pages vi and 2-18.',
+    sourceType: 'manufacturer',
+    year: 2015,
+    intendedUse:
+      'Trigger-source warnings: pressure triggering is not recommended in a sustained irregular rhythm or tachyarrhythmia, and internal triggering is not to be kept while the patient generates a cardiac output.',
+    limitation:
+      'An operating manual for one console family, dated 2015. Whether it is the current revision for a local console has not been verified, and the balloon pump in this module is a console-neutral model rather than this console.',
+  },
+  {
+    id: 'getinge-cardiosave-troubleshooting-strategies',
+    title: 'Cardiosave Troubleshooting Strategies',
+    citation:
+      'Getinge. Cardiosave Troubleshooting Strategies, MCA00002553 Rev A. © 2025 Datascope Corp. Supplied PDF; trigger sources on printed pages 3 and 5.',
+    sourceType: 'manufacturer',
+    year: 2025,
+    intendedUse:
+      'Trigger selection: ECG as the preferred trigger when the R wave is reliable and recommended for arrhythmias; pressure triggering not recommended for irregular rhythms; internal triggering asynchronous and reserved for bypass, or for CPR when compressions give too little pulse pressure to trigger.',
+    limitation:
+      'Manufacturer education, not the operating instructions for a specific console revision.',
   },
   {
     id: 'fda-impella-cp-labeling',
@@ -121,7 +149,7 @@ export const mcsSources: readonly McsSource[] = [
     year: 2020,
     url: 'https://www.fda.gov/media/140766/download',
     intendedUse:
-      'Impella 5.5 device parameters and LV-to-aorta mechanism; 5.5 L/min is used as a product-reported mean-flow reference, not a guaranteed patient-flow maximum.',
+      'Impella 5.5 device parameters and LV-to-aorta mechanism; 5.5 L/min is the maximum mean flow in the device specification, not a guaranteed patient flow.',
     limitation:
       'The module does not reproduce surgical insertion, imaging, console operation, or current local instructions.',
   },

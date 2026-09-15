@@ -207,15 +207,20 @@ describe('M0/M1 §3 — every reference flow is descriptive, never a target', ()
     expect(figures).toHaveLength(5)
 
     const measurands = figures.map((node) => node.querySelector('[data-measurand]')?.textContent)
+    const products = figures.map((node) => node.querySelector('small')?.textContent)
     expect(measurands).toEqual([
       'Maximum mean flow',
       'Peak flow rate at systole',
       'Average flow observed during support',
-      'Product-reported maximum flow',
+      // MCS-03-03: the supplied Impella 5.5 instructions for use (10003049 rL) state 5.5 L/min as a
+      // maximum mean flow — the same measurand as the first Impella CP figure, for a different pump.
+      'Maximum mean flow',
       'Product-framed flow',
     ])
-    // No two Impella CP figures claim to be the same quantity.
-    expect(new Set(measurands).size).toBe(measurands.length)
+    // No two figures for the same pump claim to be the same quantity.
+    const pairs = measurands.map((measurand, index) => `${products[index]} · ${measurand}`)
+    expect(new Set(pairs).size).toBe(pairs.length)
+    expect(products[3]).toBe('Impella 5.5 with SmartAssist')
   })
 
   it('publishes no figure at all for a pathway that reports no device flow', async () => {
