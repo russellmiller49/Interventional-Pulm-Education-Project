@@ -25,7 +25,22 @@ import {
   mcsSupportPathwayCards,
   type McsSupportPathwayCard,
 } from '../../src/features/mechanical-circulatory-support/content/supportPathways'
-import { createInitialMcsState } from '../../src/features/mechanical-circulatory-support/engine/model'
+import {
+  advanceMcsSimulation,
+  createInitialMcsState,
+} from '../../src/features/mechanical-circulatory-support/engine/model'
+import {
+  defaultMcsPatient,
+  mcsPracticeScenarios,
+} from '../../src/features/mechanical-circulatory-support/content/scenarios'
+import {
+  compareMcsUnloadingState,
+  replayMcsUnloadingComparison,
+} from '../../src/features/mechanical-circulatory-support/engine/unloadingComparison'
+import {
+  MCS_UNLOADING_COMPARISON_LEVELS,
+  mcsUnloadingExamples,
+} from '../../src/features/mechanical-circulatory-support/content/unloadingExamples'
 import { mcsReducer } from '../../src/features/mechanical-circulatory-support/engine/reducer'
 import type {
   McsAction,
@@ -146,7 +161,14 @@ function buildRows(): readonly Row[] {
     [
       'impella-cp-p8',
       'Left CP at P-8, correct position',
-      [{ type: 'SET_IMPELLA_CONTROL', side: 'left', control: 'performanceLevel', value: 8 }],
+      [
+        { type: 'SET_IMPELLA_CONTROL', side: 'left', control: 'performanceLevel', value: 8 },
+        {
+          type: 'SET_PATIENT_CONTROL',
+          control: 'systemicVascularResistanceDynSecCm5',
+          value: defaultMcsPatient.systemicVascularResistanceDynSecCm5,
+        },
+      ],
     ],
     [
       'impella-55-p8',
@@ -178,7 +200,11 @@ function buildRows(): readonly Row[] {
       'Left CP at P-8, preload limited',
       [
         { type: 'SET_IMPELLA_CONTROL', side: 'left', control: 'performanceLevel', value: 8 },
-        { type: 'SET_PATIENT_CONTROL', control: 'preloadPercent', value: 58 },
+        {
+          type: 'SET_PATIENT_CONTROL',
+          control: 'preloadPercent',
+          value: mcsUnloadingExamples[1].preloadPercent,
+        },
       ],
     ],
     [
@@ -450,7 +476,11 @@ function reportPressureFlowDivergence(rows: readonly Row[]): void {
     if (!baselineByDevice.has(row.device)) baselineByDevice.set(row.device, row)
   }
   for (const row of rows) {
-    const baseline = baselineByDevice.get(row.device)
+    // Compare the Impella afterload change at P8 on both sides, not P5 against P8.
+    const baseline =
+      row.id === 'impella-high-afterload'
+        ? rows.find((candidate) => candidate.id === 'impella-cp-p8')
+        : baselineByDevice.get(row.device)
     if (!baseline || baseline.id === row.id) continue
     const flowDelta =
       row.state.metrics.effectiveSystemicFlowLMin - baseline.state.metrics.effectiveSystemicFlowLMin
@@ -483,7 +513,7 @@ function reportPowerWithoutFlowChange(rows: readonly Row[]): void {
     baseline.state.metrics.effectiveSystemicFlowLMin
   observe(
     'lvad-thrombosis-pattern',
-    `the high-power pattern moves pump power ${n(powerDelta)} W while effective flow moves ${n(flowDelta)} L/min — the display and the delivered support come apart, which is the state the card warns about`,
+    `the high-power pattern moves pump power ${n(powerDelta)} W while effective flow moves ${n(flowDelta)} L/min — electrical power rises without reduced modeled delivery; this does not simulate progressive obstruction or establish patient perfusion`,
   )
 }
 
@@ -520,6 +550,7 @@ function pad(value: string, width: number): string {
 
 const COLUMNS: readonly (readonly [string, number, (row: Row) => string])[] = [
   ['state', 26, (row) => row.id],
+  ['t(s)', 7, (row) => n(row.state.timeSeconds)],
   ['native', 7, (row) => n(row.state.metrics.nativeFlowLMin)],
   ['dev-L', 7, (row) => n(row.state.metrics.leftDeviceFlowLMin)],
   ['dev-R', 7, (row) => n(row.state.metrics.rightDeviceFlowLMin)],
@@ -557,6 +588,72 @@ function printTable(rows: readonly Row[]): void {
 function printLabels(rows: readonly Row[]): void {
   console.log('States\n──────')
   for (const row of rows) console.log(`  ${pad(row.id, 26)} ${row.label}`)
+  console.log('')
+}
+
+/** Exact replay used by the lesson, plus the existing IMP-01/IMP-03 patient configurations. */
+function reportUnloadingComparisons(): void {
+  if (ONLY_DEVICE && ONLY_DEVICE !== 'impella') return
+  console.log('Matched unloading comparisons (provided model examples, not clinical targets)')
+  for (const level of MCS_UNLOADING_COMPARISON_LEVELS) {
+    const examples = [...replayMcsUnloadingComparison(level)]
+    const scenarios = ['IMP-01', 'IMP-03'].map((id) => {
+      const scenario = mcsPracticeScenarios.find((candidate) => candidate.id === id)
+      if (!scenario) throw new Error(`Missing MCS scenario ${id}`)
+      const state = createInitialMcsState('practice', 'impella', scenario, 417)
+      // Keep every case loading/fault condition; normalize only the P5 starting setting.
+      const baseline = advanceMcsSimulation(
+        mcsReducer(state, {
+          type: 'SET_IMPELLA_CONTROL',
+          side: 'left',
+          control: 'performanceLevel',
+          value: 5,
+        }),
+        8,
+      )
+      return { id, label: scenario.title, ...compareMcsUnloadingState(baseline, level) }
+    })
+    for (const example of [...examples, ...scenarios]) {
+      if (Math.abs(example.control.timeSeconds - example.changed.timeSeconds) > 1e-9)
+        flag(example.id, 'unloading branches were not observed at matched times')
+      console.log(
+        `\n${example.id}: ${example.label}; baseline ${n(example.baseline.timeSeconds)} s; compare P5 with P${level}`,
+      )
+      console.log(`Patient inputs: ${JSON.stringify(example.baseline.patient)}`)
+      for (const [phase, state] of [
+        ['baseline', example.baseline],
+        ['control', example.control],
+        ['changed', example.changed],
+      ] as const) {
+        const row = {
+          id: `${example.id}-P${level}-${phase}`,
+          device: 'impella' as const,
+          label: phase,
+          state,
+        }
+        checkFiniteness(row)
+        checkTopology(row)
+        console.log(
+          JSON.stringify({
+            phase,
+            seed: state.seed,
+            timeSeconds: Number(n(state.timeSeconds)),
+            device: state.device,
+            native: state.metrics.nativeFlowLMin,
+            leftPump: state.metrics.leftDeviceFlowLMin,
+            rightPump: state.metrics.rightDeviceFlowLMin,
+            effective: state.metrics.effectiveSystemicFlowLMin,
+            return: state.metrics.recirculatingFlowLMin,
+            lvedvMl: state.metrics.lvedvMl,
+            wedgeMmHg: state.metrics.pcwpMmHg,
+            mapMmHg: state.metrics.mapMmHg,
+            cpoW: state.metrics.cardiacPowerOutputW,
+            alarms: state.alarms.filter((alarm) => alarm.active).map((alarm) => alarm.id),
+          }),
+        )
+      }
+    }
+  }
   console.log('')
 }
 
@@ -611,6 +708,7 @@ function main(): void {
   reportPressureFlowDivergence(rows)
   reportPowerWithoutFlowChange(rows)
   reportPapiSensitivity()
+  reportUnloadingComparisons()
 
   if (observations.length > 0) {
     console.log(`${observations.length} observation(s) — reported, not failures`)
