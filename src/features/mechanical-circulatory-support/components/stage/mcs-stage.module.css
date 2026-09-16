@@ -541,6 +541,15 @@
   border-left: 3px solid var(--amber);
 }
 
+/* The MCS-03 atrial-fibrillation trigger limitation, beside the trigger selector. */
+.triggerLimitNote {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  border-left: 3px solid var(--amber);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
 .grammar {
   width: 100%;
   border-collapse: collapse;

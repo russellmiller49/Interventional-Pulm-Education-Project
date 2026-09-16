@@ -1,7 +1,8 @@
 'use client'
 
-import type { Dispatch } from 'react'
+import { useId, type Dispatch } from 'react'
 
+import { mcsAfTriggerLimitApplies } from '../content/afTriggerLimit'
 import type { McsLearnControlId } from '../content/learnControls'
 import {
   isMcsActionIdPermitted,
@@ -11,6 +12,7 @@ import {
   type McsPatientControl,
   type McsSimulationState,
 } from '../engine'
+import { McsAfTriggerLimit } from './McsAfTriggerLimit'
 import styles from './mechanical-circulatory-support.module.css'
 
 /**
@@ -300,6 +302,8 @@ export function McsControls({
   highlightControl?: McsLearnControlId
   allowedActionIds?: readonly string[]
 }) {
+  const afTriggerLimitId = useId()
+  const afTriggerLimit = mcsAfTriggerLimitApplies(state)
   const unavailable = (actionId: string) =>
     !isMcsActionIdPermitted(state, actionId) ||
     (allowedActionIds !== undefined && !allowedActionIds.includes(actionId))
@@ -444,6 +448,7 @@ export function McsControls({
               >
                 <span>Trigger source</span>
                 <select
+                  aria-describedby={afTriggerLimit ? afTriggerLimitId : undefined}
                   value={state.device.triggerSource}
                   disabled={unavailable('iabp:set-trigger')}
                   onChange={(event) =>
@@ -459,6 +464,13 @@ export function McsControls({
                   <option value="internal">Internal</option>
                 </select>
               </label>
+            ) : null}
+            {!hideUnavailable || !unavailable('iabp:set-trigger') ? (
+              <McsAfTriggerLimit
+                state={state}
+                id={afTriggerLimitId}
+                className={styles.triggerLimitNote}
+              />
             ) : null}
             {!hideUnavailable || !unavailable('iabp:set-inflation') ? (
               <RangeControl
