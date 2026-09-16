@@ -7,7 +7,10 @@ import {
   ventilationFinalQuestions,
   ventilationUnitQuestions,
 } from '../content/learningQuestions'
-import { ventilationUnitById } from '../content/learningCurriculum'
+import {
+  ventilationGenericQuestionPurpose,
+  ventilationUnitById,
+} from '../content/learningCurriculum'
 import { ventilationQuestionTeachingById } from '../content/questionTeaching'
 import { VentilationReinforcement } from './VentilationReinforcement'
 import { VentilationWorkedComparison } from './VentilationWorkedComparison'
@@ -79,10 +82,7 @@ export function MechanicalVentilationCourseCheck({
             <VentilationReinforcement
               key={question.id}
               id={question.id}
-              purpose={
-                teaching?.purpose ??
-                'Apply ' + unit.title.toLowerCase() + ' to a short authored case.'
-              }
+              purpose={teaching?.purpose ?? ventilationGenericQuestionPurpose(unit)}
               prompt={question.prompt}
               choices={question.choices}
               hint={teaching?.hint ?? unit.explanation}
