@@ -337,10 +337,15 @@ describe('what the module does still teach', () => {
     const resume = lesson?.steps.find((step) =>
       step.actions.some((action) => action.type === 'RESUME_SUPPORT_AFTER_BUBBLE'),
     )
+    // ECMO-HONESTY-02 dropped the unsupported "approved" adjective: no local-policy or reviewer
+    // record establishes that any protocol this module points at was reviewed or approved. Both
+    // authorities the step defers to are still named, which is what this assertion exists for.
     expect(resume?.instruction).toMatch(
-      /current manufacturer instructions for use \(IFU\).{0,60}approved ECMO air-emergency protocol/i,
+      /current manufacturer instructions for use \(IFU\).{0,60}own ECMO air-emergency protocol/i,
     )
-    expect(resume?.actionLabel).toMatch(/current IFU and approved local protocol/i)
+    expect(resume?.instruction).not.toMatch(/approved/i)
+    expect(resume?.actionLabel).toMatch(/current IFU and local protocol/i)
+    expect(resume?.actionLabel).not.toMatch(/approved|reviewed/i)
   })
 
   it('records the resumption in history as a simulation abstraction', () => {

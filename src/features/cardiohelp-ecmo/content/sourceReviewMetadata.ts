@@ -41,6 +41,18 @@ export const ECMO_SOURCE_REVIEW_LINE =
 /** The module-level statement on the hub. No attributable clinical or device review exists. */
 export const ECMO_MODULE_REVIEW_LINE = 'Clinical and device review: none recorded'
 
+/**
+ * The module-level statement about local policy (ECMO-HONESTY-02, 2026-09-15).
+ *
+ * Many instructions in this module hand a decision back to local protocol — resumption after an
+ * air event, circuit exchange, escalation of a configuration change. None of those protocols is
+ * held, registered or reviewed here, and the module has never established that any of them was
+ * approved. The copy therefore points at the learner's own institution and says nothing about its
+ * status, and this line says plainly why.
+ */
+export const ECMO_LOCAL_PROTOCOL_LINE =
+  'None recorded. Where this module defers to local protocol it means your own institution’s; no local policy is held or reviewed here.'
+
 const ASSISTANT = 'AI authoring assistant (Claude)'
 const ECMO03_QUEUE = 'docs/gap-remediation/self-paced/ECMO-03-claim-review-queue.json'
 const REGISTERED_ONLY =

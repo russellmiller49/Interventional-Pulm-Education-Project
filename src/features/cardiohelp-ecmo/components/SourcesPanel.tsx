@@ -18,7 +18,11 @@ import {
   ecmoSourceClasses,
   type EcmoSourceClass,
 } from '../content/evidenceResolver'
-import { ECMO_MODULE_REVIEW_LINE, ecmoSourceReviewMetadata } from '../content/sourceReviewMetadata'
+import {
+  ECMO_LOCAL_PROTOCOL_LINE,
+  ECMO_MODULE_REVIEW_LINE,
+  ecmoSourceReviewMetadata,
+} from '../content/sourceReviewMetadata'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoSourceList } from './evidence/EcmoSourceList'
 import evidenceStyles from './evidence/evidence.module.css'
@@ -36,6 +40,10 @@ import evidenceStyles from './evidence/evidence.module.css'
  * Publication and review are separate facts. The publication flag says whether the module is
  * listed; it has never been evidence that anyone reviewed it, and no clinical or device review is
  * recorded, so the review line is the same whichever way the flag is set.
+ *
+ * Local policy is a third, separate fact. The module's clinical copy repeatedly defers to local
+ * protocol, and holds none of it, so the profile says so rather than leaving a learner to read
+ * those deferrals as a protocol this module has seen (ECMO-HONESTY-02).
  */
 
 const sourceIcons: Readonly<Record<EcmoSourceClass, LucideIcon>> = {
@@ -115,6 +123,10 @@ export function SourcesPanel({
         <div>
           <dt>Clinical and device review</dt>
           <dd>None recorded</dd>
+        </div>
+        <div className={styles.deviceProfileWide}>
+          <dt>Local protocol</dt>
+          <dd>{ECMO_LOCAL_PROTOCOL_LINE}</dd>
         </div>
       </dl>
 

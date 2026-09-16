@@ -515,11 +515,11 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Clamp the return limb, then the drainage limb, near the patient to isolate the circuit.',
         'Correct the source of air and confirm the circuit is bubble free.',
-        'Resume support per the current IFU and approved local protocol, then reassess. Where clamp opening, pump restart and console reset fall relative to one another is set by those documents, not by this module.',
+        'Resume support per the current IFU and your local protocol, then reassess. Where clamp opening, pump restart and console reset fall relative to one another is set by those documents, not by this module.',
       ],
       safetyNotes: [
         'Premature reset is a critical safety error.',
-        'Isolation is taught explicitly. The clamp, pump, and device-reset choreography for resumption is governed by the current manufacturer IFU and your unit’s approved ECMO air-emergency protocol; this simulation does not teach that choreography.',
+        'Isolation is taught explicitly. The clamp, pump, and device-reset choreography for resumption is governed by the current manufacturer IFU and your unit’s own ECMO air-emergency protocol; this simulation does not teach that choreography and holds no copy of that protocol.',
       ],
     },
     evidenceIds: [
@@ -793,7 +793,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       ],
       correctWorkflow: [
         'Compare pInt, pArt, pressure-drop trend, matched flow/RPM, gas transfer, and sensor plausibility.',
-        'Inspect and escalate according to the reviewed local circuit-exchange protocol.',
+        'Inspect and escalate according to your local circuit-exchange protocol.',
       ],
       safetyNotes: ['No fixed pressure-drop threshold or alarm priority is encoded.'],
     },
@@ -842,7 +842,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Verify the pattern with right-arm saturation or arterial blood gas and compare it with post-oxygenator and lower-body data.',
         'Assess native cardiac ejection, lung oxygenation, circuit performance, and the likely mixing region.',
-        'Escalate the support/cannulation strategy to the ECMO team under the reviewed local protocol.',
+        'Escalate the support/cannulation strategy to the ECMO team under your local protocol.',
       ],
       safetyNotes: [
         'This simulator intentionally does not prescribe one universal pump, ventilator, or cannulation correction.',
@@ -887,7 +887,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Recognize that console flow and MAP do not establish adequate LV ejection.',
         'Assess pulse pressure, aortic-valve opening, LV size/stasis, lung findings, and systemic perfusion.',
-        'Escalate urgently for expert unloading evaluation under the reviewed local protocol.',
+        'Escalate urgently for expert unloading evaluation under your local protocol.',
       ],
       safetyNotes: [
         'No unloading device, threshold, or patient-specific algorithm is recommended in this draft module.',
@@ -1019,11 +1019,11 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Clamp the arterial return limb, then the drainage limb, near the patient to isolate the circulation.',
         'Identify and correct the air source and confirm the return path is clear.',
-        'Resume venoarterial support per the current IFU and approved local protocol, then reassess perfusion. Where clamp opening, pump restart and console reset fall relative to one another is set by those documents, not by this module.',
+        'Resume venoarterial support per the current IFU and your local protocol, then reassess perfusion. Where clamp opening, pump restart and console reset fall relative to one another is set by those documents, not by this module.',
       ],
       safetyNotes: [
         'Premature reset and alarm acknowledgement without correction remain critical errors.',
-        'Isolation is taught explicitly. The clamp, pump, and device-reset choreography for resumption is governed by the current manufacturer IFU and your unit’s approved ECMO air-emergency protocol; this simulation does not teach that choreography.',
+        'Isolation is taught explicitly. The clamp, pump, and device-reset choreography for resumption is governed by the current manufacturer IFU and your unit’s own ECMO air-emergency protocol; this simulation does not teach that choreography and holds no copy of that protocol.',
       ],
     },
     evidenceIds: [
@@ -1160,7 +1160,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Recognize and verify the upper-body mismatch with independent right-arm data.',
         'Integrate native ejection, lung status, post-oxygenator gas transfer, circuit flow, and perfusion.',
-        'Escalate the support strategy under the reviewed local VA protocol; do not use a VV off-sweep trial.',
+        'Escalate the support strategy under your local VA protocol; do not use a VV off-sweep trial.',
       ],
       safetyNotes: [
         'VA liberation, unloading-device selection, and cannulation changes remain outside this simulator.',

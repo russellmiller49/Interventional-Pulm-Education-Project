@@ -55,7 +55,7 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
       boundaries={[
         'This simulation models peripheral femoral venoarterial support with retrograde arterial return. V-AV, upper-body arterial return, and central venoarterial ECMO change the flow topology, and conclusions drawn here do not carry to them.',
         'This simulation does not derive or move a mixing point. It reproduces the upper-body oxygenation cue with a bounded educational response curve, and changing circuit flow will not move the displayed mixing region here. At a bedside, retrograde flow and native ejection genuinely do determine where the two streams meet — that this lab holds the region fixed is a limitation of the lab, not a statement that flow does not matter.',
-        'Ventilator settings, cannulation options, and cerebral oximetry are not modeled. The single corrective action here stands for verification and escalation through the reviewed local protocol, not for a bedside manoeuvre that resolves differential oxygenation on its own.',
+        'Ventilator settings, cannulation options, and cerebral oximetry are not modeled. The single corrective action here stands for verification and escalation through your local protocol, not for a bedside manoeuvre that resolves differential oxygenation on its own.',
       ]}
     >
       <section className={styles.section} aria-labelledby="va-config-heading">
@@ -233,7 +233,7 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
             {
               candidate: 'Cannulation strategy',
               standing:
-                'The definitive answer in many real cases, and outside what this lab can do. It belongs to the ECMO team under the reviewed local protocol.',
+                'The definitive answer in many real cases, and outside what this lab can do. It belongs to the ECMO team under your local protocol.',
             },
           ]}
         />
@@ -243,7 +243,7 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
             Establish the pattern before moving a circuit setting. Confirm the upper-body value with
             a right radial blood gas, read it against native ejection, the native lungs and the
             circuit data, and escalate the support and cannulation strategy to the ECMO team under
-            the reviewed local protocol.
+            your local protocol.
           </p>
         </FittingResponse>
 

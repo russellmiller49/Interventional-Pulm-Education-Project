@@ -468,7 +468,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
   'clinical-vv-oxygenator-thrombosis': {
     reassessment: {
       instruction:
-        'Select findings that demonstrate restoration of membrane-lung function after the reviewed exchange process.',
+        'Select findings that demonstrate restoration of membrane-lung function after the circuit exchange.',
       device: {
         prompt: 'Which console response is appropriate?',
         options: [
@@ -546,7 +546,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       {
         id: 'vv-oxy-action',
         title: 'Clue 2 · Prepare before definitive exchange',
-        text: 'Verify the trend and gas-transfer failure, mobilize the replacement circuit and trained team, then perform the reviewed emergency exchange process.',
+        text: 'Verify the trend and gas-transfer failure, mobilize the replacement circuit and trained team, then perform your unit’s emergency exchange process.',
         penalty: 10,
         focusId: 'practice-treatment',
       },
@@ -722,7 +722,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       {
         id: 'diff-action',
         title: 'Clue 2 · Treat the two-circulation mismatch',
-        text: 'Verify right-arm oxygenation, assess native ejection and lung function, optimize the native lung, then escalate the VA support strategy through the reviewed local pathway.',
+        text: 'Verify right-arm oxygenation, assess native ejection and lung function, optimize the native lung, then escalate the VA support strategy through your local escalation pathway.',
         penalty: 10,
         focusId: 'practice-treatment',
       },
@@ -1070,7 +1070,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       {
         id: 'va-oxy-action',
         title: 'Clue 2 · Preserve perfusion during definitive correction',
-        text: 'Verify the membrane-lung failure, support pressure if needed, prepare the trained exchange team, then perform the reviewed circuit exchange while reassessing both circulations.',
+        text: 'Verify the membrane-lung failure, support pressure if needed, prepare the trained exchange team, then perform the circuit exchange under local protocol while reassessing both circulations.',
         penalty: 10,
         focusId: 'practice-treatment',
       },
@@ -1085,7 +1085,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
         options: [
           option(
             'vv-air-device-correct',
-            'The pump resumes only after the circuit is de-aired and confirmed clear; support is resumed per the current IFU and approved local protocol.',
+            'The pump resumes only after the circuit is de-aired and confirmed clear; support is resumed per the current IFU and your local protocol.',
             'Resumption here is a single step taken after de-airing: the pump comes back with support restored, and the patient is never left across two open limbs of a stopped circuit.',
           ),
           option(
@@ -1157,7 +1157,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       {
         id: 'vv-air-action',
         title: 'Clue 2 · Isolate, de-air, then resume per protocol',
-        text: 'Clamp the return limb, then the drainage limb. De-air and confirm the circuit is clear. Then resume support per the current IFU and approved local protocol.',
+        text: 'Clamp the return limb, then the drainage limb. De-air and confirm the circuit is clear. Then resume support per the current IFU and your local protocol.',
         penalty: 10,
         target: 'circuit',
         controlId: 'cardiohelp-clamp-drainage',
@@ -1174,7 +1174,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
         options: [
           option(
             'va-air-device-correct',
-            'The pump resumes only after de-airing, through the resumption governed by the current IFU and approved local protocol.',
+            'The pump resumes only after de-airing, through the resumption governed by the current IFU and your local protocol.',
             'Here, resumption is a single step available only once the circuit is de-aired; the pump returns with support restored and no interval of two open limbs on a stopped circuit.',
           ),
           option(
@@ -1246,7 +1246,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       {
         id: 'va-air-action',
         title: 'Clue 2 · Isolate, de-air, then resume per protocol',
-        text: 'Clamp return then drainage. Secure the connector, de-air, and confirm clear. Then resume venoarterial support per the current IFU and approved local protocol while you reassess perfusion.',
+        text: 'Clamp return then drainage. Secure the connector, de-air, and confirm clear. Then resume venoarterial support per the current IFU and your local protocol while you reassess perfusion.',
         penalty: 10,
         target: 'circuit',
         controlId: 'cardiohelp-clamp-drainage',

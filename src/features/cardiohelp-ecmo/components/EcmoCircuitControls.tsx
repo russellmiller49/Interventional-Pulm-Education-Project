@@ -101,7 +101,7 @@ export function EcmoCircuitControls({
             ▶
           </span>
           <span>
-            <strong>Resume support per current IFU and approved local protocol</strong>
+            <strong>Resume support per current IFU and local protocol</strong>
             <small>
               A deliberate simplification. It stands in for the device- and program-specific
               resumption sequence and does not reproduce or teach that sequence.
