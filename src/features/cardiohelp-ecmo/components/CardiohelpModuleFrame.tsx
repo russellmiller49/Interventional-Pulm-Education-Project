@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import { EyeOff, Languages } from 'lucide-react'
 
 import { ModuleFrameV2 } from '@/features/learning-module/components/ModuleFrameV2'
@@ -31,12 +31,30 @@ export function CardiohelpModuleFrame({
   activityMode = false,
   children,
 }: CardiohelpModuleFrameProps) {
+  const shellRef = useRef<HTMLElement>(null)
+  useLayoutEffect(() => {
+    if (!activityMode) return
+    const shell = shellRef.current
+    const header = document.getElementById('main-content')?.previousElementSibling
+    if (!shell || !header) return
+    // Navigation can wrap under text enlargement. Scope its measured height to ECMO;
+    // the global token is only a minimum and other consumers retain their own contract.
+    const measure = () => {
+      shell.style.setProperty('--site-header-height', `${header.getBoundingClientRect().height}px`)
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(header)
+    return () => observer.disconnect()
+  }, [activityMode])
+
   const releaseLabel =
     cardiohelpEcmoPublicationStatus === 'published' ? 'Public release' : 'Unlisted tester access'
 
   return (
     <HandoffContent>
       <main
+        ref={shellRef}
         className={styles.moduleShell}
         data-activity-mode={activityMode || undefined}
         data-no-handoff-translate={locale !== 'en'}

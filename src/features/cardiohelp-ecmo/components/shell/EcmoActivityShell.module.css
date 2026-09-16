@@ -33,8 +33,15 @@
 }
 
 .shell[data-flowing='true'] {
-  height: auto;
   display: block;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  scroll-padding-block: 1rem;
+}
+.shell[data-flowing='true']:focus-visible {
+  outline: 2px solid var(--ecmo-shell-accent);
+  outline-offset: -2px;
 }
 .shell[data-flowing='true'] > .body {
   overflow: visible;
@@ -44,6 +51,10 @@
 @media (max-width: 1023px), (max-height: 699px) {
   .shell {
     height: auto;
+  }
+  .shell[data-flowing='true'] {
+    overflow: visible;
+    scrollbar-gutter: auto;
   }
 }
 
@@ -641,4 +652,10 @@
   top: var(--site-header-height, 5rem);
   z-index: 5;
   background: #10262b;
+}
+
+@media (min-width: 1024px) and (min-height: 700px) {
+  .shell[data-flowing='true'] > .strip:has([data-operational-status='true']) {
+    top: 0;
+  }
 }

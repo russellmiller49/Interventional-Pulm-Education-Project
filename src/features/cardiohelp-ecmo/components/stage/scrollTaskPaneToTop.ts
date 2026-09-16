@@ -1,40 +1,77 @@
-/**
- * Put the Now card back in view when the step changes.
- *
- * Both hosts move focus to the Now card on every step change and pass `preventScroll: true`, which
- * stops the browser scrolling the document — and does nothing about the pane the card actually
- * lives in. That pane is its own scroll container, so a learner who had scrolled down to reach the
- * step list, the actions or the story problems stayed exactly there when the step advanced, looking
- * at a list of steps with the instruction for the new one off the top of the pane.
- *
- * A learner review in September 2026, on the very build that put the steps on the left: "the
- * left-most 'steps panel' doesn't re-scroll back to the top, so you're left wondering what to do
- * next… happens in several other sections."
- *
- * Deliberately not `scrollIntoView`: that scrolls every scrollable ancestor including the document,
- * which is the jump `preventScroll` was there to avoid. This walks up to the one element that is
- * actually scrolling and resets it, so nothing outside the pane moves.
- */
+/** Scroll only the ECMO reading surface or the nearest independently scrolling pane. */
+export function ecmoScrollOwner(node: HTMLElement): HTMLElement | null {
+  for (
+    let element = node.parentElement;
+    element && element !== document.body;
+    element = element.parentElement
+  ) {
+    const { overflowY } = window.getComputedStyle(element)
+    if (
+      (overflowY === 'auto' || overflowY === 'scroll') &&
+      element.scrollHeight > element.clientHeight
+    ) {
+      return element
+    }
+  }
+  return null
+}
+
+function documentCanScroll(): boolean {
+  return (
+    (window.innerWidth < 1024 || window.innerHeight < 700) &&
+    window.getComputedStyle(document.body).overflowY !== 'hidden'
+  )
+}
+
+function siteHeaderHeight(): number {
+  return (
+    document.getElementById('main-content')?.previousElementSibling?.getBoundingClientRect()
+      .height ?? 0
+  )
+}
+
+/** Task changes restore the section header too; never scroll locked outer activity wrappers. */
 export function scrollTaskPaneToTop(node: HTMLElement | null): void {
   if (!node || typeof window === 'undefined') return
-  if (node.closest('[data-ecmo-flow]')) {
-    const strip = node
-      .closest('[data-ecmo-shell]')
-      ?.querySelector<HTMLElement>('[data-ecmo-context-strip]')
-    if (strip?.querySelector('[data-operational-status="true"]')) {
-      const top = Number.parseFloat(window.getComputedStyle(strip).top) || 0
-      node.style.scrollMarginTop = `${top + strip.getBoundingClientRect().height + 16}px`
-    } else {
-      node.style.removeProperty('scroll-margin-top')
-    }
-    node.scrollIntoView?.({ block: 'start', behavior: 'instant' })
-    return
+  const owner = ecmoScrollOwner(node)
+  if (owner) {
+    owner.scrollTop = 0
+  } else if (documentCanScroll()) {
+    const shell = node.closest('[data-ecmo-shell]') ?? node
+    window.scrollTo({
+      top: Math.max(0, window.scrollY + shell.getBoundingClientRect().top - siteHeaderHeight()),
+      behavior: 'instant',
+    })
   }
-  for (let element = node.parentElement; element; element = element.parentElement) {
-    const overflowY = window.getComputedStyle(element).overflowY
-    if (overflowY !== 'auto' && overflowY !== 'scroll') continue
-    if (element.scrollHeight <= element.clientHeight) continue
-    element.scrollTop = 0
-    return
+}
+
+/** Focus callers use preventScroll, then reveal their target through this single scroll owner. */
+export function scrollEcmoTargetIntoView(
+  node: HTMLElement,
+  behavior: ScrollBehavior = 'auto',
+): void {
+  const owner = ecmoScrollOwner(node)
+  const shell = node.closest('[data-ecmo-shell]')
+  const strip = shell?.querySelector<HTMLElement>('[data-ecmo-context-strip]')
+  const stickyStripHeight =
+    strip && window.getComputedStyle(strip).position === 'sticky'
+      ? strip.getBoundingClientRect().height
+      : 0
+  const label = owner?.querySelector<HTMLElement>(':scope > [data-pane-label]')
+  const inset = stickyStripHeight + (label?.getBoundingClientRect().height ?? 0) + 16
+  if (owner) {
+    owner.scrollTo({
+      top:
+        owner.scrollTop +
+        node.getBoundingClientRect().top -
+        owner.getBoundingClientRect().top -
+        inset,
+      behavior,
+    })
+  } else if (documentCanScroll()) {
+    window.scrollTo({
+      top: window.scrollY + node.getBoundingClientRect().top - siteHeaderHeight() - inset,
+      behavior,
+    })
   }
 }

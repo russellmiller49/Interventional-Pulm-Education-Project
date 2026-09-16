@@ -43,6 +43,7 @@ import {
 import { drainageChatterActive } from './ecmo-circuit/chatter'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoCircuit3D } from './EcmoCircuit3D'
+import { scrollEcmoTargetIntoView } from './stage/scrollTaskPaneToTop'
 import { EcmoCircuitControls } from './EcmoCircuitControls'
 
 /**
@@ -223,6 +224,10 @@ export function CircuitSchematic({
       if (panel.getClientRects().length === 0) return
       const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
       const behavior = reduceMotion ? 'auto' : 'smooth'
+      if (panel.closest('[data-ecmo-shell="learn"]')) {
+        scrollEcmoTargetIntoView(panel, behavior)
+        return
+      }
       const scroller = nearestScrollingAncestor(panel)
       if (!scroller) {
         // A stacked or short layout, where the document is the only scroller. The stylesheet's

@@ -42,6 +42,7 @@ export function EcmoActivityShell({
       data-stage={stage}
       data-flowing={flowing || undefined}
       aria-label={label}
+      tabIndex={flowing ? 0 : undefined}
     >
       <div className={styles.header}>{header}</div>
       <div className={styles.strip} data-ecmo-context-strip>

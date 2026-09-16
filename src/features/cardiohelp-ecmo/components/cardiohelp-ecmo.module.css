@@ -36,19 +36,12 @@
   scrollbar-gutter: stable;
 }
 
-/* Feature-local flowing lessons. Other clinical workspaces retain their viewport sizing. */
-.moduleShell[data-activity-mode='true']:has([data-flowing='true']) {
-  height: auto;
-  min-height: calc(100dvh - var(--site-header-height, 4rem));
-  overflow: visible;
-  padding: 0;
-}
-.moduleShell:has([data-flowing='true']) [data-activity-frame='true'] {
-  height: auto;
-  overflow: visible;
-}
-.moduleShell:has([data-flowing='true']) [data-activity-frame='true'] > div {
-  overflow: visible;
+/* Compact reading uses the document. Desktop reading stays inside the bounded activity frame. */
+@media (max-width: 1023px), (max-height: 699px) {
+  .moduleShell[data-activity-mode='true']:has([data-flowing='true']) {
+    min-height: calc(100dvh - var(--site-header-height, 4rem));
+    padding: 0;
+  }
 }
 
 .moduleShell *,
