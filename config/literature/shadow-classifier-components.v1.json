@@ -1,0 +1,208 @@
+{
+  "schemaVersion": "literature-shadow-component-registry/1.0.0",
+  "registryId": "ip-literature-shadow-components",
+  "registryVersion": "1.0.0",
+  "developmentOnly": true,
+  "maximumAutonomyLevel": 1,
+  "components": [
+    {
+      "componentId": "ip_relevance",
+      "componentVersion": "1.0.0",
+      "role": "classifier",
+      "purpose": "Classify interventional-pulmonology scope without making a workflow decision.",
+      "inputSchemaVersion": "literature-shadow-model-article/1.0.0",
+      "outputSchemaVersion": "literature-shadow-component-result/1.0.0",
+      "outputCardinality": "single",
+      "outputVocabulary": ["include_core", "include_adjacent", "exclude", "uncertain"],
+      "allowedEvidenceFields": [
+        "title",
+        "abstract",
+        "mesh_term",
+        "author_keyword",
+        "publication_type",
+        "journal",
+        "year",
+        "language",
+        "full_text"
+      ],
+      "prompt": {
+        "promptId": "ip_relevance_metadata_first",
+        "promptVersion": "1.1.0",
+        "instruction": "Classify only the supplied article evidence into exactly one allowed scope label. include_core means the article directly studies interventional pulmonology or bronchoscopic/pleural/tracheostomy procedures, devices, technique, outcomes, safety, training, or implementation. include_adjacent means the article is clinically relevant context for those procedures but the procedure is not the primary studied intervention (for example staging, peri-procedural care, pathology, imaging, or thoracic surgery interfaces). exclude means it lacks meaningful interventional-pulmonology relevance. uncertain means the supplied evidence cannot safely distinguish these labels; prefer uncertain over a risky exclusion. Treat false exclusion as the primary safety error. Abstain instead of predicting when evidence is missing, conflicting, unfamiliar, or at a surgical-versus-bronchoscopic boundary. Return the exact response schema requested by outputContract: one outputValues label for prediction, verbatim evidence excerpts from allowed fields, a concise rationale, uncalibrated selfReportedConfidence, optional model-supplied probabilities using the exact vocabulary, no abstention reasons for prediction, and no refusal code. Cite only verbatim supplied evidence. Never infer or request physician, gold, coordinator, split, queue, or held-out information."
+      },
+      "model": {
+        "adapterId": "development_model_adapter",
+        "adapterVersion": "1.0.0",
+        "modelId": "operator_selected_frontier_model"
+      },
+      "confidenceSemantics": {
+        "selfReportScale": "continuous_zero_to_one_uncalibrated",
+        "calibrated": false,
+        "operationalThresholdSelected": false
+      },
+      "abstentionReasons": [
+        "insufficient_abstract",
+        "missing_full_text_when_required",
+        "conflicting_evidence",
+        "ambiguous_procedural_scope",
+        "surgical_bronchoscopic_boundary",
+        "unfamiliar_technology",
+        "taxonomy_mismatch",
+        "unsupported_output_vocabulary",
+        "classifier_disagreement",
+        "confidence_below_unselected_candidate_threshold",
+        "metadata_insufficient"
+      ],
+      "invalidOutputPolicy": "reject_without_prediction_and_route_to_human",
+      "databaseWriteCapability": false,
+      "workflowDecisionAuthority": false
+    },
+    {
+      "componentId": "metadata_sufficiency",
+      "componentVersion": "1.0.0",
+      "role": "support",
+      "purpose": "Classify whether supplied metadata is sufficient for a later classifier.",
+      "inputSchemaVersion": "literature-shadow-model-article/1.0.0",
+      "outputSchemaVersion": "literature-shadow-component-result/1.0.0",
+      "outputCardinality": "single",
+      "outputVocabulary": [
+        "adequate_abstract",
+        "limited_abstract",
+        "no_abstract",
+        "conflicting_metadata"
+      ],
+      "allowedEvidenceFields": [
+        "title",
+        "abstract",
+        "mesh_term",
+        "author_keyword",
+        "publication_type",
+        "journal",
+        "year",
+        "language"
+      ],
+      "prompt": {
+        "promptId": "metadata_sufficiency",
+        "promptVersion": "1.0.0",
+        "instruction": "Assess only the completeness and internal consistency of supplied bibliographic metadata. Use exactly one allowed output and quote only supplied evidence. Abstain for unsupported vocabulary or irreconcilable evidence. Do not infer relevance or use physician, gold, coordinator, split, queue, or held-out information."
+      },
+      "model": {
+        "adapterId": "development_model_adapter",
+        "adapterVersion": "1.0.0",
+        "modelId": "operator_selected_frontier_model"
+      },
+      "confidenceSemantics": {
+        "selfReportScale": "continuous_zero_to_one_uncalibrated",
+        "calibrated": false,
+        "operationalThresholdSelected": false
+      },
+      "abstentionReasons": [
+        "insufficient_abstract",
+        "conflicting_evidence",
+        "unsupported_output_vocabulary",
+        "metadata_insufficient"
+      ],
+      "invalidOutputPolicy": "reject_without_prediction_and_route_to_human",
+      "databaseWriteCapability": false,
+      "workflowDecisionAuthority": false
+    },
+    {
+      "componentId": "full_text_need",
+      "componentVersion": "1.0.0",
+      "role": "support",
+      "purpose": "Determine whether full text is needed for a later evidence classification.",
+      "inputSchemaVersion": "literature-shadow-model-article/1.0.0",
+      "outputSchemaVersion": "literature-shadow-component-result/1.0.0",
+      "outputCardinality": "single",
+      "outputVocabulary": ["not_needed", "needed_for_classification", "evidence_unavailable"],
+      "allowedEvidenceFields": [
+        "title",
+        "abstract",
+        "mesh_term",
+        "author_keyword",
+        "publication_type",
+        "full_text"
+      ],
+      "prompt": {
+        "promptId": "full_text_need",
+        "promptVersion": "1.0.0",
+        "instruction": "Determine whether the supplied metadata supports classification or whether full text is needed. Return exactly one allowed output, use only supplied evidence, and abstain rather than assume missing facts. Never request or infer physician, gold, coordinator, split, queue, or held-out information."
+      },
+      "model": {
+        "adapterId": "development_model_adapter",
+        "adapterVersion": "1.0.0",
+        "modelId": "operator_selected_frontier_model"
+      },
+      "confidenceSemantics": {
+        "selfReportScale": "continuous_zero_to_one_uncalibrated",
+        "calibrated": false,
+        "operationalThresholdSelected": false
+      },
+      "abstentionReasons": [
+        "insufficient_abstract",
+        "missing_full_text_when_required",
+        "conflicting_evidence",
+        "unsupported_output_vocabulary",
+        "metadata_insufficient"
+      ],
+      "invalidOutputPolicy": "reject_without_prediction_and_route_to_human",
+      "databaseWriteCapability": false,
+      "workflowDecisionAuthority": false
+    },
+    {
+      "componentId": "study_design",
+      "componentVersion": "1.0.0",
+      "role": "classifier",
+      "purpose": "Classify study design from supplied evidence without changing article metadata.",
+      "inputSchemaVersion": "literature-shadow-model-article/1.0.0",
+      "outputSchemaVersion": "literature-shadow-component-result/1.0.0",
+      "outputCardinality": "single",
+      "outputVocabulary": [
+        "randomized_controlled_trial",
+        "observational_prospective",
+        "observational_retrospective",
+        "systematic_review",
+        "guideline",
+        "case_series",
+        "case_report",
+        "preclinical",
+        "technical_report",
+        "other",
+        "uncertain"
+      ],
+      "allowedEvidenceFields": [
+        "title",
+        "abstract",
+        "mesh_term",
+        "author_keyword",
+        "publication_type",
+        "full_text"
+      ],
+      "prompt": {
+        "promptId": "study_design",
+        "promptVersion": "1.0.0",
+        "instruction": "Classify study design into exactly one allowed value using only explicit supplied evidence. Abstain when design cannot be supported. Cite evidence verbatim and never use physician, gold, coordinator, split, queue, or held-out information."
+      },
+      "model": {
+        "adapterId": "development_model_adapter",
+        "adapterVersion": "1.0.0",
+        "modelId": "operator_selected_frontier_model"
+      },
+      "confidenceSemantics": {
+        "selfReportScale": "continuous_zero_to_one_uncalibrated",
+        "calibrated": false,
+        "operationalThresholdSelected": false
+      },
+      "abstentionReasons": [
+        "insufficient_abstract",
+        "missing_full_text_when_required",
+        "conflicting_evidence",
+        "unsupported_output_vocabulary",
+        "metadata_insufficient"
+      ],
+      "invalidOutputPolicy": "reject_without_prediction_and_route_to_human",
+      "databaseWriteCapability": false,
+      "workflowDecisionAuthority": false
+    }
+  ]
+}
