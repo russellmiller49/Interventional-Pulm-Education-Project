@@ -133,7 +133,7 @@ describe('the air-resumption safety invariant', () => {
     (scenarioId) => {
       // The owner decision: past isolation, de-airing and source correction, this module does not
       // teach one universal clamp/pump/reset order, because no such order is supported by both the
-      // current instructions for use and every approved local protocol.
+      // current instructions for use and every local protocol.
       const lesson = cardiohelpLearnLessonByScenarioId.get(scenarioId)
       if (!lesson) throw new Error(`No guided lesson for ${scenarioId}`)
       const actions = lesson.steps.flatMap((step) => step.actions)

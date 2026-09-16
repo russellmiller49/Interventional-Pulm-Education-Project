@@ -67,6 +67,13 @@
       "autoPort": false
     },
     {
+      "name": "claude-ecmo-honesty",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "--port", "3128", "--webpack"],
+      "port": 3128,
+      "autoPort": false
+    },
+    {
       "name": "claude-b-dev",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["next", "dev", "--port", "3121", "--webpack"],

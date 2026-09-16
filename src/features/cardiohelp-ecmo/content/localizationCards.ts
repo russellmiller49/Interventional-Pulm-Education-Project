@@ -27,8 +27,8 @@ import type { ecmoDerivedValueGuides } from './ecmoValueGuides'
  * So the sentences live here, once. A lesson selects a row and a depth; no lesson restates a row.
  *
  * What a row deliberately does not do: name a threshold, name a number, or promise that the
- * shortlist is exhaustive. The cause lists are what to inspect first, drawn from the reviewed
- * teaching in the drills that own each pattern — not a differential a learner should stop at.
+ * shortlist is exhaustive. The cause lists are what to inspect first, drawn from the teaching in
+ * the drills that own each pattern — not a differential a learner should stop at.
  */
 
 export const ecmoLocalizationRowIds = [
