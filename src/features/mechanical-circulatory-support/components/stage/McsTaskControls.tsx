@@ -1,7 +1,9 @@
-import type { Dispatch } from 'react'
+import { useId, type Dispatch } from 'react'
+import { mcsAfTriggerLimitApplies } from '../../content/afTriggerLimit'
 import { mcsLearnControls } from '../../content/learnControls'
 import { isMcsLearningActionPermitted } from '../../engine/learningSession'
 import type { McsAction, McsSimulationState } from '../../engine/types'
+import { McsAfTriggerLimit } from '../McsAfTriggerLimit'
 import { RangeControl } from '../McsControls'
 import styles from './mcs-stage.module.css'
 
@@ -17,6 +19,8 @@ export function McsTaskControls({
   allowedActionIds: readonly string[]
   disabled?: boolean
 }) {
+  const afTriggerLimitId = useId()
+  const afTriggerLimit = mcsAfTriggerLimitApplies(state)
   const controls = Object.values(mcsLearnControls).filter(
     (control) =>
       allowedActionIds.includes(control.actionId) && control.location !== 'guided-actions',
@@ -208,6 +212,7 @@ export function McsTaskControls({
               <label>
                 Trigger source
                 <select
+                  aria-describedby={afTriggerLimit ? afTriggerLimitId : undefined}
                   value={state.device.triggerSource}
                   disabled={
                     disabled ||
@@ -230,6 +235,13 @@ export function McsTaskControls({
                   <option value="internal">Internal</option>
                 </select>
               </label>
+            ) : null}
+            {control.id === 'control:iabp-trigger' ? (
+              <McsAfTriggerLimit
+                state={state}
+                id={afTriggerLimitId}
+                className={styles.triggerLimitNote}
+              />
             ) : null}
             <p>
               {control.changes} {control.doesNotGuarantee}
