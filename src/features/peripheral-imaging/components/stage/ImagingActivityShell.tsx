@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactNode, RefObject } from 'react'
+import { useRef, type ReactNode, type RefObject } from 'react'
 import { Bookmark, BookmarkCheck } from 'lucide-react'
 
 import type { NowCardAction, NowCardModel } from '@/features/learning-module/stage/NowCard'
@@ -15,6 +15,7 @@ import {
 import { PERIPHERAL_IMAGING_NAV_BASE } from '../../content/routes'
 import { peripheralImagingModuleNavItems } from '../PeripheralImagingModuleFrame'
 import styles from './imaging-flow.module.css'
+import { useImagingFocusClearance } from './useImagingFocusClearance'
 
 export interface ImagingNowAction extends NowCardAction {
   /** For a disclosure toggle, such as Show the explanation: whether what it opens is open. */
@@ -77,9 +78,15 @@ export function ImagingActivityShell({
 }) {
   const activity = lesson.steps[index].activity
   const earlierSteps = lesson.steps.slice(0, liveIndex)
+  const shellNode = useRef<HTMLElement | null>(null)
+  const headerNode = useRef<HTMLElement | null>(null)
+  const footerNode = useRef<HTMLElement | null>(null)
+  // Keeps a control that Tab moves to out from under the pinned header and footer (G02-PI-01).
+  useImagingFocusClearance(shellNode, headerNode, footerNode)
   return (
     <section
       className={styles.course}
+      ref={shellNode}
       data-stage={lesson.steps[index].id}
       data-imaging-flow
       data-now-card
@@ -87,7 +94,7 @@ export function ImagingActivityShell({
       data-task-kind={activity.task}
       data-learning-activity={activity.id}
     >
-      <header className={styles.header}>
+      <header className={styles.header} ref={headerNode}>
         <div>
           <Link href={PERIPHERAL_IMAGING_NAV_BASE} className={styles.eyebrow}>
             Peripheral bronchoscopy imaging
@@ -202,7 +209,7 @@ export function ImagingActivityShell({
       </aside>
       {children}
       <div className={styles.references}>{references}</div>
-      <footer className={styles.actions} aria-label="Activity navigation">
+      <footer className={styles.actions} ref={footerNode} aria-label="Activity navigation">
         <div className={styles.actionStatus} role="status" data-now-status>
           {model.status ??
             (model.primary?.disabled
