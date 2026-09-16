@@ -1,6 +1,8 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
+
+import { useEcmoFocusClearance } from './useEcmoFocusClearance'
 
 import styles from './EcmoActivityShell.module.css'
 
@@ -34,8 +36,12 @@ export function EcmoActivityShell({
   readonly children: ReactNode
   readonly flowing?: boolean
 }) {
+  const shellRef = useRef<HTMLElement>(null)
+  useEcmoFocusClearance(shellRef, section === 'learn' && flowing, stage)
+
   return (
     <section
+      ref={shellRef}
       className={styles.shell}
       data-critical-care-activity-shell="true"
       data-ecmo-shell={section}

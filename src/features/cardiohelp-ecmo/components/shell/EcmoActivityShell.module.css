@@ -659,3 +659,25 @@
     top: 0;
   }
 }
+
+/* Native Tab/Shift+Tab must use the same reading owner as wheel and guided focus. The strip's
+ * measured size includes wrapping/text enlargement; the activity header is not pinned chrome. */
+.shell[data-ecmo-shell='learn'][data-flowing='true'] {
+  scroll-padding-block-start: calc(var(--ecmo-sticky-strip-height, 0px) + 1rem);
+}
+.shell[data-ecmo-shell='learn'][data-flowing='true']:has(> .header :focus),
+.shell[data-ecmo-shell='learn'][data-flowing='true']:has(> .strip :focus) {
+  scroll-padding-block-start: 1rem;
+}
+
+@media (max-width: 1023px), (max-height: 699px) {
+  :global(html):has(.shell[data-ecmo-shell='learn'][data-flowing='true']) {
+    scroll-padding-block-start: calc(var(--ecmo-document-focus-clearance, 0px) + 1rem);
+    scroll-padding-block-end: 1rem;
+  }
+
+  .shell[data-ecmo-shell='learn'][data-flowing='true']
+    :is(a, button, input, select, textarea, summary, [tabindex]) {
+    scroll-margin-block: 0.5rem;
+  }
+}
