@@ -95,6 +95,10 @@ Earlier failures remain in the evidence directory: initial new comparison tests 
 
 No green technical result establishes clinical approval. The clinical/model holds above remain open and visible to the learner.
 
+## Module backlog — integration copy triage (2026-09-15)
+
+- **Deferred, optional clarity improvement:** `VentilationPeepComparison.tsx` uses “Engine-generated example values · no hold acquired” in its desktop table caption and compact readings label (two static-copy findings). `createPeepComparisonBaseline` and `runPeepComparison` generate separate simulated examples without acquiring an inspiratory hold or a learner capture. The wording accurately distinguishes modeled values from measurements; the scanner objects to the software term “engine”, not a false clinical claim. Consider plainer provenance wording in a later MV editorial slice while preserving the no-hold qualification. No factual error, stale claim, broken reference or grade authority was found in these two labels; neither label nor the scanner was changed by the integration cleanup. Quantitative/model-review holds above remain open.
+
 ## Changed files and next slice
 
 - `docs/gap-remediation/mv/MV-02-peep-investigation.md`

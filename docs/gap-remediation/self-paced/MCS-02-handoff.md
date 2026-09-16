@@ -251,6 +251,10 @@ changed, so no shared consumer integration slice is required.
 | H11  | PASS — MCS feature, MCS script, MCS browser test and MCS docs only; no release/source-hold change                                |
 | H12  | PASS for the bounded technical journey — 745 Jest tests and 8 browser tests; clinical review/pilot remain pending                |
 
+## Module backlog — integration copy triage (2026-09-15)
+
+- **Deferred, optional clarity improvement:** `McsUnloadingComparison.tsx` displays “Seed {baseline.seed}” under “Starting state and model assumptions” (one static-copy finding). The value is the actual shared baseline's simulation seed used by `replayMcsUnloadingComparison`; it is reproducibility metadata, not a clinical measurement or learner grade. Consider explaining the term in a later MCS editorial slice. The scanner's “seed” match establishes a terminology concern, not a factual error, stale statement, contradiction or broken reference. Keep the disclosure and scanner unchanged in this integration cleanup; existing faculty/device and quantitative-model holds remain open.
+
 ## Next slice
 
 No shared integration slice is required. Follow-up is attributable MCS
