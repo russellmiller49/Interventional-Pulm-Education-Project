@@ -1055,7 +1055,7 @@ export function ecmoSimulationReducer(
         return appendHistory(
           held,
           'action',
-          'Clamp held: resume support per the current IFU and approved local protocol rather than opening the last limb onto a stopped pump',
+          'Clamp held: resume support per the current IFU and your local protocol rather than opening the last limb onto a stopped pump',
         )
       }
       const canResumeAfterOpening =

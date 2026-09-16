@@ -4299,6 +4299,20 @@
   font-weight: 800;
 }
 
+/*
+  A profile row whose value is a sentence rather than a value: the local-protocol statement, which
+  has to say what "none recorded" means before a learner reads the module's deferrals as a policy
+  it has seen. Spanning the row keeps it readable at every column count the grid drops to.
+*/
+.deviceProfileWide {
+  grid-column: 1 / -1;
+}
+
+.deviceProfileWide dd {
+  font-weight: 600;
+  line-height: 1.5;
+}
+
 .evidenceGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

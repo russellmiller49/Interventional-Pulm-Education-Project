@@ -1276,17 +1276,17 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         id: 'resume-support',
         target: 'circuit',
         preferredCircuitView: 'bedside',
-        title: 'Resume support per the current IFU and approved local protocol',
+        title: 'Resume support per the current IFU and your local protocol',
         instruction:
-          'With the source corrected and the circuit confirmed clear, resume support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol.',
+          'With the source corrected and the circuit confirmed clear, resume support according to the current manufacturer instructions for use (IFU) and your unit’s own ECMO air-emergency protocol.',
         rationale:
           'This module does not teach where clamp opening, pump restart and console reset fall relative to one another during resumption: that choreography is device- and program-specific. What it does teach is the precondition — nothing resumes until the air source is corrected and the circuit is confirmed clear. This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
-        actionLabel: 'Resume support per current IFU and approved local protocol',
+        actionLabel: 'Resume support per current IFU and local protocol',
         actions: [{ type: 'RESUME_SUPPORT_AFTER_BUBBLE' }],
         expectedResponse: [
           'Support resumes as one bounded step, with no moment where both limbs are open on a stopped pump',
           'The bubble latch clears and the pump runs',
-          'Where clamp opening, pump restart and console reset fall relative to one another is governed by the current IFU and your approved local protocol, not by this simulation',
+          'Where clamp opening, pump restart and console reset fall relative to one another is governed by the current IFU and your own local protocol, not by this simulation',
         ],
       },
     ],
@@ -1468,7 +1468,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         target: 'circuit',
         title: 'Escalate the oxygenator/circuit problem',
         instruction:
-          'Check sensor plausibility, resistance, gas transfer, and the circuit; escalate under the reviewed exchange protocol.',
+          'Check sensor plausibility, resistance, gas transfer, and the circuit; escalate under your unit’s circuit-exchange protocol.',
         rationale:
           'Repeated RPM escalation does not correct a rising cross-oxygenator resistance pattern.',
         actionLabel: 'Escalate the identified oxygenator problem',
@@ -1512,7 +1512,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
           'Verify right-arm oxygenation, assess native ejection and lung oxygenation, compare circuit data, and escalate the support strategy.',
         rationale:
           'No single pump or sweep adjustment safely represents every differential-oxygenation cause.',
-        actionLabel: 'Verify the pattern and escalate the reviewed response',
+        actionLabel: 'Verify the pattern and escalate under local protocol',
         actions: [{ type: 'CORRECT_FAULT', fault: 'differential-hypoxemia' }],
         expectedResponse: [
           'Upper-body pattern recognized',
@@ -1703,17 +1703,17 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         id: 'resume-support',
         target: 'circuit',
         preferredCircuitView: 'bedside',
-        title: 'Resume support per the current IFU and approved local protocol',
+        title: 'Resume support per the current IFU and your local protocol',
         instruction:
-          'With the source corrected and the circuit confirmed clear, resume venoarterial support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol.',
+          'With the source corrected and the circuit confirmed clear, resume venoarterial support according to the current manufacturer instructions for use (IFU) and your unit’s own ECMO air-emergency protocol.',
         rationale:
           'This module does not teach where clamp opening, pump restart and console reset fall relative to one another during resumption: that choreography is device- and program-specific. What it does teach is the precondition — nothing resumes until the air source is corrected and the circuit is confirmed clear. This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
-        actionLabel: 'Resume support per current IFU and approved local protocol',
+        actionLabel: 'Resume support per current IFU and local protocol',
         actions: [{ type: 'RESUME_SUPPORT_AFTER_BUBBLE' }],
         expectedResponse: [
           'Support resumes as one bounded step, with no moment where both limbs are open on a stopped pump',
           'The bubble latch clears and the pump runs',
-          'Where clamp opening, pump restart and console reset fall relative to one another is governed by the current IFU and your approved local protocol, not by this simulation',
+          'Where clamp opening, pump restart and console reset fall relative to one another is governed by the current IFU and your own local protocol, not by this simulation',
         ],
       },
     ],

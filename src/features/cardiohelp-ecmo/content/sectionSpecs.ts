@@ -154,7 +154,7 @@ export const ecmoSectionSpecs: readonly EcmoSectionSpec[] = Object.freeze([
     objective: 'Choose the control for a CO₂ problem and decide how fast to correct it',
     prerequisiteSectionIds: ['blood-flow-versus-sweep'],
     learnerCopyOverrideReason:
-      'The approved objective uses "correct" in its clinical sense — correcting an acidemia — not as scoring vocabulary.',
+      'The authored objective uses "correct" in its clinical sense — correcting an acidemia — not as scoring vocabulary.',
   },
   {
     sectionId: 'compensated-hypercapnia',
