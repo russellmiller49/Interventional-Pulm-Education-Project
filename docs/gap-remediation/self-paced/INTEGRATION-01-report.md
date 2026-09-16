@@ -1,9 +1,9 @@
 # INTEGRATION-01 — post-remediation combined validation
 
 Validation date: 2026-09-15 PDT (2026-09-16 UTC). Prepared by Codex, an AI assistant.
-**Not G02, clinical approval, release approval, or accessibility certification.**
+**Integration cleanup gate: PASS — the integrated build is ready.** This is technical integration readiness, not clinical approval, publication approval or accessibility certification. The bounded cleanup and next-phase start are recorded below.
 
-**Result: production build passes; integration is not fully green.** The combined checks found a newly stale CRRT review-queue quotation introduced by SHARED-02. The already-failing learner-copy scanner also contains three added findings from MV-02/MCS-02. No application, clinical content, model, progress contract, source-review decision, or test was changed during this validation.
+**Initial audit result (before the cleanup below): production build passes; integration was not fully green.** The combined checks found a newly stale CRRT review-queue quotation introduced by SHARED-02. The already-failing learner-copy scanner also contains three added findings from MV-02/MCS-02. No application, clinical content, model, progress contract, source-review decision, or test was changed during this validation.
 
 ## Baseline and evidence
 
@@ -98,13 +98,13 @@ Compared every first-parent merge from `9ef04539` through tested main against it
 | `critical-care/__tests__/accessibility.test.tsx` — color-independent circuit/pressure/alarm/trend states | Missing `img` accessible name matching `patient access, access catheter, access line, filter, return line, then patient return`. Also fails at pre-series `9ef04539`. This is a real existing test failure, not accessibility certification or a newly introduced remediation failure.                                                                                                                                                                                                                                                      |
 | `bronchial-branch-tracing/__tests__/contracts.test.ts` — anonymous/unlisted versus admin anatomy         | `isPublicPath('/airway-anatomy/case-001/case_manifest.json')`: expected false, actual true. Same predicate/assertion fails at `9ef04539`; current line 198, historical line 201. Existing shared-access debt; BBT-01/02 also recorded it. No access rule was changed here.                                                                                                                                                                                                                                                                  |
 | `critical-care/__tests__/curriculum-sequencing.test.tsx` — authored CRRT case order                      | Current rendered list adds **PrisMax troubleshooting challenge** after the expected 18 practice titles. Passes at `9ef04539`, already fails before SHARED-02 at `b32d9cd6`. Owning change: CRRT-01 `916eb45e` / PR #208 intentionally classified the former Assess item as `practice-case`, non-credit, no mastery authority. The expected list still filters only `crrt:practice:` IDs. **Obsolete test contract after a documented self-paced change**, not evidence that the 18 authored cases were reordered. No assertion was relaxed. |
-| `critical-care/__tests__/learner-copy.test.ts` — static component copy                                   | Fails at `9ef04539` and current main. Current failure contains **19 reported literal occurrences**, versus 21 at the pre-series commit. This is not an identical finding set: three added occurrences are disclosed under NEW REGRESSION. Remaining findings include legacy software terms and clinical uses of “assessment”; classification needs contextual judgment. Do not infer that all matches represent grading claims.                                                                                                             |
+| `critical-care/__tests__/learner-copy.test.ts` — static component copy                                   | Fails at `9ef04539` and current main. Current failure contains **19 reported literal occurrences**, versus 21 at the pre-series commit. This is not an identical finding set: three added occurrences are disclosed under INITIAL AUDIT FINDINGS and triaged in the cleanup below. Remaining findings include legacy software terms and clinical uses of “assessment”; classification needs contextual judgment. Do not infer that all matches represent grading claims.                                                                    |
 
 The pre-series four-suite comparison ran **44 passed / three failed**, with curriculum ordering passing. SHARED-02-parent comparison (review queue plus ordering) ran **21 passed / one failed**: ordering failed, queue passed. The post-SHARED-02 queue-only run ran **four passed / one failed**. Logs and JSON retain exact payloads rather than relying on older handoff counts.
 
 Known BF larynx-junction TODO remains TODO. It is not a passing anatomy check.
 
-## NEW REGRESSION
+## INITIAL AUDIT FINDINGS — disposition recorded in cleanup below
 
 ### 1. SHARED-02 left G01-CRRT-10 out of sync with current source
 
@@ -124,7 +124,7 @@ A failing baseline scan is not permission to ignore additions. Comparing extract
 
 These are two distinct new strings / three occurrences in an already-red test, rather than three additional failing tests. Other old occurrences were removed, so the net count decreased. They describe example provenance/reproducibility, not restored learner grade authority. Whether to use clearer learner wording or retain a narrowly justified exception is an owner decision; neither was changed here. Earlier handoffs documenting a red scanner do not establish acceptance of these exact additions.
 
-**One smallest proposed follow-up:** reconcile **G01-CRRT-10 only** with SHARED-02's already-merged “Public release” wording, preserving previous wording as history and every `NOT REVIEWED`/null reviewer field. Re-run the strict quotation suite and CRRT source/scaffold consumers. Do not bump persisted content versions, restore “Reviewed release”, change release state, or weaken matching. Static-copy additions remain recorded for later triage; this report does not start another repair slice.
+**Original proposed follow-up (now implemented by the authorized cleanup):** reconcile **G01-CRRT-10 only** with SHARED-02's already-merged “Public release” wording, preserving previous wording as history and every `NOT REVIEWED`/null reviewer field. Re-run the strict quotation suite and CRRT source/scaffold consumers. Do not bump persisted content versions, restore “Reviewed release”, change release state, or weaken matching. Static-copy additions remain recorded for later triage; this report does not start another repair slice.
 
 ## HUMAN REVIEW HOLDS
 
@@ -206,4 +206,63 @@ git show 65a99815 -- src/features/mechanical-circulatory-support/components/stag
 
 The temporary Playwright config selects only the five named spec files, one Chromium worker, zero automatic retries, 1440×900 default viewport, and the already-running local server. The preserved scripts/configs make the ad-hoc browser observations replayable without adding a test framework or modifying tracked tests. Browser attempts are recorded separately; failed exploratory assertions are not included as passes.
 
-Only this validation report is proposed for the repository. Stop here; no repair, release, merge, clinical sign-off or G02 is authorized by this report.
+The original validation-only task ended with this report. The subsequent owner instruction authorizes the bounded cleanup below and, after its gate passes, starting the next planned phase. It does not authorize publication, deployment or clinical sign-off.
+
+## Authorized integration cleanup — 2026-09-15
+
+The owner requested closure of the recorded findings only, reusing the audit and baseline evidence above. Cleanup starts at `42028d72` on the existing PR #231 branch, with a clean worktree. No broad audit or historical baseline run was repeated. The original run totals above remain historical evidence.
+
+### Five-test classification
+
+| Previously failing test                      | Classification for this integration cleanup                | Evidence and disposition                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| -------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CRRT `g01SourceReviewQueue` strict quotation | **Newly introduced regression — fixed**                    | Passed 5/5 before SHARED-02 (`b32d9cd6`), failed after (`a465b486`). Reconciled G01-CRRT-10 with the already-correct `Public release` branch.                                                                                                                                                                                                                                                                                                                                    |
+| Critical-care accessibility                  | **Pre-existing debt — preserved**                          | Same circuit accessible-name failure at pre-series `9ef04539`. No application or test change.                                                                                                                                                                                                                                                                                                                                                                                    |
+| BBT contracts                                | **Pre-existing debt — preserved**                          | Same manifest/public-path assertion at `9ef04539`, also recorded by BBT handoffs. No access-rule or test change.                                                                                                                                                                                                                                                                                                                                                                 |
+| Critical-care curriculum sequencing          | **Pre-existing debt — preserved (obsolete test contract)** | Passed before the self-paced series, but already failed before SHARED-02. CRRT-01 intentionally reclassified the former Assess challenge as `practice-case`; the old expectation lists only the 18 `crrt:practice:` IDs. This is debt from that earlier documented conversion, not a newly discovered reorder or an integration-introduced functional regression. This classification does not claim the assertion always failed historically or that someone approved a waiver. |
+| Critical-care static learner copy            | **Pre-existing debt — preserved**                          | Scanner already failed at `9ef04539`. Its 19 current occurrences include the three additions individually triaged below; the finding set is not identical to the historical 21. No blanket suppression or scanner change.                                                                                                                                                                                                                                                        |
+
+### Correction and static-copy disposition
+
+- **Fixed:** G01-CRRT-10 quotes `Public release` and accurately describes the dormant published branch. Its previous wording and original G01/SHARED-02 history remain recorded. Current hold/decision text no longer asks for a label change SHARED-02 already made. All `NOT REVIEWED`/null reviewer fields, original source checks, content versions, release state and the other nine queue items remain unchanged.
+- **Deferred — MV desktop caption:** “Engine-generated example values · no hold acquired” accurately describes the separate replay and absent acquired hold. The `engine` match is a terminology/clarity concern, not an incorrect educational claim.
+- **Deferred — MV compact label:** the same accurate sentence in the narrow layout. It preserves the same model-versus-measurement distinction.
+- **Deferred — MCS assumptions disclosure:** “Seed {baseline.seed}” displays the actual simulation baseline seed. It is reproducibility metadata, not a clinical quantity or learner grade. Explaining the term is optional editorial work.
+
+These three occurrences are now recorded in the existing [MV-02 module backlog](MV-02-handoff.md#module-backlog--integration-copy-triage-2026-09-15) and [MCS-02 module backlog](MCS-02-handoff.md#module-backlog--integration-copy-triage-2026-09-15). No static-copy occurrence required a factual correction. No unaffected educational copy, runtime, model, test assertion or progress contract changed.
+
+### Cleanup validation
+
+Evidence: `/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/integration-01-cleanup-2026-09-15/`, initially generated under `/tmp/integration-01-cleanup/`. Initial audit evidence remains intact.
+
+- CRRT source/scaffold regressions: **5 suites / 23 tests passed**, including the unchanged strict quotation assertion.
+- Re-run of all five formerly failing suites: **50 passed / four failed**, with only the four classified pre-existing failures remaining. This command intentionally remains red; the cleanup gate does not claim a green full test suite.
+- Structural comparison against cleanup-entry HEAD: first nine queue items, top-level metadata, all clinical-review decision fields, original source-check history and persisted content versions unchanged.
+
+- Full `npm run build`: **PASS (exit 0)**, including both embedded applications, asset validators, production TypeScript check and standalone preparation. Existing dependency/Node warnings remain non-fatal.
+- Production-build Chromium: **3/3 existing CRRT tests passed**, no retry. Routes: `/en/baxter-crrt/practice?case=CRRT-01`, `/en/baxter-crrt/learn?lesson=crrt-indications-modality` with outline/reload navigation, and `/en/baxter-crrt/assess`. Actual device prerequisites, ungraded progress, optional explanation/wrong-answer/retry/skip, keyboard navigation and compact worked examples remain healthy.
+- Label smoke: **2/2 routes passed**, `/en/baxter-crrt` and `/es/baxter-crrt`, HTTP 200, `unlisted-preview`, correct English-fallback presence, neither dormant release label rendered, no page exceptions or page overflow at 390 px. Spanish hub screenshot inspected. The published branch remains unrendered by design; exact source quotation/scaffold tests cover its text without changing release state.
+- Changed-file Prettier and `git diff --check`: **PASS**. No runtime or test source changed. The prior 393-suite aggregate was not rerun or relabeled as green.
+
+Exact cleanup commands (outputs redirected to the evidence directory):
+
+```sh
+node node_modules/jest/bin/jest.js --runInBand --runTestsByPath src/features/baxter-crrt/__tests__/g01SourceReviewQueue.test.ts src/features/baxter-crrt/__tests__/sourceReviewMetadata.test.tsx src/features/baxter-crrt/__tests__/scaffold.test.tsx src/features/baxter-crrt/__tests__/learnerSourceMap.test.ts src/features/baxter-crrt/__tests__/sourceMatrixIntegrity.test.ts --json --outputFile=/tmp/integration-01-cleanup/crrt-source.json
+node node_modules/jest/bin/jest.js --runInBand --runTestsByPath src/features/baxter-crrt/__tests__/g01SourceReviewQueue.test.ts src/features/critical-care/__tests__/accessibility.test.tsx src/features/bronchial-branch-tracing/__tests__/contracts.test.ts src/features/critical-care/__tests__/curriculum-sequencing.test.tsx src/features/critical-care/__tests__/learner-copy.test.ts --json --outputFile=/tmp/integration-01-cleanup/known-failures.json
+npm run build
+NEXT_PUBLIC_SUPABASE_URL=https://preview.invalid NEXT_PUBLIC_SUPABASE_ANON_KEY=preview-only node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3137
+node node_modules/@playwright/test/cli.js test --config=/tmp/integration-01-cleanup/playwright.config.cjs --grep 'real device actions|Learn supports|compact legacy Assess'
+node /tmp/integration-01-cleanup/crrt-labels.cjs
+node node_modules/prettier/bin/prettier.cjs --check docs/gap-remediation/self-paced/G01-crrt-source-review-queue.json docs/gap-remediation/self-paced/MV-02-handoff.md docs/gap-remediation/self-paced/MCS-02-handoff.md docs/gap-remediation/self-paced/INTEGRATION-01-report.md
+git diff --check
+```
+
+The production server emitted Next's advisory to use `.next/standalone/server.js` with `output: standalone`; all listed served-route checks passed against `next start`. The label smoke blocked external hosts and fulfilled APIs locally. Existing browser specs used isolated local browser records; these checks do not establish real account synchronization or source review.
+
+### Gate and next phase
+
+**PASS — the integrated build is ready.** No known integration-introduced functional regression or incorrect/stale educational-content regression remains. The production build and affected browser checks pass. Four pre-existing test failures, the BF TODO, all clinical/media/source/model holds and the optional MV/MCS terminology backlog remain explicit. Technical integration readiness is not a release decision.
+
+Cleanup changes only this existing report, G01-CRRT-10's current quotation/descriptions, and backlog entries in the existing MV-02/MCS-02 handoffs. Existing PR #231 is updated rather than opening a second report-only PR. No unrelated uncommitted or concurrent work was present or changed.
+
+**Next phase: G02 — Peripheral Imaging, proposed read-only self-paced release-candidate check.** The v2 G02 prompt selects Peripheral Imaging when no target is named. Start only after the cleanup gate above, reuse the integration evidence, and keep actual clinical/media decisions and human observations distinct from automated QA. No publication is authorized.

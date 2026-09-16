@@ -437,11 +437,11 @@
         {
           "file": "src/features/baxter-crrt/components/BaxterCrrtModuleFrame.tsx",
           "locator": "Release label (not shown while the release stage is unlisted-preview)",
-          "excerpt": "baxterCrrtReleaseStage === 'published' ? 'Reviewed release' : 'Unlisted preview'"
+          "excerpt": "baxterCrrtReleaseStage === 'published' ? 'Public release' : 'Unlisted preview'"
         }
       ],
-      "learnerWording": "Now: “English fallback” on non-English routes, and “v1 authored teaching calibration · no clinical review recorded” as the version text of simulated-value sources. Unchanged and not shown today: “Reviewed release”, displayed only if the release stage becomes 'published'.",
-      "previousWording": "“Reviewed-English fallback”; “v1 SME-review build”.",
+      "learnerWording": "Now: “English fallback” on non-English routes, and “v1 authored teaching calibration · no clinical review recorded” as the version text of simulated-value sources. SHARED-02 renamed the conditional release label to “Public release”; it is not shown while the release stage is 'unlisted-preview'.",
+      "previousWording": "“Reviewed-English fallback”; “v1 SME-review build”. Before SHARED-02: “Reviewed release” on the conditional published branch.",
       "visual": "Small note and source-list text.",
       "intendedTeachingPoint": "A status label must not imply a review that no record documents.",
       "sourceRecordIds": [],
@@ -454,9 +454,9 @@
         "notChecked": "Rendered wording in other shared critical-care surfaces (hub and pathway 'Preview · clinical review' labels)."
       },
       "limitation": "The module content version (1.1.0-sme-review.1) keeps its name: changing it would invalidate saved progress.",
-      "clinicalDecisionNeeded": "Owner: before any publication, name the review record that a 'Reviewed release' label would stand for, or relabel it.",
-      "hold": "“Reviewed release” unchanged; the release stage stays unlisted-preview.",
-      "changeInThisBatch": "Two labels renamed; the scaffold test assertion updated.",
+      "clinicalDecisionNeeded": "Owner: record the actual scoped review and publication decisions before any publication. “Public release” describes availability, not a completed clinical review.",
+      "hold": "The release stage stays unlisted-preview; no clinical review or publication decision is recorded by this wording correction.",
+      "changeInThisBatch": "G01: two labels renamed; the scaffold test assertion updated. SHARED-02 (a465b486): conditional “Reviewed release” renamed to “Public release”. INTEGRATION-01 cleanup (2026-09-15, Codex): synchronized this item's quotation and current descriptions with that existing source change; original source-check history, content version and NOT REVIEWED decision preserved.",
       "contentVersion": "baxter-crrt 1.1.0-sme-review.1 · branch claude/g01-source-review from dea4e80d",
       "reviewerDecision": {
         "decision": "NOT REVIEWED",
