@@ -403,6 +403,19 @@
     margin-inline: 1rem;
   }
 }
+/*
+ * The page is the scroll container for this activity, and both the course header above the task
+ * and the Activity-navigation footer below it are painted over it. The browser scrolls a control
+ * that Tab moves to into the scrollport without knowing what covers that scrollport, so reserve
+ * the room the chrome actually occupies and let that scrolling land the control in the clear
+ * (G02-PI-01). `useImagingFocusClearance` measures the chrome, which is content-sized and grows
+ * several-fold as text is enlarged; the fallback is this chrome at desktop width and normal text.
+ * `:has` keeps every declaration here to pages that render the activity.
+ */
+:global(html):has(.course) {
+  scroll-padding-top: var(--imaging-focus-clear-top, calc(var(--site-header-height, 4rem) + 7rem));
+  scroll-padding-bottom: var(--imaging-focus-clear-bottom, 0px);
+}
 .header {
   position: sticky;
   top: var(--site-header-height, 4rem);
@@ -428,4 +441,13 @@
   .taskHeading {
     scroll-margin-top: calc(var(--site-header-height, 4rem) + 1rem);
   }
+}
+/*
+ * Chrome that would hold more of the viewport than the task it frames stops being pinned, the way
+ * the header above already stops being pinned on a narrow viewport. `useImagingFocusClearance`
+ * measures it; without that script the chrome stays pinned exactly as before.
+ */
+.course[data-chrome-pinned='false'] .header,
+.course[data-chrome-pinned='false'] .actions {
+  position: static;
 }
