@@ -102,8 +102,15 @@
   top: 100%;
   right: 0;
   width: min(80vw, 30rem);
-  max-height: 65dvh;
+  /*
+   * `top: 100%` takes no account of how far down the viewport the trigger already is, so the panel
+   * is capped against the end of the usable band — the viewport minus whatever chrome is pinned
+   * over it — and not against the viewport (G02-PI-02). `useImagingOutlinePlacement` measures that
+   * room; without it this is the 65dvh the panel has always had.
+   */
+  max-block-size: min(65dvh, var(--imaging-outline-anchored-max-block, 65dvh));
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 1.25rem;
   border: 1px solid var(--line);
   background: #0e262d;
@@ -450,4 +457,32 @@
 .course[data-chrome-pinned='false'] .header,
 .course[data-chrome-pinned='false'] .actions {
   position: static;
+}
+/*
+ * G02-PI-02. The anchored panel above grows from its trigger's inline-end edge towards the inline
+ * start, which is only right while the trigger sits at the inline end of a roomy header row. Once
+ * enlarged text re-wraps the header tools towards the inline start, the panel hangs off the
+ * viewport: at 900 px with root text at 32 px it opened 412.9 px past the inline-start edge, with
+ * every section link's centre outside the viewport and none of them reachable.
+ *
+ * Capping the anchored panel's width cannot repair that — a right-anchored box only gets narrower,
+ * it does not come back on screen — so where it would not fit the panel is laid out against the
+ * usable scrollport instead: inset from both inline edges of the viewport, opened below the
+ * trigger but never below the point where it would be too short to read, and never past the end of
+ * the usable band, which is where the pinned Activity-navigation footer starts. It scrolls its own
+ * contents rather than the page, so every section link stays reachable.
+ *
+ * `useImagingOutlinePlacement` measures which presentation applies and publishes the lengths;
+ * nothing here is positioned from script. Where the anchored panel still fits — desktop width at
+ * normal text — none of this applies and the panel is unchanged.
+ */
+.course[data-outline-contained='true'] .outline nav {
+  position: fixed;
+  z-index: 60;
+  inset-block: var(--imaging-outline-block-start, 0px) auto;
+  inset-inline: 1rem;
+  inline-size: auto;
+  max-inline-size: 30rem;
+  margin-inline-start: auto;
+  max-block-size: var(--imaging-outline-max-block, 65dvh);
 }

@@ -16,6 +16,7 @@ import { PERIPHERAL_IMAGING_NAV_BASE } from '../../content/routes'
 import { peripheralImagingModuleNavItems } from '../PeripheralImagingModuleFrame'
 import styles from './imaging-flow.module.css'
 import { useImagingFocusClearance } from './useImagingFocusClearance'
+import { useImagingOutlinePlacement } from './useImagingOutlinePlacement'
 
 export interface ImagingNowAction extends NowCardAction {
   /** For a disclosure toggle, such as Show the explanation: whether what it opens is open. */
@@ -81,8 +82,12 @@ export function ImagingActivityShell({
   const shellNode = useRef<HTMLElement | null>(null)
   const headerNode = useRef<HTMLElement | null>(null)
   const footerNode = useRef<HTMLElement | null>(null)
+  const outlineNode = useRef<HTMLDetailsElement | null>(null)
+  const outlineTrigger = useRef<HTMLElement | null>(null)
   // Keeps a control that Tab moves to out from under the pinned header and footer (G02-PI-01).
   useImagingFocusClearance(shellNode, headerNode, footerNode)
+  // Keeps the opened Course outline inside the viewport the pinned chrome leaves (G02-PI-02).
+  useImagingOutlinePlacement(shellNode, headerNode, footerNode, outlineNode, outlineTrigger)
   return (
     <section
       className={styles.course}
@@ -116,8 +121,8 @@ export function ImagingActivityShell({
           ))}
         </nav>
         <div className={styles.headerTools}>
-          <details className={styles.outline} data-course-outline>
-            <summary>Course outline</summary>
+          <details className={styles.outline} data-course-outline ref={outlineNode}>
+            <summary ref={outlineTrigger}>Course outline</summary>
             <nav aria-label="Course outline">
               {imagingPathwayGroups().map((group) => (
                 <section key={group.phase}>

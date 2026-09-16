@@ -855,3 +855,252 @@ test('frozen learner images survive resizing, outline, demonstration replay and 
   expect((await fingerprint()) === baseline).toBe(true)
   await capture(page, info, 'frozen-learner-comparison.png')
 })
+
+/**
+ * G02-PI-02. Course outline used to be an anchored dropdown whose only placement was `top: 100%;
+ * right: 0` with a `min(80vw, 30rem)` width, so once enlarged text wrapped the header tools it
+ * opened off the viewport — 412.9 px past the inline-start edge at 900 x 1000 with root text at
+ * 32 px, every section link's centre outside the viewport — or, on a phone, past the bottom, where
+ * the last section could not be reached at all.
+ *
+ * This walks the required matrix in a real browser and holds the geometry: the opened panel stays
+ * inside the viewport, nothing is painted over it, the first link is there when it opens, the last
+ * is reachable by scrolling the panel itself, Tab reaches every link with each one visible, and
+ * the outline still navigates. Each of these fails against the pre-repair module.
+ */
+const OUTLINE_CONDITIONS = [
+  { name: '1440x1000, normal text', width: 1440, height: 1000, textPercent: 100, anchored: true },
+  { name: '1440x1000, 200% text', width: 1440, height: 1000, textPercent: 200, anchored: false },
+  { name: '900x1000, 200% text', width: 900, height: 1000, textPercent: 200, anchored: false },
+  { name: '390x844, 200% text', width: 390, height: 844, textPercent: 200, anchored: false },
+  { name: '320x740, 200% text', width: 320, height: 740, textPercent: 200, anchored: false },
+]
+
+/** The opened panel, the viewport it has to stay inside, and what is painted over it. */
+async function outlineGeometry(page: Page) {
+  return page.evaluate(() => {
+    const nav = document.querySelector('[data-course-outline] nav')!
+    const summary = document.querySelector('[data-course-outline] summary')!
+    const box = nav.getBoundingClientRect()
+    const inset = 4
+    // Five points on the panel: anything that comes back outside it is painted over the panel.
+    const covered = (
+      [
+        [box.left + inset, box.top + inset],
+        [box.right - inset, box.top + inset],
+        [box.left + box.width / 2, box.top + box.height / 2],
+        [box.left + inset, box.bottom - inset],
+        [box.right - inset, box.bottom - inset],
+      ] as const
+    ).filter(([x, y]) => {
+      if (x < 0 || x > window.innerWidth || y < 0 || y > window.innerHeight) return true
+      const hit = document.elementFromPoint(x, y)
+      return !(hit && nav.contains(hit))
+    }).length
+    const links = [...nav.querySelectorAll('a')]
+    const reachable = (node: Element) => {
+      const r = node.getBoundingClientRect()
+      if (r.left < 0 || r.right > window.innerWidth || r.top < 0 || r.bottom > window.innerHeight)
+        return false
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+      return Boolean(hit && (hit === node || node.contains(hit)))
+    }
+    return {
+      position: getComputedStyle(nav).position,
+      contained: (document.querySelector('[data-imaging-flow]') as HTMLElement).dataset
+        .outlineContained,
+      inViewport:
+        box.left >= -0.5 &&
+        box.right <= window.innerWidth + 0.5 &&
+        box.top >= -0.5 &&
+        box.bottom <= window.innerHeight + 0.5,
+      covered,
+      scrolls: nav.scrollHeight - nav.clientHeight > 1,
+      firstLinkReachable: reachable(links[0]),
+      linkCount: links.length,
+      // The trigger's inline-end edge, which the anchored dropdown is aligned to.
+      triggerRight: Math.round(summary.getBoundingClientRect().right * 100) / 100,
+      panelRight: Math.round(box.right * 100) / 100,
+      box: { top: box.top, right: box.right, bottom: box.bottom, left: box.left },
+    }
+  })
+}
+
+test('the Course outline opens inside the viewport at every width and text size', async ({
+  page,
+}, info) => {
+  test.setTimeout(300_000)
+  for (const condition of OUTLINE_CONDITIONS) {
+    await page.setViewportSize({ width: condition.width, height: condition.height })
+    await openSection(page, 'projection')
+    await expect(primary(page)).toBeEnabled({ timeout: 60000 })
+    if (condition.textPercent !== 100)
+      await page.addStyleTag({
+        content: `html { font-size: ${condition.textPercent}% !important; }`,
+      })
+    await page.waitForTimeout(400)
+
+    // Opening the outline must not move the page under the learner, or widen it.
+    const before = await page.evaluate(() => ({
+      scrollY: window.scrollY,
+      scrollWidth: document.documentElement.scrollWidth,
+    }))
+    await page.evaluate(() => {
+      ;(document.querySelector('[data-course-outline] summary') as HTMLElement).click()
+    })
+    await page.waitForTimeout(300)
+    const after = await page.evaluate(() => ({
+      scrollY: window.scrollY,
+      scrollWidth: document.documentElement.scrollWidth,
+    }))
+    expect(after.scrollY, `${condition.name}: page jumped`).toBe(before.scrollY)
+    // The page itself already overflows by 3 px at 320 px with 200% text, from the course title
+    // block — pre-existing debt G02 recorded and this repair does not touch. What has to hold is
+    // that the outline adds nothing to it.
+    expect(after.scrollWidth, `${condition.name}: the outline widened the page`).toBe(
+      before.scrollWidth,
+    )
+
+    const geometry = await outlineGeometry(page)
+    expect(geometry.linkCount, condition.name).toBe(peripheralImagingSectionIds.length)
+    expect(geometry.inViewport, `${condition.name}: outline left the viewport`).toBe(true)
+    expect(geometry.covered, `${condition.name}: chrome painted over the outline`).toBe(0)
+    expect(geometry.firstLinkReachable, `${condition.name}: first section unreachable`).toBe(true)
+
+    // Desktop width at normal text keeps the anchored dropdown, aligned to its trigger.
+    expect(geometry.contained, condition.name).toBe(String(!condition.anchored))
+    expect(geometry.position, condition.name).toBe(condition.anchored ? 'absolute' : 'fixed')
+    if (condition.anchored) expect(geometry.panelRight).toBe(geometry.triggerRight)
+
+    // The last section is reached by scrolling the panel, never by scrolling the page.
+    expect(geometry.scrolls, `${condition.name}: outline does not scroll`).toBe(true)
+    const pageScroll = await page.evaluate(() => window.scrollY)
+    const last = await page.evaluate(() => {
+      const nav = document.querySelector('[data-course-outline] nav')!
+      nav.scrollTop = nav.scrollHeight
+      const links = [...nav.querySelectorAll('a')]
+      const node = links[links.length - 1]
+      const r = node.getBoundingClientRect()
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+      return {
+        text: node.textContent,
+        reachable:
+          r.top >= 0 && r.bottom <= window.innerHeight && Boolean(hit && node.contains(hit)),
+      }
+    })
+    expect(last.reachable, `${condition.name}: last section unreachable`).toBe(true)
+    expect(await page.evaluate(() => window.scrollY), `${condition.name}: page scrolled`).toBe(
+      pageScroll,
+    )
+
+    // Tab reaches every link, and every focused link is visible and unobstructed.
+    await page.evaluate(() => {
+      const outline = document.querySelector('[data-course-outline]')!
+      outline.querySelector('nav')!.scrollTop = 0
+      ;(outline.querySelector('summary') as HTMLElement).focus()
+    })
+    for (let index = 0; index < geometry.linkCount; index += 1) {
+      await page.keyboard.press('Tab')
+      await page.waitForTimeout(80)
+      const focused = await page.evaluate(() => {
+        const node = document.activeElement!
+        const nav = document.querySelector('[data-course-outline] nav')!
+        const r = node.getBoundingClientRect()
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+        return {
+          inside: nav.contains(node),
+          visible:
+            r.top >= 0 &&
+            r.bottom <= window.innerHeight &&
+            r.left >= 0 &&
+            r.right <= window.innerWidth &&
+            Boolean(hit && (hit === node || node.contains(hit))),
+        }
+      })
+      expect(focused.inside, `${condition.name}: Tab ${index + 1} left the outline`).toBe(true)
+      expect(focused.visible, `${condition.name}: Tab ${index + 1} is not visible`).toBe(true)
+    }
+    await capture(page, info, `outline-${condition.width}-${condition.textPercent}.png`)
+
+    // Escape closes it and puts focus back on a trigger the learner can see.
+    await page.keyboard.press('Escape')
+    await page.waitForTimeout(200)
+    const closed = await page.evaluate(() => {
+      const outline = document.querySelector('[data-course-outline]') as HTMLDetailsElement
+      const summary = outline.querySelector('summary')!
+      const r = summary.getBoundingClientRect()
+      const hit =
+        r.top >= 0 && r.bottom <= window.innerHeight
+          ? document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+          : null
+      return {
+        open: outline.open,
+        focused: document.activeElement === summary,
+        visible: Boolean(hit && (hit === summary || summary.contains(hit))),
+      }
+    })
+    expect(closed.open, `${condition.name}: Escape left it open`).toBe(false)
+    expect(closed.focused, `${condition.name}: focus did not return to the trigger`).toBe(true)
+    expect(closed.visible, `${condition.name}: the trigger came back hidden`).toBe(true)
+
+    // Reopening and choosing a section still navigates.
+    await page.evaluate(() => {
+      ;(document.querySelector('[data-course-outline] summary') as HTMLElement).click()
+    })
+    await page.waitForTimeout(250)
+    await page.evaluate(() => {
+      const link = document.querySelector(
+        '[data-course-outline] a[href*="section=dose-reporting"]',
+      ) as HTMLElement
+      link.click()
+    })
+    await expect(page.locator('[data-stage]')).toHaveAttribute(
+      'data-stage',
+      imagingStageLesson('dose-reporting' as never).steps[0].id,
+      { timeout: 60000 },
+    )
+  }
+})
+
+/**
+ * PI-FOCUS-01 (G02-PI-01) reserved the pinned chrome for the browser's own focus scrolling and
+ * dropped the pin from chrome that no longer fits. The outline repair reuses that same
+ * measurement, so this holds it: the chrome stays pinned where it fits and the reservation the
+ * stylesheet reads is the chrome that is actually there.
+ */
+test('the activity still reserves its pinned chrome for keyboard focus', async ({ page }) => {
+  test.setTimeout(120_000)
+  for (const [width, height, textPercent, pinned] of [
+    [1440, 1000, 100, true],
+    [900, 1000, 200, false],
+  ] as const) {
+    await page.setViewportSize({ width, height })
+    await openSection(page, 'projection')
+    await expect(primary(page)).toBeEnabled({ timeout: 60000 })
+    if (textPercent !== 100)
+      await page.addStyleTag({ content: `html { font-size: ${textPercent}% !important; }` })
+    await page.waitForTimeout(400)
+    const state = await page.evaluate(() => {
+      const shell = document.querySelector('[data-imaging-flow]') as HTMLElement
+      const header = shell.querySelector(':scope > header')!
+      const footer = shell.querySelector(':scope > footer')!
+      const root = document.documentElement
+      const measured = (name: string) =>
+        Number.parseFloat(getComputedStyle(root).getPropertyValue(name))
+      return {
+        chromePinned: shell.dataset.chromePinned,
+        headerPosition: getComputedStyle(header).position,
+        footerPosition: getComputedStyle(footer).position,
+        headerBottom: header.getBoundingClientRect().bottom,
+        clearTop: measured('--imaging-focus-clear-top'),
+        scrollPaddingTop: Number.parseFloat(getComputedStyle(root).scrollPaddingTop),
+      }
+    })
+    expect(state.chromePinned, `${width}/${textPercent}`).toBe(String(pinned))
+    expect(state.headerPosition, `${width}/${textPercent}`).toBe(pinned ? 'sticky' : 'static')
+    expect(state.footerPosition, `${width}/${textPercent}`).toBe(pinned ? 'sticky' : 'static')
+    // The page reserves what is actually painted over it, not a fixed length.
+    expect(state.scrollPaddingTop).toBeCloseTo(state.clearTop, 1)
+    if (pinned) expect(state.clearTop).toBeGreaterThan(state.headerBottom - 1)
+  }
+})

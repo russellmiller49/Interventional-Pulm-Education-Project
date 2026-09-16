@@ -2,6 +2,8 @@
 
 import { useEffect, type RefObject } from 'react'
 
+import { bottomClearance, topClearance, zoomFactor } from './pinnedChrome'
+
 /**
  * Keep keyboard focus out from under the activity's pinned chrome (G02-PI-01).
  *
@@ -41,52 +43,6 @@ const FOCUS_RING_GAP = 8
  * worth more than the task they frame. Desktop width at normal text sits near 0.17.
  */
 const MAX_PINNED_SHARE = 0.4
-
-/** The rect of a node that is actually pinned over the page, or null when it scrolls away. */
-function pinnedRect(node: HTMLElement | null): DOMRect | null {
-  if (!node) return null
-  const { position } = getComputedStyle(node)
-  if (position !== 'sticky' && position !== 'fixed') return null
-  return node.getBoundingClientRect()
-}
-
-/**
- * `getBoundingClientRect` reports zoomed pixels, and a length in the stylesheet is scaled by the
- * same zoom again, so the measurement is divided back out. Browser zoom does not set this
- * property and leaves the factor at 1.
- */
-function zoomFactor(root: HTMLElement): number {
-  const zoom = Number.parseFloat(getComputedStyle(root).zoom)
-  return Number.isFinite(zoom) && zoom > 0 ? zoom : 1
-}
-
-/**
- * How far down the viewport is covered: the course header when it is pinned, and the site chrome
- * above the module, which pins itself over the page independently of this feature. Walking the
- * ancestors' earlier siblings finds it without naming or changing anything outside the module.
- */
-function topClearance(header: HTMLElement | null, anchor: HTMLElement | null): number {
-  let covered = pinnedRect(header)?.bottom ?? 0
-  for (let node = anchor; node; node = node.parentElement) {
-    for (
-      let earlier = node.previousElementSibling;
-      earlier;
-      earlier = earlier.previousElementSibling
-    ) {
-      if (!(earlier instanceof HTMLElement)) continue
-      const rect = pinnedRect(earlier)
-      if (rect && rect.top <= 1 && rect.bottom > covered) covered = rect.bottom
-    }
-  }
-  return Math.max(0, covered)
-}
-
-/** How far up from the bottom of the viewport the Activity-navigation footer covers. */
-function bottomClearance(footer: HTMLElement | null): number {
-  const rect = pinnedRect(footer)
-  if (!rect) return 0
-  return Math.max(0, window.innerHeight - rect.top)
-}
 
 /** Whether the chrome still leaves the task most of the viewport, measured however it is placed. */
 function chromeFits(header: HTMLElement | null, footer: HTMLElement | null): boolean {
