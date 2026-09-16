@@ -1,4 +1,12 @@
 .course {
+  /*
+   * MV-UX-01: this surface paints a fixed light palette whatever the site theme is, so it has to
+   * declare the scheme the user agent should paint native controls in. Without it a dark site or OS
+   * theme is inherited here and an *unchecked* radio is drawn as a dark filled dot on the white
+   * card, while the checked one is drawn as a pale ring — the two states read as inverted. The
+   * stage already does this for the same component in `stage/task-flow.module.css`.
+   */
+  color-scheme: light;
   --ink: #17343c;
   --muted: #536b71;
   --line: #dce5e4;
@@ -413,6 +421,11 @@
   line-height: 26px;
   font-weight: 800;
 }
+/* The reinforcement card carries the light palette wherever it is mounted, so it carries the
+   scheme with it; `stage/task-flow.module.css` already declares the same thing for this element. */
+.question {
+  color-scheme: light;
+}
 .question fieldset {
   border: 0;
   margin: 0;
@@ -438,9 +451,15 @@
   line-height: 1.55;
   cursor: pointer;
 }
+/*
+ * The chosen row is marked three ways, so it never depends on color alone: the tint, the accented
+ * border, and the inset ring that doubles that border's thickness. The native radio stays the
+ * authority on what is checked; this only makes the row agree with it.
+ */
 .choice:has(input:checked) {
   background: #eaf5f1;
   border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 .choice input {
   margin-top: 6px;
@@ -448,6 +467,18 @@
   width: 16px;
   height: 16px;
   flex-shrink: 0;
+}
+/* Focus stays visible on the control itself even where this module's `.course` root is absent. */
+.choice input:focus-visible {
+  outline: 3px solid #b56e21;
+  outline-offset: 3px;
+}
+/* Windows high contrast drops backgrounds and author colors; keep the thickness cue. */
+@media (forced-colors: active) {
+  .choice:has(input:checked) {
+    border-color: Highlight;
+    box-shadow: inset 0 0 0 1px Highlight;
+  }
 }
 .confidence {
   display: flex;
