@@ -17,7 +17,8 @@ touched, and no Peripheral Imaging redesign was performed.
   `695ede0a7c3469f4374414f2136d84e16c31e972` — the PR #234 merge, which already contains
   PI-FOCUS-01 ([PR #233](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/233))
   at `a3609638`. `git fetch origin && git rev-parse HEAD origin/main` returned the same commit for
-  both, and the tree was clean before any edit.
+  both, and the tree was clean before any edit. The branch was rebased onto `99b43dee` (the PR #235
+  merge, an ECMO documentation addendum) after the work was finished; nothing it touches overlaps.
 - **Checkout note.** The request asked for a fresh worktree; this session's harness pins its working
   directory to `Interventional-Pulm-Education-Worktrees/claude-pi-focus-01` and forbids working
   elsewhere, so the branch was cut in that checkout instead. The substantive condition is met: the
@@ -306,22 +307,29 @@ nothing is painted over it; first link reachable at open; last link reachable by
 unobstructed; Shift+Tab back to a visible trigger; Escape; click outside; click the trigger; reopen;
 select a section and confirm it navigates; no horizontal page overflow; `scrollY` unchanged on open.
 
-| Check                                       | 1440/100% | 1440/200% | 1440/zoom2 | 900/200% | 390/100% | 390/200% | 320/100% | 320/200% |
-| ------------------------------------------- | --------- | --------- | ---------- | -------- | -------- | -------- | -------- | -------- |
-| Panel inside the viewport                   | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
-| Nothing painted over the panel (5 points)   | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
-| First section reachable at open             | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
-| Panel scrolls its own contents              | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
-| Last section reachable by that scrolling    | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
-| Tab reaches all 19 links                    | 19/19     | 19/19     | 19/19      | 19/19    | 19/19    | 19/19    | 19/19    | 19/19    |
-| Every focused link visible and unobstructed | 19/19     | 19/19     | 19/19      | 19/19    | 19/19    | 19/19    | 19/19    | 19/19    |
-| Shift+Tab returns to a visible trigger      | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
-| Escape closes it                            | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
-| A click outside closes it                   | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
-| Clicking the trigger opens and closes it    | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
-| Selecting a section navigates               | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
-| Opening causes no page jump                 | 0 px      | 0 px      | 0 px       | 0 px     | 0 px     | 0 px     | 0 px     | 0 px     |
-| No horizontal page overflow                 | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
+| Check                                        | 1440/100% | 1440/200% | 1440/zoom2 | 900/200% | 390/100% | 390/200% | 320/100% | 320/200% |
+| -------------------------------------------- | --------- | --------- | ---------- | -------- | -------- | -------- | -------- | -------- |
+| Panel inside the viewport                    | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
+| Nothing painted over the panel (5 points)    | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
+| First section reachable at open              | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
+| Panel scrolls its own contents               | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
+| Last section reachable by that scrolling     | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
+| Tab reaches all 19 links                     | 19/19     | 19/19     | 19/19      | 19/19    | 19/19    | 19/19    | 19/19    | 19/19    |
+| Every focused link visible and unobstructed  | 19/19     | 19/19     | 19/19      | 19/19    | 19/19    | 19/19    | 19/19    | 19/19    |
+| Shift+Tab returns to a visible trigger       | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
+| Escape closes it                             | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
+| A click outside closes it                    | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
+| Clicking the trigger opens and closes it     | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
+| Selecting a section navigates                | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
+| Opening causes no page jump                  | 0 px      | 0 px      | 0 px       | 0 px     | 0 px     | 0 px     | 0 px     | 0 px     |
+| The outline adds no horizontal page overflow | PASS      | PASS      | PASS       | PASS     | PASS     | PASS     | PASS     | PASS     |
+
+The horizontal-overflow row is what it says: the page's own `scrollWidth` is unchanged by opening
+the outline. At 320 × 740 with 200% text the page **already** overflows by 3 px (323 px against a
+320 px viewport) with the outline shut — the course title block and the stage's own copy, measured
+here as `[data-imaging-flow]` descendants ending at x = 322.61. That is the untriaged observation
+G02 recorded, it is not the outline, and this repair neither causes nor fixes it. The assertion was
+written against the outline's own contribution for that reason.
 
 Before the repair the same probe passed only the 1440/100% column; the other seven columns failed
 the first two rows, and 1440/200%, 1440/zoom 2 and 900/200% scored 0/19 on focused-link visibility.
@@ -364,7 +372,23 @@ New browser tests in `e2e/peripheral-imaging.spec.ts`:
   `data-chrome-pinned` and the header's and footer's computed `position` at both widths, and that
   the page's `scroll-padding-top` equals the measured clearance and covers the pinned header.
 
-Both fail against pre-repair `origin/main`; the failure is recorded in section 7.
+**Both were run against pre-repair `origin/main`** — the three stage files restored with
+`git checkout origin/main -- src/features/peripheral-imaging/components/stage/`, dev server
+unchanged:
+
+| Suite                                           | Against pre-repair main                                                                                                                                                                                                                                                  |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `outline-placement.test.tsx`                    | 3 of 18 fail — the stylesheet assertions. The hook's own tests cannot fail there: the file does not exist on main, so its arithmetic has nothing to run against.                                                                                                         |
+| `the Course outline opens inside the viewport`  | **fails.** It stops first on the presentation attribute; with that assertion removed it stops on `Escape left it open`; with the conditions reordered so a failing one runs first, it stops on **`900x1000, 200% text: outline left the viewport`** — the defect itself. |
+| `the activity still reserves its pinned chrome` | passes, as it must: it holds PI-FOCUS-01, which is already merged.                                                                                                                                                                                                       |
+
+The three runs above are the discriminating evidence that the browser test is a regression guard and
+not an attribute-presence check. The stage files were restored with `git checkout HEAD -- …` and
+everything re-run afterwards.
+
+Executed probes, logs, measurements and screenshots are preserved outside Git:
+
+`/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/pi-outline-01-2026-09-16/`
 
 ### Commands
 
@@ -375,6 +399,7 @@ node node_modules/jest/bin/jest.js src/features/peripheral-imaging src/features/
 # 49 suites, 409 tests, all passing (48 suites / 391 tests on main, plus this task's 18)
 
 PERIPHERAL_IMAGING_BASE_URL=http://127.0.0.1:3145 node node_modules/@playwright/test/cli.js test -c playwright.peripheral-imaging.config.ts --reporter=list
+# 22 passed (3.2m), including the two new tests; 20 on main plus this task's 2
 
 NODE_OPTIONS=--max-old-space-size=8192 npm run type-check        # clean
 node node_modules/eslint/bin/eslint.js <changed files> --max-warnings=0   # clean
@@ -402,8 +427,10 @@ untouched; shared module chrome and the site header are untouched.
   listed as NOT RUN — the full route and locale matrix, the no-answer traversals, the adversarial
   skip paths, the storage end-to-end, the missing-image fallback — remain not run.
 - **The pre-existing shared-footer overflow at CSS zoom 2** (document 1449 px against a 1440 px
-  viewport) and the **320 px / 200% page measuring 323 px wide**. Both are G02's recorded
-  shared-site debt, both are unchanged by this repair, and neither was investigated here.
+  viewport) and the **320 px / 200% page measuring 323 px wide**. Both are G02's recorded debt. The
+  320 px one was measured far enough to establish that it is the course title block and stage copy
+  with the outline shut, not the outline, and that opening the outline adds nothing to it; neither
+  was repaired, and no user-impact classification is asserted for either.
 - **`--site-header-height` understating the real site header at enlarged text.** PI-FOCUS-01's open
   note; shared infrastructure, not repaired here.
 - **PI-02's learner sessions and every human review hold** (faculty, technologist, clinical-language,
