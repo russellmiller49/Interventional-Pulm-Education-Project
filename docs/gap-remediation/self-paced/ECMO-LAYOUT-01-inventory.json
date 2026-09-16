@@ -1,0 +1,6112 @@
+{
+  "baseline": "112a20c9e5ec747e4374efa3d236494f99a5622b",
+  "distinctSections": 30,
+  "trackEntries": 34,
+  "tasks": 240,
+  "sections": [
+    {
+      "id": "why-extracorporeal-support",
+      "title": "Why extracorporeal support exists",
+      "track": "vv",
+      "steps": [
+        {
+          "id": "why-extracorporeal-support-recognize",
+          "title": "Start with oxygen delivery",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "why-extracorporeal-support-worked-example",
+          "title": "Follow a worked example",
+          "phase": "explain",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "why-extracorporeal-support-predict",
+          "title": "Apply the relationship",
+          "phase": "predict",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "why-extracorporeal-support-act",
+          "title": "Identify what each change affects",
+          "phase": "act",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "why-extracorporeal-support-transfer",
+          "title": "Consider a different patient",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "why-extracorporeal-support-recognize",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 7,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": 0,
+        "shellHeight": 1190.515625,
+        "scrollY": 81
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 1191,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 1191,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 1191,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 1293,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 1892.45,
+          "contentHeight": 1892,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 2083.5,
+          "contentHeight": 2084,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "circuit-flow-path",
+      "title": "Drainage \u2192 pump \u2192 membrane lung \u2192 return: a walk round the circuit",
+      "track": "vv",
+      "steps": [
+        {
+          "id": "circuit-flow-path-recognize",
+          "title": "Follow the blood",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "circuit-flow-path-gas-path",
+          "title": "Follow the separate gas path",
+          "phase": "explain",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "circuit-flow-path-pressure-sites",
+          "title": "Find the pressure measurements",
+          "phase": "act",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "circuit-flow-path-observe",
+          "title": "Compare circuit and patient readings",
+          "phase": "observe",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "circuit-flow-path-predict",
+          "title": "Locate a measurement from memory",
+          "phase": "predict",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "circuit-flow-path-transfer",
+          "title": "Interpret a different reading",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "circuit-flow-path-recognize",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 9,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -42,
+        "shellHeight": 2145.828125,
+        "scrollY": 123
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 2146,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2146,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2152,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 3162,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 4167.16,
+          "contentHeight": 4167,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 4619.88,
+          "contentHeight": 4620,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "pump-and-pressure-zones",
+      "title": "The pump, and the pressures either side of it",
+      "track": "vv",
+      "steps": [
+        {
+          "id": "pump-and-pressure-zones-recognize",
+          "title": "Read the settled reference",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "pump-and-pressure-zones-act",
+          "title": "Watch one speed change",
+          "phase": "act",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "pump-and-pressure-zones-observe",
+          "title": "Compare the result",
+          "phase": "observe",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "pump-and-pressure-zones-loading",
+          "title": "Keep speed, change the load",
+          "phase": "act",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "pump-and-pressure-zones-predict",
+          "title": "Predict a different speed change",
+          "phase": "predict",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "pump-and-pressure-zones-decrease",
+          "title": "Check the speed decrease",
+          "phase": "act",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "pump-and-pressure-zones-transfer",
+          "title": "Apply the loading principle",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "pump-and-pressure-zones-recognize",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 10,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -42,
+        "shellHeight": 2166.828125,
+        "scrollY": 123
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 2167,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2167,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2162,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 2743,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 3615.22,
+          "contentHeight": 3615,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 4020.61,
+          "contentHeight": 4021,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "blood-flow-versus-sweep",
+      "title": "The control panel: the three things you can change",
+      "track": "vv",
+      "steps": [
+        {
+          "id": "blood-flow-versus-sweep-recognize",
+          "title": "Find the three adjustments",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["gas"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "blood-flow-versus-sweep-pump",
+          "title": "Watch the pump-speed comparison",
+          "phase": "act",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "blood-flow-versus-sweep-sweep",
+          "title": "Watch the sweep comparison",
+          "phase": "act",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "blood-flow-versus-sweep-oxygen",
+          "title": "Watch the oxygen-fraction comparison",
+          "phase": "act",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "blood-flow-versus-sweep-predict",
+          "title": "Choose a control for a new example",
+          "phase": "predict",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "blood-flow-versus-sweep-sweep-story",
+          "title": "Try the sweep story",
+          "phase": "observe",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "blood-flow-versus-sweep-speed-story",
+          "title": "Try the speed story",
+          "phase": "observe",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "blood-flow-versus-sweep-transfer",
+          "title": "Interpret the flow display",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "blood-flow-versus-sweep-recognize",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 5,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -42,
+        "shellHeight": 2353.96875,
+        "scrollY": 123
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 2354,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2354,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2354,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 2875,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 4440.14,
+          "contentHeight": 4440,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 4926.28,
+          "contentHeight": 4926,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "vv-normal-state",
+      "title": "A stable VV run: the baseline you read everything against",
+      "track": "vv",
+      "steps": [
+        {
+          "id": "vv-normal-state-recognize",
+          "title": "Decide which signals belong in a baseline review.",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-normal-state-predict",
+          "title": "Decide what a single unfamiliar absolute value establishes.",
+          "phase": "predict",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-normal-state-act",
+          "title": "Capture this circuit\u2019s own starting values and watch them over a window.",
+          "phase": "act",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-normal-state-observe",
+          "title": "Read the raw change in each signal over the observed window.",
+          "phase": "observe",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-normal-state-explain",
+          "title": "State what belongs to a stable run beyond the circuit display.",
+          "phase": "explain",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-normal-state-transfer",
+          "title": "Recognize a stable baseline whose absolute values are unfamiliar.",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "vv-normal-state-recognize",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 7,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -11,
+        "shellHeight": 1851.8125,
+        "scrollY": 92
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 1852,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 1852,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 1852,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 1925,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 3208.7,
+          "contentHeight": 3209,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 3746.66,
+          "contentHeight": 3747,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "vv-series-physiology",
+      "title": "In series with the heart: what the flow number counts",
+      "track": "vv",
+      "steps": [
+        {
+          "id": "vv-series-physiology-recognize",
+          "title": "Trace the series circuit and name which flow the pump displays.",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-series-physiology-predict",
+          "title": "Decide what a higher displayed flow with a worsening patient means.",
+          "phase": "predict",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-series-physiology-act",
+          "title": "Load the recirculation preview and read it beside the reference.",
+          "phase": "act",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-series-physiology-observe",
+          "title": "Compare the two states signal by signal.",
+          "phase": "observe",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-series-physiology-explain",
+          "title": "State what VV support does and does not do for the circulation.",
+          "phase": "explain",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-series-physiology-transfer",
+          "title": "Separate a real increase in useful support from an increase in recirculation.",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "vv-series-physiology-recognize",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 6,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -11,
+        "shellHeight": 2167.6875,
+        "scrollY": 92
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 2168,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2168,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2168,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 2242,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 3377.45,
+          "contentHeight": 3377,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 3925.16,
+          "contentHeight": 3925,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "startup-sensor-orientation",
+      "title": "Meet the console, the circuit, and the external controls",
+      "track": "vv",
+      "steps": [
+        {
+          "id": "startup-orient-domains",
+          "title": "Start with four sources of information",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "startup-screen-parameters",
+          "title": "The pump is stopped: which channels still mean anything?",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "startup-bring-circuit-up",
+          "title": "Bring a reference circuit up before touring the rest",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "startup-settle-circuit",
+          "title": "Let the circuit respond",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "startup-screen-parameters-running",
+          "title": "Read the parameter list again, now that it reports",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "startup-screen-blood",
+          "title": "Review blood parameters",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "startup-screen-transport",
+          "title": "Find transport power status",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "startup-screen-interventions",
+          "title": "Locate intervention state",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "startup-screen-timers",
+          "title": "Review timers and menu surfaces",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "startup-screen-alarm-history",
+          "title": "Use alarm history as context",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "startup-physical-controls",
+          "title": "Map the physical controls",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "startup-external-gas",
+          "title": "Separate sweep and sweep-gas FiO\u2082 from the console",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "gas"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "startup-return-to-pre-use",
+          "title": "End the demonstration and return to the pre-use state",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "startup-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "startup-respond",
+          "title": "Complete startup and the tip-to-tip check",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "startup-reassess",
+          "title": "Confirm the whole system, not only the screen",
+          "phase": "observe",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "startup-sensor-orientation-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "startup-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "startup-orient-domains",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 12,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -72,
+        "shellHeight": 8844.515625,
+        "scrollY": 153
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 8845,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 8845,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 8938,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 8344,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 14897.53,
+          "contentHeight": 14898,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 17846.73,
+          "contentHeight": 17847,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "preload-drainage-collapse",
+      "title": "Drainage insufficiency: falling flow and line chatter",
+      "track": "vv",
+      "steps": [
+        {
+          "id": "preload-drainage-collapse-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "preload-drainage-collapse-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "preload-drainage-collapse-reduce-rpm",
+          "title": "Reduce pump demand first",
+          "phase": "act",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": true,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "preload-drainage-collapse-correct-drainage-cause",
+          "title": "Correct the drainage limitation",
+          "phase": "act",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "preload-drainage-collapse-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "preload-drainage-collapse-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "preload-drainage-collapse-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": true,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "preload-drainage-collapse-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 14,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -72,
+        "shellHeight": 3348.390625,
+        "scrollY": 153
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 3348,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3348,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3348,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 4721,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 7301.62,
+          "contentHeight": 7302,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 8088.95,
+          "contentHeight": 8089,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "afterload-return-obstruction",
+      "title": "Return obstruction: rising post-pump pressures",
+      "track": "vv",
+      "steps": [
+        {
+          "id": "afterload-return-obstruction-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "afterload-return-obstruction-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "afterload-return-obstruction-correct-return-obstruction",
+          "title": "Inspect and clear the return path",
+          "phase": "act",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "afterload-return-obstruction-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "afterload-return-obstruction-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "afterload-return-obstruction-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": true,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "afterload-return-obstruction-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 7,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -72,
+        "shellHeight": 2769.234375,
+        "scrollY": 153
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 2769,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2769,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2761,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 4235,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 5758,
+          "contentHeight": 5758,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 6494.14,
+          "contentHeight": 6494,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "afterload-oxygenator-resistance",
+      "title": "Oxygenator resistance: a widening pressure gradient",
+      "track": "vv",
+      "steps": [
+        {
+          "id": "afterload-oxygenator-resistance-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "afterload-oxygenator-resistance-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "afterload-oxygenator-resistance-correct-oxygenator-resistance",
+          "title": "Escalate the oxygenator/circuit cause",
+          "phase": "act",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "afterload-oxygenator-resistance-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "afterload-oxygenator-resistance-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "afterload-oxygenator-resistance-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": true,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "afterload-oxygenator-resistance-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 7,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -72,
+        "shellHeight": 2874.015625,
+        "scrollY": 153
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 2874,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2874,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2874,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 4253,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 6059,
+          "contentHeight": 6059,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 6946.95,
+          "contentHeight": 6947,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "vv-recirculation",
+      "title": "VV recirculation: circuit flow and patient oxygenation",
+      "track": "vv",
+      "steps": [
+        {
+          "id": "vv-recirculation-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-recirculation-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-recirculation-correct-recirculation",
+          "title": "Correct the recirculation cause",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-recirculation-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-recirculation-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-recirculation-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["circuit", "monitor", "gas"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "vv-recirculation-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 13,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -72,
+        "shellHeight": 3228.203125,
+        "scrollY": 153
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 3228,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3228,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3273,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 4415,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 7108.88,
+          "contentHeight": 7109,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 7926.77,
+          "contentHeight": 7927,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "acute-hypercapnia",
+      "title": "Acute hypercapnia: sweep and the acid\u2013base picture",
+      "track": "vv",
+      "steps": [
+        {
+          "id": "acute-hypercapnia-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "acute-hypercapnia-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "acute-hypercapnia-increase-sweep",
+          "title": "Increase external sweep flow",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "acute-hypercapnia-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "acute-hypercapnia-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "acute-hypercapnia-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "acute-hypercapnia-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 5,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -72,
+        "shellHeight": 2035.15625,
+        "scrollY": 153
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 2035,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2035,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2032,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 2752,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 3706.28,
+          "contentHeight": 3706,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 4094.48,
+          "contentHeight": 4094,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "compensated-hypercapnia",
+      "title": "Compensated hypercapnia: interpreting CO\u2082 with pH",
+      "track": "vv",
+      "steps": [
+        {
+          "id": "compensated-hypercapnia-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "compensated-hypercapnia-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "compensated-hypercapnia-hold-sweep",
+          "title": "Hold sweep and reassess the goal",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "compensated-hypercapnia-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "compensated-hypercapnia-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "compensated-hypercapnia-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "compensated-hypercapnia-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 5,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -72,
+        "shellHeight": 2035.15625,
+        "scrollY": 153
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 2035,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2035,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2032,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 2752,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 3662.91,
+          "contentHeight": 3663,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 4094.48,
+          "contentHeight": 4094,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "gas-source-interruption",
+      "title": "Sweep-gas interruption: gas transfer with stable blood flow",
+      "track": "vv",
+      "steps": [
+        {
+          "id": "gas-source-interruption-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "gas-source-interruption-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "gas-source-interruption-restore-gas-source",
+          "title": "Restore the verified gas source",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "gas-source-interruption-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "gas-source-interruption-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "gas-source-interruption-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends", "circuit"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "gas-source-interruption-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 12,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -72,
+        "shellHeight": 3537.390625,
+        "scrollY": 153
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 3537,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3537,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3561,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 4132,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 7256.22,
+          "contentHeight": 7256,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 8123.58,
+          "contentHeight": 8124,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "arterial-bubble-stop",
+      "title": "Bubble alarm: the pump stopped itself",
+      "track": "vv",
+      "steps": [
+        {
+          "id": "arterial-bubble-stop-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "arterial-bubble-stop-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "arterial-bubble-stop-isolate-return-clamp",
+          "title": "Isolate the patient: clamp the return limb",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "arterial-bubble-stop-isolate-drainage-clamp",
+          "title": "Complete isolation: clamp the drainage limb",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "arterial-bubble-stop-correct-bubble-source",
+          "title": "Correct and clear the air source",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "arterial-bubble-stop-resume-support",
+          "title": "Resume support per the current IFU and your local protocol",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "arterial-bubble-stop-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "arterial-bubble-stop-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "arterial-bubble-stop-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "arterial-bubble-stop-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 12,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": 0,
+        "shellHeight": 5713.828125,
+        "scrollY": 81
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 5714,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 5714,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 5764,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 6446,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 11306.02,
+          "contentHeight": 11306,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 13041.58,
+          "contentHeight": 13042,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "transport-power-loss",
+      "title": "Power loss during transport: battery support",
+      "track": "vv",
+      "steps": [
+        {
+          "id": "transport-power-loss-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "transport-power-loss-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "transport-power-loss-restore-ac-power",
+          "title": "Restore verified AC and confirm backup readiness",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "transport-power-loss-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "transport-power-loss-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "transport-power-loss-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "transport-power-loss-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 6,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": 0,
+        "shellHeight": 3038.90625,
+        "scrollY": 81
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 3039,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3039,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3034,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 3769,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 5254.92,
+          "contentHeight": 5255,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 5629.59,
+          "contentHeight": 5630,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "vv-integration-capstone",
+      "title": "One presentation, four explanations: flow unchanged, patient worse",
+      "track": "vv",
+      "steps": [
+        {
+          "id": "vv-integration-capstone-recognize",
+          "title": "Establish that circuit flow alone cannot discriminate here.",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-integration-capstone-predict",
+          "title": "Commit to one of the four explanations before looking further.",
+          "phase": "predict",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-integration-capstone-act",
+          "title": "Gather the findings that separate the four explanations.",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["circuit", "gas", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-integration-capstone-observe",
+          "title": "Reveal how the case has evolved and read it against your prediction.",
+          "phase": "observe",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["circuit", "gas", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-integration-capstone-explain",
+          "title": "Work the whole differential against what each explanation predicts.",
+          "phase": "explain",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "vv-integration-capstone-transfer",
+          "title": "Apply the same discipline to a case with a different mechanism.",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["monitor"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "vv-integration-capstone-recognize",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 6,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -54,
+        "shellHeight": 11717.90625,
+        "scrollY": 135
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 11718,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 11718,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 11785,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 9535,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 15013.58,
+          "contentHeight": 15014,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 17594.73,
+          "contentHeight": 17595,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "why-extracorporeal-support",
+      "title": "Why extracorporeal support exists",
+      "track": "va",
+      "steps": [
+        {
+          "id": "why-extracorporeal-support-recognize",
+          "title": "Start with oxygen delivery",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "why-extracorporeal-support-worked-example",
+          "title": "Follow a worked example",
+          "phase": "explain",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "why-extracorporeal-support-predict",
+          "title": "Apply the relationship",
+          "phase": "predict",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "why-extracorporeal-support-act",
+          "title": "Identify what each change affects",
+          "phase": "act",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "why-extracorporeal-support-transfer",
+          "title": "Consider a different patient",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "why-extracorporeal-support-recognize",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 7,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": 0,
+        "shellHeight": 1237.515625,
+        "scrollY": 81
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 1238,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 1238,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 1238,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 1340,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 1960.45,
+          "contentHeight": 1960,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 2172.5,
+          "contentHeight": 2173,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "circuit-flow-path",
+      "title": "Drainage \u2192 pump \u2192 membrane lung \u2192 return: a walk round the circuit",
+      "track": "va",
+      "steps": [
+        {
+          "id": "circuit-flow-path-recognize",
+          "title": "Follow the blood",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "circuit-flow-path-gas-path",
+          "title": "Follow the separate gas path",
+          "phase": "explain",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "circuit-flow-path-pressure-sites",
+          "title": "Find the pressure measurements",
+          "phase": "act",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "circuit-flow-path-observe",
+          "title": "Compare circuit and patient readings",
+          "phase": "observe",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "circuit-flow-path-predict",
+          "title": "Locate a measurement from memory",
+          "phase": "predict",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "circuit-flow-path-transfer",
+          "title": "Interpret a different reading",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "circuit-flow-path-recognize",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 9,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -42,
+        "shellHeight": 2145.828125,
+        "scrollY": 123
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 2146,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2146,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2152,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 3186,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 4327.8,
+          "contentHeight": 4328,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 4837.81,
+          "contentHeight": 4838,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "pump-and-pressure-zones",
+      "title": "The pump, and the pressures either side of it",
+      "track": "va",
+      "steps": [
+        {
+          "id": "pump-and-pressure-zones-recognize",
+          "title": "Read the settled reference",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "pump-and-pressure-zones-act",
+          "title": "Watch one speed change",
+          "phase": "act",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "pump-and-pressure-zones-observe",
+          "title": "Compare the result",
+          "phase": "observe",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "pump-and-pressure-zones-loading",
+          "title": "Keep speed, change the load",
+          "phase": "act",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "pump-and-pressure-zones-predict",
+          "title": "Predict a different speed change",
+          "phase": "predict",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "pump-and-pressure-zones-decrease",
+          "title": "Check the speed decrease",
+          "phase": "act",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "pump-and-pressure-zones-transfer",
+          "title": "Apply the loading principle",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "pump-and-pressure-zones-recognize",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 10,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -42,
+        "shellHeight": 2166.828125,
+        "scrollY": 123
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 2167,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2167,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2162,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 2790,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 3799.11,
+          "contentHeight": 3799,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 4238.55,
+          "contentHeight": 4239,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "blood-flow-versus-sweep",
+      "title": "The control panel: the three things you can change",
+      "track": "va",
+      "steps": [
+        {
+          "id": "blood-flow-versus-sweep-recognize",
+          "title": "Find the three adjustments",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["gas"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "blood-flow-versus-sweep-pump",
+          "title": "Watch the pump-speed comparison",
+          "phase": "act",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "blood-flow-versus-sweep-sweep",
+          "title": "Watch the sweep comparison",
+          "phase": "act",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "blood-flow-versus-sweep-oxygen",
+          "title": "Watch the oxygen-fraction comparison",
+          "phase": "act",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "blood-flow-versus-sweep-predict",
+          "title": "Choose a control for a new example",
+          "phase": "predict",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "blood-flow-versus-sweep-sweep-story",
+          "title": "Try the sweep story",
+          "phase": "observe",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "blood-flow-versus-sweep-speed-story",
+          "title": "Try the speed story",
+          "phase": "observe",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "blood-flow-versus-sweep-transfer",
+          "title": "Interpret the flow display",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "blood-flow-versus-sweep-recognize",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 5,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -42,
+        "shellHeight": 2353.96875,
+        "scrollY": 123
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 2354,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2354,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2354,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 2922,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 4508.14,
+          "contentHeight": 4508,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 5015.28,
+          "contentHeight": 5015,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "va-normal-state",
+      "title": "A stable VA run: VV plus two ideas",
+      "track": "va",
+      "steps": [
+        {
+          "id": "va-normal-state-recognize",
+          "title": "Decide which signals belong in a VA baseline review.",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-normal-state-predict",
+          "title": "Decide what an unremarkable circuit display establishes about a VA run.",
+          "phase": "predict",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-normal-state-act",
+          "title": "Capture this circuit\u2019s own starting values and watch them over a window.",
+          "phase": "act",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-normal-state-observe",
+          "title": "Read the raw change in each signal over the observed window.",
+          "phase": "observe",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-normal-state-explain",
+          "title": "State what belongs to a stable VA run beyond the circuit display.",
+          "phase": "explain",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-normal-state-transfer",
+          "title": "Recognize a stable VA baseline whose absolute values are unfamiliar.",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "va-normal-state-recognize",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 8,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -11,
+        "shellHeight": 2002.5,
+        "scrollY": 92
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 2003,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2003,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2003,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 2052,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 3423.62,
+          "contentHeight": 3424,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 4027.66,
+          "contentHeight": 4028,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "va-parallel-physiology",
+      "title": "In parallel with the heart: who fills the aorta",
+      "track": "va",
+      "steps": [
+        {
+          "id": "va-parallel-physiology-recognize",
+          "title": "Trace the two circulations and find where they meet.",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-parallel-physiology-predict",
+          "title": "Decide what an unchanged circuit display with a falling upper-body saturation means.",
+          "phase": "predict",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-parallel-physiology-act",
+          "title": "Load the two consequences of parallelism and read each beside the reference.",
+          "phase": "act",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-parallel-physiology-observe",
+          "title": "Compare the upper-body and lower-body saturations, and the pulsatility, in each state.",
+          "phase": "observe",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-parallel-physiology-explain",
+          "title": "State what parallel circulation adds and what it costs.",
+          "phase": "explain",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-parallel-physiology-transfer",
+          "title": "Separate a loading problem from an oxygenation one.",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "comparison-lab",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "va-parallel-physiology-recognize",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 7,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -11,
+        "shellHeight": 2978.5625,
+        "scrollY": 92
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 2979,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2979,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2979,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 3030,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 4865.02,
+          "contentHeight": 4865,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 5758.84,
+          "contentHeight": 5759,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "va-startup-sensor-orientation",
+      "title": "Meet the console on a VA circuit",
+      "track": "va",
+      "steps": [
+        {
+          "id": "va-startup-orient-domains",
+          "title": "Start with four sources of information",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-startup-screen-parameters",
+          "title": "The pump is stopped: which channels still mean anything?",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-startup-bring-circuit-up",
+          "title": "Bring a reference circuit up before touring the rest",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-startup-settle-circuit",
+          "title": "Let the circuit respond",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-startup-screen-parameters-running",
+          "title": "Read the parameter list again, now that it reports",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-startup-screen-blood",
+          "title": "Review blood parameters",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-startup-screen-transport",
+          "title": "Find transport power status",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-startup-screen-interventions",
+          "title": "Locate intervention state",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-startup-screen-timers",
+          "title": "Review timers and menu surfaces",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-startup-screen-alarm-history",
+          "title": "Use alarm history as context",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-startup-physical-controls",
+          "title": "Map the physical controls",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-startup-external-gas",
+          "title": "Separate sweep and sweep-gas FiO\u2082 from the console",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "gas"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-startup-return-to-pre-use",
+          "title": "End the demonstration and return to the pre-use state",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-startup-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-startup-respond",
+          "title": "Complete startup and the tip-to-tip check",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-startup-reassess",
+          "title": "Confirm the whole system, not only the screen",
+          "phase": "observe",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-startup-sensor-orientation-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-startup-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "va-startup-orient-domains",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 6,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -72,
+        "shellHeight": 3030.90625,
+        "scrollY": 153
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 3031,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3031,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3026,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 3747,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 5488.84,
+          "contentHeight": 5489,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 5961.47,
+          "contentHeight": 5961,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "va-preload-drainage-collapse",
+      "title": "VA drainage insufficiency: falling flow and pressure",
+      "track": "va",
+      "steps": [
+        {
+          "id": "va-preload-drainage-collapse-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-preload-drainage-collapse-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-preload-drainage-collapse-reduce-rpm",
+          "title": "Reduce pump demand first",
+          "phase": "act",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": true,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-preload-drainage-collapse-correct-drainage-cause",
+          "title": "Correct the venous drainage limitation",
+          "phase": "act",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-preload-drainage-collapse-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-preload-drainage-collapse-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-preload-drainage-collapse-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": true,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "va-preload-drainage-collapse-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 7,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -72,
+        "shellHeight": 2846.640625,
+        "scrollY": 153
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 2847,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2847,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2847,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 4380,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 6268.67,
+          "contentHeight": 6269,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 7157.8,
+          "contentHeight": 7158,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "va-afterload-arterial-return-obstruction",
+      "title": "VA arterial return obstruction: rising circuit pressures",
+      "track": "va",
+      "steps": [
+        {
+          "id": "va-afterload-arterial-return-obstruction-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-afterload-arterial-return-obstruction-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-afterload-arterial-return-obstruction-clear-arterial-return",
+          "title": "Inspect the arterial return path and patient afterload",
+          "phase": "act",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-afterload-arterial-return-obstruction-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-afterload-arterial-return-obstruction-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-afterload-arterial-return-obstruction-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": true,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "va-afterload-arterial-return-obstruction-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 7,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -72,
+        "shellHeight": 2838.640625,
+        "scrollY": 153
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 2839,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2839,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2839,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 4326,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 6116.45,
+          "contentHeight": 6116,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 7039.14,
+          "contentHeight": 7039,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "va-afterload-oxygenator-resistance",
+      "title": "VA oxygenator resistance: a widening pressure gradient",
+      "track": "va",
+      "steps": [
+        {
+          "id": "va-afterload-oxygenator-resistance-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-afterload-oxygenator-resistance-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-afterload-oxygenator-resistance-escalate-oxygenator",
+          "title": "Escalate the oxygenator/circuit problem",
+          "phase": "act",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-afterload-oxygenator-resistance-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-afterload-oxygenator-resistance-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": false,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-afterload-oxygenator-resistance-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "circuit-walk",
+            "console": true,
+            "surfaces": ["circuit", "trends"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "va-afterload-oxygenator-resistance-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 7,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -72,
+        "shellHeight": 3008.140625,
+        "scrollY": 153
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 3008,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3008,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3008,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 4344,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 6352.39,
+          "contentHeight": 6352,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 7275.08,
+          "contentHeight": 7275,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "va-differential-hypoxemia",
+      "title": "Differential hypoxemia: right-arm and femoral oxygenation",
+      "track": "va",
+      "steps": [
+        {
+          "id": "va-differential-hypoxemia-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-differential-hypoxemia-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-differential-hypoxemia-verify-and-escalate-mixing",
+          "title": "Verify the upper-body mismatch and escalate",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-differential-hypoxemia-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-differential-hypoxemia-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-differential-hypoxemia-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "va-differential-hypoxemia-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 12,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -72,
+        "shellHeight": 5553.953125,
+        "scrollY": 153
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 5554,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 5554,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 5554,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 6751,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 11945.38,
+          "contentHeight": 11945,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 13428.89,
+          "contentHeight": 13429,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "va-lv-loading",
+      "title": "VA left ventricular loading: interpreting low pulsatility",
+      "track": "va",
+      "steps": [
+        {
+          "id": "va-lv-loading-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-lv-loading-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-lv-loading-escalate-lv-loading",
+          "title": "Escalate concerning LV-loading cues",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-lv-loading-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-lv-loading-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-lv-loading-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor", "gas"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "va-lv-loading-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 6,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -72,
+        "shellHeight": 3498.09375,
+        "scrollY": 153
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 3498,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3498,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3493,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 4193,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 6218.09,
+          "contentHeight": 6218,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 6792.42,
+          "contentHeight": 6792,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "va-acute-hypercapnia",
+      "title": "Acute hypercapnia on VA: sweep and patient reassessment",
+      "track": "va",
+      "steps": [
+        {
+          "id": "va-acute-hypercapnia-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-acute-hypercapnia-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-acute-hypercapnia-increase-sweep",
+          "title": "Increase external sweep flow",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-acute-hypercapnia-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-acute-hypercapnia-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-acute-hypercapnia-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "va-acute-hypercapnia-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 5,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -72,
+        "shellHeight": 2202.9375,
+        "scrollY": 153
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 2203,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2203,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2200,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 2909,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 3972.28,
+          "contentHeight": 3972,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 4471.94,
+          "contentHeight": 4472,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "va-gas-source-interruption",
+      "title": "VA sweep-gas interruption: gas transfer with stable flow",
+      "track": "va",
+      "steps": [
+        {
+          "id": "va-gas-source-interruption-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-gas-source-interruption-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-gas-source-interruption-restore-gas-source",
+          "title": "Restore the verified source",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-gas-source-interruption-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-gas-source-interruption-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-gas-source-interruption-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["gas", "monitor", "trends", "circuit"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "va-gas-source-interruption-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 6,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -72,
+        "shellHeight": 2976.765625,
+        "scrollY": 153
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 2977,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2977,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 2977,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 3885,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 5911.25,
+          "contentHeight": 5911,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 6843.86,
+          "contentHeight": 6844,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "va-arterial-bubble-stop",
+      "title": "Bubble alarm on VA: the pump stopped itself",
+      "track": "va",
+      "steps": [
+        {
+          "id": "va-arterial-bubble-stop-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-arterial-bubble-stop-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-arterial-bubble-stop-isolate-return-clamp",
+          "title": "Isolate the patient: clamp the arterial return limb",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-arterial-bubble-stop-isolate-drainage-clamp",
+          "title": "Complete isolation: clamp the drainage limb",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-arterial-bubble-stop-correct-bubble-source",
+          "title": "Correct and clear the air source",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-arterial-bubble-stop-resume-support",
+          "title": "Resume support per the current IFU and your local protocol",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-arterial-bubble-stop-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-arterial-bubble-stop-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-arterial-bubble-stop-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "va-arterial-bubble-stop-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 6,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": 0,
+        "shellHeight": 3038.90625,
+        "scrollY": 81
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 3039,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3039,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3034,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 3872,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 5750.67,
+          "contentHeight": 5751,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 6268.52,
+          "contentHeight": 6269,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "va-transport-power-loss",
+      "title": "VA power loss during transport: battery support",
+      "track": "va",
+      "steps": [
+        {
+          "id": "va-transport-power-loss-observe",
+          "title": "Read the pattern before touching a control",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-transport-power-loss-interpret",
+          "title": "Commit to a prediction before you act",
+          "phase": "predict",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-transport-power-loss-restore-ac",
+          "title": "Restore verified AC and confirm backup",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-transport-power-loss-reassess",
+          "title": "Let the circuit respond, then reassess device, circuit and patient",
+          "phase": "observe",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit", "monitor"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-transport-power-loss-explain",
+          "title": "What explains the pattern you worked",
+          "phase": "explain",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-transport-power-loss-transfer",
+          "title": "Carry the reasoning to a new circuit",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "guided-device",
+            "console": true,
+            "surfaces": ["circuit"],
+            "operational": true
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "va-transport-power-loss-observe",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 6,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": 0,
+        "shellHeight": 3038.90625,
+        "scrollY": 81
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 3039,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3039,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 3034,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 3791,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 5479.25,
+          "contentHeight": 5479,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 5932.03,
+          "contentHeight": 5932,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    },
+    {
+      "id": "va-integration-capstone",
+      "title": "The same unchanged flow, with a second circulation to blame",
+      "track": "va",
+      "steps": [
+        {
+          "id": "va-integration-capstone-recognize",
+          "title": "Establish that circuit flow alone cannot discriminate here either.",
+          "phase": "recognize",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-integration-capstone-predict",
+          "title": "Commit to one of the explanations before looking further.",
+          "phase": "predict",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-integration-capstone-act",
+          "title": "Gather the findings that separate the explanations.",
+          "phase": "act",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["circuit", "gas", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-integration-capstone-observe",
+          "title": "Read each mechanism preview against the case in front of you.",
+          "phase": "observe",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["circuit", "gas", "monitor"]
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-integration-capstone-explain",
+          "title": "Work the whole differential against what each explanation predicts.",
+          "phase": "explain",
+          "presentation": {
+            "kind": "concept",
+            "console": false,
+            "surfaces": []
+          },
+          "layout": "FLOWING"
+        },
+        {
+          "id": "va-integration-capstone-transfer",
+          "title": "Apply the same discipline to a mechanism the circuit does report.",
+          "phase": "transfer",
+          "presentation": {
+            "kind": "guided-device",
+            "console": false,
+            "surfaces": ["monitor"]
+          },
+          "layout": "FLOWING"
+        }
+      ],
+      "initialTask": "va-integration-capstone-recognize",
+      "layoutMode": "FLOWING",
+      "dataFlowing": "true",
+      "previousIntendedScrollOwner": "document",
+      "previousActualScrollOwner": "none for wheel/PageDown; document moved programmatically",
+      "correctedScrollOwner": {
+        "desktop": "ECMO shell",
+        "reflow": "document"
+      },
+      "beforeContentReachable": false,
+      "beforeHeaderVisible": false,
+      "containsExpandableContent": true,
+      "disclosuresAtInitialTask": 10,
+      "automaticFocus": "task entry preventScroll focus; shell/pane reset; guided targets use bounded helper",
+      "before1600": {
+        "headerTop": -54,
+        "shellHeight": 19611.0625,
+        "scrollY": 135
+      },
+      "browserResults": [
+        {
+          "viewport": "1920x1080",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 999,
+          "contentHeight": 19611,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1600x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 19611,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1440x900",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 819,
+          "contentHeight": 19743,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "1024x768",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "ECMO shell",
+          "shellHeight": 687,
+          "contentHeight": 14767,
+          "siteHeaderBottom": 81,
+          "activityHeaderTop": 81
+        },
+        {
+          "viewport": "390x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 25267.11,
+          "contentHeight": 25267,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        },
+        {
+          "viewport": "320x844",
+          "headerVisible": true,
+          "fullContentReachable": true,
+          "wheel": "PASS",
+          "PageDown": "PASS",
+          "scrollOwner": "document",
+          "shellHeight": 30198.02,
+          "contentHeight": 30198,
+          "siteHeaderBottom": 73,
+          "activityHeaderTop": 73
+        }
+      ],
+      "taskTransitionBrowserResult": "PASS (initial plus all subsequent authored tasks at 1440x900)"
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 'use client'
 
+import { scrollEcmoTargetIntoView } from '../stage/scrollTaskPaneToTop'
+
 import { useEffect, useId, useRef } from 'react'
 
 import { ecmoSceneLabelName } from '../../content/circuitSceneAnchors'
@@ -122,7 +124,10 @@ export function EcmoCircuitWalk({
     }
     if (mountedStopRef.current === stop.id) return
     mountedStopRef.current = stop.id
-    headingRef.current?.focus()
+    if (headingRef.current) {
+      headingRef.current.focus({ preventScroll: true })
+      scrollEcmoTargetIntoView(headingRef.current)
+    }
   }, [stop.id])
 
   const { supportMode } = state

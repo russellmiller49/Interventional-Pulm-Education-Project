@@ -46,7 +46,7 @@ import { SectionsDrawer } from './SectionsDrawer'
 import { StageLayout } from './StageLayout'
 import { ActivityContent } from './ActivityContent'
 import { ecmoTaskPresentation } from './activityPresentation'
-import { scrollTaskPaneToTop } from './scrollTaskPaneToTop'
+import { scrollEcmoTargetIntoView, scrollTaskPaneToTop } from './scrollTaskPaneToTop'
 import { StageSourcesScope } from './StageSourcesScope'
 import { StepList } from './StepList'
 import { STAGE_PHASES, type StageLesson, type StagePhase, type StageSurfaceId } from './stageModel'
@@ -392,7 +392,7 @@ export function DrillStageHost({
       if (!control) return
       const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
       control.focus({ preventScroll: true })
-      control.scrollIntoView?.({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' })
+      scrollEcmoTargetIntoView(control, reduceMotion ? 'auto' : 'smooth')
     }, 0)
     return () => window.clearTimeout(timer)
   }, [guidedControlId, helpCount])

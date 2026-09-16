@@ -82,7 +82,7 @@ import {
   baselineGroupLabels,
   foundationPresentationSections,
 } from './foundationPresentationSections'
-import { scrollTaskPaneToTop } from './scrollTaskPaneToTop'
+import { scrollEcmoTargetIntoView, scrollTaskPaneToTop } from './scrollTaskPaneToTop'
 import { StageSourcesScope } from './StageSourcesScope'
 import { StageTeachingScope } from './StageTeachingScope'
 import { StepList } from './StepList'
@@ -306,17 +306,7 @@ function FoundationStageSession({
       )
       if (!target) return
       // Scroll only the teaching pane, once on entry, never on a simulation update.
-      for (let pane = target.parentElement; pane; pane = pane.parentElement) {
-        const overflow = window.getComputedStyle(pane).overflowY
-        if (
-          (overflow === 'auto' || overflow === 'scroll') &&
-          pane.scrollHeight > pane.clientHeight
-        ) {
-          pane.scrollTop +=
-            target.getBoundingClientRect().top - pane.getBoundingClientRect().top - 48
-          break
-        }
-      }
+      scrollEcmoTargetIntoView(target)
       if (activeStep.lookIn?.pane === 'teaching') {
         const heading = target.querySelector<HTMLElement>('h3')
         if (heading) {
@@ -356,17 +346,7 @@ function FoundationStageSession({
     requestAnimationFrame(() => {
       const result = nowFocusRef.current?.querySelector<HTMLElement>('[data-foundation-comparison]')
       if (!result) return
-      for (let pane = result.parentElement; pane; pane = pane.parentElement) {
-        const overflow = window.getComputedStyle(pane).overflowY
-        if (
-          (overflow === 'auto' || overflow === 'scroll') &&
-          pane.scrollHeight > pane.clientHeight
-        ) {
-          pane.scrollTop +=
-            result.getBoundingClientRect().top - pane.getBoundingClientRect().top - 48
-          break
-        }
-      }
+      scrollEcmoTargetIntoView(result)
       const heading = result.querySelector<HTMLElement>('h3')
       if (heading) {
         heading.tabIndex = -1
