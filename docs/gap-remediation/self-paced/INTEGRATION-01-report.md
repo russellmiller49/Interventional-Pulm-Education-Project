@@ -266,3 +266,20 @@ The production server emitted Next's advisory to use `.next/standalone/server.js
 Cleanup changes only this existing report, G01-CRRT-10's current quotation/descriptions, and backlog entries in the existing MV-02/MCS-02 handoffs. Existing PR #231 is updated rather than opening a second report-only PR. No unrelated uncommitted or concurrent work was present or changed.
 
 **Next phase: G02 — Peripheral Imaging, proposed read-only self-paced release-candidate check.** The v2 G02 prompt selects Peripheral Imaging when no target is named. Start only after the cleanup gate above, reuse the integration evidence, and keep actual clinical/media decisions and human observations distinct from automated QA. No publication is authorized.
+
+### G02 start checkpoint — Peripheral Imaging only
+
+Started **after** cleanup passed and commit `8ad6917f` was pushed to the existing PR. No second audit report or PR was created. Read the v2 G02 prompt, learning brief, roadmap target and PI-01/PI-02 review records. The default target is a **proposed read-only** Peripheral Imaging release-candidate check, not an owner publication decision. Existing integration feature, route, legacy-progress and optional-learning evidence above is carried forward, rather than repeating the nine-module audit.
+
+Two additional existing PI Chromium checks against the same production build **passed (2/2, zero retries)**:
+
+- Missing required image: failed acquisition remains unavailable, teaching/replay remain visible, Continue without the image works, returning records that the step was not completed, and no response record is written.
+- Keyboard and layout: actual image signal, no horizontal page overflow and keyboard Continue/focus across 1440, 1280, 1024, 390 and 320 px; 200% CSS text enlargement at 900 and 1440 px preserves Help, Continue and navigation. The 390-px capture was inspected. This is CSS text enlargement, not native browser zoom or screen-reader certification.
+
+```sh
+PERIPHERAL_IMAGING_BASE_URL=http://127.0.0.1:3137 node node_modules/@playwright/test/cli.js test --config=/tmp/integration-01-cleanup/g02-pi.config.cjs --grep 'required-image failure|laptop, tablet, small phone'
+```
+
+The first invocation omitted the suite's explicit local-server opt-in and **skipped both tests**. Its log/JSON are retained as `g02-pi-missing-opt-in.*`; it is not counted as verification. The command above supplies the required environment variable and ran both tests successfully (`g02-pi-start.*`).
+
+**G02 remains in progress, with HUMAN HOLD for release readiness:** PI-02 contains blank observation/retest forms and explicitly records no actual session; PI-01 carries draft items, specific faculty/technologist interpretation/copy decisions and translation review. No attributable clinical/media approval or owner limited-preview decision was supplied by this cleanup. Actual learner/technologist observations and scoped review decisions are the next required inputs; PI-03 may repair at most three selected observed problems once those records exist. No participant findings, new clinical judgments or runtime changes were invented to advance that work. The existing PI-01 question ledger/test-contract migrations remain authoritative and unchanged. These human holds do not reopen the technical integration cleanup gate.
