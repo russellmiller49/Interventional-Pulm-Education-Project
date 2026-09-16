@@ -13,7 +13,8 @@ the same institution.
 
 - Worktree `…/Interventional-Pulm-Education-Worktrees/claude-ecmo-honesty-02`, branch
   `claude/ecmo-honesty-02`, cut from merged `origin/main` at `21fc130a` (the merge of PR #227,
-  ECMO-03). The tree was clean and level with `origin/main`; nothing was reset.
+  ECMO-03). The tree was clean and level with `origin/main`; nothing was reset. `origin/main` was
+  later merged in at `b5479340` — see [Integration with origin/main](#integration-with-originmain-2026-09-15).
 - Read first, as instructed: [ECMO-01](ECMO-01.md), [ECMO-02](ECMO-02-handoff.md),
   [ECMO-03](ECMO-03-handoff.md), the [ECMO-03 claim-review queue](ECMO-03-claim-review-queue.json),
   [SHARED-02](SHARED-02-source-honesty-handoff.md), the ECMO evidence registry and
@@ -219,8 +220,8 @@ They are the same three ECMO-03 and SHARED-02 recorded.
 
 ### Browser checks
 
-Local Next dev server on port 3128 (`claude-ecmo-honesty` launch entry, added in this PR), in-app
-browser, unauthenticated. JavaScript was used only to read DOM text and to scroll; nothing was
+Local Next dev server on port 3128 (`npx next dev --port 3128 --webpack` from this worktree),
+in-app browser, unauthenticated. JavaScript was used only to read DOM text and to scroll; nothing was
 written to the page state. `POST /api/analytics` returns 500 because this worktree has no Supabase
 environment — the same condition ECMO-03 recorded — and no other request failed.
 
@@ -314,7 +315,122 @@ Documents and tooling:
 - `docs/gap-remediation/self-paced/ECMO-HONESTY-02-review-language-inventory.json` (new)
 - `docs/gap-remediation/self-paced/README.md`
 - `docs/gap-remediation/self-paced/test-contracts.md`
-- `.claude/launch.json` (one dev-server entry on port 3128, so the browser walk is reproducible)
+
+## Integration with origin/main (2026-09-15)
+
+`origin/main` was merged into `claude/ecmo-honesty-02` after PR #228 (MV-UX-01) and PR #229
+(MCS-AF-PRESENTATION-01) landed. No rebase, no force-push, no recreated PR.
+
+|                      |                                                               |
+| -------------------- | ------------------------------------------------------------- |
+| `origin/main` merged | `b5479340fe7e0c7ee8cd5cdc2bb17cce2c90617b` (merge of PR #229) |
+| Merge commit         | `4ce196c0`                                                    |
+| Previous base        | `21fc130a` (merge of PR #227, ECMO-03)                        |
+| Conflicted files     | one: `docs/gap-remediation/self-paced/README.md`              |
+
+### How the README conflict was resolved
+
+Both sides inserted a new first entry under `## Implementation handoffs` — this branch's
+ECMO-HONESTY-02 entry and main's MCS-AF-PRESENTATION-01 entry — so git could not order them.
+
+Resolved **additively**: both entries kept, this branch's first and main's second, with every
+other entry below them untouched. Neither side's file was taken wholesale. The resolved list is
+the exact set union, verified by comparing entry ids against both parents: **18 entries on main,
+18 on this branch, 19 after the merge**, with nothing present on either side missing and nothing
+in the result that was on neither side.
+
+One observation, not acted on: **MV-UX-01 has no README entry on current main.** PR #228 did not
+add one, so its absence is main's own state rather than something this merge dropped. Adding an
+entry for another module's batch would be outside this integration, so it is recorded here
+instead.
+
+### `.claude/launch.json` restored
+
+PR #230 previously carried one added entry in `.claude/launch.json` — a dev-server launch
+configuration on port 3128, used only to reproduce the browser walk from this worktree. Nothing
+in `src`, the test suites or `package.json` references it (the only other "3128" matches in the
+repository are coincidental substrings inside hashes, geometry coordinates and product CSVs), so
+it is not required by the bounded product change.
+
+It has been **restored to current `origin/main`**: `git diff origin/main -- .claude/launch.json`
+is empty, and the file no longer appears in this PR's diff. The handoff's browser-evidence
+section now names the plain command (`npx next dev --port 3128 --webpack`) instead of the launch
+entry. A temporary entry was added locally to drive the post-merge browser walk and reverted
+before committing; it is in no commit on this branch.
+
+### ECMO runtime and content during conflict resolution
+
+**No ECMO runtime or content file conflicted, and none was touched by the resolution.** The only
+overlap between the two sides was the README. MV and MCS files came in from main unchanged.
+
+One unrelated post-merge edit was made in this branch, and it is not a conflict resolution: the
+file-level doc comment in `__tests__/resumption-copy-contract.test.ts` still described the
+canonical fifth step as "the unit's approved ECMO air-emergency protocol", which the batch had
+already changed in the assertion below it. The comment now reads "the unit's own …". Comment
+only; no assertion, no learner-facing string.
+
+### Post-merge verification
+
+Both runs use the same command and scope: `node node_modules/jest/bin/jest.js --runInBand
+src/features/cardiohelp-ecmo 'src/app/\[locale\]/cardiohelp-ecmo' src/features/critical-care
+src/features/learning-module`. The baseline ran in a detached worktree at `b5479340`.
+
+| Check                                                                                                                   | Result                                                                                                                                                          |
+| ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Current `origin/main` (`b5479340`), ECMO integration scope                                                              | 114 suites (111 passed, 3 failed); 2,580 tests (2,577 passed, 3 failed, 0 skipped)                                                                              |
+| Merged branch, same scope                                                                                               | **115 suites (112 passed, 3 failed); 2,740 tests (2,737 passed, 3 failed, 0 skipped)**                                                                          |
+| Failure comparison                                                                                                      | **The same three failures, no regressions, nothing fixed, nothing skipped.** After normalizing the worktree path prefix the messages are byte-identical, 3 of 3 |
+| Merged branch, MV and MCS suites (`src/features/mechanical-ventilation`, `src/features/mechanical-circulatory-support`) | **73 suites, 1,506 tests, all passed** — the newly merged #228 and #229 work is intact                                                                          |
+| `npx tsc --noEmit`                                                                                                      | Exit 0                                                                                                                                                          |
+| ESLint `--max-warnings=0` on every changed TS/TSX file                                                                  | Exit 0, no warnings                                                                                                                                             |
+| Prettier `--check` on every changed file                                                                                | Clean                                                                                                                                                           |
+| `git diff --check`                                                                                                      | Clean                                                                                                                                                           |
+
+The +1 suite and +160 tests against main are this batch's own
+`ecmo-honesty-02-review-language.test.tsx`. The MV and MCS suites #228 and #229 added fall outside
+the ECMO integration scope, which is why that scope's totals do not move with them; they are
+covered by the separate MV/MCS run above.
+
+The three failures are main's own and unrelated to ECMO — the CRRT pressure-lab accessible name in
+`critical-care/__tests__/accessibility.test.tsx`, the CRRT station order in
+`curriculum-sequencing.test.tsx`, and the all-module static scan in `learner-copy.test.ts`. They are
+the same three ECMO-03, SHARED-02 and this batch's pre-merge run recorded. **None is classified as a
+regression.**
+
+### Preservation re-checked on the merged tree
+
+|                                       |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Inventory                             | 116 items, ids unique, declared counts match the rows: A 40, B 70, C 5, D 1; 74 changed, 42 unchanged                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Banned wording in the ECMO module     | None. The only remaining matches are negative assertions (`not.toMatch`) and the ECMO-HONESTY-02 rationale comment                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ECMO-03 claim-review queue            | 10 items, **all `NOT REVIEWED`**; no reviewer, role, date or reviewed version is filled in anywhere                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Held ELSO source title                | Present and unchanged in `content/evidence.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ECMO-03 protected files               | `git diff origin/main` empty for `storyProblems.ts`, `foundationLearningItems.ts`, `ecmoValueGuides.ts`, `evidence.ts`, `evidenceResolver.ts`, `deviceProfile.ts`, `drillSpecs.ts`, `BloodFlowVsSweepPanel.tsx`, `VvSeriesPhysiologyPanel.tsx`, `CircuitAndMonitors.tsx`, `components/evidence`, `engine/simulation.ts`, `engine/types.ts`, `engine/progress` and the ECMO-03 claim queue — so the PaCO₂ floor, saturation-ceiling and recirculation-limit wording, the source identities, dates and revisions, the engine and the progress layer are all byte-identical to main |
+| Device Intelligence and other modules | `git diff origin/main` empty for `src/features/ip-device-intelligence`, `src/features/mechanical-ventilation`, `src/features/mechanical-circulatory-support`, `src/features/critical-care`, `src/features/learning-module`, `src/lib`, `src/app` and `.claude`                                                                                                                                                                                                                                                                                                                   |
+
+### Post-merge browser checks
+
+Local Next dev server on port 3128 from this worktree, in-app browser, unauthenticated.
+JavaScript read DOM text and scrolled only; nothing was written to page state.
+
+| Surface                                                                                | Observed                                                                                                                                                                                                                                                                                                                                                               |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/en/cardiohelp-ecmo`, hub source area                                                 | Badge "UNLISTED DRAFT · Clinical and device review: none recorded"; Publication "Unlisted draft"; **Local protocol — None recorded. Where this module defers to local protocol it means your own institution's; no local policy is held or reviewed here.** Screenshot inspected                                                                                       |
+| Same, at 375×812                                                                       | Full-width row wraps and renders; `scrollWidth - clientWidth` is 0. Screenshot inspected                                                                                                                                                                                                                                                                               |
+| `/en/cardiohelp-ecmo/learn?track=vv&lesson=arterial-bubble-stop`                       | Control reads "Resume support per current IFU and local protocol"; the knob strip reads "…belongs to the current IFU and your unit's air-emergency protocol". Both dependency markers — "holds no copy of one" and "does not hold a copy of" — present and visible in the DOM                                                                                          |
+| `/en/cardiohelp-ecmo/practice?track=vv&case=clinical-vv-circuit-air-embolism`, Debrief | Safety note renders in full: "…governed by the current manufacturer IFU and your unit's own ECMO air-emergency protocol; this simulation does not teach that choreography and holds no copy of that protocol." The case source list still shows ECMO-03's dating and "Clinical and device review of how this module uses it: none recorded yet." Screenshots inspected |
+| `/en/cardiohelp-ecmo/learn?track=va&lesson=va-differential-hypoxemia`                  | All three rewritten VA panel strings present and visible                                                                                                                                                                                                                                                                                                               |
+| Every route above                                                                      | A scan of `document.body.innerText` for "approved local", "reviewed local", "approved ECMO", "approved protocol" and "REVIEW APPROVED" returned **nothing**                                                                                                                                                                                                            |
+| Network                                                                                | Every page, chunk, font and GLB 200. The only failures are `POST /api/analytics → 500`, because this worktree has no Supabase environment — the same condition ECMO-03 recorded and unchanged by the merge. The remaining console errors are the in-app pane's HMR WebSocket retries                                                                                   |
+
+### Post-merge checks not run
+
+Full `npm test`; production build; Playwright; Safari or Firefox; keyboard-only and screen-reader
+passes; tablet widths; Spanish and Simplified Chinese wording; the VA Practice air case in a
+browser; authenticated sync or remote analytics; learner observation; faculty, device or
+institutional review. **MV-UX-01 and MCS-AF-PRESENTATION-01 were confirmed present by their full
+test suites passing and by a byte-identical diff against `origin/main`, not by a browser walk**;
+neither module was modified.
 
 ## Stop boundary
 

@@ -11,7 +11,7 @@ import { cardiohelpScenarioById } from '../content/scenarios'
  *
  * The canonical teaching is five steps: recognise the event and the device stop, isolate the
  * patient, identify and correct the air source, de-air and verify the circuit, then resume support
- * according to the current manufacturer instructions for use and the unit's approved ECMO
+ * according to the current manufacturer instructions for use and the unit's own ECMO
  * air-emergency protocol. The fifth is where this contract lives — the module does not teach where
  * clamp opening, pump restart and console reset fall relative to one another, and no learner-facing
  * string may imply that it does.
