@@ -707,6 +707,21 @@ export const ventilationCourseMinutes = ventilationLearningUnits.reduce(
 export const ventilationUnitHref = (id: string) =>
   `/mechanical-ventilation/learn?activity=${encodeURIComponent(id)}`
 
+/**
+ * The purpose line shown above an optional question that has no authored MV-03 teaching record.
+ *
+ * MV-UX-01: the previous composition was `'Apply ' + unit.title.toLowerCase() + ' to a short
+ * authored case.'`. Unit titles are written as questions ("Did oxygenation improve at a cost?") and
+ * as two-sentence labels ("What you set. What you check."), so lowering and embedding a title
+ * produced sentences such as "Apply did oxygenation improve at a cost? to a short authored case."
+ * The unit's authored `outcome` is already a purpose sentence in the same voice as the MV-03
+ * purposes, so it is used verbatim with only its closing period replaced. No authored text is
+ * re-cased, and nothing here reads or writes an answer.
+ */
+export function ventilationGenericQuestionPurpose(unit: VentilationLearningUnit): string {
+  return `${unit.outcome.replace(/\.$/, '')}, in a short authored case.`
+}
+
 /** A single table is introduced progressively and reused at debrief; never rendered during checks. */
 export const ventilationDecisionTable = [
   {
