@@ -1,9 +1,27 @@
+/*
+ * G02-PI-03. A long clinical term is one unbreakable word, and at 320 px with the root text at
+ * 32 px several of them are wider than the column they sit in: `superimposition,` alone measures
+ * 226 px inside a 217 px outline panel. Without a break opportunity the word sets the box's
+ * min-content width, so a grid track sizes past its own container -- the teaching column resolved
+ * to a 257.5 px track inside 190 px, the source list to 271.6 px inside 198.4 px -- and the text
+ * is then clipped by the panel that scrolls, or pushes the page 3 px wider than the viewport.
+ *
+ * `anywhere`, not `break-word`: only `anywhere` lets the break opportunity count towards
+ * min-content, which is what brings those tracks back inside their containers. It breaks a word
+ * solely when the word cannot fit its line on its own, so wider viewports are unaffected.
+ *
+ * This is the root of the stage flow, so it reaches every surface rendered inside the activity --
+ * including the shared source list and lesson-shell chrome the activity hosts -- without editing
+ * shared CSS. The imaging lab's own root carries the same declaration (`imaging.module.css`); the
+ * stage rebuild never carried it over.
+ */
 .course {
   color: var(--ink);
   width: 100%;
   min-width: 0;
   font-size: 1rem;
   line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 .course :is(button, summary, a) {
   touch-action: manipulation;
