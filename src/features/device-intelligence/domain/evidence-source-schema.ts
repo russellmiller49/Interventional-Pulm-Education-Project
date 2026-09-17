@@ -12,6 +12,7 @@ export const D2D_SOURCE_KINDS = [
   'fda_premarket',
   'fda_classification',
   'fda_registration_listing',
+  'fda_safety_notice',
   'governed_catalog',
 ] as const
 

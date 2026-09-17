@@ -2,6 +2,7 @@ import 'server-only'
 
 import profileOverlayJson from '../../../../data/ip-device-intelligence/generated/product-profile-overlay.json'
 import regulatoryOverlayJson from '../../../../data/ip-device-intelligence/generated/product-regulatory-overlay.json'
+import { getPhysicianReviewedProfile } from './physician-review.server'
 
 import type { D2dSourceProjection, D2dSourceReference } from '../domain/evidence-source-schema'
 import {
@@ -329,7 +330,7 @@ const evidenceByProductId: ReadonlyMap<string, DeepReadonly<D2dProductEvidence>>
 })()
 
 export function getReviewedProductProfile(productId: string): ReviewedProductProfile | null {
-  return profileByProductId.get(productId) ?? null
+  return getPhysicianReviewedProfile(productId) ?? profileByProductId.get(productId) ?? null
 }
 
 export function getReviewedProductRegulatoryEvidence(
@@ -338,7 +339,10 @@ export function getReviewedProductRegulatoryEvidence(
   return regulatoryByProductId.get(productId) ?? null
 }
 
-/** Null outside the reviewed ten-product pilot; no synthetic fallback row is ever created. */
+/** Dated physician profile review supersedes the pilot profile, with regulatory axes independent. */
 export function getD2dProductEvidence(productId: string): D2dProductEvidence | null {
-  return evidenceByProductId.get(productId) ?? null
+  const profile = getPhysicianReviewedProfile(productId)
+  return profile
+    ? deepFreeze({ profile, regulatoryEvidence: regulatoryByProductId.get(productId) ?? null })
+    : (evidenceByProductId.get(productId) ?? null)
 }

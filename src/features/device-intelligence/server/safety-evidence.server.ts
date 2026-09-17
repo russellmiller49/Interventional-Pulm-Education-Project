@@ -1,5 +1,6 @@
 import 'server-only'
 import artifactJson from '../../../../data/ip-device-intelligence/generated/product-safety-evidence.json'
+import { applyPhysicianSafetyReview } from './physician-review.server'
 import {
   safetyEvidenceArtifactSchema,
   type SafetyEvidenceRow,
@@ -18,5 +19,5 @@ const byProductId = new Map(artifact.rows.map((row) => [row.product_id, freeze(r
 
 /** Public rows only. Research prose, source hashes, query receipts and caches stay server-side. */
 export function getSafetyEvidence(productId: string): SafetyEvidenceRow | null {
-  return byProductId.get(productId) ?? null
+  return applyPhysicianSafetyReview(productId, byProductId.get(productId) ?? null)
 }

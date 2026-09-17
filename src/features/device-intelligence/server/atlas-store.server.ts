@@ -27,6 +27,7 @@ import {
 } from '@/features/preference-cards/server/catalog-store'
 import { isAtlasCohortProduct } from '@/features/device-intelligence/domain/atlas-cohort'
 import { assertExclusionsResolve } from '@/features/device-intelligence/domain/atlas-visibility-exclusions'
+import { applyPhysicianCatalogCorrections } from './physician-review.server'
 
 /**
  * The D2B atlas view of the governed catalog: the SAME statically imported generated JSON the
@@ -64,7 +65,7 @@ export function getAtlasCatalogStore(): CatalogStore {
     // already loaded.
     assertExclusionsResolve(new Set(allProducts.map((product) => product.product_id)))
     cachedAtlasStore = buildCatalogStore({
-      products: allProducts.filter(isAtlasCohortProduct),
+      products: applyPhysicianCatalogCorrections(allProducts.filter(isAtlasCohortProduct)),
       productGovernance: (
         externalReviewCorrectionsJson as unknown as {
           productGovernance: ProductGovernanceRecord[]

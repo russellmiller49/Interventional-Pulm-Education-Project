@@ -319,7 +319,15 @@ describe('D2B status overlay — runtime reader', () => {
       expect(SAFETY_DISPLAYS).toContain(status.safetyDisplay)
       expect(STATUS_RECOMMENDATION_GATES).toContain(status.statusRecommendationGate)
       if (status.researched) researched += 1
-      else expect(status).toEqual(UNRESEARCHED_PRODUCT_STATUS)
+      else if (
+        ['PRD-04A0F61F62', 'PRD-2F1DF55F3C', 'PRD-94C61697D9'].includes(product.product_id)
+      ) {
+        // Narrow physician recall adjudication does not assert a refreshed market search.
+        expect(status.marketStatus).toBe('current_status_unverified')
+        expect(status.researchSnapshotDate).toBeNull()
+        expect(status.safetyDisplay).toBe('active_safety_notice')
+        expect(status.statusRecommendationGate).toBe('blocked_active_safety_action')
+      } else expect(status).toEqual(UNRESEARCHED_PRODUCT_STATUS)
     }
     // Research remains frozen; new source-completeness identities stay explicitly unresearched.
     expect(researched).toBe(sourceCompletenessCount('status_researched_products'))

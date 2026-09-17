@@ -8551,7 +8551,8 @@
           "fda_premarket": "FDA premarket record",
           "fda_classification": "FDA classification record",
           "fda_registration_listing": "FDA registration/listing record",
-          "governed_catalog": "Governed catalog"
+          "governed_catalog": "Governed catalog",
+          "fda_safety_notice": "FDA safety notice"
         },
         "organizationLabel": "Organization",
         "snapshotDateLabel": "Snapshot date",
@@ -8599,6 +8600,7 @@
       "confidenceLabel": "Research confidence:",
       "snapshotLabel": "U.S. status research snapshot:",
       "notResearched": "This product was not covered by the U.S. status research snapshot, so its current availability and its FDA safety-action status have not been verified.",
+      "marketNotResearchedWithSafetyEvidence": "This product was not covered by the U.S. market-status research snapshot. Availability remains unverified; the dated safety records shown here were reviewed separately.",
       "orderabilityNote": "Market status describes distribution evidence recorded at the research snapshot. It does not establish present orderability, local availability, formulary status, procurement, or clinical suitability.",
       "lotSpecificNote": "Safety notices may be lot-specific: a notice shown here does not necessarily apply to every unit or lot of this product.",
       "referenceCodesLabel": "FDA recall number(s):",
@@ -8749,7 +8751,7 @@
       "back": "Back to Device Atlas",
       "identifiersHeading": "Identifiers and packaging",
       "specsHeading": "Dimensions and configuration",
-      "specsMissingNote": "A value shown as \"not recorded\" means the source documents reviewed so far do not state it — not that the device lacks it.",
+      "specsMissingNote": "An unrecorded catalog field does not mean the device lacks that attribute. Additional reviewed specifications are shown in the cited product profile when available.",
       "fields": {
         "catalogNumber": "Catalog number",
         "gtin": "GTIN / UDI-DI",
@@ -8795,7 +8797,7 @@
       "displayOnlyGroupingNote": "Display-only grouping by manufacturer and product line for discovery. It is never persisted as identity and is not a clinical equivalence group.",
       "otherManufacturersHeading": "Other manufacturers with products mapped to this clinical role",
       "roleDiscoveryCaption": "Shared clinical-role mapping is a catalog-discovery fact, not a claim that these products are clinically equivalent or substitutable.",
-      "notRecordedFields": "Not recorded in reviewed sources: {fields}.",
+      "notRecordedFields": "Not recorded in catalog fields: {fields}.",
       "otherManufacturersSelectionNote": "One product per manufacturer, drawn from {productCount, plural, one {# cohort product} other {# cohort products}} across {manufacturerCount, plural, one {# other manufacturer} other {# other manufacturers}} mapped to this role ({shown} shown). Representatives prefer primary-fit mappings and are otherwise arbitrary — never a matched or comparable set, and sizes are not matched.",
       "otherManufacturersViewRole": "View every cohort product mapped to this role.",
       "catalogDescriptionLabel": "Catalog description · see the source documents below.",
@@ -9317,7 +9319,8 @@
         "sterile": "Sterility labeling",
         "package": "Package / unit of measure",
         "packageQuantity": "Units per package",
-        "distalDiameter": "Distal-end outer diameter"
+        "distalDiameter": "Distal-end outer diameter",
+        "labeledLength": "Manufacturer-labeled length"
       },
       "catalogSources": "Inspect catalog evidence",
       "descriptionSources": "Description evidence",
@@ -9373,6 +9376,19 @@
         "emergency_pull": "Retrieve in an emergency",
         "do_not_substitute": "Do not substitute"
       }
+    },
+    "physicianReview": {
+      "heading": "Physician evidence review",
+      "scope": "Confirmed findings and unresolved questions from the September 17, 2026 review. Source dates and document revisions remain specific to each citation; this review does not establish local device availability, compatibility or recall clearance.",
+      "identities": "Reviewed UDI records",
+      "udiNote": "Primary device identifiers and package identifiers are distinct. Match the exact model, revision and package to its label. GUDID identity does not establish FDA authorization or current orderability.",
+      "model": "Model / catalog in record",
+      "primaryDi": "Primary DI",
+      "packageDi": "Package DI (quantity)",
+      "identityScope": "Identity scope",
+      "exact": "Reviewed model/package match",
+      "requiresLabel": "Exact revision requires label confirmation",
+      "unresolved": "Still needs evidence"
     }
   }
 }

@@ -1,6 +1,8 @@
 import 'server-only'
 
 import statusOverlayJson from '../../../../data/ip-device-intelligence/generated/product-status-overlay.json'
+import { applyPhysicianStatusReview } from './physician-review.server'
+import { getSafetyEvidence } from './safety-evidence.server'
 
 import {
   UNRESEARCHED_PRODUCT_STATUS,
@@ -57,7 +59,11 @@ function getRowIndex(): Map<string, ProductStatusView> {
 }
 
 export function getProductStatus(productId: string): ProductStatusView {
-  return getRowIndex().get(productId) ?? UNRESEARCHED_PRODUCT_STATUS
+  return applyPhysicianStatusReview(
+    productId,
+    getRowIndex().get(productId) ?? UNRESEARCHED_PRODUCT_STATUS,
+    getSafetyEvidence(productId),
+  )
 }
 
 /** Status for a list of products, as a plain serializable record for view models. */

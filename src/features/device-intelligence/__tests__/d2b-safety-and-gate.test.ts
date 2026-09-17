@@ -93,10 +93,10 @@ describe('D2B — active safety actions block recommendation, never visibility',
       const scope = status.safetyActionScope ?? 'null'
       byScope.set(scope, (byScope.get(scope) ?? 0) + 1)
     }
-    // 14 lot-specific, 8 product-wide, 1 undetermined — carried through, never collapsed.
+    // Physician review removes four false Ion matches and adds three exact-model notice groups.
     expect(Object.fromEntries([...byScope.entries()].sort())).toEqual({
-      lot_specific: 14,
-      product_wide: 8,
+      lot_specific: 16,
+      product_wide: 5,
       unknown: 1,
     })
   })
@@ -106,7 +106,7 @@ describe('D2B — active safety actions block recommendation, never visibility',
     const historical = atlas.products
       .map((product) => ({ product, status: getProductStatus(product.product_id) }))
       .filter((entry) => entry.status.safetyDisplay === 'historical_safety_notice')
-    expect(historical.length).toBe(2)
+    expect(historical.length).toBe(4)
     for (const { product, status } of historical) {
       // Visible, badged on cards, but not blocked and not called active.
       expect(getAtlasProductDetail(product.product_id)).not.toBeNull()
@@ -180,9 +180,9 @@ describe('D2B — the gate governs recommendation only', () => {
     expect(productsWithoutRole).toBe(25)
     // Researched review holds plus all unresearched products remain honestly review-required.
     expect(Object.fromEntries([...gates.entries()].sort())).toEqual({
-      blocked_active_safety_action: 23,
+      blocked_active_safety_action: 22,
       clear: 521,
-      review_required: sourceCompletenessCount('status_gate_review_required'),
+      review_required: sourceCompletenessCount('status_gate_review_required') + 1,
     })
   })
 })
