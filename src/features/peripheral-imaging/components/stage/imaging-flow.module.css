@@ -33,6 +33,26 @@
   outline: 3px solid var(--amber);
   outline-offset: 4px;
 }
+/*
+ * PI-HELP-01: the shared Help dialog is a DOM descendant of this course, including when native
+ * showModal() paints it in the top layer. PI does not use the shared .shell that supplies these
+ * tokens. Adapt only Help's dependencies to the PI palette; retain its existing 1rem body text.
+ */
+.course [data-stage-help-dialog] {
+  --stage-panel: var(--panel);
+  --stage-ink: var(--ink);
+  --stage-line: var(--line);
+  --stage-type-floor: 1rem;
+}
+/* Select the semantic title row, without depending on shared CSS-module class names. Wrapping
+ * gives the title the available width before Close moves to its own row at enlarged text sizes.
+ * The course's overflow-wrap protection remains in force for the rest of the dialog content. */
+.course [data-stage-help-dialog] :has(> h2) {
+  flex-wrap: wrap;
+}
+.course [data-stage-help-dialog] h2 + button {
+  flex-shrink: 0;
+}
 .header {
   display: flex;
   flex-wrap: wrap;

@@ -1104,3 +1104,282 @@ test('the activity still reserves its pinned chrome for keyboard focus', async (
     if (pinned) expect(state.clearTop).toBeGreaterThan(state.headerBottom - 1)
   }
 })
+
+// PI-HELP-01: root text and injected CSS zoom are separate conditions, neither is browser zoom.
+const HELP_CONDITIONS = [
+  { name: '1440-normal', width: 1440, height: 1000, text: 100, zoom: 1 },
+  { name: '1440-text200', width: 1440, height: 1000, text: 200, zoom: 1 },
+  { name: '1440-zoom2', width: 1440, height: 1000, text: 100, zoom: 2 },
+  { name: '900-text200', width: 900, height: 1000, text: 200, zoom: 1 },
+  { name: '390-normal', width: 390, height: 844, text: 100, zoom: 1 },
+  { name: '390-text200', width: 390, height: 844, text: 200, zoom: 1 },
+  { name: '320-normal', width: 320, height: 740, text: 100, zoom: 1 },
+  { name: '320-text200', width: 320, height: 740, text: 200, zoom: 1 },
+]
+
+/** Wait for fonts and stable painted geometry, including native focus scrolling. */
+async function settleHelp(page: Page) {
+  await page.evaluate(async () => {
+    await document.fonts.ready
+    let last = ''
+    let stable = 0
+    for (let frame = 0; frame < 120; frame++) {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+      const nodes = document.querySelectorAll(
+        '[data-stage-help-dialog], [data-stage-help-dialog] *',
+      )
+      const current = JSON.stringify([
+        scrollY,
+        ...[...nodes].map((node) => [
+          node.getBoundingClientRect().toJSON(),
+          getComputedStyle(node).backgroundColor,
+          node.scrollTop,
+        ]),
+      ])
+      stable = current === last ? stable + 1 : 0
+      if (stable === 4) return
+      last = current
+    }
+    throw new Error('Help geometry did not settle')
+  })
+}
+
+/** Text ranges catch a five-line Close label even when its button border box fits. */
+async function helpGeometry(page: Page) {
+  return page.locator('[data-stage-help-dialog]').evaluate((node) => {
+    const dialog = node as HTMLDialogElement
+    const title = dialog.querySelector('h2')!
+    const close = dialog.querySelector('button')!
+    const info = (element: Element) => {
+      const range = document.createRange()
+      range.selectNodeContents(element)
+      const rects = [...range.getClientRects()].filter((r) => r.width && r.height)
+      const style = getComputedStyle(element)
+      return {
+        box: element.getBoundingClientRect().toJSON(),
+        textRects: rects.map((r) => r.toJSON()),
+        lines: new Set(rects.map((r) => r.top)).size,
+        font: style.fontSize,
+        color: style.color,
+        background: style.backgroundColor,
+      }
+    }
+    const words = [...title.firstChild!.textContent!.matchAll(/\S+/g)].map((match) => {
+      const range = document.createRange()
+      range.setStart(title.firstChild!, match.index!)
+      range.setEnd(title.firstChild!, match.index! + match[0].length)
+      return { word: match[0], lines: new Set([...range.getClientRects()].map((r) => r.top)).size }
+    })
+    const style = getComputedStyle(dialog)
+    return {
+      dialog: info(dialog),
+      title: info(title),
+      close: info(close),
+      header: info(title.parentElement!),
+      words,
+      modal: dialog.matches(':modal'),
+      insidePI: Boolean(dialog.closest('[data-imaging-flow]')),
+      panelToken: style.getPropertyValue('--panel').trim(),
+      stagePanel: style.getPropertyValue('--stage-panel').trim(),
+      border: style.borderTopColor,
+      borderWidth: style.borderTopWidth,
+      bodyFont: getComputedStyle(dialog.querySelector('p')!).fontSize,
+      rootFont: getComputedStyle(document.documentElement).fontSize,
+      documentWidth: document.documentElement.scrollWidth,
+      scrollHeight: dialog.scrollHeight,
+      clientHeight: dialog.clientHeight,
+      clientWidth: dialog.clientWidth,
+      scrollWidth: dialog.scrollWidth,
+    }
+  })
+}
+
+/** Every text line must fit horizontally and be reachable by scrolling the dialog itself. */
+async function helpTextReachability(page: Page) {
+  return page.locator('[data-stage-help-dialog]').evaluate((node) => {
+    const dialog = node as HTMLDialogElement
+    const box = dialog.getBoundingClientRect()
+    // Client dimensions and scrollTop are unzoomed CSS lengths; Range rectangles include zoom.
+    const scale = box.width / dialog.offsetWidth
+    const left = box.left + dialog.clientLeft * scale
+    const right = left + dialog.clientWidth * scale
+    const top = box.top + dialog.clientTop * scale
+    const bottom = top + dialog.clientHeight * scale
+    const walker = document.createTreeWalker(dialog, NodeFilter.SHOW_TEXT)
+    const failures: { text: string; horizontal: boolean; unreachable: boolean }[] = []
+    let lines = 0
+    while (walker.nextNode()) {
+      const text = walker.currentNode
+      if (!text.textContent?.trim()) continue
+      const range = document.createRange()
+      range.selectNodeContents(text)
+      const count = range.getClientRects().length
+      for (let index = 0; index < count; index++) {
+        let rect = range.getClientRects()[index]
+        if (!rect.width || !rect.height) continue
+        dialog.scrollTop += (rect.top + rect.height / 2 - (top + bottom) / 2) / scale
+        rect = range.getClientRects()[index]
+        const horizontal = rect.left < left - 1 || rect.right > right + 1
+        const hit = document.elementFromPoint(
+          rect.left + rect.width / 2,
+          rect.top + rect.height / 2,
+        )
+        const unreachable =
+          rect.top < top - 1 || rect.bottom > bottom + 1 || !hit || !dialog.contains(hit)
+        if (horizontal || unreachable)
+          failures.push({ text: text.textContent, horizontal, unreachable })
+        lines++
+      }
+    }
+    return { lines, failures, scrollTop: dialog.scrollTop }
+  })
+}
+
+async function helpLearnerState(page: Page) {
+  return {
+    url: page.url(),
+    stage: await page.locator('[data-stage]').getAttribute('data-stage'),
+    storage: await storedValues(page),
+    controls: await page
+      .locator('[data-imaging-flow] input, [data-imaging-flow] select')
+      .evaluateAll((nodes) =>
+        nodes.map((n) => ({ id: n.id, value: (n as HTMLInputElement).value })),
+      ),
+  }
+}
+
+for (const condition of HELP_CONDITIONS) {
+  test(`Help presentation and dismissal: ${condition.name}`, async ({ page }, info) => {
+    await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'light' })
+    await page.setViewportSize({ width: condition.width, height: condition.height })
+    await openSection(page, 'projection')
+    await expect(primary(page)).toBeEnabled({ timeout: 60000 })
+    await page.addStyleTag({
+      content: `html { font-size:${condition.text}% !important; zoom:${condition.zoom}; }`,
+    })
+    const help = page.getByRole('button', { name: 'Help', exact: true })
+    await help.focus()
+    await settleHelp(page)
+    const before = await helpLearnerState(page)
+    const beforeWidth = await page.evaluate(() => document.documentElement.scrollWidth)
+    await page.keyboard.press('Enter')
+    const dialog = page.getByRole('dialog', { name: 'What do I do now?', exact: true })
+    const close = dialog.getByRole('button', { name: 'Close', exact: true })
+    await expect(close).toBeFocused()
+    await settleHelp(page)
+    const geometry = await helpGeometry(page)
+    await info.attach('help-geometry.json', {
+      body: JSON.stringify(geometry, null, 2),
+      contentType: 'application/json',
+    })
+    await capture(page, info, 'help-top.png')
+    // The native modal is in the top layer. An opaque resolved background plus the inspected
+    // screenshot establishes that lesson text cannot show through the panel.
+    expect.soft(geometry.modal).toBe(true)
+    expect.soft(geometry.insidePI).toBe(true)
+    expect.soft(geometry.stagePanel).toBe(geometry.panelToken)
+    expect.soft(geometry.dialog.background).toBe('rgb(16, 38, 43)')
+    expect.soft(geometry.dialog.color).toBe('rgb(234, 244, 244)')
+    expect.soft(geometry.border).toBe('rgba(163, 206, 209, 0.22)')
+    expect.soft(geometry.borderWidth).toBe('1px')
+    expect.soft(geometry.bodyFont).toBe(`${(16 * condition.text) / 100}px`)
+    expect.soft(geometry.rootFont).toBe(`${(16 * condition.text) / 100}px`)
+    expect.soft(geometry.close.lines, 'Close must stay a word').toBe(1)
+    expect
+      .soft(
+        geometry.words.filter((w) => w.lines !== 1),
+        'heading words must stay readable',
+      )
+      .toEqual([])
+    const d = geometry.dialog.box
+    expect.soft(d.left).toBeGreaterThanOrEqual(0)
+    expect.soft(d.top).toBeGreaterThanOrEqual(0)
+    expect.soft(d.right).toBeLessThanOrEqual(condition.width)
+    expect.soft(d.bottom).toBeLessThanOrEqual(condition.height)
+    const t = geometry.title.box
+    const c = geometry.close.box
+    expect.soft(t.right <= c.left || t.bottom <= c.top, 'heading overlaps Close').toBe(true)
+    if (condition.name === '320-text200') {
+      expect.soft(t.width / geometry.header.box.width).toBeGreaterThan(0.9)
+      expect.soft(c.top).toBeGreaterThanOrEqual(t.bottom)
+      expect.soft(geometry.scrollHeight).toBeGreaterThan(geometry.clientHeight)
+    }
+    if (condition.name === '1440-normal') {
+      expect.soft(geometry.title.lines).toBe(1)
+      expect.soft(t.right).toBeLessThan(c.left)
+    }
+    expect.soft(geometry.documentWidth, 'Help must not add page overflow').toBe(beforeWidth)
+    expect.soft(geometry.scrollWidth).toBeLessThanOrEqual(geometry.clientWidth + 1)
+    const text = await helpTextReachability(page)
+    expect.soft(text.lines).toBeGreaterThan(5)
+    expect.soft(text.failures, 'clipped or unreachable text ranges').toEqual([])
+    await capture(page, info, 'help-bottom.png')
+    await info.attach('help-text-reachability.json', {
+      body: JSON.stringify(text, null, 2),
+      contentType: 'application/json',
+    })
+
+    // Enter activates the actual Close control even after reading the bottom of a tall dialog.
+    await close.focus()
+    await page.keyboard.press('Enter')
+    await expect(dialog).not.toBeVisible()
+    await expect(help).toBeFocused()
+    expect(await helpLearnerState(page)).toEqual(before)
+    await help.click()
+    await close.click()
+    await expect(help).toBeFocused()
+    expect(await helpLearnerState(page)).toEqual(before)
+    await help.click()
+    await page.keyboard.press('Escape')
+    await expect(dialog).not.toBeVisible()
+    await expect(help).toBeFocused()
+    expect(await helpLearnerState(page)).toEqual(before)
+  })
+}
+
+test('Help keeps longer existing content reachable and keyboard navigation modal in both site themes', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 320, height: 740 })
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await openSection(page, 'projection')
+  await advanceReading(page, 'projection')
+  await page.addStyleTag({ content: 'html { font-size:200% !important; }' })
+  const help = page.getByRole('button', { name: 'Help', exact: true })
+  const dialog = page.getByRole('dialog', { name: 'What do I do now?', exact: true })
+  const close = dialog.getByRole('button', { name: 'Close', exact: true })
+  const locate = dialog.getByRole('button', { name: 'Show me where', exact: true })
+  for (const colorScheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme })
+    await expect(page.locator('html')).toHaveClass(new RegExp(colorScheme))
+    const before = await helpLearnerState(page)
+    await help.focus()
+    await page.keyboard.press('Enter')
+    await expect(close).toBeFocused()
+    await expect(locate).toBeVisible()
+    await settleHelp(page)
+    const geometry = await helpGeometry(page)
+    expect(geometry.dialog.background).toBe('rgb(16, 38, 43)')
+    expect(geometry.dialog.color).toBe('rgb(234, 244, 244)')
+    expect(geometry.close.lines).toBe(1)
+    expect((await helpTextReachability(page)).failures).toEqual([])
+    await page.keyboard.press('Tab')
+    await expect(locate).toBeFocused()
+    await settleHelp(page)
+    const visible = await locate.evaluate((node) => {
+      const box = node.getBoundingClientRect()
+      const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)
+      return box.top >= 0 && box.bottom <= innerHeight && Boolean(hit && node.contains(hit))
+    })
+    expect(visible).toBe(true)
+    await capture(page, info, `help-long-${colorScheme}-bottom.png`)
+    await page.keyboard.press('Shift+Tab')
+    await expect(close).toBeFocused()
+    await settleHelp(page)
+    await capture(page, info, `help-long-${colorScheme}-top.png`)
+    await page.keyboard.press('Escape')
+    await expect(dialog).not.toBeVisible()
+    await expect(help).toBeFocused()
+    expect(await helpLearnerState(page)).toEqual(before)
+  }
+})
