@@ -132,7 +132,13 @@ test('renders an exact reviewed profile with exact regulatory identity and safe 
   await openProduct(page, PRODUCTS.exact)
   await expect(page.getByRole('heading', { name: 'Reviewed product profile' })).toBeVisible()
   await expect(page.locator('[data-d2d-profile-scope="exact_product"]')).toBeVisible()
-  await expect(page.getByText(/KARL STORZ 10350F is a reusable optical forceps/)).toBeVisible()
+  // The reviewed summary is quoted twice by design — as the header description and inside the
+  // profile panel — so the assertion names the panel's copy.
+  await expect(
+    page
+      .getByLabel('Reviewed summary')
+      .getByText(/KARL STORZ 10350F is a reusable optical forceps/),
+  ).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Regulatory evidence' })).toBeVisible()
   await expect(
     page.locator('[data-d2d-regulatory-match="exact_model_manufacturer_match"]'),

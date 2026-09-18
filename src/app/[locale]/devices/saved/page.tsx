@@ -1,6 +1,6 @@
-import type { Metadata, Route } from 'next'
-import Link from 'next/link'
+import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { DeviceTaskNav } from '@/features/device-intelligence/components/DeviceTaskNav'
 import { SavedDevicesWorkspace } from '@/features/device-intelligence/components/SavedDevicesWorkspace'
 import { getSaveDeviceLabels } from '@/features/device-intelligence/server/reference-labels.server'
 import { getProductStatusLabels } from '@/features/device-intelligence/server/status-labels.server'
@@ -20,6 +20,9 @@ export default async function SavedDevicesPage({
   const { locale } = await params
   setRequestLocale(locale)
   const t = await getTranslations('deviceIntelligence.savedDevices')
+  const tDevices = await getTranslations('deviceIntelligence.devices')
+  const tReference = await getTranslations('deviceIntelligence.reference')
+  const tCompare = await getTranslations('deviceIntelligence.compareSelection')
   const keys = [
     'loading',
     'empty',
@@ -41,12 +44,17 @@ export default async function SavedDevicesPage({
   >
   return (
     <div className="container space-y-5 py-8">
-      <Link
-        className="inline-flex min-h-11 items-center text-sm underline"
-        href={`/${locale}/devices` as Route}
-      >
-        {t('find')}
-      </Link>
+      <DeviceTaskNav
+        locale={locale}
+        active="saved"
+        labels={{
+          navigation: tDevices('navigationLabel'),
+          find: tDevices('findDevice'),
+          procedures: tDevices('prepareProcedure'),
+          saved: tReference('savedDevices'),
+          compare: tCompare('navCompare'),
+        }}
+      />
       <header className="max-w-3xl space-y-2">
         <h1 className="text-3xl font-bold">{t('title')}</h1>
         <p className="text-sm leading-6 text-muted-foreground">{t('note')}</p>

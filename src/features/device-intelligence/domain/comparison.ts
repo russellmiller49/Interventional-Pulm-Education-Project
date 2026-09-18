@@ -60,3 +60,31 @@ const categoryFields: Partial<Record<DeviceClassCode, ComparisonField[]>> = {
 export function comparisonFieldsForClass(deviceClass: DeviceClassCode): ComparisonField[] {
   return [...(categoryFields[deviceClass] ?? []), 'reuse', 'sterile', 'package', 'packageQuantity']
 }
+
+/** Fields every class shares; they follow the class-specific technical fields. */
+export const GENERAL_COMPARISON_FIELDS: readonly ComparisonField[] = [
+  'reuse',
+  'sterile',
+  'package',
+  'packageQuantity',
+]
+
+/**
+ * "Show differences only": whether a row's recorded values differ across the compared devices.
+ * A value that is not established is its own state — recorded-versus-missing IS a difference
+ * worth seeing — while a row where every device is missing carries no information and folds
+ * away. This applies to specification rows only. Identity, safety and market status rows are
+ * never passed through it: they are always shown.
+ */
+export function comparisonValuesDiffer(
+  values: readonly { value: string | number | boolean | null; unit: string | null }[],
+): boolean {
+  const states = new Set(
+    values.map((entry) =>
+      entry.value === null
+        ? 'missing'
+        : `${String(entry.value).trim().toLowerCase()}|${entry.unit ?? ''}`,
+    ),
+  )
+  return states.size > 1
+}

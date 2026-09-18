@@ -75,7 +75,10 @@ describe('D2B Device Atlas index', () => {
 
   it('gives every row one market badge and no per-row warning block', async () => {
     const { container } = await renderPage(
-      DevicesIndexPage({ params: Promise.resolve({ locale: 'en' }) }),
+      DevicesIndexPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ view: 'models' }),
+      }),
     )
     const rows = container.querySelectorAll('tbody tr')
     expect(rows.length).toBeGreaterThan(0)
@@ -100,10 +103,12 @@ describe('D2B Device Atlas index', () => {
     const { container } = await renderPage(
       DevicesIndexPage({
         params: Promise.resolve({ locale: 'en' }),
-        searchParams: Promise.resolve({ q: 'Flexible Cryoprobe 2.4 mm' }),
+        // The model view is the table under test; the index default groups product lines.
+        searchParams: Promise.resolve({ q: 'Flexible Cryoprobe 2.4 mm', view: 'models' }),
       }),
     )
-    const link = container.querySelector(`a[href="/en/devices/${ACTIVE_SAFETY}"]`)
+    // A result link carries the search it came from, so the device page can return to it.
+    const link = container.querySelector(`a[href^="/en/devices/${ACTIVE_SAFETY}?from="]`)
     expect(link).not.toBeNull()
     const row = link!.closest('tr')!
     expect(row.querySelector('[data-market-status]')!.getAttribute('data-market-status')).toBe(
@@ -173,10 +178,15 @@ describe('D2B product page — market and safety panel', () => {
   })
 
   it('shows a historical action as history and does not block it', async () => {
-    const { container, getByText, queryByText } = await detailFor(HISTORICAL_SAFETY)
+    const { container, getByText } = await detailFor(HISTORICAL_SAFETY)
     getByText(/recorded as no longer active at the research snapshot/)
     getByText(/shown as history, not as a current action/)
-    expect(queryByText('Active FDA safety action')).toBeNull()
+    // Scoped to THIS product's identity and status panel: the same-line table below lists
+    // sibling models with their own statuses, and a sibling's notice is not this product's.
+    const header = within(container.querySelector<HTMLElement>('header')!)
+    const panel = within(container.querySelector<HTMLElement>('#device-safety')!)
+    expect(header.queryByText('Active FDA safety action')).toBeNull()
+    expect(panel.queryByText('Active FDA safety action')).toBeNull()
     expect(container.querySelector('[data-status-gate]')!.getAttribute('data-status-gate')).toBe(
       'clear',
     )
@@ -247,7 +257,7 @@ describe('D2B product page — market and safety panel', () => {
     const { container, getByText } = await renderPage(
       DevicesIndexPage({
         params: Promise.resolve({ locale: 'en' }),
-        searchParams: Promise.resolve({ category: 'Airway stenting' }),
+        searchParams: Promise.resolve({ category: 'Airway stenting', view: 'models' }),
       }),
     )
     getByText(
@@ -262,7 +272,7 @@ describe('D2B product page — market and safety panel', () => {
     const { container, getByText } = await renderPage(
       DevicesIndexPage({
         params: Promise.resolve({ locale: 'en' }),
-        searchParams: Promise.resolve({ subcategory: 'Pulmonary guidewire' }),
+        searchParams: Promise.resolve({ subcategory: 'Pulmonary guidewire', view: 'models' }),
       }),
     )
     getByText(
@@ -295,7 +305,10 @@ describe('D2B product page — market and safety panel', () => {
     // Layout is CSS-driven (the results table scrolls inside its own labeled region), so the
     // structural guarantee is asserted here and the visual pass is recorded in the D2B doc.
     const { container } = await renderPage(
-      DevicesIndexPage({ params: Promise.resolve({ locale: 'en' }) }),
+      DevicesIndexPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ view: 'models' }),
+      }),
     )
     const region = container.querySelector('[role="region"]')!
     expect(region.getAttribute('aria-label')).toBe('Device search results')

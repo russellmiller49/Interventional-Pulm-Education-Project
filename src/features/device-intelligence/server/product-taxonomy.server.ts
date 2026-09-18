@@ -7,8 +7,10 @@ import zhCnMessages from '../../../../messages/zh-CN.json'
 
 import {
   DEVICE_CLASS_CODES,
+  DEVICE_SUBTYPE_CLASS,
   UNCLASSIFIED_PRODUCT_TAXONOMY,
   isDeviceClassCode,
+  isDeviceSubtypeCode,
   type DeviceClassCode,
   type DeviceSubtypeCode,
   type ProductTaxonomyView,
@@ -104,6 +106,48 @@ export function getProductIdsForDeviceClass(
   if (!isDeviceClassCode(deviceClass)) return ids
   for (const product of store.products) {
     if (getProductTaxonomy(product.product_id).deviceClassCode === deviceClass) {
+      ids.add(product.product_id)
+    }
+  }
+  return ids
+}
+
+export interface DeviceSubtypeFacet {
+  code: DeviceSubtypeCode
+  productCount: number
+}
+
+/**
+ * Subtype facet counts inside one device class, over the same store population as the class
+ * facet. Subtypes keep the controlled vocabulary's declaration order (the reviewed,
+ * clinically sensible order — never a ranking), and subtypes with no product are omitted so
+ * the browse list cannot offer an empty shelf.
+ */
+export function getDeviceSubtypeFacets(
+  store: CatalogStore,
+  deviceClass: string,
+): DeviceSubtypeFacet[] {
+  if (!isDeviceClassCode(deviceClass)) return []
+  const counts = new Map<string, number>()
+  for (const product of store.products) {
+    const taxonomy = getProductTaxonomy(product.product_id)
+    if (taxonomy.deviceClassCode !== deviceClass) continue
+    counts.set(taxonomy.deviceSubtypeCode, (counts.get(taxonomy.deviceSubtypeCode) ?? 0) + 1)
+  }
+  return Object.keys(DEVICE_SUBTYPE_CLASS)
+    .filter((code) => DEVICE_SUBTYPE_CLASS[code] === deviceClass && (counts.get(code) ?? 0) > 0)
+    .map((code) => ({ code: code as DeviceSubtypeCode, productCount: counts.get(code) ?? 0 }))
+}
+
+/** Product ids carrying the given normalized device subtype, scoped to a store. */
+export function getProductIdsForDeviceSubtype(
+  store: CatalogStore,
+  deviceSubtype: string,
+): ReadonlySet<string> {
+  const ids = new Set<string>()
+  if (!isDeviceSubtypeCode(deviceSubtype)) return ids
+  for (const product of store.products) {
+    if (getProductTaxonomy(product.product_id).deviceSubtypeCode === deviceSubtype) {
       ids.add(product.product_id)
     }
   }

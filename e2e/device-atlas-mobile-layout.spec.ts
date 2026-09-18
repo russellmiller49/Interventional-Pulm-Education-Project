@@ -64,8 +64,23 @@ function atlasStrings(locale: string): AtlasStrings {
   }
 }
 
+/**
+ * The semantic results table under test is the individual-model view. The index default now
+ * groups product lines (each line holds this same table inside a disclosure), so the table
+ * checks open the model view explicitly; the default view has its own containment test below.
+ */
+function atlasUrl(locale: string, query: string, view: 'models' | 'families'): string {
+  const params = new URLSearchParams(query.replace(/^\?/, ''))
+  if (view === 'models') params.set('view', 'models')
+  const serialized = params.toString()
+  return `/${locale}/devices${serialized ? `?${serialized}` : ''}`
+}
+
 async function openAtlas(page: Page, locale: string, query = ''): Promise<void> {
-  await page.goto(`/${locale}/devices${query}`, { waitUntil: 'networkidle', timeout: 120_000 })
+  await page.goto(atlasUrl(locale, query, 'models'), {
+    waitUntil: 'networkidle',
+    timeout: 120_000,
+  })
   await page.locator('tbody tr').first().waitFor({ timeout: 120_000 })
 }
 
@@ -121,6 +136,31 @@ for (const viewport of VIEWPORTS) {
     const both = await geometry(page, strings.region)
     expect(both.rootScrollWidth).toBe(both.rootClientWidth)
     expect(both.bodyScrollWidth).toBeLessThanOrEqual(both.rootClientWidth)
+  })
+}
+
+for (const viewport of [VIEWPORTS[0], VIEWPORTS[2]]) {
+  test(`the default product-line view stays contained at ${viewport.name}, lines expanded`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height })
+    await page.goto(atlasUrl('en', BOTH_VARIANTS_QUERY, 'families'), {
+      waitUntil: 'networkidle',
+      timeout: 120_000,
+    })
+    await page.locator('[data-family-key]').first().waitFor({ timeout: 120_000 })
+    // Browse tiles, subtype chips, filter chips and every expanded model table included.
+    const widths = await page.evaluate(() => {
+      for (const details of document.querySelectorAll('details')) details.open = true
+      const root = document.documentElement
+      return { client: root.clientWidth, scroll: root.scrollWidth, body: document.body.scrollWidth }
+    })
+    expect(widths.scroll).toBe(widths.client)
+    expect(widths.body).toBeLessThanOrEqual(widths.client)
+    // A model inside a line keeps its material safety badge visible once expanded.
+    await expect(
+      page.locator('[data-family-key] [data-safety-display="active_safety_notice"]').first(),
+    ).toBeVisible()
   })
 }
 

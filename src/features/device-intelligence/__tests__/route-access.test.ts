@@ -155,11 +155,21 @@ describe('D1 route access model', () => {
       }
     }
     walk(featureDir)
-    expect(offenders).toEqual([join(featureDir, 'components/SavedDevicesProvider.tsx')])
-    const browserStore = readFileSync(offenders[0], 'utf8')
-    expect(browserStore).toContain('serializeSavedDevices(next)')
-    expect(browserStore).not.toMatch(
-      /supabase|createServerClient|writeFileSync|\.insert\(|\.upsert\(/,
-    )
+    // Two browser-only identifier lists, deliberately separate: saved devices (keep for
+    // later) and the comparison selection (inspect differences now). Neither writes anywhere
+    // but this browser, and each persists only what its validating serializer produces.
+    expect(offenders.sort()).toEqual([
+      join(featureDir, 'components/CompareSelection.tsx'),
+      join(featureDir, 'components/SavedDevicesProvider.tsx'),
+    ])
+    const serializers = ['serializeCompareSelection(next)', 'serializeSavedDevices(next)']
+    offenders.forEach((path, index) => {
+      const browserStore = readFileSync(path, 'utf8')
+      expect(browserStore).toContain(serializers[index])
+      expect(browserStore.match(/localStorage\.setItem\(/g)).toHaveLength(1)
+      expect(browserStore).not.toMatch(
+        /supabase|createServerClient|writeFileSync|\.insert\(|\.upsert\(/,
+      )
+    })
   })
 })

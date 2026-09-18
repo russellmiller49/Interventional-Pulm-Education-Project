@@ -8699,27 +8699,33 @@
       "metadataTitle": "Device Atlas",
       "metadataDescription": "Read-only atlas of verified interventional pulmonology devices with source citations.",
       "title": "Device Atlas",
-      "intro": "Find an exact device, look up recorded specifications, and open its source documents and FDA safety notices.",
+      "intro": "Browse by device type or search for an exact device. Every entry opens its recorded specifications, source documents and FDA safety notices.",
       "cohortBadge": "{count} products with source evidence",
       "cohortRule": "Products appear when their catalog identity or specifications have verified source evidence. Current availability is not a condition of inclusion.",
       "exclusionNote": "Products awaiting source verification are excluded from this Atlas. A source evidence badge does not mean every specification, description, or safety status has been reviewed.",
       "form": {
         "search": "Search",
-        "searchPlaceholder": "Name, manufacturer, or catalog number…",
-        "filters": "Filter by manufacturer, type or procedure",
+        "searchPlaceholder": "Search device, brand, manufacturer, model, or catalog number",
         "manufacturer": "Manufacturer",
         "deviceClass": "Device class",
         "role": "Clinical role",
         "procedure": "Procedure",
         "any": "Any",
         "apply": "Apply",
-        "clear": "Clear"
+        "clear": "Clear",
+        "deviceSubtype": "Device subtype",
+        "subtypeNeedsClass": "Choose a device class to list its subtypes.",
+        "moreFilters": "More filters: clinical role, procedure and specifications",
+        "specHeading": "Recorded specifications",
+        "specNote": "These filters read recorded catalog numbers only. A device whose value is not recorded is reported separately, not treated as a non-match.",
+        "min": "min",
+        "max": "max",
+        "channelMaxHelp": "Lists devices whose recorded minimum working channel is at or below this value (for example, your scope’s channel diameter). A recorded-number match is not a compatibility statement."
       },
       "unknownFilter": "The \"{filter}\" filter value is not recognized.",
       "legacyCategoryNotice": "The Category and Subcategory filters have been replaced by the normalized Device class filter. The classification value in this link was not applied.",
       "resultsHeading": "Results",
       "resultCount": "{count, plural, one {# product} other {# products}}",
-      "excludedMissingSpec": "{count, plural, one {# product was} other {# products were}} excluded only because the filtered specification is not recorded for it.",
       "noResults": "No devices match these filters. Try a catalog number, manufacturer, or broader device name.",
       "table": {
         "product": "Product",
@@ -8727,8 +8733,8 @@
         "deviceType": "Device type",
         "catalogNumber": "Catalog number",
         "size": "Size / specification",
-        "evidence": "Evidence",
-        "status": "Market / safety status"
+        "status": "Market / safety status",
+        "keySpecs": "Key specifications"
       },
       "pagination": {
         "next": "Next",
@@ -8743,7 +8749,82 @@
       "coverage": "{researchedCount} of {totalCount} products have dated U.S. status research; {reviewedCount} have reviewed descriptions.",
       "evidenceGuide": "About the evidence and its limits",
       "exactIdentifierMatch": "Exact identifier match",
-      "statusAsOf": "Status snapshot:"
+      "statusAsOf": "Status snapshot:",
+      "specs": {
+        "diameter": "Diameter",
+        "length": "Length",
+        "french": "French size",
+        "gauge": "Gauge",
+        "workingLength": "Working length",
+        "minWorkingChannel": "Min. working channel",
+        "deliveryOd": "Delivery system OD",
+        "material": "Material",
+        "coverage": "Covering",
+        "reuse": "Reuse"
+      },
+      "specFilters": {
+        "diameter": "Recorded diameter",
+        "length": "Recorded length",
+        "french": "Recorded French size",
+        "workingLength": "Recorded working length",
+        "channelMax": "Recorded min. working channel, at most",
+        "gauge": "Recorded gauge"
+      },
+      "browse": {
+        "heading": "Browse by device type",
+        "allTypes": "Show all device types",
+        "moreTypes": "All device types ({count})",
+        "subtypeHeading": "{deviceClass}: subtypes",
+        "allOfClass": "All subtypes",
+        "productCount": "{count, plural, one {# product} other {# products}}"
+      },
+      "chips": {
+        "heading": "Active filters",
+        "remove": "Remove filter",
+        "clearAll": "Clear all",
+        "search": "Search: “{query}”",
+        "family": "Product line: {name}",
+        "procedure": "Related to procedure: {name}",
+        "specUnknown": "Only devices with an unrecorded value"
+      },
+      "familyResultCount": "{families, plural, one {# product line} other {# product lines}} · {count, plural, one {# model} other {# models}}",
+      "procedureDiscoveryNote": "Devices related to this procedure: they share a clinical role with one of its equipment requirements. That is discovery only. To see the devices actually listed for an equipment requirement, open the procedure.",
+      "subtypeMismatchNotice": "The subtype in this link belongs to a different device class, so it was not applied.",
+      "view": {
+        "label": "Result view",
+        "families": "Product lines",
+        "models": "Individual models"
+      },
+      "sort": {
+        "label": "Sort by",
+        "apply": "Sort",
+        "options": {
+          "relevance": "Relevance",
+          "name": "Product name",
+          "manufacturer": "Manufacturer",
+          "diameter": "Recorded diameter",
+          "length": "Recorded length"
+        }
+      },
+      "specMatched": "{count, plural, one {# device matches} other {# devices match}} the recorded values you entered.",
+      "specNotEvaluated": "{count, plural, one {# additional device} other {# additional devices}} could not be evaluated because this value is not recorded: {fields}.",
+      "specShowUnknown": "Show devices with an unrecorded value",
+      "specUnknownOnly": "{count, plural, one {# device is} other {# devices are}} listed because this value is not recorded: {fields}. They were not evaluated against your filter.",
+      "specUnknownBack": "Back to devices that match",
+      "specMatchBoundary": "A match means a recorded number meets the value entered. It does not establish that devices are compatible; confirm against current manufacturer instructions.",
+      "exactMatchHeading": "{count, plural, one {Exact identifier match} other {Exact identifier matches}}",
+      "exactMatchRegionLabel": "Exact identifier matches",
+      "familyGroupingNote": "Models are grouped by manufacturer product line and device subtype. Filters are applied to individual models first, so each line lists only the models that match.",
+      "family": {
+        "modelCount": "{count, plural, one {# matching model} other {# matching models}}",
+        "viewModels": "View models ({count})",
+        "viewAllModels": "View all {count} models",
+        "previewNote": "Showing {shown} of {total} models.",
+        "safetyNotice": "{affected} of {total} listed models have a recorded safety notice. The notice applies to the marked models only; open a model for its details.",
+        "marketVaries": "Market status varies by model",
+        "catalogGrouping": "Grouped by catalog category; no brand family is recorded for these models.",
+        "recordedFor": "(recorded for {recorded} of {total})"
+      }
     },
     "device": {
       "notFound": "Device not found",
@@ -8801,7 +8882,24 @@
       "otherManufacturersSelectionNote": "One product per manufacturer, drawn from {productCount, plural, one {# cohort product} other {# cohort products}} across {manufacturerCount, plural, one {# other manufacturer} other {# other manufacturers}} mapped to this role ({shown} shown). Representatives prefer primary-fit mappings and are otherwise arbitrary — never a matched or comparable set, and sizes are not matched.",
       "otherManufacturersViewRole": "View every cohort product mapped to this role.",
       "catalogDescriptionLabel": "Catalog description · see the source documents below.",
-      "reviewSafetyNotices": "Review safety notices"
+      "reviewSafetyNotices": "Review safety notices",
+      "backToResults": "Back to results",
+      "keySpecsHeading": "Key specifications",
+      "otherModelsAction": "View other models ({count})",
+      "otherModelsNote": "Other models recorded under the same manufacturer product line and device subtype, each with its own recorded specifications and status.",
+      "sectionNavLabel": "On this page",
+      "sections": {
+        "overview": "Overview",
+        "specifications": "Specifications",
+        "configuration": "Configuration & use",
+        "safety": "Safety & status",
+        "sources": "Sources"
+      },
+      "reviewedConfigurationHeading": "Reviewed configuration statement",
+      "recordedMinChannel": "Recorded minimum working channel: {value} mm.",
+      "recordedValueBoundary": "A recorded catalog value; confirm against current manufacturer instructions.",
+      "ruleDetails": "Rule and source details",
+      "otherModelsRegionLabel": "Other models in this manufacturer product line"
     },
     "role": {
       "metadataTitle": "Clinical role",
@@ -8858,9 +8956,13 @@
         "proposalsOnly": "{count} with unreviewed proposals only",
         "noCoverage": "{count} with no option and no proposal"
       },
-      "openWorkspace": "Open workspace",
+      "openWorkspace": "Prepare this procedure",
       "openReadiness": "Demo readiness",
-      "otherProceduresNote": "This index deliberately shows only the Phase D1 exemplar procedures — it is not a statement that other procedures do not exist."
+      "otherProceduresNote": "This index deliberately shows only the Phase D1 exemplar procedures — it is not a statement that other procedures do not exist.",
+      "equipmentGroups": "Equipment groups",
+      "requirementSummary": "{count} equipment requirements: {required} required · {contingency} contingency · {optional} optional",
+      "templateDetails": "Template details",
+      "procedureCode": "Procedure code"
     },
     "workspace": {
       "metadataTitle": "Procedure workspace",
@@ -8900,12 +9002,13 @@
         "allowCustom": "custom allowed",
         "proposals": "Unreviewed proposals",
         "proposalsDisclaimer": "Unreviewed machine-derived suggestions. Never selectable; never satisfy coverage or readiness.",
-        "authoredOptions": "Authored options",
-        "noAuthoredOptions": "No authored options exist for this requirement.",
+        "authoredOptions": "Devices listed for this equipment requirement",
+        "noAuthoredOptions": "No devices are listed for this equipment requirement.",
         "optionsWithheld": "{count, plural, one {# authored option} other {# authored options}} ({selectable} selectable) withheld from this public view — products outside the Device Atlas cohort are not identified here.",
         "optionSafetyNote": "A safety label beside an option reports an FDA safety action matched to that product at the research snapshot. It is not a statement about compatibility, and it does not change which options this release authors as selectable.",
         "catalogNumber": "Catalog number",
-        "missingIdentifier": "Not recorded — confirm exact configuration"
+        "missingIdentifier": "Not recorded — confirm exact configuration",
+        "relatedDevices": "Browse devices related to this clinical role (discovery only — not listed for this requirement)"
       },
       "setupZones": {
         "room_capital_equipment": "Room / capital equipment",
@@ -8957,7 +9060,9 @@
       "laserPathwayNote": "No laser requirement in this release has an authored selectable option. The laser pathway is not modelled here and must not be planned from this page.",
       "longTermDrainageNote": "The Long-term drainage section lists indwelling pleural catheter (IPC) equipment — a divergent long-term pathway; a separate IPC placement procedure exists in the catalog. In this release every long-term drainage role carries authored selectable options while several chest-tube pathway roles remain non-selectable or unmapped. Authoring coverage reflects catalog ingestion, not clinical priority.",
       "divergentPathwayGroup": "Long-term drainage — divergent pathway ({count, plural, one {# requirement} other {# requirements}})",
-      "divergentPathwayCaption": "Indwelling pleural catheter equipment for long-term drainage — a pathway distinct from chest-tube insertion itself, collapsed here so it does not read as core setup."
+      "divergentPathwayCaption": "Indwelling pleural catheter equipment for long-term drainage — a pathway distinct from chest-tube insertion itself, collapsed here so it does not read as core setup.",
+      "viewSections": "By equipment group",
+      "sectionUnassigned": "No equipment group recorded"
     },
     "readiness": {
       "metadataTitle": "Demo readiness",
@@ -9280,7 +9385,7 @@
       "choose": "Select at least two available devices to create a comparison.",
       "mixedClasses": "These devices belong to different physical classes. Identity and safety information are shown together; select devices from the same class to compare category-specific fields.",
       "sourceNote": "Reviewed values cite their supporting passages. Catalog fields retain their recorded meaning and have no field-level citation in this view. Missing values remain unknown. Neither the catalog diameter nor a tool’s minimum channel requirement is treated as a bronchoscope working-channel diameter.",
-      "scroll": "On a small screen, scroll the comparison table horizontally to inspect each device.",
+      "scroll": "If the table is wider than the screen, scroll it sideways to inspect each device.",
       "tableLabel": "Exact device comparison",
       "field": "Reference field",
       "missingIdentifier": "Catalog number not recorded",
@@ -9332,7 +9437,13 @@
         "insufficient_evidence": "Insufficient evidence"
       },
       "configuration": "Recorded configuration / compatibility notes",
-      "configurationSources": "Inspect configuration evidence"
+      "configurationSources": "Inspect configuration evidence",
+      "findMore": "Find more devices",
+      "rowsLabel": "Comparison rows",
+      "allFields": "All fields",
+      "differencesOnly": "Differences only",
+      "differencesNote": "Showing specification rows whose recorded values differ, including recorded-versus-not-established. {count, plural, =0 {No rows are hidden.} one {# row with matching values is hidden.} other {# rows with matching values are hidden.}} Device type, safety and market status are always shown.",
+      "removeDevice": "Remove from comparison"
     },
     "procedureReview": {
       "title": "Review before local use",
@@ -9410,6 +9521,18 @@
         "incomplete_search": "The evidence search is incomplete. U.S. market status remains unverified.",
         "manufacturer_restriction": "The manufacturer lists U.S. sales restrictions for this product family. Confirm the exact U.S. configuration."
       }
+    },
+    "compareSelection": {
+      "add": "Compare",
+      "added": "In comparison",
+      "limit": "A comparison holds up to 4 devices. Remove one before adding another.",
+      "storage": "The comparison selection is available in this tab only. Browser storage could not be read or updated.",
+      "trayHeading": "Compare devices",
+      "trayCompare": "Compare devices",
+      "trayNeedTwo": "Add one more device to compare.",
+      "trayRemove": "Remove from comparison",
+      "trayClear": "Clear",
+      "navCompare": "Compare"
     }
   }
 }

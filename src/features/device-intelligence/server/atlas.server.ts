@@ -13,22 +13,38 @@ import {
   type ProductDetail,
   type UseDetail,
 } from '@/features/preference-cards/server/catalog'
-import type { CatalogSearchQuery } from '@/features/preference-cards/schemas/catalog-search'
-import { normalizeIdentifier } from '@/features/preference-cards/server/catalog-store'
+import type {
+  CatalogSearchQuery,
+  CatalogViewValue,
+} from '@/features/preference-cards/schemas/catalog-search'
+import {
+  normalizeIdentifier,
+  type CatalogStore,
+} from '@/features/preference-cards/server/catalog-store'
+import type { CatalogListItem } from '@/features/preference-cards/server/catalog'
+import {
+  groupAtlasFamilies,
+  type AtlasFamilyGroup,
+} from '@/features/device-intelligence/domain/atlas-families'
+import type { AtlasSpecSource } from '@/features/device-intelligence/domain/device-display-config'
 import type { ProductStatusView } from '@/features/device-intelligence/domain/product-status'
 import {
   isDeviceClassCode,
+  isDeviceSubtypeCode,
   type ProductTaxonomyView,
 } from '@/features/device-intelligence/domain/product-taxonomy'
 import { getAtlasCatalogStore } from './atlas-store.server'
 import { getProductStatus, getProductStatusMap } from './product-status.server'
 import {
   getDeviceClassFacets,
+  getDeviceSubtypeFacets,
   getProductIdsForDeviceClass,
+  getProductIdsForDeviceSubtype,
   getProductTaxonomy,
   getProductTaxonomyMap,
   getTaxonomyTextMatchIds,
   type DeviceClassFacet,
+  type DeviceSubtypeFacet,
 } from './product-taxonomy.server'
 import {
   getRawStatementsForProduct,
@@ -53,48 +69,172 @@ import {
  * the shared preference-card list types stay exactly as the preserved surfaces expect.
  */
 
+/** Recorded columns the atlas shows that the shared list item does not carry. */
+export interface AtlasModelExtras {
+  reuseStatus: string | null
+}
+
+export type AtlasFamily = AtlasFamilyGroup<CatalogListItem>
+
 export interface AtlasSearchResponse extends CatalogSearchResponse {
+  /**
+   * `items` and `total` always describe individual MODELS: `total` is the number of matching
+   * models in either view. In the family view `items` holds every model of the families on
+   * this page (so the side maps below are total over what is rendered) and `pageCount`
+   * counts pages of families.
+   */
+  view: CatalogViewValue
   /** Equality after catalog identifier normalization; prefixes and fuzzy matches are excluded. */
   exactIdentifierMatchIds: string[]
+  /**
+   * Every matching model whose recorded identifier EQUALS the query, across all pages. The
+   * index pins these above the results in both views, so an exact catalog-number lookup is
+   * never buried in a family or pushed down by a sort.
+   */
+  exactMatches: CatalogListItem[]
+  /** Product lines on this page; empty in the model view. Built from matching models only. */
+  families: AtlasFamily[]
+  /** Number of product lines across all pages; null in the model view. */
+  familyTotal: number | null
   /** Market/safety status for every product in `items`. Total: an unresearched product
    *  resolves to the honest "not recently verified" default, never to nothing. */
   statusByProductId: Record<string, ProductStatusView>
   /** D2C normalized taxonomy for every product in `items`. Total for the same reason. */
   taxonomyByProductId: Record<string, ProductTaxonomyView>
+  extrasByProductId: Record<string, AtlasModelExtras>
 }
 
+function intersectIdSets(
+  sets: (ReadonlySet<string> | undefined)[],
+): ReadonlySet<string> | undefined {
+  const present = sets.filter((set): set is ReadonlySet<string> => set !== undefined)
+  if (present.length === 0) return undefined
+  const [first, ...rest] = present
+  return new Set([...first].filter((id) => rest.every((set) => set.has(id))))
+}
+
+function getProductIdsForFamily(store: CatalogStore, familyKey: string): ReadonlySet<string> {
+  return new Set(
+    store.products
+      .filter((product) => product.familyKey === familyKey)
+      .map((product) => product.product_id),
+  )
+}
+
+/**
+ * The atlas search. Matching, filtering and sorting are `searchCatalog`'s — one full pass with
+ * the taxonomy restrictions handed in as its extension — and the atlas adds only presentation
+ * on top of that ordered model list: exact-identifier pinning, optional grouping into product
+ * lines, and pagination of whichever unit the view shows.
+ *
+ * The query layer's default view is `models`, exactly the pre-existing behavior; the index
+ * page chooses families as ITS default and passes the view explicitly.
+ */
 export function searchAtlas(query: CatalogSearchQuery): AtlasSearchResponse {
   const store = getAtlasCatalogStore()
+  const view: CatalogViewValue = query.view ?? 'models'
   // D2C: canonical primary_category/subcategory are no longer atlas browsing facets. A
   // legacy `category` URL value is reported honestly by the page (see
   // `validateAtlasFilters`) and never silently applied here; the normalized Device class
   // facet replaces it. The preserved preference-card catalog keeps both filters.
   const atlasQuery: CatalogSearchQuery = { ...query, category: undefined, subcategory: undefined }
   const trimmed = atlasQuery.q.trim()
-  const response = searchCatalog(atlasQuery, store, {
-    restrictToProductIds: atlasQuery.deviceClass
-      ? getProductIdsForDeviceClass(store, atlasQuery.deviceClass)
-      : undefined,
-    // Normalized class/subtype labels are searchable ("guidewire", "EBUS bronchoscope"):
-    // matched cohorts join the candidates AFTER exact-identifier and fuzzy matches, so
-    // exact catalog-number behavior is untouched.
-    additionalTextMatchIds:
-      trimmed.length > 0 ? getTaxonomyTextMatchIds(store, trimmed) : undefined,
-  })
+  const full = searchCatalog(
+    { ...atlasQuery, page: 1, pageSize: Math.max(1, store.products.length) },
+    store,
+    {
+      restrictToProductIds: intersectIdSets([
+        atlasQuery.deviceClass
+          ? getProductIdsForDeviceClass(store, atlasQuery.deviceClass)
+          : undefined,
+        atlasQuery.deviceSubtype
+          ? getProductIdsForDeviceSubtype(store, atlasQuery.deviceSubtype)
+          : undefined,
+        atlasQuery.family ? getProductIdsForFamily(store, atlasQuery.family) : undefined,
+      ]),
+      // Normalized class/subtype labels are searchable ("guidewire", "EBUS bronchoscope"):
+      // matched cohorts join the candidates AFTER exact-identifier and fuzzy matches, so
+      // exact catalog-number behavior is untouched.
+      additionalTextMatchIds:
+        trimmed.length > 0 ? getTaxonomyTextMatchIds(store, trimmed) : undefined,
+    },
+  )
+
+  // Exact identifier lookups are model-first in every view and under every sort: a strict
+  // identifier match is stably moved ahead of the rest of the (already filtered) list.
+  const normalized = normalizeIdentifier(trimmed)
+  const isExact = (item: CatalogListItem) =>
+    normalized.length >= 3 &&
+    Boolean(store.productById.get(item.productId)?.searchableIds.includes(normalized))
+  const exactMatches = full.items.filter(isExact)
+  const ordered = [...exactMatches, ...full.items.filter((item) => !isExact(item))]
+
+  const allFamilies =
+    view === 'families'
+      ? groupAtlasFamilies(
+          ordered.flatMap((item) => {
+            const product = store.productById.get(item.productId)
+            if (!product) return []
+            const taxonomy = getProductTaxonomy(item.productId)
+            return [
+              {
+                item,
+                productId: item.productId,
+                productName: item.productName,
+                familyKey: product.familyKey,
+                familyName: product.familyName,
+                hasBrandFamily: Boolean(product.brand_family?.trim()),
+                manufacturerGroupId: item.manufacturerGroupId,
+                manufacturerDisplay: item.manufacturerDisplay,
+                deviceClassCode: taxonomy.deviceClassCode,
+                deviceSubtypeCode: taxonomy.deviceSubtypeCode,
+                status: getProductStatus(item.productId),
+                diameterMm: item.diameterMm,
+                frenchSize: item.frenchSize,
+              },
+            ]
+          }),
+        )
+      : []
+
+  const unitCount = view === 'families' ? allFamilies.length : ordered.length
+  const pageCount = Math.max(1, Math.ceil(unitCount / query.pageSize))
+  const page = Math.min(query.page, pageCount)
+  const start = (page - 1) * query.pageSize
+  const families = allFamilies.slice(start, start + query.pageSize)
+  const items =
+    view === 'families'
+      ? [
+          ...new Map(
+            [...exactMatches, ...families.flatMap((family) => family.models)].map((item) => [
+              item.productId,
+              item,
+            ]),
+          ).values(),
+        ]
+      : ordered.slice(start, start + query.pageSize)
+  const itemIds = items.map((item) => item.productId)
+
   return {
-    ...response,
-    exactIdentifierMatchIds:
-      normalizeIdentifier(trimmed).length >= 3
-        ? response.items
-            .filter((item) =>
-              store.productById
-                .get(item.productId)
-                ?.searchableIds.includes(normalizeIdentifier(trimmed)),
-            )
-            .map((item) => item.productId)
-        : [],
-    statusByProductId: getProductStatusMap(response.items.map((item) => item.productId)),
-    taxonomyByProductId: getProductTaxonomyMap(response.items.map((item) => item.productId)),
+    items,
+    total: full.total,
+    page,
+    pageSize: query.pageSize,
+    pageCount,
+    excludedMissingSpecCount: full.excludedMissingSpecCount,
+    view,
+    exactIdentifierMatchIds: items.filter(isExact).map((item) => item.productId),
+    exactMatches,
+    families,
+    familyTotal: view === 'families' ? allFamilies.length : null,
+    statusByProductId: getProductStatusMap(itemIds),
+    taxonomyByProductId: getProductTaxonomyMap(itemIds),
+    extrasByProductId: Object.fromEntries(
+      itemIds.map((productId) => [
+        productId,
+        { reuseStatus: store.productById.get(productId)?.reuse_status ?? null },
+      ]),
+    ),
   }
 }
 
@@ -126,23 +266,79 @@ export function getAtlasEvidenceCoverage(): { researched: number; reviewedProfil
   }
 }
 
+export function getAtlasSubtypeFacets(deviceClass: string): DeviceSubtypeFacet[] {
+  return getDeviceSubtypeFacets(getAtlasCatalogStore(), deviceClass)
+}
+
+/** The display name of a product line, for the `family` filter chip. Null when unknown. */
+export function getAtlasFamilyName(familyKey: string): string | null {
+  return (
+    getAtlasCatalogStore().products.find((product) => product.familyKey === familyKey)
+      ?.familyName ?? null
+  )
+}
+
 export function validateAtlasFilters(query: CatalogSearchQuery): string | null {
   // D2C: an unknown device-class code is a friendly no-op notice, exactly like the other
   // unknown filters. Legacy `category` values are handled separately by the page (an
   // honest replacement notice), not as "unrecognized" — they were real canonical values.
   if (query.deviceClass && !isDeviceClassCode(query.deviceClass)) return 'device class'
+  // A stale or mistyped subtype / product-line value gets the same friendly notice rather
+  // than an unexplained empty list.
+  if (query.deviceSubtype && !isDeviceSubtypeCode(query.deviceSubtype)) return 'device subtype'
+  if (query.family && getAtlasFamilyName(query.family) === null) return 'product line'
   return validateKnownCatalogFilters(query, getAtlasCatalogStore())
 }
 
+/** The recorded spec columns of one governed product, in the display config's shape. */
+function specSourceOf(product: {
+  diameter_mm: number | null
+  length_mm: number | null
+  french_size: number | null
+  gauge: number | null
+  working_length_cm: number | null
+  min_working_channel_mm: number | null
+  delivery_system_od_mm: number | null
+  material: string | null
+  coverage: string | null
+  reuse_status: string | null
+}): AtlasSpecSource {
+  return {
+    diameterMm: product.diameter_mm,
+    lengthMm: product.length_mm,
+    frenchSize: product.french_size,
+    gauge: product.gauge,
+    workingLengthCm: product.working_length_cm,
+    minWorkingChannelMm: product.min_working_channel_mm,
+    deliverySystemOdMm: product.delivery_system_od_mm,
+    material: product.material,
+    coverage: product.coverage,
+    reuseStatus: product.reuse_status,
+  }
+}
+
 export interface AtlasProductDetail extends ProductDetail {
+  /** This product's own recorded spec columns, for the category-aware key-spec block. */
+  specs: AtlasSpecSource
   /** Reviewed copy takes precedence without mutating the shared canonical catalog. */
   publicDescription: { text: string; origin: 'reviewed' | 'catalog' } | null
-  /** Same-line siblings inside the atlas cohort — a display-only manufacturer grouping. */
+  /**
+   * Same-line siblings inside the atlas cohort — a display-only manufacturer grouping. A
+   * sibling shares BOTH the manufacturer product line (`familyKey`) and this product's
+   * normalized device subtype, because a brand range alone can span a dozen physically
+   * different device classes. Navigation aid only: never an equivalence or compatibility
+   * claim. Each sibling carries its own recorded specs and its own status.
+   */
   sameManufacturerLine: {
     productId: string
     productName: string
+    manufacturerDisplay: string
     sizeDisplay: string | null
     catalogNumber: string | null
+    /** Derived from the sibling's own record, never asserted for the line. */
+    verificationTier: CatalogListItem['verificationTier']
+    specs: AtlasSpecSource
+    status: ProductStatusView
   }[]
   rawCompatibilityStatements: AtlasCompatibilityStatement[]
   typedRuleConditions: TypedRuleCondition[]
@@ -199,11 +395,13 @@ export function getAtlasProductDetail(productId: string): AtlasProductDetail | n
   const detail = getProductDetail(productId, store, { representativeSelection: 'primary_fit' })
   if (!detail) return null
 
+  const ownSubtype = getProductTaxonomy(productId).deviceSubtypeCode
   const sameManufacturerLine = (store.products ?? [])
     .filter(
       (candidate) =>
         candidate.familyKey === detail.product.familyKey &&
-        candidate.product_id !== detail.product.product_id,
+        candidate.product_id !== detail.product.product_id &&
+        getProductTaxonomy(candidate.product_id).deviceSubtypeCode === ownSubtype,
     )
     .sort(
       (left, right) =>
@@ -214,8 +412,12 @@ export function getAtlasProductDetail(productId: string): AtlasProductDetail | n
     .map((candidate) => ({
       productId: candidate.product_id,
       productName: candidate.product_name,
+      manufacturerDisplay: candidate.manufacturerDisplay,
       sizeDisplay: candidate.size_display,
       catalogNumber: candidate.catalog_number,
+      verificationTier: candidate.verificationTier,
+      specs: specSourceOf(candidate),
+      status: getProductStatus(candidate.product_id),
     }))
 
   const procedureStatusByCode: Record<string, string> = {}
@@ -246,6 +448,7 @@ export function getAtlasProductDetail(productId: string): AtlasProductDetail | n
 
   return {
     ...detail,
+    specs: specSourceOf(detail.product),
     publicDescription: d2dEvidence?.profile
       ? d2dEvidence.profile.runtime_state === 'reviewed' &&
         d2dEvidence.profile.summary_claims.length > 0
