@@ -458,6 +458,9 @@
  * `:has` keeps every declaration here to pages that render the activity.
  */
 :global(html):has(.course) {
+  /* A second Tab can arrive during a smooth focus scroll and leave the new target under
+   * the header. Let native focus scrolling settle immediately in this document workbench. */
+  scroll-behavior: auto;
   scroll-padding-top: var(--imaging-focus-clear-top, calc(var(--site-header-height, 4rem) + 7rem));
   scroll-padding-bottom: var(--imaging-focus-clear-bottom, 0px);
 }
@@ -523,4 +526,14 @@
   max-inline-size: 30rem;
   margin-inline-start: auto;
   max-block-size: var(--imaging-outline-max-block, 65dvh);
+}
+
+/* A comparison includes the current image, its baseline, the C-arm and real controls.
+ * Give that workbench the task width; the supporting explanation remains in the document. */
+.course[data-presentation='comparison'] .task:has([data-suite-scene]) {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 1320px;
+}
+.course[data-presentation='comparison'] .task:has([data-suite-scene]) .explanation {
+  order: initial;
 }

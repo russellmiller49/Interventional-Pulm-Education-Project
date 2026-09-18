@@ -79,6 +79,7 @@ export function MechanicalVentilationModuleFrame({
       className={styles.moduleShell}
       data-activity-mode={activityMode || undefined}
       data-task-flow={taskFlow || undefined}
+      data-learning-document-flow={taskFlow || undefined}
       aria-label="Mechanical ventilation module"
     >
       <ModuleFrameV2

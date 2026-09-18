@@ -2,7 +2,7 @@
  * This selector affects only pages rendering this feature, including reduced-motion users. */
 :global(html):has(.course) {
   scroll-behavior: auto;
-  scroll-padding-top: 6rem;
+  scroll-padding-top: var(--bronch-focus-clear-top, 6rem);
   scroll-padding-bottom: 19rem;
 }
 .course {
@@ -144,12 +144,6 @@
   margin: 0 0 0.5rem;
   text-align: left;
   padding: 0.35rem 0.65rem;
-}
-.continuation .stickyTask {
-  margin: 0 0 0.35rem;
-  text-align: left;
-  font-size: 0.82rem;
-  color: var(--ink);
 }
 .actions,
 .forward {
@@ -303,8 +297,21 @@
     padding: 0;
   }
   .skillGrid .coaching {
-    grid-row: 1;
+    grid-row: auto;
   }
+}
+
+/* The scope's controls and keyboard focus must not sit behind a growing action footer.
+ * Keep interactive tasks in normal document flow, including enlarged text. */
+.course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+  .continuation {
+  position: static;
+  margin: 0 0 1rem;
+}
+:global(html):has(
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+) {
+  scroll-padding-bottom: 1rem;
 }
 @media (max-width: 650px) {
   .lesson {

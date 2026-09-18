@@ -316,222 +316,242 @@ export function GuidedKnobology({
           {error || 'The image library could not load. Reload to retry.'}
         </p>
       )}
-      {baseline && config.recordedTask !== 'capture' && (
-        <figure className="recorded-baseline">
-          <div className="guided-media">
-            <img
-              src={baseline.image}
-              alt="Previous recorded image retained for comparison"
-              data-recorded-baseline
-            />
-          </div>
-          <figcaption>
-            Previous recording · Selected depth {baseline.source.settings.depthMm / 10} cm · Gain{' '}
-            {baseline.source.settings.gain} · Contrast {baseline.source.settings.contrast} ·{' '}
-            {baseline.source.settings.doppler ? 'Color Doppler' : 'Grayscale'}. These pixels stay
-            fixed until you keep a new comparison.
-          </figcaption>
-        </figure>
-      )}
-      <div className="guided-media recorded-current">
-        {segment && (
-          <video
-            ref={video}
-            hidden={config.locked && !!held}
-            src={getKnobologyVideoSegmentSrc(segment.depth)}
-            muted
-            playsInline
-            preload="auto"
-            aria-label="Ultrasound teaching clip"
-          />
-        )}
-        {config.locked && held && (
-          <img
-            src={held.image}
-            alt="Held recorded image from this acquisition"
-            data-recorded-held
-          />
-        )}
-        {!frameReady && !error && <p role="status">Loading the selected ultrasound image…</p>}
-        {state.calipers && !config.locked && (
-          <svg viewBox="0 0 100 100" aria-label="Movable measurement calipers">
-            {[state.measurementStart, state.measurementEnd].map(
-              (p, i) =>
-                p && (
-                  <g
-                    key={i}
-                    stroke={i === state.activeMeasurementMarker ? '#ffff93' : '#69f5de'}
-                    strokeWidth=".6"
-                  >
-                    <path
-                      d={
-                        'M' +
-                        (p.x * 100 - 2) +
-                        ' ' +
-                        p.y * 100 +
-                        'h4 M' +
-                        p.x * 100 +
-                        ' ' +
-                        (p.y * 100 - 2) +
-                        'v4'
-                      }
-                    />
-                  </g>
-                ),
-            )}
-          </svg>
-        )}
-      </div>
-      <p role="status">
-        {config.locked
-          ? 'Held recording'
-          : state.frozen
-            ? 'Image frozen'
-            : playbackPaused
-              ? 'Recording paused'
-              : 'Recording playing'}{' '}
-        · Depth {getKnobologyVideoDepthCm(state.depth)} cm
-      </p>
-      <button
-        disabled={!frameReady || state.frozen || config.locked}
-        onClick={() => setPlaybackPaused((v) => !v)}
-      >
-        {playbackPaused ? 'Play clip' : 'Pause clip'}
-      </button>
-      {config.recordedTask !== 'capture' && (
-        <button
-          disabled={!frameReady || config.locked}
-          onClick={() => {
-            video.current?.pause()
-            setPlaybackPaused(true)
-            const actual = snapshot(false)
-            if (actual) setBaseline(actual)
-          }}
-        >
-          Keep this image for comparison
-        </button>
-      )}
-      <p className="guided-label">
-        Each control selects a recorded example. Combined settings are not a continuous ultrasound
-        simulation. Control levels and caliper positions are educational; no clinical measurement is
-        reported.
-      </p>
-      <fieldset hidden={config.locked} disabled={config.locked || !frameReady}>
-        <legend>Image controls</legend>
-        {(['depth', 'gain', 'contrast'] as const)
-          .filter((c) => config.controls.includes(c))
-          .map((control) => {
-            const values: readonly number[] =
-              control === 'depth' ? KNOBOLOGY_VIDEO_DEPTH_LEVELS : KNOBOLOGY_VIDEO_VALUE_LEVELS
-            const index = values.reduce(
-              (best, v, i) =>
-                Math.abs(v - state[control]) < Math.abs(values[best] - state[control]) ? i : best,
-              0,
-            )
-            return (
-              <label key={control}>
-                {control === 'depth' ? 'Depth' : control === 'gain' ? 'Gain' : 'Contrast'}{' '}
-                <output>
-                  {control === 'depth'
-                    ? getKnobologyVideoDepthCm(state.depth) + ' cm'
-                    : 'level ' + (index + 1)}
-                </output>
-                <input
-                  aria-label={
-                    control === 'depth'
-                      ? 'Image depth'
-                      : control === 'gain'
-                        ? 'Image gain'
-                        : 'Image contrast'
-                  }
-                  type="range"
-                  min="0"
-                  max={values.length - 1}
-                  step="1"
-                  value={index}
-                  disabled={state.frozen}
-                  onChange={(e) => {
-                    setLastControl(control)
-                    act(control, {
-                      type: 'SET_NUMERIC_FIELD',
-                      field: control,
-                      value: values[Number(e.target.value)],
-                    })
-                  }}
+      <div className="recorded-workspace">
+        <div className="recorded-images">
+          {baseline && config.recordedTask !== 'capture' && (
+            <figure className="recorded-baseline">
+              <div className="guided-media">
+                <img
+                  src={baseline.image}
+                  alt="Previous recorded image retained for comparison"
+                  data-recorded-baseline
                 />
-              </label>
-            )
-          })}
-        {config.controls.includes('doppler') && (
-          <button
-            disabled={state.frozen}
-            aria-pressed={state.colorDoppler}
-            onClick={() =>
-              act('doppler', { type: 'SET_COLOR_DOPPLER', enabled: !state.colorDoppler })
-            }
-          >
-            Color Doppler
-          </button>
-        )}
-        {config.controls.includes('freeze') && (
-          <button aria-pressed={state.frozen} onClick={() => processor('freeze', 'TOGGLE_FREEZE')}>
-            {state.frozen ? 'Resume image' : 'Freeze image'}
-          </button>
-        )}
-        {config.controls.includes('measure') && (
-          <div>
-            <p>
-              Freeze → Measure → move the first marker → Set first caliper → move the second marker.
-              Compare two distinct positions on the image.
-            </p>
-            <div className="guided-tabs">
-              <button disabled={!state.frozen} onClick={() => processor('measure', 'MEASURE_MODE')}>
-                Measure
-              </button>
-              <button
-                disabled={!state.measurementStart}
-                onClick={() => processor('measure', 'MEASURE_SET')}
-              >
-                Set first caliper
-              </button>
-              <button
-                disabled={!state.measurementEnd}
-                onClick={() => processor('measure', 'CURSOR_MODE')}
-              >
-                Switch caliper
-              </button>
-            </div>
-            <div className="guided-tabs" role="group" aria-label="Move active caliper">
-              {[
-                ['Left', -15, 0],
-                ['Right', 15, 0],
-                ['Up', 0, -15],
-                ['Down', 0, 15],
-              ].map(([label, x, y]) => (
-                <button
-                  key={label}
-                  disabled={!state.measurementStart}
-                  onClick={() =>
-                    act('measure', { type: 'MOVE_TRACKBALL', deltaX: Number(x), deltaY: Number(y) })
-                  }
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <p className="guided-label">
-              Active marker:{' '}
-              {state.activeMeasurementMarker === null ? 'none' : state.activeMeasurementMarker + 1}.{' '}
-              {validMeasurement ? 'Two distinct caliper positions recorded.' : ''}
-            </p>
+              </div>
+              <figcaption>
+                Previous recording · Selected depth {baseline.source.settings.depthMm / 10} cm ·
+                Gain {baseline.source.settings.gain} · Contrast {baseline.source.settings.contrast}{' '}
+                · {baseline.source.settings.doppler ? 'Color Doppler' : 'Grayscale'}. These pixels
+                stay fixed until you keep a new comparison.
+              </figcaption>
+            </figure>
+          )}
+          <div className="guided-media recorded-current">
+            {segment && (
+              <video
+                ref={video}
+                hidden={config.locked && !!held}
+                src={getKnobologyVideoSegmentSrc(segment.depth)}
+                muted
+                playsInline
+                preload="auto"
+                aria-label="Ultrasound teaching clip"
+              />
+            )}
+            {config.locked && held && (
+              <img
+                src={held.image}
+                alt="Held recorded image from this acquisition"
+                data-recorded-held
+              />
+            )}
+            {!frameReady && !error && <p role="status">Loading the selected ultrasound image…</p>}
+            {state.calipers && !config.locked && (
+              <svg viewBox="0 0 100 100" aria-label="Movable measurement calipers">
+                {[state.measurementStart, state.measurementEnd].map(
+                  (p, i) =>
+                    p && (
+                      <g
+                        key={i}
+                        stroke={i === state.activeMeasurementMarker ? '#ffff93' : '#69f5de'}
+                        strokeWidth=".6"
+                      >
+                        <path
+                          d={
+                            'M' +
+                            (p.x * 100 - 2) +
+                            ' ' +
+                            p.y * 100 +
+                            'h4 M' +
+                            p.x * 100 +
+                            ' ' +
+                            (p.y * 100 - 2) +
+                            'v4'
+                          }
+                        />
+                      </g>
+                    ),
+                )}
+              </svg>
+            )}
           </div>
-        )}
-        {config.controls.includes('save') && (
-          <button disabled={!state.frozen || !validMeasurement} onClick={save}>
-            Save image
+        </div>
+        <div className="recorded-controls">
+          <p role="status">
+            {config.locked
+              ? 'Held recording'
+              : state.frozen
+                ? 'Image frozen'
+                : playbackPaused
+                  ? 'Recording paused'
+                  : 'Recording playing'}{' '}
+            · Depth {getKnobologyVideoDepthCm(state.depth)} cm
+          </p>
+          <fieldset hidden={config.locked} disabled={config.locked || !frameReady}>
+            <legend>Image controls</legend>
+            {(['depth', 'gain', 'contrast'] as const)
+              .filter((c) => config.controls.includes(c))
+              .map((control) => {
+                const values: readonly number[] =
+                  control === 'depth' ? KNOBOLOGY_VIDEO_DEPTH_LEVELS : KNOBOLOGY_VIDEO_VALUE_LEVELS
+                const index = values.reduce(
+                  (best, v, i) =>
+                    Math.abs(v - state[control]) < Math.abs(values[best] - state[control])
+                      ? i
+                      : best,
+                  0,
+                )
+                return (
+                  <label key={control}>
+                    {control === 'depth' ? 'Depth' : control === 'gain' ? 'Gain' : 'Contrast'}{' '}
+                    <output>
+                      {control === 'depth'
+                        ? getKnobologyVideoDepthCm(state.depth) + ' cm'
+                        : 'level ' + (index + 1)}
+                    </output>
+                    <input
+                      aria-label={
+                        control === 'depth'
+                          ? 'Image depth'
+                          : control === 'gain'
+                            ? 'Image gain'
+                            : 'Image contrast'
+                      }
+                      type="range"
+                      min="0"
+                      max={values.length - 1}
+                      step="1"
+                      value={index}
+                      disabled={state.frozen}
+                      onChange={(e) => {
+                        setLastControl(control)
+                        act(control, {
+                          type: 'SET_NUMERIC_FIELD',
+                          field: control,
+                          value: values[Number(e.target.value)],
+                        })
+                      }}
+                    />
+                  </label>
+                )
+              })}
+            {config.controls.includes('doppler') && (
+              <button
+                disabled={state.frozen}
+                aria-pressed={state.colorDoppler}
+                onClick={() =>
+                  act('doppler', { type: 'SET_COLOR_DOPPLER', enabled: !state.colorDoppler })
+                }
+              >
+                Color Doppler
+              </button>
+            )}
+            {config.controls.includes('freeze') && (
+              <button
+                aria-pressed={state.frozen}
+                onClick={() => processor('freeze', 'TOGGLE_FREEZE')}
+              >
+                {state.frozen ? 'Resume image' : 'Freeze image'}
+              </button>
+            )}
+            {config.controls.includes('measure') && (
+              <div>
+                <p>
+                  Freeze → Measure → move the first marker → Set first caliper → move the second
+                  marker. Compare two distinct positions on the image.
+                </p>
+                <div className="guided-tabs">
+                  <button
+                    disabled={!state.frozen}
+                    onClick={() => processor('measure', 'MEASURE_MODE')}
+                  >
+                    Measure
+                  </button>
+                  <button
+                    disabled={!state.measurementStart}
+                    onClick={() => processor('measure', 'MEASURE_SET')}
+                  >
+                    Set first caliper
+                  </button>
+                  <button
+                    disabled={!state.measurementEnd}
+                    onClick={() => processor('measure', 'CURSOR_MODE')}
+                  >
+                    Switch caliper
+                  </button>
+                </div>
+                <div className="guided-tabs" role="group" aria-label="Move active caliper">
+                  {[
+                    ['Left', -15, 0],
+                    ['Right', 15, 0],
+                    ['Up', 0, -15],
+                    ['Down', 0, 15],
+                  ].map(([label, x, y]) => (
+                    <button
+                      key={label}
+                      disabled={!state.measurementStart}
+                      onClick={() =>
+                        act('measure', {
+                          type: 'MOVE_TRACKBALL',
+                          deltaX: Number(x),
+                          deltaY: Number(y),
+                        })
+                      }
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <p className="guided-label">
+                  Active marker:{' '}
+                  {state.activeMeasurementMarker === null
+                    ? 'none'
+                    : state.activeMeasurementMarker + 1}
+                  . {validMeasurement ? 'Two distinct caliper positions recorded.' : ''}
+                </p>
+              </div>
+            )}
+            {config.controls.includes('save') && (
+              <button disabled={!state.frozen || !validMeasurement} onClick={save}>
+                Save image
+              </button>
+            )}
+          </fieldset>
+          <button
+            disabled={!frameReady || state.frozen || config.locked}
+            onClick={() => setPlaybackPaused((v) => !v)}
+          >
+            {playbackPaused ? 'Play clip' : 'Pause clip'}
           </button>
-        )}
-      </fieldset>
+          {config.recordedTask !== 'capture' && (
+            <button
+              disabled={!frameReady || config.locked}
+              onClick={() => {
+                video.current?.pause()
+                setPlaybackPaused(true)
+                const actual = snapshot(false)
+                if (actual) setBaseline(actual)
+              }}
+            >
+              Keep this image for comparison
+            </button>
+          )}
+          <p className="guided-label">
+            Each control selects a recorded example. Combined settings are not a continuous
+            ultrasound simulation. Control levels and caliper positions are educational; no clinical
+            measurement is reported.
+          </p>
+        </div>
+      </div>
       {capture && !config.locked && (
         <figure>
           <img src={capture} alt="Saved teaching image with the calipers you placed" />

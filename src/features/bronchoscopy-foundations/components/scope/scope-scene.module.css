@@ -51,7 +51,7 @@
 .views[data-pilot-bench='true'][data-observer='true'] {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  min-height: 410px;
+  min-height: clamp(270px, calc(100dvh - 560px), 340px);
 }
 .views[data-pilot-bench='true'] .opticalViewport {
   height: 100%;
@@ -59,7 +59,7 @@
 }
 .observer[data-control-closeups='true'] {
   display: grid;
-  grid-template-rows: minmax(270px, 1.9fr) minmax(140px, 1fr);
+  grid-template-rows: minmax(180px, 1.9fr) minmax(90px, 1fr);
 }
 .headCloseup,
 .tipCloseup {

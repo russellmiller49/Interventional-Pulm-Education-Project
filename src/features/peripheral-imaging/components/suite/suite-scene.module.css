@@ -664,21 +664,51 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
-@container suite (min-width: 900px) {
+@container suite (min-width: 48rem) {
   .pane[data-task-presentation='comparison'] .displays[data-image-first='true'] {
-    grid-template-columns: minmax(0, 1.8fr) minmax(260px, 0.8fr);
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr) minmax(0, 1fr);
   }
   .pane[data-task-presentation='comparison'] .displays .monitorPanel {
     grid-column: 1;
-    grid-row: 1 / span 2;
+    grid-row: 1;
   }
   .pane[data-task-presentation='comparison'] .displays .nearImageControls {
-    grid-column: 2;
+    grid-column: 3;
     grid-row: 1;
   }
   .pane[data-task-presentation='comparison'] .displays .scenePanel {
     grid-column: 2;
-    grid-row: 2;
+    grid-row: 1;
+  }
+}
+.pane[data-task-presentation='comparison'] .displays .monitor,
+.pane[data-task-presentation='comparison']
+  .displays
+  .comparison[data-has-baseline='true']
+  .monitor {
+  width: min(100%, 300px);
+}
+.pane[data-task-presentation='comparison'] .displays .controls {
+  grid-template-columns: minmax(0, 1fr);
+}
+.pane[data-task-presentation='comparison'] .displays .dock {
+  grid-template-columns: minmax(0, 1fr);
+}
+/* Put the actual projections before their capture metadata at task entry. Keep
+   the comparison action above the stacked images on compact screens. */
+.pane[data-task-presentation='comparison'] .comparison figure {
+  display: flex;
+  flex-direction: column;
+}
+.pane[data-task-presentation='comparison'] .comparison figcaption {
+  order: 1;
+}
+.pane[data-task-presentation='comparison'] .comparison > .toolbar {
+  order: 1;
+}
+@container suite (max-width: 47.99rem) {
+  .pane[data-task-presentation='comparison'] .comparison > .toolbar {
+    order: -1;
   }
 }
 .pane[data-task-presentation='acquisition'] .displays {

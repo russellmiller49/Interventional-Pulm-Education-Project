@@ -74,6 +74,32 @@ export function CrrtFoundationLesson({
   }, [lessonId])
   const tasks = crrtLearnTasks[lessonId]!
   const task = tasks[attempt.taskIndex]
+  const taskLocation = `${attempt.attemptId}:${task.id}:${attempt.finished}`
+  const previousTaskLocation = useRef(taskLocation)
+  useEffect(() => {
+    if (previousTaskLocation.current === taskLocation) return
+    previousTaskLocation.current = taskLocation
+    // Continue, skip and task-map navigation replace the document beneath the learner.
+    // Reveal the new instruction after that replacement, not against the old page height.
+    // Initial entry and ordinary workbench operations do not scroll or move focus here.
+    document
+      .getElementById('crrt-current-task')
+      ?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+  }, [taskLocation])
+  // Keep the current instruction first, then its circuit/controls, then supporting prose.
+  // Reading, assessment and operational tasks retain their authored presentation order.
+  const circuitFirst =
+    task.kind === 'guided' &&
+    ['blood-walk', 'fluid-walk', 'modalities', 'pressure-sites', 'mechanisms'].includes(
+      task.tool ?? '',
+    )
+  const teaching = task.teaching.length ? (
+    <div className={styles.teaching}>
+      {task.teaching.map((p) => (
+        <p key={p}>{p}</p>
+      ))}
+    </div>
+  ) : null
   const operationReady = crrtOperationalTaskComplete(attempt.run, task.operation)
   const readyResponse =
     task.operation && task.operation !== 'hardware'
@@ -123,10 +149,6 @@ export function CrrtFoundationLesson({
     if (incoming && !acceptEvidence(incoming)) return
     dispatch(action)
     setGuidedResult(null)
-    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    document
-      .getElementById('crrt-current-task')
-      ?.scrollIntoView?.({ block: 'start', behavior: reduce ? 'auto' : 'smooth' })
   }
   const ready = (response: string) =>
     setGuidedResult((current) =>
@@ -339,16 +361,11 @@ export function CrrtFoundationLesson({
                     Continue without this exercise
                   </button>
                 ) : null}
-                {task.teaching.length ? (
-                  <div className={styles.teaching}>
-                    {task.teaching.map((p) => (
-                      <p key={p}>{p}</p>
-                    ))}
-                  </div>
-                ) : null}
+                {!circuitFirst ? teaching : null}
                 {task.tool && task.tool !== 'known-pressure' && task.tool !== 'builder' ? (
                   <CrrtFoundationToolView tool={task.tool} onReady={ready} />
                 ) : null}
+                {circuitFirst ? teaching : null}
                 {task.advancedTool ? (
                   <CrrtCitrateDifferential
                     presentation={task.advancedTool === 'citrate-path' ? 'mechanism' : 'comparison'}

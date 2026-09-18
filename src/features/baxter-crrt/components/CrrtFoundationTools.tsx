@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import {
   crrtCircuitOverlay,
   crrtPressureSignalDetail,
@@ -127,6 +127,16 @@ function Circuit({
   )
 }
 
+/** Local layout only: the existing circuit and selection state remain authoritative. */
+function CircuitWorkbench({ controls, children }: { controls: ReactNode; children: ReactNode }) {
+  return (
+    <div className={styles.circuitWorkbench} data-crrt-circuit-workbench>
+      <div className={styles.circuitControls}>{controls}</div>
+      <div className={styles.circuitVisual}>{children}</div>
+    </div>
+  )
+}
+
 /** A component-local selection is a guided observation; the parent must explicitly review it. */
 export function CrrtFoundationToolView({
   tool,
@@ -197,19 +207,25 @@ export function CrrtFoundationToolView({
     const fluid = fluidStops.find((s) => s.id === selected)
     return (
       <>
-        {controls(tool === 'blood-walk' ? bloodStops : fluidStops, tool === 'blood-walk')}
+        <CircuitWorkbench
+          controls={controls(
+            tool === 'blood-walk' ? bloodStops : fluidStops,
+            tool === 'blood-walk',
+          )}
+        >
+          <Circuit
+            overlay={tool === 'fluid-walk' ? 'cvvhdf' : 'blood-path'}
+            node={blood?.id}
+            paths={
+              tool === 'fluid-walk' ? [...bloodPathIds, ...(fluid ? [fluid.id] : [])] : undefined
+            }
+          />
+        </CircuitWorkbench>
         <p className={styles.observation} aria-live="polite">
           {tool === 'blood-walk'
             ? (blood?.text ?? 'Select Patient access to begin.')
             : (fluid?.text ?? 'Select a fluid path to trace it.')}
         </p>
-        <Circuit
-          overlay={tool === 'fluid-walk' ? 'cvvhdf' : 'blood-path'}
-          node={blood?.id}
-          paths={
-            tool === 'fluid-walk' ? [...bloodPathIds, ...(fluid ? [fluid.id] : [])] : undefined
-          }
-        />
       </>
     )
   }
@@ -219,11 +235,14 @@ export function CrrtFoundationToolView({
     ) as CrrtCircuitOverlayId
     return (
       <>
-        {controls(modalityIds.map((id) => ({ id, label: id.toUpperCase() })))}
+        <CircuitWorkbench
+          controls={controls(modalityIds.map((id) => ({ id, label: id.toUpperCase() })))}
+        >
+          <Circuit overlay={overlay} />
+        </CircuitWorkbench>
         <p className={styles.observation} aria-live="polite">
           {selected ? modalityText[selected] : 'Select a modality to reveal its active paths.'}
         </p>
-        <Circuit overlay={overlay} />
         <p className={styles.caption}>
           Conceptual configuration only. No numeric flows or device settings are applied.
         </p>
@@ -238,17 +257,43 @@ export function CrrtFoundationToolView({
     const snap = changed ? result.revealed : result.baseline
     return (
       <>
-        {controls(
-          crrtPressureSignalDetails.map((detail) => ({ id: detail.id, label: detail.label })),
-        )}
+        <CircuitWorkbench
+          controls={
+            <>
+              {controls(
+                crrtPressureSignalDetails.map((detail) => ({ id: detail.id, label: detail.label })),
+              )}
+              <button type="button" onClick={() => setChanged((value) => !value)}>
+                {changed ? 'Return to normal reference' : 'Compare return-side resistance'}
+              </button>
+            </>
+          }
+        >
+          <CrrtPilotCircuit
+            presentation="focused"
+            overlayId="pressure-profile"
+            highlightedSignalId={detail?.id}
+            running={false}
+            setReady
+            fluidsReady
+            bloodFlowMlMin={100}
+            dialysateFlowMlHour={null}
+            patientFluidRemovalMlHour={null}
+            pressure={{
+              access: snap.accessPressureMmHg,
+              filter: snap.filterPressureMmHg,
+              return: snap.returnPressureMmHg,
+              effluent: snap.effluentPressureMmHg,
+              TMP: snap.tmpMmHg,
+              filterDrop: snap.filterPressureDropMmHg,
+            }}
+          />
+        </CircuitWorkbench>
         <p className={styles.observation} aria-live="polite">
           {detail
             ? `${detail.label}: ${detail.physicalLocation} ${detail.whatProducesTheValue}`
             : 'Select a pressure readout to locate its site or contributing sites.'}
         </p>
-        <button type="button" onClick={() => setChanged((value) => !value)}>
-          {changed ? 'Return to normal reference' : 'Compare return-side resistance'}
-        </button>
         <p>
           Reference blood flow: 100 mL/min in both synthetic states.{' '}
           {changed
@@ -266,25 +311,6 @@ export function CrrtFoundationToolView({
             </div>
           ))}
         </dl>
-        <CrrtPilotCircuit
-          presentation="focused"
-          overlayId="pressure-profile"
-          highlightedSignalId={detail?.id}
-          running={false}
-          setReady
-          fluidsReady
-          bloodFlowMlMin={100}
-          dialysateFlowMlHour={null}
-          patientFluidRemovalMlHour={null}
-          pressure={{
-            access: snap.accessPressureMmHg,
-            filter: snap.filterPressureMmHg,
-            return: snap.returnPressureMmHg,
-            effluent: snap.effluentPressureMmHg,
-            TMP: snap.tmpMmHg,
-            filterDrop: snap.filterPressureDropMmHg,
-          }}
-        />
         <details onToggle={(event) => setShowRecordedComparison(event.currentTarget.open)}>
           <summary>Engine-generated recorded comparison</summary>
           {showRecordedComparison ? <CrrtLivePressureStation /> : null}
@@ -329,18 +355,25 @@ export function CrrtFoundationToolView({
   if (tool === 'mechanisms') {
     return (
       <>
-        {controls([
-          { id: 'diffusion', label: 'Diffusion' },
-          { id: 'convection', label: 'Convection' },
-          { id: 'ultrafiltration', label: 'Ultrafiltration' },
-        ])}
-        <Circuit
-          overlay={
-            selected === 'diffusion' ? 'cvvhd' : selected === 'convection' ? 'cvvh-post' : 'scuf'
+        <CircuitWorkbench
+          controls={
+            <>
+              {controls([
+                { id: 'diffusion', label: 'Diffusion' },
+                { id: 'convection', label: 'Convection' },
+                { id: 'ultrafiltration', label: 'Ultrafiltration' },
+              ])}
+              <FilterInset mechanism={selected ?? 'diffusion'} />
+            </>
           }
-          node="filter"
-        />
-        <FilterInset mechanism={selected ?? 'diffusion'} />
+        >
+          <Circuit
+            overlay={
+              selected === 'diffusion' ? 'cvvhd' : selected === 'convection' ? 'cvvh-post' : 'scuf'
+            }
+            node="filter"
+          />
+        </CircuitWorkbench>
       </>
     )
   }

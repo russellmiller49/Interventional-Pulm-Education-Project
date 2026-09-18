@@ -836,6 +836,7 @@ export function CrrtStagedPrescriptionBuilder({
                           <select
                             id={`${idPrefix}-anticoagulation`}
                             defaultValue="none"
+                            disabled
                             aria-describedby={`${idPrefix}-anticoagulation-description`}
                           >
                             <option value="none">None — only available selection</option>
@@ -847,8 +848,9 @@ export function CrrtStagedPrescriptionBuilder({
                             </option>
                           </select>
                           <small id={`${idPrefix}-anticoagulation-description`}>
-                            No dosing, target, monitoring plan, or recommendation is provided here.
-                            The citrate section teaches where citrate acts, not how much to give.
+                            This setting is fixed in this exercise. No dosing, target, monitoring
+                            plan, or recommendation is provided here. The citrate section teaches
+                            where citrate acts, not how much to give.
                           </small>
                         </div>
                       )
