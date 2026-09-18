@@ -53,7 +53,8 @@ export default async function ProcedureWorkspacePage({ params, searchParams }: P
   if (!workspace) notFound()
 
   const search = (await searchParams) ?? {}
-  const view: RequirementView = search.view === 'phases' ? 'phases' : 'zones'
+  const view: RequirementView =
+    search.view === 'phases' ? 'phases' : search.view === 'sections' ? 'sections' : 'zones'
   const outputTab: OutputTab = (['card', 'room', 'nursing', 'training', 'gaps'] as const).includes(
     search.output as OutputTab,
   )

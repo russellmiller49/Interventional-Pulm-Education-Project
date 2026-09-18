@@ -308,12 +308,30 @@ interface SpecFilterOutcome {
   excludedForMissingSpec: boolean
 }
 
+/**
+ * Every gauge a record lists. The governed column is typed numeric, but reviewed rows also
+ * carry strings such as "22G" or "19G/21G"; reading both keeps a gauge filter from silently
+ * treating those records as "not recorded". Presentation/query tolerance only — the governed
+ * value is never rewritten.
+ */
+export function parseGaugeValues(value: unknown): number[] {
+  if (typeof value === 'number') return Number.isFinite(value) ? [value] : []
+  if (typeof value !== 'string') return []
+  return [...value.matchAll(/\d+(?:\.\d+)?/g)].map((match) => Number(match[0]))
+}
+
 function applySpecFilters(product: CatalogProduct, query: CatalogSearchQuery): SpecFilterOutcome {
   let excludedForMissingSpec = false
 
   const rangeChecks: { min?: number; max?: number; value: number | null }[] = [
     { min: query.diameterMin, max: query.diameterMax, value: product.diameter_mm },
     { min: query.lengthMin, max: query.lengthMax, value: product.length_mm },
+    { min: query.frenchMin, max: query.frenchMax, value: product.french_size },
+    {
+      min: query.workingLengthMin,
+      max: query.workingLengthMax,
+      value: product.working_length_cm,
+    },
   ]
   for (const check of rangeChecks) {
     if (check.min === undefined && check.max === undefined) continue
@@ -335,6 +353,15 @@ function applySpecFilters(product: CatalogProduct, query: CatalogSearchQuery): S
     }
   }
 
+  if (query.gauge !== undefined) {
+    const gauges = parseGaugeValues(product.gauge)
+    if (gauges.length === 0) {
+      excludedForMissingSpec = true
+    } else if (!gauges.includes(query.gauge)) {
+      return { keep: false, excludedForMissingSpec: false }
+    }
+  }
+
   return { keep: !excludedForMissingSpec, excludedForMissingSpec }
 }
 
@@ -347,7 +374,8 @@ export interface CatalogSearchResponse {
   /**
    * Products dropped *only* because a spec-range filter was applied and that spec is
    * not recorded for them. Surfaced in the UI so a thin data field never silently
-   * looks like an empty shelf.
+   * looks like an empty shelf. With `specUnknown: 'only'` these ARE the returned items,
+   * and the count still reports them.
    */
   excludedMissingSpecCount: number
 }
@@ -446,8 +474,11 @@ export function searchCatalog(
     if (!matchesTier(product, query.tier)) continue
 
     const specOutcome = applySpecFilters(product, query)
-    if (!specOutcome.keep) {
-      if (specOutcome.excludedForMissingSpec) excludedMissingSpecCount += 1
+    if (specOutcome.excludedForMissingSpec) excludedMissingSpecCount += 1
+    // `only` inverts the listing, never the evaluation: a product whose filtered value is
+    // not recorded was not tested against the requirement, so it is listed on its own and
+    // is never mixed in with the products that met it.
+    if (query.specUnknown === 'only' ? !specOutcome.excludedForMissingSpec : !specOutcome.keep) {
       continue
     }
     filtered.push(product)

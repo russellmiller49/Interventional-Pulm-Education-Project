@@ -224,6 +224,11 @@ export function getCoverageLadderForProcedure(
 }
 
 export interface ExemplarProcedureIndexEntry {
+  /**
+   * The template's own authored equipment sections, in authored order, with how many
+   * requirement slots each holds. Verbatim governed strings — nothing is inferred or renamed.
+   */
+  equipmentGroups: { section: string; slotCount: number }[]
   procedureCode: D1ExemplarProcedureCode
   procedureName: string
   /** Verbatim `procedures.json` status string — never paraphrased. */
@@ -251,7 +256,14 @@ export function getExemplarProcedureIndex(): ExemplarProcedureIndexEntry[] {
     const slots = procedureSlots.filter((slot) => slot.procedure_code === procedureCode)
     const countRequiredness = (value: string) =>
       slots.filter((slot) => slot.requiredness === value).length
+    const orderedSlots = [...slots].sort((left, right) => left.display_order - right.display_order)
+    const groupCounts = new Map<string, number>()
+    for (const slot of orderedSlots) {
+      if (!slot.section) continue
+      groupCounts.set(slot.section, (groupCounts.get(slot.section) ?? 0) + 1)
+    }
     return {
+      equipmentGroups: [...groupCounts].map(([section, slotCount]) => ({ section, slotCount })),
       procedureCode,
       procedureName: procedure.procedure_name,
       status: procedure.status ?? 'unknown',

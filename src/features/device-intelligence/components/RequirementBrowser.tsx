@@ -26,7 +26,15 @@ import { SafetyBadge, type ProductStatusLabels } from './ProductStatus'
  * remain the canonical governed values and no ordering or default changes because of it.
  */
 
-export type RequirementView = 'zones' | 'phases'
+/**
+ * `sections` groups by the template's own authored equipment section ("Sampling", "Platform",
+ * "Rescue", …) — the clinician-facing "what kind of equipment is this" grouping. The section
+ * strings are governed data quoted verbatim; no requiredness or membership is inferred.
+ */
+export type RequirementView = 'zones' | 'phases' | 'sections'
+
+/** Group key for requirements the template does not assign to a section. */
+const UNASSIGNED_SECTION = '__unassigned__'
 
 /**
  * The one template section that describes a divergent long-term pathway rather than the
@@ -59,22 +67,40 @@ export async function RequirementBrowser({
   const tCommon = await getTranslations('deviceIntelligence.common')
 
   const basePath = `/${locale}/procedures/${workspace.procedureCode}`
+  const sectionKeys = [
+    ...workspace.sectionOrder,
+    ...(workspace.requirements.some((requirement) => requirement.section === null)
+      ? [UNASSIGNED_SECTION]
+      : []),
+  ]
   const groups =
-    view === 'zones'
-      ? workspace.setupZoneOrder.map((zone) => ({
-          key: zone,
-          label: t(`setupZones.${zone}` as 'setupZones.unassigned'),
+    view === 'sections'
+      ? sectionKeys.map((section) => ({
+          key: section,
+          label: section === UNASSIGNED_SECTION ? t('sectionUnassigned') : section,
+          // Authored section names are English governed strings, in every locale.
+          lang: section === UNASSIGNED_SECTION ? undefined : 'en',
           requirements: workspace.requirements.filter(
-            (requirement) => requirement.setupZone === zone,
+            (requirement) => (requirement.section ?? UNASSIGNED_SECTION) === section,
           ),
         }))
-      : workspace.proceduralPhaseOrder.map((phase) => ({
-          key: phase,
-          label: t(`proceduralPhases.${phase}` as 'proceduralPhases.unassigned'),
-          requirements: workspace.requirements.filter(
-            (requirement) => requirement.proceduralPhase === phase,
-          ),
-        }))
+      : view === 'zones'
+        ? workspace.setupZoneOrder.map((zone) => ({
+            key: zone,
+            label: t(`setupZones.${zone}` as 'setupZones.unassigned'),
+            lang: undefined,
+            requirements: workspace.requirements.filter(
+              (requirement) => requirement.setupZone === zone,
+            ),
+          }))
+        : workspace.proceduralPhaseOrder.map((phase) => ({
+            key: phase,
+            label: t(`proceduralPhases.${phase}` as 'proceduralPhases.unassigned'),
+            lang: undefined,
+            requirements: workspace.requirements.filter(
+              (requirement) => requirement.proceduralPhase === phase,
+            ),
+          }))
 
   const coverageLabels: Record<string, string> = {
     selectable_authored: t('coverage.selectableAuthored'),
@@ -102,6 +128,12 @@ export async function RequirementBrowser({
               label: t('viewPhases'),
               href: `${basePath}?view=phases` as Route,
               active: view === 'phases',
+            },
+            {
+              key: 'sections',
+              label: t('viewSections'),
+              href: `${basePath}?view=sections` as Route,
+              active: view === 'sections',
             },
           ]}
         />
@@ -137,6 +169,7 @@ export async function RequirementBrowser({
                 proposals: t('requirement.proposals'),
                 proposalsDisclaimer: t('requirement.proposalsDisclaimer'),
                 authoredOptions: t('requirement.authoredOptions'),
+                relatedDevices: t('requirement.relatedDevices'),
                 noAuthoredOptions: t('requirement.noAuthoredOptions'),
                 optionsWithheld: t('requirement.optionsWithheld', {
                   count: requirement.withheldAuthoredOptionCount,
@@ -156,7 +189,9 @@ export async function RequirementBrowser({
           )
           return (
             <div key={group.key} className="space-y-2">
-              <h3 className="text-lg font-bold tracking-tight">{group.label}</h3>
+              <h3 lang={group.lang} className="text-lg font-bold tracking-tight">
+                {group.label}
+              </h3>
               {coreRequirements.length > 0 ? (
                 <ul className="grid gap-3 xl:grid-cols-2">{coreRequirements.map(renderCard)}</ul>
               ) : null}
@@ -205,6 +240,7 @@ function RequirementCard({
     proposals: string
     proposalsDisclaimer: string
     authoredOptions: string
+    relatedDevices: string
     noAuthoredOptions: string
     optionsWithheld: string
     optionSafetyNote: string
@@ -353,6 +389,17 @@ function RequirementCard({
           {labels.noAuthoredOptions}
         </p>
       )}
+      {/* Discovery, kept visibly apart from the listed options above: sharing a clinical role
+          relates a device to this requirement; it does not list it for the requirement. */}
+      <p className="mt-2 text-xs">
+        <Link
+          href={`/${locale}/devices?role=${encodeURIComponent(requirement.roleCode)}` as Route}
+          data-related-devices-link
+          className="text-muted-foreground underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {labels.relatedDevices}
+        </Link>
+      </p>
     </li>
   )
 }

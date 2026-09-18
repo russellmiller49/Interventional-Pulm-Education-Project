@@ -244,6 +244,24 @@ export function marketStatusAssertsCurrentDistribution(marketStatus: MarketStatu
  * cards, "safety badge only when material"). Unverified and no-exact-action-found states are
  * stated on the product-detail panel instead of badging every card in the atlas.
  */
+/**
+ * Whether a product's status deserves the reader's attention before the routine evidence: a
+ * matched safety action, a gate blocked by an active safety action, or a market status that
+ * records a lifecycle question (historical/discontinued, or conflicting evidence). Drives
+ * PLACEMENT only — the device page lifts its full status panel to the top for these — and
+ * never visibility, ordering, or any recommendation. "Not researched" / "review required"
+ * is deliberately not in this list: it is the honest default for most of the atlas, it is
+ * stated in the panel, and it is never dressed up as an alert or as reassurance.
+ */
+export function statusNeedsAttention(status: ProductStatusView): boolean {
+  return (
+    safetyDisplayIsMaterialOnCards(status.safetyDisplay) ||
+    status.statusRecommendationGate === 'blocked_active_safety_action' ||
+    status.marketStatus === 'historical_or_discontinued' ||
+    status.marketStatus === 'current_status_conflicted'
+  )
+}
+
 export function safetyDisplayIsMaterialOnCards(safetyDisplay: SafetyDisplay): boolean {
   return (
     safetyDisplay === 'active_safety_notice' ||

@@ -12,9 +12,23 @@ export const catalogSortValues = [
   'length',
 ] as const
 export const catalogTierValues = ['all', 'verified', 'unverified'] as const
+/**
+ * Device Atlas result presentation. `families` groups the matching models into
+ * manufacturer product lines; `models` lists every catalog item. Presentation only —
+ * filters always run on individual models first. The preference-card catalog ignores it.
+ */
+export const catalogViewValues = ['families', 'models'] as const
+/**
+ * What to do with products whose filtered specification is not recorded. `exclude` (the
+ * default) keeps them out of the matches and counts them; `only` lists exactly those
+ * products so a missing value can be inspected instead of reading as a failed match.
+ */
+export const catalogSpecUnknownValues = ['exclude', 'only'] as const
 
 export type CatalogSortValue = (typeof catalogSortValues)[number]
 export type CatalogTierValue = (typeof catalogTierValues)[number]
+export type CatalogViewValue = (typeof catalogViewValues)[number]
+export type CatalogSpecUnknownValue = (typeof catalogSpecUnknownValues)[number]
 
 const optionalNumberSchema = (min: number, max: number) =>
   z.preprocess(
@@ -39,6 +53,17 @@ export const catalogSearchSchema = z
      * pagination and URL round-trips preserve it like every other filter.
      */
     deviceClass: z.string().trim().min(1).max(80).optional(),
+    /**
+     * Normalized Device Atlas device-subtype code. Atlas-only, exactly like `deviceClass`:
+     * a stable taxonomy code, never a display label. Unknown codes are reported by the
+     * atlas as an unrecognized filter rather than silently matching nothing.
+     */
+    deviceSubtype: z.string().trim().min(1).max(80).optional(),
+    /**
+     * Atlas-only: one manufacturer product line (the catalog store's `familyKey`), used by
+     * "View all models" on a family card. A display grouping, never an equivalence claim.
+     */
+    family: z.string().trim().min(1).max(300).optional(),
     role: z.string().trim().min(1).max(80).optional(),
     procedure: z.string().trim().min(1).max(80).optional(),
     tier: z.enum(catalogTierValues).default('all'),
@@ -48,6 +73,19 @@ export const catalogSearchSchema = z
     lengthMax: optionalNumberSchema(0, 1000),
     /** "Fits my scope": keep products whose required working channel is at most this. */
     channelMax: optionalNumberSchema(0, 6),
+    /** Recorded needle gauge, matched exactly against every gauge the record lists. */
+    gauge: optionalNumberSchema(1, 40),
+    frenchMin: optionalNumberSchema(0, 60),
+    frenchMax: optionalNumberSchema(0, 60),
+    /** Recorded working length in centimetres. */
+    workingLengthMin: optionalNumberSchema(0, 400),
+    workingLengthMax: optionalNumberSchema(0, 400),
+    specUnknown: z.enum(catalogSpecUnknownValues).default('exclude').catch('exclude'),
+    /**
+     * Atlas-only presentation mode; absent means the surface's own default. An unknown
+     * value degrades to that default instead of discarding the rest of a shared link.
+     */
+    view: z.enum(catalogViewValues).optional().catch(undefined),
     sort: z.enum(catalogSortValues).default('relevance'),
     page: positiveIntegerSchema.default(1),
     pageSize: positiveIntegerSchema
@@ -77,6 +115,28 @@ export const catalogSearchSchema = z
         path: ['lengthMax'],
       })
     }
+    if (
+      query.frenchMin !== undefined &&
+      query.frenchMax !== undefined &&
+      query.frenchMin > query.frenchMax
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: '`frenchMin` must not be greater than `frenchMax`.',
+        path: ['frenchMax'],
+      })
+    }
+    if (
+      query.workingLengthMin !== undefined &&
+      query.workingLengthMax !== undefined &&
+      query.workingLengthMin > query.workingLengthMax
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: '`workingLengthMin` must not be greater than `workingLengthMax`.',
+        path: ['workingLengthMax'],
+      })
+    }
   })
 
 export type CatalogSearchQuery = z.infer<typeof catalogSearchSchema>
@@ -96,6 +156,8 @@ export function catalogSearchInputFromUrl(searchParams: URLSearchParams) {
     category: searchParams.get('category') || undefined,
     subcategory: searchParams.get('subcategory') || undefined,
     deviceClass: searchParams.get('deviceClass') || undefined,
+    deviceSubtype: searchParams.get('deviceSubtype') || undefined,
+    family: searchParams.get('family') || undefined,
     role: searchParams.get('role') || undefined,
     procedure: searchParams.get('procedure') || undefined,
     tier: searchParams.get('tier') || 'all',
@@ -104,6 +166,13 @@ export function catalogSearchInputFromUrl(searchParams: URLSearchParams) {
     lengthMin: searchParams.get('lengthMin') ?? undefined,
     lengthMax: searchParams.get('lengthMax') ?? undefined,
     channelMax: searchParams.get('channelMax') ?? undefined,
+    gauge: searchParams.get('gauge') ?? undefined,
+    frenchMin: searchParams.get('frenchMin') ?? undefined,
+    frenchMax: searchParams.get('frenchMax') ?? undefined,
+    workingLengthMin: searchParams.get('workingLengthMin') ?? undefined,
+    workingLengthMax: searchParams.get('workingLengthMax') ?? undefined,
+    specUnknown: searchParams.get('specUnknown') || 'exclude',
+    view: searchParams.get('view') || undefined,
     sort: searchParams.get('sort') || 'relevance',
     page: searchParams.get('page') ?? undefined,
     pageSize: searchParams.get('pageSize') ?? undefined,
@@ -118,6 +187,8 @@ export function serializeCatalogSearchQuery(query: CatalogSearchQuery): string {
   if (query.category) params.set('category', query.category)
   if (query.subcategory) params.set('subcategory', query.subcategory)
   if (query.deviceClass) params.set('deviceClass', query.deviceClass)
+  if (query.deviceSubtype) params.set('deviceSubtype', query.deviceSubtype)
+  if (query.family) params.set('family', query.family)
   if (query.role) params.set('role', query.role)
   if (query.procedure) params.set('procedure', query.procedure)
   if (query.tier !== 'all') params.set('tier', query.tier)
@@ -126,6 +197,15 @@ export function serializeCatalogSearchQuery(query: CatalogSearchQuery): string {
   if (query.lengthMin !== undefined) params.set('lengthMin', String(query.lengthMin))
   if (query.lengthMax !== undefined) params.set('lengthMax', String(query.lengthMax))
   if (query.channelMax !== undefined) params.set('channelMax', String(query.channelMax))
+  if (query.gauge !== undefined) params.set('gauge', String(query.gauge))
+  if (query.frenchMin !== undefined) params.set('frenchMin', String(query.frenchMin))
+  if (query.frenchMax !== undefined) params.set('frenchMax', String(query.frenchMax))
+  if (query.workingLengthMin !== undefined)
+    params.set('workingLengthMin', String(query.workingLengthMin))
+  if (query.workingLengthMax !== undefined)
+    params.set('workingLengthMax', String(query.workingLengthMax))
+  if (query.specUnknown !== 'exclude') params.set('specUnknown', query.specUnknown)
+  if (query.view) params.set('view', query.view)
   if (query.sort !== 'relevance') params.set('sort', query.sort)
   if (query.page > 1) params.set('page', String(query.page))
   if (query.pageSize !== DEFAULT_CATALOG_PAGE_SIZE) params.set('pageSize', String(query.pageSize))
