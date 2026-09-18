@@ -9389,6 +9389,27 @@
       "exact": "Reviewed model/package match",
       "requiresLabel": "Exact revision requires label confirmation",
       "unresolved": "Still needs evidence"
+    },
+    "marketEvidence": {
+      "heading": "Evidencia de comercialización en EE. UU.",
+      "checked": "Fecha de revisión",
+      "udiDate": "Datos de FDA GUDID",
+      "listingDate": "Datos de registro y listado de la FDA",
+      "unavailable": "No establecido",
+      "sources": "Ver registros de respaldo",
+      "listingSource": "Búsqueda de registro y listado de la FDA",
+      "inDistribution": "Figura en distribución comercial",
+      "endedDistribution": "Figura fuera de distribución comercial",
+      "limits": "Son hallazgos regulatorios y del fabricante con fecha. No establecen existencias locales, posibilidad de compra, aprobación de la FDA ni idoneidad clínica. Los identificadores del dispositivo y del embalaje se mantienen separados.",
+      "basis": {
+        "active_udi": "Una coincidencia exacta de fabricante e identificador del dispositivo figura en distribución comercial en FDA GUDID. Esto respalda una distribución probablemente vigente en EE. UU.",
+        "corroborated_current": "La distribución del dispositivo exacto en FDA GUDID está corroborada por un registro o listado vigente del dispositivo exacto, o por una página del fabricante para EE. UU.",
+        "mixed_distribution": "Los registros coincidentes de la FDA muestran estados de distribución diferentes. Confirme la configuración y el embalaje exactos antes de basarse en su disponibilidad.",
+        "ended_udi_only": "Los registros coincidentes de la FDA indican que terminó la distribución comercial. Se necesita confirmación del fabricante antes de clasificar el producto como descontinuado.",
+        "identity_unresolved": "Las búsquedas no establecieron una identidad exacta del dispositivo en la FDA que cumpla los criterios. La comercialización en EE. UU. sigue sin verificar.",
+        "incomplete_search": "La búsqueda de evidencia está incompleta. La comercialización en EE. UU. sigue sin verificar.",
+        "manufacturer_restriction": "El fabricante indica restricciones de venta en EE. UU. para esta familia. Confirme la configuración exacta para EE. UU."
+      }
     }
   }
 }

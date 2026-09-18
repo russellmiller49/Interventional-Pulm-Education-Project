@@ -88,7 +88,7 @@ describe('September 17 physician evidence review', () => {
         expect.objectContaining({ recall_number: 'Z-0106-2022', recorded_state: 'historical' }),
       ]),
     )
-    expect(getProductStatus('PRD-8A4A27BDD7').safetyDisplay).toBe('safety_status_unverified')
+    expect(getProductStatus('PRD-8A4A27BDD7').safetyDisplay).toBe('safety_identity_review_required')
   })
 
   it('adds exact Ambu and Atrium notices consistently to details and safety gates', () => {

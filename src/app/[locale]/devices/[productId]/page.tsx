@@ -1,6 +1,7 @@
 import type { Metadata, Route } from 'next'
 import { SaveDeviceButton } from '@/features/device-intelligence/components/SavedDevicesProvider'
 import { PhysicianReviewPanel } from '@/features/device-intelligence/components/PhysicianReviewPanel'
+import { MarketEvidencePanel } from '@/features/device-intelligence/components/MarketEvidencePanel'
 import { getPhysicianProductReview } from '@/features/device-intelligence/server/physician-review.server'
 import { getSaveDeviceLabels } from '@/features/device-intelligence/server/reference-labels.server'
 import Link from 'next/link'
@@ -57,6 +58,7 @@ export default async function DeviceDetailPage({ params }: PageProps) {
   const tCommon = await getTranslations('deviceIntelligence.common')
   const tReference = await getTranslations('deviceIntelligence.reference')
   const tReview = await getTranslations('deviceIntelligence.physicianReview')
+  const tMarketEvidence = await getTranslations('deviceIntelligence.marketEvidence')
   const tVerification = await getTranslations('preferenceCards.catalog.verification')
 
   if (!PRODUCT_ID_PATTERN.test(productId)) notFound()
@@ -245,6 +247,8 @@ export default async function DeviceDetailPage({ params }: PageProps) {
         evidence={safetyEvidence}
         freshness={safetyFreshness}
       />
+
+      <MarketEvidencePanel productId={productId} translate={tMarketEvidence} />
 
       <PhysicianReviewPanel productId={productId} translate={tReview} />
 

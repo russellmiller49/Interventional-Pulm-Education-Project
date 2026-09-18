@@ -204,7 +204,7 @@ describe('Comparison source semantics', () => {
     expect(getDeviceComparison([AXESS, 'PRD-4A04124FF2']).fields).toContain('workingChannel')
     expect(() => getDeviceComparison(Array(5).fill(CRYO))).toThrow()
   })
-  it('distinguishes newly reviewed safety evidence from the older market snapshot in comparisons', async () => {
+  it('shows refreshed distribution evidence alongside the retained active safety notices', async () => {
     const view = render(
       await DeviceComparisonPage({
         params: Promise.resolve({ locale: 'en' }),
@@ -212,8 +212,9 @@ describe('Comparison source semantics', () => {
       }),
     )
     expect(
-      view.getAllByText(/Availability remains unverified; the dated safety records/),
+      view.container.querySelectorAll('[data-market-status="likely_current_us"]'),
     ).toHaveLength(2)
+    expect(view.getAllByText('U.S. status research snapshot: 2026-09-17')).toHaveLength(2)
     expect(
       view.queryByText(/its FDA safety-action status have not been verified/),
     ).not.toBeInTheDocument()

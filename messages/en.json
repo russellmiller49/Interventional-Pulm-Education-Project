@@ -9389,6 +9389,27 @@
       "exact": "Reviewed model/package match",
       "requiresLabel": "Exact revision requires label confirmation",
       "unresolved": "Still needs evidence"
+    },
+    "marketEvidence": {
+      "heading": "U.S. market evidence",
+      "checked": "Review date",
+      "udiDate": "FDA GUDID dataset",
+      "listingDate": "FDA registration/listing dataset",
+      "unavailable": "Not established",
+      "sources": "View supporting records",
+      "listingSource": "FDA registration/listing search",
+      "inDistribution": "Listed in commercial distribution",
+      "endedDistribution": "Listed as no longer in commercial distribution",
+      "limits": "These are dated regulatory and manufacturer findings. They do not establish local stock, orderability, FDA approval, or clinical suitability. Primary device identifiers and package identifiers remain distinct.",
+      "basis": {
+        "active_udi": "An exact manufacturer and device-identifier match is listed in commercial distribution in FDA GUDID. This supports likely current U.S. distribution.",
+        "corroborated_current": "Exact FDA GUDID distribution evidence is corroborated by a current exact-device registration/listing or a manufacturer U.S. product page.",
+        "mixed_distribution": "Matching FDA records contain different distribution states. Confirm the exact configuration and package before relying on availability.",
+        "ended_udi_only": "Matching FDA entries report that commercial distribution has ended. Manufacturer confirmation is still needed before classifying the product as discontinued.",
+        "identity_unresolved": "The searches did not establish a qualifying exact FDA device identity. U.S. market status remains unverified.",
+        "incomplete_search": "The evidence search is incomplete. U.S. market status remains unverified.",
+        "manufacturer_restriction": "The manufacturer lists U.S. sales restrictions for this product family. Confirm the exact U.S. configuration."
+      }
     }
   }
 }

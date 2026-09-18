@@ -9389,6 +9389,27 @@
       "exact": "Reviewed model/package match",
       "requiresLabel": "Exact revision requires label confirmation",
       "unresolved": "Still needs evidence"
+    },
+    "marketEvidence": {
+      "heading": "美国市场证据",
+      "checked": "审核日期",
+      "udiDate": "FDA GUDID 数据集",
+      "listingDate": "FDA 注册与列名数据集",
+      "unavailable": "尚未确定",
+      "sources": "查看支持记录",
+      "listingSource": "FDA 注册与列名检索",
+      "inDistribution": "记录为正在商业销售",
+      "endedDistribution": "记录为已停止商业销售",
+      "limits": "这些是有日期的监管和制造商信息，不证明本地库存、可订购性、FDA 批准或临床适用性。主要器械标识符与包装标识符保持区分。",
+      "basis": {
+        "active_udi": "FDA GUDID 中与制造商及器械标识符精确匹配的记录显示正在商业销售，支持该产品目前可能在美国销售。",
+        "corroborated_current": "FDA GUDID 中精确匹配的商业销售记录获得当前精确器械注册或列名记录，或制造商美国产品页面的佐证。",
+        "mixed_distribution": "匹配的 FDA 记录显示不同的销售状态。依赖可用性信息前，请确认具体配置与包装。",
+        "ended_udi_only": "匹配的 FDA 记录显示商业销售已结束。将产品归类为停产前仍需制造商确认。",
+        "identity_unresolved": "检索未能确定符合条件的精确 FDA 器械身份。美国市场状态仍未核实。",
+        "incomplete_search": "证据检索尚不完整。美国市场状态仍未核实。",
+        "manufacturer_restriction": "制造商列出了此产品系列在美国的销售限制。请确认美国市场的具体配置。"
+      }
     }
   }
 }

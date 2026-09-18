@@ -105,14 +105,15 @@ describe('dated safety evidence', () => {
     expect(partial.notices).toEqual(evidence.notices)
   })
 
-  it('separates a reviewed exact notice from incomplete market and search coverage', async () => {
+  it('retains the physician notice after completing dated FDA market and safety searches', async () => {
     const productId = 'PRD-04A0F61F62'
     const reviewed = getSafetyEvidence(productId)!
     const status = getProductStatus(productId)
     const labels = await getProductStatusLabels('en')
     const freshness = safetyEvidenceFreshness(reviewed, '2026-09-17')
-    expect(status.researchSnapshotDate).toBeNull()
-    expect(freshness).toBe('incomplete')
+    expect(status.researchSnapshotDate).toBe('2026-09-17')
+    expect(status.marketStatus).toBe('likely_current_us')
+    expect(freshness).toBe('within_review_interval')
     const view = render(
       <MarketSafetyPanel
         status={status}
@@ -121,7 +122,8 @@ describe('dated safety evidence', () => {
         freshness={freshness}
       />,
     )
-    view.getByText(labels.marketNotResearchedWithSafetyEvidence)
+    view.getByText('2026-09-17')
+    expect(view.queryByText(labels.marketNotResearchedWithSafetyEvidence)).not.toBeInTheDocument()
     expect(view.queryByText(labels.notResearched)).not.toBeInTheDocument()
     expect(view.queryByText(labels.evidence.freshness.not_checked)).not.toBeInTheDocument()
     expect(view.container.querySelector('[data-safety-notice="Z-1723-2025"]')).toBeInTheDocument()

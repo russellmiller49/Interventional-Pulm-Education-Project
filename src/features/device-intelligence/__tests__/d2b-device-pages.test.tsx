@@ -53,10 +53,10 @@ const detailFor = (productId: string) =>
 const CONFIRMED_CURRENT = 'PRD-2E043ED827' // Olympus radial probe, no exact action found
 const LIKELY_CURRENT = 'PRD-0FECB0AD06' // Karl Storz suction tube
 const CONFLICTED = 'PRD-027269F110' // Richard Wolf TipControl scissors
-const UNVERIFIED = 'PRD-00C13A59AA' // Richard Wolf TEXAS tracheoscope tube
+const UNVERIFIED = 'PRD-019030A1C7' // Manufacturer/FDA identity still unresolved
 const ACTIVE_SAFETY = 'PRD-05670F1B5F' // ERBE Flexible Cryoprobe 2.4 mm
 const HISTORICAL_SAFETY = 'PRD-1517AA42DA' // Teleflex Arrow-Clarke kit (terminated action)
-const NOT_RESEARCHED = 'PRD-88E003F12B' // BF-1T180: prototype-visible, outside the snapshot
+const NEWLY_RESEARCHED = 'PRD-88E003F12B' // BF-1T180: outside August, searched in September
 
 describe('D2B Device Atlas index', () => {
   it('states the inclusion-first cohort rule and what the status labels mean', async () => {
@@ -127,8 +127,13 @@ describe('D2B product page — market and safety panel', () => {
       'confirmed_current_us',
       'blocked_active_safety_action',
     ],
-    ['a historical-safety product', HISTORICAL_SAFETY, 'current_status_unverified', 'clear'],
-    ['an unresearched product', NOT_RESEARCHED, 'current_status_unverified', 'review_required'],
+    ['a historical-safety product', HISTORICAL_SAFETY, 'likely_current_us', 'clear'],
+    [
+      'a newly researched product',
+      NEWLY_RESEARCHED,
+      'current_status_unverified',
+      'blocked_active_safety_action',
+    ],
   ])(
     'renders %s with its controlled labels and required statements',
     async (_label, productId, marketStatus, gate) => {
@@ -177,11 +182,17 @@ describe('D2B product page — market and safety panel', () => {
     )
   })
 
-  it('says plainly when a product was never covered by the research snapshot', async () => {
-    const { container, getByText } = await detailFor(NOT_RESEARCHED)
-    getByText(/was not covered by the U.S. status research snapshot/)
-    // Never rendered as safe or recall-free.
-    getByText(/not a finding that no action exists/)
+  it('shows new safety findings without inferring current market availability', async () => {
+    const { container, getByText } = await detailFor(NEWLY_RESEARCHED)
+    getByText(/Matching FDA entries report that commercial distribution has ended/)
+    expect(container.querySelector('[data-market-status]')).toHaveAttribute(
+      'data-market-status',
+      'current_status_unverified',
+    )
+    expect(container.querySelector('[data-status-gate]')).toHaveAttribute(
+      'data-status-gate',
+      'blocked_active_safety_action',
+    )
     expect(container.textContent).not.toMatch(/recall-free/)
   })
 
@@ -194,7 +205,7 @@ describe('D2B product page — market and safety panel', () => {
     // "not recently verified" would be noise, not information.
     const unverified = within((await detailFor(UNVERIFIED)).container)
     expect(unverified.queryByText(/Research confidence:/)).toBeNull()
-    unverified.getByText('2026-08-13')
+    expect(unverified.getAllByText('2026-09-17').length).toBeGreaterThan(0)
   })
 
   it('renders the D2C normalized device type in the results table, never source categories or codes', async () => {

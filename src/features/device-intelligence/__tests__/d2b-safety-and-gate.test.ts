@@ -10,7 +10,6 @@ import {
   searchAtlas,
 } from '@/features/device-intelligence/server/atlas.server'
 import { getProductStatus } from '@/features/device-intelligence/server/product-status.server'
-import { sourceCompletenessCount } from '../../../../scripts/ip-preference-cards/source-completeness-intake'
 
 /**
  * The D2B safety contract: an active FDA safety action changes what a product's page SAYS
@@ -93,11 +92,11 @@ describe('D2B — active safety actions block recommendation, never visibility',
       const scope = status.safetyActionScope ?? 'null'
       byScope.set(scope, (byScope.get(scope) ?? 0) + 1)
     }
-    // Physician review removes four false Ion matches and adds three exact-model notice groups.
+    // September exact-identity FDA searches supplement the physician-adjudicated notices.
     expect(Object.fromEntries([...byScope.entries()].sort())).toEqual({
-      lot_specific: 16,
-      product_wide: 5,
-      unknown: 1,
+      lot_specific: 141,
+      product_wide: 3,
+      unknown: 19,
     })
   })
 
@@ -106,7 +105,7 @@ describe('D2B — active safety actions block recommendation, never visibility',
     const historical = atlas.products
       .map((product) => ({ product, status: getProductStatus(product.product_id) }))
       .filter((entry) => entry.status.safetyDisplay === 'historical_safety_notice')
-    expect(historical.length).toBe(4)
+    expect(historical.length).toBe(33)
     for (const { product, status } of historical) {
       // Visible, badged on cards, but not blocked and not called active.
       expect(getAtlasProductDetail(product.product_id)).not.toBeNull()
@@ -169,20 +168,20 @@ describe('D2B — the gate governs recommendation only', () => {
         status.statusRecommendationGate,
         (gates.get(status.statusRecommendationGate) ?? 0) + 1,
       )
+      const detail = getAtlasProductDetail(product.product_id)
+      if (detail!.roles.length === 0) productsWithoutRole += 1
       if (status.statusRecommendationGate === 'clear') continue
       // Blocked / review-required products keep their page and identity. Brochure identities
       // without defensible canonical roles remain explicitly unassigned.
-      const detail = getAtlasProductDetail(product.product_id)
       expect(detail).not.toBeNull()
       expect(detail!.product.product_name).toBe(product.product_name)
-      if (detail!.roles.length === 0) productsWithoutRole += 1
     }
     expect(productsWithoutRole).toBe(25)
-    // Researched review holds plus all unresearched products remain honestly review-required.
+    // Active notices and unresolved identities remain gated after the FDA refresh.
     expect(Object.fromEntries([...gates.entries()].sort())).toEqual({
-      blocked_active_safety_action: 22,
-      clear: 521,
-      review_required: sourceCompletenessCount('status_gate_review_required') + 1,
+      blocked_active_safety_action: 163,
+      clear: 1647,
+      review_required: 147,
     })
   })
 })
