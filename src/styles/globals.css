@@ -522,19 +522,27 @@ body:has([data-learning-module-v2-theme-root][data-theme='dark']) {
   }
 }
 
-/* Active desktop simulations are application workspaces. At accessible reflow widths/heights the
-   normal document flow is restored by the component's responsive styles. */
+/* Active desktop simulations are application workspaces. Adapters that deliberately render a
+   flowing lesson declare its scroll owner; sharing lesson chrome must not lock that document.
+   At accessible reflow widths/heights the component's responsive styles restore document flow. */
 @media (min-width: 1024px) and (min-height: 700px) {
-  body:has(#main-content [data-critical-care-activity-shell]) {
+  body:has(#main-content [data-critical-care-activity-shell]):not(
+      :has([data-learning-document-flow])
+    ) {
     overflow: hidden;
   }
 
-  body:has(#main-content [data-critical-care-activity-shell])
+  body:has(#main-content [data-critical-care-activity-shell]):not(
+      :has([data-learning-document-flow])
+    )
     footer:not([data-critical-care-activity-shell] footer) {
     display: none;
   }
 
-  body:has(#main-content [data-critical-care-activity-shell]) #main-content {
+  body:has(#main-content [data-critical-care-activity-shell]):not(
+      :has([data-learning-document-flow])
+    )
+    #main-content {
     min-height: 0;
     overflow: hidden;
   }

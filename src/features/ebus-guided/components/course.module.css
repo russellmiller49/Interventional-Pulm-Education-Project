@@ -45,6 +45,16 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+.moduleShell .choices:disabled label {
+  cursor: default;
+  border-color: var(--line);
+  background: var(--panel);
+  color: var(--muted);
+}
+.moduleShell select:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
 .page {
   max-width: 1200px;
   margin: auto;

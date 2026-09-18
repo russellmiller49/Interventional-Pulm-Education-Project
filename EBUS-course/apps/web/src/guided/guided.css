@@ -432,38 +432,48 @@ body,
 .guided-workbench button {
   min-height: 42px;
 }
-.guided-recording {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  column-gap: 14px;
+/* Keep the manipulated recording beside its controls. Flex wrapping also responds
+   to enlarged text; the host retains the only vertical scroll owner. */
+.recorded-workspace {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
   align-items: start;
 }
-.guided-recording > * {
-  grid-column: 1 / -1;
+.recorded-images {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  flex: 2 1 24em;
+  min-width: 0;
+  align-items: start;
+}
+.recorded-controls {
+  flex: 1 1 17em;
   min-width: 0;
 }
-.guided-recording > .recorded-baseline {
-  grid-column: 1;
+.recorded-images > .recorded-baseline {
   margin: 0;
 }
-.guided-recording > .recorded-current {
-  grid-column: 2;
+.recorded-images:not(:has(.recorded-baseline)) {
+  grid-template-columns: minmax(0, 1fr);
 }
-.guided-recording:not(:has(.recorded-baseline)) > .recorded-current {
-  grid-column: 1 / -1;
+.recorded-images .guided-media {
+  width: min(100%, 300px);
+  margin-inline: auto;
 }
-.guided-recording > .recorded-baseline .guided-media {
-  max-height: 360px;
+.recorded-controls fieldset {
+  margin-top: 0;
+  min-width: 0;
 }
-.guided-recording > fieldset[hidden] {
-  display: none;
+.recorded-controls > button {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
 }
-@media (max-width: 560px) {
-  .guided-recording {
+@media (max-width: 28em) {
+  .recorded-images {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .guided-recording > .recorded-current {
-    grid-column: 1;
   }
 }
 .guided-workbench fieldset[hidden] {

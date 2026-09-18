@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, type ReactNode, type RefObject } from 'react'
+import { useEffect, useId, type ReactNode, type RefObject } from 'react'
 import type { NowCardAction, NowCardModel } from '@/features/learning-module/stage/NowCard'
 import { Link } from '@/i18n/navigation'
 import type { CoursePresentation } from '../../content/courseFlow'
@@ -45,6 +45,51 @@ export function BronchCourseLayout({
 }) {
   const id = useId()
   const interactive = presentation === 'skill' || presentation === 'inspection'
+  // The site navigation wraps under text enlargement. Reserve its actual height
+  // for native keyboard scrolling without changing focus or the shared shell.
+  useEffect(() => {
+    const root = document.documentElement
+    const header = document.getElementById('main-content')?.previousElementSibling
+    if (!header) return
+    const measure = () => {
+      const zoom = Number.parseFloat(getComputedStyle(root).zoom) || 1
+      root.style.setProperty(
+        '--bronch-focus-clear-top',
+        `${(header.getBoundingClientRect().height + 12) / zoom}px`,
+      )
+    }
+    measure()
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+    observer?.observe(header)
+    return () => {
+      observer?.disconnect()
+      root.style.removeProperty('--bronch-focus-clear-top')
+    }
+  }, [])
+  const continuation = (
+    <div className={styles.continuation}>
+      {model.status ? (
+        <p className={styles.status} data-now-status role="status">
+          {model.status}
+        </p>
+      ) : null}
+      <div className={styles.actions}>
+        {model.back ? <Action action={{ ...model.back, label: 'Back' }} back /> : <span />}
+        <div className={styles.forward}>
+          {skip ? <Action action={skip} skip /> : null}
+          {model.secondary ? <Action action={model.secondary} /> : null}
+          {model.primary ? (
+            <Action action={model.primary} primary reasonId={`${id}-reason`} />
+          ) : null}
+        </div>
+      </div>
+      {model.primary?.disabled && model.primary.disabledReason ? (
+        <p id={`${id}-reason`} data-now-disabled-reason>
+          {model.primary.disabledReason}
+        </p>
+      ) : null}
+    </div>
+  )
   return (
     <div
       className={styles.course}
@@ -66,6 +111,7 @@ export function BronchCourseLayout({
           <h2 id={`${id}-title`}>{model.heading}</h2>
           <p data-current-instruction>{model.body}</p>
         </div>
+        {interactive ? continuation : null}
         {interactive ? (
           <div className={styles.skillGrid}>
             <div className={styles.workspace}>{workspace}</div>
@@ -82,29 +128,7 @@ export function BronchCourseLayout({
           </div>
         )}
         {completion}
-        <div className={styles.continuation}>
-          {interactive ? <p className={styles.stickyTask}>{model.body}</p> : null}
-          {model.status ? (
-            <p className={styles.status} data-now-status role="status">
-              {model.status}
-            </p>
-          ) : null}
-          <div className={styles.actions}>
-            {model.back ? <Action action={{ ...model.back, label: 'Back' }} back /> : <span />}
-            <div className={styles.forward}>
-              {skip ? <Action action={skip} skip /> : null}
-              {model.secondary ? <Action action={model.secondary} /> : null}
-              {model.primary ? (
-                <Action action={model.primary} primary reasonId={`${id}-reason`} />
-              ) : null}
-            </div>
-          </div>
-          {model.primary?.disabled && model.primary.disabledReason ? (
-            <p id={`${id}-reason`} data-now-disabled-reason>
-              {model.primary.disabledReason}
-            </p>
-          ) : null}
-        </div>
+        {!interactive ? continuation : null}
       </section>
       <footer className={styles.sources}>{footer}</footer>
       {overlay}
