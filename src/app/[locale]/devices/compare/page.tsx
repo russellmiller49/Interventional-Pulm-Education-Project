@@ -15,6 +15,10 @@ import {
 import { getProductStatusLabels } from '@/features/device-intelligence/server/status-labels.server'
 import { getTaxonomyLabels } from '@/features/device-intelligence/server/product-taxonomy.server'
 import { getSafetyEvidence } from '@/features/device-intelligence/server/safety-evidence.server'
+import {
+  getPhysicianProductReview,
+  PHYSICIAN_REVIEW_DATE,
+} from '@/features/device-intelligence/server/physician-review.server'
 import { safetyEvidenceFreshness } from '@/features/device-intelligence/domain/evidence-freshness'
 import styles from '@/features/device-intelligence/components/ReferencePrint.module.css'
 
@@ -34,6 +38,7 @@ export default async function DeviceComparisonPage({
   const { locale } = await params
   setRequestLocale(locale)
   const t = await getTranslations('deviceIntelligence.comparison')
+  const tReview = await getTranslations('deviceIntelligence.physicianReview')
   const raw = (await searchParams)?.ids
   const ids = Array.isArray(raw) ? null : parseDeviceIds(raw, MAX_COMPARISON_DEVICES)
   const comparison = getDeviceComparison(ids ?? [])
@@ -144,6 +149,7 @@ export default async function DeviceComparisonPage({
                   {comparison.devices.map((device) => {
                     const evidence = getSafetyEvidence(device.product.product_id)
                     const freshness = safetyEvidenceFreshness(evidence, today)
+                    const physicianReview = getPhysicianProductReview(device.product.product_id)
                     return (
                       <td key={device.product.product_id} className={cellClass}>
                         <ProductStatusBadges status={device.status} labels={statusLabels} />
@@ -151,9 +157,31 @@ export default async function DeviceComparisonPage({
                           {statusLabels.evidence.freshness[freshness]}
                         </p>
                         <p className="mt-1 text-xs">
-                          {statusLabels.snapshotLabel}{' '}
-                          {device.status.researchSnapshotDate ?? statusLabels.notResearched}
+                          {device.status.researchSnapshotDate
+                            ? `${statusLabels.snapshotLabel} ${device.status.researchSnapshotDate}`
+                            : evidence?.notices.length
+                              ? statusLabels.marketNotResearchedWithSafetyEvidence
+                              : statusLabels.notResearched}
                         </p>
+                        {physicianReview ? (
+                          <div className="mt-2 space-y-2 text-xs">
+                            <Link
+                              className="underline"
+                              href={
+                                `/${locale}/devices/${device.product.product_id}#physician-evidence-review` as Route
+                              }
+                            >
+                              {tReview('heading')} · {PHYSICIAN_REVIEW_DATE}
+                            </Link>
+                            {physicianReview.notes
+                              .filter((note) => note.kind === 'safety')
+                              .map((note) => (
+                                <p lang="en" key={note.text}>
+                                  {note.text}
+                                </p>
+                              ))}
+                          </div>
+                        ) : null}
                         {device.status.statusRecommendationGate !== 'clear' ? (
                           <p className="mt-2 text-xs font-semibold">
                             {statusLabels.gateHeading}:{' '}

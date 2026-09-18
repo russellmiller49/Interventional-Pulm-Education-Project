@@ -78,6 +78,7 @@ export async function getProductStatusLabels(locale: string): Promise<ProductSta
     confidenceLabel: t('confidenceLabel'),
     snapshotLabel: t('snapshotLabel'),
     notResearched: t('notResearched'),
+    marketNotResearchedWithSafetyEvidence: t('marketNotResearchedWithSafetyEvidence'),
     orderabilityNote: t('orderabilityNote'),
     lotSpecificNote: t('lotSpecificNote'),
     referenceCodesLabel: t('referenceCodesLabel'),

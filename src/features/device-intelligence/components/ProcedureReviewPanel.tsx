@@ -3,6 +3,10 @@ import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import type { ProcedureWorkspace } from '../server/procedures.server'
 import { getProcedureReviewSummary } from '../server/procedure-review.server'
+import {
+  getPhysicianProcedureReview,
+  PHYSICIAN_REVIEW_DATE,
+} from '../server/physician-review.server'
 
 export async function ProcedureReviewPanel({
   locale,
@@ -15,6 +19,7 @@ export async function ProcedureReviewPanel({
 }) {
   const t = await getTranslations('deviceIntelligence.procedureReview')
   const summary = getProcedureReviewSummary(workspace)
+  const physicianReview = getPhysicianProcedureReview(workspace.procedureCode)
   return (
     <section className="space-y-3 rounded-2xl border border-border p-4" aria-label={t('title')}>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -46,6 +51,14 @@ export async function ProcedureReviewPanel({
         {summary.laserCoverageGap ? <li>{t('laser')}</li> : null}
         {summary.rescueAuthoringGap ? <li>{t('rescue')}</li> : null}
       </ul>
+      {physicianReview ? (
+        <div lang="en" className="space-y-2 border-t pt-3 text-sm">
+          <p className="font-semibold">Evidence review · {PHYSICIAN_REVIEW_DATE}</p>
+          {physicianReview.notes.map((note) => (
+            <p key={note}>{note}</p>
+          ))}
+        </div>
+      ) : null}
     </section>
   )
 }

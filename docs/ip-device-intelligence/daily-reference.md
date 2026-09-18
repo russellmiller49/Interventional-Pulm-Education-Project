@@ -2,6 +2,10 @@
 
 Implemented September 11–12, 2026, on top of the reference-beta work in PR #175.
 
+The [September 17 physician review](physician-review-2026-09-17.md) now applies the completed
+50-device evidence review through a separate reviewed overlay. The preparation history below
+describes the original packet; its pending decisions are superseded only as recorded there.
+
 The reference now supports saving exact devices, comparing two to four items, and printing a dated comparison or draft setup worksheet. Clinicians can inspect specifications and their evidence scope; office managers can retain a short list and identify questions for local equipment review. This is a reference workflow at the “knows how” level. It has no assessment, patient simulation or competence claim, so lesson sequencing and retrieval exercises are not added to these utility pages.
 
 ## Saved devices

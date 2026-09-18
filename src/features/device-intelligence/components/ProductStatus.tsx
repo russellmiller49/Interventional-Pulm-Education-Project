@@ -58,6 +58,7 @@ export interface ProductStatusLabels {
   confidenceLabel: string
   snapshotLabel: string
   notResearched: string
+  marketNotResearchedWithSafetyEvidence: string
   orderabilityNote: string
   lotSpecificNote: string
   referenceCodesLabel: string
@@ -260,6 +261,8 @@ export function MarketSafetyPanel({
                 {labels.snapshotLabel}{' '}
                 <span className="font-mono">{status.researchSnapshotDate}</span>
               </>
+            ) : evidence?.notices.length ? (
+              labels.marketNotResearchedWithSafetyEvidence
             ) : (
               labels.notResearched
             )}

@@ -319,13 +319,19 @@ describe('D2B status overlay — runtime reader', () => {
       expect(SAFETY_DISPLAYS).toContain(status.safetyDisplay)
       expect(STATUS_RECOMMENDATION_GATES).toContain(status.statusRecommendationGate)
       if (status.researched) researched += 1
-      else expect(status).toEqual(UNRESEARCHED_PRODUCT_STATUS)
+      else if (
+        ['PRD-04A0F61F62', 'PRD-2F1DF55F3C', 'PRD-94C61697D9'].includes(product.product_id)
+      ) {
+        // Narrow physician recall adjudication does not assert a refreshed market search.
+        expect(status.marketStatus).toBe('current_status_unverified')
+        expect(status.researchSnapshotDate).toBeNull()
+        expect(status.safetyDisplay).toBe('active_safety_notice')
+        expect(status.statusRecommendationGate).toBe('blocked_active_safety_action')
+      } else expect(status).toEqual(UNRESEARCHED_PRODUCT_STATUS)
     }
-    // Research remains frozen; new source-completeness identities stay explicitly unresearched.
-    expect(researched).toBe(sourceCompletenessCount('status_researched_products'))
-    expect(atlas.products.length - researched).toBe(
-      sourceCompletenessCount('status_unresearched_atlas_products'),
-    )
+    // The immutable August overlay is supplemented by the dated September FDA refresh.
+    expect(researched).toBe(1957)
+    expect(atlas.products.length - researched).toBe(0)
   })
 
   it('exposes the pinned provenance to the UI', () => {
@@ -348,8 +354,10 @@ describe('D2B status overlay — runtime reader', () => {
       }
     }
     roots.forEach(walk)
-    const importers = sources.filter((source) =>
-      /^import .* from '[^']*product-status-overlay\.json'$/m.test(source.text),
+    const importers = sources.filter(
+      (source) =>
+        !source.path.includes('/__tests__/') &&
+        /^import .* from '[^']*product-status-overlay\.json'$/m.test(source.text),
     )
     expect(importers.map((source) => source.path)).toEqual([
       'src/features/device-intelligence/server/product-status.server.ts',

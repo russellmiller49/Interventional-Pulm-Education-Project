@@ -12,7 +12,10 @@ export function safetyEvidenceFreshness(
   evidence: SafetyEvidenceRow | null,
   today: string,
 ): SafetyFreshness {
-  if (!evidence || evidence.search_status === 'not_searched') return 'not_checked'
+  if (!evidence) return 'not_checked'
+  // A reviewed individual notice does not establish complete search coverage.
+  if (evidence.search_status === 'not_searched')
+    return evidence.notices.length ? 'incomplete' : 'not_checked'
   if (evidence.search_status !== 'searched') return 'incomplete'
   const systems = new Set(evidence.source_checks.map((source) => source.system))
   if (

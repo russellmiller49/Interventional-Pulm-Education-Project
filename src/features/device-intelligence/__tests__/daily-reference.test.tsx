@@ -181,15 +181,15 @@ describe('Comparison source semantics', () => {
   })
   it('prefers reviewed exact specs and preserves the original canonical values', () => {
     const detail = getAtlasProductDetail(CRYO)!
-    const original = detail.product.working_length_cm
-    const changed = { ...detail, product: { ...detail.product, working_length_cm: 999 } }
-    expect(comparisonValue(changed, 'workingLength')).toMatchObject({
-      value: 115,
+    const original = detail.product.length_mm
+    const changed = { ...detail, product: { ...detail.product, length_mm: 999 } }
+    expect(comparisonValue(changed, 'labeledLength')).toMatchObject({
+      value: 1150,
       origin: 'reviewed',
       scope: 'exact',
     })
-    expect(comparisonValue(changed, 'workingLength').citations.length).toBeGreaterThan(0)
-    expect(getAtlasCatalogStore().productById.get(CRYO)!.working_length_cm).toBe(original)
+    expect(comparisonValue(changed, 'labeledLength').citations.length).toBeGreaterThan(0)
+    expect(getAtlasCatalogStore().productById.get(CRYO)!.length_mm).toBe(original)
   })
   it('keeps configuration evidence scoped and missing values honest', () => {
     const detail = getAtlasProductDetail('PRD-F4AE2A74E6')!
@@ -204,6 +204,21 @@ describe('Comparison source semantics', () => {
     expect(getDeviceComparison([AXESS, 'PRD-4A04124FF2']).fields).toContain('workingChannel')
     expect(() => getDeviceComparison(Array(5).fill(CRYO))).toThrow()
   })
+  it('shows refreshed distribution evidence alongside the retained active safety notices', async () => {
+    const view = render(
+      await DeviceComparisonPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ ids: 'PRD-04A0F61F62,PRD-94C61697D9' }),
+      }),
+    )
+    expect(
+      view.container.querySelectorAll('[data-market-status="likely_current_us"]'),
+    ).toHaveLength(2)
+    expect(view.getAllByText('U.S. status research snapshot: 2026-09-17')).toHaveLength(2)
+    expect(
+      view.queryByText(/its FDA safety-action status have not been verified/),
+    ).not.toBeInTheDocument()
+  })
   it('uses the corrected summary with safety and specification citations on the rendered comparison', async () => {
     const view = render(
       await DeviceComparisonPage({
@@ -216,7 +231,7 @@ describe('Comparison source semantics', () => {
       'href',
       expect.stringContaining('res.cfm?id='),
     )
-    expect(screen.getAllByText('115 cm', { selector: 'span.font-semibold' })).toHaveLength(2)
+    expect(screen.getAllByText('1150 mm', { selector: 'span.font-semibold' })).toHaveLength(2)
     expect(await axe(view.container)).toHaveNoViolations()
     view.unmount()
     const clrView = render(

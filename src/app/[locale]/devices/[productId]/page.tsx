@@ -1,5 +1,8 @@
 import type { Metadata, Route } from 'next'
 import { SaveDeviceButton } from '@/features/device-intelligence/components/SavedDevicesProvider'
+import { PhysicianReviewPanel } from '@/features/device-intelligence/components/PhysicianReviewPanel'
+import { MarketEvidencePanel } from '@/features/device-intelligence/components/MarketEvidencePanel'
+import { getPhysicianProductReview } from '@/features/device-intelligence/server/physician-review.server'
 import { getSaveDeviceLabels } from '@/features/device-intelligence/server/reference-labels.server'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -54,12 +57,15 @@ export default async function DeviceDetailPage({ params }: PageProps) {
   const t = await getTranslations('deviceIntelligence.device')
   const tCommon = await getTranslations('deviceIntelligence.common')
   const tReference = await getTranslations('deviceIntelligence.reference')
+  const tReview = await getTranslations('deviceIntelligence.physicianReview')
+  const tMarketEvidence = await getTranslations('deviceIntelligence.marketEvidence')
   const tVerification = await getTranslations('preferenceCards.catalog.verification')
 
   if (!PRODUCT_ID_PATTERN.test(productId)) notFound()
   const detail = getAtlasProductDetail(productId)
   if (!detail) notFound()
   const { product } = detail
+  const physicianReview = getPhysicianProductReview(productId)
   const safetyEvidence = getSafetyEvidence(productId)
   const safetyFreshness = safetyEvidenceFreshness(
     safetyEvidence,
@@ -91,7 +97,17 @@ export default async function DeviceDetailPage({ params }: PageProps) {
 
   const identifiers: { label: string; value: string | null; mono?: boolean }[] = [
     { label: t('fields.catalogNumber'), value: product.catalog_number, mono: true },
-    { label: t('fields.gtin'), value: product.gtin, mono: true },
+    {
+      label: t('fields.gtin'),
+      value:
+        (product.gtin ??
+          physicianReview?.udi_records
+            .filter((record) => record.scope === 'exact')
+            .map((record) => `${record.primary_di} (${record.model})`)
+            .join('; ')) ||
+        null,
+      mono: true,
+    },
     { label: t('fields.globalPartNumber'), value: product.global_part_number, mono: true },
     { label: t('fields.referencePartNumber'), value: product.reference_part_number, mono: true },
     { label: t('fields.alternateIds'), value: product.alternate_ids, mono: true },
@@ -231,6 +247,10 @@ export default async function DeviceDetailPage({ params }: PageProps) {
         evidence={safetyEvidence}
         freshness={safetyFreshness}
       />
+
+      <MarketEvidencePanel productId={productId} translate={tMarketEvidence} />
+
+      <PhysicianReviewPanel productId={productId} translate={tReview} />
 
       {detail.profile ? (
         <ProductProfilePanel

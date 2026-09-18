@@ -16,7 +16,8 @@ const clone = () => JSON.parse(JSON.stringify(evidence)) as typeof evidence
 
 describe('dated safety evidence', () => {
   it('labels historical and active notices independently on a product with both', async () => {
-    const productId = 'PRD-48C48C68BA'
+    // Arrow AK-01500 retains an active kit correction and a terminated packaging notice.
+    const productId = 'PRD-7E17F5F17E'
     const mixed = getSafetyEvidence(productId)!
     expect(new Set(mixed.notices.map((notice) => notice.recorded_state))).toEqual(
       new Set(['active', 'historical']),
@@ -97,10 +98,36 @@ describe('dated safety evidence', () => {
     partial.source_checks.pop()
     expect(safetyEvidenceFreshness(partial, '2026-09-11')).toBe('incomplete')
     partial.search_status = 'not_searched'
-    expect(safetyEvidenceFreshness(partial, '2026-09-11')).toBe('not_checked')
+    expect(safetyEvidenceFreshness(partial, '2026-09-11')).toBe('incomplete')
+    expect(safetyEvidenceFreshness({ ...partial, notices: [] }, '2026-09-11')).toBe('not_checked')
     partial.search_status = 'query_error'
     expect(safetyEvidenceFreshness(partial, '2026-09-11')).toBe('incomplete')
     expect(partial.notices).toEqual(evidence.notices)
+  })
+
+  it('retains the physician notice after completing dated FDA market and safety searches', async () => {
+    const productId = 'PRD-04A0F61F62'
+    const reviewed = getSafetyEvidence(productId)!
+    const status = getProductStatus(productId)
+    const labels = await getProductStatusLabels('en')
+    const freshness = safetyEvidenceFreshness(reviewed, '2026-09-17')
+    expect(status.researchSnapshotDate).toBe('2026-09-17')
+    expect(status.marketStatus).toBe('likely_current_us')
+    expect(freshness).toBe('within_review_interval')
+    const view = render(
+      <MarketSafetyPanel
+        status={status}
+        labels={labels}
+        evidence={reviewed}
+        freshness={freshness}
+      />,
+    )
+    view.getByText('2026-09-17')
+    expect(view.queryByText(labels.marketNotResearchedWithSafetyEvidence)).not.toBeInTheDocument()
+    expect(view.queryByText(labels.notResearched)).not.toBeInTheDocument()
+    expect(view.queryByText(labels.evidence.freshness.not_checked)).not.toBeInTheDocument()
+    expect(view.container.querySelector('[data-safety-notice="Z-1723-2025"]')).toBeInTheDocument()
+    expect(status.statusRecommendationGate).toBe('blocked_active_safety_action')
   })
 
   it('shows a dated actionable notice and never turns aging evidence into a cleared status', async () => {
