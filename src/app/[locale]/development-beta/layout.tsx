@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'Development beta testing',
   robots: { index: false, follow: false, noarchive: true },
 }
-// The site's proxy requires the same verified, onboarded account used by the main site.
+// Server mode requires a verified, onboarded account; owner-local serves only browser-local UI.
 export default function BetaLayout({ children }: { children: ReactNode }) {
   return children
 }

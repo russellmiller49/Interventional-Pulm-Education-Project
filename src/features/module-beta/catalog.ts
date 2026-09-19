@@ -97,6 +97,7 @@ export function feedbackPagePath(url: URL) {
   const safe = new URL(url.pathname, 'https://module.invalid')
   for (const key of [
     'lesson',
+    'section',
     'unit',
     'step',
     'tab',
@@ -105,6 +106,17 @@ export function feedbackPagePath(url: URL) {
     'station',
     'view',
     'device',
+    // Audited lesson/stage and simulator selectors; see docs/module-beta-owner-review.md.
+    'phase',
+    'activity',
+    'track',
+    'entry',
+    'focus',
+    'seed',
+    'start',
+    'nextLearn',
+    'scopeProfile',
+    'output',
   ]) {
     const value = url.searchParams.get(key)
     if (value && /^[\w.-]{1,100}$/.test(value)) safe.searchParams.set(key, value)

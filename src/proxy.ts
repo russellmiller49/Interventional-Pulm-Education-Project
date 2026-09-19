@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { isOwnerLocalFeedbackPage } from '@/features/module-beta/config'
 
 import {
   canUseLegacyEbusApproval,
@@ -88,6 +89,9 @@ export async function proxy(req: NextRequest) {
   if (hasValidLocalDevAuthCookie(req.nextUrl, req.cookies.get(LOCAL_DEV_AUTH_COOKIE_NAME)?.value)) {
     return res
   }
+
+  // This shell reads only this browser's IndexedDB; server APIs keep independent auth checks.
+  if (isOwnerLocalFeedbackPage(pathname)) return res
 
   type CookieOptions = Parameters<typeof res.cookies.set>[2]
 
