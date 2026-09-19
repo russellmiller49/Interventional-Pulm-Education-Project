@@ -12,6 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { feedbackMode } from './config'
+import { saveOwnerFeedback } from './ownerFeedbackStore'
 import { betaModuleForPath, feedbackPagePath, type BetaModule } from './catalog'
 import {
   ScreenshotEditor,
@@ -26,6 +28,7 @@ export function BetaTestingFrame({
   moduleEntry: BetaModule
   locale: string
 }) {
+  const local = feedbackMode() === 'owner-local'
   const frame = useRef<HTMLIFrameElement>(null)
   const screenshotDraft = useRef<ScreenshotDraft>({ source: null, rects: [] })
   const editor = useRef<ScreenshotEditorHandle>(null)
@@ -72,22 +75,38 @@ export function BetaTestingFrame({
     setError('')
     try {
       const image = await editor.current?.exportImage()
-      const body = new FormData()
-      body.set('id', reportId)
-      body.set('moduleId', reportModule.id)
-      body.set('pagePath', pagePath)
-      body.set('comment', comment)
-      body.set('selectedText', selectedText)
-      if (image) body.set('screenshot', image, 'feedback.png')
-      const response = await fetch('/api/module-feedback', { method: 'POST', body })
-      const result = await response.json()
-      if (!response.ok) throw new Error(result.error || 'Feedback could not be saved.')
+      let savedId: string
+      if (local) {
+        const saved = await saveOwnerFeedback(
+          {
+            id: reportId,
+            moduleId: reportModule.id,
+            pagePath,
+            comment,
+            selectedText,
+          },
+          image,
+        )
+        savedId = saved.id
+      } else {
+        const body = new FormData()
+        body.set('id', reportId)
+        body.set('moduleId', reportModule.id)
+        body.set('pagePath', pagePath)
+        body.set('comment', comment)
+        body.set('selectedText', selectedText)
+        if (image) body.set('screenshot', image, 'feedback.png')
+        const response = await fetch('/api/module-feedback', { method: 'POST', body })
+        const result = await response.json()
+        if (!response.ok) throw new Error(result.error || 'Feedback could not be saved.')
+        savedId = result.id
+      }
       setOpen(false)
       setComment('')
       setSelectedText('')
       setReportId('')
       screenshotDraft.current = { source: null, rects: [] }
-      setSuccess(`Feedback saved. Reference ${result.id.slice(0, 8)}.`)
+      setSuccess(`Feedback saved${local ? ' locally' : ''}. Reference ${savedId.slice(0, 8)}.`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Feedback could not be saved. Please retry.')
     } finally {
@@ -106,14 +125,23 @@ export function BetaTestingFrame({
             <ArrowLeft className="h-4 w-4" aria-hidden /> All modules
           </Link>
           <div>
-            <p className="text-xs font-semibold text-primary">Beta testing</p>
+            <p className="text-xs font-semibold text-primary">
+              {local ? 'Owner review · saved locally on this browser' : 'Beta testing'}
+            </p>
             <h1 className="text-sm font-semibold md:text-base">{moduleEntry.title}</h1>
           </div>
         </div>
-        <Button size="sm" onClick={beginFeedback}>
-          <MessageSquare className="mr-2 h-4 w-4" aria-hidden />
-          {reportId ? 'Continue feedback' : 'Give feedback'}
-        </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          {local && (
+            <Link href={`/${locale}/admin/module-feedback` as Route} className="text-sm underline">
+              Review feedback
+            </Link>
+          )}
+          <Button size="sm" onClick={beginFeedback}>
+            <MessageSquare className="mr-2 h-4 w-4" aria-hidden />
+            {reportId ? 'Continue feedback' : 'Give feedback'}
+          </Button>
+        </div>
       </header>
       {success && (
         <p role="status" className="border-b bg-muted px-4 py-2 text-sm">
@@ -146,7 +174,10 @@ export function BetaTestingFrame({
           <DialogHeader>
             <DialogTitle>Module feedback</DialogTitle>
             <DialogDescription>
-              {reportModule.title} · Saved to the site team’s private review workspace.
+              {reportModule.title} ·{' '}
+              {local
+                ? 'Saved locally on this browser for owner review.'
+                : 'Saved to the site team’s private review workspace.'}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">
@@ -208,7 +239,7 @@ export function BetaTestingFrame({
                 Continue testing
               </Button>
               <Button type="submit" disabled={sending || !comment.trim()}>
-                {sending ? 'Saving…' : 'Send feedback'}
+                {sending ? 'Saving…' : local ? 'Save feedback locally' : 'Send feedback'}
               </Button>
             </div>
           </form>

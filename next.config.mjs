@@ -80,9 +80,10 @@ const embeddedAppSecurityHeaders = securityHeaders.map((header) => {
   return header
 })
 
-// Only the modules offered by the signed-in beta hub may be framed by this site.
+// Only the modules offered by the development-beta hub may be framed by this site.
 // Keep the default DENY policy on unrelated pages and all feedback/admin endpoints.
 const betaFramePaths = [
+  '/ebus-guided/:path*',
   '/admin/therapeutic-bronchoscopy',
   '/learn/anatomy/airway/:path*',
   '/learn/anatomy/branch-tracing/:path*',

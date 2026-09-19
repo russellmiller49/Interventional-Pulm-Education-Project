@@ -1,11 +1,38 @@
 # Development beta testing
 
+## Owner review — current
+
+The site owner is the sole reviewer during the current phase. Set
+`NEXT_PUBLIC_MODULE_FEEDBACK_MODE=owner-local` explicitly to save feedback and screenshots in
+IndexedDB without Supabase. The beta interface labels this **Owner review · saved locally on this
+browser**. The local workspace at `/en/admin/module-feedback` supports filters, review status,
+notes, screenshots, ZIP export for consolidated ChatGPT analysis, and confirmed clearing.
+These records make no external-user identity claims and are not publication approval.
+See [Owner review feedback](module-beta-owner-review.md) for setup, privacy, storage limits,
+page-context inventory, exports, and the transition checklist.
+
+## External development beta — future
+
+Before external distribution, disable owner-local, set `NEXT_PUBLIC_MODULE_FEEDBACK_MODE=server`,
+and rebuild/restart. Configure main-site Supabase, apply the feedback migration (and later catalog
+constraint migrations), verify a real submission with an image and admin review, and verify
+main-site tester authentication. Missing/unrecognized mode configuration defaults to server.
+Server errors never fall back to local storage. The server-backed design below remains the
+external development-beta workflow.
+
+## Public release — later
+
+Public main-page exposure requires a separate publication decision after external beta.
+Neither feedback mode nor a resolved report authorizes publication.
+
+## Server-backed beta design
+
 The unlisted hub is `/en/development-beta` (also available under the other locale prefixes).
 It uses the existing main-site sign-in, email verification, and profile completion flow. Any
 verified site account can test; no shared password or separate tester account is introduced.
 The hub is absent from public navigation and the sitemap, with `noindex, nofollow, noarchive`.
 
-The hub offers 12 modules: the three requested simulators, the existing live anatomy lesson,
+The hub offers 13 modules: EBUS Guided, the three requested simulators, the existing live anatomy lesson,
 Device Atlas, Peripheral Bronchoscopy Imaging, Bronchoscopy Foundations, and the five critical
 care modules. The live lesson at `/en/intro-bronchoscopy/airway-anatomy` is now titled **Live
 Bronchoscopy Anatomy**; the synchronized simulator is a separate entry at
@@ -54,18 +81,21 @@ private `module-beta-feedback` image bucket. Do not apply it to the dedicated li
 project. Follow the primary-checkout requirements in `AGENTS.md` for database operations.
 This PR does not apply the migration to a shared or production database.
 
-The API uses the site's existing server-only `SUPABASE_SERVICE_ROLE_KEY` and Supabase URL
-configuration. No new environment variables are required. Table access is revoked from public,
+In server mode, the API uses the site's existing server-only `SUPABASE_SERVICE_ROLE_KEY` and Supabase URL
+configuration. `NEXT_PUBLIC_MODULE_FEEDBACK_MODE` selects the UI storage mode; it never changes
+API authorization. Table access is revoked from public,
 `anon`, and `authenticated`; only authenticated server endpoints use the service role. A
 restrictive storage policy also excludes browser roles from this bucket even if an unrelated
 legacy storage policy is broad. Images are served through an admin-authenticated endpoint with
 private/no-store caching, never public URLs.
 
-Without the migration or server storage configuration, the UI returns an explicit storage
+In server mode, without the migration or server storage configuration, the UI returns an explicit storage
 unavailable error and preserves the current draft. After deployment, verify a real tester
 submission with an image and a real admin review before distributing the beta link.
 
 ## Validation
+
+Owner-local validation and commands are documented in [Owner review feedback](module-beta-owner-review.md).
 
 - Targeted Jest coverage: catalog/access boundaries, signed-in and admin authorization,
   submission validation, account identity, retries, image rejection, cleanup after failed saves,

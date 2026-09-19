@@ -60,3 +60,30 @@ describe('beta module boundaries', () => {
     expect(isPngScreenshot(new TextEncoder().encode('<svg>unsafe</svg>'))).toBe(false)
   })
 })
+
+it.each([
+  ['peripheral-imaging', 'field'],
+  ['ebus-guided', 'acoustic-contact'],
+])('preserves exact %s lesson section without auth parameters', (moduleId, section) => {
+  const path = `/en/${moduleId}/learn?section=${section}`
+  expect(
+    feedbackPagePath(
+      new URL(
+        `https://site.test${path}&access_token=secret&redirect=private&email=owner@example.org`,
+      ),
+    ),
+  ).toBe(path)
+  expect(feedbackSchema.safeParse({ ...report, moduleId, pagePath: path }).success).toBe(true)
+})
+it('retains audited navigation selectors but rejects non-scalar values', () => {
+  const path =
+    '/en/mechanical-ventilation/practice?mode=guided&case=mv-1&device=hamilton&phase=apply&activity=oxygenation&track=vv&entry=check&focus=unit-1&seed=demo&start=1&nextLearn=pressure-system&scopeProfile=standard&output=reference'
+  expect(feedbackPagePath(new URL(`https://site.test${path}`))).toBe(path)
+  expect(
+    feedbackPagePath(
+      new URL(
+        'https://site.test/en/ebus-guided/learn?section=owner%40example.org&redirect=foo&token=abc#access_token=secret',
+      ),
+    ),
+  ).toBe('/en/ebus-guided/learn')
+})

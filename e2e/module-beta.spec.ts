@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { betaModules } from '../src/features/module-beta/catalog'
 
 const id = 'b8b3da51-5068-4c58-9ebd-3f846a27b337'
 test('beta hub requires sign-in, is noindex, and feedback APIs reject preview cookies', async ({
@@ -20,7 +21,9 @@ test('beta hub requires sign-in, is noindex, and feedback APIs reject preview co
   const hub = await page.goto('/en/development-beta')
   expect(hub!.headers()['x-robots-tag']).toContain('noindex')
   await expect(page.getByRole('heading', { name: 'Help shape the next modules' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Test with feedback' })).toHaveCount(12)
+  await expect(page.getByRole('link', { name: 'Test with feedback' })).toHaveCount(
+    betaModules.length,
+  )
   await page.screenshot({
     path: 'artifacts/module-beta-hub.png',
     fullPage: true,
@@ -64,7 +67,10 @@ test('feedback preserves the page, selection and highlighted screenshot across c
     }).formData()
     if (failFirst) {
       failFirst = false
-      await route.fulfill({ status: 503, json: { error: 'Storage temporarily unavailable.' } })
+      await route.fulfill({
+        status: 503,
+        json: { error: 'Feedback storage is not available yet. Your draft has been kept open.' },
+      })
       return
     }
     await route.fulfill({ status: 201, json: { id } })
@@ -110,8 +116,15 @@ test('feedback preserves the page, selection and highlighted screenshot across c
     animations: 'disabled',
   })
   await page.getByRole('button', { name: 'Send feedback' }).click()
-  await expect(page.getByRole('alert')).toHaveText('Storage temporarily unavailable.')
+  await expect(page.getByRole('alert')).toHaveText(
+    'Feedback storage is not available yet. Your draft has been kept open.',
+  )
   await expect(page.getByLabel('What should we know?')).toHaveValue('Increase contrast here.')
+  expect(
+    (await page.evaluate(() => indexedDB.databases())).some(
+      (db) => db.name === 'module-owner-feedback',
+    ),
+  ).toBe(false)
   await page.getByRole('button', { name: 'Send feedback' }).click()
   await expect(page.getByRole('status')).toContainText('Feedback saved')
   expect(submitted!.get('pagePath')).toBe('/en/devices?view=grid#label')
@@ -192,6 +205,8 @@ test('real standard module pages permit same-origin beta framing and have no fee
   for (const path of [
     '/en/devices',
     '/en/peripheral-imaging',
+    '/en/ebus-guided',
+    '/en/ebus-guided/learn?section=acoustic-contact',
     '/en/bronchoscopy-foundations',
     '/en/cardiohelp-ecmo',
     '/en/baxter-crrt',
