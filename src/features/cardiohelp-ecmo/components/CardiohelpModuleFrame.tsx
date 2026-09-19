@@ -57,6 +57,7 @@ export function CardiohelpModuleFrame({
         ref={shellRef}
         className={styles.moduleShell}
         data-activity-mode={activityMode || undefined}
+        data-learning-scroll-owner={activityMode ? 'workspace' : 'document'}
         data-no-handoff-translate={locale !== 'en'}
       >
         <ModuleFrameV2

@@ -2,6 +2,11 @@
   color: #e9f5f5;
   min-width: 0;
 }
+:global(html:focus-within):has(.foundation) {
+  /* A rapid Tab/Enter can leave a native smooth focus scroll pending when the task
+     changes. Settle native focus immediately so it cannot undo the instruction reveal. */
+  scroll-behavior: auto;
+}
 .foundation :global([data-lesson-shell]) {
   height: auto;
 }
@@ -12,8 +17,14 @@
   max-width: 1140px;
   margin: 0 auto;
   padding: 1rem clamp(0.6rem, 2vw, 1.5rem) 2rem;
-  scroll-margin-top: 9rem;
   min-width: 0;
+}
+.instruction {
+  scroll-margin-top: 9rem;
+}
+.instruction h2:focus {
+  outline: 3px solid #ffce80;
+  outline-offset: 3px;
 }
 .header {
   display: flex;
@@ -132,6 +143,25 @@
   flex: 4 1 800px;
   min-width: 0;
   max-width: 820px;
+}
+/* Keep the primary circuit with its controls. The inset is adjacent on wide screens,
+   then follows that pair when the available width or enlarged text requires wrapping. */
+.mechanismWorkbench {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+.mechanismWorkbench > .circuitWorkbench {
+  flex: 4 1 800px;
+  min-width: 0;
+  margin-top: 0;
+}
+.mechanismWorkbench > .inset {
+  flex: 1 1 16rem;
+  min-width: 0;
+  margin: 0;
 }
 .observation {
   border-left: 3px solid #75dce3;
@@ -289,7 +319,7 @@
   font: inherit;
 }
 @media (max-width: 600px) {
-  .readingSurface {
+  .instruction {
     scroll-margin-top: 5rem;
   }
   .header {

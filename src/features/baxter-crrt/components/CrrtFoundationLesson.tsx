@@ -76,16 +76,25 @@ export function CrrtFoundationLesson({
   const task = tasks[attempt.taskIndex]
   const taskLocation = `${attempt.attemptId}:${task.id}:${attempt.finished}`
   const previousTaskLocation = useRef(taskLocation)
+  const instructionRef = useRef<HTMLDivElement>(null)
+  const taskMapSelection = useRef(false)
   useEffect(() => {
-    if (previousTaskLocation.current === taskLocation) return
+    if (previousTaskLocation.current === taskLocation && !taskMapSelection.current) return
     previousTaskLocation.current = taskLocation
     // Continue, skip and task-map navigation replace the document beneath the learner.
-    // Reveal the new instruction after that replacement, not against the old page height.
+    // Target the instruction, excluding the persistent (possibly expanded) task map.
     // Initial entry and ordinary workbench operations do not scroll or move focus here.
-    document
-      .getElementById('crrt-current-task')
-      ?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
-  }, [taskLocation])
+    if (taskMapSelection.current) {
+      taskMapSelection.current = false
+      const heading = instructionRef.current?.querySelector('h2')
+      if (heading) {
+        heading.tabIndex = -1
+        heading.focus({ preventScroll: true })
+      }
+    }
+    instructionRef.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+    // Also consume explicit re-selection of the current task after its reducer render.
+  })
   // Keep the current instruction first, then its circuit/controls, then supporting prose.
   // Reading, assessment and operational tasks retain their authored presentation order.
   const circuitFirst =
@@ -263,7 +272,7 @@ export function CrrtFoundationLesson({
           </p>
         }
       >
-        <div className={styles.readingSurface} id="crrt-current-task" tabIndex={-1}>
+        <div className={styles.readingSurface}>
           <details className={styles.map}>
             <summary>
               Lesson tasks · {attempt.taskIndex + 1} of {tasks.length}
@@ -275,6 +284,7 @@ export function CrrtFoundationLesson({
                     type="button"
                     aria-current={index === attempt.taskIndex ? 'step' : undefined}
                     onClick={() => {
+                      taskMapSelection.current = true
                       dispatch({ type: 'navigate', taskIndex: index })
                     }}
                   >
@@ -286,23 +296,30 @@ export function CrrtFoundationLesson({
             </ol>
           </details>
           {attempt.finished ? (
-            <NowCard
-              model={{
-                kicker: 'Continue learning',
-                heading: 'End of this lesson',
-                body: 'Continue, revisit a topic, or repeat an exercise. Only your location and topics visited are saved.',
-                primary: {
-                  label: next ? `Continue to ${next.title}` : 'Continue to practice',
-                  onActivate: () =>
-                    next
-                      ? onNavigate(next.id as BaxterCrrtLearnLessonId)
-                      : router.push(`${baxterCrrtNavBase}/practice`),
-                },
-                secondary: { label: 'Repeat lesson', onActivate: onRestart },
-              }}
-            />
+            <div className={styles.instruction} id="crrt-current-task" ref={instructionRef}>
+              <NowCard
+                model={{
+                  kicker: 'Continue learning',
+                  heading: 'End of this lesson',
+                  body: 'Continue, revisit a topic, or repeat an exercise. Only your location and topics visited are saved.',
+                  primary: {
+                    label: next ? `Continue to ${next.title}` : 'Continue to practice',
+                    onActivate: () =>
+                      next
+                        ? onNavigate(next.id as BaxterCrrtLearnLessonId)
+                        : router.push(`${baxterCrrtNavBase}/practice`),
+                  },
+                  secondary: { label: 'Repeat lesson', onActivate: onRestart },
+                }}
+              />
+            </div>
           ) : (
-            <div key={`${attempt.attemptId}:${task.id}`}>
+            <div
+              key={`${attempt.attemptId}:${task.id}`}
+              className={styles.instruction}
+              id="crrt-current-task"
+              ref={instructionRef}
+            >
               <NowCard
                 model={{
                   kicker: `Task ${attempt.taskIndex + 1} of ${tasks.length} · ${task.kind === 'question' || task.kind === 'numeric' ? 'Apply' : task.kind === 'read' ? 'Worked explanation' : 'Guided exercise'}`,

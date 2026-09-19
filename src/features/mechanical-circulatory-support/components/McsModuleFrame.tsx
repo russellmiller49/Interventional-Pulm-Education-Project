@@ -36,7 +36,7 @@ export function McsModuleFrame({
         className={styles.moduleShell}
         data-activity-mode={activityMode || undefined}
         data-flowing={flowing || undefined}
-        data-learning-document-flow={flowing || undefined}
+        data-learning-scroll-owner={activityMode && !flowing ? 'workspace' : 'document'}
         data-no-handoff-translate={locale !== 'en'}
       >
         <ModuleFrameV2

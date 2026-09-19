@@ -522,25 +522,34 @@ body:has([data-learning-module-v2-theme-root][data-theme='dark']) {
   }
 }
 
-/* Active desktop simulations are application workspaces. Adapters that deliberately render a
-   flowing lesson declare its scroll owner; sharing lesson chrome must not lock that document.
+/* Scroll ownership belongs to the active module boundary: a direct child of #main-content
+   containing an activity shell. That boundary declares "document" or "workspace" once.
+   Only the exact "document" value opts out; missing/invalid declarations retain the legacy
+   workspace default. Descendant markers, siblings and portals cannot override the owner.
    At accessible reflow widths/heights the component's responsive styles restore document flow. */
 @media (min-width: 1024px) and (min-height: 700px) {
-  body:has(#main-content [data-critical-care-activity-shell]):not(
-      :has([data-learning-document-flow])
-    ) {
+  body:has(
+    #main-content
+      > :not([hidden], [inert], [aria-hidden='true'], [data-learning-scroll-owner='document'])
+      [data-critical-care-activity-shell]
+  ) {
     overflow: hidden;
   }
 
-  body:has(#main-content [data-critical-care-activity-shell]):not(
-      :has([data-learning-document-flow])
+  body:has(
+      #main-content
+        > :not([hidden], [inert], [aria-hidden='true'], [data-learning-scroll-owner='document'])
+        [data-critical-care-activity-shell]
     )
-    footer:not([data-critical-care-activity-shell] footer) {
+    #main-content
+    + footer {
     display: none;
   }
 
-  body:has(#main-content [data-critical-care-activity-shell]):not(
-      :has([data-learning-document-flow])
+  body:has(
+      #main-content
+        > :not([hidden], [inert], [aria-hidden='true'], [data-learning-scroll-owner='document'])
+        [data-critical-care-activity-shell]
     )
     #main-content {
     min-height: 0;

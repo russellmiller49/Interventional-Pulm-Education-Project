@@ -375,7 +375,9 @@ for (const id of ['mv', 'mcs'] as const) {
           ? '/en/mechanical-ventilation/learn?activity=ventilation-and-co2'
           : '/en/mechanical-circulatory-support/learn?lesson=iabp-timing-triggering',
       )
-      await expect(page.locator('[data-learning-document-flow]')).toBeVisible()
+      await expect(
+        page.locator('#main-content > [data-learning-scroll-owner="document"]'),
+      ).toBeVisible()
       if (variant.name === 'text200')
         await page.addStyleTag({ content: 'html { font-size:200% !important }' })
       await settleScroll(page)
