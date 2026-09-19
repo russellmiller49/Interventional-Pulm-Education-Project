@@ -354,18 +354,13 @@ export function CrrtFoundationToolView({
   }
   if (tool === 'mechanisms') {
     return (
-      <>
+      <div className={styles.mechanismWorkbench}>
         <CircuitWorkbench
-          controls={
-            <>
-              {controls([
-                { id: 'diffusion', label: 'Diffusion' },
-                { id: 'convection', label: 'Convection' },
-                { id: 'ultrafiltration', label: 'Ultrafiltration' },
-              ])}
-              <FilterInset mechanism={selected ?? 'diffusion'} />
-            </>
-          }
+          controls={controls([
+            { id: 'diffusion', label: 'Diffusion' },
+            { id: 'convection', label: 'Convection' },
+            { id: 'ultrafiltration', label: 'Ultrafiltration' },
+          ])}
         >
           <Circuit
             overlay={
@@ -374,7 +369,8 @@ export function CrrtFoundationToolView({
             node="filter"
           />
         </CircuitWorkbench>
-      </>
+        <FilterInset mechanism={selected ?? 'diffusion'} />
+      </div>
     )
   }
   if (tool === 'transport-comparison') {

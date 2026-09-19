@@ -33,6 +33,7 @@ export function ModuleFrame({
     <div
       className={styles.module}
       data-activity={activity}
+      data-learning-scroll-owner={activity ? 'workspace' : 'document'}
       data-enlarged-text={enlargedText || undefined}
       lang="en"
     >

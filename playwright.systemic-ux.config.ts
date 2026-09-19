@@ -8,10 +8,13 @@ export default defineConfig({
   testDir: './e2e',
   testMatch: [
     'systemic-ux.spec.ts',
+    'systemic-ux-stabilization.spec.ts',
     'peripheral-imaging.spec.ts',
     'bronchoscopy-foundations.spec.ts',
     'baxter-crrt-foundations.spec.ts',
     'baxter-crrt-self-paced.spec.ts',
+    'baxter-crrt-operations.spec.ts',
+    'baxter-crrt-advanced.spec.ts',
     'branch-tracing.spec.ts',
     'ecmo-layout.spec.ts',
     'ecmo-focus.spec.ts',

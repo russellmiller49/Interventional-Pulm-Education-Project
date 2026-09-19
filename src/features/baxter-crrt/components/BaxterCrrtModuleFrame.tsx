@@ -30,7 +30,7 @@ export function BaxterCrrtModuleFrame({
       <main
         className={styles.moduleShell}
         data-focused-lesson={focusedLesson || undefined}
-        data-learning-document-flow={focusedLesson || undefined}
+        data-learning-scroll-owner={activityMode && !focusedLesson ? 'workspace' : 'document'}
         data-release-stage={baxterCrrtReleaseStage}
         data-publication-status={baxterCrrtPublicationStatus}
         data-analytics="allowlisted"

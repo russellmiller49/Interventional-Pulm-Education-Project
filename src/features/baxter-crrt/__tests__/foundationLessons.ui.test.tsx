@@ -10,6 +10,7 @@ import {
 } from '../engine/progress'
 import { readCrrtSelfPacedProgress } from '../selfPacedProgress'
 import { crrtFoundationTasks } from '../content/foundationLessons'
+import { crrtLearnTasks } from '../content/learnTasks'
 
 jest.mock('@/features/critical-care/analytics', () => ({ recordCriticalCareEvent: jest.fn() }))
 jest.mock('@/i18n/navigation', () => ({
@@ -68,6 +69,42 @@ beforeEach(() => {
 })
 
 describe('rendered CRRT introductory pathway', () => {
+  it('reveals only the committed instruction and focuses it on explicit map selection, including re-selection', () => {
+    const original = HTMLElement.prototype.scrollIntoView
+    const scrollIntoView = jest.fn()
+    HTMLElement.prototype.scrollIntoView = scrollIntoView
+    try {
+      const view = render(<BaxterCrrtLearn initialLessonId="crrt-pressure-profile-integration" />)
+      expect(scrollIntoView).not.toHaveBeenCalled()
+      const tasks = crrtLearnTasks['crrt-pressure-profile-integration']!
+      const map = screen.getByText(/^Lesson tasks ·/).closest('details')!
+      map.open = true
+      for (const index of [tasks.length - 1, Math.floor(tasks.length / 2), 0, 0]) {
+        fireEvent.click(within(map).getByRole('button', { name: tasks[index].title }))
+        const heading = screen.getByRole('heading', { name: tasks[index].title })
+        expect(heading).toHaveFocus()
+        expect(scrollIntoView.mock.contexts.at(-1)).toBe(
+          view.container.querySelector('#crrt-current-task'),
+        )
+        expect(view.container.querySelector('#crrt-current-task')).not.toContainElement(map)
+        expect(map.open).toBe(true)
+      }
+      expect(scrollIntoView).toHaveBeenCalledTimes(4)
+      view.unmount()
+      scrollIntoView.mockClear()
+      render(<BaxterCrrtLearn initialLessonId="crrt-solute-transport" />)
+      fireEvent.click(button('Convection'))
+      expect(scrollIntoView).not.toHaveBeenCalled()
+      fireEvent.click(button('Continue without this exercise'))
+      expect(scrollIntoView).toHaveBeenCalledTimes(1)
+      expect(scrollIntoView.mock.contexts[0]).toContainElement(
+        screen.getByRole('heading', { name: crrtLearnTasks['crrt-solute-transport']![1].title }),
+      )
+    } finally {
+      HTMLElement.prototype.scrollIntoView = original
+    }
+  })
+
   it('keeps focused circuit, question and guided builder surfaces accessible', async () => {
     const view = render(<BaxterCrrtLearn initialLessonId="crrt-indications-modality" />)
     expect(await axe(view.container)).toHaveNoViolations()
