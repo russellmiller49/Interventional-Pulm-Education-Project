@@ -4,6 +4,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -18,7 +19,8 @@ import { ParametricCarm, BeamCone } from './ParametricCarm'
 import { DetectorImage } from './DetectorImage'
 import { Monitor } from './Monitor'
 import type { DrrTextureSource } from './drrTextureSource'
-import { CameraRig } from './CameraRig'
+import { CameraRig, type CameraCommand } from './CameraRig'
+import { SceneLabels } from './SceneLabels'
 import { ChainPins } from './ChainPins'
 import { ChainAnswerFieldset } from './ChainAnswerFieldset'
 import { WebGLContextGuard } from './WebGLContextGuard'
@@ -42,7 +44,7 @@ import { TimeView, TimeOverlay, TimeSamples } from './views/TimeView'
 import { useSuitePlayback, SuiteClock } from './useSuitePlayback'
 import { ProjectionOverlays } from './ProjectionOverlays'
 import { FieldView, FieldMask, FieldContextOverlay } from './views/FieldView'
-import { ProjectionView3D } from './views/ProjectionView3D'
+import { ProjectionView3D, projectionObjectLabels } from './views/ProjectionView3D'
 import { RayTrace, SignalReadout } from './views/SignalView'
 import { loadAnatomyVolume } from '../../lib/anatomy'
 import { rayProfile } from '../../lib/rayProfile'
@@ -53,6 +55,23 @@ import { rayThrough, suiteFrame, temporal, cbctOrbitSamples, roomMonitorOffset }
 import { SuiteFallback } from './SuiteFallback'
 import type { ImagingSuitePaneProps, SuiteCamera } from './types'
 import styles from './suite-scene.module.css'
+
+/**
+ * What each camera preset is for. Report 2.5 (fellow walkthrough, PDF p.18/p.25): the buttons
+ * answered a click without saying what the view was meant to show, and two of them — the view from
+ * above, where the detector covers the chest at 0°, and the beam's eye — read as broken. Every
+ * preset is kept; each now says what it shows, including what is in the way.
+ */
+const CAMERA_PURPOSE: Record<'suite' | 'beam' | 'anterior' | 'side' | 'head' | 'target', string> = {
+  suite:
+    'Suite: the whole C-arm, table and patient, to see where each component of image formation sits.',
+  beam: 'Beam view: from the X-ray tube, looking along the beam to the detector. Everything the beam crosses lines up, which is why a projection superimposes it.',
+  anterior:
+    'Anterior: looking down on the patient from the front. At 0° the detector is nearest you and covers the chest; the tube is beneath the table. Rotate the C-arm and the detector moves off the chest.',
+  side: 'Side: from beside the table. The tube is below, the detector above, and the depth between the tool and the target, which a frontal image collapses, is visible.',
+  head: 'Head: from the head of the table, to see how far the C-arm has rotated around the patient.',
+  target: 'Target: close on the authored target and the tool tip.',
+}
 
 class SceneBoundary extends Component<
   { children: ReactNode; fallback: ReactNode },
@@ -226,6 +245,12 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
     requested: SuiteCamera
     value: SuiteCamera
   } | null>(null)
+  const [cameraCommand, setCameraCommand] = useState<CameraCommand | null>(null)
+  const moveCamera = useCallback(
+    (kind: CameraCommand['kind']) =>
+      setCameraCommand((previous) => ({ kind, nonce: (previous?.nonce ?? 0) + 1 })),
+    [],
+  )
   const [contextLost, setContextLost] = useState(false)
   const [epoch, setEpoch] = useState(0)
   const [attemptEpoch, setAttemptEpoch] = useState(0)
@@ -309,6 +334,29 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
       view.mode,
     ) &&
       view.sectionId !== 'chain-walk')
+  // Report 2.3: the component walk keeps its one control and its projections directly under the
+  // 3D highlight, in a compact row, so the text for the current component can sit beside the scene.
+  const walkLayout =
+    view.sectionId === 'chain-walk' && props.presentation === 'acquisition' && !props.independent
+  const dockNearImage = imageFirst || walkLayout
+  const objectLabels = useMemo(
+    () =>
+      view.layers.includes('labels') && drrMode && !['time', 'navigation'].includes(view.mode)
+        ? projectionObjectLabels(frame, inputs, translation)
+        : [],
+    [view.layers, view.mode, drrMode, frame, inputs, translation],
+  )
+  const stepPurposeId = useId()
+  const stepPurpose =
+    view.mode === 'sampling'
+      ? 'Move to the next axial slice'
+      : dts.active
+        ? 'Add the next projection of the sweep'
+        : isCbct
+          ? 'Advance the spin by one position'
+          : view.mode === 'time'
+            ? 'Advance by one pulse'
+            : 'Rotate the C-arm by one degree'
   const fieldVisible =
     view.mode === 'field' || view.sectionId === 'two-dimensional' || view.sectionId === 'good-image'
   const controlDock = (
@@ -340,6 +388,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         data-volume-captured={props.lab.values.captured === true ? 'true' : undefined}
         data-suite-mode={view.mode}
         data-suite-camera={displayCamera}
+        data-walk-layout={walkLayout ? 'true' : undefined}
         data-suite-state={contextLost ? 'failed' : ready ? 'ready' : 'fallback'}
         data-lit={view.litStop ?? ''}
         data-suite-anim={running ? 'running' : 'idle'}
@@ -475,8 +524,6 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                               inputs={inputs}
                               offset={translation}
                               ray={view.layers.includes('ray')}
-                              labels={view.layers.includes('labels')}
-                              portal={portal as RefObject<HTMLDivElement>}
                             />
                           )}
                           {view.mode === 'time' && (
@@ -531,15 +578,19 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                           )}
                           {showChain && (
                             <ChainPins
-                              spread={['suite', 'room', 'anterior', 'side', 'head'].includes(
-                                displayCamera,
-                              )}
+                              objectLabels={objectLabels}
                               frame={frame}
                               portal={portal as RefObject<HTMLDivElement>}
                               lit={view.litStop}
                               answer={props.chainAnswer}
                               onCamera={onCamera}
                               monitorOffset={monitorOffset}
+                            />
+                          )}
+                          {!showChain && objectLabels.length > 0 && (
+                            <SceneLabels
+                              portal={portal as RefObject<HTMLDivElement>}
+                              labels={objectLabels}
                             />
                           )}
                           <FrameReady ready={onReady} />
@@ -556,6 +607,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                           closeupDistance={
                             view.mode === 'sampling' ? 120 : isRegistration ? 180 : undefined
                           }
+                          command={cameraCommand}
                         />
                       </Canvas>
                     </div>
@@ -632,9 +684,16 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                           ),
                         })
                       }}
+                      title={stepPurpose}
+                      // The name stays "Step"; what a step does here is its description.
+                      aria-describedby={stepPurposeId}
+                      data-scene-step
                     >
                       Step
                     </button>
+                    <span id={stepPurposeId} hidden>
+                      {stepPurpose}
+                    </span>
                     {view.animation && !isCbct && (
                       <button
                         type="button"
@@ -658,6 +717,47 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                             : v.charAt(0).toUpperCase() + v.slice(1)}
                       </button>
                     ))}
+                    <span
+                      className={styles.cameraMoves}
+                      role="group"
+                      aria-label="Move the 3D camera"
+                      data-camera-moves
+                    >
+                      {(
+                        [
+                          ['rotate-left', '◀', 'Rotate the view left'],
+                          ['rotate-right', '▶', 'Rotate the view right'],
+                          ['zoom-in', '+', 'Zoom the view in'],
+                          ['zoom-out', '−', 'Zoom the view out'],
+                        ] as const
+                      ).map(([kind, glyph, name]) => (
+                        <button
+                          type="button"
+                          key={kind}
+                          aria-label={name}
+                          title={name}
+                          disabled={!props.controlsEnabled}
+                          data-camera-move={kind}
+                          onClick={() => moveCamera(kind)}
+                        >
+                          <span aria-hidden="true">{glyph}</span>
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        disabled={!props.controlsEnabled}
+                        data-camera-move="reset"
+                        onClick={() => moveCamera('reset')}
+                      >
+                        Reset view
+                      </button>
+                    </span>
+                    {displayCamera in CAMERA_PURPOSE && (
+                      <p className={styles.cameraPurpose} data-camera-purpose={displayCamera}>
+                        {CAMERA_PURPOSE[displayCamera as keyof typeof CAMERA_PURPOSE]} Drag to
+                        rotate; the mouse wheel scrolls the page.
+                      </p>
+                    )}
                   </div>
                 )}
               </>
@@ -735,7 +835,11 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
           {dts.active && (
             <section className={styles.monitorPanel} hidden={view.monitor === 'hidden'}>
               <div className={styles.sceneHeader}>Limited-angle teaching plane</div>
-              <TomosynthesisMonitor model={dts} />
+              <TomosynthesisMonitor
+                model={dts}
+                planeDepth={inputs.planeDepth}
+                allowOverlay={!props.independent}
+              />
               <p className={styles.monitorCaption}>
                 {dts.count} / 13 projections ·{' '}
                 {dts.selectedLayer === 'measured'
@@ -746,7 +850,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
               </p>
             </section>
           )}
-          {imageFirst && <div className={styles.nearImageControls}>{controlDock}</div>}
+          {dockNearImage && <div className={styles.nearImageControls}>{controlDock}</div>}
         </div>
         {props.presentation === 'multiplanar' && !props.independent && (
           <button
@@ -786,7 +890,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         )}
         {view.mode === 'time' && <TimeSamples model={timeModel} phase={playback.phase} />}
         {view.mode === 'signal' && <SignalReadout profile={profile} failed={profileFailed} />}
-        {isRoom ? <LabGoals goals={props.goals} /> : !imageFirst ? controlDock : null}
+        {isRoom ? <LabGoals goals={props.goals} /> : !dockNearImage ? controlDock : null}
         {!representationReady && !isRoom && (
           <p role="status">
             The required image is loading or unavailable. Image-based work is paused; use the

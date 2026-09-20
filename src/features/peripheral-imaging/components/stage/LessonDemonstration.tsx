@@ -99,6 +99,13 @@ export function LessonDemonstration({
               </div>
             </>
           )}
+          {/* Report 2.9 (fellow walkthrough, PDF p.19): the cue sat under the figure and its controls,
+              below the fold, so it was found after the image had already been explored. */}
+          {example && (
+            <p className={styles.lookFor} data-look-for>
+              <strong>Look for…</strong> {example.look}
+            </p>
+          )}
           <ImagingSuitePane
             key={replay}
             viewMemory={viewMemory}
@@ -119,11 +126,6 @@ export function LessonDemonstration({
               setReplay((n) => n + 1)
             }}
           />
-          {example && (
-            <p className={styles.lookFor} data-look-for>
-              <strong>Look for…</strong> {example.look}
-            </p>
-          )}
         </>
       )}
     </div>

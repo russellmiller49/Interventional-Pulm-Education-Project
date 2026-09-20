@@ -97,6 +97,7 @@ export function ImagingActivityShell({
       data-now-card
       data-presentation={activity.presentation}
       data-task-kind={activity.task}
+      data-step-kind={lesson.steps[index].interaction.kind}
       data-learning-activity={activity.id}
     >
       <header className={styles.header} ref={headerNode}>

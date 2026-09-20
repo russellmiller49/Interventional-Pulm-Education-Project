@@ -549,7 +549,7 @@ function ImagingStageSession({
             : {
                 ...base,
                 status:
-                  'Every component visited. This step is done when every item below is met, or you can skip it.',
+                  'Every component visited. This step is done when every item listed with the controls is met, or you can skip it.',
                 secondary: showWhereAction,
                 skip: skipStep('Skip this step'),
               }
@@ -654,7 +654,7 @@ function ImagingStageSession({
           ...base,
           status: !imageReady
             ? 'The required image is unavailable or loading. Retry the view; text explanations remain available, and you can skip this step.'
-            : 'Compare the image as you make the changes listed below, or skip this step.',
+            : 'Compare the image as you make the changes listed with the controls, or skip this step.',
           secondary: showWhereAction,
           skip: skipStep('Skip this step'),
         }
@@ -730,7 +730,7 @@ function ImagingStageSession({
     }
     switch (interaction.kind) {
       case 'walk':
-        if (commitments.walkDone) return goalList
+        if (commitments.walkDone) return null
         return walkStop ? <ChainWalkCard stopId={walkStop} stepId={activeStep.id} /> : null
       case 'prediction': {
         const committedId = commitments.choices[activeStep.id]
@@ -808,7 +808,9 @@ function ImagingStageSession({
         )
       case 'lab-task':
       case 'observe':
-        return goalList
+        // Report 2.13: the checklist is printed in the control dock, beside the controls it is
+        // about. A step with no suite pane has no dock, and keeps it here.
+        return activity.visual === 'case' ? goalList : null
       case 'explain': {
         const predictionStep = lesson.steps[lesson.predictionStepIndex]
         const predictionItem =
@@ -914,6 +916,12 @@ function ImagingStageSession({
           suiteView.mode === 'sampling' ? ['axial', 'coronal', 'sagittal', 'slab'] : ['plane'],
       }
     : suiteView
+  // The walk lists its goals once every component has been visited; until then its card is the
+  // instruction. Looking back shows the recap instead, so the dock carries no live checklist.
+  const paneGoals =
+    lookingBack || (interaction.kind === 'walk' && !commitments.walkDone)
+      ? []
+      : goals.map((goal, index) => ({ goal, met: goalsMetNow[index] }))
   const captureGroup = activity.captureGroup ?? activity.id
   const demoMemory = (demonstrationMemories.current[captureGroup] ??= { current: {} })
   const simulator =
@@ -981,7 +989,7 @@ function ImagingStageSession({
             controlsEnabled={controlsEnabled}
             lockedReason={lockedReason}
             pausedReason={pausedReason}
-            goals={[]}
+            goals={paneGoals}
             chainCaption={suiteView.stopSentence}
             chainAnswer={chainAnswer}
             spotlightKey={spotlight?.stepId === activeStep.id ? spotlight.key : undefined}

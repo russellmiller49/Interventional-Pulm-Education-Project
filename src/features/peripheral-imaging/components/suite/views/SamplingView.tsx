@@ -82,20 +82,46 @@ export function SamplingPanels({ inputs, revealed }: { inputs: SuiteInputs; reve
       </p>
       <p>
         {inputs.slab
-          ? 'The slab projects depths −60 to 42 mm into one image. Plane sliders apply to thin planes.'
+          ? 'The slab projects depths −60 to 42 mm into one image. Each pair shows the thin plane at the slider position beside the slab through it; the plane sliders move the thin plane only.'
           : 'Each coloured outline is one thin plane; its linked image is below.'}
       </p>
-      <div className={styles.mprGrid}>
-        {model.planes.map((plane) => (
-          <MPR
-            key={plane.plane}
-            plane={plane.plane}
-            position={plane.position}
-            tip={model.localTip}
-            slab={inputs.slab}
-          />
-        ))}
-      </div>
+      {inputs.slab ? (
+        // Report 6.4 (fellow walkthrough, PDF p.41): the slab replaced the thin planes, so the
+        // learner had to remember one picture while looking at the other. Each plane now shows its
+        // thin section and the slab through the same position together, which is where an
+        // off-plane miss that the slab hides becomes visible. Same model, same inputs, drawn twice.
+        <div className={styles.mprPairs} data-slab-comparison>
+          {model.planes.map((plane) => (
+            <div key={plane.plane} className={styles.mprPair} data-slab-pair={plane.plane}>
+              <figure className={styles.pairView} data-slab-pair-view="thin">
+                <MPR
+                  plane={plane.plane}
+                  position={plane.position}
+                  tip={model.localTip}
+                  slab={false}
+                />
+                <figcaption>Thin plane · {plane.position} mm</figcaption>
+              </figure>
+              <figure className={styles.pairView} data-slab-pair-view="slab">
+                <MPR plane={plane.plane} position={plane.position} tip={model.localTip} slab />
+                <figcaption>Slab · depths combined</figcaption>
+              </figure>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className={styles.mprGrid}>
+          {model.planes.map((plane) => (
+            <MPR
+              key={plane.plane}
+              plane={plane.plane}
+              position={plane.position}
+              tip={model.localTip}
+              slab={false}
+            />
+          ))}
+        </div>
+      )}
       {revealed && (
         <p>
           {model.relationship.label}. Inspect the window across thin planes; the end of the tip is a

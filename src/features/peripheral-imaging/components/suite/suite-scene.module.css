@@ -37,6 +37,22 @@
    * instrument here: at a 1180px window this pane is barely 320px wide.
    */
   container: suite / inline-size;
+  /*
+   * Report 2.10 (fellow walkthrough, PDF p.20). The control dock, the readouts, the signal profile
+   * and the answer fieldset were authored on a near-white card, so beside a dark fluoroscopy image
+   * the brightest thing on screen was the chrome, not the image being read. Every one of those
+   * surfaces now reads the host's palette. The fallbacks are the old light values, so the suite
+   * still states a complete light palette wherever a host supplies no tokens.
+   */
+  --suite-card: var(--panel, #f7fafa);
+  --suite-card-ink: var(--ink, #183542);
+  --suite-card-line: var(--line, #cddbdd);
+  --suite-card-inset: var(--panel-2, #eaf2f2);
+  --suite-card-muted: var(--muted, #456571);
+  --suite-card-accent: var(--cyan, #2a7c7d);
+  --suite-card-control: var(--panel-3, #f3f8f8);
+  --suite-card-met: var(--green, #23674d);
+  --suite-card-spotlight: color-mix(in srgb, var(--amber, #d9a554) 18%, var(--suite-card));
   display: grid;
   gap: 14px;
   min-width: 0;
@@ -51,29 +67,26 @@
   cursor: pointer;
 }
 .pane button {
-  border: 1px solid #bcced3;
+  border: 1px solid var(--suite-card-line);
   border-radius: 6px;
   padding: 7px 11px;
-  background: #f3f8f8;
-  color: #244957;
+  background: var(--suite-card-control);
+  color: var(--suite-card-ink);
 }
-.pane button:hover {
-  background: #e1eeee;
+.pane button:hover:not(:disabled) {
+  border-color: var(--suite-card-accent);
 }
 /* Report 4.5 (fellow walkthrough, PDF p.34): the image-source buttons carried the real
    `aria-pressed` state but the dock had no rule for it, so on load all three looked identical and
    the selected one only became visible once another was clicked. This styles the state the markup
-   already reports; it does not change which button is selected. Contrast on the dock's #f7fafa
-   surface: #1d4753 on #cfe3e4 is about 7.4:1. */
+   already reports; it does not change which button is selected. It matches the camera toolbar's
+   pressed state: #ddfaf4 on #315b61 is about 6.9:1. */
 .pane button[aria-pressed='true'] {
-  border-color: #3d7d84;
-  background: #cfe3e4;
-  color: #1d4753;
+  border-color: #83beb9;
+  background: #315b61;
+  color: #ddfaf4;
   font-weight: 650;
-  box-shadow: inset 0 0 0 1px #3d7d84;
-}
-.pane button[aria-pressed='true']:hover {
-  background: #c1dadc;
+  box-shadow: inset 0 0 0 1px #83beb9;
 }
 .pane button:disabled {
   cursor: default;
@@ -96,8 +109,8 @@
 .reason {
   margin: 0;
   border-left: 3px solid #d6a361;
-  background: #fbf6eb;
-  color: #4a3a20;
+  background: color-mix(in srgb, var(--amber, #d6a361) 12%, var(--suite-card));
+  color: var(--suite-card-ink);
   padding: 8px 12px;
 }
 .displays {
@@ -293,16 +306,16 @@
   font-size: 11px;
 }
 .dock {
-  /* A light surface inside a dark shell states its own ink. Inheriting the shell's near-white
-     `--ink` here put the control labels, their values and the readouts at about 1.07:1. */
-  color: #183542;
+  /* The dock states its own ink and surface together, from one palette, so the pair can never be
+     split across a light card and a dark shell again (that put the labels at about 1.07:1). */
+  color: var(--suite-card-ink);
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
   gap: 16px;
   padding: 16px;
-  border: 1px solid #cddbdd;
+  border: 1px solid var(--suite-card-line);
   border-radius: 9px;
-  background: #f7fafa;
+  background: var(--suite-card);
 }
 .controls {
   display: grid;
@@ -325,9 +338,9 @@
   border-radius: 5px;
 }
 .control[data-spotlight='true'] {
-  outline: 3px solid #d9a554;
+  outline: 3px solid var(--amber, #d9a554);
   outline-offset: 4px;
-  background: #fff6dc;
+  background: var(--suite-card-spotlight);
 }
 .controlLabel {
   display: flex;
@@ -341,21 +354,21 @@
 }
 .control input[type='range'] {
   width: 100%;
-  accent-color: #2a7c7d;
+  accent-color: var(--suite-card-accent);
 }
 .control input[type='checkbox'] {
   margin-right: 8px;
-  accent-color: #2a7c7d;
+  accent-color: var(--suite-card-accent);
 }
 .control select {
   display: block;
   width: 100%;
   padding: 6px;
   margin-top: 5px;
-  border: 1px solid #bed0d2;
+  border: 1px solid var(--suite-card-line);
   border-radius: 5px;
-  background: #fff;
-  color: #173c47;
+  background: var(--suite-card-control);
+  color: var(--suite-card-ink);
 }
 .readouts {
   display: grid;
@@ -365,26 +378,42 @@
 }
 .readouts > div {
   padding: 9px 12px;
-  border-left: 2px solid #76a6a4;
-  background: #eaf2f2;
+  border-left: 2px solid var(--suite-card-accent);
+  background: var(--suite-card-inset);
 }
 .readouts dt {
   font-size: 12px;
-  color: #456571;
+  color: var(--suite-card-muted);
 }
 .readouts dd {
   margin: 3px 0 0;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
 }
+.goalBlock {
+  grid-column: 1 / -1;
+  padding: 9px 12px;
+  border-left: 3px solid var(--amber, #d9a554);
+  background: var(--suite-card-inset);
+}
+.goalHeading {
+  margin: 0 0 4px;
+  font-weight: 650;
+}
+.goalBlock .goals {
+  color: var(--suite-card-ink);
+}
+.goals li[data-met='true']::marker {
+  content: '✓  ';
+}
 .goals {
   grid-column: 1/-1;
   margin: 0;
   padding-left: 20px;
-  color: #586b73;
+  color: var(--suite-card-muted);
 }
 .goals li[data-met='true'] {
-  color: #23674d;
+  color: var(--suite-card-met);
 }
 /* The static room has no light control dock behind a host-supplied goal list. */
 .pane[data-suite-mode='room'] > .goals {
@@ -409,8 +438,8 @@
   height: 100%;
 }
 .answer {
-  color: #193b46;
-  background: #f7fafa;
+  color: var(--suite-card-ink);
+  background: var(--suite-card);
   border-radius: 8px;
 }
 .answer input[type='radio'] {
@@ -426,10 +455,10 @@
 .signalProfile {
   margin: 0;
   padding: 12px;
-  border: 1px solid #cddbdd;
+  border: 1px solid var(--suite-card-line);
   border-radius: 8px;
-  background: #f4f8f8;
-  color: #183542;
+  background: var(--suite-card);
+  color: var(--suite-card-ink);
 }
 @media (max-width: 600px) {
   .dock {
@@ -477,7 +506,7 @@
   display: inline-block;
   width: 9px;
   height: 9px;
-  border: 1px solid #536772;
+  border: 1px solid var(--suite-card-muted);
 }
 .tissues dd {
   margin: 3px 0;
@@ -486,7 +515,7 @@
 }
 .signalProfile > p:last-child {
   font-size: 12px;
-  color: #526b76;
+  color: var(--suite-card-muted);
   margin: 9px 0 0;
 }
 
@@ -499,7 +528,10 @@
 .sampleDiagram {
   display: block;
   width: 100%;
-  max-height: 140px;
+  height: auto;
+}
+.sampleCaption {
+  margin: 4px 0;
 }
 
 .sequenceToolbar {
@@ -731,4 +763,227 @@
 }
 .pane[data-task-presentation='acquisition'][data-suite-mode='cbct'] .monitorPanel {
   display: none;
+}
+
+/* Explicit camera moves (report 2.2): the wheel scrolls the page, so zoom and rotation are buttons. */
+.cameraMoves {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-inline-start: auto;
+}
+.cameraMoves button {
+  min-width: 2rem;
+}
+/* What the selected preset is for (report 2.5). */
+.cameraPurpose {
+  flex-basis: 100%;
+  margin: 2px 0 0;
+  color: #b7cbd5;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+/*
+ * The component walk (report 2.3, fellow walkthrough PDF p.17/p.23).
+ *
+ * The walk stacked a full-width 3D scene, then two projections at full size, then the one slider,
+ * and only then — about 1,300 px down at 1280 px — the text for the highlighted component, so
+ * "Next component" changed a highlight that was no longer on screen. The host now puts that text
+ * beside the scene; here the projections become a compact pair in the row under the scene, with the
+ * obliquity slider beside them, which is the row the beam-geometry stop asks the learner to use.
+ * They are reduced, not removed: the same two images at the size the comparison layout already
+ * uses, and still enlarged by the browser's own zoom.
+ */
+.pane[data-walk-layout] .displays,
+.pane[data-walk-layout] .displays[data-monitor-layout] {
+  position: static;
+  grid-template-columns: minmax(0, 1fr);
+  --suite-display-height: 270px;
+}
+.pane[data-walk-layout] .displays .monitorPanel {
+  width: 100%;
+  max-width: none;
+  justify-self: stretch;
+}
+.pane[data-walk-layout] .displays .monitor {
+  width: min(100%, 230px);
+  height: auto;
+}
+.pane[data-walk-layout] .displays .dock,
+.pane[data-walk-layout] .displays .controls {
+  grid-template-columns: minmax(0, 1fr);
+}
+.pane[data-walk-layout] .comparison figure {
+  display: flex;
+  flex-direction: column;
+}
+.pane[data-walk-layout] .comparison figcaption,
+.pane[data-walk-layout] .comparison > .toolbar {
+  order: 1;
+}
+@container suite (min-width: 34rem) {
+  .pane[data-walk-layout] .displays,
+  .pane[data-walk-layout] .displays[data-monitor-layout] {
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  }
+  .pane[data-walk-layout] .displays .scenePanel {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Report 6.4: a thin plane beside the slab through it, per plane. Three pairs across where there is
+   room; one pair per row on a phone, still side by side, and stacked only below that. */
+.mprPairs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.pairView {
+  margin: 0;
+  min-width: 0;
+}
+.pairView figcaption {
+  padding-top: 3px;
+  font-size: 11px;
+}
+.mprPair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  min-width: 0;
+}
+@container suite (max-width: 56rem) {
+  .mprPairs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@container suite (max-width: 22rem) {
+  .mprPair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/*
+ * Report 6.2 (fellow walkthrough, PDF p.41): the controls sat above the images here, to the right
+ * of them in the comparison sections and below them elsewhere. The multiplanar workbenches now
+ * follow the comparison layout: the image on the left, its controls and readouts in a column on the
+ * right, so a slider and the plane it moves are on screen together. Narrow panes stack as before.
+ */
+/* The pane is the `suite` container, and a container query cannot style its own container, so the
+   pane-level grid is keyed on the window. The multiplanar task gives the pane the page's width. */
+@media (min-width: 62rem) {
+  .pane[data-task-presentation='multiplanar'][data-suite-mode='sampling'] {
+    grid-template-columns: minmax(0, 1fr) minmax(15rem, 19rem);
+    /* Dense, so the first column's items fill in beside the dock rather than starting below it. */
+    grid-auto-flow: row dense;
+  }
+  .pane[data-task-presentation='multiplanar'][data-suite-mode='sampling'] > * {
+    grid-column: 1 / -1;
+  }
+  /* The dock's column runs beside the planes; the button that opens the 3D explanation follows. */
+  .pane[data-task-presentation='multiplanar'][data-suite-mode='sampling'] > .displays {
+    grid-column: 2;
+    align-self: start;
+  }
+  .pane[data-task-presentation='multiplanar'][data-suite-mode='sampling'] > [data-sampling-state] {
+    grid-column: 1;
+  }
+  .pane[data-task-presentation='multiplanar'][data-suite-mode='sampling'] > .displays ~ button {
+    order: 1;
+    justify-self: start;
+  }
+}
+@container suite (min-width: 48rem) {
+  .pane[data-task-presentation='multiplanar']:is(
+      [data-suite-mode='dts'],
+      [data-suite-mode='dts-prior']
+    )
+    .displays[data-image-first='true'] {
+    grid-template-columns: minmax(0, 1.7fr) minmax(15rem, 1fr);
+  }
+  .pane[data-task-presentation='multiplanar'] .displays .scenePanel {
+    grid-column: 1 / -1;
+  }
+  .pane[data-task-presentation='multiplanar'] .displays :is(.dock, .controls) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Report 4.2: the optional DTS teaching overlay's switch and its statement of what it is. */
+.overlayToggle {
+  padding: 8px 12px 0;
+  font-size: 12px;
+}
+.overlayToggle input {
+  margin-right: 8px;
+  accent-color: var(--suite-card-accent);
+}
+.overlayToggle p {
+  margin: 6px 0 0;
+  color: #b7cbd5;
+  font-size: 11px;
+  line-height: 1.45;
+}
+/* Report 4.3: a projection thumbnail, enlarged in place. */
+.pane .thumb {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border-radius: 3px;
+  overflow: hidden;
+  background: none;
+}
+.pane .thumb[aria-pressed='true'] {
+  outline: 2px solid var(--amber, #dc963d);
+  outline-offset: 1px;
+  box-shadow: none;
+}
+.enlarged {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  margin: 12px 0;
+}
+.enlarged canvas {
+  display: block;
+  width: min(100%, 384px);
+  height: auto;
+  image-rendering: auto;
+  background: #08151b;
+}
+.enlarged figcaption {
+  font-size: 12px;
+}
+.enlargedActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Report 3.8: the readouts a control change has just moved, so six numbers do not compete. */
+.readouts > div[data-readout-changed='true'] {
+  border-left-width: 4px;
+  border-left-color: var(--amber, #d9a554);
+  background: color-mix(in srgb, var(--amber, #d9a554) 14%, var(--suite-card-inset));
+}
+.readouts > div[data-readout-changed='true'] dd::after {
+  content: ' · changed';
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--suite-card-muted);
+}
+
+/* Report 2.2, touch: the orbit controls write `touch-action: none` on the canvas each time they
+   connect, which makes the figure a place a touch scroll cannot start. A vertical swipe belongs to
+   the page and a pinch to the browser; a sideways drag still reaches the controls. `!important` is
+   what lets a stylesheet outrank that inline value. */
+.canvasHost canvas {
+  touch-action: pan-y pinch-zoom !important;
+}
+/* One text size in the pulse card (report 3.8): the card's last-paragraph rule is for footnotes. */
+.signalProfile > p.sampleCaption {
+  margin: 4px 0;
+  font-size: inherit;
+  color: inherit;
 }

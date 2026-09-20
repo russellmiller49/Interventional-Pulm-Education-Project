@@ -84,3 +84,43 @@
   border-color: var(--cyan-bright);
   box-shadow: inset 0 0 0 1px var(--cyan-bright);
 }
+
+/*
+ * Report 1.9 (fellow walkthrough, PDF p.13). "Why the other answers do not fit" is some of the most
+ * useful text in a section and was the hardest to read: the stage's rule for any disclosure inside
+ * the explanation column greys it to `--muted`, and the list sat on a lightened panel at 14 px.
+ * The shared verdict is not edited; the list simply takes the body colour and size here, wherever
+ * a PI page renders it. The complete feedback is unchanged.
+ */
+.moduleShell [data-answer-verdict] details,
+.moduleShell [data-other-answers] {
+  color: var(--ink);
+}
+.moduleShell [data-other-answers] {
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+/*
+ * Report PR3 (fellow walkthrough, PDF p.46/p.47). The practice and integrated-case decisions use the
+ * shared action classes, which read `--stage-*` tokens that only the shared lesson shell defines.
+ * PI does not render that shell, so "Check my answer" had no background at all: dark ink on the
+ * dark page at 55% opacity, beside a bright "Show the explanation" that read as the only thing to
+ * do. The tokens are supplied here from the PI palette, and the disabled action is drawn readable.
+ * It stays natively disabled until a choice is made. The explanation is not demoted, hidden or made
+ * conditional on an answer: it is a first-class way to learn here (PI-01), so it gets the same
+ * bordered button it has everywhere else.
+ */
+.moduleShell [data-case-decision] {
+  --stage-accent: var(--cyan-bright);
+  --stage-line: var(--line);
+  --stage-ink: var(--ink);
+  --stage-muted: var(--muted);
+  --stage-type-floor: 1rem;
+}
+.moduleShell [data-case-decision] [data-now-primary]:disabled {
+  opacity: 1;
+  border-color: var(--line);
+  background: var(--panel-2);
+  color: #c3d6d8;
+}

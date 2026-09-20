@@ -1,25 +1,41 @@
 'use client'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { OrbitControls } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
-import { Box3, PerspectiveCamera, Vector3 } from 'three'
+import { PerspectiveCamera } from 'three'
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { LESION_CENTER, type Point3 } from '../../lib/physics'
-import { add, chainStopAnchors, scale, type SuiteFrame } from './suiteModel'
+import { cameraPose } from './cameraPose'
+import type { SuiteFrame } from './suiteModel'
 import type { SuiteCamera } from './types'
 
-/**
- * The views that show the whole chain, and so must frame every stop and its label whatever shape
- * the pane is. The rest — the beam's eye, the target close-up, the console — are deliberately
- * tight on one thing and are left where they are authored.
- */
 const NO_BOUNDS: readonly Point3[] = []
-const OVERVIEW_VIEWS: readonly SuiteCamera[] = ['suite', 'room', 'anterior', 'side', 'head']
 
-/** Which way is up on screen for a view. */
-function upFor(view: SuiteCamera): Point3 {
-  return ['suite', 'room', 'console', 'head'].includes(view) ? [0, 1, 0] : [0, 0, 1]
+/** The explicit camera moves the toolbar offers. `nonce` makes a repeated move a new command. */
+export interface CameraCommand {
+  readonly kind: 'rotate-left' | 'rotate-right' | 'zoom-in' | 'zoom-out' | 'reset'
+  readonly nonce: number
 }
 
+/** One press turns the view this far about its vertical axis. */
+export const CAMERA_ROTATE_STEP = Math.PI / 12
+/** One press moves the camera this much nearer or further. */
+export const CAMERA_ZOOM_STEP = 1.25
+
+/**
+ * Report 2.2 (fellow walkthrough, PDF p.16). The scene took the mouse wheel for its own zoom
+ * whenever the pointer was over it, and in the component walk the scene spans the page, so an
+ * ordinary scroll stopped dead until the pointer left the figure.
+ *
+ * The wheel now always belongs to the page: `enableZoom` is off, which is also what stops the
+ * controls calling `preventDefault` on it, so Ctrl/Cmd + wheel reaches the browser's own zoom too.
+ * Zoom and rotation are explicit toolbar buttons instead — reachable by keyboard, which the
+ * pointer-only controls never were — and there is no camera mode to enter or to be left in.
+ * Dragging with a mouse or pen still rotates. On a touch screen a vertical swipe scrolls the page
+ * and a pinch is the browser's; a sideways drag turns the view. That last part is a stylesheet rule
+ * (`.canvasHost canvas`), because the controls write `touch-action: none` inline whenever they
+ * connect and an effect here cannot reliably run after every reconnect.
+ */
 export function CameraRig({
   view,
   frame,
@@ -30,6 +46,7 @@ export function CameraRig({
   labelled = true,
   roomComposition = false,
   monitorOffset,
+  command,
 }: {
   view: SuiteCamera
   frame: SuiteFrame
@@ -40,92 +57,68 @@ export function CameraRig({
   labelled?: boolean
   roomComposition?: boolean
   monitorOffset?: Point3
+  command?: CameraCommand | null
 }) {
   const { camera, invalidate, size } = useThree()
-  const config = useMemo(() => {
-    const f = frame.geometry.field
-    const anchors = chainStopAnchors(frame, monitorOffset)
-    const target: Point3 =
-      view === 'target'
-        ? focus
-        : view === 'console'
-          ? scale(add(anchors.reconstruction, anchors.display), 0.5)
-          : frame.iso
-    const positions: Record<SuiteCamera, Point3> = {
-      suite: [f * 2.1, f * 0.3, f * 1.8],
-      room: roomComposition ? [f * 1.6, f * 1.45, f * 3.2] : [f * 2.5, f * 1.8, f * 2.5],
-      anterior: [0, f * 2.5, 0.01],
-      side: [f * 2.8, 0, 0.01],
-      head: [0, 0.01, f * 2.8],
-      target: add(
+  const controls = useRef<OrbitControlsImpl>(null)
+  const config = useMemo(
+    () =>
+      cameraPose({
+        view,
+        frame,
+        fov: camera instanceof PerspectiveCamera ? camera.fov : null,
+        width: size.width,
+        height: size.height,
+        overviewBounds,
         focus,
-        scale([0.45, 0.4, 0.3], closeupDistance ? closeupDistance / Math.hypot(0.45, 0.4, 0.3) : f),
-      ),
-      console: add(target, [f * 0.6, f * 0.3, f * 1.2]),
-      beam: add(frame.source, scale(frame.normal, -f * 0.55)),
-    }
-    if (OVERVIEW_VIEWS.includes(view) && camera instanceof PerspectiveCamera) {
-      // Fit the whole chain, with room for the DOM pin labels, at the actual pane aspect ratio.
-      const points = [...frame.corners, ...Object.values(anchors), ...overviewBounds].map(
-        (p) => new Vector3(...p),
-      )
-      const center = new Box3().setFromPoints(points).getCenter(new Vector3())
-      const towardCamera = new Vector3(...positions[view]).normalize()
-      // Build the screen axes from this view's own up. Using a fixed world up would collapse to
-      // zero for the views that look straight down it, which is why they were left unfitted.
-      const upHint = new Vector3(...upFor(view))
-      const right = upHint.clone().cross(towardCamera).normalize()
-      const up = towardCamera.clone().cross(right).normalize()
-      const tanY = Math.tan((camera.fov * Math.PI) / 360)
-      const labelMargin = labelled ? (size.width < 420 ? 110 : 200) : 32
-      const usableX = Math.max(0.35, 1 - labelMargin / size.width)
-      const usableY = Math.max(0.5, 1 - 64 / size.height)
-      const tanX = tanY * (size.width / size.height) * usableX
-      let distance = frame.geometry.sid
-      for (const point of points) {
-        const delta = point.clone().sub(center)
-        distance = Math.max(
-          distance,
-          delta.dot(towardCamera) + Math.abs(delta.dot(right)) / tanX,
-          delta.dot(towardCamera) + Math.abs(delta.dot(up)) / (tanY * usableY),
-        )
-      }
-      return {
-        target: center.toArray() as Point3,
-        position: center.clone().addScaledVector(towardCamera, distance).toArray() as Point3,
-        up: upFor(view),
-      }
-    }
-    return {
-      target,
-      position: positions[view],
-      up: (view === 'beam' ? frame.v : upFor(view)) as Point3,
-    }
-  }, [
-    view,
-    frame,
-    camera,
-    size.width,
-    size.height,
-    overviewBounds,
-    focus,
-    closeupDistance,
-    labelled,
-    roomComposition,
-    monitorOffset,
-  ])
+        closeupDistance,
+        labelled,
+        roomComposition,
+        monitorOffset,
+      }),
+    [
+      view,
+      frame,
+      camera,
+      size.width,
+      size.height,
+      overviewBounds,
+      focus,
+      closeupDistance,
+      labelled,
+      roomComposition,
+      monitorOffset,
+    ],
+  )
+  const resetNonce = command?.kind === 'reset' ? command.nonce : 0
   useEffect(() => {
     camera.position.set(...config.position)
     camera.up.set(...config.up)
     camera.lookAt(...config.target)
     camera.updateProjectionMatrix()
+    controls.current?.update()
     invalidate()
-  }, [camera, invalidate, config])
+  }, [camera, invalidate, config, resetNonce])
+  useEffect(() => {
+    const orbit = controls.current
+    if (!orbit || !command || command.kind === 'reset') return
+    if (command.kind === 'zoom-in') orbit.dollyOut(CAMERA_ZOOM_STEP)
+    else if (command.kind === 'zoom-out') orbit.dollyIn(CAMERA_ZOOM_STEP)
+    else
+      orbit.setAzimuthalAngle(
+        orbit.getAzimuthalAngle() +
+          (command.kind === 'rotate-left' ? -CAMERA_ROTATE_STEP : CAMERA_ROTATE_STEP),
+      )
+    invalidate()
+    // A command is identified by its nonce; the controls are a stable ref.
+  }, [command, invalidate])
   return (
     <OrbitControls
+      ref={controls}
       target={config.target}
       enabled={enabled}
       enablePan={false}
+      enableZoom={false}
       enableDamping={false}
       minDistance={
         view === 'target' && closeupDistance ? closeupDistance * 0.35 : frame.geometry.field * 0.15

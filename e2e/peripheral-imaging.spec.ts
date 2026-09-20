@@ -1581,3 +1581,812 @@ test('report 4.5: the image source that is already selected is styled as selecte
   }
   await capture(page, info, 'fellow-45-image-source.png')
 })
+
+/* ------------------------------------------------------------------ *
+ * PI-FELLOW-02 — the figure, the instruction and the control together.
+ *
+ * Source: an AI-assisted walkthrough written in a first-year-fellow persona (PDF pp.4–47). Each
+ * test below reproduces one of its browser observations against the running module with real
+ * pointer, wheel and keyboard input, and measures rendered rectangles, pixels and computed styles.
+ * None of it is learner-study evidence or clinical review.
+ * ------------------------------------------------------------------ */
+
+/** Advance with Continue on reading steps and the step's own skip elsewhere, to the first `kind`. */
+async function advanceToKind(page: Page, sectionId: string, kind: string) {
+  const lesson = imagingStageLesson(sectionId as never)
+  await openSection(page, sectionId)
+  for (let guard = 0; guard < lesson.steps.length; guard++) {
+    const stage = await page.locator('[data-stage]').getAttribute('data-stage')
+    const step = lesson.steps.find((candidate) => candidate.id === stage)!
+    if (step.interaction.kind === kind) return step
+    if (step.interaction.kind === 'read') {
+      await expect(primary(page)).toBeEnabled({ timeout: 60000 })
+      await primary(page).click()
+    } else await skip(page).click()
+    await expect(page.locator('[data-stage]')).not.toHaveAttribute('data-stage', stage!)
+  }
+  throw new Error(`No ${kind} step in ${sectionId}`)
+}
+
+/**
+ * A real pointer click at the control's own centre. `locator.click()` first scrolls its target
+ * "into view" against the page's scroll-padding, which for a button in the pinned footer moves the
+ * page on every click — an artefact of the harness that a learner's click does not have.
+ */
+async function pointerClick(page: Page, target: Locator) {
+  const box = (await target.boundingBox())!
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+}
+
+/** How much of each element lies in the band the pinned header and footer leave uncovered. */
+async function inUncoveredBand(page: Page, selectors: Record<string, string>) {
+  return page.evaluate((entries) => {
+    const flow = document.querySelector('[data-imaging-flow]')!
+    const header = flow.querySelector(':scope > header')!
+    const footer = flow.querySelector(':scope > footer')!
+    const pinned = (node: Element) => getComputedStyle(node).position === 'sticky'
+    const top = pinned(header) ? header.getBoundingClientRect().bottom : 0
+    const bottom = pinned(footer) ? footer.getBoundingClientRect().top : window.innerHeight
+    const result: Record<string, { visiblePx: number; fraction: number; top: number } | null> = {}
+    for (const [name, selector] of Object.entries(entries)) {
+      const node = document.querySelector(selector)
+      if (!node) {
+        result[name] = null
+        continue
+      }
+      const rect = node.getBoundingClientRect()
+      const visiblePx = Math.max(0, Math.min(rect.bottom, bottom) - Math.max(rect.top, top))
+      result[name] = {
+        visiblePx: Math.round(visiblePx),
+        fraction: rect.height ? visiblePx / rect.height : 0,
+        top: Math.round(rect.top - top),
+      }
+    }
+    return result
+  }, selectors)
+}
+
+async function sceneReady(page: Page) {
+  await expect(page.locator('[data-suite-scene]').first()).toHaveAttribute(
+    'data-suite-state',
+    'ready',
+    { timeout: 90000 },
+  )
+}
+
+/** Rendered bounds of every scene label, and each label's distance from the object it names. */
+async function sceneLabels(page: Page) {
+  return page.evaluate(() => {
+    const host = document.querySelector('[data-suite-viewport]')!.getBoundingClientRect()
+    const labels = [...document.querySelectorAll<HTMLElement>('[data-scene-label]')]
+      .filter((node) => getComputedStyle(node).visibility !== 'hidden')
+      .map((node) => {
+        const rect = node.getBoundingClientRect()
+        const ax = Number(node.dataset.anchorX) + host.left
+        const ay = Number(node.dataset.anchorY) + host.top
+        const dx = Math.max(rect.left - ax, 0, ax - rect.right)
+        const dy = Math.max(rect.top - ay, 0, ay - rect.bottom)
+        return {
+          id: node.dataset.sceneLabel!,
+          left: rect.left,
+          right: rect.right,
+          top: rect.top,
+          bottom: rect.bottom,
+          fromObject: Math.hypot(dx, dy),
+          leader: node.dataset.labelLeader === 'true',
+          inside:
+            rect.left >= host.left - 1 &&
+            rect.right <= host.right + 1 &&
+            rect.top >= host.top - 1 &&
+            rect.bottom <= host.bottom + 1,
+        }
+      })
+    const overlaps: string[] = []
+    for (let i = 0; i < labels.length; i++)
+      for (let j = i + 1; j < labels.length; j++) {
+        const a = labels[i]
+        const b = labels[j]
+        if (
+          Math.min(a.right, b.right) - Math.max(a.left, b.left) > 0.5 &&
+          Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 0.5
+        )
+          overlaps.push(`${a.id} × ${b.id}`)
+      }
+    return { labels, overlaps }
+  })
+}
+
+async function scenePixels(page: Page) {
+  return page.locator('[data-suite-viewport] canvas').evaluate((node) => {
+    const canvas = node as HTMLCanvasElement
+    const gl = canvas.getContext('webgl2')!
+    const pixels = new Uint8Array(canvas.width * canvas.height * 4)
+    gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
+    let hash = 0
+    for (let i = 0; i < pixels.length; i += 97) hash = (hash * 31 + pixels[i]) >>> 0
+    return hash
+  })
+}
+
+test('report 2.2: the wheel over the 3D scene scrolls the page, and the camera has explicit keyboard controls', async ({
+  page,
+}, info) => {
+  // PDF p.16. With the pointer over the scene the wheel zoomed the camera and the page stood still.
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await advanceToKind(page, 'chain-walk', 'walk')
+  await sceneReady(page)
+  const viewport = page.locator('[data-suite-viewport]')
+  const box = (await viewport.boundingBox())!
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  const before = await scenePixels(page)
+  expect(await page.evaluate(() => window.scrollY)).toBe(0)
+  await page.mouse.wheel(0, 300)
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(250)
+  // The wheel did not move the camera on its way past.
+  expect(await scenePixels(page)).toBe(before)
+
+  // Ctrl + wheel is the browser's zoom gesture: the scene must not cancel it.
+  await page.evaluate(() => window.scrollTo(0, 0))
+  const prevented = await viewport.locator('canvas').evaluate((canvas) => {
+    const event = new WheelEvent('wheel', {
+      deltaY: -120,
+      ctrlKey: true,
+      cancelable: true,
+      bubbles: true,
+    })
+    canvas.dispatchEvent(event)
+    return event.defaultPrevented
+  })
+  expect(prevented).toBe(false)
+  // Touch: a vertical swipe belongs to the page, and a pinch to the browser.
+  expect(
+    await viewport.locator('canvas').evaluate((canvas) => getComputedStyle(canvas).touchAction),
+  ).toBe('pan-y pinch-zoom')
+
+  // The explicit controls, by keyboard, change what the scene draws; Reset brings the preset back.
+  const moves = page.getByRole('group', { name: 'Move the 3D camera' })
+  await moves.getByRole('button', { name: 'Zoom the view in' }).focus()
+  await page.keyboard.press('Enter')
+  await expect.poll(() => scenePixels(page)).not.toBe(before)
+  const zoomed = await scenePixels(page)
+  await moves.getByRole('button', { name: 'Rotate the view right' }).focus()
+  await page.keyboard.press('Space')
+  await expect.poll(() => scenePixels(page)).not.toBe(zoomed)
+  await moves.getByRole('button', { name: 'Reset view' }).focus()
+  await page.keyboard.press('Enter')
+  await expect.poll(() => scenePixels(page)).toBe(before)
+
+  // Pointer rotation still works, with no mode to enter or leave.
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(box.x + box.width / 2 + 120, box.y + box.height / 2, { steps: 6 })
+  await page.mouse.up()
+  await expect.poll(() => scenePixels(page)).not.toBe(before)
+  await capture(page, info, 'fellow2-22-camera.png')
+})
+
+for (const size of [
+  { width: 1280, height: 900 },
+  { width: 1440, height: 900 },
+  { width: 1024, height: 768 },
+]) {
+  test(`report 2.3: the walk keeps the highlighted component and its text together at ${size.width}×${size.height}`, async ({
+    page,
+  }, info) => {
+    // PDF p.17/p.23. The component text started about 1,000 px below the highlight it describes.
+    await page.setViewportSize(size)
+    await page.emulateMedia({ colorScheme: 'dark' })
+    await advanceToKind(page, 'chain-walk', 'walk')
+    await sceneReady(page)
+    const together = async () => {
+      // The highlight moves between pins on a change; read it once it has landed.
+      await expect(page.locator('[data-chain-pin][aria-current="step"]')).toBeVisible()
+      const seen = await inUncoveredBand(page, {
+        scene: '[data-suite-viewport]',
+        text: '[data-walk-stop]',
+        lit: '[data-chain-pin][aria-current="step"]',
+      })
+      // The lit component, the scene it is in, and the start of the text about it.
+      expect(seen.scene!.fraction).toBeGreaterThan(0.85)
+      expect(seen.lit!.fraction).toBeGreaterThan(0.99)
+      expect(seen.text!.visiblePx).toBeGreaterThan(200)
+      expect(seen.text!.top).toBeGreaterThanOrEqual(0)
+      // Beside it, not below it.
+      const [scene, text] = await Promise.all([
+        page.locator('[data-suite-viewport]').boundingBox(),
+        page.locator('[data-walk-stop]').boundingBox(),
+      ])
+      expect(text!.x).toBeGreaterThanOrEqual(scene!.x + scene!.width)
+    }
+    await together()
+    const titles = new Set<string>()
+    for (let stop = 0; stop < 4; stop++) {
+      titles.add((await page.locator('[data-walk-stop]').getAttribute('data-walk-stop'))!)
+      await pointerClick(page, primary(page))
+      await expect
+        .poll(async () => page.locator('[data-walk-stop]').getAttribute('data-walk-stop'))
+        .not.toBe([...titles].at(-1))
+      // Nothing scrolled: the learner is still looking at the highlight that just moved.
+      expect(await page.evaluate(() => window.scrollY)).toBe(0)
+      await together()
+    }
+    // After reading down to the projections and back by wheel, the pair is still together.
+    await page.mouse.move(size.width / 2, size.height / 2)
+    await page.mouse.wheel(0, 500)
+    await page.mouse.wheel(0, -500)
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+    await together()
+    await capture(page, info, `fellow2-23-walk-${size.width}.png`)
+    await noHorizontalOverflow(page)
+  })
+}
+
+test('report 2.3: at the beam-geometry stop the slider, the projection it changes and the text are on screen together', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await advanceToKind(page, 'chain-walk', 'walk')
+  await sceneReady(page)
+  await pointerClick(page, primary(page))
+  await expect(page.locator('[data-walk-stop]')).toHaveAttribute('data-walk-stop', 'beam')
+  const slider = page.getByRole('slider', { name: 'C-arm obliquity' })
+  // One ordinary orientation scroll: bring the control into view the way Tab would.
+  await slider.focus()
+  await page.waitForTimeout(150)
+  const current = page.locator('[data-current-image] canvas')
+  const pixelsBefore = await current.evaluate((node) =>
+    (node as HTMLCanvasElement).toDataURL().slice(-200),
+  )
+  const scrollBefore = await page.evaluate(() => window.scrollY)
+  for (let i = 0; i < 30; i++) await page.keyboard.press('ArrowRight')
+  await expect(page.locator('[data-current-image] figcaption')).toContainText('Orbit 30°')
+  await expect
+    .poll(() => current.evaluate((node) => (node as HTMLCanvasElement).toDataURL().slice(-200)))
+    .not.toBe(pixelsBefore)
+  // The change was made and read without scrolling away from the control.
+  expect(await page.evaluate(() => window.scrollY)).toBe(scrollBefore)
+  const seen = await inUncoveredBand(page, {
+    slider: '#peripheral-imaging-control-orbit',
+    current: '[data-current-image] canvas',
+    text: '[data-walk-stop]',
+  })
+  expect(seen.slider!.fraction).toBeGreaterThan(0.99)
+  expect(seen.current!.fraction).toBeGreaterThan(0.95)
+  expect(seen.text!.visiblePx).toBeGreaterThan(200)
+  // The 3D scene above them is scrolled out of view at this height. That is recorded as a
+  // limitation in the handoff, not asserted: the slider and the projection it changes are the
+  // causal pair this stop asks for.
+  // A projection reduced for the walk is still a readable image, not a thumbnail.
+  expect((await current.boundingBox())!.width).toBeGreaterThanOrEqual(180)
+  await capture(page, info, 'fellow2-23-beam-stop.png')
+})
+
+test('report 2.4 and 2.5: labels stay beside their objects, never collide, and every preset says what it shows', async ({
+  page,
+}, info) => {
+  // PDF p.17/p.18/p.25. "X-ray tube" sat top-left while the tube is under the table; "Tool tip" was
+  // printed over "Authored target"; in Beam view all six labels were drawn at one point.
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await advanceToKind(page, 'chain-walk', 'walk')
+  await sceneReady(page)
+  const settled = async () => {
+    await expect.poll(async () => (await sceneLabels(page)).labels.length).toBe(8)
+    await expect.poll(async () => (await sceneLabels(page)).overlaps).toEqual([])
+    return sceneLabels(page)
+  }
+  const purposes = new Set<string>()
+  for (const [name, camera] of [
+    ['Suite', 'suite'],
+    ['Beam view', 'beam'],
+    ['Anterior', 'anterior'],
+    ['Side', 'side'],
+    ['Head', 'head'],
+    ['Target', 'target'],
+    ['Suite', 'suite'],
+  ] as const) {
+    const before = await scenePixels(page)
+    const previous = await page.locator('[data-suite-scene]').getAttribute('data-suite-camera')
+    await page.getByRole('button', { name, exact: true }).click()
+    await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-camera', camera)
+    // A label never trails its object through the change: within one poll they are apart again.
+    const { labels } = await settled()
+    // A preset shows its subject, not merely a pressed button: the drawn scene changed.
+    if (previous !== camera) await expect.poll(() => scenePixels(page)).not.toBe(before)
+    for (const label of labels) {
+      expect(label.inside, `${label.id} in ${name}`).toBe(true)
+      // Beside its object, or joined to it by a leader when it has had to give way.
+      expect(label.fromObject < 40 || label.leader, `${label.id} in ${name}`).toBe(true)
+    }
+    const purpose = page.locator('[data-camera-purpose]')
+    await expect(purpose).toHaveAttribute('data-camera-purpose', camera)
+    purposes.add((await purpose.innerText()).split(':')[0])
+    await capture(page, info, `fellow2-24-${camera}.png`)
+  }
+  expect([...purposes]).toEqual(['Suite', 'Beam view', 'Anterior', 'Side', 'Head', 'Target'])
+
+  // The whole-suite view is the one the report's screenshot shows: every label is near its object.
+  const suite = await settled()
+  const tube = suite.labels.find((label) => label.id === 'pin-source')!
+  const detector = suite.labels.find((label) => label.id === 'pin-detector')!
+  expect(tube.fromObject).toBeLessThan(60)
+  expect(detector.fromObject).toBeLessThan(60)
+  // The tube is under the table and the detector above it; their labels follow them.
+  expect(tube.top).toBeGreaterThan(detector.bottom)
+
+  // Moving the C-arm moves the objects; the labels follow and still do not collide.
+  await controlRange(page, 'orbit', 47)
+  const moved = await settled()
+  for (const label of moved.labels) expect(label.fromObject < 40 || label.leader).toBe(true)
+
+  // A narrower figure re-lays the labels out rather than letting them overlap.
+  await page.setViewportSize({ width: 1024, height: 768 })
+  await settled()
+  await capture(page, info, 'fellow2-24-1024.png')
+})
+
+test('report 2.9, 2.10, 2.13 and 2.15: cue before the figure, checklist with the controls, dark cards, opaque footer', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.emulateMedia({ colorScheme: 'dark' })
+  // 2.9 — PDF p.19: the cue sat under the figure and its controls, below the fold.
+  await openSection(page, 'projection')
+  await sceneReady(page)
+  const cue = await inUncoveredBand(page, {
+    cue: '[data-look-for]',
+    figure: '[data-suite-scene]',
+  })
+  expect(cue.cue!.fraction).toBeGreaterThan(0.99)
+  expect(cue.cue!.top).toBeLessThan(cue.figure!.top)
+
+  // 2.10 — PDF p.20: the control card was the brightest thing beside a dark image.
+  const luminance = (rgb: string) => {
+    const [r, g, b] = rgb.match(/\d+(\.\d+)?/g)!.map(Number)
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+  }
+  const surfaces = await page.evaluate(() => {
+    const colour = (selector: string) => {
+      const node = document.querySelector(selector)
+      return node ? getComputedStyle(node).backgroundColor : null
+    }
+    return {
+      dock: colour('[data-lab-dock]'),
+      readout: colour('[data-readout]'),
+      cue: colour('[data-look-for]'),
+      example: colour('[data-lesson-demonstration] button'),
+      ink: getComputedStyle(document.querySelector('[data-lab-dock] label')!).color,
+    }
+  })
+  for (const [name, value] of Object.entries(surfaces))
+    // The old cards measured about 0.96; the darkest of them is now the pressed example button.
+    if (name !== 'ink') expect(luminance(value!), name).toBeLessThan(0.4)
+  expect(luminance(surfaces.ink)).toBeGreaterThan(0.8)
+
+  // 2.15 — PDF p.21: body text showed through the pinned footer.
+  const footer = await page.locator('[data-imaging-flow] > footer').evaluate((node) => {
+    const style = getComputedStyle(node)
+    return { background: style.backgroundColor, position: style.position }
+  })
+  expect(footer.position).toBe('sticky')
+  expect(footer.background).toMatch(/^rgb\(/)
+
+  // 2.13 — PDF p.21/p.27: "the changes listed below" pointed at a list under the fold.
+  await advanceToKind(page, 'good-image', 'lab-task')
+  await sceneReady(page)
+  await expect(page.locator('[data-now-status]')).toContainText('listed with the controls')
+  await expect(page.locator('[data-step-goals]')).toHaveCount(0)
+  const list = await inUncoveredBand(page, {
+    goals: '[data-dock-goals]',
+    controls: '[data-suite-controls]',
+    image: '[data-current-image] canvas',
+  })
+  expect(list.goals!.fraction).toBeGreaterThan(0.99)
+  expect(list.image!.fraction).toBeGreaterThan(0.9)
+  const [goals, controls] = await Promise.all([
+    page.locator('[data-dock-goals]').boundingBox(),
+    page.locator('[data-suite-controls]').boundingBox(),
+  ])
+  // In the same dock, directly above the controls it is about.
+  expect(Math.abs(goals!.x - controls!.x)).toBeLessThan(40)
+  expect(controls!.y - (goals!.y + goals!.height)).toBeLessThan(40)
+  // A real change ticks the list where the learner is looking.
+  const unmet = page.locator('[data-dock-goals] li[data-met="false"]')
+  const before = await unmet.count()
+  expect(before).toBeGreaterThan(0)
+  await controlRange(page, 'orbit', 35)
+  await expect.poll(() => unmet.count()).toBeLessThan(before)
+  await expect(skip(page)).toBeVisible()
+  await capture(page, info, 'fellow2-213-checklist.png')
+})
+
+test('report 3.8: the pulse strip has the width of its card, one text size, and marks the readouts a change moved', async ({
+  page,
+}, info) => {
+  // PDF p.31/p.32. Six dashes about 100 px wide under captions several times the body size.
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await advanceToKind(page, 'time', 'lab-task')
+  await sceneReady(page)
+  const strip = page.locator('[data-pulse-strip]')
+  const reading = () =>
+    page.evaluate(() => {
+      const host = document.querySelector('[data-temporal-phase]')!
+      const svg = host.querySelector('[data-pulse-strip]')!
+      const xs = [...svg.querySelectorAll('[data-time-sample] line')].map(
+        (line) => line.getBoundingClientRect().left,
+      )
+      const sizes = new Set(
+        [...host.querySelectorAll('p')].map((p) => getComputedStyle(p).fontSize),
+      )
+      return {
+        span: Math.max(...xs) - Math.min(...xs),
+        card: host.getBoundingClientRect().width,
+        svgText: svg.querySelectorAll('text').length,
+        sizes: [...sizes],
+      }
+    })
+  const first = await reading()
+  expect(first.span).toBeGreaterThan(200)
+  expect(first.svgText).toBe(0)
+  expect(first.sizes).toHaveLength(1)
+  // The scale is fixed, so a lower pulse rate visibly spreads the samples: the causal picture.
+  const readouts = async () =>
+    Object.fromEntries(
+      await page
+        .locator('[data-readout]')
+        .evaluateAll((nodes) =>
+          nodes.map((node) => [
+            node.getAttribute('data-readout'),
+            node.querySelector('dd')!.textContent,
+          ]),
+        ),
+    )
+  const before = await readouts()
+  await page.getByLabel('Pulse width').focus()
+  await page.keyboard.press('ArrowRight')
+  await page.keyboard.press('ArrowRight')
+  const after = await readouts()
+  const moved = Object.keys(after).filter((key) => after[key] !== before[key])
+  expect(moved.length).toBeGreaterThan(0)
+  expect(moved.length).toBeLessThan(Object.keys(after).length)
+  const marked = await page
+    .locator('[data-readout][data-readout-changed="true"]')
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-readout')))
+  // Exactly the readouts the change moved, and with their values intact.
+  expect(marked.sort()).toEqual(moved.sort())
+  expect(after.interFrameTravelMm).toBe(before.interFrameTravelMm)
+  await strip.scrollIntoViewIfNeeded()
+  await capture(page, info, 'fellow2-38-pulse.png')
+})
+
+test('report 4.2 and 4.3: an optional, truthful DTS overlay and projections that enlarge in place', async ({
+  page,
+}, info) => {
+  // PDF p.33/p.38: no mark for the tool or the lesion. p.34: thirteen ~45 px thumbnails.
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await openSection(page, 'dts-acquisition')
+  for (let i = 0; i < 2; i++) {
+    const stage = await page.locator('[data-stage]').getAttribute('data-stage')
+    await expect(primary(page)).toBeEnabled({ timeout: 60000 })
+    await primary(page).click()
+    await expect(page.locator('[data-stage]')).not.toHaveAttribute('data-stage', stage!)
+  }
+  const plane = page.locator('[data-dts-state]')
+  await expect(plane).toHaveAttribute('data-dts-state', 'ready', { timeout: 90000 })
+  // Off by default: the image is read unmarked first, and its pixels are never drawn on.
+  await expect(plane).toHaveAttribute('data-dts-overlay', 'hidden')
+  await expect(page.locator('[data-dts-mark]')).toHaveCount(0)
+  const raw = await plane
+    .locator('canvas')
+    .evaluate((node) => (node as HTMLCanvasElement).toDataURL())
+
+  const toggle = page.locator('[data-dts-overlay-toggle]')
+  await toggle.focus()
+  await page.keyboard.press('Space')
+  await expect(plane).toHaveAttribute('data-dts-overlay', 'shown')
+  await expect(page.locator('[data-dts-overlay-note]')).toContainText('not something detected')
+  // The "tool" example opens on the tool's plane: the tool is in it, the target 18 mm away.
+  await expect(page.locator('[data-dts-mark="tool"]')).toHaveAttribute('data-in-plane', 'true')
+  await expect(page.locator('[data-dts-mark="target"]')).toHaveAttribute('data-in-plane', 'false')
+  await expect(page.locator('[data-dts-mark="target"] text')).toHaveText(
+    'Modeled target · 18 mm from this plane',
+  )
+  // An out-of-plane object gets a dotted guide, never a solid outline.
+  expect(await page.locator('[data-dts-mark="target"] rect').getAttribute('stroke-dasharray')).toBe(
+    '2 4',
+  )
+  expect(
+    await page.locator('[data-dts-mark="tool"] rect').getAttribute('stroke-dasharray'),
+  ).toBeNull()
+  expect(
+    await plane.locator('canvas').evaluate((node) => (node as HTMLCanvasElement).toDataURL()),
+  ).toBe(raw)
+
+  // The mark sits on what the model drew: the sharpest thin horizontal structure in this plane is
+  // on the row the overlay names, inside the columns it brackets.
+  const sharpestRow = await plane.locator('canvas').evaluate((node) => {
+    const data = (node as HTMLCanvasElement).getContext('2d')!.getImageData(0, 0, 256, 256).data
+    const at = (x: number, y: number) => data[(y * 256 + x) * 4]
+    let best = -1
+    let bestScore = -1
+    for (let y = 100; y < 156; y++) {
+      let score = 0
+      for (let x = 60; x < 160; x++) score += Math.abs(2 * at(x, y) - at(x, y - 3) - at(x, y + 3))
+      if (score > bestScore) [best, bestScore] = [y, score]
+    }
+    return best
+  })
+  const toolBox = await page.locator('[data-dts-mark="tool"] rect').evaluate((rect) => ({
+    y: Number(rect.getAttribute('y')),
+    height: Number(rect.getAttribute('height')),
+  }))
+  expect(sharpestRow).toBeGreaterThanOrEqual(toolBox.y)
+  expect(sharpestRow).toBeLessThanOrEqual(toolBox.y + toolBox.height)
+  await capture(page, info, 'fellow2-42-overlay-tool-plane.png')
+
+  await toggle.uncheck()
+  await expect(page.locator('[data-dts-mark]')).toHaveCount(0)
+  // The check that follows reads the image unaided.
+  // 4.3 — a thumbnail opens the same projection, enlarged, and gives focus back on Escape.
+  const thumb = page.locator('[data-dts-frame="0"] button')
+  await thumb.scrollIntoViewIfNeeded()
+  expect((await thumb.boundingBox())!.width).toBeLessThan(90)
+  await thumb.focus()
+  await page.keyboard.press('Enter')
+  const enlarged = page.locator('[data-dts-enlarged]')
+  await expect(enlarged).toHaveAttribute('data-dts-enlarged', '0')
+  await expect(enlarged.locator('figcaption')).toContainText('Projection 1 of 13 · -15°')
+  expect((await enlarged.locator('canvas').boundingBox())!.width).toBeGreaterThanOrEqual(300)
+  const same = await page.evaluate(() => {
+    const big = document.querySelector<HTMLCanvasElement>('[data-dts-enlarged] canvas')!
+    const small = document.querySelector<HTMLCanvasElement>('[data-dts-frame="0"] canvas')!
+    return big.toDataURL() === small.toDataURL()
+  })
+  expect(same).toBe(true)
+  await enlarged.locator('[data-dts-enlarged-next]').focus()
+  await page.keyboard.press('Enter')
+  await expect(enlarged).toHaveAttribute('data-dts-enlarged', '1')
+  await expect(page.locator('[data-dts-frame="1"] button')).toHaveAttribute('aria-pressed', 'true')
+  await capture(page, info, 'fellow2-43-enlarged.png')
+  await page.keyboard.press('Escape')
+  await expect(enlarged).toHaveCount(0)
+  await expect(page.locator('[data-dts-frame="1"] button')).toBeFocused()
+})
+
+test('report 4.2: a check never offers the overlay that would answer it', async ({ page }) => {
+  await advanceToKind(page, 'dts-acquisition', 'prediction')
+  await expect(page.locator('[data-dts-state]')).toHaveAttribute('data-dts-state', 'ready', {
+    timeout: 90000,
+  })
+  await expect(page.locator('[data-dts-overlay-toggle]')).toHaveCount(0)
+  await expect(page.locator('[data-dts-mark]')).toHaveCount(0)
+  await expect(secondary(page)).toHaveText('Show the explanation')
+})
+
+test('report 6.2 and 6.4: controls beside the planes, and the slab shown with the thin plane through it', async ({
+  page,
+}, info) => {
+  // PDF p.41. The sliders sat above the images here and elsewhere beside or below them; the slab
+  // replaced the thin planes instead of sitting with them.
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await advanceToKind(page, 'tool-confirmation', 'lab-task')
+  await expect(page.locator('[data-ct-state="ready"]').first()).toBeVisible({ timeout: 90000 })
+  const [dock, planes] = await Promise.all([
+    page.locator('[data-lab-dock]').boundingBox(),
+    page.locator('[data-sampling-state]').boundingBox(),
+  ])
+  // Beside, to the right, top-aligned: the comparison workbenches' arrangement.
+  expect(dock!.x).toBeGreaterThanOrEqual(planes!.x + planes!.width)
+  expect(Math.abs(dock!.y - planes!.y)).toBeLessThan(24)
+  const axial = page.locator('#peripheral-imaging-control-axial')
+  await axial.focus()
+  const scrollBefore = await page.evaluate(() => window.scrollY)
+  await page.keyboard.press('ArrowRight')
+  await page.keyboard.press('ArrowRight')
+  await expect(page.locator('[data-sampling-state]')).toContainText('Axial · 2 mm')
+  expect(await page.evaluate(() => window.scrollY)).toBe(scrollBefore)
+  const seen = await inUncoveredBand(page, {
+    slider: '#peripheral-imaging-control-axial',
+    planes: '[data-sampling-state] svg',
+  })
+  expect(seen.slider!.fraction).toBeGreaterThan(0.99)
+  expect(seen.planes!.fraction).toBeGreaterThan(0.9)
+
+  await page.locator('#peripheral-imaging-control-slab').check()
+  const pairs = page.locator('[data-slab-pair]')
+  await expect(pairs).toHaveCount(3)
+  for (const plane of ['Axial', 'Coronal', 'Sagittal']) {
+    const pair = page.locator(`[data-slab-pair="${plane}"]`)
+    const [thin, slab] = await Promise.all([
+      pair.locator('[data-slab-pair-view="thin"]').boundingBox(),
+      pair.locator('[data-slab-pair-view="slab"]').boundingBox(),
+    ])
+    // Matched: same size, same row, side by side.
+    expect(Math.abs(thin!.width - slab!.width)).toBeLessThan(2)
+    expect(Math.abs(thin!.y - slab!.y)).toBeLessThan(2)
+    expect(slab!.x).toBeGreaterThan(thin!.x)
+    expect(thin!.width).toBeGreaterThan(110)
+    await expect(pair.locator('[data-slab-pair-view="thin"] svg')).toHaveAttribute(
+      'aria-label',
+      /teaching slice at/,
+    )
+    await expect(pair.locator('[data-slab-pair-view="slab"] svg')).toHaveAttribute(
+      'aria-label',
+      /teaching slab/,
+    )
+  }
+  await capture(page, info, 'fellow2-64-slab-pairs.png')
+  // A phone keeps each pair side by side and readable, one plane per row.
+  await page.setViewportSize({ width: 390, height: 844 })
+  const phone = await page
+    .locator('[data-slab-pair="Axial"] [data-slab-pair-view="thin"]')
+    .boundingBox()
+  expect(phone!.width).toBeGreaterThan(130)
+  await noHorizontalOverflow(page)
+})
+
+test('report PR3, 1.9, O3 and O5: readable disabled Check, readable rationale, a full intro card and labels on the picture', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.emulateMedia({ colorScheme: 'dark' })
+  const contrast = (foreground: string, background: string) => {
+    const channel = (value: number) => {
+      const c = value / 255
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+    }
+    const lum = (rgb: string) => {
+      const [r, g, b] = rgb.match(/\d+(\.\d+)?/g)!.map(Number)
+      return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+    }
+    const [a, b] = [lum(foreground), lum(background)].sort((x, y) => y - x)
+    return (a + 0.05) / (b + 0.05)
+  }
+
+  // PR3 — PDF p.46/p.47.
+  const firstCase = imagingMicroCasesInPathwayOrder()[0]
+  await page.goto(`${base()}/en/peripheral-imaging/practice?case=${firstCase.id}`)
+  const check = page.getByRole('button', { name: /Check my answer/ })
+  await expect(check).toBeDisabled()
+  const checkStyle = await check.evaluate((node) => {
+    const style = getComputedStyle(node)
+    return { color: style.color, background: style.backgroundColor, opacity: style.opacity }
+  })
+  expect(checkStyle.opacity).toBe('1')
+  expect(contrast(checkStyle.color, checkStyle.background)).toBeGreaterThan(4.5)
+  // The explanation is offered before any answer, as a real button, and opens without one.
+  const explain = page.getByRole('button', { name: 'Show the explanation' })
+  await expect(explain).toBeEnabled()
+  expect(await explain.evaluate((node) => getComputedStyle(node).borderTopWidth !== '0px')).toBe(
+    true,
+  )
+  await explain.click()
+  await expect(page.getByText('Shown without an answer.')).toBeVisible()
+  await expect(check).toBeDisabled()
+  await page.locator('[data-prediction-choices] input').first().check()
+  await expect(check).toBeEnabled()
+  await capture(page, info, 'fellow2-pr3-check.png')
+
+  // 1.9 — PDF p.13.
+  await check.click()
+  const others = page.locator('[data-answer-verdict] details')
+  await others.locator('summary').click()
+  const rationale = await page
+    .locator('[data-other-answers] li')
+    .first()
+    .evaluate((node) => {
+      const style = getComputedStyle(node)
+      let surface = node as HTMLElement | null
+      let background = 'rgba(0, 0, 0, 0)'
+      // The panel is a translucent wash; the opaque colour under it decides what the text is read on.
+      while (surface && /rgba\(.*, 0(\.\d+)?\)$/.test(background)) {
+        background = getComputedStyle(surface).backgroundColor
+        surface = surface.parentElement
+      }
+      return { color: style.color, size: style.fontSize, background }
+    })
+  expect(parseFloat(rationale.size)).toBeGreaterThanOrEqual(16)
+  expect(contrast(rationale.color, 'rgb(16, 38, 43)')).toBeGreaterThan(7)
+
+  // O3 and O5 — PDF p.4/p.5.
+  await page.goto(`${base()}/en/peripheral-imaging`)
+  const card = page.locator('[data-hub-before-you-start]')
+  await card.scrollIntoViewIfNeeded()
+  const cardBox = (await card.boundingBox())!
+  const entries = await card
+    .locator('dl > div')
+    .evaluateAll((nodes) =>
+      nodes.map((node) => node.getBoundingClientRect()).map((rect) => [rect.left, rect.right]),
+    )
+  // The entries use both halves of the card; no empty column.
+  expect(Math.min(...entries.map(([left]) => left)) - cardBox.x).toBeLessThan(60)
+  expect(cardBox.x + cardBox.width - Math.max(...entries.map(([, right]) => right))).toBeLessThan(
+    60,
+  )
+  expect(new Set(entries.map(([left]) => Math.round(left))).size).toBe(2)
+
+  const hero = page.locator('[data-hub-hero]')
+  await hero.scrollIntoViewIfNeeded()
+  const labels = await hero.locator('[data-hub-hero-label] span').evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const rect = node.getBoundingClientRect()
+      return {
+        text: node.textContent,
+        left: rect.left,
+        right: rect.right,
+        top: rect.top,
+        bottom: rect.bottom,
+      }
+    }),
+  )
+  expect(labels.map((label) => label.text)).toEqual([
+    'X-ray tube',
+    'Beam geometry',
+    'Patient anatomy',
+    'Flat-panel detector',
+    'Reconstruction and registration',
+    'Display and interpretation',
+  ])
+  const picture = (await hero.locator('img').boundingBox())!
+  for (let i = 0; i < labels.length; i++) {
+    expect(labels[i].left).toBeGreaterThanOrEqual(picture.x)
+    expect(labels[i].right).toBeLessThanOrEqual(picture.x + picture.width)
+    for (let j = i + 1; j < labels.length; j++)
+      expect(
+        Math.min(labels[i].right, labels[j].right) - Math.max(labels[i].left, labels[j].left) > 0 &&
+          Math.min(labels[i].bottom, labels[j].bottom) - Math.max(labels[i].top, labels[j].top) > 0,
+      ).toBe(false)
+  }
+  // The caption is still the text equivalent.
+  await expect(hero.locator('[data-hub-hero-stop]')).toHaveCount(6)
+  await hero.screenshot({ path: info.outputPath('fellow2-o5-hero.png') })
+})
+
+for (const condition of [
+  { name: '390', width: 390, height: 844, root: 100 },
+  { name: '320', width: 320, height: 740, root: 100 },
+  { name: '1280-200pct-root-text', width: 1280, height: 900, root: 200 },
+  { name: '390-200pct-root-text', width: 390, height: 844, root: 200 },
+]) {
+  test(`the repaired workbenches stack readably at ${condition.name}`, async ({ page }, info) => {
+    // Root-text enlargement, not CSS zoom, device pixel ratio or native browser zoom.
+    await page.setViewportSize({ width: condition.width, height: condition.height })
+    await advanceToKind(page, 'chain-walk', 'walk')
+    if (condition.root !== 100) {
+      await page.addStyleTag({ content: `html { font-size: ${condition.root}% !important; }` })
+      // Held, so the condition cannot silently fail to apply.
+      expect(
+        await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize)),
+      ).toBe(32)
+      await expect(page.locator('[data-imaging-flow]')).toHaveAttribute(
+        'data-chrome-pinned',
+        'false',
+      )
+    }
+    await sceneReady(page)
+    // Stacked, in reading order: the scene, then the text about it. No pinned side column, and so
+    // no fixed-height panel with a scrollbar of its own.
+    const [scene, text] = await Promise.all([
+      page.locator('[data-suite-viewport]').boundingBox(),
+      page.locator('[data-walk-stop]').boundingBox(),
+    ])
+    expect(text!.y).toBeGreaterThan(scene!.y)
+    const explanation = page.locator('[data-current-task] > div').nth(1)
+    expect(await explanation.evaluate((node) => getComputedStyle(node).position)).toBe('static')
+    expect(
+      await explanation.evaluate((node) => node.scrollHeight - node.clientHeight),
+    ).toBeLessThanOrEqual(1)
+    // The scene draws no frames while it is off screen, so bring it into view before reading it:
+    // at enlarged text it starts below the fold.
+    await page.locator('[data-suite-viewport]').scrollIntoViewIfNeeded()
+    await expect.poll(async () => (await sceneLabels(page)).overlaps).toEqual([])
+    // The wheel still belongs to the page.
+    const shown = (await page.locator('[data-suite-viewport]').boundingBox())!
+    await page.mouse.move(shown.x + shown.width / 2, shown.y + Math.min(shown.height, 200) / 2)
+    const y = await page.evaluate(() => window.scrollY)
+    await page.mouse.wheel(0, 200)
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(y)
+    if (condition.root === 100) await noHorizontalOverflow(page)
+    await capture(page, info, `fellow2-compact-${condition.name}.png`)
+  })
+}
