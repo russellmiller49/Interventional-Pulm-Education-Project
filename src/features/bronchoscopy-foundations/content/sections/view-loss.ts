@@ -328,7 +328,7 @@ export const section: BronchSectionDefinition = {
       },
       {
         id: 'on-to-the-carina',
-        label: 'Then advance along the visible lumen to the main carina',
+        label: 'Then, with the lumen back in view, advance as far as the main carina',
         test: { type: 'event-sequence', events: ['red-out-recovered', 'reached-carina'] },
       },
     ],

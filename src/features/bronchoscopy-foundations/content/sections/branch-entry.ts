@@ -318,7 +318,7 @@ export const section: BronchSectionDefinition = {
       {
         id: 'no-force',
         label:
-          'Advance only with the opening aimed and the lumen in view, and keep the tip off the wall',
+          'Reach the left main bronchus with no advance refused for want of aim, none made without a clear view, and no wall contact recorded',
         test: {
           type: 'all',
           tests: [
@@ -334,7 +334,7 @@ export const section: BronchSectionDefinition = {
       view: {
         ...CARINA_VIEW,
         controls: ['advance', 'withdraw', 'rotate', 'deflect', 'capture', 'acknowledge'],
-        readouts: ['depthMm', 'contactCount'],
+        readouts: ['depthMm', 'contactCount', 'holdRemaining'],
         litAirways: ['TR'],
         script: 'assistant-interrupt',
         boundary:
@@ -370,7 +370,7 @@ export const section: BronchSectionDefinition = {
         },
         {
           id: 'no-drift',
-          label: 'Keep the depth steady and the tip off the wall during the hold',
+          label: 'Finish the hold with no change in depth and no wall contact recorded',
           test: {
             type: 'all',
             tests: [
@@ -381,7 +381,7 @@ export const section: BronchSectionDefinition = {
           },
         },
       ],
-      readouts: ['depthMm', 'contactCount'],
+      readouts: ['depthMm', 'contactCount', 'holdRemaining'],
     },
   },
 

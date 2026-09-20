@@ -64,7 +64,11 @@ import {
 } from '../../engine/selfPacedProgress'
 import { NEUTRAL_LOCATION_CAPTION, scopeLocationCaption } from '../../engine/scope/scopeCaption'
 import type { ScopeCase } from '../../engine/scope/scopeCase'
-import { scopeGoalStatuses } from '../../engine/scope/scopeGoalEvaluation'
+import {
+  scopeGoalClaim,
+  scopeGoalsClaim,
+  scopeGoalStatuses,
+} from '../../engine/scope/scopeGoalEvaluation'
 import type { ScopeRuntimeState } from '../../engine/scope/scopeRuntime'
 import {
   deriveStageProgress,
@@ -161,6 +165,32 @@ function skipLabel(kind: BronchStageStep['interaction']['kind'], last: boolean):
 }
 
 const EXPLANATION_NOTE = 'Opened without an answer. Nothing is recorded; you can still answer.'
+
+/**
+ * What a row of ticks on a scope card is a statement about (A4, A5).
+ *
+ * Most scope goals are written over the events of the attempt, so they stay met after the tip has
+ * moved on: they record what was done, not what is on the screen now. Saying so keeps a completed
+ * card from reading as approval of a view the model cannot judge — and the model genuinely cannot:
+ * it counts contacts, lost views and positions, and measures nothing about the picture.
+ */
+const GOAL_BASIS: Readonly<Record<'history' | 'current' | 'mixed', string>> = {
+  history: 'Each goal here records something that happened during this attempt.',
+  current: 'Each goal here reads the state the scope is in now.',
+  mixed:
+    'Some goals here record what happened during this attempt; others read the state the scope is in now.',
+}
+const GOAL_MODEL_LIMIT =
+  'The model counts contacts, lost views and where the tip is; it does not judge the picture on the screen.'
+
+/** The done line on a scope card, bounded by what its goals actually establish. */
+function scopeDoneStatus(goals: readonly ScopeGoal[], lead: string): string {
+  const claim = scopeGoalsClaim(goals)
+  if (claim === 'current') return lead
+  return claim === 'history'
+    ? `${lead} They record this attempt, not the view on the screen now.`
+    : `${lead} Some of them record this attempt rather than the view on the screen now.`
+}
 
 /** The control to spotlight for a goal not yet met. */
 function goalControlKey(test: ScopeGoalTest): ScopeControlKey | null {
@@ -521,8 +551,13 @@ function BronchStageSessionView({
   const activeScopeState = session.scope[activeStep.id]
   const goalStatuses = activeScopeState
     ? scopeGoalStatuses(goals, activeScopeState)
-    : goals.map((goal) => ({ goal, met: false }))
+    : goals.map((goal) => ({ goal, met: false, claim: scopeGoalClaim(goal.test) }))
   const goalsMetNow = goalStatuses.map((status) => status.met)
+  /** Where the tip is now, so a met goal is never read as a statement about the present view. */
+  const liveAirwayLine =
+    goals.length > 0 && activeScopeState && activeScopeState.location.label !== null
+      ? `The tip is in ${activeScopeState.location.fullLabel} now.`
+      : null
   const firstUnmetKey = (() => {
     const index = goalsMetNow.findIndex((met) => !met)
     if (index < 0 || !goalInteraction || activeStep.learn) return null
@@ -746,7 +781,7 @@ function BronchStageSessionView({
           return {
             ...base,
             status: workDone
-              ? (activeStep.learn?.success ?? 'Done. Every goal is met.')
+              ? scopeDoneStatus(goals, activeStep.learn?.success ?? 'Done. Every goal is met.')
               : activeScopeState?.events.includes('bench-advanced-off-target')
                 ? 'You advanced before centering the target. Reset this attempt, establish the aim, and keep it centered as you advance.'
                 : 'Use the controls beside the views. The goal checks the resulting movement or view; reset starts a fresh attempt.',
@@ -767,7 +802,7 @@ function BronchStageSessionView({
         if (workDone)
           return {
             ...base,
-            status: 'Done. Every goal on this card is met.',
+            status: scopeDoneStatus(goals, 'Done. Every goal on this card is met.'),
             primary: isLastStep ? finishAction : continueAction,
           }
         return {
@@ -786,7 +821,11 @@ function BronchStageSessionView({
         }
       case 'observe':
         if (workDone)
-          return { ...base, status: 'Done.', primary: isLastStep ? finishAction : continueAction }
+          return {
+            ...base,
+            status: scopeDoneStatus(goals, 'Done. Every goal on this card is met.'),
+            primary: isLastStep ? finishAction : continueAction,
+          }
         return {
           ...base,
           status: !activeScopeState
@@ -810,14 +849,22 @@ function BronchStageSessionView({
    * The Now card's body
    * ---------------------------------------------------------------- */
   const goalList = (
-    <ul className={stageStyles.taskList} data-step-goals aria-label="The goals on this card">
-      {goalStatuses.map(({ goal, met }) => (
-        <li key={goal.id} data-goal={goal.id} data-met={met}>
-          {met ? <Check aria-hidden="true" /> : <Circle aria-hidden="true" />}
-          <span>{goal.label}</span>
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul className={stageStyles.taskList} data-step-goals aria-label="The goals on this card">
+        {goalStatuses.map(({ goal, met, claim }) => (
+          <li key={goal.id} data-goal={goal.id} data-met={met} data-goal-claim={claim}>
+            {met ? <Check aria-hidden="true" /> : <Circle aria-hidden="true" />}
+            <span>{goal.label}</span>
+          </li>
+        ))}
+      </ul>
+      {goals.length > 0 ? (
+        <p className={styles.figureCaption} data-goal-basis={scopeGoalsClaim(goals)}>
+          {GOAL_BASIS[scopeGoalsClaim(goals)]} {GOAL_MODEL_LIMIT}
+          {liveAirwayLine ? ` ${liveAirwayLine}` : ''}
+        </p>
+      ) : null}
+    </>
   )
 
   function policiesLine(stage: BronchStageItem) {

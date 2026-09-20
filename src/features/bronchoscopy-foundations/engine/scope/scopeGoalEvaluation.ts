@@ -69,11 +69,58 @@ export function scopeGoalTestMet(test: ScopeGoalTest, state: ScopeState): boolea
   }
 }
 
+/**
+ * What a met goal is a statement about: something that happened, or something that is true now.
+ *
+ * A goal written over events (`event`, `event-sequence`, `without`) records the attempt — it stays
+ * met after the tip has moved on, and after the picture has stopped being the one the goal was met
+ * in. A goal written over the state (`location`, `metric`, `ledger`, `bench-target`) is a live
+ * reading and stops holding when the state changes. The Now card says which kind it is showing, so
+ * a row of ticks beside a lost view is not read as a statement about the present (A4, A5).
+ *
+ * Neither kind is evidence that the image shows an open lumen: this model counts contacts, lost
+ * views and positions, and has no measure of what the picture looks like.
+ */
+export type ScopeGoalClaim = 'history' | 'current' | 'mixed'
+
+export function scopeGoalClaim(test: ScopeGoalTest): ScopeGoalClaim {
+  switch (test.type) {
+    case 'event':
+    case 'event-sequence':
+    case 'without':
+      return 'history'
+    case 'location':
+    case 'metric':
+    case 'ledger':
+    case 'ledger-complete':
+    case 'bench-target':
+      return 'current'
+    case 'all': {
+      const claims = new Set(test.tests.map(scopeGoalClaim))
+      if (claims.size === 0) return 'history'
+      if (claims.size === 1) return [...claims][0]
+      return 'mixed'
+    }
+  }
+}
+
+/** The one claim a whole card's goals make together, for the sentence under the list. */
+export function scopeGoalsClaim(goals: readonly ScopeGoal[]): ScopeGoalClaim {
+  const claims = new Set(goals.map((goal) => scopeGoalClaim(goal.test)))
+  if (claims.size === 0) return 'history'
+  if (claims.size === 1) return [...claims][0]
+  return 'mixed'
+}
+
 export function scopeGoalStatuses(
   goals: readonly ScopeGoal[],
   state: ScopeState,
-): readonly { readonly goal: ScopeGoal; readonly met: boolean }[] {
-  return goals.map((goal) => ({ goal, met: scopeGoalTestMet(goal.test, state) }))
+): readonly { readonly goal: ScopeGoal; readonly met: boolean; readonly claim: ScopeGoalClaim }[] {
+  return goals.map((goal) => ({
+    goal,
+    met: scopeGoalTestMet(goal.test, state),
+    claim: scopeGoalClaim(goal.test),
+  }))
 }
 
 export function scopeGoalsMet(goals: readonly ScopeGoal[], state: ScopeState): boolean {
