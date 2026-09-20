@@ -7,6 +7,7 @@ import {
 import {
   MODEL_REVISION,
   MODEL_STEPS,
+  PHANTOM_RECOMMENDED_COMPARISON,
   initialModelState,
   modelComplete,
   modelFrameId,
@@ -181,6 +182,19 @@ function Controls({ state: s, act }: { state: ModelState; act: (a: ModelAction) 
           <option value="lobulated">Lobulated</option>
         </select>
       </label>
+      <button
+        onClick={() => {
+          act({ type: 'shape', value: PHANTOM_RECOMMENDED_COMPARISON.shape })
+          act({ type: 'offset', value: PHANTOM_RECOMMENDED_COMPARISON.offset })
+        }}
+      >
+        Go to the recommended comparison
+      </button>
+      <p className="model-caption">
+        The recorded image this activity asks for is the central plane of the elongated phantom.
+        Start there, then sweep the other shapes and planes to see how the section changes; both
+        remain available and the activity still records every plane you visit.
+      </p>
       <label>
         Plane offset · {s.offset} phantom mm
         <input
@@ -234,7 +248,7 @@ function Controls({ state: s, act }: { state: ModelState; act: (a: ModelAction) 
       </label>
       <div className="model-calipers">
         <label>
-          Horizontal position
+          Horizontal position · phantom mm, 0 at the midline
           <input
             type="number"
             min="-30"
@@ -249,7 +263,7 @@ function Controls({ state: s, act }: { state: ModelState; act: (a: ModelAction) 
           />
         </label>
         <label>
-          Vertical position
+          Vertical position · phantom mm from the top of the field
           <input
             type="number"
             min="0"
@@ -359,6 +373,11 @@ export function ModelWorkbench({
         </div>
       ) : (
         <>
+          {/* The views and the controls that drive them share one row at laptop widths and stack
+              again when the column is narrow (EBUS-PRE-REVIEW-02, L5-5 / L9-1 / L21-2). They were
+              stacked, which put a dozen controls below a workbench taller than the viewport. */}
+          <div className="model-workspace">
+          <div className="model-views">
           <ModelImage state={state} reveal={config.reveal} locked={config.locked} dispatch={act} />
           <ModelViewport
             state={state}
@@ -366,6 +385,7 @@ export function ModelWorkbench({
             onRendered={setRendered}
             onError={onError}
           />
+          </div>
           <section className="model-controls">
             <h2>{config.locked ? 'Retained model observation' : 'Model controls'}</h2>
             <fieldset disabled={config.locked || !rendered}>
@@ -404,6 +424,7 @@ export function ModelWorkbench({
               </p>
             )}
           </section>
+          </div>
         </>
       )}
     </main>
