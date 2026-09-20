@@ -1,0 +1,334 @@
+{
+  "batch": "EBUS-PRE-REVIEW-01",
+  "title": "Truthful feedback, navigation and evidence",
+  "lane": "01",
+  "module": "ebus-guided",
+  "source": "EBUS_Guided_Course_Fellow_Walkthrough.docx (Claude in a first-year-fellow persona, 18-19 September 2026)",
+  "package": "Interventional-Pulm-Local-Data/module_update_9_19/EBUS_Claude_Implementation_Pack",
+  "baseSha": "77a141ccfd574a984f91e74abc9018b5d67e8202",
+  "branch": "claude/ebus-pre-review-01",
+  "checkout": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-ebus-9-19",
+  "state": "implemented; pull request open; not merged, not deployed",
+  "claims": {
+    "clinicalApproval": false,
+    "sourceReview": false,
+    "mediaRightsReview": false,
+    "realLearnerValidation": false,
+    "usabilitySession": false,
+    "release": false
+  },
+  "sharedFileScope": {
+    "authorisedSharedRuntimeFile": "src/features/learning-module/components/AnswerVerdict.tsx",
+    "authorisedBy": "PI_EBUS_COORDINATION.md — EBUS batch 01 only",
+    "changeSummary": "Comparison heading is truthful when the unselected set contains the keyed answer, and that entry names itself. No prop, timing rule, announcement, plausibility mapping, key, rationale or callback changed.",
+    "directlyAffectedConsumers": [
+      "src/features/ebus-guided/components/QuestionBody.tsx",
+      "src/features/cardiohelp-ecmo/components/stage/DrillStageHost.tsx",
+      "src/features/cardiohelp-ecmo/components/stage/FoundationStageHost.tsx",
+      "src/features/icu-hemodynamics/components/stage/HemodynamicsQuestion.tsx",
+      "src/features/icu-hemodynamics/components/stage/HemodynamicsStageHost.tsx",
+      "src/features/icu-hemodynamics/components/stage/HemodynamicsStoryProblems.tsx",
+      "src/features/icu-hemodynamics/components/NormalWaveformValidityChallenges.tsx",
+      "src/features/mechanical-circulatory-support (stage consumers)",
+      "src/features/bronchoscopy-foundations/components/BronchCaseActivity.tsx",
+      "src/features/bronchoscopy-foundations/components/BronchIntegratedCases.tsx",
+      "src/features/bronchoscopy-foundations/components/stage/BronchStageHost.tsx",
+      "src/features/peripheral-imaging/components/ImagingCaseDecision.tsx",
+      "src/features/peripheral-imaging/components/stage/ImagingStageHost.tsx"
+    ],
+    "consumerResult": "all consumer suites pass unchanged; no consumer file edited",
+    "notChanged": "src/features/learning-module/components/ChoiceReasoningFeedback.tsx (same defect shape, not authorised in this batch)",
+    "otherNonModuleFiles": [
+      {
+        "path": "src/lib/ebus-model-contract.ts",
+        "reason": "EBUS-only adapter; task section D assigns L21-4. No PI or other-module consumer. The embedded bundle is built from it and is not committed.",
+        "consumers": [
+          "src/features/ebus-guided/content/types.ts",
+          "src/lib/ebus-guided-bridge.ts",
+          "EBUS-course/apps/web/src/guided/models/ModelImage.tsx",
+          "EBUS-course/apps/web/src/guided/models/ModelViewport.tsx",
+          "EBUS-course/apps/web/src/guided/models/ModelWorkbench.tsx"
+        ]
+      },
+      {
+        "path": ".claude/launch.json",
+        "reason": "one dev-server entry for this worktree's port (3128)"
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "L4-1",
+      "section": "A",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/learning-module/components/AnswerVerdict.tsx",
+      "state": "any Learn check, after a wrong selection",
+      "learnerImpact": "The correct answer was listed under a heading saying it does not fit, so 'Try again' had already given the key away under a false label.",
+      "evidence": "Browser at 1246x1021; jest src/features/ebus-guided/__tests__/pre-review-01.test.tsx and src/features/learning-module/components/__tests__/AnswerVerdict.test.tsx"
+    },
+    {
+      "id": "PR-3",
+      "section": "A",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/learning-module/components/AnswerVerdict.tsx",
+      "state": "practice case practice-boundary, check 1, selected '4R'",
+      "learnerImpact": "Same as L4-1, in Practice.",
+      "evidence": "Browser: summary text before = 'Why the other answers do not fit' with row '7 - The medial subcarinal location supports station 7.'; after = 'How the other answers compare' with that row marked 'Best-supported answer.'"
+    },
+    {
+      "id": "CS-6",
+      "section": "A",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/learning-module/components/AnswerVerdict.tsx, src/features/ebus-guided/components/QuestionExplanation.tsx",
+      "state": "integrated case assessment-sampling (heading); assessment-map debrief (repeated takeaway)",
+      "learnerImpact": "The false heading, plus a debrief that printed the keyed rationale twice under two headings.",
+      "evidence": "Browser: assessment-map debrief shows 3 explanation cards and 0 [data-explanation-takeaway] blocks, every distinct rationale still present"
+    },
+    {
+      "id": "L4-2",
+      "section": "A",
+      "status": "partially-addressed",
+      "path": "src/features/ebus-guided/components/QuestionBody.tsx, src/features/ebus-guided/components/course.module.css",
+      "state": "acoustic-contact transfer check, unsafe choice 'Advance the needle to find tissue'",
+      "learnerImpact": "The card claimed the course was stopping when it was not.",
+      "done": "Truthful title through the caller's existing frames; distinguished by text, role=alert/aria-live=assertive and an 8px double left rule, not colour alone.",
+      "notDone": "Required acknowledgement and an unsafe flag in the lesson summary, both barred by the self-paced contract and by this task.",
+      "evidence": "Browser on assessment-sampling: verdict text, role, aria-live, computed border-left style 'double' 8px; Try again and the primary both enabled"
+    },
+    {
+      "id": "CS-3",
+      "section": "A",
+      "status": "held-by-contract",
+      "path": "src/features/ebus-guided/components/CasePlayer.tsx",
+      "learnerImpact": "The debrief shows only the final response; the source wanted first and final.",
+      "reason": "No first-response persistence or attempt history is permitted. The debrief already explains every unsafe option, chosen or not, so safety teaching is available without claiming to remember an erased response."
+    },
+    {
+      "id": "PR-7",
+      "section": "B",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/ebus-guided/components/CasePlayer.tsx, src/features/ebus-guided/components/ModuleFrame.tsx, PracticePage.tsx, IntegratedCasesPage.tsx",
+      "state": "inside any practice or integrated case",
+      "learnerImpact": "There was no way out of a case but finishing every check or reloading the page.",
+      "evidence": "Browser before: both controls left caseOpen=true at /en/ebus-guided/practice. After: exit verified from check 1 before answering, from check 2, after a retry, from the debrief, from an integrated case, and from the already-active Practice tab; the Learn tab still navigates."
+    },
+    {
+      "id": "L26-5",
+      "section": "B",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/ebus-guided/components/LessonHost.tsx",
+      "learnerImpact": "Practice was never offered in the flow.",
+      "done": "The finish card offers Practice and Cases side by side, neither ordered before the other and neither a prerequisite."
+    },
+    {
+      "id": "PR-5",
+      "section": "B",
+      "status": "partially-not-reproduced",
+      "path": "src/features/ebus-guided/components/PracticePage.tsx",
+      "notReproduced": "'Fix the image and document it' does not reopen Learn lessons; it opens the knobology labs inside Practice with a fresh practice-<id>-<round> session.",
+      "fixed": "The two links to the older EBUS tools now say they are separate tools outside this course.",
+      "held": "New practice variants are new content; not in this batch."
+    },
+    {
+      "id": "PR-2",
+      "section": "C",
+      "status": "reproduced-and-fixed-partially",
+      "path": "src/features/ebus-guided/components/CasePlayer.tsx",
+      "state": "practice-boundary, check 2 ('The same target is viewed through the left main bronchus')",
+      "learnerImpact": "The stem referred to a CT that had disappeared after check 1.",
+      "fixed": "The case reference is shown for every check of the case, same station, same figure caption identifying it as supplied reference evidence.",
+      "held": "No target marker was added: no verified annotation exists and inferring one is forbidden. -> lane 05.",
+      "evidence": "Browser: figure present on both checks; screenshot of check 2 with the CT"
+    },
+    {
+      "id": "L3-8",
+      "section": "C",
+      "status": "partially-addressed",
+      "path": "src/features/ebus-guided/components/LessonHost.tsx",
+      "done": "The evidence pane names what it holds; a held activity's instruction no longer claims the held image is the subject of a check that describes a scenario in words.",
+      "held": "Rewriting the item to ask about the held image, and annotating the target after commit, are clinical/asset decisions. -> lane 05."
+    },
+    {
+      "id": "L5-1",
+      "section": "C",
+      "status": "partially-addressed",
+      "path": "src/features/ebus-guided/components/LessonHost.tsx",
+      "state": "contact-cutaway-model, held activity, checks 1 and 2, reproduced with a real acquisition of all five contact states held in the air-gap state",
+      "done": "Check 1 ('An air gap is present...') now says it is a described situation and not a reading of the held image, which stays beside it.",
+      "exactMismatchForLane05": "Check 2 (cutaway-observe) declares imagePolicy 'retained-acquisition' and names the reflector-shadow state, but EbusObservation carries no contact mode, so the host cannot tell which of the five states is held. Resolving it needs a new bridge field (lane 02/03) or a re-worded item (lane 05).",
+      "notDone": "Nothing was overwritten, relabelled, unlocked or invented to hide the mismatch."
+    },
+    {
+      "id": "L9-4",
+      "section": "C",
+      "status": "partially-addressed",
+      "path": "src/features/ebus-guided/components/LessonHost.tsx",
+      "done": "The measurement lesson's held evidence is labelled and stays visible.",
+      "held": "EbusObservation does not carry the recorded phantom number, and asking about the learner's own measurement is new measurement-dependent reasoning. -> lane 05."
+    },
+    {
+      "id": "L11-5",
+      "section": "C",
+      "status": "partially-addressed",
+      "path": "src/features/ebus-guided/components/LessonHost.tsx",
+      "done": "Same evidence labelling and instruction correction.",
+      "held": "The title/item mismatch and the trivial distractor are content. -> lanes 04/05."
+    },
+    {
+      "id": "L1-6",
+      "section": "D",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/ebus-guided/components/MatchingActivity.tsx",
+      "state": "clinical-question matching, 1 of 3 correct",
+      "learnerImpact": "'One or more pairs need another look' gave nothing to act on.",
+      "done": "Row-level feedback from the authored mapping, editable, no count and no score. Show the matches is still available before any attempt."
+    },
+    {
+      "id": "L1-7",
+      "section": "D",
+      "status": "reproduced-and-fixed-partially",
+      "path": "src/features/ebus-guided/components/LessonHost.tsx, course.module.css",
+      "done": "The advance control keeps its place and label and gives up its weight while a task is open; on an acquisition step the skip carries the weight while the primary is disabled, and hands it back when a real acquisition enables the hold.",
+      "rejected": "Gating Show the matches behind one attempt, as the ledger direction states."
+    },
+    {
+      "id": "L2-3",
+      "section": "D",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/ebus-guided/components/SequenceActivity.tsx",
+      "evidence": "Browser screenshot before: '1. 1. Clarify the indication...'. After: a single marker."
+    },
+    {
+      "id": "L2-4",
+      "section": "D",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/ebus-guided/components/SequenceActivity.tsx",
+      "done": "Instruction names the click and keyboard interaction, the running order is labelled, a partial order says what is left, and a wrong order names the first position that differs. Which sequences are accepted is unchanged."
+    },
+    {
+      "id": "L20-2",
+      "section": "D",
+      "status": "owner-decision",
+      "note": "Whether the alternative ordering should be accepted is clinical/device review. -> lane 05. Accepted sequences are unchanged here."
+    },
+    {
+      "id": "L12-6",
+      "section": "D",
+      "status": "partially-addressed",
+      "path": "src/features/ebus-guided/engine/examination.ts",
+      "fixed": "'Negative tissue assessment' no longer returns the survey-completeness message; it returns the reason for that answer, built from the statement the workspace already carries on the same screen.",
+      "notReproduced": [
+        "'Inadequate image evidence...' is accepted because recording inadequate evidence is a valid declaration for that task.",
+        "The string 'This is your last unannotated ultrasound frame' does not exist anywhere in this repository; likely the embedded workbench's own copy (lane 02)."
+      ],
+      "held": "Any new explanation of evidence sufficiency or tissue interpretation. -> lane 05."
+    },
+    {
+      "id": "L21-4",
+      "section": "D",
+      "status": "reproduced-and-fixed",
+      "path": "src/lib/ebus-model-contract.ts",
+      "learnerImpact": "Stopping because the tip had left the imaging plane was answered 'do not overcome resistance by adding force', with no resistance reported.",
+      "done": "Each cause gets the reason already authored for it, and both when both are true. Recorded steps, safety predicates and the advance block are unchanged.",
+      "evidence": "Unit tests on modelReducer; not re-driven through the embedded 3D needle model, which belongs to lanes 02/03"
+    },
+    {
+      "id": "L26-3",
+      "section": "D",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/ebus-guided/components/ExaminationWorkspace.tsx",
+      "state": "results-reporting record task, all five nodes",
+      "learnerImpact": "Untouched selects read 'Not examined' and 'Not recorded', which are declarations about a real patient, so defaults could be submitted as history.",
+      "done": "Per-field transient form intent: a field nobody has filled opens on 'Choose...'. Never written, saved or read back. A stored draft, legacy included, is shown and saved byte for byte. No schema change, no migration, no validation change. The conditional 'reason not sampled' field stays conditional and is announced before it appears.",
+      "evidence": "Browser: all ten per-node selects blank on a fresh record; localStorage empty before and after rendering and after skipping; after entering one field only that field is set and the stored node record matches byte for byte on reload"
+    },
+    {
+      "id": "L1-1",
+      "section": "E",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/ebus-guided/components/LessonHost.tsx, useLessonChromeClearance.ts, course.module.css",
+      "state": "1246x1021, on load and after every task change",
+      "learnerImpact": "Lesson number, lesson title and task number were off screen or behind the sticky site header.",
+      "measuredBefore": {
+        "siteHeader": "0 to 81",
+        "lessonEyebrow": "-32 to -15",
+        "lessonTitle": "-15 to 22",
+        "taskCounter": "36 to 56",
+        "taskHeadingScrollMarginTop": "110px fixed"
+      },
+      "measuredAfter": {
+        "siteHeader": "0 to 81",
+        "lessonEyebrow": "158 to 175",
+        "lessonTitle": "175 to 212",
+        "taskCounter": "226 to 246",
+        "taskHeading": "299",
+        "taskHeadingScrollMarginTop": "var(--ebus-focus-clear-top) = 202.9px measured"
+      },
+      "keyboard": "all 18 focusables in the lesson flow visible and hit-testable when focused, at normal text and at 200%",
+      "textScaling": [
+        { "root": "16px", "chrome": "114px", "pinned": true, "reserved": "202.9px" },
+        { "root": "32px", "chrome": "205px", "pinned": true, "reserved": "374.0px" },
+        {
+          "root": "56px",
+          "chrome": "486px",
+          "pinned": false,
+          "reserved": "510.5px (capped at half the viewport)"
+        }
+      ],
+      "notDone": "No global focus listener, no locked viewport, no change to the site header, no fixed pixel guess."
+    }
+  ],
+  "verification": {
+    "newRegressionSuite": "src/features/ebus-guided/__tests__/pre-review-01.test.tsx — 43 tests pass here; 28 of those 43 fail on unmodified origin/main in a separate worktree (the 15 that pass are controls that must not change)",
+    "ebusSuites": "npx jest src/features/ebus-guided — 11 suites, 123 tests, all pass",
+    "sharedVerdictAndConsumers": "npx jest src/features/learning-module src/features/cardiohelp-ecmo src/features/icu-hemodynamics src/features/mechanical-circulatory-support src/features/bronchoscopy-foundations src/features/peripheral-imaging — all pass",
+    "fullSuite": "npx jest — 890 of 899 suites pass; 9 failures all reproduce identically on unmodified origin/main and none touches this diff",
+    "preExistingFailures": [
+      "scripts/ip-preference-cards/check-brochure-intake-static-exposure.test.ts",
+      "scripts/ip-preference-cards/us-status/__tests__/safety-boundaries.test.ts",
+      "scripts/training-apps.test.mjs",
+      "src/features/bronchial-branch-tracing/__tests__/contracts.test.ts",
+      "src/features/critical-care/__tests__/accessibility.test.tsx",
+      "src/features/critical-care/__tests__/curriculum-sequencing.test.tsx",
+      "src/features/critical-care/__tests__/learner-copy.test.ts",
+      "src/features/literature/dedicated-supabase/foundation-manifest.test.ts",
+      "src/lib/board-review-html.test.ts"
+    ],
+    "typeCheck": "NODE_OPTIONS=--max-old-space-size=8192 npx tsc --noEmit — clean",
+    "lint": "npx eslint on the changed paths — clean",
+    "formatting": "prettier clean; lint-staged ran on every commit",
+    "productionBuild": "npm run build — exit 0, 767 static pages, standalone output prepared",
+    "browser": {
+      "engine": "Chromium in the Claude desktop browser pane, isolated profile, local dev server on port 3128",
+      "codec": "H.264 available: Depth8.mp4 decoded at 1920x1080, readyState 4. No WebM substitution was needed, unlike the source walkthrough's clean-Chromium session.",
+      "viewports": ["1246x1021", "1440x900", "1024x768", "390x844", "320x740"],
+      "textScaling": ["100%", "200%", "350% (for the unpin boundary)"],
+      "routes": "direct /en/ebus-guided/** only; no beta-wrapped EBUS route exists for this module in this session, so no beta-wrapped evidence is claimed",
+      "scenarios": [
+        "fresh load and a returning load with a stored examination draft",
+        "wrong, correct and unsafe responses in Learn, a practice case and an integrated case",
+        "continuing without answering through to a debrief",
+        "revealing the explanation without answering",
+        "leaving a case from the first check, a later check, after a retry, and from the debrief",
+        "reselecting the already-active Practice tab; confirming other tabs still navigate",
+        "case reference CT retained across checks",
+        "a real acquisition driven through the embedded workbench (knobology depth lab and the 3D contact model)",
+        "an image check refused with no acquisition held, explanation and Back to the acquisition still offered",
+        "the record skipped with nothing written and no field fabricated",
+        "a stored draft restored byte for byte"
+      ]
+    },
+    "safetyAssertionsRelaxed": false
+  },
+  "observationsNotActedOn": [
+    "ChoiceReasoningFeedback.tsx has the same 'Why the other answers do not fit' heading over a list that excludes the selected rather than the keyed choice. Not authorised in this batch. Consumers: ECMO foundation, the MCS workbench, CRRT Learn.",
+    "The global site header wraps to 1037 css px at 350% root text at 1246px wide, taller than the viewport, and one of its links overflows horizontally at 200%. Global chrome belongs to the PI platform task.",
+    "POST /api/analytics returns 500 on this local dev server because no Supabase URL/key is configured in this worktree. A local environment condition, not an application regression; no auth or tracking change was made or is authorised.",
+    "npm run build and the dev server cannot share a worktree: the dev wrapper's watcher rebuilds the embedded training apps while build:training-apps is removing and re-copying the same directory, and the copy fails with ENOENT. With the dev server stopped the build completes."
+  ],
+  "nextSteps": [
+    "Owner review of this pull request.",
+    "Lane 02 (workbench and recordings) only after this merges.",
+    "Lane 05 receives: the L5-1 exact mismatch, the PR-2 target marker, L3-8/L9-4/L11-5 item wording, L12-6 evidence-sufficiency teaching and L20-2's alternative ordering."
+  ]
+}
