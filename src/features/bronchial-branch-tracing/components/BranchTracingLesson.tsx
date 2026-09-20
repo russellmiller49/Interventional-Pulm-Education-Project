@@ -16,9 +16,10 @@ import { StepList } from '@/features/learning-module/stage/StepList'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { StageBlock } from '@/features/learning-module/stage/StageBlock'
 import { BASE_PATH, LESSONS, SOURCE, lessonAfter, lessonById } from '../content/lessons'
-import { COURSE_OPTIONS, type CtLesson } from '../content/ct-types'
+import { type CtLesson } from '../content/ct-types'
 import { traceById, targetForTrace } from '../geometry/native-ct'
 import { orientationFor, orientationName } from '../geometry/orientation'
+import { approachReference } from '../engine/model-reference'
 import { CtOrientationTeaching, CtOrientationFeedback } from './CtOrientationTeaching'
 import {
   browserStorage,
@@ -30,6 +31,7 @@ import {
 import {
   ctSessionReducer,
   emptyCtSession,
+  routeRestartDiscards,
   traceComplete,
   junctionReady,
   reachableThrough,
@@ -40,6 +42,7 @@ import { NativeCtViewer } from './NativeCtViewer'
 import {
   CtAirwayGuide,
   CtBranchDecision,
+  CtCourseFeedback,
   CtJunctionTeaching,
   CtCourseControl,
   CtTraceList,
@@ -78,6 +81,9 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
   const router = useRouter()
   const [help, setHelp] = useState(false)
   const [exitWarning, setExitWarning] = useState(false)
+  const [restartAsk, setRestartAsk] = useState(false)
+  // A restart in this session; it makes the draft-restored note above it out of date.
+  const [restarted, setRestarted] = useState(false)
   const helpRef = useRef<HTMLButtonElement>(null)
   const prediction = traceById(lesson.prediction),
     transferTrace = traceById(lesson.transfer)
@@ -186,6 +192,8 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
       setViews({})
       setShownRefs({})
       setViewerEpoch((v) => v + 1)
+      setRestarted(true)
+      setRestartAsk(false)
     }
     if (action.type === 'advance' || action.type === 'restart') {
       setReview(null)
@@ -234,7 +242,11 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
           kicker={`Learn · Lesson ${LESSONS.indexOf(lesson) + 1} of ${LESSONS.length}`}
           title={lesson.title}
           sectionsControl={<CourseOutline currentId={lesson.id} />}
-          onRestart={() => perform({ type: 'restart' })}
+          onRestart={() =>
+            routeRestartDiscards(s, trace).length
+              ? setRestartAsk(true)
+              : perform({ type: 'restart' })
+          }
           restartLabel="Restart lesson"
           helpRef={helpRef}
           onHelp={() => setHelp(true)}
@@ -246,7 +258,9 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
           resumedNote={
             !saved
               ? 'Browser storage is unavailable. Work continues, but your draft cannot be saved.'
-              : loaded.notice || undefined
+              : restarted
+                ? 'You restarted this lesson. Your checked junction marks are kept; the route responses, recorded interpretations and CT display started again in standard axial.'
+                : loaded.notice || undefined
           }
         />
       }
@@ -396,11 +410,14 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 <strong>Your interpretation is recorded</strong>
                 <CtOrientationFeedback trace={trace} {...response.orientation} />
                 <p>
-                  {COURSE_OPTIONS[response.course]}.{' '}
                   {response.marks.filter((m) => m.pixel === null).length} checkpoints marked
                   unresolved.
                 </p>
-                <CtTargetFeedback value={response.targetRelation} />
+                <CtCourseFeedback value={response.course} trace={trace} />
+                <CtTargetFeedback
+                  value={response.targetRelation}
+                  reference={approachReference(trace, targetForTrace(trace))}
+                />
                 <p>
                   Compare the image evidence before accepting either trace. No clinical accuracy
                   score is assigned.
@@ -652,6 +669,27 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
               Continue without recording moves on and records nothing for that junction or trace.
               Nothing here is scored. Help preserves your current responses.
             </p>
+          </HelpDialog>
+          <HelpDialog
+            open={restartAsk}
+            onClose={() => setRestartAsk(false)}
+            title="Restart this lesson?"
+          >
+            <p>Restarting would discard:</p>
+            <ul>
+              {routeRestartDiscards(s, trace).map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+            <p>
+              Kept either way: the junction marks you have already checked, whether this lesson is
+              marked reviewed, and every other lesson&rsquo;s draft. Nothing else in this browser is
+              cleared.
+            </p>
+            <div className={styles.walkthroughControls}>
+              <button onClick={() => perform({ type: 'restart' })}>Restart the lesson</button>
+              <button onClick={() => setRestartAsk(false)}>Cancel, keep my work</button>
+            </div>
           </HelpDialog>
           <HelpDialog
             open={exitWarning}

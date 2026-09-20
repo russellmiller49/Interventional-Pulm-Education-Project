@@ -17,7 +17,6 @@ import { NowCard } from '@/features/learning-module/stage/NowCard'
 import { BASE_PATH, SOURCE, VERSION } from '../content/lessons'
 import { ASSESS_TRACES, PRACTICE_TRACES, SEGMENT_PRACTICE_TRACES } from '../content/practice'
 import {
-  COURSE_OPTIONS,
   type Course,
   type CtBranchChoice,
   type CtMark,
@@ -41,12 +40,15 @@ import { NativeCtViewer } from './NativeCtViewer'
 import {
   CtAirwayGuide,
   CtBranchDecision,
+  CtContinuationFeedback,
+  CtCourseFeedback,
   CtJunctionTeaching,
   CtCourseControl,
   CtTraceList,
   CtTargetRelationControl,
   CtTargetFeedback,
 } from './CtTraceControls'
+import { approachReference } from '../engine/model-reference'
 import { TargetCtPreview } from './TargetCtPreview'
 import styles from './branch-tracing.module.css'
 import { resetPaneScroll } from './resetPaneScroll'
@@ -442,15 +444,36 @@ function CtPracticeSession({
     a.click()
     URL.revokeObjectURL(url)
   }
+  // Work in progress for a route: the live state for the open route, the saved per-route draft
+  // for the others. Nothing here is promoted into a recorded interpretation.
+  const workFor = (i: number) =>
+    i === index
+      ? {
+          marks,
+          branches,
+          recorded: junctions,
+          course,
+          targetRelation,
+          reached,
+        }
+      : drafts[ids[i]]
+  const partialCount = ids.filter(
+    (_, i) =>
+      !responses[i] && (workFor(i)?.recorded.some(Boolean) || workFor(i)?.marks.some(Boolean)),
+  ).length
   if (submitted)
     return (
       <div className={styles.debrief} data-route-comparison>
         <h1>Compare your routes with the reference</h1>
         <p>
           {recordedCount} of {ids.length} {ids.length === 1 ? 'route has' : 'routes have'} a
-          recorded interpretation. Compare each marked lumen with the source-derived path, then
-          inspect the distal airway–nodule relationship. A route without a recorded interpretation
-          shows the reference only.
+          recorded interpretation
+          {partialCount > 0
+            ? `, and ${partialCount} ${partialCount === 1 ? 'has' : 'have'} junction work that is not part of one yet`
+            : ''}
+          . Compare each marked lumen with the source-derived path, then inspect the distal
+          airway–nodule relationship. Your partial work is shown as you left it; a route with
+          neither shows the reference only.
         </p>
         <p className={styles.small}>
           ○ Your trace · ＋ Source-derived comparison. These are interpretations within one CT;
@@ -469,17 +492,38 @@ function CtPracticeSession({
         </div>
         {ids.map((id, i) => {
           const response = responses[i]
+          const trace = traceById(id)
+          const work = response ? undefined : workFor(i)
+          const stops = trace.checkpoints.length
+          const recordedStops = work?.recorded.filter(Boolean).length ?? 0
+          const placed = work?.marks.filter(Boolean).length ?? 0
+          const partial = Boolean(work && (recordedStops > 0 || placed > 0))
           return (
-            <section key={id} className={styles.ctDebriefRow}>
+            <section
+              key={id}
+              className={styles.ctDebriefRow}
+              data-route-state={response ? 'recorded' : partial ? 'partial' : 'none'}
+            >
               <div>
                 <h2>
-                  Target {i + 1} · {targetForTrace(traceById(id)).segment.code}
+                  Target {i + 1} · {targetForTrace(trace).segment.code}
+                  {partial && (
+                    <>
+                      {' '}
+                      <span className={styles.partialTag} data-route-partial>
+                        Partial
+                      </span>
+                    </>
+                  )}
                 </h2>
                 {response ? (
                   <>
-                    <p>{COURSE_OPTIONS[response.course]}</p>
-                    <CtOrientationFeedback trace={traceById(id)} {...response.orientation} />
-                    <CtTargetFeedback value={response.targetRelation} />
+                    <CtCourseFeedback value={response.course} trace={trace} />
+                    <CtOrientationFeedback trace={trace} {...response.orientation} />
+                    <CtTargetFeedback
+                      value={response.targetRelation}
+                      reference={approachReference(trace, targetForTrace(trace))}
+                    />
                     <p>
                       {response.marks.filter((m) => m.pixel === null).length} checkpoints marked
                       unresolved.
@@ -490,14 +534,36 @@ function CtPracticeSession({
                       automatic wrong answer.
                     </p>
                   </>
+                ) : partial ? (
+                  <>
+                    <p data-partial-counts>
+                      {recordedStops} of {stops} {stops === 1 ? 'stop' : 'stops'} recorded on this
+                      route; final route interpretation not recorded.{' '}
+                      {placed > recordedStops
+                        ? `${placed - recordedStops} further ${placed - recordedStops === 1 ? 'lumen response is' : 'lumen responses are'} placed but not yet checked. `
+                        : ''}
+                      Your marks are shown below exactly as you left them.
+                    </p>
+                    <p>
+                      Nothing has been finalized or filled in for you: the course and airway–nodule
+                      description are part of the route interpretation and were not recorded, so
+                      they are not shown. Return to the route to continue where you stopped.
+                    </p>
+                  </>
                 ) : (
                   <p>
-                    No interpretation recorded for this route. The reference trace is shown for
-                    study; nothing is marked as yours.
+                    No junction work and no interpretation recorded for this route. The reference
+                    trace is shown for study; nothing is marked as yours.
                   </p>
                 )}
               </div>
-              <DebriefViewer id={id} response={response} />
+              <DebriefViewer
+                id={id}
+                response={response}
+                partialMarks={partial ? work!.marks : undefined}
+                partialBranches={partial ? work!.branches : undefined}
+                partialRecorded={partial ? work!.recorded : undefined}
+              />
             </section>
           )
         })}
@@ -854,28 +920,59 @@ function CtPracticeSession({
     />
   )
 }
-function DebriefViewer({ id, response }: { id: string; response: CtResponse | null }) {
+function DebriefViewer({
+  id,
+  response,
+  partialMarks,
+  partialBranches,
+  partialRecorded,
+}: {
+  id: string
+  response: CtResponse | null
+  /** Junction work that is not part of a recorded interpretation, shown as the learner left it. */
+  partialMarks?: (CtMark | null)[]
+  partialBranches?: (CtBranchChoice | null)[]
+  partialRecorded?: boolean[]
+}) {
   const trace = traceById(id)
   const [active, setActive] = useState(0)
   const [orientation, setOrientation] = useState(response?.orientation.used ?? STANDARD_ORIENTATION)
+  const marks = response?.marks ?? partialMarks ?? trace.checkpoints.map(() => null)
+  const branches = response?.branches ?? partialBranches ?? trace.checkpoints.map(() => null)
+  const recordedHere = Boolean(response) || Boolean(partialRecorded?.[active])
   return (
     <>
       <NativeCtViewer
         trace={trace}
-        marks={response?.marks ?? trace.checkpoints.map(() => null)}
+        marks={marks}
         active={active}
         onActive={setActive}
         orientation={orientation}
         onOrientation={setOrientation}
         revealed
       />
+      {!response && partialRecorded && (
+        <p className={styles.small} data-partial-station={active}>
+          {partialRecorded[active]
+            ? 'You recorded this junction. It is not part of a recorded route interpretation.'
+            : marks[active]
+              ? 'A lumen response is placed here but this junction was not checked.'
+              : 'Nothing was recorded at this junction. The ＋ reference below is the model route, not your work.'}
+        </p>
+      )}
       <CtBranchDecision
         trace={trace}
         active={active}
-        choice={response?.branches[active] ?? null}
-        recorded={Boolean(response)}
+        choice={branches[active] ?? null}
+        recorded={recordedHere}
         reveal
       />
+      {trace.checkpoints[active].decision && (
+        <CtContinuationFeedback
+          checkpoint={trace.checkpoints[active]}
+          choice={recordedHere ? (branches[active] ?? null) : null}
+        />
+      )}
     </>
   )
 }

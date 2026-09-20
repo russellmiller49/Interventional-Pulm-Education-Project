@@ -30,17 +30,32 @@ export interface JunctionNaming {
   try?: JunctionNamingTry
   uncertainty?: string
 }
+export interface JunctionWhenNearer {
+  /**
+   * The model airway codes this text actually names, or 'any' when it names none.
+   * The comparison only shows the text when the nearest other locator is one of them,
+   * so a sibling-specific sentence never appears because an unrelated locator is nearer.
+   */
+  appliesTo: string[] | 'any'
+  text: string
+}
 export interface JunctionFeedbackPacket {
   checkpointId: string
   parent: string
   daughters: [string, string]
+  /**
+   * What the source model and the authoring image reading already establish about the
+   * response planes, shown before the task when the division is not yet separated on them.
+   * Drawn from `divergence` and `continuity`; it adds no new anatomical claim.
+   */
+  entryLimitation?: string
   /** Model node level and the slices on which the two paths separate. */
   divergence: string
   /** The wall or lumen relationship that decides identity on the answer slices. */
   continuity: string
   revisit: JunctionRevisit[]
-  /** Keyed by the intended daughter code: read when its mark sits nearer another model locator. */
-  whenNearer: Record<string, string>
+  /** Keyed by the intended daughter code: read when its mark sits nearer the locator it names. */
+  whenNearer: Record<string, JunctionWhenNearer>
   /** What additional evidence would help after an unresolved response. */
   moreEvidence: string
   /** Relationships established by the source model and its nomenclature record. */
@@ -61,6 +76,8 @@ const PACKETS: JunctionFeedbackPacket[] = [
     checkpointId: 'junction-1',
     parent: 'Trachea',
     daughters: ['RMSB', 'LMSB'],
+    entryLimitation:
+      'Before you start: on this scan the two main bronchi still share one transversely elongated air column throughout the slices you can browse here (the model node is at about slice 392 and this interval ends at slice 384). The separate lumens with the carina between them appear at about slice 378 to 375, below this interval — an authoring-session reading of these images, pending faculty review. So the response plane, slice 387, asks which half of one shared column each model locator sits in, not which of two visible lumens it is in. Recording the response as unresolved is a reasonable record here; the full-route practice reaches the slices where the two lumens are separate.',
     divergence:
       'The model node for this division sits at about slice 392, 2.5 mm above the answer slice 387. On slices 392 to 381 the two main bronchi still share one transversely elongated air column; on this scan that lucency does not split into two separate lumens until about slice 378 to 375 (authoring reading, pending faculty review). That separation lies below this local interval, which ends at slice 384; the full-route practice shows it.',
     continuity:
@@ -78,8 +95,14 @@ const PACKETS: JunctionFeedbackPacket[] = [
       },
     ],
     whenNearer: {
-      RMSB: "Your RMSB mark sits nearer the LMSB model locator. The two paths separate at the carina, not on this slice: step from 392 down to 384 and watch each model locator keep to its own side; the right half becomes its own lumen on the patient's right (screen-left in standard axial) below this interval. If your mark was placed on the patient's left, it lies in the left-main-bronchus part of the same shared column. The geometry alone cannot say whether that came from the display side or from a deliberate choice.",
-      LMSB: "Your LMSB mark sits nearer the RMSB model locator. The two paths separate at the carina, not on this slice: step from 392 down to 384 and watch each model locator keep to its own side; the left half becomes its own lumen on the patient's left (screen-right in standard axial) below this interval. If your mark was placed on the patient's right, it lies in the right-main-bronchus part of the same shared column. The geometry alone cannot say whether that came from the display side or from a deliberate choice.",
+      RMSB: {
+        appliesTo: ['LMSB'],
+        text: "Your RMSB mark sits nearer the LMSB model locator. The two paths separate at the carina, not on this slice: step from 392 down to 384 and watch each model locator keep to its own side; the right half becomes its own lumen on the patient's right (screen-left in standard axial) below this interval. If your mark was placed on the patient's left, it lies in the left-main-bronchus part of the same shared column. The geometry alone cannot say whether that came from the display side or from a deliberate choice.",
+      },
+      LMSB: {
+        appliesTo: ['RMSB'],
+        text: "Your LMSB mark sits nearer the RMSB model locator. The two paths separate at the carina, not on this slice: step from 392 down to 384 and watch each model locator keep to its own side; the left half becomes its own lumen on the patient's left (screen-right in standard axial) below this interval. If your mark was placed on the patient's right, it lies in the right-main-bronchus part of the same shared column. The geometry alone cannot say whether that came from the display side or from a deliberate choice.",
+      },
     },
     moreEvidence:
       'Within this interval the evidence is the side of the midline: check the R and L markers on the display, then step from 392 to 384 and confirm that your candidate stays on one side of the shared column. The confirming view, two separate ovals with the carina between them at about slice 375, lies below this interval; the full-route practice reaches it. Until you have seen it, an unresolved response here is a reasonable record.',
@@ -114,6 +137,8 @@ const PACKETS: JunctionFeedbackPacket[] = [
     checkpointId: 'junction-6',
     parent: 'LLL',
     daughters: ['LB6', 'L basal'],
+    entryLimitation:
+      'Before you start: on the LB6 response plane, slice 326, the LB6 origin appears as a posterior extension of the same lucency as the descending lower-lobe bronchus, with no wall resolved between them on slices 328 to 322 — an authoring-session reading of these images, pending faculty review. The LB6 response therefore asks which part of one lucency, anterior or posterior, the mark sits in. The basal-trunk response on slice 313 lies below the node, where the model has a single lower-lobe lumen. Recording either response as unresolved is a reasonable record.',
     divergence:
       'The model node sits at about slice 321. The two daughters leave it in opposite slice directions: LB6 runs posteriorly and cranially, so its answer slice, 326, lies above the node, while the basal trunk continues caudally to its answer slice, 313.',
     continuity:
@@ -136,9 +161,14 @@ const PACKETS: JunctionFeedbackPacket[] = [
       },
     ],
     whenNearer: {
-      LB6: 'Your LB6 mark sits nearer the lower-lobe bronchus model locator than the LB6 locator. On this scan both lie in one lucency with no wall between them on slice 326, so the distinction is anterior against posterior: LB6 is the posterior part that heads posteriorly and cranially over slices 322 to 328, and a mark in the anterior part is in the parent lumen descending toward the basal trunk. The geometry cannot say whether you chose that part deliberately.',
-      'L basal':
-        'Your basal-trunk mark sits nearer another model locator on slice 313. Below the node at 321 the model has a single lower-lobe lumen here; re-trace from 321 down to 313 and confirm that the lumen you marked is the one continuous with the lower-lobe bronchus rather than a neighbouring lucency.',
+      LB6: {
+        appliesTo: ['LLL'],
+        text: 'Your LB6 mark sits nearer the lower-lobe bronchus model locator than the LB6 locator. On this scan both lie in one lucency with no wall between them on slice 326, so the distinction is anterior against posterior: LB6 is the posterior part that heads posteriorly and cranially over slices 322 to 328, and a mark in the anterior part is in the parent lumen descending toward the basal trunk. The geometry cannot say whether you chose that part deliberately.',
+      },
+      'L basal': {
+        appliesTo: 'any',
+        text: 'Your basal-trunk mark sits nearer another model locator on slice 313. Below the node at 321 the model has a single lower-lobe lumen here; re-trace from 321 down to 313 and confirm that the lumen you marked is the one continuous with the lower-lobe bronchus rather than a neighbouring lucency.',
+      },
     },
     moreEvidence:
       'Step from 328 to 321 one slice at a time and watch whether the posterior part of the lucency shrinks toward the node while the anterior part continues; then go below 321 and confirm that a single lumen remains. If the posterior extension cannot be separated from the parent on these planes, keeping the LB6 response unresolved is reasonable: the origin is oblique and partly in-plane here.',
@@ -191,8 +221,14 @@ const PACKETS: JunctionFeedbackPacket[] = [
       },
     ],
     whenNearer: {
-      RB4: "Your RB4 mark sits nearer the RB5 model locator. Both daughters lie on slice 307 only 8 mm apart, so the fork decides: RB4 is the channel that continues laterally (screen-left in standard axial, toward the patient's right chest wall) and slightly posteriorly; RB5 is the channel that turns anteriorly and medially. Re-read the wedge of soft tissue between them on slices 308 to 306.",
-      RB5: "Your RB5 mark sits nearer the RB4 model locator. Both daughters lie on slice 307 only 8 mm apart, so the fork decides: RB5 is the channel that turns anteriorly and medially (toward the top of a standard axial display and toward the heart); RB4 is the channel that continues laterally toward the patient's right chest wall. Re-read the wedge of soft tissue between them on slices 308 to 306.",
+      RB4: {
+        appliesTo: ['RB5'],
+        text: "Your RB4 mark sits nearer the RB5 model locator. Both daughters lie on slice 307 only 8 mm apart, so the fork decides: RB4 is the channel that continues laterally (screen-left in standard axial, toward the patient's right chest wall) and slightly posteriorly; RB5 is the channel that turns anteriorly and medially. Re-read the wedge of soft tissue between them on slices 308 to 306.",
+      },
+      RB5: {
+        appliesTo: ['RB4'],
+        text: "Your RB5 mark sits nearer the RB4 model locator. Both daughters lie on slice 307 only 8 mm apart, so the fork decides: RB5 is the channel that turns anteriorly and medially (toward the top of a standard axial display and toward the heart); RB4 is the channel that continues laterally toward the patient's right chest wall. Re-read the wedge of soft tissue between them on slices 308 to 306.",
+      },
     },
     moreEvidence:
       'Follow the parent channel from 311 to 307 and note where it widens at the fork. Then, without changing slice, follow each channel away from the fork: one heads laterally (RB4), one anteriorly and medially (RB5). Comparing slices 308 and 306 shows how quickly each channel leaves the plane; a channel that vanishes on the next slice is not evidence against continuity here.',
@@ -244,8 +280,14 @@ const PACKETS: JunctionFeedbackPacket[] = [
       },
     ],
     whenNearer: {
-      RB1b: 'Your RB1b mark sits nearer the RB1a model locator. The two lumens are separated front-to-back, not side-to-side: RB1b is the anterior lumen (toward the top of a standard axial display) and RB1a the posterior one. Step from 416 to 424 and watch which lumen your candidate becomes as the waist closes into a wall.',
-      RB1a: 'Your RB1a mark sits nearer the RB1b model locator. The two lumens are separated front-to-back, not side-to-side: RB1a is the posterior lumen (toward the bottom of a standard axial display) and RB1b the anterior one. Step from 416 to 424 and watch which lumen your candidate becomes as the waist closes into a wall.',
+      RB1b: {
+        appliesTo: ['RB1a'],
+        text: 'Your RB1b mark sits nearer the RB1a model locator. The two lumens are separated front-to-back, not side-to-side: RB1b is the anterior lumen (toward the top of a standard axial display) and RB1a the posterior one. Step from 416 to 424 and watch which lumen your candidate becomes as the waist closes into a wall.',
+      },
+      RB1a: {
+        appliesTo: ['RB1b'],
+        text: 'Your RB1a mark sits nearer the RB1b model locator. The two lumens are separated front-to-back, not side-to-side: RB1a is the posterior lumen (toward the bottom of a standard axial display) and RB1b the anterior one. Step from 416 to 424 and watch which lumen your candidate becomes as the waist closes into a wall.',
+      },
     },
     moreEvidence:
       'Go back to slice 415, where there is one ring, then step up one slice at a time. The first slice on which you can see a complete wall between an anterior and a posterior lumen is where the two identities become separable; before that slice an unresolved response is reasonable. At 2 to 3 mm these lumens are only a few pixels wide, so use the airway-detail zoom.',
@@ -287,8 +329,14 @@ const PACKETS: JunctionFeedbackPacket[] = [
       },
     ],
     whenNearer: {
-      RB5a: 'Your RB5a mark sits nearer another model locator on slice 309. RB5a is the small lumen that rises above the node; on 309 it is a thin dark channel next to a bright vessel, and other lucencies nearby belong to neighbouring airways or to lung between vessels. Step from 306 up to 309 and check that your candidate stays continuous with the RB5 channel.',
-      RB5b: 'Your RB5b mark sits nearer another model locator on slice 301. RB5b is the lumen that descends from the node beside its vessel; on 301 other dark channels nearby belong to neighbouring middle-lobe airways. Step from 306 down to 301 keeping the same thin channel in view.',
+      RB5a: {
+        appliesTo: 'any',
+        text: 'Your RB5a mark sits nearer another model locator on slice 309. RB5a is the small lumen that rises above the node; on 309 it is a thin dark channel next to a bright vessel, and other lucencies nearby belong to neighbouring airways or to lung between vessels. Step from 306 up to 309 and check that your candidate stays continuous with the RB5 channel.',
+      },
+      RB5b: {
+        appliesTo: 'any',
+        text: 'Your RB5b mark sits nearer another model locator on slice 301. RB5b is the lumen that descends from the node beside its vessel; on 301 other dark channels nearby belong to neighbouring middle-lobe airways. Step from 306 down to 301 keeping the same thin channel in view.',
+      },
     },
     moreEvidence:
       'Return to slice 307, find the anterior-medial channel (RB5) leaving the middle-lobe bronchus, then step one slice at a time in each direction. A rising lumen that stays continuous with that channel up to 309 is the RB5a candidate; a descending one down to 301 is the RB5b candidate. If either lumen cannot be separated from the adjacent vessel at this resolution, an unresolved response is the honest record: the export review flags these middle-lobe intervals for partial-volume sampling.',

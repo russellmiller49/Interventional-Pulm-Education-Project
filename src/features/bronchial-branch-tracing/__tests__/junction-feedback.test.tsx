@@ -38,7 +38,7 @@ it('explains a mark nearer the other daughter by geometry and divergence, guides
     'unresolved',
   ])
   expect(items[0]).toHaveTextContent(
-    /A · RMSB · slice 387\. Your mark is 0\.0 mm from the LMSB model locator and 8\.6 mm from the RMSB locator: it sits nearer LMSB\./,
+    /A · RMSB · slice 387\. Your mark is 0\.0 mm from the LMSB model locator and 8\.6 mm from the RMSB locator: of the named model locators crossing slice 387, LMSB is the closer one\./,
   )
   expect(items[1]).toHaveTextContent(
     /You recorded B · LMSB as unresolved on slice 387\. That is a valid response/,
@@ -123,7 +123,7 @@ it('shows subsegmental names directly with their uncertainty and no try, and sta
     ),
   ).toEqual(['nearest-intended', 'nearest-intended'])
   expect(view.container.querySelectorAll('li[data-mark-status]')[0]).toHaveTextContent(
-    /Your mark is 0\.0 mm from the RB1b model locator; the nearest other model airway on this slice, RB1a, is \d+\.\d mm away\./,
+    /Your mark is 0\.0 mm from the RB1b model locator; the nearest other named model locator on slice 422, RB1a, is \d+\.\d mm away\./,
   )
   view.unmount()
   const other = exerciseFor('junction-16')
@@ -135,8 +135,15 @@ it('shows subsegmental names directly with their uncertainty and no try, and sta
       onGoToSlice={() => {}}
     />,
   )
-  expect(container.querySelector('[data-feedback-scope]')).toHaveTextContent(
-    `BBT-02 covers five pilot junctions (${JUNCTION_FEEDBACK_SCOPE.join(', ')})`,
+  // BBTF-38: the scope is stated in plain language; the pilot identifiers stay in the
+  // source and review detail beneath it, not in the teaching sentence.
+  const scope = container.querySelector('[data-feedback-scope]')!
+  expect(scope).toHaveTextContent(
+    /A written explanation of this division has not been authored yet/,
+  )
+  expect(scope.textContent).not.toMatch(/BBT-02|junction-\d+|edge \d+/)
+  expect(container.querySelector('details')).toHaveTextContent(
+    `Authored feedback exists for these divisions only: ${JUNCTION_FEEDBACK_SCOPE.join(', ')}.`,
   )
   expect(container.querySelector('[data-naming-aid]')).toBeNull()
   expect(container.querySelectorAll('li[data-mark-status]')).toHaveLength(2)

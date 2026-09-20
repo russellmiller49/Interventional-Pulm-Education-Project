@@ -124,9 +124,25 @@ export function CtProgressiveMap({
         current.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 30
     }
   }, [active, recordedKey])
+  const recordedCount = recorded.filter(Boolean).length
+  const total = trace.checkpoints.length
+  const missing = trace.checkpoints
+    .map((p, i) => ({ p, i }))
+    .filter(({ i }) => !recorded[i])
+    .map(({ p, i }) => `${i + 1}. ${p.decision?.parent.airway.code ?? 'Distal approach'}`)
   return (
     <section ref={mapRef} className={styles.progressiveMap} aria-label="Connected route map">
-      <h3>Your route map · {recorded.filter(Boolean).length} recorded stops</h3>
+      <h3 data-map-state={recordedCount === total ? 'complete' : 'partial'}>
+        Your route map · {recordedCount} of {total} stops recorded
+        {recordedCount < total && (
+          <>
+            {' '}
+            <span className={styles.partialTag} data-map-partial>
+              Partial
+            </span>
+          </>
+        )}
+      </h3>
       <ol className={styles.connectedRoute}>
         {trace.checkpoints.map((p, i) => {
           if (!recorded[i]) return null
@@ -168,6 +184,13 @@ export function CtProgressiveMap({
       </ol>
       {!recorded.some(Boolean) && (
         <p>Record a division to add your interpretation. Future continuations are not prefilled.</p>
+      )}
+      {missing.length > 0 && recorded.some(Boolean) && (
+        <p data-map-missing>
+          Not recorded here: {missing.join(', ')}. Moving past a division without recording it is a
+          valid way to work; those stops stay off this map rather than being filled in, and nothing
+          is counted against you.
+        </p>
       )}
       <details>
         <summary>How to read this map</summary>

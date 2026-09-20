@@ -1,6 +1,8 @@
 import type { CtCheckpoint, LocalExerciseSpec } from './ct-types'
 
 // Source-specific observations of the supplied geometry, not reviewed CT findings.
+// Learner-facing sentences name airways, not source edge or checkpoint identifiers; those stay
+// in the exercise's teaching metadata and in the comparison's source and review detail.
 const NOTES: Record<string, [string, string]> = {
   'junction-1': [
     'The supplied parent is the trachea above the carina.',
@@ -44,14 +46,14 @@ const NOTES: Record<string, [string, string]> = {
   ],
   'junction-11': [
     'Begin the recorded short route at LB6 after the caudal LLL approach. LB6 itself now advances cranially.',
-    'The reference continues into source edge 23 toward more cranial levels. Preserve the other daughter when adding this division.',
+    'The reference route continues into one of these daughters toward more cranial levels. Preserve the other daughter when adding this division.',
   ],
   'junction-25': [
-    'This division continues directly from edge 23 into its daughters.',
-    'Compare both daughter locations before accepting the reference continuation into edge 50.',
+    'This division continues directly from the daughter the previous division entered.',
+    'Compare both daughter locations before accepting the reference continuation.',
   ],
   'junction-52': [
-    'The final mapped division is reached along edge 50.',
+    'The final mapped division is reached along the daughter the previous division entered.',
     'Both supplied daughters lie cranial to the parent here. Distal travel has reversed the earlier caudal direction.',
   ],
 }

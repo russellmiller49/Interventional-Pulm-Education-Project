@@ -299,7 +299,7 @@ it('gives junction feedback from the learner’s own marks, navigates to revisit
     'unresolved',
   ])
   expect(items[0]).toHaveTextContent(
-    /Your mark is \d+\.\d mm from the RMSB model locator; the nearest other model airway on this slice, LMSB, is \d+\.\d mm away\./,
+    /Your mark is \d+\.\d mm from the RMSB model locator; the nearest other named model locator on slice 387, LMSB, is \d+\.\d mm away\./,
   )
   expect(within(feedback).getByRole('heading', { name: 'Uncertain? Start here' })).toBeVisible()
   expect(

@@ -1,0 +1,229 @@
+# BBT-PRE-REVIEW-01 — truthful evidence, feedback and drafts
+
+**Scope:** Bronchial Branch Tracing only (`src/features/bronchial-branch-tracing/**` and this
+document set). No other module, no auth or access policy, no shared header/footer/global CSS, no
+shared lesson stage, no source volume, mesh, graph or nomenclature file was changed.
+
+**No clinical approval, faculty review, release, deployment or merge is claimed or performed.** The
+BBT-02 five-junction packet remains NOT REVIEWED. The first-bifurcation teaching mismatch is
+**contained, not resolved**, and stays an owner decision (OD-01).
+
+## Repository reconciliation
+
+| Field                    | Recorded value                                                                                                                                                                |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Worktree                 | `/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-bbt-9-19`                                                                                       |
+| Branch                   | `claude/bbt-9-19`, created from freshly fetched `origin/main`                                                                                                                 |
+| Base SHA                 | `77a141ccfd574a984f91e74abc9018b5d67e8202` (fetched 2026-09-19; identical to the package's planning SHA, verified, not assumed)                                               |
+| Open PRs overlapping BBT | None. Open PRs at the time of work: #134 (critical care), #114 (literature), #98 (literature). No shared file contention.                                                     |
+| Other active lanes       | `claude-pi-9-19` and `claude-ebus-9-19` worktrees exist on their own branches; their surfaces are disjoint per the coordination file.                                         |
+| Dev server               | `npm run dev:claude`, port 3120, this worktree only                                                                                                                           |
+| Browser profile          | The built-in browser pane, a fresh profile. The owner's Chrome profile and the `claude-review-backup::branch-tracing::2026-09-19` backup were never opened, restored or read. |
+| Test data                | Synthetic drafts created in the pane's own `localStorage`, plus one explicitly seeded reflected-orientation draft used to reproduce BBTF-23.                                  |
+
+## Assigned findings — what happened
+
+Full per-ID detail, including verification commands, is in `BBT-PRE-REVIEW-01-status.json`.
+
+### A. First-junction evidence mismatch — investigated first
+
+**BBTF-01 · reproduced · technical error ruled out · contained · anatomy decision open.**
+
+Reproduced in the running app at 1427 × 1226: the `continuity` lesson asks "Mark each daughter on
+its answer slice" for slice 387 and only _after_ Check reveals that the two lumens do not separate
+until about 378–375, below a browsable interval that ends at 384.
+
+Measurement ruled out a technical cause. Slice indexing reproduces the exporter's own HU samples to
+a mean 0.6 HU across 183 points, degrading to 33 HU at ±1 slice; the response planes are the source
+graph's own first post-node samples and are internally consistent; the volume and graph hashes
+match everywhere. **387 is not an off-by-one or a wrong source.** Full reconciliation, including the
+decoded image evidence and the four evidence classes kept apart, is in
+[`BBT-PRE-REVIEW-01-first-junction.md`](BBT-PRE-REVIEW-01-first-junction.md).
+
+Containment: the packet gained an `entryLimitation` field, drawn from its own already-recorded
+divergence and continuity prose, shown **before** the task in the local lesson and beside the
+junction diagram on every route that reaches this division. `junction-6` received the same
+treatment for its LB6 response plane, which the packet likewise records as having no wall resolved.
+Reference, unresolved and skip paths are untouched. No coordinate, response plane, branch identity,
+packet sentence or review status was edited, and the course was not disabled.
+
+### B. Coherent feedback without invented accuracy
+
+**BBTF-39 · reproduced · repaired.** At `junction-10` with the RB5 response, a mark near the RB5a
+crossing produced "it sits nearer RB5a" beside the packet paragraph "Your RB5 mark sits nearer the
+RB4 model locator". Cause: `packet.whenNearer` is keyed by the _intended_ daughter but was emitted
+whenever _any_ other locator was nearer. `whenNearer` entries now declare `appliesTo` — the airway
+codes their text actually names, or `'any'` — and a sibling-specific paragraph is shown only when
+the nearest locator is one of them. Otherwise a generated paragraph names the actual nearest
+locator, says the written guidance compares different branches and does not apply, and points back
+to the parent. `MarkComparison` now carries `nearestOther`, `nearestSibling` and `spanMm` so the two
+scopes are distinguishable rather than inferred.
+
+**BBTF-05 · reproduced · repaired.** The ambiguous `beyondSpan` sentence ("farther from the X
+locator than that other locator is") now states the scalar it actually compares: the mark's distance
+from the intended locator against the distance _between the two locators_, naming both numbers. The
+comparator was not reversed to fit the old prose. The position sentence names its scope explicitly
+("of the named model locators crossing slice N"), a sibling clause is added when the nearest locator
+is not the sibling, and the standing caveat now says in plain words that the comparison cannot
+establish which lumen contains a mark and that continuity from the parent is what decides. Divisions
+with no authored packet — the RLL/RB6 case in the report — now get real revisit controls (go to the
+parent slice, go to each response slice) instead of prose alone.
+
+**BBTF-38 · reproduced · repaired.** "BBT-02 covers five pilot junctions (junction-1, junction-6,
+…)" is gone from learner prose, as are "source edge 23" and "edge 50" in the L9 route-map teaching
+notes. The scope is now stated in plain language; the checkpoint id, parent and daughter source
+edges, volume and graph hashes and the pilot list live in a "Source and review details" disclosure
+beside the existing provenance. No missing authored explanation is claimed to exist.
+
+**BBTF-10 · reproduced · repaired.** The route comparison repeated the learner's course and
+airway–nodule reading with no reference beside them. Both are now held against an **existing
+explicit** source statement: the checkpoint levels and the exporter's own direction labels for the
+course, and the target's declared `approachCode` (which is every route's own distal checkpoint) for
+the airway–nodule relationship. Both are labelled as what they are: the source records point levels
+and a placement, not a reviewed course description, so nothing is matched automatically. Where the
+source has nothing to say — an adjacent structure, an unresolvable distal connection — the text says
+it cannot currently be compared rather than inventing an answer, and the existing statement that
+this does not establish instrument reach or tool-in-lesion is repeated.
+
+**BBTF-37 · reproduced · repaired.** The optional course choice in the local pattern and
+integration exercises now gets the same treatment at the division level: the parent's plane, each
+daughter's plane, how many slices away and in which direction, and the source direction label. Skip
+and unresolved paths are unchanged; no correct answer and no threshold were added.
+
+**BBTF-46 · reproduced · repaired.** A continuation that differs from the model reference route is
+now explained by stable identity, level and direction rather than by name, including the
+same-name case (both daughters of `junction-52` are labelled LB6, and the text says so explicitly:
+the name does not tell them apart, the levels and directions do). It offers revisit controls, keeps
+"continuation unresolved" distinct from "no continuation recorded", and states that a different
+choice is not recorded as an error.
+
+Forbidden shortcuts were not taken: no "inside intended lumen", "correct branch", "mistaken vessel",
+accuracy band or radius threshold, and no nearest-neighbour classifier presented as anatomical
+validation. Guard regexes in three test files assert this.
+
+### C. Partial work, finalized interpretation and restart
+
+**BBTF-14 · reproduced · repaired · confirmed a presentation omission, not data loss.** Appendix B
+reproduced exactly in the browser: on the RS4 practice route, after choosing RMSB, placing a genuine
+mark at native (240.58, 315.71) on slice 387 and checking the junction, "Compare all routes" said
+"0 of 1 route has a recorded interpretation" and "No interpretation recorded for this route". The
+saved draft at that moment still held `work.recorded[0] = true`, one mark, `branches[0] = 1` and one
+junction attempt — **the bytes never disappeared**, so this was labelled a display omission and
+nothing was called a persistence loss. The comparison now reads the live work for the open route and
+the per-route draft for the others, renders such a route as **Partial** with its actual counts
+("1 of 8 stops recorded on this route; final route interpretation not recorded"), shows the
+learner's own marks as they were left, and keeps the model reference a separate ＋ overlay that is
+never attributed to the learner. Course and airway–nodule text stay absent because they belong to
+the route interpretation and were not recorded. Compare remains available before any work, returning
+to tracing restores the same partial data, retry and reload were tested, and the export contract and
+draft schema are unchanged.
+
+**BBTF-44 · reproduced · repaired.** The connected route map now reads "N of M stops recorded", adds
+a Partial marker while any stop is unrecorded, and names the stops that were skipped, saying plainly
+that moving past a division without recording it is a valid way to work and is not counted against
+anyone. Skipped stops are still absent from the map rather than filled in, and no completion lock
+was added.
+
+**BBTF-22 · reproduced · repaired.** Restart discarded the current marks, branch, course, view
+answer, phase and display with no confirmation. What it does _not_ discard was verified in the
+browser: checked attempts, opening-choice history, recorded parent selections and every other
+storage key survived. Restart now asks first — and only when genuine work would be lost, so a
+restart from an untouched lesson still runs straight through. The dialog lists exactly what would go
+and exactly what is kept; Cancel preserves the draft bytes and the display, verified in the browser
+and in tests. The same confirmation, with its own list, was added to the route-lesson host, where a
+restart would otherwise silently discard a recorded route interpretation.
+
+**BBTF-23 · reproduced · repaired.** The "Restored display: Left–right reflection" clause came from
+the draft read at mount and was never recomputed, so it survived a restart that had already returned
+the CT to standard axial. The note now reflects current state: after a restart it says the lesson
+was restarted, what was kept and that the display started again in standard axial; without a
+restart it mentions the restored display only while that display is still in use, and otherwise says
+the draft was saved with one display and the CT is now in another. No new restore event is claimed.
+
+## Separated dispositions
+
+**Technical fixes landed in this batch:** BBTF-05, 10, 14, 22, 23, 37, 38, 39, 44, 46.
+
+**Source mismatch contained but unresolved:** BBTF-01. The learner-facing containment shipped; the
+anatomical teaching question is OD-01 and stays open for the owner / anatomy reviewer, with task 05
+preparing the comparison packet.
+
+**Review holds carried forward, unchanged:** the BBT-02 five-junction packet is NOT REVIEWED; every
+`entryLimitation` sentence repeats that its image reading is an authoring-session reading pending
+faculty review; `exercise.review.status` stays `provisional`; subsegmental a/b assignments remain
+pending nomenclature review; OD-02 to OD-07 are untouched.
+
+**Baseline debt, not introduced and not papered over:**
+`__tests__/contracts.test.ts` › "the new pages are anonymous and unlisted without exposing the
+existing admin anatomy routes" fails at `isPublicPath('/airway-anatomy/case-001/case_manifest.json')`.
+The identical failure was reproduced at the unmodified base SHA in a separate clean worktree
+(1 failed / 7 passed there, 1 failed / 106 passed here). **Access policy was not changed to make it
+pass.**
+
+Eight repository-wide test failures across nine suites predate this branch and are unrelated to it:
+`scripts/ip-preference-cards/check-brochure-intake-static-exposure`,
+`scripts/ip-preference-cards/us-status/safety-boundaries`, `scripts/training-apps`,
+the BBT access contract above, three `critical-care` suites
+(`accessibility`, `curriculum-sequencing`, `learner-copy`),
+`literature/dedicated-supabase/foundation-manifest` and `lib/board-review-html`. The same nine
+suites and the same eight tests fail at `77a141cc` with no changes applied.
+
+**Not run / missing environment:**
+
+- `npm run build` was not run. This batch changes no route, host, config or server code — only
+  components, content and engine modules inside the BBT feature — and the production build in this
+  worktree also needs training-app and asset-validation steps that touch shared caches used by other
+  lanes. Type-check, lint, formatting and the full Jest suite were run instead.
+- Playwright (`npm run test:e2e`) was not run; the browser journeys were driven manually in the
+  preview pane instead, and the equivalent state journeys were added as component tests.
+- The application's own home page returns 500 in this worktree ("Your project's URL and Key are
+  required"): there is no `.env.local` here and none was created. The BBT routes themselves render
+  and were exercised normally. Unrelated to this change.
+- Screen-reader and native-zoom testing: not performed. The 200 % condition below was a CSS
+  root-font probe, labelled as such.
+
+**Ordinary unrelated findings logged, not fixed here** (they belong to tasks 02–04):
+
+- The local CT viewer opens at a very high magnification with the image extending past the visible
+  pane, so the workspace must be scrolled before the CT is usable (task 02, CT workspace).
+- Navigating to the site root from inside the module hits the 500 above in a checkout without
+  Supabase environment values; worth a friendlier local-dev failure at some point.
+
+## Verification
+
+| Check                                            | Result                                                                                                                                                                                                                  |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npx tsc --noEmit`                               | Clean (needs `NODE_OPTIONS=--max-old-space-size=8192` in this worktree; the default heap OOMs on this repo).                                                                                                            |
+| `npx jest src/features/bronchial-branch-tracing` | 106 passed, 1 failed — the baseline access-contract test above. Baseline at origin/main: 80 passed, same 1 failed.                                                                                                      |
+| `npx jest` (whole repository)                    | 13 208 passed, 8 failed across 9 suites. **The same 9 suites and same 8 tests fail at the unmodified base SHA** (13 182 passed there); the difference is the 26 tests added here. No regression introduced.             |
+| `npx eslint <changed paths>`                     | Clean.                                                                                                                                                                                                                  |
+| `npx prettier --check <changed paths>`           | Clean.                                                                                                                                                                                                                  |
+| Browser journeys (port 3120, pane profile)       | First-bifurcation entry and comparison; RS4 practice partial journey through "Compare all routes"; restart with and without work, Cancel and Confirm; resumed-note text after restart.                                  |
+| Viewport matrix                                  | 1427 × 1226 (the reported state), 1440 × 900, 1024 × 768, 390 × 844, 320 × 740 — the new entry-limitation block reflows at every width with no horizontal document overflow and no clipping.                            |
+| 200 % root text                                  | CSS root-font probe at 1427 × 1226 (**not** native browser zoom): the block reflows to 356 × 1174 inside the instructions pane, which is a real scroll owner (`overflow-y: auto`); no horizontal overflow, no clipping. |
+
+### Tests added
+
+- `__tests__/first-junction-source.test.ts` — the response planes are the source export's own
+  samples; slice indexing is exact and ±1 disagrees; no soft tissue separates the two locators
+  anywhere in the browsable interval while it does below it; the limitation is stated at entry and
+  the canonical coordinates are unchanged.
+- `__tests__/junction-feedback-scope.test.tsx` — nearest-locator versus nearest-sibling scopes; the
+  sibling paragraph withheld when an unrelated airway is nearest and shown when the sibling is;
+  the span sentence's actual scalar and comparator; unresolved input; no mutation of marks; no
+  prohibited verdict wording; the no-packet path's revisit action and identifier placement.
+- `__tests__/model-reference.test.tsx` — level relations, division levels, the reference
+  continuation and its shared-name flag, every route's declared approach branch, and the three
+  comparison components' wording and refusals.
+- `__tests__/partial-route-and-restart.test.tsx` — the partial RS4 journey with real counts and
+  untouched bytes, comparison before any work, return-to-tracing, retry, reload, the partial route
+  map and its named unrecorded stops, `restartDiscards` and `routeRestartDiscards`, and the restart
+  dialog's Cancel and Confirm with the stale-banner check.
+
+Four existing assertions were updated because their wording is exactly what this batch changed:
+two position sentences, the feedback-scope sentence (BBTF-38) and the all-routes comparison text.
+
+## Next
+
+One bounded PR, then stop. Task 05 prepares the OD-01 owner packet; tasks 02–04 follow after this
+merges, in the package's order. Nothing here records a faculty or learner review as complete.

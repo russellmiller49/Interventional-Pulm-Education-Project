@@ -417,7 +417,11 @@ describe('Practice and the former Assess address', () => {
       screen.getByRole('heading', { name: 'Compare your routes with the reference' }),
     ).toBeVisible()
     expect(screen.getByText(/^0 of 4 routes have a recorded interpretation/)).toBeVisible()
-    expect(screen.getAllByText(/No interpretation recorded for this route/)).toHaveLength(4)
+    // Continuing without recording leaves no junction work, so no route is shown as partial.
+    expect(
+      screen.getAllByText(/No junction work and no interpretation recorded for this route/),
+    ).toHaveLength(4)
+    expect(document.querySelectorAll('[data-route-state="partial"]')).toHaveLength(0)
     expectNoGradeWording(container)
     const drafts = storedKeys()
       .filter((key) => key.startsWith(`${DRAFT_PREFIX}assess.`))
