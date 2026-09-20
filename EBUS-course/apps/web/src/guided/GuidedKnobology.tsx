@@ -27,12 +27,12 @@ import {
   type EbusWorkbenchConfig,
   type EbusControl,
 } from '../../../../../src/lib/ebus-guided-bridge'
+import { RecordedFrameView } from './RecordedFrameView'
 import {
-  RecordedFrameView,
   RECORDED_FRAME_FIT_LABELS,
   recordedFramePixelSeparation,
   type RecordedFrameFit,
-} from './RecordedFrameView'
+} from './recordedFrameRegion'
 
 /** Controls that pick a recorded example; the rest act on the frame that is already decoded. */
 const SELECTION_CONTROLS: EbusControl[] = ['depth', 'gain', 'contrast', 'doppler']
