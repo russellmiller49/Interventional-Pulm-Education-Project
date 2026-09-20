@@ -301,7 +301,13 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
   }
 }
 
-/** Separate, authored image states. The lesson controller never writes them into learner lab history. */
+/**
+ * Separate, authored image states. The lesson controller never writes them into learner lab history.
+ *
+ * These are the sections whose check and transfer rounds differ from each other. Sections whose
+ * example is the same in both rounds are in `SECTION_FIXED_EXAMPLE` below. Resolve either through
+ * `fixedExampleValues`, never directly: a fixed example must never fall back to learner state.
+ */
 export function independentValues(id: ImagingSectionId, round: 0 | 1): LabValues | null {
   if (id === 'dts-acquisition') return { sweep: 20, plane: 10 }
   if (id === 'projection')
@@ -333,4 +339,105 @@ export function independentValues(id: ImagingSectionId, round: 0 | 1): LabValues
       revealed: false,
     }
   return null
+}
+
+/**
+ * The state every other section's fixed example is drawn at, authored from that section's own
+ * question and demonstration rather than from whatever the learner last did.
+ *
+ * Report 2.1 (fellow walkthrough, PDF p.16/p.22): the "This example stays fixed" banner promised a
+ * held image while the pane, having no authored state for the section, was handed the learner's own
+ * lab values. A learner who set the C-arm to 47 degrees in the component walk then read a question
+ * about a superimposed tool and nodule over an image that showed them apart. The state below is the
+ * whole of the fix: it is fixed data, it cannot inherit a control, and it is the same on a first
+ * visit, a retry and a deep link.
+ *
+ * Each entry names why it is what it is. None of them is a device setting or a clinical target.
+ */
+const SECTION_FIXED_EXAMPLE: Readonly<Partial<Record<ImagingSectionId, LabValues>>> = {
+  // The stem describes a frontal image on which the tool and nodule are superimposed although they
+  // are two centimetres apart along the X-ray path: zero obliquity, and 20 mm of depth offset.
+  'chain-walk': { orbit: 0, tilt: 0, depth: 20 },
+  // The stem reads a last-image-hold frame and asks which change alters what is acquired rather
+  // than how it is displayed, so the example carries the section's own worked geometry with the
+  // full acquired field and no display operation applied.
+  'good-image': { orbit: 0, tilt: 0, depth: 22, field: 100, crop: false, cropWidth: 70, zoom: 1 },
+  // The planning target and the initial current target agree: the section's authored starting
+  // state, before any modeled displacement ('Planning / initial current state').
+  'current-anatomy': { shift: 0, previous: 0, overlay: false, showCurrent: true },
+  // The stem's situation is the section's own first demonstration, 'Two scouts · one centered':
+  // centered on one view, offset in depth on the orthogonal one.
+  'cbct-acquisition': { offsetX: 0, offsetDepth: 25 },
+  // The same authored starting state as current-anatomy; this section's stem is about motion during
+  // a spin, which the registration model does not simulate, so the image stays at its baseline.
+  'changing-anatomy': { shift: 0, previous: 0, overlay: false, showCurrent: true },
+  // The section's authored starting geometry: staff at the baseline distance, no barrier in place.
+  'staff-protection': { distance: 1.3, orbit: 0, shield: false },
+}
+
+/**
+ * The immutable authored state a fixed example is drawn at. Total by construction: it never returns
+ * null, so no caller can fall back to the learner's own controls.
+ *
+ * Sections whose check renders self-contained panels or a text scenario resolve to the lab's own
+ * defaults, which are themselves fixed data.
+ */
+export function fixedExampleValues(id: ImagingSectionId, round: 0 | 1): LabValues {
+  const authored = independentValues(id, round)
+  if (authored) return authored
+  return { ...(SECTION_FIXED_EXAMPLE[id] ?? {}) }
+}
+
+/**
+ * The identity of a fixed example: one section, one round, one authored image. Equal identities
+ * must produce equal image and readout semantics whatever the learner did before arriving.
+ */
+export function fixedExampleIdentity(id: ImagingSectionId, round: 0 | 1): string {
+  return `${id}:example:${round}`
+}
+
+/**
+ * How a fixed example's image stands in relation to the question printed beside it.
+ *
+ * `depicts-the-question` — the learner can read the answer's evidence off this image: the tool and
+ * the nodule really are superimposed on it, the lateral scout really does show the offset.
+ *
+ * `illustrative-model` — the image is the section's authored equipment model, and the question is a
+ * written clinical scenario the model does not represent. A new dependent opacity, duplicated edges
+ * from motion during a spin and a clinician holding an accessory in the primary beam are all
+ * outside what the registration and scatter models simulate (see each section's `modelBoundary`).
+ * The image is still a fixed, authored, stable picture of the equipment; it is simply not evidence
+ * of the situation described, and the module must not say that it is.
+ */
+export type FixedExampleEvidence = 'depicts-the-question' | 'illustrative-model'
+
+/**
+ * Declared per question, by the identity of the exact check and round — never per section and never
+ * as a blanket rule, so a section's other activities and its transfer round keep their own framing.
+ *
+ * These three are the checks PI-FELLOW-01 recorded as claiming a connection their image does not
+ * support. Each entry names the stem and the model that does not represent it. Removing an entry
+ * restores the image-based framing, so this list is the whole of the claim.
+ */
+const ILLUSTRATIVE_ONLY_EXAMPLES: ReadonlySet<string> = new Set([
+  // "a new dependent opacity now obscures a previously distinct peripheral lesion" — the
+  // registration model translates the CT rigidly and simulates no ventilation or recruitment.
+  'current-anatomy:example:0',
+  // "duplicated tool and lesion edges from motion during the spin" — the same rigid-translation
+  // model simulates no motion artifact.
+  'changing-anatomy:example:0',
+  // "a clinician proposes holding an accessory in the primary beam while wearing a lead glove" —
+  // the scatter scene shows distance, tube side and a barrier, and no such action.
+  'staff-protection:example:0',
+])
+
+export function fixedExampleEvidence(id: ImagingSectionId, round: 0 | 1): FixedExampleEvidence {
+  return ILLUSTRATIVE_ONLY_EXAMPLES.has(fixedExampleIdentity(id, round))
+    ? 'illustrative-model'
+    : 'depicts-the-question'
+}
+
+/** The declared identities, for the tests that hold this list to exactly what it claims. */
+export function illustrativeOnlyExampleIdentities(): readonly string[] {
+  return [...ILLUSTRATIVE_ONLY_EXAMPLES]
 }

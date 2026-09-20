@@ -23,6 +23,7 @@ import { REVIEWED_ON, SOURCES } from '../data/sources'
 import {
   ImagingContinueCta,
   ImagingProgressNotes,
+  ImagingStartAtFirstSectionLink,
   ImagingStoredPathwayAccordion,
 } from './hub/ImagingPathwayAccordion'
 import { ReconstructionComparison } from './stage/ReconstructionComparison'
@@ -82,6 +83,7 @@ export function PeripheralImagingHub() {
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <ImagingContinueCta />
+            <ImagingStartAtFirstSectionLink />
           </div>
           <ImagingProgressNotes className="mt-4 grid gap-3" />
           <p className={`${styles.composition} mt-4`} data-pathway-composition>

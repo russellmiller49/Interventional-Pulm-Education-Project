@@ -35,7 +35,11 @@ import {
   type ImagingStageStep,
 } from '../../content/stageLessons'
 import { imagingStageSources } from '../../content/stageSources'
-import { independentValues } from '../../content/teachingExamples'
+import {
+  fixedExampleEvidence,
+  fixedExampleIdentity,
+  fixedExampleValues,
+} from '../../content/teachingExamples'
 import { labGoalMet, type LabGoal } from '../../engine/labGoalEvaluation'
 import {
   formatReadout,
@@ -605,7 +609,19 @@ function ImagingStageSession({
         }
       }
       case 'sort': {
-        if (commitments.sorts[activeStep.id]) return { ...base, primary: continueAction }
+        // Report 1.10 (fellow walkthrough, PDF p.13): after Check, every row locked with no way to
+        // reconsider the one that did not hold. The rows keep their own explanations either way;
+        // this only offers the placements back, as a check already offers its answer back. No
+        // score, no attempt count, nothing stored (PI-01).
+        if (commitments.sorts[activeStep.id])
+          return {
+            ...base,
+            primary: continueAction,
+            secondary: {
+              label: 'Place these again',
+              onActivate: () => dispatch({ type: 'RETRY_SORT', stepId: activeStep.id }),
+            },
+          }
         const remaining = interaction.sort.rows.filter((row) => !sortDraft[row.id]).length
         return {
           ...base,
@@ -855,8 +871,17 @@ function ImagingStageSession({
     ['sampling', 'dts', 'dts-prior'].includes(suiteView.mode)
   const controlsEnabled =
     (!checkPending || browsingIndependent) && !beforePrediction && !lookingBack
+  const exampleEvidence =
+    interaction.kind === 'prediction'
+      ? fixedExampleEvidence(lesson.sectionId, interaction.round)
+      : undefined
+  // A pending check's image is held. What the banner may claim about it depends on this exact
+  // question and round: three checks put a written clinical scenario beside the section's teaching
+  // model, which does not represent it, and must not say the two match.
   const lockedReason = checkPending
-    ? 'This example stays fixed so the question and the image match.'
+    ? exampleEvidence === 'illustrative-model'
+      ? 'This image stays fixed while you read it. It is this section’s teaching model of the equipment, not a picture of the situation in the question — answer from the written scenario.'
+      : 'This example stays fixed so the question and the image match.'
     : beforePrediction
       ? 'The worked demonstration uses separate state. The guided task starts from its own baseline.'
       : undefined
@@ -865,10 +890,18 @@ function ImagingStageSession({
       ? 'The controls are paused while you look back at an earlier step. Return to the live step to take them.'
       : undefined
 
+  // The fixed example's own state, and nothing else. `fixedExampleValues` is total, so a check can
+  // never be handed the learner's controls: report 2.1 was the pane falling back to `session.lab`
+  // for every section with no authored state, which let a 47-degree obliquity set in the preceding
+  // walk contradict a question about a superimposed tool and nodule.
   const exampleValues =
     interaction.kind === 'prediction'
-      ? independentValues(lesson.sectionId, interaction.round)
+      ? fixedExampleValues(lesson.sectionId, interaction.round)
       : null
+  const exampleIdentity =
+    interaction.kind === 'prediction'
+      ? fixedExampleIdentity(lesson.sectionId, interaction.round)
+      : undefined
   const panelQuestion =
     interaction.kind === 'prediction' &&
     interaction.round === 0 &&
@@ -893,7 +926,11 @@ function ImagingStageSession({
         onRepresentationReady={onRepresentationReady}
       />
     ) : activity.visual === 'case' ? null : (
-      <div className={styles.demonstration}>
+      <div
+        className={styles.demonstration}
+        data-authored-example={exampleIdentity}
+        data-example-evidence={exampleEvidence}
+      >
         {panelQuestion ? (
           <IndependentImagePanels
             sectionId={lesson.sectionId}
@@ -911,7 +948,7 @@ function ImagingStageSession({
               independentImage
                 ? {
                     values: {
-                      ...(exampleValues ?? session.lab?.values),
+                      ...exampleValues,
                       ...independentDisplay[activeStep.id],
                     },
                     events: [],

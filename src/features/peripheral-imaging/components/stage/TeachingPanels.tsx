@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useId, useState } from 'react'
+import { INDEPENDENT_IMAGE_PANEL_SECTIONS } from '../../content/learningActivities'
 import type { ImagingSectionId } from '../../content/pathway'
 import { FIELD_CONTEXT, LESION_CENTER, projectToDetector } from '../../lib/physics'
 import { collimator, suiteFrame } from '../suite/suiteModel'
@@ -420,7 +421,7 @@ export function TeachingPanels({
 }
 
 export function hasIndependentImagePanel(sectionId: ImagingSectionId) {
-  return ['signal', 'field', 'time', 'dose-reporting'].includes(sectionId)
+  return INDEPENDENT_IMAGE_PANEL_SECTIONS.includes(sectionId)
 }
 
 /** These self-contained SVG/table examples need no remote asset or WebGL renderer. */

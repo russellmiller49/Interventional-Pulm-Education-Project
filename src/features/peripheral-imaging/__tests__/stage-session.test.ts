@@ -140,6 +140,34 @@ describe('the stage session', () => {
     expect(reduce(session, { type: 'RETRY_CHOICE', stepId: predict.id })).toBe(session)
   })
 
+  it('lets a checked set be placed again before the learner moves past it, and not after', () => {
+    // Report 1.10 (fellow walkthrough, PDF p.13): after Check the rows locked with no way to
+    // reconsider. Taking the set back has exactly RETRY_CHOICE's bounds and, like it, un-performs
+    // the step so nothing claims work that is no longer there. No attempt is counted or stored.
+    const sortLesson = imagingStageLesson('imaging-questions')
+    const sortReduce = imagingStageReducer(sortLesson)
+    const sortIndex = sortLesson.steps.findIndex((step) => step.interaction.kind === 'sort')
+    const sortStep = sortLesson.steps[sortIndex]
+    let session: ImagingStageSession = emptyImagingStageSession(sortLesson)
+    const answers = { 'row-a': 'origin-a' }
+
+    session = sortReduce(session, { type: 'COMMIT_SORT', stepId: sortStep.id, answers })
+    expect(session.commitments.sorts[sortStep.id]).toEqual(answers)
+    expect(deriveStageProgress(sortLesson, session).performedIds.has(sortStep.id)).toBe(true)
+
+    session = sortReduce(session, { type: 'RETRY_SORT', stepId: sortStep.id })
+    expect(session.commitments.sorts[sortStep.id]).toBeUndefined()
+    expect(deriveStageProgress(sortLesson, session).performedIds.has(sortStep.id)).toBe(false)
+    expect(stepWorkDone(sortLesson, sortStep, sortIndex, session)).toBe(false)
+
+    // Nothing to take back is a no-op, and so is a step the learner has already moved past.
+    expect(sortReduce(session, { type: 'RETRY_SORT', stepId: sortStep.id })).toBe(session)
+    session = sortReduce(session, { type: 'COMMIT_SORT', stepId: sortStep.id, answers })
+    session = sortReduce(session, { type: 'CONTINUE_PAST', index: sortIndex })
+    expect(sortReduce(session, { type: 'RETRY_SORT', stepId: sortStep.id })).toBe(session)
+    expect(sortReduce(session, { type: 'RETRY_SORT', stepId: 'no-such-step' })).toBe(session)
+  })
+
   it('snapshots readouts by key, and finishes after the transfer whether or not it was answered', () => {
     let session: ImagingStageSession = emptyImagingStageSession(lesson)
     session = reduce(session, { type: 'SNAPSHOT', key: 'before' })

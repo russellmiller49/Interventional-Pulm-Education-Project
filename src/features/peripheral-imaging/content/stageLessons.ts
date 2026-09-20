@@ -30,6 +30,7 @@ import {
 import { imagingSectionSpec, type ImagingSectionSpec } from './sectionSpecs'
 import { imagingSort, type ImagingSort } from './sorts'
 import { imagingSectionItems } from './stageItems'
+import { fixedExampleEvidence } from './teachingExamples'
 import { suiteViewForStep } from './suiteViews'
 
 /**
@@ -130,6 +131,24 @@ function firstSentence(text: string): string {
   return (match ? match[0] : text).trim()
 }
 
+/**
+ * What a check asks the learner to read, decided by what that check actually puts on screen.
+ *
+ * Transfer rounds carry no visual at all and keep their own wording. A check with no visual reads
+ * its scenario. A check whose image is declared `illustrative-model` for this exact section and
+ * round says so and sends the learner to the written scenario; every other check keeps the
+ * image-based instruction, because its image is the evidence.
+ */
+function checkInstruction(activity: ImagingLearningActivity): string {
+  if (activity.task === 'transfer')
+    return 'Use the stated evidence in this different situation. Select an answer, then review the feedback.'
+  if (activity.visual === 'case')
+    return 'Read the scenario. Choose what the evidence supports and what remains uncertain.'
+  if (fixedExampleEvidence(activity.sectionId, 0) === 'illustrative-model')
+    return 'Answer from the written scenario below. The image beside it is this section’s teaching model of the equipment, not a picture of the situation described.'
+  return 'Inspect the image and acquisition context. Choose what the evidence supports and what remains uncertain.'
+}
+
 function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
   const lesson = imagingLesson(sectionId)
   const spec = imagingSectionSpec(sectionId)
@@ -158,10 +177,18 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
         return {
           ...base,
           phase: activity.task === 'transfer' ? 'transfer' : 'predict',
-          instruction:
-            activity.task === 'transfer'
-              ? 'Use the stated evidence in this different situation. Select an answer, then review the feedback.'
-              : 'Inspect the image and acquisition context. Choose what the evidence supports and what remains uncertain.',
+          // Report 1.2 (fellow walkthrough, PDF p.10): the check told the learner to inspect an
+          // image on screens that render none, so they scrolled looking for one. A check that
+          // carries no visual is a written scenario and says so. Nothing here converts an
+          // image-reading objective into a reading one: each of these stems already states its
+          // findings in words. Items that genuinely depend on an image are batch 04's evidence
+          // matrix (PR1/IC3), not a reworded prompt.
+          //
+          // A check that does carry a visual says which of the two it is, by the identity of this
+          // exact question and round: an image the answer can be read off, or the section's
+          // authored equipment model beside a written scenario it does not represent. Only the
+          // second is relabelled, and only for the three declared identities.
+          instruction: checkInstruction(activity),
           actionLabel: 'Check my interpretation',
           interaction: prediction(
             activity.task === 'transfer' ? items.transfer : items.prediction,
@@ -215,8 +242,12 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
         return {
           ...base,
           phase: 'explain',
+          // Same truthfulness rule (report 1.2): a section whose hands-on step is an attribution
+          // sort has no image work to review.
           instruction:
-            'Review the explanation and the evidence from the image work. Then apply the principle to another situation.',
+            spec.act.kind === 'sort'
+              ? 'Review the explanation and the evidence in this section. Then apply the principle to another situation.'
+              : 'Review the explanation and the evidence from the image work. Then apply the principle to another situation.',
           interaction: { kind: 'explain', round: 0 },
           lookIn: { pane: 'steps', landmark: IN_STEPS.verdictAndChange },
         }

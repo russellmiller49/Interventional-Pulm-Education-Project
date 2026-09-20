@@ -110,6 +110,18 @@ export interface ControlStrip {
   readonly sentence: string
 }
 
+/**
+ * Whether a section's control strip says anything one control at a time.
+ *
+ * A strip that marks every family "monitoring" is a section with nothing to adjust. Its own
+ * sentence carries that ("No control here…"), so repeating it five times adds nothing (report 1.7).
+ */
+export function controlStripDistinguishes(
+  states: Readonly<Record<ImagingControlId, ControlStripState>>,
+): boolean {
+  return imagingControlIds.some((id) => states[id] !== 'monitoring')
+}
+
 export function imagingControl(id: ImagingControlId): ImagingControl {
   const control = IMAGING_CONTROL_PANEL.controls.find((candidate) => candidate.id === id)
   if (!control) throw new Error(`Unknown control ${id}`)

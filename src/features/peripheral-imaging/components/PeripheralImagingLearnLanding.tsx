@@ -5,6 +5,7 @@ import { imagingCompositionLine } from '../content/pathwayResolver'
 import {
   ImagingContinueCta,
   ImagingProgressNotes,
+  ImagingStartAtFirstSectionLink,
   ImagingStoredPathwayAccordion,
 } from './hub/ImagingPathwayAccordion'
 import styles from './peripheral-imaging-hub.module.css'
@@ -39,6 +40,7 @@ export function PeripheralImagingLearnLanding({
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <ImagingContinueCta />
+        <ImagingStartAtFirstSectionLink />
       </div>
       <ImagingProgressNotes className="grid gap-3" />
       <p className={styles.composition} data-pathway-composition>

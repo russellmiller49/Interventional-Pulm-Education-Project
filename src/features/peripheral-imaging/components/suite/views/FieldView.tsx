@@ -27,6 +27,11 @@ export function FieldView({
   )
 }
 
+/**
+ * The field outline on a projection. `crop` distinguishes the two: without it the mask is the
+ * acquired (collimated) field, which belongs to the acquisition; with it the mask is an electronic
+ * crop of the stored frame, which is a display operation and is never part of a stored acquisition.
+ */
 export function FieldMask({
   frame,
   fieldPercent,
@@ -46,6 +51,7 @@ export function FieldMask({
       viewBox="0 0 512 512"
       aria-hidden="true"
       data-field-mask
+      data-mask-kind={crop ? 'display-crop' : 'acquired-field'}
       data-physical-field={crop ? 100 : fieldPercent}
     >
       <path
