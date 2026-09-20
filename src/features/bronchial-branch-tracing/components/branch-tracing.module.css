@@ -1893,3 +1893,25 @@
 .namingTry {
   margin-top: 0.5rem;
 }
+/* A source limitation stated before the task, not a warning about the learner's work. */
+.entryLimitation {
+  margin: 0.4rem 0 0.6rem;
+  padding: 0.5rem 0.65rem;
+  border-left: 3px solid #f6c66c;
+  border-radius: 0 6px 6px 0;
+  background: #14252c;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.partialTag {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid #f6c66c;
+  border-radius: 999px;
+  color: #f6c66c;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}

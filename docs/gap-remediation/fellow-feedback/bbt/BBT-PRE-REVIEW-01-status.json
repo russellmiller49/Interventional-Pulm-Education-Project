@@ -1,0 +1,236 @@
+{
+  "task": "BBT-PRE-REVIEW-01",
+  "title": "Truthful evidence, feedback and drafts — Bronchial Branch Tracing",
+  "branch": "claude/bbt-9-19",
+  "baseSha": "77a141ccfd574a984f91e74abc9018b5d67e8202",
+  "worktree": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-bbt-9-19",
+  "date": "2026-09-20",
+  "reviewClaims": {
+    "facultyReview": "none claimed",
+    "humanApproval": "none claimed",
+    "release": "none",
+    "deployment": "none",
+    "merge": "none"
+  },
+  "baselineDebt": {
+    "bbt": [
+      {
+        "test": "src/features/bronchial-branch-tracing/__tests__/contracts.test.ts › the new pages are anonymous and unlisted without exposing the existing admin anatomy routes",
+        "assertion": "isPublicPath('/airway-anatomy/case-001/case_manifest.json') expected false, received true",
+        "reproducedAtBase": true,
+        "action": "left failing; access policy not changed to make it pass"
+      }
+    ],
+    "repositoryWide": {
+      "note": "Identical set fails at the unmodified base SHA: 9 suites, 8 tests.",
+      "suites": [
+        "scripts/ip-preference-cards/check-brochure-intake-static-exposure.test.ts",
+        "scripts/ip-preference-cards/us-status/__tests__/safety-boundaries.test.ts",
+        "scripts/training-apps.test.mjs",
+        "src/features/bronchial-branch-tracing/__tests__/contracts.test.ts",
+        "src/features/critical-care/__tests__/accessibility.test.tsx",
+        "src/features/critical-care/__tests__/curriculum-sequencing.test.tsx",
+        "src/features/critical-care/__tests__/learner-copy.test.ts",
+        "src/features/literature/dedicated-supabase/foundation-manifest.test.ts",
+        "src/lib/board-review-html.test.ts"
+      ],
+      "branchTotals": "13208 passed, 8 failed",
+      "baseTotals": "13182 passed, 8 failed"
+    }
+  },
+  "notRun": [
+    {
+      "check": "npm run build (production)",
+      "reason": "RUN during the pre-merge sanity review and PASSED (exit 0) with placeholder public env values supplied as process environment only. Not run during the implementation batch."
+    },
+    {
+      "check": "npm run test:e2e (Playwright)",
+      "reason": "Browser journeys were driven manually in the preview pane; equivalent state journeys were added as component tests."
+    },
+    {
+      "check": "Native browser zoom at 200%",
+      "reason": "Only a CSS root-font probe was available in the preview pane; labelled as such and not reported as native zoom."
+    },
+    {
+      "check": "Screen-reader testing",
+      "reason": "Not performed in this batch and not inherited as a pass."
+    }
+  ],
+  "missingEnvironment": [
+    {
+      "item": "Supabase environment values",
+      "detail": "No .env.local in this worktree and none was created. The site root returns 500 (\"Your project's URL and Key are required\"). The branch-tracing routes render and were exercised normally."
+    },
+    {
+      "item": "tsc heap",
+      "detail": "npx tsc --noEmit needs NODE_OPTIONS=--max-old-space-size=8192 in this worktree; the default heap OOMs on this repository."
+    }
+  ],
+  "findings": [
+    {
+      "id": "BBTF-01",
+      "title": "First bifurcation does not demonstrate a visible split",
+      "reported": "Response slice 387 sits in one shared air column; the module's own text places separate lumens at about 378–375, below a local interval ending at 384. The same junction recurs in L9, Practice and More routes.",
+      "reproduction": "reproduced",
+      "reproductionEvidence": "Browser, 1427x1226, /learn?lesson=continuity: the task asks for two daughter marks on slice 387 and the divergence text appears only after Check. Decoded PNG measurement: along the line between the two model locators no sample exceeds -400 HU from slice 395 down to 376; a first rise appears at 375 (-435 HU) and a frank partition at 374-372 (-50 to +65 HU).",
+      "diagnosis": "Not a technical defect. Slice indexing reproduces the exporter's own HU samples to a mean 0.6 HU across 183 sampled points and degrades to 33 HU at +/-1 slice; volume, graph and label hashes match across the native manifest, the targets manifest and the branch registry; and every response point's slice, LPS and pixel are mutually consistent (slice === round(k(lps.z)), pixel === lps->pixel). The response points are NOT raw graph samples: the exporter walked a uniform 5.000 mm along each daughter centreline from the node and interpolated between the bracketing samples (192 of 195 interpolated; 8.000 mm for parents). The plane is therefore set by a generic authoring rule, not by an indexing accident and not by a per-junction anatomical judgement. Anchored independently of that transform: at a -900 HU airway threshold both response pixels lie in one connected air component from slice 394 to 377 and in two separate components at 374-372, 198/199 graph points in slices 360-414 land on air, and the single tracheal lumen sits at a higher slice index than the split, so the Z sign is not reversed.",
+      "implemented": "Containment only. Added JunctionFeedbackPacket.entryLimitation, drawn from the packet's existing divergence/continuity prose, for junction-1 and junction-6. Rendered before the task in LocalCtLesson (demo and attempt phases) and in CtJunctionTeaching, which every route consumer of this division already renders. Reference, unresolved and skip paths unchanged.",
+      "notChanged": "No response plane, coordinate, branch identity, model point, packet sentence, review status or geometry file. The course was not disabled and the lesson was not replaced by disclaimer text.",
+      "deferred": "The anatomical teaching mismatch itself.",
+      "remainingDecision": "OD-01 (owner / IP anatomy reviewer, task 05 prepares the packet): (1) is slice 387 - the plane a uniform 5 mm-from-node rule produces - intended as a proximal model-reference location rather than a visible two-lumen bifurcation, and should a mark be asked for there; (2) which native frames best demonstrate continuity through the split and what should a learner mark on them; (3) should the local lesson change only its demonstration, also its response planes, or be replaced by another verified fork; (4) which reused Practice / More-routes / route-lesson checkpoints adopt the same reviewed change. Changing a response plane invalidates existing draft signatures for the affected lessons and routes. The 5 mm daughter rule is uniform across the export, so changing this plane is either a per-junction exception to that rule or a change to the rule itself.",
+      "verification": "__tests__/first-junction-source.test.ts (5 tests); browser reproduction at 1427x1226; docs/gap-remediation/fellow-feedback/bbt/BBT-PRE-REVIEW-01-first-junction.md",
+      "status": "CONTAINED - OWNER/ANATOMY DECISION OPEN"
+    },
+    {
+      "id": "BBTF-05",
+      "title": "Distance feedback lacks an actionable explanation",
+      "reported": "Distances and ambiguous comparative sentences with no clear next step.",
+      "reproduction": "reproduced",
+      "reproductionEvidence": "The beyondSpan sentence read 'It is farther from the X locator than that other locator is', which parses against its own scalar. Divisions outside the five-junction pilot (the reported RLL/RB6 case) offered prose but no revisit control.",
+      "implemented": "spanSentence now names both numbers and states the actual comparison (mark-to-intended vs the separation between the two locators). The position sentence names its comparison scope. A sibling clause is added when the nearest locator is not the sibling. The standing caveat states that the comparison cannot establish which lumen contains a mark and that continuity from the parent decides. Unpacketed divisions get go-to-parent and go-to-response-slice controls.",
+      "notChanged": "No comparator was reversed to fit prose; metrics stay in the per-response sentences with the source and review detail available; no accuracy band, lumen verdict, branch verdict, vessel claim or radius threshold was added.",
+      "deferred": "none",
+      "remainingDecision": "none",
+      "verification": "__tests__/junction-feedback-scope.test.tsx › 'the span sentence states the scalar it is actually comparing', 'a division with no authored packet gives a revisit action…'"
+    },
+    {
+      "id": "BBTF-10",
+      "title": "Recorded course and target relationship are not compared",
+      "reported": "The summary repeats the learner's course and airway–nodule interpretation without showing the existing reference.",
+      "reproduction": "reproduced",
+      "reproductionEvidence": "BranchTracingPractice debrief rendered COURSE_OPTIONS[response.course] alone; CtTargetFeedback showed only the learner's choice plus generic advice.",
+      "implemented": "engine/model-reference.ts reads existing source statements: checkpoint levels and the exporter's direction labels (course), and the target's declared approachCode, which is each route's own distal checkpoint (airway–nodule). CtCourseFeedback and an extended CtTargetFeedback render learner input and source statement as distinct, qualified fields in Practice, More routes and the route lessons.",
+      "notChanged": "No reviewed course label exists in this module, so nothing is matched automatically and no answer key was invented. For 'unresolved' and 'possible adjacent structure' the text says the source cannot speak to it. No new clinical reach or tool-in-lesion claim; the existing limitation sentence is repeated.",
+      "deferred": "none",
+      "remainingDecision": "Whether a reviewed course description or approach-quality reference should ever exist is OD-06's territory and was not started.",
+      "verification": "__tests__/model-reference.test.tsx › 'the course comparison states the source levels and refuses to match them for the learner', 'the airway–nodule comparison names the declared approach and its limits'"
+    },
+    {
+      "id": "BBTF-14",
+      "title": "Compare all routes omits partial junction work",
+      "reported": "After one recorded stop, comparison says no recorded interpretation and shows none of that work.",
+      "reproduction": "reproduced",
+      "reproductionEvidence": "Browser, RS4 practice route: chose RMSB, placed a genuine mark at native (240.58, 315.71) on slice 387, checked the junction, opened Compare all routes. It read '0 of 1 route has a recorded interpretation' and 'No interpretation recorded for this route'. The saved draft at that moment still held work.recorded[0]=true, one mark, branches[0]=1 and one junction attempt.",
+      "classification": "presentation omission, not data loss — the bytes were verified present before and after",
+      "implemented": "The comparison reads the live work for the open route and drafts[id] for the others, marks such a route Partial with its actual counts ('1 of 8 stops recorded on this route; final route interpretation not recorded'), shows the learner's own marks as left, keeps the model reference a separate overlay never attributed to the learner, and states per station whether that junction was recorded.",
+      "notChanged": "Nothing is auto-finalized, erased or synthesized. The finalized-interpretation contract, the export schema and the draft schema are untouched; the export still carries only recorded interpretations and the existing junctionAttempts field. Compare remains available before any work.",
+      "deferred": "none",
+      "remainingDecision": "If a future export should carry partial junction work, that is a versioned schema extension for the owner; it was not made here.",
+      "verification": "__tests__/partial-route-and-restart.test.tsx › four BBTF-14 tests (partial counts and untouched bytes, comparison before any work, return to tracing with retry, reload); browser reproduction and re-verification at 1427x1226"
+    },
+    {
+      "id": "BBTF-22",
+      "title": "Restart removes the current draft without clear confirmation",
+      "reported": "Draft/progress wiped on Restart lesson.",
+      "reproduction": "reproduced",
+      "reproductionEvidence": "Browser: Restart lesson cleared marks [{387,…},{387,…}] to [null,null], phase compare to demo and orientation reflected to standard, with no prompt. Checked attempts, opening-choice history and recorded parent selections survived, and no other localStorage key was touched (keys before and after: branch-tracing.draft.learn.continuity, branch-tracing.draft.practice.middle-lobe-lateral, branch-tracing.practice-selection, branch-tracing.self-paced-v1).",
+      "implemented": "restartDiscards (local lessons) and routeRestartDiscards (route lessons) enumerate exactly what a restart would discard. The header control opens a confirmation listing those items and what is kept; Cancel preserves the draft bytes and the display; confirmation is skipped when nothing would be lost.",
+      "notChanged": "Restart still clears only current-session/draft state. No module storage, backup, unrelated route or reviewed history is cleared, and the reset was not broadened.",
+      "deferred": "none",
+      "remainingDecision": "none",
+      "verification": "__tests__/partial-route-and-restart.test.tsx › 'lists exactly what a restart discards…', 'cancels without touching the draft and confirms only on request', 'lists a route lesson’s recorded interpretations before discarding them'; browser Cancel/Confirm check"
+    },
+    {
+      "id": "BBTF-23",
+      "title": "Restored-state banners persist after reset",
+      "reported": "Restored/reflected labels persist after Restart while the current CT is standard axial.",
+      "reproduction": "reproduced",
+      "reproductionEvidence": "With a reflected orientation seeded into the saved draft, the banner read 'Draft restored on this device… Restored display: Left–right reflection…' and still read exactly that after a restart had returned the session to standard axial.",
+      "implemented": "The note reflects current state: after a restart it says the lesson was restarted, what was kept and that the display started again in standard axial; otherwise the restored-display clause appears only while that display is still in use, and says so plainly when it is not. The same treatment was added to the route-lesson host.",
+      "notChanged": "No new restore event is claimed; the historical restore is described as historical.",
+      "deferred": "none",
+      "remainingDecision": "none",
+      "verification": "__tests__/partial-route-and-restart.test.tsx › 'does not describe the current standard display as the restored one'; browser check after restart"
+    },
+    {
+      "id": "BBTF-37",
+      "title": "Local course choice receives no comparison feedback",
+      "reported": "The optional check requires a selection but gives no explanation of the chosen course.",
+      "reproduction": "reproduced",
+      "reproductionEvidence": "LocalCtLesson's compare phase rendered no course feedback for pattern and integration exercises.",
+      "implemented": "CtCourseFeedback in the compare phase shows the recorded course beside the division's own source levels: the parent plane, each daughter's plane, the slice distance and direction, and the source direction label.",
+      "notChanged": "Skip, unresolved and reference paths unchanged. No mandatory correct answer, no grading threshold, no reviewed course label invented.",
+      "deferred": "none",
+      "remainingDecision": "none",
+      "verification": "__tests__/model-reference.test.tsx › 'the course comparison states the source levels and refuses to match them for the learner'"
+    },
+    {
+      "id": "BBTF-38",
+      "title": "Internal pilot IDs leak into fallback teaching",
+      "reported": "BBT-02/junction IDs and source edge 23 appear in learner-facing sentences.",
+      "reproduction": "reproduced",
+      "reproductionEvidence": "JunctionFeedback's no-packet branch read 'BBT-02 covers five pilot junctions (junction-1, junction-6, junction-10, junction-14, junction-20)'. content/local-teaching.ts contained 'source edge 23', 'from edge 23' and 'into edge 50' in the L9 route-map notes.",
+      "implemented": "Plain-language scope sentence; a Source and review details disclosure carries the checkpoint id, parent and daughter source edges, volume and graph hash prefixes, the pilot list and the review status. Teaching notes now name airways and 'the daughter the previous division entered'.",
+      "notChanged": "No claim that a missing authored explanation exists; the detailed identifiers were retained, not deleted.",
+      "deferred": "none",
+      "remainingDecision": "none",
+      "verification": "__tests__/junction-feedback.test.tsx (updated assertion) and __tests__/junction-feedback-scope.test.tsx › 'a division with no authored packet gives a revisit action and keeps identifiers in the detail'"
+    },
+    {
+      "id": "BBTF-39",
+      "title": "Two feedback sentences use conflicting nearest-airway comparisons",
+      "reported": "One sentence says nearer RB5a while another says nearer RB4.",
+      "reproduction": "reproduced",
+      "reproductionEvidence": "junction-10, RB5 response, mark placed toward the RB5a crossing on slice 307: position sentence 'it sits nearer RB5a' (RB5a 1.8 mm, RB5 7.1 mm) alongside packet whenNearer['RB5'] = 'Your RB5 mark sits nearer the RB4 model locator'. Cause: whenNearer is keyed by the intended daughter but was emitted on any nearest-other status.",
+      "implemented": "whenNearer entries declare appliesTo (the airway codes their text names, or 'any'); the paragraph is shown only when the nearest locator is one of them. Otherwise a generated paragraph names the actual nearest locator, states that the written guidance compares different branches and does not apply, and points back to the parent. MarkComparison gained nearestOther, nearestSibling and spanMm.",
+      "notChanged": "No geometry changed; no true-airway or lumen verdict was introduced.",
+      "deferred": "none",
+      "remainingDecision": "none",
+      "verification": "__tests__/junction-feedback-scope.test.tsx › first three tests (scope separation, withheld sibling paragraph, sibling paragraph still shown when it applies)"
+    },
+    {
+      "id": "BBTF-44",
+      "title": "Skipped L8 examples yield a one-stop map under a three-division objective",
+      "reported": "Two examples can be skipped and the resulting map has one stop.",
+      "reproduction": "reproduced",
+      "reproductionEvidence": "CtProgressiveMap headed 'Your route map · N recorded stops' with no denominator and no indication that anything was skipped.",
+      "implemented": "Heading reads 'N of M stops recorded' with a Partial marker while any stop is unrecorded, and the unrecorded stops are named with a statement that moving past a division without recording it is valid and is not counted against anyone.",
+      "notChanged": "Skipping still works; skipped stops stay off the map rather than being filled in; no completion lock and no penalty were added; a supplied complete reference remains separate from the learner map.",
+      "deferred": "none",
+      "remainingDecision": "none",
+      "verification": "__tests__/partial-route-and-restart.test.tsx › 'labels a map with unrecorded divisions Partial and names them'"
+    },
+    {
+      "id": "BBTF-46",
+      "title": "L9 branch-reference disagreement lacks a reason",
+      "reported": "A caudal LB9 selection differs from the cranial model continuation but feedback only mentions names.",
+      "reproduction": "reproduced",
+      "reproductionEvidence": "CtBranchDecision named the reference continuation and, for same-named daughters, only said they share a name.",
+      "implemented": "CtContinuationFeedback compares stable identity, response plane, slice distance and direction with the source direction label for both the recorded choice and the reference route, says explicitly when the two daughters share a name that the name does not tell them apart, and offers go-to-parent and go-to-daughter revisit controls. Rendered in the local integration exercises and in the route comparison.",
+      "notChanged": "Unresolved and omitted continuations stay distinct and are never turned into a branch; a different choice is not recorded as an error; no bronchoscopic truth is inferred from same-name matching.",
+      "deferred": "none",
+      "remainingDecision": "Duplicate branch names themselves (RB3a, RB4, LB6, LB9) remain OD-03 for the owner; no name was changed here.",
+      "verification": "__tests__/model-reference.test.tsx › 'the continuation comparison explains the difference by level and direction, not by name', 'a division whose daughters share a name is flagged…'"
+    }
+  ],
+  "testMatrix": {
+    "viewports": ["1427x1226", "1440x900", "1024x768", "390x844", "320x740"],
+    "rootText": "200% via CSS root-font probe at 1427x1226 (not native browser zoom)",
+    "result": "New entry-limitation block reflows at every width with no horizontal document overflow and no clipping; at 200% it reflows inside the instructions pane, which is a real scroll owner (overflow-y: auto)."
+  },
+  "preMergeReview": {
+    "date": "2026-09-20",
+    "reviewedHeadShaBefore": "29ec464f1216d90283f141244cd79342cb4335ab",
+    "mainSha": "77a141ccfd574a984f91e74abc9018b5d67e8202",
+    "mainMovedSinceBase": false,
+    "overlappingOpenPrs": "None. #248 (PI) and #249 (EBUS) touch no BBT, shared-stage, access or anatomy-route file.",
+    "correctionsMade": [
+      "BBTF-01 evidence: this batch claimed the first-junction response planes are the source graph's own first post-node samples. They are not - the exporter walks a uniform 5.000 mm along each daughter centreline from the node and interpolates between the bracketing graph samples (192 of 195 checkable daughter points interpolated, 3 coincident; parents use an 8.000 mm cap). The BBTF-01 conclusion is unchanged and better supported; the basis was restated in the test name, its assertions and all three deliverables, and the OD-01 framing now records that the plane comes from a generic rule.",
+      "Learner copy: the level phrase produced '0 slices same level' on every in-plane division (the whole 'Follow a horizontal branch' lesson, where both daughters sit on slice 307). A shared levelPhrase helper now reads 'on the same level as the parent point' and handles the singular."
+    ],
+    "regressionsAdded": [
+      "first-junction-source.test.ts: the response point is not a raw graph sample, sits exactly 5.000 mm from the node, equals the interpolation between the bracketing samples, and the rule is uniform across the export.",
+      "first-junction-source.test.ts: image-anchored Z-sign check - the tracheal parent point is air and sits at a higher slice index than both the response plane and the split.",
+      "model-reference.test.tsx: in-plane divisions are described as being on the parent level, never as '0 slices'."
+    ],
+    "antiCircularityChecks": {
+      "huVsPng": "Compares two artifacts the same exporter produced, so it was not relied on alone.",
+      "independentAnchors": "At a -900 HU airway threshold both response pixels lie in one connected air component from slice 394 to 377 and in two separate components at 374-372; 198/199 graph points in slices 360-414 land on air; the single tracheal lumen sits at a higher slice index than the split, so the Z sign is not reversed.",
+      "transformAgreement": "NATIVE_CT matches the manifest ijkToLps exactly; slice === round(k(lps.z)) and pixel === lps->pixel for every checkable response point; volume, graph and label hashes agree across the native manifest, the targets manifest and the branch registry.",
+      "displayTransform": "All measurements used raw array indices; display presets are applied separately in pixelToDisplay and were not involved."
+    },
+    "productionBuild": "npm run build succeeded (exit 0) with placeholder public env values supplied as process environment only - no .env file created, no secret used or committed. build:training-apps, build:content, validate:critical-care-assets, validate:cardiac-assets, next build --webpack and prepare:standalone all completed; all four branch-tracing routes compiled.",
+    "focusedTests": "npx jest src/features/bronchial-branch-tracing: 108 passed, 1 failed (the pre-existing access-contract test, unchanged).",
+    "bbtf01Status": "CONTAINED - OWNER/ANATOMY DECISION OPEN (OD-01 not resolved)"
+  }
+}

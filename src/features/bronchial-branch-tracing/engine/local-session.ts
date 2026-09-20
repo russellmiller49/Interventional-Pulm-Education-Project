@@ -206,6 +206,31 @@ export function parseLocalSession(
   return s
 }
 
+/**
+ * Exactly what a restart would discard, in the learner's words. Recorded (checked) attempts,
+ * earlier opening choices, recorded parent selections and every other lesson's draft survive a
+ * restart, so they are never listed here. An empty list means nothing would be lost.
+ */
+export function restartDiscards(s: LocalSession, exercises: LocalCtExercise[]): string[] {
+  const exercise = exercises[s.exercise]
+  const placed = s.marks.filter((m) => m?.pixel).length
+  const unresolved = s.marks.filter((m) => m && m.pixel === null).length
+  const discards: string[] = []
+  if (placed)
+    discards.push(
+      `${placed} lumen mark${placed === 1 ? '' : 's'} on the ${exercise.trace.anchor.airway.code} example`,
+    )
+  if (unresolved)
+    discards.push(`${unresolved} unresolved response${unresolved === 1 ? '' : 's'} on this example`)
+  if (s.branch !== null) discards.push('the continuation branch chosen on this example')
+  if (s.course) discards.push('the airway course chosen on this example')
+  if (s.viewAnswer !== null) discards.push('the parent-view opening chosen on this example')
+  if (s.exercise > 0)
+    discards.push(`your place in the lesson: you would return to example 1 of ${exercises.length}`)
+  else if (s.phase !== 'demo') discards.push('your place in this example: it would start again')
+  return discards
+}
+
 export function localSessionReducer(
   exercises: LocalCtExercise[],
   s: LocalSession,

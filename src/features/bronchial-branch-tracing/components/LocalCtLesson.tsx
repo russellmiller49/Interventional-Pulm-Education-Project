@@ -29,9 +29,10 @@ import {
   localReady,
   localSessionReducer,
   parseLocalSession,
+  restartDiscards,
   type LocalAction,
 } from '../engine/local-session'
-import { CtCourseControl } from './CtTraceControls'
+import { CtContinuationFeedback, CtCourseControl, CtCourseFeedback } from './CtTraceControls'
 import { CtParentMap, CtLocalRouteMap } from './CtBranchMap'
 import { NativeCtViewer } from './NativeCtViewer'
 import { CtOrientationTeaching, orientationActionLabel } from './CtOrientationTeaching'
@@ -80,6 +81,9 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
   const instructionsRef = useRef<HTMLElement>(null)
   const previousStep = useRef<string | null>(null)
   const [exitWarning, setExitWarning] = useState(false)
+  const [restartAsk, setRestartAsk] = useState(false)
+  // A restart in this session; it makes the draft-restored note above it out of date.
+  const [restarted, setRestarted] = useState(false)
   const [reviewAttempt, setReviewAttempt] = useState<number | null>(null)
   const [viewerEpoch, setViewerEpoch] = useState(0)
   const [playing, setPlaying] = useState(false)
@@ -123,6 +127,14 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
   const complete = s.phase === 'complete'
   const reviewed = record.reviewedLessonIds.includes(lesson.id)
   const checkedCount = exercises.filter((e) => s.history[e.id]?.length).length
+  const packet = junctionFeedbackPacket(exercise.spec.checkpointId)
+  // Stated before the task, from the packet's own already-recorded source qualification.
+  const entryLimitation = !sameLumen ? packet?.entryLimitation : undefined
+  const discards = restartDiscards(s, exercises)
+  const restoredDisplay =
+    loaded.value && !sameOrientation(loaded.value.orientation, STANDARD_ORIENTATION)
+      ? orientationName(loaded.value.orientation)
+      : null
   const title = guide
     ? guide === 'context'
       ? 'Orient yourself on the CT'
@@ -172,7 +184,11 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
       setPlaying(false)
       goToSlice(exercise.answerPoints[next.slot].slice)
     }
-    if (action.type === 'restart') setViewerEpoch((v) => v + 1)
+    if (action.type === 'restart') {
+      setViewerEpoch((v) => v + 1)
+      setRestarted(true)
+      setRestartAsk(false)
+    }
     if (action.type === 'retry' || action.type === 'next' || action.type === 'restart')
       setReviewAttempt(null)
     if (action.type === 'begin' || action.type === 'retry' || action.type === 'reset-attempt')
@@ -485,15 +501,23 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
           sectionsControl={<CourseOutline currentId={lesson.id} />}
           helpRef={helpRef}
           onHelp={() => setHelp(true)}
-          onRestart={() => act({ type: 'restart' })}
+          onRestart={() => (discards.length ? setRestartAsk(true) : act({ type: 'restart' }))}
           restartLabel="Restart lesson"
           onSaveAndExit={exit}
           resumedNote={
             saveFailed
               ? 'Draft saving failed. Keep this page open; Save & exit will explain how to leave without saving.'
-              : loaded.notice
-                ? `${loaded.notice}${loaded.value && !sameOrientation(loaded.value.orientation, STANDARD_ORIENTATION) ? ` Restored display: ${orientationName(loaded.value.orientation)}. Return to standard axial changes only the display.` : ''}`
-                : undefined
+              : restarted
+                ? `You restarted this lesson. Your checked marks are kept below; the current example, its responses and the CT display started again in ${orientationName(STANDARD_ORIENTATION).toLowerCase()}.`
+                : loaded.notice
+                  ? `${loaded.notice}${
+                      restoredDisplay
+                        ? sameOrientation(s.orientation, loaded.value!.orientation)
+                          ? ` Restored display: ${restoredDisplay}. Return to standard axial changes only the display.`
+                          : ` That draft was saved with the display set to ${restoredDisplay}; the CT is now in ${orientationName(s.orientation).toLowerCase()}.`
+                        : ''
+                    }`
+                  : undefined
           }
         />
       }
@@ -613,6 +637,14 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
               )}
 
               {showingWalkthrough && s.phase !== 'compare' && walkthrough}
+              {entryLimitation && ['demo', 'attempt'].includes(s.phase) && (
+                <p
+                  className={styles.entryLimitation}
+                  data-entry-limitation={exercise.spec.checkpointId}
+                >
+                  {entryLimitation}
+                </p>
+              )}
               {s.phase === 'demo' && !sameLumen && (
                 <>
                   <p>{lesson.objective}</p>
@@ -775,6 +807,25 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                           goToSlice(slice)
                         }}
                       />
+                      {s.course && (
+                        <>
+                          <h3>Your recorded course and the source levels</h3>
+                          <CtCourseFeedback value={s.course} checkpoint={point} />
+                        </>
+                      )}
+                      {exercise.spec.kind === 'integration' && (
+                        <>
+                          <h3>Your continuation and the model reference route</h3>
+                          <CtContinuationFeedback
+                            checkpoint={point}
+                            choice={s.branch}
+                            onGoToSlice={(slice) => {
+                              setPlaying(false)
+                              goToSlice(slice)
+                            }}
+                          />
+                        </>
+                      )}
                       <p>{exercise.explanation}</p>
                     </>
                   )}
@@ -1005,6 +1056,30 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
             !attemptReady &&
             ' Show reference, Highlight the region and Return to the parent are in the task instructions.'}
         </p>
+      </HelpDialog>
+      <HelpDialog
+        open={restartAsk}
+        onClose={() => setRestartAsk(false)}
+        title="Restart this lesson?"
+      >
+        <p>Restarting would discard:</p>
+        <ul>
+          {discards.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+        <p>
+          Kept either way: the marks you have already checked
+          {attempts.length || checkedCount
+            ? ` (${checkedCount} of ${exercises.length} ${exercises.length === 1 ? 'example' : 'examples'} checked so far)`
+            : ''}
+          , whether this lesson is marked reviewed, and every other lesson&rsquo;s draft. Nothing
+          else in this browser is cleared.
+        </p>
+        <div className={styles.walkthroughControls}>
+          <button onClick={() => act({ type: 'restart' })}>Restart the lesson</button>
+          <button onClick={() => setRestartAsk(false)}>Cancel, keep my work</button>
+        </div>
       </HelpDialog>
       <HelpDialog
         open={exitWarning}

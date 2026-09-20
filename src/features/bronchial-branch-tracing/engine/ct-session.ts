@@ -134,6 +134,34 @@ export function traceComplete(
     work.recorded.every((v, i) => v && junctionReady(trace, i, work.marks, work.branches))
   )
 }
+/**
+ * Exactly what a restart of a route lesson would discard. The junction history it keeps is not
+ * listed. An empty list means nothing would be lost.
+ */
+export function routeRestartDiscards(s: CtSession, trace: CtTrace): string[] {
+  const discards: string[] = []
+  const placed = s.marks.filter((m) => m?.pixel).length
+  const unresolved = s.marks.filter((m) => m && m.pixel === null).length
+  const recorded = s.recorded.filter(Boolean).length
+  if (recorded)
+    discards.push(
+      `${recorded} recorded ${recorded === 1 ? 'junction' : 'junctions'} on the ${trace.airwayPath[0].code} route`,
+    )
+  if (placed > recorded)
+    discards.push(
+      `${placed - recorded} placed lumen ${placed - recorded === 1 ? 'mark' : 'marks'} that ${placed - recorded === 1 ? 'has' : 'have'} not been recorded`,
+    )
+  if (unresolved)
+    discards.push(`${unresolved} unresolved ${unresolved === 1 ? 'response' : 'responses'}`)
+  if (s.prediction) discards.push('your recorded interpretation of the first route')
+  if (s.transfer) discards.push('your recorded interpretation of the second route')
+  if (s.course) discards.push('the airway course you chose')
+  if (s.targetRelation) discards.push('the airway–nodule relationship you chose')
+  if (s.alignment) discards.push('the CT display you recorded for this route')
+  if (s.step > 0) discards.push(`your place in the lesson: it would start again at step 1`)
+  return discards
+}
+
 export function ctSessionReducer(prediction: CtTrace, transfer: CtTrace, example = prediction) {
   return (s: CtSession, action: CtAction): CtSession => {
     if (action.type === 'restart')

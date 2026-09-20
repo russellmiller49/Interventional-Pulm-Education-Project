@@ -31,7 +31,16 @@ export interface MarkComparison {
   intended: LocatorDistance | null
   /** Other named model airways crossing this slice, nearest first, one per airway code. */
   others: LocatorDistance[]
-  /** The mark is farther from the intended locator than the nearest other locator is. */
+  /** The nearest of `others`, whatever its role. Null when no other locator crosses this slice. */
+  nearestOther: LocatorDistance | null
+  /**
+   * The nearest other daughter of this same division, when one of them crosses this plane.
+   * Sibling-specific feedback is written about this locator, never about `nearestOther`.
+   */
+  nearestSibling: LocatorDistance | null
+  /** Distance between the intended locator and `nearestOther`, in millimetres on this plane. */
+  spanMm: number | null
+  /** The mark is farther from the intended locator than the two locators are from each other. */
   beyondSpan: boolean
 }
 
@@ -140,7 +149,16 @@ export function compareMarks(
     const mark = marks[slot]
     const base = { slot, label: point.label, slice: point.slice }
     if (!mark?.pixel || mark.slice !== point.slice)
-      return { ...base, status: 'unresolved', intended: null, others: [], beyondSpan: false }
+      return {
+        ...base,
+        status: 'unresolved',
+        intended: null,
+        others: [],
+        nearestOther: null,
+        nearestSibling: null,
+        spanMm: null,
+        beyondSpan: false,
+      }
     const locators = slotLocators(exercise, slot)
     const intendedLocator = locators.find((l) => l.role === 'intended')!
     const intended = {
@@ -156,16 +174,20 @@ export function compareMarks(
       if (!current || candidate.mm < current.mm) byCode.set(locator.airway.code, candidate)
     }
     const others = [...byCode.values()].sort((a, b) => a.mm - b.mm)
-    const nearestOther = others[0]
+    const nearestOther = others[0] ?? null
+    const nearestSibling = others.find((o) => o.locator.role === 'daughter') ?? null
+    const spanMm = nearestOther
+      ? planeDistanceMm(intendedLocator.pixel, nearestOther.locator.pixel)
+      : null
     return {
       ...base,
       status: nearestOther && nearestOther.mm < intended.mm ? 'nearest-other' : 'nearest-intended',
       intended,
       others,
-      beyondSpan: Boolean(
-        nearestOther &&
-        intended.mm > planeDistanceMm(intendedLocator.pixel, nearestOther.locator.pixel),
-      ),
+      nearestOther,
+      nearestSibling,
+      spanMm,
+      beyondSpan: Boolean(spanMm !== null && intended.mm > spanMm),
     }
   })
 }

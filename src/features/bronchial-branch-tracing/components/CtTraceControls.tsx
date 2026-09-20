@@ -1,11 +1,26 @@
 'use client'
 
-import type { Course, CtBranchChoice, CtMark, CtTrace, TargetRelation } from '../content/ct-types'
+import type {
+  Course,
+  CtBranchChoice,
+  CtCheckpoint,
+  CtMark,
+  CtTrace,
+  TargetRelation,
+} from '../content/ct-types'
 import {
   COURSE_OPTIONS,
   TARGET_RELATION_OPTIONS,
   TARGET_RELATION_FEEDBACK,
 } from '../content/ct-types'
+import { junctionFeedbackPacket } from '../content/junction-feedback'
+import {
+  continuationReference,
+  divisionLevels,
+  levelPhrase,
+  routeLevels,
+  type ApproachReference,
+} from '../engine/model-reference'
 import styles from './branch-tracing.module.css'
 
 export function CtTraceList({
@@ -165,11 +180,20 @@ export function CtBranchDecision({
   )
 }
 export function CtJunctionTeaching({ trace, active }: { trace: CtTrace; active: number }) {
-  const decision = trace.checkpoints[active].decision
+  const point = trace.checkpoints[active]
+  const decision = point.decision
   if (!decision) return null
+  // Where the packet already records that the response plane precedes a visible separation,
+  // say so before the task rather than only in the comparison afterwards.
+  const limitation = junctionFeedbackPacket(point.id)?.entryLimitation
   return (
     <section className={styles.junctionTeaching} aria-label="Current airway division">
       <h2>This junction</h2>
+      {limitation && (
+        <p className={styles.entryLimitation} data-entry-limitation={point.id}>
+          {limitation}
+        </p>
+      )}
       <div className={styles.junctionParent}>
         {decision.parent.airway.code}
         <small>{decision.parent.airway.name}</small>
@@ -288,13 +312,155 @@ export function CtTargetRelationControl({
   )
 }
 
-export function CtTargetFeedback({ value }: { value: TargetRelation }) {
+export function CtTargetFeedback({
+  value,
+  reference,
+}: {
+  value: TargetRelation
+  reference?: ApproachReference
+}) {
   return (
     <>
       <p>
         <strong>Your airway–nodule interpretation:</strong> {TARGET_RELATION_OPTIONS[value]}.
       </p>
       <p>{TARGET_RELATION_FEEDBACK[value]}</p>
+      {reference && (
+        <div data-target-reference={reference.segmentCode}>
+          <p>
+            <strong>Model reference:</strong> the source places this simulated nodule in{' '}
+            {reference.segmentCode} ({reference.segmentName.toLowerCase()}) at the end of{' '}
+            {reference.approachCode}
+            {reference.matchesRoute
+              ? `, which is this route's distal checkpoint (${reference.distalCode}).`
+              : `; this route's distal checkpoint is ${reference.distalCode}.`}{' '}
+            That is how the target was placed in the source data. It is not a reviewed finding that
+            the distal lumen can be followed to it on this scan, and it does not establish
+            instrument reach or tool-in-lesion.
+          </p>
+          {value !== 'approaches' && (
+            <p>
+              The source records only where the target was placed. It holds no record of a
+              neighbouring structure or of where the air column stops being resolvable, so what you
+              recorded here cannot be compared with a model answer; keep it as your reading and
+              revisit the last definite lumen.
+            </p>
+          )}
+        </div>
+      )}
     </>
+  )
+}
+
+/**
+ * The learner's recorded course beside what the source actually records. The module has no
+ * reviewed course label, so the two are shown side by side and never matched automatically.
+ */
+export function CtCourseFeedback({
+  value,
+  trace,
+  checkpoint,
+}: {
+  value: Course
+  trace?: CtTrace
+  checkpoint?: CtCheckpoint
+}) {
+  const division = checkpoint ? divisionLevels(checkpoint) : null
+  const route = trace ? routeLevels(trace) : null
+  return (
+    <div data-course-feedback={value}>
+      <p>
+        <strong>Your recorded course:</strong> {COURSE_OPTIONS[value]}.
+      </p>
+      {division && (
+        <p>
+          <strong>Source levels:</strong> the parent point for {division.parentCode} lies on slice{' '}
+          {division.parentSlice}.{' '}
+          {division.daughters
+            .map(
+              (d) =>
+                `${d.label} is marked on slice ${d.slice}, ${levelPhrase(d)}, with the source direction label “${d.direction}”`,
+            )
+            .join('; ')}
+          .
+        </p>
+      )}
+      {route && (
+        <p>
+          <strong>Source levels:</strong> this route&rsquo;s supplied points run{' '}
+          {route.levels.map((l) => `${l.code} ${l.slice}`).join(' → ')}; overall {route.net}, with{' '}
+          {route.reversals === 0
+            ? 'no change of cranial–caudal direction'
+            : `${route.reversals} change${route.reversals === 1 ? '' : 's'} of cranial–caudal direction`}
+          .
+        </p>
+      )}
+      <p className={styles.small}>
+        The source records point levels and daughter direction labels. It holds no reviewed course
+        description for what you traced, so your answer is not matched against one and nothing is
+        recorded as right or otherwise. Compare the two yourself, and revisit any interval where
+        they do not agree.
+      </p>
+    </div>
+  )
+}
+
+/**
+ * Which daughter the source reference route continues through, why the two daughters are
+ * distinguishable in the source data, and what to revisit. Choosing differently is not an error.
+ */
+export function CtContinuationFeedback({
+  checkpoint,
+  choice,
+  onGoToSlice,
+}: {
+  checkpoint: CtCheckpoint
+  choice: CtBranchChoice | null
+  onGoToSlice?: (slice: number) => void
+}) {
+  const reference = continuationReference(checkpoint)
+  const division = divisionLevels(checkpoint)
+  if (!reference || !division || !checkpoint.decision) return null
+  const index = checkpoint.decision.options.findIndex((o) => o.sourceEdgeId === choice)
+  const chosen = index >= 0 ? division.daughters[index] : null
+  return (
+    <div data-continuation-feedback={checkpoint.id}>
+      <p>
+        <strong>Your recorded continuation:</strong>{' '}
+        {chosen
+          ? `${chosen.label}, marked on slice ${chosen.slice}, ${levelPhrase(chosen)}, source direction label “${chosen.direction}”.`
+          : choice === 'unresolved'
+            ? 'continuation unresolved. That response stays unresolved; it is not turned into a branch.'
+            : 'no continuation was recorded at this division.'}
+      </p>
+      <p>
+        <strong>Model reference route:</strong> it continues through {reference.label}, marked on
+        slice {reference.slice}, {levelPhrase(reference)}, source direction label “
+        {reference.direction}”.
+        {reference.sharedName
+          ? ` Both daughters of this division carry the name ${reference.code}: the name does not tell them apart, their levels and directions do.`
+          : ''}
+      </p>
+      {chosen && chosen.label !== reference.label && (
+        <p>
+          The two differ in level and direction, not only in name. Return to {division.parentCode}{' '}
+          on slice {division.parentSlice} and follow each daughter lumen away from the division
+          before deciding which one you were in. A different choice is not recorded as an error, and
+          the route continues along the source path either way.
+        </p>
+      )}
+      {onGoToSlice && (
+        <p className={styles.revisitControls}>
+          <button onClick={() => onGoToSlice(division.parentSlice)}>
+            Go to the parent slice {division.parentSlice}
+          </button>
+          {division.daughters.map((d) => (
+            <button key={d.label} onClick={() => onGoToSlice(d.slice)}>
+              Go to {d.label} · slice {d.slice}
+            </button>
+          ))}
+        </p>
+      )}
+    </div>
   )
 }
