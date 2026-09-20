@@ -281,11 +281,19 @@ export function GuidedKnobology({
     }
     const loop = () => {
       if (!element.paused && element.currentTime >= end - 0.045) element.currentTime = start
+      // A seek can complete before the data for the new position has decoded, and after that the
+      // element fires nothing further on its own. Re-asking costs nothing and is what stops a
+      // rapid run of selections leaving the workbench busy for ever (EBUS-PRE-REVIEW-02, L7-4).
+      report()
       animation = requestAnimationFrame(loop)
     }
     element.addEventListener('loadedmetadata', seek)
     element.addEventListener('loadeddata', report)
     element.addEventListener('seeked', report)
+    // `canplay` and `timeupdate` cover the same gap without a rendering frame, for a tab that is
+    // not being painted.
+    element.addEventListener('canplay', report)
+    element.addEventListener('timeupdate', report)
     element.addEventListener('error', fail)
     if (element.readyState >= 1) seek()
     animation = requestAnimationFrame(loop)
@@ -297,9 +305,27 @@ export function GuidedKnobology({
       element.removeEventListener('loadedmetadata', seek)
       element.removeEventListener('loadeddata', report)
       element.removeEventListener('seeked', report)
+      element.removeEventListener('canplay', report)
+      element.removeEventListener('timeupdate', report)
       element.removeEventListener('error', fail)
     }
   }, [segment])
+  /*
+   * The label follows the element, not the intent (EBUS-PRE-REVIEW-02, D). A browser can decline
+   * to play, or stop playing a document it is not painting, and "Recording playing" over a
+   * stopped clip is exactly the kind of claim this workbench should not make.
+   */
+  useEffect(() => {
+    const element = video.current
+    if (!element) return
+    const sync = () => setPlaybackPaused(element.paused)
+    element.addEventListener('play', sync)
+    element.addEventListener('pause', sync)
+    return () => {
+      element.removeEventListener('play', sync)
+      element.removeEventListener('pause', sync)
+    }
+  }, [])
   // Playback begins only with an explicit learner action. Layout and hydration cannot start it.
   useEffect(() => {
     const element = video.current
@@ -496,7 +522,6 @@ export function GuidedKnobology({
               {state.colorDoppler ? ' · Color Doppler' : ' · Grayscale'}.
             </figcaption>
           </figure>
-        </div>
           {baseline && config.recordedTask !== 'capture' && (
             <figure className="recorded-baseline">
               <RecordedFrameView
@@ -519,6 +544,7 @@ export function GuidedKnobology({
               </figcaption>
             </figure>
           )}
+        </div>
         <div className="recorded-controls">
           <p role="status" aria-busy={!frameReady}>
             {config.locked
