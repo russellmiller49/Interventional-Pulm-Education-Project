@@ -16,7 +16,7 @@ type Plausibility = ClinicalLearningItem['choices'][number]['plausibility']
  * announced, and about who advances the phase.
  *
  * What is shared here is the behaviour the plan requires: plausibility-keyed feedback, a disclosure
- * covering why the other answers do not fit, an accessible announcement, an explicit Continue
+ * comparing the answers the learner did not take, an accessible announcement, an explicit Continue
  * control, and — critically — no advancement of its own. Advancing is always the caller's decision,
  * taken when the learner presses Continue.
  *
@@ -228,6 +228,21 @@ export function AnswerVerdict({
   const isUnsafe = chosen.plausibility === 'unsafe'
   const tone = revealed ? (theme === 'light' ? copy.light : copy.dark) : withheldTone[theme]
   const others = item.choices.filter((choice) => choice.id !== choiceId)
+  /*
+   * The comparison is over every answer the learner did not take, which after a wrong or unsafe
+   * selection includes the keyed one — so the list cannot always be headed "why the other answers
+   * do not fit" (EBUS-PRE-REVIEW-01: L4-1, PR-3, CS-6). The heading is kept exactly where it is
+   * true, which is when the learner took the keyed answer and nothing in this list is keyed, and a
+   * neutral comparison heading takes over where it is not. The keyed entry is named in the list
+   * itself, so the grouping is unambiguous however the reader reaches it, and every option, its
+   * label, its rationale and its identity are unchanged.
+   */
+  const isKeyed = (choice: ClinicalLearningItem['choices'][number]) =>
+    item.correctChoiceIds.includes(choice.id)
+  const othersIncludeKeyed = others.some(isKeyed)
+  const comparisonHeading = othersIncludeKeyed
+    ? 'How the other answers compare'
+    : 'Why the other answers do not fit'
   // The full comparison is a Learn/debrief affordance. Guided Practice gets the branch note only,
   // so the mechanism is not handed over before the learner has worked it.
   const showFullReasoning = revealed && (timing === 'immediate-after-commit' || inDebrief)
@@ -286,13 +301,22 @@ export function AnswerVerdict({
             <p className="mt-1">{item.explanation}</p>
           </div>
           {others.length > 0 ? (
-            <details className="mt-3 rounded-lg border border-black/10 bg-white/10 p-2">
-              <summary className="min-h-9 cursor-pointer font-medium">
-                Why the other answers do not fit
-              </summary>
+            <details
+              className="mt-3 rounded-lg border border-black/10 bg-white/10 p-2"
+              data-other-answers-keyed={othersIncludeKeyed || undefined}
+            >
+              <summary className="min-h-9 cursor-pointer font-medium">{comparisonHeading}</summary>
               <ul className="mt-2 grid gap-2" data-other-answers>
                 {others.map((choice) => (
-                  <li key={choice.id}>
+                  <li
+                    key={choice.id}
+                    data-other-answer-role={isKeyed(choice) ? 'keyed' : 'alternative'}
+                  >
+                    {othersIncludeKeyed && isKeyed(choice) ? (
+                      <>
+                        <strong data-keyed-answer-label>Best-supported answer.</strong>{' '}
+                      </>
+                    ) : null}
                     <span className="font-medium">{choice.label}</span> — {choice.rationale}
                   </li>
                 ))}

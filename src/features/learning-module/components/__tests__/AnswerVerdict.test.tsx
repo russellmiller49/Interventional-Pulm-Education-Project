@@ -93,6 +93,49 @@ describe('AnswerVerdict', () => {
     }
   })
 
+  /*
+   * EBUS-PRE-REVIEW-01 (L4-1, PR-3, CS-6). `others` is every answer the learner did not take, so
+   * after a wrong or unsafe selection the keyed answer is in that list. The card used to head the
+   * whole list "Why the other answers do not fit", which said of the correct answer that it does
+   * not fit. These fail on the unmodified component.
+   */
+  describe('the comparison heading says what the list actually holds', () => {
+    it('keeps "do not fit" only when the learner took the keyed answer', () => {
+      const { container } = render(<AnswerVerdict item={item} choiceId="drainage-limited" />)
+      expect(screen.getByText(/why the other answers do not fit/i)).toBeInTheDocument()
+      expect(container.querySelector('[data-other-answers-keyed]')).toBeNull()
+      expect(container.querySelector('[data-keyed-answer-label]')).toBeNull()
+    })
+
+    for (const [choiceId, what] of [
+      ['membrane-clotting', 'wrong'],
+      ['watch-longer', 'partly correct'],
+      ['raise-speed', 'unsafe'],
+    ] as const) {
+      it(`does not call the keyed answer non-fitting after a ${what} selection`, () => {
+        const { container } = render(<AnswerVerdict item={item} choiceId={choiceId} />)
+        expect(screen.queryByText(/why the other answers do not fit/i)).toBeNull()
+        expect(screen.getByText(/how the other answers compare/i)).toBeInTheDocument()
+
+        // The keyed answer is still there, still with its rationale, and named for what it is.
+        const keyed = container.querySelector('[data-other-answer-role="keyed"]')
+        expect(keyed?.textContent).toContain('The circuit is asking for more flow')
+        expect(keyed?.textContent).toContain(item.choices[0].rationale)
+        expect(keyed?.querySelector('[data-keyed-answer-label]')?.textContent).toBe(
+          'Best-supported answer.',
+        )
+
+        // and nothing was dropped.
+        expect(container.querySelectorAll('[data-other-answers] li')).toHaveLength(
+          item.choices.length - 1,
+        )
+        expect(container.querySelectorAll('[data-other-answer-role="alternative"]')).toHaveLength(
+          item.choices.length - 2,
+        )
+      })
+    }
+  })
+
   it('never advances by itself — Continue is the only way forward, and only if wired', () => {
     const withoutContinue = render(<AnswerVerdict item={item} choiceId="drainage-limited" />)
     expect(withoutContinue.container.querySelector('[data-verdict-continue]')).toBeNull()
@@ -190,7 +233,8 @@ describe('AnswerVerdict timing policy', () => {
       'true',
     )
     expect(screen.getByText(/predicts a different pattern/i)).toBeInTheDocument()
-    expect(screen.getByText(/why the other answers do not fit/i)).toBeInTheDocument()
+    // The selection is wrong, so the comparison list holds the keyed answer and says so.
+    expect(screen.getByText(/how the other answers compare/i)).toBeInTheDocument()
   })
 
   /**
