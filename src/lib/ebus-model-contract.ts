@@ -17,7 +17,16 @@ export const MODEL_STEPS = {
 } as const
 export type Point2 = [number, number]
 export type PhantomName = keyof typeof contract.phantoms
-export type ContactMode = 'gap' | 'direct' | 'balloon' | 'bubble' | 'shadow'
+export const CONTACT_MODES = ['gap', 'direct', 'balloon', 'bubble', 'shadow'] as const
+export type ContactMode = (typeof CONTACT_MODES)[number]
+/** How each modelled acoustic-contact condition is named to a learner. */
+export const CONTACT_MODE_LABELS: Record<ContactMode, string> = {
+  gap: 'air gap',
+  direct: 'direct contact',
+  balloon: 'fluid-balloon contact',
+  bubble: 'balloon with a bubble',
+  shadow: 'contact with a reflector',
+}
 interface Base {
   package: ModelPackage
   steps: string[]

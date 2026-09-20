@@ -331,6 +331,9 @@ export function ModelWorkbench({
         steps: state.steps,
         complete: ready && complete,
         annotations: config.reveal,
+        // The live selection behind the rendered frame, read from the model state rather than
+        // from the image (EBUS-PRE-REVIEW-02, carry-forward of L5-1).
+        ...(state.package === 'contact' ? { contactMode: state.mode } : {}),
       },
     })
   }, [state, rendered, frameId, error, config.locked, config.reveal, complete, pkg, onObservation])

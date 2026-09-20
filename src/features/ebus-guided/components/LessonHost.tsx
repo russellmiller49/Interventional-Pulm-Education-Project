@@ -3,9 +3,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from '@/i18n/navigation'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
 import { EMPTY_EBUS_OBSERVATION, type EbusObservation } from '@/lib/ebus-guided-bridge'
+import { CONTACT_MODE_LABELS } from '@/lib/ebus-model-contract'
 import { BASE, CHAPTERS, LESSONS, chapterForLesson, lessonHref } from '../content/curriculum'
 import { activitiesForLesson, type LessonActivity } from '../content/stage'
-import { labGoalMet, type Lesson, type Question } from '../content/types'
+import { labGoalMet, labGoalRequirements, type Lesson, type Question } from '../content/types'
 import {
   recordLocation,
   setLessonReviewed,
@@ -105,6 +106,14 @@ function LessonSession({
   const missingImage =
     !!question && !retainedImageAvailable(question, runtimeLab, retained, observation)
   const labDone = !!runtimeLab && labGoalMet(runtimeLab, observation)
+  /*
+   * What the acquisition is still waiting for (EBUS-PRE-REVIEW-02, L7-3). Reported from the same
+   * conditions the gate applies, so the learner can see which one is open instead of reading one
+   * sentence that names a camera this lab does not have. Nothing here changes the gate.
+   */
+  const labOutstanding = runtimeLab
+    ? labGoalRequirements(runtimeLab, observation).filter((requirement) => !requirement.met)
+    : []
   const acquireStep = !reviewId && current.interaction === 'acquire'
   const onObservation = useCallback((value: EbusObservation) => {
     setObservation(value)
@@ -297,10 +306,23 @@ function LessonSession({
             : ['reference', 'diagram'].includes(current.image)
               ? ('supplied' as const)
               : undefined
+  const heldContactMode =
+    retained?.model?.package === 'contact' ? retained.model.contactMode : undefined
   const evidenceLabel: Record<NonNullable<typeof evidenceKind>, string> = {
     demonstration:
       'Authored demonstration. This is a worked example, not an acquisition of yours; you acquire your own next.',
-    held: 'Your held acquisition, from this session in this workbench.',
+    held:
+      'Your held acquisition, from this session in this workbench.' +
+      /*
+       * Which of the five modelled contact conditions is actually held
+       * (EBUS-PRE-REVIEW-02, carry-forward of L5-1). The workbench now reports it with the
+       * observation, so the pane can say what the held frame is instead of leaving the learner
+       * to assume it matches whichever state the next check happens to name. The wording of the
+       * checks is untouched; this only stops the evidence claiming more than it is.
+       */
+      (heldContactMode
+        ? ' Contact condition held: ' + CONTACT_MODE_LABELS[heldContactMode] + '.'
+        : ''),
     'held-missing':
       'No acquisition is held in this session, so there is no image of yours to read here.',
     live: 'Live workbench. Nothing is held yet; what you see moves with the controls.',
@@ -518,7 +540,16 @@ function LessonSession({
                   : instruction}
             </p>
           </div>
-          <div className={styles.taskComposition} data-composition={current.presentation}>
+          <div
+            className={styles.taskComposition}
+            data-composition={current.presentation}
+            /*
+             * An acquisition step gives the workbench the room (EBUS-PRE-REVIEW-02, A). The
+             * column beside it carries one short instruction and the status, so the split that
+             * suits a reading task starves the one surface the learner is actually working in.
+             */
+            data-acquiring={current.interaction === 'acquire' && !reviewId ? 'true' : undefined}
+          >
             <div
               className={styles.taskEvidence}
               hidden={
@@ -737,13 +768,36 @@ function LessonSession({
                   </section>
                 )}
               {!finished && current.interaction === 'acquire' && (
-                <p role="status" className={styles.taskStatus}>
-                  {reviewId
-                    ? 'An earlier acquisition is not replayed during review.'
-                    : labDone
-                      ? 'The acquisition is ready. Hold this image to interpret it.'
-                      : 'Waiting for your acquisition. Loading a preset or moving the observer camera is not an acquisition. You can also continue without an image; the next check then has nothing to interpret.'}
-                </p>
+                <div role="status" className={styles.taskStatus} data-acquisition-status>
+                  {reviewId ? (
+                    <p>An earlier acquisition is not replayed during review.</p>
+                  ) : labDone ? (
+                    <p>The acquisition is ready. Hold this image to interpret it.</p>
+                  ) : (
+                    <>
+                      <p>
+                        Waiting for your acquisition.{' '}
+                        {runtimeLab?.kind === 'knobology'
+                          ? 'Selecting a recording is not yet an acquisition.'
+                          : 'Loading a preset or moving the observer camera is not an acquisition.'}{' '}
+                        You can also continue without an image; the next check then has nothing to
+                        interpret.
+                      </p>
+                      {labOutstanding.length > 0 && (
+                        <>
+                          <p>Still open on this acquisition:</p>
+                          <ul className={styles.taskSummary} data-acquisition-outstanding>
+                            {labOutstanding.map((requirement) => (
+                              <li key={requirement.id} data-requirement={requirement.id}>
+                                {requirement.text}
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
               )}
               {!finished && current.teaching.includes('takeaways') && (
                 <section className={styles.lessonTeaching}>
@@ -818,7 +872,18 @@ function LessonSession({
                 {primaryLabel}
               </button>
             )}
-            {primaryDisabled && <p role="status">{disabledReason}</p>}
+            {/*
+             * The footer keeps one row of controls and one line of explanation under it, whether
+             * or not there is anything to explain (EBUS-PRE-REVIEW-02, L6-6). The note used to be
+             * inserted only while the primary was disabled, and inserting a full-width line into
+             * a wrapping flex row moved both buttons: becoming ready pulled "Continue without an
+             * image" up into the place the disabled "Hold this acquisition" had just occupied,
+             * under the pointer that was resting there. The slot is always present now, so
+             * neither control moves when readiness changes.
+             */}
+            <p role="status" className={styles.advanceNote} data-advance-note>
+              {primaryDisabled ? disabledReason : ''}
+            </p>
           </footer>
         </section>
         <div className={styles.flowFooter}>

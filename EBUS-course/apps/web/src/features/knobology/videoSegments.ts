@@ -4,6 +4,28 @@ export const KNOBOLOGY_LOOKUP_SRC = resolveCourseAssetPath('/media/knobology/kno
 export const KNOBOLOGY_SEGMENT_VIDEO_DIR = resolveCourseAssetPath('/media/knobology/Depth_segments');
 export const KNOBOLOGY_DEPTH_FILE_SEGMENT_DURATION_SECONDS = 2;
 
+/**
+ * Where the recorded content actually sits inside the 1920x1080 frame.
+ *
+ * Measured, not guessed: `scripts/ebus-guided/measure-recorded-sector.mjs` samples every authored
+ * segment window of all six depth files and takes the union bounding box of the lit pixels. Across
+ * the frames the workbench displays this is x 480..1763, y 76..932 — the sector plus the depth
+ * scale and its tick marks down the right-hand side, which is the scale a reader needs.
+ *
+ * It is a display window only. No file is cropped, and the frames that also carry the device
+ * banner (patient header, date, depth setting, frame rate) extend past it, which is why every
+ * surface that uses this region keeps a full-frame view one control away.
+ */
+export const KNOBOLOGY_VIDEO_FRAME_WIDTH = 1920;
+export const KNOBOLOGY_VIDEO_FRAME_HEIGHT = 1080;
+export const KNOBOLOGY_VIDEO_IMAGE_REGION = {
+  x: 480,
+  y: 76,
+  width: 1284,
+  height: 857,
+  measuredBy: 'scripts/ebus-guided/measure-recorded-sector.mjs',
+} as const;
+
 export const KNOBOLOGY_VIDEO_DEPTH_LEVELS = [20, 40, 60, 72, 84, 100] as const;
 export const KNOBOLOGY_VIDEO_DEPTHS_CM = [2, 3, 4, 5, 6, 8] as const;
 export const KNOBOLOGY_VIDEO_VALUE_LEVELS = [0, 14, 29, 43, 57, 71, 86, 100] as const;
