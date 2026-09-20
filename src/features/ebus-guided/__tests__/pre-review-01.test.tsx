@@ -18,6 +18,7 @@ import { taskErrors, newExamination } from '../engine/examination'
 import { MODEL_WINDOW_CASE, EXAMINATION_CASE } from '../content/examination-cases'
 import { initialModelState, modelReducer, type NeedleState } from '@/lib/ebus-model-contract'
 import { EMPTY_EBUS_OBSERVATION, type EbusObservation } from '@/lib/ebus-guided-bridge'
+import type { ClinicalLearningItem } from '@/features/learning-module/activity'
 
 /**
  * EBUS-PRE-REVIEW-01 — the concrete defects this batch repairs.
@@ -150,7 +151,9 @@ describe('feedback says which answer is which', () => {
 
   /* CS-6: the takeaway restated the keyed rationale word for word. */
   it('drops a takeaway that only repeats the keyed rationale, and keeps one that does not', () => {
-    const base = {
+    // Typed as the item rather than `as const`: a const assertion makes `choices` a readonly
+    // tuple, which `ClinicalLearningItem` does not accept.
+    const base: Omit<ClinicalLearningItem, 'explanation'> = {
       id: 'x',
       activityId: 'ebus-guided',
       phase: 'predict',
@@ -164,7 +167,7 @@ describe('feedback says which answer is which', () => {
       correctChoiceIds: ['a'],
       evidenceIds: ['ebus-guided-sources'],
       reviewStatus: 'draft',
-    } as const
+    }
 
     const repeated = render(
       <QuestionExplanation item={{ ...base, explanation: 'Because of the landmark.' }} />,
