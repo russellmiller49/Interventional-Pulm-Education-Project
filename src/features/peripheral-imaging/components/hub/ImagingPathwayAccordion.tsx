@@ -161,6 +161,35 @@ export function ImagingContinueCta({ className }: { readonly className?: string 
 }
 
 /**
+ * A second door to the first section, beside the one the recommendation resolves to.
+ *
+ * Report O1 (fellow walkthrough, PDF p.4): on a device with saved progress the only prominent
+ * control was Resume at the last section touched, and starting over from the beginning meant
+ * opening the outline, opening its first group and clicking the section chip. This is navigation
+ * and nothing else: it deletes no progress, marks nothing reviewed, and leaves the recommendation
+ * exactly as it was. It renders only once the stored progress is known, and only when the
+ * recommendation is not already the first section.
+ */
+export function ImagingStartAtFirstSectionLink({ className }: { readonly className?: string }) {
+  const { progress, hydrated } = useImagingProgress()
+  const first = peripheralImagingPathwaySections[0]
+  const next = recommendedImagingSection(progress)
+  if (!hydrated || !first || next?.section.id === first.id) return null
+  return (
+    <Link
+      href={imagingSectionLinkTarget(first.id)}
+      className={className ?? styles.startFirst}
+      data-imaging-start-first={first.id}
+    >
+      <span>
+        Start at Section 1 — {first.title}
+        <small> Your saved place is kept.</small>
+      </span>
+    </Link>
+  )
+}
+
+/**
  * Sections saved to review later, and an honest note when this browser is not saving the learner's
  * place. Renders nothing until hydrated, and nothing when there is nothing to say.
  */

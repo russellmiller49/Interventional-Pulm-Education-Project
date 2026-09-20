@@ -1137,7 +1137,7 @@ export const LESSONS: Lesson[] = [
     blocks: [
       {
         title: 'Apply the same reasoning to new situations',
-        body: 'This section adds nothing new. It combines the modalities and safety questions of the course: each problem in the suite arises at one component of image formation, and naming it guides the next step. The eight case decisions follow on the Assess page, once every section has been worked through.',
+        body: 'This section adds nothing new. It combines the modalities and safety questions of the course: each problem in the suite arises at one component of image formation, and naming it guides the next step. The eight integrated cases are on the Integrated cases tab. Every one of them is open at any time; no section has to be finished first.',
         points: [
           'Name the imaging question before naming a device.',
           'Say where in image formation the problem arises.',

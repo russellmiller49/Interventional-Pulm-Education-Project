@@ -44,6 +44,8 @@ export type ImagingStageAction =
   | { readonly type: 'LAB_CHANGE'; readonly patch: LabValues }
   | { readonly type: 'LAB_RESET' }
   | { readonly type: 'RETRY_CHOICE'; readonly stepId: string }
+  /** Take back a checked set so it can be placed again, while the step is still live. */
+  | { readonly type: 'RETRY_SORT'; readonly stepId: string }
   | { readonly type: 'COMMIT_CHOICE'; readonly stepId: string; readonly choiceId: string }
   | {
       readonly type: 'COMMIT_SORT'
@@ -146,6 +148,26 @@ export function imagingStageReducer(lesson: ImagingStageLesson) {
           commitments: {
             ...session.commitments,
             choices,
+            performedIds: session.commitments.performedIds.filter((id) => id !== action.stepId),
+          },
+        }
+      }
+      case 'RETRY_SORT': {
+        // The same bounds as RETRY_CHOICE: only the step the learner is on, and only before they
+        // have moved past it. Report 1.10 (fellow walkthrough, PDF p.13) found the rows locked with
+        // no way back; taking the check back un-performs it exactly as taking an answer back does,
+        // so nothing claims work that is no longer there. No attempt is counted or stored.
+        const index = lesson.steps.findIndex((step) => step.id === action.stepId)
+        if (index < 0 || session.commitments.finished || session.commitments.confirmed >= index)
+          return session
+        if (session.commitments.sorts[action.stepId] === undefined) return session
+        const sorts = { ...session.commitments.sorts }
+        delete sorts[action.stepId]
+        return {
+          ...session,
+          commitments: {
+            ...session.commitments,
+            sorts,
             performedIds: session.commitments.performedIds.filter((id) => id !== action.stepId),
           },
         }

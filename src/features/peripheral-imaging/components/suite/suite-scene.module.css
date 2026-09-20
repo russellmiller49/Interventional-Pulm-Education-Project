@@ -60,6 +60,21 @@
 .pane button:hover {
   background: #e1eeee;
 }
+/* Report 4.5 (fellow walkthrough, PDF p.34): the image-source buttons carried the real
+   `aria-pressed` state but the dock had no rule for it, so on load all three looked identical and
+   the selected one only became visible once another was clicked. This styles the state the markup
+   already reports; it does not change which button is selected. Contrast on the dock's #f7fafa
+   surface: #1d4753 on #cfe3e4 is about 7.4:1. */
+.pane button[aria-pressed='true'] {
+  border-color: #3d7d84;
+  background: #cfe3e4;
+  color: #1d4753;
+  font-weight: 650;
+  box-shadow: inset 0 0 0 1px #3d7d84;
+}
+.pane button[aria-pressed='true']:hover {
+  background: #c1dadc;
+}
 .pane button:disabled {
   cursor: default;
   opacity: 0.55;

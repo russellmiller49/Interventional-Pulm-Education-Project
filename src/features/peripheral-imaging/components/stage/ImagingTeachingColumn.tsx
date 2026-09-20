@@ -1,6 +1,10 @@
 'use client'
 
-import { IMAGING_CONTROL_PANEL, imagingControlIds } from '../../content/controlPanel'
+import {
+  IMAGING_CONTROL_PANEL,
+  controlStripDistinguishes,
+  imagingControlIds,
+} from '../../content/controlPanel'
 import { GRAMMAR_TREND_RULE, IMAGING_GRAMMAR } from '../../content/grammar'
 import type { ImagingStageLesson } from '../../content/stageLessons'
 import type { ImagingLearningActivity } from '../../content/learningActivities'
@@ -140,21 +144,30 @@ function TeachingReference({
           ))}
           <p>{GRAMMAR_TREND_RULE}</p>
           <p>{spec.controlStrip.sentence}</p>
-          <ul data-teaching-block="control-strip">
-            {imagingControlIds.map((id) => (
-              <li key={id}>
-                {IMAGING_CONTROL_PANEL.controls.find((c) => c.id === id)?.plainName}:{' '}
-                {
+          {/*
+            Report 1.7 (fellow walkthrough, PDF p.12): a section that adjusts nothing listed all five
+            control families as "monitoring only", which reads as unfilled template text rather than
+            a reference. Where the section's own strip marks no control as in play, its sentence
+            already says so; the list is only rendered where it distinguishes one control from
+            another. Nothing is removed from a section that does have controls.
+          */}
+          {controlStripDistinguishes(spec.controlStrip.states) ? (
+            <ul data-teaching-block="control-strip">
+              {imagingControlIds.map((id) => (
+                <li key={id}>
+                  {IMAGING_CONTROL_PANEL.controls.find((c) => c.id === id)?.plainName}:{' '}
                   {
-                    'this-one': 'relevant to this question',
-                    'not-this-one': 'does not address this question',
-                    'harmful-reflex': 'does not resolve the uncertainty',
-                    monitoring: 'monitoring only',
-                  }[spec.controlStrip.states[id]]
-                }
-              </li>
-            ))}
-          </ul>
+                    {
+                      'this-one': 'relevant to this question',
+                      'not-this-one': 'does not address this question',
+                      'harmful-reflex': 'does not resolve the uncertainty',
+                      monitoring: 'monitoring only',
+                    }[spec.controlStrip.states[id]]
+                  }
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </details>
         {RECONSTRUCTION_SECTIONS.includes(lesson.sectionId) && (
           <details>

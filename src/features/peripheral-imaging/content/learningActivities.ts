@@ -113,9 +113,12 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ['@purpose', 'Navigation, localization, confirmation, diagnosis'],
       'questions',
     ),
+    // Report 1.4 (fellow walkthrough, PDF p.11): the title said choose, but the screen is the
+    // section's second reading screen — the modality panels and the worked example, with nothing
+    // to select. The activity id stays 'evidence'; only the learner-facing name changes.
     read(
       'evidence',
-      'Choose evidence for the next question',
+      'Compare what each modality can and cannot show',
       ['Match the modality to the question', '@worked'],
       'questions',
     ),
@@ -580,10 +583,27 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       'questions',
       'record',
     ),
-    work('Match the finding to the next useful decision', 'record', 'case'),
+    // Report 8.2 (fellow walkthrough, PDF p.44): the task places eight findings against the six
+    // components of image formation; no decision is asked for, and the prompt already says so.
+    work('Match each finding to its component of image formation', 'record', 'case'),
     ...finish('record', 'case'),
   ],
 }
+
+/**
+ * Sections whose check renders self-contained teaching panels — matched SVG or table examples built
+ * from authored numbers — instead of the shared suite pane.
+ *
+ * It lives here, beside `visual`, because it is a fact about the authored activity rather than about
+ * the renderer: it decides whether a check needs an authored suite state of its own (report 2.1).
+ * `TeachingPanels` re-exports the predicate for the components that ask it.
+ */
+export const INDEPENDENT_IMAGE_PANEL_SECTIONS: readonly ImagingSectionId[] = [
+  'signal',
+  'field',
+  'time',
+  'dose-reporting',
+]
 
 export function imagingLearningActivities(
   sectionId: ImagingSectionId,

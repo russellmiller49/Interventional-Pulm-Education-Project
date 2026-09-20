@@ -35,7 +35,7 @@ import {
   type ImagingStageStep,
 } from '../../content/stageLessons'
 import { imagingStageSources } from '../../content/stageSources'
-import { independentValues } from '../../content/teachingExamples'
+import { fixedExampleIdentity, fixedExampleValues } from '../../content/teachingExamples'
 import { labGoalMet, type LabGoal } from '../../engine/labGoalEvaluation'
 import {
   formatReadout,
@@ -605,7 +605,19 @@ function ImagingStageSession({
         }
       }
       case 'sort': {
-        if (commitments.sorts[activeStep.id]) return { ...base, primary: continueAction }
+        // Report 1.10 (fellow walkthrough, PDF p.13): after Check, every row locked with no way to
+        // reconsider the one that did not hold. The rows keep their own explanations either way;
+        // this only offers the placements back, as a check already offers its answer back. No
+        // score, no attempt count, nothing stored (PI-01).
+        if (commitments.sorts[activeStep.id])
+          return {
+            ...base,
+            primary: continueAction,
+            secondary: {
+              label: 'Place these again',
+              onActivate: () => dispatch({ type: 'RETRY_SORT', stepId: activeStep.id }),
+            },
+          }
         const remaining = interaction.sort.rows.filter((row) => !sortDraft[row.id]).length
         return {
           ...base,
@@ -865,10 +877,18 @@ function ImagingStageSession({
       ? 'The controls are paused while you look back at an earlier step. Return to the live step to take them.'
       : undefined
 
+  // The fixed example's own state, and nothing else. `fixedExampleValues` is total, so a check can
+  // never be handed the learner's controls: report 2.1 was the pane falling back to `session.lab`
+  // for every section with no authored state, which let a 47-degree obliquity set in the preceding
+  // walk contradict a question about a superimposed tool and nodule.
   const exampleValues =
     interaction.kind === 'prediction'
-      ? independentValues(lesson.sectionId, interaction.round)
+      ? fixedExampleValues(lesson.sectionId, interaction.round)
       : null
+  const exampleIdentity =
+    interaction.kind === 'prediction'
+      ? fixedExampleIdentity(lesson.sectionId, interaction.round)
+      : undefined
   const panelQuestion =
     interaction.kind === 'prediction' &&
     interaction.round === 0 &&
@@ -893,7 +913,7 @@ function ImagingStageSession({
         onRepresentationReady={onRepresentationReady}
       />
     ) : activity.visual === 'case' ? null : (
-      <div className={styles.demonstration}>
+      <div className={styles.demonstration} data-authored-example={exampleIdentity}>
         {panelQuestion ? (
           <IndependentImagePanels
             sectionId={lesson.sectionId}
@@ -911,7 +931,7 @@ function ImagingStageSession({
               independentImage
                 ? {
                     values: {
-                      ...(exampleValues ?? session.lab?.values),
+                      ...exampleValues,
                       ...independentDisplay[activeStep.id],
                     },
                     events: [],

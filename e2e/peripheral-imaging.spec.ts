@@ -1383,3 +1383,201 @@ test('Help keeps longer existing content reachable and keyboard navigation modal
     expect(await helpLearnerState(page)).toEqual(before)
   }
 })
+
+/* ------------------------------------------------------------------ *
+ * PI-FELLOW-01 — AI-assisted first-year-fellow walkthrough, 2026-09-18
+ *
+ * Three browser regressions for the runtime defects that walkthrough reported. The evidence
+ * provenance is an AI walkthrough, not a learner study: these tests check the application's
+ * behaviour, and establish nothing clinical.
+ * ------------------------------------------------------------------ */
+
+/** Walk `chain-walk` to its fixed example, changing the C-arm on the way when asked to. */
+async function reachWalkCheckWithObliquity(page: Page, priorObliquity: number | null) {
+  const lesson = imagingStageLesson('chain-walk')
+  const checkId = lesson.steps[lesson.predictionStepIndex].id
+  await openSection(page, 'chain-walk')
+  for (let guard = 0; guard < 40; guard++) {
+    const stage = await page.locator('[data-stage]').getAttribute('data-stage')
+    if (stage === checkId) return
+    const step = lesson.steps.find((candidate) => candidate.id === stage)!
+    if (step.interaction.kind === 'walk' && priorObliquity !== null)
+      await controlRange(page, 'orbit', priorObliquity)
+    if ((await primary(page).count()) > 0) {
+      await expect(primary(page)).toBeEnabled({ timeout: 60000 })
+      await primary(page).click()
+    } else await skip(page).click()
+  }
+  throw new Error(`Never reached ${checkId}`)
+}
+
+/** What a learner can read of a fixed example's acquisition state. */
+async function fixedExampleReading(page: Page) {
+  await expect(page.locator('[data-authored-example]')).toHaveCount(1)
+  return page.evaluate(() => {
+    const value = (key: string) =>
+      (document.getElementById(`peripheral-imaging-control-${key}`) as HTMLInputElement | null)
+        ?.value ?? null
+    const output = (key: string) =>
+      document
+        .querySelector(`output[for="peripheral-imaging-control-${key}"]`)
+        ?.textContent?.trim() ?? null
+    return {
+      identity: document
+        .querySelector('[data-authored-example]')
+        ?.getAttribute('data-authored-example'),
+      orbit: value('orbit'),
+      tilt: value('tilt'),
+      orbitShown: output('orbit'),
+      tiltShown: output('tilt'),
+      dockDisabled:
+        document.querySelector<HTMLFieldSetElement>('[data-suite-controls]')?.disabled ?? null,
+      lockedReason:
+        Array.from(document.querySelectorAll('[data-suite-locked], .reason, p'))
+          .map((node) => node.textContent?.trim() ?? '')
+          .find((text) => /stays fixed so the question and the image match/.test(text)) ?? null,
+    }
+  })
+}
+
+test('report 2.1: the fixed example is one authored image whatever the learner set beforehand', async ({
+  page,
+}, info) => {
+  // PDF p.16, screenshot p.22. The banner promised a held image; the pane was handed the learner's
+  // own controls, so a C-arm left at 47 degrees in the component walk contradicted a question
+  // about a superimposed tool and nodule. Fails against the pre-repair module at the first history.
+  const readings: {
+    history: number | null
+    reading: Awaited<ReturnType<typeof fixedExampleReading>>
+  }[] = []
+  for (const history of [null, 47, -28, 75]) {
+    await page.evaluate(() => localStorage.clear())
+    await reachWalkCheckWithObliquity(page, history)
+    readings.push({ history, reading: await fixedExampleReading(page) })
+    await capture(page, info, `fellow-21-prior-${history}.png`)
+  }
+  const [first, ...rest] = readings
+  expect(first.reading.identity).toBe('chain-walk:example:0')
+  expect(first.reading.orbit).toBe('0')
+  expect(first.reading.tilt).toBe('0')
+  expect(first.reading.orbitShown).toBe('0°')
+  expect(first.reading.dockDisabled).toBe(true)
+  expect(first.reading.lockedReason).not.toBeNull()
+  for (const other of rest) expect(other.reading).toEqual(first.reading)
+
+  // Reading, revealing and retrying the example is not work performed.
+  await secondary(page).click()
+  await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+  await page.locator('[data-prediction-choices] input').first().check()
+  await primary(page).click()
+  await expect(page.locator('[data-answer-verdict]')).toHaveCount(1)
+  await secondary(page).click()
+  await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+  expect(await fixedExampleReading(page)).toEqual(first.reading)
+  await expectNoStoredResponses(page)
+  expect((await storedProgress(page)).reviewedSectionIds).toEqual([])
+})
+
+/** The two comparison panels, reduced to acquisition state and display operations. */
+async function comparisonPanels(page: Page) {
+  return page.evaluate(() => {
+    const read = (selector: string) => {
+      const root = document.querySelector(selector)
+      if (!root) return null
+      return {
+        caption: root.querySelector('figcaption')?.textContent?.trim() ?? null,
+        pixels: root.querySelector('img')?.getAttribute('src') ?? null,
+        zoom: root.querySelector('[data-monitor-zoom]')?.getAttribute('data-monitor-zoom') ?? null,
+        masks: Array.from(root.querySelectorAll('[data-field-mask]')).map(
+          (node) => (node as HTMLElement).dataset.maskKind ?? 'unknown',
+        ),
+      }
+    }
+    return { baseline: read('[data-baseline-image]'), current: read('[data-current-image]') }
+  })
+}
+
+test('report 2.12: a stored acquisition keeps its own pixels while display operations change the current view', async ({
+  page,
+}, info) => {
+  // PDF p.20, screenshot p.26. The baseline panel inherited the electronic crop and display zoom
+  // that happened to be applied when it was frozen, so both panels showed the same cropped picture.
+  await openSection(page, 'good-image')
+  await expect(primary(page)).toBeEnabled({ timeout: 60000 })
+  await primary(page).click()
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'good-image:display')
+  await expect(page.locator('[data-projection-state]')).toHaveAttribute(
+    'data-projection-state',
+    'ready',
+  )
+  await expect(page.locator('[data-baseline-image]')).toHaveCount(1)
+
+  // The authored comparison opens on the crop example, and the two panels differ.
+  await expect(
+    page.getByRole('button', { name: 'Crop the baseline stored frame', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true')
+  const cropped = await comparisonPanels(page)
+  expect(cropped.baseline!.masks).toEqual(['acquired-field'])
+  expect(cropped.current!.masks).toContain('display-crop')
+  expect(cropped.baseline!.zoom).toBe('1')
+  await capture(page, info, 'fellow-212-crop.png')
+
+  // Display zoom moves the current view and leaves the stored acquisition alone.
+  await page.getByRole('button', { name: 'Zoom the baseline stored frame', exact: true }).click()
+  const zoomed = await comparisonPanels(page)
+  expect(zoomed.current!.zoom).toBe('1.5')
+  expect(zoomed.baseline).toEqual(cropped.baseline)
+  expect(zoomed.current!.masks).not.toContain('display-crop')
+  await capture(page, info, 'fellow-212-zoom.png')
+
+  // Replaying the demonstration and resizing leave the same stored acquisition in place.
+  await page.getByRole('button', { name: 'Replay demonstration' }).click()
+  await expect(page.locator('[data-projection-state]')).toHaveAttribute(
+    'data-projection-state',
+    'ready',
+  )
+  await page.setViewportSize({ width: 1024, height: 768 })
+  const replayed = await comparisonPanels(page)
+  expect(replayed.baseline!.masks).toEqual(['acquired-field'])
+  expect(replayed.baseline!.caption).toBe(cropped.baseline!.caption)
+  expect(replayed.baseline!.zoom).toBe('1')
+  await page.setViewportSize({ width: 1440, height: 1050 })
+  await expectNoStoredResponses(page)
+})
+
+test('report 4.5: the image source that is already selected is styled as selected, with no click', async ({
+  page,
+}, info) => {
+  // PDF p.34. "Acquired projections" carried aria-pressed="true" on load but the dock had no rule
+  // for it, so all three buttons looked identical until another was clicked.
+  await openSection(page, 'dts-interpretation')
+  await expect(primary(page)).toBeEnabled({ timeout: 60000 })
+  await primary(page).click()
+  await expect(page.locator('[data-stage]')).toHaveAttribute(
+    'data-stage',
+    'dts-interpretation:prior',
+  )
+  const source = page.locator('fieldset', { has: page.getByText('Image source', { exact: true }) })
+  const selected = source.getByRole('button', { name: 'Acquired projections', exact: true })
+  await expect(selected).toHaveAttribute('aria-pressed', 'true', { timeout: 60000 })
+  const styles = await source.evaluate((node) =>
+    Array.from(node.querySelectorAll('button')).map((button) => {
+      const computed = getComputedStyle(button)
+      return {
+        label: button.textContent?.trim(),
+        pressed: button.getAttribute('aria-pressed'),
+        background: computed.backgroundColor,
+        borderColor: computed.borderTopColor,
+        fontWeight: computed.fontWeight,
+      }
+    }),
+  )
+  const [pressed, ...others] = styles
+  expect(pressed.pressed).toBe('true')
+  for (const other of others) {
+    expect(other.pressed).toBe('false')
+    expect(other.background).not.toBe(pressed.background)
+    expect(other.borderColor).not.toBe(pressed.borderColor)
+  }
+  await capture(page, info, 'fellow-45-image-source.png')
+})

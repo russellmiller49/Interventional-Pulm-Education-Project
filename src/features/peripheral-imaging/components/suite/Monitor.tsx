@@ -7,12 +7,22 @@ import { ProjectionOverlays } from './ProjectionOverlays'
 import type { ImagingSuitePaneProps } from './types'
 import styles from './suite-scene.module.css'
 
+/**
+ * A frozen acquisition: the pixels that were read out, the overlays that describe the geometry they
+ * were acquired at, and that acquisition's own metadata.
+ *
+ * It deliberately carries no display state. Report 2.12 (fellow walkthrough, PDF p.20/p.26) was the
+ * consequence of it carrying some: the stored frame kept the electronic crop and the display zoom
+ * that happened to be applied when it was captured, so the "Baseline acquisition A" panel and the
+ * current panel showed the same cropped picture and the authored comparison showed nothing. An
+ * electronic crop and a display zoom are operations on a stored frame, not part of one — which is
+ * exactly what this section teaches — so they stay on the current view.
+ */
 export interface StoredProjection {
   image: string
   overlay: ReactNode
+  /** The acquired (collimated) field, which is acquisition, not display. */
   mask: ReactNode
-  displayMask: ReactNode
-  zoom: number
   label: string
   id: string
   state: {
@@ -92,8 +102,6 @@ export function Monitor({
       image: engine.current.snapshot().toDataURL(),
       overlay: currentOverlay,
       mask,
-      displayMask,
-      zoom,
       label,
     }
     if (viewMemory) {
@@ -138,21 +146,23 @@ export function Monitor({
           >
             Save baseline image
           </button>
-          <span>Freeze this image, then change one control.</span>
+          <span>
+            Freeze this acquisition, then change one control. An electronic crop and display zoom
+            change the current view only.
+          </span>
         </div>
       )}
       {comparison && baseline && (
         <figure data-baseline-image data-acquisition-id={baseline.id}>
           <figcaption>Baseline acquisition A · {baseline.label}</figcaption>
           <div className={styles.monitor} role="img" aria-label="Saved baseline projection">
-            <div className={styles.monitorImage} style={{ transform: `scale(${baseline.zoom})` }}>
+            <div className={styles.monitorImage} data-monitor-zoom={1}>
               {/* A local canvas capture, retained with its own overlay and acquisition state. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={baseline.image} alt="" />
               {baseline.overlay}
               {baseline.mask}
             </div>
-            {baseline.displayMask}
           </div>
         </figure>
       )}

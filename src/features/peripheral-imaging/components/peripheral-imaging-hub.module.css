@@ -32,7 +32,30 @@
   flex: none;
 }
 
+/* Report O1 (fellow walkthrough, PDF p.4): a returning learner's only prominent control was
+   Resume at the section they left, and reaching the first section took three clicks through the
+   outline. This is a second, quieter door to the same open course — navigation, not a reset. */
+.startFirst {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0.65rem 1.1rem;
+  border: 1px solid var(--lm-v2-border, #cbd5e1);
+  border-radius: 0.9rem;
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.startFirst small {
+  font-weight: 500;
+  color: var(--lm-v2-muted, #64748b);
+}
+
 .continue:focus-visible,
+.startFirst:focus-visible,
 .chip:focus-visible,
 .groupSummary:focus-visible {
   outline: 3px solid var(--lm-v2-accent, #0369a1);
