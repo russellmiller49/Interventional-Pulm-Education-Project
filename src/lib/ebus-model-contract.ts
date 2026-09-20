@@ -252,10 +252,26 @@ export function modelReducer(state: ModelState, a: ModelAction): ModelState {
         'Resistance is reported by the operator. Choose the next action; this model does not calculate force.'
     } else if (a.type === 'stop') {
       s.stopped = true
-      if (s.plane !== 0 && !needleGeometry(s).tipVisible) s.steps = add(s.steps, 'lost-tip-stop')
+      const lostTip = s.plane !== 0 && !needleGeometry(s).tipVisible
+      if (lostTip) s.steps = add(s.steps, 'lost-tip-stop')
       if (s.resistance) s.steps = add(s.steps, 'resistance-stop')
+      /*
+       * The stop that follows a plane change is not the stop that follows resistance, and the
+       * model already distinguishes them: it sets `plane` and `resistance` from two different
+       * actions and records two different steps. The notice did not — every stop read "do not
+       * overcome resistance by adding force", including a stop taken because the tip had left
+       * the imaging plane, where no resistance had been reported at all (EBUS-PRE-REVIEW-01,
+       * L21-4). Each state now gets the reason already authored for it: the plane-change wording
+       * from the `lost` action and the lesson's "stop movement and regain a reliable view", and
+       * the resistance wording unchanged. Both together when both are true. The safety
+       * predicates, the recorded steps and the block on advancing are untouched.
+       */
       s.notice =
-        'Advancement stopped. Reassess the image and assembly with the supervising operator; do not overcome resistance by adding force.'
+        lostTip && s.resistance
+          ? 'Advancement stopped with the tip out of the imaging plane and resistance reported. Restore a reliable view of the tip and reassess the assembly with the supervising operator; do not overcome resistance by adding force.'
+          : lostTip
+            ? 'Advancement stopped. The tip is not identified in the imaging plane: restore the window and regain a reliable view of the tip with the supervising operator before any further movement.'
+            : 'Advancement stopped. Reassess the image and assembly with the supervising operator; do not overcome resistance by adding force.'
     } else if (a.type === 'restore') {
       if (!s.stopped)
         return { ...s, notice: 'Stop advancement before restoring this demonstration window.' }

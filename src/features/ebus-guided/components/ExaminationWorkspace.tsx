@@ -324,7 +324,21 @@ export function ExaminationWorkspace({
           <>
             <p>{caseData.complications}</p>
             {caseData.nodes.map((node) => {
-              const entry = draft.nodes[node.id] ?? emptyNodeRecord()
+              const stored = draft.nodes[node.id]
+              const entry = stored ?? emptyNodeRecord()
+              /*
+               * Whether this node has been touched at all in any session (L26-3).
+               *
+               * The empty record's "Not examined" and "Not recorded" are real declarations about
+               * a real patient, and they were what an untouched select showed, so a learner could
+               * submit an examination history nobody had entered. A node with no stored record is
+               * not a node recorded as unexamined, and the two now look different: the selects
+               * open on "Choose…" until something is chosen, and a stored draft — including a
+               * legacy one that really does say "Not examined" — is shown exactly as it was
+               * saved. Nothing is written by rendering, no value is overwritten, and the check
+               * still requires the supplied history, so an untouched node fails it as before.
+               */
+              const untouched = !stored
               return (
                 <section
                   key={node.id}
@@ -351,8 +365,9 @@ export function ExaminationWorkspace({
                         {node.label}: visualization
                         <select
                           aria-label={node.label + ': visualization'}
-                          value={entry.visualization}
-                          onChange={(event) =>
+                          value={untouched ? '' : entry.visualization}
+                          onChange={(event) => {
+                            if (!event.target.value) return
                             update({
                               ...draft,
                               nodes: {
@@ -363,8 +378,11 @@ export function ExaminationWorkspace({
                                 },
                               },
                             })
-                          }
+                          }}
                         >
+                          {untouched ? (
+                            <option value="">Choose the supplied visualization</option>
+                          ) : null}
                           {[
                             ['not-examined', 'Not examined'],
                             ['not-visualized', 'Not visualized'],
@@ -382,8 +400,9 @@ export function ExaminationWorkspace({
                         {node.label}: sampling
                         <select
                           aria-label={node.label + ': sampling'}
-                          value={entry.sampling}
-                          onChange={(event) =>
+                          value={untouched ? '' : entry.sampling}
+                          onChange={(event) => {
+                            if (!event.target.value) return
                             update({
                               ...draft,
                               nodes: {
@@ -394,13 +413,26 @@ export function ExaminationWorkspace({
                                 },
                               },
                             })
-                          }
+                          }}
                         >
+                          {untouched ? <option value="">Choose the supplied history</option> : null}
                           <option value="unrecorded">Not recorded</option>
                           <option value="sampled">Sampled — supplied history</option>
                           <option value="not-sampled">Not sampled — supplied history</option>
                         </select>
                       </label>
+                      {/*
+                       * The stated reason appears only under "Not sampled", which the walkthrough
+                       * found through an error message rather than through the form (L26-3). It
+                       * stays conditional, because a reason not to sample has no meaning under
+                       * the other answers, but the form now says it is there before it appears.
+                       */}
+                      {entry.sampling !== 'not-sampled' && (
+                        <p className={styles.muted}>
+                          Choosing “Not sampled — supplied history” adds one more field here: the
+                          stated reason sampling was not performed.
+                        </p>
+                      )}
                       {fieldError(node.id + '-sampling')}
                       {entry.sampling === 'not-sampled' && (
                         <>
