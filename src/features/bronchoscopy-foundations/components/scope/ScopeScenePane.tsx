@@ -22,6 +22,29 @@ export function ScopeScenePane(props: ScopePaneProps) {
   return <ScenePane key={props.view.mode} {...props} />
 }
 
+/**
+ * Why the scripted scene is standing still, and what moves it on.
+ *
+ * Reduced motion, an explicit Step control and the schematic view all hold the scene's clock. The
+ * phase the goals read is the phase on the readouts, so saying the clock is held is the honest
+ * alternative to animating it anyway.
+ */
+const PAUSED_SCENE_NOTE =
+  'The scripted scene is held while motion is reduced. Step one second moves it on, one second at a time.'
+
+function ScopeDockWithClock(props: ScopePaneProps & { needsStep: boolean }) {
+  return (
+    <>
+      {props.needsStep ? (
+        <p className={styles.scriptClock} role="status" data-scripted-scene="held">
+          {PAUSED_SCENE_NOTE}
+        </p>
+      ) : null}
+      <ScopeDock {...props} />
+    </>
+  )
+}
+
 function ScenePane(props: ScopePaneProps) {
   const root = useRef<HTMLDivElement>(null)
   const playbackRoot = useRef<HTMLDivElement>(null)
@@ -80,7 +103,7 @@ function ScenePane(props: ScopePaneProps) {
           <ScopePaneFrame
             {...props}
             renderState="fallback"
-            dock={<ScopeDock {...props} needsStep={playback.needsStep} />}
+            dock={<ScopeDockWithClock {...props} needsStep={playback.needsStep} />}
           />
         </div>
       ) : (
@@ -147,7 +170,13 @@ function ScenePane(props: ScopePaneProps) {
               </div>
             </>
           }
-          dock={<ScopeDock {...props} controlsEnabled={enabled} needsStep={playback.needsStep} />}
+          dock={
+            <ScopeDockWithClock
+              {...props}
+              controlsEnabled={enabled}
+              needsStep={playback.needsStep}
+            />
+          }
         />
       )}
       {props.view.controls.length > 0 ? (

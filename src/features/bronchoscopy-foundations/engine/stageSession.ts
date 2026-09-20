@@ -5,6 +5,7 @@ import type { ScopeCase } from './scope/scopeCase'
 import { scopeGoalsMet } from './scope/scopeGoalEvaluation'
 import { createScopeState, reduceScope } from './scope/scopeReducer'
 import type { ScopeRuntimeState } from './scope/scopeRuntime'
+import { isEnvironmentClockCommand } from './scope/scopeScripts'
 
 /**
  * Everything a learner has answered or done on a section, for this session only.
@@ -21,6 +22,12 @@ import type { ScopeRuntimeState } from './scope/scopeRuntime'
  * The scope runs through the pane engine's pure reducer, one state per step that shows a scope
  * view (an Act and its Observe have different starts). Every learner action reaches the engine as
  * a command with its input mode.
+ *
+ * Four things stay apart on an authored step (BF-PRE-REVIEW-01): a demonstration's playback, which
+ * runs on its own state and never reaches this session; the scripted scene's own clock, which is
+ * the one `scripted` command an authored step accepts (`isEnvironmentClockCommand`) because a
+ * breathing patient and a waiting assistant do not wait for the learner; the learner's own
+ * commands, which alone record an input mode; and `performedIds`, which stays historical.
  */
 export interface LedgerCommitment {
   /** Row id → the milligrams the learner entered. */
@@ -271,10 +278,11 @@ export function bronchStageReducer(lesson: BronchStageLesson) {
         return { ...session, scope: { ...session.scope, [action.stepId]: state } }
       }
       case 'SCOPE_COMMAND': {
+        const authored = lesson.steps.find((step) => step.id === action.stepId)
         if (
           action.inputMode === 'scripted' &&
-          (lesson.steps.find((step) => step.id === action.stepId)?.learn ||
-            lesson.steps.find((step) => step.id === action.stepId)?.course)
+          (authored?.learn || authored?.course) &&
+          !isEnvironmentClockCommand(action.view, action.command)
         )
           return session
         const current = session.scope[action.stepId]

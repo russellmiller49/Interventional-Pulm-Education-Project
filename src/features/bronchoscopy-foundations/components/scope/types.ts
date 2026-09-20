@@ -369,6 +369,8 @@ export type ScopeMetricId =
   | 'annularAreaMm2'
   | 'cordsState'
   | 'accessoryState'
+  /** What the scripted hold's own clock has left to run, from the state the goal reads. */
+  | 'holdRemaining'
   | 'ledgerSummary'
   | 'inputMode'
   | 'assistsUsed'
@@ -386,6 +388,7 @@ export const SCOPE_METRIC_IDS: readonly ScopeMetricId[] = [
   'annularAreaMm2',
   'cordsState',
   'accessoryState',
+  'holdRemaining',
   'ledgerSummary',
   'inputMode',
   'assistsUsed',
