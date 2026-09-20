@@ -45,12 +45,39 @@ const FOCUS_RING_GAP = 8
  */
 const MAX_PINNED_SHARE = 0.35
 
+/**
+ * The most of the viewport the reservation may take, whatever is measured above the lesson.
+ *
+ * The site header is not this module's and grows with the text: measured at 1246x1021 it is 81
+ * css px at normal text, 213 at 200%, and past that it wraps into something taller than the
+ * viewport. A `scroll-padding-top` at or beyond the scrollport's own height stops the browser
+ * being able to scroll anything into the remaining strip at all, so the reservation stops there
+ * and the oversized site chrome is reported rather than worked around here.
+ */
+const MAX_CLEARANCE_SHARE = 0.5
+
 /** The rect of a node that is actually painted over the page, or null when it scrolls away. */
 function pinnedRect(node: HTMLElement | null): DOMRect | null {
   if (!node) return null
   const { position } = getComputedStyle(node)
   if (position !== 'sticky' && position !== 'fixed') return null
   return node.getBoundingClientRect()
+}
+
+/**
+ * How far down a pinned node reaches once it is actually pinned, which is what the reservation
+ * has to cover. A sticky node measured before the page has scrolled sits wherever the flow left
+ * it, lower than the offset it will settle at, and reserving that larger number leaves a band of
+ * empty page above every heading the browser scrolls to. Its resting place is its own `top`
+ * offset plus its height; a fixed node is already there.
+ */
+function pinnedBottom(node: HTMLElement | null): number {
+  const rect = pinnedRect(node)
+  if (!rect || !node) return 0
+  const style = getComputedStyle(node)
+  if (style.position !== 'sticky') return rect.bottom
+  const offset = Number.parseFloat(style.top)
+  return Number.isFinite(offset) ? offset + rect.height : rect.bottom
 }
 
 /**
@@ -70,7 +97,7 @@ function zoomFactor(root: HTMLElement): number {
  * the module.
  */
 function topClearance(chrome: HTMLElement | null, anchor: HTMLElement | null): number {
-  let covered = pinnedRect(chrome)?.bottom ?? 0
+  let covered = pinnedBottom(chrome)
   for (let node = anchor; node; node = node.parentElement) {
     for (
       let earlier = node.previousElementSibling;
@@ -79,7 +106,9 @@ function topClearance(chrome: HTMLElement | null, anchor: HTMLElement | null): n
     ) {
       if (!(earlier instanceof HTMLElement)) continue
       const rect = pinnedRect(earlier)
-      if (rect && rect.top <= 1 && rect.bottom > covered) covered = rect.bottom
+      if (!rect || rect.top > 1) continue
+      const bottom = pinnedBottom(earlier)
+      if (bottom > covered) covered = bottom
     }
   }
   return Math.max(0, covered)
@@ -100,8 +129,9 @@ export function useLessonChromeClearance(
       const fits = viewport <= 0 || height <= viewport * MAX_PINNED_SHARE
       flowNode?.setAttribute(PINNED_ATTRIBUTE, String(fits))
       const zoom = zoomFactor(root)
-      const top = (topClearance(chromeNode, chromeNode ?? flowNode) + FOCUS_RING_GAP) / zoom
-      root.style.setProperty(TOP_PROPERTY, `${top}px`)
+      const measured = topClearance(chromeNode, chromeNode ?? flowNode) + FOCUS_RING_GAP
+      const capped = viewport > 0 ? Math.min(measured, viewport * MAX_CLEARANCE_SHARE) : measured
+      root.style.setProperty(TOP_PROPERTY, `${capped / zoom}px`)
     }
     // The chrome re-wraps when the window, the text size or the lesson's own storage notice
     // changes. Where ResizeObserver is missing the chrome is still measured once, just not

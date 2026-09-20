@@ -13,6 +13,7 @@ import { QuestionExplanation } from '../components/QuestionExplanation'
 import { useLessonChromeClearance } from '../components/useLessonChromeClearance'
 import { FINAL_CASES, PRACTICE_CASES } from '../content/cases'
 import { LESSONS } from '../content/curriculum'
+import { activitiesForLesson } from '../content/stage'
 import { taskErrors, newExamination } from '../engine/examination'
 import { MODEL_WINDOW_CASE, EXAMINATION_CASE } from '../content/examination-cases'
 import { initialModelState, modelReducer, type NeedleState } from '@/lib/ebus-model-contract'
@@ -277,6 +278,17 @@ describe('evidence identity', () => {
     expect(document.querySelector(`[data-mock-decision-image="${station}"]`)).not.toBeNull()
   })
 
+  it('corrects the held-activity instruction on a check that is a described scenario', () => {
+    // The first check on this lesson's held activity is the authored air-gap scenario (L5-1):
+    // it declares no retained-acquisition policy, so it is not a reading of whatever the learner
+    // holds. Driven with a real acquisition in the browser; here the wording rule is pinned.
+    const lesson = LESSONS.find((entry) => entry.id === 'contact-cutaway-model')!
+    const held = activitiesForLesson(lesson).find((activity) => activity.image === 'held')!
+    expect(held.instruction).toContain('This is the image you acquired')
+    expect(lesson.question.imagePolicy).not.toBe('retained-acquisition')
+    expect(lesson.observation.imagePolicy).toBe('retained-acquisition')
+  })
+
   it('names what the pane beside the task is, and never calls a reference an acquisition', () => {
     const lesson = LESSONS.find((entry) => entry.id === 'ct-map')!
     render(<LessonHost lesson={lesson} />)
@@ -295,18 +307,19 @@ describe('evidence identity', () => {
     )
   })
 
-  it('does not present a described scenario as a reading of a held image', () => {
+  it('does not claim a held image when the acquisition was skipped', () => {
     const lesson = LESSONS.find((entry) => entry.id === 'contact-cutaway-model')!
     render(<LessonHost lesson={lesson} />)
     fireEvent.click(document.querySelector('[data-now-primary]')!) // the acquisition
     fireEvent.click(screen.getByRole('button', { name: 'Continue without an image' }))
-    // The first check on the held activity is the authored air-gap scenario (L5-1): it carries no
-    // retained-acquisition policy, and with no image held the pane says so rather than implying one.
     expect(document.querySelector('[data-evidence-identity]')).toHaveAttribute(
       'data-evidence-identity',
       'held-missing',
     )
-    expect(document.querySelector('[data-check-evidence="held"]')).toBeNull()
+    // Nothing on this task says the image beside it is the learner's.
+    expect(document.querySelector('[data-task-instruction]')?.textContent).not.toContain(
+      'This is the image you acquired',
+    )
   })
 })
 
@@ -425,6 +438,18 @@ describe('the examination record', () => {
     expect(within(visualization).getByText('Choose the supplied visualization')).toBeVisible()
     // And the conditional field is announced before it exists.
     expect(screen.getAllByText(/adds one more field here/)[0]).toBeVisible()
+
+    // Entering one field does not silently declare the other.
+    fireEvent.change(visualization, { target: { value: 'described' } })
+    expect((screen.getByLabelText(node.label + ': visualization') as HTMLSelectElement).value).toBe(
+      'described',
+    )
+    expect((screen.getByLabelText(node.label + ': sampling') as HTMLSelectElement).value).toBe('')
+    // Nor any other node's.
+    const other = EXAMINATION_CASE.nodes[1]
+    expect(
+      (screen.getByLabelText(other.label + ': visualization') as HTMLSelectElement).value,
+    ).toBe('')
   })
 
   it('keeps a stored draft exactly as it was saved', () => {
@@ -610,10 +635,13 @@ describe('the clearance measurement', () => {
   function page({
     siteHeaderBottom,
     chromeHeight,
+    chromeFlowTop,
     position = 'sticky',
   }: {
     siteHeaderBottom: number
     chromeHeight: number
+    /** Where the unscrolled page leaves the chrome, when that is not where it sticks. */
+    chromeFlowTop?: number
     position?: string
   }) {
     const siteHeader = document.createElement('header')
@@ -624,15 +652,24 @@ describe('the clearance measurement', () => {
     const rect = (height: number, top: number) =>
       ({ top, bottom: top + height, height, left: 0, right: 0, width: 0, x: 0, y: top }) as DOMRect
     siteHeader.getBoundingClientRect = () => rect(siteHeaderBottom, 0)
-    chrome.getBoundingClientRect = () => rect(chromeHeight, siteHeaderBottom)
+    chrome.getBoundingClientRect = () => rect(chromeHeight, chromeFlowTop ?? siteHeaderBottom)
     const positions = new Map<Element, string>([
       [siteHeader, 'sticky'],
       [chrome, position],
+    ])
+    // Where each pinned node settles once it is pinned: the site header at the top of the
+    // viewport, this chrome directly below it. The rects above already put them there, so the
+    // measurement reads the same number from either — which is the point of the flow-position
+    // case below, where the chrome has not settled yet.
+    const tops = new Map<Element, string>([
+      [siteHeader, '0px'],
+      [chrome, `${siteHeaderBottom}px`],
     ])
     jest.spyOn(window, 'getComputedStyle').mockImplementation(
       (node: Element) =>
         ({
           position: positions.get(node) ?? 'static',
+          top: tops.get(node) ?? 'auto',
           zoom: '1',
         }) as unknown as CSSStyleDeclaration,
     )
@@ -646,6 +683,13 @@ describe('the clearance measurement', () => {
   it('reserves the site header, this chrome and room for the focus ring', () => {
     Object.defineProperty(window, 'innerHeight', { value: 1021, configurable: true })
     page({ siteHeaderBottom: 81, chromeHeight: 96 })
+    expect(document.documentElement.style.getPropertyValue('--ebus-focus-clear-top')).toBe('185px')
+  })
+
+  it('reserves where a sticky chrome settles, not where the unscrolled page leaves it', () => {
+    Object.defineProperty(window, 'innerHeight', { value: 1021, configurable: true })
+    // The page has not scrolled, so the chrome is still 63 px below where it will stick.
+    page({ siteHeaderBottom: 81, chromeHeight: 96, chromeFlowTop: 144 })
     expect(document.documentElement.style.getPropertyValue('--ebus-focus-clear-top')).toBe('185px')
   })
 
@@ -665,6 +709,15 @@ describe('the clearance measurement', () => {
     Object.defineProperty(window, 'innerHeight', { value: 844, configurable: true })
     page({ siteHeaderBottom: 81, chromeHeight: 96, position: 'static' })
     expect(document.documentElement.style.getPropertyValue('--ebus-focus-clear-top')).toBe('89px')
+  })
+
+  it('never reserves so much that nothing can be scrolled into what is left', () => {
+    Object.defineProperty(window, 'innerHeight', { value: 1021, configurable: true })
+    // A site header that has wrapped to taller than the viewport, measured at 350% text.
+    page({ siteHeaderBottom: 1037, chromeHeight: 486 })
+    expect(document.documentElement.style.getPropertyValue('--ebus-focus-clear-top')).toBe(
+      '510.5px',
+    )
   })
 
   it('leaves the page as it found it when the lesson unmounts', () => {

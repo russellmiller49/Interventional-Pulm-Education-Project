@@ -319,7 +319,19 @@ function LessonSession({
   const instruction =
     current.interaction === 'acquire'
       ? (runtimeLab?.instruction ?? current.instruction)
-      : current.instruction
+      : /*
+         * A held activity's authored instruction is "This is the image you acquired. Interpret
+         * it". It is not true of a check that describes a situation in words rather than reading
+         * the frame, and it is not true at all when the acquisition was skipped and there is no
+         * image of the learner's to interpret (EBUS-PRE-REVIEW-01, L5-1, L3-8, L11-5). The
+         * evidence and the checks are unchanged; only the sentence that mis-described their
+         * relationship is corrected.
+         */
+        evidenceKind === 'held-missing'
+        ? 'No image of yours is held for this task. The checks below stay open: go back to the acquisition to hold one, read the explanation, or continue.'
+        : scenarioCheckBesideHeldImage
+          ? 'The image you acquired stays beside this check. This one describes a situation in words, so answer it from the description.'
+          : current.instruction
   const unavailableReason = !question
     ? undefined
     : !missingImage
@@ -493,7 +505,12 @@ function LessonSession({
             <h2 id="ebus-task-title" ref={heading} tabIndex={-1}>
               {finished ? 'Lesson finished' : current.title}
             </h2>
-            <p>
+            <p
+              data-task-instruction
+              data-instruction-evidence={
+                !finished && !reviewId && scenarioCheckBesideHeldImage ? 'scenario' : undefined
+              }
+            >
               {finished
                 ? 'This lesson is marked as reviewed in this browser. That records where you have been, not what you answered and not procedural competence.'
                 : reviewId
@@ -676,17 +693,6 @@ function LessonSession({
                     />
                   )}
                 </>
-              )}
-              {!finished && scenarioCheckBesideHeldImage && (
-                <p className={styles.muted} data-check-evidence="scenario">
-                  This check describes a situation in words. It is not a reading of the image you
-                  are holding, which stays beside it for comparison.
-                </p>
-              )}
-              {!finished && question && checkUsesHeldImage && !missingImage && (
-                <p className={styles.muted} data-check-evidence="held">
-                  This check is about the image you are holding.
-                </p>
               )}
               {!finished && question && (
                 <QuestionBody
