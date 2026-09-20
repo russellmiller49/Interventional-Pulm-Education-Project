@@ -27,7 +27,12 @@ export function IntegratedCasesPage({
   const [active, setActive] = useState<string | null>(known ? caseId! : null)
   const item = FINAL_CASES.find((c) => c.id === active)
   return (
-    <EbusModuleFrame locale={locale} active="Cases">
+    <EbusModuleFrame
+      locale={locale}
+      active="Cases"
+      // Selecting Cases while a case is open returns to the case list (PR-7).
+      onReselectSection={active ? () => setActive(null) : undefined}
+    >
       <div className={styles.page}>
         {item ? (
           <CasePlayer key={item.id} item={item} kind="integrated" onExit={() => setActive(null)} />

@@ -39,7 +39,12 @@ export function PracticePage({ locale = 'en' }: { locale?: string }) {
   }
   const acquired = observation.frameReady && observation.actionCount >= 1
   return (
-    <EbusModuleFrame locale={locale} active="Practice">
+    <EbusModuleFrame
+      locale={locale}
+      active="Practice"
+      // Selecting Practice while a case or a lab is open returns to the practice list (PR-7).
+      onReselectSection={active ? () => choose(null) : undefined}
+    >
       <div className={styles.page}>
         {item ? (
           <CasePlayer
@@ -151,16 +156,22 @@ export function PracticePage({ locale = 'en' }: { locale?: string }) {
             </section>
             <section className={styles.card}>
               <h2>Explore anatomy and acquisition</h2>
+              {/*
+               * These two leave the guided course for the separate, older EBUS tools, which the
+               * link text did not say (EBUS-PRE-REVIEW-01, PR-5). They are free exploration: no
+               * lesson, no check and no course record.
+               */}
               <p>
-                Use the existing unrestricted EBUS tools for free exploration. Return here for the
-                guided course activities.
+                These open the separate EBUS training tools, outside this course. They are free
+                exploration — no lesson, no checks and nothing recorded here. Use the browser Back
+                button or the course tabs above to return.
               </p>
               <div className={styles.actions}>
                 <Link className={styles.secondary} href="/ebus-training/simulator">
-                  Open full EBUS simulator
+                  Open the full EBUS simulator (separate tool)
                 </Link>
                 <Link className={styles.secondary} href="/ebus-training/knobology">
-                  Open full knobology tools
+                  Open the full knobology tools (separate tool)
                 </Link>
               </div>
             </section>
