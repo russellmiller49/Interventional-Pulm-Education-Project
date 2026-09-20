@@ -35,7 +35,11 @@ import {
   type ImagingStageStep,
 } from '../../content/stageLessons'
 import { imagingStageSources } from '../../content/stageSources'
-import { fixedExampleIdentity, fixedExampleValues } from '../../content/teachingExamples'
+import {
+  fixedExampleEvidence,
+  fixedExampleIdentity,
+  fixedExampleValues,
+} from '../../content/teachingExamples'
 import { labGoalMet, type LabGoal } from '../../engine/labGoalEvaluation'
 import {
   formatReadout,
@@ -867,8 +871,17 @@ function ImagingStageSession({
     ['sampling', 'dts', 'dts-prior'].includes(suiteView.mode)
   const controlsEnabled =
     (!checkPending || browsingIndependent) && !beforePrediction && !lookingBack
+  const exampleEvidence =
+    interaction.kind === 'prediction'
+      ? fixedExampleEvidence(lesson.sectionId, interaction.round)
+      : undefined
+  // A pending check's image is held. What the banner may claim about it depends on this exact
+  // question and round: three checks put a written clinical scenario beside the section's teaching
+  // model, which does not represent it, and must not say the two match.
   const lockedReason = checkPending
-    ? 'This example stays fixed so the question and the image match.'
+    ? exampleEvidence === 'illustrative-model'
+      ? 'This image stays fixed while you read it. It is this section’s teaching model of the equipment, not a picture of the situation in the question — answer from the written scenario.'
+      : 'This example stays fixed so the question and the image match.'
     : beforePrediction
       ? 'The worked demonstration uses separate state. The guided task starts from its own baseline.'
       : undefined
@@ -913,7 +926,11 @@ function ImagingStageSession({
         onRepresentationReady={onRepresentationReady}
       />
     ) : activity.visual === 'case' ? null : (
-      <div className={styles.demonstration} data-authored-example={exampleIdentity}>
+      <div
+        className={styles.demonstration}
+        data-authored-example={exampleIdentity}
+        data-example-evidence={exampleEvidence}
+      >
         {panelQuestion ? (
           <IndependentImagePanels
             sectionId={lesson.sectionId}

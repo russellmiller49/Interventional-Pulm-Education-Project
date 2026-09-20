@@ -9,6 +9,10 @@ import {
 } from '../content/routes'
 import { imagingSectionSpec } from '../content/sectionSpecs'
 import { imagingStageLesson } from '../content/stageLessons'
+import {
+  fixedExampleEvidence,
+  illustrativeOnlyExampleIdentities,
+} from '../content/teachingExamples'
 import { LESSONS } from '../data/lessons'
 
 /*
@@ -17,19 +21,43 @@ import { LESSONS } from '../data/lessons'
  */
 
 describe('report 1.2 — a prompt names the evidence the screen actually carries', () => {
-  it('no check tells the learner to inspect an image on a screen that renders none', () => {
+  it('every check names the evidence its own screen carries, and no other', () => {
     for (const sectionId of peripheralImagingSectionIds) {
       const lesson = imagingStageLesson(sectionId)
       for (const step of lesson.steps) {
         if (step.interaction.kind !== 'prediction') continue
+        const { round } = step.interaction
         if (step.activity.visual === 'case') {
+          // No visual at all: a written scenario, and it says so.
           expect(step.instruction).not.toMatch(/inspect the image/i)
           expect(step.instruction).toMatch(/read the scenario|stated evidence/i)
+        } else if (fixedExampleEvidence(sectionId, round) === 'illustrative-model') {
+          // A visual the question cannot be read off: it is named as a teaching model, and the
+          // learner is sent to the written scenario.
+          expect(step.instruction).not.toMatch(/inspect the image/i)
+          expect(step.instruction).toMatch(/answer from the written scenario/i)
+          expect(step.instruction).toMatch(/teaching model/i)
         } else {
+          // A visual that is the evidence keeps its image-based instruction.
           expect(step.instruction).toMatch(/inspect the image|stated evidence/i)
         }
       }
     }
+  })
+
+  it('exactly three checks are declared illustrative, and nothing else is relabelled', () => {
+    // The declaration is per question and round. Holding the list here means a fourth check cannot
+    // quietly lose its image-based framing, and the transfer rounds cannot be caught by it.
+    expect(illustrativeOnlyExampleIdentities()).toEqual([
+      'current-anatomy:example:0',
+      'changing-anatomy:example:0',
+      'staff-protection:example:0',
+    ])
+    for (const sectionId of peripheralImagingSectionIds)
+      expect(fixedExampleEvidence(sectionId, 1)).toBe('depicts-the-question')
+    // The two checks whose image really is the evidence keep it.
+    expect(fixedExampleEvidence('chain-walk', 0)).toBe('depicts-the-question')
+    expect(fixedExampleEvidence('cbct-acquisition', 0)).toBe('depicts-the-question')
   })
 
   it('the five text-only checks read as scenarios', () => {

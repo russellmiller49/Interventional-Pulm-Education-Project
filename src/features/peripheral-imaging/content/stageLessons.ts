@@ -30,6 +30,7 @@ import {
 import { imagingSectionSpec, type ImagingSectionSpec } from './sectionSpecs'
 import { imagingSort, type ImagingSort } from './sorts'
 import { imagingSectionItems } from './stageItems'
+import { fixedExampleEvidence } from './teachingExamples'
 import { suiteViewForStep } from './suiteViews'
 
 /**
@@ -130,6 +131,24 @@ function firstSentence(text: string): string {
   return (match ? match[0] : text).trim()
 }
 
+/**
+ * What a check asks the learner to read, decided by what that check actually puts on screen.
+ *
+ * Transfer rounds carry no visual at all and keep their own wording. A check with no visual reads
+ * its scenario. A check whose image is declared `illustrative-model` for this exact section and
+ * round says so and sends the learner to the written scenario; every other check keeps the
+ * image-based instruction, because its image is the evidence.
+ */
+function checkInstruction(activity: ImagingLearningActivity): string {
+  if (activity.task === 'transfer')
+    return 'Use the stated evidence in this different situation. Select an answer, then review the feedback.'
+  if (activity.visual === 'case')
+    return 'Read the scenario. Choose what the evidence supports and what remains uncertain.'
+  if (fixedExampleEvidence(activity.sectionId, 0) === 'illustrative-model')
+    return 'Answer from the written scenario below. The image beside it is this section’s teaching model of the equipment, not a picture of the situation described.'
+  return 'Inspect the image and acquisition context. Choose what the evidence supports and what remains uncertain.'
+}
+
 function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
   const lesson = imagingLesson(sectionId)
   const spec = imagingSectionSpec(sectionId)
@@ -164,12 +183,12 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
           // image-reading objective into a reading one: each of these stems already states its
           // findings in words. Items that genuinely depend on an image are batch 04's evidence
           // matrix (PR1/IC3), not a reworded prompt.
-          instruction:
-            activity.task === 'transfer'
-              ? 'Use the stated evidence in this different situation. Select an answer, then review the feedback.'
-              : activity.visual === 'case'
-                ? 'Read the scenario. Choose what the evidence supports and what remains uncertain.'
-                : 'Inspect the image and acquisition context. Choose what the evidence supports and what remains uncertain.',
+          //
+          // A check that does carry a visual says which of the two it is, by the identity of this
+          // exact question and round: an image the answer can be read off, or the section's
+          // authored equipment model beside a written scenario it does not represent. Only the
+          // second is relabelled, and only for the three declared identities.
+          instruction: checkInstruction(activity),
           actionLabel: 'Check my interpretation',
           interaction: prediction(
             activity.task === 'transfer' ? items.transfer : items.prediction,

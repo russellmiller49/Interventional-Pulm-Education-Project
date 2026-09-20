@@ -395,3 +395,49 @@ export function fixedExampleValues(id: ImagingSectionId, round: 0 | 1): LabValue
 export function fixedExampleIdentity(id: ImagingSectionId, round: 0 | 1): string {
   return `${id}:example:${round}`
 }
+
+/**
+ * How a fixed example's image stands in relation to the question printed beside it.
+ *
+ * `depicts-the-question` — the learner can read the answer's evidence off this image: the tool and
+ * the nodule really are superimposed on it, the lateral scout really does show the offset.
+ *
+ * `illustrative-model` — the image is the section's authored equipment model, and the question is a
+ * written clinical scenario the model does not represent. A new dependent opacity, duplicated edges
+ * from motion during a spin and a clinician holding an accessory in the primary beam are all
+ * outside what the registration and scatter models simulate (see each section's `modelBoundary`).
+ * The image is still a fixed, authored, stable picture of the equipment; it is simply not evidence
+ * of the situation described, and the module must not say that it is.
+ */
+export type FixedExampleEvidence = 'depicts-the-question' | 'illustrative-model'
+
+/**
+ * Declared per question, by the identity of the exact check and round — never per section and never
+ * as a blanket rule, so a section's other activities and its transfer round keep their own framing.
+ *
+ * These three are the checks PI-FELLOW-01 recorded as claiming a connection their image does not
+ * support. Each entry names the stem and the model that does not represent it. Removing an entry
+ * restores the image-based framing, so this list is the whole of the claim.
+ */
+const ILLUSTRATIVE_ONLY_EXAMPLES: ReadonlySet<string> = new Set([
+  // "a new dependent opacity now obscures a previously distinct peripheral lesion" — the
+  // registration model translates the CT rigidly and simulates no ventilation or recruitment.
+  'current-anatomy:example:0',
+  // "duplicated tool and lesion edges from motion during the spin" — the same rigid-translation
+  // model simulates no motion artifact.
+  'changing-anatomy:example:0',
+  // "a clinician proposes holding an accessory in the primary beam while wearing a lead glove" —
+  // the scatter scene shows distance, tube side and a barrier, and no such action.
+  'staff-protection:example:0',
+])
+
+export function fixedExampleEvidence(id: ImagingSectionId, round: 0 | 1): FixedExampleEvidence {
+  return ILLUSTRATIVE_ONLY_EXAMPLES.has(fixedExampleIdentity(id, round))
+    ? 'illustrative-model'
+    : 'depicts-the-question'
+}
+
+/** The declared identities, for the tests that hold this list to exactly what it claims. */
+export function illustrativeOnlyExampleIdentities(): readonly string[] {
+  return [...ILLUSTRATIVE_ONLY_EXAMPLES]
+}
