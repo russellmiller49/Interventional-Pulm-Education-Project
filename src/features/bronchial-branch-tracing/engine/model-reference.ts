@@ -27,6 +27,15 @@ export interface DaughterLevel {
   /** Whole slices between the parent point and this daughter's response plane. */
   slices: number
 }
+/**
+ * How a response plane sits relative to the parent point, in words. In-plane divisions such as
+ * RML → RB4/RB5 put both daughters on the parent's own level, where a slice count says nothing.
+ */
+export const levelPhrase = (d: { slices: number; relation: LevelRelation }) =>
+  d.relation === 'same level' || d.slices === 0
+    ? 'on the same level as the parent point'
+    : `${d.slices} ${d.slices === 1 ? 'slice' : 'slices'} ${d.relation} of the parent point`
+
 export interface DivisionLevels {
   parentCode: string
   parentSlice: number

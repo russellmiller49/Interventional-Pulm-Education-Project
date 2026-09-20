@@ -17,6 +17,7 @@ import { junctionFeedbackPacket } from '../content/junction-feedback'
 import {
   continuationReference,
   divisionLevels,
+  levelPhrase,
   routeLevels,
   type ApproachReference,
 } from '../engine/model-reference'
@@ -378,7 +379,7 @@ export function CtCourseFeedback({
           {division.daughters
             .map(
               (d) =>
-                `${d.label} is marked on slice ${d.slice}, ${d.slices} slices ${d.relation}, with the source direction label “${d.direction}”`,
+                `${d.label} is marked on slice ${d.slice}, ${levelPhrase(d)}, with the source direction label “${d.direction}”`,
             )
             .join('; ')}
           .
@@ -427,15 +428,15 @@ export function CtContinuationFeedback({
       <p>
         <strong>Your recorded continuation:</strong>{' '}
         {chosen
-          ? `${chosen.label}, marked on slice ${chosen.slice}, ${chosen.slices} slices ${chosen.relation} of the parent point, source direction label “${chosen.direction}”.`
+          ? `${chosen.label}, marked on slice ${chosen.slice}, ${levelPhrase(chosen)}, source direction label “${chosen.direction}”.`
           : choice === 'unresolved'
             ? 'continuation unresolved. That response stays unresolved; it is not turned into a branch.'
             : 'no continuation was recorded at this division.'}
       </p>
       <p>
         <strong>Model reference route:</strong> it continues through {reference.label}, marked on
-        slice {reference.slice}, {reference.slices} slices {reference.relation} of the parent point,
-        source direction label “{reference.direction}”.
+        slice {reference.slice}, {levelPhrase(reference)}, source direction label “
+        {reference.direction}”.
         {reference.sharedName
           ? ` Both daughters of this division carry the name ${reference.code}: the name does not tell them apart, their levels and directions do.`
           : ''}

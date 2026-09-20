@@ -8,6 +8,7 @@ import {
   approachReference,
   continuationReference,
   divisionLevels,
+  levelPhrase,
   levelRelation,
   routeLevels,
 } from '../engine/model-reference'
@@ -27,6 +28,23 @@ test('level relations read from the source z axis, where higher slices are more 
   expect(levelRelation(416, 422)).toBe('cranial')
   expect(levelRelation(321, 313)).toBe('caudal')
   expect(levelRelation(307, 307)).toBe('same level')
+})
+
+test('an in-plane division is described as being on the parent level, not as "0 slices"', () => {
+  expect(levelPhrase({ slices: 0, relation: 'same level' })).toBe(
+    'on the same level as the parent point',
+  )
+  expect(levelPhrase({ slices: 1, relation: 'cranial' })).toBe(
+    '1 slice cranial of the parent point',
+  )
+  expect(levelPhrase({ slices: 6, relation: 'caudal' })).toBe('6 slices caudal of the parent point')
+  // RML -> RB4/RB5 is the in-plane case the learner actually meets.
+  const inPlane = traceById('middle-lobe-lateral').checkpoints.find((p) => p.id === 'junction-10')!
+  const levels = divisionLevels(inPlane)!
+  expect(levels.daughters.map((d) => d.relation)).toEqual(['same level', 'same level'])
+  const { container } = render(<CtCourseFeedback value="horizontal" checkpoint={inPlane} />)
+  expect(container.textContent).toContain('on the same level as the parent point')
+  expect(container.textContent).not.toMatch(/\d+ slices same level/)
 })
 
 test('division levels and the reference continuation come from the checkpoint itself', () => {

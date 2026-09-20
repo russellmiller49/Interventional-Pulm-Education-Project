@@ -50,26 +50,75 @@ const huAt = (pixels: Uint8Array, x: number, y: number) =>
 const firstDecision = decisions.traces[0].checkpoints.find((p) => p.id === 'junction-1')!.decision!
 const [RMSB, LMSB] = firstDecision.options
 
-test('the first junction response planes are the source export’s own daughter samples, not an authored choice', () => {
+const mmBetween = (a: readonly number[], b: readonly number[]) =>
+  Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
+
+test('the first junction response points are coherent centreline points, and their plane is set by a fixed distance rule rather than by a graph sample', () => {
   expect(firstDecision.nodeId).toBe(1)
   for (const option of [RMSB, LMSB]) {
-    // Slice, patient-space point and native pixel all describe the same sample.
+    // Slice, patient-space point and native pixel describe one consistent location.
     expect(option.slice).toBe(387)
-    expect(Math.abs(option.lps[2] - sliceZ(option.slice))).toBeLessThanOrEqual(0.25)
+    expect(option.slice).toBe(
+      Math.round((option.lps[2] - NATIVE_CT.origin[2]) / NATIVE_CT.spacing[2]),
+    )
     for (const axis of [0, 1])
       expect(option.pixel[axis] * NATIVE_CT.spacing[axis] + NATIVE_CT.origin[axis]).toBeCloseTo(
         option.lps[axis],
         3,
       )
-    // The same point is where the daughter's own centreline edge crosses that plane.
+    // It lies on the daughter's own centreline where that edge crosses the plane.
     const [crossing] = edgeCrossings(option.sourceEdgeId, option.slice)
     expect(planeDistanceMm(crossing, option.pixel)).toBeLessThan(0.5)
-    // The edge begins at the node, about 2.5 mm cranial to the response plane.
+
     const edge = routes.edges.find((e) => e.id === option.sourceEdgeId)!
+    // The edge begins at the node, about 2.5 mm cranial to the response plane.
     expect(Math.max(...edge.points.map((p) => p[2]))).toBeCloseTo(firstDecision.junctionLps[2], 3)
+    // It is NOT one of the graph's own samples: the exporter walked a fixed 5 mm along the
+    // centreline from the node and interpolated between the samples that bracket that distance.
+    // The plane the learner answers on therefore follows a uniform authoring rule, not the scan.
+    expect(edge.points.some((p) => mmBetween(p, option.lps) < 1e-4)).toBe(false)
+    expect(mmBetween(option.lps, firstDecision.junctionLps)).toBeCloseTo(5, 3)
+    const bracket = edge.points.findIndex(
+      (p, i) =>
+        i > 0 &&
+        (option.lps[2] - edge.points[i - 1][2]) * (option.lps[2] - p[2]) <= 0 &&
+        edge.points[i - 1][2] !== p[2],
+    )
+    expect(bracket).toBeGreaterThan(0)
+    const a = edge.points[bracket - 1],
+      b = edge.points[bracket]
+    const f = (option.lps[2] - a[2]) / (b[2] - a[2])
+    expect(
+      mmBetween(
+        option.lps,
+        a.map((v, i) => v + f * (b[i] - v)),
+      ),
+    ).toBeLessThan(1e-3)
   }
   expect(Math.round((firstDecision.junctionLps[2] - NATIVE_CT.origin[2]) / NATIVE_CT.spacing[2])) //
     .toBe(392)
+})
+
+test('the 5 mm daughter rule is uniform, so this plane is not a per-junction anatomical choice', () => {
+  const distances: number[] = []
+  for (const trace of decisions.traces)
+    for (const point of trace.checkpoints) {
+      const decision = point.decision
+      if (!decision) continue
+      for (const option of decision.options) {
+        const edge = routes.edges.find((e) => e.id === option.sourceEdgeId)
+        if (!edge) continue
+        distances.push(mmBetween(option.lps, decision.junctionLps))
+        expect(option.slice).toBe(
+          Math.round((option.lps[2] - NATIVE_CT.origin[2]) / NATIVE_CT.spacing[2]),
+        )
+      }
+    }
+  expect(distances.length).toBeGreaterThan(150)
+  // Capped at 5 mm from the node, shorter only where the daughter edge itself is shorter.
+  expect(Math.max(...distances)).toBeCloseTo(5, 3)
+  expect(distances.every((d) => d <= 5.001)).toBe(true)
+  expect(distances.filter((d) => d > 4.999).length).toBeGreaterThan(50)
 })
 
 test('native slice indexing is exact: every sampled source point matches its own plane and no neighbouring one', () => {
@@ -144,6 +193,15 @@ test('no soft tissue separates the two main-bronchus locators anywhere in the br
   expect(maxOnSegment(376)).toBeLessThan(SOFT_TISSUE_HU)
   expect(maxOnSegment(374)).toBeGreaterThan(SOFT_TISSUE_HU)
   expect(374).toBeLessThan(low)
+
+  // Z sign, anchored in the images rather than in the transform we are checking: the single
+  // tracheal lumen sits at a HIGHER slice index than the plane where the column divides, so
+  // higher indices are more cranial and the split really is below this interval, not above it.
+  const parent = firstDecision.parent
+  expect(huAt(slicePixels(parent.slice), parent.pixel[0], parent.pixel[1])).toBeLessThan(-800)
+  expect(parent.slice).toBeGreaterThan(RMSB.slice)
+  expect(RMSB.slice).toBeGreaterThan(374)
+  expect(sliceZ(parent.slice)).toBeGreaterThan(sliceZ(374))
 })
 
 test('the limitation is stated before the task and the canonical coordinates are untouched', () => {
