@@ -22,6 +22,7 @@ import { SequenceActivity } from './SequenceActivity'
 import { Workbench } from './Workbench'
 import { ExaminationWorkspace } from './ExaminationWorkspace'
 import { useCourseProgress } from './useCourseProgress'
+import { useLessonChromeClearance } from './useLessonChromeClearance'
 import styles from './course.module.css'
 
 /**
@@ -82,6 +83,9 @@ function LessonSession({
   const helpButton = useRef<HTMLButtonElement>(null)
   const outlineButton = useRef<HTMLButtonElement>(null)
   const heading = useRef<HTMLHeadingElement>(null)
+  const lessonFlow = useRef<HTMLDivElement>(null)
+  const lessonChrome = useRef<HTMLDivElement>(null)
+  useLessonChromeClearance(lessonFlow, lessonChrome)
   const [sessionId] = useState(() => lesson.id + '-' + Math.random().toString(36).slice(2))
   const position = activities.findIndex((activity) => activity.id === activeId)
   const current = activities.find((activity) => activity.id === (reviewId ?? activeId))!
@@ -234,6 +238,20 @@ function LessonSession({
               ? 'Next check'
               : finishOrNext
   const primaryDisabled = holdRequested || (acquireStep && !labDone)
+  /*
+   * How much weight the advance control carries (EBUS-PRE-REVIEW-01, L1-7). It is always in the
+   * same place and always says the same thing; only its prominence follows what it is offering.
+   *
+   *  - While a matching, sequence or record task is open it offers to leave that task
+   *    uncompleted. That stays one click away and plainly labelled, but the brightest control on
+   *    a screen whose point is the task should not be the one that skips it.
+   *  - While the primary is disabled on an acquisition step there would otherwise be no prominent
+   *    way forward at all, so "Continue without an image" carries the weight until a real
+   *    acquisition enables "Hold this acquisition" and takes it back. Nothing about what either
+   *    control does, or about the acquisition gate itself, changes here.
+   */
+  const advanceIsProminent = !(taskOpen && !reviewId) && !primaryDisabled
+  const skipLeadsWhileDisabled = acquireStep && primaryDisabled && !holdRequested
   const disabledReason = holdRequested
     ? 'Waiting for the workbench to acknowledge the paused frame.'
     : 'Complete the acquisition to hold an image, or continue without one.'
@@ -255,12 +273,65 @@ function LessonSession({
   }, [holdRequested, current, observation, labDone])
   const showRuntime = !reviewId && ['live', 'held'].includes(current.image)
   const showDemo = !runtimeActivity && !reviewId && current.image === 'demonstration'
+  /*
+   * What the evidence beside the task actually is (EBUS-PRE-REVIEW-01: L3-8, L5-1, L9-4, L11-5).
+   *
+   * Four things appear in this pane and the learner could not tell them apart: the supplied
+   * reference figure or diagram, the live workbench with nothing held yet, the frame this
+   * session really acquired and held, and an authored demonstration. A held frame in particular
+   * carried the instruction "This is the image you acquired. Interpret it", and the checks that
+   * followed were not always about it — some describe a scenario in words and are answerable
+   * without it. Saying which is which costs nothing and stops the pane from claiming more than
+   * it is. Nothing here changes what is displayed, what is held, or which checks are open.
+   */
+  const evidenceKind = reviewId
+    ? undefined
+    : current.image === 'demonstration' && showDemo
+      ? ('demonstration' as const)
+      : current.image === 'held' && retained
+        ? ('held' as const)
+        : current.image === 'held'
+          ? ('held-missing' as const)
+          : current.image === 'live'
+            ? ('live' as const)
+            : ['reference', 'diagram'].includes(current.image)
+              ? ('supplied' as const)
+              : undefined
+  const evidenceLabel: Record<NonNullable<typeof evidenceKind>, string> = {
+    demonstration:
+      'Authored demonstration. This is a worked example, not an acquisition of yours; you acquire your own next.',
+    held: 'Your held acquisition, from this session in this workbench.',
+    'held-missing':
+      'No acquisition is held in this session, so there is no image of yours to read here.',
+    live: 'Live workbench. Nothing is held yet; what you see moves with the controls.',
+    supplied: 'Supplied reference, authored for this course. It is not an acquisition of yours.',
+  }
+  /*
+   * Whether the check in front of the learner is a reading of the held frame or a described
+   * scenario. `imagePolicy` already carries that distinction — it is what decides whether a
+   * check can be answered at all without a held image — so this only says out loud what the
+   * content already declares. Rewording any question is a clinical change and is not done here.
+   */
+  const checkUsesHeldImage = question?.imagePolicy === 'retained-acquisition'
+  const scenarioCheckBesideHeldImage = !!question && evidenceKind === 'held' && !checkUsesHeldImage
   const reveal =
     current.image === 'held' && (!!committed || !!(question && explanationOpen[question.id]))
   const instruction =
     current.interaction === 'acquire'
       ? (runtimeLab?.instruction ?? current.instruction)
-      : current.instruction
+      : /*
+         * A held activity's authored instruction is "This is the image you acquired. Interpret
+         * it". It is not true of a check that describes a situation in words rather than reading
+         * the frame, and it is not true at all when the acquisition was skipped and there is no
+         * image of the learner's to interpret (EBUS-PRE-REVIEW-01, L5-1, L3-8, L11-5). The
+         * evidence and the checks are unchanged; only the sentence that mis-described their
+         * relationship is corrected.
+         */
+        evidenceKind === 'held-missing'
+        ? 'No image of yours is held for this task. The checks below stay open: go back to the acquisition to hold one, read the explanation, or continue.'
+        : scenarioCheckBesideHeldImage
+          ? 'The image you acquired stays beside this check. This one describes a situation in words, so answer it from the description.'
+          : current.instruction
   const unavailableReason = !question
     ? undefined
     : !missingImage
@@ -330,6 +401,7 @@ function LessonSession({
   return (
     <EbusModuleFrame locale={locale} active="Learn" activity>
       <div
+        ref={lessonFlow}
         className={styles.lessonFlow}
         data-ebus-flow
         data-activity-id={current.id}
@@ -347,63 +419,71 @@ function LessonSession({
           ))}
           <span>Unlisted preview · For education and supervised training</span>
         </nav>
-        <header className={styles.flowHeader}>
-          <div>
-            <p className={styles.eyebrow}>
-              Lesson {lessonIndex + 1} of {LESSONS.length} · {chapter.title}
-            </p>
-            <h1>{lesson.title}</h1>
+        {/*
+         * Lesson identity, the lesson controls and the task counter, kept together and kept in
+         * view while the host scrolls the task heading (EBUS-PRE-REVIEW-01, L1-1). See
+         * `useLessonChromeClearance` for how much room the scrolling reserves and when this
+         * stops being pinned.
+         */}
+        <div className={styles.lessonChrome} ref={lessonChrome} data-lesson-chrome>
+          <header className={styles.flowHeader}>
+            <div>
+              <p className={styles.eyebrow}>
+                Lesson {lessonIndex + 1} of {LESSONS.length} · {chapter.title}
+              </p>
+              <h1>{lesson.title}</h1>
+            </div>
+            <nav aria-label="Lesson controls">
+              <button
+                ref={outlineButton}
+                className={styles.secondary}
+                onClick={() => {
+                  setDialogTrigger('outline')
+                  setDialog('outline')
+                }}
+              >
+                Course outline
+              </button>
+              <button
+                ref={helpButton}
+                className={styles.secondary}
+                onClick={() => {
+                  setDialogTrigger('help')
+                  setDialog('help')
+                }}
+              >
+                Help
+              </button>
+              <button
+                className={styles.secondary}
+                aria-pressed={savedForLater}
+                onClick={() => setLessonReviewLater(lesson.id, !savedForLater)}
+              >
+                {savedForLater ? 'Saved for later' : 'Save for later'}
+              </button>
+              <button className={styles.secondary} onClick={onRestart}>
+                Restart lesson
+              </button>
+              <Link className={styles.secondary} href={BASE}>
+                Exit lesson
+              </Link>
+            </nav>
+          </header>
+          <div className={styles.flowProgress}>
+            <span>
+              {finished
+                ? 'Finished'
+                : 'Task ' + (activities.indexOf(current) + 1) + ' of ' + activities.length}
+            </span>
+            <progress
+              max={activities.length}
+              value={finished ? activities.length : position}
+              aria-label="Position in this lesson"
+            />
+            <span>
+              {progress.reviewedLessonIds.length} of {LESSONS.length} lessons reviewed
+            </span>
           </div>
-          <nav aria-label="Lesson controls">
-            <button
-              ref={outlineButton}
-              className={styles.secondary}
-              onClick={() => {
-                setDialogTrigger('outline')
-                setDialog('outline')
-              }}
-            >
-              Course outline
-            </button>
-            <button
-              ref={helpButton}
-              className={styles.secondary}
-              onClick={() => {
-                setDialogTrigger('help')
-                setDialog('help')
-              }}
-            >
-              Help
-            </button>
-            <button
-              className={styles.secondary}
-              aria-pressed={savedForLater}
-              onClick={() => setLessonReviewLater(lesson.id, !savedForLater)}
-            >
-              {savedForLater ? 'Saved for later' : 'Save for later'}
-            </button>
-            <button className={styles.secondary} onClick={onRestart}>
-              Restart lesson
-            </button>
-            <Link className={styles.secondary} href={BASE}>
-              Exit lesson
-            </Link>
-          </nav>
-        </header>
-        <div className={styles.flowProgress}>
-          <span>
-            {finished
-              ? 'Finished'
-              : 'Task ' + (activities.indexOf(current) + 1) + ' of ' + activities.length}
-          </span>
-          <progress
-            max={activities.length}
-            value={finished ? activities.length : position}
-            aria-label="Position in this lesson"
-          />
-          <span>
-            {progress.reviewedLessonIds.length} of {LESSONS.length} lessons reviewed
-          </span>
         </div>
         {status === 'unavailable' && (
           <p role="status" className={styles.notice}>
@@ -425,7 +505,12 @@ function LessonSession({
             <h2 id="ebus-task-title" ref={heading} tabIndex={-1}>
               {finished ? 'Lesson finished' : current.title}
             </h2>
-            <p>
+            <p
+              data-task-instruction
+              data-instruction-evidence={
+                !finished && !reviewId && scenarioCheckBesideHeldImage ? 'scenario' : undefined
+              }
+            >
               {finished
                 ? 'This lesson is marked as reviewed in this browser. That records where you have been, not what you answered and not procedural competence.'
                 : reviewId
@@ -443,6 +528,15 @@ function LessonSession({
                   : !showDemo && !['reference', 'diagram'].includes(current.image))
               }
             >
+              {evidenceKind && (
+                <p
+                  className={styles.evidenceIdentity}
+                  data-evidence-identity={evidenceKind}
+                  role="note"
+                >
+                  {evidenceLabel[evidenceKind]}
+                </p>
+              )}
               {runtimeActivity && runtimeLab ? (
                 <Workbench
                   key={runtimeActivity.task ?? 'guided'}
@@ -493,6 +587,23 @@ function LessonSession({
                     >
                       {reviewed ? 'Unmark as reviewed' : 'Mark as reviewed'}
                     </button>
+                  </p>
+                  {/*
+                   * Where else the learner can go from here. The footer offers the next lesson,
+                   * or the integrated cases after the last one; practice was never named in the
+                   * flow at all (EBUS-PRE-REVIEW-01, L26-5). Both are optional and both are open
+                   * now: practice is not a prerequisite for the cases.
+                   */}
+                  <div className={styles.actions} data-lesson-destinations>
+                    <Link className={styles.secondary} href={BASE + '/practice'}>
+                      Practice cases and labs
+                    </Link>
+                    <Link className={styles.secondary} href={BASE + '/assess'}>
+                      Integrated cases
+                    </Link>
+                  </div>
+                  <p className={styles.muted}>
+                    Either is open at any time, in any order, before or after the remaining lessons.
                   </p>
                 </section>
               )}
@@ -676,8 +787,11 @@ function LessonSession({
             {acquireStep && !holdRequested && !finished && (
               <button
                 type="button"
-                className={styles.secondary + ' ' + styles.skip}
+                className={
+                  (skipLeadsWhileDisabled ? styles.button : styles.secondary) + ' ' + styles.skip
+                }
                 data-skip-acquisition
+                data-prominent={skipLeadsWhileDisabled || undefined}
                 onClick={skipAcquisition}
               >
                 Continue without an image
@@ -686,7 +800,7 @@ function LessonSession({
             {finished ? (
               <Link
                 data-now-primary
-                className={styles.button}
+                className={styles.button + ' ' + styles.advance}
                 href={following ? lessonHref(following.id) : BASE + '/assess'}
               >
                 {following ? 'Continue to ' + following.title : 'Open the integrated cases'}
@@ -694,7 +808,10 @@ function LessonSession({
             ) : (
               <button
                 data-now-primary
-                className={styles.button}
+                data-prominent={advanceIsProminent || undefined}
+                className={
+                  (advanceIsProminent ? styles.button : styles.secondary) + ' ' + styles.advance
+                }
                 disabled={primaryDisabled}
                 onClick={advance}
               >

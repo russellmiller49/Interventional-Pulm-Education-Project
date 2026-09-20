@@ -146,9 +146,17 @@ export function QuestionBody({
           choiceId={committed}
           timing="immediate-after-commit"
           outcome="stated"
+          /*
+           * The shared card's own unsafe title is "Stopping here — this could harm a real
+           * patient". Nothing here stops: the course is self-paced, Try again and Continue are
+           * both available, and the sentence described a course this one does not take
+           * (EBUS-PRE-REVIEW-01, L4-2). This says what the concern is instead. The outcome label
+           * ("Not correct, and unsafe.") and the assertive announcement are the card's and stay.
+           */
           frames={{
             best: 'This addresses the clinical question',
             'incorrect-mechanism': 'Reconsider this interpretation',
+            unsafe: 'Unsafe — this would put a real patient at risk',
           }}
           explanationHeading="Reasoning"
         />

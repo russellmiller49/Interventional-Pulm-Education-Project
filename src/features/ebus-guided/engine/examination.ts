@@ -250,6 +250,23 @@ export function taskErrors(
   const expectDecision = (key: string, answer: string, message: string) => {
     if (draft.decisions[key] !== answer) errors[key] = message
   }
+  /*
+   * The same field with a different message per answer, where the answers fail for different
+   * reasons (EBUS-PRE-REVIEW-01, L12-6). `survey-extent` returned its survey-completeness
+   * sentence for "Negative tissue assessment" too, which is not what is wrong with that answer:
+   * this model task supplies no needle action, specimen or pathology at all, which the workspace
+   * already says on the same screen. Each message is the reason for the answer it is given for;
+   * no accepted answer and no other field's wording changes.
+   */
+  const expectDecisionPerChoice = (
+    key: string,
+    answer: string,
+    messages: Record<string, string> & { default: string },
+  ) => {
+    const given = draft.decisions[key]
+    if (given === answer) return
+    errors[key] = (given && messages[given]) || messages.default
+  }
   if (task === 'station-window') {
     if (!draft.acquisitions.length)
       errors.image = 'Acquire the current model window before recording its evidence.'
@@ -258,11 +275,12 @@ export function taskErrors(
       'landmarks',
       'Use the target compartment and the identified carina/main-bronchus landmarks, not a control angle or shape.',
     )
-    expectDecision(
-      'survey-extent',
-      'window-only',
-      'One modeled window does not establish a complete clinical station survey.',
-    )
+    expectDecisionPerChoice('survey-extent', 'window-only', {
+      default: 'One modeled window does not establish a complete clinical station survey.',
+      complete: 'One modeled window does not establish a complete clinical station survey.',
+      negative:
+        'No needle action, specimen or pathology is supplied for this model task, so nothing here can report tissue as negative.',
+    })
     const entry = draft.nodes[caseData.nodes[0].id]
     if (!entry || !['described', 'image-inadequate'].includes(entry.visualization))
       errors.visualization =

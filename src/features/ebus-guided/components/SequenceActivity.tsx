@@ -5,6 +5,14 @@ import styles from './course.module.css'
 /**
  * Ordering task. Checking gives feedback; "Show the sequence" lays out the authored order with
  * its explanation and tells the caller the answer was shown, which is not the same as completing it.
+ *
+ * Three repairs from EBUS-PRE-REVIEW-01. The list numbered itself twice — a hard-coded "1." in
+ * front of the list marker the stylesheet already draws (L2-3); the marker is now the only
+ * numbering. The steps are buttons that look like cards, and nothing said to select them in
+ * order or that the keyboard works the same way, so a learner's first instinct was to drag
+ * (L2-4); the instruction now says what the interaction is and the running order is labelled.
+ * Feedback on a wrong order names the first position that differs from the authored order,
+ * which is read from the existing key: which sequences are accepted is unchanged.
  */
 export function SequenceActivity({
   sequence,
@@ -19,18 +27,27 @@ export function SequenceActivity({
   const [checked, setChecked] = useState(false)
   const [shown, setShown] = useState(false)
   const order = useMemo(() => [...sequence.steps.slice(1), sequence.steps[0]], [sequence])
-  const correct = selected.join('|') === sequence.steps.map((s) => s.id).join('|')
+  const authored = sequence.steps.map((s) => s.id)
+  const correct = selected.join('|') === authored.join('|')
   const settled = shown || (checked && correct)
+  const remaining = sequence.steps.length - selected.length
+  const firstDifference = selected.findIndex((id, i) => id !== authored[i]) + 1
   return (
     <div className={styles.sequence} data-sequence-shown={shown || undefined}>
       <p>{sequence.prompt}</p>
-      <ol aria-label={shown ? 'The authored sequence' : 'Your sequence'}>
-        {selected.map((id, i) => (
-          <li key={id}>
-            {i + 1}. {sequence.steps.find((s) => s.id === id)?.text}
-          </li>
+      {!settled && (
+        <p className={styles.muted} data-sequence-instruction>
+          Select the steps in the order you would do them: choose the first step, then the next,
+          until all {sequence.steps.length} are in the list. Each step is a button — click it, or
+          move to it with Tab and press Enter or Space. Clear the sequence to start again.
+        </p>
+      )}
+      <ol aria-label={shown ? 'The authored sequence' : 'Your sequence so far'} data-sequence-order>
+        {selected.map((id) => (
+          <li key={id}>{sequence.steps.find((s) => s.id === id)?.text}</li>
         ))}
       </ol>
+      {!settled && selected.length === 0 && <p className={styles.muted}>No steps selected yet.</p>}
       {!settled &&
         order
           .filter((s) => !selected.includes(s.id))
@@ -83,6 +100,13 @@ export function SequenceActivity({
           </button>
         )}
       </div>
+      {!settled && remaining > 0 && selected.length > 0 && (
+        <p className={styles.muted} data-sequence-remaining>
+          {remaining === 1
+            ? 'One step left to place; the check opens once the order is complete.'
+            : remaining + ' steps left to place; the check opens once the order is complete.'}
+        </p>
+      )}
       {shown && (
         <p role="status">This is the authored sequence, shown on request. {sequence.explanation}</p>
       )}
@@ -90,7 +114,10 @@ export function SequenceActivity({
         <p role="status">
           {correct
             ? 'The sequence is complete. ' + sequence.explanation
-            : 'Reconsider the order. ' + sequence.explanation}
+            : 'Reconsider the order. Your step ' +
+              firstDifference +
+              ' is the first that differs from the authored order; the steps before it are in place. ' +
+              sequence.explanation}
         </p>
       )}
     </div>

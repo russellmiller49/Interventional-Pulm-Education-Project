@@ -36,12 +36,24 @@ export function ExaminationWorkspace({
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [accepted, setAccepted] = useState(false)
   const [saveFailed, setSaveFailed] = useState(false)
+  /*
+   * Which fields the learner has actually put a value in, this session (L26-3).
+   *
+   * Form intent, not record content: it is never written to the draft, never saved and never
+   * read back, so nothing about what is stored or how it is validated depends on it. A field
+   * restored from a stored draft counts as entered, because somebody entered it.
+   */
+  const [entered, setEntered] = useState<Record<string, boolean>>({})
+  const markEntered = (field: string) => setEntered((value) => ({ ...value, [field]: true }))
+  /** Node records that came back from a stored draft, so every field in them was entered once. */
+  const [restored, setRestored] = useState<readonly string[]>([])
   useEffect(() => {
     const loaded = loadExamination(caseData)
     // Browser-local draft hydration is intentionally separate from live acquisition state.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setDraft(loaded.draft)
     setLoadState(loaded.state)
+    setRestored(Object.keys(loaded.draft.nodes))
   }, [caseData])
   const update = (next: ExaminationDraft) => {
     if (readOnly || loadState === 'incompatible') return
@@ -324,7 +336,23 @@ export function ExaminationWorkspace({
           <>
             <p>{caseData.complications}</p>
             {caseData.nodes.map((node) => {
-              const entry = draft.nodes[node.id] ?? emptyNodeRecord()
+              const stored = draft.nodes[node.id]
+              const entry = stored ?? emptyNodeRecord()
+              /*
+               * Whether each of this node's two entries has actually been entered (L26-3).
+               *
+               * The empty record's "Not examined" and "Not recorded" are declarations about a
+               * real patient, and they were what an untouched select showed, so a learner could
+               * submit an examination history nobody had entered. A field nobody has filled in
+               * is not a field recorded as unexamined, and the two now look different: it opens
+               * on "Choose…" until something is chosen. A stored draft — including a legacy one
+               * that really does say "Not examined" — counts as entered and is shown and saved
+               * exactly as it was. Nothing is written by rendering, no value is overwritten, and
+               * the check still requires the supplied history, so an unfilled field fails it as
+               * it did before.
+               */
+              const blank = (field: 'visualization' | 'sampling') =>
+                !restored.includes(node.id) && !entered[node.id + ':' + field]
               return (
                 <section
                   key={node.id}
@@ -351,8 +379,10 @@ export function ExaminationWorkspace({
                         {node.label}: visualization
                         <select
                           aria-label={node.label + ': visualization'}
-                          value={entry.visualization}
-                          onChange={(event) =>
+                          value={blank('visualization') ? '' : entry.visualization}
+                          onChange={(event) => {
+                            if (!event.target.value) return
+                            markEntered(node.id + ':visualization')
                             update({
                               ...draft,
                               nodes: {
@@ -363,8 +393,11 @@ export function ExaminationWorkspace({
                                 },
                               },
                             })
-                          }
+                          }}
                         >
+                          {blank('visualization') ? (
+                            <option value="">Choose the supplied visualization</option>
+                          ) : null}
                           {[
                             ['not-examined', 'Not examined'],
                             ['not-visualized', 'Not visualized'],
@@ -382,8 +415,10 @@ export function ExaminationWorkspace({
                         {node.label}: sampling
                         <select
                           aria-label={node.label + ': sampling'}
-                          value={entry.sampling}
-                          onChange={(event) =>
+                          value={blank('sampling') ? '' : entry.sampling}
+                          onChange={(event) => {
+                            if (!event.target.value) return
+                            markEntered(node.id + ':sampling')
                             update({
                               ...draft,
                               nodes: {
@@ -394,13 +429,28 @@ export function ExaminationWorkspace({
                                 },
                               },
                             })
-                          }
+                          }}
                         >
+                          {blank('sampling') ? (
+                            <option value="">Choose the supplied history</option>
+                          ) : null}
                           <option value="unrecorded">Not recorded</option>
                           <option value="sampled">Sampled — supplied history</option>
                           <option value="not-sampled">Not sampled — supplied history</option>
                         </select>
                       </label>
+                      {/*
+                       * The stated reason appears only under "Not sampled", which the walkthrough
+                       * found through an error message rather than through the form (L26-3). It
+                       * stays conditional, because a reason not to sample has no meaning under
+                       * the other answers, but the form now says it is there before it appears.
+                       */}
+                      {entry.sampling !== 'not-sampled' && (
+                        <p className={styles.muted}>
+                          Choosing “Not sampled — supplied history” adds one more field here: the
+                          stated reason sampling was not performed.
+                        </p>
+                      )}
                       {fieldError(node.id + '-sampling')}
                       {entry.sampling === 'not-sampled' && (
                         <>

@@ -4,7 +4,7 @@ import { Link } from '@/i18n/navigation'
 import { NowCard } from '@/features/learning-module/stage/NowCard'
 import type { ClinicalLearningItem } from '@/features/learning-module/activity'
 import type { EbusCase, Question } from '../content/types'
-import { BASE, lessonHref, LESSONS } from '../content/curriculum'
+import { lessonHref, LESSONS } from '../content/curriculum'
 import { recordLocation } from '../engine/selfPacedProgress'
 import { QuestionBody } from './QuestionBody'
 import { QuestionExplanation } from './QuestionExplanation'
@@ -63,6 +63,17 @@ export function CasePlayer({
     () => item.lessonIds.map((id) => LESSONS.find((l) => l.id === id)).filter(Boolean),
     [item.lessonIds],
   )
+  /*
+   * The reference image belongs to the case, not to the one check that happens to declare it
+   * (EBUS-PRE-REVIEW-01, PR-2). It used to be rendered per question, so the CT the clinical
+   * situation describes and every later stem refers back to ("the same target", "this node")
+   * disappeared after check 1. No case in this module declares two stations, so a single case
+   * reference is the whole of it; a case that later declares a second one shows the station its
+   * own check names. It is supplied case evidence throughout, never a learner acquisition, and
+   * `DecisionImage` says so on the figure.
+   */
+  const caseStation =
+    q.imageStation ?? item.questions.find((entry) => entry.imageStation)?.imageStation
   function advance() {
     if (last) {
       setDebrief(true)
@@ -82,7 +93,6 @@ export function CasePlayer({
       </ul>
     </>
   )
-  const exitHref = BASE + (kind === 'practice' ? '/practice' : '/assess')
   return (
     <div data-ebus-case={item.id}>
       <p className={styles.eyebrow}>
@@ -94,7 +104,7 @@ export function CasePlayer({
           <section className={styles.card}>
             <h2>Clinical situation</h2>
             <p>{item.context}</p>
-            {q.imageStation && <DecisionImage key={q.id} station={q.imageStation} />}
+            {caseStation && <DecisionImage key={caseStation} station={caseStation} />}
             <p className={styles.muted}>
               Feedback appears when you check a response. You can open the hint or the explanation
               first, try again after any response, or continue without answering. An unsafe choice
@@ -188,9 +198,14 @@ export function CasePlayer({
       )}
       <SourceList ids={item.sources} />
       <div className={styles.actions}>
-        <Link className={styles.secondary} href={exitHref}>
+        {/*
+         * The parent owns which case is open, so leaving is the parent's callback — the same one
+         * the debrief's Return uses. This was a link to the list address, which is the address
+         * already open, so it navigated nowhere and the case stayed up (EBUS-PRE-REVIEW-01, PR-7).
+         */}
+        <button type="button" className={styles.secondary} data-case-exit onClick={onExit}>
           Leave this case
-        </Link>
+        </button>
       </div>
     </div>
   )

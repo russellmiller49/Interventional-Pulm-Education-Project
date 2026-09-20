@@ -284,6 +284,24 @@
   padding-left: 22px;
   list-style: decimal;
 }
+/* Per-row matching feedback (L1-6). The wording carries the state; the rule is a second cue. */
+.rowFeedback {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--muted);
+  border-left: 3px solid var(--line);
+  padding-left: 8px;
+  margin-top: 4px;
+}
+.sequence label[data-matching-state='review'] .rowFeedback {
+  border-left-style: double;
+  border-left-width: 6px;
+  border-left-color: #b76868;
+  color: var(--ink);
+}
+.sequence label[data-matching-state='matched'] .rowFeedback {
+  border-left-color: var(--cyan);
+}
 .caseList {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -505,6 +523,18 @@
 .taskEvidence[hidden] {
   display: none;
 }
+/* What the pane beside the task actually holds (EBUS-PRE-REVIEW-01, part C). */
+.evidenceIdentity {
+  font-size: 0.8rem;
+  color: var(--stage-muted);
+  border-left: 3px solid var(--line);
+  padding: 4px 0 4px 10px;
+  margin-bottom: 8px;
+}
+.evidenceIdentity[data-evidence-identity='held'] {
+  border-left-color: var(--cyan);
+  color: var(--ink);
+}
 .taskComposition:has(> .taskEvidence[hidden]) {
   grid-template-columns: minmax(0, 1fr);
   max-width: 960px;
@@ -573,7 +603,11 @@
   color: var(--muted);
   font-size: 0.875rem;
 }
-.taskAdvance .button {
+/*
+ * The advance control keeps its place at the end of the row whatever weight it is carrying. Its
+ * weight changes with what it is actually offering: see `LessonHost` (EBUS-PRE-REVIEW-01, L1-7).
+ */
+.taskAdvance .advance {
   margin-left: auto;
   max-width: 100%;
 }
@@ -640,7 +674,7 @@
   .flowHeader .eyebrow {
     letter-spacing: 0;
   }
-  .taskAdvance .button {
+  .taskAdvance .advance {
     margin-left: 0;
   }
   .taskHeading h2 {
@@ -763,11 +797,61 @@
 .lessonFlow {
   overflow-anchor: none;
 }
+/*
+ * Focus and reveal clearance for the lesson flow (EBUS-PRE-REVIEW-01, L1-1).
+ *
+ * The page is the scroll container and the site header is painted over it, so the host's
+ * `scrollIntoView({ block: 'start' })` on every task change put the task heading at the top of
+ * the scrollport and left the lesson's own identity above it, off screen or behind the header.
+ * The chrome that carries that identity now sticks below the site header, and the room both
+ * headers occupy is reserved for the browser's scrolling — the host's and native Tab scrolling
+ * alike. `useLessonChromeClearance` measures it, because the chrome is content-sized and grows
+ * and re-wraps as text is enlarged; the fallback here is the site header plus this chrome at
+ * desktop width and normal text, which is what applies before the script runs. `:has` keeps
+ * every declaration to pages that render a lesson.
+ */
+:global(html):has(.lessonFlow) {
+  /* A second Tab during a smooth focus scroll would otherwise land on a target the first scroll
+   * has not finished moving. Focus scrolling settles immediately in this flow. */
+  scroll-behavior: auto;
+  scroll-padding-top: var(--ebus-focus-clear-top, calc(var(--site-header-height, 5rem) + 6rem));
+}
+.lessonChrome {
+  position: sticky;
+  top: var(--site-header-height, 5rem);
+  z-index: 15;
+  background: var(--surface-base);
+}
 .taskHeading h2 {
-  scroll-margin-top: 110px;
+  scroll-margin-top: var(--ebus-focus-clear-top, calc(var(--site-header-height, 5rem) + 6rem));
+}
+/*
+ * Chrome that would hold more of the viewport than the lesson it frames stops being pinned, the
+ * way it already stops being pinned on a narrow viewport. `useLessonChromeClearance` measures
+ * it and it then reports a clearance of the site header alone, so the heading still lands in the
+ * clear; without that script the chrome stays pinned exactly as the rules above leave it.
+ */
+.lessonFlow[data-chrome-pinned='false'] .lessonChrome {
+  position: static;
+}
+@media (max-width: 767px) {
+  .lessonChrome {
+    position: static;
+  }
 }
 .questionFeedback[data-repeated-reasoning='true'] :global([data-how-to-distinguish]) {
   display: none;
+}
+/*
+ * An unsafe response is marked by more than its colour (EBUS-PRE-REVIEW-01, L4-2). The card
+ * already says "Not correct, and unsafe." and announces itself assertively; this adds a shape
+ * a reader who cannot separate the red from the rose still sees — a heavy double rule down the
+ * side, the same side marker the explanation card uses for an unsafe option.
+ */
+.questionFeedback :global([data-answer-verdict][data-plausibility='unsafe']) {
+  border-left-style: double;
+  border-left-width: 8px;
+  padding-left: 14px;
 }
 .embed iframe[hidden] {
   display: none;
