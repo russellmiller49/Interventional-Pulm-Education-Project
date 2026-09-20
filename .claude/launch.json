@@ -98,6 +98,13 @@
       ],
       "port": 3214,
       "autoPort": false
+    },
+    {
+      "name": "claude-ebus",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/dev-with-training-apps.mjs", "--port", "3128"],
+      "port": 3128,
+      "autoPort": false
     }
   ]
 }
