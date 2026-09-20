@@ -1,0 +1,439 @@
+{
+  "task": "BBT-PRE-REVIEW-02",
+  "title": "Stable and readable CT workspace",
+  "date": "2026-09-20",
+  "module": "bronchial-branch-tracing",
+  "worktree": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-bb-2-9-19",
+  "branch": "claude/bb-2-9-19",
+  "baseSha": "c717c9ffae09cb67e19b06a56d37c75487a5605a",
+  "planningShaIsHistoricalContextOnly": "77a141ccfd574a984f91e74abc9018b5d67e8202",
+  "devServer": "next dev --port 3121 (this worktree only; port 3001 avoided so no run could reuse another checkout's server)",
+  "overlappingOpenPrs": [],
+  "clinicalApproval": "none claimed",
+  "reviewHoldsCarriedForward": [
+    "OD-01 first-junction teaching mismatch remains open for the owner / anatomy reviewer",
+    "BBT-02 five-junction packet remains NOT REVIEWED",
+    "exercise.review.status remains provisional for every local exercise",
+    "subsegmental a/b assignments remain pending nomenclature review",
+    "OD-02 to OD-07 untouched"
+  ],
+  "protectedEvidenceUnchanged": {
+    "statement": "No source volume, graph, response-plane coordinate, branch identity, nomenclature or review status was changed. Nothing under engine/, content/ or geometry/ differs from origin/main.",
+    "sha256Prefixes": {
+      "src/features/bronchial-branch-tracing/geometry/branch-decisions.json": "1a78138c5e4e991a",
+      "src/features/bronchial-branch-tracing/geometry/paired-routes.json": "ddd2a61893a0da64",
+      "src/features/bronchial-branch-tracing/geometry/native-ct.ts": "b4120aa97585e084",
+      "src/features/bronchial-branch-tracing/geometry/orientation.ts": "ea7da120887afc7f",
+      "src/features/bronchial-branch-tracing/geometry/coordinates.ts": "8637d6795aae4353",
+      "src/features/bronchial-branch-tracing/content/local-exercises.ts": "f99b8319e570db9e",
+      "src/features/bronchial-branch-tracing/content/junction-feedback.ts": "4329d6fde60bb986",
+      "src/features/bronchial-branch-tracing/content/practice.ts": "5e9dcd4df831ca2a",
+      "src/features/bronchial-branch-tracing/content/lessons.ts": "deb4a2c08c1f4740",
+      "public/branch-tracing/native-v1/manifest.json": "3cd614847f371541"
+    }
+  },
+  "findings": [
+    {
+      "id": "BBTF-03",
+      "title": "Slice controls move under the cursor",
+      "reproduced": true,
+      "disposition": "repaired",
+      "baseline": {
+        "condition": "1427x1226, Lesson 1, real mouse input, Trachea 416 -> 413 -> 412",
+        "minusRect413": {
+          "x": 483,
+          "y": 1042,
+          "w": 31,
+          "h": 44
+        },
+        "minusRect412": {
+          "x": 827,
+          "y": 990,
+          "w": 31,
+          "h": 44
+        },
+        "sliderWidth413to412": [802, 458],
+        "elementAtPreviousMinusCentre": "Full CT field",
+        "sliceAfterRepeatedClick": "412 (the zoom toggled instead of stepping)"
+      },
+      "after": {
+        "minusRect413": {
+          "x": 444,
+          "y": 896,
+          "w": 31,
+          "h": 44
+        },
+        "minusRect412": {
+          "x": 444,
+          "y": 896,
+          "w": 31,
+          "h": 44
+        },
+        "sliderWidth413to412": [880, 880],
+        "elementAtPreviousMinusCentre": "More caudal CT slice",
+        "sliceAfterRepeatedClick": "411",
+        "keyboardFocus": "stays on the minus button through the transition",
+        "alsoVerifiedAt": "1024x768"
+      },
+      "change": "The slice row, display tools and guidance sit in a fixed grid under the image; the guidance reserves two lines; both response actions are always present and change only their enabled state."
+    },
+    {
+      "id": "BBTF-11",
+      "title": "Labels and rings obscure airway walls",
+      "reproduced": true,
+      "disposition": "repaired",
+      "baseline": {
+        "condition": "1427x1226, continuity lesson, both daughters marked, after Check",
+        "labels": ["A \u00b7 RMSB", "B \u00b7 LMSB", "Your mark"],
+        "overlappingPairs": [["A \u00b7 RMSB", "B \u00b7 LMSB"]],
+        "leaderLines": 0,
+        "rings": 4,
+        "hideOverlaysControl": false,
+        "labelFontUserUnits": 4.3
+      },
+      "after": {
+        "labels": ["A \u00b7 RMSB", "B \u00b7 LMSB", "Your mark A", "Your mark B"],
+        "overlappingPairs": [],
+        "leaderLines": 4,
+        "rings": 2,
+        "hideOverlaysControl": true,
+        "labelFontUserUnits": 3.4,
+        "shapeDistinction": "learner mark = cyan ring; model locator and reference = gold gapped crosshair with a clear centre"
+      },
+      "refusals": [
+        "no lumen contour invented",
+        "no reference point moved",
+        "no maximum pixel font size imposed",
+        "anchors are unchanged; only screen text moves"
+      ]
+    },
+    {
+      "id": "BBTF-12",
+      "title": "Check recenters the crop and moves the visual target",
+      "reproduced": true,
+      "disposition": "repaired",
+      "baseline": {
+        "markScreenShiftPx": {
+          "dx": 0,
+          "dy": 47
+        },
+        "imageWorkspaceScrollTop": [47, 0],
+        "storedNativePixelChanged": false
+      },
+      "after": {
+        "markScreenShiftPx": {
+          "dx": 0,
+          "dy": 0
+        },
+        "imageWorkspaceScrollTop": [50, 50],
+        "cropTransformIdentical": true,
+        "storedNativePixelChanged": false
+      },
+      "causes": [
+        "resetPaneScroll ran on every phase change; it now runs only on a new exercise, the orientation introduction or a restart",
+        "content below the image shrank on Check, clamping the pane scroll; the guidance row and Reset attempt now hold their place",
+        "resetPaneScroll no longer fires on referenceThrough, so revealing a reference cannot recentre the image",
+        "a slice request for the plane already on screen now keeps the learner's crop"
+      ]
+    },
+    {
+      "id": "BBTF-20",
+      "title": "Too many navigation controls compete with the active task",
+      "reproduced": "partly",
+      "disposition": "improved locally; the header's action count is a platform item",
+      "measurements": {
+        "headerActionCount": 7,
+        "headerActions": [
+          "Back to overview",
+          "Next lesson",
+          "Course outline",
+          "Save for review",
+          "What do I do now?",
+          "Restart lesson",
+          "Save & exit"
+        ],
+        "stepPrimaryActionAreaPx2": 17565,
+        "largestHeaderActionAreaPx2": 5452
+      },
+      "change": "The workspace's loose buttons became two labelled groups, 'CT view tools' and 'Exercise tools', so they no longer read as candidate next steps. The shared SectionHeader was not modified.",
+      "escalated": "Reducing the header's seven actions needs the platform owner (coordination file)."
+    },
+    {
+      "id": "BBTF-21",
+      "title": "Walkthrough player is below unrelated reading",
+      "reproduced": true,
+      "disposition": "repaired",
+      "baseline": {
+        "playButtonY": 1135,
+        "offsetBelowTeachingProse": 784,
+        "column": "instructions"
+      },
+      "after": {
+        "playButtonY": 964,
+        "column": "image, inside the CT viewer region",
+        "inViewportWithoutScrolling": true,
+        "autoplay": false,
+        "fullCaptionsStillReachable": "caption transcript stays in the instructions pane"
+      }
+    },
+    {
+      "id": "BBTF-25",
+      "title": "Walkthrough playback shows loading interruptions",
+      "reproduced": "mechanism confirmed in code; visible symptom reproduced only with an injected 450 ms per-plane delay, not on an unthrottled local server",
+      "disposition": "repaired",
+      "decodedImageEvidence": {
+        "method": "screenshot of the CT frame, greyscaled, mean luminance of 0-255",
+        "baseline": [
+          {
+            "t": "before",
+            "slice": "416",
+            "mean": 142.6
+          },
+          {
+            "t": "+60ms",
+            "slice": "415",
+            "mean": 13.2
+          },
+          {
+            "t": "+160ms",
+            "slice": "415",
+            "mean": 13.2
+          },
+          {
+            "t": "+260ms",
+            "slice": "415",
+            "mean": 142.7
+          }
+        ],
+        "after": [
+          {
+            "t": "before",
+            "slice": "416",
+            "mean": 135.7
+          },
+          {
+            "t": "+60ms",
+            "slice": "416",
+            "mean": 131.0
+          },
+          {
+            "t": "+160ms",
+            "slice": "416",
+            "mean": 131.0
+          },
+          {
+            "t": "+260ms",
+            "slice": "415",
+            "mean": 136.2
+          }
+        ],
+        "reading": "The baseline frame goes black while already labelled slice 415. After the change the anatomy stays on screen and the label stays on the plane actually shown."
+      },
+      "domEvidence": {
+        "samples": 13,
+        "framesWithoutAnImageElement": 0,
+        "fullCoverLoadingPanels": 0,
+        "sliceNumberPixelMismatches": 0
+      },
+      "change": "The decoded plane stays on screen until every image the requested plane needs has loaded, then swaps in one step during render. Preload is bounded to \u00b12 planes. Failure, retry and skip are unchanged and still truthful.",
+      "refusals": [
+        "the native stack is never fetched eagerly",
+        "overlays stay withheld until the requested plane is the one displayed"
+      ]
+    },
+    {
+      "id": "BBTF-28",
+      "title": "Wheel behavior contradicts the instruction",
+      "reproduced": "not as reported; the opposite defect reproduced",
+      "disposition": "repaired",
+      "baseline": {
+        "wheelOverCtChangedSlice": "416 -> 415",
+        "paneScrolled": false,
+        "note": "the wheel handler always called preventDefault, so ordinary page scrolling was trapped over the image and a plain scroll could carry the learner off the response plane"
+      },
+      "after": {
+        "wheelOverCtChangedSlice": "416 (unchanged)",
+        "paneScrollTopAfterWheel": 50,
+        "optInControl": "Wheel steps slices: off/on, released by the same button or Escape",
+        "browserZoomGesture": "ctrl/cmd wheel never intercepted",
+        "keyboardRangeControls": "unchanged (Page Up / Page Down and the slider)"
+      }
+    },
+    {
+      "id": "BBTF-32",
+      "title": "Expanded CT view may be browser-limited",
+      "reproduced": false,
+      "disposition": "investigated; a feature-detected fallback added anyway",
+      "evidence": {
+        "documentFullscreenEnabled": true,
+        "requestFullscreenPresent": true,
+        "trustedClickEntersFullscreen": true,
+        "trueAtBaselineToo": true,
+        "conclusion": "the report's message came from the automation session, exactly as the report warned"
+      },
+      "change": "Fullscreen is feature-detected; if it is unsupported or refused, an in-page enlargement opens instead of an error message, closing on Escape or the same button and returning focus to it.",
+      "refusals": ["no browser security policy was loosened"]
+    },
+    {
+      "id": "BBTF-35",
+      "title": "Highlight the region outlines the entire image",
+      "reproduced": true,
+      "disposition": "repaired by renaming and giving it an evidenced effect",
+      "baseline": {
+        "outlineCoveredWholeImage": true,
+        "effect": "none beyond the outline"
+      },
+      "after": {
+        "name": "Focus CT view",
+        "effect": "restores the crop this division was authored with, clearing full-field and any start or target focus",
+        "outline": "frames the displayed crop; documented as such, not as an anatomical region of interest",
+        "contourDrawn": false,
+        "markPlaced": false
+      }
+    },
+    {
+      "id": "BBTF-36",
+      "title": "Demo frame cadence is too coarse to show continuity",
+      "reproduced": false,
+      "disposition": "investigated; the authored sequence is adjacent, so the repair is visibility",
+      "evidence": {
+        "method": "every authored demonstration sequence in all 16 local exercises enumerated programmatically",
+        "maximumStepBetweenConsecutiveFrames": 1,
+        "playbackInterval": "900 ms per frame",
+        "reading": "401 -> 404 -> 408 -> 413 -> 418 is consistent with sampling a 900 ms playback of the 68-frame Lesson 4 interval, not with a skipping player or a coarse authored list"
+      },
+      "change": "The transport sits with the image, carries a slice readout and its position in the sequence, and steps one adjacent native plane at a time; the caption block states that no image is interpolated between planes.",
+      "refusals": [
+        "no intermediate image evidence fabricated",
+        "no new anatomical landmark annotated; model-reference marker evidence stays with tasks 03 and 05"
+      ]
+    },
+    {
+      "id": "BBTF-40",
+      "title": "Tiny distal lumens need useful magnification",
+      "reproduced": true,
+      "disposition": "repaired",
+      "change": "The magnification slider moved out of the 'Image details' disclosure to a labelled control beside the image with a numeric readout, and its range rose from 2.5x to 4x.",
+      "transformChecks": {
+        "scaleAt2_5x": "exactly 2.5 times the unmagnified SVG group scale",
+        "storedNativePixelChangedByMagnifying": false,
+        "markPlacedWhileMagnifiedRoundTrips": true,
+        "pointerRoundTripAcrossAllEightDisplays": "existing browser test still passes"
+      },
+      "copy": "states that it enlarges the native pixels and creates no extra resolution and no validation",
+      "fullFieldViewStillAvailable": true
+    },
+    {
+      "id": "BBTF-47",
+      "title": "Rotated transfer image and controls overrun viewport",
+      "reproduced": true,
+      "disposition": "repaired",
+      "baseline": {
+        "at1024x768": {
+          "imagePx": 440,
+          "viewerHeightPx": 1121,
+          "panePx": 525,
+          "sliderY": 1146,
+          "sliderVisible": false
+        },
+        "at1427x1226": "not captured \u2014 the first navigation to /assess aborted while the dev server compiled the route"
+      },
+      "after": {
+        "at1024x768": {
+          "imagePx": 311,
+          "viewerHeightPx": 1006,
+          "panePx": 525,
+          "sliderVisible": true,
+          "coVisibility": "with the pane at its top the image occupies y 337-648 and the slider ends at y 766, inside the 768 px window"
+        },
+        "at1427x1226": {
+          "imagePx": 620,
+          "sliderY": 1006,
+          "sliderVisible": true,
+          "imageFullyInView": true
+        },
+        "aspectRatio": "square within 2 px in both cases",
+        "directionLabels": ["R", "A", "L", "P"],
+        "horizontalDocumentOverflow": false
+      },
+      "change": "The plane is sized from the pane it has (a size container query at desktop) rather than from the window, and the slice row sits immediately under the image.",
+      "tradeOff": "The plane is smaller than before at 1024x768 (316 px against 403 px local; 311 px against 440 px rotated route), which is why the magnifier was promoted and its range raised. Patient orientation was not removed and nothing was shrunk to a thumbnail."
+    }
+  ],
+  "reflow": {
+    "condition": "local lesson at the marking slice; plane width in px and horizontal document overflow",
+    "1427x1226": {
+      "baseline": 720,
+      "after": 620,
+      "overflowX": false
+    },
+    "1440x900": {
+      "baseline": 535,
+      "after": 475,
+      "overflowX": false
+    },
+    "1024x768": {
+      "baseline": 403,
+      "after": 316,
+      "overflowX": false
+    },
+    "390x844": {
+      "baseline": 364,
+      "after": 364,
+      "overflowX": false
+    },
+    "320x740": {
+      "baseline": 294,
+      "after": 294,
+      "overflowX": false
+    },
+    "1427x1226_rootText200Percent": {
+      "after": 560,
+      "overflowX": false,
+      "layoutStableAcrossTwoFrames": true,
+      "note": "CSS root-font probe, not native browser zoom"
+    }
+  },
+  "scrollOwnership": {
+    "moduleKeepsInternalWorkspaceScrolling": true,
+    "stabilizationTest": "systemic-ux-stabilization 'bbt: native workspace scroll ownership' passes at 1600, 1440 and 1024",
+    "resetOnNewExerciseOrRestart": ["image workspace", "route evidence pane"],
+    "resetOnStepChange": ["instructions pane"],
+    "neverResetBy": ["Check", "showing a reference", "slice controls", "view tools"],
+    "sizeContainmentScope": "desktop grid only; switched off in stacked layouts and at enlarged root text, where the document scrolls"
+  },
+  "verification": {
+    "typeCheck": "clean (NODE_OPTIONS=--max-old-space-size=8192)",
+    "jestModule": "120 passed, 1 failed \u2014 the access-contract test documented by task 01; the same test fails at origin/main in this worktree (1 failed / 7 passed)",
+    "jestRepository": "13307 passed, 8 failed across 9 suites \u2014 the same nine suites and eight tests task 01 recorded at the base SHA",
+    "playwrightBranchTracing": "32 passed, 0 failed (this worktree's server on port 3121)",
+    "playwrightSystemicUxBbt": "3 passed (1600, 1440, 1024)",
+    "playwrightSystemicUxFull": "90 passed, 14 failed; none BBT (13 CRRT/EBUS cases owned by other lanes, plus one nine-entries case that passes 6/6 on its own and failed only inside the 11-minute full run)",
+    "eslintChangedPaths": "clean, no warnings",
+    "prettierChangedPaths": "clean",
+    "productionBuild": "npm run build exit 0; build:training-apps, build:content, validate:critical-care-assets, validate:cardiac-assets, next build --webpack and prepare:standalone all completed, and all four branch-tracing routes compiled. Public env values came from .env.example placeholders passed as process environment only."
+  },
+  "testsAdded": {
+    "src/features/bronchial-branch-tracing/__tests__/ct-workspace.test.tsx": 8,
+    "src/features/bronchial-branch-tracing/__tests__/ct-overlay-labels.test.ts": 4,
+    "e2e/branch-tracing.spec.ts": 9
+  },
+  "existingAssertionsUpdated": [
+    "the live demonstration caption is read from the transport beside the CT, because it moved there",
+    "the nodule-patch test waits for the requested plane before reading the patch URL, because the viewer no longer swaps pixels before they have loaded",
+    "'gold rings' became 'gold crosshairs' in one feedback string, because the marker shape changed"
+  ],
+  "notRun": [
+    "native screen readers",
+    "real mobile devices and touch input",
+    "native browser zoom (the 200 % condition is a CSS root-font probe)",
+    "Safari and Firefox",
+    "real slow networks (the loading evidence uses an injected 450 ms per-plane delay)"
+  ],
+  "backlog": [
+    "The shared SectionHeader presents seven actions on this module's lesson surfaces; reducing the count is a platform-owner decision.",
+    "playwright.config.ts runs its web server on port 3001 with reuseExistingServer, so a run started from a worktree can silently test another checkout's server.",
+    "The site root returns 500 in a checkout without Supabase environment values (already logged by task 01)."
+  ],
+  "next": "One bounded PR, then stop. Tasks 03 and 04 follow after review and merge. OD-01 stays open; task 05 prepares its packet."
+}

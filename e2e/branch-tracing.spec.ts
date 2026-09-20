@@ -304,7 +304,13 @@ test('short route: declared approach reversal, all connected divisions, map grow
   await ctReady(page)
   await button(page, 'Replay from parent').click()
   await ctReady(page)
-  await expect(page.getByText(/Approach context, slice/).first()).toBeVisible()
+  // BBT-PRE-REVIEW-02 moved the live caption to the transport beside the CT; the
+  // full transcript stays in the instructions pane.
+  await expect(
+    page
+      .getByRole('region', { name: 'CT demonstration controls' })
+      .getByText(/Approach context, slice/),
+  ).toBeVisible()
   await button(page, 'Start marking branches').click()
   for (const [i, spec] of lesson.exercises!.entries()) {
     await markLocal(page, localExercise(spec))
@@ -632,6 +638,10 @@ test('nodule patches retain the native display transform and recover from asset 
   await page.getByRole('combobox', { name: 'Target segment' }).selectOption('left-upper-anterior')
   await page.getByRole('button', { name: 'Start CT practice' }).click()
   await page.getByRole('button', { name: 'Show target', exact: true }).click()
+  // Harness fix (BBT-PRE-REVIEW-02): the viewer now keeps the previous plane on
+  // screen until the requested one has loaded, so read the patch once it is the
+  // plane that was asked for.
+  await ctReady(page)
   const patch = page.locator('[data-ct-nodule]')
   await expect(patch).toHaveCount(1)
   const url = (await patch.getAttribute('href'))!
@@ -646,4 +656,245 @@ test('nodule patches retain the native display transform and recover from asset 
   await page.unroute(`**${url}`)
   await page.getByRole('button', { name: 'Retry slice' }).click()
   await expect(page.getByRole('button', { name: 'Retry slice' })).toHaveCount(0)
+})
+
+// BBT-PRE-REVIEW-02. The reported appendix-A sequence: step to the response slice
+// and click again at the same screen point.
+for (const [width, height] of [
+  [1427, 1226],
+  [1024, 768],
+])
+  test(`slice controls keep their rectangle through the response slice at ${width}×${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height })
+    await startLocal(page, 'follow-one-airway')
+    const exercise = localExercise(LESSONS[0].exercises![0])
+    const response = exercise.answerPoints[0].slice
+    const minus = button(page, 'More caudal CT slice')
+    const rects = async () => ({
+      minus: await minus.boundingBox(),
+      range: await page.getByRole('slider', { name: 'CT slice' }).boundingBox(),
+      plus: await button(page, 'More cranial CT slice').boundingBox(),
+      image: await page.locator('[data-preset]').boundingBox(),
+    })
+    for (let slice = exercise.trace.anchor.slice; slice > response + 1; slice--) {
+      await minus.click()
+      await ctReady(page)
+    }
+    const before = await rects()
+    const point = {
+      x: before.minus!.x + before.minus!.width / 2,
+      y: before.minus!.y + before.minus!.height / 2,
+    }
+    await page.mouse.click(point.x, point.y)
+    await ctReady(page)
+    await expect(page.locator('[data-preset]')).toHaveAttribute('data-slice', String(response))
+    expect(await rects()).toEqual(before)
+    // The same coordinate still belongs to the same control, so the next click steps.
+    expect(
+      await page.evaluate(
+        ([x, y]) => document.elementFromPoint(x, y)?.getAttribute('aria-label'),
+        [point.x, point.y],
+      ),
+    ).toBe('More caudal CT slice')
+    await page.mouse.click(point.x, point.y)
+    await ctReady(page)
+    await expect(page.locator('[data-preset]')).toHaveAttribute('data-slice', String(response - 1))
+    await expect(minus).toBeFocused()
+    await capture(page, `bbt02-controls-${width}-${height}`)
+  })
+
+test('checking a response keeps the crop, the workspace scroll and the mark where they were', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  await startLocal(page, 'follow-one-airway')
+  await button(page, 'Go to response slice').click()
+  await ctReady(page)
+  await page.getByRole('group', { name: /^CT image\./ }).click({ position: { x: 320, y: 320 } })
+  const stored = () =>
+    page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem('branch-tracing.draft.learn.follow-one-airway')!).value
+          .marks,
+    )
+  const pane = page
+    .locator('[data-preset]')
+    .locator('xpath=ancestor::div[contains(@class,"localImageWorkspace")]')
+  await pane.evaluate((node) => {
+    node.scrollTop = node.scrollHeight
+  })
+  const geometry = async () => ({
+    transform: await page.locator('[data-preset] g').first().getAttribute('transform'),
+    scroll: await pane.evaluate((node) => node.scrollTop),
+    mark: await page.getByLabel('Your mark 1', { exact: true }).locator('circle').boundingBox(),
+  })
+  const before = await geometry()
+  const marksBefore = await stored()
+  await button(page, 'Check my tracing').click()
+  await ctReady(page)
+  await expect(page.getByText(/Reviewing slice/)).toBeVisible()
+  expect(await geometry()).toEqual(before)
+  expect(await stored()).toEqual(marksBefore)
+})
+
+test('the wheel scrolls the workspace until slice stepping is turned on, and Escape releases it', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  await startLocal(page, 'follow-one-airway')
+  const image = page.locator('[data-preset]')
+  const slice = () => image.getAttribute('data-slice')
+  const box = (await image.boundingBox())!
+  const pane = image.locator('xpath=ancestor::div[contains(@class,"localImageWorkspace")]')
+  const scroll = () => pane.evaluate((node) => node.scrollTop)
+  const start = await slice()
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.wheel(0, 320)
+  await page.waitForTimeout(250)
+  expect(await slice()).toBe(start)
+  expect(await scroll()).toBeGreaterThan(0)
+  await button(page, 'Wheel steps slices: off').click()
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.wheel(0, 320)
+  await page.waitForTimeout(250)
+  await ctReady(page)
+  expect(Number(await slice())).toBe(Number(start) - 1)
+  await page.keyboard.press('Escape')
+  await expect(button(page, 'Wheel steps slices: off')).toBeVisible()
+})
+
+// BBTF-47: the reported rotated LS5 transfer state.
+for (const [width, height] of [
+  [1427, 1226],
+  [1024, 768],
+])
+  test(`a rotated route plane keeps its direction labels and slice controls in the workspace at ${width}×${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height })
+    await page.goto(`${base}/assess`)
+    await button(page, 'Start the route set').click()
+    await ctReady(page)
+    await button(page, /Rotate 90° right/).click()
+    await ctReady(page)
+    const image = page.locator('[data-preset]')
+    const pane = image.locator('xpath=ancestor::section[contains(@class,"routeEvidence")]')
+    const paneBox = (await pane.boundingBox())!
+    const imageBox = (await image.boundingBox())!
+    // Aspect ratio and a useful size survive the rotation.
+    expect(Math.abs(imageBox.width - imageBox.height)).toBeLessThan(2)
+    expect(imageBox.width).toBeGreaterThan(260)
+    expect(imageBox.width).toBeLessThanOrEqual(paneBox.width + 1)
+    expect(await pane.evaluate((node) => getComputedStyle(node).overflowY)).toBe('auto')
+    // All four patient directions stay attached to the image.
+    await expect(image.locator('> span')).toHaveText(['R', 'A', 'L', 'P'])
+    // The image and its slice row are reachable in the same scroll owner.
+    const slider = page.getByRole('slider', { name: 'CT slice' })
+    await slider.scrollIntoViewIfNeeded()
+    const sliderBox = (await slider.boundingBox())!
+    expect(sliderBox.y).toBeGreaterThanOrEqual(0)
+    expect(sliderBox.y + sliderBox.height).toBeLessThanOrEqual(height)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+    await capture(page, `bbt02-rotated-${width}-${height}`)
+  })
+
+test('an expanded CT falls back in page when fullscreen is refused, and Escape returns focus', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Element.prototype.requestFullscreen = () => Promise.reject(new Error('denied by test'))
+  })
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  await startLocal(page, 'follow-one-airway')
+  const expand = button(page, 'Expand CT views')
+  await expand.click()
+  const viewer = page.getByRole('region', { name: 'CT tracing viewer' })
+  await expect(viewer).toHaveAttribute('data-ct-enlarged', 'true')
+  await expect(page.locator('[data-preset]')).toBeVisible()
+  await expect(button(page, 'Close expanded views')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(viewer).not.toHaveAttribute('data-ct-enlarged', 'true')
+  await expect(button(page, 'Expand CT views')).toBeFocused()
+})
+
+test('overlay labels stay apart on the crowded first division and can be hidden', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  await startLocal(page, 'continuity')
+  const exercise = localExercise(LESSONS[2].exercises![0])
+  for (const point of exercise.answerPoints) {
+    await button(
+      page,
+      new RegExp(`^${point.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} · slice`),
+    ).click()
+    await expect(
+      page.getByText(`Slice ${point.slice} · patient directions`, { exact: false }).first(),
+    ).toBeVisible()
+    await ctReady(page)
+    await page.getByRole('group', { name: /^CT image\./ }).press('Enter')
+  }
+  await button(page, 'Check my tracing').click()
+  await ctReady(page)
+  const boxes = async () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll('[data-preset] svg text')].map((node) => {
+        const box = node.getBoundingClientRect()
+        return { text: node.textContent, x: box.x, y: box.y, w: box.width, h: box.height }
+      }),
+    )
+  const labels = await boxes()
+  // Each learner mark is named, so A and B are not one generic label.
+  expect(labels.map((label) => label.text)).toEqual(
+    expect.arrayContaining(['Your mark A', 'Your mark B']),
+  )
+  for (let i = 0; i < labels.length; i++)
+    for (let j = i + 1; j < labels.length; j++) {
+      const a = labels[i]
+      const b = labels[j]
+      expect(
+        a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h,
+        `${a.text} overlaps ${b.text}`,
+      ).toBe(false)
+    }
+  // Leader lines pair each moved label with its unmoved anchor.
+  expect(await page.locator('[data-preset] svg line').count()).toBe(labels.length)
+  await capture(page, 'bbt02-crowded-labels')
+  const marks = await page.evaluate(
+    () => JSON.parse(localStorage.getItem('branch-tracing.draft.learn.continuity')!).value.marks,
+  )
+  await button(page, 'Hide overlays').click()
+  expect(await page.locator('[data-preset] svg text').count()).toBe(0)
+  await button(page, 'Show overlays').click()
+  expect((await boxes()).length).toBe(labels.length)
+  expect(
+    await page.evaluate(
+      () => JSON.parse(localStorage.getItem('branch-tracing.draft.learn.continuity')!).value.marks,
+    ),
+  ).toEqual(marks)
+})
+
+test('the demonstration transport sits with the CT and steps adjacent native planes', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  await page.goto(`${base}/learn?lesson=follow-one-airway`)
+  await ctReady(page)
+  await focusAirway(page)
+  const transport = page.getByRole('region', { name: 'CT demonstration controls' })
+  await expect(transport).toBeVisible()
+  const transportBox = (await transport.boundingBox())!
+  const imageBox = (await page.locator('[data-preset]').boundingBox())!
+  // Same column as the image, and inside the window without scrolling for it.
+  expect(transportBox.x).toBeGreaterThanOrEqual(imageBox.x - 200)
+  expect(transportBox.y + transportBox.height).toBeLessThanOrEqual(1226)
+  const frames = localExercise(LESSONS[0].exercises![0]).frames
+  await expect(page.locator('[data-preset]')).toHaveAttribute('data-slice', String(frames[0].slice))
+  await button(page, 'Next demonstration slice').click()
+  await ctReady(page)
+  await expect(page.locator('[data-preset]')).toHaveAttribute('data-slice', String(frames[1].slice))
+  expect(Math.abs(frames[1].slice - frames[0].slice)).toBe(1)
+  await capture(page, 'bbt02-demonstration-transport')
 })

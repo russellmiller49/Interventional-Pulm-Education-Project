@@ -92,6 +92,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
   const [referenceFor, setReferenceFor] = useState<string | null>(null)
   const [labelsFor, setLabelsFor] = useState<string | null>(null)
   const [request, setRequest] = useState<{ slice: number; serial: number; focusAirway?: boolean }>()
+  const [focusRequest, setFocusRequest] = useState(0)
   const exercise = exercises[s.exercise]
   const point = exercise.trace.checkpoints[0]
   const slot = exercise.answerPoints[s.slot]
@@ -237,13 +238,18 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
     const step = `${guide}:${exercise.id}:${s.phase}`
     const changed = previousStep.current !== null && previousStep.current !== step
     previousStep.current = step
+    // The instructions pane holds the new task, so it returns to its own top.
     resetPaneScroll(pane)
-    resetPaneScroll(imageWorkspaceRef.current)
     // Stacked layouts scroll the document. Return to the new task after reviewing
     // the CT; the sticky task alone does not bring its diagram/choices into view.
     if (changed && pane && getComputedStyle(pane).overflowY === 'visible')
       workspaceRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' })
   }, [guide, exercise.id, s.phase])
+  useEffect(() => {
+    // A new example is a new workspace. Checking an answer is not: the crop,
+    // magnification and scroll position the learner set stay where they are.
+    resetPaneScroll(imageWorkspaceRef.current)
+  }, [exercise.id, guide, viewerEpoch])
   useEffect(() => {
     // Report whether synchronization with browser storage succeeded.
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -280,6 +286,9 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
   }
   function hint(level: number) {
     act({ type: 'hint', level })
+    // Focus CT view restores the crop this division was authored with. It claims no
+    // region of interest and places nothing on the image.
+    if (level === 1) setFocusRequest((value) => value + 1)
     if (level === 2) goToSlice(exercise.trace.anchor.slice)
   }
   function toggleReference() {
@@ -432,8 +441,10 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
       </ol>
     </section>
   ) : null
-  const walkthrough = (
-    <section className={styles.walkthrough} aria-label="Captioned CT walkthrough">
+  // The transport sits with the CT; the caption transcript and the teaching prose
+  // stay in the instructions pane. Nothing plays until the learner asks it to.
+  const walkthroughTransport = (
+    <section className={styles.walkthroughTransport} aria-label="CT demonstration controls">
       <div className={styles.walkthroughControls}>
         <button
           onClick={() => {
@@ -469,11 +480,20 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
         >
           Replay from parent
         </button>
+        <span className={styles.walkthroughPosition}>
+          Demonstration slice {exercise.frames[s.frame].slice} · {s.frame + 1} of{' '}
+          {exercise.frames.length}
+        </span>
       </div>
       <p>
         {frame?.caption ??
           `Browsing slice ${viewSlice}. Return to a demonstration slice to see its caption.`}
       </p>
+    </section>
+  )
+  const walkthrough = (
+    <section className={styles.walkthrough} aria-label="Captioned CT walkthrough">
+      {walkthroughTransport}
       <details>
         <summary>Caption transcript</summary>
         <ol>
@@ -486,6 +506,10 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
             ))}
         </ol>
       </details>
+      <p className={styles.small}>
+        Every demonstration slice is an adjacent native plane; the transport steps one plane at a
+        time and no image is interpolated between them.
+      </p>
     </section>
   )
   return (
@@ -636,7 +660,30 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                 </p>
               )}
 
-              {showingWalkthrough && s.phase !== 'compare' && walkthrough}
+              {showingWalkthrough && s.phase !== 'compare' && (
+                <section className={styles.walkthrough} aria-label="Captioned CT walkthrough">
+                  <p>
+                    The demonstration controls and the current caption are beside the CT. Full
+                    captions for every slice are here.
+                  </p>
+                  <details>
+                    <summary>Caption transcript</summary>
+                    <ol>
+                      {exercise.frames
+                        .filter((f, i, frames) => i === 0 || f.caption !== frames[i - 1].caption)
+                        .map((f, i) => (
+                          <li key={i}>
+                            Slice {f.slice}: {f.caption}
+                          </li>
+                        ))}
+                    </ol>
+                  </details>
+                  <p className={styles.small}>
+                    Every demonstration slice is an adjacent native plane; the transport steps one
+                    plane at a time and no image is interpolated between them.
+                  </p>
+                </section>
+              )}
               {entryLimitation && ['demo', 'attempt'].includes(s.phase) && (
                 <p
                   className={styles.entryLimitation}
@@ -656,8 +703,8 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                   <p>{exercise.teaching.finding}</p>
                   <p>{exercise.teaching.comparison}</p>
                   <p>
-                    Watch or step through the native CT interval. Rings identify model locations;
-                    examine the air-filled lumen and its walls between those locations.
+                    Watch or step through the native CT interval. Gold crosshairs identify model
+                    locations; examine the air-filled lumen and its walls between those locations.
                   </p>
                 </>
               )}
@@ -733,16 +780,16 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                     <button aria-pressed={referenceShown} onClick={toggleReference}>
                       Show reference
                     </button>
-                    {['Highlight the region', 'Return to the parent'].map((label, i) => (
+                    {['Focus CT view', 'Return to the parent'].map((label, i) => (
                       <button key={label} onClick={() => hint(i + 1)}>
                         {label}
                       </button>
                     ))}
                     {referenceShown ? (
                       <p role="status">
-                        Reference shown: gold rings mark the model locations on the demonstration
-                        slices. {exercise.hints[2]} Any mark you place stays exactly where you put
-                        it.
+                        Reference shown: gold crosshairs mark the model locations on the
+                        demonstration slices. {exercise.hints[2]} Any mark you place stays exactly
+                        where you put it.
                       </p>
                     ) : (
                       s.hints > 0 &&
@@ -836,8 +883,8 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                     </>
                   )}
                   <p>
-                    ○ Your marks · gold rings: model locations. No automatic accuracy verdict is
-                    assigned.
+                    ○ cyan rings are your marks · ＋ gold crosshairs are model locations. No
+                    automatic accuracy verdict is assigned.
                   </p>
                   <button onClick={() => act({ type: 'retry' })}>
                     {sameLumen ? 'Try this lumen again' : 'Redo branch marks (optional)'}
@@ -1013,15 +1060,37 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
               initialView={s.views[exercise.id]}
               onViewChange={onViewChange}
               onReadyChange={setImageReady}
+              markLabels={
+                sameLumen
+                  ? ['Your mark']
+                  : exercise.answerPoints.map((p) => `Your mark ${p.label.split(' · ')[0]}`)
+              }
+              focusRequest={focusRequest}
+              belowImage={
+                showingWalkthrough && s.phase !== 'compare' ? walkthroughTransport : undefined
+              }
             />
           )}
-          {!guide && !sameLumen && (
-            <button onClick={() => act({ type: 'explain-orientation' })}>
-              Compare the regional display convention
-            </button>
-          )}
-          {s.phase === 'attempt' && (
-            <button onClick={() => act({ type: 'reset-attempt' })}>Reset attempt</button>
+          {!guide && (
+            // Kept for the whole exercise, with Reset attempt holding its place
+            // outside the marking step: checking an answer must not shorten this
+            // column and slide the CT the learner is inspecting.
+            <div className={styles.workspaceTools} role="group" aria-label="Exercise tools">
+              {!sameLumen && (
+                <button onClick={() => act({ type: 'explain-orientation' })}>
+                  Compare the regional display convention
+                </button>
+              )}
+              <button
+                className={s.phase === 'attempt' ? undefined : styles.reservedControl}
+                aria-hidden={s.phase === 'attempt' ? undefined : true}
+                tabIndex={s.phase === 'attempt' ? undefined : -1}
+                disabled={s.phase !== 'attempt'}
+                onClick={() => act({ type: 'reset-attempt' })}
+              >
+                Reset attempt
+              </button>
+            </div>
           )}
           <p className={styles.referenceNotice}>
             {MODEL_REFERENCE_LABEL}. No reviewed wall contours or distractor verdicts are supplied
@@ -1051,10 +1120,16 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
           marking moves on and records nothing for that example.
         </p>
         <p>
+          Beside the image: Magnify enlarges the native pixels without adding resolution, Hide
+          overlays clears the rings, crosshairs and labels and restores them at once, and Wheel
+          steps slices is off until you turn it on, so an ordinary scroll moves the page. Checking
+          an answer keeps the crop, magnification and scroll position you set.
+        </p>
+        <p>
           Help does not reset your marks.
           {s.phase === 'attempt' &&
             !attemptReady &&
-            ' Show reference, Highlight the region and Return to the parent are in the task instructions.'}
+            ' Show reference, Focus CT view and Return to the parent are in the task instructions.'}
         </p>
       </HelpDialog>
       <HelpDialog
