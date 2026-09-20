@@ -556,3 +556,36 @@ body,
 .guided-workbench fieldset[hidden] {
   display: none;
 }
+/*
+ * The scanning labs put the image and the controls that drive it side by side at laptop widths
+ * (EBUS-PRE-REVIEW-02, L3-1 / L5-5 / L14-2). They were stacked, so at the report's 1021 px
+ * viewport the rotation slider and the image it moves were never on screen together. The columns
+ * stack again below 56em, and nothing is pinned or clipped: the host keeps the only scrollport.
+ */
+.guided-scan-workspace {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: start;
+}
+.guided-scan-image {
+  flex: 3 1 24em;
+  min-width: 0;
+}
+.guided-scan-controls {
+  flex: 1 1 15em;
+  min-width: 0;
+}
+.guided-scan-controls fieldset {
+  margin-top: 0;
+}
+.guided-scan-image .simulator-continuous-ultrasound {
+  height: auto;
+  max-height: none;
+  aspect-ratio: 1;
+}
+.guided-scan-image .guided-anatomy {
+  height: auto;
+  aspect-ratio: 1;
+  max-height: 460px;
+}
