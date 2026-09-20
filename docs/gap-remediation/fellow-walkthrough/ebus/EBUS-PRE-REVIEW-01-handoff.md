@@ -20,7 +20,7 @@ faculty reviewer. Nothing here is evidence that the module teaches what it inten
 | Starting status    | clean                                                                                                                                                                                                                                                                                                             |
 | Instructions read  | root `AGENTS.md` and `CLAUDE.md`; `docs/local-authoring-assets.md`; the package in place under `Interventional-Pulm-Local-Data/module_update_9_19/EBUS_Claude_Implementation_Pack` (`00_START_HERE.md`, `01_…`, `PI_EBUS_COORDINATION.md`, `OWNER_DECISIONS.md`, `SOURCE_CONTEXT.md`, `FEEDBACK_LEDGER.md/.json`) |
 | Prior context read | `docs/gap-remediation/self-paced/EBUS-01-handoff.md` (active self-paced contract), `docs/gap-remediation/systemic-ux/SYSTEMIC-UX-01-handoff.md` and `-02-handoff.md`                                                                                                                                              |
-| Commits            | seven, listed below, each independently revertible                                                                                                                                                                                                                                                                |
+| Commits            | nine, each independently revertible; the ninth is the sanity review's correction, and the docs commit is the eighth                                                                                                                                                                                               |
 | Pull request       | opened from this branch; not merged                                                                                                                                                                                                                                                                               |
 
 ## Shared-file scope
@@ -171,7 +171,7 @@ session found no EBUS route behind it; the evidence above is all from the direct
 | EBUS host, routes, matching/sequence/record/bridge/state                                                   | `npx jest src/features/ebus-guided`                                                                                                                                                                                  | 11 suites, 123 tests passed                                                                                                                                                                                                                                   |
 | Shared verdict and its consumers                                                                           | `npx jest src/features/learning-module src/features/cardiohelp-ecmo src/features/icu-hemodynamics src/features/mechanical-circulatory-support src/features/bronchoscopy-foundations src/features/peripheral-imaging` | all passed                                                                                                                                                                                                                                                    |
 | Whole suite                                                                                                | `npx jest`                                                                                                                                                                                                           | 890 of 899 suites pass. **Nine failures, all pre-existing:** verified by running the same nine on unmodified `origin/main` in a separate worktree, where they fail identically. None touches EBUS, the shared verdict or anything in this diff. Listed below. |
-| Types                                                                                                      | `NODE_OPTIONS=--max-old-space-size=8192 npx tsc --noEmit`                                                                                                                                                            | clean (the default heap OOMs on this repository; not related to this change)                                                                                                                                                                                  |
+| Types                                                                                                      | `NODE_OPTIONS=--max-old-space-size=8192 npx tsc --noEmit`                                                                                                                                                            | clean **after the sanity review's correction**. At the first PR head (`51194cc1`) it exited 2 with two errors in this batch's own new test file; see "Corrected during the sanity review" below. The default heap OOMs on this repository, unrelated.         |
 | Lint                                                                                                       | `npx eslint src/features/ebus-guided src/features/learning-module/components/AnswerVerdict.tsx src/lib/ebus-model-contract.ts`                                                                                       | clean                                                                                                                                                                                                                                                         |
 | Formatting                                                                                                 | `npx prettier --check` on the changed paths, and `lint-staged` on every commit                                                                                                                                       | clean                                                                                                                                                                                                                                                         |
 | Production build                                                                                           | `npm run build`                                                                                                                                                                                                      | exit 0; 767 static pages generated, standalone output prepared. See note 4 below about running it while the dev server is up.                                                                                                                                 |
@@ -210,6 +210,63 @@ No safety or identity assertion was relaxed. `labGoalMet`, `retainedImageAvailab
 handshake, `taskErrors`, `compatibleExamination` and the workbench origin/session checks are
 untouched.
 
+## Corrected during the pre-merge sanity review (2026-09-20)
+
+One defect introduced by this batch, found by re-running the repository type-check at the PR head
+and fixed inside this PR.
+
+**`npx tsc --noEmit` exited 2 at `51194cc1`**, with two errors, both in
+`src/features/ebus-guided/__tests__/pre-review-01.test.tsx`: the `as const` on the shared
+`QuestionExplanation` fixture makes `choices` a readonly tuple, which `ClinicalLearningItem` does
+not accept, so neither of that test's two renders type-checked.
+
+Why nothing caught it: Jest transpiles without type-checking; `next build` uses
+`tsconfig.build.json`, which deliberately excludes test fixtures from the production type-check
+worker, so the build passed; and the repository type-check is not run in CI (`.github/workflows`
+holds only `worktree-scope.yml`). The "clean" recorded in the table above came from a run made
+before that test file was written — the wrong order, and the reason this handoff carried a false
+claim until now.
+
+The fixture is now annotated as the item it stands for, which both fixes the assignment and
+checks it properly. No assertion changed; 43 tests still pass. The regression signal is the
+type-check itself: exit 2 at `51194cc1`, exit 0 now.
+
+Attribution, checked: on `origin/main` in a **built** checkout the repository type-check is clean.
+A freshly created worktree at `origin/main` reports 17 errors, but all of them are
+`Cannot find module 'contentlayer/generated'` and its knock-on implicit-`any`s — an artefact of a
+checkout that has never run `build:content`, not breakage on main.
+
+## Independent pre-merge sanity review (2026-09-20)
+
+Reviewed at head `51194cc1`, corrected to `7e05d47d`. `origin/main` is still
+`77a141cc` — it has not moved since the recorded base — and the PR reports `MERGEABLE` /
+`mergeStateStatus: CLEAN`.
+
+Re-verified against the **production build** (`npm run build`, then the standalone server), not
+the dev server, with the dev server and its training-app watcher stopped first:
+
+- the four shared-verdict cases — keyed, ordinary wrong, partly correct, unsafe — including that
+  the original heading survives only when nothing in the list is keyed;
+- every current consumer of the shared verdict, re-derived from the tree rather than the handoff:
+  233 suites, 4453 tests, all pass with no consumer edited;
+- leaving a case from a later check and from an integrated case; reselecting the active Practice
+  tab; ordinary navigation to Cases; browser Back; the `?case=` deep link;
+- the case reference CT present on check 2;
+- evidence identity in all five states, driven with a real acquisition of the contact model;
+- matching row feedback clearing on edit, one numbering system for ordering, keyboard selection,
+  the record's blank placeholders, a legacy draft restored byte for byte, and skip writing nothing;
+- lesson identity and focus clearance at 1440×900, 1246×1021, 1024×768, 390×844 and 200% root
+  text: identity visible after a task change at every size, all focusables visible and
+  hit-testable when focused, no horizontal overflow from this module, chrome at 12.7–20.3% of the
+  viewport where pinned.
+
+Holds confirmed still held, not papered over: **L5-1** — with the contact model genuinely held in
+the air-gap state, check 1 says it describes a situation in words, and check 2 keeps the authored
+instruction while its question still names the reflector state. No relabelling, no manufactured
+state, no substituted evidence and no question rewritten. No content file is touched by this PR at
+all, so no answer key, stem, rationale or clinical claim moved; no annotation, target marker,
+measurement or attempt-history machinery was added anywhere in the diff.
+
 ## Observations recorded, not acted on
 
 These are outside this batch's mechanisms; they are logged rather than fixed.
@@ -223,7 +280,21 @@ These are outside this batch's mechanisms; they are logged rather than fixed.
 3. **`POST /api/analytics` returns 500** on this local dev server because no Supabase URL/key is
    configured in this worktree. That is a local environment condition, not an application
    regression, and no change to authentication or tracking was made or is authorised.
-4. **`npm run build` and the dev server cannot share a worktree.** The dev wrapper's file watcher
+4. **The record's blank placeholders are session-scoped for a partially entered node.** Choosing
+   one of a node's two fields writes the whole node record, so after a reload the sibling field
+   comes back showing its stored value ("Not recorded") rather than "Choose…". Within a session
+   the distinction holds per field. Persisting per-field intent would need a schema change, which
+   this batch is not authorised to make, and the consequence is display only: the check still
+   refuses an unentered declaration — verified, 17 field errors including "Distinguish sampled
+   from not sampled using the source entry" — so no fabricated record can be accepted.
+5. **Open PR [#134](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/134)
+   (`claude/critical-care-shared-and-hub`, 2026-09-08) also touches `AnswerVerdict.tsx`,** adding a
+   derived `answerVerdictFrames` export near `verdictCopy`. A trial merge auto-merges that file
+   with this batch's change — the two edits are in disjoint regions and neither reads the other's
+   state. #134 is separately conflicted against current `main` in four
+   `cardiohelp-ecmo/components/stage` files, which reproduce without #249 in the merge, so it
+   needs a rebase on its own account. Merge order is a note, not a blocker.
+6. **`npm run build` and the dev server cannot share a worktree.** The dev wrapper's file watcher
    rebuilds the embedded training apps while `build:training-apps` is removing and re-copying the
    same directory, and the copy fails with `ENOENT` on a path it is mid-way through replacing. The
    first build attempt failed this way; with the dev server stopped it completes. Worth knowing

@@ -8,7 +8,7 @@
   "baseSha": "77a141ccfd574a984f91e74abc9018b5d67e8202",
   "branch": "claude/ebus-pre-review-01",
   "checkout": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-ebus-9-19",
-  "state": "implemented; pull request open; not merged, not deployed",
+  "state": "implemented; pre-merge sanity review complete; pull request open; not merged, not deployed",
   "claims": {
     "clinicalApproval": false,
     "sourceReview": false,
@@ -266,8 +266,18 @@
       },
       "keyboard": "all 18 focusables in the lesson flow visible and hit-testable when focused, at normal text and at 200%",
       "textScaling": [
-        { "root": "16px", "chrome": "114px", "pinned": true, "reserved": "202.9px" },
-        { "root": "32px", "chrome": "205px", "pinned": true, "reserved": "374.0px" },
+        {
+          "root": "16px",
+          "chrome": "114px",
+          "pinned": true,
+          "reserved": "202.9px"
+        },
+        {
+          "root": "32px",
+          "chrome": "205px",
+          "pinned": true,
+          "reserved": "374.0px"
+        },
         {
           "root": "56px",
           "chrome": "486px",
@@ -294,7 +304,7 @@
       "src/features/literature/dedicated-supabase/foundation-manifest.test.ts",
       "src/lib/board-review-html.test.ts"
     ],
-    "typeCheck": "NODE_OPTIONS=--max-old-space-size=8192 npx tsc --noEmit — clean",
+    "typeCheck": "NODE_OPTIONS=--max-old-space-size=8192 npx tsc --noEmit — clean after the sanity review's correction. At the first PR head 51194cc1 it exited 2 with two errors in this batch's own new test file (an `as const` fixture producing a readonly `choices` tuple). Jest does not type-check, `next build` uses tsconfig.build.json which excludes test fixtures, and CI does not run the repository type-check, so nothing caught it; the earlier \"clean\" was recorded before that file existed. On origin/main in a built checkout the type-check is clean.",
     "lint": "npx eslint on the changed paths — clean",
     "formatting": "prettier clean; lint-staged ran on every commit",
     "productionBuild": "npm run build — exit 0, 767 static pages, standalone output prepared",
@@ -330,5 +340,43 @@
     "Owner review of this pull request.",
     "Lane 02 (workbench and recordings) only after this merges.",
     "Lane 05 receives: the L5-1 exact mismatch, the PR-2 target marker, L3-8/L9-4/L11-5 item wording, L12-6 evidence-sufficiency teaching and L20-2's alternative ordering."
-  ]
+  ],
+  "sanityReview": {
+    "date": "2026-09-20",
+    "headReviewed": "51194cc1",
+    "headAfterCorrection": "7e05d47d",
+    "originMain": "77a141cc — unchanged since the recorded base",
+    "mergeable": "MERGEABLE / mergeStateStatus CLEAN",
+    "scope": "bounded pre-merge sanity review; no new defect-discovery cycle, no batch 02, no merge, no deploy",
+    "defectsCausedByThisPr": [
+      {
+        "summary": "Repository type-check failed at the PR head: two errors in the batch's own new test file.",
+        "path": "src/features/ebus-guided/__tests__/pre-review-01.test.tsx",
+        "correction": "Fixture annotated as Omit<ClinicalLearningItem, \"explanation\"> instead of `as const`.",
+        "regressionSignal": "npx tsc --noEmit exits 2 at 51194cc1 and 0 at 7e05d47d",
+        "assertionsChanged": "none; 43 tests still pass"
+      }
+    ],
+    "reverifiedAgainstProductionBuild": [
+      "the four shared-verdict cases: keyed, ordinary wrong, partly correct, unsafe",
+      "every current consumer of the shared verdict re-derived from the tree: 233 suites, 4453 tests, no consumer edited",
+      "leaving a case mid-case and from an integrated case; active-tab reselect; ordinary navigation; browser Back; ?case= deep link",
+      "case reference CT present on check 2",
+      "evidence identity in all five states, with a real contact-model acquisition",
+      "matching row feedback clearing on edit; one numbering system; keyboard selection; record placeholders; legacy draft byte-for-byte; skip writes nothing",
+      "lesson identity and focus clearance at 1440x900, 1246x1021, 1024x768, 390x844 and 200% root text"
+    ],
+    "holdsConfirmedStillHeld": [
+      "L5-1: contact model held in the air-gap state — check 1 declares itself a described situation, check 2 keeps the authored instruction and its question still names the reflector. No relabelling, manufactured state, substituted evidence or rewritten question.",
+      "No content file is changed by this PR, so no answer key, stem, rationale or clinical claim moved.",
+      "No annotation, target marker, measurement surfacing or attempt-history machinery anywhere in the diff."
+    ],
+    "preExistingFailuresConfirmedOnOriginMain": "all nine suites fail identically in a fresh worktree at origin/main (8 failed tests, same suites)",
+    "newObservations": [
+      "The record's blank placeholders are session-scoped for a partially entered node: after a reload the sibling field shows its stored value. Display only — the check still refuses an unentered declaration (verified). Fixing it would need a schema change this batch is not authorised to make.",
+      "Open PR #134 also touches AnswerVerdict.tsx; the two edits auto-merge. #134 is separately conflicted against current main in four cardiohelp-ecmo stage files, independently of #249. Merge-order note, not a blocker.",
+      "The repository type-check is not run in CI (.github/workflows holds only worktree-scope.yml), which is why a type error reached the PR head."
+    ],
+    "decision": "READY TO MERGE"
+  }
 }
