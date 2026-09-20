@@ -1,0 +1,272 @@
+{
+  "batch": "EBUS-PRE-REVIEW-02",
+  "title": "Readable images and usable controls",
+  "lane": "02",
+  "module": "ebus-guided",
+  "source": "EBUS_Guided_Course_Fellow_Walkthrough.docx (Claude in a first-year-fellow persona, 18-19 September 2026)",
+  "package": "Interventional-Pulm-Local-Data/module_update_9_19/EBUS_Claude_Implementation_Pack",
+  "baseSha": "c717c9ffae09cb67e19b06a56d37c75487a5605a",
+  "branch": "claude/ebus-pre-review-02",
+  "checkout": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-ecmo-2-9-19",
+  "state": "implemented; pull request open; not merged, not deployed",
+  "claims": {
+    "clinicalApproval": false,
+    "sourceReview": false,
+    "mediaRightsReview": false,
+    "realLearnerValidation": false,
+    "usabilitySession": false,
+    "release": false,
+    "mediaReplacedOrReencoded": false,
+    "clinicalCalibrationAdded": false,
+    "anatomyLabelsAdded": false
+  },
+  "sharedFileScope": {
+    "authorisedBy": "PI_EBUS_COORDINATION.md - EBUS guided adapters, lane 02",
+    "notTouched": [
+      "src/features/learning-module/components/AnswerVerdict.tsx (lane 01's authorised shared edit)",
+      "global site CSS",
+      "PI workbenches"
+    ],
+    "otherNonModuleFiles": [
+      {
+        "path": "src/lib/ebus-recorded-contract.ts",
+        "reason": "EBUS-only. Adds the optional, validated recorded-example provenance a frame came from (L7-1).",
+        "legacyProtection": "Optional field; a frame without it still validates. settings is byte-identical because labGoalMet is checked against it."
+      },
+      {
+        "path": "src/lib/ebus-guided-bridge.ts",
+        "reason": "EBUS-only. Adds the optional held contact condition (carry-forward of L5-1).",
+        "legacyProtection": "Optional, and accepted only on the contact package."
+      },
+      {
+        "path": "src/lib/ebus-model-contract.ts",
+        "reason": "EBUS-only. CONTACT_MODES/CONTACT_MODE_LABELS and phantomPlaneReference, derived from existing geometry.",
+        "legacyProtection": "Additions only; modelFrameId, modelReducer, measurePhantom, modelComplete and MODEL_STEPS unchanged."
+      },
+      {
+        "path": "EBUS-course/apps/web/src/features/simulator/ContinuousSectorView.tsx",
+        "reason": "Shared legacy renderer; one guarded line so a guided lab without the freeze control does not render a permanently disabled one (L14-4).",
+        "legacyProtection": "!guided unchanged; the standalone simulator still shows and allows Freeze, re-checked in the browser on the built app."
+      },
+      {
+        "path": "EBUS-course/apps/web/src/features/simulator/SimulatorPage.tsx",
+        "reason": "Shared legacy renderer; the edit is entirely inside the if (guided) branch, wrapping the image and its controls in two columns.",
+        "legacyProtection": "Nothing outside that branch touched."
+      },
+      {
+        "path": "EBUS-course/apps/web/src/features/knobology/videoSegments.ts",
+        "reason": "Shared with the legacy knobology panel; three added constants for the frame size and the measured image region.",
+        "legacyProtection": "No existing export changed; the legacy panel does not read them."
+      },
+      {
+        "path": "src/features/ebus-guided/content/optimize.ts",
+        "reason": "Two authored strings that name the control scale, so the user-facing vocabulary is coherent (L7-1).",
+        "legacyProtection": "No key, stem, choice, rationale, explanation, source or clinical claim changed."
+      },
+      {
+        "path": ".claude/launch.json",
+        "reason": "Dev and standalone-preview entries for this worktree's ports."
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "L6-1",
+      "section": "A",
+      "status": "reproduced-and-fixed",
+      "path": "EBUS-course/apps/web/src/guided/RecordedFrameView.tsx, recordedFrameRegion.ts, guided.css",
+      "state": "lesson 7 acquisition, 1246x1021",
+      "learnerImpact": "The 1920x1080 recording was letterboxed into a square 204.7 px box, so the sector and its depth scale rendered 136.9 x 91.3 and no border could be read.",
+      "evidence": "Measured on both builds: before 204.7 x 204.7 box / 136.9 x 91.3 image area; after 493.1 x 329.1, all of it image. Region measured by scripts/ebus-guided/measure-recorded-sector.mjs: x 480..1763, y 76..932."
+    },
+    {
+      "id": "L7-5",
+      "section": "A",
+      "status": "reproduced-and-partly-addressed",
+      "held": "The nodal border is still not outlined; no verified annotation exists and inferring one is barred. -> 05.",
+      "evidence": "Same geometry as L6-1; the border is rendered at 3.6x the linear size."
+    },
+    {
+      "id": "L3-1",
+      "section": "A",
+      "status": "reproduced-and-fixed-for-co-visibility",
+      "path": "EBUS-course/apps/web/src/features/simulator/SimulatorPage.tsx, guided.css",
+      "evidence": "Measured on lesson 14 (the same guided simulator surface): after, 707 px tall with a 497 x 497 sector beside a 271 px control column."
+    },
+    {
+      "id": "L5-5",
+      "section": "A",
+      "status": "reproduced-and-fixed",
+      "path": "EBUS-course/apps/web/src/guided/models/ModelWorkbench.tsx, models.css",
+      "evidence": "Views and controls share a row above 56em; the ineffective position:sticky on the schematic was removed (the host sizes the document to its content, so there was no scrollport to stick to)."
+    },
+    {
+      "id": "L9-1",
+      "section": "A/C",
+      "status": "reproduced-and-partly-fixed",
+      "evidence": "Before: phantom workbench 1761 px tall, controls starting at y=918 below the image. After: 1304 px, views 491 wide at y=73 beside controls 276 wide at y=73.",
+      "declined": "The 4 x 13 sweep predicate is unchanged and asserted unchanged by test; a recommended starting comparison is offered, not enforced. Any change to the requirement belongs to 04/05."
+    },
+    {
+      "id": "L14-2",
+      "section": "A",
+      "status": "partly-implemented-partly-declined",
+      "declined": "Lesson 14's tab set was not copied to every lab; in the recorded labs it would hide a comparison the learner needs simultaneously, which the task rules out."
+    },
+    {
+      "id": "L21-2",
+      "section": "A",
+      "status": "reproduced-and-partly-fixed",
+      "path": "EBUS-course/apps/web/src/guided/models/ModelViewport.tsx",
+      "evidence": "Model bounds 122.0 x 45.5 x 24.0 mm. Before: fixed 178 mm camera in a 594 x 240 panel, assembly about 39% of the width. After: derived 161 mm in a 454 x 341 panel, about 83% of the width. Camera framing is excluded from modelFrameId.",
+      "held": "Labelling the handle parts in view is lane 03/05. The deliberate concealment of distal geometry during the task is unchanged."
+    },
+    {
+      "id": "L6-6",
+      "section": "B",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/ebus-guided/components/LessonHost.tsx, course.module.css",
+      "learnerImpact": "Becoming ready moved 'Continue without an image' from a second row into the place the disabled 'Hold this acquisition' had occupied, under a resting pointer.",
+      "evidence": "Measured x before: not ready -> Back 50, Hold 1000 (disabled), skip 50 on row two; ready -> Hold 748, skip 951. After: Back 50, skip 125, Hold 1000/988 identical box, note in a slot that is always present."
+    },
+    {
+      "id": "L7-1",
+      "section": "B",
+      "status": "reproduced-and-fixed",
+      "learnerImpact": "The slider read 'Gain level 8' while the caption read 'Gain 100 - Contrast 43'; the contrast figure described a clip that does not vary contrast.",
+      "evidence": "Every surface now names the recorded example and the frame carries control, step, segment, file and window: 'Depth 4 cm - gain example 4 of 8 - clip Depth4_Gain_4, 6.0-8.0 s of Depth4.mp4'."
+    },
+    {
+      "id": "L7-3",
+      "section": "B",
+      "status": "reproduced-explained-not-bypassed",
+      "investigation": "The last-touched-control requirement is real, not stale state: the lookup holds one clip per step of one control, so the clip on screen is a gain example only while gain is the control last moved, and the goal is to hold a gain example.",
+      "change": "labGoalRequirements reports the same conditions labGoalMet applies; a test holds the two to the same answer for every lab in the course. The criterion itself is unchanged."
+    },
+    {
+      "id": "L7-4",
+      "section": "B",
+      "status": "reproduced-and-fixed",
+      "rootCause": "Changing a control cleared the ready key, which disabled the whole fieldset for about 20 ms (sampled at 8 ms: enabled -> disabled at 51 ms -> enabled at 73 ms), and a disabled control loses focus. Focus went to BODY on the first change, so every later arrow press went nowhere.",
+      "change": "Selection controls always apply the latest intent; the fieldset stays enabled and aria-busy while a clip decodes; readiness still waits for the decode and no stale provenance is reported while it does.",
+      "evidence": "Four rapid steps applied, focus on 'Image gain' throughout."
+    },
+    {
+      "id": "L14-4",
+      "section": "B",
+      "status": "reproduced-and-fixed",
+      "rootCause": "allowed('freeze') requires freeze in config.controls, and no guided simulator lab has it, so it rendered permanently disabled in all of them.",
+      "change": "Absent in a guided lab that was not given it. Not enabled: nothing bypasses the bridge and no stale pixels are labelled current."
+    },
+    {
+      "id": "L9-3",
+      "section": "C",
+      "status": "reproduced-and-fixed",
+      "evidence": "The section's viewBox is the phantom coordinate system itself, so a 10 mm bar, decade depth ticks and a midline mark are exact. Fields read 'phantom mm, 0 at the midline' and 'phantom mm from the top of the field'."
+    },
+    {
+      "id": "L9-2",
+      "section": "C",
+      "status": "reproduced-and-addressed",
+      "evidence": "phantomPlaneReference derives the section, axes, lengths and ideal caliper line from the exact current plane: central elongated plane short 16.0 / long 32.0 mm; at offset 6 the short axis is 16*sqrt(1-0.36) = 12.8 mm. Openable at any time, including before an attempt.",
+      "notAdded": "no score, no accuracy threshold, no pass mark, no competence claim"
+    },
+    {
+      "id": "L10-1",
+      "section": "C",
+      "status": "partly-addressed-partly-held",
+      "change": "The workbench says that two separated points are control practice and not evidence that either sits on a border, and reports separation in recorded-frame pixels.",
+      "held": "No expert overlay on recorded ultrasound; none is sourced and inventing one is barred. -> 05."
+    },
+    {
+      "id": "L10-2",
+      "section": "C",
+      "status": "reproduced-and-fixed",
+      "evidence": "Pointer and touch placement in either view, a dashed connecting line, and an honest separation readout. A click at 45%/30% across the image view resolved to frame pixel (1057.8, 333.1) = 480 + 0.45*1284, 76 + 0.30*857. Keyboard placement unchanged and clamped identically through the same reducer action."
+    },
+    {
+      "id": "L5-1",
+      "section": "carry-forward from lane 01",
+      "status": "resolved-for-the-evidence-wording-held",
+      "change": "EbusObservation.model.contactMode carries which of the five modelled conditions produced the frame, read from the live model state at the moment of the observation. The evidence pane names it on a real held acquisition.",
+      "notDone": "no state inferred from the image, none reconstructed after the fact, no held acquisition relabelled, no supplied example substituted, and no question wording, answer key, clinical claim or review status changed",
+      "held": "Lesson 5 check 2 still names the reflector state while a learner may legitimately hold another. The learner can now see that; whether the item should be re-worded is a content decision. -> 04/05."
+    }
+  ],
+  "contentStringsTouched": [
+    "src/features/ebus-guided/content/optimize.ts - lesson 7 lab instruction: 'level 8 ... level 4 or 5' -> 'example 8 ... example 4 or 5', plus one sentence on why gain must be the control last moved",
+    "src/features/ebus-guided/content/optimize.ts - Optimize boundary line: 'Levels are specific to this teaching library' -> 'Example numbers are specific to this teaching library'"
+  ],
+  "verification": {
+    "newRegressionSuites": [
+      "src/features/ebus-guided/__tests__/pre-review-02.test.tsx - 31 tests pass; against unmodified origin/main sources 19 of the 27 that can run fail (4 cannot exist on the baseline), and the 8 that pass are controls",
+      "EBUS-course/apps/web/src/guided/recordedFrameRegion.test.ts - 10 tests holding the displayed-region transform"
+    ],
+    "ebusSuites": "npx jest src/features/ebus-guided - 12 suites, 155 tests, all pass",
+    "sharedStageConsumers": "npx jest src/features/ebus-guided src/features/learning-module - 27 suites, 293 tests, all pass",
+    "embedded": "npm --prefix EBUS-course/apps/web test - 36 files, 264 tests pass; npm run type-check:training-apps clean",
+    "types": "NODE_OPTIONS=--max-old-space-size=8192 npx tsc --noEmit - exit 0",
+    "lint": "npx eslint src/features/ebus-guided src/lib/ebus-*.ts scripts/ebus-guided - clean",
+    "format": "npx prettier --check on the changed paths - clean",
+    "fullSuite": "npx jest - 900 of 909 suites pass; the 9 failures are the same pre-existing list the 01 handoff records and none touches this diff",
+    "preExistingFailures": [
+      "scripts/ip-preference-cards/check-brochure-intake-static-exposure.test.ts",
+      "scripts/ip-preference-cards/us-status/__tests__/safety-boundaries.test.ts",
+      "scripts/training-apps.test.mjs (runner artefact; 4 pass under node --test)",
+      "src/features/bronchial-branch-tracing/__tests__/contracts.test.ts",
+      "src/features/critical-care/__tests__/accessibility.test.tsx",
+      "src/features/critical-care/__tests__/curriculum-sequencing.test.tsx",
+      "src/features/critical-care/__tests__/learner-copy.test.ts",
+      "src/features/literature/dedicated-supabase/foundation-manifest.test.ts",
+      "src/lib/board-review-html.test.ts"
+    ],
+    "productionBuild": "npm run build exit 0; the built embedded bundle carries this batch's code (recorded-frame-media in guided-HPicLmx7.css, 'Whole recorded frame' in guided-CTL8_Nah.js); verified served from .next/standalone",
+    "viewports": [
+      "1246x1021",
+      "1440x900",
+      "1024x768",
+      "390x844",
+      "320x740",
+      "200% root text at 1440x900"
+    ],
+    "themes": "both site theme classes exercised; this route renders the same palette under each, as before this batch",
+    "playback": {
+      "environment": "production standalone build, Chromium in the desktop app's browser pane, H.264 available; no WebM substitution used",
+      "file": "/socal-ebus-course/app/media/knobology/Depth_segments/Depth4.mp4",
+      "decoded": "1920x1080, readyState 4",
+      "segment": "Depth4_Gain_8, window 14.0-16.0 s, currentTime 14.025",
+      "playing": "Play advanced currentTime 10.03 -> 10.53 s; the status line follows the element, not the intent",
+      "outOfOrder": "three selections dispatched in one tick settle on Depth4_Gain_6, 10.0-12.0 s, readyState 4 - the last selection, not an earlier one",
+      "loadFailure": "alert shown, busy cleared, the host's Hold stays disabled",
+      "unchanged": "autoplay behaviour, browser safeguards, origin and session checks; no clip re-encoded"
+    },
+    "environmentArtefact": "While the desktop app's browser pane is hidden the whole tab's requestAnimationFrame is suspended, so the guided document's height message never fires and the iframe holds 800 px against 1285 px of content. Forcing a paint corrects it to 1289 px immediately. document.hidden was true throughout. Recorded, not treated as a product defect."
+  },
+  "regressionChecks": {
+    "lane01": "comparison heading and keyed row after a wrong answer, the case reference CT, leaving a case, explanation without an answer, skip holding nothing - all re-driven on this branch and intact",
+    "selfPacedContract": "no score, mastery, first-response persistence, forced attempt or new gate",
+    "storage": "nothing added, removed or re-keyed; no schema migration, telemetry or auth change",
+    "realImagePrerequisites": "labGoalMet, retainedImageAvailable, the hold handshake and the workbench origin/session checks untouched; labGoalRequirements reports and never decides",
+    "freezeCaptureReset": "unchanged, except that freeze, measure and save now also require a decoded frame",
+    "legacyEntryPoints": "the standalone SoCal EBUS course loads from the built site and its simulator still shows an enabled Freeze; the legacy knobology panel is unchanged",
+    "sourceAndReviewStatus": "unchanged"
+  },
+  "observationsNotActedOn": [
+    "'This is your last unannotated ultrasound frame' - the string lane 01 could not locate is in SimulatorPage.tsx on a locked linked acquisition. A copy claim in a shared legacy renderer. -> 04.",
+    "POST /api/analytics returns 500 on this checkout because no Supabase URL/key is configured here. Local environment, not an application regression.",
+    "A global site-header link overflows the viewport by 2 px at 200% root text; outside the lesson flow, and global chrome belongs to the PI platform task.",
+    "The embedded workbench does not follow the site's light/dark theme, and host root-text enlargement does not scale it. Both are pre-existing consequences of it being a separate document."
+  ],
+  "notRun": [
+    "any human usability session, clinical review, source review or media-rights review",
+    "any beta-wrapped route: no EBUS route was found behind the beta wrapper, and that surface belongs to PI platform 05",
+    "Playwright (npm run test:e2e)",
+    "a baseline measurement of the guided simulator's height at 1246x1021 - the ~1300 px figure for lesson 14 is the source report's, not ours; the 707 px after figure is measured",
+    "Safari, Firefox and any real mobile device - all browser evidence is one Chromium build"
+  ],
+  "nextSteps": [
+    "Owner review of this pull request.",
+    "Lane 03 (anatomy and sweep usability) only after this merges.",
+    "Lane 04/05 receive: the lesson 5 check-2 wording now that the held contact condition is visible, the nodal-border outline (L7-5), an expert caliper overlay for recorded ultrasound (L10-1), any change to the 4 x 13 sweep requirement (L9-1), handle labels in the needle view (L21-2), the 'last unannotated ultrasound frame' copy, and whether 'example' is the right word for the recorded control scale."
+  ]
+}
