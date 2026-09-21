@@ -93,6 +93,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
   const [labelsFor, setLabelsFor] = useState<string | null>(null)
   const [request, setRequest] = useState<{ slice: number; serial: number; focusAirway?: boolean }>()
   const [focusRequest, setFocusRequest] = useState(0)
+  const [displayedSlice, setDisplayedSlice] = useState<number | null>(null)
   const exercise = exercises[s.exercise]
   const point = exercise.trace.checkpoints[0]
   const slot = exercise.answerPoints[s.slot]
@@ -431,6 +432,8 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
       : exercise.frames.find((f) => f.slice === viewSlice)
     : undefined
   const showAnchor = Boolean(guide) || (s.phase === 'attempt' && s.hints < 3 && !referenceShown)
+  const displayedFrameIndex = exercise.frames.findIndex((f) => f.slice === displayedSlice)
+  const displayedFrame = exercise.frames[displayedFrameIndex]
   const checklist = lesson.checklist?.length ? (
     <section aria-label="Tracing checklist">
       <h3>Tracing checklist</h3>
@@ -481,13 +484,18 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
           Replay from parent
         </button>
         <span className={styles.walkthroughPosition}>
-          Demonstration slice {exercise.frames[s.frame].slice} · {s.frame + 1} of{' '}
-          {exercise.frames.length}
+          {displayedSlice === null
+            ? 'Loading CT demonstration…'
+            : displayedFrame
+              ? `Demonstration slice ${displayedSlice} · ${displayedFrameIndex + 1} of ${exercise.frames.length}`
+              : `Browsing slice ${displayedSlice}`}
         </span>
       </div>
       <p>
-        {frame?.caption ??
-          `Browsing slice ${viewSlice}. Return to a demonstration slice to see its caption.`}
+        {displayedSlice === null
+          ? 'Waiting for the CT image.'
+          : (displayedFrame?.caption ??
+            `Browsing slice ${displayedSlice}. Return to a demonstration slice to see its caption.`)}
       </p>
     </section>
   )
@@ -1060,6 +1068,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
               initialView={s.views[exercise.id]}
               onViewChange={onViewChange}
               onReadyChange={setImageReady}
+              onDisplayedSliceChange={setDisplayedSlice}
               markLabels={
                 sameLumen
                   ? ['Your mark']

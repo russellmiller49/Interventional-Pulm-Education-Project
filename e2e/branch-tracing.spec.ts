@@ -898,3 +898,61 @@ test('the demonstration transport sits with the CT and steps adjacent native pla
   expect(Math.abs(frames[1].slice - frames[0].slice)).toBe(1)
   await capture(page, 'bbt02-demonstration-transport')
 })
+
+for (const [width, height] of [
+  [1427, 1226],
+  [1024, 768],
+  [390, 844],
+])
+  test(`delayed demonstration captions follow the decoded plane at ${width}×${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height })
+    let releaseOlder!: () => void
+    let releaseLatest!: () => void
+    const older = new Promise<void>((resolve) => (releaseOlder = resolve))
+    const latest = new Promise<void>((resolve) => (releaseLatest = resolve))
+    await page.route('**/native-v1/axial/415.png', async (route) => {
+      await older
+      await route.continue()
+    })
+    await page.route('**/native-v1/axial/414.png', async (route) => {
+      await latest
+      await route.continue()
+    })
+    try {
+      await page.goto(`${base}/learn?lesson=follow-one-airway`, {
+        waitUntil: 'domcontentloaded',
+      })
+      await ctReady(page)
+      await focusAirway(page)
+      const image = page.locator('[data-preset]')
+      const transport = page.getByRole('region', { name: 'CT demonstration controls' })
+      const shown = image.locator('image:not([visibility="hidden"])').first()
+      await button(page, 'Next demonstration slice').click()
+      await expect(image).toHaveAttribute('data-requested-slice', '415')
+      await expect(image).toHaveAttribute('data-slice', '416')
+      await expect(shown).toHaveAttribute('href', /\/416\.png$/)
+      await expect(transport).toContainText('Demonstration slice 416 · 1 of 5')
+      await expect(transport).toContainText(
+        localExercise(LESSONS[0].exercises![0]).frames[0].caption,
+      )
+      await button(page, 'Next demonstration slice').click()
+      await expect(image).toHaveAttribute('data-requested-slice', '414')
+      releaseLatest()
+      await ctReady(page)
+      await expect(image).toHaveAttribute('data-slice', '414')
+      await expect(transport).toContainText('Demonstration slice 414 · 3 of 5')
+      const lateResponse = page.waitForResponse((response) =>
+        response.url().endsWith('/native-v1/axial/415.png'),
+      )
+      releaseOlder()
+      await lateResponse
+      await expect(image).toHaveAttribute('data-slice', '414')
+      await expect(shown).toHaveAttribute('href', /\/414\.png$/)
+      await expect(transport).toContainText('Demonstration slice 414 · 3 of 5')
+    } finally {
+      releaseOlder()
+      releaseLatest()
+    }
+  })

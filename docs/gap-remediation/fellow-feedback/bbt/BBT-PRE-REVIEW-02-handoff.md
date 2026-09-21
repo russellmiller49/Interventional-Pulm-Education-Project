@@ -397,3 +397,122 @@ have loaded), and "gold rings" became "gold crosshairs" in one feedback string.
 One bounded PR, then stop. Tasks 03 and 04 follow after this is reviewed and merged, in the
 package's order. OD-01 stays open; task 05 prepares its packet. Nothing here records a faculty or
 learner review as complete.
+
+## Independent bounded sanity review — 2026-09-21
+
+**SANITY REVIEW: NOT READY TO MERGE.** The new delayed-caption defect is corrected, but the
+requested 390 × 844 Check-position criterion is still unmet. That mobile behavior also occurs on
+the unchanged base; it is recorded here without expanding the correction into pre-existing work.
+This supersedes any blanket claim above that Check preserves the screen position at every size.
+
+### Repository and protected contract
+
+- Requested and independently reviewed PR #252 head:
+  `b956a91af841a38013cc2566ed0830cfe7f56787`.
+- Fresh `origin/main`, PR base, and Prompt 02 base:
+  `c717c9ffae09cb67e19b06a56d37c75487a5605a`.
+- GitHub initially reported `MERGEABLE / CLEAN`. Other open PRs #254, #253, #251, #134,
+  #114 and #98 have no changed-file overlap with #252.
+- The 13-file inventory is recorded in `sanityReview.changedFileInventory` in the status JSON:
+  the two task documents, BBT Playwright file, three BBT tests and seven BBT component files.
+- Read the task 01 and 02 handoffs/status, first-junction carry-forward, original Prompt 02 and
+  `OWNER_DECISIONS.md`. Compared Git trees and bytes directly: all `engine/`, `content/`,
+  `geometry/`, `public/branch-tracing/`, `scripts/branch-tracing/` and the BBT-02 review packet
+  remain identical to the Prompt 02 base. All ten hash prefixes above match independently.
+- OD-01 remains **OPEN**. Response slices, source geometry, branch identities/nomenclature and
+  `entryLimitation` are unchanged. Exercises remain `provisional`; the packet remains
+  **NOT REVIEWED**. No proximity calculation was reinterpreted as anatomical correctness.
+
+### Reproduced regression and correction
+
+Under a held request for `415.png`, the original head correctly kept `416.png` and the image's
+slice-416 caption visible, but the newly adjacent transport already said **Demonstration slice 415**
+and printed the slice-415 teaching caption. This contradicted the atomicity claim.
+
+The viewer now reports its decoded displayed slice to the lesson in a layout effect, before paint.
+The transport's identity and caption use that slice, while requested view/draft state remains
+separate for rapid stepping. No source data, teaching caption text or stored response changed.
+The new Jest regression failed before the correction and passes afterward. Three browser
+regressions hold 415 and 414 separately, release 414 first, then verify that late 415 cannot replace
+it. They pass at all three requested sizes against the corrected production build.
+
+Decoded screenshot luminance before / pending / pending / settled is 135.46 / 136.71 / 136.71 /
+142.51 (0–255). The pending samples retain image 416 and **Demonstration slice 416**; only after
+loading do image, image label and transport change to 415. No misleading empty frame was observed.
+
+### Measured browser results
+
+Fresh, disposable Chromium contexts; no owner profile or backup. Production server:
+`http://127.0.0.1:3132`. Main review paths were the BBT overview, Learn
+`?lesson=follow-one-airway`, Learn `?lesson=continuity`, Practice and More routes (`/assess`).
+The existing suite also exercises the remaining local lessons, rotations, restored drafts and
+anonymous locale routes.
+
+| Check                                                      | 1427 × 1226     | 1024 × 768      | 390 × 844                    |
+| ---------------------------------------------------------- | --------------- | --------------- | ---------------------------- |
+| Minus x/y through 416→415→414→413→412→411                  | 444.19 / 896.02 | 344.19 / 646.14 | 24.19 / 399.72               |
+| Slider width throughout that sequence                      | 879.72 px       | 576.72 px       | 262.72 px                    |
+| Same-coordinate click, hit target and keyboard stepping    | Pass            | Pass            | Pass                         |
+| Real mark → 4× → Check: crop, slice, native mark           | Unchanged       | Unchanged       | Unchanged                    |
+| Mark screen position across Check                          | Unchanged       | Unchanged       | **Moves upward ~238–239 px** |
+| Delayed frames and rapid superseding requests              | Pass            | Pass            | Pass                         |
+| Wheel off/on/off; Ctrl/Meta event not captured             | Pass            | Pass            | Pass                         |
+| Live-source 4× magnifier and projected mark agreement      | Pass            | Pass            | Pass                         |
+| Native fullscreen enter/close, state and focus return      | Pass            | Pass            | Pass                         |
+| Rejected/unavailable fullscreen fallback, Escape and focus | Pass            | Pass            | Pass                         |
+| Hidden Reset semantics and real Reset action               | Pass            | Pass            | Pass                         |
+| First-junction limitation and no horizontal overflow       | Pass            | Pass            | Pass                         |
+
+The original minus-button defect independently reproduced on the base: at 413→412 it moved from
+x=483.09/y=1041.63 to x=827.44/y=989.63; the old centre hit **Full CT field**. On the PR, minus,
+slider and plus rectangles remain unchanged at every measured neighboring slice. `elementFromPoint`
+continues to resolve the minus button, and focus remains on it; no overlay intercepts that target.
+
+At desktop sizes, a real native mark, the SVG transform and image pane `scrollTop=50` stay identical
+through Check. The phone fails the screen-position condition: the phase effect in `LocalCtLesson`
+still invokes `workspace.scrollIntoView` when the instructions pane has visible overflow. On the
+original PR head, document scroll changes 49→264 and the mark moves −239.31 px. On the corrected
+build the measured shift is −238.31 px; on the unmodified base the image shifts −238.31 px. The
+small run-to-run difference is subpixel/layout rounding, not a correction. Task-block height also
+changes. This is a pre-existing, remaining BBTF-12 limitation, not a new coordinate defect.
+
+At 1024 × 768, the smaller native plane remains usable for following the central lumen, with the
+labelled magnifier immediately beside the slice controls. At 4×, the native transform scales by
+exactly four; stepping updates the actual source PNG, and the mark's projected coordinate agrees
+with its native coordinate within 0.001 SVG units. Controls remain reachable and no horizontal
+overflow appears. This is display usability evidence, not an anatomy sign-off.
+
+The Reset placeholder is `visibility:hidden`, disabled, `aria-hidden=true`, `tabIndex=-1`, absent
+from the accessibility snapshot, not focusable and not a pointer hit. Its reserved rectangle remains
+in layout. During an attempt the real control is exposed and clears the current mark normally.
+
+Native fullscreen entered through trusted Playwright pointer input and closed normally through its
+visible close control, preserving CT state and restoring focus. Headless keyboard Escape did not
+exit browser-managed fullscreen; an OS-level Escape session was not run, and this is not classified
+as a reproduced product defect. Both a rejected request and `fullscreenEnabled=false` activate the
+in-page fallback. It occupies the viewport, says **expanded views**, exits on Escape, restores focus
+and preserves state; no conflicting document scroll was observed. Ctrl/Meta wheel event propagation
+was checked; native browser zoom itself was not tested.
+
+### Validation and evidence
+
+- Corrected production build: **PASS**, full `npm run build`; original head also built successfully.
+  An initial harness attempt supplied empty optional environment values and failed validation; it
+  was rerun successfully with non-secret process placeholders. No environment file was edited.
+- Repository type-check, changed-path ESLint, Prettier and `git diff --check`: **PASS**.
+- Focused BBT Jest: **121 passed, 1 failed**, 18 suites. The sole failure remains the documented
+  access-policy assertion. A clean detached `origin/main` checkout reproduces it: 7 passed / 1 failed.
+- BBT Playwright: **35 passed** against the corrected production build; original head: 32 passed.
+- Independent requested-size matrix: **20/21 checks pass**; only mobile Check position fails.
+  Supplemental Reset, projected-coordinate, source-update and fullscreen checks pass.
+- No full-repository suite rerun: the correction is confined to BBT display synchronization and
+  has no plausible cross-module impact.
+- No Safari/Firefox, real mobile device/touch, native screen reader, native browser zoom or OS-level
+  fullscreen-Escape testing. No new walkthrough or G02 audit.
+
+Raw measurements, screenshots, reproduction scripts and logs are retained outside Git at:
+`/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt252-sanity-2026-09-21/`.
+`browser.json`, `check-390.json`, `baseline-check-390.json`, `decoded.json`, `decoded-pixels.json`
+and `supplement.json` hold the principal measurements.
+
+No merge, deployment, Prompt 03, source-coordinate change or OD-01 resolution was performed.

@@ -435,5 +435,114 @@
     "playwright.config.ts runs its web server on port 3001 with reuseExistingServer, so a run started from a worktree can silently test another checkout's server.",
     "The site root returns 500 in a checkout without Supabase environment values (already logged by task 01)."
   ],
-  "next": "One bounded PR, then stop. Tasks 03 and 04 follow after review and merge. OD-01 stays open; task 05 prepares its packet."
+  "next": "One bounded PR, then stop. Tasks 03 and 04 follow after review and merge. OD-01 stays open; task 05 prepares its packet.",
+  "sanityReview": {
+    "date": "2026-09-21",
+    "decision": "NOT READY TO MERGE: the requested mobile Check stability criterion remains unmet",
+    "expectedAndReviewedOriginalHead": "b956a91af841a38013cc2566ed0830cfe7f56787",
+    "fetchedMainAndPrBase": "c717c9ffae09cb67e19b06a56d37c75487a5605a",
+    "initialMergeability": "MERGEABLE / CLEAN",
+    "overlappingOpenPrs": [],
+    "otherOpenPrs": [254, 253, 251, 134, 114, 98],
+    "changedFileInventory": [
+      "docs/gap-remediation/fellow-feedback/bbt/BBT-PRE-REVIEW-02-handoff.md",
+      "docs/gap-remediation/fellow-feedback/bbt/BBT-PRE-REVIEW-02-status.json",
+      "e2e/branch-tracing.spec.ts",
+      "src/features/bronchial-branch-tracing/__tests__/ct-overlay-labels.test.ts",
+      "src/features/bronchial-branch-tracing/__tests__/ct-workspace.test.tsx",
+      "src/features/bronchial-branch-tracing/__tests__/junction-feedback.test.tsx",
+      "src/features/bronchial-branch-tracing/components/CtOrientationTeaching.tsx",
+      "src/features/bronchial-branch-tracing/components/JunctionFeedback.tsx",
+      "src/features/bronchial-branch-tracing/components/LocalCtLesson.tsx",
+      "src/features/bronchial-branch-tracing/components/NativeCtViewer.tsx",
+      "src/features/bronchial-branch-tracing/components/branch-tracing.module.css",
+      "src/features/bronchial-branch-tracing/components/ctOverlayLabels.ts",
+      "src/features/bronchial-branch-tracing/components/useCtFrame.ts"
+    ],
+    "protectedContract": "All engine/, content/, geometry/, public/branch-tracing/, scripts/branch-tracing/ and BBT-02 packet bytes unchanged from Prompt 02 base; all ten recorded SHA-256 prefixes independently matched.",
+    "correction": {
+      "finding": "New demonstration readout and caption advanced to 415 while decoded image still showed 416 under delayed loading.",
+      "fix": "Report the decoded displayed slice to the lesson before paint; derive transport identity and caption from it. Keep requested view/draft state separate.",
+      "regressions": "One Jest test for delayed/superseded frames; three deterministic delayed browser tests, one per requested viewport."
+    },
+    "remainingFinding": {
+      "id": "BBT-SANITY-MOBILE-CHECK",
+      "severity": "P2",
+      "introducedBy252": false,
+      "viewport": [390, 844],
+      "trigger": "Place a real mark on slice 412, adjust the display, then Check my tracing.",
+      "originalHeadMarkDeltaY": -239.3125,
+      "baseImageDeltaY": -238.3125,
+      "correctedBuildMarkDeltaY": -238.3125,
+      "cause": "The existing phase effect still calls workspace.scrollIntoView in the stacked layout; the task block also changes height.",
+      "protectedState": "Stored native mark, crop transform and slice remain unchanged.",
+      "disposition": "Recorded as pre-existing and left unchanged under the bounded review instruction; prevents an unconditional READY declaration against the requested matrix."
+    },
+    "browser": {
+      "runtime": "Clean ephemeral Playwright Chromium profiles; local production build on 127.0.0.1:3132",
+      "viewports": [
+        [1427, 1226],
+        [1024, 768],
+        [390, 844]
+      ],
+      "paths": [
+        "/en/learn/anatomy/branch-tracing",
+        "/en/learn/anatomy/branch-tracing/learn?lesson=follow-one-airway",
+        "/en/learn/anatomy/branch-tracing/learn?lesson=continuity",
+        "/en/learn/anatomy/branch-tracing/practice",
+        "/en/learn/anatomy/branch-tracing/assess"
+      ],
+      "matrixChecks": 21,
+      "matrixChecksPassed": 20,
+      "matrixFailure": "Mobile Check screen position only",
+      "nativeFullscreen": "Trusted Playwright pointer activation enters native fullscreen at all three sizes; close button restores state/focus. Headless keyboard Escape did not exit browser-managed fullscreen; not classified as a browser product defect.",
+      "fallback": "Both request rejection and fullscreenEnabled=false exercised. In-page enlargement identifies itself as expanded views, Escape closes it, state/focus restored, no observed competing document scroll.",
+      "magnification": "4x scales the live native image transform by exactly four, preserves stored coordinates, shows updated native href after stepping, and projected marks agree to <0.001 SVG units.",
+      "resetPlaceholder": "visibility:hidden, disabled, aria-hidden=true, tabindex=-1; absent from accessible snapshot; cannot focus or be hit by pointer. Real Reset still clears only the current attempt.",
+      "wheel": "Off by default: ordinary wheel scrolls pane/document. Explicit on steps one slice; off and Escape restore scrolling. Ctrl/Meta cancelable wheel events not prevented. Native browser zoom not tested.",
+      "decodedSamples": [
+        {
+          "name": "before",
+          "meanLuminance": 135.45583068190365,
+          "standardDeviation": 72.02958934521513
+        },
+        {
+          "name": "pending1",
+          "meanLuminance": 136.70845682901972,
+          "standardDeviation": 70.0282471218092
+        },
+        {
+          "name": "pending2",
+          "meanLuminance": 136.70845682901972,
+          "standardDeviation": 70.0282471218092
+        },
+        {
+          "name": "after",
+          "meanLuminance": 142.50656958155383,
+          "standardDeviation": 67.96007143174815
+        }
+      ]
+    },
+    "validation": {
+      "productionBuild": "PASS, npm run build (both original head and corrected display code); initial empty-optional-env harness failure corrected with non-secret placeholders",
+      "typecheck": "PASS",
+      "changedPathLint": "PASS",
+      "prettier": "PASS",
+      "gitDiffCheck": "PASS",
+      "focusedJest": "121 passed, 1 baseline access-contract failure across 18 suites",
+      "baselineAccessContract": "Clean detached origin/main checkout: same assertion fails; 7 passed, 1 failed",
+      "playwright": "35 passed, production build; original head: 32 passed",
+      "fullRepositorySuite": "Not rerun: correction touches only BBT display synchronization, no plausible cross-module impact"
+    },
+    "od01": "OPEN; entryLimitation unchanged, exercises provisional, five-junction packet NOT REVIEWED; no anatomical approval or correctness classifier added",
+    "evidenceDirectory": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt252-sanity-2026-09-21",
+    "notRun": [
+      "Native screen reader",
+      "Real mobile device/touch",
+      "Safari/Firefox",
+      "Native browser zoom",
+      "Human/OS-level native fullscreen Escape"
+    ],
+    "stop": "No merge, deploy, Prompt 03, new walkthrough, G02 audit, anatomy/source edits or OD-01 resolution."
+  }
 }

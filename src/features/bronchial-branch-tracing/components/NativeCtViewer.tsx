@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useMemo,
   useState,
@@ -73,6 +74,7 @@ interface Props {
   initialView?: CtViewerState
   onViewChange?: (view: CtViewerState) => void
   onReadyChange?: (ready: boolean) => void
+  onDisplayedSliceChange?: (slice: number | null) => void
   onTargetReady?: () => void
   /** Stable names for the learner's marks, so A and B are told apart on the image. */
   markLabels?: string[]
@@ -107,6 +109,7 @@ export function NativeCtViewer({
   initialView,
   onViewChange,
   onReadyChange,
+  onDisplayedSliceChange,
   onTargetReady,
   markLabels,
   focusRequest = 0,
@@ -235,6 +238,11 @@ export function NativeCtViewer({
   // The plane whose pixels are on screen. Every label, overlay and caption reads
   // this, so a slice number is never printed beside another plane's image.
   const shownSlice = shown?.slice ?? slice
+  // Host captions must advance with the decoded image, before either is painted.
+  // Requested view state remains separate so rapid stepping and drafts keep their semantics.
+  useLayoutEffect(() => {
+    onDisplayedSliceChange?.(shown?.slice ?? null)
+  }, [shown?.slice, onDisplayedSliceChange])
   useEffect(() => {
     onReadyChange?.(Boolean(ready))
   }, [ready, onReadyChange])
