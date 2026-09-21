@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   MODEL_GEOMETRY,
   needleGeometry,
+  phantomPlaneReference,
   phantomSections,
   routeDefinition,
   routeSupported,
@@ -20,6 +21,12 @@ export function ModelImage({
   dispatch: (a: ModelAction) => void
 }) {
   const [hover, setHover] = useState('')
+  /*
+   * The model's own reference for the plane on screen (EBUS-PRE-REVIEW-02, L9-2 / L10-1). It can
+   * be opened at any time, including before an attempt: this is an analytic phantom, the numbers
+   * are derivable from its geometry, and nothing here is scored, timed or recorded.
+   */
+  const [reference, setReference] = useState(false)
   if (s.package === 'routes') {
     const r = routeDefinition(s)
     return (
@@ -53,6 +60,9 @@ export function ModelImage({
   if (s.package === 'measurement') {
     const sections = phantomSections(s.shape, s.offset),
       [a, b] = s.calipers
+    const model = phantomPlaneReference(s)
+    const placed = a && b ? Math.hypot(a[0] - b[0], a[1] - b[1]) : null
+    const showReference = reference || reveal
     return (
       <section className="model-image">
         <h2>Phantom section · {s.frozen ? 'Frozen' : 'Live plane'}</h2>
@@ -99,19 +109,86 @@ export function ModelImage({
                 </g>
               ),
           )}
-          {reveal && s.shape === 'ellipsoid' && s.offset === 0 && (
-            <g stroke="#42d6ba" strokeDasharray="1 1" strokeWidth=".25">
-              <path d="M0 14v16" />
-              <text x="0" y="41" textAnchor="middle" fill="#92f8dd" stroke="none" fontSize="2">
-                Authored short axis: 16 mm
+          {/* A scale bar and axis ticks in the section's own units. The viewBox is the phantom
+              coordinate system itself — x -30..30, y 0..46 in authored millimetres — so ten units
+              here are ten phantom millimetres, with nothing measured off the picture. */}
+          <g className="phantom-scale" stroke="#9fb4c6" strokeWidth=".2" fill="#c3d5e4">
+            <path d="M-27.5 44h10 M-27.5 43.3v1.4 M-17.5 43.3v1.4" />
+            <text x="-27.5" y="42.6" stroke="none" fontSize="2">
+              10 phantom mm
+            </text>
+            <path d="M-29.6 10h1.4 M-29.6 20h1.4 M-29.6 30h1.4 M-29.6 40h1.4" />
+            {[10, 20, 30, 40].map((depth) => (
+              <text key={depth} x="-27.8" y={depth + 0.6} stroke="none" fontSize="1.7">
+                {depth}
               </text>
+            ))}
+            <path d="M-20 1.6v-1.2 M-10 1.6v-1.2 M0 2v-1.6 M10 1.6v-1.2 M20 1.6v-1.2" />
+            <text x="0.6" y="3.4" stroke="none" fontSize="1.7">
+              0
+            </text>
+          </g>
+          {showReference && model.idealCalipers && (
+            <g stroke="#42d6ba" strokeDasharray="1 1" strokeWidth=".25" data-model-reference>
+              <path
+                d={
+                  'M' +
+                  model.idealCalipers[0][0] +
+                  ' ' +
+                  model.idealCalipers[0][1] +
+                  'L' +
+                  model.idealCalipers[1][0] +
+                  ' ' +
+                  model.idealCalipers[1][1]
+                }
+              />
+              {model.idealCalipers.map((point, index) => (
+                <path key={index} d={`M${point[0] - 1.4} ${point[1]}h2.8`} />
+              ))}
             </g>
           )}
         </svg>
         {reveal && hover && <p role="tooltip">{hover}</p>}
+        <button
+          type="button"
+          className="model-reference-toggle"
+          aria-pressed={reference}
+          onClick={() => setReference((open) => !open)}
+        >
+          {reference ? 'Hide the model reference' : 'Show the model reference'}
+        </button>
+        {showReference && (
+          <p className="model-caption" data-model-reference-readout>
+            {model.objects === 1 ? (
+              <>
+                Model reference for this exact plane: {s.axis} axis{' '}
+                <strong>{model.axisMm!.toFixed(1)} phantom mm</strong> (short{' '}
+                {model.shortAxisMm!.toFixed(1)}, long {model.longAxisMm!.toFixed(1)}). The dashed
+                line shows where that axis lies.{' '}
+                {placed === null
+                  ? 'Place both calipers to compare your own.'
+                  : `Your calipers are ${placed.toFixed(1)} phantom mm apart, ${Math.abs(placed - model.axisMm!).toFixed(1)} mm from the model axis.`}{' '}
+                This is a comparison with an authored shape, not a score, a pass mark or a
+                statement about reading a patient image.
+              </>
+            ) : (
+              <>
+                This plane cuts {model.objects} separate objects, so it has no single short or long
+                axis. The sections here are{' '}
+                {model.sections
+                  .map((section) => `${(section.ry * 2).toFixed(1)} x ${(section.rx * 2).toFixed(1)} phantom mm`)
+                  .join(' and ')}
+                . Sweep to a plane through one object to compare a single axis.
+              </>
+            )}
+          </p>
+        )}
         <p className="model-caption">
           Analytic section of the same 3D shape. Tap a frozen image for calipers, or use the numeric
-          endpoint controls. Phantom units only.
+          endpoint controls. Distances are authored phantom millimetres in the coordinate system
+          drawn on the section: horizontal 0 at the midline, vertical measured down from the top of
+          the modelled field. They are not calibrated clinical millimetres and do not transfer to a
+          recorded or patient image.
         </p>
       </section>
     )

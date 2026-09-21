@@ -370,6 +370,85 @@ p {
   max-height: 360px;
   aspect-ratio: 1;
 }
+/*
+ * A recorded frame is shown in a box with the aspect ratio of the region being displayed, so
+ * nothing is letterboxed and nothing is stretched (EBUS-PRE-REVIEW-02, L6-1). The inner element
+ * is the whole 1920 x 1080 recording, scaled and offset by `RecordedFrameView` so the displayed
+ * region fills the box; the file is never cropped.
+ */
+.guided-workbench .recorded-frame {
+  max-height: none;
+  aspect-ratio: auto;
+  width: 100%;
+  touch-action: manipulation;
+}
+.recorded-frame-media {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.recorded-frame-media video,
+.recorded-frame-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.recorded-frame[data-recorded-fit='image'] {
+  cursor: crosshair;
+}
+.recorded-frame svg {
+  z-index: 1;
+}
+.recorded-fit {
+  margin-top: 0;
+}
+.recorded-busy {
+  margin: 4px 0;
+  font-size: 12px;
+  color: #ffe0a8;
+}
+.recorded-current figcaption,
+.recorded-baseline figcaption {
+  margin-top: 6px;
+}
+/*
+ * The enlarged view. In full screen this is the display; where full screen is refused it is the
+ * workbench, and the caption says which. The image keeps its aspect ratio and is never scaled
+ * past the recorded pixels.
+ */
+.recorded-enlarged {
+  width: min(96vw, 100%);
+  max-width: none;
+  max-height: 96vh;
+  border: 1px solid #55717b;
+  border-radius: 10px;
+  background: #081c22;
+  color: #e6f2f3;
+  padding: 12px;
+  overflow: auto;
+}
+.recorded-enlarged::backdrop {
+  background: #04101488;
+}
+.recorded-enlarged-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+.recorded-enlarged-head h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.recorded-enlarged-frame {
+  max-width: min(100%, calc((96vh - 150px) * 1284 / 857));
+  margin-inline: auto;
+}
+.recorded-enlarged[data-recorded-fit='frame'] .recorded-enlarged-frame {
+  max-width: min(100%, calc((96vh - 150px) * 16 / 9));
+}
 .guided-workbench figcaption {
   font-size: 12px;
   color: #abc3ca;
@@ -419,9 +498,7 @@ body,
 .guided-workbench .recorded-baseline {
   margin: 8px 0 16px;
 }
-.guided-workbench .recorded-baseline .guided-media {
-  max-height: 240px;
-}
+
 .guided-workbench .guided-media img {
   display: block;
 }
@@ -440,11 +517,17 @@ body,
   gap: 14px;
   align-items: start;
 }
+/*
+ * The two comparisons share the column only when there is room for both to stay readable, and
+ * otherwise stack (EBUS-PRE-REVIEW-02, L6-1 / L7-5). They used to be a fixed two-across grid
+ * inside a 300 px cap, which at the report's viewport left each recording 205 px wide — and,
+ * letterboxed into a square box, a sector about 46 px tall.
+ */
 .recorded-images {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(22em, 1fr));
   gap: 14px;
-  flex: 2 1 24em;
+  flex: 3 1 26em;
   min-width: 0;
   align-items: start;
 }
@@ -452,15 +535,9 @@ body,
   flex: 1 1 17em;
   min-width: 0;
 }
-.recorded-images > .recorded-baseline {
+.recorded-images figure {
   margin: 0;
-}
-.recorded-images:not(:has(.recorded-baseline)) {
-  grid-template-columns: minmax(0, 1fr);
-}
-.recorded-images .guided-media {
-  width: min(100%, 300px);
-  margin-inline: auto;
+  min-width: 0;
 }
 .recorded-controls fieldset {
   margin-top: 0;
@@ -478,4 +555,37 @@ body,
 }
 .guided-workbench fieldset[hidden] {
   display: none;
+}
+/*
+ * The scanning labs put the image and the controls that drive it side by side at laptop widths
+ * (EBUS-PRE-REVIEW-02, L3-1 / L5-5 / L14-2). They were stacked, so at the report's 1021 px
+ * viewport the rotation slider and the image it moves were never on screen together. The columns
+ * stack again below 56em, and nothing is pinned or clipped: the host keeps the only scrollport.
+ */
+.guided-scan-workspace {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: start;
+}
+.guided-scan-image {
+  flex: 3 1 24em;
+  min-width: 0;
+}
+.guided-scan-controls {
+  flex: 1 1 15em;
+  min-width: 0;
+}
+.guided-scan-controls fieldset {
+  margin-top: 0;
+}
+.guided-scan-image .simulator-continuous-ultrasound {
+  height: auto;
+  max-height: none;
+  aspect-ratio: 1;
+}
+.guided-scan-image .guided-anatomy {
+  height: auto;
+  aspect-ratio: 1;
+  max-height: 460px;
 }

@@ -17,7 +17,16 @@ export const MODEL_STEPS = {
 } as const
 export type Point2 = [number, number]
 export type PhantomName = keyof typeof contract.phantoms
-export type ContactMode = 'gap' | 'direct' | 'balloon' | 'bubble' | 'shadow'
+export const CONTACT_MODES = ['gap', 'direct', 'balloon', 'bubble', 'shadow'] as const
+export type ContactMode = (typeof CONTACT_MODES)[number]
+/** How each modelled acoustic-contact condition is named to a learner. */
+export const CONTACT_MODE_LABELS: Record<ContactMode, string> = {
+  gap: 'air gap',
+  direct: 'direct contact',
+  balloon: 'fluid-balloon contact',
+  bubble: 'balloon with a bubble',
+  shadow: 'contact with a reflector',
+}
 interface Base {
   package: ModelPackage
   steps: string[]
@@ -129,6 +138,53 @@ export function phantomSections(shape: PhantomName, offset: number) {
         ]
   })
 }
+/**
+ * The model's own reference for the plane that is currently displayed
+ * (EBUS-PRE-REVIEW-02, L9-2 / L9-3 / L10-1).
+ *
+ * The phantoms are analytic, so the section through the current plane, its axes and its
+ * dimensions are all derivable exactly — no assumed full-object diameter, no measurement of the
+ * picture, and nothing carried over from another plane. It is a model reference in authored
+ * phantom millimetres and says nothing about a patient image or a clinical border.
+ *
+ * `axisMm` and `idealCalipers` exist only where one section is in the plane; where the plane cuts
+ * two objects there is no single short or long axis and the caller is told so rather than shown a
+ * number that means nothing.
+ */
+export interface PhantomPlaneReference {
+  objects: number
+  sections: ReturnType<typeof phantomSections>
+  shortAxisMm: number | null
+  longAxisMm: number | null
+  axisMm: number | null
+  idealCalipers: [Point2, Point2] | null
+}
+export function phantomPlaneReference(s: MeasurementState): PhantomPlaneReference {
+  const sections = phantomSections(s.shape, s.offset)
+  const single = sections.length === 1 ? sections[0] : null
+  const shortAxisMm = single ? single.ry * 2 : null
+  const longAxisMm = single ? single.rx * 2 : null
+  return {
+    objects: sections.length,
+    sections,
+    shortAxisMm,
+    longAxisMm,
+    axisMm: s.axis === 'short' ? shortAxisMm : longAxisMm,
+    idealCalipers: !single
+      ? null
+      : s.axis === 'short'
+        ? [
+            [single.x, single.y - single.ry],
+            [single.x, single.y + single.ry],
+          ]
+        : [
+            [single.x - single.rx, single.y],
+            [single.x + single.rx, single.y],
+          ],
+  }
+}
+/** The plane and shape the recorded short-axis task asks for, so it can be offered directly. */
+export const PHANTOM_RECOMMENDED_COMPARISON = { shape: 'ellipsoid' as PhantomName, offset: 0 }
 export function measurePhantom(s: MeasurementState) {
   const [a, b] = s.calipers
   if (!a || !b)
