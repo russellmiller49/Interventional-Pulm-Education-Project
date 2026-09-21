@@ -342,8 +342,35 @@ export function ModelViewport({
             controls.target.set(0, 1190, 170)
             camera.position.set(245, 1270, 470)
           } else if (s.package === 'needle') {
-            controls.target.set(-29, 4, 0)
-            camera.position.set(-20, 30, 176)
+            /*
+             * Frame the assembly from its own bounds (EBUS-PRE-REVIEW-02, L21-2). The home view
+             * was a fixed position 176 units back from a 38-degree camera, which left the
+             * assembly a few dozen pixels inside a panel several hundred wide — the objective is
+             * to relate sheath, needle, stylet and outlet, and at that size none of them can be
+             * told apart. The direction of the view is unchanged; only the distance is now
+             * derived, so it holds if the model is ever re-exported at another scale. Camera
+             * framing is excluded from `modelFrameId`, so nothing about the acquisition moves.
+             */
+            // `root` carries the glTF metre-to-millimetre scale, so its world matrix has to be
+            // current before the box means anything in the units the rest of this file uses.
+            scene.updateMatrixWorld(true)
+            const bounds = new THREE.Box3()
+            for (const group of groups) bounds.expandByObject(group)
+            const centre = bounds.getCenter(new THREE.Vector3())
+            const size = bounds.getSize(new THREE.Vector3())
+            const aspect = el.clientHeight > 0 ? el.clientWidth / el.clientHeight : 4 / 3
+            const halfFov = Math.tan((camera.fov * Math.PI) / 360)
+            // The assembly is long and shallow, so the width against the panel's aspect ratio is
+            // what actually sets the distance; the old fixed position ignored both.
+            const fit = Math.max(size.y / 2 / halfFov, size.x / 2 / halfFov / aspect)
+            const distance =
+              Number.isFinite(fit) && fit > 0 ? fit * 1.12 + size.z / 2 : 176
+            controls.target.copy(Number.isFinite(centre.x) ? centre : new THREE.Vector3(-29, 4, 0))
+            camera.position.set(
+              controls.target.x + distance * 0.05,
+              controls.target.y + distance * 0.15,
+              controls.target.z + distance,
+            )
           } else {
             controls.target.set(0, 18, 0)
             camera.position.set(46, 30, 94)
@@ -352,8 +379,8 @@ export function ModelViewport({
           draw()
         }
         resetCamera.current = home
-        home()
         resize()
+        home()
         updateScene()
         setReady(true)
       })

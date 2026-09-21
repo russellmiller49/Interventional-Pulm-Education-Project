@@ -1,7 +1,7 @@
 import type { Lesson } from './types'
 import { question as q } from './authoring'
 const boundary =
-  'These controls select existing recorded ultrasound examples. Levels are specific to this teaching library, not recommended processor settings for patients.'
+  'These controls select existing recorded ultrasound examples. Example numbers are specific to this teaching library, not recommended processor settings for patients.'
 export const optimizeLessons: Lesson[] = [
   {
     id: 'image-depth',
@@ -127,7 +127,7 @@ export const optimizeLessons: Lesson[] = [
       initialDepth: 40,
       initialGain: 100,
       instruction:
-        'Reduce Image gain from level 8 and compare the nodal border and internal echoes. Explore Image contrast separately, then return to Image gain and stop at level 4 or 5 for this teaching example.',
+        'Reduce Image gain from example 8 and compare the nodal border and internal echoes. Explore Image contrast separately, then return to Image gain and stop at example 4 or 5 for this teaching example. Each recording varies one control, so the clip on screen is a gain example only while gain is the control you moved last.',
     },
     observation: q(
       'gain-observe',

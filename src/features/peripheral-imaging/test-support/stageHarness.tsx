@@ -99,7 +99,9 @@ export function commitChainChoice(pattern: RegExp) {
 }
 
 export function goalStates(): readonly string[] {
-  return [...document.querySelectorAll('[data-step-goals] li')].map(
+  // The checklist is printed in the control dock (report 2.13); a step with no suite pane keeps it
+  // on the Now card. Never both.
+  return [...document.querySelectorAll('[data-step-goals] li, [data-suite-goals] li')].map(
     (item) => item.getAttribute('data-met') ?? 'unknown',
   )
 }

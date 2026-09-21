@@ -347,23 +347,27 @@
   flex-wrap: wrap;
   gap: 6px;
 }
+/* Report 2.10: these sat on near-white cards inside the dark shell. They read the host palette;
+   the fallbacks are the old light values. */
 .demoButtons button {
-  border: 1px solid #8ca8b1;
+  border: 1px solid var(--line, #8ca8b1);
   border-radius: 6px;
-  background: #f0f7f7;
-  color: #183542;
+  background: var(--panel, #f0f7f7);
+  color: var(--ink, #183542);
   padding: 9px;
   font: inherit;
 }
 .demoButtons button[aria-pressed='true'] {
-  background: #1c5263;
-  color: white;
+  border-color: #83beb9;
+  background: #315b61;
+  color: #ddfaf4;
 }
+/* Report 2.9: the cue says what to watch, so it is read before the figure it describes. */
 .lookFor {
   padding: 10px 12px;
-  background: #edf6f5;
-  border-left: 3px solid #367e83;
-  color: #163f48;
+  background: var(--panel-2, #edf6f5);
+  border-left: 3px solid var(--cyan, #367e83);
+  color: var(--ink, #163f48);
   margin: 0;
 }
 .exampleGrid {

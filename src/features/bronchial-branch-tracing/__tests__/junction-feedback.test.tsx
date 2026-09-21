@@ -55,7 +55,7 @@ it('explains a mark nearer the other daughter by geometry and divergence, guides
   ).toBeVisible()
   expect(
     screen.getByText(
-      /Your marks stay exactly where you placed them; the gold rings are model references/,
+      /Your marks stay exactly where you placed them; the gold crosshairs are model references/,
     ),
   ).toBeVisible()
   fireEvent.click(screen.getByRole('button', { name: 'Go to slice 392' }))

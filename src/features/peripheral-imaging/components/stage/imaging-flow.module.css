@@ -304,7 +304,10 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.85rem max(1rem, calc((100% - 1288px) / 2));
-  background: #0a2028f7;
+  /* Report 2.15 (fellow walkthrough, PDF p.21): at 97% alpha the body text sliding underneath
+     showed through the status line. Opaque; the pinned geometry, and so the measured focus
+     clearance and the enlarged-text unpin, are unchanged. */
+  background: #0a2028;
   border-top: 1px solid #41606a;
   box-shadow: 0 -4px 20px #0003;
 }
@@ -536,4 +539,38 @@
 }
 .course[data-presentation='comparison'] .task:has([data-suite-scene]) .explanation {
   order: initial;
+}
+
+/*
+ * Report 2.3 (fellow walkthrough, PDF p.17/p.23). In the component walk the text for the current
+ * component was the last thing in a single column, below the scene, both projections and the
+ * slider. The walk is a guided reading of the 3D scene, so its text sits beside that scene, where
+ * "Next component" changes a highlight and a paragraph the learner can see together. It stays
+ * pinned beside the scene while the compact projection row below is used, but only while the chrome
+ * is pinned too: once enlarged text unpins the chrome, this is ordinary document flow again, never
+ * a fixed-height panel with its own scrollbar.
+ */
+/*
+ * A media query cannot see enlarged text — `rem` there is the browser's initial size, not the
+ * root's — so the side-by-side walk is tied to the same measurement that already decides whether
+ * this activity has room to keep its chrome pinned. Where text has been enlarged past that point,
+ * the walk is one readable column again, the scene first and its text under it.
+ */
+@media (min-width: 1001px) {
+  .course[data-step-kind='walk']:not([data-chrome-pinned='false']) .task {
+    grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
+  }
+  .course[data-step-kind='walk'] .explanation,
+  .course[data-step-kind='walk'] .explanation:has([data-walk-stop]) {
+    order: initial;
+    padding: 0.85rem 1rem;
+  }
+}
+@media (min-width: 1001px) and (min-height: 700px) {
+  .course[data-step-kind='walk']:not([data-chrome-pinned='false']) .explanation {
+    position: sticky;
+    top: calc(
+      var(--imaging-focus-clear-top, calc(var(--site-header-height, 4rem) + 7rem)) + 0.5rem
+    );
+  }
 }

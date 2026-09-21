@@ -23,6 +23,19 @@ export interface ImagingHubHero {
   readonly lede: string
   /** Where to look in the picture for each stop, read after the stop's title. */
   readonly where: Readonly<Record<ChainStopId, string>>
+  /**
+   * Where each component is in the picture, as a percentage of its width and height.
+   *
+   * Report O5 (fellow walkthrough, PDF p.5): the picture named its components only in the caption,
+   * so words had to be matched to shapes by position. These are not placed by eye. Each is the
+   * suite's own anchor for that component (`chainStopAnchors`) projected through the camera the
+   * still was rendered with (`cameraPose` on `ROOM_FIXTURE` at `ROOM_HERO`'s size), and
+   * `hub-hero.test.ts` recomputes them, so a re-rendered picture that moves a component fails the
+   * test rather than mislabelling the figure.
+   */
+  readonly anchors: Readonly<Record<ChainStopId, readonly [number, number]>>
+  /** Which side of its anchor each on-figure label sits, chosen so no two labels collide. */
+  readonly labelSide: Readonly<Record<ChainStopId, 'left' | 'right'>>
   readonly boundary: string
 }
 
@@ -39,6 +52,22 @@ export const IMAGING_HUB_HERO: ImagingHubHero = {
     detector: 'the panel above the patient',
     reconstruction: 'the workstation on the right',
     display: 'the monitor on the boom beside it',
+  },
+  anchors: {
+    source: [50.2, 69.8],
+    beam: [45.6, 56.3],
+    patient: [40.0, 39.8],
+    detector: [33.3, 20.1],
+    reconstruction: [70.5, 48.4],
+    display: [75.1, 39.3],
+  },
+  labelSide: {
+    source: 'right',
+    beam: 'right',
+    patient: 'left',
+    detector: 'left',
+    reconstruction: 'left',
+    display: 'right',
   },
   boundary:
     'A schematic room and C-arm around a CT-derived chest. The head, pillow and draped body are drawn for context. No device, dimension or clearance is represented.',

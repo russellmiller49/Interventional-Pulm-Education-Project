@@ -187,33 +187,44 @@
     scroll-behavior: auto !important;
   }
 }
-.model-image {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  box-shadow: 0 5px 16px #0005;
+/*
+ * Views beside controls (EBUS-PRE-REVIEW-02, L5-5 / L9-1 / L21-2). The workbench used to stack a
+ * schematic, a 3D view and a dozen controls into a column taller than the viewport, and pinned the
+ * schematic with `position: sticky` — which does nothing, because the host sizes this document to
+ * its content and there is no scrollport inside it to stick to. Nothing is pinned now.
+ */
+.model-workspace {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: start;
+}
+.model-views {
+  flex: 3 1 24em;
+  min-width: 0;
+}
+.model-workspace .model-controls {
+  flex: 1 1 16em;
+  min-width: 0;
 }
 .model-image svg,
 .model-image svg.phantom-section {
-  width: min(100%, 360px);
+  width: 100%;
   height: auto;
   max-height: none;
   margin: 0 auto;
 }
 .model-viewport {
-  height: 240px;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  max-height: 420px;
 }
-.additional-models[data-model-package='routes'] .model-image {
-  position: static;
-}
-.additional-models[data-model-package='routes'] .model-3d {
-  position: sticky;
-  top: 0;
-  z-index: 5;
+.model-reference-toggle {
+  margin-top: 8px;
 }
 .additional-models[data-model-package='needle'] .model-controls fieldset {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(11em, 1fr));
 }
 .additional-models[data-model-package='needle'] .model-controls fieldset > label,
 .additional-models[data-model-package='needle'] .model-controls fieldset > p {

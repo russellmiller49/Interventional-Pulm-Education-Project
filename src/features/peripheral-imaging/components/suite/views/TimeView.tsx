@@ -86,6 +86,10 @@ export function TimeOverlay({ frame, model }: { frame: SuiteFrame; model: Tempor
   )
 }
 
+/** Drawing units per millimetre; see the note in `TimeSamples`. */
+const STRIP_UNITS_PER_MM = 14
+const DETAIL_UNITS_PER_MM = 1000
+
 export function TimeSamples({
   model,
   phase,
@@ -108,56 +112,72 @@ export function TimeSamples({
           image.
         </p>
       )}
+      {/*
+        Report 3.8 (fellow walkthrough, PDF p.31/p.32). The strip that carries the idea was the
+        smallest thing in its card — six dashes about 110 px across — under captions drawn inside
+        the SVG, which scaled to several times the size of the text around them. The captions are
+        now ordinary text at one size, and the drawing has the width to itself.
+
+        The scale is fixed, not fitted: 14 units per millimetre for the strip and 1,000 for the
+        detail, each chosen so the largest value the controls allow still fits (40 mm/s at 3.75
+        pulses/s is 53 mm across six pulses; 40 mm/s for 20 ms is 0.8 mm). A fitted scale would keep
+        the picture the same size whatever the learner changed, which is the opposite of the point.
+        No pulse parameter, equation or unit is changed; the numbers drawn are `model`'s own.
+      */}
+      <p className={styles.sampleCaption}>Six pulses · tool-tip positions (enlarged)</p>
       <svg
-        viewBox="0 0 440 115"
+        viewBox="0 0 880 96"
         role="img"
         aria-label="Six successive tool-tip samples. Amber bars show motion during each pulse; the gaps show travel between frames."
         className={styles.sampleDiagram}
+        data-pulse-strip
       >
-        <text x="16" y="20" fill="#183542" fontSize="12">
-          Six pulses · tool-tip positions (enlarged)
-        </text>
+        <line x1="20" y1="84" x2="860" y2="84" stroke="currentColor" strokeOpacity="0.35" />
         {Array.from({ length: 6 }, (_, i) => {
-          const x = 20 + i * model.interFrameTravel * 7
+          const x = 20 + i * model.interFrameTravel * STRIP_UNITS_PER_MM
           return (
             <g key={i} data-time-sample>
-              <line x1={x} y1="40" x2={x} y2="90" stroke="#3b7c7b" strokeDasharray="2 3" />
+              <line
+                x1={x}
+                y1="8"
+                x2={x}
+                y2="84"
+                stroke="#5fb3b0"
+                strokeWidth="2"
+                strokeDasharray="4 5"
+              />
               <rect
                 x={x}
-                y="52"
-                width={Math.max(0.4, model.inFrameBlur * 7)}
-                height="22"
-                fill="#98652b"
+                y="26"
+                width={Math.max(2, model.inFrameBlur * STRIP_UNITS_PER_MM)}
+                height="40"
+                fill="#e0a552"
               />
             </g>
           )
         })}
-        <text x="16" y="110" fill="#183542" fontSize="12">
-          Amber: within-frame blur · spacing: inter-frame travel
-        </text>
       </svg>
+      <p className={styles.sampleCaption}>Amber: within-frame blur · spacing: inter-frame travel</p>
+      <p className={styles.sampleCaption}>Within one pulse · enlarged detail (separate scale)</p>
       <svg
-        viewBox="0 0 440 82"
+        viewBox="0 0 880 48"
         className={styles.sampleDiagram}
         role="img"
         aria-label={`Enlarged within-frame motion travel: ${model.inFrameBlur.toFixed(2)} millimetres during one pulse.`}
         data-blur-detail
       >
-        <text x="16" y="19" fill="#183542" fontSize="12">
-          Within one pulse · enlarged detail (separate scale)
-        </text>
-        <line x1="20" y1="30" x2="20" y2="58" stroke="#3b7c7b" />
+        <line x1="20" y1="4" x2="20" y2="44" stroke="#5fb3b0" strokeWidth="2" />
         <rect
           x="20"
-          y="35"
-          width={Math.max(0.5, Math.min(395, model.inFrameBlur * 120))}
-          height="18"
-          fill="#98652b"
+          y="10"
+          width={Math.max(2, Math.min(840, model.inFrameBlur * DETAIL_UNITS_PER_MM))}
+          height="28"
+          fill="#e0a552"
         />
-        <text x="16" y="76" fill="#183542" fontSize="12">
-          Motion travel = {model.inFrameBlur.toFixed(2)} mm · fixed-speed arithmetic, not image lag
-        </text>
       </svg>
+      <p className={styles.sampleCaption}>
+        Motion travel = {model.inFrameBlur.toFixed(2)} mm · fixed-speed arithmetic, not image lag
+      </p>
     </section>
   )
 }

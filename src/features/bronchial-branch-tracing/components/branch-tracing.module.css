@@ -688,6 +688,10 @@
   border-radius: 10px;
   background: #0b1a22;
   overflow: hidden;
+  /* The native plane is sized from the space the workspace actually has, so the
+   * image and its slice row stay together instead of running past the window.
+   * Stacked layouts scroll the document, so there the plane is width-driven. */
+  --ct-plane: 620px;
 }
 .pairedViews {
   display: grid;
@@ -698,6 +702,9 @@
 .pairedColumn {
   min-width: 0;
   background: #071018;
+}
+.ctOnly .pairedColumn > h3 {
+  min-height: auto;
 }
 .pairedColumn > h3 {
   min-height: 3.3rem;
@@ -785,10 +792,26 @@
   max-width: 100%;
 }
 @media (min-width: 1024px) and (min-height: 700px) {
+  /* The workspace panes are the real band the CT has to fit in. Measuring them
+   * rather than the window is what keeps a rotated plane, its direction labels
+   * and its slice controls inside the visible area. */
+  .routeEvidence,
+  .localImageWorkspace {
+    container-type: size;
+  }
+  .nativeViewer {
+    --ct-plane: clamp(300px, calc(100cqh - 190px), 620px);
+  }
   .nativeViewer:not(:fullscreen) .pairedViews {
-    max-width: min(100%, calc(clamp(220px, calc(100dvh - 680px), 500px) * 2));
+    max-width: min(100%, calc(var(--ct-plane) * 2));
     margin: 0 auto;
   }
+}
+/* One column shows one plane, so it is capped at one plane's width. This has to
+ * follow the paired rule above, which it shares specificity with. */
+.nativeViewer:not(:fullscreen) .ctOnly {
+  max-width: min(100%, var(--ct-plane));
+  margin: 0 auto;
 }
 .nativeHeading {
   display: flex;
@@ -869,7 +892,7 @@
   position: relative;
   background: #020507;
   aspect-ratio: 1;
-  max-width: min(100%, clamp(240px, calc(100dvh - 660px), 570px));
+  max-width: min(100%, var(--ct-plane));
   margin: 0 auto;
   width: 100%;
   touch-action: manipulation;
@@ -928,6 +951,14 @@
   background: #071018e6;
   color: #d7e8ed;
   font-size: 0.85rem;
+}
+/* A plane is already on screen, so the notice names it instead of hiding it. */
+.ctLoadChip {
+  inset: auto 0 auto 0;
+  top: 0;
+  padding: 0.25rem 0.5rem;
+  background: #071018cc;
+  font-size: 0.72rem;
 }
 .nativeSliceControls {
   display: flex;
@@ -1228,16 +1259,36 @@
   border-radius: 0;
   padding: 0.5rem max(1rem, calc((100vw - 1000px) / 2));
 }
+.nativeViewer:fullscreen {
+  --ct-plane: clamp(280px, calc(100dvh - 330px), 900px);
+}
 .nativeViewer:fullscreen .nativeImage {
-  max-width: min(100%, calc(100dvh - 495px));
+  max-width: min(100%, var(--ct-plane));
+}
+/* Used when the browser will not grant fullscreen: the same enlargement, in page. */
+.ctEnlarged {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow: auto;
+  border: 0;
+  border-radius: 0;
+  padding: 0.5rem max(1rem, calc((100vw - 1000px) / 2));
+  --ct-plane: clamp(280px, calc(100dvh - 330px), 900px);
+}
+.ctEnlarged .nativeImage {
+  max-width: min(100%, var(--ct-plane));
+}
+.ctEnlarged .pairedViews {
+  max-width: min(100%, calc(var(--ct-plane) * 2));
+  margin: 0 auto;
+}
+.ctEnlarged .ctOnly {
+  max-width: min(100%, var(--ct-plane));
+  margin: 0 auto;
 }
 .nativeViewer:fullscreen .ctLevels {
   padding-bottom: 0.3rem;
-}
-@media (max-width: 760px) {
-  .nativeImage {
-    max-width: 570px;
-  }
 }
 
 /* This module's local exercises reuse the lesson shell with a CT-first workspace. */
@@ -1432,35 +1483,128 @@
 .walkthrough p {
   margin: 0.6rem 0;
 }
+/* The demonstration transport belongs with the image it demonstrates. */
+.walkthroughTransport {
+  padding: 0.5rem 0.7rem 0.6rem;
+  border-top: 1px solid #354d58;
+}
+.walkthroughTransport p {
+  margin: 0.45rem 0 0;
+  font-size: 0.8rem;
+  color: #cfe3e8;
+  min-height: 2.4em;
+}
+.walkthroughTransport button {
+  min-height: 40px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.75rem;
+  color: #effcfc;
+  background: #1c3b47;
+  border: 1px solid #789da9;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+.walkthroughTransport button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.walkthroughPosition {
+  align-self: center;
+  font-size: 0.72rem;
+  color: #adcad0;
+  font-variant-numeric: tabular-nums;
+}
+/* Secondary workspace actions, grouped so they do not read as the next step. */
+.workspaceTools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.5rem 0;
+}
+.workspaceTools button {
+  font-size: 0.75rem;
+  padding: 0.4rem 0.6rem;
+  min-height: 40px;
+}
 .walkthroughControls {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
 }
+/* The guidance text changes length as the learner reaches the response slice.
+ * Reserving two lines for it — not a worst-case spacer — keeps the actions and
+ * the slice row above them in a fixed place. */
 .answerGuidance {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  padding: 0.7rem;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
   background: #173844;
   color: #e8f8fb;
+  min-height: 3.5rem;
 }
-.answerGuidance button {
-  margin-left: auto;
+.answerGuidance > p {
+  margin: 0;
+  font-size: 0.82rem;
+  min-height: 2.4em;
+  display: flex;
+  align-items: center;
+}
+.answerActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+/* Holds its place so the row keeps one height across marking and review. */
+.reservedControl {
+  visibility: hidden;
+}
+@container (max-width: 560px) {
+  .answerGuidance {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .answerActions {
+    justify-content: flex-start;
+  }
+}
+/* The slice row, the display tools and the guidance, in that order, directly
+ * under the image. */
+.ctControlBand {
+  display: grid;
+  gap: 0.35rem;
+  padding-top: 0.2rem;
+}
+.ctViewTools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.7rem 0.3rem;
+}
+.ctViewTools button {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.72rem;
+  min-height: 36px;
+}
+.ctMagnifier {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: #adcad0;
+}
+.ctMagnifier input {
+  width: clamp(80px, 18cqi, 160px);
+}
+.ctMagnifier output {
+  min-width: 2.6em;
+  font-variant-numeric: tabular-nums;
 }
 .ctOnly {
   grid-template-columns: minmax(0, 1fr);
-}
-.localViewer:not(:fullscreen) .pairedViews {
-  max-width: 100%;
-}
-.localViewer:not(:fullscreen) .ctOnly {
-  max-width: min(100%, clamp(280px, calc(100dvh - 365px), 720px));
-  margin: 0 auto;
-}
-.localViewer .nativeImage {
-  max-width: 100%;
 }
 .referenceNotice {
   padding: 0.5rem 0.7rem;
@@ -1548,30 +1692,14 @@
   margin: 0;
   padding: 0.3rem 0.6rem;
 }
-.localCtControls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 0.4rem 0.6rem;
-}
-.localCtControls .answerGuidance {
-  padding: 0;
-  background: transparent;
-}
-.localCtControls .nativeSliceControls {
-  flex: 1 1 220px;
-  min-width: 220px;
-  padding: 0;
-}
-.localCtControls .nativeSliceControls button {
+.localViewer .nativeSliceControls button {
   min-height: 44px;
 }
+/* Frames the view that Focus CT view restored. It marks the displayed crop, not
+ * an anatomical region of interest, and no boundary is drawn on the image. */
 .localViewer [data-region-highlight] {
-  outline: 3px solid #e9c77e;
-  outline-offset: -3px;
+  outline: 2px solid #e9c77e;
+  outline-offset: -2px;
 }
 /* Local lessons give the task its own column instead of another full-width header. */
 .module:has(:is(.localWorkspace, .routeWorkspace)) > nav {
@@ -1618,8 +1746,8 @@
   padding: 0.2rem 0.75rem;
 }
 @media (max-width: 1023px), (max-height: 699px) {
-  .localViewer:not(:fullscreen) .ctOnly {
-    max-width: min(100%, 560px);
+  .localViewer {
+    --ct-plane: 560px;
   }
 }
 .module [data-stage-save-exit] {
@@ -1745,10 +1873,6 @@
   background: #0b1d26;
   border-right: 1px solid var(--line);
 }
-.routeEvidence .ctOnly {
-  max-width: min(100%, 540px);
-  margin: auto;
-}
 .routeTask > details {
   margin-top: 1rem;
 }
@@ -1847,13 +1971,16 @@
 .module[data-enlarged-text='true'] .routeMap {
   overflow: visible;
   max-height: none;
+  /* Enlarged text lets the panes grow with the document, so they no longer have a
+   * definite height to measure the CT against. Size containment would read zero. */
+  container-type: normal;
 }
 .module[data-enlarged-text='true'] .currentTask,
 .module[data-enlarged-text='true'] :global([data-now-card]) {
   position: static;
 }
-.module[data-enlarged-text='true'] .localViewer:not(:fullscreen) .ctOnly {
-  max-width: min(100%, 560px);
+.module[data-enlarged-text='true'] .nativeViewer {
+  --ct-plane: 560px;
 }
 @media (max-width: 1023px), (max-height: 699px) {
   .routeTask :global([data-now-card]) {

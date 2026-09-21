@@ -1,24 +1,65 @@
 'use client'
-import { Html, Line } from '@react-three/drei'
-import { useMemo, type RefObject } from 'react'
+import { Line } from '@react-three/drei'
+import { useMemo } from 'react'
 import { LESION_RADIUS, SHAFT_RADIUS, type Point3 } from '../../../lib/physics'
 import { add, detectorPoint, projectionMarkers, scale, type SuiteFrame } from '../suiteModel'
+import type { SceneLabel } from '../SceneLabels'
 import type { SuiteInputs } from '../types'
 import styles from '../suite-scene.module.css'
+
+/**
+ * The two object labels of a projection scene, anchored on the objects themselves.
+ *
+ * Report 2.4: they were offset in world space — the target's label along x, the tip's along y —
+ * so from most angles, and always in the frontal view where the two objects are superimposed, one
+ * label printed over the other and neither could be read. They now leave their anchors in opposite
+ * directions on screen and go through the scene's one layout pass with every other label.
+ */
+export function projectionObjectLabels(
+  frame: SuiteFrame,
+  inputs: SuiteInputs,
+  offset?: Point3,
+): readonly SceneLabel[] {
+  const markers = projectionMarkers(frame, inputs.toolDepth, offset, inputs.toolFollowsAnatomy)
+  const tip: SceneLabel = {
+    id: 'object-tool-tip',
+    anchor: markers.tip,
+    placement: 'above-left',
+    gap: 8,
+    estimate: [46, 18],
+    node: (
+      <span className={styles.objectLabel} data-object-label="tool-tip">
+        Tool tip
+      </span>
+    ),
+  }
+  if (!inputs.showCurrent) return [tip]
+  return [
+    tip,
+    {
+      id: 'object-target',
+      anchor: markers.target,
+      placement: 'below-right',
+      gap: 8,
+      estimate: [86, 18],
+      node: (
+        <span className={styles.objectLabel} data-object-label="target">
+          Authored target
+        </span>
+      ),
+    },
+  ]
+}
 
 export function ProjectionView3D({
   frame,
   inputs,
   ray,
-  labels,
-  portal,
   offset,
 }: {
   frame: SuiteFrame
   inputs: SuiteInputs
   ray: boolean
-  labels: boolean
-  portal: RefObject<HTMLDivElement>
   offset?: Point3
 }) {
   const markers = useMemo(
@@ -79,26 +120,6 @@ export function ProjectionView3D({
         color="#ffffff"
         lineWidth={2.5}
       />
-      {labels && (
-        <>
-          {inputs.showCurrent && (
-            <Html
-              portal={portal}
-              position={add(markers.target, [LESION_RADIUS * 2, 0, 0])}
-              zIndexRange={[5, 1]}
-            >
-              <span className={styles.objectLabel}>Authored target</span>
-            </Html>
-          )}
-          <Html
-            portal={portal}
-            position={add(markers.tip, [0, LESION_RADIUS * 2, 0])}
-            zIndexRange={[5, 1]}
-          >
-            <span className={styles.objectLabel}>Tool tip</span>
-          </Html>
-        </>
-      )}
     </group>
   )
 }

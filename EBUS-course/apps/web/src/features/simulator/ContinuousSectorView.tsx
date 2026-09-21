@@ -77,7 +77,11 @@ export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,
   const discover = canDiscoverImage(guided?.config, assessment) && !!volume && !!frame && !error && !renderError;
   return <section className={`simulator-sector-pane${compact?' simulator-sector-pane--compact':''}`} aria-label={t('Continuous EBUS ultrasound')} data-sector-source="acoustic-volume" data-acoustic-version={volume?.metadata.assetVersion} data-frame-id={frameId} data-frame-pose={frame ? JSON.stringify(frame.pose) : undefined}>
     <div className="simulator-pane-header"><div><span className="eyebrow">{t('EBUS ultrasound')}</span><h2>{held && guided?.config.linkedLesson ? 'Retained ultrasound' : selectedPreset?`${t('Station')} ${formatSimulatorStation(selectedPreset.station)}`:t('Live scan')}</h2></div>
-      <div className="simulator-sector-header-actions">{onEnlarge&&<button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={onEnlarge}>{t('Enlarge')}</button>}{onShowAll&&<button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={onShowAll}>{t('All views')}</button>}<button className="simulator-sector-style-toggle" aria-pressed={frozen} disabled={!allowed('freeze')} onClick={()=>act('freeze',()=>setFrozen(!frozen))}>{t(frozen?'Resume':'Freeze')}</button></div>
+      <div className="simulator-sector-header-actions">{onEnlarge&&<button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={onEnlarge}>{t('Enlarge')}</button>}{onShowAll&&<button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={onShowAll}>{t('All views')}</button>}{/* A guided lab that was not given the freeze control does not show one (EBUS-PRE-REVIEW-02,
+          L14-4). It used to render permanently disabled in every guided lab, since none of them
+          include `freeze`, which reads as a broken button rather than an absent capability. The
+          standalone simulator is unchanged: it always allows freezing and always shows it. */}
+      {(!guided || guided.config.controls.includes('freeze')) && <button className="simulator-sector-style-toggle" aria-pressed={frozen} disabled={!allowed('freeze')} onClick={()=>act('freeze',()=>setFrozen(!frozen))}>{t(frozen?'Resume':'Freeze')}</button>}</div>
     </div>
     <div className="simulator-continuous-ultrasound">
       <canvas ref={canvas} aria-label={t('Grayscale ultrasound image')}/><canvas ref={overlay} aria-hidden="true" style={{pointerEvents:'none'}}/>

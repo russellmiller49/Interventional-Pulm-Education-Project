@@ -548,6 +548,10 @@
 .taskComposition[data-composition='ultrasound'] {
   grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.8fr);
 }
+/* The workbench column on an acquisition step (EBUS-PRE-REVIEW-02, L3-1 / L5-5 / L6-1). */
+.taskComposition[data-acquiring='true'] {
+  grid-template-columns: minmax(0, 2.4fr) minmax(240px, 0.85fr);
+}
 .taskComposition[data-composition='case'],
 .taskComposition[data-composition='record'] {
   max-width: 1120px;
@@ -604,12 +608,34 @@
   font-size: 0.875rem;
 }
 /*
+ * The explanation under the advance row holds its space whether or not it has anything to say
+ * (EBUS-PRE-REVIEW-02, L6-6), so the row above it cannot re-wrap when readiness changes.
+ */
+.taskAdvance .advanceNote {
+  order: 4;
+  min-height: 1.4em;
+  margin: 0;
+}
+/*
  * The advance control keeps its place at the end of the row whatever weight it is carrying. Its
  * weight changes with what it is actually offering: see `LessonHost` (EBUS-PRE-REVIEW-01, L1-7).
  */
 .taskAdvance .advance {
+  order: 3;
   margin-left: auto;
   max-width: 100%;
+}
+/*
+ * The two footer controls keep one box size whichever weight they are carrying
+ * (EBUS-PRE-REVIEW-02, L6-6). `.button` and `.secondary` have different padding, so without this
+ * the advance control grew by 12 px the moment an acquisition became ready and its left edge
+ * moved under a pointer that had not.
+ */
+.taskAdvance .advance,
+.taskAdvance .skip {
+  padding: 10px 16px;
+  border-radius: 9px;
+  font-weight: 700;
 }
 .flowFooter {
   color: var(--muted);
@@ -882,8 +908,14 @@
   border-left: 3px solid #b76868;
   padding-left: 8px;
 }
+/*
+ * Reading order and visual order are the same in this row (EBUS-PRE-REVIEW-02, L6-6): Back, then
+ * the way past the task, then the advance control pinned to the end. The skip used to be ordered
+ * after the advance while sitting before it in the DOM, which both reversed the tab order and put
+ * it on a second line whenever the row wrapped.
+ */
 .taskAdvance .skip {
-  order: 3;
+  order: 2;
 }
 .taskSummary {
   display: grid;
