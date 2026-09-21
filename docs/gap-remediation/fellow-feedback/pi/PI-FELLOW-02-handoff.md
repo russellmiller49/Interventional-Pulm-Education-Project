@@ -214,8 +214,8 @@ pixels are never drawn on, and the test holds the canvas data URL identical with
 A thumbnail is now a button that opens **that same projection** enlarged in place (384 px), with
 Previous / Next to step through the sweep and watch the tool shift. The enlarged canvas is a copy of
 the thumbnail's own canvas and carries its position and angle ("Projection 1 of 13 · −15°"); the
-test holds the two data URLs equal. Not a modal: Escape or Close returns focus to the thumbnail it
-is showing. Native browser zoom is untouched.
+test holds the two data URLs equal. Not a modal: Escape or Close returns focus to the thumbnail that opened it, even after
+Previous/Next changes the displayed projection (corrected during the sanity review below). Native browser zoom is untouched.
 
 ### 3.8 — the pulse strip
 
@@ -458,3 +458,178 @@ Every row is `<base>` + the path, dark, anonymous local context.
 | 6.2, 6.4        | `/en/peripheral-imaging/learn?section=tool-confirmation` | Activity 1 as it opens. Skip to the lab task and tick "Combine depths into a teaching slab".                         |
 | PR3             | `/en/peripheral-imaging/practice?case=signal-practice-1` | Scroll to the actions before choosing anything.                                                                      |
 | Beta-wrapped    | `/en/development-beta/peripheral-imaging`                | Needs `NEXT_PUBLIC_MODULE_FEEDBACK_MODE=owner-local` at build time; navigate inside the frame to the routes above.   |
+
+## Independent pre-merge sanity review — September 21, 2026
+
+**SANITY REVIEW: READY TO MERGE — after the three corrections below.** This is the requested bounded engineering review of
+PI-FELLOW-02, not a restarted fellow walkthrough, G02 audit, clinical review or learner study.
+Prompt 03, curriculum changes, merging and deployment remain outside this task.
+
+### Exact review state
+
+- PR #253, `claude/pi-2-9-19`, expected and actual initial head:
+  `1d1d1d0b9b9d781e23f6337c72134ebdc9122965`.
+- Freshly fetched `origin/main` and PR base:
+  `c717c9ffae09cb67e19b06a56d37c75487a5605a`.
+- GitHub reported `MERGEABLE`, merge state `CLEAN`.
+- Other open PRs: #254, #252, #251, #134, #114 and #98. **Zero changed-file overlaps.**
+  #134 includes shared stage/verdict changes outside this PR's paths; the current-base shared
+  component suites were included in validation, without reviewing or merging that other branch.
+- The checkout was clean and already at the exact requested head. The owner's explicit instruction
+  to correct genuine defects **in the existing PR** governs this continuation on its branch.
+- Read this handoff, Prompt 02 from the mapped Local-Data implementation pack, PI-FELLOW-01,
+  SYSTEMIC-UX-01 and its post-merge record, SYSTEMIC-UX-02, and the PI focus/outline/wrap/Help
+  contracts. Current self-paced behavior takes precedence over generic assessment defaults.
+
+Exact initial changed paths (29; the corrections below stay within these paths):
+
+```text
+docs/gap-remediation/fellow-feedback/pi/PI-FELLOW-02-handoff.md
+e2e/peripheral-imaging.spec.ts
+src/features/peripheral-imaging/__tests__/dts-overlay.test.ts
+src/features/peripheral-imaging/__tests__/hub-hero.test.ts
+src/features/peripheral-imaging/__tests__/label-layout.test.ts
+src/features/peripheral-imaging/__tests__/workbench-loop.rendered.test.tsx
+src/features/peripheral-imaging/components/PeripheralImagingHub.tsx
+src/features/peripheral-imaging/components/peripheral-imaging-hub.module.css
+src/features/peripheral-imaging/components/peripheral-imaging-module.module.css
+src/features/peripheral-imaging/components/stage/ImagingActivityShell.tsx
+src/features/peripheral-imaging/components/stage/ImagingStageHost.tsx
+src/features/peripheral-imaging/components/stage/LessonDemonstration.tsx
+src/features/peripheral-imaging/components/stage/imaging-flow.module.css
+src/features/peripheral-imaging/components/stage/imaging-stage.module.css
+src/features/peripheral-imaging/components/suite/CameraRig.tsx
+src/features/peripheral-imaging/components/suite/ChainPins.tsx
+src/features/peripheral-imaging/components/suite/LabDock.tsx
+src/features/peripheral-imaging/components/suite/SceneLabels.tsx
+src/features/peripheral-imaging/components/suite/SuiteScene.tsx
+src/features/peripheral-imaging/components/suite/cameraPose.ts
+src/features/peripheral-imaging/components/suite/dtsModel.ts
+src/features/peripheral-imaging/components/suite/labelLayout.ts
+src/features/peripheral-imaging/components/suite/suite-scene.module.css
+src/features/peripheral-imaging/components/suite/views/ProjectionView3D.tsx
+src/features/peripheral-imaging/components/suite/views/SamplingView.tsx
+src/features/peripheral-imaging/components/suite/views/TimeView.tsx
+src/features/peripheral-imaging/components/suite/views/TomosynthesisView.tsx
+src/features/peripheral-imaging/content/hubHero.ts
+src/features/peripheral-imaging/test-support/stageHarness.tsx
+```
+
+### Reproduced defects and minimal corrections
+
+| Finding                                           | Reproduction before correction                                                                                                                                                                                                                                    | Correction and regression                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **P2: enlargement keyboard entry and return**     | Enter on projection 1 leaves focus on its thumbnail; immediate Escape leaves the enlargement open. Next then Escape returns to projection 2 rather than the original thumbnail.                                                                                   | `TomosynthesisView.tsx` keeps the opener separately from the displayed index and focuses the nonmodal figure when opened. Previous/Next preserve active-control focus; at the first/last projection focus returns to the figure before the button becomes disabled, keeping Escape operable. Escape/Close return to the opener. The new browser test failed on the original production head and tests immediate Escape, Next, Close, multiple openers, both sweep boundaries, and normal Tab exit. The endpoint extension separately failed before its fix when the newly disabled Next button lost focus. The older test's wrong destination assertion was corrected. |
+| **P2: touch scroll dead region remains**          | At 390×844, an emulated vertical swipe starting on the actual canvas leaves document scroll at 271 px. The canvas reports `pan-y pinch-zoom`, but the R3F ancestor reports `none`; checking only the canvas missed the effective prohibition.                     | Extend the existing PI-local touch-action rule to the immediate R3F wrapper. No camera or shared input code changes. A real Chromium input-dispatch regression fails before this CSS correction; with the rule applied the same swipe moves the document 271→499 px (508 px on the final-build rerun, including native momentum). This is emulated touch, not physical hardware.                                                                                                                                                                                                                                                                                       |
+| **P2: slab-paired thin sections freeze at −9 mm** | Enable slab comparison, then change axial, coronal and sagittal controls rapidly. Controls end at 6 mm while every thin caption/image stays at −9 mm. The old slab geometry adapter returns the full slab's center, which the new thin panels incorrectly reused. | `SamplingPanels` obtains thin-plane positions with `slab: false`; each MPR slab still combines the existing −60…42 mm range. The 3D slab geometry is untouched. The new browser regression fails before correction and checks final per-axis captions, accessible plane identity, changed thin-image pixels, and unchanged other thin/slab images.                                                                                                                                                                                                                                                                                                                     |
+
+No refactor, new image, clinical teaching, engine formula, question, score, gate, storage key,
+publication flag or shared component was changed. Correction paths are the three feature files
+above, `e2e/peripheral-imaging.spec.ts`, and this handoff.
+
+### Independent evidence by requested area
+
+- **Wheel/camera:** ordinary wheel over eleven visible scene routes scrolls the page without changing
+  the rendered camera. Ordinary, Ctrl and Cmd synthetic cancelable wheel events are not canceled.
+  All four camera buttons were activated by keyboard across six presets, two C-arm angles (0° and
+  67°), and 1280×900/1024×768. All 24 combinations changed rendered pixels appropriately and Reset
+  restored the complete-frame pixel hash of that active preset. A separate final-build probe
+  deliberately combined zoom and rotation so the pre-reset image differed: all **24 nontrivial
+  resets** matched their reference, including 12 after resizing to 1024×768. The reset effect assigns the
+  preset's position, up vector and target; this is not a guessed default. Existing pointer-drag
+  and resize checks also pass. Browser gesture non-consumption is distinguished from native tab
+  zoom validation; physical touch hardware was not used.
+- **Live labels:** recorded **956 visible label rectangles across 120 states** (24 initial states
+  plus four camera moves per state): **zero overlaps**. All eight labels appear at each preset;
+  four zoomed-in Target states hide the display label whose anchor is behind the camera. Source tracing follows the actual source
+  sphere/detector group transforms and the actual target/tool meshes, not their text. Independently
+  projecting those model anchors through each preset produced a maximum **0.069 px** discrepancy
+  from the rounded runtime anchor coordinates. Displaced labels retain leaders.
+- **Overview labels:** independently transformed the source/detector mesh positions and projected
+  all six component anchors by camera-basis dot products. Maximum stored-coordinate difference:
+  **0.040 percentage points**. Separately re-rendered the actual room fixture into a scratch PNG:
+  it is **byte-identical** to the shipped image, SHA-256
+  `dfa096a52a72a13b9f59666eaa5acc069fb2045b51a7015af9a56ce8a30ad72c`.
+  This closes the circular-validation concern for this head: the existing unit test alone cannot
+  prove that arbitrary replacement PNG pixels still match its assumed camera.
+- **DTS:** overlay initially hidden; underlying canvas data URL unchanged when enabled; checks
+  withhold the toggle and marks. Inverting the reconstruction's world-to-plane mapping gives tool
+  x=54.857…164.571, y=128 and target center=(164.571,128), independently matching the overlay's
+  unpadded geometry. Tested depths −25, −18, −16, −8, 0, 8, 10 and 25 mm. Solid/dotted state follows
+  object intersection; signed model distances equal object depth minus plane depth. Displayed
+  “mm from this plane” is the correct unsigned magnitude, without an invented directional sign.
+  Planning-CT mode renders only the target mark and explicitly explains the absent tool. The
+  modeled-location/not-image-detection note remains visible when enabled. No clinical validation
+  is inferred from agreement between two authored-model representations.
+- **Projection enlargement:** multiple sweep positions match their thumbnail canvas bytes and
+  angle/index (including projections 2, 8 and 13). The focus repair above preserves this identity.
+  Previous/Next remain normal buttons; no modal or focus trap is introduced.
+- **Thin/slab pairing:** corrected as above. The slabs retain their full, fixed depth interval;
+  they are not recentered or represented as a superior clinical image. Each paired thin section
+  uses its own live selected position; rapid changes must settle to the final control value.
+- **Component walk:** all six cards match the highlighted component on both direct and beta routes
+  at 1280×900, 1024×768 and 390×844; additionally exercised 1280×900 with 200% root text. Desktop
+  Next preserves document position. Compact/enlarged layouts release pinning and have no fixed
+  card-height scroller. At compact widths, native scroll anchoring can move document offset when
+  differently sized cards replace each other near the document end; the button stays in ordinary
+  document flow. This is not an added programmatic Next scroll.
+- **Beam stop:** the existing production test confirms the focused obliquity control, changed
+  projection and relevant card remain co-visible. The previously documented 1280×900 limitation
+  remains: viewing the 3D scene at this stop requires scrolling back up. It is not a blocker for
+  the demonstrated slider→projection teaching loop.
+- **Pulse strip:** equations/parameters/units are unchanged in the source diff. Changing pulse
+  width moves only fixed-current tube load and within-pulse blur; only those two readouts are
+  marked. Unchanged travel, interval and pulse rate remain unmarked. Chromium's accessibility
+  snapshot includes the generated “· changed” text. Exact wording remains editorial for Prompt 03.
+- **Practice and Prompt 01:** the full PI journeys retain disabled Check before selection,
+  selection→Check→explanation→retry, explanation before answering, and ungraded/unrestricted
+  navigation. Fixed-example independence, illustrative-scenario framing, chain/CBCT evidence
+  framing and saved-baseline/current crop behavior remain covered by rendered/Jest/browser checks.
+- **Beta wrapper:** tested independently using the production owner-local build. At each requested
+  normal-text size, no new horizontal overflow or hidden primary action; all six highlights/cards
+  stay paired and controls are reachable. The 1024 frame shows less card/scene content because the
+  wrapper consumes 65 px; ordinary scrolling remains available. At 1280 with 200% root text, an
+  unchanged shared-navigation “Intro to Bronchoscopy” link accounts for 51 px document overflow;
+  it is outside these PI changes and is not presented as a clean whole-site reflow claim.
+
+### Validation and evidence retention
+
+Validation ran against a local **production** build, served on `127.0.0.1:3167`, with
+`NEXT_PUBLIC_MODULE_FEEDBACK_MODE=owner-local`, `NEXT_PUBLIC_SUPABASE_URL=https://preview.invalid`,
+`NEXT_PUBLIC_SUPABASE_ANON_KEY=preview-only` and an 8 GiB Node heap. No stored environment secret
+was read or copied.
+
+| Check                                               | Result                                                                                                                                                                                                       |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run build`                                     | PASS, including training apps, content/assets, production compilation, TypeScript and standalone preparation. Rebuilt after the final focus-boundary change.                                                 |
+| Focused Jest: PI, shared learning-module, PI routes | **58 suites / 477 tests pass** after the three corrections; another **2 suites / 14 tests pass** after the focus-boundary extension.                                                                         |
+| Full PI Playwright production suite                 | **53/53 pass**, including new focus, touch and per-axis slab regressions and prior focus/outline/wrapping/Help/Prompt 01 journeys.                                                                           |
+| Final affected production browser rerun             | **7/7 pass** on the final rebuilt source, including immediate Escape, both sweep ends, Close/Tab exit, wheel/pointer behavior, touch scrolling, DTS overlay and per-axis slab pairing.                       |
+| Systemic production PI/public-entry checks          | **7/7 pass**, repeated on the corrected build.                                                                                                                                                               |
+| Independent probes                                  | Eleven visible-scene wheel contracts, 120 label states, 24 camera/preset combinations, direct/beta six-component walks, DTS geometry/pixels, hero rerender, slab/pulse and emulated-touch evidence retained. |
+| Repository `npm run type-check`                     | PASS after correcting a missing canvas type cast in the new test.                                                                                                                                            |
+| Changed-path ESLint, Prettier; `git diff --check`   | PASS.                                                                                                                                                                                                        |
+
+Failures and reruns remain distinct. The first PI production run was invalidated after 32 passes
+by starting a rebuild in its active output directory; its 18 later failures are retained as
+harness interference, not accepted product results. A clean subsequent build passed 51/51 checks
+with the initial focus repair. Separate before-fix regressions then demonstrated the touch and
+slab defects; their corrected build passed all 53 checks. The final focus test was extended to
+both sweep endpoints after reproducing the disabled-button focus loss; its affected rerun is
+reported separately above. A type-check failure in the added test was a missing
+`HTMLCanvasElement` cast, corrected without altering test behavior.
+
+Retained build warnings match the baseline: embedded training-app chunk size, Mermaid dependency
+compilation warnings, missing `metadataBase`, and Node `DEP0205`. No full-repository suite was
+run: no shared code changed and no focused failure indicated broader impact.
+
+Evidence is retained outside Git at
+`/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/pi253-sanity-2026-09-21/`:
+state/changed-file metadata, build/test logs, failing-before regressions, independent probe scripts,
+all label rectangles, reconstructed coordinates, direct/beta screenshots and the scratch hero.
+Some exploratory probes initially targeted hidden geometric views or nonexistent controls; these
+are retained as probe failures and are not counted as feature passes. The final visible-state
+probes and committed regressions provide the acceptance evidence.
+
+No merge or deployment was performed. Editorial DTS phrasing and the generated change-marker
+wording remain Prompt 03 items. No clinical, human-review or release hold was cleared.

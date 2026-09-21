@@ -974,10 +974,10 @@
   color: var(--suite-card-muted);
 }
 
-/* Report 2.2, touch: the orbit controls write `touch-action: none` on the canvas each time they
-   connect, which makes the figure a place a touch scroll cannot start. A vertical swipe belongs to
-   the page and a pinch to the browser; a sideways drag still reaches the controls. `!important` is
-   what lets a stylesheet outrank that inline value. */
+/* Both the R3F Canvas wrapper and the orbit controls set touch-action inline. The browser
+   intersects the canvas and ancestor permissions, so both must allow vertical page panning and
+   browser pinch zoom. A sideways drag still reaches the camera controls. */
+.canvasHost > div,
 .canvasHost canvas {
   touch-action: pan-y pinch-zoom !important;
 }

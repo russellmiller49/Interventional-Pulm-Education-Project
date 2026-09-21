@@ -2150,7 +2150,7 @@ test('report 4.2 and 4.3: an optional, truthful DTS overlay and projections that
   await capture(page, info, 'fellow2-43-enlarged.png')
   await page.keyboard.press('Escape')
   await expect(enlarged).toHaveCount(0)
-  await expect(page.locator('[data-dts-frame="1"] button')).toBeFocused()
+  await expect(thumb).toBeFocused()
 })
 
 test('report 4.2: a check never offers the overlay that would answer it', async ({ page }) => {
@@ -2390,3 +2390,140 @@ for (const condition of [
     await capture(page, info, `fellow2-compact-${condition.name}.png`)
   })
 }
+
+// Independent pre-merge sanity review: enlargement must work from the keyboard's actual focus,
+// including immediate dismissal and returning to the opener after browsing other projections.
+test('projection enlargement keeps keyboard entry and dismissal tied to the originating thumbnail', async ({
+  page,
+}) => {
+  await advanceToKind(page, 'dts-acquisition', 'lab-task')
+  await expect(page.locator('[data-dts-state]')).toHaveAttribute('data-dts-state', 'ready', {
+    timeout: 90000,
+  })
+  for (const origin of [0, 6, 11]) {
+    const thumb = page.locator(`[data-dts-frame="${origin}"] button`)
+    await thumb.focus()
+    await page.keyboard.press('Enter')
+    const enlarged = page.locator('[data-dts-enlarged]')
+    await expect(enlarged).toBeFocused()
+    await page.keyboard.press('Escape')
+    await expect(enlarged).toHaveCount(0)
+    await expect(thumb).toBeFocused()
+
+    await page.keyboard.press('Enter')
+    await expect(enlarged).toBeFocused()
+    // Tab from the enlarged figure reaches its controls in normal document order.
+    await page.keyboard.press('Tab')
+    if (origin > 0) {
+      await expect(page.locator('[data-dts-enlarged-previous]')).toBeFocused()
+      await page.keyboard.press('Tab')
+    }
+    await expect(page.locator('[data-dts-enlarged-next]')).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(enlarged).toHaveAttribute('data-dts-enlarged', String(origin + 1))
+    if (origin === 11) await expect(enlarged).toBeFocused()
+    else await expect(page.locator('[data-dts-enlarged-next]')).toBeFocused()
+    if (origin === 0 || origin === 11) await page.keyboard.press('Escape')
+    else {
+      await page.keyboard.press('Tab')
+      await expect(page.locator('[data-dts-enlarged-close]')).toBeFocused()
+      // The next tab leaves the enlargement: this is not a modal focus trap.
+      await page.keyboard.press('Tab')
+      await expect(page.locator('[data-dts-frame="0"] button')).toBeFocused()
+      await page.keyboard.press('Shift+Tab')
+      await page.keyboard.press('Enter')
+    }
+    await expect(enlarged).toHaveCount(0)
+    await expect(thumb).toBeFocused()
+  }
+  const second = page.locator('[data-dts-frame="1"] button')
+  await second.focus()
+  await page.keyboard.press('Enter')
+  await page.keyboard.press('Tab')
+  await expect(page.locator('[data-dts-enlarged-previous]')).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(page.locator('[data-dts-enlarged]')).toHaveAttribute('data-dts-enlarged', '0')
+  await expect(page.locator('[data-dts-enlarged]')).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(page.locator('[data-dts-enlarged]')).toHaveCount(0)
+  await expect(second).toBeFocused()
+})
+
+test('a vertical touch gesture beginning on the 3D scene scrolls the document', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+    reducedMotion: 'reduce',
+  })
+  try {
+    const page = await context.newPage()
+    await advanceToKind(page, 'chain-walk', 'walk')
+    await sceneReady(page)
+    const canvas = page.locator('[data-suite-viewport] canvas')
+    await canvas.scrollIntoViewIfNeeded()
+    await settleHelp(page)
+    const box = (await canvas.boundingBox())!
+    const x = box.x + box.width * 0.7
+    const y = box.y + box.height * 0.65
+    expect(
+      await canvas.evaluate((node, point) => document.elementFromPoint(point.x, point.y) === node, {
+        x,
+        y,
+      }),
+    ).toBe(true)
+    const before = await page.evaluate(() => window.scrollY)
+    // Native Chromium touch input exercises the ancestor touch-action intersection too. This is
+    // emulated touch evidence, not a physical-device test or merely a canvas-style assertion.
+    const input = await context.newCDPSession(page)
+    await input.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ x, y }],
+    })
+    for (let step = 1; step <= 10; step++) {
+      await input.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x, y: y - step * 15 }],
+      })
+      await page.waitForTimeout(20)
+    }
+    await input.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(before + 80)
+  } finally {
+    await context.close()
+  }
+})
+
+test('slab comparison keeps each thin section tied to its own live plane slider', async ({
+  page,
+}) => {
+  await advanceToKind(page, 'tool-confirmation', 'lab-task')
+  await page.locator('#peripheral-imaging-control-slab').check()
+  const pairs = page.locator('[data-slab-pair]')
+  await expect(pairs.locator('[data-ct-state="ready"]')).toHaveCount(6)
+  const pixels = () =>
+    pairs
+      .locator('canvas')
+      .evaluateAll((nodes) => nodes.map((node) => (node as HTMLCanvasElement).toDataURL()))
+  for (const [axis, title, position, index] of [
+    ['axial', 'Axial', 6, 0],
+    ['coronal', 'Coronal', -12, 2],
+    ['sagittal', 'Sagittal', 18, 4],
+  ] as const) {
+    const before = await pixels()
+    for (const value of [17, -13, position]) await controlRange(page, axis, value)
+    const thin = page.locator(`[data-slab-pair="${title}"] [data-slab-pair-view="thin"]`)
+    await expect(thin.locator('figcaption')).toHaveText(`Thin plane · ${position} mm`)
+    await expect(thin.locator('svg')).toHaveAttribute(
+      'aria-label',
+      new RegExp(`slice at ${position} millimeters`),
+    )
+    await expect.poll(async () => (await pixels())[index]).not.toBe(before[index])
+    const after = await pixels()
+    // The full-depth slabs and the other two thin sections have not changed.
+    for (let other = 0; other < after.length; other++)
+      if (other !== index) expect(after[other]).toBe(before[other])
+  }
+})

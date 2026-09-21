@@ -402,18 +402,26 @@ export function TomosynthesisMonitor({
  */
 function ProjectionFilmstrip({ model }: { model: Tomosynthesis }) {
   const frames = model.images?.projections.slice(0, model.count) ?? []
-  const [open, setOpen] = useState<number | null>(null)
+  const [open, setOpen] = useState<{ index: number; origin: number } | null>(null)
   const thumbs = useRef(new Map<number, HTMLButtonElement>())
-  const selected = open !== null && open < frames.length ? open : null
+  const enlarged = useRef<HTMLElement>(null)
+  const origin = open?.origin
+  const selected = open !== null && open.index < frames.length ? open.index : null
+  useEffect(() => {
+    // Enter the newly opened view so Escape and ordinary Tab navigation work immediately.
+    // Browsing Previous/Next preserves the active control and the original return destination.
+    if (origin !== undefined) enlarged.current?.focus()
+  }, [origin])
   const close = () => {
-    const index = selected
     setOpen(null)
-    if (index !== null) thumbs.current.get(index)?.focus()
+    if (origin !== undefined) thumbs.current.get(origin)?.focus()
   }
   return (
     <>
       {selected !== null && (
         <figure
+          ref={enlarged}
+          tabIndex={-1}
           className={styles.enlarged}
           data-dts-enlarged={selected}
           onKeyDown={(event) => {
@@ -436,7 +444,11 @@ function ProjectionFilmstrip({ model }: { model: Tomosynthesis }) {
             <button
               type="button"
               disabled={selected === 0}
-              onClick={() => setOpen(selected - 1)}
+              onClick={() => {
+                // Do not strand focus on a button that becomes disabled at the sweep boundary.
+                if (selected === 1) enlarged.current?.focus({ preventScroll: true })
+                setOpen({ index: selected - 1, origin: origin! })
+              }}
               data-dts-enlarged-previous
             >
               Previous projection
@@ -444,7 +456,10 @@ function ProjectionFilmstrip({ model }: { model: Tomosynthesis }) {
             <button
               type="button"
               disabled={selected >= frames.length - 1}
-              onClick={() => setOpen(selected + 1)}
+              onClick={() => {
+                if (selected === frames.length - 2) enlarged.current?.focus({ preventScroll: true })
+                setOpen({ index: selected + 1, origin: origin! })
+              }}
               data-dts-enlarged-next
             >
               Next projection
@@ -467,7 +482,7 @@ function ProjectionFilmstrip({ model }: { model: Tomosynthesis }) {
               }}
               aria-pressed={selected === i}
               aria-label={`Enlarge teaching projection ${i + 1} of ${frames.length} at ${p.angle} degrees`}
-              onClick={() => setOpen(selected === i ? null : i)}
+              onClick={() => setOpen(selected === i ? null : { index: i, origin: i })}
             >
               <CanvasCopy source={p.canvas} label={`Teaching projection at ${p.angle} degrees`} />
             </button>

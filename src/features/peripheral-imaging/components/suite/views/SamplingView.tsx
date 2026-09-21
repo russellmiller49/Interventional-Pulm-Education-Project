@@ -71,7 +71,9 @@ export function SamplingView({
   )
 }
 export function SamplingPanels({ inputs, revealed }: { inputs: SuiteInputs; revealed: boolean }) {
-  const model = samplingPlanes(inputs)
+  // The 3D slab is centred at -9 mm, but the paired thin sections follow their own sliders.
+  // MPR's slab renderer still combines the unchanged full depth interval.
+  const model = samplingPlanes({ ...inputs, slab: false })
   return (
     <section
       className={styles.signalProfile}
