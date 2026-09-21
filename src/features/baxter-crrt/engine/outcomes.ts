@@ -1,13 +1,8 @@
 import type { RuntimeCrrtCase } from '../content/schema'
 import { BAXTER_CRRT_CONTENT_VERSION } from '../content/versions'
 import type { CrrtLearningSessionState, CrrtPredictionCommitment } from './learningSession'
-import {
-  crrtSoluteIds,
-  type CrrtFlowRates,
-  type CrrtSimulationState,
-  type CrrtSoluteId,
-  type ExternalFluidRateKey,
-} from './types'
+import { isCrrtSoluteConcentrationMetric } from './soluteValidity'
+import type { CrrtFlowRates, CrrtSimulationState, ExternalFluidRateKey } from './types'
 
 export const CRRT_PRACTICE_HINT_PENALTY_POINTS = 5
 export const CRRT_MASTERY_MINIMUM_SCORE = 80
@@ -171,8 +166,6 @@ const prescriptionFlowKeys = new Set<keyof CrrtFlowRates>([
   'makeupFlowMlHour',
 ])
 
-const soluteIds = new Set<CrrtSoluteId>(crrtSoluteIds)
-
 function finiteOrNull(value: number | null | undefined): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
@@ -266,17 +259,13 @@ export function readAllowlistedCrrtMetric(
         return finiteOrNull(state.prescription.flows[key as keyof CrrtFlowRates])
       }
 
-      const solutePrefix = 'patient.solutes.'
-      const concentrationSuffix = '.concentrationPerLiter'
-      if (
-        metric.startsWith(solutePrefix) &&
-        metric.endsWith(concentrationSuffix) &&
-        state.patient.status === 'configured'
-      ) {
-        const id = metric.slice(solutePrefix.length, -concentrationSuffix.length)
-        if (!soluteIds.has(id as CrrtSoluteId)) return null
-        return finiteOrNull(state.patient.solutes[id as CrrtSoluteId]?.concentrationPerLiter)
-      }
+      // Evolving solute concentrations are removal-only arithmetic, not a modeled
+      // patient laboratory response (see engine/soluteValidity.ts). They must not
+      // reach a learner-facing verdict, so this reader refuses them outright
+      // rather than returning a number a success condition could score.
+      // `collectCrrtCaseSemanticIssues` rejects authored cases that use the path,
+      // so no case can depend on it silently evaluating false.
+      if (isCrrtSoluteConcentrationMetric(metric)) return null
 
       return null
     }

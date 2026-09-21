@@ -81,9 +81,9 @@ it.each(baxterCrrtCases.map((definition) => [definition.id, definition] as const
     click('Reveal hint 1')
     expect(facts()).toEqual(initial)
     click('End run and review debrief')
-    expect(screen.getByText('Worked debrief explanation')).toBeInTheDocument()
+    expect(screen.getByText('Supplied teaching path · worked example')).toBeInTheDocument()
     expect(screen.queryByText(/, completed/)).toBeNull()
-    expect(screen.getByText('Example reviewed · no run performed')).toBeInTheDocument()
+    expect(screen.getByText('Debrief opened · no run performed')).toBeInTheDocument()
     expect(facts()).toEqual(initial)
     expect(view.container.textContent).not.toMatch(
       /\b(?:mastered|mastery|grade)\b|best score|minimum score|pass\/fail|percentage correct/i,
@@ -116,8 +116,10 @@ it('keeps actual action prerequisites and delayed responses independent of quest
   click('+5 min')
   expect(facts().time).toBe(300)
   click('End run and review debrief')
-  expect(screen.getByText('Run reviewed')).toBeInTheDocument()
-  expect(screen.queryByText('Example reviewed · no run performed')).toBeNull()
+  expect(
+    screen.getByText(/^Debrief opened · \d+ recorded events? in this run$/),
+  ).toBeInTheDocument()
+  expect(screen.queryByText('Debrief opened · no run performed')).toBeNull()
 })
 
 it('does not treat opening and closing a device dialog as a performed run', () => {
@@ -131,7 +133,7 @@ it('does not treat opening and closing a device dialog as a performed run', () =
     screen.getByRole('group', { name: 'Select every reassessment you actually completed' }),
   ).toBeDisabled()
   click('End run and review debrief')
-  expect(screen.getByText('Example reviewed · no run performed')).toBeInTheDocument()
+  expect(screen.getByText('Debrief opened · no run performed')).toBeInTheDocument()
 })
 
 it.each(Object.keys(crrtLearnTasks))(

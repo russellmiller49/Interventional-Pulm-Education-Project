@@ -105,6 +105,13 @@
       "runtimeArgs": ["scripts/dev-with-training-apps.mjs", "--port", "3128"],
       "port": 3128,
       "autoPort": false
+    },
+    {
+      "name": "claude-crrt",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "--port", "3129", "--webpack"],
+      "port": 3129,
+      "autoPort": false
     }
   ]
 }

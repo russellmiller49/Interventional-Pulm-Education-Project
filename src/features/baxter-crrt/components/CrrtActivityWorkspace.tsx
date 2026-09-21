@@ -24,6 +24,11 @@ import { Link } from '@/i18n/navigation'
 import { baxterCrrtMasteryManifest } from '../content/mastery'
 import { getBaxterCrrtDeviceProfile } from '../content/deviceProfiles'
 import type { CrrtLearningSessionState, CrrtReasoningPhase } from '../engine/learningSession'
+import {
+  formatCrrtSuppliedLabValue,
+  selectCrrtLabEvidence,
+  type CrrtSuppliedLabValue,
+} from '../labEvidence'
 import styles from './baxter-crrt.module.css'
 
 /** Keep the native CRRT layout without inferring completed phases from navigation. */
@@ -172,6 +177,11 @@ export function CrrtActivityWorkspace({
   const latestTrend = session.simulation.trends.at(-1)
   const pressures = session.simulation.circuit.pressures
   const activeAlarm = session.simulation.alarms.find((alarm) => alarm.active)
+  const labEvidence = selectCrrtLabEvidence(session)
+  const suppliedLabValue = (id: CrrtSuppliedLabValue['id']): string => {
+    const entry = labEvidence.suppliedBaseline.find((candidate) => candidate.id === id)
+    return entry ? formatCrrtSuppliedLabValue(entry) : 'Not supplied'
+  }
   const activityId =
     mode === 'challenge'
       ? `crrt:assess:${baxterCrrtMasteryManifest.id}`
@@ -252,17 +262,13 @@ export function CrrtActivityWorkspace({
                 )} · ${formatClinicalValue(latestTrend?.cumulativeWholePatientBalanceMl, 'mL')}`,
               },
               {
-                label: 'Relevant labs',
-                value:
-                  patient.status === 'configured'
-                    ? `K ${formatClinicalValue(
-                        patient.solutes.potassium?.concentrationPerLiter,
-                        patient.solutes.potassium?.concentrationUnit ?? 'mmol/L',
-                      )} · HCO₃ ${formatClinicalValue(
-                        patient.solutes.bicarbonate?.concentrationPerLiter,
-                        patient.solutes.bicarbonate?.concentrationUnit ?? 'mmol/L',
-                      )} · pH ${patient.pH.toFixed(2)}`
-                    : 'Unavailable',
+                // Supplied case-start values, not the evolving pool. The pool is
+                // advanced by delivered clearance alone, so showing it here would
+                // read as a measured laboratory trend (see labEvidence.ts).
+                label: 'Supplied labs at case start',
+                value: `K ${suppliedLabValue('potassium')} · HCO₃ ${suppliedLabValue(
+                  'bicarbonate',
+                )} · pH ${suppliedLabValue('pH')} · not modeled over time`,
               },
               {
                 label: 'Pressure pattern',

@@ -67,11 +67,28 @@ export type CrrtLearningTimelineEventType =
   | 'reassessment-committed'
   | 'debrief-revealed'
 
+/** One parameter actually recorded with a timeline event, with its unit. */
+export interface CrrtLearningTimelineDetail {
+  readonly label: string
+  readonly value: string
+}
+
 export interface CrrtLearningTimelineEntry {
   readonly sequence: number
   readonly atSeconds: number
   readonly type: CrrtLearningTimelineEventType
   readonly referenceId: string | null
+  /**
+   * Values recorded at the moment of the event. An entry without details was
+   * recorded without values; a reader must say so rather than reconstruct them
+   * from the final prescription or any later state.
+   */
+  readonly details?: readonly CrrtLearningTimelineDetail[]
+  /**
+   * Whether this dispatch changed the run. Entries recorded before an outcome
+   * was tracked carry no value and must not be reported as either.
+   */
+  readonly outcome?: 'applied' | 'refused'
 }
 
 export interface CrrtLearningSessionState {
@@ -115,6 +132,7 @@ export type CrrtLearningSessionAction =
       readonly roleLens?: CrrtRoleLens
       readonly attempt?: number
     }
+  | { readonly type: 'SET_ROLE_LENS'; readonly roleLens: CrrtRoleLens }
   | {
       readonly type: 'ENTER_PRECOMMIT_REASONING_PHASE'
       readonly phase: CrrtPrecommitReasoningPhase
@@ -167,6 +185,10 @@ function appendTimeline(
   state: CrrtLearningSessionState,
   type: CrrtLearningTimelineEventType,
   referenceId: string | null,
+  extra?: {
+    readonly details?: readonly CrrtLearningTimelineDetail[]
+    readonly outcome?: 'applied' | 'refused'
+  },
 ): readonly CrrtLearningTimelineEntry[] {
   return [
     ...state.timeline,
@@ -175,8 +197,112 @@ function appendTimeline(
       atSeconds: state.simulation.simulationTimeSeconds,
       type,
       referenceId,
+      ...(extra?.details && extra.details.length > 0
+        ? { details: Object.freeze([...extra.details]) }
+        : {}),
+      ...(extra?.outcome ? { outcome: extra.outcome } : {}),
     }),
   ]
+}
+
+const prismaxDraftFieldLabels: Readonly<
+  Record<
+    'bloodFlowMlMin' | 'dialysateFlowMlHour' | 'patientFluidRemovalMlHour',
+    readonly [string, string]
+  >
+> = Object.freeze({
+  bloodFlowMlMin: ['Blood flow', 'mL/min'],
+  dialysateFlowMlHour: ['Dialysate flow', 'mL/h'],
+  patientFluidRemovalMlHour: ['Patient fluid removal', 'mL/h'],
+})
+
+function formatTimelineSeconds(seconds: number): string {
+  if (seconds % 3_600 === 0) return `${seconds / 3_600} hr`
+  if (seconds % 60 === 0) return `${seconds / 60} min`
+  return `${seconds} sec`
+}
+
+const effectTargetLabels: Readonly<Record<string, readonly [string, string]>> = Object.freeze({
+  'prescription.flows.bloodFlowMlMin': ['Blood flow', 'mL/min'],
+  'prescription.flows.dialysateFlowMlHour': ['Dialysate flow', 'mL/h'],
+  'prescription.flows.pbpFlowMlHour': ['Pre-blood-pump flow', 'mL/h'],
+  'prescription.flows.preReplacementFlowMlHour': ['Pre-filter replacement', 'mL/h'],
+  'prescription.flows.postReplacementFlowMlHour': ['Post-filter replacement', 'mL/h'],
+  'prescription.flows.patientFluidRemovalMlHour': ['Patient fluid removal', 'mL/h'],
+  'prescription.flows.syringeFlowMlHour': ['Syringe flow', 'mL/h'],
+  'prescription.flows.makeupFlowMlHour': ['Makeup flow', 'mL/h'],
+  'patient.bodyWeightKg': ['Entered body weight', 'kg'],
+  'patient.hematocritFraction': ['Entered hematocrit', 'fraction'],
+  'access.accessResistanceMmHgPerMlMin': ['Access resistance', 'mmHg per mL/min'],
+  'access.returnResistanceMmHgPerMlMin': ['Return resistance', 'mmHg per mL/min'],
+  'circuit.filter.procoagulantBurdenFraction': ['Procoagulant burden', 'fraction'],
+  'circuit.filter.lowEffectiveBloodFlowFraction': ['Low effective blood flow', 'fraction'],
+})
+
+const effectOperationVerbs: Readonly<Record<string, string>> = Object.freeze({
+  set: 'set to',
+  add: 'changed by',
+  multiply: 'multiplied by',
+})
+
+/**
+ * The parameter changes an authored action carries. They come from the action
+ * itself at the moment it is performed, never from the final prescription.
+ */
+function interventionDetails(
+  effects: readonly CaseEffect[],
+): readonly CrrtLearningTimelineDetail[] {
+  const details: CrrtLearningTimelineDetail[] = []
+  for (const effect of effects) {
+    if (effect.valueType !== 'number') {
+      if (effect.target === 'device.deliveryState') {
+        details.push({ label: 'Treatment state', value: String(effect.value) })
+      }
+      continue
+    }
+    if (effect.target === 'simulation.advanceTimeSeconds') {
+      details.push({
+        label: 'Simulated time advanced',
+        value: formatTimelineSeconds(effect.value),
+      })
+      continue
+    }
+    const descriptor = effectTargetLabels[effect.target]
+    if (!descriptor) continue
+    const verb = effectOperationVerbs[effect.operation] ?? 'changed to'
+    details.push({
+      label: descriptor[0],
+      value: `${verb} ${effect.value} ${descriptor[1]}`,
+    })
+  }
+  if (details.length === 0) {
+    details.push({ label: 'Parameter change', value: 'None recorded for this action' })
+  }
+  return details
+}
+
+/** Values carried by the device action itself — never read back from later state. */
+function deviceActionDetails(
+  action: PrismaxPilotInterfaceAction,
+): readonly CrrtLearningTimelineDetail[] {
+  if (action.type === 'SET_PRESCRIPTION_VALUE') {
+    const label = prismaxDraftFieldLabels[action.field]
+    if (!label) return []
+    return [
+      {
+        label: label[0],
+        value: action.value === null ? 'Cleared' : `${action.value} ${label[1]}`,
+      },
+    ]
+  }
+  if (action.type === 'COMPLETE_SETUP_STEP') {
+    const step = prismaxSetupSteps.find((candidate) => candidate.id === action.stepId)
+    return [{ label: 'Setup step', value: step?.label ?? action.stepId }]
+  }
+  if (action.type === 'SELECT_CVVHD') {
+    return [{ label: 'Therapy', value: 'CVVHD' }]
+  }
+  return []
 }
 
 function uniqueIds(ids: readonly string[]): readonly string[] {
@@ -428,17 +554,18 @@ function canModifyRun(state: CrrtLearningSessionState): boolean {
 export function hasCrrtRunActivity(state: CrrtLearningSessionState): boolean {
   return state.timeline.some(
     (entry) =>
-      entry.type === 'intervention-performed' ||
-      entry.type === 'time-advanced' ||
-      (entry.type === 'device-action' &&
-        [
-          'COMMIT_PRESCRIPTION',
-          'START_PRIME',
-          'COMPLETE_PRIME',
-          'COMPLETE_SETUP_STEP',
-          'START_TREATMENT',
-          'END_TREATMENT',
-        ].includes(entry.referenceId ?? '')),
+      entry.outcome !== 'refused' &&
+      (entry.type === 'intervention-performed' ||
+        entry.type === 'time-advanced' ||
+        (entry.type === 'device-action' &&
+          [
+            'COMMIT_PRESCRIPTION',
+            'START_PRIME',
+            'COMPLETE_PRIME',
+            'COMPLETE_SETUP_STEP',
+            'START_TREATMENT',
+            'END_TREATMENT',
+          ].includes(entry.referenceId ?? ''))),
   )
 }
 
@@ -748,6 +875,18 @@ export function crrtLearningSessionReducer(
         attempt: action.attempt ?? state.attempt,
         deviceId: state.simulation.deviceId,
       })
+    case 'SET_ROLE_LENS': {
+      // The role lens is a presentational choice. It must never restart the run,
+      // so it changes only the lens itself — no fixture, time, prescription,
+      // action history or reassessment is touched.
+      if (action.roleLens === state.roleLens) return state
+      if (!state.caseDefinition.roleLenses.includes(action.roleLens)) return state
+      return {
+        ...state,
+        roleLens: action.roleLens,
+        simulation: { ...state.simulation, roleLens: action.roleLens },
+      }
+    }
     case 'ENTER_PRECOMMIT_REASONING_PHASE': {
       if (state.prediction || state.debriefRevealed) return state
       if (action.phase === state.reasoningPhase) return state
@@ -771,8 +910,35 @@ export function crrtLearningSessionReducer(
       )
       if (!intervention) return state
       const performed = new Set(state.performedInterventionIds)
-      if (performed.has(intervention.id) && !intervention.repeatable) return state
-      if (intervention.prerequisites.some((id) => !performed.has(id))) return state
+      // A refused attempt is part of what actually happened in this run. It is
+      // recorded on the session timeline only; nothing is persisted or scored.
+      if (performed.has(intervention.id) && !intervention.repeatable) {
+        return {
+          ...state,
+          timeline: appendTimeline(state, 'intervention-performed', intervention.id, {
+            outcome: 'refused',
+            details: [{ label: 'Refused because', value: 'it was already performed in this run' }],
+          }),
+        }
+      }
+      const missingPrerequisite = intervention.prerequisites.find((id) => !performed.has(id))
+      if (missingPrerequisite !== undefined) {
+        const prerequisite = state.caseDefinition.interventions.find(
+          (candidate) => candidate.id === missingPrerequisite,
+        )
+        return {
+          ...state,
+          timeline: appendTimeline(state, 'intervention-performed', intervention.id, {
+            outcome: 'refused',
+            details: [
+              {
+                label: 'Refused because',
+                value: `it requires ${prerequisite?.label ?? missingPrerequisite} first`,
+              },
+            ],
+          }),
+        }
+      }
       const simulation = executeCrrtInterventionEffects(state.simulation, intervention.effects)
       const interfaceState = syncEngineDeliveryToInterface(
         state.interfaceState,
@@ -785,7 +951,10 @@ export function crrtLearningSessionReducer(
         interfaceState,
         performedInterventionIds: [...state.performedInterventionIds, intervention.id],
         reasoningPhase: 'run',
-        timeline: appendTimeline(state, 'intervention-performed', intervention.id),
+        timeline: appendTimeline(state, 'intervention-performed', intervention.id, {
+          outcome: 'applied',
+          details: interventionDetails(intervention.effects),
+        }),
       })
     }
     case 'DEVICE_ACTION': {
@@ -794,7 +963,16 @@ export function crrtLearningSessionReducer(
         throw new Error('Reset the complete CRRT learning session instead of only the interface.')
       }
       const interfaceState = prismaxPilotInterfaceReducer(state.interfaceState, action.action)
-      if (interfaceState === state.interfaceState) return state
+      const details = deviceActionDetails(action.action)
+      if (interfaceState === state.interfaceState) {
+        return {
+          ...state,
+          timeline: appendTimeline(state, 'device-action', action.action.type, {
+            outcome: 'refused',
+            details,
+          }),
+        }
+      }
       const simulation = syncInterfaceActionToEngine(
         state.interfaceState,
         interfaceState,
@@ -805,14 +983,25 @@ export function crrtLearningSessionReducer(
         interfaceState.treatmentState === 'running' &&
         simulation.device.deliveryState !== 'running'
       ) {
-        return state
+        return {
+          ...state,
+          timeline: appendTimeline(state, 'device-action', action.action.type, {
+            outcome: 'refused',
+            details: [
+              { label: 'Refused because', value: 'the circuit was not ready to start treatment' },
+            ],
+          }),
+        }
       }
       return withDerivedCriticalErrors({
         ...state,
         interfaceState,
         simulation,
         reasoningPhase: 'run',
-        timeline: appendTimeline(state, 'device-action', action.action.type),
+        timeline: appendTimeline(state, 'device-action', action.action.type, {
+          outcome: 'applied',
+          details,
+        }),
       })
     }
     case 'ACKNOWLEDGE_ALARM': {
@@ -822,7 +1011,9 @@ export function crrtLearningSessionReducer(
       return {
         ...state,
         simulation,
-        timeline: appendTimeline(state, 'alarm-acknowledged', action.alarmId),
+        timeline: appendTimeline(state, 'alarm-acknowledged', action.alarmId, {
+          outcome: 'applied',
+        }),
       }
     }
     case 'ADVANCE_TIME': {
@@ -845,7 +1036,10 @@ export function crrtLearningSessionReducer(
         simulation,
         interfaceState,
         reasoningPhase: state.performedInterventionIds.length > 0 ? 'reassess' : 'run',
-        timeline: appendTimeline(state, 'time-advanced', String(action.seconds)),
+        timeline: appendTimeline(state, 'time-advanced', String(action.seconds), {
+          outcome: 'applied',
+          details: [{ label: 'Elapsed', value: formatTimelineSeconds(action.seconds) }],
+        }),
       })
     }
     case 'USE_HINT': {

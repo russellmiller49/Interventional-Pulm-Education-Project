@@ -42,9 +42,7 @@ test('all 18 public cases support explanation, hints and debrief without invente
     await page.getByRole('button', { name: 'Reveal hint 1', exact: true }).click()
     await page.getByRole('tab', { name: 'Debrief', exact: true }).click()
     await page.getByRole('button', { name: 'End run and review debrief', exact: true }).click()
-    await expect(
-      page.getByText('Example reviewed · no run performed', { exact: true }),
-    ).toBeVisible()
+    await expect(page.getByText('Debrief opened · no run performed', { exact: true })).toBeVisible()
     await expect(page.getByRole('definition').filter({ hasText: 'None' }).first()).toBeVisible()
     await assertUngraded(page)
     if (n === 16) {
@@ -78,8 +76,10 @@ test('real device actions retain prerequisites and generate observations without
   await page.getByRole('button', { name: '+5 min', exact: true }).click()
   await page.getByRole('tab', { name: 'Debrief', exact: true }).click()
   await page.getByRole('button', { name: 'End run and review debrief' }).click()
-  await expect(page.getByText('Run reviewed', { exact: true })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Recorded action timeline' })).toBeVisible()
+  await expect(page.getByText(/^Debrief opened · \d+ recorded events? in this run$/)).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'What you did in this run' })).toBeVisible()
+  // The debrief describes the page, never the safety of the care.
+  await expect(page.getByText('Run reviewed', { exact: true })).toHaveCount(0)
   await assertUngraded(page)
   await page.screenshot({ path: info.outputPath('actual-run-desktop.png'), fullPage: true })
 })
@@ -200,7 +200,7 @@ test('worked CRRT cases teach through explanation, an optional check and an actu
   await page.screenshot({ path: info.outputPath('worked-crrt05-desktop.png'), fullPage: true })
   await page.getByRole('tab', { name: 'Debrief', exact: true }).click()
   await page.getByRole('button', { name: 'End run and review debrief', exact: true }).click()
-  await expect(page.getByText('Run reviewed', { exact: true })).toBeVisible()
+  await expect(page.getByText(/^Debrief opened · \d+ recorded events? in this run$/)).toBeVisible()
   await expect(
     page.getByRole('heading', { name: 'Expected and observed in this case', exact: true }),
   ).toBeVisible()
@@ -231,6 +231,176 @@ test('worked CRRT cases teach through explanation, an optional check and an actu
   await page.reload()
   await expect(page.getByRole('button', { name: 'Explain this case', exact: true })).toBeVisible()
   await expect(page.getByRole('region', { name: 'Worked example', exact: true })).toHaveCount(0)
+  await assertUngraded(page)
+  expect(errors).toEqual([])
+})
+
+test('the real practice route keeps one case identity and never restarts a run for the role lens', async ({
+  page,
+}, info) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+
+  const picker = page.getByRole('combobox', { name: 'Station-grouped core case' })
+  const caseTitle = page.getByRole('heading', { level: 2, name: /Set CRRT priorities/ })
+  // The case picker still lives inside the collapsed "Current task" drawer
+  // (F-09, owned by batch 03). Open it to read the current selection.
+  const openTaskDrawer = async () => {
+    const drawer = page.getByRole('group').filter({ hasText: 'Current task' }).first()
+    if (!(await picker.isVisible().catch(() => false))) {
+      await page.getByText('Current task', { exact: true }).first().click()
+    }
+    await expect(picker).toBeVisible()
+    return drawer
+  }
+
+  await page.goto('/en/baxter-crrt/practice?case=CRRT-01')
+  await expect(caseTitle).toBeVisible()
+  await openTaskDrawer()
+  await expect(picker).toHaveValue('CRRT-01')
+
+  // "Next recommended" changes the actual case, not only the address bar.
+  await page.getByRole('link', { name: /^Next recommended · / }).click()
+  await expect(page).toHaveURL(/\?case=CRRT-02$/)
+  await expect(
+    page.getByRole('heading', { level: 2, name: /Prioritize hyperkalemia and acidemia/ }),
+  ).toBeVisible()
+  await expect(caseTitle).toHaveCount(0)
+  await openTaskDrawer()
+  await expect(picker).toHaveValue('CRRT-02')
+  // The recommendation moves on instead of repeating the case just opened.
+  await expect(page.getByRole('link', { name: /^Next recommended · / })).not.toHaveText(
+    /Prioritize hyperkalemia and acidemia/,
+  )
+
+  await page.goBack()
+  await expect(page).toHaveURL(/\?case=CRRT-01$/)
+  await expect(caseTitle).toBeVisible()
+  await openTaskDrawer()
+  await expect(picker).toHaveValue('CRRT-01')
+
+  await page.goForward()
+  await expect(page).toHaveURL(/\?case=CRRT-02$/)
+  await openTaskDrawer()
+  await expect(picker).toHaveValue('CRRT-02')
+
+  await page.reload()
+  await openTaskDrawer()
+  await expect(picker).toHaveValue('CRRT-02')
+
+  // An unavailable case ID falls back explicitly rather than mixing case data.
+  await page.goto('/en/baxter-crrt/practice?case=CRRT-NOPE')
+  await openTaskDrawer()
+  await expect(
+    page.getByRole('status', { name: 'Requested practice case unavailable' }),
+  ).toBeVisible()
+  await expect(picker).toHaveValue('CRRT-01')
+  await expect(caseTitle).toBeVisible()
+
+  // Selecting an additional case updates the shareable URL with it.
+  await page.goto('/en/baxter-crrt/practice?case=CRRT-11')
+  await page.getByRole('group', { name: 'Advance simulated time' }).waitFor()
+  await openTaskDrawer()
+  await page.getByText(/Additional cases \(\d+\)/).click()
+  const optional = page.getByRole('button', { name: /Station \d · / }).first()
+  const optionalName = (await optional.textContent()) ?? ''
+  await optional.click()
+  await expect(page).toHaveURL(/\?case=CRRT-\d\d$/)
+  await expect(page.getByRole('option', { name: /^Optional · / })).toHaveCount(1)
+  expect(optionalName.length).toBeGreaterThan(0)
+
+  // A role change is presentational and must not discard the run.
+  await page.goto('/en/baxter-crrt/practice?case=CRRT-11')
+  const clock = page.getByRole('group', { name: 'Advance simulated time' })
+  await page
+    .getByRole('article')
+    .filter({ has: page.getByText('Complete the initial clinical assessment', { exact: true }) })
+    .getByRole('button')
+    .click()
+  await page.getByRole('button', { name: '+1 hr', exact: true }).click()
+  await expect(clock).toContainText('60 min')
+  const completedBefore = await page.getByRole('button', { name: 'Completed', exact: true }).count()
+
+  await page.getByRole('button', { name: 'Operator', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Operator', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  await expect(clock).toContainText('60 min')
+  await expect(page.getByRole('button', { name: 'Completed', exact: true })).toHaveCount(
+    completedBefore,
+  )
+
+  await page.getByRole('button', { name: 'Prescriber', exact: true }).click()
+  await expect(clock).toContainText('60 min')
+  await expect(page.getByRole('button', { name: 'Completed', exact: true })).toHaveCount(
+    completedBefore,
+  )
+  await page.screenshot({ path: info.outputPath('case-identity-role-desktop.png'), fullPage: true })
+
+  await assertUngraded(page)
+  expect(errors).toEqual([])
+})
+
+test('the debrief separates the worked example, the actual run and what is not modeled', async ({
+  page,
+}, info) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+
+  await page.goto('/en/baxter-crrt/practice?case=CRRT-13')
+  for (const label of [
+    'Assess the patient and treatment',
+    'Advance to the worsening pattern',
+    'Increase BFR through unresolved access resistance',
+    'Acknowledge the generic training alert',
+    'Declare resolution after acknowledgement alone',
+  ]) {
+    await page
+      .getByRole('article')
+      .filter({ has: page.getByText(label, { exact: true }) })
+      .getByRole('button')
+      .first()
+      .click()
+  }
+  await page.getByRole('button', { name: '+1 hr', exact: true }).click()
+  await page.getByRole('tab', { name: 'Debrief', exact: true }).click()
+  await page.getByRole('button', { name: 'End run and review debrief', exact: true }).click()
+
+  await expect(page.getByText(/^Debrief opened · \d+ recorded events? in this run$/)).toBeVisible()
+  await expect(page.getByText('Run reviewed', { exact: true })).toHaveCount(0)
+  await expect(
+    page.getByRole('heading', { name: 'Supplied teaching path · worked example' }),
+  ).toBeVisible()
+
+  const actual = page.getByRole('heading', { name: 'What you did in this run' }).locator('..')
+  await expect(actual).toContainText('Blood flow: set to 180 mL/min')
+  await expect(actual).toContainText('Not recorded.')
+  await expect(actual).not.toContainText('SET_PRESCRIPTION_VALUE')
+
+  const safety = page.getByRole('heading', { name: 'Safety review of this run' }).locator('..')
+  await expect(safety).toContainText('Increase BFR through unresolved access resistance')
+  await expect(safety).toContainText('Access-line obstruction')
+  await expect(safety).toContainText('does not correct its cause')
+
+  const labs = page.getByRole('heading', { name: 'Laboratory values in this case' }).locator('..')
+  await expect(labs).toContainText('Supplied case values at case start')
+  await expect(labs).toContainText('Not modeled in this exercise')
+
+  // The sampled-evidence table carries no solute row.
+  const table = page.getByRole('region', { name: /Session sampled trends/ })
+  await expect(table).toContainText('Delivered dose')
+  for (const solute of ['sodium', 'bicarbonate', 'potassium', 'urea marker']) {
+    await expect(table.getByRole('rowheader', { name: solute, exact: true })).toHaveCount(0)
+  }
+
+  await noOverflow(page)
+  await page.screenshot({ path: info.outputPath('debrief-actual-run-desktop.png'), fullPage: true })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await noOverflow(page)
+  await page.screenshot({ path: info.outputPath('debrief-actual-run-mobile.png'), fullPage: true })
+  await page.setViewportSize({ width: 1440, height: 900 })
+
   await assertUngraded(page)
   expect(errors).toEqual([])
 })
