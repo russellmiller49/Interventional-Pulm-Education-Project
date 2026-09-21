@@ -1,5 +1,6 @@
 import { MCS_AF_TRIGGER_LIMIT, mcsAfTriggerLimitApplies } from '../content/afTriggerLimit'
 import type { McsSimulationState } from '../engine/types'
+import { McsAfTriggerComparison } from './McsAfTriggerComparison'
 
 /**
  * The MCS-03 atrial-fibrillation trigger limitation, rendered beside the trigger selector.
@@ -24,9 +25,22 @@ export function McsAfTriggerLimit({
 }) {
   if (!mcsAfTriggerLimitApplies(state)) return null
   return (
-    <p id={id} className={className} data-af-trigger-limit>
-      <strong>{MCS_AF_TRIGGER_LIMIT.heldLead}.</strong> {MCS_AF_TRIGGER_LIMIT.modelRating}{' '}
-      {MCS_AF_TRIGGER_LIMIT.deviceLabeling} {MCS_AF_TRIGGER_LIMIT.atTheControl}
-    </p>
+    <div className={className} data-af-trigger-limit>
+      {/*
+       * The id stays on the sentences, not on the wrapper: the selector's `aria-describedby`
+       * points here, and a description that swallowed the comparison table would read the whole
+       * table out every time the control took focus.
+       */}
+      <p id={id}>
+        <strong>{MCS_AF_TRIGGER_LIMIT.heldLead}.</strong> {MCS_AF_TRIGGER_LIMIT.modelRating}{' '}
+        {MCS_AF_TRIGGER_LIMIT.deviceLabeling} {MCS_AF_TRIGGER_LIMIT.atTheControl}
+      </p>
+      {/*
+       * The three ratings together, in the same block as the sentences that disagree with them.
+       * Open on arrival: MCS-PRE-REVIEW-01 requires the model limitation and the source-specific
+       * teaching to be reachable at the moment of the choice, not one disclosure later.
+       */}
+      <McsAfTriggerComparison state={state} />
+    </div>
   )
 }

@@ -124,6 +124,7 @@ it('continues the real simulation clock without graded or assistance events', as
   const label = screen.getByRole('img', { name: /^ART waveform/ }).getAttribute('aria-label')
   advanceSimulation(1000)
   expect(screen.getByRole('img', { name: /^ART waveform/ })).toBeInTheDocument()
-  expect(label).toMatch(/current value/)
+  // F04: the strip's accessible name names the quantity and the window, not "current value".
+  expect(label).toMatch(/instantaneous sample/)
   expect(capturedAnalyticsEvents()).toEqual([])
 })

@@ -27,6 +27,7 @@ import shellStyles from '@/features/learning-module/stage/lesson-shell.module.cs
 import stageStyles from '@/features/learning-module/stage/lesson-stage.module.css'
 import { useRouter } from '@/i18n/navigation'
 
+import { MCS_AF_TRIGGER_CONTAINMENT, mcsAfTriggerLimitApplies } from '../../content/afTriggerLimit'
 import { mcsLearnControls, type McsLearnControlId } from '../../content/learnControls'
 import { mcsMapAnswerTargets } from '../../content/mapAnswerTargets'
 import { mcsPathway } from '../../content/pathwayResolver'
@@ -1374,11 +1375,22 @@ function McsStageSession({
     },
     { label: 'Mean pressure', value: `${state.metrics.mapMmHg} mm Hg` },
   ]
+  /*
+   * The context strip may not say "No active alarm" on its own while the trigger rating is held.
+   *
+   * In atrial fibrillation the engine's trigger alarm is quiet on arterial pressure and on nothing
+   * else, so the strip answered a switch to the warned-against source with an all-clear (F19). The
+   * strip still reports every alarm the model raises; it just cannot report silence as the whole
+   * story here.
+   */
+  const afTriggerLimitHeld = mcsAfTriggerLimitApplies(state)
   const alarm = pendingTimingIdentification
     ? { priority: 'none' as const, text: 'Timing interpretation pending · support running' }
     : activeAlarm
       ? { priority: alarmPriority(activeAlarm.priority), text: activeAlarm.label }
-      : { priority: 'none' as const, text: 'No active alarm' }
+      : afTriggerLimitHeld
+        ? { priority: 'medium' as const, text: MCS_AF_TRIGGER_CONTAINMENT.notAnAllClear }
+        : { priority: 'none' as const, text: 'No active alarm' }
 
   const highlightControl: McsLearnControlId | undefined =
     activeStep.interaction.kind === 'action'

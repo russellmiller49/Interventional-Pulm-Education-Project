@@ -6,6 +6,13 @@
   --navy: #071f29;
   --navy-2: #0c3540;
   --teal: #14847f;
+  /*
+   * The same teal, one step darker, for small text on the module's tinted light cards: `--teal`
+   * itself clears 4.5:1 on white (4.53) but not on the route cards' `#f5faf8` (4.29), and the
+   * labels that sit there are 0.64rem, far below the large-text exemption. Fills, borders and
+   * accents keep `--teal`.
+   */
+  --teal-text: #0f6f6b;
   --teal-soft: #e4f4f1;
   --amber: #c28228;
   --amber-soft: #fff3d7;
@@ -33,6 +40,31 @@
   overflow: auto;
   padding: 1rem;
   scrollbar-gutter: stable;
+}
+
+/*
+ * The module's light theme is a light theme, in a dark browser too.
+ *
+ * `ModuleFrameV2` builds its light palette out of the app's own `--background`/`--foreground`
+ * tokens, and the site's `.dark` class flips those to a near-white ink on a near-black page. The
+ * frame is a descendant of this shell, so its `color` won the cascade over `--ink` for everything
+ * inside it, while the module's own surfaces stayed the hand-painted light cards they are: in a
+ * dark browser the pathway group titles rendered rgb(248, 250, 252) on white (1.05:1), the three
+ * route cards' body text 1.01:1, and the navy section headings sat on a near-black page at 1.09:1
+ * (F01). None of that is a dark theme; it is a light theme with one inherited colour inverted.
+ *
+ * So the light frame inside this shell is pinned to the palette the shell already publishes. The
+ * stage keeps `data-theme='dark'`, whose own block in `learning-module-v2.module.css` replaces
+ * every one of these tokens, and is untouched by this rule.
+ */
+.moduleShell [data-learning-module-v2-theme-root][data-theme='light'] {
+  --lm-v2-surface: var(--paper);
+  --lm-v2-panel: #fff;
+  --lm-v2-panel-muted: #eef4f2;
+  --lm-v2-border: var(--line);
+  --lm-v2-text: var(--ink);
+  --lm-v2-muted: #52676c;
+  color-scheme: light;
 }
 
 .moduleShell *,
@@ -1599,6 +1631,16 @@
   color: #80d9c6;
   background: #153b3c;
 }
+/*
+ * The held chip. Amber like an advisory, because that is what it is — but it is deliberately not
+ * `data-priority='clear'`: it exists so that a quiet bar cannot read as an all-clear while the
+ * atrial-fibrillation trigger rating is held (F19).
+ */
+.alarmBar span[data-priority='held'] {
+  color: #2a1d02;
+  background: #f4dba2;
+  text-transform: uppercase;
+}
 @keyframes alarmPulse {
   50% {
     opacity: 0.72;
@@ -1632,6 +1674,16 @@
   margin-top: 0.18rem;
   color: #7d9699;
   font-size: 0.6rem;
+}
+/*
+ * The strip readout's window, on the strip. The column is 86px, so the qualifier wraps under the
+ * value rather than pushing it; it is quieter than the number but has to stay readable (F04).
+ */
+.waveStrip span small {
+  display: block;
+  color: #6b8285;
+  font-size: 0.92em;
+  letter-spacing: 0.01em;
 }
 .waveStrip svg {
   width: 100%;
@@ -2116,6 +2168,43 @@
 }
 .debriefCard ul {
   padding-left: 1rem;
+}
+/*
+ * The condition list. Each entry is a threshold, then what kind of number it is, then — where the
+ * predicate is quarantined — why it is not graded. The class line is quieter than the threshold but
+ * stays on the module's ink rather than a wash, because it is the part that stops the number from
+ * reading as a target (F33). The held line is set apart so it cannot be skimmed past.
+ */
+.debriefCard [data-condition-list] {
+  display: grid;
+  gap: 0.5rem;
+  padding-left: 0;
+  list-style: none;
+}
+.debriefCard [data-condition-list] > li {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.45rem 0.6rem;
+  border-left: 3px solid rgba(174, 117, 24, 0.4);
+  border-radius: 0.35rem;
+  background: rgba(255, 255, 255, 0.55);
+}
+.debriefCard [data-condition-list] > li > small {
+  font-size: 0.94em;
+  opacity: 0.85;
+}
+.debriefCard [data-condition-list] > li[data-condition-held='true'] {
+  border-left-color: #b4560f;
+}
+.debriefCard [data-condition-hold] {
+  margin-top: 0.2rem;
+  font-size: 0.94em;
+  font-style: normal;
+  font-weight: 650;
+}
+.debriefCard [data-condition-contract] {
+  margin: 0.25rem 0 0.55rem;
+  font-weight: 650;
 }
 .studioPrompts {
   display: grid;
@@ -4247,7 +4336,7 @@
   background: #f5faf8;
 }
 .routeGrid article > span {
-  color: var(--teal, #14847f);
+  color: var(--teal-text, #0f6f6b);
   font-size: 0.64rem;
   font-weight: 900;
   letter-spacing: 0.09em;

@@ -221,11 +221,52 @@ export interface McsPredictionOption {
   label: string
 }
 
+/**
+ * What kind of claim a scenario's numerical condition is making.
+ *
+ * The twelve cases each end on a short list of numbers under "Signals to reconcile" — MAP ≥58,
+ * MAP ≥50, device flow ≥2 L/min, timing ≥80% and so on — and none of them said where the number
+ * came from. A reader reasonably took "MAP ≥50" for a target and measured it against the 65 they
+ * had been taught (F33). Every condition now carries its own answer to that question, and the type
+ * makes the answer compulsory rather than optional.
+ */
+export type McsConditionClassKind =
+  /** Authored for this simulation: a test on the model, not a clinical or device criterion. */
+  | 'authored-model-condition'
+  /** A quantity a real console reports, at a value this module authored. */
+  | 'device-reported-quantity'
+  /** A clinical criterion carried from a named source, with the scope that source covers. */
+  | 'source-supported-clinical'
+
+/**
+ * A condition kept in the record but quarantined: excluded from scoring and never shown as a
+ * result. Used where satisfying the predicate would endorse something the module is not in a
+ * position to endorse, and removing it would erase a historical contract.
+ */
+export interface McsConditionHold {
+  /** Why the predicate is not graded, in one clause. */
+  readonly reason: string
+  /** The open review item the hold belongs to; its decision is elsewhere and not the agent's. */
+  readonly openItemId: string
+}
+
+export interface McsConditionClassification {
+  readonly kind: McsConditionClassKind
+  /** What the number on the left of the operator actually is in this model. */
+  readonly quantity: string
+  /** Required for `source-supported-clinical`, and meaningless without it. */
+  readonly sourceId?: string
+  /** The exact patient, device and setting the cited source's criterion covers. */
+  readonly scope?: string
+  readonly held?: McsConditionHold
+}
+
 export interface McsMetricCriterion {
   metric: keyof McsDerivedMetrics
   operator: 'at-least' | 'at-most' | 'equals'
   value: number | boolean
   label: string
+  classification: McsConditionClassification
 }
 
 export interface McsScenarioDefinition {

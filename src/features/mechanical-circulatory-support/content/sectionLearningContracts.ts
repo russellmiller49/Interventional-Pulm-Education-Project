@@ -80,12 +80,20 @@ export interface McsObservedSignal {
   readonly label: string
   readonly unit: string
   readonly digits: number
-  /** Which level of the causal ladder this reading answers at. */
+  /**
+   * Which level of the causal ladder this reading answers at.
+   *
+   * `device-display` means a quantity a real console reports, modeled here. `model-index` means a
+   * number that exists only in this simulation and has no console equivalent — the timing synchrony
+   * figure is the one such reading the module shows, and labelling it `device-display` invited the
+   * reading that a console reports it (F04).
+   */
   readonly level:
     | 'pressure'
     | 'flow'
     | 'oxygen-balance'
     | 'device-display'
+    | 'model-index'
     | 'volume'
     | 'pressure-flow'
 }
@@ -174,6 +182,9 @@ const lvadEvidence = [
   'mcs-bedside-reference-supplied',
   'ishlt-durable-mcs-2023',
   'fda-heartmate3-ifu',
+  // F28: the card that names which way the power/flow dependency runs on the device this model
+  // resembles. Cited wherever the module shows a parameter pattern, so the boundary has a source.
+  'abbott-heartmate3-pump-parameters-card',
 ]
 
 function signal(
@@ -542,7 +553,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     clinicalQuestion:
       'The balloon is running and the console reports no fault. Is it inflating at the right moment?',
     startingContext:
-      'Begin with an aligned reference beat. Demonstrations vary one timing event at a time; a different unannotated example then tests recognition before correction.',
+      'Begin with an aligned reference beat. Demonstrations vary one timing event at a time, and the annotated reference and the model’s own alarm both stay on screen while you name the relationship — recognition here is reading the trace against its landmarks, not recalling them from memory.',
     patientProblem:
       'The same low-output circulation, now receiving counterpulsation that is technically running but mistimed.',
     supportPathway:
@@ -554,7 +565,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     startingDevice: 'iabp',
     startingActions: [{ type: 'SET_IABP_CONTROL', control: 'inflationOffsetMs', value: -120 }],
     recognizePrompt:
-      'Inspect the unannotated Timing example and balloon band. Which timing relationship is present?',
+      'Read the annotated Timing reference and the balloon band — the landmark letters and the model’s alarm are both on screen. Which timing relationship is present?',
     recognizeOptions: [
       {
         id: 'raises-impedance',
@@ -646,7 +657,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     observationFocus:
       'Watch the early-inflation alarm clear and timing synchrony recover, then read how much effective systemic delivery actually moved.',
     observedSignals: [
-      signal('timingQualityPercent', 'Timing synchrony', '%', 0, 'device-display'),
+      signal('timingQualityPercent', 'Modeled timing synchrony', '%', 0, 'model-index'),
       signal('mapMmHg', 'Mean arterial pressure', 'mm Hg', 0, 'pressure'),
       signal('pulsePressureMmHg', 'Pulse pressure', 'mm Hg', 0, 'pressure'),
       signal('nativeFlowLMin', 'Native contribution', 'L/min', 1, 'flow'),
@@ -805,7 +816,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     observationFocus:
       'Watch mean pressure and effective systemic delivery separate on the trend while timing synchrony does not move at all.',
     observedSignals: [
-      signal('timingQualityPercent', 'Timing synchrony', '%', 0, 'device-display'),
+      signal('timingQualityPercent', 'Modeled timing synchrony', '%', 0, 'model-index'),
       signal('rapMmHg', 'Right atrial pressure', 'mm Hg', 0, 'pressure'),
       signal('papi', 'Pulmonary pulsatility ratio', 'ratio', 1, 'pressure'),
       signal('effectiveSystemicFlowLMin', 'Effective systemic delivery', 'L/min', 1, 'flow'),
@@ -1203,7 +1214,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     clinicalQuestion:
       'The speed has not changed and the displayed flow has fallen. What does that number actually measure?',
     startingContext:
-      'A durable continuous-flow pump at an unchanged speed, with power, pulsatility index and the displayed flow all reading normally, and no active alarm.',
+      'A durable continuous-flow pump at an unchanged speed, with power, pulsatility index and the displayed flow all steady and no alarm raised by this model. Steady is not the same as normal. This is an authored reference state, chosen so one variable can be watched moving, and its mean arterial pressure starts high — higher than the mean blood pressure Abbott’s HeartMate 3 pump-parameter card names for patients on that device, measured its way. That figure is cited here as the manufacturer’s statement about its own device, not adopted as this module’s target; what this reference patient’s pressure ought to be is an open question for review (OD-02), and nothing in this section treats its starting value as one to aim at.',
     patientProblem:
       'A patient on durable support whose systemic vascular resistance is about to rise sharply while nothing about the pump changes.',
     supportPathway:
@@ -1221,7 +1232,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         label: 'It is generated from speed and loading; power and PI are then derived',
         correct: true,
         feedback:
-          'The model generates flow first and then derives electrical power and PI. It does not implement a manufacturer’s estimator and does not measure bedside cardiac output.',
+          'The model generates flow first and then derives electrical power and PI. It does not implement a manufacturer’s estimator and does not measure bedside cardiac output — and the direction matters, because on a HeartMate 3 it runs the other way: Abbott’s pump-parameter card states that device power is a direct measurement of motor voltage and current, and that flow is an estimate calculated from fixed speed, power and the patient’s hematocrit. So this is a fact about this simulation, and the arrow between power and flow points the opposite way here from the device.',
       },
       {
         id: 'from-a-probe',
@@ -1360,7 +1371,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     clinicalQuestion:
       'Power has climbed and the displayed flow has not moved. Which of those is the signal?',
     startingContext:
-      'The same durable pump, back at its baseline loading, with no active alarm and power in its usual range.',
+      'The same durable pump, back at the same authored reference loading as Section 7 — including its high starting mean pressure, which is a property of that reference state and not a target — with no alarm raised by this model and power where the model puts it at rest.',
     patientProblem:
       'A patient on durable support in whom an obstructed flow path is about to announce itself through the power signature rather than through the flow display.',
     supportPathway:
@@ -1413,7 +1424,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
           label:
             'Power rises substantially while the displayed flow barely moves, and an alarm appears',
           rationale:
-            'This teaching model adds a high-power signature after calculating flow, without simulating a clinical estimator failure. Power and the flow it is supposed to imply come apart, and that separation is itself the signal.',
+            'This teaching model adds a high-power signature after calculating flow, without simulating a clinical estimator failure. Power and the flow it is supposed to imply come apart, and that separation is itself the signal. What is being predicted here is this model’s behaviour: on a HeartMate 3 the displayed flow is calculated from speed, power and hematocrit, so power is an input to it rather than something it ignores, and what that controller would show in this state is not reproduced here.',
           plausibility: 'best',
         },
         {
@@ -1478,7 +1489,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     unmodeledNote:
       'This model raises the power signature and leaves the delivered flow essentially where it was. It does not represent the haemolysis, the neurological events, or the collapse that a real obstructed flow path can produce, and the absence of those here is a limit of the model rather than reassurance about the state.',
     explanation:
-      'Two values that are supposed to move together stopped doing so. The model adds a power signature without reducing its modeled flow. It does not implement a real controller estimator or the full consequences of obstruction. A learner reading only the flow display would see a normal number.',
+      'Two values that are supposed to move together stopped doing so. The model adds a power signature without reducing its modeled flow. It does not implement a real controller estimator or the full consequences of obstruction, and on a HeartMate 3 the dependency runs the other way — power is measured and the displayed flow is calculated from speed, power and hematocrit — so a static flow display in a high-power state is this model’s behaviour and not the device’s. What is transferable is the habit: a computed value and the measurement it was derived from can come apart, and a normal-looking flow display is not reassurance. What a particular controller would show is a device question this module holds open.',
     pressureLevelExplanation:
       'Mean arterial pressure did not move. At the pressure level of the model, nothing has happened — which is the trap.',
     flowLevelExplanation:
@@ -1509,7 +1520,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       howTheActionAffectsTheModel:
         'The high-power pattern makes the pump draw substantially more power at an unchanged speed while the computed flow stays where it was.',
       flowAccountNote:
-        'The displayed flow estimate here is generated from loading and speed; the fault adds power afterwards. This demonstrates discordant readings, not a validated manufacturer flow-estimator failure.',
+        'The displayed flow estimate here is generated from loading and speed; the fault adds power afterwards, and the flow number does not move. That is a property of this model, and it is the reverse of the device it resembles: Abbott’s HeartMate 3 pump-parameter card states that power is a direct measurement and that the displayed flow is calculated from fixed speed, power and hematocrit, so on that controller a power change is an input to the flow estimate rather than something the estimate ignores. What a real controller’s displayed flow does in this state is not reproduced here and is not claimed — the card names the inputs and gives no estimator equation. Carry the lesson that power and a computed flow can come apart; do not carry this model’s particular arrow to a bedside. Held for device review (OD-02).',
     },
   },
 
