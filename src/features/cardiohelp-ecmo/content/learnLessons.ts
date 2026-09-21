@@ -475,16 +475,26 @@ const orientationLesson: GuidedLessonDefinition = {
       phase: 'respond',
       target: 'circuit',
       title: 'Complete startup and the tip-to-tip check',
+      /*
+       * What the click does, and what it only describes.
+       *
+       * One control here resolves the whole pre-use sequence: the model marks the startup
+       * diagnostic passed and the circuit inspected, and that is all it represents. The instruction
+       * used to read "allow self-test completion, verify the audible indicator" — an instruction to
+       * wait for something that never runs and to confirm a sound this simulation does not make,
+       * both of which a single click then recorded as done (S7-5). The bedside list is still worth
+       * reading, so it stays; it is presented as the list rather than as steps performed here.
+       */
       instruction:
-        'Allow self-test completion, verify the audible indicator and startup screen, then inspect drainage-to-return, sensors, gas, power, and backup readiness.',
+        'Work the pre-use list at the bedside in your head as you do it: the startup diagnostic run through with the console untouched, the audible indicator and startup screen confirmed, then drainage-to-return, sensors, gas, power and backup readiness walked by hand. Then record it here.',
       rationale:
-        'This creates a verified baseline before later pressure, flow, gas-transfer, or alarm troubleshooting.',
-      actionLabel: 'Complete startup + tip-to-tip check',
+        'This creates a verified baseline before later pressure, flow, gas-transfer, or alarm troubleshooting. One control stands for the whole list: this simulation has no self-test to wait for and makes no sound, so recording it marks the diagnostic and the circuit walk as done rather than observing either.',
+      actionLabel: 'Record the startup diagnostic and tip-to-tip check as complete',
       actions: [{ type: 'PERFORM_CHECK', checkId: TIP_TO_TIP_CHECK_ID }],
       expectedResponse: [
-        'Self-test passed',
-        'Circuit inspected',
-        'Sensor and gas orientation verified',
+        'The startup diagnostic is recorded as passed — this model runs no diagnostic and produces no audible indicator',
+        'The circuit is recorded as inspected',
+        'Sensor and gas orientation are recorded as verified',
       ],
     }),
     step({
@@ -1020,12 +1030,23 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         title: 'Escalate the oxygenator/circuit cause',
         instruction:
           'Inspect sensor plausibility, oxygenator/circuit resistance, and gas transfer; escalate according to the local exchange protocol.',
+        /*
+         * One action, and an honest account of how much of the story it carries.
+         *
+         * This step escalates, and the model then jumps the circuit to the state it would be in
+         * after the component had been changed — in one simulated second, with no exchange
+         * represented in between (S10-2). The jump is the authored teaching transition and stays;
+         * what changes is that it is named as one instead of reading as an escalation that fixed a
+         * membrane. The exchange procedure itself, how long it takes and what it risks, is outside
+         * this module and awaits a clinical and device review.
+         */
         rationale:
-          'A rising cross-oxygenator pattern should not be managed by repeatedly increasing RPM.',
-        actionLabel: 'Escalate the identified oxygenator/circuit problem',
+          'A rising cross-oxygenator pattern should not be managed by repeatedly increasing RPM. This one action stands for two separate things: your escalation, and — as a teaching transition — the circuit as it would be once the exchange your unit performs has been done. The exchange is not simulated, and nothing here says how long it takes or what it costs.',
+        actionLabel: 'Escalate, then move to the post-exchange circuit',
         actions: [{ type: 'CORRECT_FAULT', fault: 'oxygenator-resistance' }],
         expectedResponse: [
-          'Resistance cause addressed',
+          'The escalation is recorded',
+          'The circuit moves to its post-exchange state as a teaching transition, not as a simulated procedure',
           'No fixed Δp threshold or priority is taught',
         ],
       },
@@ -1469,12 +1490,14 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         title: 'Escalate the oxygenator/circuit problem',
         instruction:
           'Check sensor plausibility, resistance, gas transfer, and the circuit; escalate under your unit’s circuit-exchange protocol.',
+        // Same composite action as the VV lesson, named the same way. See the note there.
         rationale:
-          'Repeated RPM escalation does not correct a rising cross-oxygenator resistance pattern.',
-        actionLabel: 'Escalate the identified oxygenator problem',
+          'Repeated RPM escalation does not correct a rising cross-oxygenator resistance pattern. This one action stands for two separate things: your escalation, and — as a teaching transition — the circuit as it would be once the exchange your unit performs has been done. The exchange is not simulated, and nothing here says how long it takes or what it costs.',
+        actionLabel: 'Escalate, then move to the post-exchange circuit',
         actions: [{ type: 'CORRECT_FAULT', fault: 'oxygenator-resistance' }],
         expectedResponse: [
-          'Resistance cause addressed',
+          'The escalation is recorded',
+          'The circuit moves to its post-exchange state as a teaching transition, not as a simulated procedure',
           'No fixed pressure-drop alarm threshold is taught',
         ],
       },

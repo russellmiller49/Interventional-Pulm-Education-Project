@@ -1,5 +1,6 @@
 'use client'
 
+import { resolveBubbleResumption } from '../engine'
 import type { EcmoSimulationState, GuidedControlId, SimulationAction } from '../engine'
 import styles from './cardiohelp-ecmo.module.css'
 
@@ -54,6 +55,20 @@ export function EcmoCircuitControls({
     Number(state.circuit.drainageClampClosed) + Number(state.circuit.returnClampClosed)
   // Protective controls depend on the live/read-only surface, never a learning response.
   const clampControlsEnabled = controlsEnabled
+  /*
+   * Whether resumption is available is the engine's question, not this component's.
+   *
+   * This used to read `circuit.bubbleResetRequired` — the console's intervention latch — which is
+   * not what the reducer's resumption branch asks about. On the clinical air cases the de-airing
+   * intervention clears that latch, so the button went dead at precisely the point the case's own
+   * next required action needed it, while sitting live over an uncleared circuit beforehand. Both
+   * readers now share `resolveBubbleResumption`, and the reason it gives is the reason shown.
+   */
+  const resumption = resolveBubbleResumption(state)
+  const resumeEnabled = clampControlsEnabled && resumption.eligible
+  const resumeReason = clampControlsEnabled
+    ? resumption.reason
+    : 'This is a read-only teaching view. Open the guided activity to use circuit controls.'
   const flowState =
     closedClampCount > 0 ? 'ISOLATED' : state.device.pumpRunning ? 'FLOWING' : 'PUMP STOPPED'
   return (
@@ -94,7 +109,9 @@ export function EcmoCircuitControls({
           id="cardiohelp-resume-support"
           className={styles.clampControl}
           data-guided-help={guidedControlId === 'cardiohelp-resume-support'}
-          disabled={!clampControlsEnabled || !state.circuit.bubbleResetRequired}
+          data-resumption-status={resumption.status}
+          disabled={!resumeEnabled}
+          aria-describedby="cardiohelp-resume-support-reason"
           onClick={() => dispatch({ type: 'RESUME_SUPPORT_AFTER_BUBBLE' })}
         >
           <span aria-hidden="true" className={styles.clampControlIcon}>
@@ -109,6 +126,22 @@ export function EcmoCircuitControls({
           </span>
         </button>
       </div>
+      {/*
+        The reason a protective control is unavailable, said rather than implied.
+        A blocked resumption used to be a greyed-out button with nothing to read: S15-2 in the
+        September 2026 walkthrough. It is `role="status"` rather than an alert because it changes
+        as the learner works the sequence, and it carries the enabled case too, so the accessible
+        description the button points at is never empty.
+      */}
+      <p
+        id="cardiohelp-resume-support-reason"
+        className={styles.clampStatus}
+        role="status"
+        aria-live="polite"
+        data-resume-reason={resumption.status}
+      >
+        {resumeReason}
+      </p>
       <div
         className={styles.clampStatus}
         role="status"

@@ -1,3 +1,4 @@
+export * from './bubbleResumption'
 export * from './clinicalResponse'
 export * from './progress'
 export * from './reducer'

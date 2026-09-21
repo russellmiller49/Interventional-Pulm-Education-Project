@@ -1164,10 +1164,19 @@ export function GasBlenderPanel({
   const fio2TargetMatched = initiationTargets
     ? Math.abs(state.gas.fio2 - initiationTargets.fio2) <= (initiationTargets.fio2Tolerance ?? 0.01)
     : false
-  // The blender's setting and what reaches the membrane, the two numbers the observe steps ask the
-  // learner to compare. Delivered is the model's own rule: the set flow while the source is
-  // connected, nothing while it is not.
-  const deliveredSweepLpm = state.gas.sourceConnected ? state.gas.sweepLpm : 0
+  /*
+   * The blender's setting and the blender's own flowmeter, the two numbers the observe steps ask
+   * the learner to compare. The second is the model's own rule: the set flow while the source is
+   * connected, nothing while it is not.
+   *
+   * It is a flowmeter reading and is labelled as one. It used to read "sweep flow reaching the
+   * membrane", which claims something the instrument cannot know: a flowmeter measures what passes
+   * through itself, so it falls to zero when the supply fails and keeps reading when a line comes
+   * off downstream of it (S14-1). The number and when it is shown are unchanged — withholding
+   * gas-path evidence until after a prediction would hide exactly the finding the bedside checks
+   * are for.
+   */
+  const flowmeterSweepLpm = state.gas.sourceConnected ? state.gas.sweepLpm : 0
 
   return (
     <section
@@ -1337,23 +1346,42 @@ export function GasBlenderPanel({
         {state.gas.sourceConnected ? <PlugZap aria-hidden="true" /> : <Fan aria-hidden="true" />}
         <span>
           <strong>
-            Set {state.gas.sweepLpm.toFixed(1)} L/min · delivered {deliveredSweepLpm.toFixed(1)}{' '}
+            Set {state.gas.sweepLpm.toFixed(1)} L/min · flowmeter {flowmeterSweepLpm.toFixed(1)}{' '}
             L/min
           </strong>
-          <small>Sweep flow reaching the membrane, read against the setting</small>
+          <small>
+            The blender&rsquo;s own flowmeter, read against its setting. It measures gas passing
+            through the meter, so it cannot tell you what reaches the membrane: check the supply,
+            the tubing from the meter to the oxygenator and the exhaust by hand.
+          </small>
         </span>
       </div>
       {!state.gas.sourceConnected ? (
-        <button
-          id="cardiohelp-restore-gas-source"
-          type="button"
-          className={styles.primaryAction}
-          disabled={!controlsEnabled}
-          data-guided-help={guidedControlId === 'cardiohelp-restore-gas-source'}
-          onClick={() => dispatch({ type: 'RESTORE_GAS_SOURCE' })}
-        >
-          <RotateCcw aria-hidden="true" /> Restore verified gas source
-        </button>
+        <>
+          <button
+            id="cardiohelp-restore-gas-source"
+            type="button"
+            className={styles.primaryAction}
+            disabled={!controlsEnabled}
+            aria-describedby={controlsEnabled ? undefined : 'cardiohelp-restore-gas-reason'}
+            data-guided-help={guidedControlId === 'cardiohelp-restore-gas-source'}
+            onClick={() => dispatch({ type: 'RESTORE_GAS_SOURCE' })}
+          >
+            <RotateCcw aria-hidden="true" /> Restore verified gas source
+          </button>
+          {/*
+            Why this control is greyed out in a reading section.
+            The console carries this note already; this panel did not, so the correction the
+            section is about looked broken rather than deferred (S17-4). The read-only state is the
+            foundation sections' own design, not a refusal by the model.
+          */}
+          {controlsEnabled ? null : (
+            <p id="cardiohelp-restore-gas-reason" role="status">
+              Reading only in this section. Use the named lesson action to restore the source; this
+              panel&rsquo;s own controls are off here.
+            </p>
+          )}
+        </>
       ) : null}
     </section>
   )

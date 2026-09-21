@@ -10,6 +10,7 @@ import { criticalCareConceptById } from '@/features/critical-care/content/concep
 import { cardiohelpLearnLessonByScenarioId } from '../../content/learnLessons'
 import { pairedLessonIdsForCase } from '../../content/curriculum'
 import { resolveScenarioReassessment } from '../../content/practiceSupport'
+import { RECOGNITION_ONLY_FAULTS } from '../../engine/reducer'
 import { predictionControls, predictionDirections, predictionGoals } from '../../content/scenarios'
 import type { ScenarioOutcome } from '../../engine'
 import type {
@@ -202,6 +203,35 @@ export function EcmoCaseDebrief({
   const reassessment = resolveScenarioReassessment(scenario)
   const submitted = state.scenario.reassessment
   const safetyEvents = describeSafetyEvents(scenario, outcome.criticalErrors)
+  /*
+   * Where the patient actually is at the reveal, beside the action log rather than instead of it.
+   *
+   * "No safety event is recorded" is a statement about one thing: whether an action this case
+   * treats as unsafe was taken. On the VV integrated case it sat alone under a heading that reads
+   * as a verdict, at the end of an off-sweep trial the patient had failed — SpO₂ 82, PaCO₂ 72,
+   * pH 7.16 on the monitor at that moment (IV-3). The readings are the model's own current state,
+   * printed unrounded from the patient rather than re-derived, and carry the same simulated-values
+   * badge as every other number in this debrief.
+   */
+  const patientAtReveal: readonly { readonly label: string; readonly value: string }[] =
+    supportMode === 'va'
+      ? [
+          { label: 'Right-arm SpO₂', value: `${state.patient.rightRadialSpo2.toFixed(1)} %` },
+          { label: 'Femoral SpO₂', value: `${state.patient.femoralArterialSpo2.toFixed(1)} %` },
+          { label: 'MAP', value: `${state.patient.meanArterialPressure.toFixed(0)} mm Hg` },
+          {
+            label: 'PaCO₂ / pH',
+            value: `${state.patient.paCO2.toFixed(0)} mm Hg / ${state.patient.pH.toFixed(2)}`,
+          },
+        ]
+      : [
+          { label: 'SpO₂', value: `${state.patient.spo2.toFixed(1)} %` },
+          { label: 'PaCO₂', value: `${state.patient.paCO2.toFixed(0)} mm Hg` },
+          { label: 'pH', value: state.patient.pH.toFixed(2) },
+          { label: 'Work of breathing', value: state.patient.workOfBreathing },
+        ]
+  /** The authored "correction" here is recognition and escalation; the pattern is still running. */
+  const recognitionOnly = RECOGNITION_ONLY_FAULTS.includes(scenario.expectation.correctiveFault)
   const pairedLessonId = pairedLessonIdsForCase(scenario.id)[0]
   const pairedLesson = pairedLessonId
     ? cardiohelpLearnLessonByScenarioId.get(pairedLessonId)
@@ -323,8 +353,31 @@ export function EcmoCaseDebrief({
             </ul>
           </div>
         ) : (
-          <p>No safety event is recorded. This is not a safety certification.</p>
+          <p>
+            No action in this run was one this case records as unsafe. That is a statement about the
+            action log and about nothing else: it is not a safety certification, and it says nothing
+            about how the patient is doing. Read that below.
+          </p>
         )}
+        <div data-patient-at-reveal>
+          <span className={styles.kicker}>Where the patient is at the reveal</span>
+          <dl aria-label="Patient state at the reveal">
+            {patientAtReveal.map((item) => (
+              <div key={item.label}>
+                <dt>{item.label}</dt>
+                <dd>{item.value}</dd>
+              </div>
+            ))}
+          </dl>
+          <small data-badge>Simulated values from the bounded teaching model</small>
+        </div>
+        {recognitionOnly && causeCorrected ? (
+          <p role="note" data-recognition-only>
+            What this case asks for here is recognition and escalation, and that is what it
+            represents. No treatment for this pattern is modeled, so the physiology above is still
+            the physiology the case opened with, whatever you recorded.
+          </p>
+        ) : null}
         {submitted ? (
           <ul className={styles.domainComparison}>
             <DomainComparison

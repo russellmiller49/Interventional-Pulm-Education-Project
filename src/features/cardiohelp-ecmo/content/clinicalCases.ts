@@ -1359,8 +1359,18 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           description:
             'Activate expert evaluation for a configuration change when upper-body hypoxemia persists.',
           effect: 'definitive',
+          /*
+           * Escalation is escalation. The response says so.
+           *
+           * This card called for expert evaluation and then reported that the strategy had been
+           * revised and the upper body was recovering — while the right-arm saturation on the
+           * monitor beside it sat in the low eighties, because nothing here patches it and the
+           * configuration change this case is about is outside what the simulator represents
+           * (VAC5-2). The card still earns the case's cause credit, which is the right credit for
+           * getting the recognition and the escalation right.
+           */
           response:
-            'The support strategy is revised and upper-body oxygen delivery begins to recover.',
+            'The configuration decision is escalated to the ECMO team. This simulator does not carry out a configuration change, so read the right-arm saturation against the femoral sample: what the upper body is receiving has not been altered by this step.',
           prerequisites: ['differential-right-arm', 'differential-native-lung'],
         }),
       ],
@@ -1370,7 +1380,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'differential-escalate-config',
       ],
       completionResponse:
-        'Upper-body oxygen delivery recovers after native-lung optimization and expert support revision.',
+        'The upper-body mismatch is verified against independent right-arm data, native-lung gas exchange is optimized, and the configuration decision is escalated. Recognition and escalation are what this case asks for and what it represents: the differential pattern is still running, so keep reading the right arm rather than the femoral sample.',
       deteriorationResponse:
         'Cerebral and coronary hypoxemia worsen despite reassuring femoral data.',
     },
