@@ -7,6 +7,8 @@ import {
   defaultVentilatorDeviceId,
 } from '../content/deviceProfiles'
 import { cloneMechanicalVentilationSettings, isSimvMode, isTwoLevelMode } from './modes'
+import { baselineArterialGasSample, collectRepeatArterialGasSample } from './arterialGas'
+import { measurementConditionsFingerprint } from './measurementConditions'
 import {
   cardiogenicFlowOscillationLps,
   clamp,
@@ -39,6 +41,7 @@ import type {
   InterventionDefinition,
   LearningExperience,
   PatientModelState,
+  PerformedHoldRecord,
   RiskState,
   VentilationCaseDefinition,
   VentilationSimulationState,
@@ -192,6 +195,8 @@ function baseState(
     criticalErrors: [],
     lastResponse: null,
     lastAbgAt: null,
+    holdRecords: [],
+    arterialGasSamples: [baselineArterialGasSample(definition.id, patient.gasExchange)],
     teachingMechanics: { complianceScale: 1, resistanceScale: 1 },
   }
   return { ...state, measurements: deriveMeasurements(state, definition, patient) }
@@ -893,6 +898,17 @@ export function advanceSimulation(
   let lastTrendSecond = Math.floor(state.simulationTime)
   let ventilator = state.ventilator
   let previousPhase = state.waveforms.at(-1)?.phase ?? 'expiration'
+  /*
+   * The record of occlusions that actually happened, maintained as the valves close and open.
+   *
+   * An occlusion is opened (`completedAtSeconds: null`) at the boundary the hold is armed on,
+   * updated at every occluded step so the recorded value is read from the last occluded sample
+   * rather than from the released breath after it, and closed when the release time is reached.
+   * `interpretable` only ever falls: the patient pulling at any instant during the occlusion is
+   * what makes a plateau report them rather than the lung.
+   */
+  let holdRecords: PerformedHoldRecord[] = [...state.holdRecords]
+  const openHoldIndex = () => holdRecords.findIndex((record) => record.completedAtSeconds === null)
 
   for (let index = 0; index < steps; index += 1) {
     time += actualStep
@@ -927,6 +943,17 @@ export function advanceSimulation(
         // Recompute this step with the valves shut, from the volume *before* it: an inspiratory
         // hold has to occlude on the full delivered breath, not after a step of expiratory flow.
         frame = nextWaveformSample(working, definition, patient, measurements, time, volumeL)
+        holdRecords = [
+          ...holdRecords.filter((record) => record.completedAtSeconds !== null).slice(-9),
+          {
+            hold: ventilator.holdType as 'inspiratory' | 'expiratory',
+            startedAtSeconds: time,
+            completedAtSeconds: null,
+            valueCmH2O: 0,
+            interpretable: true,
+            conditions: measurementConditionsFingerprint(working),
+          },
+        ]
       }
     }
     previousPhase = frame.sample.phase
@@ -938,6 +965,23 @@ export function advanceSimulation(
     }
     patient = { ...patient, mechanics: { ...patient.mechanics, endExpiratoryVolumeL: volumeL } }
     measurements = deriveMeasurements({ ...working, patient }, definition, patient)
+    const open = openHoldIndex()
+    if (open >= 0) {
+      const record = holdRecords[open]
+      const releaseAt = ventilator.holdUntil ?? record.startedAtSeconds
+      const occluded = ventilator.holdUntil !== null && ventilator.holdUntil > time
+      holdRecords = [...holdRecords]
+      holdRecords[open] = {
+        ...record,
+        valueCmH2O: occluded
+          ? record.hold === 'inspiratory'
+            ? measurements.plateauPressureCmH2O
+            : ventilator.settings.peepCmH2O + measurements.intrinsicPeepCmH2O
+          : record.valueCmH2O,
+        interpretable: record.interpretable && (!occluded || measurements.plateauIsInterpretable),
+        completedAtSeconds: occluded ? null : releaseAt,
+      }
+    }
     patient = updateSlowPhysiology(
       { ...working, patient, measurements },
       definition,
@@ -971,6 +1015,7 @@ export function advanceSimulation(
     waveforms,
     trends,
     risk,
+    holdRecords,
     // `ventilator`, not `state.ventilator`: a hold armed inside the loop lives on the local copy.
     ventilator: {
       ...ventilator,
@@ -1032,7 +1077,26 @@ export function applyIntervention(
       pendingHold: intervention.effectId === 'inspiratory-hold' ? 'inspiratory' : 'expiratory',
     }
   }
-  if (intervention.effectId === 'order-abg') lastAbgAt = state.simulationTime + 60
+  /*
+   * A drawn specimen, frozen here. `lastAbgAt` stays as the availability stamp the existing
+   * surfaces read; the numbers now live on the sample so that waiting for the result, and time
+   * passing after it, cannot resample the patient. The latency is the intervention's own
+   * authored `latencySeconds`, not a second constant.
+   */
+  let arterialGasSamples = state.arterialGasSamples
+  if (intervention.effectId === 'order-abg') {
+    lastAbgAt = state.simulationTime + intervention.latencySeconds
+    arterialGasSamples = [
+      ...arterialGasSamples,
+      collectRepeatArterialGasSample({
+        caseId: state.caseId,
+        sequence: arterialGasSamples.filter((sample) => sample.kind === 'repeat').length + 1,
+        collectedAtSeconds: state.simulationTime,
+        latencySeconds: intervention.latencySeconds,
+        gasExchange: state.patient.gasExchange,
+      }),
+    ]
+  }
   if (intervention.effectId === 'deepen-sedation') {
     if (definition.id === 'MV-15')
       errors.add('Deep sedation before assessing pain, dyspnea, and delirium')
@@ -1045,6 +1109,7 @@ export function applyIntervention(
     phase: 'reassess',
     lastResponse: intervention.response,
     lastAbgAt,
+    arterialGasSamples,
     criticalErrors: [...errors],
   }
   const effectivePatient = deriveEffectivePatient(next, definition)

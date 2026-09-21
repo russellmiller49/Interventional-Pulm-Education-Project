@@ -31,6 +31,12 @@ interface CaseFindingPlan {
   /** Indices into the case's own `visibleFindings`, by kind. Anything unlisted is `present`. */
   readonly byBranch?: readonly number[]
   readonly onAction?: readonly number[]
+  /**
+   * Which internal branch each `byBranch` line belongs to, where the source text names one line
+   * per branch. Only used to say which candidate an actual examination finding narrows to; the
+   * token is never printed.
+   */
+  readonly branchOf?: Readonly<Record<number, string>>
 }
 
 /**
@@ -57,7 +63,10 @@ const findingPlans: Readonly<Record<string, CaseFindingPlan>> = {
   // Every finding is the consequence of a rise-time setting: slow, overcorrected, or best.
   'MV-11': { onAction: [0, 1, 2] },
   // The three candidate causes, each labelled with its own branch name in the source text.
-  'MV-13': { byBranch: [1, 2, 3] },
+  'MV-13': {
+    byBranch: [1, 2, 3],
+    branchOf: { 1: 'secretions', 2: 'hme-or-ett', 3: 'bronchospasm' },
+  },
   // "Pain, urinary retention, disorientation, and poor sleep are discoverable only if assessed."
   'MV-15': { onAction: [3] },
 }
@@ -65,6 +74,8 @@ const findingPlans: Readonly<Record<string, CaseFindingPlan>> = {
 export interface ClassifiedFinding {
   readonly text: string
   readonly kind: FindingKind
+  /** For a `byBranch` line the source wrote per branch: which one. Never shown to the learner. */
+  readonly branch?: string
 }
 
 export function classifyCaseFindings(caseId: string): readonly ClassifiedFinding[] {
@@ -76,7 +87,52 @@ export function classifyCaseFindings(caseId: string): readonly ClassifiedFinding
   return definition.visibleFindings.map((text, index) => ({
     text,
     kind: byBranch.has(index) ? 'byBranch' : onAction.has(index) ? 'onAction' : 'present',
+    ...(plan.branchOf?.[index] ? { branch: plan.branchOf[index] } : {}),
   }))
+}
+
+/* ------------------------------------------------------------------------------------------------
+ * What the learner's own examination has narrowed
+ * ---------------------------------------------------------------------------------------------- */
+
+/**
+ * The branch an examination the learner actually performed points at, or null.
+ *
+ * MV-13 printed "Coarse breath sounds; secretions are visible in the airway tubing" — read off the
+ * live patient — and then, directly underneath, "Still open: one of these fits this patient" with
+ * all three candidates. Once a current finding separates them, continuing to assert that all three
+ * remain equally unresolved is false.
+ *
+ * Two rules keep this from going the other way and leaking the hidden branch:
+ *
+ *  - it is gated on the actions the learner has performed. Nothing is narrowed until they examine
+ *    the patient, and the tube/filter and circuit branches need the circuit inspection, because
+ *    that is where those findings are found.
+ *  - it reads the same live fields the bedside findings are drawn from, so it can only claim what
+ *    is on screen. It never consults `state.branch`.
+ */
+export function examinationBranchEvidence(
+  airway: {
+    readonly secretions: boolean
+    readonly bronchospasm: boolean
+    readonly hmeObstructed: boolean
+    readonly ettObstructed: boolean
+    readonly condensate: boolean
+    readonly circuitLeak: boolean
+  },
+  access: { readonly assessed: boolean; readonly circuitInspected: boolean },
+): { readonly branch: string; readonly from: string } | null {
+  if (access.assessed && airway.secretions)
+    return { branch: 'secretions', from: 'the secretions you found in the airway and tubing' }
+  if (access.assessed && airway.bronchospasm)
+    return { branch: 'bronchospasm', from: 'the diffuse expiratory wheeze you heard' }
+  if (access.circuitInspected && (airway.hmeObstructed || airway.ettObstructed))
+    return { branch: 'hme-or-ett', from: 'what the circuit and airway check found' }
+  if (access.circuitInspected && airway.condensate)
+    return { branch: 'condensate', from: 'the condensate you found near the flow sensor' }
+  if (access.circuitInspected && airway.circuitLeak)
+    return { branch: 'leak', from: 'the leak you found on the circuit check' }
+  return null
 }
 
 /* ------------------------------------------------------------------------------------------------

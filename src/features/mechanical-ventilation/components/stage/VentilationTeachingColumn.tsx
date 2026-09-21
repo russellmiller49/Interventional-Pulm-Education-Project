@@ -37,6 +37,8 @@ export function VentilationTeachingColumn({
   step,
   state,
   stops,
+  roundIndex = 0,
+  showCapturedReference = true,
   onShowControl,
 }: {
   readonly lesson: VentilationStageLesson
@@ -45,6 +47,10 @@ export function VentilationTeachingColumn({
   readonly predictionCommitted?: boolean
   /** The stops the breath map is lighting for this step: the walk's current stop, or the step's. */
   readonly stops: readonly BreathStopId[]
+  /** Which application this step belongs to, so the worked reference is that round's breath. */
+  readonly roundIndex?: 0 | 1
+  /** False when the step itself already carries the marked reference. */
+  readonly showCapturedReference?: boolean
   readonly onShowControl?: () => void
 }) {
   if (isFoundationUnit(lesson.unit.id))
@@ -54,6 +60,8 @@ export function VentilationTeachingColumn({
         step={step}
         state={state}
         stops={stops}
+        roundIndex={roundIndex}
+        showCapturedReference={showCapturedReference}
         onShowControl={onShowControl}
       />
     )

@@ -7,6 +7,8 @@ import type { LabGoal, LabMetric } from '../../content/learningExperiments'
 import type { VentilationTaskPresentation } from '../../content/taskPresentation'
 import { labMetricLabels, labSnapshot, type LabSession } from '../../engine/learningLab'
 import { holdStatus } from '../../engine/learningMeasurements'
+import { plateauAcquisition } from '../../content/plateauAcquisition'
+import { PATIENT_REPORT_METRICS, patientReportAvailability } from '../../content/patientReport'
 import type { VentilationAction, VentilatorDeviceId, WaveformSample } from '../../engine/types'
 import { BedsidePanel } from '../BedsidePanel'
 import { MechanicalVentilatorConsole } from '../MechanicalVentilatorConsole'
@@ -56,7 +58,16 @@ export function VentilationTaskWorkbench({
   const before = session.evidence[session.round].baseline
   const snapshot = labSnapshot(state, session.holds, session.conditionRevision)
   const integration = session.unitId === 'high-peak-pressure-integration'
-  const withholdUnacquiredPlateau = integration && snapshot.plateauSource !== 'captured'
+  /*
+   * One acquisition projection for every surface on this card: the Readings plateau, the console
+   * facsimile inside it, and the measurement-status line below. It used to be
+   * `snapshot.plateauSource !== 'captured'` on this one section, so the other thirteen described
+   * an estimate off the trace as "Plateau · modeled" while the console beside them said
+   * "measured Pplateau".
+   */
+  const acquisition = plateauAcquisition(state, { requireAcquisition: integration })
+  const withholdUnacquiredPlateau = integration && !acquisition.supportsMechanicsClaim
+  const report = patientReportAvailability(state)
   const showPatient = presentation.patient === 'bedside'
   const bedsideActionIds = [
     ...new Set([
@@ -81,6 +92,18 @@ export function VentilationTaskWorkbench({
       : watch.length
         ? watch
         : ['peak', 'volume', 'rate']
+  /*
+   * "Dyspnea 7.0 /10" and "Anxiety 8.0 /10" used to sit in the same list as inspiratory time and
+   * exhaled volume, which reads as two more things the ventilator measured. They are a modeled
+   * patient report, and on a patient who cannot answer they are not even that — see
+   * `content/patientReport.ts`.
+   */
+  const ventilatorMetrics = metrics.filter(
+    (metric) => !(PATIENT_REPORT_METRICS as readonly string[]).includes(metric),
+  )
+  const reportMetrics = metrics.filter((metric) =>
+    (PATIENT_REPORT_METRICS as readonly string[]).includes(metric),
+  )
   const reference = presentation.surface === 'reference'
   const comparison = presentation.surface === 'comparison'
   const canAct = controlsEnabled && !readOnly && !state.ventilator.locked
@@ -208,13 +231,13 @@ export function VentilationTaskWorkbench({
                       ? ` · Pressure above PEEP ${state.ventilator.settings.deltaPControlCmH2O} cmH₂O · Inspiratory time ${state.ventilator.settings.inspiratoryTimeSeconds} s`
                       : ` · Pressure support above PEEP ${state.ventilator.settings.pressureSupportCmH2O} cmH₂O`}
                 </p>
-                <dl className={styles.readings}>
-                  {metrics.map((metric) => (
+                <dl className={styles.readings} data-reading-group="ventilator">
+                  {ventilatorMetrics.map((metric) => (
                     <div key={metric} data-metric={metric}>
                       <dt>
                         {labMetricLabels[metric].label}
                         {metric === 'plateau'
-                          ? ` · ${snapshot.plateauSource}`
+                          ? ` · ${acquisition.label}`
                           : metric === 'intrinsicPeep'
                             ? ' · model estimate'
                             : ''}
@@ -238,10 +261,27 @@ export function VentilationTaskWorkbench({
                     </div>
                   ))}
                 </dl>
+                {reportMetrics.length > 0 ? (
+                  <section data-reading-group="patient-report" data-report={report.availability}>
+                    <h4>{report.heading}</h4>
+                    <p className={styles.note}>{report.note}</p>
+                    <dl className={styles.readings}>
+                      {reportMetrics.map((metric) => (
+                        <div key={metric} data-metric={metric}>
+                          <dt>{labMetricLabels[metric].label}</dt>
+                          <dd>
+                            {snapshot.values[metric].toFixed(labMetricLabels[metric].digits)}{' '}
+                            {labMetricLabels[metric].unit}
+                            <small>{report.suffix}</small>
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </section>
+                ) : null}
                 {watch.includes('plateau') ? (
-                  <p className={styles.note}>
-                    A displayed plateau is not an acquired measurement. Use Measurement status to
-                    judge acquisition and interpretability.
+                  <p className={styles.note} data-plateau-acquisition={acquisition.status}>
+                    {acquisition.detail}
                   </p>
                 ) : null}
               </section>

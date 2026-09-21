@@ -11,6 +11,8 @@
 import { useMemo, useState } from 'react'
 
 import { plateauReadingValidity } from '../../content/plateauValidity'
+import { plateauAcquisition } from '../../content/plateauAcquisition'
+import { triggerDelayEvidence } from '../../engine/triggerEvidence'
 import type { VentilationSimulationState } from '../../engine'
 import { ModelBoundary, TextEquivalent, latestBreath, round, styles, tracePath } from './shared'
 
@@ -84,13 +86,14 @@ export function VentilationDyssynchronyDomains({
 
   const peakEffort = breath.reduce((lowest, sample) => Math.min(lowest, sample.pmusCmH2O), 0)
   const effortPresent = peakEffort < -1.5
-  const plateauMeasured = measurements.plateauPressureCmH2O > 0
+  // Acquired, not merely published: the engine estimates a plateau off the trace on every breath.
+  const acquisition = plateauAcquisition(state, { requireAcquisition: true })
+  const plateauMeasured = acquisition.valueCmH2O !== null
+  const plateauValue = acquisition.valueCmH2O ?? measurements.plateauPressureCmH2O
   const plateauInterpretable = plateauReadingValidity(state).interpretable
-  const gap = Math.max(0, measurements.peakPressureCmH2O - measurements.plateauPressureCmH2O)
-  const plateauAboveBaseline = Math.max(
-    0,
-    measurements.plateauPressureCmH2O - state.ventilator.settings.peepCmH2O,
-  )
+  const trigger = triggerDelayEvidence(state)
+  const gap = Math.max(0, measurements.peakPressureCmH2O - plateauValue)
+  const plateauAboveBaseline = Math.max(0, plateauValue - state.ventilator.settings.peepCmH2O)
   const trapping = Math.abs(measurements.expiratoryFlowAtNextBreathLMin) >= 1
   const patientRate = measurements.observedPatientRatePerMin
   // In pressure support there is no mandatory rate to breathe over, only the apnea backup — so the
@@ -130,7 +133,7 @@ export function VentilationDyssynchronyDomains({
         {
           signal: 'Peak-to-plateau difference',
           observed: !plateauMeasured
-            ? 'No plateau measured — perform an inspiratory hold'
+            ? `No acquired plateau — ${acquisition.label}; perform an inspiratory hold`
             : plateauInterpretable
               ? `${round(gap, 1)} cmH₂O`
               : 'The plateau is depressed by the patient’s own effort, so this difference is not purely resistive',
@@ -145,7 +148,7 @@ export function VentilationDyssynchronyDomains({
         {
           signal: 'Plateau above baseline',
           observed: !plateauMeasured
-            ? 'No plateau measured — perform an inspiratory hold'
+            ? `No acquired plateau — ${acquisition.label}; perform an inspiratory hold`
             : plateauInterpretable
               ? `${round(plateauAboveBaseline, 1)} cmH₂O`
               : 'Not the distending pressure of the respiratory system while the patient is pulling',
@@ -166,8 +169,13 @@ export function VentilationDyssynchronyDomains({
       return [
         {
           signal: 'Trigger delay',
-          observed: `${round(measurements.triggerDelayMs)} ms`,
-          bearing: measurements.triggerDelayMs > 0 ? 'supports' : 'neutral',
+          observed:
+            trigger.status === 'reported'
+              ? trigger.display
+              : trigger.status === 'not-applicable'
+                ? '— no effort started this breath'
+                : '— no complete breath on the trace yet',
+          bearing: trigger.status === 'reported' ? 'supports' : 'neutral',
         },
         {
           signal: 'Efforts producing no breath',

@@ -76,6 +76,7 @@ import {
   deriveMeasurements,
   WAVEFORM_WINDOW_SECONDS,
 } from '../engine/physics'
+import { plateauAcquisition } from './plateauAcquisition'
 import { plateauReadingValidity, plateauWithheldNote } from './plateauValidity'
 
 /* ------------------------------------------------------------------------------------------------
@@ -256,12 +257,20 @@ export function coachingReadingSnapshot(
 ): CoachingReadingSnapshot {
   const measurements = state.measurements
   const plateau = plateauReadingValidity(state)
+  const acquisition = plateauAcquisition(state)
   const repeatGasResulted = state.lastAbgAt !== null && state.simulationTime >= state.lastAbgAt
   return {
     'peak-pressure': measurements.peakPressureCmH2O,
-    'peak-plateau-gap': plateau.interpretable
-      ? measurements.peakPressureCmH2O - measurements.plateauPressureCmH2O
-      : null,
+    /*
+     * A split, not a subtraction. It needs an acquired, interpretable hold behind the plateau —
+     * `plateauReadingValidity` alone says only that the patient was quiet, which was true on every
+     * passive case that had never been occluded.
+     */
+    'peak-plateau-gap':
+      plateau.interpretable && acquisition.supportsMechanicsClaim
+        ? measurements.peakPressureCmH2O -
+          (acquisition.valueCmH2O ?? measurements.plateauPressureCmH2O)
+        : null,
     'intrinsic-peep': measurements.intrinsicPeepCmH2O,
     'exhaled-vt': measurements.exhaledVtMl,
     'total-rate': measurements.totalRatePerMin,
@@ -769,15 +778,33 @@ const interventionCoachingProfiles: Readonly<
  * it, so neither can report a change until the buffer holds breaths taken after the change. The
  * plateau is estimated off the same trace, so the peak-to-plateau difference inherits it.
  */
+/** Always on the card, whether or not they moved, so the window has to be valid for them. */
+const coreReadings: readonly CoachingReadingId[] = ['peak-pressure', 'spo2', 'map']
+
 const traceDerivedReadings: readonly CoachingReadingId[] = [
   'peak-pressure',
   'peak-plateau-gap',
   'exhaled-vt',
 ]
 
+/**
+ * How long after the effect lands before the card's readings describe the action.
+ *
+ * This used to extend to one trace length only when the *action's own target* was trace-derived.
+ * But `coreReadings` puts peak airway pressure on every card, and the displayed peak is the
+ * maximum over the whole 12-second buffer — so on MV-14 the decompression card, whose target is
+ * mean arterial pressure, closed one breath after the effect and reported "Peak airway pressure
+ * 58 → 58 UNCHANGED" while the console two panes away read 31. The window has to cover every
+ * reading the card prints, and the longest of those is a trace length.
+ *
+ * `breathSeconds` is still the floor for a reading the model reports directly, and both numbers
+ * are the ones this module already had: the patient's own rate and `WAVEFORM_WINDOW_SECONDS`.
+ */
 function settleSecondsFor(effectId: InterventionEffectId | null, breathSeconds: number): number {
   const target = effectId ? interventionCoachingProfiles[effectId]?.target : null
-  return target && traceDerivedReadings.includes(target)
+  const tracedTarget = Boolean(target && traceDerivedReadings.includes(target))
+  const tracedCore = coreReadings.some((id) => traceDerivedReadings.includes(id))
+  return tracedTarget || tracedCore
     ? Math.max(breathSeconds, WAVEFORM_WINDOW_SECONDS)
     : breathSeconds
 }
@@ -947,6 +974,13 @@ export interface PostActionCoaching {
   readonly reassess: string
   readonly stabilizationRequired: boolean
   readonly stabilization: string
+  /**
+   * The interval these readings describe: the action's own time, and the simulated second the
+   * observation window closed and the card was written. Both are printed, because a report that
+   * does not say when it was taken becomes a claim about now the moment the patient moves on.
+   */
+  readonly observedFromSeconds: number
+  readonly observedToSeconds: number
 }
 
 /**
@@ -1010,8 +1044,6 @@ function moved(reading: CoachingReading): boolean {
 }
 
 /** Readings the console and bedside always show, so "nothing moved" is a reported finding. */
-const coreReadings: readonly CoachingReadingId[] = ['peak-pressure', 'spo2', 'map']
-
 function buildReadings(
   baseline: PostActionBaseline,
   current: CoachingReadingSnapshot,
@@ -1230,21 +1262,35 @@ function notDemonstrated(
   return clauses.join(' ')
 }
 
-function stabilizationAnswer(state: VentilationSimulationState): {
+/**
+ * Was something else needed — as at the end of the interval this card reports.
+ *
+ * The card is latched when its window closes and is deliberately not re-derived afterwards (see
+ * `CaseWorkflow`: re-deriving it turned a report into a second monitor that rewrote itself under
+ * the learner and re-announced through `role="status"`). So the wording has to be tensed to the
+ * captured moment. It used to read "SpO₂ low is active on the ventilator now" and then stayed on
+ * screen after the alarm cleared. The live alarm state is on the console banner, and this line now
+ * says which surface to read for it.
+ */
+function stabilizationAnswer(
+  state: VentilationSimulationState,
+  atSeconds: number,
+): {
   required: boolean
   text: string
 } {
+  const asOf = `at ${atSeconds.toFixed(0)} s, the end of this interval,`
   if (state.criticalErrors.length > 0) {
     return {
       required: true,
-      text: 'Yes. A safety interruption is open on this case and takes precedence over any further localizing.',
+      text: `Yes. A safety interruption was open on this case ${asOf} and it takes precedence over any further localizing.`,
     }
   }
   const urgent = state.alarms.filter((alarm) => alarm.priority === 'high' && alarm.active)
   if (urgent.length > 0) {
     return {
       required: true,
-      text: `Yes. ${listPhrase(urgent.map((alarm) => alarm.message))} ${urgent.length === 1 ? 'is' : 'are'} active on the ventilator now — stabilize before continuing to localize.`,
+      text: `Yes. ${listPhrase(urgent.map((alarm) => alarm.message))} ${urgent.length === 1 ? 'was' : 'were'} active on the ventilator ${asOf} so stabilize before continuing to localize. What is alarming now is on the console banner, which may have changed since.`,
     }
   }
   /*
@@ -1254,7 +1300,7 @@ function stabilizationAnswer(state: VentilationSimulationState): {
    */
   return {
     required: false,
-    text: 'No active safety interruption or high-priority ventilator alarm is shown. Continue immediate bedside reassessment; those two checks alone do not establish that no stabilization or escalation is needed.',
+    text: `No safety interruption or high-priority ventilator alarm was shown ${asOf} so far as those two checks go. Continue immediate bedside reassessment, and read the console banner for what is alarming now; those checks alone do not establish that no stabilization or escalation is needed.`,
   }
 }
 
@@ -1288,7 +1334,8 @@ export function ventilationPostActionCoaching(
   const newSafetyInterruption = state.criticalErrors.length > baseline.criticalErrorCount
   const verdict = computeVerdict(readings)
   const response = targetResponse(profile, readings)
-  const stabilization = stabilizationAnswer(state)
+  const observedToSeconds = state.simulationTime
+  const stabilization = stabilizationAnswer(state, observedToSeconds)
 
   return {
     recordId: baseline.recordId,
@@ -1308,6 +1355,8 @@ export function ventilationPostActionCoaching(
     reassess: profile.reassess,
     stabilizationRequired: stabilization.required,
     stabilization: stabilization.text,
+    observedFromSeconds: baseline.actionSeconds,
+    observedToSeconds,
   }
 }
 

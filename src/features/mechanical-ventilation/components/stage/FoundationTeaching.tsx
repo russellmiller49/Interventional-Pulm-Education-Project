@@ -5,9 +5,11 @@ import { foundationTeaching, type FoundationUnitId } from '../../content/foundat
 import { ventilationSectionSpec } from '../../content/sectionSpecs'
 import { getVentilatorDeviceProfile } from '../../content/deviceProfiles'
 import { createLabSimulation } from '../../engine/learningLab'
-import { advanceSimulation } from '../../engine/simulation'
+import { advanceSimulation, HOLD_SECONDS } from '../../engine/simulation'
 import { ventilationSimulationReducer } from '../../engine/reducer'
 import { plateauReadingValidity } from '../../content/plateauValidity'
+import { plateauAcquisition } from '../../content/plateauAcquisition'
+import { ventilationReferenceMarker } from '../../content/referenceEvidence'
 import type { VentilationSimulationState } from '../../engine/types'
 import type { VentilationStageStep } from '../../content/stageLessons'
 import type { BreathStopId } from '../../content/breathSpine'
@@ -65,7 +67,26 @@ function SettingMap({ state }: { state: VentilationSimulationState }) {
   )
 }
 
-/** Static worked reference from the actual engine. Never dispatched into the learner's session. */
+/**
+ * Static worked reference from the actual engine. Never dispatched into the learner's session.
+ *
+ * The walkthrough read the two plateaus on this screen — 12.9 here, "Plateau · modeled 13.5" in
+ * the Readings panel — as one patient measured twice. They are two different quantities, and the
+ * difference is implemented rather than clinical:
+ *
+ *   - the Readings number is `observedPlateauPressureCmH2O`, the airway pressure at the last
+ *     end-inspiratory sample less the pressure still spent on resistance at that instant. Nothing
+ *     is occluded; it is an estimate off the trace.
+ *   - this number is read after the valves have actually been shut for two seconds, and the
+ *     engine scales the elastic term by `1 - holdRelaxationFraction(secondsHeld)` while they are
+ *     (`simulation.ts`, the hold branch of the equation of motion). Two seconds of that term is
+ *     about 4.6% of the elastic pressure, which is the gap.
+ *
+ * So the difference is a modeled relaxation during the occlusion, stated as such. Whether the
+ * amplitude and time constant of that term match real respiratory-system stress relaxation is a
+ * clinical question and is in the review queue, not answered here — and the two values are not
+ * averaged, rounded together or renamed to make them agree.
+ */
 function WorkedHold({ device }: { device: VentilationSimulationState['deviceId'] }) {
   const reference = useMemo(() => {
     const baseline = createLabSimulation('mechanics-load-and-pressure', 0, device)
@@ -76,6 +97,9 @@ function WorkedHold({ device }: { device: VentilationSimulationState['deviceId']
     return { baseline, held: advanceSimulation(held, 2) }
   }, [device])
   const valid = plateauReadingValidity(reference.held)
+  const estimate = reference.baseline.measurements.plateauPressureCmH2O
+  const held = reference.held.measurements.plateauPressureCmH2O
+  const acquisition = plateauAcquisition(reference.held)
   return (
     <div data-worked-hold>
       <p>
@@ -85,8 +109,18 @@ function WorkedHold({ device }: { device: VentilationSimulationState['deviceId']
       </p>
       <p>
         Flowing peak {reference.baseline.measurements.peakPressureCmH2O.toFixed(1)} cmH₂O; plateau
-        during the reference hold {reference.held.measurements.plateauPressureCmH2O.toFixed(1)}{' '}
-        cmH₂O. {valid.interpretable ? 'Recent effort is absent in this reference.' : valid.reason}
+        during the reference hold {held.toFixed(1)} cmH₂O ({acquisition.label}).{' '}
+        {valid.interpretable ? 'Recent effort is absent in this reference.' : valid.reason}
+      </p>
+      <p data-worked-hold-difference>
+        Before the valves shut, the same reference publishes a plateau <em>estimate</em> of{' '}
+        {estimate.toFixed(1)} cmH₂O, taken from the last end-inspiratory sample with the resistive
+        pressure at that instant removed. The held reading is {held.toFixed(1)} cmH₂O after two
+        seconds of an actual {HOLD_SECONDS}-second occlusion, during which this model relaxes the
+        elastic pressure a little. They are an unoccluded estimate and a timed hold, not one
+        measurement reported twice, and they are left as the two numbers the model produces. Whether
+        the modeled relaxation matches a real patient&rsquo;s is a clinical question this module has
+        not had reviewed.
       </p>
       <CapturedBreath
         label="Captured reference: delivered breath and inspiratory hold"
@@ -102,19 +136,30 @@ export function FoundationTeaching({
   step,
   state,
   stops,
+  roundIndex = 0,
+  showCapturedReference = true,
   onShowControl,
 }: {
   unitId: FoundationUnitId
   step: VentilationStageStep
   state: VentilationSimulationState
   stops: readonly BreathStopId[]
+  /**
+   * Which application this step belongs to. The reference used to be built from round 0 always,
+   * so Section 1 step 10 — "A new complete breath is shown on a longer respiratory cycle" —
+   * re-rendered the original 3.74 s breath and even kept the cursor the learner had left on it.
+   */
+  roundIndex?: 0 | 1
+  /** False when the step already shows the marked reference beside its own instruction. */
+  showCapturedReference?: boolean
   onShowControl?: () => void
 }) {
   const content = foundationTeaching[unitId]
   const reference = useMemo(
-    () => createLabSimulation(unitId, 0, state.deviceId),
-    [unitId, state.deviceId],
+    () => createLabSimulation(unitId, roundIndex, state.deviceId),
+    [unitId, roundIndex, state.deviceId],
   )
+  const marker = ventilationReferenceMarker(unitId, roundIndex)
   const worked =
     step.phase === 'recognize' ||
     ['prediction', 'sort', 'interpret'].includes(step.interaction.kind)
@@ -159,13 +204,15 @@ export function FoundationTeaching({
         <strong>By the end:</strong> {content.purpose}
       </p>
       <p>{content.explanation}</p>
-      {unitId === 'breathing-with-support' || unitId === 'waveform-anatomy' ? (
+      {showCapturedReference &&
+      (unitId === 'breathing-with-support' || unitId === 'waveform-anatomy') ? (
         <CapturedBreath
-          key={stops[0] ?? 'reference'}
-          label="Captured reference · complete engine-generated breath"
+          key={`${roundIndex}:${stops[0] ?? 'reference'}`}
+          label={`Captured reference · application ${roundIndex + 1}`}
           samples={reference.waveforms}
           guided
           stop={stops[0]}
+          marker={marker ?? undefined}
         />
       ) : null}
       {unitId === 'controls-and-goals' ? <SettingMap state={state} /> : null}

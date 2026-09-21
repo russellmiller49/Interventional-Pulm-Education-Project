@@ -21,7 +21,7 @@ import {
   type PostActionBaseline,
 } from '../content/postActionCoaching'
 import { advanceSimulation, applyIntervention, createInitialSimulationState } from '../engine'
-import { deriveEffectivePatient, isCaseResolved } from '../engine/physics'
+import { deriveEffectivePatient, isCaseResolved, WAVEFORM_WINDOW_SECONDS } from '../engine/physics'
 import { ventilationSimulationReducer } from '../engine/reducer'
 import type { VentilationCaseDefinition, VentilationSimulationState } from '../engine/types'
 
@@ -266,6 +266,13 @@ describe('the observation interval', () => {
     expect(scenario.container.querySelector(PENDING)).not.toBeNull()
   })
 
+  /*
+   * MV-PRE-REVIEW-01 lengthened this window. Every card prints peak airway pressure, and the
+   * displayed peak is the maximum over the whole 12-second trace buffer, so until a trace length
+   * has passed the card would be reporting breaths from before the action — which is how MV-14's
+   * decompression card came to say "Peak airway pressure 58 → 58 UNCHANGED" against a console
+   * reading 31.
+   */
   it('shows the coaching as soon as the interval completes, and drops the waiting notice', () => {
     const scenario = startScenario('MV-08', 'condensate')
     perform(scenario, 'inspect-circuit')
@@ -275,6 +282,10 @@ describe('the observation interval', () => {
     expect(scenario.container.querySelector(COACHING)).toBeNull()
 
     advance(scenario, 3)
+    expect(scenario.container.querySelector(COACHING)).toBeNull()
+    expect(scenario.container.querySelector(PENDING)).not.toBeNull()
+
+    advance(scenario, WAVEFORM_WINDOW_SECONDS)
     expect(scenario.container.querySelector(COACHING)).not.toBeNull()
     expect(scenario.container.querySelector(PENDING)).toBeNull()
   })
@@ -464,7 +475,7 @@ describe('successful, ineffective, and harmful responses', () => {
       'false',
     )
     expect(stable.coachingText()).toContain(
-      'No active safety interruption or high-priority ventilator alarm is shown',
+      'No safety interruption or high-priority ventilator alarm was shown at',
     )
   })
 })
@@ -578,7 +589,7 @@ describe('what the readings actually did', () => {
     // Lightening sedation does not move the patient's own rate on a reverse-triggered patient; it
     // moves the sedation level, which the bedside prints. Keying it on the rate made the block tell
     // a learner who had just resolved MV-04 that their action was evidence against itself.
-    const scenario = coachedScenario('MV-04', 'entrainment-1:2', ['reduce-sedation'], 130)
+    const scenario = coachedScenario('MV-04', 'entrainment-1:2', ['reduce-sedation'], 135)
     const text = scenario.coachingText()
     expect(text).not.toBe('')
     expect(scenario.container.querySelector('[data-reading="sedation"]')).not.toBeNull()
@@ -593,7 +604,7 @@ describe('what the readings actually did', () => {
      * true is that the value was not on the screen when the learner acted.
      */
     const definition = definitionFor('MV-01')
-    const scenario = coachedScenario('MV-01', 'standard', ['order-abg'], 70)
+    const scenario = coachedScenario('MV-01', 'standard', ['order-abg'], 75)
     const text = scenario.coachingText()
     expect(text).not.toBe('')
     expect(scenario.container.querySelector('[data-reading="paco2"]')).toHaveAttribute(
@@ -638,7 +649,7 @@ describe('the block is a report, not a second monitor', () => {
     // the stabilization answer names the interruption without claiming where it is.
     const scenario = coachedScenario('MV-15', 'pain-bladder-delirium', ['deepen-sedation'], 90)
     const text = scenario.coachingText()
-    expect(text).toContain('A safety interruption is open on this case')
+    expect(text).toContain('A safety interruption was open on this case at')
     expect(text).not.toContain('interruption above')
   })
 })
@@ -1025,9 +1036,11 @@ describe('clinical copy', () => {
     const stabilization = scenario.container.querySelector('[data-coaching-claim="stabilization"]')
     expect(stabilization).toHaveAttribute('data-stabilization-required', 'false')
     const text = stabilization?.textContent ?? ''
-    expect(text).toContain(
-      'No active safety interruption or high-priority ventilator alarm is shown',
-    )
+    /*
+     * Tensed to the interval the card reports, not to now: the block is latched when its window
+     * closes and stays on screen while the patient goes on changing.
+     */
+    expect(text).toContain('No safety interruption or high-priority ventilator alarm was shown at')
     expect(text).toContain('Continue immediate bedside reassessment')
     expect(text).toContain('do not establish that no stabilization or escalation is needed')
     expect(text).not.toContain('continue localizing rather than escalating')

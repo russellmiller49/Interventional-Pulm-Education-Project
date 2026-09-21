@@ -426,6 +426,59 @@ export interface AlarmEvent {
   active: boolean
 }
 
+/**
+ * One occlusion that actually happened on this patient, recorded by `advanceSimulation` as the
+ * valves close and again as they open.
+ *
+ * Until now the only record of a performed hold lived in the Learn lab wrapper
+ * (`CapturedHold` in `engine/learningMeasurements.ts`), so every other surface — the four console
+ * facsimiles, the teaching panels, the case feedback — had no way to tell a hold that happened
+ * from the continuously published `measurements.plateauPressureCmH2O`, which is an estimate off
+ * the trace whether or not anything was ever occluded. This is that record, kept where every
+ * surface can read it. It is in-memory only: `VentilationSimulationState` is never serialised.
+ *
+ * `completedAtSeconds` is null while the occlusion is still running, which is what "pending"
+ * means on the learner surfaces. `interpretable` is false the moment the patient pulls at any
+ * point during the occlusion — an invalid hold is still a hold that happened, and it is kept as
+ * one rather than discarded.
+ */
+export interface PerformedHoldRecord {
+  readonly hold: 'inspiratory' | 'expiratory'
+  readonly startedAtSeconds: number
+  readonly completedAtSeconds: number | null
+  /** Plateau for an inspiratory hold; total end-expiratory pressure for an expiratory one. */
+  readonly valueCmH2O: number
+  readonly interpretable: boolean
+  /**
+   * The settings and teaching mechanics the occlusion was performed under, as
+   * `measurementInputs` writes them. A later change makes the record stale rather than wrong.
+   */
+  readonly conditions: string
+}
+
+/**
+ * One arterial blood gas as an observation rather than as a window onto the current model.
+ *
+ * A specimen is drawn at `collectedAtSeconds` and the numbers are frozen there; the result
+ * becomes readable at `availableAtSeconds`. Waiting for the result does not resample the
+ * patient, and time passing afterwards does not change what the sample said. The authored
+ * baseline is the case's own `initialPatient.gasExchange`, collected before the run starts.
+ */
+export interface ArterialGasSample {
+  readonly id: string
+  readonly kind: 'baseline' | 'repeat'
+  /** Null for the authored baseline, which nobody in this run ordered. */
+  readonly orderedAtSeconds: number | null
+  readonly collectedAtSeconds: number
+  readonly availableAtSeconds: number
+  readonly values: {
+    readonly pH: number
+    readonly paCO2MmHg: number
+    readonly paO2MmHg: number
+    readonly bicarbonateMmolL: number
+  }
+}
+
 export interface RiskState {
   highPlateau: number
   stackedVolume: number
@@ -636,6 +689,17 @@ export interface VentilationSimulationState {
   criticalErrors: readonly string[]
   lastResponse: string | null
   lastAbgAt: number | null
+  /**
+   * Occlusions performed in this run, oldest first, capped at the last few. See
+   * `PerformedHoldRecord`: this is what separates an acquired plateau from the estimate the
+   * console publishes on every breath.
+   */
+  holdRecords: readonly PerformedHoldRecord[]
+  /**
+   * Arterial gases as frozen specimens. Index 0 is the case's authored baseline; ordered repeats
+   * are appended. `lastAbgAt` is kept as the availability stamp the existing surfaces read.
+   */
+  arterialGasSamples: readonly ArterialGasSample[]
   /**
    * Teaching-only multipliers on this patient's mechanics, so a Learn section can change the lung
    * and let the learner watch the consequence on the real console rather than on a drawing.

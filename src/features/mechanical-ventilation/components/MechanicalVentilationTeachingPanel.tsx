@@ -3,6 +3,7 @@
 import { useMemo, useState, type Dispatch } from 'react'
 
 import { PLATEAU_SPLIT_WITHHELD_LABEL, plateauReadingValidity } from '../content/plateauValidity'
+import { plateauAcquisition } from '../content/plateauAcquisition'
 import type { VentilationAction, VentilationSimulationState } from '../engine'
 import { VentilationDyssynchronyDomains } from './teaching/dyssynchrony'
 import { VentilationModeVariables } from './teaching/modes'
@@ -598,22 +599,28 @@ export function VentilationHighPressureDiscriminator({
 }) {
   const [selected, setSelected] = useState<MechanismId | null>(null)
   const { measurements, ventilator } = state
-  const gap = Math.max(0, measurements.peakPressureCmH2O - measurements.plateauPressureCmH2O)
-  const plateauAboveBaseline = Math.max(
-    0,
-    measurements.plateauPressureCmH2O - ventilator.settings.peepCmH2O,
-  )
   const expiratoryEndFlow = measurements.expiratoryFlowAtNextBreathLMin
   const breath = useMemo(() => latestBreath(state.waveforms), [state.waveforms])
   const peakEffort = breath.reduce((lowest, sample) => Math.min(lowest, sample.pmusCmH2O), 0)
-  const plateauMeasured = measurements.plateauPressureCmH2O > 0
+  /*
+   * `plateauPressureCmH2O > 0` is true on every breath of every case: the engine publishes an
+   * estimate off the trace whether or not anything has been occluded. So this panel showed
+   * "PLATEAU 14.3 · PEAK − PLATEAU 17.4" on the step whose own instruction is "Measure before
+   * deciding", and graded the mechanism comparisons against it. The question the panel needs
+   * answered is whether a hold was acquired, which is what `plateauAcquisition` reports.
+   */
+  const acquisition = plateauAcquisition(state, { requireAcquisition: true })
+  const plateauMeasured = acquisition.supportsMechanicsClaim
+  const plateauValue = acquisition.valueCmH2O ?? measurements.plateauPressureCmH2O
+  const acquiredGap = Math.max(0, measurements.peakPressureCmH2O - plateauValue)
+  const acquiredAboveBaseline = Math.max(0, plateauValue - ventilator.settings.peepCmH2O)
   const effortPresent = peakEffort < -1.5
 
   const predictionsFor = (mechanism: MechanismId): readonly MechanismPrediction[] => {
     const trapping = Math.abs(expiratoryEndFlow) >= 1
     const plateauObserved = plateauMeasured
-      ? `${round(plateauAboveBaseline, 1)} cmH₂O above baseline`
-      : 'No plateau measured — perform an inspiratory hold'
+      ? `${round(acquiredAboveBaseline, 1)} cmH₂O above baseline`
+      : `No acquired plateau — ${acquisition.label}; perform an inspiratory hold`
     const effortObserved = effortPresent
       ? `Effort present, ${round(peakEffort, 1)} cmH₂O`
       : 'No appreciable effort'
@@ -634,8 +641,8 @@ export function VentilationHighPressureDiscriminator({
       expectation,
       verdict,
       observed: plateauMeasured
-        ? `${round(gap, 1)} cmH₂O`
-        : 'No plateau measured — perform an inspiratory hold',
+        ? `${round(acquiredGap, 1)} cmH₂O`
+        : `No acquired plateau — ${acquisition.label}; perform an inspiratory hold`,
     })
     const plateauRow = (expectation: string, verdict: Verdict): MechanismPrediction => ({
       signal: 'Plateau above baseline',
@@ -658,18 +665,21 @@ export function VentilationHighPressureDiscriminator({
 
     if (mechanism === 'resistance') {
       return [
-        gapRow('Widened — the extra pressure is spent moving gas', plateauVerdict(gap > 6)),
-        plateauRow('Little changed — the system is no stiffer', plateauVerdict(gap > 6)),
+        gapRow('Widened — the extra pressure is spent moving gas', plateauVerdict(acquiredGap > 6)),
+        plateauRow('Little changed — the system is no stiffer', plateauVerdict(acquiredGap > 6)),
         expiratoryRow('Reaches zero unless trapping coexists', trapping ? 'against' : 'consistent'),
         effortRow('Compatible with or without effort', 'neutral'),
       ]
     }
     if (mechanism === 'compliance') {
       return [
-        gapRow('Little changed — flow still meets the same resistance', plateauVerdict(gap <= 6)),
+        gapRow(
+          'Little changed — flow still meets the same resistance',
+          plateauVerdict(acquiredGap <= 6),
+        ),
         plateauRow(
           'Raised — more pressure is needed to distend the same volume',
-          plateauVerdict(gap <= 6),
+          plateauVerdict(acquiredGap <= 6),
         ),
         expiratoryRow('Reaches zero unless trapping coexists', trapping ? 'against' : 'consistent'),
         effortRow(
@@ -683,7 +693,7 @@ export function VentilationHighPressureDiscriminator({
         gapRow('May be normal or widened; not discriminating on its own', 'neutral'),
         plateauRow(
           'Raised, because the breath started above set PEEP',
-          plateauVerdict(plateauAboveBaseline > 0),
+          plateauVerdict(acquiredAboveBaseline > 0),
         ),
         expiratoryRow(
           'Does not reach zero before the next breath — the discriminating finding',
@@ -710,7 +720,7 @@ export function VentilationHighPressureDiscriminator({
   }
 
   const predictions = selected ? predictionsFor(selected) : []
-  const summary = `Peak ${round(measurements.peakPressureCmH2O, 1)}, plateau ${plateauMeasured ? round(measurements.plateauPressureCmH2O, 1) : 'not measured'}, peak-to-plateau difference ${plateauMeasured ? round(gap, 1) : 'unavailable'}, expiratory flow at the next breath ${round(expiratoryEndFlow, 1)} liters per minute, and patient effort ${effortPresent ? `present at ${round(peakEffort, 1)} centimeters of water` : 'not appreciable'}.${selected ? ` The selected mechanism is ${mechanismLabels[selected]}.` : ' No mechanism has been selected yet.'}`
+  const summary = `Peak ${round(measurements.peakPressureCmH2O, 1)}, plateau ${plateauMeasured ? round(plateauValue, 1) : `not acquired — ${acquisition.label}`}, peak-to-plateau difference ${plateauMeasured ? round(acquiredGap, 1) : 'unavailable until a hold is acquired'}, expiratory flow at the next breath ${round(expiratoryEndFlow, 1)} liters per minute, and patient effort ${effortPresent ? `present at ${round(peakEffort, 1)} centimeters of water` : 'not appreciable'}.${selected ? ` The selected mechanism is ${mechanismLabels[selected]}.` : ' No mechanism has been selected yet.'}`
 
   return (
     <section className={styles.panel} aria-labelledby="mv-discriminator-teaching">
@@ -730,17 +740,19 @@ export function VentilationHighPressureDiscriminator({
             {round(measurements.peakPressureCmH2O, 1)} <small>cmH₂O</small>
           </dd>
         </div>
-        <div data-state={plateauMeasured ? undefined : 'unavailable'}>
+        <div
+          data-state={plateauMeasured ? undefined : 'unavailable'}
+          data-plateau-acquisition={acquisition.status}
+        >
           <dt>Plateau</dt>
           <dd>
-            {plateauMeasured ? round(measurements.plateauPressureCmH2O, 1) : '—'}{' '}
-            <small>cmH₂O</small>
+            {plateauMeasured ? round(plateauValue, 1) : '—'} <small>cmH₂O</small>
           </dd>
         </div>
         <div data-state={plateauMeasured ? undefined : 'unavailable'}>
           <dt>Peak − plateau</dt>
           <dd>
-            {plateauMeasured ? round(gap, 1) : '—'} <small>cmH₂O</small>
+            {plateauMeasured ? round(acquiredGap, 1) : '—'} <small>cmH₂O</small>
           </dd>
         </div>
         <div>

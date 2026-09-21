@@ -20,6 +20,7 @@ import {
   round,
   styles,
 } from './shared'
+import { plateauAcquisition } from '../../content/plateauAcquisition'
 
 type Lever = 'fio2' | 'peep' | 'mean-pressure'
 
@@ -74,8 +75,19 @@ export function VentilationOxygenationTradeoff({
   const [selected, setSelected] = useState<Lever | null>(null)
   const { measurements, patient, trends, ventilator } = state
   const reading = peepComparisonSnapshot(state)
+  /*
+   * An occlusion that is running is not yet an acquired reading, and a number published on every
+   * breath is not an occlusion at all. Three labels, from the one projection.
+   */
+  const acquisition = plateauAcquisition(state)
   const plateauLabel =
-    reading.plateauSource === 'active occlusion' ? 'Active occlusion pressure' : 'Plateau estimate'
+    acquisition.status === 'acquired-valid'
+      ? 'Plateau · acquired hold'
+      : acquisition.status === 'acquired-invalid'
+        ? 'Plateau · acquired, not interpretable'
+        : reading.plateauSource === 'active occlusion'
+          ? 'Pressure during the running occlusion'
+          : 'Plateau estimate'
 
   const spo2Delta = trendDelta(trends, 'spo2Percent')
   const mapDelta = trendDelta(trends, 'mapMmHg')

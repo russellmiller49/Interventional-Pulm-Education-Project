@@ -2303,6 +2303,11 @@
   background: var(--surface-soft);
 }
 
+.coachingWindow {
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+  opacity: 0.85;
+}
 .coachingReadings {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));

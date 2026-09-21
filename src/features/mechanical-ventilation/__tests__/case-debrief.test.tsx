@@ -185,14 +185,74 @@ describe('possible findings against present findings', () => {
   })
 
   it('separates them at the bedside instead of listing them as peers', () => {
+    /*
+     * Nothing on this examination separates the three, so all three stay on the list — the
+     * differential is still a menu and is printed apart from the findings that are present.
+     */
+    const state = createInitialSimulationState('MV-13', 'learn', 1, 'hamilton-c6')
     render(
       <BedsidePanel
-        state={createInitialSimulationState('MV-13', 'learn', 1, 'hamilton-c6')}
+        state={{
+          ...state,
+          patient: {
+            ...state.patient,
+            airway: {
+              ...state.patient.airway,
+              secretions: false,
+              bronchospasm: false,
+              hmeObstructed: false,
+              ettObstructed: false,
+            },
+          },
+        }}
         definition={definitionFor('MV-13')}
       />,
     )
     expect(screen.getByText(/Still open:/i)).toBeInTheDocument()
     expect(screen.getByText(/one of these fits this patient/i)).toBeInTheDocument()
+  })
+
+  /**
+   * MV-PRE-REVIEW-01: a current examination narrows a differential.
+   *
+   * MV-13 printed "secretions are visible in the airway tubing" — read off the live patient — and
+   * then, immediately underneath, "Still open: one of these fits this patient" with all three
+   * candidates. An examination that separates them has separated them.
+   */
+  it('narrows the differential once the learner’s own examination separates it', () => {
+    const state = createInitialSimulationState('MV-13', 'learn', 1, 'hamilton-c6')
+    const withSecretions = {
+      ...state,
+      patient: {
+        ...state.patient,
+        airway: {
+          ...state.patient.airway,
+          secretions: true,
+          bronchospasm: false,
+          hmeObstructed: false,
+          ettObstructed: false,
+        },
+      },
+    }
+    const { container } = render(
+      <BedsidePanel state={withSecretions} definition={definitionFor('MV-13')} />,
+    )
+    expect(screen.queryByText(/Still open:/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/Narrowed by what you found:/i)).toBeInTheDocument()
+    expect(container.querySelectorAll('[data-branch-support="supported"]')).toHaveLength(1)
+    expect(container.querySelectorAll('[data-branch-support="unsupported"]')).toHaveLength(2)
+    // Narrowing is not diagnosis: the response to treatment is still the test.
+    expect(screen.getByText(/not a confirmed diagnosis/i)).toBeInTheDocument()
+  })
+
+  it('keeps all three open while no examination has been performed', () => {
+    const state = createInitialSimulationState('MV-13', 'practice', 1, 'hamilton-c6')
+    const { container } = render(
+      <BedsidePanel state={state} definition={definitionFor('MV-13')} requireAssessment />,
+    )
+    // Nothing is revealed at all before the assessment, so nothing is narrowed either.
+    expect(container.querySelector('[data-finding-group="differential"]')).toBeNull()
+    expect(screen.getByText(/Repeat a bedside evaluation/i)).toBeInTheDocument()
   })
 
   it('marks a finding that only appears in response to an action', () => {

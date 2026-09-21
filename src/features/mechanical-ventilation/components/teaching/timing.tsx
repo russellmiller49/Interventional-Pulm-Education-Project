@@ -20,6 +20,7 @@ import {
   styles,
   tracePath,
 } from './shared'
+import { triggerDelayEvidence } from '../../engine/triggerEvidence'
 
 type Transition = 'trigger' | 'cycle'
 
@@ -111,7 +112,20 @@ export function VentilationTriggerAndCycle({
   const machineEnd = breath.length > 1 ? (breath[lastInspiratory].time - first) / duration : 0
 
   const effortPresent = neural.seconds > 0
-  const triggerDelayMs = measurements.triggerDelayMs
+  /*
+   * A delay needs an effort to time from. `measurements.triggerDelayMs` defaults to 80 for every
+   * case the phenotype table does not name, so this readout printed "Measured trigger delay is
+   * 80 ms" beside "Patient effort is not appreciable this breath" on the passive, time-triggered
+   * model in Section 7. `triggerDelayEvidence` looks for the event first and keeps absent,
+   * unknown and zero apart.
+   */
+  const trigger = triggerDelayEvidence(state)
+  const triggerSentence =
+    trigger.status === 'reported'
+      ? `Measured trigger delay is ${round(trigger.delayMs ?? 0)} ms`
+      : trigger.status === 'not-applicable'
+        ? 'Trigger delay is not applicable: no effort started this breath'
+        : 'Trigger delay is not available yet: no complete breath on the trace'
   const ineffectivePercent = measurements.ineffectiveEffortFraction * 100
   const autotriggerPercent = measurements.autotriggerFraction * 100
   const machineSeconds = measurements.mechanicalInspiratoryTimeSeconds
@@ -133,7 +147,7 @@ export function VentilationTriggerAndCycle({
   const summary =
     breath.length === 0
       ? 'No complete breath yet, so patient and machine timing cannot be compared.'
-      : `Two timelines for the most recent breath. The machine's inspiration runs from the start of the breath for ${round(machineSeconds, 2)} seconds. Patient effort ${effortPresent ? `runs for ${round(neural.seconds, 2)} seconds` : 'is not appreciable this breath'}. At the cycle end, ${cycleRelation}. Measured trigger delay is ${round(triggerDelayMs)} milliseconds, ineffective efforts ${round(ineffectivePercent)} percent of efforts, and breaths with no effort behind them ${round(autotriggerPercent)} percent. The selected transition is ${transitionCopy[selected].label}.`
+      : `Two timelines for the most recent breath. The machine's inspiration runs from the start of the breath for ${round(machineSeconds, 2)} seconds. Patient effort ${effortPresent ? `runs for ${round(neural.seconds, 2)} seconds` : 'is not appreciable this breath'}. At the cycle end, ${cycleRelation}. ${triggerSentence}, ineffective efforts ${round(ineffectivePercent)} percent of efforts, and breaths with no effort behind them ${round(autotriggerPercent)} percent. The selected transition is ${transitionCopy[selected].label}.`
 
   return (
     <section className={styles.panel} aria-labelledby="mv-timing-teaching">
@@ -219,10 +233,19 @@ export function VentilationTriggerAndCycle({
       )}
 
       <dl className={styles.readouts} aria-label="Measured timing signals">
-        <div>
+        <div
+          data-state={trigger.status === 'reported' ? undefined : 'unavailable'}
+          data-trigger-delay={trigger.status}
+        >
           <dt>Trigger delay</dt>
           <dd>
-            {round(triggerDelayMs)} <small>ms</small>
+            {trigger.status === 'reported' ? (
+              <>
+                {round(trigger.delayMs ?? 0)} <small>ms</small>
+              </>
+            ) : (
+              '—'
+            )}
           </dd>
         </div>
         <div data-state={effortPresent ? undefined : 'unavailable'}>
@@ -274,7 +297,7 @@ export function VentilationTriggerAndCycle({
         <span>Right now</span>
         <p>
           {selected === 'trigger'
-            ? `Measured trigger delay is ${round(triggerDelayMs)} ms, with ${round(ineffectivePercent)}% of efforts producing no breath and ${round(autotriggerPercent)}% of breaths having no effort behind them. A rise in the last of those points away from the patient and toward the circuit.`
+            ? `${triggerSentence}. ${trigger.detail} ${round(ineffectivePercent)}% of efforts produce no breath and ${round(autotriggerPercent)}% of breaths have no effort behind them; a rise in the last of those points away from the patient and toward the circuit.`
             : `Mechanical inspiration is ${round(machineSeconds, 2)} s against a neural inspiration of ${effortPresent ? `${round(neural.seconds, 2)} s` : 'no appreciable effort'}, so ${cycleRelation}.`}
         </p>
       </div>

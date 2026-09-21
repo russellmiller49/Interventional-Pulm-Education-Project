@@ -30,6 +30,7 @@ import {
   resolveBreathPhase,
 } from '../content'
 import { plateauReadingValidity, plateauWithheldNote } from '../content/plateauValidity'
+import { plateauAcquisition, plateauAcquisitionNote } from '../content/plateauAcquisition'
 import {
   isAdaptivePressureMode,
   isAdaptiveSupportMode,
@@ -217,10 +218,13 @@ function DynamicLungPanel({
   )
   /*
    * Peak minus plateau is the resistive gap only when the plateau is the elastic pressure. While
-   * the patient is pulling it is not, so this panel withholds the number instead of printing a gap
-   * the pressure readouts two panes away have just marked uninterpretable.
+   * the patient is pulling it is not — and before anything has been occluded the plateau is an
+   * estimate off the trace rather than a measurement, so the difference is not a measured split
+   * either. The panel withholds the number in both cases rather than printing a gap the pressure
+   * readouts two panes away have just marked uninterpretable.
    */
-  const gapIsAttributable = plateauReadingValidity(state).interpretable
+  const gapAcquisition = plateauAcquisition(state)
+  const gapIsAttributable = gapAcquisition.supportsMechanicsClaim
   const effort = state.patient.drive.effortAmplitudeCmH2O
   return (
     <section className={styles.dynamicLung} aria-label="Simplified dynamic lung panel">
@@ -245,7 +249,12 @@ function DynamicLungPanel({
                 {resistanceGap.toFixed(0)} {pressureUnit}
               </>
             ) : (
-              <>— while the patient is pulling</>
+              <>
+                —{' '}
+                {gapAcquisition.status === 'acquired-invalid'
+                  ? 'while the patient is pulling'
+                  : `plateau is an ${gapAcquisition.label}`}
+              </>
             )}
           </dd>
         </div>
@@ -787,14 +796,34 @@ export function MechanicalVentilatorConsole({
    * usable.
    */
   const plateauValidity = plateauReadingValidity(state)
-  const plateauUnreliable = !plateauValidity.interpretable
+  /*
+   * Two separate questions, and the console used to answer only one of them.
+   *
+   * `plateauValidity` says whether the patient was quiet; `plateauAcquisition` says whether
+   * anything was occluded. Every case opened printing "measured Pplateau 14" with no hold behind
+   * it, because the estimate the model publishes on every breath and a measured plateau were the
+   * same number on this screen. The value still shows — a real ventilator shows one — but what it
+   * is called now comes from the acquisition projection, and the elastic/resistive attribution is
+   * made only when a valid occlusion produced it.
+   */
+  const plateauAcquired = plateauAcquisition(state)
+  const plateauUnreliable = !plateauAcquired.supportsMechanicsClaim
   const pressureReadouts = [
     { label: pressureNames.peak, value: state.measurements.peakPressureCmH2O },
     {
       label: pressureNames.plateau,
       value: state.measurements.plateauPressureCmH2O,
       unreliable: plateauUnreliable,
-      caveat: plateauUnreliable ? plateauWithheldNote(plateauValidity) : undefined,
+      /*
+       * Both reasons when both apply. Acquisition and passivity are independent, and a learner
+       * reading "estimate from the trace" on a patient who is also pulling needs to hear the
+       * second half as well.
+       */
+      caveat: plateauUnreliable
+        ? plateauValidity.interpretable
+          ? plateauAcquired.label
+          : `${plateauAcquired.label}; ${plateauWithheldNote(plateauValidity)}`
+        : undefined,
     },
     { label: pressureNames.mean, value: state.measurements.meanAirwayPressureCmH2O },
     { label: pressureNames.peep, value: settings.peepCmH2O },
@@ -823,9 +852,11 @@ export function MechanicalVentilatorConsole({
       id: 'plateau',
       marker: `${pressureNames.plateau} ${state.measurements.plateauPressureCmH2O.toFixed(0)}`,
       label: `${pressureNames.plateau} ${state.measurements.plateauPressureCmH2O.toFixed(0)} — ${
-        plateauUnreliable
-          ? 'depressed by the patient’s own effort; the gap to peak is not purely resistive'
-          : 'elastic load only; gap to peak is resistive'
+        plateauAcquired.supportsMechanicsClaim
+          ? 'elastic load only; gap to peak is resistive'
+          : !plateauValidity.interpretable
+            ? `${plateauAcquired.label}; depressed by the patient’s own effort, so the gap to peak is not purely resistive`
+            : `${plateauAcquired.label}; the gap to peak cannot be read as resistive until a hold is acquired`
       }`,
       value: state.measurements.plateauPressureCmH2O,
     },
@@ -1635,14 +1666,16 @@ export function MechanicalVentilatorConsole({
           .join('; ')}
         {withholdUnacquiredPlateau
           ? '; plateau pressure has not been acquired'
-          : `; measured ${pressureNames.plateau} ${state.measurements.plateauPressureCmH2O.toFixed(0)} ${display.pressureUnit}`}
+          : plateauAcquired.supportsMechanicsClaim
+            ? `; measured ${pressureNames.plateau} ${state.measurements.plateauPressureCmH2O.toFixed(0)} ${display.pressureUnit}, ${plateauAcquisitionNote(plateauAcquired)}`
+            : `; ${pressureNames.plateau} ${state.measurements.plateauPressureCmH2O.toFixed(0)} ${display.pressureUnit} — ${plateauAcquired.label}`}
         {/*
          * The readout beside the trace marks an uninterpretable plateau with a bare "?" that is
          * hidden from assistive technology, and the trace's own caption — screen-reader only —
          * carries the clause. The visible text equivalent carries it too, so a sighted learner is
          * told what the "?" means.
          */}
-        {!withholdUnacquiredPlateau && plateauUnreliable
+        {!withholdUnacquiredPlateau && !plateauValidity.interpretable
           ? ` — ${plateauWithheldNote(plateauValidity)}`
           : ''}
         ; intrinsic PEEP {state.measurements.intrinsicPeepCmH2O.toFixed(1)} {display.pressureUnit}.
@@ -1655,7 +1688,7 @@ export function MechanicalVentilatorConsole({
         {annotationsVisible ? (
           <>
             {' '}
-            Held trace, labelled levels:{' '}
+            {holdActive ? 'Held trace' : 'Frozen trace'}, labelled levels:{' '}
             {pressureAnnotations.map((annotation) => annotation.label).join('; ')}.
           </>
         ) : null}

@@ -2,7 +2,8 @@
 
 import { ClipboardPlus, HeartPulse, Stethoscope, TestTube2, UserRound } from 'lucide-react'
 
-import { classifyCaseFindings } from '../content/caseFindings'
+import { classifyCaseFindings, examinationBranchEvidence } from '../content/caseFindings'
+import { arterialGasSampleLabel, arterialGasView } from '../engine/arterialGas'
 import type { VentilationCaseDefinition, VentilationSimulationState } from '../engine'
 import styles from './mechanical-ventilation.module.css'
 
@@ -56,11 +57,19 @@ export function BedsidePanel({
   const circuitInspected =
     (!requireAssessment && state.experience === 'learn') || performed(state, 'inspect-circuit')
   const classified = classifyCaseFindings(definition.id)
-  const presentFindings = classified.filter((finding) => finding.kind === 'present')
+  const suppliedFindings = classified.filter((finding) => finding.kind === 'present')
   const differentialFindings = classified.filter((finding) => finding.kind === 'byBranch')
   const conditionalFindings = classified.filter((finding) => finding.kind === 'onAction')
-  const repeatAbgOrdered = state.lastAbgAt !== null
-  const repeatAbgReady = repeatAbgOrdered && state.simulationTime >= state.lastAbgAt!
+  /*
+   * What this learner's own examination has narrowed, and nothing else. `examinationBranchEvidence`
+   * reads only the live findings the panel is already printing, and only after the action that
+   * produces them — the model's hidden branch is never consulted here.
+   */
+  const narrowed = examinationBranchEvidence(state.patient.airway, { assessed, circuitInspected })
+  const narrowedLine = narrowed
+    ? (differentialFindings.find((finding) => finding.branch === narrowed.branch) ?? null)
+    : null
+  const gas = arterialGasView(state.arterialGasSamples, state.simulationTime)
   const mean = state.patient.hemodynamics.mapMmHg
 
   return (
@@ -149,31 +158,74 @@ export function BedsidePanel({
             {assessed ? (
               <>
                 {/*
-                 * What this patient has, kept apart from what they might have had. The authored
-                 * list mixes the two — for MV-13 it names all three candidate causes at once, each
-                 * tagged with its own internal branch name — so listing it flat asserted three
-                 * mutually exclusive findings as present simultaneously.
+                 * What this patient has, kept apart from what they might have had, and both kept
+                 * apart from how the case was described at handover.
+                 *
+                 * The authored list mixes all three — for MV-13 it names the three candidate
+                 * causes at once, each tagged with its own internal branch name — so listing it
+                 * flat asserted mutually exclusive findings as present simultaneously. It also
+                 * carries the handover's own numbers: MV-01's "Ppeak 34 and Pplat 27 cm H2O"
+                 * belongs to that description, not to the console, which reads 25 and 14 at the
+                 * same instant, and MV-14's "SpO2 falls" describes the presentation rather than
+                 * the saturation now. Printing all of it under "Examination and comfort" made it
+                 * the learner's own current findings.
                  */}
-                <ul>
-                  {presentFindings.map((finding) => (
-                    <li key={finding.text}>{finding.text}</li>
-                  ))}
-                  {bedsideFindings(state).map((finding) => (
-                    <li key={finding}>{finding}</li>
-                  ))}
-                </ul>
+                <section data-finding-group="supplied">
+                  <h3>From the case description at handover</h3>
+                  <p>
+                    How this patient was presented. Any numbers here are the presenting description;
+                    what the patient is doing now is on the console and in the vitals above.
+                  </p>
+                  <ul>
+                    {suppliedFindings.map((finding) => (
+                      <li key={finding.text}>{finding.text}</li>
+                    ))}
+                  </ul>
+                </section>
+                <section data-finding-group="current">
+                  <h3>What your examination finds now</h3>
+                  <ul>
+                    {bedsideFindings(state).map((finding) => (
+                      <li key={finding}>{finding}</li>
+                    ))}
+                  </ul>
+                </section>
                 {differentialFindings.length ? (
-                  <>
-                    <p>
-                      <strong>Still open:</strong> one of these fits this patient. The examination
-                      and the traces are what separate them.
-                    </p>
-                    <ul>
-                      {differentialFindings.map((finding) => (
-                        <li key={finding.text}>{finding.text}</li>
-                      ))}
-                    </ul>
-                  </>
+                  <section data-finding-group="differential" data-narrowed={narrowed?.branch}>
+                    {narrowedLine ? (
+                      <>
+                        <p>
+                          <strong>Narrowed by what you found:</strong> {narrowed!.from} supports one
+                          of the candidates this case carries. It is not a confirmed diagnosis, and
+                          the response to treatment is still the test.
+                        </p>
+                        <ul>
+                          <li data-branch-support="supported">
+                            {narrowedLine.text} — supported by your examination.
+                          </li>
+                          {differentialFindings
+                            .filter((finding) => finding !== narrowedLine)
+                            .map((finding) => (
+                              <li key={finding.text} data-branch-support="unsupported">
+                                {finding.text} — nothing on this examination supports this one.
+                              </li>
+                            ))}
+                        </ul>
+                      </>
+                    ) : (
+                      <>
+                        <p>
+                          <strong>Still open:</strong> one of these fits this patient. The
+                          examination and the traces are what separate them.
+                        </p>
+                        <ul>
+                          {differentialFindings.map((finding) => (
+                            <li key={finding.text}>{finding.text}</li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </section>
                 ) : null}
                 {conditionalFindings.length && !requireAssessment ? (
                   <>
@@ -228,32 +280,67 @@ export function BedsidePanel({
             <TestTube2 aria-hidden="true" /> Arterial blood gas
           </summary>
           <div>
-            <dl className={styles.abgGrid}>
+            {/*
+             * A specimen, not a window onto the model. These four numbers used to be read live
+             * from `state.patient.gasExchange` under the line "Baseline gas shown", so the
+             * baseline moved: MV-14 showed PaO2 76 at the start of the run and 97 a hundred
+             * simulated seconds later with nothing ordered.
+             */}
+            <dl className={styles.abgGrid} data-abg-sample={gas.current.id}>
               <div>
                 <dt>pH</dt>
-                <dd>{state.patient.gasExchange.pH.toFixed(2)}</dd>
+                <dd>{gas.current.values.pH.toFixed(2)}</dd>
               </div>
               <div>
                 <dt>PaCO₂</dt>
-                <dd>{state.patient.gasExchange.paCO2MmHg.toFixed(0)} mmHg</dd>
+                <dd>{gas.current.values.paCO2MmHg.toFixed(0)} mmHg</dd>
               </div>
               <div>
                 <dt>PaO₂</dt>
-                <dd>{state.patient.gasExchange.paO2MmHg.toFixed(0)} mmHg</dd>
+                <dd>{gas.current.values.paO2MmHg.toFixed(0)} mmHg</dd>
               </div>
               <div>
                 <dt>HCO₃⁻</dt>
-                <dd>{state.patient.gasExchange.bicarbonateMmolL.toFixed(0)} mmol/L</dd>
+                <dd>{gas.current.values.bicarbonateMmolL.toFixed(0)} mmol/L</dd>
               </div>
             </dl>
-            <p className={styles.orderStatus}>
-              <ClipboardPlus aria-hidden="true" />{' '}
-              {!repeatAbgOrdered
-                ? 'Baseline gas shown. Order a repeat ABG through a bedside review action.'
-                : repeatAbgReady
-                  ? 'Repeat gas is available from the current simulated physiology.'
-                  : `Repeat gas processing: ${Math.max(0, state.lastAbgAt! - state.simulationTime).toFixed(0)} simulated seconds remaining.`}
+            <p className={styles.orderStatus} data-abg-kind={gas.current.kind}>
+              <ClipboardPlus aria-hidden="true" /> {arterialGasSampleLabel(gas.current)}.{' '}
+              {gas.currentIsBaseline
+                ? 'It is history supplied with the case and does not change as the simulated patient does. Order a repeat ABG through a bedside review action to sample the patient now.'
+                : 'The values were frozen when the specimen was drawn; the patient has gone on changing since.'}
             </p>
+            {gas.pending ? (
+              <p className={styles.orderStatus} data-abg-pending={gas.pending.id}>
+                Repeat gas drawn at {gas.pending.collectedAtSeconds.toFixed(0)} s is processing:{' '}
+                {gas.secondsUntilPending.toFixed(0)} simulated seconds until the result. The
+                specimen does not change while it waits.
+              </p>
+            ) : null}
+            {gas.all.length > 1 ? (
+              <details data-abg-history>
+                <summary>Earlier gases on this patient ({gas.all.length})</summary>
+                <ul>
+                  {gas.all.map((sample) => (
+                    <li key={sample.id} data-abg-history-sample={sample.id}>
+                      {arterialGasSampleLabel(sample)} —{' '}
+                      {/* A specimen that has not resulted has no numbers to read yet. */}
+                      {gas.pending?.id === sample.id ? (
+                        'not resulted yet'
+                      ) : (
+                        <>
+                          pH {sample.values.pH.toFixed(2)}, PaCO₂{' '}
+                          {sample.values.paCO2MmHg.toFixed(0)}, PaO₂{' '}
+                          {sample.values.paO2MmHg.toFixed(0)}, HCO₃⁻{' '}
+                          {sample.values.bicarbonateMmolL.toFixed(0)}
+                          {sample.id === gas.current.id ? ' · shown above' : ''}
+                        </>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ) : null}
           </div>
         </details>
 
