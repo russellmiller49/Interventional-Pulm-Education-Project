@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Line } from '@react-three/drei'
 import { CanvasTexture, SRGBColorSpace } from 'three'
 import {
@@ -11,7 +11,14 @@ import {
 import { sampleAnatomy } from '../../../lib/anatomy'
 import { LESION_CENTER, radians, type Point3 } from '../../../lib/physics'
 import { add, chainStopAnchors, scale, suiteFrame } from '../suiteModel'
-import { dtsArc, dtsPlaneQuad, missingWedge, smearWidth } from '../dtsModel'
+import {
+  DTS_PLANE,
+  dtsArc,
+  dtsOverlayObjects,
+  dtsPlaneQuad,
+  missingWedge,
+  smearWidth,
+} from '../dtsModel'
 import { Quad } from '../SceneGeometry'
 import { useCtVolumeState } from '../CtSliceImages'
 import type { SuiteInputs, SuiteViewSpec } from '../types'
@@ -251,34 +258,239 @@ function CanvasCopy({ source, label }: { source: HTMLCanvasElement; label: strin
     />
   )
 }
-export function TomosynthesisMonitor({ model }: { model: Tomosynthesis }) {
+/**
+ * Report 4.2: an optional teaching overlay on the reconstructed plane. Off by default, so the image
+ * is read unmarked first and the raw pixels are always one click away; the canvas underneath is
+ * never drawn on. It marks where the model placed the tool and the target — never what was found —
+ * and an object the selected plane does not pass through gets a dotted guide and its distance, not
+ * an outline.
+ */
+export function TomosynthesisMonitor({
+  model,
+  planeDepth,
+  allowOverlay = true,
+}: {
+  model: Tomosynthesis
+  planeDepth: number
+  /** A check reads the image unaided: marking which plane holds the tool would answer it. */
+  allowOverlay?: boolean
+}) {
   const failed = model.failed || (model.selectedLayer !== 'measured' && model.priorFailed)
   const state = failed ? 'failed' : model.images ? 'ready' : 'loading'
+  const [overlay, setOverlay] = useState(false)
+  const toggleId = useId()
+  // The planning CT was acquired before the tool was placed; there is no tool in it to point at.
+  const objects = dtsOverlayObjects(planeDepth).filter(
+    (object) => object.id !== 'tool' || model.selectedLayer !== 'prior',
+  )
+  const mm = (value: number) => `${Math.abs(value).toFixed(0)} mm`
   return (
-    <div
-      className={styles.monitor}
-      data-dts-state={state}
-      data-projection-state={state}
-      data-image-provenance={model.selectedLayer}
-    >
-      {model.images ? (
-        <CanvasCopy
-          source={model.images.plane}
-          label={
-            model.selectedLayer === 'measured'
-              ? 'Teaching focal plane from limited-angle projections'
-              : model.selectedLayer === 'prior'
-                ? 'Planning CT prior, coloured teal'
-                : 'Teaching focal plane blended with a teal planning CT prior'
-          }
-        />
-      ) : (
-        <p className={styles.imageStatus}>
-          {' '}
-          {failed ? 'Teaching image unavailable.' : 'Preparing the teaching plane…'}{' '}
-        </p>
+    <>
+      <div
+        className={styles.monitor}
+        data-dts-state={state}
+        data-projection-state={state}
+        data-image-provenance={model.selectedLayer}
+        data-dts-overlay={allowOverlay && overlay ? 'shown' : 'hidden'}
+      >
+        {model.images ? (
+          <CanvasCopy
+            source={model.images.plane}
+            label={
+              model.selectedLayer === 'measured'
+                ? 'Teaching focal plane from limited-angle projections'
+                : model.selectedLayer === 'prior'
+                  ? 'Planning CT prior, coloured teal'
+                  : 'Teaching focal plane blended with a teal planning CT prior'
+            }
+          />
+        ) : (
+          <p className={styles.imageStatus}>
+            {' '}
+            {failed ? 'Teaching image unavailable.' : 'Preparing the teaching plane…'}{' '}
+          </p>
+        )}
+        {allowOverlay && overlay && model.images && (
+          <svg
+            viewBox={`0 0 ${DTS_PLANE.sizePx} ${DTS_PLANE.sizePx}`}
+            role="img"
+            aria-label="Teaching overlay of the modeled tool and target positions"
+            data-dts-overlay-marks
+          >
+            {objects.map((object) => {
+              const { x, y, w, h } = object.box
+              const pad = 5
+              const colour = object.id === 'tool' ? '#9be7da' : '#f0c27d'
+              const labelY = object.id === 'tool' ? y - pad - 5 : y + h + pad + 11
+              return (
+                <g
+                  key={object.id}
+                  data-dts-mark={object.id}
+                  data-in-plane={object.inPlane ? 'true' : 'false'}
+                >
+                  {/* Drawn around the object, never over it, so its pixels stay readable. */}
+                  <rect
+                    x={x - pad}
+                    y={y - pad}
+                    width={w + pad * 2}
+                    height={h + pad * 2}
+                    rx={object.id === 'target' ? (w + pad * 2) / 2 : 3}
+                    fill="none"
+                    stroke={colour}
+                    strokeWidth={object.inPlane ? 1.4 : 1}
+                    strokeDasharray={object.inPlane ? undefined : '2 4'}
+                    opacity={object.inPlane ? 1 : 0.75}
+                  />
+                  <text
+                    x={object.id === 'tool' ? x - pad : x + w / 2}
+                    y={labelY}
+                    textAnchor={object.id === 'tool' ? 'start' : 'middle'}
+                    fontSize="8.5"
+                    fill={colour}
+                    stroke="#05070c"
+                    strokeWidth="2.2"
+                    paintOrder="stroke"
+                  >
+                    {object.inPlane
+                      ? `${object.label} · in this plane`
+                      : `${object.label} · ${mm(object.fromPlaneMm)} from this plane`}
+                  </text>
+                </g>
+              )
+            })}
+          </svg>
+        )}
+      </div>
+      {allowOverlay && (
+        <div className={styles.overlayToggle}>
+          <label htmlFor={toggleId}>
+            <input
+              id={toggleId}
+              type="checkbox"
+              checked={overlay}
+              disabled={!model.images}
+              onChange={(event) => setOverlay(event.target.checked)}
+              data-dts-overlay-toggle
+            />
+            Show where the model placed the tool and the target
+          </label>
+          {overlay && (
+            <p data-dts-overlay-note>
+              A teaching overlay drawn from the model’s authored coordinates, not something detected
+              in this image. A solid outline means the selected plane passes through that object; a
+              dotted one marks an object that lies off this plane, where the image can show only its
+              blur.
+              {model.selectedLayer === 'prior'
+                ? ' The planning CT was acquired before the tool was placed, so no tool is marked on it.'
+                : ''}{' '}
+              Clear the box to read the image unmarked.
+            </p>
+          )}
+        </div>
       )}
-    </div>
+    </>
+  )
+}
+/**
+ * Report 4.3 (fellow walkthrough, PDF p.34): the thirteen projections are about 65 px wide, too
+ * small to see the tool move against the anatomy from one end of the sweep to the other — which is
+ * the whole basis of shift-and-add. A thumbnail now opens that same projection enlarged, in place,
+ * and Previous/Next step through the sweep so the shift can be watched. The enlarged image is a
+ * copy of the thumbnail's own canvas and carries its position in the sweep and its angle, so the
+ * two can never name different acquisitions. It is not a modal: Escape or Close returns focus to
+ * the thumbnail that opened it.
+ */
+function ProjectionFilmstrip({ model }: { model: Tomosynthesis }) {
+  const frames = model.images?.projections.slice(0, model.count) ?? []
+  const [open, setOpen] = useState<{ index: number; origin: number } | null>(null)
+  const thumbs = useRef(new Map<number, HTMLButtonElement>())
+  const enlarged = useRef<HTMLElement>(null)
+  const origin = open?.origin
+  const selected = open !== null && open.index < frames.length ? open.index : null
+  useEffect(() => {
+    // Enter the newly opened view so Escape and ordinary Tab navigation work immediately.
+    // Browsing Previous/Next preserves the active control and the original return destination.
+    if (origin !== undefined) enlarged.current?.focus()
+  }, [origin])
+  const close = () => {
+    setOpen(null)
+    if (origin !== undefined) thumbs.current.get(origin)?.focus()
+  }
+  return (
+    <>
+      {selected !== null && (
+        <figure
+          ref={enlarged}
+          tabIndex={-1}
+          className={styles.enlarged}
+          data-dts-enlarged={selected}
+          onKeyDown={(event) => {
+            if (event.key !== 'Escape') return
+            event.stopPropagation()
+            close()
+          }}
+        >
+          <CanvasCopy
+            key={selected}
+            source={frames[selected].canvas}
+            label={`Teaching projection ${selected + 1} of ${frames.length} at ${frames[selected].angle} degrees, enlarged`}
+          />
+          <figcaption>
+            Projection {selected + 1} of {frames.length} · {frames[selected].angle}° · the same
+            pixels as the thumbnail, enlarged. Step through the sweep and watch the tool shift
+            against the anatomy.
+          </figcaption>
+          <div className={styles.enlargedActions}>
+            <button
+              type="button"
+              disabled={selected === 0}
+              onClick={() => {
+                // Do not strand focus on a button that becomes disabled at the sweep boundary.
+                if (selected === 1) enlarged.current?.focus({ preventScroll: true })
+                setOpen({ index: selected - 1, origin: origin! })
+              }}
+              data-dts-enlarged-previous
+            >
+              Previous projection
+            </button>
+            <button
+              type="button"
+              disabled={selected >= frames.length - 1}
+              onClick={() => {
+                if (selected === frames.length - 2) enlarged.current?.focus({ preventScroll: true })
+                setOpen({ index: selected + 1, origin: origin! })
+              }}
+              data-dts-enlarged-next
+            >
+              Next projection
+            </button>
+            <button type="button" onClick={close} data-dts-enlarged-close>
+              Close enlarged view
+            </button>
+          </div>
+        </figure>
+      )}
+      <div className={styles.filmstrip}>
+        {frames.map((p, i) => (
+          <figure key={i} className={styles.snapshot} data-dts-frame={i}>
+            <button
+              type="button"
+              className={styles.thumb}
+              ref={(node) => {
+                if (node) thumbs.current.set(i, node)
+                else thumbs.current.delete(i)
+              }}
+              aria-pressed={selected === i}
+              aria-label={`Enlarge teaching projection ${i + 1} of ${frames.length} at ${p.angle} degrees`}
+              onClick={() => setOpen(selected === i ? null : { index: i, origin: i })}
+            >
+              <CanvasCopy source={p.canvas} label={`Teaching projection at ${p.angle} degrees`} />
+            </button>
+            <figcaption>{p.angle}°</figcaption>
+          </figure>
+        ))}
+      </div>
+    </>
   )
 }
 export function TomosynthesisPanels({
@@ -335,14 +547,7 @@ export function TomosynthesisPanels({
           )}
         </fieldset>
       )}
-      <div className={styles.filmstrip}>
-        {model.images?.projections.slice(0, model.count).map((p, i) => (
-          <figure key={i} className={styles.snapshot} data-dts-frame={i}>
-            <CanvasCopy source={p.canvas} label={`Teaching projection at ${p.angle} degrees`} />
-            <figcaption>{p.angle}°</figcaption>
-          </figure>
-        ))}
-      </div>
+      <ProjectionFilmstrip model={model} />
       <p>
         Tool-plane spread:{' '}
         {smearWidth(DTS.toolPlaneRelativeMm, inputs.planeDepth, inputs.sweepDeg).toFixed(1)} mm ·

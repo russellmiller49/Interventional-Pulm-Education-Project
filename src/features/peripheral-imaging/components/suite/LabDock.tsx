@@ -1,5 +1,5 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   LAB_CONTROLS,
   LAB_METRICS,
@@ -49,12 +49,42 @@ export function LabDock(props: ImagingSuitePaneProps & { disabledControls?: Read
           (!props.independent || !MODEL_KEYS.has(c.key)),
       )
     : []
+  // Report 3.8: several readouts update together, and nothing said which of them the last control
+  // change had moved. A readout is marked from the change that moved it until the next change; it
+  // is a statement about the display, and no value, unit or formula is touched.
+  const shown = metricIds.map((metric) => `${metric}=${formatReadout(metric, readouts[metric])}`)
+  const shownKey = shown.join('|')
+  const [tracked, setTracked] = useState<{
+    readonly key: string
+    readonly shown: readonly string[]
+    readonly changed: ReadonlySet<string>
+  }>({ key: shownKey, shown, changed: new Set() })
+  if (tracked.key !== shownKey) {
+    // Adjusted while rendering, from the previous render's readouts, rather than in an effect.
+    const moved = shown
+      .filter((entry) => !tracked.shown.includes(entry))
+      .map((entry) => entry.split('=')[0])
+    // Every readout moving at once is a reset or a new example, not one control's effect.
+    const changed = moved.length < shown.length ? new Set(moved) : new Set<string>()
+    setTracked({ key: shownKey, shown, changed })
+  }
+  const changed = tracked.changed
   useEffect(() => {
     if (!spotlightKey) return
     document.getElementById(controlElementId(spotlightKey))?.focus({ preventScroll: true })
   }, [spotlightKey])
   return (
-    <div className={styles.dock}>
+    <div className={styles.dock} data-lab-dock>
+      {/* Report 2.13 (fellow walkthrough, PDF p.21/p.27): the step's checklist was printed in the
+          explanation column, which the comparison workbench puts below the fold, while the footer
+          said "the changes listed below". It is the list of what these controls are for, so it
+          leads the dock that holds them. */}
+      {props.goals.length > 0 && (
+        <div className={styles.goalBlock} data-dock-goals>
+          <p className={styles.goalHeading}>What to do in this step</p>
+          <LabGoals goals={props.goals} />
+        </div>
+      )}
       {view.lab && controls.length > 0 && (
         <fieldset className={styles.controls} disabled={!controlsEnabled} data-suite-controls>
           <legend>Image controls</legend>
@@ -167,13 +197,16 @@ export function LabDock(props: ImagingSuitePaneProps & { disabledControls?: Read
       )}
       <dl className={styles.readouts} data-readouts>
         {metricIds.map((metric) => (
-          <div key={metric} data-readout={metric}>
+          <div
+            key={metric}
+            data-readout={metric}
+            data-readout-changed={changed.has(metric) ? 'true' : undefined}
+          >
             <dt>{LAB_METRICS[metric].label}</dt>
             <dd>{formatReadout(metric, readouts[metric])}</dd>
           </div>
         ))}
       </dl>
-      <LabGoals goals={props.goals} />
     </div>
   )
 }
