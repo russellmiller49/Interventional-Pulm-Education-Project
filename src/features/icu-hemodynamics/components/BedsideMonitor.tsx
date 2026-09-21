@@ -12,6 +12,7 @@ import {
   recentTracePressureMetrics,
   thermodilutionAcceptedAverage,
 } from '../engine'
+import { catheterSimulationNotice } from '../engine/catheterSafety'
 import { CARDIAC_PHASE } from '../engine/waveformMorphology'
 import { WaveformStrip, type WaveformLandmark, type WaveformPhaseCursor } from './WaveformStrip'
 import styles from './icu-hemodynamics.module.css'
@@ -149,8 +150,12 @@ export function BedsideMonitor({
         state.catheter.position === 'wedge'),
   )
   const cvpScaleMaximum = lowPressureScaleMaximum(measurements.rapMmHg + 10)
+  const falseWedge = state.measurementSystem.artifact === 'false-wedge'
+  // What the simulation itself is restricting, named as a simulation notice rather than smuggled
+  // into the device alarm bar (report L9-02).
+  const simulationNotice = catheterSimulationNotice(state)
   const wedgeScaleMaximum = lowPressureScaleMaximum(
-    state.measurementSystem.artifact === 'false-wedge'
+    falseWedge
       ? measurements.papSystolicMmHg + 5
       : (measurements.pawpMmHg ?? measurements.papDiastolicMmHg) + 8,
   )
@@ -180,13 +185,19 @@ export function BedsideMonitor({
         : state.catheter.position === 'wedge'
           ? {
               field: 'pcwpMmHg',
-              label: 'PAWP',
+              // A channel is named for what it is carrying. Under the false-wedge artifact the
+              // engine deliberately draws this channel from the pulmonary-artery waveform, because
+              // retained pulsatility is what an incomplete occlusion looks like — so naming it
+              // PAWP asserted the one thing the tracing denies (report L9-01).
+              label: falseWedge ? 'PAC distal' : 'PAWP',
               minimum: 0,
               maximum: wedgeScaleMaximum,
               color: '#ffd166',
-              landmarks: WEDGE_LANDMARKS,
-              referenceValue: measurements.pawpMmHg ?? measurements.papDiastolicMmHg,
-              referenceLabel: 'end-exp mean',
+              landmarks: falseWedge ? PA_LANDMARKS : WEDGE_LANDMARKS,
+              referenceValue: falseWedge
+                ? measurements.meanPapMmHg
+                : (measurements.pawpMmHg ?? measurements.papDiastolicMmHg),
+              referenceLabel: falseWedge ? 'trace mean' : 'end-exp mean',
               transitionFrom:
                 state.catheter.wedgeStartedAt === null
                   ? undefined
@@ -288,11 +299,27 @@ export function BedsideMonitor({
                 )}/${value(pacTraceMetrics?.diastolic ?? measurements.papDiastolicMmHg)}`,
                 detail: `mPAP ${value(pacTraceMetrics?.mean ?? measurements.meanPapMmHg)}`,
               }
-            : {
-                label: 'PAC · PAWP',
-                value: value(pacTraceMetrics?.mean ?? measurements.pawpMmHg),
-                detail: 'live occlusion mean · mmHg',
-              }
+            : falseWedge
+              ? {
+                  label: 'PAC · distal',
+                  value: value(pacTraceMetrics?.mean ?? measurements.pawpMmHg),
+                  // Not an occlusion mean: the tracing has kept its pulmonary-artery pulsatility,
+                  // which is what an incomplete occlusion looks like. The balloon state is printed
+                  // because the contradiction the report found was between a claimed live
+                  // occlusion and a balloon that was down (L9-01, Figure 37 callout 3).
+                  detail: `trace mean · balloon ${
+                    state.catheter.balloonInflated ? 'up' : 'down'
+                  } · not a validated occlusion · mmHg`,
+                }
+              : {
+                  label: 'PAC · PAWP',
+                  value: value(pacTraceMetrics?.mean ?? measurements.pawpMmHg),
+                  detail: `${
+                    state.catheter.balloonInflated
+                      ? 'balloon occlusion'
+                      : 'occluded branch, balloon down'
+                  } · live mean · mmHg`,
+                }
 
   if (focus !== 'all') {
     const arterial = focus === 'arterial'
@@ -373,6 +400,12 @@ export function BedsideMonitor({
         </div>
         <time>{state.timeSeconds.toFixed(1)} s</time>
       </header>
+
+      {simulationNotice && !withheld ? (
+        <p className={styles.simulationNotice} role="status" data-simulation-safety-notice>
+          {simulationNotice}
+        </p>
+      ) : null}
 
       <div className={styles.alarmBar} role="status" aria-live="polite">
         {activeAlarms.length === 0 ? (
@@ -504,7 +537,11 @@ export function BedsideMonitor({
               {state.catheter.storedWedgeMmHg !== null
                 ? 'stored end-exp · mmHg'
                 : state.catheter.position === 'wedge'
-                  ? 'live trace visible · not stored'
+                  ? // "A live trace is visible" said nothing about whether that trace is an
+                    // occlusion pressure. Under the false-wedge artifact it is not (report L9-01).
+                    falseWedge
+                    ? 'nothing stored · the distal trace is not a valid occlusion'
+                    : 'live occlusion trace visible · not stored'
                   : 'not captured'}
             </small>
           </div>

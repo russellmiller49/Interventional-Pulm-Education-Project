@@ -296,14 +296,24 @@ export function HemodynamicHeart3D({ state }: { state: HemodynamicSimulationStat
       ? 'at axis'
       : `${Math.abs(level).toFixed(0)} cm ${level > 0 ? 'above' : 'below'} axis`
   const balloonVisuallyInflated = isPacBalloonVisuallyInflated(state.catheter)
-  const balloonLabel =
-    state.catheter.position === 'wedge'
+  /*
+   * The balloon's state, read from the balloon rather than from where the tip is.
+   *
+   * A tip at the wedge position used to be labelled "INFLATED for brief PA occlusion" whatever the
+   * flags said, so the capstone — whose tip sits distally on a deflated balloon — reported an
+   * inflation that was not happening, beside a monitor channel that claimed an occlusion mean
+   * (report L9-01/L9-02, Figure 37). The flags are the answer; the position only says what the
+   * inflation is for.
+   */
+  const balloonLabel = state.catheter.balloonInflated
+    ? state.catheter.position === 'wedge'
       ? 'INFLATED for brief PA occlusion'
-      : state.catheter.floatBalloonInflated
-        ? 'INFLATED for flow-directed advancement'
-        : state.catheter.balloonInflated
-          ? 'INFLATED'
-          : 'deflated'
+      : 'INFLATED'
+    : state.catheter.floatBalloonInflated
+      ? 'INFLATED for flow-directed advancement · raised by this simulation, not by you'
+      : state.catheter.position === 'wedge'
+        ? 'deflated — the tip is occluding a branch without it'
+        : 'deflated'
 
   function adjustView({
     azimuth = 0,

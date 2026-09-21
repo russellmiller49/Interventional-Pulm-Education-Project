@@ -29,6 +29,7 @@ import { useRouter } from '@/i18n/navigation'
 import {
   pawpPlausibilityCommitment,
   pawpRecoveryCommitment,
+  pawpRecoveryOutcomes,
 } from '../../content/pawpCaptureSequence'
 import { hemodynamicsPathway } from '../../content/pathwayResolver'
 import { hemodynamicCaseById } from '../../content/cases'
@@ -45,6 +46,15 @@ import {
   withSectionVisited,
 } from '../../engine/selfPacedProgress'
 import {
+  catheterTransitionAllowed,
+  catheterTransitionHold,
+  paReturnEpisodeKey,
+  paWaveformReturned,
+} from '../../engine/catheterSafety'
+import { catheterFlushBlocked } from '../../engine/pressureObservation'
+import {
+  DYNAMIC_RESPONSE_CLASSIFIED_CHECK,
+  LEVEL_TOLERANCE_CM,
   PA_RETURN_CHECK,
   stageGoalLabel,
   stageGoalMet,
@@ -165,7 +175,27 @@ const DECISION_SHAPED_TRANSFERS: ReadonlySet<string> = new Set([
   'pac-td-transfer-1',
 ])
 
+/**
+ * Titles for the items whose own explanation contradicts the shared card's default sentence.
+ *
+ * "That mechanism predicts a different pattern" is true of most wrong answers here: a wrong
+ * mechanism usually does predict something else on the screen. §1 Task 2 is the exception the
+ * report caught (L1-03) — its whole teaching point is that a failing heart, vasodilation and a low
+ * volume can all produce the same displayed number, so a header saying the mechanism predicts a
+ * different pattern says the opposite of the body underneath it. The stem, the options, their
+ * rationales and the key are untouched; only this one sentence is written for this one item.
+ */
+const ITEM_FRAMES: Readonly<
+  Record<string, Partial<Record<ClinicalLearningItem['choices'][number]['plausibility'], string>>>
+> = {
+  'hd-why-predict-1': {
+    'incorrect-mechanism': 'That cause cannot be picked out from this number',
+  },
+}
+
 function verdictFrames(item: ClinicalLearningItem) {
+  const specific = ITEM_FRAMES[item.id]
+  if (specific) return specific
   return item.itemType === 'management-decision' || DECISION_SHAPED_TRANSFERS.has(item.id)
     ? DECISION_FRAMES
     : undefined
@@ -239,6 +269,7 @@ function HemodynamicsStageSession({
   const [recognitionRecord, setRecognitionRecord] = useState(emptyRecognitionRecord)
   const [confirmedPlaces, setConfirmedPlaces] = useState<Set<string>>(() => new Set())
   const [placeNote, setPlaceNote] = useState<string | null>(null)
+  const [placeSelection, setPlaceSelection] = useState<string | null>(null)
   // In-session feedback state for the derived-hemodynamics drills. Nothing here gates a step.
   const [derivedSeparated, setDerivedSeparated] = useState(false)
   const [derivedDisagreementPreserved, setDerivedDisagreementPreserved] = useState(false)
@@ -257,7 +288,16 @@ function HemodynamicsStageSession({
   const finished = commitments.finished
   const interaction = activeStep.interaction
   const presentation = hemodynamicsTaskPresentation(lesson.sectionId, activeStep)
-  const balloonActive = state.catheter.balloonInflated || state.catheter.floatBalloonInflated
+  /*
+   * One rule, consulted by every route out of a step (HD-PRE-REVIEW-01 / report L5-07).
+   *
+   * `catheterTransitionHold` reads both balloon flags and an in-flight transition together, so
+   * Continue, Finish, the task list, Back, the section links, Restart and Save & exit can no longer
+   * disagree about whether the simulation may be left. `held` replaces the old `balloonActive`,
+   * which several of those routes did not consult at all.
+   */
+  const hold = catheterTransitionHold(state)
+  const held = hold !== null
   const readingParts = flowReadingParts(sectionId, interaction.kind, activeStep.ordinal)
   const [readingPositions, setReadingPositions] = useState<Record<string, number>>({})
   const readingIndex = readingPositions[activeStep.id] ?? 0
@@ -389,7 +429,9 @@ function HemodynamicsStageSession({
   /** Move past a step — performing it only if the learner's own simulation work on it is done. */
   const continuePast = useCallback(
     (index: number) => {
-      if (state.catheter.balloonInflated) return
+      // The same eligibility rule the banner, the task list and Finish use. Reading only
+      // `balloonInflated` here let a section be left mid-float (report L5-07).
+      if (!catheterTransitionAllowed(state)) return
       const step = lesson.steps[index]
       if (!step) return
       const performed = simulationWorkPerformed(step, state, commitments, taskBaselines[step.id])
@@ -419,7 +461,7 @@ function HemodynamicsStageSession({
 
   /** Open any step live: later ones are reached without doing the steps between; earlier ones restart. */
   function moveTo(target: number) {
-    if (balloonActive) return
+    if (held) return
     const index = Math.max(0, Math.min(target, lesson.steps.length - 1))
     if (index === liveIndex && viewIndex === null) return
     const entry = entryStateFor(lesson, index, liveIndex)
@@ -431,7 +473,7 @@ function HemodynamicsStageSession({
   }
 
   function goBack() {
-    if (balloonActive || activeIndex <= 0) return
+    if (held || activeIndex <= 0) return
     setViewIndex(activeIndex - 1)
   }
 
@@ -440,7 +482,7 @@ function HemodynamicsStageSession({
   }
 
   function goToSection(nextId: string) {
-    if (balloonActive || nextId === sectionId) return
+    if (held || nextId === sectionId) return
     // Changing sections intentionally starts that section's safe session. A document navigation
     // avoids racing query-only Next transitions against the current session's phase history.
     window.location.assign(
@@ -449,7 +491,7 @@ function HemodynamicsStageSession({
   }
 
   function finish() {
-    if (state.catheter.balloonInflated) return
+    if (!catheterTransitionAllowed(state)) return
     const performed = simulationWorkPerformed(
       activeStep,
       state,
@@ -529,8 +571,18 @@ function HemodynamicsStageSession({
     (activeStep.chamberLabel === 'shown' || locationRevealed) &&
     activeStep.surface !== 'recognition'
 
+  /*
+   * Confirming a place, and saying what happened where it was said.
+   *
+   * The response was rendered in the Now card while the pins are in the simulator pane, so a
+   * mismatched or premature confirmation looked like nothing at all (report L5-02). It is rendered
+   * at the control now, and the row the learner pressed stays selected, so a second press on the
+   * same row has an answer on screen rather than needing a second event to produce one. Nothing is
+   * counted: the response describes the tracing at that moment and clears when the tip moves.
+   */
   const confirmPlaceOnMap = (choiceId: string) => {
     const position = choiceId as CatheterPosition
+    setPlaceSelection(choiceId)
     if (state.catheter.position === position && state.catheter.targetPosition === null) {
       dispatch({ type: 'VALIDATE_SIGNAL', check: `waveform-confirmed-${position}` })
       setConfirmedPlaces((current) => new Set([...current, choiceId]))
@@ -542,6 +594,29 @@ function HemodynamicsStageSession({
           : 'The tracing on the monitor does not match that place. Look at the shape again.',
       )
     }
+  }
+
+  /*
+   * What a confirmation and its response belong to, adjusted during render rather than in an
+   * effect so the same render already shows the right thing.
+   *
+   * A response belongs to the tracing it was given about, so it clears when the tip moves. A
+   * confirmation belongs to the task it was made in: the badges used to carry into the next task,
+   * so a later step opened with places already marked confirmed (report L5-06, Figure 28).
+   */
+  const placeKey = `${state.catheter.position}:${state.catheter.targetPosition ?? ''}`
+  const [placeTaskId, setPlaceTaskId] = useState(activeStep.id)
+  const [placeObservation, setPlaceObservation] = useState(placeKey)
+  if (placeTaskId !== activeStep.id) {
+    setPlaceTaskId(activeStep.id)
+    setConfirmedPlaces(new Set())
+    setPlaceNote(null)
+    setPlaceSelection(null)
+  }
+  if (placeObservation !== placeKey) {
+    setPlaceObservation(placeKey)
+    setPlaceNote(null)
+    setPlaceSelection(null)
   }
 
   const mapAnswer: CatheterMapAnswer | undefined = locationItem
@@ -578,11 +653,12 @@ function HemodynamicsStageSession({
           targets: Object.fromEntries(
             POSITION_CHOICES.map((choice) => [choice.id, STOP_FOR_POSITION[choice.id]]),
           ),
-          selectedChoiceId: null,
+          selectedChoiceId: placeSelection,
           onSelect: confirmPlaceOnMap,
           disabled: performedNow,
           confirmed: confirmedPlaces,
           hint: 'After each move, wait for the tracing to settle, then confirm the place it says. A place is confirmed only when the tracing matches it.',
+          note: placeNote,
         }
       : undefined
 
@@ -619,12 +695,28 @@ function HemodynamicsStageSession({
             : unmet.id === 'dynamic-response-corrected'
               ? 'repair'
               : 'flush'
+      /*
+       * Which control is next for a case milestone.
+       *
+       * These three cover several operations each, so "the control" depends on where the run has
+       * got to — and, for the line, on whether the catheter is allowing a flush at all. Pointing
+       * at a disabled Flush while the tip sits in an occluding position is the same defect the
+       * capstone's stated order had (report L9-02): the control that moves the run on is the one
+       * that unblocks it.
+       */
       case 'intervention':
-        return unmet.id === 'reposition-catheter'
-          ? 'deflate'
-          : unmet.id === 'repeat-valid-thermodilution'
-            ? 'inject'
-            : 'level'
+        if (unmet.id === 'reposition-catheter') {
+          return state.catheter.balloonInflated ? 'deflate' : 'withdraw'
+        }
+        if (unmet.id === 'repeat-valid-thermodilution') {
+          return catheterFlushBlocked(state, 'pulmonary-artery') ? 'withdraw' : 'inject'
+        }
+        if (Math.abs(state.measurementSystem.transducerLevelCm) > LEVEL_TOLERANCE_CM) return 'level'
+        if (!state.measurementSystem.zeroed) return 'zero'
+        if (catheterFlushBlocked(state, 'pulmonary-artery')) return 'withdraw'
+        return state.signalValidationChecks.includes(DYNAMIC_RESPONSE_CLASSIFIED_CHECK)
+          ? 'repair'
+          : 'flush'
       default:
         return null
     }
@@ -635,6 +727,15 @@ function HemodynamicsStageSession({
     const timer = window.setTimeout(() => {
       const control = document.getElementById(quickControlId(spotlight.key))
       if (!control) return
+      // The capstone groups its docks in disclosures, and a control inside a closed one cannot take
+      // focus: "Show me where" quietly did nothing there. Open the disclosures on the way down.
+      for (
+        let group = control.closest('details');
+        group;
+        group = group.parentElement?.closest('details') ?? null
+      ) {
+        group.open = true
+      }
       const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
       control.focus({ preventScroll: true })
       control.scrollIntoView?.({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' })
@@ -655,7 +756,7 @@ function HemodynamicsStageSession({
    * The Now card
    * ---------------------------------------------------------------- */
   const stepPosition = `Task ${activeStep.ordinal} of ${lesson.steps.length}`
-  const canGoBack = activeIndex > 0 && !balloonActive
+  const canGoBack = activeIndex > 0 && !held
   const showWhereAction =
     firstUnmetKey && !performedNow && !lookingBack
       ? {
@@ -960,7 +1061,7 @@ function HemodynamicsStageSession({
               type="button"
               className={shellStyles.nowSecondary}
               data-skip-task
-              disabled={balloonActive}
+              disabled={held}
               onClick={() => continuePast(activeIndex)}
             >
               Continue without finishing the walk
@@ -1060,11 +1161,6 @@ function HemodynamicsStageSession({
                 ))}
               </ul>
             ) : null}
-            {placeNote ? (
-              <p className={stageStyles.taskInstruction} role="status" data-place-note>
-                {placeNote}
-              </p>
-            ) : null}
             {interaction.kind === 'observe' && lesson.runtime.comparison === 'ventricle-artery' ? (
               <VentricleArtery state={state} />
             ) : null}
@@ -1103,14 +1199,18 @@ function HemodynamicsStageSession({
             goals.some((goal) => goal.type === 'check' && goal.id === PA_RETURN_CHECK) ? (
               <ReturnCheck
                 state={state}
-                onConfirm={() => dispatch({ type: 'VALIDATE_SIGNAL', check: PA_RETURN_CHECK })}
+                onObserved={(episode) =>
+                  dispatch({ type: 'VALIDATE_SIGNAL', check: `${PA_RETURN_CHECK}:${episode}` })
+                }
               />
             ) : null}
             {wedgeQuestions.includes('return') ? (
               <>
                 <ReturnCheck
                   state={state}
-                  onConfirm={() => dispatch({ type: 'VALIDATE_SIGNAL', check: PA_RETURN_CHECK })}
+                  onObserved={(episode) =>
+                    dispatch({ type: 'VALIDATE_SIGNAL', check: `${PA_RETURN_CHECK}:${episode}` })
+                  }
                 />
                 <section
                   className={styles.commitment}
@@ -1354,13 +1454,13 @@ function HemodynamicsStageSession({
       <div ref={nowFocusRef} tabIndex={-1} data-now-focus>
         <NowCard
           model={
-            state.catheter.balloonInflated && nowModel.primary
+            hold && nowModel.primary
               ? {
                   ...nowModel,
                   primary: {
                     ...nowModel.primary,
                     disabled: true,
-                    disabledReason: 'Deflate the balloon and verify recovery before continuing.',
+                    disabledReason: `${hold.state} ${hold.recovery}`,
                   },
                 }
               : nowModel
@@ -1433,7 +1533,7 @@ function HemodynamicsStageSession({
                 <button
                   type="button"
                   aria-current={index === activeIndex ? 'step' : undefined}
-                  disabled={balloonActive || index === activeIndex}
+                  disabled={held || index === activeIndex}
                   onClick={() => {
                     if (index < liveIndex) setViewIndex(index)
                     else if (index === liveIndex) returnToLive()
@@ -1482,7 +1582,7 @@ function HemodynamicsStageSession({
               type="button"
               className={shellStyles.nowPrimary}
               data-practice-pairing={pairing.kind}
-              disabled={balloonActive}
+              disabled={held}
               onClick={() =>
                 router.push({
                   pathname: `${icuHemodynamicsNavBase}/practice`,
@@ -1523,9 +1623,7 @@ function HemodynamicsStageSession({
 
   const header = (
     <SectionHeader
-      breadcrumb={
-        balloonActive ? undefined : { href: icuHemodynamicsNavBase, label: 'ICU Hemodynamics' }
-      }
+      breadcrumb={held ? undefined : { href: icuHemodynamicsNavBase, label: 'ICU Hemodynamics' }}
       kicker={`Section ${lesson.index + 1} of ${lesson.total} · ${lesson.minutes} min`}
       title={lesson.title}
       sectionsControl={
@@ -1539,9 +1637,9 @@ function HemodynamicsStageSession({
       }
       helpRef={helpButtonRef}
       onHelp={() => setHelpOpen(true)}
-      onRestart={balloonActive ? undefined : onRestart}
-      restartLabel="Restart section"
-      saveAndExitHref={balloonActive ? undefined : icuHemodynamicsNavBase}
+      onRestart={onRestart}
+      restartLabel={held ? 'Abandon this simulation and restart the section' : 'Restart section'}
+      saveAndExitHref={held ? undefined : icuHemodynamicsNavBase}
     />
   )
 
@@ -1589,19 +1687,48 @@ function HemodynamicsStageSession({
             aria-label="Guided ICU hemodynamics section"
           >
             <header className={shellStyles.header}>{header}</header>
-            {balloonActive ? (
-              <aside className={flowStyles.safety} role="status">
-                Balloon active. Finish recovery before reviewing or changing sections.
-                {state.catheter.balloonInflated ? (
-                  <button type="button" onClick={() => dispatch({ type: 'DEFLATE_WEDGE' })}>
-                    Deflate balloon
-                  </button>
-                ) : (
+            {hold ? (
+              <aside className={flowStyles.safety} role="status" data-catheter-hold={hold.reason}>
+                <p data-catheter-hold-state>
+                  <strong>{hold.state}</strong>{' '}
                   <span>
-                    Flow-directed advancement is active. Use the catheter controls to complete the
-                    current movement.
+                    Moving on, changing section and Save &amp; exit wait for it, because none of
+                    them would end it. Restarting the section is offered as an abandon instead.
                   </span>
-                )}
+                </p>
+                <p data-catheter-hold-recovery>{hold.recovery}</p>
+                <div className={stageStyles.completionActions}>
+                  {hold.controlKey ? (
+                    <button
+                      type="button"
+                      className={shellStyles.nowSecondary}
+                      data-catheter-hold-locate
+                      onClick={() =>
+                        setSpotlight((current) => ({
+                          stepId: activeStep.id,
+                          key: hold.controlKey!,
+                          count: current?.stepId === activeStep.id ? current.count + 1 : 1,
+                        }))
+                      }
+                    >
+                      <LocateFixed aria-hidden="true" /> Show me that control
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    className={shellStyles.nowSecondary}
+                    data-catheter-hold-abandon
+                    onClick={onRestart}
+                  >
+                    Abandon this simulation and restart the section
+                  </button>
+                </div>
+                <p data-catheter-hold-abandon-note>
+                  Abandoning resets this section&apos;s simulated patient and clears what you
+                  answered here. It is not a float, a confirmed artery, a deflation you performed or
+                  a completed skill, and it records none of those. The sections you have opened or
+                  marked reviewed are untouched.
+                </p>
               </aside>
             ) : null}
             <div className={flowStyles.activity}>{task}</div>
@@ -1630,35 +1757,104 @@ function HemodynamicsStageSession({
  * Pieces
  * ------------------------------------------------------------------ */
 
+/**
+ * The last step of a wedge: say, yourself, whether the artery came back.
+ *
+ * Before HD-PRE-REVIEW-01 this offered one button, "The artery is back", enabled from the moment
+ * the tip was in a confirmed artery — which is before any balloon has gone up. The step the module
+ * calls the one that gets skipped was therefore a click-through, and a click taken in an earlier
+ * task satisfied a later wedge (report L6-05, Figure 32).
+ *
+ * Three things changed and nothing else. The control belongs to the occlusion that has just been
+ * released, so it says so until there is one. Both answers are offered, because "it has not come
+ * back" is the answer the sequence exists to be able to give. And an answer is checked against what
+ * the simulation is actually showing rather than accepted as proof: only an observation the current
+ * tracing supports records the check, a mistaken reading gets the reason and another look, and the
+ * persistent-occlusion branch shows the authored response for that outcome — which stops, does not
+ * flush or manipulate, and escalates. No complication is injected, no attempt is counted, and the
+ * outcomes and the recovery question below stay readable whatever is answered.
+ */
 function ReturnCheck({
   state,
-  onConfirm,
+  onObserved,
 }: {
   readonly state: HemodynamicSimulationState
-  readonly onConfirm: () => void
+  readonly onObserved: (episode: string) => void
 }) {
-  const confirmed = state.signalValidationChecks.includes(PA_RETURN_CHECK)
+  const [answer, setAnswer] = useState<'returned' | 'not-returned' | null>(null)
+  const episode = paReturnEpisodeKey(state)
+  const returned = paWaveformReturned(state)
+  const confirmed =
+    episode !== null && state.signalValidationChecks.includes(`${PA_RETURN_CHECK}:${episode}`)
+  const persistent = pawpRecoveryOutcomes.find((outcome) => !outcome.paWaveformReturned)!
+
+  function answered(choice: 'returned' | 'not-returned') {
+    setAnswer(choice)
+    if (episode !== null && choice === 'returned' && returned) onObserved(episode)
+  }
+
   return (
-    <div className={styles.returnCheck} data-return-check>
+    <div className={styles.returnCheck} data-return-check data-return-episode={episode ?? 'none'}>
       <p>
         <strong>Has the pulmonary-artery tracing come back?</strong> Look at the monitor: the notch,
         the diastolic run-off, the pulsatility.
       </p>
-      <button
-        type="button"
-        className={shellStyles.nowSecondary}
-        disabled={
-          confirmed ||
-          state.catheter.position !== 'pa' ||
-          state.catheter.balloonInflated ||
-          state.catheter.forcedSafetyRecovery
-        }
-        onClick={onConfirm}
-      >
-        {confirmed ? 'The artery is back — confirmed' : 'The artery is back'}
-      </button>
+      {episode === null ? (
+        <p className={styles.dockNote} data-return-unavailable>
+          {state.catheter.balloonInflated
+            ? 'The balloon is still up. This question is about the tracing after it comes down.'
+            : 'Nothing to answer yet: this question is about the tracing after an occlusion in this task has been released.'}
+        </p>
+      ) : (
+        <div className={stageStyles.completionActions}>
+          <button
+            type="button"
+            className={shellStyles.nowSecondary}
+            data-return-answer="returned"
+            aria-pressed={answer === 'returned'}
+            onClick={() => answered('returned')}
+          >
+            {confirmed ? 'The artery is back — recorded' : 'The artery is back'}
+          </button>
+          <button
+            type="button"
+            className={shellStyles.nowSecondary}
+            data-return-answer="not-returned"
+            aria-pressed={answer === 'not-returned'}
+            onClick={() => answered('not-returned')}
+          >
+            It has not come back
+          </button>
+        </div>
+      )}
+      {answer !== null && episode !== null ? (
+        <p
+          role="status"
+          data-return-response={returned === (answer === 'returned') ? 'agrees' : 'differs'}
+        >
+          {answer === 'returned'
+            ? returned
+              ? 'Recorded for this occlusion: pulsatility and the notch are back on the monitor, and the occlusion has ended at the vessel.'
+              : `Not recorded — the tracing does not support that yet. ${whyNotReturned(state)} Look again, and answer when the monitor agrees with you.`
+            : returned
+              ? 'Look again: the tracing on the monitor has its systolic pulse, its diastolic run-off and its dicrotic notch back, which is the artery returning. Nothing is recorded either way.'
+              : `${persistent.whatItMeans} ${persistent.requiredResponse}`}
+        </p>
+      ) : null}
     </div>
   )
+}
+
+/** Why the current tracing is not yet the artery returning, in the simulation's own terms. */
+function whyNotReturned(state: HemodynamicSimulationState): string {
+  const catheter = state.catheter
+  if (catheter.balloonInflated) return 'The balloon is still inflated.'
+  if (catheter.forcedSafetyRecovery)
+    return 'This simulation released the balloon itself at its own cutoff, so the release was not yours and the recovery is still to be established.'
+  if (catheter.targetPosition !== null) return 'The tip is still moving.'
+  if (catheter.position !== 'pa')
+    return `The tip is not in the pulmonary artery; it is at ${positionWords(catheter.position)}.`
+  return 'The simulation does not show the artery back.'
 }
 
 /**

@@ -1279,6 +1279,8 @@ describe('H4 completion and non-regression', () => {
     const wedge = sectionRuntime('pawp-capture')
     const wedgeGoals = [...wedge.actGoals, ...wedge.observeGoals]
     expect(wedgeGoals).toContainEqual({ type: 'check', id: PA_RETURN_CHECK })
+    // The pulmonary-artery-return check belongs to the occlusion it was observed after, so the
+    // state carries the episode it was recorded against (HD-PRE-REVIEW-01 / report L6-05).
     const recovered: HemodynamicSimulationState = {
       ...state,
       catheter: {
@@ -1288,8 +1290,9 @@ describe('H4 completion and non-regression', () => {
         storedAtEndExpiration: true,
         balloonInflated: false,
         forcedSafetyRecovery: true,
+        wedgeEpisodeCount: 1,
       },
-      signalValidationChecks: [PA_RETURN_CHECK],
+      signalValidationChecks: [`${PA_RETURN_CHECK}:episode-1`],
     }
     expect(stageGoalMet({ type: 'balloon-down' }, recovered)).toBe(false)
     expect(goalsMet(wedgeGoals, recovered)).toBe(false)

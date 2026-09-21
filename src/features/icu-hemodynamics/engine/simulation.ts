@@ -623,6 +623,7 @@ export function createInitialHemodynamicState(
       storedWedgeMmHg: null,
       storedAtEndExpiration: false,
       forcedSafetyRecovery: false,
+      wedgeEpisodeCount: 0,
     },
     measurements,
     waveforms,

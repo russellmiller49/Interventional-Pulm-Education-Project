@@ -1,0 +1,203 @@
+{
+  "batch": "HD-PRE-REVIEW-01",
+  "title": "Catheter safety and action truth",
+  "lane": "01",
+  "module": "icu-hemodynamics",
+  "source": "ICU_Hemodynamics_Learner_Walkthrough.docx (Claude in a first-year critical-care-fellow persona, 19 September 2026; 89 pages, 91 findings)",
+  "package": "Interventional-Pulm-Local-Data/module_update_9_19/HD_Claude_Implementation_Pack",
+  "inspectedSha": "c717c9ffae09cb67e19b06a56d37c75487a5605a",
+  "baseSha": "c717c9ffae09cb67e19b06a56d37c75487a5605a",
+  "branch": "claude/emodynamics-9-21",
+  "checkout": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-emodynamics-9-21",
+  "handoff": "docs/gap-remediation/fellow-walkthrough/hemodynamics/HD-PRE-REVIEW-01-handoff.md",
+  "state": "implemented; pull request open; not merged, not deployed",
+  "claims": {
+    "clinicalApproval": false,
+    "sourceReview": false,
+    "deviceReview": false,
+    "realLearnerValidation": false,
+    "usabilitySession": false,
+    "release": false
+  },
+  "sharedFileScope": {
+    "sharedRuntimeFilesChanged": [],
+    "note": "No shared learning-module, critical-care, catalog, progress, analytics, auth or deployment file was changed. The shared AnswerVerdict keyed-alternative correction already on main was verified through the HD route and not duplicated. A-02's omission feedback is rendered HD-locally beside the unchanged shared ScenarioTeachingDebrief."
+  },
+  "engineSurfaceAdded": [
+    "CatheterState.wedgeEpisodeCount (engine/types.ts, set in START_WEDGE)",
+    "engine/catheterSafety.ts: catheterTransitionHold, catheterTransitionAllowed, paReturnEpisodeKey, paWaveformReturned, catheterSimulationNotice",
+    "engine/decisionRecord.ts: observedSystemState, describeObservedSystemState"
+  ],
+  "findings": [
+    {
+      "id": "L1-02",
+      "section": "G",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/content/stageItems.ts",
+      "state": "Learn section 1 task 2, option 'under-filled, so give fluid'",
+      "learnerImpact": "An unsupported treatment inference was headed 'Partly correct. Defensible' over a rationale saying the number cannot pick that cause out.",
+      "fix": "plausibility reasonable-but-incomplete -> incorrect-mechanism; key, option text, rationale and review status unchanged",
+      "hold": "R5 - whether the option should be 'unsafe' is a clinical-key decision, not made here"
+    },
+    {
+      "id": "L1-03",
+      "section": "G",
+      "status": "partly-reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/components/stage/HemodynamicsStageHost.tsx, components/stage/HemodynamicsQuestion.tsx",
+      "state": "Learn section 1 task 2 after checking an answer",
+      "learnerImpact": "The generic subtitle contradicted the item's own body, and the stem vanished with the verdict.",
+      "fix": "item-specific verdict frame for hd-why-predict-1; the stem is kept above the verdict card. Shared alternatives heading verified already correct on main and not duplicated.",
+      "hold": null
+    },
+    {
+      "id": "L4-07",
+      "section": "G",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/content/stageItems.ts",
+      "state": "Learn section 4 task 6, constriction option",
+      "learnerImpact": "A mechanism the same card rejects was labelled defensible.",
+      "fix": "plausibility reasonable-but-incomplete -> incorrect-mechanism; differential and key unchanged",
+      "hold": null
+    },
+    {
+      "id": "L5-02",
+      "section": "B",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/components/catheter-map/CatheterMap.tsx, components/stage/HemodynamicsStageHost.tsx",
+      "state": "Learn section 5 task 3, pressing a place the tracing does not match",
+      "learnerImpact": "The response rendered in another pane and the row never showed a selection, so a mismatched or repeated press looked like nothing happening.",
+      "fix": "response rendered inside the map's answer control; pressed row stays selected; both clear when the tip moves. No miss count.",
+      "hold": null
+    },
+    {
+      "id": "L5-03",
+      "section": "B",
+      "status": "reproduced-partly-fixed",
+      "path": "src/features/icu-hemodynamics/components/HemodynamicHeart3D.tsx, components/stage/StageDocks.tsx",
+      "state": "Learn section 5 tasks 2-3",
+      "learnerImpact": "The status box contradicted the stem, and the two balloon decisions the intro stresses were never practised.",
+      "fix": "status box reads the balloon flags rather than the tip position; the tip controls state that the simulation raises and lowers the flow-directed balloon for the learner, credited to nobody",
+      "hold": "R1 - whether inflate/deflate should become learner controls"
+    },
+    {
+      "id": "L5-06",
+      "section": "D",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/components/stage/StageDocks.tsx, engine/stageRuntime.ts, components/stage/HemodynamicsStageHost.tsx",
+      "state": "Learn section 5 task 7 with the tip in the right atrium",
+      "learnerImpact": "A control labelled for the pulmonary artery worked in the atrium, under a rule the simulation does not enforce, beside stale confirmation badges.",
+      "fix": "channel named as the distal lumen with the tip's current place; the printed rule now states the restriction the reducer applies; badges reset per task. Flushing while wedged, balloon-up or mid-transition is still blocked.",
+      "hold": "R1 - what the RA flush control represents clinically"
+    },
+    {
+      "id": "L5-07",
+      "section": "A",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/engine/catheterSafety.ts, components/stage/HemodynamicsStageHost.tsx",
+      "state": "Learn section 5 task 8 with the tip in the right ventricle and the flow-directed balloon up (report Figure 29)",
+      "learnerImpact": "The section could be finished and marked reviewed from a state the same section teaches never to leave.",
+      "fix": "one HD-local eligibility rule reading both balloon flags and an in-flight transition, consumed by Continue, skip, Finish, task-list selection, Back, section links, restart, save-and-exit and the completion actions",
+      "hold": null
+    },
+    {
+      "id": "L5-08",
+      "section": "A",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/components/stage/HemodynamicsStageHost.tsx",
+      "state": "Learn section 5 header banner while a balloon is up",
+      "learnerImpact": "'Finish recovery' named no action and replaced the only ways out.",
+      "fix": "state, recovery and the control that performs it, with a focus affordance that opens collapsed disclosures, plus an explicitly uncredited abandon-and-restart",
+      "hold": null
+    },
+    {
+      "id": "L6-05",
+      "section": "D",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/engine/catheterSafety.ts, engine/stageRuntime.ts, engine/types.ts, engine/reducer.ts, components/stage/HemodynamicsStageHost.tsx",
+      "state": "Learn section 6 tasks 4 and 7",
+      "learnerImpact": "The step the module calls the one that gets skipped had one answer, clickable before any balloon went up.",
+      "fix": "confirmation keyed to the current occlusion episode; both answers offered after a real release; the answer is checked against the current tracing; the not-returned branch shows the authored stop/escalate response",
+      "hold": "R8 / HD-03-08 - persistent wedge guidance unresolved; no withdrawal distance invented"
+    },
+    {
+      "id": "L9-01",
+      "section": "C",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/components/BedsideMonitor.tsx, components/HemodynamicHeart3D.tsx",
+      "state": "Learn section 9 tasks 1-3 (report Figure 37)",
+      "learnerImpact": "A channel labelled PAWP with a live occlusion mean while the balloon was down and the trace kept PA pulsatility.",
+      "fix": "under the authored false-wedge artifact the channel reads PAC distal / trace mean / balloon down / not a validated occlusion, with PA landmarks; a real balloon occlusion still reads PAWP",
+      "hold": "R1, R3 - which fault the capstone should teach is still an owner decision; the scenario was not changed"
+    },
+    {
+      "id": "L9-02",
+      "section": "C",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/content/stageLessons.ts, components/stage/HemodynamicsSimulatorPane.tsx, components/BedsideMonitor.tsx, engine/catheterSafety.ts, components/stage/HemodynamicsStageHost.tsx",
+      "state": "Learn section 9 task 3 (report Figure 38)",
+      "learnerImpact": "The stated order sent the learner to the transducer before an unsafe catheter position, and the block appeared as a small note in a collapsed panel.",
+      "fix": "level and zero, then the tip, then the flush; catheter panel open when the catheter is the constraint; a simulation safety notice that is explicitly not a device alarm; 'Show me where' points at Withdraw",
+      "hold": "R1, R8 - no withdrawal sequence or distance adopted"
+    },
+    {
+      "id": "P-09",
+      "section": "E",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/components/HemodynamicCaseActivity.tsx, content/hemodynamicTeaching.ts",
+      "state": "Practice HD-08, the three bundled restore actions",
+      "learnerImpact": "Feedback described completed corrections the engine had refused, over an unchanged monitor.",
+      "fix": "the reducer's refusal is kept; the host reduces first and reports what the engine did; refused requests are named as requests and point at the real control",
+      "hold": null
+    },
+    {
+      "id": "P-10",
+      "section": "F",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/engine/decisionRecord.ts, components/HemodynamicCaseActivity.tsx",
+      "state": "every case debrief, decision trace",
+      "learnerImpact": "A cardiac index the learner never measured appeared at every step.",
+      "fix": "an explicit observable/acquired projection: displayed pressures with their validation state, flow only from an accepted series with method, curve count and age; missing stays missing",
+      "hold": "R4 - series and episode identity is HD-PRE-REVIEW-02's"
+    },
+    {
+      "id": "P-11",
+      "section": "F",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/components/HemodynamicCaseActivity.tsx",
+      "state": "HD-02 to HD-08, treating on an unzeroed line",
+      "learnerImpact": "The module's own motto was never applied to the learner's run.",
+      "fix": "each trace row states the line's state and the debrief explains what it limits, saying explicitly that it does not block patient-directed care",
+      "hold": "R5 - no scored checkpoint added, by decision"
+    },
+    {
+      "id": "A-02",
+      "section": "F",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/components/HemodynamicCaseActivity.tsx",
+      "state": "Applied HD-07 with fluid and norepinephrine only",
+      "learnerImpact": "The definitive step was never said to have been missed, and a MAP rise was left to read as improvement.",
+      "fix": "an HD-local run summary naming each authored definitive action and whether the engine accepted it, contrasting displayed pressure with whether any flow was measured",
+      "hold": "R5 - how omitted definitive treatment is explained without a score"
+    }
+  ],
+  "verification": {
+    "browser": "Chromium via the in-app browser pane against this worktree's own dev server on port 3125 (.claude/launch.json -> claude-hemodynamics). Sizes: 1204x987 (report), 390x844, and 390x844 at 200% root-text enlargement.",
+    "jestHd": "39 suites / 530 tests pass (base: 37 / 501)",
+    "newSuitesAgainstBase": "15 of 25 assertions groups fail on the unchanged base; the rest are preservation checks",
+    "jestConsumers": "src/app/[locale]/icu-hemodynamics, src/features/critical-care, src/features/learning-module, src/features/module-beta, src/app/api/critical-care: 43/46 suites pass; the same 3 suites and 420/423 counts fail on the unchanged base",
+    "playwright": "playwright.icu-hemodynamics.config.ts (port 3125): 10 passed / 16 failed - identical names and counts on the unchanged base; pre-existing",
+    "typeCheck": "clean",
+    "lint": "clean on all changed and added files",
+    "build": "npm run build succeeded with dev watchers stopped"
+  },
+  "observationsNotActedOn": [
+    "16 of 26 HD Playwright tests are red at the base commit; realigning them is a separate bounded task.",
+    "critical-care learner-copy framing and critical-care accessibility surfaces are red at the base commit; neither has an ICU-hemodynamics row after this batch.",
+    "/api/analytics returns 500 in this worktree because it has no .env.local; environment only."
+  ],
+  "nextSteps": [
+    "Owner review of R1 (which fault the capstone teaches; whether float-balloon inflation becomes a learner control; what the RA flush control represents), R5 (the two plausibility items and how omission is explained) and R8/HD-03-08 (persistent wedge guidance).",
+    "HD-PRE-REVIEW-02 extends observedSystemState with condition and series identity and matched-time comparison, and owns thermodilution episode grouping.",
+    "A separate bounded task to realign the HD Playwright specs with the current stage."
+  ]
+}

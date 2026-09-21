@@ -35,6 +35,7 @@ import type {
   HemodynamicAction,
   HemodynamicSimulationState,
 } from '../../engine/types'
+import { positionWords } from '../catheter-map/CatheterMap'
 import { FastFlushTrace } from '../PressureSystemTeachingVisual'
 import { ThermodilutionSeriesReadout, ThermodilutionTrialCard } from '../ThermodilutionTrialReview'
 import styles from './hemodynamics-stage.module.css'
@@ -244,12 +245,22 @@ export function FlushDock({
     <fieldset className={styles.dock} disabled={!enabled} data-dock="flush">
       <legend>The flush check</legend>
       {lineType === 'pulmonary-artery' ? (
+        /*
+         * What this control flushes, and what actually stops it.
+         *
+         * The rule printed here used to require "a confirmed artery tracing", which this
+         * simulation does not enforce and which reads as a broken rule when the step legitimately
+         * flushes the line with the tip still in the right atrium (report L5-06, Figure 28). The
+         * channel is the catheter's distal lumen wherever the tip is, so it is named that way, the
+         * tip's current place is printed beside it, and the sentence now states the restriction the
+         * reducer and this control both apply.
+         */
         <p className={styles.dockNote} role={paUnsafe ? 'alert' : undefined}>
-          A flush on the pulmonary-artery line needs a confirmed artery tracing and a balloon that
-          is down. Never flush a wedged catheter.
-          {paUnsafe
-            ? ' Flushing is blocked while wedged, while either balloon state is inflated, or while the tip is moving.'
-            : ''}
+          This is the catheter&apos;s distal lumen — one channel, wherever the tip is; right now,{' '}
+          {positionWords(state.catheter.position)}. Never flush a wedged catheter: this simulation
+          blocks a flush on this lumen while the tip is in an occluding position, while either
+          balloon is up, and while the tip is moving.
+          {paUnsafe ? ' That is why the control is unavailable now.' : ''}
         </p>
       ) : null}
       <div className={styles.dockRow}>
@@ -264,7 +275,7 @@ export function FlushDock({
           disabled={paUnsafe}
           onClick={run}
         >
-          Flush the {lineType === 'pulmonary-artery' ? 'pulmonary-artery' : 'arterial'} line
+          Flush the {lineType === 'pulmonary-artery' ? 'distal PAC' : 'arterial'} line
         </button>
       </div>
       {hasRun ? (
@@ -283,7 +294,9 @@ export function FlushDock({
           ) : (
             <p className={styles.dockNote}>
               Current acquisition ·{' '}
-              {lineType === 'pulmonary-artery' ? 'PAC pressure channel' : 'systemic arterial line'}{' '}
+              {lineType === 'pulmonary-artery'
+                ? `PAC distal lumen, tip in ${positionWords(state.catheter.position)}`
+                : 'systemic arterial line'}{' '}
               · qualitative release rendering.
             </p>
           )}
@@ -407,12 +420,19 @@ export function TipDock({ state, dispatch, enabled }: DockProps) {
           </button>
         </div>
       </div>
-      {state.catheter.floatBalloonInflated ? (
-        <p className={styles.dockNote}>
-          The flow-directed balloon is up while the tip floats forward, as the manufacturer&apos;s
-          instructions describe. It is not the wedge.
-        </p>
-      ) : null}
+      {/*
+        Who raised the balloon. This simulation inflates the flow-directed balloon when the tip
+        leaves the atrium and lets it down when the artery appears; the learner never chooses
+        either. Saying so is the honest reading of the report's L5-03 — the two decisions the
+        intro stresses are not practised here — and it keeps the assistance from reading as work
+        the learner performed. Whether those decisions should become controls is a review
+        question, not one this repair answers.
+      */}
+      <p className={styles.dockNote} data-float-balloon-provenance>
+        {state.catheter.floatBalloonInflated
+          ? 'The flow-directed balloon is up while the tip floats forward, as the manufacturer’s instructions describe. This simulation raised it for you when the tip left the atrium and lets it down when the artery appears — guided model assistance, not an action you performed, and not the wedge.'
+          : 'The flow-directed balloon is down. In this simulation it is raised and lowered for you as the tip floats; inflating and deflating it are not controls here, and nothing about it is recorded as your work.'}
+      </p>
     </fieldset>
   )
 }
