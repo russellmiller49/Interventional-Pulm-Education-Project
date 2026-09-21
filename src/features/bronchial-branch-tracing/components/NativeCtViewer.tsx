@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useMemo,
   useState,
@@ -31,8 +32,14 @@ import {
 } from '../geometry/orientation'
 import { pairedScope } from '../geometry/paired-scope'
 import { nativeImageUrl, sliceZ, targetForTrace, TARGET_CT_BASE } from '../geometry/native-ct'
+import { placeOverlayLabels } from './ctOverlayLabels'
+import { useCtFrame } from './useCtFrame'
 import styles from './branch-tracing.module.css'
 import { resetPaneScroll } from './resetPaneScroll'
+
+const OVERLAY_FONT = 3.4
+/** Native planes kept warm around the browsed slice. The full stack is never fetched. */
+const PRELOAD_RADIUS = 2
 
 const ClinicalAirwayView = dynamic(
   () => import('./ClinicalAirwayView').then((m) => m.ClinicalAirwayView),
@@ -67,7 +74,14 @@ interface Props {
   initialView?: CtViewerState
   onViewChange?: (view: CtViewerState) => void
   onReadyChange?: (ready: boolean) => void
+  onDisplayedSliceChange?: (slice: number | null) => void
   onTargetReady?: () => void
+  /** Stable names for the learner's marks, so A and B are told apart on the image. */
+  markLabels?: string[]
+  /** Bumped to restore the authored crop for this division without changing any coordinate. */
+  focusRequest?: number
+  /** Controls placed with the CT: the demonstration transport belongs beside the image. */
+  belowImage?: React.ReactNode
 }
 export function NativeCtViewer({
   trace,
@@ -95,7 +109,11 @@ export function NativeCtViewer({
   initialView,
   onViewChange,
   onReadyChange,
+  onDisplayedSliceChange,
   onTargetReady,
+  markLabels,
+  focusRequest = 0,
+  belowImage,
 }: Props) {
   const target = targetForTrace(trace)
   const checkpoint = trace.checkpoints[active]
@@ -127,6 +145,9 @@ export function NativeCtViewer({
       }),
     [active, levelRequest, trace],
   )
+  // The plane on screen before the current request, used to tell a real
+  // navigation from a request for the plane the learner is already looking at.
+  const sliceRef = useRef(slice)
   const [localOrientation, setLocalOrientation] = useState<CtOrientation>(STANDARD_ORIENTATION)
   const orientation = controlledOrientation ?? localOrientation
   const setOrientation = (value: CtOrientation) => {
@@ -156,41 +177,79 @@ export function NativeCtViewer({
   const [showScope, setShowScope] = useState(initialView?.showScope ?? !local)
   const [magnification, setMagnification] = useState(initialView?.magnification ?? 1)
   const [cursor, setCursor] = useState<[number, number]>([50, 50])
-  const [imageStatus, setImageStatus] = useState<{ url: string; failed: boolean } | null>(null)
-  const [patchStatus, setPatchStatus] = useState<{ url: string; failed: boolean } | null>(null)
   const [retry, setRetry] = useState(0)
   const [expanded, setExpanded] = useState(false)
-  const [expandError, setExpandError] = useState(false)
+  const [inPageExpanded, setInPageExpanded] = useState(false)
+  const [showOverlays, setShowOverlays] = useState(true)
+  const [wheelSlices, setWheelSlices] = useState(false)
   const viewer = useRef<HTMLElement>(null)
-  useEffect(() => resetPaneScroll(viewer.current), [active, levelRequest, referenceThrough])
+  const expandButton = useRef<HTMLButtonElement>(null)
+  // A different junction opens its own view. Revealing a reference or checking an
+  // answer is not a new plane, so it must not move the pane the learner set.
+  useEffect(() => resetPaneScroll(viewer.current), [active, levelRequest])
   useEffect(() => {
     const changed = () => setExpanded(document.fullscreenElement === viewer.current)
     document.addEventListener('fullscreenchange', changed)
     return () => document.removeEventListener('fullscreenchange', changed)
   }, [])
-  async function toggleExpanded() {
-    try {
-      setExpandError(false)
-      if (document.fullscreenElement === viewer.current) await document.exitFullscreen()
-      else await viewer.current?.requestFullscreen()
-    } catch {
-      setExpandError(true)
+  const fullscreenSupported =
+    typeof document !== 'undefined' &&
+    document.fullscreenEnabled &&
+    typeof viewer.current?.requestFullscreen === 'function'
+  const closeExpanded = useCallback(() => {
+    setInPageExpanded(false)
+    if (typeof document !== 'undefined' && document.fullscreenElement === viewer.current)
+      void document.exitFullscreen().catch(() => undefined)
+    expandButton.current?.focus()
+  }, [])
+  useEffect(() => {
+    if (!inPageExpanded) return
+    const key = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') closeExpanded()
     }
+    document.addEventListener('keydown', key)
+    return () => document.removeEventListener('keydown', key)
+  }, [inPageExpanded, closeExpanded])
+  async function toggleExpanded() {
+    if (expanded || inPageExpanded) {
+      closeExpanded()
+      return
+    }
+    // Fullscreen needs a user gesture and may be denied by the embedding policy.
+    // An in-page enlargement is the fallback, not an error message.
+    if (fullscreenSupported && viewer.current) {
+      try {
+        await viewer.current.requestFullscreen()
+        return
+      } catch {
+        /* fall through to the in-page enlargement */
+      }
+    }
+    setInPageExpanded(true)
   }
   const surface = useRef<HTMLDivElement>(null)
   const url = nativeImageUrl(slice)
   const patch = showNodule ? target.patch.frames.find((frame) => frame.slice === slice) : undefined
   const patchUrl = patch ? `${TARGET_CT_BASE}/${patch.path}` : null
-  const patchReady = !patchUrl || (patchStatus?.url === patchUrl && !patchStatus.failed)
-  const ready = imageStatus?.url === url && !imageStatus.failed && patchReady
+  const request = useMemo(() => ({ slice, url, patchUrl }), [slice, url, patchUrl])
+  const frame = useCtFrame(request, retry)
+  const { shown, ready, failed, pending } = frame
+  const reportImage = frame.report
+  // The plane whose pixels are on screen. Every label, overlay and caption reads
+  // this, so a slice number is never printed beside another plane's image.
+  const shownSlice = shown?.slice ?? slice
+  // Host captions must advance with the decoded image, before either is painted.
+  // Requested view state remains separate so rapid stepping and drafts keep their semantics.
+  useLayoutEffect(() => {
+    onDisplayedSliceChange?.(shown?.slice ?? null)
+  }, [shown?.slice, onDisplayedSliceChange])
   useEffect(() => {
     onReadyChange?.(Boolean(ready))
   }, [ready, onReadyChange])
   useEffect(() => {
     if (ready && showNodule && slice === target.slice) onTargetReady?.()
   }, [ready, showNodule, slice, target.slice, onTargetReady])
-  const patchFailed = patchUrl && patchStatus?.url === patchUrl && patchStatus.failed
-  const failed = (imageStatus?.url === url && imageStatus.failed) || patchFailed
+  const patchFailed = Boolean(patchUrl) && failed && !frame.baseFailed
   const center = full
     ? [255.5, 255.5]
     : focusedOnTarget
@@ -211,45 +270,156 @@ export function NativeCtViewer({
     () => pairedScope(trace, slice, active, focusedOnStart),
     [trace, slice, active, focusedOnStart],
   )
+  const project = (pixel: readonly number[]): [number, number] =>
+    orientedPixel([pixel[0], pixel[1]], center, size, orientation)
+  const annotations: {
+    id: string
+    kind: 'model' | 'mark'
+    point: [number, number]
+    reach: number
+    ariaLabel: string
+    text: string | null
+    teaching?: boolean
+    referenceIndex?: number
+    contour?: [number, number][]
+  }[] = []
+  if (ready && showOverlays) {
+    if (showAnchor && shownSlice === trace.anchor.slice)
+      annotations.push({
+        id: 'anchor',
+        kind: 'model',
+        point: project(trace.anchor.pixel),
+        reach: 4,
+        ariaLabel: `Starting airway: ${trace.anchor.airway.name}`,
+        text: trace.anchor.airway.code,
+      })
+    if (teachingFrame?.slice === shownSlice) {
+      const reviewed = annotationReview?.status === 'faculty-reviewed'
+      teachingFrame.overlays.forEach((overlay, i) =>
+        annotations.push({
+          id: `model-${i}`,
+          kind: 'model',
+          point: project(overlay.pixel),
+          reach: 3,
+          ariaLabel: `${reviewed ? 'Reviewed annotation' : 'Model locator'}: ${overlay.label}`,
+          text: overlay.label,
+          teaching: true,
+          contour: reviewed && overlay.contour ? overlay.contour.map(project) : undefined,
+        }),
+      )
+    }
+    marks.forEach((mark, i) => {
+      if (!mark?.pixel || mark.slice !== shownSlice) return
+      annotations.push({
+        id: `mark-${i}`,
+        kind: 'mark',
+        point: project(mark.pixel),
+        reach: 3,
+        ariaLabel: `Your mark ${i + 1}`,
+        text: markLabels?.[i] ?? 'Your mark',
+      })
+    })
+    trace.checkpoints.forEach((point, i) => {
+      if (point.slice !== shownSlice || (!revealed && i > referenceThrough)) return
+      annotations.push({
+        id: `reference-${point.id}`,
+        kind: 'model',
+        point: project(point.pixel),
+        reach: 3,
+        referenceIndex: i + 1,
+        ariaLabel: `Reference: ${point.airway.name}${point.landmark ? `, ${point.landmark.toLowerCase()}` : ''}`,
+        text: i === active ? point.airway.code : null,
+      })
+    })
+  }
+  const toneById = new Map(annotations.map((a) => [a.id, a.kind]))
+  // Only the text moves. Every anchor above stays on its projected native coordinate.
+  const placedLabels = placeOverlayLabels(
+    annotations
+      .filter((a) => a.text)
+      .map((a) => ({ id: a.id, point: a.point, text: a.text as string })),
+    { fontSize: OVERLAY_FONT },
+  ).map((label) => ({ ...label, tone: toneById.get(label.id) ?? 'model' }))
+  const crosshair = ([x, y]: [number, number], reach = 3) =>
+    `M${x - reach},${y}h${reach - 1} M${x + 1},${y}h${reach - 1} ` +
+    `M${x},${y - reach}v${reach - 1} M${x},${y + 1}v${reach - 1}`
   const submissionSlice = answerSlice ?? checkpoint.slice
   const atCheckpoint = slice === submissionSlice
-  const answerControls = onMark && (
-    <div className={styles.answerGuidance} role="status">
-      {failed
-        ? 'Image unavailable. Retry this slice before marking.'
-        : !ready
-          ? 'Loading the CT image before marking.'
-          : atCheckpoint
-            ? local
-              ? null
-              : `Answer slice ${submissionSlice}: mark the lumen, or record uncertainty.`
-            : `Exploring slice ${slice}. Your current task is unchanged; marks are recorded on slice ${submissionSlice}.`}
-      <button
-        onClick={() => {
-          setStartFocus(null)
-          setTargetFocus(null)
-          setSlice(submissionSlice)
-        }}
-      >
-        Go to response slice
-      </button>
-      {atCheckpoint && (
-        <button disabled={!ready} onClick={() => onMark({ slice, pixel: null })}>
-          Lumen unresolved here
-        </button>
-      )}
-    </div>
-  )
+  // Both actions keep their place whatever the response state is: the row's size
+  // and the buttons' DOM identity do not change when the response slice is reached,
+  // so a second click never lands on a control that moved under the pointer.
+  // Shown while a response can be placed, and kept afterwards while responses
+  // exist, so checking an answer does not resize the column under the image.
+  const answerControls =
+    onMark || (local && marks.some(Boolean)) ? (
+      <div className={styles.answerGuidance} data-answer-guidance>
+        <p role="status">
+          {failed
+            ? 'Image unavailable. Retry this slice before marking.'
+            : !ready
+              ? `Loading slice ${slice} before marking.`
+              : !onMark
+                ? `Reviewing slice ${slice}. Responses stay as you placed them.`
+                : atCheckpoint
+                  ? `Response slice ${submissionSlice}: mark the lumen, or record uncertainty.`
+                  : `Exploring slice ${slice}. Your current task is unchanged; marks are recorded on slice ${submissionSlice}.`}
+        </p>
+        <div className={styles.answerActions}>
+          <button
+            onClick={() => {
+              setStartFocus(null)
+              setTargetFocus(null)
+              setSlice(submissionSlice)
+            }}
+          >
+            Go to response slice
+          </button>
+          {/* Kept in the layout between marking and review so the row, and the CT
+              above it, do not move when the learner checks an answer. */}
+          <button
+            className={onMark ? undefined : styles.reservedControl}
+            aria-hidden={onMark ? undefined : true}
+            tabIndex={onMark ? undefined : -1}
+            disabled={!onMark || !ready || !atCheckpoint}
+            onClick={() => onMark?.({ slice, pixel: null })}
+          >
+            Lumen unresolved here
+          </button>
+        </div>
+      </div>
+    ) : null
   useEffect(() => {
     if (!sliceRequest) return
     setSlice(sliceRequest.slice)
-    setStartFocus(sliceRequest.focusAirway ? { active, levelRequest } : null)
+    // Asking for the plane already on screen is not a navigation: the learner's
+    // crop, magnification and scroll position stay as they left them.
+    setStartFocus((current) =>
+      sliceRequest.focusAirway
+        ? { active, levelRequest }
+        : sliceRequest.slice === sliceRef.current
+          ? current
+          : null,
+    )
     if (sliceRequest.focusAirway) {
       setFull(false)
       setMagnification(1)
     }
-    setTargetFocus(null)
+    setTargetFocus((current) =>
+      !sliceRequest.focusAirway && sliceRequest.slice === sliceRef.current ? current : null,
+    )
   }, [sliceRequest, setSlice, active, levelRequest])
+  useEffect(() => {
+    sliceRef.current = slice
+  }, [slice])
+  // Focus CT view: return to the crop this division was authored with. It changes
+  // the display only; no coordinate, region or anatomical claim is created.
+  const firstFocusRequest = useRef(focusRequest)
+  useEffect(() => {
+    if (focusRequest === firstFocusRequest.current) return
+    setFull(false)
+    setTargetFocus(null)
+    setStartFocus(null)
+  }, [focusRequest])
   useEffect(() => {
     onViewChange?.({
       slice,
@@ -272,8 +442,11 @@ export function NativeCtViewer({
   const canMark = Boolean(onMark) && ready && atCheckpoint
   const clampSlice = (value: number) => Math.max(trace.range[0], Math.min(trace.range[1], value))
   useEffect(() => {
+    // Off by default: an ordinary wheel or trackpad gesture over the image scrolls
+    // the page. Slice stepping on the wheel is an explicit, reversible local mode,
+    // and a browser zoom gesture is never intercepted.
     const target = surface.current
-    if (!target) return
+    if (!target || !wheelSlices) return
     const wheel = (event: WheelEvent) => {
       if (event.ctrlKey || event.metaKey) return
       event.preventDefault()
@@ -283,16 +456,26 @@ export function NativeCtViewer({
     }
     target.addEventListener('wheel', wheel, { passive: false })
     return () => target.removeEventListener('wheel', wheel)
-  }, [setSlice, trace.range])
+  }, [setSlice, trace.range, wheelSlices])
   useEffect(() => {
-    // Preload only the nearest planes. The full native stack is never eagerly downloaded.
-    const neighbors = [slice - 1, slice + 1]
-      .filter((k) => k >= trace.range[0] && k <= trace.range[1])
-      .map((k) => {
-        const img = new Image()
-        img.src = nativeImageUrl(k)
-        return img
-      })
+    if (!wheelSlices) return
+    const key = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') setWheelSlices(false)
+    }
+    document.addEventListener('keydown', key)
+    return () => document.removeEventListener('keydown', key)
+  }, [wheelSlices])
+  useEffect(() => {
+    // Preload the planes immediately around the browsed slice so stepping does not
+    // blank the image. The full native stack is never eagerly downloaded.
+    const neighbors: HTMLImageElement[] = []
+    for (let offset = -PRELOAD_RADIUS; offset <= PRELOAD_RADIUS; offset++) {
+      const k = slice + offset
+      if (offset === 0 || k < trace.range[0] || k > trace.range[1]) continue
+      const img = new Image()
+      img.src = nativeImageUrl(k)
+      neighbors.push(img)
+    }
     return () => {
       neighbors.forEach((img) => {
         img.onload = null
@@ -372,6 +555,45 @@ export function NativeCtViewer({
       </button>
     </div>
   )
+  // Tools that change only how the native plane is displayed. They keep a fixed
+  // place beside the image so the slice controls never move under the pointer.
+  const viewTools = (
+    <div className={styles.ctViewTools} role="group" aria-label="CT view tools">
+      <label className={styles.ctMagnifier}>
+        <span>Magnify</span>
+        <input
+          aria-label="CT magnification"
+          type="range"
+          min="1"
+          max="4"
+          step=".1"
+          value={magnification}
+          onChange={(e) => setMagnification(Number(e.target.value))}
+        />
+        <output>{magnification.toFixed(1)}×</output>
+      </label>
+      <button aria-pressed={!showOverlays} onClick={() => setShowOverlays((value) => !value)}>
+        {showOverlays ? 'Hide overlays' : 'Show overlays'}
+      </button>
+      <button aria-pressed={wheelSlices} onClick={() => setWheelSlices((value) => !value)}>
+        {wheelSlices ? 'Wheel steps slices: on' : 'Wheel steps slices: off'}
+      </button>
+      <button
+        aria-pressed={full}
+        onClick={() => {
+          setFull((v) => !v)
+          setMagnification(1)
+        }}
+      >
+        {full ? 'Airway detail' : 'Full CT field'}
+      </button>
+      {scopeAvailable && (
+        <button aria-pressed={showScope} onClick={() => setShowScope((v) => !v)}>
+          {showScope ? 'Hide parent airway view' : 'Show parent airway view'}
+        </button>
+      )}
+    </div>
+  )
   const manualOrientationControls = (
     <>
       <button onClick={() => setOrientation(turnCt(orientation, 'left'))}>↶ Rotate 90° left</button>
@@ -381,10 +603,54 @@ export function NativeCtViewer({
       <button onClick={() => setOrientation(turnCt(orientation, 'flip'))}>⇆ Flip left–right</button>
     </>
   )
+  const targetBar = !local && (
+    <div className={styles.targetBar}>
+      <div>
+        <strong>Target · {target.segment.code}</strong>
+        <span>{target.segment.name} · simulated nodule</span>
+      </div>
+      <button onClick={showTarget}>Show target</button>
+    </div>
+  )
+  const orientationBlock = (orientationControls ||
+    !sameOrientation(orientation, STANDARD_ORIENTATION)) && (
+    <div className={styles.ctViewButtons} role="group" aria-label="CT orientation">
+      {local ? (
+        <>
+          <button
+            aria-pressed={sameOrientation(orientation, STANDARD_ORIENTATION)}
+            onClick={() => setOrientation(STANDARD_ORIENTATION)}
+          >
+            Return to standard axial
+          </button>
+          <button
+            aria-pressed={sameOrientation(orientation, orientationFor(trace.preset))}
+            onClick={() => setOrientation(orientationFor(trace.preset))}
+          >
+            Show tracing view
+          </button>
+          <details>
+            <summary>More orientation controls</summary>
+            {manualOrientationControls}
+          </details>
+        </>
+      ) : (
+        <>
+          {manualOrientationControls}
+          <button onClick={() => setOrientation(STANDARD_ORIENTATION)}>
+            Return to standard axial
+          </button>
+        </>
+      )}
+    </div>
+  )
   return (
     <section
       ref={viewer}
-      className={`${styles.nativeViewer} ${local ? styles.localViewer : ''}`}
+      className={`${styles.nativeViewer} ${local ? styles.localViewer : ''} ${
+        inPageExpanded ? styles.ctEnlarged : ''
+      }`}
+      data-ct-enlarged={inPageExpanded || undefined}
       aria-label="CT tracing viewer"
     >
       <div className={styles.nativeHeading}>
@@ -392,52 +658,10 @@ export function NativeCtViewer({
           <h2>{local ? 'Axial CT' : 'CT tracing stack'}</h2>
           <span>{local ? orientationName(orientation) : `${trace.region} · 0.5 mm slices`}</span>
         </div>
-        <button className={styles.ctExpand} onClick={toggleExpanded}>
-          {expanded ? 'Close expanded views' : 'Expand CT views'}
+        <button ref={expandButton} className={styles.ctExpand} onClick={toggleExpanded}>
+          {expanded || inPageExpanded ? 'Close expanded views' : 'Expand CT views'}
         </button>
       </div>
-      {!local && (
-        <div className={styles.targetBar}>
-          <div>
-            <strong>Target · {target.segment.code}</strong>
-            <span>{target.segment.name} · simulated nodule</span>
-          </div>
-          <button onClick={showTarget}>Show target</button>
-        </div>
-      )}
-      {(orientationControls || !sameOrientation(orientation, STANDARD_ORIENTATION)) && (
-        <div className={styles.ctViewButtons} role="group" aria-label="CT orientation">
-          {local ? (
-            <>
-              <button
-                aria-pressed={sameOrientation(orientation, STANDARD_ORIENTATION)}
-                onClick={() => setOrientation(STANDARD_ORIENTATION)}
-              >
-                Return to standard axial
-              </button>
-              <button
-                aria-pressed={sameOrientation(orientation, orientationFor(trace.preset))}
-                onClick={() => setOrientation(orientationFor(trace.preset))}
-              >
-                Show tracing view
-              </button>
-              <details>
-                <summary>More orientation controls</summary>
-                {manualOrientationControls}
-              </details>
-            </>
-          ) : (
-            <>
-              {manualOrientationControls}
-              <button onClick={() => setOrientation(STANDARD_ORIENTATION)}>
-                Return to standard axial
-              </button>
-            </>
-          )}
-        </div>
-      )}
-      {expandError && <p role="status">Expanded view is unavailable in this browser.</p>}
-      {!local && answerControls}
       <div
         className={`${styles.pairedViews} ${!showScope || !scopeAvailable ? styles.ctOnly : ''}`}
         aria-label="CT and supporting views"
@@ -452,7 +676,8 @@ export function NativeCtViewer({
             ref={surface}
             className={styles.nativeImage}
             data-preset={preset}
-            data-slice={slice}
+            data-slice={shownSlice}
+            data-requested-slice={slice}
             data-ct-ready={Boolean(ready)}
             data-region-highlight={highlightRegion || undefined}
           >
@@ -478,39 +703,74 @@ export function NativeCtViewer({
                   : focusedOnStart
                     ? `Starting airway: ${trace.anchor.airway.name}`
                     : `At ${stationLabel}: ${stationName}`}
-                , axial CT slice {slice}, {orientationName(orientation)}
+                , axial CT slice {shownSlice}, {orientationName(orientation)}
               </title>
               <rect width="100" height="100" fill="#020507" />
               <g
                 transform={`translate(50 50) ${orientationTransform(orientation)} scale(${100 / size}) translate(${-center[0]} ${-center[1]})`}
               >
-                <image
-                  key={`${url}-${retry}`}
-                  href={url}
-                  x={-0.5}
-                  y={-0.5}
-                  width="512"
-                  height="512"
-                  onLoad={() => setImageStatus({ url, failed: false })}
-                  onError={() => setImageStatus({ url, failed: true })}
-                />
-                {patchUrl && (
+                {shown && (
                   <image
-                    key={`${patchUrl}-${retry}`}
-                    href={patchUrl}
+                    key={`shown-${shown.url}-${retry}`}
+                    href={shown.url}
+                    x={-0.5}
+                    y={-0.5}
+                    width="512"
+                    height="512"
+                    onLoad={() => reportImage(shown.url, 'ok')}
+                    onError={() => reportImage(shown.url, 'error')}
+                  />
+                )}
+                {shown?.patchUrl && (
+                  <image
+                    key={`shown-${shown.patchUrl}-${retry}`}
+                    href={shown.patchUrl}
                     x={target.patch.originPixel[0] - 0.5}
                     y={target.patch.originPixel[1] - 0.5}
                     width={target.patch.size[0]}
                     height={target.patch.size[1]}
                     data-ct-nodule={target.id}
-                    onLoad={() => setPatchStatus({ url: patchUrl, failed: false })}
-                    onError={() => setPatchStatus({ url: patchUrl, failed: true })}
+                    onLoad={() => reportImage(shown.patchUrl as string, 'ok')}
+                    onError={() => reportImage(shown.patchUrl as string, 'error')}
+                  />
+                )}
+                {/* The requested plane decodes out of sight, then replaces the one
+                    above in a single step. The learner never sees a blank frame,
+                    and no label is ever attached to the previous plane's pixels. */}
+                {pending && (
+                  <image
+                    key={`pending-${pending.url}-${retry}`}
+                    href={pending.url}
+                    x={-0.5}
+                    y={-0.5}
+                    width="512"
+                    height="512"
+                    visibility="hidden"
+                    aria-hidden="true"
+                    data-ct-pending={pending.slice}
+                    onLoad={() => reportImage(pending.url, 'ok')}
+                    onError={() => reportImage(pending.url, 'error')}
+                  />
+                )}
+                {pending?.patchUrl && (
+                  <image
+                    key={`pending-${pending.patchUrl}-${retry}`}
+                    href={pending.patchUrl}
+                    x={target.patch.originPixel[0] - 0.5}
+                    y={target.patch.originPixel[1] - 0.5}
+                    width={target.patch.size[0]}
+                    height={target.patch.size[1]}
+                    visibility="hidden"
+                    aria-hidden="true"
+                    onLoad={() => reportImage(pending.patchUrl!, 'ok')}
+                    onError={() => reportImage(pending.patchUrl!, 'error')}
                   />
                 )}
               </g>
               {ready &&
+                showOverlays &&
                 showNodule &&
-                slice === target.slice &&
+                shownSlice === target.slice &&
                 (() => {
                   const p = orientedPixel(target.pixel, center, size, orientation)
                   return (
@@ -539,145 +799,69 @@ export function NativeCtViewer({
                     </g>
                   )
                 })()}
-              {ready &&
-                showAnchor &&
-                slice === trace.anchor.slice &&
-                (() => {
-                  const p = orientedPixel(trace.anchor.pixel, center, size, orientation)
-                  return (
-                    <g aria-label={`Starting airway: ${trace.anchor.airway.name}`}>
-                      <circle
-                        cx={p[0]}
-                        cy={p[1]}
-                        r="3"
-                        fill="none"
-                        stroke="#f1ca79"
-                        strokeWidth=".5"
-                      />
-                      <text
-                        x={p[0] + (p[0] > 60 ? -4 : 4)}
-                        y={p[1]}
-                        textAnchor={p[0] > 60 ? 'end' : 'start'}
-                        fill="#ffe1a6"
-                        fontSize="4.3"
-                        stroke="#07151b"
-                        strokeWidth=".6"
-                        paintOrder="stroke"
-                      >
-                        {trace.anchor.airway.code}
-                      </text>
-                    </g>
-                  )
-                })()}
-              {ready &&
-                teachingFrame?.slice === slice &&
-                teachingFrame.overlays.map((overlay, i) => {
-                  const p = orientedPixel(overlay.pixel, center, size, orientation)
-                  const reviewed = annotationReview?.status === 'faculty-reviewed'
-                  return (
-                    <g
-                      key={i}
-                      data-teaching-overlay
-                      aria-label={`${reviewed ? 'Reviewed annotation' : 'Model locator'}: ${overlay.label}`}
-                    >
-                      {reviewed && overlay.contour && (
-                        <polygon
-                          points={overlay.contour
-                            .map((point) =>
-                              orientedPixel(point, center, size, orientation).join(','),
-                            )
-                            .join(' ')}
-                          fill="none"
-                          stroke="#f6c66c"
-                          strokeWidth=".45"
-                        />
-                      )}
-                      <circle
-                        cx={p[0]}
-                        cy={p[1]}
-                        r="2.5"
-                        fill="none"
-                        stroke="#f6c66c"
-                        strokeWidth=".5"
-                      />
-                      <text
-                        x={p[0]}
-                        y={p[1] - 4}
-                        textAnchor="middle"
-                        fontSize="3.2"
-                        fill="#ffe0a1"
-                        stroke="#07151b"
-                        strokeWidth=".6"
-                        paintOrder="stroke"
-                      >
-                        {overlay.label}
-                      </text>
-                    </g>
-                  )
-                })}
-              {ready &&
-                marks.map((mark, i) => {
-                  if (!mark?.pixel || mark.slice !== slice) return null
-                  const p = orientedPixel(mark.pixel, center, size, orientation)
-                  return (
-                    <g key={i} aria-label={`Your mark ${i + 1}`}>
-                      <circle
-                        cx={p[0]}
-                        cy={p[1]}
-                        r="2.3"
-                        fill="none"
-                        stroke="#81f1ed"
-                        strokeWidth=".65"
-                      />
-                      {i === active && (
-                        <text
-                          x={p[0] + (p[0] > 60 ? -4 : 4)}
-                          y={p[1] > 88 ? p[1] - 12 : p[1] + 7}
-                          textAnchor={p[0] > 60 ? 'end' : 'start'}
-                          fill="#a8fffa"
-                          stroke="#07151b"
-                          strokeWidth=".5"
-                          paintOrder="stroke"
-                          fontSize="4.3"
-                        >
-                          Your mark
-                        </text>
-                      )}
-                    </g>
-                  )
-                })}
-              {ready &&
-                trace.checkpoints.map((point, i) => {
-                  if (point.slice !== slice || (!revealed && i > referenceThrough)) return null
-                  const p = orientedPixel(point.pixel, center, size, orientation)
-                  return (
-                    <g
-                      key={point.id}
-                      data-ct-reference={i + 1}
-                      aria-label={`Reference: ${point.airway.name}${point.landmark ? `, ${point.landmark.toLowerCase()}` : ''}`}
-                    >
-                      <path
-                        d={`M${p[0] - 2},${p[1]}h4 M${p[0]},${p[1] - 2}v4`}
-                        stroke="#f6c66c"
-                        strokeWidth=".6"
-                      />
-                      {i === active && (
-                        <text
-                          x={p[0] + (p[0] > 60 ? -4 : 4)}
-                          y={p[1] + 5}
-                          textAnchor={p[0] > 60 ? 'end' : 'start'}
-                          fill="#ffe0a1"
-                          stroke="#07151b"
-                          strokeWidth=".5"
-                          paintOrder="stroke"
-                          fontSize="4.3"
-                        >
-                          {point.airway.code}
-                        </text>
-                      )}
-                    </g>
-                  )
-                })}
+              {annotations.map((annotation) => (
+                <g
+                  key={annotation.id}
+                  role="img"
+                  data-teaching-overlay={annotation.teaching || undefined}
+                  data-ct-reference={annotation.referenceIndex}
+                  aria-label={annotation.ariaLabel}
+                >
+                  {annotation.contour && (
+                    <polygon
+                      points={annotation.contour.map((point) => point.join(',')).join(' ')}
+                      fill="none"
+                      stroke="#f6c66c"
+                      strokeWidth=".45"
+                    />
+                  )}
+                  {annotation.kind === 'mark' ? (
+                    <circle
+                      cx={annotation.point[0]}
+                      cy={annotation.point[1]}
+                      r="2.3"
+                      fill="none"
+                      stroke="#81f1ed"
+                      strokeWidth=".65"
+                    />
+                  ) : (
+                    /* A gapped crosshair, not a ring: the model location is marked
+                       without covering the few pixels of lumen underneath it. It is
+                       a locator, never a wall or a boundary. */
+                    <path
+                      d={crosshair(annotation.point, annotation.reach)}
+                      stroke="#f6c66c"
+                      strokeWidth=".6"
+                      fill="none"
+                    />
+                  )}
+                </g>
+              ))}
+              {placedLabels.map((label) => (
+                <g key={`label-${label.id}`} aria-hidden="true">
+                  <line
+                    x1={label.point[0]}
+                    y1={label.point[1]}
+                    x2={label.leader[0]}
+                    y2={label.leader[1]}
+                    stroke={label.tone === 'mark' ? '#81f1ed' : '#f6c66c'}
+                    strokeWidth=".25"
+                    opacity=".85"
+                  />
+                  <text
+                    x={label.x}
+                    y={label.y}
+                    textAnchor={label.textAnchor}
+                    fontSize={OVERLAY_FONT}
+                    fill={label.tone === 'mark' ? '#a8fffa' : '#ffe0a1'}
+                    stroke="#07151b"
+                    strokeWidth=".55"
+                    paintOrder="stroke"
+                  >
+                    {label.text}
+                  </text>
+                </g>
+              ))}
               {canMark && (
                 <g className={styles.ctCursor} aria-hidden="true">
                   <path
@@ -693,22 +877,23 @@ export function NativeCtViewer({
             <span className={styles.nativeBottom}>{labels.bottom}</span>
             <span className={styles.nativeLeft}>{labels.left}</span>
             {!ready && (
-              <div className={styles.ctLoad} role={failed ? 'alert' : 'status'}>
+              // While a previous plane is still on screen the notice is a chip, not a
+              // cover: the image stays readable and says which plane it is. Only a
+              // failure, or having nothing decoded yet, takes the whole frame.
+              <div
+                className={`${styles.ctLoad} ${shown && !failed ? styles.ctLoadChip : ''}`}
+                role={failed ? 'alert' : 'status'}
+                data-ct-load={failed ? 'failed' : 'loading'}
+              >
                 {failed ? (
                   <>
                     {patchFailed
                       ? 'The simulated nodule could not load.'
                       : 'This CT slice could not load.'}{' '}
-                    <button
-                      onClick={() => {
-                        setImageStatus(null)
-                        setPatchStatus(null)
-                        setRetry((v) => v + 1)
-                      }}
-                    >
-                      Retry slice
-                    </button>
+                    <button onClick={() => setRetry((v) => v + 1)}>Retry slice</button>
                   </>
+                ) : shown ? (
+                  `Loading slice ${slice}… showing slice ${shown.slice}`
                 ) : (
                   'Loading CT slice…'
                 )}
@@ -716,7 +901,7 @@ export function NativeCtViewer({
             )}
           </div>
           <p className={styles.pairCaption}>
-            Slice {slice} · patient directions stay attached to the image.
+            Slice {shownSlice} · patient directions stay attached to the image.
           </p>
         </div>
         {showScope && scopeAvailable && (
@@ -754,32 +939,22 @@ export function NativeCtViewer({
           </div>
         )}
       </div>
-      {local && (
-        <div className={styles.localCtControls}>
-          {answerControls}
-          {sliceControls}
-        </div>
-      )}
+      {/* The slice row keeps one fixed place directly under the image, above the
+          guidance whose wording changes. Reaching the response plane never moves it. */}
+      <div className={styles.ctControlBand}>
+        {sliceControls}
+        {belowImage}
+        {viewTools}
+        {answerControls}
+      </div>
+      {targetBar}
+      {orientationBlock}
       <div className={styles.ctViewButtons}>
-        {scopeAvailable && (
-          <button aria-pressed={showScope} onClick={() => setShowScope((v) => !v)}>
-            {showScope ? 'Hide parent airway view' : 'Show parent airway view'}
-          </button>
-        )}
         {!local && orientationControls && (demonstrate || revealed) && (
           <button onClick={() => setOrientation(orientationFor(trace.preset))}>
             Show book convention
           </button>
         )}
-        <button
-          aria-pressed={full}
-          onClick={() => {
-            setFull((v) => !v)
-            setMagnification(1)
-          }}
-        >
-          {full ? 'Airway detail' : 'Full CT field'}
-        </button>
       </div>
       {orientationPending && (
         <p className={styles.orientationPrompt}>
@@ -811,7 +986,6 @@ export function NativeCtViewer({
           </span>
         </div>
       )}
-      {!local && sliceControls}
       {!local && (
         <div className={styles.ctLevels} role="group" aria-label="Airway checkpoints">
           <button
@@ -874,8 +1048,8 @@ export function NativeCtViewer({
       )}
       {revealed && (
         <p className={styles.ctLegend}>
-          <span>○ Your trace</span>
-          <span>＋ Model reference — not yet faculty reviewed</span>
+          <span>○ ring · your trace</span>
+          <span>＋ open crosshair · model reference — not yet faculty reviewed</span>
         </p>
       )}
       <details className={styles.options}>
@@ -893,18 +1067,6 @@ export function NativeCtViewer({
             {showNodule ? 'View original CT without nodule' : 'Restore simulated nodule'}
           </button>
         )}
-        <label>
-          Image magnification{' '}
-          <input
-            aria-label="CT magnification"
-            type="range"
-            min="1"
-            max="2.5"
-            step=".1"
-            value={magnification}
-            onChange={(e) => setMagnification(Number(e.target.value))}
-          />
-        </label>
         <button
           onClick={() => {
             setSlice(trace.anchor.slice)
@@ -917,9 +1079,12 @@ export function NativeCtViewer({
           Show starting airway
         </button>
         <p>
-          Focus the image. Arrow keys move the cursor; Shift moves faster; Enter places a mark. Page
-          Up/Down or the mouse wheel scrolls the CT. Acquisition slice index: {slice}; patient z:{' '}
-          {sliceZ(slice).toFixed(1)} mm.
+          Focus the image. Arrow keys move the cursor; Shift moves faster; Enter places a mark; Page
+          Up and Page Down change the slice. The mouse wheel scrolls the page unless you turn on
+          Wheel steps slices, which Escape or the same button turns off again. Magnify enlarges the
+          native pixels beside the image; it adds no resolution and validates nothing. Hide overlays
+          removes the rings, crosshairs and labels and restores them immediately. Acquisition slice
+          index: {shownSlice}; patient z: {sliceZ(shownSlice).toFixed(1)} mm.
         </p>
         <p>
           Native 512×512 axial acquisition planes; 0.69×0.69 mm in-plane spacing. Fixed lung window

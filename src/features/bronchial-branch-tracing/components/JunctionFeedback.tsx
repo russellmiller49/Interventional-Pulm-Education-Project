@@ -89,7 +89,7 @@ export function JunctionFeedback({
         mark inside the intended lumen can lie a few millimetres from its locator; a mark nearer
         another locator is a reason to re-trace, not a verdict, and by itself it cannot show that a
         vessel or another structure was taken for this airway. Your marks stay exactly where you
-        placed them; the gold rings are model references, not corrections.
+        placed them; the gold crosshairs are model references, not corrections.
       </p>
       {unresolved.length > 0 && (
         <>
@@ -109,9 +109,10 @@ export function JunctionFeedback({
             ))}
           </p>
           <p>
-            Reference trace: the gold rings mark the model locators on the demonstration slices.
-            Replay the walkthrough below, then redo the marks or continue. An unresolved response
-            stays unresolved: it is neither counted against you nor turned into an identification.
+            Reference trace: the gold crosshairs mark the model locators on the demonstration
+            slices. Replay the walkthrough below, then redo the marks or continue. An unresolved
+            response stays unresolved: it is neither counted against you nor turned into an
+            identification.
           </p>
         </>
       )}
