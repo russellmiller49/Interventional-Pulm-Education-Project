@@ -237,7 +237,7 @@
       "segment": "Depth4_Gain_8, window 14.0-16.0 s, currentTime 14.025",
       "playing": "Play advanced currentTime 10.03 -> 10.53 s; the status line follows the element, not the intent",
       "outOfOrder": "three selections dispatched in one tick settle on Depth4_Gain_6, 10.0-12.0 s, readyState 4 - the last selection, not an earlier one",
-      "loadFailure": "alert shown, busy cleared, the host's Hold stays disabled",
+      "loadFailure": "Original claim that busy cleared was incorrect. The independent review reproduced terminal failures with aria-busy=true and corrected this in GuidedKnobology; see sanityReview.",
       "unchanged": "autoplay behaviour, browser safeguards, origin and session checks; no clip re-encoded"
     },
     "environmentArtefact": "While the desktop app's browser pane is hidden the whole tab's requestAnimationFrame is suspended, so the guided document's height message never fires and the iframe holds 800 px against 1285 px of content. Forcing a paint corrects it to 1289 px immediately. document.hidden was true throughout. Recorded, not treated as a product defect."
@@ -268,5 +268,123 @@
     "Owner review of this pull request.",
     "Lane 03 (anatomy and sweep usability) only after this merges.",
     "Lane 04/05 receive: the lesson 5 check-2 wording now that the held contact condition is visible, the nodal-border outline (L7-5), an expert caliper overlay for recorded ultrasound (L10-1), any change to the 4 x 13 sweep requirement (L9-1), handle labels in the needle view (L21-2), the 'last unannotated ultrasound frame' copy, and whether 'example' is the right word for the recorded control scale."
-  ]
+  ],
+  "sanityReview": {
+    "date": "2026-09-21",
+    "scope": "One bounded independent pre-merge review of PR #251; no lane 03, G02, clinical/content/media resolution, merge or deployment.",
+    "reviewedHead": "cb85f63ed955698d09bfed0d5347812eb4ba8114",
+    "mainSha": "c717c9ffae09cb67e19b06a56d37c75487a5605a",
+    "baseSha": "c717c9ffae09cb67e19b06a56d37c75487a5605a",
+    "mergeabilityAtStart": "MERGEABLE / CLEAN",
+    "changedFilesAtStart": [
+      ".claude/launch.json",
+      "EBUS-course/apps/web/src/features/knobology/videoSegments.ts",
+      "EBUS-course/apps/web/src/features/simulator/ContinuousSectorView.tsx",
+      "EBUS-course/apps/web/src/features/simulator/SimulatorPage.tsx",
+      "EBUS-course/apps/web/src/guided/GuidedKnobology.tsx",
+      "EBUS-course/apps/web/src/guided/RecordedFrameView.tsx",
+      "EBUS-course/apps/web/src/guided/guided.css",
+      "EBUS-course/apps/web/src/guided/models/ModelImage.tsx",
+      "EBUS-course/apps/web/src/guided/models/ModelViewport.tsx",
+      "EBUS-course/apps/web/src/guided/models/ModelWorkbench.tsx",
+      "EBUS-course/apps/web/src/guided/models/models.css",
+      "EBUS-course/apps/web/src/guided/recordedFrameRegion.test.ts",
+      "EBUS-course/apps/web/src/guided/recordedFrameRegion.ts",
+      "docs/gap-remediation/fellow-walkthrough/ebus/EBUS-PRE-REVIEW-02-handoff.md",
+      "docs/gap-remediation/fellow-walkthrough/ebus/EBUS-PRE-REVIEW-02-status.json",
+      "scripts/ebus-guided/measure-recorded-sector.mjs",
+      "scripts/ebus-guided/measure-recorded-sector.py",
+      "src/features/ebus-guided/__tests__/pre-review-02.test.tsx",
+      "src/features/ebus-guided/components/LessonHost.tsx",
+      "src/features/ebus-guided/components/course.module.css",
+      "src/features/ebus-guided/content/optimize.ts",
+      "src/features/ebus-guided/content/types.ts",
+      "src/lib/ebus-guided-bridge.ts",
+      "src/lib/ebus-model-contract.ts",
+      "src/lib/ebus-recorded-contract.ts"
+    ],
+    "overlappingOpenPullRequests": [
+      {
+        "number": 254,
+        "paths": [".claude/launch.json"],
+        "runtimeOverlap": false
+      }
+    ],
+    "finding": {
+      "severity": "P2",
+      "path": "EBUS-course/apps/web/src/guided/GuidedKnobology.tsx",
+      "reproduction": "Abort Depth4.mp4 or knobology_lookup.json, open lesson 7 acquisition. The alert appears but both aria-busy attributes remain true and the status says Loading the selected recording. Lookup failure also leaves the image loading line present.",
+      "correction": "Derive frameLoading from unreadiness AND absence of a terminal error. Show Recording unavailable on failure. Keep frameReady and acquisition requirements unchanged.",
+      "regression": "e2e/ebus-recording-status.spec.ts: both browser tests fail on the original production build at the aria-busy assertion."
+    },
+    "whitespace": "Removed the added EOF blank line in RecordedFrameView.tsx reported by git diff --check origin/main.",
+    "playback": {
+      "browser": "Fresh headed Playwright Chromium contexts, production standalone server, original H.264; no stored owner progress reused.",
+      "fourArrows": "Gain example 8 -> 4, Depth4_Gain_4 at 6.025 s, 1920x1080, readyState 4; focus remains Image gain.",
+      "alternating": "Gain/contrast changes settle on Depth4_Contrast_4 at 22.025 s; Hold disabled. Returning to gain selects Depth4_Gain_4 at 6.025 s and enables Hold.",
+      "delayedEarlierLoad": "Depth3.mp4 request held pending; newer Depth4.mp4 decodes at 4.025 s. Releasing the earlier request leaves Depth4_Gain_3 displayed, ready and focused. During pending work frameReady=false and recorded is absent.",
+      "hold": "Original full 1920x1080 capture; held image data URL unchanged after whole-frame toggle. Enlarged held view retains the segment caption.",
+      "delayedDecodeReadiness": "On corrected build, temporarily expose readyState=1 for the earlier gain-7 window. Three further arrows select gain 4. Release the gate and deliver late seeked/canplay events: Depth4_Gain_4 remains current and focused. Test instrumentation delays readiness; actual newer pixels are original H.264."
+    },
+    "contact": {
+      "status": "L5-1 DATA CONTRACT RESOLVED; QUESTION/EVIDENCE ALIGNMENT REMAINS CONTENT HOLD FOR LANE 04/05.",
+      "statesTested": ["gap", "direct"],
+      "frameIds": [
+        "additional-models-v1:contact:8bc777e7",
+        "additional-models-v1:contact:24cb3b20"
+      ],
+      "trace": "state.mode -> model observation contactMode -> validated same-session bridge -> retained acquisition -> CONTACT_MODE_LABELS on held evidence. Non-contact and older optional-field cases pass existing tests.",
+      "residual": "Both acquired conditions remain truthfully labelled beside Lesson 5 check 2, whose authored text still names reflector. No relabel or substitution.",
+      "reload": "No acquisition is persisted. Reload starts the unfinished lesson at briefing with authored demonstration, without claiming restored held evidence."
+    },
+    "region": {
+      "remeasured": [480, 76, 1284, 857],
+      "sampleCount": 90,
+      "bannerSample": "Depth3.mp4 at 11 s (Depth3_Gain_6); original header and bottom device data visible outside the teaching region.",
+      "notes": "Measured script samples 15 times per file, not every possible frame. Independently inspected banner sample, Depth4 gain image and Depth8 color-flow image. No asset bytes changed; no borders inferred."
+    },
+    "viewports": [
+      [1440, 900],
+      [1246, 1021],
+      [1024, 768],
+      [390, 844]
+    ],
+    "visual": "Recorded, phantom and needle workbenches measured at all four sizes: no positive horizontal overflow, normal painted iframe height matches its document. Desktop image and control columns share their top edge. At phone width recorded controls remain reachable; model workbenches retain their existing desktop/tablet requirement and pause without claiming a frame.",
+    "legacy": "Standalone simulator Freeze -> Resume -> Freeze works and no guided-scan-workspace is mounted; standalone knobology loads. Guided-only wrappers and Freeze condition are confined to guided branches. Phantom recommended plane/reference and needle sheath/lock/advance respond.",
+    "vocabulary": "Current, previous and enlarged segment captions; gain/contrast outputs; workbench boundary; two optimize strings; gain/depth outstanding conditions all describe authored recordings. Depth selection chooses a recording at a depth (including preferred gain segments), not a synthetic independent depth-control clip. No patient-setting, recommendation or learner-acquisition claim added.",
+    "preExistingNotCorrected": [
+      {
+        "path": "EBUS-course/apps/web/src/guided/GuidedKnobology.tsx",
+        "observation": "After video.pause() outside the UI, video.paused is true but status remains Recording playing. Main uses the same playbackPaused state for that label and does not subscribe to native pause. PR adds a subscription in a mount-only effect before async lookup mounts the video, so it does not repair this pre-existing mismatch. Not a PR-caused regression; no change made."
+      }
+    ],
+    "validation": {
+      "status": "passed on corrected production build",
+      "baselineHost": "27 suites / 293 tests passed",
+      "baselineEmbedded": "36 files / 264 tests passed",
+      "baselineRootTypes": "exit 0",
+      "baselineBuild": "exit 0",
+      "regressionBefore": "2 failed, both at aria-busy=true versus expected false",
+      "fullSuite": "Not rerun: no shared legacy runtime changed during correction and focused failures isolate a guided loading label.",
+      "correctedHost": "27 suites / 293 tests passed",
+      "correctedEmbedded": "36 files / 264 tests passed",
+      "correctedEmbeddedTypes": "exit 0",
+      "correctedRootTypes": "NODE_OPTIONS=--max-old-space-size=8192 npm run type-check: exit 0",
+      "correctedBuild": "npm run build: exit 0; production server stopped before rebuilding",
+      "regressionAfter": "2 passed on rebuilt standalone host, headed Chromium",
+      "healthyAfter": "Delayed earlier decode-readiness and late seeked/canplay events do not replace newer segment; repeated busy selections retain focus; UI Play/Pause, gain goal and held whole-frame identity pass.",
+      "lint": "Scoped ESLint exit 0 under repository config (imported EBUS-course tree excluded by existing policy).",
+      "prettier": "Changed nonignored paths pass repository Prettier; imported EBUS-course files preserve existing formatting policy.",
+      "diffCheck": "git diff --check origin/main: exit 0",
+      "mainRechecked": "c717c9ffae09cb67e19b06a56d37c75487a5605a; remote PR still cb85f63ed955698d09bfed0d5347812eb4ba8114 before correction push."
+    },
+    "evidenceDirectory": "/tmp/ebus251-sanity",
+    "notClaimed": [
+      "clinical/source/media-rights approval",
+      "human learner validation",
+      "Safari/Firefox/real-device verification",
+      "full-display fullscreen support; iframe request was denied and the fallback disclosed it"
+    ],
+    "result": "SANITY REVIEW: READY TO MERGE"
+  }
 }

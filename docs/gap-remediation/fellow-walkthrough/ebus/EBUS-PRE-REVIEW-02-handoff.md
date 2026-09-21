@@ -329,3 +329,157 @@ was suspended too. Recorded rather than "fixed".
 This batch is not a clinical review, a source review, a media-rights review or a usability session.
 "Reviewed" in this course still means a place in a browser, not competence. Nothing here is
 authorised to merge, deploy, publish or start lane 03.
+
+## Independent pre-merge sanity review — 2026-09-21
+
+One bounded review of PR #251, starting at the requested head
+`cb85f63ed955698d09bfed0d5347812eb4ba8114`. Current main and the PR base were both
+`c717c9ffae09cb67e19b06a56d37c75487a5605a`; GitHub reported `MERGEABLE / CLEAN`.
+The 25-file starting inventory is recorded in `sanityReview.changedFilesAtStart` in the status
+JSON. Of the other open PRs, only #254 overlaps, in `.claude/launch.json`; none overlaps this PR's
+runtime changes. The explicit review request authorizes the correction in the existing PR.
+
+Read the Prompt 02 instructions and PI/EBUS coordination rules from the local implementation pack,
+the 01 and 02 handoffs, 02 status, active self-paced contract, actual diff, lookup and bridge.
+The earlier fellow walkthrough remains AI-assisted engineering evidence, not learner validation
+or clinical review. No G02 audit, lane 03, redesign, clinical/media resolution, merge or deployment.
+
+### Reproduced finding and narrow correction
+
+**P2 — terminal media failures still claimed active loading.** On the original production build,
+abort either `Depth4.mp4` or `knobology_lookup.json`, open lesson 7 and continue to acquisition.
+The error alert appears, but the new status still says “Loading the selected recording” and both
+new `aria-busy` attributes stay `true`. Lookup failure also leaves the image loading line present.
+The original Playback evidence row's claim that busy cleared was incorrect.
+
+`GuidedKnobology` now distinguishes a failed recording from one still loading. Both busy attributes
+clear on failure, the status says “Recording unavailable”, and the loading line disappears.
+`frameReady`, selection controls, decoding, snapshot identity and all acquisition predicates are
+unchanged. Failure does not enable Hold.
+
+The two tests in `e2e/ebus-recording-status.spec.ts` both failed on the original built head at the
+`aria-busy` assertion before correction. They drive the real host and embedded app with isolated
+browser contexts and failed network requests, rather than mocking the workbench. The added EOF
+blank line in `RecordedFrameView.tsx` was also removed because `git diff --check origin/main`
+reported it. No speculative cleanup was made.
+
+### Playback and acquisition evidence
+
+Headed Chromium, clean contexts, production standalone host on `127.0.0.1:3137`. `ffprobe` and
+browser decoding both confirm original H.264 at 1920 × 1080. No replacement media or owner progress.
+
+| Challenge                              | Independent result                                                                                                                                                                           |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Four rapid arrows                      | Gain 8 → 4; `Depth4_Gain_4`, 6.025 s, readyState 4. Focus stays on Image gain.                                                                                                               |
+| Rapidly alternating controls           | Ends on `Depth4_Contrast_4`, 22.025 s; Hold correctly unavailable.                                                                                                                           |
+| Away from and back to required control | Return to gain 4 produces `Depth4_Gain_4`, 6.025 s; Hold becomes available.                                                                                                                  |
+| Earlier slow media, newer fast media   | Hold the Depth3 request pending, choose Depth4, then release Depth3. Depth4 remains displayed at 4.025 s with source `Depth4_Gain_3`; the old request cannot replace it.                     |
+| Input while busy                       | Depth remains focused and accepts the newer selection while the earlier request is pending. Busy observation has frameReady=false and no recorded source; successful newer load clears busy. |
+| Paused and playing                     | Initial decode occurs paused. Play advances currentTime from 6.025 to 6.533 s without autoplay.                                                                                              |
+| Hold and region toggle                 | Whole 1920 × 1080 held image; data URL unchanged after toggling to whole frame. Enlarged held view keeps the source caption.                                                                 |
+| Error                                  | Missing clip and missing lookup cannot create a held acquisition; terminal loading claim corrected as above.                                                                                 |
+
+The lookup independently supports the last-control rule. Gain segments occupy 0–16 seconds,
+contrast segments 16–32 seconds and flow segments 32–38 seconds of each depth file. A selected gain
+value does not alter a contrast recording. The gain lab requires a middle gain, contrast explored,
+and gain last; its explanation, selected segment and gate agree. The depth lab selects a recording
+at the requested depth (including preferred `Depth4_Gain_3`), rather than synthesizing a distinct
+depth-control segment. The Doppler lab requests its flow segment. Existing tests compare
+`labGoalRequirements` with `labGoalMet` across all labs. No criterion was removed.
+
+**Pre-existing limitation, outside the correction:** pausing the video element outside the UI can
+leave “Recording playing” displayed. Reproduced with `video.pause()`. Main already derives the
+label from `playbackPaused` and lacks a native pause subscription; this PR's added mount-only
+subscription runs before async lookup creates the video, so it does not repair that existing
+behavior. Normal UI play/pause works. This is recorded separately from the PR-caused loading defect.
+
+### Region, vocabulary and contact carry-forward
+
+Fresh measurement of 90 sampled frames reproduces **x 480…1763, y 76…932**, 1284 × 857. The script
+samples 15 times per file; this is not an assertion about every possible frame. The default Python
+lacked numpy, so the existing extracted PNGs were analyzed with the bundled Python runtime.
+Independently inspected the original Depth3 frame at 11 s, Depth4 gain image and Depth8 flow image.
+The Depth3 sample has its header and device information outside the region, visible in the original
+frame. The sector and depth scale are inside the region. Display transforms do not modify files,
+held pixels or frame identity, and the whole-frame control remains one action away. No border was
+inferred or drawn. Tested enlargement remained below original resolution; fullscreen was denied in
+this iframe and the UI disclosed its workbench-sized fallback.
+
+Every new learner-facing “example” use was checked: current/previous/enlarged segment captions,
+gain/contrast outputs, the workbench boundary paragraph, the two Optimize strings, and the gain/depth
+outstanding conditions. They describe the authored recording library; no device units, patient
+settings, recommendation or learner-owned acquisition are implied. Editorial preference remains
+lane 04, not a merge blocker.
+
+**L5-1 DATA CONTRACT RESOLVED; QUESTION/EVIDENCE ALIGNMENT REMAINS CONTENT HOLD FOR LANE 04/05.**
+
+Drove the actual contact controls through the model steps, then held **air gap** and, in a separate
+fresh journey, **direct contact**. The model observation, validated same-session bridge and retained
+pane preserve the selected mode. Frame IDs were `additional-models-v1:contact:8bc777e7` and
+`additional-models-v1:contact:24cb3b20`. On check 2 the pane truthfully names the held condition while
+the authored question still names reflector. Nothing is relabelled or substituted. Reload restarts
+the unfinished lesson at briefing and clears held evidence, as the existing storage contract
+requires. Existing tests cover missing optional modes, invalid modes and non-contact packages.
+No condition is reconstructed from a later question or guessed from pixels.
+
+### Visual and legacy checks
+
+Recorded, phantom and needle workbenches were measured at 1440×900, 1246×1021, 1024×768 and 390×844.
+No positive horizontal overflow was found in host or iframe. Normally painted iframe heights match
+their documents; no background-tab throttling workaround was introduced.
+
+| Viewport  | Recorded image region | Control width / placement                |
+| --------- | --------------------- | ---------------------------------------- |
+| 1440×900  | 605.6 × 404.2         | 326.9, beside image at the same top edge |
+| 1246×1021 | 501.4 × 334.6         | 292.1, beside image at the same top edge |
+| 1024×768  | 566.3 × 377.9         | 313.8, beside image at the same top edge |
+| 390×844   | 301.0 × 200.9         | 301, stacked and reachable               |
+
+Model workbenches retain their existing desktop/tablet requirement at phone width and preserve
+paused state without claiming a current frame. The phantom's recommended plane/reference and the
+needle's sheath, lock and advance controls respond. Standalone simulator Freeze → Resume → Freeze
+works, `.guided-scan-workspace` is absent there, and standalone knobology loads. Shared renderer
+edits remain guarded by guided configuration; selection logic and standalone geometry are unchanged.
+
+Prompt 01 protection comes from the focused host/shared regressions plus these real acquisition,
+reload and navigation journeys: truthful verdicts, case exit, evidence identity, matching/ordering,
+record semantics and lesson/focus clearance remain intact. This was not another full walkthrough.
+For the structured-module review contract within this scope: H1/H4–H12 PASS; H2/H3 NOT APPLICABLE
+(no curriculum redesign or stage migration; active self-paced policy governs layout). These are
+bounded engineering checks, not a full-module teaching or clinical certification.
+
+### Final validation
+
+Raw logs, measured JSON and screenshots from this review are local in `/tmp/ebus251-sanity`;
+no raw media or screenshots were added to Git.
+
+| Check on the corrected tree                                                  | Result                                                                                                                                                                             |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npx jest src/features/ebus-guided src/features/learning-module --runInBand` | 27 suites, 293 tests pass; includes Prompt 01 and 02 regressions.                                                                                                                  |
+| `npm --prefix EBUS-course/apps/web test`                                     | 36 files, 264 tests pass.                                                                                                                                                          |
+| `npm --prefix EBUS-course/apps/web run typecheck`                            | Exit 0.                                                                                                                                                                            |
+| `NODE_OPTIONS=--max-old-space-size=8192 npm run type-check`                  | Exit 0.                                                                                                                                                                            |
+| Scoped ESLint, including new browser tests                                   | Exit 0 under repository config. The imported EBUS tree remains excluded by that config.                                                                                            |
+| Prettier on changed nonignored paths                                         | Pass under repository policy; imported EBUS formatting preserved.                                                                                                                  |
+| `git diff --check origin/main`                                               | Exit 0 after removing the reported EOF blank line.                                                                                                                                 |
+| `npm run build`                                                              | Exit 0, fresh embedded bundle and standalone output. Review production server stopped before rebuilding; no task dev server/watchers running.                                      |
+| New browser regressions against rebuilt production                           | 2 pass, following 2 failures on the original build.                                                                                                                                |
+| Healthy-media check after correction                                         | Repeated selections while earlier decode-readiness is withheld, late seeked/canplay events, normal UI Play/Pause, gain criterion, Hold and unchanged whole-frame capture all pass. |
+
+For the deterministic decode-readiness check, test instrumentation temporarily exposed readyState=1
+for the earlier gain-7 window; three more arrows selected gain 4. After releasing that gate and
+delivering late media events, `Depth4_Gain_4` stayed current and focused. This complements the real
+pending-network test; it is not presented as a naturally occurring slow decode.
+
+The new regression command was `npx playwright test --config /tmp/ebus251-sanity/playwright.config.cjs`.
+That local configuration selects only `ebus-recording-status.spec.ts`, one worker, no retries,
+headed Chromium at 1440×900, and baseURL `http://127.0.0.1:3137`, with no dev webServer. The host was
+started with `PORT=3137 HOSTNAME=127.0.0.1 node .next/standalone/server.js` after `npm run build`.
+
+The full suite was not rerun: the correction only changes GuidedKnobology's loading presentation;
+no shared legacy runtime was edited during this review, and the two failures isolate that state.
+Main and remote PR head were re-fetched immediately before delivery and remained unchanged.
+
+**SANITY REVIEW: READY TO MERGE**, with the terminal-loading correction in this commit. The
+pre-existing external-pause label limitation and content/media holds above are not claimed resolved.
+No merge, deployment or next lane was performed.

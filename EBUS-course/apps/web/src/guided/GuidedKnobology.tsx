@@ -130,6 +130,8 @@ export function GuidedKnobology({
   const segment = resolved?.segment
   const key = segment?.name ?? ''
   const frameReady = !!key && readyKey === key && !error
+  const recordingUnavailable = status === 'error' || !!error
+  const frameLoading = !frameReady && !recordingUnavailable
   const example = useMemo(() => (segment ? describeExample(segment) : null), [segment])
   /**
    * A selection is usable as soon as the lookup resolves it; the frame catches up on its own
@@ -511,7 +513,7 @@ export function GuidedKnobology({
               connectLine
               onPlace={placementOpen ? placeCaliper : undefined}
             />
-            {!frameReady && !error && (
+            {frameLoading && (
               <p role="status" className="recorded-busy" data-recorded-busy>
                 Loading the selected ultrasound image…
               </p>
@@ -546,23 +548,25 @@ export function GuidedKnobology({
           )}
         </div>
         <div className="recorded-controls">
-          <p role="status" aria-busy={!frameReady}>
-            {config.locked
-              ? 'Held recording'
-              : !frameReady
-                ? 'Loading the selected recording'
-                : state.frozen
-                  ? 'Image frozen'
-                  : playbackPaused
-                    ? 'Recording paused'
-                    : 'Recording playing'}{' '}
+          <p role="status" aria-busy={frameLoading}>
+            {recordingUnavailable
+              ? 'Recording unavailable'
+              : config.locked
+                ? 'Held recording'
+                : !frameReady
+                  ? 'Loading the selected recording'
+                  : state.frozen
+                    ? 'Image frozen'
+                    : playbackPaused
+                      ? 'Recording paused'
+                      : 'Recording playing'}{' '}
             · Depth {getKnobologyVideoDepthCm(state.depth)} cm
           </p>
           {fitToggle}
           <button type="button" onClick={() => setEnlarged(true)} data-recorded-enlarge>
             Enlarge the image
           </button>
-          <fieldset hidden={config.locked} disabled={!controlsUsable} aria-busy={!frameReady}>
+          <fieldset hidden={config.locked} disabled={!controlsUsable} aria-busy={frameLoading}>
             <legend>Image controls</legend>
             {(['depth', 'gain', 'contrast'] as const)
               .filter((c) => config.controls.includes(c))
