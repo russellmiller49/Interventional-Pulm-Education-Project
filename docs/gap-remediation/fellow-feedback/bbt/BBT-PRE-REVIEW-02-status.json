@@ -438,7 +438,7 @@
   "next": "One bounded PR, then stop. Tasks 03 and 04 follow after review and merge. OD-01 stays open; task 05 prepares its packet.",
   "sanityReview": {
     "date": "2026-09-21",
-    "decision": "NOT READY TO MERGE: the requested mobile Check stability criterion remains unmet",
+    "decision": "READY TO MERGE: compact BBTF-12 screen stability repaired and validated",
     "expectedAndReviewedOriginalHead": "b956a91af841a38013cc2566ed0830cfe7f56787",
     "fetchedMainAndPrBase": "c717c9ffae09cb67e19b06a56d37c75487a5605a",
     "initialMergeability": "MERGEABLE / CLEAN",
@@ -465,19 +465,6 @@
       "fix": "Report the decoded displayed slice to the lesson before paint; derive transport identity and caption from it. Keep requested view/draft state separate.",
       "regressions": "One Jest test for delayed/superseded frames; three deterministic delayed browser tests, one per requested viewport."
     },
-    "remainingFinding": {
-      "id": "BBT-SANITY-MOBILE-CHECK",
-      "severity": "P2",
-      "introducedBy252": false,
-      "viewport": [390, 844],
-      "trigger": "Place a real mark on slice 412, adjust the display, then Check my tracing.",
-      "originalHeadMarkDeltaY": -239.3125,
-      "baseImageDeltaY": -238.3125,
-      "correctedBuildMarkDeltaY": -238.3125,
-      "cause": "The existing phase effect still calls workspace.scrollIntoView in the stacked layout; the task block also changes height.",
-      "protectedState": "Stored native mark, crop transform and slice remain unchanged.",
-      "disposition": "Recorded as pre-existing and left unchanged under the bounded review instruction; prevents an unconditional READY declaration against the requested matrix."
-    },
     "browser": {
       "runtime": "Clean ephemeral Playwright Chromium profiles; local production build on 127.0.0.1:3132",
       "viewports": [
@@ -492,9 +479,6 @@
         "/en/learn/anatomy/branch-tracing/practice",
         "/en/learn/anatomy/branch-tracing/assess"
       ],
-      "matrixChecks": 21,
-      "matrixChecksPassed": 20,
-      "matrixFailure": "Mobile Check screen position only",
       "nativeFullscreen": "Trusted Playwright pointer activation enters native fullscreen at all three sizes; close button restores state/focus. Headless keyboard Escape did not exit browser-managed fullscreen; not classified as a browser product defect.",
       "fallback": "Both request rejection and fullscreenEnabled=false exercised. In-page enlargement identifies itself as expanded views, Escape closes it, state/focus restored, no observed competing document scroll.",
       "magnification": "4x scales the live native image transform by exactly four, preserves stored coordinates, shows updated native href after stepping, and projected marks agree to <0.001 SVG units.",
@@ -521,17 +505,23 @@
           "meanLuminance": 142.50656958155383,
           "standardDeviation": 67.96007143174815
         }
-      ]
+      ],
+      "initialIndependentMatrix": {
+        "checks": 21,
+        "passed": 20,
+        "failure": "Mobile Check screen position only",
+        "asOf": "Before compact correction; the remaining case is now covered by the passing production regression"
+      }
     },
     "validation": {
-      "productionBuild": "PASS, npm run build (both original head and corrected display code); initial empty-optional-env harness failure corrected with non-secret placeholders",
+      "productionBuild": "PASS, full npm run build after compact correction; non-secret process placeholders",
       "typecheck": "PASS",
       "changedPathLint": "PASS",
       "prettier": "PASS",
       "gitDiffCheck": "PASS",
       "focusedJest": "121 passed, 1 baseline access-contract failure across 18 suites",
-      "baselineAccessContract": "Clean detached origin/main checkout: same assertion fails; 7 passed, 1 failed",
-      "playwright": "35 passed, production build; original head: 32 passed",
+      "baselineAccessContract": "Current origin/main d9dbfa2e: identical failure, 7 passed / 1 failed",
+      "playwright": "38 passed, zero skipped/flaky/failed, corrected production build",
       "fullRepositorySuite": "Not rerun: correction touches only BBT display synchronization, no plausible cross-module impact"
     },
     "od01": "OPEN; entryLimitation unchanged, exercises provisional, five-junction packet NOT REVIEWED; no anatomical approval or correctness classifier added",
@@ -543,6 +533,111 @@
       "Native browser zoom",
       "Human/OS-level native fullscreen Escape"
     ],
-    "stop": "No merge, deploy, Prompt 03, new walkthrough, G02 audit, anatomy/source edits or OD-01 resolution."
+    "stop": "No merge, deploy, Prompt 03, new walkthrough, G02 audit, anatomy/source edits or OD-01 resolution.",
+    "currentMainAtFinalization": "d9dbfa2ec33c00f90395c14ec1dc6634623551e2",
+    "mainAdvanceOverlap": "No BBT overlap from EBUS/peripheral-imaging merges; PR remains mergeable",
+    "resolvedCompactFinding": {
+      "id": "BBT-SANITY-MOBILE-CHECK",
+      "severity": "P2",
+      "introducedBy252": false,
+      "viewport": [390, 844],
+      "trigger": "Place a real mark on slice 412, adjust the display, then Check my tracing.",
+      "originalHeadMarkDeltaY": -239.3125,
+      "baseImageDeltaY": -238.3125,
+      "correctedBuildMarkDeltaY": -238.3125,
+      "cause": "The existing phase effect still calls workspace.scrollIntoView in the stacked layout; the task block also changes height.",
+      "protectedState": "Stored native mark, crop transform and slice remain unchanged.",
+      "disposition": "REPAIRED by task-entry/phase distinction and retaining measured task-summary footprint; see compactCorrection"
+    },
+    "compactCorrection": {
+      "date": "2026-09-21",
+      "preCorrectionHead": "ad79dbfb7c4930ee488a230a7b2f3f2af5870a1c",
+      "taskIdentity": "guide + exercise; phase changes no longer trigger document task-entry scrolling",
+      "layout": "On same-task phase changes, retain the actual task card height as min-block-size; clear it on a new guide/exercise. This prevents shorter feedback summaries collapsing space above CT. No timers, scroll-back, hard-coded offsets or viewport conditions.",
+      "feedback": "Rendered normally with existing live/status semantics; browser test scrolls to feedback and verifies reachability. No autofocus or new acknowledgement.",
+      "regression": "Real pointer mark and Check, nonzero document scroll, full before/after pane/image/mark rectangles and source state, 1 px tolerance. Three requested viewports pass against production.",
+      "baselineFailure": {
+        "preCorrectionHead": "100 → 216 px document scroll; image top 468.96875 → 328.65625; mark ring top 642.58740234375 → 502.27490234375",
+        "currentMain": "Identical compact failure at d9dbfa2ec33c00f90395c14ec1dc6634623551e2",
+        "effectOnlyCandidate": "Document scroll 100 → 100, but image/mark still shift -24.3125 px because task summary shrinks"
+      },
+      "productionMeasurements": [
+        {
+          "test": "Check preserves the current task screen position at 390×844",
+          "status": "passed",
+          "documentScroll": [100, 100],
+          "paneScroll": [0, 0],
+          "paneXY": [
+            [0, 405.1875],
+            [0, 405.1875]
+          ],
+          "imageXY": [
+            [13, 468.96875],
+            [13, 468.96875]
+          ],
+          "markXY": [
+            [186.6280059814453, 642.58740234375],
+            [186.6280059814453, 642.58740234375]
+          ],
+          "transformUnchanged": true,
+          "slice": ["412", "412"],
+          "nativeMarksUnchanged": true
+        },
+        {
+          "test": "Check preserves the current task screen position at 1024×768",
+          "status": "passed",
+          "documentScroll": [0, 0],
+          "paneScroll": [50, 50],
+          "paneXY": [
+            [320, 200.59375],
+            [320, 200.59375]
+          ],
+          "imageXY": [
+            [514.046875, 214.375],
+            [514.046875, 214.375]
+          ],
+          "markXY": [
+            [664.7244873046875, 365.0545349121094],
+            [664.7244873046875, 365.0545349121094]
+          ],
+          "transformUnchanged": true,
+          "slice": ["412", "412"],
+          "nativeMarksUnchanged": true
+        },
+        {
+          "test": "Check preserves the current task screen position at 1427×1226",
+          "status": "passed",
+          "documentScroll": [0, 0],
+          "paneScroll": [50, 50],
+          "paneXY": [
+            [420, 173],
+            [420, 173]
+          ],
+          "imageXY": [
+            [613.5, 186.78125],
+            [613.5, 186.78125]
+          ],
+          "markXY": [
+            [909.239990234375, 482.52001953125],
+            [909.239990234375, 482.52001953125]
+          ],
+          "transformUnchanged": true,
+          "slice": ["412", "412"],
+          "nativeMarksUnchanged": true
+        }
+      ],
+      "newTaskEntry": "Next airway interval remains positioned and releases old minimum block size",
+      "validation": {
+        "jest": "121 passed, one known baseline access failure",
+        "playwright": "38 passed",
+        "typecheck": "PASS",
+        "lint": "PASS",
+        "prettier": "PASS",
+        "diffCheck": "PASS",
+        "productionBuild": "PASS"
+      },
+      "protectedContract": "All protected anatomy/source/content/engine files byte-identical to Prompt 02 base. OD-01 OPEN; entryLimitation unchanged; provisional/NOT REVIEWED intact.",
+      "evidenceDirectory": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt252-compact-2026-09-21/"
+    }
   }
 }

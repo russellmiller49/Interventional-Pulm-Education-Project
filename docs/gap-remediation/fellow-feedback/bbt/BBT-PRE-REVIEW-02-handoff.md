@@ -400,10 +400,10 @@ learner review as complete.
 
 ## Independent bounded sanity review — 2026-09-21
 
-**SANITY REVIEW: NOT READY TO MERGE.** The new delayed-caption defect is corrected, but the
-requested 390 × 844 Check-position criterion is still unmet. That mobile behavior also occurs on
-the unchanged base; it is recorded here without expanding the correction into pre-existing work.
-This supersedes any blanket claim above that Check preserves the screen position at every size.
+**SANITY REVIEW: READY TO MERGE.** The delayed-caption correction and the subsequent bounded
+BBTF-12 compact-layout correction both pass. The initial review measurements below are retained
+as historical evidence; the final compact-layout disposition and production measurements follow
+at the end of this document.
 
 ### Repository and protected contract
 
@@ -440,7 +440,7 @@ Decoded screenshot luminance before / pending / pending / settled is 135.46 / 13
 142.51 (0–255). The pending samples retain image 416 and **Demonstration slice 416**; only after
 loading do image, image label and transport change to 415. No misleading empty frame was observed.
 
-### Measured browser results
+### Initial sanity-review measurements (before compact correction)
 
 Fresh, disposable Chromium contexts; no owner profile or backup. Production server:
 `http://127.0.0.1:3132`. Main review paths were the BBT overview, Learn
@@ -474,7 +474,8 @@ still invokes `workspace.scrollIntoView` when the instructions pane has visible 
 original PR head, document scroll changes 49→264 and the mark moves −239.31 px. On the corrected
 build the measured shift is −238.31 px; on the unmodified base the image shifts −238.31 px. The
 small run-to-run difference is subpixel/layout rounding, not a correction. Task-block height also
-changes. This is a pre-existing, remaining BBTF-12 limitation, not a new coordinate defect.
+changes. This was the pre-existing BBTF-12 limitation, now repaired by the bounded correction below;
+it was never a coordinate defect.
 
 At 1024 × 768, the smaller native plane remains usable for following the central lumen, with the
 labelled magnifier immediately beside the slice controls. At 4×, the native transform scales by
@@ -494,7 +495,7 @@ in-page fallback. It occupies the viewport, says **expanded views**, exits on Es
 and preserves state; no conflicting document scroll was observed. Ctrl/Meta wheel event propagation
 was checked; native browser zoom itself was not tested.
 
-### Validation and evidence
+### Initial sanity-review validation and evidence
 
 - Corrected production build: **PASS**, full `npm run build`; original head also built successfully.
   An initial harness attempt supplied empty optional environment values and failed validation; it
@@ -516,3 +517,79 @@ Raw measurements, screenshots, reproduction scripts and logs are retained outsid
 and `supplement.json` hold the principal measurements.
 
 No merge, deployment, Prompt 03, source-coordinate change or OD-01 resolution was performed.
+
+## Final BBTF-12 compact-layout correction — 2026-09-21
+
+**SANITY REVIEW: READY TO MERGE.** This replaces the initial NOT READY disposition.
+
+The corrected head builds on `ad79dbfb7c4930ee488a230a7b2f3f2af5870a1c` in the existing PR #252.
+Current fetched `origin/main` is `d9dbfa2ec33c00f90395c14ec1dc6634623551e2` (including the
+EBUS and peripheral-imaging merges). Those merges have no BBT file overlap; GitHub reports the PR
+mergeable. The Prompt 02 source baseline remains `c717c9ffae09cb67e19b06a56d37c75487a5605a`.
+
+### Narrow correction
+
+`LocalCtLesson` now distinguishes the guide/exercise identity from its phase. Only entering a
+different guide/exercise can call the existing document task-entry `scrollIntoView`. A phase
+change can still refresh the instructions pane, without treating the CT workspace as newly entered.
+
+Removing the document reset alone left a **24.31 px** shift because the shorter feedback summary
+collapsed space above the CT. For a same-task phase transition, the task card now keeps its already
+measured height as a minimum block size. The next guide/exercise clears that minimum and uses its
+own natural layout. This reserves existing layout space; it never scrolls back, applies a positional
+offset, uses a timer or checks a viewport breakpoint. Longer content can grow naturally. Feedback
+renders in normal document flow with the existing live/status semantics; no focus movement or
+mandatory acknowledgement was added. No viewer, source, engine or content change was needed.
+
+### Regression and measured results
+
+The new browser regression runs at **390 × 844, 1024 × 768 and 1427 × 1226**. It enters a real
+marking task, places a real pointer mark, establishes document scroll (100 px on the phone) or
+image-pane scroll (50 px on desktop), records document/pane scroll, pane/image rectangles, the
+mark rectangle, native mark, source slice and SVG transform, then activates Check by an actual
+pointer click at the measured button. Every positional assertion permits at most **1 px**.
+It subsequently scrolls to the rendered feedback and verifies it is reachable. On the phone it also
+enters the next airway interval and confirms task-entry positioning still works and the previous
+minimum block size is released.
+
+| 390 × 844 measurement                     | Pre-correction PR / current main | Corrected production build   |
+| ----------------------------------------- | -------------------------------- | ---------------------------- |
+| Document scroll before → after Check      | 100 → 216 px                     | **100 → 100 px**             |
+| CT image top before → after               | 468.96875 → 328.65625 px         | **468.96875 → 468.96875 px** |
+| Mark x before → after                     | 186.62801 → 186.62801 px         | **186.62801 → 186.62801 px** |
+| Mark y before → after                     | 642.58740 → 502.27490 px         | **642.58740 → 642.58740 px** |
+| Native mark, crop transform, source slice | Unchanged                        | **Unchanged**                |
+| Feedback rendered and reachable           | Yes                              | **Yes**                      |
+
+This regression deliberately starts at document scroll 100 px, so its baseline mark movement is
+140.31 px. The earlier sanity-review scenario started elsewhere and measured 238–239 px; these are
+the same defect under different initial scroll positions, not contradictory measurements.
+The focused regression fails on the pre-correction #252 head and on current `origin/main`, and
+passes on the corrected production build. The intermediate effect-only candidate held document
+scroll at 100 px but failed the 1 px image/mark tolerance by 24.31 px, demonstrating why both the
+semantic task identity and the existing task footprint matter.
+
+At 1024 × 768, mark y is **365.05453 → 365.05453 px**; at 1427 × 1226 it is
+**482.52002 → 482.52002 px**. Both preserve pane scroll 50 → 50, image position, stored mark,
+source slice and crop transform. The slice-control, delayed-image/caption, rapid-request, wheel,
+magnifier, fullscreen/fallback and Reset regressions remain green in the BBT suites. The other
+Prompt 02 viewer behavior is unchanged by this correction.
+
+### Final validation and protected scope
+
+- **Production build:** full `npm run build` PASS with non-secret process placeholders.
+- **BBT Playwright:** 38 passed, zero skipped/flaky/failed, against that production build.
+- **Focused BBT Jest:** 121 passed; only the known access-contract assertion fails. A fresh
+  detached checkout of current main reproduces that same assertion (7 passed / 1 failed).
+- **Repository type-check, changed-path ESLint, Prettier and `git diff --check`:** PASS.
+- Full unrelated module suites were not rerun solely because main advanced.
+- Protected engine, content, geometry, runtime source assets and BBT-02 packet remain byte-identical
+  to the Prompt 02 base. **OD-01 remains OPEN**; `entryLimitation`, response planes, coordinates,
+  branch identities/nomenclature, provisional exercises and **NOT REVIEWED** packet are intact.
+- No merge, deployment, Prompt 03, new walkthrough or expanded UX audit.
+
+Measurements and logs are retained outside Git at:
+`/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt252-compact-2026-09-21/`.
+`production-geometry.json` contains full before/after rectangles and transforms; the baseline and
+production Playwright JSON reports retain the regression evidence and test results. The final
+pushed PR head is recorded in `final-revision.json` there and in the review response.

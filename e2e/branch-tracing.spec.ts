@@ -739,6 +739,94 @@ test('checking a response keeps the crop, the workspace scroll and the mark wher
   expect(await stored()).toEqual(marksBefore)
 })
 
+for (const [width, height] of [
+  [390, 844],
+  [1024, 768],
+  [1427, 1226],
+])
+  test(`Check preserves the current task screen position at ${width}×${height}`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width, height })
+    await startLocal(page, 'follow-one-airway')
+    await button(page, 'Go to response slice').click()
+    await ctReady(page)
+    const image = page.getByRole('group', { name: /^CT image\./ })
+    const imageBox = (await image.boundingBox())!
+    await image.click({ position: { x: imageBox.width / 2, y: imageBox.height / 2 } })
+    await expect(page.getByLabel('Your mark 1', { exact: true })).toBeVisible()
+    const check = button(page, 'Check my tracing')
+    if (width === 390) {
+      // A real document scroll, with both Check and the marked CT still on screen.
+      await page.evaluate(() => window.scrollTo(0, 100))
+    } else {
+      await page.locator('[class*="localImageWorkspace"]').evaluate((pane) => {
+        pane.scrollTop = 50
+      })
+    }
+    const geometry = () =>
+      page.evaluate(() => {
+        const image = document.querySelector('[data-preset]')!
+        const pane = image.closest('[class*="localImageWorkspace"]')!
+        const mark = image.querySelector('[aria-label="Your mark 1"] circle')!
+        return {
+          documentScroll: window.scrollY,
+          paneScroll: pane.scrollTop,
+          pane: pane.getBoundingClientRect().toJSON(),
+          image: image.getBoundingClientRect().toJSON(),
+          mark: mark.getBoundingClientRect().toJSON(),
+          transform: image.querySelector('g')!.getAttribute('transform'),
+          slice: image.getAttribute('data-slice'),
+          marks: JSON.parse(localStorage.getItem('branch-tracing.draft.learn.follow-one-airway')!)
+            .value.marks,
+        }
+      })
+    // Wait for layout/scroll delivery before recording the actual click target.
+    await page.evaluate(
+      () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())),
+    )
+    const before = await geometry()
+    if (width === 390) expect(before.documentScroll).toBeGreaterThan(0)
+    const target = (await check.boundingBox())!
+    expect(target.y).toBeGreaterThanOrEqual(0)
+    expect(target.y + target.height).toBeLessThan(height)
+    await page.mouse.click(target.x + target.width / 2, target.y + target.height / 2)
+    await ctReady(page)
+    await expect(
+      page.getByRole('heading', { name: 'Review the image evidence', exact: true }),
+    ).toHaveCount(1)
+    const after = await geometry()
+    await testInfo.attach('Check geometry', {
+      body: JSON.stringify({ before, after }, null, 2),
+      contentType: 'application/json',
+    })
+    expect(Math.abs(after.documentScroll - before.documentScroll)).toBeLessThanOrEqual(1)
+    expect(Math.abs(after.paneScroll - before.paneScroll)).toBeLessThanOrEqual(1)
+    for (const part of ['pane', 'image', 'mark'] as const)
+      for (const coordinate of ['x', 'y'] as const)
+        expect(Math.abs(after[part][coordinate] - before[part][coordinate])).toBeLessThanOrEqual(1)
+    expect(after.transform).toBe(before.transform)
+    expect(after.slice).toBe(before.slice)
+    expect(after.marks).toEqual(before.marks)
+    // Feedback stays in normal flow, reachable without a focus jump or acknowledgement.
+    const feedback = page.getByRole('heading', { name: 'Review the image evidence', exact: true })
+    await feedback.scrollIntoViewIfNeeded()
+    await expect(feedback).toBeInViewport()
+    await expect(button(page, 'Try this lumen again')).toBeVisible()
+    if (width === 390) {
+      await button(page, 'Next airway interval').click()
+      await ctReady(page)
+      // Genuine task entry still positions the new task and releases the old footprint.
+      const task = page.locator('[data-current-task]')
+      await expect(task).toBeInViewport()
+      expect(await task.evaluate((node) => (node as HTMLElement).style.minBlockSize)).toBe('')
+      await expect(page.locator('[data-preset]')).toHaveAttribute(
+        'data-slice',
+        String(localExercise(LESSONS[0].exercises![1]).trace.anchor.slice),
+      )
+    }
+  })
+
 test('the wheel scrolls the workspace until slice stepping is turned on, and Escape releases it', async ({
   page,
 }) => {

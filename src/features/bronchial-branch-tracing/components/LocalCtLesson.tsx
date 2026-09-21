@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, useRouter } from '@/i18n/navigation'
 import { LessonShell } from '@/features/learning-module/stage/LessonShell'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
@@ -78,8 +78,9 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
   const helpRef = useRef<HTMLButtonElement>(null)
   const imageWorkspaceRef = useRef<HTMLDivElement>(null)
   const workspaceRef = useRef<HTMLDivElement>(null)
+  const currentTaskRef = useRef<HTMLDivElement>(null)
   const instructionsRef = useRef<HTMLElement>(null)
-  const previousStep = useRef<string | null>(null)
+  const previousTask = useRef<string | null>(null)
   const [exitWarning, setExitWarning] = useState(false)
   const [restartAsk, setRestartAsk] = useState(false)
   // A restart in this session; it makes the draft-restored note above it out of date.
@@ -179,6 +180,17 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
   function act(action: LocalAction) {
     const next = localSessionReducer(exercises, s, action)
     if (next === s) return s
+    if (
+      next.phase !== s.phase &&
+      next.exercise === s.exercise &&
+      next.orientationGuide === s.orientationGuide &&
+      currentTaskRef.current
+    ) {
+      // A shorter phase summary must not pull the CT upward in document flow.
+      // Reserve the space already occupied; longer feedback can still grow naturally.
+      const task = currentTaskRef.current
+      task.style.minBlockSize = `${task.getBoundingClientRect().height}px`
+    }
     // Reaching the end marks the lesson reviewed on this device; nothing about the marks is stored.
     if (next.phase === 'complete' && !complete) setLessonReviewed(lesson.id, true)
     if (action.type === 'frame') goToSlice(exercise.frames[next.frame].slice)
@@ -236,16 +248,23 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
   }, [s.taughtPresets])
   useEffect(() => {
     const pane = instructionsRef.current
-    const step = `${guide}:${exercise.id}:${s.phase}`
-    const changed = previousStep.current !== null && previousStep.current !== step
-    previousStep.current = step
-    // The instructions pane holds the new task, so it returns to its own top.
+    // Feedback updates this pane without making the surrounding workspace a new task.
     resetPaneScroll(pane)
-    // Stacked layouts scroll the document. Return to the new task after reviewing
-    // the CT; the sticky task alone does not bring its diagram/choices into view.
+  }, [guide, exercise.id, s.phase])
+  useLayoutEffect(() => {
+    // A new task owns its own natural footprint; no previous task's space is carried over.
+    if (currentTaskRef.current) currentTaskRef.current.style.minBlockSize = ''
+  }, [guide, exercise.id])
+  useEffect(() => {
+    const pane = instructionsRef.current
+    const task = `${guide}:${exercise.id}`
+    const changed = previousTask.current !== null && previousTask.current !== task
+    previousTask.current = task
+    // Only entering another guide/exercise positions the document. A phase change
+    // within this task must leave the learner's CT inspection where it is.
     if (changed && pane && getComputedStyle(pane).overflowY === 'visible')
       workspaceRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' })
-  }, [guide, exercise.id, s.phase])
+  }, [guide, exercise.id])
   useEffect(() => {
     // A new example is a new workspace. Checking an answer is not: the crop,
     // magnification and scroll position the learner set stay where they are.
@@ -569,6 +588,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
         data-route-map={exercise.spec.kind === 'integration' || undefined}
       >
         <div
+          ref={currentTaskRef}
           className={styles.currentTask}
           data-current-task
           data-response-ready={attemptReady}
