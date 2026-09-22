@@ -30,6 +30,7 @@ import { canDiscoverImage } from './imageDiscoveryPixels'
 import {
   createStructureCallouts,
   surfaceAnchor,
+  linkedCalloutFocus,
   type StructureCalloutHandle,
 } from './structureCallouts'
 import { compassDirections, fitSphereDistance } from './observerCamera'
@@ -369,10 +370,19 @@ export function LinkedModelView(props: Props) {
     let hovered: THREE.Object3D | null = null
     let dismissed: THREE.Object3D | null = null
     let hoverFrame = 0
+    const focusedMarker = () => {
+      const active = document.activeElement
+      return active instanceof HTMLButtonElement &&
+        active.classList.contains('linked-structure-letter') &&
+        element.contains(active) && active.offsetParent !== null
+        ? active.dataset.structure ?? null
+        : null
+    }
+    const markerHover = (id: string | null) => setHovered(focusedMarker() ?? id)
     const hideHover = () => {
       tooltip.hidden = true
       tooltip.textContent = ''
-      if (hovered && latest.current.hovered === hovered.name) setHovered(null)
+      if (hovered && latest.current.hovered === hovered.name) setHovered(focusedMarker())
       hovered = null
     }
     const stopHover = () => {
@@ -412,6 +422,14 @@ export function LinkedModelView(props: Props) {
     const refreshHover = () => {
       hoverFrame = 0
       const state = latest.current
+      const focused = focusedMarker()
+      if (focused) {
+        // A stationary pointer must not overwrite a keyboard-focused marker on the next frame.
+        tooltip.hidden = true
+        hovered = null
+        if (state.hovered !== focused) setHovered(focused)
+        return
+      }
       if (
         !hoverPosition ||
         state.mode === 'section' ||
@@ -805,7 +823,13 @@ export function LinkedModelView(props: Props) {
           .map((root) => root.getObjectByName(candidate.name))
           .find(Boolean) as THREE.Mesh,
     )
-    callouts = createStructureCallouts(element, calloutMeshes, orbit.target, choose, setHovered)
+    // Preserve the original surface anchors independently of observer-camera framing.
+    // In particular, using the new regional camera target moves long-vessel anchors.
+    const calloutFocus = linkedCalloutFocus(
+      mode === 'scope' ? teachingScopeMatrix(latest.current.pose, true) : null,
+      wholeScope,
+    )
+    callouts = createStructureCallouts(element, calloutMeshes, calloutFocus, choose, markerHover)
     render()
     return () => {
       cancelAnimationFrame(hoverFrame)

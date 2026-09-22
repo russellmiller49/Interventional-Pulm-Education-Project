@@ -112,6 +112,43 @@ test.describe('landmark markers', () => {
     await expect(a).toHaveAttribute('aria-label', /Structure A: .+/)
     await expect(letters.first().locator('.linked-structure-name')).not.toBeEmpty()
   })
+  test('keyboard marker focus wins over a stationary pointer on another model structure', async ({
+    page,
+  }) => {
+    const f = await openLesson(page, 'scope-orientation', 'live')
+    await ready(page)
+    const canvas = f.locator('.linked-canvas')
+    await canvas.scrollIntoViewIfNeeded()
+    const box = (await canvas.boundingBox())!
+    const callouts = f.locator('.linked-structure-callouts')
+    const points = JSON.parse((await callouts.getAttribute('data-callout-geometry'))!) as {
+      letter: string
+      ax: number
+      ay: number
+    }[]
+    const a = points.find((point) => point.letter === 'A')!
+    await page.mouse.move(box.x + a.ax, box.y + a.ay)
+    await expect(f.locator('.linked-structure-letter.is-hovered')).toHaveAttribute(
+      'data-structure',
+      'channel_outlet',
+    )
+    const b = f.locator('.linked-structure-letter[data-structure="legacy_distal_body"]')
+    await b.focus()
+    // Allow the queued model hover/raycast to run after React commits the focus highlight.
+    await b.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    )
+    await expect(b).toHaveClass(/is-hovered/)
+    await page.keyboard.press('Enter')
+    await expect
+      .poll(async () => (await latest(page))?.linked?.selectedStructure)
+      .toBe('legacy_distal_body')
+    await page.keyboard.press('Tab')
+    await expect(b).not.toHaveClass(/is-hovered/)
+  })
   test('lesson 4 has no landmark task and shows no letters', async ({ page }) => {
     const f = await openLesson(page, 'acoustic-contact', 'live')
     await ready(page)
@@ -119,6 +156,35 @@ test.describe('landmark markers', () => {
     await expect(f.locator('.linked-contact-comparison .guided-label').first()).toContainText(
       'bright band is the airway wall',
     )
+    const sections = f.locator('.linked-contact-comparison canvas[data-contact-label-layout]')
+    await expect(sections).toHaveCount(2)
+    for (const section of await sections.all()) {
+      const layout = JSON.parse((await section.getAttribute('data-contact-label-layout'))!) as {
+        kind: string
+        rect: number[]
+      }[]
+      const anchors = JSON.parse((await section.getAttribute('data-contact-labels'))!) as Record<
+        string,
+        number[] | null
+      >
+      expect(layout.map((label) => label.kind)).toEqual([
+        ...['air', 'wall', 'soft'].filter((kind) => anchors[kind] !== null),
+        'transducer',
+      ])
+      expect(layout.map((label) => label.kind)).toContain('air')
+      expect(layout.map((label) => label.kind)).toContain('soft')
+      for (let i = 0; i < layout.length; i++) {
+        const [x, y, w, h] = layout[i].rect
+        expect(x).toBeGreaterThanOrEqual(0)
+        expect(y).toBeGreaterThanOrEqual(0)
+        expect(x + w).toBeLessThanOrEqual(192)
+        expect(y + h).toBeLessThanOrEqual(112)
+        for (let j = 0; j < i; j++) {
+          const [xx, yy, ww, hh] = layout[j].rect
+          expect(x + w <= xx || xx + ww <= x || y + h <= yy || yy + hh <= y).toBe(true)
+        }
+      }
+    }
   })
 })
 
@@ -151,6 +217,50 @@ test.describe('camera and scrolling', () => {
     await expect(canvas).toHaveAttribute('data-engaged', 'false')
     await expect(f.getByRole('button', { name: 'Zoom in' })).toBeVisible()
     await expect(f.locator('[data-observer-caption]')).not.toContainText('scroll to zoom')
+  })
+  test('browser zoom shortcuts and modified wheel gestures do not control the observer', async ({
+    page,
+  }) => {
+    const f = await openLesson(page, 'scope-orientation', 'live')
+    await ready(page)
+    const canvas = f.locator('.linked-canvas canvas')
+    await canvas.focus()
+    const geometry = () =>
+      f.locator('.linked-structure-callouts').getAttribute('data-callout-geometry')
+    const before = await geometry()
+    const prevented = await canvas.evaluate((element) => {
+      const results: boolean[] = []
+      for (const modifier of ['ctrlKey', 'metaKey'] as const) {
+        for (const key of ['+', '=', '-', '0']) {
+          const event = new KeyboardEvent('keydown', {
+            key,
+            [modifier]: true,
+            bubbles: true,
+            cancelable: true,
+          })
+          element.dispatchEvent(event)
+          results.push(event.defaultPrevented)
+        }
+        const wheel = new WheelEvent('wheel', {
+          deltaY: 80,
+          [modifier]: true,
+          bubbles: true,
+          cancelable: true,
+        })
+        element.dispatchEvent(wheel)
+        results.push(wheel.defaultPrevented)
+      }
+      return results
+    })
+    expect(prevented).toEqual(Array(10).fill(false))
+    expect(await geometry()).toBe(before)
+    // Plain keyboard zoom still changes the projected model; Tab and Escape provide an exit.
+    await page.keyboard.press('+')
+    await expect.poll(geometry).not.toBe(before)
+    await page.keyboard.press('Escape')
+    await expect(canvas).toHaveAttribute('data-engaged', 'false')
+    await page.keyboard.press('Tab')
+    expect(await canvas.evaluate((el) => document.activeElement === el)).toBe(false)
   })
   test('lesson 19 arrows are legible and the model is labelled', async ({ page }) => {
     const f = await openLesson(page, 'eus-b-route-model', 'live')

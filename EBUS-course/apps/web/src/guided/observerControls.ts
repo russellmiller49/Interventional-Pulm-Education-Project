@@ -11,7 +11,7 @@ import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js
  *
  * Now the wheel and one-finger touch only drive the camera while the view is *engaged* — after a
  * click, tap or keyboard focus on it — and Escape, blur, or a pointer-down anywhere else releases
- * it. Two-finger gestures always orbit and pinch, which never conflict with page scrolling. The
+ * it. While engaged, two-finger gestures orbit and pinch. The
  * explicit buttons and the keyboard work without engaging anything. Mouse drag orbit is unchanged.
  * The browser's own zoom is never intercepted.
  */
@@ -105,6 +105,8 @@ export function attachObserverControls(
     if (!element.contains(event.target as Node)) release()
   }
   const key = (event: KeyboardEvent) => {
+    // Modified shortcuts belong to the browser (including zoom and reset zoom).
+    if (event.ctrlKey || event.metaKey || event.altKey) return
     switch (event.key) {
       case 'ArrowLeft':
         orbitBy(-0.15)
@@ -138,6 +140,12 @@ export function attachObserverControls(
     }
     event.preventDefault()
   }
+  // OrbitControls prevents every wheel event while zoom is enabled. Let browser
+  // zoom/pinch wheel gestures reach their native default before that listener runs.
+  const browserWheel = (event: WheelEvent) => {
+    if (event.ctrlKey || event.metaKey) event.stopImmediatePropagation()
+  }
+  element.addEventListener('wheel', browserWheel, { capture: true, passive: true })
   element.addEventListener('pointerdown', down)
   element.addEventListener('pointerup', up)
   element.addEventListener('pointercancel', cancel)
@@ -154,6 +162,7 @@ export function attachObserverControls(
     orbit: orbitBy,
     tilt,
     dispose() {
+      element.removeEventListener('wheel', browserWheel, true)
       element.removeEventListener('pointerdown', down)
       element.removeEventListener('pointerup', up)
       element.removeEventListener('pointercancel', cancel)
@@ -166,4 +175,4 @@ export function attachObserverControls(
 }
 /** The one caption that is true for every observer view. */
 export const OBSERVER_CAPTION =
-  'Drag to orbit. Zoom with the buttons, or click or tap the model to turn on wheel and one-finger control — Escape, or a click or tap elsewhere, turns it off so the page scrolls normally. A finger that scrolls does not engage it; two fingers orbit and pinch at any time. Keyboard: Tab to the model, arrow keys orbit and tilt, + and − zoom, Home resets. Browser zoom is untouched.'
+  'Drag to orbit. Zoom with the buttons, or click or tap the model to turn on wheel and one-finger control — Escape, or a click or tap elsewhere, turns it off so the page scrolls normally. A finger that scrolls does not engage it; while engaged, two fingers orbit and pinch. Keyboard: Tab to the model, arrow keys orbit and tilt, + and − zoom, Home resets. Browser zoom is untouched.'

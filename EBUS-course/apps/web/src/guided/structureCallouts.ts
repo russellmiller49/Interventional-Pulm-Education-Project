@@ -41,6 +41,12 @@ export function surfaceAnchorLocal(mesh: THREE.Mesh, focus: THREE.Vector3): THRE
 export function surfaceAnchor(mesh: THREE.Mesh, focus: THREE.Vector3): THREE.Vector3 {
   return mesh.localToWorld(surfaceAnchorLocal(mesh, focus))
 }
+/** Baseline label reference points; camera framing must never relocate a surface anchor. */
+export function linkedCalloutFocus(scopeBasis: THREE.Matrix4 | null, wholeScope = false) {
+  return scopeBasis
+    ? new THREE.Vector3(wholeScope ? 99 : 12, wholeScope ? -1 : 10, 0).applyMatrix4(scopeBasis)
+    : new THREE.Vector3(-10, 1222, 161)
+}
 export interface StructureCalloutHandle {
   render(
     camera: THREE.Camera,
