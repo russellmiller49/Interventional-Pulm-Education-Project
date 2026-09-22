@@ -7,7 +7,7 @@
   "package": "Interventional-Pulm-Local-Data/module_update_9_19/HD_Claude_Implementation_Pack",
   "inspectedSha": "c717c9ffae09cb67e19b06a56d37c75487a5605a",
   "baseSha": "9fbdbddc4d7f124c7ac3254f4cb8aa4c15c0233f",
-  "headSha": "RECORDED_AT_COMMIT",
+  "headSha": "585a216155d7e0e4d9cf8867f22f80a83987c6b5",
   "branch": "claude/hemodynamics-2-9-22",
   "checkout": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-hemodynamics-2-9-22",
   "handoff": "docs/gap-remediation/fellow-walkthrough/hemodynamics/HD-PRE-REVIEW-02-handoff.md",
@@ -296,5 +296,6 @@
     "Owner review of holds HD02-H1..H14 grouped by R2, R4, R5.",
     "HD-PRE-REVIEW-03: move value tags out of the trace lane keeping this batch's labels; mark the RA reading point; contrast; optional manual cursor in the case dock.",
     "HD-PRE-REVIEW-04: decide whether before/after tables report monitor readings; Fick comparison table; action-menu design with the owner."
-  ]
+  ],
+  "headShaNote": "The implementation commit. The commit that records this SHA is docs-only and follows it; the PR shows the final head."
 }
