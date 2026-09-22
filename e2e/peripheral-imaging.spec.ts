@@ -1211,6 +1211,9 @@ async function helpTextReachability(page: Page) {
     while (walker.nextNode()) {
       const text = walker.currentNode
       if (!text.textContent?.trim()) continue
+      // Text inside a closed disclosure is collapsed by design, not clipped: Chrome still reports
+      // layout rectangles for it. The open state is checked by the tests that open it.
+      if (text.parentElement?.closest('details:not([open])')) continue
       const range = document.createRange()
       range.selectNodeContents(text)
       const count = range.getClientRects().length
@@ -1840,7 +1843,7 @@ test('report 2.3: at the beam-geometry stop the slider, the projection it change
   )
   const scrollBefore = await page.evaluate(() => window.scrollY)
   for (let i = 0; i < 30; i++) await page.keyboard.press('ArrowRight')
-  await expect(page.locator('[data-current-image] figcaption')).toContainText('Orbit 30°')
+  await expect(page.locator('[data-current-image] figcaption')).toContainText('C-arm obliquity 30°')
   await expect
     .poll(() => current.evaluate((node) => (node as HTMLCanvasElement).toDataURL().slice(-200)))
     .not.toBe(pixelsBefore)
@@ -1870,10 +1873,33 @@ test('report 2.4 and 2.5: labels stay beside their objects, never collide, and e
   await page.setViewportSize({ width: 1280, height: 900 })
   await advanceToKind(page, 'chain-walk', 'walk')
   await sceneReady(page)
+  // Each label's box is applied a frame behind the camera, so while a preset animates a label
+  // can sit outside the figure for a frame. The property is where the labels end up: read them
+  // once two consecutive reads agree, and judge that snapshot.
   const settled = async () => {
-    await expect.poll(async () => (await sceneLabels(page)).labels.length).toBe(8)
-    await expect.poll(async () => (await sceneLabels(page)).overlaps).toEqual([])
-    return sceneLabels(page)
+    let last: Awaited<ReturnType<typeof sceneLabels>> | null = null
+    let previous = ''
+    await expect
+      .poll(
+        async () => {
+          const now = await sceneLabels(page)
+          const key = JSON.stringify(
+            now.labels.map((l) => [l.id, Math.round(l.left), Math.round(l.top)]),
+          )
+          const stable = key === previous
+          previous = key
+          last = now
+          return {
+            count: now.labels.length,
+            overlaps: now.overlaps,
+            outside: now.labels.filter((l) => !l.inside).map((l) => l.id),
+            stable,
+          }
+        },
+        { intervals: [150, 150, 150, 250, 250, 500] },
+      )
+      .toEqual({ count: 8, overlaps: [], outside: [], stable: true })
+    return last!
   }
   const purposes = new Set<string>()
   for (const [name, camera] of [
@@ -2089,7 +2115,7 @@ test('report 4.2 and 4.3: an optional, truthful DTS overlay and projections that
   await expect(page.locator('[data-dts-mark="tool"]')).toHaveAttribute('data-in-plane', 'true')
   await expect(page.locator('[data-dts-mark="target"]')).toHaveAttribute('data-in-plane', 'false')
   await expect(page.locator('[data-dts-mark="target"] text')).toHaveText(
-    'Modeled target · 18 mm from this plane',
+    'Target (model position) · 18 mm from this plane',
   )
   // An out-of-plane object gets a dotted guide, never a solid outline.
   expect(await page.locator('[data-dts-mark="target"] rect').getAttribute('stroke-dasharray')).toBe(
@@ -2527,3 +2553,262 @@ test('slab comparison keeps each thin section tied to its own live plane slider'
       if (other !== index) expect(after[other]).toBe(before[other])
   }
 })
+
+/*
+ * PI-FELLOW-03 — Teaching clarity. Report IDs are the AI-assisted fellow walkthrough's own.
+ */
+
+async function walkToTransfer(page: Page, sectionId: string) {
+  const lesson = imagingStageLesson(sectionId as never)
+  const transferId = lesson.steps[lesson.transferStepIndex].id
+  await openSection(page, sectionId)
+  for (let guard = 0; guard < lesson.steps.length; guard++) {
+    const stage = await page.locator('[data-stage]').getAttribute('data-stage')
+    if (stage === transferId) return lesson
+    const step = lesson.steps.find((candidate) => candidate.id === stage)!
+    if (step.interaction.kind === 'read' || step.interaction.kind === 'explain') {
+      await expect(primary(page)).toBeEnabled({ timeout: 60000 })
+      await primary(page).click()
+    } else await skip(page).click()
+    await expect(page.locator('[data-stage]')).not.toHaveAttribute('data-stage', stage!)
+  }
+  throw new Error(`No closing question reached in ${sectionId}`)
+}
+
+async function fitsViewport(page: Page, selector: string) {
+  return page.evaluate((s) => {
+    const node = document.querySelector(s)
+    if (!node) return null
+    const rect = node.getBoundingClientRect()
+    return rect.left >= -1 && rect.right <= window.innerWidth + 1
+  }, selector)
+}
+
+/**
+ * No horizontal overflow at normal text; at enlarged root text the shared site header (outside
+ * this module) already exceeds 1280 px, so the module's own stage is what is held to the viewport.
+ */
+async function stageFitsViewport(page: Page, root: number) {
+  if (root === 100) await noHorizontalOverflow(page)
+  expect(await fitsViewport(page, '[data-imaging-flow]')).toBe(true)
+  expect(await fitsViewport(page, '[data-current-task]')).toBe(true)
+}
+
+async function enlargeRootText(page: Page, root: number) {
+  if (root === 100) return
+  await page.addStyleTag({ content: `html { font-size: ${root}% !important; }` })
+  expect(
+    await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize)),
+  ).toBe((16 * root) / 100)
+}
+
+test('report CW3, O2 and CW4: a deep-linked section defines its own terms, shows its opening question, and Help still navigates first', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' })
+  await openSection(page, 'dts-acquisition')
+  const glossary = page.locator('[data-section-glossary="teaching"]')
+  await expect(glossary).toBeVisible()
+  expect(await glossary.evaluate((node) => node.closest('[data-teaching-review]'))).toBeNull()
+  await glossary.locator('summary').click()
+  for (const id of ['dts', 'missing-wedge', 'anisotropy', 'tool-plane-spread']) {
+    await expect(glossary.locator(`[data-glossary-term="${id}"]`)).toBeVisible()
+  }
+  await expect(
+    glossary.locator('[data-glossary-term="cbct"] [data-glossary-taught-in]'),
+  ).toHaveAttribute('href', /section=cbct-acquisition/)
+  // The framing question is printed where it is asked, outside any disclosure, asking nothing.
+  const question = page.locator('[data-opening-question]')
+  await expect(question).toBeVisible()
+  expect(await question.evaluate((node) => node.closest('details'))).toBeNull()
+  await expect(question).toContainText(imagingStageLesson('dts-acquisition').lesson.recall.prompt)
+  await expect(question.locator('input, button')).toHaveCount(0)
+  await capture(page, info, 'fellow3-cw3-glossary-1280-dark.png')
+
+  // Help: navigation first, then the section's terms and the one statement about the models.
+  await page.getByRole('button', { name: 'Help', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'What do I do now?', exact: true })
+  await expect(dialog).toBeVisible()
+  expect(
+    await dialog.evaluate((node) => {
+      const nav = [...node.querySelectorAll('p')].find((p) =>
+        /Any step can be skipped/.test(p.textContent ?? ''),
+      )
+      const terms = node.querySelector('[data-section-glossary="help"]')
+      if (!nav || !terms) return null
+      return Boolean(nav.compareDocumentPosition(terms) & Node.DOCUMENT_POSITION_FOLLOWING)
+    }),
+  ).toBe(true)
+  await dialog.locator('[data-section-glossary="help"] summary').click()
+  await expect(dialog.locator('[data-glossary-term="dts"]')).toBeVisible()
+  await expect(dialog.locator('[data-help-models]')).toBeVisible()
+  await settleHelp(page)
+  const text = await helpTextReachability(page)
+  expect(text.failures, 'clipped or unreachable Help text').toEqual([])
+  await capture(page, info, 'fellow3-cw3-help-1280-dark.png')
+  await page.keyboard.press('Escape')
+  await expect(dialog).not.toBeVisible()
+  await expect(page.locator('[data-stage]')).toHaveAttribute(
+    'data-stage',
+    imagingStageLesson('dts-acquisition').steps[0].id,
+  )
+})
+
+test('report CW1: a reused closing question is labelled optional review with a link to its section; reveal, retry and leaving unanswered remain', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  const lesson = await walkToTransfer(page, 'dts-acquisition')
+  await expect(page.locator('[data-now-focus] h2')).toHaveText(
+    'Optional review · Projection & depth',
+  )
+  const origin = page.locator('[data-transfer-origin="projection"] [data-transfer-origin-link]')
+  await expect(origin).toHaveAttribute('href', /section=projection/)
+  await expect(page.locator('[data-now-focus]')).toContainText(
+    'you first met it at the end of Section 6',
+  )
+  await capture(page, info, 'fellow3-cw1-review-1440.png')
+  // The explanation opens before any answer.
+  await expect(primary(page)).toBeDisabled()
+  await expect(secondary(page)).toHaveText('Show the explanation')
+  await secondary(page).click()
+  await expect(page.locator('[data-explanation-reveal]')).toBeVisible()
+  await secondary(page).click()
+  // An answer can be checked and retried.
+  await commitKeyed(page, 'dts-acquisition', lesson.transferStepIndex)
+  await page.getByRole('button', { name: 'Try this question again' }).click()
+  await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+  await expect(page.locator('[data-prediction-choices] input:checked')).toHaveCount(0)
+  // The section can be finished without answering, and nothing about the answer is stored.
+  await expect(skip(page)).toHaveText('Finish without answering')
+  await skip(page).click()
+  await expect(page.locator('[data-section-completion]')).toBeVisible()
+  expect((await storedProgress(page)).reviewedSectionIds).toEqual(['dts-acquisition'])
+  await expectNoStoredResponses(page)
+  // The link opens the originating section at its start.
+  await walkToTransfer(page, 'dts-acquisition')
+  await origin.click()
+  await expect(page).toHaveURL(/section=projection/)
+  await expect(page.locator('[data-stage]')).toHaveAttribute(
+    'data-stage',
+    imagingStageLesson('projection').steps[0].id,
+  )
+  await expect(page.locator('[data-transfer-origin]')).toHaveCount(0)
+})
+
+test('report PR4 and CW5: the eccentric rEBUS case is offered from Section 1 and opens unchanged, and the recap folds the full feedback', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await walkToTransfer(page, 'imaging-questions')
+  await expect(page.locator('[data-now-focus] h2')).toHaveText('Apply it to another situation')
+  await expect(page.locator('[data-transfer-origin]')).toHaveCount(0)
+  const related = page.locator('[data-related-practice-case="two-dimensional-practice-1"] a')
+  await expect(related).toHaveText('Eccentric radial EBUS view')
+  await related.click()
+  await expect(page).toHaveURL(/practice\?case=two-dimensional-practice-1/)
+  await expect(page.getByText('Eccentric radial EBUS view').first()).toBeVisible()
+  await expect(page.getByRole('button', { name: /Check my answer/ })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Show the explanation' })).toBeEnabled()
+
+  // CW5 — the explain step: choice, best-supported reading, takeaway; the full verdict folded.
+  await openSection(page, 'projection')
+  await advanceReading(page, 'projection')
+  await skip(page).click()
+  await skip(page).click()
+  const lesson = imagingStageLesson('projection')
+  await expect(page.locator('[data-stage]')).toHaveAttribute(
+    'data-stage',
+    lesson.steps[lesson.predictionStepIndex].id,
+  )
+  await commitKeyed(page, 'projection', lesson.predictionStepIndex)
+  await primary(page).click()
+  const recap = page.locator('[data-explain-recap] [data-check-recap]')
+  await expect(recap).toBeVisible()
+  await expect(recap.locator('[data-recap-best]')).toContainText('best-supported reading')
+  const full = page.locator('[data-explain-recap] [data-recap-full]')
+  expect(await full.evaluate((node) => (node as HTMLDetailsElement).open)).toBe(false)
+  await expect(full.locator('[data-answer-verdict]')).toBeHidden()
+  await full.locator(':scope > summary').click()
+  await expect(full.locator('[data-answer-verdict]')).toBeVisible()
+  // The step's own rhythm is untouched: Continue is where it was.
+  await expect(primary(page)).toBeEnabled()
+  await capture(page, info, 'fellow3-cw5-recap-1440.png')
+})
+
+for (const condition of [
+  { name: '1440x900', width: 1440, height: 900, root: 100 },
+  { name: '1024x768', width: 1024, height: 768, root: 100 },
+  { name: '390x844', width: 390, height: 844, root: 100 },
+  { name: '320x740', width: 320, height: 740, root: 100 },
+  { name: '1280-200pct-root-text', width: 1280, height: 900, root: 200 },
+  { name: '320-200pct-root-text', width: 320, height: 740, root: 200 },
+]) {
+  test(`the teaching-clarity surfaces reflow at ${condition.name}`, async ({ page }, info) => {
+    test.setTimeout(300_000)
+    await page.setViewportSize({ width: condition.width, height: condition.height })
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+
+    // Section 10: the terms, the opening question and the DTS-led reconstruction comparison.
+    await openSection(page, 'dts-acquisition')
+    await enlargeRootText(page, condition.root)
+    const glossary = page.locator('[data-section-glossary="teaching"]')
+    await glossary.locator('summary').click()
+    await expect(glossary.locator('[data-glossary-term="dts"]')).toBeVisible()
+    expect(await fitsViewport(page, '[data-section-glossary="teaching"]')).toBe(true)
+    await expect(page.locator('[data-opening-question]')).toBeVisible()
+    const comparison = page.locator('[data-reconstruction-comparison][data-lead="tomosynthesis"]')
+    await comparison.scrollIntoViewIfNeeded()
+    await expect(comparison.locator('[data-reconstruction-analogy]')).toBeVisible()
+    await expect(
+      comparison.locator('[data-reconstruction-figure="tomosynthesis"] svg'),
+    ).toBeVisible()
+    await expect(comparison.locator('[data-reconstruction-table]')).toBeVisible()
+    expect(await fitsViewport(page, '[data-reconstruction-table]')).toBe(true)
+    expect(await fitsViewport(page, '[data-reconstruction-figure="cone-beam"]')).toBe(true)
+    await stageFitsViewport(page, condition.root)
+    await capture(page, info, `fellow3-s10-${condition.name}.png`)
+    // Help, with the terms opened, stays reachable.
+    await page.getByRole('button', { name: 'Help', exact: true }).click()
+    const dialog = page.getByRole('dialog', { name: 'What do I do now?', exact: true })
+    await dialog.locator('[data-section-glossary="help"] summary').click()
+    await settleHelp(page)
+    const text = await helpTextReachability(page)
+    expect(text.failures, 'clipped or unreachable Help text').toEqual([])
+    await capture(page, info, `fellow3-help-${condition.name}.png`)
+    await page.keyboard.press('Escape')
+    await expect(dialog).not.toBeVisible()
+
+    // Section 18: the quantities table and the copyable template with nothing filled in.
+    await openSection(page, 'dose-reporting')
+    await enlargeRootText(page, condition.root)
+    const quantities = page.locator('[data-dose-quantities]')
+    await quantities.scrollIntoViewIfNeeded()
+    await expect(quantities).toBeVisible()
+    expect(await fitsViewport(page, '[data-dose-quantities] table')).toBe(true)
+    const template = page.locator('[data-dose-note-lines]')
+    await template.scrollIntoViewIfNeeded()
+    await expect(template).toBeVisible()
+    expect(await template.textContent()).not.toMatch(/\d/)
+    expect(await fitsViewport(page, '[data-dose-note-lines]')).toBe(true)
+    await stageFitsViewport(page, condition.root)
+    await capture(page, info, `fellow3-s18-${condition.name}.png`)
+
+    // Section 1: the figure's labels and the definition at the point of need.
+    await openSection(page, 'imaging-questions')
+    await enlargeRootText(page, condition.root)
+    await page.getByRole('button', { name: 'Sampling component' }).click()
+    const definition = page.locator('[data-sampling-component-definition]')
+    await definition.scrollIntoViewIfNeeded()
+    await expect(definition).toBeVisible()
+    await expect(definition.locator('[data-sampling-component-link]')).toHaveAttribute(
+      'href',
+      /section=tool-confirmation/,
+    )
+    await expect(page.locator('[data-figure-label="sampling-component"]')).toBeVisible()
+    await expect(page.locator('[data-figure-legend]')).toBeVisible()
+    await stageFitsViewport(page, condition.root)
+    await capture(page, info, `fellow3-s1-${condition.name}.png`)
+  })
+}

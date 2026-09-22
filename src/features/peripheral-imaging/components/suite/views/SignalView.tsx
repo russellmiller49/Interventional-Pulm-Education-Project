@@ -30,6 +30,15 @@ export function SignalReadout({
       data-ray-profile-state={failed ? 'failed' : profile ? 'ready' : 'loading'}
     >
       <p className={styles.caption}>What lies along the target ray</p>
+      {/* Report 3.6: what the strip is and what to conclude from it, from the ray profile that
+          computes it. The model names density classes, not organs. */}
+      <p data-ray-meaning>
+        One X-ray path from the tube through the target to the detector, split into the CT density
+        classes it crosses and how many millimetres of each. A long soft-tissue-like or bone-like
+        stretch means dense structure shares this path with the target in this projection; the model
+        does not name the organ. Rotate the C-arm and watch that length fall as the target ray
+        clears dense anatomy.
+      </p>
       {profile ? (
         <>
           <svg

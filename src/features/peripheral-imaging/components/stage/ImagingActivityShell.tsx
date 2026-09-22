@@ -7,6 +7,7 @@ import type { NowCardAction, NowCardModel } from '@/features/learning-module/sta
 import { Link } from '@/i18n/navigation'
 
 import type { ImagingStageLesson } from '../../content/stageLessons'
+import { IMAGING_SHARED_BOUNDARY } from '../../content/sectionSpecs'
 import {
   imagingPathwayGroups,
   imagingPhaseOf,
@@ -197,7 +198,7 @@ export function ImagingActivityShell({
         <p>{model.body}</p>
       </div>
       {!['check', 'transfer'].includes(activity.task) && index === 0 && (
-        <p className={styles.safetyCue} role="note">
+        <p className={styles.safetyCue} role="note" data-safety-cue>
           Before an exposure: state the imaging question and preserve adequate information.
           Coordinate patient care, equipment clearance and staff protection with the team. Follow
           current device instructions and local protocols.
@@ -210,8 +211,27 @@ export function ImagingActivityShell({
           {response}
         </div>
       </div>
-      <aside className={styles.boundary} role="note" data-teaching-block="boundary">
-        <strong>Model limitations.</strong> {lesson.spec.modelBoundary}
+      {/* Report CW2: the section-specific limit stays on every step. The one general sentence shared
+          by all nineteen sections is printed in full on the first step (where a deep link lands) and
+          in Help, and reduced to a reminder after that. */}
+      <aside
+        className={styles.boundary}
+        role="note"
+        data-teaching-block="boundary"
+        data-boundary-full={index === 0 ? 'true' : 'false'}
+      >
+        <strong>Model limitations.</strong>{' '}
+        <span data-boundary-specific>
+          {lesson.spec.modelBoundary.replace(IMAGING_SHARED_BOUNDARY, '').trim()}
+        </span>{' '}
+        {index === 0 ? (
+          <span data-boundary-shared>{IMAGING_SHARED_BOUNDARY}</span>
+        ) : (
+          <span data-boundary-reminder>
+            Authored teaching model: not equipment settings, patient measurements or dose. The full
+            statement is on this section’s first step and in Help.
+          </span>
+        )}
       </aside>
       {children}
       <div className={styles.references}>{references}</div>

@@ -23,6 +23,8 @@ export interface ReconstructionAccount {
   readonly name: string
   /** The one-line contrast that separates it from the other. */
   readonly inShort: string
+  /** The picture to hold in mind first (report 4.1), in words the course already uses. */
+  readonly analogy: string
   /** What the machine actually collects. */
   readonly measured: string
   /** How the collected images become the picture. */
@@ -46,6 +48,8 @@ export const RECONSTRUCTION_ACCOUNTS: readonly ReconstructionAccount[] = [
     name: 'Digital tomosynthesis (DTS)',
     inShort:
       'A limited arc of projections, with an older scan or a model standing in for the directions the arc never covered.',
+    analogy:
+      'Think of sliding a stack of transparencies until one object lines up: what sits at the chosen depth reinforces, and everything nearer or further spreads into a smear.',
     measured:
       'A short arc of images — thirteen in this section — acquired as the C-arm moves through a limited arc, all from roughly the same side of the patient. On the bronchoscopy systems in use that arc is usually fifty to seventy degrees; CT acquires over a hundred and eighty degrees or more.',
     built: [
@@ -77,6 +81,8 @@ export const RECONSTRUCTION_ACCOUNTS: readonly ReconstructionAccount[] = [
     id: 'cone-beam',
     name: 'Cone-beam CT (CBCT)',
     inShort: 'Projections from a wide rotation, and a volume comes back.',
+    analogy:
+      'Think of a sculptor working from photographs taken all the way around: with every direction acquired, nothing inside the reconstruction volume has to be inferred, and the picture simply stops at its edge.',
     measured:
       'Hundreds of projections acquired as the C-arm rotates around the patient during the CBCT spin, so the same tissue is seen from directions that differ by a large angle.',
     built: [
@@ -140,6 +146,7 @@ export function validateImagingReconstruction(): readonly string[] {
     for (const [field, text] of [
       ['name', account.name],
       ['in short', account.inShort],
+      ['analogy', account.analogy],
       ['measured', account.measured],
       ['comes out', account.comesOut],
       ['provenance', account.provenance],

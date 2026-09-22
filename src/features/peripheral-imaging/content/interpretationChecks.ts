@@ -127,7 +127,7 @@ export const INTERPRETATION_CHECKS: Partial<Record<ImagingSectionId, Question>> 
         id: 'a',
         text: 'Accept the visible tip and target as adequate confirmation for sampling.',
         rationale:
-          'The sampling component and depth remain unconfirmed; required image context is also missing. The module never grants permission to biopsy.',
+          'The sampling component and its depth remain unconfirmed, and required image context is missing. A teaching image cannot clear a biopsy: that decision stays with the procedure team, with the real images and the patient in front of them.',
       },
       {
         id: 'b',

@@ -97,6 +97,12 @@ export function StaffPanels({ inputs }: { inputs: SuiteInputs }) {
       data-staff-orbit={inputs.orbit}
       data-staff-barrier={String(inputs.barrier)}
     >
+      {/* Report 7.3: the practical point first, in the section's own words, with its qualifier. */}
+      <p className={styles.leadRule} data-staff-practical>
+        <strong>Where to stand.</strong> In lateral projections, positions on the detector side
+        often receive less than the beam-entrance (tube) side, but a CBCT spin changes directions
+        throughout. Rotate the C-arm and watch the contours lean toward the tube side.
+      </p>
       <p>
         Floor contours show a relative 1/r² trend around the irradiated volume. Their shape has an
         authored tube-side weighting; orientation moves the same gantry shown in the suite.

@@ -71,13 +71,13 @@ export const LESSONS: Lesson[] = [
       },
       {
         title: 'Match the modality to the question',
-        body: 'Fluoroscopy provides a real-time projection. Radial EBUS images the tissue immediately around the probe. DTS adds depth information from a limited-angle acquisition. CBCT reconstructs a volume from a rotational acquisition. Augmented fluoroscopy projects a segmentation from an earlier acquisition onto the live image.',
+        body: 'Fluoroscopy provides a real-time projection. Radial endobronchial ultrasound (radial EBUS) images the tissue immediately around the probe: a concentric or eccentric view helps localize the lesion relative to the airway, but atelectatic lung can also look lesion-like, and the probe is not the biopsy tool. Digital tomosynthesis (DTS) adds depth information from a limited-angle acquisition. Cone-beam CT (CBCT) reconstructs a volume from a rotational acquisition. Augmented fluoroscopy projects a segmentation from an earlier acquisition onto the live image.',
         points: [
           'A visible needle does not establish that the lesion is visible.',
           'A tracked catheter does not establish where a different tool will exit.',
           'Tool-in-lesion confirmation does not guarantee diagnostic tissue.',
         ],
-        sources: ['setser', 'frontier', 'pritchett'],
+        sources: ['setser', 'frontier', 'pritchett', 'ilocate', 'mobile'],
       },
     ],
     worked: {
@@ -433,8 +433,12 @@ export const LESSONS: Lesson[] = [
       },
       {
         title: 'Display zoom versus acquisition magnification',
-        body: 'Display zoom enlarges acquired pixels and adds no exposure when applied to a stored image. Image-intensifier electronic magnification generally required increased exposure. Flat-panel acquisition field and readout modes may change detector sampling, binning, processing and automatic exposure behavior, or may simply crop; their effect on detail and dose needs local characterization. Ask whether a control changes the X-ray acquisition, the detector readout, or only the display.',
+        body: 'Ask whether a control changes the X-ray acquisition, the detector readout, or only the display. Display zoom enlarges acquired pixels and adds no exposure when applied to a stored image. A smaller acquisition field or magnification mode is an acquisition change, and what it changes depends on the system.',
         sources: ['tg272', 'tg125'],
+        detail: {
+          title: 'Device-dependent limits of magnification modes',
+          body: 'Image-intensifier electronic magnification generally required increased exposure. Flat-panel acquisition field and readout modes may change detector sampling, binning (combining adjacent detector pixels at readout), processing and automatic exposure behavior, or may simply crop; their effect on detail and dose needs local characterization.',
+        },
       },
       {
         title: 'Geometry changes magnification and blur',
@@ -601,7 +605,7 @@ export const LESSONS: Lesson[] = [
       {
         title: 'Depth resolution depends on angular coverage',
         kind: 'after-commitment',
-        body: 'Limited angular coverage leaves part of the spatial information unmeasured, often described as a missing wedge. In-plane edges can look sharp while depth remains elongated or blurred, and small voxels do not repair this anisotropy: a reconstruction can contain small voxels without equivalent resolution in every direction. Sparse projections over a wide rotation and a limited arc are different sampling problems. Because the acquired projections do not single out one volume, a system may resolve the unmeasured directions from a registered prior scan or a learned model and render a CT-like image, which removes the visible sign of the limit without removing the limit.',
+        body: 'Limited angular coverage leaves part of the spatial information unmeasured, often described as a missing wedge. In-plane edges can look sharp while depth remains elongated or blurred, and small voxels do not repair this anisotropy (resolution that differs by direction): a reconstruction can contain small voxels without equivalent resolution in every direction. Sparse projections over a wide rotation and a limited arc are different sampling problems. Because the acquired projections do not single out one volume, a system may resolve the unmeasured directions from a registered prior scan or a learned model and render a CT-like image, which removes the visible sign of the limit without removing the limit.',
         sources: ['saad', 'sumner', 'podder'],
         detail: {
           title: 'More projections: state the constraint',
@@ -666,7 +670,7 @@ export const LESSONS: Lesson[] = [
       },
       {
         title: 'A prior CT can improve the reconstruction and bias it',
-        body: 'Iterative reconstruction compares acquired projections with projections predicted from an estimated volume. A prior CT and regularization can guide an incomplete problem toward a useful solution. If the anatomy has changed, the prior can also pull the result toward the older anatomy.',
+        body: 'Iterative reconstruction compares acquired projections with projections predicted from an estimated volume, and revises the estimate until they agree. A prior CT, or regularization — an added rule that favours one solution — can guide an incomplete problem toward a useful answer. If the anatomy has changed, the prior can also pull the result toward the older anatomy.',
         sources: ['saad'],
         detail: {
           title: 'What the reconstruction study established',
@@ -675,7 +679,7 @@ export const LESSONS: Lesson[] = [
       },
       {
         title: 'Question the claim, not the brand name',
-        body: 'For “AI tomography” or “real-time 3D,” ask about angular coverage, what was acquired, the prior CT’s contribution, motion correction and the independently validated endpoint. A DTS acquisition may answer the question well without being interchangeable with every CBCT protocol.',
+        body: 'For “AI tomography” or “real-time 3D,” ask about angular coverage, what was acquired, the prior CT’s contribution, motion correction and the independently validated endpoint: the outcome measured in its own study, not inferred from how the image looks. A DTS acquisition may answer the question well without being interchangeable with every CBCT protocol.',
         sources: ['saad', 'frontier', 'sumner'],
         detail: {
           title: 'What “CT-like” names, and what it does not',
@@ -966,7 +970,7 @@ export const LESSONS: Lesson[] = [
       },
       {
         title: 'Treat atelectasis as anatomy, not an image-quality problem',
-        body: 'Ventilation research supports preventing atelectasis in studied settings, including the bundled strategy in VESPA. It does not justify one pressure, PEEP, oxygen concentration or apnea duration for all patients. Position changes may help selected dependent lesions but also change access, clearance and registration.',
+        body: 'Ventilation research supports preventing atelectasis in studied settings, including VESPA, a multicenter randomized trial of bronchoscopy under general anesthesia in which a bundle — an endotracheal tube, a recruitment maneuver after intubation, PEEP of 8 to 10 cm H₂O and an inspired oxygen fraction below 1.0 — reduced atelectasis on chest CT compared with conventional settings. It does not justify one pressure, PEEP, oxygen concentration or apnea duration for all patients. Position changes may help selected dependent lesions but also change access, clearance and registration.',
         sources: ['vespa', 'ilocate', 'setser'],
         detail: {
           title: 'Reconfirm an augmented-fluoroscopy overlay',
@@ -1021,7 +1025,9 @@ export const LESSONS: Lesson[] = [
       },
       {
         title: 'Keep hands out of the primary beam',
-        body: 'Use supported tool stabilization and shielding. A lead apron, glove or shield does not justify placing a hand in the primary beam, and it can drive automatic exposure regulation up. Wear assigned dosimeters in the specified positions, and use eye, thyroid or other protection as the institutional program directs.',
+        callout:
+          'A lead apron, glove or shield does not justify placing a hand in the primary beam, and it can drive automatic exposure regulation up.',
+        body: 'Use supported tool stabilization and shielding. Wear assigned dosimeters in the specified positions, and use eye, thyroid or other protection as the institutional program directs.',
         points: [
           'Verify barrier position for the current projection.',
           'Wear the assigned dosimeters consistently.',

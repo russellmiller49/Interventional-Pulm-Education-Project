@@ -1,8 +1,23 @@
 'use client'
 
 import { useEffect, useId, useState } from 'react'
-import { INDEPENDENT_IMAGE_PANEL_SECTIONS } from '../../content/learningActivities'
-import type { ImagingSectionId } from '../../content/pathway'
+import { Link } from '@/i18n/navigation'
+import {
+  DOSE_NOTE_TEMPLATE_LINES,
+  DOSE_NOTE_TEMPLATE_TEXT,
+  DOSE_QUANTITIES,
+} from '../../content/doseQuantities'
+import { glossaryTerm } from '../../content/glossary'
+import {
+  INDEPENDENT_IMAGE_PANEL_SECTIONS,
+  type ImagingVisual,
+} from '../../content/learningActivities'
+import {
+  imagingLesson,
+  peripheralImagingSectionIds,
+  type ImagingSectionId,
+} from '../../content/pathway'
+import { imagingSectionLinkTarget } from '../../content/pathwayResolver'
 import { FIELD_CONTEXT, LESION_CENTER, projectToDetector } from '../../lib/physics'
 import { collimator, suiteFrame } from '../suite/suiteModel'
 import { TimeSamples } from '../suite/views/TimeView'
@@ -80,7 +95,9 @@ export function SignalComparison({ independent = false }: { independent?: boolea
   const [factor, setFactor] = useState<'noise' | 'contrast' | 'overlap'>('noise')
   return (
     <section className={styles.teachingCard} data-signal-comparison>
-      <p className={styles.kicker}>Matched conceptual images · draft illustrations</p>
+      <p className={styles.kicker} data-draft-status>
+        Matched conceptual images · draft illustrations
+      </p>
       {!independent && (
         <div className={styles.demoButtons} aria-label="Conceptual comparison">
           <button
@@ -123,17 +140,17 @@ export function SignalComparison({ independent = false }: { independent?: boolea
           />
         )}
       </div>
+      {/* Report CW2: one caveat where there were two overlapping ones. */}
       <p>
         Each panel changes one illustrative limiting factor from the reference. These drawings do
-        not calculate photon statistics, scatter, dose response or patient anatomy. A texture alone
-        is not diagnostic in a clinical image.
+        not calculate photon statistics, scatter, dose response or patient anatomy, and none of them
+        establishes lesion identity.
       </p>
       {!independent && (
         <p>
           Noise concerns limited signal statistics; review exposure/image-quality mode with the
           imaging team. Scatter can reduce contrast; review the irradiated field and beam path.
-          Superimposition depends on projection; compare the CT geometry below. None of these
-          drawings establishes lesion identity.
+          Superimposition depends on projection; compare the CT geometry below.
         </p>
       )}
     </section>
@@ -203,6 +220,76 @@ export function FieldComparison() {
   )
 }
 
+/**
+ * Report 7.2: the four quantities as a table, and the whole-procedure record as a copyable
+ * template. Every cell is the section's own teaching; the template carries no value.
+ */
+export function DoseQuantityTable() {
+  return (
+    <section className={styles.teachingCard} data-dose-quantities>
+      <p className={styles.kicker}>Four quantities, four questions</p>
+      <table className={styles.doseTable}>
+        <thead>
+          <tr>
+            <th scope="col">Quantity</th>
+            <th scope="col">Unit</th>
+            <th scope="col">What it tells you</th>
+            <th scope="col">What it does not</th>
+          </tr>
+        </thead>
+        <tbody>
+          {DOSE_QUANTITIES.map((row) => (
+            <tr key={row.id} data-dose-quantity={row.id}>
+              <th scope="row">{row.name}</th>
+              <td data-label="Unit">{row.unit}</td>
+              <td data-label="What it tells you">{row.tells}</td>
+              <td data-label="What it does not">{row.doesNot}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  )
+}
+
+export function DoseNoteTemplate() {
+  const [copied, setCopied] = useState<'copied' | 'unavailable' | null>(null)
+  return (
+    <section className={styles.teachingCard} data-dose-note-template>
+      <p className={styles.kicker}>Record the whole procedure once · copyable aid</p>
+      <p>
+        An educational aid for the procedure note, listing the fields the section teaches. Nothing
+        is filled in: every value comes from your own record and local policy.
+      </p>
+      <pre className={styles.template} data-dose-note-lines>
+        {DOSE_NOTE_TEMPLATE_LINES.join('\n')}
+      </pre>
+      <div className={styles.demoButtons}>
+        <button
+          type="button"
+          data-copy-dose-note
+          onClick={() => {
+            const clipboard = navigator.clipboard
+            if (!clipboard) {
+              setCopied('unavailable')
+              return
+            }
+            void clipboard.writeText(DOSE_NOTE_TEMPLATE_TEXT).then(
+              () => setCopied('copied'),
+              () => setCopied('unavailable'),
+            )
+          }}
+        >
+          {copied === 'copied' ? 'Copied' : 'Copy the template'}
+        </button>
+        {copied === 'unavailable' ? (
+          <span role="status">Copying is not available here; select the lines above instead.</span>
+        ) : null}
+      </div>
+    </section>
+  )
+}
+
 export function DoseRecord({ independent = false }: { independent?: boolean }) {
   return (
     <section className={styles.teachingCard} data-dose-record>
@@ -238,7 +325,7 @@ export function DoseRecord({ independent = false }: { independent?: boolean }) {
           </tr>
         </tbody>
       </table>
-      <p>
+      <p data-draft-status>
         Fictional report values, not expected bronchoscopy exposures. Peak skin dose and effective
         dose are not supplied.
       </p>
@@ -284,6 +371,36 @@ export function ImagingQuestionPanels() {
                       <>
                         <path d="M85 48L151 75" stroke="#edf8f6" strokeWidth="3" />
                         <path d="M132 67L142 71" stroke="#61d8bc" strokeWidth="5" />
+                        {/* Report 1.1: the teal segment and the tip are named on the figure, in
+                            the drawing's own coordinates. */}
+                        <text x="150" y="92" fill="#edf8f6" fontSize="9" data-figure-label="tip">
+                          tip
+                        </text>
+                        <line
+                          x1="151"
+                          y1="75"
+                          x2="156"
+                          y2="84"
+                          stroke="#edf8f6"
+                          strokeWidth="0.8"
+                        />
+                        <text
+                          x="96"
+                          y="104"
+                          fill="#8de7d1"
+                          fontSize="9"
+                          data-figure-label="sampling-component"
+                        >
+                          sampling component (teal)
+                        </text>
+                        <line
+                          x1="137"
+                          y1="69"
+                          x2="122"
+                          y2="96"
+                          stroke="#8de7d1"
+                          strokeWidth="0.8"
+                        />
                       </>
                     )}
                   </>
@@ -297,7 +414,9 @@ export function ImagingQuestionPanels() {
           ) : null,
         )}
       </div>
-      <p>
+      {/* Reports 1.1 and 6.1: the term is defined on the screen where it is first used, in Section
+          15's words, and the section that teaches it in full is linked. */}
+      <p data-panel-caption={panel}>
         {
           [
             'The planning target guides the catheter to a previously defined location. It does not establish the current lesion location.',
@@ -306,6 +425,22 @@ export function ImagingQuestionPanels() {
             'An image of tool–lesion position does not establish diagnostic tissue. The specimen result answers that question.',
           ][panel]
         }
+      </p>
+      {panel === 2 ? (
+        <p data-sampling-component-definition>
+          <strong>Sampling component:</strong> {glossaryTerm('sampling-component').definition}{' '}
+          Taught in full in{' '}
+          <Link href={imagingSectionLinkTarget('tool-confirmation')} data-sampling-component-link>
+            Section {peripheralImagingSectionIds.indexOf('tool-confirmation') + 1},{' '}
+            {imagingLesson('tool-confirmation').title}
+          </Link>
+          .
+        </p>
+      ) : null}
+      <p className={styles.figureLegend} data-figure-legend>
+        Dashed amber circle: the navigation target from the planning CT · solid amber circle: the
+        lesion on current imaging · white line: the biopsy tool · teal segment: its sampling
+        component.
       </p>
       <div className={styles.demoButtons} aria-label="Evidence sequence">
         {['Planning target', 'Current lesion', 'Sampling component', 'Tissue result'].map(
@@ -331,15 +466,95 @@ export function ImagingQuestionPanels() {
   )
 }
 
+/**
+ * Report 5.4: the provenance flow was authored for DTS and reused, word for word, on the mobile
+ * CBCT section, so a CBCT card described "limited-angle projections" and a prior-aided
+ * reconstruction. The flow now says what each acquisition contributes in its own terms, from the
+ * reconstruction accounts; the steps that apply to both (a navigation update, an overlay) stay.
+ */
+function ProvenanceFlow({ modality }: { readonly modality: 'dts' | 'cbct' }) {
+  return (
+    <section
+      className={styles.teachingCard}
+      data-provenance-flow
+      data-provenance-modality={modality}
+    >
+      <p className={styles.kicker}>From acquisition to guidance</p>
+      <ol>
+        <li>
+          <strong>Acquired now</strong>
+          <span>
+            {modality === 'dts'
+              ? 'Current limited-angle projections contribute measured attenuation information.'
+              : 'The projections from the CBCT spin contribute measured attenuation from every direction inside the reconstruction volume.'}
+          </span>
+        </li>
+        <li>
+          <strong>Prior anatomy</strong>
+          <span>
+            {modality === 'dts'
+              ? 'Planning CT may contribute prior anatomical information in some reconstruction methods.'
+              : 'The planning CT is not part of a CBCT reconstruction; it enters only through registration for navigation or an overlay, which has to be verified separately.'}
+          </span>
+        </li>
+        <li>
+          <strong>{modality === 'dts' ? 'Reconstructed planes' : 'Reconstructed volume'}</strong>
+          <span>
+            {modality === 'dts'
+              ? 'The reconstructed planes combine those inputs according to the method.'
+              : 'The volume can be reviewed in any plane; outside it nothing was acquired.'}
+          </span>
+        </li>
+        <li>
+          <strong>Navigation update</strong>
+          <span>
+            A navigation-target update changes guidance coordinates; it is not a new biopsy-tool
+            image.
+          </span>
+        </li>
+        <li>
+          <strong>Displayed overlay</strong>
+          <span>
+            An overlay displays stored information on a projection; its acquisition source and age
+            still matter.
+          </span>
+        </li>
+      </ol>
+      <p>
+        Capabilities differ by platform and software version. A study-specific localization error is
+        not a universal accuracy specification.
+      </p>
+    </section>
+  )
+}
+
 export function TeachingPanels({
   sectionId,
   independent = false,
+  visual,
 }: {
   sectionId: ImagingSectionId
   independent?: boolean
+  /** The activity's declared visual, when the caller has one; decides the provenance flow. */
+  visual?: ImagingVisual
 }) {
+  if (visual === 'provenance' || (sectionId === 'dts-interpretation' && !independent))
+    return (
+      <ProvenanceFlow
+        modality={sectionId === 'mobile-suite' || sectionId === 'fixed-suite' ? 'cbct' : 'dts'}
+      />
+    )
   if (sectionId === 'signal') return <SignalComparison independent={independent} />
-  if (sectionId === 'dose-reporting') return <DoseRecord independent={independent} />
+  if (sectionId === 'dose-reporting')
+    return independent ? (
+      <DoseRecord independent />
+    ) : (
+      <>
+        <DoseQuantityTable />
+        <DoseNoteTemplate />
+        <DoseRecord />
+      </>
+    )
   if (sectionId === 'field' && independent) return <FieldComparison />
   if (sectionId === 'imaging-questions' && !independent) return <ImagingQuestionPanels />
   if (sectionId === 'time' && independent)
@@ -356,49 +571,6 @@ export function TeachingPanels({
             />
           </div>
         ))}
-      </section>
-    )
-  if (sectionId === 'dts-interpretation' && !independent)
-    return (
-      <section className={styles.teachingCard} data-provenance-flow>
-        <p className={styles.kicker}>From acquisition to guidance</p>
-        <ol>
-          <li>
-            <strong>Acquired now</strong>
-            <span>
-              Current limited-angle projections contribute measured attenuation information.
-            </span>
-          </li>
-          <li>
-            <strong>Prior anatomy</strong>
-            <span>
-              Planning CT may contribute prior anatomical information in some reconstruction
-              methods.
-            </span>
-          </li>
-          <li>
-            <strong>Reconstructed planes</strong>
-            <span>The reconstructed planes combine those inputs according to the method.</span>
-          </li>
-          <li>
-            <strong>Navigation update</strong>
-            <span>
-              A navigation-target update changes guidance coordinates; it is not a new biopsy-tool
-              image.
-            </span>
-          </li>
-          <li>
-            <strong>Displayed overlay</strong>
-            <span>
-              An overlay displays stored information on a projection; its acquisition source and age
-              still matter.
-            </span>
-          </li>
-        </ol>
-        <p>
-          Capabilities differ by platform and software version. A study-specific localization error
-          is not a universal accuracy specification.
-        </p>
       </section>
     )
   if (sectionId === 'suite-cases' && !independent)

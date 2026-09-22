@@ -122,7 +122,7 @@ export const CHAIN_STOPS: readonly ChainStop[] = Object.freeze([
     analogy:
       'Think of a camera sensor: it records one field, at one sampling pitch, a set number of times per second, and nothing outside the field or between frames.',
     precise:
-      'The detector field of view, pixel sampling (including binning) and acquisition rate decide what is recorded. The kerma–area product is defined in the beam on its way here; the panel records what it receives.',
+      'The detector field of view, pixel sampling (including binning) and acquisition rate decide what is recorded. The kerma–area product (KAP: the air kerma multiplied by the beam area) is defined in the beam on its way here; the panel records what it receives.',
     checklistLabel: 'What the detector records',
     checklist: [
       'field of view — what the panel sees',

@@ -11,6 +11,7 @@ import type { ImagingLearningActivity } from '../../content/learningActivities'
 import type { ChainStopId } from '../../content/imagingChain'
 import { RECONSTRUCTION_SECTIONS } from '../../content/reconstruction'
 import { ReconstructionComparison } from './ReconstructionComparison'
+import { SectionGlossary } from './SectionGlossary'
 import { imagingSectionLinkTarget } from '../../content/pathwayResolver'
 import { Link } from '@/i18n/navigation'
 import styles from './imaging-stage.module.css'
@@ -24,6 +25,11 @@ import styles from './imaging-stage.module.css'
  * everything the section taught before the check one disclosure away, tagged as review so every
  * essential block still has exactly one teaching destination. Only the check's own explanation
  * waits, behind its Show the explanation control.
+ *
+ * PI-FELLOW-03: the section's opening question is printed where it is asked, not folded away
+ * (reports CW4/1.6); the section's terms are defined on its first step (CW3); a block's safety
+ * callout is set apart (7.4); and the closing recap restates the opening question rather than
+ * claiming it was answered.
  */
 export function ImagingTeachingColumn({
   lesson,
@@ -54,6 +60,7 @@ export function ImagingTeachingColumn({
             ))}
           </details>
         ) : null}
+        <SectionGlossary sectionId={lesson.sectionId} variant="teaching" />
       </div>
     )
   }
@@ -81,12 +88,18 @@ function TeachingReference({
       <div data-teaching-block="purpose">
         <p className={styles.kicker}>Imaging question</p>
         <p>{spec.objective}</p>
+        {/* Reports CW4 and 1.6: the recap at the end of the section revisits this question, so it
+            is shown here rather than inside a closed disclosure. It asks for nothing. */}
+        <p className={styles.openingQuestion} data-opening-question>
+          <strong>A question to carry through this section.</strong> {lesson.lesson.recall.prompt}{' '}
+          <span>No answer is needed now; the section closes with it.</span>
+        </p>
         <details>
           <summary>Clinical purpose and prior learning</summary>
           <p>{lesson.lesson.why}</p>
-          <p>{lesson.lesson.recall.prompt}</p>
           <p>{spec.incrementSentence}</p>
         </details>
+        {review ? null : <SectionGlossary sectionId={lesson.sectionId} variant="teaching" />}
       </div>
     )
   if (ref === '@worked')
@@ -129,8 +142,11 @@ function TeachingReference({
             <li key={line}>{line}</li>
           ))}
         </ul>
+        {/* Report CW4: the recap names the question it answers, and does not say the learner
+            answered it. */}
         <p data-recall-answer>
-          <strong>Earlier question, revisited.</strong> {lesson.lesson.recall.answer}
+          <strong>The opening question, revisited.</strong>{' '}
+          <em data-recall-prompt>{lesson.lesson.recall.prompt}</em> {lesson.lesson.recall.answer}
         </p>
         <details data-teaching-block="grammar">
           <summary>Troubleshooting and control reference</summary>
@@ -185,6 +201,12 @@ function TeachingReference({
       data-teaching-block="mechanism"
     >
       <h3>{block.title}</h3>
+      {/* Report 7.4: an immediate safety precaution is set apart, not left inside a paragraph. */}
+      {block.callout ? (
+        <p className={styles.callout} role="note" data-safety-callout>
+          {block.callout}
+        </p>
+      ) : null}
       <p>{block.body}</p>
       {block.points && (
         <ul className={styles.checklist}>

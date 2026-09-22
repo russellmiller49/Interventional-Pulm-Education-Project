@@ -53,6 +53,13 @@ export function ImagingIntegratedCaseActivity({ caseId }: { readonly caseId: str
           {imagingCase.critical ? ' · safety decision' : ''}
         </p>
         <h1 className="text-2xl font-bold tracking-tight">{imagingCase.presentationTitle}</h1>
+        {imagingCase.critical ? (
+          <p className="text-sm text-muted-foreground" data-safety-tag-note>
+            Safety decision: an alternative here could harm a patient, so the feedback names an
+            unsafe choice at once. A teaching emphasis only; this case carries no more weight than
+            any other and nothing about your answer is recorded.
+          </p>
+        ) : null}
       </div>
 
       <ImagingCaseDecision
