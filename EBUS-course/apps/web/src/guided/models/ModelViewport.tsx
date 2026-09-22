@@ -15,6 +15,7 @@ import {
   type ModelState,
   type ModelPackage,
 } from '../../../../../../src/lib/ebus-model-contract'
+import { structureDisplayName } from '../../../../../../src/lib/ebus-linked-contract'
 
 const FILES: Record<ModelPackage, string> = {
   needle: 'ebus-needle-assembly.glb',
@@ -146,7 +147,10 @@ export function ModelViewport({
       root.traverse((o) => {
         if (o instanceof THREE.Mesh && o.userData.label) {
           const id = (o.userData.semanticId as string) || o.name
-          names[o.name] = !live.current.reveal && id.startsWith('node') ? 'Example node' : String(o.userData.label)
+          names[o.name] =
+            !live.current.reveal && id.startsWith('node')
+              ? 'Example node'
+              : structureDisplayName(id, o.userData.label as string | undefined)
         }
       })
       return names
@@ -380,7 +384,10 @@ export function ModelViewport({
           if (!hiddenAnswer)
             items.push({
               id,
-              label: !r && id.startsWith('node') ? 'Example node' : o.userData.label,
+              label:
+                !r && id.startsWith('node')
+                  ? 'Example node'
+                  : structureDisplayName(id, o.userData.label as string | undefined),
             })
         }
       })

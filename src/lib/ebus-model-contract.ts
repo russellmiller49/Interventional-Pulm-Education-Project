@@ -231,6 +231,33 @@ export function measurePhantom(s: MeasurementState) {
   }
 }
 export const routeDefinition = (s: RouteState) => contract.routes.find((r) => r.id === s.station)
+/**
+ * What one recorded route comparison was (EBUS-PRE-REVIEW-04, L19-2).
+ *
+ * Every supported comparison used to return the same sentence, so six presses of "Record
+ * comparison" read identically. The notice now names which view was recorded and how many of the
+ * supported views are done, and keeps the one statement that is true of all of them — the target
+ * and the surrounding anatomy do not move; the locator and viewing direction do (the lesson's own
+ * teaching). No view-specific anatomy is added: the lesson has no per-view statement to draw on.
+ * Messages are excluded from `modelFrameId`, so no acquisition identity changes.
+ */
+function routeComparisonNotice(s: RouteState) {
+  const target = s.station === '8' ? 'the lower paraesophageal example (8)' : s.station + ' example'
+  const view = s.route === 'airway' ? 'airway (EBUS) view' : 'esophageal (EUS-B) view'
+  const supported = MODEL_STEPS.routes.filter((step) => step !== 'unsupported')
+  const done = supported.filter((step) => s.steps.includes(step)).length
+  return (
+    'Recorded: the ' +
+    view +
+    ' of ' +
+    target +
+    '. The target and the surrounding anatomy stay where they were; only the locator and viewing direction change. ' +
+    done +
+    ' of ' +
+    supported.length +
+    ' supported views recorded.'
+  )
+}
 export const routeSupported = (s: RouteState) =>
   !!routeDefinition(s)?.[s.route === 'airway' ? 'airway' : 'esophageal']
 export function modelComplete(s: ModelState) {
@@ -440,7 +467,7 @@ export function modelReducer(state: ModelState, a: ModelAction): ModelState {
     if (routeSupported(s)) s.steps = add(s.steps, `${s.station}-${s.route}`)
     else s.steps = add(s.steps, 'unsupported')
     s.notice = routeSupported(s)
-      ? 'View compared. The anatomical target has not moved with the approach.'
+      ? routeComparisonNotice(s)
       : 'This preset is not modeled. Absence of a supported window is not a negative nodal examination.'
   }
   return s

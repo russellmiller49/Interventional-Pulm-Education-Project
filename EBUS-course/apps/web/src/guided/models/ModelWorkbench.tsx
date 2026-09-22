@@ -360,7 +360,7 @@ export function ModelWorkbench({
       <header>
         <p className="model-kicker">
           {config.demonstration
-            ? 'Worked model · exploration does not complete your activity'
+            ? 'Worked demonstration · nothing here is recorded'
             : config.locked
               ? 'Retained model observation'
               : 'Guided model activity'}
@@ -399,9 +399,24 @@ export function ModelWorkbench({
               </p>
             )}
             {!config.locked && (
-              <details>
+              <details data-model-steps={config.demonstration ? 'demonstration' : 'activity'}>
+                {/*
+                 * In the demonstration this list is a guide to the worked example, not a record
+                 * (EBUS-PRE-REVIEW-04, L5-2): it sat beside "exploration does not complete your
+                 * activity" and read as tracking. The host drops demonstration observations; the
+                 * label now says so. In the learner's own activity it lists the steps the activity asks for.
+                 */}
                 <summary>
-                  Activity progress · {state.steps.length} of {MODEL_STEPS[pkg].length}
+                  {config.demonstration
+                    ? 'Steps in this demonstration · ' +
+                      state.steps.length +
+                      ' of ' +
+                      MODEL_STEPS[pkg].length +
+                      ' explored, not recorded'
+                    : 'Steps this activity asks for · ' +
+                      state.steps.length +
+                      ' of ' +
+                      MODEL_STEPS[pkg].length}
                 </summary>
                 <ul>
                   {MODEL_STEPS[pkg].map((step) => (

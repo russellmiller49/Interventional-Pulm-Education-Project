@@ -1,4 +1,9 @@
-import { MODEL_REVISION, MODEL_STEPS, type ModelPackage } from '@/lib/ebus-model-contract'
+import {
+  MODEL_REVISION,
+  MODEL_STEPS,
+  type ContactMode,
+  type ModelPackage,
+} from '@/lib/ebus-model-contract'
 import type { EbusControl, EbusObservation, EbusLinkedLesson } from '@/lib/ebus-guided-bridge'
 import {
   LINKED_LANDMARKS,
@@ -21,6 +26,18 @@ export interface Question {
   explanation: string
   imageStation?: string
   imagePolicy?: 'none' | 'retained-acquisition'
+  /**
+   * A passage from this lesson's own teaching that bears on this check (EBUS-PRE-REVIEW-04,
+   * L1-9). Quoted, never written for the hint: where no lesson passage fits, there is none, and
+   * the hint keeps the lesson's recall and checklist.
+   */
+  hint?: string
+  /**
+   * The modelled contact condition this check names, where it names one (EBUS-PRE-REVIEW-04,
+   * L5-1). Read only to tell the learner when the condition they held is a different one; the
+   * held frame is never replaced or relabelled.
+   */
+  namesContactMode?: ContactMode
 }
 export type LabGoal = 'scan' | 'coupling' | 'depth' | 'gain' | 'doppler' | 'capture' | 'model'
 export interface Lab {
@@ -39,8 +56,14 @@ export interface Lab {
 }
 export interface Sequence {
   prompt: string
-  steps: { id: string; text: string }[]
+  /**
+   * `bare` is the step without the worked label it carries (EBUS-PRE-REVIEW-04, L17-3), for the
+   * learner who chooses to try the order without it. The key is the step ids either way.
+   */
+  steps: { id: string; text: string; bare?: string }[]
   explanation: string
+  /** The learner-chosen "try it yourself" wording, present only when steps carry `bare`. */
+  tryItYourself?: { hide: string; show: string; note: string }
 }
 export interface Matching {
   prompt: string
@@ -66,7 +89,16 @@ export interface Lesson {
   sequence?: Sequence
   matching?: Matching
   station?: string
-  diagram: 'workflow' | 'ultrasound' | 'stations' | 'needle' | 'specimens'
+  /**
+   * The figure beside the lesson's briefing, when it has one. The five-phase overview schematic
+   * that used to fill this for four lessons repeated the course map without teaching anything the
+   * lesson did not, so those lessons now have none (EBUS-PRE-REVIEW-04, OV-1 / L1-2 / L2-8 /
+   * L25-5). `specimens` draws the running case's supplied specimens and `troubleshooting` the
+   * lesson's own troubleshooting questions (L22-6, L24-2).
+   */
+  diagram?: 'ultrasound' | 'stations' | 'needle' | 'specimens' | 'troubleshooting'
+  /** Optional refreshers in separate courses, linked from the recall (L1-3). Never required. */
+  refreshers?: { href: string; label: string; course: string }[]
   takeaways: string[]
   sources: string[]
   boundary: string

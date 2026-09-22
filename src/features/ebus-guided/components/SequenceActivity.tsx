@@ -26,15 +26,40 @@ export function SequenceActivity({
   const [selected, setSelected] = useState<string[]>([])
   const [checked, setChecked] = useState(false)
   const [shown, setShown] = useState(false)
+  /*
+   * "Try it yourself" (EBUS-PRE-REVIEW-04, L17-3). Some steps print a worked label — the N
+   * category of each target — that answers the ordering. The learner may choose to hide it; it is
+   * never hidden by default, nothing records the choice, the check reads the same step ids, and
+   * Show the sequence, its explanation and the full step text on the result stay as they were.
+   */
+  const [bare, setBare] = useState(false)
+  const offerBare = !!sequence.tryItYourself && sequence.steps.some((step) => step.bare)
   const order = useMemo(() => [...sequence.steps.slice(1), sequence.steps[0]], [sequence])
   const authored = sequence.steps.map((s) => s.id)
   const correct = selected.join('|') === authored.join('|')
   const settled = shown || (checked && correct)
   const remaining = sequence.steps.length - selected.length
   const firstDifference = selected.findIndex((id, i) => id !== authored[i]) + 1
+  const textFor = (id: string) => {
+    const step = sequence.steps.find((s) => s.id === id)
+    return bare && !settled ? (step?.bare ?? step?.text) : step?.text
+  }
   return (
     <div className={styles.sequence} data-sequence-shown={shown || undefined}>
       <p>{sequence.prompt}</p>
+      {offerBare && !settled && (
+        <div className={styles.tryItYourself} data-try-it-yourself>
+          <button
+            type="button"
+            className={styles.secondary}
+            aria-pressed={bare}
+            onClick={() => setBare((value) => !value)}
+          >
+            {bare ? sequence.tryItYourself!.show : sequence.tryItYourself!.hide}
+          </button>
+          <p className={styles.muted}>{sequence.tryItYourself!.note}</p>
+        </div>
+      )}
       {!settled && (
         <p className={styles.muted} data-sequence-instruction>
           Select the steps in the order you would do them: choose the first step, then the next,
@@ -44,7 +69,7 @@ export function SequenceActivity({
       )}
       <ol aria-label={shown ? 'The authored sequence' : 'Your sequence so far'} data-sequence-order>
         {selected.map((id) => (
-          <li key={id}>{sequence.steps.find((s) => s.id === id)?.text}</li>
+          <li key={id}>{textFor(id)}</li>
         ))}
       </ol>
       {!settled && selected.length === 0 && <p className={styles.muted}>No steps selected yet.</p>}
@@ -60,7 +85,7 @@ export function SequenceActivity({
                 setChecked(false)
               }}
             >
-              {s.text}
+              {textFor(s.id)}
             </button>
           ))}
       <div className={styles.checkActions}>

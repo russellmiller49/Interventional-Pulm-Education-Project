@@ -77,7 +77,7 @@ export function ExaminationWorkspace({
       if (!source) {
         setErrors({
           image:
-            'The current acquisition is unavailable. Historical metadata cannot restore live evidence; reacquire the window.',
+            'No current acquisition is available for this record. A reference saved earlier cannot stand in for a live acquisition: go back and acquire the window again.',
         })
         return
       }
@@ -119,10 +119,17 @@ export function ExaminationWorkspace({
         </p>
       </header>
       <p className={styles.muted}>{caseData.limitation}</p>
+      {/*
+       * Learner language for a restored draft (EBUS-PRE-REVIEW-04, L22-5). The three facts the
+       * developer wording carried are all still said: the entries came back from an earlier
+       * session, any acquisition they mention is a record of that session and not a new one, and
+       * a model task needs a new acquisition.
+       */}
       {loadState === 'compatible' && (
-        <p role="status" className={styles.muted}>
-          Compatible case draft restored. Acquisition references are historical metadata; active
-          model tasks restart and require a new acquisition.
+        <p role="status" className={styles.muted} data-record-restored>
+          Your earlier entries for this case were restored from this browser. Any model acquisition
+          they mention is a record from that earlier session, not a new acquisition: model tasks
+          start again and need a new acquisition.
         </p>
       )}
       {loadState === 'incompatible' && (
@@ -576,7 +583,7 @@ export function ExaminationWorkspace({
         {draft.acquisitions.map((entry) => (
           <p key={entry.source.taskId}>
             Observed model action: {entry.source.taskId} · {entry.source.frameId} ·{' '}
-            {entry.source.scope.approach} · historical metadata only.
+            {entry.source.scope.approach} · a stored reference; it does not restore a live frame.
           </p>
         ))}
       </details>

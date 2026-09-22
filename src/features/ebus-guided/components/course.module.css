@@ -922,3 +922,204 @@
   gap: 6px;
   padding-left: 20px;
 }
+/*
+ * EBUS-PRE-REVIEW-04 — teaching clarity. Every surface below uses the course's existing tokens and
+ * reflows to one column; none hides content by default.
+ */
+.moduleShell summary:focus-visible {
+  outline: 3px solid var(--cyan-bright);
+  outline-offset: 3px;
+}
+/* The chapter map summary on the Overview, beside the introduction (OV-1). */
+.mapSummary {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  padding: 18px 20px;
+  align-self: start;
+  min-width: 0;
+}
+.mapSummary h2 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+.mapSummary ol {
+  list-style: decimal;
+  padding-left: 22px;
+  margin: 10px 0 0;
+}
+.mapSummary li {
+  padding: 4px 0;
+}
+.mapSummary a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.map > section[id] {
+  scroll-margin-top: 7rem;
+}
+/* What a scaffolded activity is for (part H). */
+.purpose {
+  max-width: 105ch;
+  margin-top: 8px;
+  padding: 6px 0 6px 12px;
+  border-left: 3px solid var(--cyan);
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+/* First-use terms and the course glossary (NAV-3). Native disclosures. */
+.glossary {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.glossary h2,
+.glossary h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+}
+.glossary ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+.glossary details {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel-2);
+  padding: 6px 12px;
+}
+.glossary summary {
+  cursor: pointer;
+  font-weight: 650;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+.glossary details[open] summary {
+  margin-bottom: 6px;
+}
+.glossary details p {
+  margin: 0 0 8px;
+}
+.glossary a {
+  color: var(--cyan-bright);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.refreshers {
+  font-size: 0.9rem;
+  color: var(--stage-muted);
+}
+.refreshers a {
+  color: var(--cyan-bright);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* Lesson 24's troubleshooting questions as a flow (L24-2). */
+.ladder {
+  list-style: none;
+  counter-reset: ladder;
+  padding: 0;
+  margin: 12px 0;
+  display: grid;
+  gap: 10px;
+}
+.ladder > li {
+  counter-increment: ladder;
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+  padding: 10px 12px 10px 44px;
+}
+.ladder > li::before {
+  content: counter(ladder);
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--panel-3);
+  border: 1px solid var(--cyan);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+.ladder > li + li::after {
+  content: '';
+  position: absolute;
+  left: 21px;
+  top: -11px;
+  height: 10px;
+  border-left: 2px solid var(--cyan);
+}
+.ladderQuestion {
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+.ladder dl,
+.ladderNote dl,
+.caseSpecimens dl {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+  gap: 2px 10px;
+  margin: 0;
+  font-size: 0.9rem;
+}
+.ladder dt,
+.ladderNote dt,
+.caseSpecimens dt {
+  color: var(--stage-muted);
+}
+.ladder dd,
+.ladderNote dd,
+.caseSpecimens dd {
+  margin: 0;
+  min-width: 0;
+}
+.ladderNote {
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 10px 0;
+}
+.ladderNote p {
+  margin: 0 0 6px;
+}
+/* The running case's supplied specimens (L22-6). */
+.caseSpecimens {
+  display: grid;
+  gap: 10px;
+}
+.caseSpecimens h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+/* The learner's own choice to hide a worked label (L17-3). */
+.tryItYourself {
+  display: grid;
+  gap: 4px;
+  margin: 6px 0 10px;
+  justify-items: start;
+}
+@media (max-width: 480px) {
+  .ladder dl,
+  .ladderNote dl,
+  .caseSpecimens dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ladder dd,
+  .ladderNote dd,
+  .caseSpecimens dd {
+    margin-bottom: 4px;
+  }
+}

@@ -78,7 +78,7 @@ export const completeLessons: Lesson[] = [
       ],
       true,
     ),
-    diagram: 'ultrasound',
+    diagram: 'troubleshooting',
     takeaways: [
       'Match the correction to the failure.',
       'Document an inaccessible target and the next plan.',
@@ -169,7 +169,6 @@ export const completeLessons: Lesson[] = [
       ],
       true,
     ),
-    diagram: 'workflow',
     takeaways: [
       'Stop acquisition when patient safety requires it.',
       'Recovery includes escalation instructions and result follow-up.',
@@ -270,7 +269,6 @@ export const completeLessons: Lesson[] = [
         'A recommendation against routine add-on staging is not a ban on all subsequent surgical evaluation.',
       ],
     ),
-    diagram: 'workflow',
     takeaways: [
       'Negative, nonrepresentative, and unassessed are different.',
       'A complete report assigns the next action and its owner.',
