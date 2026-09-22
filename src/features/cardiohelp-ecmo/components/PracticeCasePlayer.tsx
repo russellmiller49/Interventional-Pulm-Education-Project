@@ -85,6 +85,29 @@ const faultLabels: Record<FaultId, string> = {
   'distal-limb-ischemia': 'Restore cannulated-limb perfusion',
 }
 
+/**
+ * What the brief's numbers are (ECMO-FELLOW-02, C2-1 and C5-2).
+ *
+ * The case data are the presentation as the case authors it: some are the patient before this run
+ * began ("SpO₂ falls from 90% to 78%"), and some are derived by the simulation rather than set by
+ * the case, so the console computes its own value (the recirculation case's pre-oxygenator
+ * saturation reads 75 on the console against the brief's 84). Printed without a label beside the
+ * live monitor, they read as two measurements of the same moment that disagree.
+ */
+export const PRESENTATION_DATA_NOTE =
+  'At presentation: the case data as this case describes the patient before you start. The monitor shows the simulated patient from the first modeled second on, and where the two differ, the monitor is the running model.'
+
+/**
+ * What a modeled second is (ECMO-FELLOW-02; S4-3, C1-4, S10-2, IV-4).
+ *
+ * The clock counts the model's own steps. Responses here settle in seconds that take minutes to
+ * hours at a bedside, and nothing in the module converts one to the other: relabelling the steps as
+ * minutes would invent a rate, so the clock says what it is instead. Clinical pacing — how fast CO₂
+ * should be allowed to fall, how long a trial runs — is ECMO-OWNER-09's decision, not this label's.
+ */
+export const MODELED_TIME_NOTE =
+  'Modeled seconds are compressed: they are this simulation’s steps, not a bedside time course.'
+
 export function advanceSimulation(dispatch: CasePanelProps['dispatch'], seconds: number) {
   const boundedSeconds = Math.min(60, Math.max(1, Math.ceil(seconds)))
   for (let index = 0; index < boundedSeconds; index += 1) {
@@ -223,7 +246,10 @@ export function ClinicalCaseBrief({ state, scenario }: Pick<CasePanelProps, 'sta
       <span className={styles.kicker}>{clinicalCase.setting}</span>
       <h3 id="clinical-case-heading">{clinicalCase.patientLabel}</h3>
       <p>{clinicalCase.openingNarrative}</p>
-      <dl className={styles.clinicalDataGrid}>
+      <p className={styles.presentationNote} data-presentation-note>
+        {PRESENTATION_DATA_NOTE}
+      </p>
+      <dl className={styles.clinicalDataGrid} aria-label="Case data at presentation">
         {clinicalCase.data.map((item) => (
           <div key={item.label} data-trend={item.trend ?? 'stable'}>
             <dt>{item.label}</dt>
@@ -857,7 +883,7 @@ export function ReassessmentPanel({
           </li>
           <li data-complete={observation.anchor !== null}>
             <span aria-hidden="true">{observation.anchor !== null ? '✓' : '○'}</span>
-            At least one intervention or corrective action completed
+            An action taken that the response can be read from
           </li>
           <li data-complete={observation.responseObserved}>
             <span aria-hidden="true">{observation.responseObserved ? '✓' : '○'}</span>
@@ -893,6 +919,11 @@ export function ReassessmentPanel({
         </div>
       ) : null}
       <p className={styles.reassessmentInstruction}>{reassessment.instruction}</p>
+      {reassessment.modelBoundary ? (
+        <p className={styles.presentationNote} role="note" data-model-boundary="response">
+          <strong>What this monitor cannot show in this case.</strong> {reassessment.modelBoundary}
+        </p>
+      ) : null}
       <div className={styles.reassessmentGrid}>
         <ReassessmentQuestionField
           domain="device"

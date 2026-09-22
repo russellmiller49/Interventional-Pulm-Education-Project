@@ -1383,6 +1383,9 @@ export function PatientMonitor({
   guidedTarget,
   guidedControlId,
 }: Pick<SimulationPanelProps, 'state' | 'guidedTarget' | 'guidedControlId'>) {
+  const limbStoryDriven =
+    state.scenario.activeFaults.includes('distal-limb-ischemia') ||
+    state.scenario.correctedFaults.includes('distal-limb-ischemia')
   return (
     <section
       id="cardiohelp-patient-monitor"
@@ -1452,6 +1455,12 @@ export function PatientMonitor({
         <div>
           <span>Work of breathing</span>
           <strong>{state.patient.workOfBreathing}</strong>
+          {/* C1-1 / S17-4 (ECMO-FELLOW-02): breathing is not coupled to CO₂, pH or support. */}
+          <small data-local-model-boundary="breathing-held">
+            {state.supportMode === 'vv'
+              ? 'Held at the value the case set, except after the sweep has been off for twenty modeled seconds.'
+              : 'Not modeled: held at the value the case set.'}
+          </small>
         </div>
         <div>
           <span>MAP</span>
@@ -1460,6 +1469,10 @@ export function PatientMonitor({
         <div>
           <span>Heart rate</span>
           <strong>{state.patient.heartRate}/min</strong>
+          {/* C3-2 / VAC2-1 (ECMO-FELLOW-02): heart rate is authored and never derived. */}
+          <small data-local-model-boundary="heart-rate-not-modeled">
+            Not modeled: held at the value the case set.
+          </small>
         </div>
         {state.scenario.clinical ? (
           <>
@@ -1522,11 +1535,24 @@ export function PatientMonitor({
                 <strong>
                   {state.patient.distalLimbPerfusion} · NIRS {state.patient.distalLimbNirs}%
                 </strong>
-                <small data-local-model-boundary="limb-perfusion-fixed">
-                  Model boundary: this simulation holds the limb state where the case set it.
-                  Nothing you do to the circuit moves it, so it cannot be used to judge whether an
-                  intervention helped the limb.
-                </small>
+                {/*
+                 * VAC6-1 (ECMO-FELLOW-02): this note used to say nothing moves the limb on every VA
+                 * case — including the one case built around the limb, where the rescue restores it.
+                 * It now describes the case that is actually loaded.
+                 */}
+                {limbStoryDriven ? (
+                  <small data-local-model-boundary="limb-perfusion-case-story">
+                    Model boundary: in this case the limb follows the case&apos;s own story. It
+                    worsens while the obstruction stands and is restored by the case&apos;s rescue
+                    step, over a few compressed modeled seconds. Circuit settings do not move it.
+                  </small>
+                ) : (
+                  <small data-local-model-boundary="limb-perfusion-fixed">
+                    Model boundary: this simulation holds the limb state where the case set it.
+                    Nothing you do to the circuit moves it, so it cannot be used to judge whether an
+                    intervention helped the limb.
+                  </small>
+                )}
               </div>
             ) : null}
           </>

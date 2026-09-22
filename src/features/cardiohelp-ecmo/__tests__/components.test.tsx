@@ -408,7 +408,9 @@ describe('CARDIOHELP ECMO learner interface', () => {
     )
     const checklist = screen.getByLabelText(/Reassessment context/i)
     expect(checklist).toHaveTextContent(/Initial clinical plan committed/i)
-    expect(checklist).toHaveTextContent(/intervention or corrective action completed/i)
+    // ECMO-FELLOW-02 (IA-3): the item no longer says a corrective action was completed, because a
+    // recognition-only step or an acknowledged alarm also anchors the observation.
+    expect(checklist).toHaveTextContent(/An action taken that the response can be read from/i)
     expect(checklist).toHaveTextContent(/Response observed for 0\/3 seconds/i)
     expect(checklist).toHaveTextContent(/Device\/console response selected/i)
     expect(checklist).toHaveTextContent(/Circuit\/gas response selected/i)
@@ -655,7 +657,8 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(within(debrief).getByText(definition.debrief.diagnosis)).toBeInTheDocument()
     // Every domain names what was recorded and what the model showed, in words.
     expect(within(debrief).getAllByText(/You recorded:/i)).toHaveLength(6)
-    expect(within(debrief).getAllByText(/Modeled response:/i)).toHaveLength(3)
+    // ECMO-FELLOW-02: the key is the response the case expects, not a claim the model showed it.
+    expect(within(debrief).getAllByText(/The response this case expects:/i)).toHaveLength(3)
     expect(
       within(debrief).getByRole('link', { name: /Review the paired lesson/i }),
     ).toHaveAttribute('href', expect.stringContaining('lesson=va-differential-hypoxemia'))

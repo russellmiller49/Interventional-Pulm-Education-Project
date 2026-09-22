@@ -576,6 +576,16 @@ export interface ScenarioReassessmentDefinition {
   device: ReassessmentQuestion
   circuit: ReassessmentQuestion
   patient: ReassessmentQuestion
+  /**
+   * What the monitor cannot show in this case (ECMO-FELLOW-02).
+   *
+   * Some expected responses name a finding this simulation does not produce — breathing easing after
+   * initiation, blood pressure recovering after decompression, pulsatility returning after a
+   * tamponade is relieved. The stage asks the learner to pick the response they actually see, so it
+   * says, before they choose, which of those signals this model holds still. The key is unchanged:
+   * the expected clinical course is still the expected clinical course.
+   */
+  modelBoundary?: string
 }
 
 export interface ReassessmentSubmission {
