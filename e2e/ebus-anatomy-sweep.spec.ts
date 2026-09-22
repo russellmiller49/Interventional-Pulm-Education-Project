@@ -41,6 +41,7 @@ const latest = (page: Page) =>
             linked?: {
               assetsReady: boolean
               approach: string
+              selectedStructure?: string
               sweeps?: Record<string, { phase: string; samples: number; span: number }>
             }
           }
