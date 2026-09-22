@@ -14,9 +14,9 @@
     "6663f030 docs(mcs)",
     "2124cd0f Merge PR #256"
   ],
-  "headSha": "the documents commit on top of the implementation commit; see the PR head",
+  "headSha": "the PR head of https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/260 (documents commits on top of implementationCommitSha)",
   "planningShaIsHistoricalContextOnly": "77a141ccfd574a984f91e74abc9018b5d67e8202",
-  "prUrl": "PENDING",
+  "prUrl": "https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/260",
   "devServer": "npm run dev:claude, port 3120, this worktree only (baseline reproduction and development)",
   "productionServer": ".next/standalone/server.js on port 3136 (launch entry claude-bbt-03-prod; port 3131 was occupied by another session's server); .env.example placeholders as process environment only",
   "overlappingOpenPrs": [],
