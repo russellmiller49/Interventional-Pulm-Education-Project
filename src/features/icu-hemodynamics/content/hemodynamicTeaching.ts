@@ -492,6 +492,58 @@ export function feedbackForHemodynamicAction(
   }
 }
 
+/**
+ * The three HD-08 actions the engine refuses to grant, and the control that actually grants each.
+ *
+ * `HD08_PROCEDURE_MILESTONES` in the reducer deliberately withholds bundled credit for these:
+ * levelling, zeroing, repositioning and building a usable series are the skills the case exists to
+ * ask for, so the milestone is derived from those operations and not from a card. The case host,
+ * however, narrated the authored five-part feedback the moment the card was pressed — so a learner
+ * read "the pressure chain was re-leveled and re-zeroed" over a header still saying ZERO REQUIRED,
+ * and "a pulsatile PA morphology reappeared" over a tracing that had not changed (report P-09,
+ * Figure 45).
+ *
+ * These are the same three actions described as what they are on this case: a statement of intent,
+ * and where to go and do it. The authored `whyItHappened` and `theCue` are kept, because the
+ * reasoning they teach is unchanged; only the claim about what happened is replaced.
+ */
+const HD08_PREPARATION_BY_ACTION_ID: Readonly<Record<string, string>> = {
+  'correct-measurement-system':
+    'Nothing has changed on the monitor. On this case the measurement chain is restored by doing it: level the transducer and zero it in The line, then flush the distal lumen and classify how it settles in The flush check.',
+  'reposition-catheter':
+    'Nothing has changed on the monitor. On this case the catheter is repositioned by doing it: bring the balloon down in The balloon if it is up, then Withdraw in The tip until a pulmonary-artery tracing is back, and confirm it.',
+  'repeat-valid-thermodilution':
+    'Nothing has changed on the monitor, and no series has been started. On this case a series comes from The injection: inject, read each raw curve, and accept or exclude it for a technical reason the curve shows.',
+}
+
+export function isHemodynamicPreparationOnly(
+  definition: HemodynamicCaseDefinition,
+  intervention: HemodynamicInterventionDefinition,
+): boolean {
+  return definition.id === 'HD-08' && intervention.id in HD08_PREPARATION_BY_ACTION_ID
+}
+
+/** The feedback for a requested action the engine did not perform. It claims nothing. */
+export function preparationFeedbackForHemodynamicAction(
+  intervention: HemodynamicInterventionDefinition,
+): ScenarioFeedback {
+  const authored = baseFeedbackByActionId[intervention.id]
+  if (!authored) {
+    throw new Error(`Missing five-part hemodynamics feedback for ${intervention.id}`)
+  }
+  return {
+    ...authored,
+    whatHappened: `Requested, not performed. ${HD08_PREPARATION_BY_ACTION_ID[intervention.id]}`,
+    likelyFrame:
+      'If pressing the card felt like taking the action, that is reasonable — it is how the other cases work. This one asks for the operation itself, because the operation is the skill.',
+  }
+}
+
+/** Where the real control is, for the card that names the action. */
+export function hemodynamicPreparationGuidance(interventionId: string): string | undefined {
+  return HD08_PREPARATION_BY_ACTION_ID[interventionId]
+}
+
 export function feedbackTimingForHemodynamicAction(
   intervention: HemodynamicInterventionDefinition,
   hardInterrupt: boolean,

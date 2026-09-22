@@ -1,6 +1,7 @@
 import { hemodynamicCaseById, normalCirculationParameters } from '../content/cases'
 import type { HemodynamicsSectionId } from '../content/sectionSpecs'
 import { icuHemodynamicsReducer } from './reducer'
+import { paReturnEpisodeKey, paWaveformReturned } from './catheterSafety'
 import {
   pressureObservationKey,
   catheterFlushBlocked,
@@ -60,6 +61,16 @@ export function stageGoalMet(goal: StageGoal, state: HemodynamicSimulationState)
     case 'zeroed':
       return state.measurementSystem.zeroed
     case 'check':
+      if (goal.id === PA_RETURN_CHECK) {
+        // The observation belongs to one occlusion. A confirmation taken before any balloon went
+        // up, or left over from an earlier wedge, is not this episode's (report L6-05).
+        const episode = paReturnEpisodeKey(state)
+        return (
+          episode !== null &&
+          paWaveformReturned(state) &&
+          checks.has(`${PA_RETURN_CHECK}:${episode}`)
+        )
+      }
       if (goal.id === CURRENT_RESPONSE_RECHECKED) {
         return (
           !catheterFlushBlocked(state, 'pulmonary-artery') &&
@@ -111,7 +122,7 @@ const POSITION_WORDS: Readonly<Record<CatheterPosition, string>> = {
 }
 
 const CHECK_WORDS: Readonly<Record<string, string>> = {
-  [FAST_FLUSH_CHECK]: 'Run a fast flush on the pulmonary-artery line',
+  [FAST_FLUSH_CHECK]: 'Run a fast flush on the catheter’s distal lumen',
   [DYNAMIC_RESPONSE_CLASSIFIED_CHECK]: 'Read the flush response and say what it is',
   [DYNAMIC_RESPONSE_CORRECTED_CHECK]: 'Repair the line until the flush response is acceptable',
   [CURRENT_RESPONSE_RECHECKED]: 'Flush the corrected line again and identify the current response',
