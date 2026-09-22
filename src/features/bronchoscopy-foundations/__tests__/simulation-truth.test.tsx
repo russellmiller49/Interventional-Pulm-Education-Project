@@ -2,6 +2,7 @@
 import { section as branchEntry } from '../content/sections/branch-entry'
 import { section as larynxAndEntry } from '../content/sections/larynx-and-entry'
 import { section as protectedAccessories } from '../content/sections/protected-accessories'
+import { section as systematicSurvey } from '../content/sections/systematic-survey'
 import { section as viewLoss } from '../content/sections/view-loss'
 import { COURSE_FLOWS } from '../content/courseFlow'
 import { bronchStageLesson } from '../content/stageLessons'
@@ -14,6 +15,11 @@ import {
 import { createScopeState, reduceScope } from '../engine/scope/scopeReducer'
 import { accessoryIsExposed } from '../engine/scope/scopeAccessory'
 import { scopeGoalClaim, scopeGoalsClaim } from '../engine/scope/scopeGoalEvaluation'
+import {
+  GOAL_GROUP_HEADING,
+  GOAL_MODEL_LIMIT,
+  scopeDoneLead,
+} from '../engine/scope/goalPresentation'
 import { formatScopeMetric } from '../engine/scope/scopeMetrics'
 import {
   ENVIRONMENT_CLOCK_SCRIPTS,
@@ -303,6 +309,10 @@ describe('a met goal says what kind of claim it is (A4, A5)', () => {
       scopeGoalClaim({ type: 'event-sequence', events: ['reached-carina', 'entered:RMSB'] }),
     ).toBe('history')
     expect(scopeGoalClaim({ type: 'without', event: 'wall-contact' })).toBe('history')
+    // The inspection record keeps every declaration after the scope leaves the airway, so reading
+    // it is a statement about the attempt, not about what is in view (PR-254 review, finding 2).
+    expect(scopeGoalClaim({ type: 'ledger', airway: 'RB6', status: 'inspected' })).toBe('history')
+    expect(scopeGoalClaim({ type: 'ledger-complete', airways: ['RB6', 'RB7'] })).toBe('history')
     expect(scopeGoalClaim({ type: 'location', airway: 'TR' })).toBe('current')
     expect(
       scopeGoalClaim({ type: 'metric', metric: 'deflectionDeg', op: 'abs>=', value: 10 }),
@@ -323,6 +333,37 @@ describe('a met goal says what kind of claim it is (A4, A5)', () => {
     expect(scopeGoalsClaim(act(viewLoss).goals)).toBe('history')
   })
 
+  it('classes the survey card, which is entirely a record, as history', () => {
+    const survey = act(systematicSurvey)
+    expect(scopeGoalsClaim(survey.goals)).toBe('history')
+    for (const goal of survey.goals)
+      expect([goal.id, scopeGoalClaim(goal.test)]).toEqual([goal.id, 'history'])
+  })
+
+  it('keeps a live reading current, and a card that mixes the two mixed', () => {
+    const hold = act(branchEntry).observe!.goals
+    expect(scopeGoalsClaim(hold)).toBe('mixed')
+    const byId = Object.fromEntries(hold.map((goal) => [goal.id, scopeGoalClaim(goal.test)]))
+    expect(byId).toEqual({
+      acknowledge: 'history',
+      capture: 'mixed',
+      hold: 'mixed',
+      'no-drift': 'history',
+    })
+  })
+
+  it('names what every finished card is allowed to say', () => {
+    expect(scopeDoneLead('history')).toBe('Recorded: every step this card asks for.')
+    expect(scopeDoneLead('mixed')).toBe(
+      'Recorded: every step this card asks for, and its live readings hold.',
+    )
+    // No lead may read as approval of the picture; only a live-reading card says "Done".
+    for (const claim of ['history', 'mixed'] as const)
+      expect(scopeDoneLead(claim)).not.toMatch(/Every goal on this card is met/i)
+    expect(GOAL_MODEL_LIMIT).toContain('does not judge the bronchoscope image')
+    expect(GOAL_GROUP_HEADING.history).toBe('On the record for this attempt')
+  })
+
   it('stops claiming an unmeasured quality in the goals themselves', () => {
     const labels = (goals: readonly ScopeGoal[]) => goals.map((goal) => goal.label).join(' | ')
     const entry = labels(act(branchEntry).goals)
@@ -331,6 +372,12 @@ describe('a met goal says what kind of claim it is (A4, A5)', () => {
     expect(entry).toMatch(/no wall contact recorded/i)
     expect(labels(act(viewLoss).goals)).not.toMatch(/along the visible lumen/i)
     expect(labels(act(branchEntry).observe!.goals)).toMatch(/no wall contact recorded/i)
+    // `advanced-blind` records an advance made while the model's own view signal was lost. It is
+    // not a reading of the image, and the label may not imply one.
+    expect(entry).not.toMatch(/without a clear view/i)
+    expect(entry).toMatch(/while the model recorded a lost view/i)
+    expect(labels(act(viewLoss).observe!.goals)).not.toMatch(/usable view/i)
+    expect(labels(act(branchEntry).observe!.goals)).not.toMatch(/no change in depth/i)
   })
 
   it('keeps every goal reachable and unmet at the start', () => {

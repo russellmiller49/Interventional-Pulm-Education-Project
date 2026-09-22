@@ -911,7 +911,11 @@ test.describe('the scripted scene runs on its own clock', () => {
     for (const id of ['acknowledge', 'capture', 'hold', 'no-drift'])
       await expect(page.locator('[data-goal="' + id + '"]')).toHaveAttribute('data-met', 'true')
     await expect(primary(page)).toBeEnabled()
-    await expect(page.locator('[data-now-status]')).toContainText('Done.')
+    // The lead reports the record and the live readings; it never approves the image.
+    await expect(page.locator('[data-now-status]')).toHaveText(
+      'Recorded: every step this card asks for, and its live readings hold.',
+    )
+    await expect(page.locator('[data-goal-group]')).toHaveAttribute('data-goal-group', 'mixed')
   })
 })
 
@@ -963,9 +967,9 @@ for (const viewport of [
   { width: 390, height: 844 },
 ]) {
   test(
-    'a finished card after an overshoot records the attempt without describing the view at ' +
-      viewport.width,
+    'a finished card after an overshoot reports a record and not a view at ' + viewport.width,
     async ({ page }) => {
+      test.setTimeout(240_000)
       await page.setViewportSize(viewport)
       await reachAct(page, 'view-loss')
       await ready(page)
@@ -976,25 +980,81 @@ for (const viewport of [
         await control(page, 'advance').press('Enter')
       await expect(carina).toHaveAttribute('data-met', 'true')
       const status = page.locator('[data-now-status]')
-      await expect(status).toContainText(
-        'They record this attempt, not the view on the screen now.',
-      )
-      const basis = page.locator('[data-goal-basis]')
-      await expect(basis).toHaveAttribute('data-goal-basis', 'history')
-      await expect(basis).toContainText('does not judge the picture on the screen')
+      const heading = page.locator('[data-goal-group]')
+      const limit = page.locator('[data-goal-now]')
+      await expect(status).toHaveText('Recorded: every step this card asks for.')
+      await expect(heading).toHaveText('On the record for this attempt')
+      await expect(limit).toContainText('does not judge the bronchoscope image')
       // Keep going past the target, the way the walkthrough did.
       for (let i = 0; i < 12; i++) await control(page, 'advance').press('Enter')
-      await expect(basis).toContainText('The tip is in')
-      await expect(basis).not.toContainText('The tip is in the trachea now.')
-      // The events happened, so the ticks stay; what the card claims about them is bounded.
+      // The events happened, so the ticks stay; the headline still reports only the record.
       await expect(carina).toHaveAttribute('data-met', 'true')
-      await expect(status).toContainText(
-        'They record this attempt, not the view on the screen now.',
+      await expect(status).toHaveText('Recorded: every step this card asks for.')
+      await expect(page.locator('[data-now-card]')).not.toContainText(
+        'Every goal on this card is met',
       )
+      // Where the tip is now stays visible, and separate from the record.
+      await expect(limit).toContainText('Where the tip is now:')
+      await expect(limit).not.toContainText('Where the tip is now: Trachea.')
       expect(await page.locator('[data-step-goals] li[data-goal-claim="history"]').count()).toBe(3)
+      // The pane's own green list carries the same framing, not a bare row of ticks.
+      await expect(page.locator('[data-scope-goals-group]')).toHaveText(
+        'On the record for this attempt',
+      )
+      await expect(page.locator('[data-scope-goals-limit]')).toContainText(
+        'does not judge the bronchoscope image',
+      )
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+      ).toBe(true)
+      const themeOf = () =>
+        page.evaluate(() =>
+          document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+        )
+      const shot = async (theme: string) =>
+        page.locator('[data-now-card]').screenshot({
+          path:
+            'test-results/bronchoscopy-foundations/overshoot-card-' +
+            viewport.width +
+            '-' +
+            theme +
+            '.png',
+        })
+      const first = await themeOf()
+      await shot(first)
+      // The same card in the other theme: the heading and the limit are the learner's only
+      // protection against reading the ticks as approval, so neither may disappear. The site's
+      // theme control sits inside the collapsed navigation at phone width, which is this module's
+      // chrome rather than its card, so the theme pass runs at the desktop width.
+      if (viewport.width >= 1024) {
+        const themeToggle = page.locator('button[aria-label="Toggle dark mode"]').first()
+        await expect(themeToggle).toBeVisible({ timeout: 15_000 })
+        await themeToggle.click()
+        await expect.poll(themeOf, { timeout: 10_000 }).not.toBe(first)
+        await expect(heading).toBeVisible()
+        await expect(limit).toBeVisible()
+        await expect(status).toHaveText('Recorded: every step this card asks for.')
+        await expect(page.locator('[data-scope-goals-limit]')).toBeVisible()
+        await shot(await themeOf())
+      }
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
       ).toBe(true)
     },
   )
 }
+
+test('a completed inspection record stays a record after the scope leaves those airways', async ({
+  page,
+}) => {
+  test.setTimeout(240_000)
+  await reachAct(page, 'systematic-survey')
+  await ready(page)
+  // Every goal on this card reads the attempt: the sequences it walked and the record it wrote.
+  const rows = page.locator('[data-step-goals] li')
+  await expect(rows).toHaveCount(5)
+  expect(await page.locator('[data-step-goals] li[data-goal-claim="history"]').count()).toBe(5)
+  await expect(page.locator('[data-goal-group]')).toHaveAttribute('data-goal-group', 'history')
+  await expect(page.locator('[data-now-card]')).not.toContainText('Read from the scope right now')
+  await expect(page.locator('[data-goal-now]')).toContainText('Where the tip is now:')
+})
