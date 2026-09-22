@@ -598,5 +598,55 @@
     "notMergedNotDeployed": true,
     "prompt04NotStarted": true,
     "repairCommitSha": "199e6e3be8b747630ad4786c202a90fb69a4fd88"
+  },
+  "integrationRepair": {
+    "date": "2026-09-22",
+    "previouslyReviewedHead": "b0e7b1dbcf6e7730abafc82298ac55316b11025c",
+    "blocker": "merge conflict with main in .claude/launch.json; all Prompt 03 technical findings already passed independent re-review and were not revisited",
+    "mainNamedByReview": "745146f6e40bd536c201313f0480ddde2ee03ca3",
+    "mainIntegrated": "d98bab79af9231eb1857e2da96cb75ca2068d85c",
+    "mainAdvancedNote": "origin/main advanced to d98bab79 (merge of PR #254, Bronchoscopy Foundations) before execution; 745146f6 is its ancestor, so the fresher main was merged",
+    "method": "ordinary merge commit; no rebase, no force push, no reviewed commit rewritten",
+    "integrationMergeCommitSha": "6e37645172d4d4501f3b455a3d23d5aa66f3f6fb",
+    "integrationMergeParents": [
+      "b0e7b1dbcf6e7730abafc82298ac55316b11025c",
+      "d98bab79af9231eb1857e2da96cb75ca2068d85c"
+    ],
+    "conflictedFiles": [".claude/launch.json"],
+    "resolution": "additive: main's claude-ebus-03 (3131) and claude-ebus-03-prod (3132) kept exactly as main has them, followed by claude-bbt-03-prod (3136) unchanged; 20 entries = main's 19 in main's order byte-for-byte + the BBT entry; no duplicate name; no new shared port (3120 is shared by claude-worktree and claude-worktree-attached on main by design); main has no claude-bbt-03-prod and nothing on 3136, so the port was kept",
+    "runtimePortNote": "3136 was held at run time by another session's ad hoc server (/private/tmp/hd02-base), not a launch entry; left alone; validation used port 3001 as before",
+    "sourceIntegrity": {
+      "committedTreeEqualsGitMergeTreeExceptLaunchJson": true,
+      "mainChangedBbtPathsSinceBase": false,
+      "bbtFeatureTreeHash": "e40de72152f721cc7b193fa847c348183295bc11 (identical to b0e7b1db)",
+      "branchTracingSpecBlobHash": "3c15448a9a2ba4b15ee699438a24e9f38f349ba6 (identical to b0e7b1db)",
+      "protectedPathsUnchanged": "public/airway-anatomy, public/airway-lesson, geometry/ (including paired-scope.ts), camera and draft-signature fixtures, manifests, graph identities, response planes, nomenclature, packets and review status",
+      "prDiffAgainstCurrentMain": "the same 26 files as the reviewed diff, byte-identical outside .claude/launch.json; the launch hunk is the one BBT entry; no other module's merged work carried"
+    },
+    "verification": {
+      "launchJson": "valid JSON (Node and Python); Prettier clean",
+      "diffCheck": "clean vs b0e7b1db, vs main, and on the merge commit",
+      "typeCheck": "npx tsc --noEmit clean, exit 0, no diagnostics, with NODE_OPTIONS=--max-old-space-size=8192; the first run at Node's default ~4 GB heap aborted out of memory (exit 134) before emitting any diagnostic",
+      "productionBuild": "npm run build passed, exit 0; standalone output prepared; no tracked file changed",
+      "jestModule": "141 passed, 1 failed across 23 suites (142 tests); the failure is the documented contracts.test.ts:198 case_manifest.json access assertion",
+      "playwrightBranchTracingProduction": "53 passed, 0 failed, 0 skipped, 1.4 min",
+      "playwrightSystemicUxBbtProduction": "3 passed: bbt native workspace scroll ownership at 1600, 1440 and 1024",
+      "eslintBbtPaths": "clean",
+      "server": "this worktree's .next/standalone/server.js on port 3001; .env.example public placeholders as process environment only; no .env created or read",
+      "uniqueRunsOnly": true
+    },
+    "knownBaselineFailureUnchanged": true,
+    "accessPolicyUnchanged": true,
+    "holdsUnchanged": [
+      "OD-01 OPEN",
+      "OD-03 held",
+      "OD-05 held",
+      "BBT-02 five-junction packet NOT REVIEWED",
+      "every exercise.review.status stays provisional"
+    ],
+    "newHeadSha": "the documents commit on top of 6e37645172d4d4501f3b455a3d23d5aa66f3f6fb; recorded on the PR page",
+    "status": "INTEGRATION REPAIR: READY FOR FINAL MERGEABILITY CONFIRMATION",
+    "notMergedNotDeployed": true,
+    "prompt04NotStarted": true
   }
 }

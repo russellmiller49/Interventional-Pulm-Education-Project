@@ -451,6 +451,66 @@ so every hash in **Geometry and source integrity** above still stands, `paired-s
 byte-identical to the base, the 128 authored camera mappings and the draft-signature fixture are
 untouched, and the access-policy assertion fails exactly as before — no access control was loosened.
 
+## Integration repair — 2026-09-22
+
+The independent re-review of PR #260 at head **`b0e7b1dbcf6e7730abafc82298ac55316b11025c`** passed
+both repairs above and left one blocker: a merge conflict with main in `.claude/launch.json`. This
+pass integrates main and resolves that file only. The sections above are unchanged.
+
+**Main integrated.** The review named `745146f6e40bd536c201313f0480ddde2ee03ca3`; by execution
+`origin/main` had advanced to **`d98bab79af9231eb1857e2da96cb75ca2068d85c`** (merge of PR #254,
+Bronchoscopy Foundations), a descendant of `745146f6`, so the fresher main was merged. The
+integration is an ordinary merge commit (parents `b0e7b1db` and `d98bab79`); no rebase, no force
+push, no reviewed commit rewritten.
+
+**Conflict.** `.claude/launch.json` was the only conflicted file. Main's side had appended
+`claude-ebus-03` (3131) and `claude-ebus-03-prod` (3132) at the end of the list; this branch had
+appended `claude-bbt-03-prod` (3136) at the same place. Resolved additively: main's two entries kept
+exactly as main has them, followed by `claude-bbt-03-prod` unchanged. The result is valid JSON with
+20 entries — main's 19 in main's order, byte-for-byte, plus the BBT entry — no duplicate name, and
+no new shared port (3120 is shared by `claude-worktree` and `claude-worktree-attached` on main by
+design). Main has no `claude-bbt-03-prod` and nothing on 3136, so the BBT port was kept. At run
+time 3136 happened to be held by another session's ad hoc server (`/private/tmp/hd02-base`, not a
+launch entry); that process was left alone and validation used port 3001, as before.
+
+**Source unchanged.** The committed merge tree equals `git merge-tree` of the two parents except for
+the hand-resolved launch file, so the pre-commit hooks rewrote nothing. Main changed no path under
+`src/features/bronchial-branch-tracing/` or `e2e/branch-tracing.spec.ts` since this branch's base
+`2124cd0f`; both trees are hash-identical to `b0e7b1db` (`e40de721…` and `3c15448a…`).
+`public/airway-anatomy`, `public/airway-lesson`, `geometry/` (including `paired-scope.ts`), the
+camera and draft-signature fixtures, manifests, graph identities, response planes, nomenclature,
+packets and review status are all untouched. The PR diff against current main is the same 26 files
+as the reviewed diff, byte-identical outside `.claude/launch.json`, and the launch hunk is the one
+BBT entry — no other module's merged work is carried.
+
+### Validation on the integrated tree
+
+| Check                                                                         | Result                                                                                                                                                                                   |
+| ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.claude/launch.json` JSON parse (Node and Python) + Prettier check           | Valid; clean                                                                                                                                                                             |
+| `git diff --check` (vs `b0e7b1db`, vs main, merge commit)                     | Clean                                                                                                                                                                                    |
+| `npx tsc --noEmit` (repository)                                               | Clean, exit 0, no diagnostics, with `NODE_OPTIONS=--max-old-space-size=8192`; the first run at Node's default ~4 GB heap aborted out of memory (exit 134) before emitting any diagnostic |
+| `npm run build` (production)                                                  | Passed, exit 0; standalone output prepared; no tracked file changed                                                                                                                      |
+| `npx jest src/features/bronchial-branch-tracing`                              | 141 passed, 1 failed across 23 suites (142 tests); the failure is the documented `case_manifest.json` access-contract assertion (`contracts.test.ts:198`)                                |
+| Playwright `branch-tracing.spec.ts` (production build)                        | 53 passed, 0 failed, 0 skipped, 1.4 min                                                                                                                                                  |
+| Playwright `systemic-ux-stabilization -g bbt` (production build)              | 3 passed: `bbt: native workspace scroll ownership` at 1600, 1440 and 1024                                                                                                                |
+| `npx eslint src/features/bronchial-branch-tracing e2e/branch-tracing.spec.ts` | Clean                                                                                                                                                                                    |
+
+Each suite ran once; no rerun is counted. The server was this worktree's `.next/standalone/server.js`
+on port 3001 with `.env.example` public placeholders as process environment only; no `.env` file
+was created or read. Access policy was not changed.
+
+### Heads
+
+| Field                    | Value                                                                                                                    |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Previously reviewed head | `b0e7b1dbcf6e7730abafc82298ac55316b11025c`                                                                               |
+| Main integrated          | `d98bab79af9231eb1857e2da96cb75ca2068d85c` (review named `745146f6e40bd536c201313f0480ddde2ee03ca3`, an ancestor)        |
+| Integration merge commit | `6e37645172d4d4501f3b455a3d23d5aa66f3f6fb`                                                                               |
+| New PR head              | The documents commit on top of the integration merge commit; `BBT-PRE-REVIEW-03-status.json` records both                |
+| Branch / PR              | `claude/bbt-2-21` → #260; pushed, **not merged, not deployed**                                                           |
+| Holds                    | OD-01 OPEN; OD-03 and OD-05 held; BBT-02 NOT REVIEWED; every `exercise.review.status` provisional; Prompt 04 not started |
+
 ## Next
 
 One bounded PR, then stop. Prompt 04 follows after review and merge. OD-01 stays open; task 05
