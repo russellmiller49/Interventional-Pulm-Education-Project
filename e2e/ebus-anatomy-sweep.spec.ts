@@ -27,26 +27,71 @@ async function openLesson(page: Page, id: string, until: 'live' | 'demonstration
   await expect(page.locator(`[data-evidence-identity="${until}"]`)).toBeVisible()
   return page.frameLocator('iframe[title="EBUS workbench"]')
 }
-const latest = (page: Page) =>
-  page.evaluate(
-    () =>
-      (
-        window as unknown as { __ebusEvents: { observation: Record<string, unknown> }[] }
-      ).__ebusEvents.at(-1)?.observation as
-        | {
-            roll: number
-            frameReady: boolean
-            targetVisible: boolean
-            actionCount: number
-            linked?: {
-              assetsReady: boolean
-              approach: string
-              selectedStructure?: string
-              sweeps?: Record<string, { phase: string; samples: number; span: number }>
-            }
-          }
-        | undefined,
+type ObservationEvent = {
+  sessionId: string
+  observation: {
+    roll: number
+    frameReady: boolean
+    targetVisible: boolean
+    actionCount: number
+    linked?: {
+      assetsReady: boolean
+      approach: string
+      selectedStructure?: string
+      sweeps?: Record<string, { phase: string; samples: number; span: number }>
+    }
+  }
+}
+const latestEvent = (page: Page) =>
+  page.evaluate(() =>
+    (window as unknown as { __ebusEvents: ObservationEvent[] }).__ebusEvents.at(-1),
   )
+const latest = async (page: Page) => (await latestEvent(page))?.observation
+const isReadyResetEvent = (event: ObservationEvent | undefined, previousSessionId: string) =>
+  !!event?.sessionId &&
+  event.sessionId !== previousSessionId &&
+  event.observation.actionCount === 0 &&
+  event.observation.frameReady &&
+  !!event.observation.linked?.assetsReady
+
+test('reset readiness rejects stale sessions and uncleared or unready new events', () => {
+  const event: ObservationEvent = {
+    sessionId: 'old-session',
+    observation: {
+      roll: 85,
+      frameReady: true,
+      targetVisible: false,
+      actionCount: 0,
+      linked: { assetsReady: true, approach: 'rms', sweeps: {} },
+    },
+  }
+  // Even a cleared, ready observation is insufficient if reset did not replace the session.
+  expect(isReadyResetEvent(event, 'old-session')).toBe(false)
+  expect(isReadyResetEvent(undefined, 'old-session')).toBe(false)
+  const fresh = { ...event, sessionId: 'new-session' }
+  expect(isReadyResetEvent(fresh, 'old-session')).toBe(true)
+  expect(
+    isReadyResetEvent(
+      { ...fresh, observation: { ...fresh.observation, actionCount: 1 } },
+      'old-session',
+    ),
+  ).toBe(false)
+  expect(
+    isReadyResetEvent(
+      { ...fresh, observation: { ...fresh.observation, frameReady: false } },
+      'old-session',
+    ),
+  ).toBe(false)
+  expect(
+    isReadyResetEvent(
+      {
+        ...fresh,
+        observation: { ...fresh.observation, linked: { assetsReady: false, approach: 'rms' } },
+      },
+      'old-session',
+    ),
+  ).toBe(false)
+})
 async function ready(page: Page) {
   await expect
     .poll(
@@ -334,13 +379,16 @@ test.describe('sweep state', () => {
       samples: 12,
       span: 110,
     })
-    // J5: reset clears everything and starts a new session. The last event before the reboot is
-    // still frame-ready, so waiting for readiness alone read the pre-reset observation
-    // (EBUS-PRE-REVIEW-04: failed on main d98bab79 too). Wait for the new session's event
-    // instead; a reset that did not clear would still time out here.
+    // J5: a ready, cleared event must belong to a different session after reset.
+    // Neither the old ready event nor a same-session counter reset proves an iframe reboot.
+    const previousSessionId = (await latestEvent(page))!.sessionId
+    expect(previousSessionId).toBeTruthy()
     await f.getByRole('button', { name: 'Reset acquisition' }).click()
-    await expect.poll(async () => (await latest(page))?.actionCount, { timeout: 90000 }).toBe(0)
-    await ready(page)
+    await expect
+      .poll(async () => isReadyResetEvent(await latestEvent(page), previousSessionId), {
+        timeout: 90000,
+      })
+      .toBe(true)
     expect((await latest(page))!.actionCount).toBe(0)
     expect((await latest(page))!.linked!.sweeps).toEqual({})
     // J7: skip holds nothing.
