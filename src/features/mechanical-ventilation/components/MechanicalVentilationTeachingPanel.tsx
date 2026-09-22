@@ -70,14 +70,28 @@ export function VentilationPressureDecomposition({
   const intrinsic = measurements.intrinsicPeepCmH2O
   const totalBaseline = setPeep + intrinsic
   const peak = measurements.peakPressureCmH2O
-  const plateau = measurements.plateauPressureCmH2O
   /*
-   * The split is a claim about the respiratory system, and it is only that claim when the plateau
-   * it is built on reports the respiratory system. While the patient is pulling it does not, so the
-   * two upper bands are drawn as one unattributed band instead — see content/plateauValidity.ts.
+   * The split is a claim about the respiratory system, and it is that claim only when the plateau
+   * it is built on both reports the respiratory system *and* was actually measured.
+   *
+   * This panel asked only the first question. `plateauReadingValidity` says whether the patient is
+   * quiet; it says nothing about whether anything was ever occluded, so on a passive patient the
+   * figure drew an Elastic and a Resistive band off `measurements.plateauPressureCmH2O` — the
+   * estimate the engine publishes on every breath — and the summary asserted "there is no
+   * appreciable patient effort, so this split reports respiratory-system mechanics". Worse, a hold
+   * that had been acquired and then made stale by a PEEP change kept the split alive and recomputed
+   * it from the drifting live estimate. The consoles were corrected in the first repair pass; this
+   * consumer still bypassed the contract.
+   *
+   * `supportsMechanicsClaim` is now the gate, and the plateau the bands are built from is the
+   * projection's own acquired value — never a reconstructed live estimate standing in for it.
    */
+  const acquisition = plateauAcquisition(state, { requireAcquisition: true })
   const validity = plateauReadingValidity(state)
-  const separable = validity.interpretable
+  const separable = acquisition.supportsMechanicsClaim
+  const plateau = separable
+    ? (acquisition.valueCmH2O ?? acquisition.estimateCmH2O)
+    : acquisition.estimateCmH2O
   const elastic = Math.max(0, plateau - totalBaseline)
   const resistive = Math.max(0, peak - plateau)
   const unattributed = Math.max(0, peak - totalBaseline)
@@ -96,12 +110,25 @@ export function VentilationPressureDecomposition({
   const dim = (component: PressureComponent) =>
     focused && focused !== component ? styles.segmentMuted : undefined
 
+  /*
+   * Why it is withheld, in the words of whichever condition actually failed. Effort and acquisition
+   * are independent, and a learner told "the patient is breathing against this measurement" on a
+   * quiet patient whose hold has gone stale has been told the wrong thing.
+   */
+  const withheldReason = !validity.interpretable
+    ? `The patient is breathing against this measurement, reaching ${round(validity.recentEffortCmH2O, 1)} centimeters of water of inspiratory effort across the recent trace, so a plateau here reports alveolar pressure minus that effort and the split is withheld rather than drawn.`
+    : `${acquisition.detail} Until a valid hold is acquired on these settings, the plateau on screen is an estimate from the trace and the split is withheld rather than drawn.`
   const summary = separable
-    ? `Peak airway pressure ${round(peak, 1)} centimeters of water decomposes into a baseline of ${round(totalBaseline, 1)} — set PEEP ${round(setPeep, 1)} plus ${round(intrinsic, 1)} of trapped pressure — an elastic component of ${round(elastic, 1)} measured as plateau minus baseline, and a resistive component of ${round(resistive, 1)} measured as peak minus plateau. There is no appreciable patient effort, so this split reports respiratory-system mechanics.`
-    : `Peak airway pressure ${round(peak, 1)} centimeters of water sits above a baseline of ${round(totalBaseline, 1)} — set PEEP ${round(setPeep, 1)} plus ${round(intrinsic, 1)} of trapped pressure — leaving ${round(unattributed, 1)} that is not separated into elastic and resistive components here. The patient is breathing against this measurement, reaching ${round(validity.recentEffortCmH2O, 1)} centimeters of water of inspiratory effort across the recent trace, so a plateau here reports alveolar pressure minus that effort and the split is withheld rather than drawn.`
+    ? `Peak airway pressure ${round(peak, 1)} centimeters of water decomposes into a baseline of ${round(totalBaseline, 1)} — set PEEP ${round(setPeep, 1)} plus ${round(intrinsic, 1)} of trapped pressure — an elastic component of ${round(elastic, 1)} measured as plateau minus baseline, and a resistive component of ${round(resistive, 1)} measured as peak minus plateau. The plateau was acquired during an inspiratory hold with the patient quiet across it, so this split reports respiratory-system mechanics.`
+    : `Peak airway pressure ${round(peak, 1)} centimeters of water sits above a baseline of ${round(totalBaseline, 1)} — set PEEP ${round(setPeep, 1)} plus ${round(intrinsic, 1)} of trapped pressure — leaving ${round(unattributed, 1)} that is not separated into elastic and resistive components here. ${withheldReason}`
 
   return (
-    <section className={styles.panel} aria-labelledby="mv-mechanics-teaching">
+    <section
+      className={styles.panel}
+      aria-labelledby="mv-mechanics-teaching"
+      data-plateau-acquisition={acquisition.status}
+      data-split-separable={separable}
+    >
       <header className={styles.panelHeader}>
         <span>Mechanism view</span>
         <h2 id="mv-mechanics-teaching">What peak pressure is made of</h2>
@@ -252,7 +279,9 @@ export function VentilationPressureDecomposition({
         <figcaption>
           {separable
             ? 'Each band is labelled with its own magnitude. The values on the right are the cumulative pressures a console reports at those boundaries — plateau at the top of the elastic band, peak at the top of the resistive band.'
-            : 'The pressure above baseline is drawn as one band because it cannot be divided here. Dividing it needs a plateau taken while the respiratory muscles are quiet, and this patient’s are not.'}
+            : validity.interpretable
+              ? 'The pressure above baseline is drawn as one band because it cannot be divided here. Dividing it needs a plateau acquired during an inspiratory hold on these settings, and there is not one.'
+              : 'The pressure above baseline is drawn as one band because it cannot be divided here. Dividing it needs a plateau taken while the respiratory muscles are quiet, and this patient’s are not.'}
         </figcaption>
       </figure>
 
@@ -276,8 +305,10 @@ export function VentilationPressureDecomposition({
           {!separable && focused !== 'baseline' ? (
             <p>
               This component is described here, but it is not being measured on this patient right
-              now: separating it from the other one needs a plateau taken while the respiratory
-              muscles are quiet.
+              now:{' '}
+              {validity.interpretable
+                ? 'separating it from the other one needs a plateau acquired during an inspiratory hold on these settings.'
+                : 'separating it from the other one needs a plateau taken while the respiratory muscles are quiet.'}
             </p>
           ) : null}
         </div>
@@ -304,7 +335,12 @@ export function VentilationPressureDecomposition({
               </>
             ) : (
               <>
-                — <small>{PLATEAU_SPLIT_WITHHELD_LABEL}</small>
+                —{' '}
+                <small>
+                  {validity.interpretable
+                    ? `Not separable: plateau ${acquisition.label}`
+                    : PLATEAU_SPLIT_WITHHELD_LABEL}
+                </small>
               </>
             )}
           </dd>

@@ -541,3 +541,173 @@ No gas value, gas coefficient, PEEP bin, case severity, alarm threshold, answer 
 or review status was touched in this pass. The R6 observation that the engine has no causal
 effort-to-breath trigger is **recorded** for batch 02 / owner group D5, not decided. MV-03 remains
 excluded and the legacy storage protections are unchanged.
+
+---
+
+# Second repair pass — the three findings that survived the first one
+
+The independent review of `fd71cdd9` returned **NOT READY TO MERGE** with three bounded defects
+left: R1, R2 and R6. R3, R4, R5 and R7 were accepted as correct and were not touched except where
+one of these three repairs strictly required it. Nothing assigned to batch 02 was adjudicated.
+
+## Heads and integration
+
+|                                         | SHA                                                                        |
+| --------------------------------------- | -------------------------------------------------------------------------- |
+| Head reviewed in this round             | `fd71cdd925bd3eea411bd635e06846e11b771621`                                 |
+| `origin/main` at the start of this pass | `c1fb8a0d4d0704ea7fc3050d34512104edba79b7`                                 |
+| `origin/main` at the end of this pass   | `81145a6d1a7166f1d7000485a8853cd9ddbf89b6` (PR #258 merged while this ran) |
+| Repaired head                           | the second repair commit on `claude/mechanical-vent-9-21`                  |
+
+**Current main integrates cleanly.** `git merge-tree --write-tree origin/main HEAD` produced no
+conflicts against both SHAs above, and main's changed files still do not intersect this branch's
+change set. The branch was not reset, rebased, force-pushed or recreated; it still descends from
+`c717c9ff`.
+
+## R1 — pressure decomposition bypassed the acquisition contract
+
+**Root cause.** `VentilationPressureDecomposition` in `MechanicalVentilationTeachingPanel.tsx` — the
+Section 6 "What peak pressure is made of" figure — never consulted `plateauAcquisition`. It set
+`separable = plateauReadingValidity(state).interpretable`, which answers only _is the patient
+quiet_, and drew its Elastic and Resistive bands from `measurements.plateauPressureCmH2O`, the
+estimate the engine publishes on every breath. The consoles were corrected in the first pass; this
+consumer was missed.
+
+Reproduced on `fd71cdd9` with `lung-protection`: acquire a hold (`acquired-valid`, acquired value
+16.1, live estimate 17.1), then raise PEEP by 4. The acquisition correctly went `stale` with
+`supportsMechanicsClaim: false`, and `plateauReadingValidity.interpretable` stayed `true` — so the
+panel kept `separable = true` and recomputed the resistive band from the drifting live estimate
+(6.7 cmH₂O), while asserting "there is no appreciable patient effort, so this split reports
+respiratory-system mechanics".
+
+**Fix.** The panel now calls `plateauAcquisition(state, { requireAcquisition: true })`.
+`supportsMechanicsClaim` is the gate for `separable`; the plateau the bands are built from is the
+projection's own `valueCmH2O` when the claim is supported and its `estimateCmH2O` otherwise, so a
+live estimate is never substituted for an acquired reading. The withheld copy now names whichever
+condition actually failed — the effort sentence when the patient is pulling, the acquisition's own
+`detail` when the plateau was never acquired, is pending, is stale or was invalidated — instead of
+always blaming an effort. Static compliance travels with the same gate, and the section carries
+`data-plateau-acquisition` and `data-split-separable` so a test can read the state without parsing
+prose. The modeled estimate is still displayed, labelled as an estimate.
+
+The audit was limited to the pressure-decomposition path as instructed; the plateau subsystem was
+not reopened.
+
+**Browser verification** (Section 6, `lung-protection`): at open, `not-acquired` → split withheld,
+"No inspiratory hold has been performed on this patient". After an inspiratory hold,
+`acquired-valid` → elastic 11.1, resistive 7.7, "Peak − plateau 7.7 cmH₂O". After PEEP 5 → 9,
+`stale` → "— Not separable: plateau acquired before the change", both bands withdrawn.
+
+## R2 — the condition latch only ran inside `advanceSimulation`
+
+**Root cause.** The latch compared the measurement fingerprint at each _occluded step_. With the
+simulation paused there are no steps, so PEEP 5 → 9 → 5 during an open hold was never compared
+against anything, and the record finished `acquired-valid` with
+`conditionsChangedDuringHold: false` because its opening and closing fingerprints matched again.
+
+**Fix.** `latchOpenHoldConditionChange` in `engine/measurementConditions.ts` — beside
+`measurementInputs`, so there is one definition of which conditions count and no second list. It
+compares the current fingerprint with the open record's own stored `conditions`, latches
+`conditionsChangedDuringHold`, sets `interpretable: false` and `invalidReason: 'conditions-changed'`,
+and only ever latches on. It is applied at exactly two mutation points: the single exit of
+`ventilationSimulationReducer` (the body is now `reduceVentilationSimulation`, wrapped once), and the
+end of `applyIntervention`, which is reachable directly as well as through the reducer. No action
+needs to know about holds for its change to be caught.
+
+Playback speed, pause, screen and waveform freeze are outside `measurementInputs` by design and
+therefore cannot invalidate a hold — asserted explicitly. An intervention still inside its latency
+has not changed the conditions the occlusion is being taken under, so it does not latch either;
+`advanceSimulation` catches it if it lands while the valves are still shut.
+
+**Browser verification** (Section 6): Tools → Inspiratory hold → PEEP 5 → 9 → 5 using the console
+rotary, with the simulated clock unchanged throughout → complete the hold →
+`acquired-invalid`, "The settings or the simulated patient changed while the valves were shut at
+4.9 s … Changing them back afterwards does not make it one", split withheld, PEEP back at 5.
+
+## R6 — a shortened look-back window still caught a decaying tail
+
+**Root cause.** The first pass replaced the whole-expiration scan with a window the length of the
+model's own `triggerDelayMs`. That is still a window. On MV-05 at 8 s the inspiration begins at
+7.52 s and the modeled effort has already decayed to zero by 7.28 s; the 415 ms look-back reached
+back to 7.105 s and caught the samples on the way down, so the helper reported
+`measured 415 ms` with `breathEffortCmH2O: 0`.
+
+**Fix.** There is no window any more. The test is the two samples either side of the onset: the
+effort must be appreciable at the sample immediately before the breath arrives **and** no smaller at
+the onset itself — an effort under way and still building, which is what "the machine answered it"
+looks like on a trace. An effort on its way down fails by construction. `precedingEffortCmH2O` is
+now that single sample rather than a peak over an interval. No new cutoff: the engine's own
+`EFFORT_DETECTION_FLOOR_CMH2O` is still the only threshold, and the phenotype's number is never
+labelled measured on evidence it does not have.
+
+MV-05 at 8 s now returns `not-applicable` (no effort belongs to that breath). MV-01 at 20 s remains
+`model-estimate`. The passive Section 7 patient remains `not-applicable`, never zero. An empty
+buffer remains `unavailable`.
+
+**Browser verification:** Section 7 passive round → "TRIGGER DELAY —", `not-applicable`; Section 8
+→ "330 ms · model estimate", and no surface prints "Measured trigger delay is N". MV-05's specific
+state is not reachable through any Learn teaching surface — the sections that mount the Timing view
+run MV-LAB, MV-07, MV-09, MV-10 and MV-11 — so that case is verified at the engine level, before and
+after, and pinned by a regression rather than claimed from the app.
+
+### D5 handoff preserved and restated
+
+Current live physiology may not represent a genuine effort-before-trigger event: `effortAt` is a
+neural oscillator entrained to the machine period, so on every case that carries effort the modeled
+effort rises from zero at the same sample the inspiration begins. **No live case produces a
+`measured` trigger interval today**, and that is the honest outcome rather than a gap to be filled.
+Batch 01's requirement is honest labelling only. Whether the model should represent true trigger
+physiology, and derive an actual interval from it, is for **batch 02 / owner group D5**. The
+`measured` branch is kept and is exercised by a fixture with a genuinely building pre-inspiratory
+effort; nothing was manufactured in the engine to make it reachable.
+
+## Tests
+
+`__tests__/mv-pre-review-01-sanity-repairs.test.tsx` now carries **33** tests. New in this pass:
+
+- R1: split withheld on a quiet patient never occluded; split allowed after a valid hold, with the
+  readout proving it uses the acquired gap and not the estimate gap; split withdrawn on a PEEP
+  change with neither the stale acquired value nor the drifting estimate substituted, and static
+  compliance withdrawn with it; effort still named as the reason when the patient is the one pulling.
+- R2: latch set by a change with zero time advance and not cleared by reverting; the completed hold
+  is not `acquired-valid`; the latch works through `applyIntervention`; playback/screen/freeze do
+  not latch and the fingerprint is unchanged by them; a not-yet-effective intervention does not
+  latch.
+- R6: the MV-05 ~8 s reproduction is not `measured`; a synthetic falling-effort tail across the
+  onset is not `measured`; a synthetic building effort still is.
+
+Two existing `teaching-panel` tests asserted the split on a patient who was merely quiet — the
+defect R1 names — and were corrected to acquire a real hold first, with a new test pinning the
+withheld case.
+
+| Command                                                                                    | Result                                           |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| `jest src/features/mechanical-ventilation`                                                 | 38 suites, **823 tests, all passing**            |
+| consumer suites (MV routes, critical-care, learning-module, icu-simulation, draft-modules) | 49 suites, 454 tests, **451 passing, 3 failing** |
+| `npx tsc --noEmit -p tsconfig.json` (8 GB heap)                                            | clean, exit 0                                    |
+| `npx eslint src/features/mechanical-ventilation`                                           | clean, no warnings                               |
+| `npx prettier --check`                                                                     | clean                                            |
+| `git diff --check`                                                                         | clean                                            |
+| `npm run build`                                                                            | succeeded, dev server stopped first              |
+
+### Remaining failures
+
+The same three critical-care suites, reproduced identically on **current `origin/main`
+(`81145a6d`)** in a read-only worktree: `accessibility.test.tsx`, `curriculum-sequencing.test.tsx`
+and `learner-copy.test.ts`. The learner-copy scanner flags **19** strings on main and **19** on this
+head, so this branch's copy still adds none.
+
+### Smoke checks on the already-passing repairs
+
+- Overlapping ABGs (R4) — MV-07 with two orders open: both rows "result due at … — not resulted yet".
+- Frozen hold (R2, first pass) — MV-14 frozen + inspiratory hold: the console prints the acquired
+  Pplateau 52 from the occlusion, correctly marked "acquired; not interpretable" on that pulling
+  patient, rather than a reading of the frozen buffer.
+- Frozen post-action coaching (R5) — MV-14 frozen + decompression: no card at 123 s; after
+  unfreezing, the card reports 58 → 31 against a console reading Ppeak 31.
+
+### Still NOT RUN
+
+Unchanged: native browser zoom, Firefox and Safari, hardware, real assistive technology,
+keyboard-only and screen-reader journeys, the es and zh-CN locales, the deployed build, and any
+clinical, device, media or source review. **No clinical approval is claimed.**

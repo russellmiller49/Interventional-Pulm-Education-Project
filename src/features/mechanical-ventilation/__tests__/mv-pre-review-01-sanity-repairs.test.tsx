@@ -13,6 +13,7 @@ import { MechanicalVentilatorConsole } from '../components/MechanicalVentilatorC
 import { MechanicalVentilationTeachingPanel } from '../components/MechanicalVentilationTeachingPanel'
 import { mechanicalVentilationCaseById } from '../content'
 import { plateauAcquisition } from '../content/plateauAcquisition'
+import { plateauReadingValidity } from '../content/plateauValidity'
 import {
   capturePostActionBaseline,
   coachingReadingSnapshot,
@@ -26,6 +27,7 @@ import {
   ventilatorDeviceIds,
 } from '../engine'
 import { arterialGasSampleIsPending, arterialGasView } from '../engine/arterialGas'
+import { measurementConditionsFingerprint } from '../engine/measurementConditions'
 import { createLabSimulation } from '../engine/learningLab'
 import { ventilationSimulationReducer } from '../engine/reducer'
 import { triggerDelayEvidence } from '../engine/triggerEvidence'
@@ -128,6 +130,120 @@ describe('R1 · acquired plateau identity and value', () => {
 })
 
 /* ------------------------------------------------------------------------------------------------
+ * R1 (second pass) — the pressure-decomposition teaching path
+ * ---------------------------------------------------------------------------------------------- */
+
+describe('R1 · pressure decomposition honours the acquisition contract', () => {
+  /** A passive patient, so effort never confounds what is being tested here. */
+  const passiveBase = () => createLabSimulation('lung-protection', 0, DEVICE)
+  const decomposition = (state: VentilationSimulationState) =>
+    render(
+      <MechanicalVentilationTeachingPanel lessonId="mechanics-load-and-pressure" state={state} />,
+    )
+  const figureLabel = (container: HTMLElement) =>
+    container.querySelector('svg[role="img"]')?.getAttribute('aria-label') ?? ''
+
+  it('withholds the split on a quiet patient who has never been occluded', () => {
+    const state = passiveBase()
+    expect(plateauReadingValidity(state).interpretable).toBe(true)
+    expect(plateauAcquisition(state).supportsMechanicsClaim).toBe(false)
+
+    const { container } = decomposition(state)
+    const panel = container.querySelector('[data-split-separable]')!
+    expect(panel.getAttribute('data-split-separable')).toBe('false')
+    const label = figureLabel(container)
+    expect(label).toMatch(/not separated into elastic and resistive components/i)
+    expect(label).not.toMatch(/an elastic component of/i)
+    // And it says the true reason rather than blaming an effort that is not there.
+    expect(label).not.toMatch(/breathing against this measurement/i)
+    expect(label).toMatch(/hold/i)
+  })
+
+  it('allows the split once a valid hold has been acquired, using the acquired value', () => {
+    const held = advanceSimulation(hold(passiveBase()), 8)
+    const acquisition = plateauAcquisition(held)
+    expect(acquisition.status).toBe('acquired-valid')
+    // The precondition that makes a substitution visible.
+    expect(acquisition.valueCmH2O).not.toBeCloseTo(held.measurements.plateauPressureCmH2O, 1)
+
+    const { container } = decomposition(held)
+    expect(
+      container.querySelector('[data-split-separable]')!.getAttribute('data-split-separable'),
+    ).toBe('true')
+    const label = figureLabel(container)
+    expect(label).toMatch(/an elastic component of/i)
+    expect(label).toMatch(/a resistive component of/i)
+    // The resistive band is peak minus the *acquired* plateau, not peak minus the live estimate.
+    const acquiredGap = held.measurements.peakPressureCmH2O - acquisition.valueCmH2O!
+    const estimateGap = held.measurements.peakPressureCmH2O - held.measurements.plateauPressureCmH2O
+    const readouts = container.querySelector('[aria-label="Live derived mechanics"]')!
+    const gap = [...readouts.querySelectorAll('div')].find(
+      (node) => node.querySelector('dt')?.textContent === 'Peak − plateau',
+    )!
+    expect(gap.textContent).toContain(acquiredGap.toFixed(1))
+    expect(gap.textContent).not.toContain(estimateGap.toFixed(1))
+  })
+
+  it('withdraws the split when a PEEP change makes the acquisition stale', () => {
+    const held = advanceSimulation(hold(passiveBase()), 8)
+    const stale = advanceSimulation(
+      ventilationSimulationReducer(held, {
+        type: 'SET_CONTROL',
+        control: 'peepCmH2O',
+        value: held.ventilator.settings.peepCmH2O + 4,
+      }),
+      4,
+    )
+    const acquisition = plateauAcquisition(stale)
+    expect(acquisition.status).toBe('stale')
+    expect(acquisition.supportsMechanicsClaim).toBe(false)
+    // The patient is still quiet: passivity alone must not carry the claim.
+    expect(plateauReadingValidity(stale).interpretable).toBe(true)
+    // And the live estimate has moved on.
+    expect(stale.measurements.plateauPressureCmH2O).not.toBeCloseTo(
+      held.measurements.plateauPressureCmH2O,
+      1,
+    )
+
+    const { container } = decomposition(stale)
+    expect(
+      container.querySelector('[data-split-separable]')!.getAttribute('data-split-separable'),
+    ).toBe('false')
+    const label = figureLabel(container)
+    expect(label).toMatch(/not separated into elastic and resistive components/i)
+    expect(label).not.toMatch(/an elastic component of/i)
+    expect(label).not.toMatch(/a resistive component of/i)
+
+    const readouts = container.querySelector('[aria-label="Live derived mechanics"]')!
+    const gap = [...readouts.querySelectorAll('div')].find(
+      (node) => node.querySelector('dt')?.textContent === 'Peak − plateau',
+    )!
+    expect(gap.getAttribute('data-state')).toBe('unavailable')
+    // Neither the stale acquired value nor the drifting estimate is substituted for it.
+    const staleGap = stale.measurements.peakPressureCmH2O - acquisition.acquiredValueCmH2O!
+    const estimateGap =
+      stale.measurements.peakPressureCmH2O - stale.measurements.plateauPressureCmH2O
+    expect(gap.textContent).not.toContain(staleGap.toFixed(1))
+    expect(gap.textContent).not.toContain(estimateGap.toFixed(1))
+    // Static compliance is a plateau claim too and travels with the same gate.
+    const compliance = [...readouts.querySelectorAll('div')].find(
+      (node) => node.querySelector('dt')?.textContent === 'Static compliance',
+    )!
+    expect(compliance.getAttribute('data-state')).toBe('unavailable')
+  })
+
+  it('still blames effort, not acquisition, when the patient is the one pulling', () => {
+    const active = advanceSimulation(
+      { ...createInitialSimulationState('MV-13', 'practice', 1, DEVICE), paused: false },
+      20,
+    )
+    expect(plateauReadingValidity(active).interpretable).toBe(false)
+    const { container } = decomposition(active)
+    expect(figureLabel(container)).toMatch(/breathing against this measurement/i)
+  })
+})
+
+/* ------------------------------------------------------------------------------------------------
  * R2 — the occlusion's own evidence, not the display buffer
  * ---------------------------------------------------------------------------------------------- */
 
@@ -183,6 +299,103 @@ describe('R2 · hold acquisition uses occlusion evidence', () => {
     expect(acquisition.supportsMechanicsClaim).toBe(false)
     expect(acquisition.status).toBe('acquired-invalid')
     expect(acquisition.detail).toMatch(/changed while the valves were shut/i)
+  })
+
+  /**
+   * Second pass: the latch ran only inside `advanceSimulation`, so a change made while the
+   * simulation was paused was never compared against anything. PEEP 5 → 9 → 5 with no timestep at
+   * all finished `acquired-valid` with `conditionsChangedDuringHold: false`.
+   */
+  it('latches a condition change made with no time advance at all', () => {
+    const base = createLabSimulation('mechanics-load-and-pressure', 0, DEVICE)
+    const peep = base.ventilator.settings.peepCmH2O
+    const opened = hold(base)
+    expect(opened.holdRecords.at(-1)!.completedAtSeconds).toBeNull()
+    expect(opened.holdRecords.at(-1)!.conditionsChangedDuringHold).toBe(false)
+
+    // Two mutations, zero elapsed simulated time between or after them.
+    const raised = ventilationSimulationReducer(opened, {
+      type: 'SET_CONTROL',
+      control: 'peepCmH2O',
+      value: peep + 4,
+    })
+    expect(raised.simulationTime).toBe(opened.simulationTime)
+    expect(raised.holdRecords.at(-1)!.conditionsChangedDuringHold).toBe(true)
+
+    const reverted = ventilationSimulationReducer(raised, {
+      type: 'SET_CONTROL',
+      control: 'peepCmH2O',
+      value: peep,
+    })
+    expect(reverted.simulationTime).toBe(opened.simulationTime)
+    // Reverting restores the fingerprint and must not clear the latch.
+    expect(reverted.ventilator.settings.peepCmH2O).toBe(peep)
+    expect(reverted.holdRecords.at(-1)!.conditionsChangedDuringHold).toBe(true)
+
+    const finished = advanceSimulation(reverted, 8)
+    const record = finished.holdRecords.at(-1)!
+    expect(record.completedAtSeconds).not.toBeNull()
+    expect(record.conditionsChangedDuringHold).toBe(true)
+    expect(record.invalidReason).toBe('conditions-changed')
+    const acquisition = plateauAcquisition(finished)
+    expect(acquisition.status).not.toBe('acquired-valid')
+    expect(acquisition.supportsMechanicsClaim).toBe(false)
+  })
+
+  it('latches through applyIntervention as well as through the reducer', () => {
+    /*
+     * `applyIntervention` is reachable directly, not only through the reducer, so it asks the same
+     * latch. An assessment is effective at the instant it is recorded, so it enters the measurement
+     * fingerprint immediately and the open hold sees it.
+     */
+    const definition = mechanicalVentilationCaseById.get('MV-13')!
+    const base = advanceSimulation(
+      { ...createInitialSimulationState('MV-13', 'practice', 1, DEVICE), paused: false },
+      20,
+    )
+    const opened = hold(base)
+    expect(opened.holdRecords.at(-1)!.conditionsChangedDuringHold).toBe(false)
+    const acted = applyIntervention(opened, definition, 'assess-patient')
+    expect(acted.simulationTime).toBe(opened.simulationTime)
+    expect(acted.holdRecords.at(-1)!.conditionsChangedDuringHold).toBe(true)
+  })
+
+  it('does not latch an action that has not yet reached the model', () => {
+    /*
+     * The latch follows the measurement fingerprint exactly, and that fingerprint counts only
+     * interventions whose `effectiveAt` has arrived. An action still in its latency has not changed
+     * the conditions the occlusion is being taken under, so it does not invalidate the maneuver —
+     * and `advanceSimulation` will catch it if it lands while the valves are still shut.
+     */
+    const definition = mechanicalVentilationCaseById.get('MV-13')!
+    const base = advanceSimulation(
+      { ...createInitialSimulationState('MV-13', 'practice', 1, DEVICE), paused: false },
+      20,
+    )
+    const opened = hold(base)
+    const queued = applyIntervention(opened, definition, 'suction-airway')
+    const record = queued.interventions.at(-1)!
+    expect(record.effectiveAt).toBeGreaterThan(queued.simulationTime)
+    expect(queued.holdRecords.at(-1)!.conditionsChangedDuringHold).toBe(false)
+  })
+
+  it('does not invalidate a hold for playback, screen or waveform-freeze changes', () => {
+    const opened = hold(createLabSimulation('mechanics-load-and-pressure', 0, DEVICE))
+    const fingerprint = opened.holdRecords.at(-1)!.conditions
+    let state = opened
+    for (const action of [
+      { type: 'SET_PAUSED', paused: true },
+      { type: 'SET_SPEED', speed: 30 },
+      { type: 'TOGGLE_FREEZE' },
+      { type: 'SET_SCREEN', screen: 'graphics' },
+    ] as const) {
+      state = ventilationSimulationReducer(state, action as never)
+      expect(state.holdRecords.at(-1)!.conditionsChangedDuringHold).toBe(false)
+    }
+    // The fingerprint itself is unchanged — these are outside the measurement contract by design.
+    expect(measurementConditionsFingerprint(state)).toBe(fingerprint)
+    const finished = advanceSimulation({ ...state, paused: false }, 8)
+    expect(plateauAcquisition(finished).status).toBe('acquired-valid')
   })
 
   it('leaves an undisturbed hold valid, so the guard is not simply refusing everything', () => {
@@ -434,6 +647,75 @@ describe('R6 · trigger delay needs an associated event', () => {
     expect(evidence.display).toBe('—')
     // The analytic default is still in the engine; it is simply not reported as an interval.
     expect(passive.measurements.triggerDelayMs).toBeGreaterThan(0)
+  })
+
+  /**
+   * Second pass: the look-back window was the model's own `triggerDelayMs`, and on MV-05 at 8 s
+   * that reached back far enough to catch the *tail* of the previous breath's effort as it decayed
+   * to zero at 7.28 s — 240 ms before the inspiration at 7.52 s — and reported "measured 415 ms".
+   */
+  it('does not promote a decaying effort tail to a measured interval on MV-05', () => {
+    const state = advanceSimulation(
+      { ...createInitialSimulationState('MV-05', 'learn', 1, DEVICE), paused: false },
+      8,
+    )
+    const onset = latestOnset(state)
+    expect(onset).toBeGreaterThan(0)
+    const waveforms = state.waveforms
+    // The precondition: an effort ended shortly before this breath and nothing is left at the door.
+    expect(waveforms.slice(0, onset).some((sample) => -sample.pmusCmH2O >= 1.5)).toBe(true)
+    expect(-waveforms[onset - 1].pmusCmH2O).toBeLessThan(1.5)
+    expect(state.measurements.triggerDelayMs).toBeGreaterThan(0)
+
+    const evidence = triggerDelayEvidence(state)
+    expect(evidence.status).not.toBe('measured')
+    expect(evidence.display).not.toBe(`${state.measurements.triggerDelayMs.toFixed(0)} ms`)
+    expect(evidence.precedingEffortCmH2O).toBe(0)
+  })
+
+  it('refuses an effort that is already falling away as the breath arrives', () => {
+    /*
+     * A synthetic trace: effort above the floor at the sample before the onset, but on its way
+     * down. That is a tail crossing the boundary, not an effort the machine answered.
+     */
+    const base = advanceSimulation(
+      { ...createInitialSimulationState('MV-01', 'learn', 1, DEVICE), paused: false },
+      20,
+    )
+    const onset = latestOnset(base)
+    const falling = base.waveforms.map((sample, index) =>
+      index === onset - 1
+        ? { ...sample, pmusCmH2O: -6 }
+        : index === onset
+          ? { ...sample, pmusCmH2O: -2 }
+          : sample,
+    )
+    const evidence = triggerDelayEvidence({ ...base, waveforms: falling })
+    expect(evidence.precedingEffortCmH2O).toBeCloseTo(6, 1)
+    expect(evidence.status).not.toBe('measured')
+  })
+
+  it('still reports measured where an effort is genuinely building into the onset', () => {
+    /*
+     * The branch stays reachable and honest. No live case currently produces this shape — the
+     * model's effort rises at the same sample the breath begins — so it is demonstrated on a
+     * fixture rather than manufactured in the engine. See the D5 note in the handoff.
+     */
+    const base = advanceSimulation(
+      { ...createInitialSimulationState('MV-01', 'learn', 1, DEVICE), paused: false },
+      20,
+    )
+    const onset = latestOnset(base)
+    const building = base.waveforms.map((sample, index) =>
+      index === onset - 1
+        ? { ...sample, pmusCmH2O: -4 }
+        : index === onset
+          ? { ...sample, pmusCmH2O: -7 }
+          : sample,
+    )
+    const evidence = triggerDelayEvidence({ ...base, waveforms: building })
+    expect(evidence.status).toBe('measured')
+    expect(evidence.delayMs).toBe(base.measurements.triggerDelayMs)
   })
 
   it('never renders a measured trigger delay without a preceding effort, on any live case', () => {

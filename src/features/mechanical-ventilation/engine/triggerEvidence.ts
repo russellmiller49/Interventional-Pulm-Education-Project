@@ -20,9 +20,9 @@
  * effort rises from zero at the same sample the inspiration begins. So there are three honest
  * answers and the helper returns whichever the trace supports:
  *
- * - **`measured`** — appreciable effort in the samples immediately before the onset, inside the
- *   interval the model itself claims as the delay. Then, and only then, an effort genuinely
- *   preceded delivery and the number is an interval between two events on this trace.
+ * - **`measured`** — an effort that is *still building into* this onset: appreciable at the sample
+ *   immediately before it and no smaller at the onset itself. Then, and only then, an effort
+ *   genuinely preceded delivery and the number is an interval between two events on this trace.
  * - **`model-estimate`** — this inspiration has an appreciable effort of its own, but nothing
  *   precedes it, so the delay is the phenotype's modeled value rather than something measured
  *   here. The number stays useful and stops being called a measurement.
@@ -30,9 +30,23 @@
  *   all. Not a delay of zero, and no claim about the next breath.
  * - **`unavailable`** — the buffer holds no breath boundary yet.
  *
- * Everything is measured against the engine's own `EFFORT_DETECTION_FLOOR_CMH2O` and the model's
- * own `triggerDelayMs`. No new clinical cutoff is introduced, and no prior expiratory interval is
- * scanned for a historical effort to borrow.
+ * ## Why there is no look-back window any more
+ *
+ * The first repair replaced the whole-expiration scan with a window the length of the model's own
+ * `triggerDelayMs`. That is still a window, and on MV-05 at 8 s it was long enough to reach the
+ * *tail* of the previous breath's effort: the inspiration begins at 7.52 s, the modeled effort has
+ * already decayed to zero by 7.28 s, and the 415 ms look-back caught the samples between 7.105 s
+ * and 7.28 s on the way down. The helper then emitted the phenotype's 415 ms and called it
+ * measured. A decaying tail is not the event that started the next breath.
+ *
+ * So there is no window to tune. The two samples either side of the onset are the whole test: the
+ * effort has to be appreciable at the sample before the breath arrives and still at least as large
+ * at the onset, which is what "an effort was under way and the machine answered it" looks like on
+ * a trace. An effort on its way down fails it by construction.
+ *
+ * Everything is measured against the engine's own `EFFORT_DETECTION_FLOOR_CMH2O`. No new clinical
+ * cutoff is introduced, no interval is scanned for a historical effort to borrow, and the
+ * phenotype's assigned number is never labelled measured on evidence it does not have.
  */
 import { EFFORT_DETECTION_FLOOR_CMH2O } from './physics'
 import type { VentilationSimulationState, WaveformSample } from './types'
@@ -45,7 +59,7 @@ export interface TriggerDelayEvidence {
   readonly delayMs: number | null
   /** Largest modeled inspiratory effort belonging to this inspiration. */
   readonly breathEffortCmH2O: number
-  /** Largest modeled effort in the interval immediately preceding the onset. */
+  /** Modeled effort at the single sample immediately before the onset. No window, no peak. */
   readonly precedingEffortCmH2O: number
   /** The simulated second this inspiration began, when one is on the trace. */
   readonly onsetSeconds: number | null
@@ -84,15 +98,14 @@ export function triggerDelayEvidence(state: VentilationSimulationState): Trigger
 
   const onsetSample = waveforms[onset]
   /*
-   * The window the model's own delay would have to span, bounded to the samples actually before
-   * the onset. Nothing outside it can be the event this breath was triggered by.
+   * The two samples either side of the boundary. An effort that triggered this breath is under way
+   * when the breath arrives and has not already peaked and fallen away: appreciable at the sample
+   * before, and no smaller at the onset.
    */
-  const delaySeconds = Math.max(0, state.measurements.triggerDelayMs) / 1000
-  const windowStart = onsetSample.time - delaySeconds
-  const preceding = waveforms
-    .slice(0, onset)
-    .filter((sample) => sample.time >= windowStart && sample.phase === 'expiration')
-  const precedingEffortCmH2O = peakEffort(preceding)
+  const beforeOnset = waveforms[onset - 1]
+  const precedingEffortCmH2O = Math.max(0, -beforeOnset.pmusCmH2O)
+  const onsetEffortCmH2O = Math.max(0, -onsetSample.pmusCmH2O)
+  const stillBuilding = onsetEffortCmH2O >= precedingEffortCmH2O
 
   /* The effort belonging to this inspiration: from the onset to the end of the buffer or of it. */
   const breath: WaveformSample[] = []
@@ -102,7 +115,7 @@ export function triggerDelayEvidence(state: VentilationSimulationState): Trigger
   }
   const breathEffortCmH2O = peakEffort(breath)
 
-  if (precedingEffortCmH2O >= EFFORT_DETECTION_FLOOR_CMH2O)
+  if (precedingEffortCmH2O >= EFFORT_DETECTION_FLOOR_CMH2O && stillBuilding)
     return {
       status: 'measured',
       delayMs: state.measurements.triggerDelayMs,

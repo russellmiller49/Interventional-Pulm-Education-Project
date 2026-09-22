@@ -9,7 +9,12 @@ import {
   ventilationTeachingPanelSectionIds,
 } from '../components/MechanicalVentilationTeachingPanel'
 import { mechanicalVentilationLessons } from '../content'
-import { createInitialSimulationState, ventilationSimulationReducer } from '../engine'
+import {
+  advanceSimulation,
+  createInitialSimulationState,
+  ventilationSimulationReducer,
+} from '../engine'
+import { createLabSimulation } from '../engine/learningLab'
 import type { VentilationSimulationState } from '../engine'
 
 /**
@@ -56,6 +61,26 @@ function passiveState(state: VentilationSimulationState): VentilationSimulationS
       plateauPressureCmH2O: state.measurements.relaxedPlateauPressureCmH2O,
     },
   }
+}
+
+/**
+ * A quiet patient whose plateau was also actually acquired.
+ *
+ * Passivity and acquisition are two different conditions and the pressure split needs both. These
+ * tests used to assert the split on a patient who was merely quiet, which is true of every case the
+ * moment it opens — the defect MV-PRE-REVIEW-01's sanity review caught in this panel. The hold is
+ * performed on the engine so the record is a real occlusion, and the effort is then taken out of
+ * the trace the same way `passiveState` does it.
+ */
+function acquiredPassiveState(caseId: string): VentilationSimulationState {
+  const held = advanceSimulation(
+    ventilationSimulationReducer(createLabSimulation(caseId, 0, 'hamilton-c6'), {
+      type: 'PERFORM_HOLD',
+      hold: 'inspiratory',
+    }),
+    8,
+  )
+  return passiveState(held)
 }
 
 describe('mechanical-ventilation teaching panels', () => {
@@ -113,8 +138,9 @@ describe('mechanical-ventilation teaching panels', () => {
 
   describe('pressure decomposition', () => {
     it('splits peak pressure into baseline, elastic, and resistive components that sum back', () => {
-      // Only a passive patient's plateau can carry the split, so the arithmetic is pinned there.
-      const state = passiveState(stateFor('MV-13'))
+      // Only an acquired plateau on a quiet patient can carry the split, so the arithmetic is
+      // pinned there rather than on a patient who merely happens to be quiet.
+      const state = acquiredPassiveState('lung-protection')
       render(
         <MechanicalVentilationTeachingPanel lessonId="mechanics-load-and-pressure" state={state} />,
       )
@@ -154,8 +180,8 @@ describe('mechanical-ventilation teaching panels', () => {
       expect(gap?.textContent).toMatch(/Not separable while the patient is pulling/i)
     })
 
-    it('states the split again once the patient is passive', () => {
-      const passive = passiveState(stateFor('MV-13'))
+    it('states the split again once the patient is passive and a hold has been acquired', () => {
+      const passive = acquiredPassiveState('lung-protection')
       render(
         <MechanicalVentilationTeachingPanel
           lessonId="mechanics-load-and-pressure"
@@ -167,6 +193,29 @@ describe('mechanical-ventilation teaching panels', () => {
       expect(label).toMatch(/an elastic component of/i)
       const readouts = screen.getByLabelText('Live derived mechanics')
       expect(within(readouts).getByText('Peak − plateau').closest('div')).not.toHaveAttribute(
+        'data-state',
+        'unavailable',
+      )
+    })
+
+    /**
+     * MV-PRE-REVIEW-01 sanity review, R1: quiet is not measured. The panel drew an elastic and a
+     * resistive band off the estimate the engine publishes on every breath.
+     */
+    it('withholds the split on a quiet patient whose plateau was never acquired', () => {
+      const passiveOnly = passiveState(stateFor('MV-13'))
+      render(
+        <MechanicalVentilationTeachingPanel
+          lessonId="mechanics-load-and-pressure"
+          state={passiveOnly}
+        />,
+      )
+      const label =
+        screen.getByRole('img', { name: /Peak airway pressure/i }).getAttribute('aria-label') ?? ''
+      expect(label).toMatch(/not separated into elastic and resistive components/i)
+      expect(label).not.toMatch(/an elastic component of/i)
+      const readouts = screen.getByLabelText('Live derived mechanics')
+      expect(within(readouts).getByText('Peak − plateau').closest('div')).toHaveAttribute(
         'data-state',
         'unavailable',
       )

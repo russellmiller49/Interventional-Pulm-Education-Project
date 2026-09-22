@@ -8,7 +8,10 @@ import {
 } from '../content/deviceProfiles'
 import { cloneMechanicalVentilationSettings, isSimvMode, isTwoLevelMode } from './modes'
 import { baselineArterialGasSample, collectRepeatArterialGasSample } from './arterialGas'
-import { measurementConditionsFingerprint } from './measurementConditions'
+import {
+  latchOpenHoldConditionChange,
+  measurementConditionsFingerprint,
+} from './measurementConditions'
 import {
   cardiogenicFlowOscillationLps,
   clamp,
@@ -1135,11 +1138,16 @@ export function applyIntervention(
     criticalErrors: [...errors],
   }
   const effectivePatient = deriveEffectivePatient(next, definition)
-  return {
+  /*
+   * The same latch the reducer applies at its exit. An intervention is part of the measurement
+   * fingerprint, and `applyIntervention` is reachable directly as well as through the reducer, so
+   * it asks the one contract rather than carrying a second copy of which changes count.
+   */
+  return latchOpenHoldConditionChange({
     ...next,
     patient: effectivePatient,
     measurements: deriveMeasurements(next, definition, effectivePatient),
-  }
+  })
 }
 
 export function selectCaseOutcome(
