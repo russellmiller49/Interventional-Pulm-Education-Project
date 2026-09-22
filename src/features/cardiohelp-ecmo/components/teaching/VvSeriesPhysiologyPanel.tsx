@@ -486,8 +486,8 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
 
           <TextEquivalent>
             {impliedFraction === null
-              ? `The two saturations either side of the drainage limb are too close together here for the share to be separated from them, so no share is shown. The simulation is using ${circuit.recirculationFraction.toFixed(3)}.`
-              : `Rearranged, the same relationship returns a share of ${impliedFraction.toFixed(3)}, which is the ${circuit.recirculationFraction.toFixed(3)} this simulation is using. That agreement is a property of the model, not a measurement.`}
+              ? `The two saturations either side of the drainage limb are too close together here for the share to be separated from them, so no share is shown. The simulation is using ${circuit.recirculationFraction.toFixed(3)} (${formatRecirculationShare(circuit.recirculationFraction)}).`
+              : `Rearranged, the same relationship returns a share of ${impliedFraction.toFixed(3)}, which is the ${circuit.recirculationFraction.toFixed(3)} this simulation is using — the ${formatRecirculationShare(circuit.recirculationFraction)} shown above, written as the fraction this formula takes. That agreement is a property of the model, not a measurement.`}
           </TextEquivalent>
 
           <ModelBoundary>
