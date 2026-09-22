@@ -12,6 +12,11 @@ import {
   inspectionRecords,
   ledgerStatus,
 } from '../../engine/scope/inspectionLedger'
+import {
+  GOAL_GROUP_HEADING,
+  GOAL_MODEL_LIMIT,
+  scopeNowLine,
+} from '../../engine/scope/goalPresentation'
 import { MODEL_DEFLECTION_LIMIT_DEG } from '../../engine/scope/scopeInputs'
 import {
   ACCESSORY_POSITION_WORDS,
@@ -159,6 +164,16 @@ export function ScopePaneFrame(
   } = props
   const inputMode = useRef<ScopeInputMode>('pointer')
   const send = (command: ScopeCommand) => onCommand(command, inputMode.current)
+  /**
+   * The pane repeats the step's goals under the controls, and they turn green together. The host
+   * classifies each one; where every row is met, the list says what those ticks are a record of
+   * rather than leaving a green block to be read as approval of the image (A4).
+   */
+  const paneClaims = new Set(goals.map(({ claim }) => claim ?? 'history'))
+  const paneGoalsClaim = paneClaims.size === 1 ? [...paneClaims][0] : 'mixed'
+  const paneGoalsHeading = goals.every(({ met }) => met)
+    ? GOAL_GROUP_HEADING[paneGoalsClaim]
+    : 'What this step is waiting for'
 
   const pins = fieldPins(state)
   const alignOffered = view.assists['align-to-branch'] === true && controlsEnabled
@@ -566,13 +581,21 @@ export function ScopePaneFrame(
       </p>
 
       {goals.length > 0 ? (
-        <ul className={styles.goals} aria-label="What this step is waiting for" data-scope-goals>
-          {goals.map(({ goal, met }) => (
-            <li key={goal.id} data-met={met ? 'true' : 'false'}>
-              {goal.label}
-            </li>
-          ))}
-        </ul>
+        <>
+          <p className={styles.goalsHeading} data-scope-goals-group={paneGoalsClaim}>
+            {paneGoalsHeading}
+          </p>
+          <ul className={styles.goals} aria-label={paneGoalsHeading} data-scope-goals>
+            {goals.map(({ goal, met, claim }) => (
+              <li key={goal.id} data-met={met ? 'true' : 'false'} data-goal-claim={claim ?? ''}>
+                {goal.label}
+              </li>
+            ))}
+          </ul>
+          <p className={styles.goalsLimit} data-scope-goals-limit>
+            {scopeNowLine(state)} {GOAL_MODEL_LIMIT}
+          </p>
+        </>
       ) : null}
 
       <p className={styles.boundary} {...{ [SCOPE_DOM.boundary]: '' }}>

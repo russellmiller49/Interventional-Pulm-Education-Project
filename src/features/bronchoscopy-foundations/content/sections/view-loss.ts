@@ -349,7 +349,8 @@ export const section: BronchSectionDefinition = {
       goals: [
         {
           id: 'lens-cleared-without-advancing',
-          label: 'Bring a usable view back without advancing while the image is obscured',
+          label:
+            'Clear the lens, with no advance made while the model recorded the view as obscured',
           test: {
             type: 'all',
             tests: [

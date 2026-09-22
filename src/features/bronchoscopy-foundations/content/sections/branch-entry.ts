@@ -318,7 +318,7 @@ export const section: BronchSectionDefinition = {
       {
         id: 'no-force',
         label:
-          'Reach the left main bronchus with no advance refused for want of aim, none made without a clear view, and no wall contact recorded',
+          'Reach the left main bronchus with no advance refused for want of aim, none made while the model recorded a lost view, and no wall contact recorded',
         test: {
           type: 'all',
           tests: [
@@ -370,7 +370,7 @@ export const section: BronchSectionDefinition = {
         },
         {
           id: 'no-drift',
-          label: 'Finish the hold with no change in depth and no wall contact recorded',
+          label: 'Finish the hold with no drift in depth recorded and no wall contact recorded',
           test: {
             type: 'all',
             tests: [

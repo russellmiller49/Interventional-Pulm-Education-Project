@@ -372,6 +372,16 @@ label.mapPin {
   font-size: 0.8rem;
 }
 
+.goalsHeading {
+  margin: 0.55rem 0 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #b1c3d2;
+  overflow-wrap: anywhere;
+}
+
 .goals {
   margin: 0;
   padding-left: 1.2rem;
@@ -380,6 +390,14 @@ label.mapPin {
 
 .goals li[data-met='true'] {
   color: var(--green, #4ade80);
+}
+
+.goalsLimit {
+  margin: 0.4rem 0 0;
+  color: #b1c3d2;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .mapSvg .mapLeader {
