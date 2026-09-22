@@ -26,6 +26,7 @@ import {
 } from '../../engine/scope/scopeMetrics'
 import { OPTICAL_ASPECT, OPTICAL_FOV_DEG } from '../../engine/scope/scopeOstia'
 import { LocationCaptionStrip } from './LocationCaptionStrip'
+import { opticalViewName } from './scopeSceneModel'
 import styles from './scope-fallback.module.css'
 import { TreeAnswerFieldset } from './TreeAnswerFieldset'
 import { TreeMap } from './TreeMap'
@@ -117,18 +118,13 @@ function fieldPins(state: ScopeState): readonly FieldPin[] {
 }
 
 /**
- * What is seen, never why: the cause of a red or dark field is the answer some sections ask for,
- * so the field's name describes the picture and leaves the mechanism to the learner.
+ * The field is named through the scene's own `opticalViewName`, so this renderer and the WebGL
+ * one report the model's view signal in the same words and neither carries the stronger claim
+ * (BF-PRE-REVIEW-01 finding 1). The openings are a separate, measured fact: they come from the
+ * same optical projection the scene uses, so they are named here as well.
  */
-const VIEW_SEEN_WORDS: Readonly<Record<ScopeState['signals']['view'], string>> = {
-  clear: 'a clear view of the airway',
-  'red-out': 'a red field',
-  contaminated: 'a smeared view',
-  dark: 'a dark field',
-}
-
 function opticalFieldName(state: ScopeState, pins: readonly FieldPin[]): string {
-  const view = `The view through the scope: ${VIEW_SEEN_WORDS[state.signals.view]}`
+  const view = opticalViewName(state.signals.view)
   if (pins.length === 0) return view
   const openings = state.inputs.branchLabels
     ? `Openings ahead: ${pins.map(({ pin }) => pin.fullLabel).join(', ')}`
