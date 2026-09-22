@@ -374,8 +374,9 @@ export function EcmoCaseDebrief({
         {recognitionOnly && causeCorrected ? (
           <p role="note" data-recognition-only>
             What this case asks for here is recognition and escalation, and that is what it
-            represents. No treatment for this pattern is modeled, so the physiology above is still
-            the physiology the case opened with, whatever you recorded.
+            represents. Recognition and escalation do not themselves treat this pattern. The
+            readings above show the current simulated patient state, including any changes as the
+            model clock advanced; they do not demonstrate a treatment response to recognition.
           </p>
         ) : null}
         {submitted ? (

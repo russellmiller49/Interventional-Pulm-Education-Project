@@ -1164,19 +1164,9 @@ export function GasBlenderPanel({
   const fio2TargetMatched = initiationTargets
     ? Math.abs(state.gas.fio2 - initiationTargets.fio2) <= (initiationTargets.fio2Tolerance ?? 0.01)
     : false
-  /*
-   * The blender's setting and the blender's own flowmeter, the two numbers the observe steps ask
-   * the learner to compare. The second is the model's own rule: the set flow while the source is
-   * connected, nothing while it is not.
-   *
-   * It is a flowmeter reading and is labelled as one. It used to read "sweep flow reaching the
-   * membrane", which claims something the instrument cannot know: a flowmeter measures what passes
-   * through itself, so it falls to zero when the supply fails and keeps reading when a line comes
-   * off downstream of it (S14-1). The number and when it is shown are unchanged — withholding
-   * gas-path evidence until after a prediction would hide exactly the finding the bedside checks
-   * are for.
-   */
-  const flowmeterSweepLpm = state.gas.sourceConnected ? state.gas.sweepLpm : 0
+  // This model has a connection flag, not a located flowmeter or separate upstream/downstream
+  // disconnections. Keep the existing value visible without inventing an instrument measurement.
+  const modeledGasAvailabilityLpm = state.gas.sourceConnected ? state.gas.sweepLpm : 0
 
   return (
     <section
@@ -1346,13 +1336,14 @@ export function GasBlenderPanel({
         {state.gas.sourceConnected ? <PlugZap aria-hidden="true" /> : <Fan aria-hidden="true" />}
         <span>
           <strong>
-            Set {state.gas.sweepLpm.toFixed(1)} L/min · flowmeter {flowmeterSweepLpm.toFixed(1)}{' '}
-            L/min
+            Set {state.gas.sweepLpm.toFixed(1)} L/min · Modeled gas availability{' '}
+            {modeledGasAvailabilityLpm.toFixed(1)} L/min
           </strong>
           <small>
-            The blender&rsquo;s own flowmeter, read against its setting. It measures gas passing
-            through the meter, so it cannot tell you what reaches the membrane: check the supply,
-            the tubing from the meter to the oxygenator and the exhaust by hand.
+            This value comes from the model&rsquo;s gas-source connection state; it is not a
+            measured flowmeter reading. The model does not locate a disconnection and cannot tell
+            you what reaches the membrane. At the bedside, check the supply, flowmeter, tubing to
+            the oxygenator and exhaust.
           </small>
         </span>
       </div>

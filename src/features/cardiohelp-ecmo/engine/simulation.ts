@@ -1060,7 +1060,7 @@ export function resolvePumpStopExplanation(state: EcmoSimulationState): PumpStop
         cause: 'pressure-protection',
         running: false,
         label: "Stopped by this model's pressure protection",
-        detail: `This simulation's pressure interlock has stopped the pump: the modeled ${channel} pressure went past its alarm limit. The speed shown is the setting the console is holding, not a speed the pump is turning at. While the pump is stopped this model produces no pressure values, which is why the channels read as unavailable rather than showing numbers. What a CARDIOHELP itself does in this state, and with what alarm, is outside what this module represents.`,
+        detail: `This simulation's pressure interlock has stopped the pump: the modeled ${channel} pressure went past its alarm limit. The speed shown is the setting the console is holding, not a speed the pump is turning at. Pressure values calculated before the stop can remain visible until the next model update. The stopped-pump channels then read as unavailable; the retained values are not new pressure measurements. What a CARDIOHELP itself does in this state, and with what alarm, is outside what this module represents.`,
       }
     }
   }

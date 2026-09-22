@@ -105,6 +105,14 @@ export function resolveBubbleResumption(state: EcmoSimulationState): BubbleResum
         'Support has already been resumed on this circuit. Both limbs are open and the pump is running; there is nothing further to resume.',
     }
   }
+  // Closing a clamp on an ordinary circuit does not create an air event to resume from.
+  if (!airEventInPlay(state)) {
+    return {
+      status: 'not-applicable',
+      eligible: false,
+      reason: 'No air event is outstanding on this circuit, so there is nothing to resume from.',
+    }
+  }
   if (!airIsCorrectedAndClear(state)) {
     return {
       status: 'air-outstanding',
@@ -114,19 +122,12 @@ export function resolveBubbleResumption(state: EcmoSimulationState): BubbleResum
     }
   }
   if (!anyLimbClamped(state)) {
-    return airEventInPlay(state)
-      ? {
-          status: 'never-isolated',
-          eligible: false,
-          reason:
-            'Not available: the patient was never isolated from the air column, so there is no isolation to bring them back from. Both near-patient clamps have to be closed before the air is dealt with.',
-        }
-      : {
-          status: 'not-applicable',
-          eligible: false,
-          reason:
-            'No air event is outstanding on this circuit, so there is nothing to resume from.',
-        }
+    return {
+      status: 'never-isolated',
+      eligible: false,
+      reason:
+        'Not available: the patient was never isolated from the air column, so there is no isolation to bring them back from. Both near-patient clamps have to be closed before the air is dealt with.',
+    }
   }
   return {
     status: 'eligible',

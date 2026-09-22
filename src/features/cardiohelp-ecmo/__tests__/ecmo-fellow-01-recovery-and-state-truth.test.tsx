@@ -6,6 +6,8 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 import { CardiohelpConsole } from '../components/CardiohelpConsole'
 import { EcmoCircuitControls } from '../components/EcmoCircuitControls'
+import { GasBlenderPanel } from '../components/CircuitAndMonitors'
+import { EcmoCaseDebrief } from '../components/practice/EcmoCaseDebrief'
 import { EcmoContextStrip } from '../components/shell/EcmoContextStrip'
 import { resolveNowCard } from '../components/practice/nowCard'
 import { describeSafetyEvent } from '../components/practice/safetyLabels'
@@ -20,6 +22,7 @@ import {
   ecmoSimulationReducer,
   resolveBubbleResumption,
   resolvePumpStopExplanation,
+  selectScenarioOutcome,
 } from '../engine'
 import type { EcmoSimulationState, SimulationAction } from '../engine/types'
 
@@ -96,19 +99,22 @@ describe('B · the clinical air cases reach resumed support through the rendered
     })
     expect(resumed.scenario.criticalErrors).toEqual([])
     const again = ecmoSimulationReducer(resumed, { type: 'RESUME_SUPPORT_AFTER_BUBBLE' })
+    expect(again).toBe(resumed)
     expect(again.scenario.criticalErrors).toEqual([])
     expect(again.device.pumpRunning).toBe(true)
     expect(again.circuit.drainageClampClosed).toBe(false)
     expect(again.circuit.returnClampClosed).toBe(false)
   })
 
-  it('refuses an unsafe direct dispatch that bypasses the rendered control', () => {
-    const notIsolated = run('clinical-vv-circuit-air-embolism', [
-      { type: 'RESUME_SUPPORT_AFTER_BUBBLE' },
-    ])
-    expect(notIsolated.scenario.criticalErrors).toContain('premature-bubble-reset')
-    expect(notIsolated.device.pumpRunning).toBe(false)
-  })
+  it.each(AIR_CASES)(
+    '%s refuses an unsafe direct dispatch that bypasses the rendered control',
+    (caseId) => {
+      const notIsolated = run(caseId, [{ type: 'RESUME_SUPPORT_AFTER_BUBBLE' }])
+      expect(notIsolated.scenario.criticalErrors).toContain('premature-bubble-reset')
+      expect(notIsolated.device.pumpRunning).toBe(false)
+      expect(notIsolated.scenario.penalties).toBe(50)
+    },
+  )
 
   it('gives a disabled Resume control an accurate accessible reason', () => {
     const fresh = createInitialSimulationState('clinical-vv-circuit-air-embolism', 'guided')
@@ -327,8 +333,13 @@ describe('B · the whole air sequence, clean and recovered', () => {
     expect(resolveBubbleResumption(restarted).status).toBe('air-outstanding')
     expect(restarted.scenario.criticalErrors).toEqual([])
     // And the other air case starts from its own opening state, not this one's.
-    const other = createInitialSimulationState('va-clinical-circuit-air-embolism', 'guided')
+    const other = ecmoSimulationReducer(resumed, {
+      type: 'LOAD_SCENARIO',
+      scenarioId: 'va-clinical-circuit-air-embolism',
+    })
     expect(resolveBubbleResumption(other).status).toBe('air-outstanding')
+    expect(other.scenario.correctedFaults).toEqual([])
+    expect(other.scenario.clinical?.appliedInterventions).toEqual([])
   })
 
   it.each(['arterial-bubble-stop', 'va-arterial-bubble-stop'] as const)(
@@ -349,6 +360,12 @@ describe('B · the whole air sequence, clean and recovered', () => {
       expect(resolveBubbleResumption(corrected).eligible).toBe(true)
       render(<EcmoCircuitControls state={corrected} dispatch={jest.fn()} controlsEnabled />)
       expect(resumeButton().disabled).toBe(false)
+      const resumed = ecmoSimulationReducer(corrected, { type: 'RESUME_SUPPORT_AFTER_BUBBLE' })
+      expect(resumed.device.pumpRunning).toBe(true)
+      expect(resumed.circuit.drainageClampClosed).toBe(false)
+      expect(resumed.circuit.returnClampClosed).toBe(false)
+      expect(resumed.scenario.criticalErrors).toEqual([])
+      expect(ecmoSimulationReducer(resumed, { type: 'RESUME_SUPPORT_AFTER_BUBBLE' })).toBe(resumed)
     },
   )
 })
@@ -439,6 +456,18 @@ describe('C · both safety-event debrief paths', () => {
 })
 
 describe('D · requested settings, running state, and alarm scope', () => {
+  it('describes the stop transition truthfully while its last calculated pressure is still visible', () => {
+    const stopped = run('clinical-vv-tension-pneumothorax', [
+      { type: 'SET_RPM', rpm: 3600 },
+      { type: 'STEP' },
+    ])
+    expect(stopped.device.pumpRunning).toBe(false)
+    expect(stopped.circuit.readouts.pVen.displayed).not.toBeNull()
+    expect(resolvePumpStopExplanation(stopped).detail).toContain('calculated before the stop')
+    const next = ecmoSimulationReducer(stopped, { type: 'STEP' })
+    expect(next.circuit.readouts.pVen.displayed).toBeNull()
+  })
+
   it('C3-1: the escalation path stops the pump and says so, without inventing a device alarm', () => {
     const collapsed = run('clinical-vv-tension-pneumothorax', [
       { type: 'STEP' },
@@ -539,6 +568,50 @@ describe('D · requested settings, running state, and alarm scope', () => {
 })
 
 describe('E · no-action and explanation-only paths fabricate nothing', () => {
+  it('does not present modeled gas availability as a measurement at an assumed flowmeter', () => {
+    const state = createInitialSimulationState('clinical-vv-gas-disconnection', 'guided')
+    const view = render(<GasBlenderPanel state={state} dispatch={jest.fn()} controlsEnabled />)
+    expect(view.container.textContent).toContain('Modeled gas availability')
+    expect(view.container.textContent).toContain('not a measured flowmeter reading')
+    expect(state.gas.sourceConnected).toBe(false)
+  })
+
+  it('recognition debrief reports current readings without claiming the opening physiology persists unchanged', () => {
+    const initial = createInitialSimulationState('va-mixed-circulation-capstone', 'guided')
+    const state = run('va-mixed-circulation-capstone', [
+      { type: 'CORRECT_FAULT', fault: 'differential-hypoxemia' },
+      ...Array.from({ length: 10 }, (): SimulationAction => ({ type: 'STEP' })),
+      { type: 'REVEAL_DEBRIEF' },
+    ])
+    expect(state.patient.paCO2).not.toBe(initial.patient.paCO2)
+    const view = render(
+      <EcmoCaseDebrief
+        state={state}
+        scenario={cardiohelpScenarioById.get('va-mixed-circulation-capstone')!}
+        outcome={selectScenarioOutcome(state)}
+        supportMode="va"
+        onReplay={jest.fn()}
+      />,
+    )
+    expect(view.container.querySelector('[data-recognition-only]')?.textContent).not.toContain(
+      'still the physiology the case opened with',
+    )
+    expect(
+      within(view.container).getByLabelText('Patient state at the reveal').textContent,
+    ).toContain(state.patient.rightRadialSpo2.toFixed(1))
+  })
+
+  it('keeps air resumption unavailable on a clamped circuit that has no air event', () => {
+    const state = run('afterload-oxygenator-resistance', [
+      { type: 'STEP' },
+      { type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: true },
+    ])
+    render(<EcmoCircuitControls state={state} dispatch={jest.fn()} controlsEnabled />)
+    expect(resumeButton()).toBeDisabled()
+    expect(resolveBubbleResumption(state).status).toBe('not-applicable')
+    expect(ecmoSimulationReducer(state, { type: 'RESUME_SUPPORT_AFTER_BUBBLE' })).toBe(state)
+  })
+
   it('opening the explanation without acting records no intervention and no time', () => {
     const opened = run('clinical-vv-oxygenator-thrombosis', [{ type: 'REVEAL_DEBRIEF' }])
     expect(opened.scenario.clinical?.appliedInterventions ?? []).toEqual([])
@@ -563,13 +636,13 @@ describe('E · no-action and explanation-only paths fabricate nothing', () => {
     }
   })
 
-  it('S14-1: the blender readout is labelled as the blender flowmeter', () => {
+  it('S14-1: the gas readout does not claim confirmed membrane delivery', () => {
     const source = readFileSync(
       join(__dirname, '..', 'components', 'CircuitAndMonitors.tsx'),
       'utf8',
     )
     expect(source).not.toContain('Sweep flow reaching the membrane, read against the setting')
-    expect(source).toContain('cannot tell you what reaches the membrane')
+    expect(source.replace(/\s+/g, ' ')).toContain('cannot tell you what reaches the membrane')
   })
 
   it('no run of any of these paths writes a score, a first-attempt record or a legacy field', () => {
