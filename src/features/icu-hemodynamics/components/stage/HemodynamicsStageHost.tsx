@@ -48,6 +48,7 @@ import {
 import {
   catheterTransitionAllowed,
   catheterTransitionHold,
+  occlusionReleasedByLearner,
   paReturnEpisodeKey,
   paWaveformReturned,
 } from '../../engine/catheterSafety'
@@ -1781,16 +1782,40 @@ function ReturnCheck({
   readonly state: HemodynamicSimulationState
   readonly onObserved: (episode: string) => void
 }) {
-  const [answer, setAnswer] = useState<'returned' | 'not-returned' | null>(null)
+  /*
+   * The answer is held with the occlusion it was given about.
+   *
+   * It used to be a bare choice in React state, which outlived the episode: a second occlusion
+   * opened already showing the first one's answer and its "Recorded for this occlusion" line,
+   * although the engine had correctly refused to carry the check itself over (sanity review of
+   * HD-PRE-REVIEW-01, blocker 2). The episode key is the identity, so nothing here needs a second
+   * source of truth — an answer whose episode is not the current one simply is not this episode's
+   * answer.
+   */
+  const [answer, setAnswer] = useState<{
+    readonly episode: string
+    readonly choice: 'returned' | 'not-returned'
+  } | null>(null)
   const episode = paReturnEpisodeKey(state)
   const returned = paWaveformReturned(state)
+  const automatic = !occlusionReleasedByLearner(state)
+  const choice = answer !== null && answer.episode === episode ? answer.choice : null
   const confirmed =
     episode !== null && state.signalValidationChecks.includes(`${PA_RETURN_CHECK}:${episode}`)
   const persistent = pawpRecoveryOutcomes.find((outcome) => !outcome.paWaveformReturned)!
+  /*
+   * Said whenever the simulation's own cutoff ended the occlusion. It belongs beside either
+   * answer, because it is a fact about the release and not about the tracing: the observation can
+   * be right while the deflation is still not the learner's.
+   */
+  const automaticNote = automatic
+    ? ' The release itself was not yours: this simulation ended the occlusion at its own cutoff, so it is not recorded as a deflation you performed, and the step still asks for one.'
+    : ''
 
-  function answered(choice: 'returned' | 'not-returned') {
-    setAnswer(choice)
-    if (episode !== null && choice === 'returned' && returned) onObserved(episode)
+  function answered(next: 'returned' | 'not-returned') {
+    if (episode === null) return
+    setAnswer({ episode, choice: next })
+    if (next === 'returned' && returned) onObserved(episode)
   }
 
   return (
@@ -1811,7 +1836,7 @@ function ReturnCheck({
             type="button"
             className={shellStyles.nowSecondary}
             data-return-answer="returned"
-            aria-pressed={answer === 'returned'}
+            aria-pressed={choice === 'returned'}
             onClick={() => answered('returned')}
           >
             {confirmed ? 'The artery is back — recorded' : 'The artery is back'}
@@ -1820,24 +1845,28 @@ function ReturnCheck({
             type="button"
             className={shellStyles.nowSecondary}
             data-return-answer="not-returned"
-            aria-pressed={answer === 'not-returned'}
+            aria-pressed={choice === 'not-returned'}
             onClick={() => answered('not-returned')}
           >
             It has not come back
           </button>
         </div>
       )}
-      {answer !== null && episode !== null ? (
+      {choice !== null && episode !== null ? (
         <p
           role="status"
-          data-return-response={returned === (answer === 'returned') ? 'agrees' : 'differs'}
+          data-return-response={returned === (choice === 'returned') ? 'agrees' : 'differs'}
         >
-          {answer === 'returned'
+          {choice === 'returned'
             ? returned
-              ? 'Recorded for this occlusion: pulsatility and the notch are back on the monitor, and the occlusion has ended at the vessel.'
+              ? `${
+                  confirmed
+                    ? 'Recorded for this occlusion:'
+                    : 'Observed, and not yet recorded for this occlusion:'
+                } pulsatility and the notch are back on the monitor, and the occlusion has ended at the vessel.${automaticNote}`
               : `Not recorded — the tracing does not support that yet. ${whyNotReturned(state)} Look again, and answer when the monitor agrees with you.`
             : returned
-              ? 'Look again: the tracing on the monitor has its systolic pulse, its diastolic run-off and its dicrotic notch back, which is the artery returning. Nothing is recorded either way.'
+              ? `Look again: the tracing on the monitor has its systolic pulse, its diastolic run-off and its dicrotic notch back, which is the artery returning. Nothing is recorded either way.${automaticNote}`
               : `${persistent.whatItMeans} ${persistent.requiredResponse}`}
         </p>
       ) : null}
@@ -1845,12 +1874,15 @@ function ReturnCheck({
   )
 }
 
-/** Why the current tracing is not yet the artery returning, in the simulation's own terms. */
+/**
+ * Why the current tracing is not yet the artery returning, in the simulation's own terms.
+ *
+ * Only reasons about the tracing belong here. How the occlusion ended is a separate fact and is
+ * said separately; it never makes a returned waveform read as absent (sanity blocker 1).
+ */
 function whyNotReturned(state: HemodynamicSimulationState): string {
   const catheter = state.catheter
   if (catheter.balloonInflated) return 'The balloon is still inflated.'
-  if (catheter.forcedSafetyRecovery)
-    return 'This simulation released the balloon itself at its own cutoff, so the release was not yours and the recovery is still to be established.'
   if (catheter.targetPosition !== null) return 'The tip is still moving.'
   if (catheter.position !== 'pa')
     return `The tip is not in the pulmonary artery; it is at ${positionWords(catheter.position)}.`

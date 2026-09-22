@@ -10,7 +10,7 @@
   "branch": "claude/emodynamics-9-21",
   "checkout": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-emodynamics-9-21",
   "handoff": "docs/gap-remediation/fellow-walkthrough/hemodynamics/HD-PRE-REVIEW-01-handoff.md",
-  "state": "implemented; pull request open; not merged, not deployed",
+  "state": "implemented; independent sanity review returned three blockers; all three repaired; pull request open; not merged, not deployed",
   "claims": {
     "clinicalApproval": false,
     "sourceReview": false,
@@ -182,7 +182,7 @@
   ],
   "verification": {
     "browser": "Chromium via the in-app browser pane against this worktree's own dev server on port 3125 (.claude/launch.json -> claude-hemodynamics). Sizes: 1204x987 (report), 390x844, and 390x844 at 200% root-text enlargement.",
-    "jestHd": "39 suites / 530 tests pass (base: 37 / 501)",
+    "jestHd": "40 suites / 539 tests pass (reviewed head: 39 / 530)",
     "newSuitesAgainstBase": "15 of 25 assertions groups fail on the unchanged base; the rest are preservation checks",
     "jestConsumers": "src/app/[locale]/icu-hemodynamics, src/features/critical-care, src/features/learning-module, src/features/module-beta, src/app/api/critical-care: 43/46 suites pass; the same 3 suites and 420/423 counts fail on the unchanged base",
     "playwright": "playwright.icu-hemodynamics.config.ts (port 3125): 10 passed / 16 failed - identical names and counts on the unchanged base; pre-existing",
@@ -199,5 +199,48 @@
     "Owner review of R1 (which fault the capstone teaches; whether float-balloon inflation becomes a learner control; what the RA flush control represents), R5 (the two plausibility items and how omission is explained) and R8/HD-03-08 (persistent wedge guidance).",
     "HD-PRE-REVIEW-02 extends observedSystemState with condition and series identity and matched-time comparison, and owns thermodilution episode grouping.",
     "A separate bounded task to realign the HD Playwright specs with the current stage."
-  ]
+  ],
+  "sanityReview": {
+    "reviewer": "independent Codex sanity review",
+    "reviewedHead": "78a4bdcba72ac0132bcb415429ea4928b6cd8678",
+    "mainAtReview": "5ff2b096f6aa4d7032594b28520e2d78d64df5ed",
+    "result": "NOT READY TO MERGE — three blockers",
+    "blockers": [
+      {
+        "id": "sanity-1",
+        "severity": "P1",
+        "title": "Automatic recovery falsely reported persistent occlusion",
+        "status": "reproduced-and-fixed",
+        "path": "src/features/icu-hemodynamics/engine/catheterSafety.ts, components/stage/HemodynamicsStageHost.tsx",
+        "cause": "paWaveformReturned folded forcedSafetyRecovery into an observation about the tracing",
+        "fix": "paWaveformReturned is an observation only; occlusionReleasedByLearner carries the release provenance; whyNotReturned no longer cites the release; either answer notes an automatic release without crediting a deflation",
+        "preserved": "automatic cutoff behaviour; balloon-down goal still refuses credit for an automatic release; authored stop/escalate guidance still shown where the trace truly has not returned; R8 hold untouched; no invented distance or complication"
+      },
+      {
+        "id": "sanity-2",
+        "severity": "P1",
+        "title": "A stale answer claimed a new observation was recorded",
+        "status": "reproduced-and-fixed",
+        "path": "src/features/icu-hemodynamics/components/stage/HemodynamicsStageHost.tsx",
+        "cause": "the ReturnCheck answer was React state that outlived the occlusion episode",
+        "fix": "the answer is stored with its episode and shown only when that episode is current, derived from the existing paReturnEpisodeKey; \"Recorded for this occlusion\" additionally requires the engine to have accepted the check for that episode",
+        "preserved": "the engine-level episode check from batch 01 is unchanged"
+      },
+      {
+        "id": "sanity-3",
+        "severity": "P2",
+        "title": "The displayed-pressure projection did not snapshot the monitor",
+        "status": "reproduced-and-fixed",
+        "path": "src/features/icu-hemodynamics/engine/monitorDisplay.ts, engine/decisionRecord.ts, components/BedsideMonitor.tsx",
+        "cause": "the provenance adapter read state.measurements while calling the value displayed; capstoneState(808) at +8 s showed 69 on the monitor and 68 in the record",
+        "fix": "monitorPressureReadouts is the single implementation of the rail arterial and central-venous numbers and their rounding; the monitor and the record both read it; the record names the sampling window",
+        "preserved": "no physiology changed; the model-versus-trace difference itself is untouched; Task-02 scope not entered"
+      }
+    ],
+    "regressionAdded": [
+      "src/features/icu-hemodynamics/__tests__/hd-pre-review-01-catheter-safety.test.tsx (two new groups)",
+      "src/features/icu-hemodynamics/__tests__/hd-pre-review-01-displayed-pressure.test.tsx (new file)"
+    ],
+    "failsOnReviewedHead": "8 tests, with src/features/icu-hemodynamics/{components,engine} reverted to 78a4bdcb"
+  }
 }

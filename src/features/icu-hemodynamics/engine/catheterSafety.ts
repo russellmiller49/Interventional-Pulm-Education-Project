@@ -125,7 +125,15 @@ export function paReturnEpisodeKey(state: HemodynamicSimulationState): string | 
  *
  * Used to answer a learner's observation honestly rather than to answer it for them: the control
  * offers "it is back" and "it has not come back", and this says which the current simulation
- * supports. An automatic release is excluded because the simulation ended that occlusion itself.
+ * supports.
+ *
+ * It says nothing about *who* ended the occlusion. The first version folded
+ * `forcedSafetyRecovery` in, so after the simulation's own cutoff released the balloon — which
+ * puts the tip back in the artery and a pulsatile pulmonary-artery tracing back on the monitor —
+ * this reported "not returned", and the control then narrated a persistent occlusion over a trace
+ * that had visibly come back (sanity review of HD-PRE-REVIEW-01, blocker 1). How an occlusion
+ * ended and what the tracing shows are two facts, and only the second one is an observation.
+ * `occlusionReleasedByLearner` carries the first.
  */
 export function paWaveformReturned(state: HemodynamicSimulationState): boolean {
   const catheter = state.catheter
@@ -133,9 +141,18 @@ export function paWaveformReturned(state: HemodynamicSimulationState): boolean {
     catheter.position === 'pa' &&
     catheter.targetPosition === null &&
     !catheter.balloonInflated &&
-    !catheter.floatBalloonInflated &&
-    !catheter.forcedSafetyRecovery
+    !catheter.floatBalloonInflated
   )
+}
+
+/**
+ * Whether the learner ended the last occlusion, or the simulation ended it for them.
+ *
+ * The provenance half of the pair above, and the one the section's `balloon-down` goal turns on:
+ * an automatic release is still not the learner's deflation, and still earns no credit for it.
+ */
+export function occlusionReleasedByLearner(state: HemodynamicSimulationState): boolean {
+  return !state.catheter.forcedSafetyRecovery
 }
 
 /**

@@ -8,6 +8,7 @@ import {
   catheterSimulationNotice,
   catheterTransitionAllowed,
   catheterTransitionHold,
+  occlusionReleasedByLearner,
   paReturnEpisodeKey,
   paWaveformReturned,
 } from '../engine/catheterSafety'
@@ -23,6 +24,7 @@ import {
   sectionRuntime,
   stageGoalMet,
 } from '../engine/stageRuntime'
+import { WEDGE_AUTO_DEFLATION_SECONDS } from '../engine/simulation'
 import type { HemodynamicSimulationState } from '../engine/types'
 import {
   clickPrimary,
@@ -137,15 +139,19 @@ describe('one eligibility rule for leaving a step', () => {
     })
     // Navigation is free: nothing is inflating and nothing is moving.
     expect(catheterTransitionAllowed(afterAutomaticRelease)).toBe(true)
-    // The work is still not the learner's, and the artery is not established as back.
+    // The work is still not the learner's: the deflation goal stays unmet.
     expect(stageGoalMet({ type: 'balloon-down' }, afterAutomaticRelease)).toBe(false)
-    expect(paWaveformReturned(afterAutomaticRelease)).toBe(false)
+    expect(occlusionReleasedByLearner(afterAutomaticRelease)).toBe(false)
+    // The tracing, separately, is a pulmonary-artery tracing again — see the sanity-blocker-1
+    // group below. Who released the balloon is not evidence about what the monitor shows.
+    expect(paWaveformReturned(afterAutomaticRelease)).toBe(true)
 
     const afterLearnerDeflation = withCatheter(afterAutomaticRelease, {
       forcedSafetyRecovery: false,
     })
     expect(catheterTransitionAllowed(afterLearnerDeflation)).toBe(true)
     expect(stageGoalMet({ type: 'balloon-down' }, afterLearnerDeflation)).toBe(true)
+    expect(occlusionReleasedByLearner(afterLearnerDeflation)).toBe(true)
     expect(paWaveformReturned(afterLearnerDeflation)).toBe(true)
   })
 })
@@ -504,5 +510,155 @@ describe('the verdict labels match the rationales beside them (L1-02, L4-07, L1-
     expect(item.choices.find((choice) => choice.id === 'needs-fluid')!.rationale).toMatch(
       /one cause among several/,
     )
+  })
+})
+
+/**
+ * Sanity-review repairs on top of HD-PRE-REVIEW-01 (independent review of `78a4bdcb`).
+ *
+ * Blocker 1: `paWaveformReturned` folded `forcedSafetyRecovery` into its answer, so after the
+ * simulation's own cutoff released the balloon — leaving a pulsatile pulmonary-artery tracing on
+ * the monitor — the control agreed with "It has not come back" and produced persistent-occlusion
+ * guidance. How an occlusion ended and what the tracing shows are different facts.
+ *
+ * Blocker 2: the control's answer lived in React state that outlived the occlusion it was about,
+ * so a second occlusion opened already showing the first one's answer and its "Recorded for this
+ * occlusion" line, although the engine had correctly refused to carry the check over.
+ */
+describe('an automatic release is not evidence about the tracing (sanity blocker 1)', () => {
+  /** The teaching patient, one occlusion taken, released by the simulation's own cutoff. */
+  function afterAutomaticRelease(): HemodynamicSimulationState {
+    const inflated = reduceAll(cleanState(550, 'pa'), [{ type: 'START_WEDGE' }])
+    return reduceAll(inflated, [{ type: 'TICK', seconds: WEDGE_AUTO_DEFLATION_SECONDS + 1 }])
+  }
+
+  it('reports the tracing as back, while still refusing the learner credit for the release', () => {
+    const state = afterAutomaticRelease()
+    // The simulation ended it, and says so.
+    expect(state.catheter.forcedSafetyRecovery).toBe(true)
+    expect(state.catheter.balloonInflated).toBe(false)
+    expect(state.catheter.position).toBe('pa')
+
+    // Observation: a pulmonary-artery tracing is on the monitor.
+    expect(paWaveformReturned(state)).toBe(true)
+    // Provenance: the release was not the learner's, so the deflation goal stays unmet.
+    expect(occlusionReleasedByLearner(state)).toBe(false)
+    expect(stageGoalMet({ type: 'balloon-down' }, state)).toBe(false)
+  })
+
+  it('still answers "not returned" where the tracing really is not back', () => {
+    // The capstone's tip sits distally on a deflated balloon: no artery on that channel.
+    const held = withCatheter(capstoneState(808), { wedgeEpisodeCount: 1 })
+    expect(paWaveformReturned(held)).toBe(false)
+    // And while a balloon is up, there is no released episode to answer about at all.
+    const occluding = reduceAll(cleanState(550, 'pa'), [{ type: 'START_WEDGE' }])
+    expect(paWaveformReturned(occluding)).toBe(false)
+    expect(paReturnEpisodeKey(occluding)).toBeNull()
+  })
+
+  it('answers the learner against the tracing after an automatic release, both ways', () => {
+    const { lesson } = mountSection('pawp-capture')
+    clickPrimary()
+    while (currentStepId() !== lesson.steps[2].id) clickPrimary()
+    fireEvent.click(control('inflate'))
+    tick(WEDGE_AUTO_DEFLATION_SECONDS + 1)
+    expect(screen.getByRole('alert').textContent).toMatch(/released the balloon itself/)
+    clickPrimary()
+
+    expect(document.querySelector('[data-return-check]')?.getAttribute('data-return-episode')).toBe(
+      'episode-1',
+    )
+
+    // "It has not come back" must not narrate a persistent occlusion over a returned tracing.
+    fireEvent.click(
+      document.querySelector<HTMLButtonElement>('[data-return-answer="not-returned"]')!,
+    )
+    const disagreement = document.querySelector('[data-return-response]')
+    expect(disagreement?.getAttribute('data-return-response')).toBe('differs')
+    expect(disagreement?.textContent).toMatch(/Look again/i)
+    expect(disagreement?.textContent).not.toMatch(/occlusion has not ended at the vessel/i)
+    expect(disagreement?.textContent).not.toMatch(/escalate/i)
+
+    // "The artery is back" is observationally correct, and says whose release it was.
+    fireEvent.click(document.querySelector<HTMLButtonElement>('[data-return-answer="returned"]')!)
+    const agreement = document.querySelector('[data-return-response]')
+    expect(agreement?.getAttribute('data-return-response')).toBe('agrees')
+    expect(agreement?.textContent).toMatch(/this simulation ended the occlusion at its own cutoff/i)
+    expect(agreement?.textContent).toMatch(/not recorded as a deflation you performed/i)
+    // The observation counts; the deflation still does not.
+    expect(
+      [...document.querySelectorAll('[data-step-goals] li')].map((li) =>
+        li.getAttribute('data-met'),
+      ),
+    ).toEqual(['true'])
+  })
+})
+
+describe('an answer belongs to the occlusion it was given about (sanity blocker 2)', () => {
+  /** Take one occlusion on the wedge section's transfer task and release it by hand. */
+  function occludeAndRelease() {
+    fireEvent.click(control('inflate'))
+    tick(6)
+    fireEvent.click(control('cursor'))
+    fireEvent.click(control('store'))
+    fireEvent.click(control('deflate'))
+  }
+
+  it('does not show the first occlusion’s answer, or its recorded line, on the second', () => {
+    const { lesson } = mountSection('pawp-capture')
+    let remaining = 20
+    while (currentStepId() !== lesson.steps[6].id && remaining-- > 0) clickPrimary()
+    expect(currentStepId()).toBe(lesson.steps[6].id)
+
+    // No episode yet.
+    expect(document.querySelector('[data-return-check]')?.getAttribute('data-return-episode')).toBe(
+      'none',
+    )
+    expect(document.querySelector('[data-return-response]')).toBeNull()
+
+    // Episode 1, answered and recorded.
+    occludeAndRelease()
+    expect(document.querySelector('[data-return-check]')?.getAttribute('data-return-episode')).toBe(
+      'episode-1',
+    )
+    fireEvent.click(document.querySelector<HTMLButtonElement>('[data-return-answer="returned"]')!)
+    expect(document.querySelector('[data-return-response]')?.textContent).toMatch(
+      /Recorded for this occlusion/,
+    )
+    expect(
+      document.querySelector<HTMLButtonElement>('[data-return-answer="returned"]')?.textContent,
+    ).toMatch(/recorded/)
+
+    // Episode 2 begins: the previous answer is not this episode's answer.
+    fireEvent.click(control('inflate'))
+    expect(document.querySelector('[data-return-check]')?.getAttribute('data-return-episode')).toBe(
+      'none',
+    )
+    expect(document.querySelector('[data-return-response]')).toBeNull()
+
+    // Episode 2 released and unanswered: nothing claims a recorded observation.
+    tick(6)
+    fireEvent.click(control('deflate'))
+    expect(document.querySelector('[data-return-check]')?.getAttribute('data-return-episode')).toBe(
+      'episode-2',
+    )
+    expect(document.querySelector('[data-return-response]')).toBeNull()
+    expect(
+      document.querySelector<HTMLButtonElement>('[data-return-answer="returned"]')?.textContent,
+    ).not.toMatch(/recorded/)
+    expect(
+      document
+        .querySelector<HTMLButtonElement>('[data-return-answer="returned"]')
+        ?.getAttribute('aria-pressed'),
+    ).toBe('false')
+
+    // Episode 2 answered: now, and only now, it is this episode's recorded observation.
+    fireEvent.click(document.querySelector<HTMLButtonElement>('[data-return-answer="returned"]')!)
+    expect(document.querySelector('[data-return-response]')?.textContent).toMatch(
+      /Recorded for this occlusion/,
+    )
+    expect(
+      document.querySelector<HTMLButtonElement>('[data-return-answer="returned"]')?.textContent,
+    ).toMatch(/recorded/)
   })
 })

@@ -195,6 +195,54 @@ and present on the base.
 | ----------------------------------------------------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------- |
 | `critical-care learner-copy framing` and `critical-care accessibility surfaces` are red on main | Pre-existing, unrelated to HD | A shared critical-care task; this batch added no ICU-hemodynamics rows to either. |
 
+## Independent sanity review, and the repairs it required
+
+An independent Codex review of head `78a4bdcb` returned **NOT READY TO MERGE** with three blockers.
+All three reproduced on that head — the reproductions are the regression tests below, which fail
+there and pass here — and all three are repaired without touching any held decision.
+
+| Blocker                                                               | Severity | Reproduced                                                                                                                                                                                                                                                                                                                       | Repair                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| --------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. An automatic safety release was reported as a persistent occlusion | P1       | Yes. `paWaveformReturned` folded `forcedSafetyRecovery` into its answer, so after the simulation's own cutoff released the balloon — which puts the tip back in the artery with a pulsatile tracing on the monitor — the control agreed with "It has not come back" and printed the persistent-occlusion stop/escalate guidance. | The two facts are separated. `paWaveformReturned` is now an observation about the tracing only; the new `occlusionReleasedByLearner` carries who ended the occlusion. `whyNotReturned` no longer offers the release's provenance as a reason the trace is absent. Either answer now also carries a note, when it applies, that the release was the simulation's and is **not** recorded as a deflation the learner performed. The `balloon-down` goal still turns on `forcedSafetyRecovery`, so an automatic release still earns no credit. |
+| 2. A stale answer claimed a new observation had been recorded         | P1       | Yes. The control's answer was a bare choice in React state that outlived the occlusion it was about, so a second occlusion opened already showing the first one's answer and its "Recorded for this occlusion" line, although the engine had correctly refused to carry the check over.                                          | The answer is stored with the episode it was given about (`{ episode, choice }`) and is only displayed when its episode is the current one — derived from the existing `paReturnEpisodeKey`, not from a second source of truth. "Recorded for this occlusion" now additionally requires that the engine has accepted the check _for that episode_. The engine-level episode check from batch 01 is unchanged.                                                                                                                               |
+| 3. The "displayed pressure" projection did not snapshot the monitor   | P2       | Yes, with the reviewer's own numbers: on `capstoneState(808)` advanced eight seconds the monitor printed a mean arterial pressure of **69** and the record certified **68** as the displayed value. A second divergence appears on a damped line's right-atrial mean (5 versus 4).                                               | `monitorPressureReadouts` in `engine/monitorDisplay.ts` is now the single implementation of the rail's arterial and central-venous numbers, including their rounding, and both `BedsideMonitor` and `decisionRecord` read it. The record also names the sampling window it came from — "monitor, last cardiac cycle" and "monitor, end-expiratory c-wave base" — alongside the existing levelled/zeroed provenance. The underlying model-versus-trace difference is not changed; only the claim about which of them was displayed.          |
+
+The record's wording changed as a consequence of blocker 3, from
+`MAP 78 mmHg (displayed, line not yet zeroed)` to
+`MAP 78 mmHg (monitor, last cardiac cycle; line not yet zeroed)`.
+
+### Regression coverage added
+
+- `hd-pre-review-01-catheter-safety.test.tsx` — two new groups: an automatic release reports the
+  tracing as back while `occlusionReleasedByLearner` and the `balloon-down` goal both stay false;
+  a genuinely absent waveform (the capstone's distal position, and a balloon still up) still
+  answers "not returned"; the rendered control answers both ways correctly after an automatic
+  release; and an episode-1 answer neither appears nor claims a recording on episode 2, across
+  no-episode / episode 1 answered / episode 2 inflating / episode 2 released-unanswered / episode 2
+  answered.
+- `hd-pre-review-01-displayed-pressure.test.tsx` (new) — renders the real `BedsideMonitor` and
+  asserts the record's arterial and right-atrial values equal the numbers on the rail, across four
+  states including the reviewer's exact reproduction; plus the sampling/validation wording and the
+  continued absence of an unacquired cardiac index.
+- Two batch-01 expectations were updated because the repair changed what is correct: the assertion
+  that `paWaveformReturned` is false after an automatic release encoded blocker 1 itself, and is
+  replaced by the observation/provenance split (the safety meaning — no credit for an automatic
+  release — is still asserted); and the displayed-pressure wording assertion follows blocker 3.
+
+### Verification of the repair round
+
+`jest src/features/icu-hemodynamics`: **40 suites / 539 tests pass** (reviewed head: 39 / 530).
+With `src/features/icu-hemodynamics/{components,engine}` reverted to `78a4bdcb` and the new tests in
+place, **8 tests fail**, so each repaired defect distinguishes this head from the reviewed one.
+Consumer suites unchanged at 43/46 with the same three pre-existing failures and the same 420/423
+counts; the copy scanner still reports zero ICU-hemodynamics rows. Browser reproduction of all
+three blockers at 1204×987 on port 3125. Type-check clean, lint clean on changed files, production
+build succeeded with the dev server stopped.
+
+No held decision moved: the capstone's fault identity, learner-controlled flow-balloon inflation,
+the RA/distal flush interpretation, the R5 answer-key questions and the R8 persistent-wedge / PA-return
+source conflict are all exactly as they were. `HD-PRE-REVIEW-02` was not started.
+
 ## Stopping rule
 
 One branch, one PR, no merge, no deployment, no second task, no G02 re-run.

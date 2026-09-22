@@ -1,4 +1,9 @@
 import {
+  monitorPressureReadouts,
+  type DisplayedPressure,
+  type DisplayedPressureSampling,
+} from './monitorDisplay'
+import {
   thermodilutionAcceptedAverage,
   thermodilutionTrialCountsTowardSeries,
 } from './thermodilution'
@@ -29,7 +34,10 @@ import type { HemodynamicSimulationState } from './types'
  * captured here rather than flattened into the sentence.
  */
 export interface ObservedPressure {
+  /** The integer the monitor printed at that moment, from `monitorPressureReadouts`. */
   readonly displayedMmHg: number
+  /** Which sample of the drawn trace that number is, in the monitor's own terms. */
+  readonly sampling: DisplayedPressureSampling
   /** Whether the pressure chain had been levelled and zeroed when this was read. */
   readonly validated: boolean
   readonly transducerLevelCm: number
@@ -65,8 +73,12 @@ export function observedSystemState(state: HemodynamicSimulationState): Observed
   const zeroed = state.measurementSystem.zeroed
   const transducerLevelCm = state.measurementSystem.transducerLevelCm
   const validated = zeroed && Math.abs(transducerLevelCm) <= LEVEL_TOLERANCE_CM
-  const pressure = (displayedMmHg: number): ObservedPressure => ({
-    displayedMmHg,
+  // The one selector the bedside monitor's rail is drawn from. A record that says "displayed"
+  // has to mean the number that was on the screen, not the model's own estimate of it.
+  const readouts = monitorPressureReadouts(state)
+  const pressure = (shown: DisplayedPressure): ObservedPressure => ({
+    displayedMmHg: shown.displayedMmHg,
+    sampling: shown.sampling,
     validated,
     transducerLevelCm,
     zeroed,
@@ -92,8 +104,8 @@ export function observedSystemState(state: HemodynamicSimulationState): Observed
 
   return {
     timeSeconds: state.timeSeconds,
-    arterialMean: pressure(state.measurements.mapMmHg),
-    rightAtrialMean: pressure(state.measurements.rapMmHg),
+    arterialMean: pressure(readouts.arterial.mean),
+    rightAtrialMean: pressure(readouts.rightAtrial),
     flow,
     zeroed,
     transducerLevelCm,
@@ -102,13 +114,19 @@ export function observedSystemState(state: HemodynamicSimulationState): Observed
   }
 }
 
+const SAMPLING_WORDS: Readonly<Record<DisplayedPressureSampling, string>> = {
+  'recent-cardiac-cycle': 'monitor, last cardiac cycle',
+  'end-expiratory-c-wave-base': 'monitor, end-expiratory c-wave base',
+  'model-estimate': 'model estimate, before the trace had a cycle to read',
+}
+
 function pressureWords(label: string, observed: ObservedPressure): string {
-  const qualifier = observed.validated
-    ? 'displayed on a levelled, zeroed line'
+  const chain = observed.validated
+    ? 'levelled and zeroed'
     : observed.zeroed
-      ? `displayed, transducer ${observed.transducerLevelCm.toFixed(0)} cm off the reference`
-      : 'displayed, line not yet zeroed'
-  return `${label} ${observed.displayedMmHg.toFixed(0)} mmHg (${qualifier})`
+      ? `transducer ${observed.transducerLevelCm.toFixed(0)} cm off the reference`
+      : 'line not yet zeroed'
+  return `${label} ${observed.displayedMmHg} mmHg (${SAMPLING_WORDS[observed.sampling]}; ${chain})`
 }
 
 /** One sentence for a decision-trace row: only what was on the screen or had been acquired. */

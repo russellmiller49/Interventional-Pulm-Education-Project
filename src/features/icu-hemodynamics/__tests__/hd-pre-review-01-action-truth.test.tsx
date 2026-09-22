@@ -214,14 +214,14 @@ describe('a decision record holds what could be seen or had been acquired (P-10)
   it('says whether the pressure it reports was read on a validated line', () => {
     const unzeroed = createInitialHemodynamicState(hemodynamicCaseById.get('HD-08')!, 'practice', 1)
     expect(describeObservedSystemState(observedSystemState(unzeroed))).toMatch(
-      /MAP \d+ mmHg \(displayed, line not yet zeroed\)/,
+      /MAP \d+ mmHg \(monitor, [^;]+; line not yet zeroed\)/,
     )
     const zeroed = icuHemodynamicsReducer(
       icuHemodynamicsReducer(unzeroed, { type: 'SET_TRANSDUCER_LEVEL', levelCm: 0 }),
       { type: 'ZERO_TRANSDUCER' },
     )
     expect(describeObservedSystemState(observedSystemState(zeroed))).toMatch(
-      /displayed on a levelled, zeroed line/,
+      /MAP \d+ mmHg \(monitor, [^;]+; levelled and zeroed\)/,
     )
   })
 })

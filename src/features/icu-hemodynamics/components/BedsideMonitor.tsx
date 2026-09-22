@@ -8,7 +8,7 @@ import type {
   PressureWaveformField,
 } from '../engine'
 import {
-  latestEndExpiratoryCvpCursor,
+  monitorPressureReadouts,
   recentTracePressureMetrics,
   thermodilutionAcceptedAverage,
 } from '../engine'
@@ -117,16 +117,17 @@ export function BedsideMonitor({
   const measurements = state.measurements
   const withheld = chamberLabel === 'withheld'
   const thermodilutionAverage = thermodilutionAcceptedAverage(state.thermodilutionTrials)
-  const endExpiratoryCvpCursor = useMemo(
-    () =>
-      latestEndExpiratoryCvpCursor(
-        state.waveforms,
-        state.measurements.heartRateBpm,
-        state.parameters.respiratoryRateBpm,
-      ),
-    [state.measurements.heartRateBpm, state.parameters.respiratoryRateBpm, state.waveforms],
-  )
-  const endExpiratoryRap = endExpiratoryCvpCursor?.value ?? measurements.rapMmHg
+  /*
+   * The rail's pressures come from one selector, which the decision record reads too.
+   *
+   * They used to be derived here and, separately, from `state.measurements` in the record's
+   * provenance adapter, which then described the model's estimate as the displayed value; the two
+   * disagreed (sanity review of HD-PRE-REVIEW-01, blocker 3). `monitorPressureReadouts` is now the
+   * only implementation, so "displayed" means this.
+   */
+  const readouts = useMemo(() => monitorPressureReadouts(state), [state])
+  const endExpiratoryCvpCursor = readouts.rightAtrial.cursor
+  const endExpiratoryRap = readouts.rightAtrial.displayedMmHg
   const endExpirationMarker: WaveformPhaseCursor | undefined = endExpiratoryCvpCursor
     ? {
         time: endExpiratoryCvpCursor.time,
@@ -137,7 +138,8 @@ export function BedsideMonitor({
     ? {
         time: endExpiratoryCvpCursor.time,
         value: endExpiratoryCvpCursor.value,
-        label: `end-exp · c-base ${endExpiratoryCvpCursor.value.toFixed(0)}`,
+        // The tag prints the rail's number, so the trace and the rail cannot disagree by a digit.
+        label: `end-exp · c-base ${value(endExpiratoryRap)}`,
       }
     : undefined
   const activeAlarms = state.alarms.filter(
@@ -236,10 +238,6 @@ export function BedsideMonitor({
     : namedPacTrace
   // Labels would smear across a sweeping trace, so they appear only on a frozen strip.
   const annotate = state.frozen
-  const artTraceMetrics = useMemo(
-    () => recentTracePressureMetrics(state.waveforms, 'artMmHg', state.measurements.heartRateBpm),
-    [state.measurements.heartRateBpm, state.waveforms],
-  )
   const pacTraceMetrics = useMemo(
     () =>
       state.catheter.position === 'introducer' || state.catheter.position === 'ra'
@@ -251,9 +249,9 @@ export function BedsideMonitor({
           ),
     [pacTrace.field, state.catheter.position, state.measurements.heartRateBpm, state.waveforms],
   )
-  const artSystolic = Math.round(artTraceMetrics?.systolic ?? measurements.artSystolicMmHg)
-  const artDiastolic = Math.round(artTraceMetrics?.diastolic ?? measurements.artDiastolicMmHg)
-  const artMean = Math.round(artTraceMetrics?.mean ?? measurements.mapMmHg)
+  const artSystolic = readouts.arterial.systolicMmHg
+  const artDiastolic = readouts.arterial.diastolicMmHg
+  const artMean = readouts.arterial.mean.displayedMmHg
   const acceptedCardiacIndex =
     thermodilutionAverage === null
       ? null
