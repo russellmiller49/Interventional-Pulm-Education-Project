@@ -20,7 +20,8 @@
       "321d5338 fix(ebus-guided): name the refresher by its real title; say what the contact cutaway shows",
       "docs commit (this file, the handoff and the copy table) = PR head"
     ],
-    "pullRequest": "set in the PR description; not merged, not deployed"
+    "pullRequest": "set in the PR description; not merged, not deployed",
+    "currentMainAtPr": "bf613270a37a30cfd31a915a33758b808dfbff89 (PR #259, mechanical ventilation only; d98bab79 is its ancestor; no EBUS/shared overlap; not rebased)"
   },
   "curriculumRegistry": {
     "authority": "CHAPTERS in src/features/ebus-guided/content/curriculum.ts",
