@@ -11,7 +11,7 @@
     "branch": "claude/ebus-anatomy-sweep-9-21",
     "worktree": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-ebus-2-9-21",
     "finalHead": "b3a16dd31b23c3a107f056feb5b077719c80885c",
-    "pullRequest": "__PR_URL__",
+    "pullRequest": "https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/261 (#261, open, not merged)",
     "priorBatches": {
       "EBUS-PRE-REVIEW-01": "#249 merged",
       "EBUS-PRE-REVIEW-02": "#251 merged"
