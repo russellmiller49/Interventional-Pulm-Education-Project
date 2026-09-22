@@ -32,6 +32,17 @@ companion `MV-PRE-REVIEW-02-causal-matrix.md` has one row per relationship with 
   scratchpad to reproduce baseline failures and generate the "before" inventory, and removed
   afterwards.
 
+### Heads
+
+|                                         | SHA / reference                                                                           |
+| --------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Base (`origin/main` at start and end)   | `bf613270a37a30cfd31a915a33758b808dfbff89`                                                |
+| Engine, content and test changes        | `470a35dd`                                                                                |
+| Handoff, matrix, inventory, final fixes | `54bb7c5f` (the head every check in §11–12 was run against)                               |
+| Pull request                            | [#271](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/271) |
+
+`git merge-tree --write-tree origin/main HEAD` is clean; `origin/main` did not move during the work.
+
 ## 1. The causal inventory
 
 `src/features/mechanical-ventilation/test-support/causalInventory.ts` replays a case through the real
