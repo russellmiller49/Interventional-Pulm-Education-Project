@@ -498,5 +498,105 @@
     "BBTF-29 replacement fork selection (candidates listed)"
   ],
   "next": "One bounded PR, then stop. Prompt 04 follows after review and merge. OD-01 stays open; task 05 prepares its packet.",
-  "implementationCommitSha": "aefc136da7b0bbe10cee9b9489f61958de2dd0e6"
+  "implementationCommitSha": "aefc136da7b0bbe10cee9b9489f61958de2dd0e6",
+  "sanityRepair": {
+    "date": "2026-09-22",
+    "independentlyReviewedOldHead": "a96047ef3766fa10c81af451887a2dc930586d16",
+    "independentDisposition": "SANITY REVIEW: NOT READY TO MERGE",
+    "scope": "Exactly the two reproduced regressions. No response plane, camera mapping, graph or source identity, manifest, anatomy packet, draft signature, stored answer, nomenclature or review status was touched; OD-01, OD-03, OD-05 and the BBT-02 packet keep their recorded status; access policy unchanged.",
+    "passedAreasNotRevisited": [
+      "all 128 authored camera mappings unchanged",
+      "protected assets and source data unchanged",
+      "production build, type-check, lint and formatting",
+      "BBT Jest 137 passed at the reviewed head",
+      "browser checks other than the two findings"
+    ],
+    "findings": [
+      {
+        "id": "SANITY-P1",
+        "severity": "P1",
+        "title": "A CT plane demonstrated in more than one pass inherited the first pass’s daughter identity",
+        "reproduction": "Lesson 4 (vertical, right-upper-apical.junction-14.pattern), second demonstration pass through slice 419: the drawn model course locator was Daughter B · RB1a while the caption named Daughter A · RB1b.",
+        "reportedSource": "LocalCtLesson.tsx:496",
+        "rootCause": "frames walks the parent interval once per daughter, so slice 419 is authored steps 18, 25 and 62 of 68. LocalCtLesson resolved the displayed frame with frames.findIndex((f) => f.slice === displayedSlice) and the overlay frame with frames.find(...), which always answer with the first step showing that plane. modelCourseLocators() derives the pass from the frame index, so the drawn crosshair (from s.frame) was correct while the caption, the course-locator sentence and the \"n of N\" position came from the earlier pass. Generic, not specific to Lesson 4: Lesson 8 gave Daughter B’s pass the lead-in’s \"Approach context, slice 332\" caption and its \"Approach · LLL and Parent · LB6\" locator names.",
+        "repair": "New engine/model-course.ts helper demonstrationFrameIndex(frames, currentIndex, slice): the current step wins whenever its plane is on screen, otherwise the occurrence nearest the current step does. Used by LocalCtLesson for the overlay frame, the displayed caption/position and onViewChange. Identity is keyed on the authored demonstration step, never on a slice number.",
+        "notChanged": [
+          "source graph",
+          "Daughter A/B source assignments",
+          "response planes",
+          "stored answers",
+          "branch nomenclature",
+          "camera geometry"
+        ],
+        "rotationReflectionChecked": "Covered in the Jest regression: rotating the CT to the regional tracing view and returning to standard axial leaves the caption, the transport position and the locator aria-label unchanged."
+      },
+      {
+        "id": "SANITY-P2",
+        "severity": "P2",
+        "title": "The explanation for an intentionally suppressed wall label was covered by the canvas",
+        "reproduction": "Lesson 8 (orientation-changes), second LB6 example (left-lower-returning.junction-25.integration), slice 345: Daughter B is correctly withheld from the wall because its projected point is occluded, the sentence saying so is in the DOM, and document.elementFromPoint returned the <canvas> at every point down that sentence. Reproduced at 1427x1226, 390x844 and 320x740.",
+        "reportedSource": "ClinicalAirwayView.tsx:463",
+        "rootCause": ".pairedScope was aspect-ratio: 1 with position: relative and .pairedScope .clinicalCanvas was position: absolute; inset: 0. The explanation is an in-flow sibling of that canvas, so it was laid out inside the same square and painted beneath an opaque positioned element at every width.",
+        "repair": ".pairedScope is a flex column; the canvas keeps its square with aspect-ratio: 1 in normal flow (still position: relative so the opening-letter SVG overlay covers the camera exactly); the explanation takes its own space beneath it. Loading, surface-error and 3D-boundary paragraphs reserve the same square so mounting the canvas shifts nothing.",
+        "notChanged": [
+          "the ray cast and its occlusion result",
+          "the suppression rule (Daughter B is still not drawn on the wall)",
+          "source geometry",
+          "the wording of the explanation",
+          "no z-index-only fix"
+        ]
+      }
+    ],
+    "testsAdded": {
+      "src/features/bronchial-branch-tracing/__tests__/demonstration-step-identity.test.tsx": 4,
+      "e2e/branch-tracing.spec.ts": 4
+    },
+    "reviewedHeadBaselineProof": "All eight new assertions fail on a96047ef. The four Playwright tests were run against a production build with only the two repaired files restored from a96047ef: 4 failed (Lesson 8 transport read \"Demonstration slice 327 · 6 of 29 · Approach context…\" instead of step 22; elementFromPoint returned false at all three probe points at all three viewport sizes), then 4 passed on the repaired build.",
+    "verification": {
+      "focusedJestRepeatedPlaneIdentity": "4 passed",
+      "focusedPlaywrightStepIdentityAndOcclusion": "4 passed on the repaired production build; the same 4 failed on the reviewed-head build",
+      "jestModule": "141 passed, 1 failed across 23 suites (142 tests) — the failure is the same documented access-contract assertion; access policy unchanged",
+      "playwrightBranchTracingProduction": "53 passed, 0 failed, 0 skipped (1.3 min), including the Prompt 02 compact Check stability trio (390x844, 1024x768, 1427x1226) and the decoded-image caption trio",
+      "playwrightSystemicUxBbtProduction": "3 passed (bbt: native workspace scroll ownership at 1600, 1440, 1024)",
+      "typeCheck": "clean (exit 0, no diagnostics) after the final source and test edit",
+      "eslintChangedPaths": "clean, no warnings",
+      "prettierChangedPaths": "clean",
+      "productionBuild": "passed, exit 0; standalone output prepared",
+      "productionServer": ".next/standalone/server.js on port 3001 — the port playwright.config.ts already names — with .env.example placeholders passed as process environment only; no .env file created or read",
+      "rerunsNotCounted": true
+    },
+    "browserMatrix": {
+      "occlusionReasonReadable": ["1427x1226", "390x844", "320x740"],
+      "evidenceKind": "document.elementFromPoint at three points down the sentence, bounding rectangle inside the viewport, canvas bottom above the sentence top — not a CSS-class assertion",
+      "repeatedPlaneIdentity": [
+        "1427x1226 (Playwright, Lesson 8 steps 6/22/27)",
+        "jsdom (Jest, Lesson 4 steps 18/25/62 and Lesson 8)"
+      ]
+    },
+    "sourceIntegrity": {
+      "changedPathsVsReviewedHead": [
+        "e2e/branch-tracing.spec.ts",
+        "src/features/bronchial-branch-tracing/__tests__/demonstration-step-identity.test.tsx (new)",
+        "src/features/bronchial-branch-tracing/components/LocalCtLesson.tsx",
+        "src/features/bronchial-branch-tracing/components/branch-tracing.module.css",
+        "src/features/bronchial-branch-tracing/engine/model-course.ts",
+        "docs/gap-remediation/fellow-feedback/bbt/BBT-PRE-REVIEW-03-handoff.md",
+        "docs/gap-remediation/fellow-feedback/bbt/BBT-PRE-REVIEW-03-status.json"
+      ],
+      "noProtectedPathChanged": "No geometry/, public/, manifest, fixture, packet or review-status path is in the diff; paired-scope.ts is still byte-identical to the base; the 128 authored camera mappings and the draft-signature fixture are untouched.",
+      "knownBaselineFailureUnchanged": "contracts.test.ts isPublicPath(/airway-anatomy/case-001/case_manifest.json) fails exactly as before; no access control was loosened."
+    },
+    "holdsUnchanged": [
+      "OD-01 OPEN",
+      "OD-03 held",
+      "OD-05 held",
+      "BBT-02 five-junction packet NOT REVIEWED",
+      "every exercise.review.status stays provisional"
+    ],
+    "newHeadSha": "the documents commit on top of 199e6e3be8b747630ad4786c202a90fb69a4fd88; recorded on the PR page",
+    "status": "SANITY REPAIR: READY FOR INDEPENDENT RE-REVIEW",
+    "notMergedNotDeployed": true,
+    "prompt04NotStarted": true,
+    "repairCommitSha": "199e6e3be8b747630ad4786c202a90fb69a4fd88"
+  }
 }

@@ -6,6 +6,12 @@ set. No other module, no auth or access policy, no shared header/footer/global C
 lesson-stage component, and no source volume, mesh, graph, manifest, response plane, nomenclature
 or review-status file was changed.
 
+> **Read [Sanity repair — 2026-09-22](#sanity-repair--2026-09-22) first.** An independent
+> sanity review of head `a96047ef` reproduced two regressions this batch introduced — a repeated
+> CT plane taking the first pass's daughter identity, and a hidden explanation for an occluded
+> daughter. Both are repaired on this branch; the sections below are the original record and
+> were not rewritten.
+
 **No clinical approval, faculty review, release, deployment or merge is claimed or performed.**
 OD-01 remains **OPEN**. The first-bifurcation teaching mismatch is contained, not anatomically
 resolved. The BBT-02 five-junction packet remains **NOT REVIEWED**. Every `exercise.review.status`
@@ -320,6 +326,130 @@ not changed, no asset was exposed and no auth was altered to make it pass.**
   (5 s `data-ct-ready` wait while the dev server recompiled the changed chunk); it passed twice in
   isolation and on the production build. It is recorded, not counted.
 - No new walkthrough, G02 audit, Prompt 04 work, merge, deployment or release was performed.
+
+## Sanity repair — 2026-09-22
+
+An independent sanity review of PR [#260](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/260)
+at head **`a96047ef3766fa10c81af451887a2dc930586d16`** returned **SANITY REVIEW: NOT READY TO MERGE**
+and reproduced two regressions introduced by the batch above. Everything else it checked passed:
+all 128 authored camera mappings unchanged, protected assets and source data unchanged, production
+build, type-check, lint and formatting clean, BBT Jest 137 passed with the one documented
+`case_manifest.json` access assertion still failing as the known baseline. The sections above are
+left as they were written; this section records what was wrong with them and what was changed.
+
+The repair is bounded to those two defects. No response plane, camera mapping, graph identity,
+manifest, packet, draft signature or review status was touched, and OD-01, OD-03, OD-05 and the
+BBT-02 packet keep the status recorded above.
+
+### Finding 1 (P1) · a repeated CT plane inherited the first pass's daughter identity
+
+**Reproduction.** Lesson 4 (`vertical`, `right-upper-apical.junction-14.pattern`), the second
+demonstration pass through slice 419: the drawn model course locator was Daughter B · RB1a, while
+the caption beside it named Daughter A · RB1b.
+
+**Root cause.** `frames` walks the parent interval once per daughter, so the same native plane is
+an authored step more than once — slice 419 is steps 18, 25 and 62 of that exercise's 68.
+`LocalCtLesson` resolved the caption with `frames.findIndex((f) => f.slice === displayedSlice)`
+(and the overlay frame with `frames.find(...)`), which always answers with the **first** step that
+shows that plane. `modelCourseLocators()` is pass-aware — it derives the pass from the frame index —
+so the crosshair drawn from `s.frame` was right while the caption, the course-locator sentence and
+the `n of N` transport position came from step 18's pass. The defect is generic, not Lesson 4's: on
+Lesson 8 the same lookup gave Daughter B's outbound pass the lead-in's "Approach context, slice 332"
+caption and its "Approach · LLL and Parent · LB6" locator names.
+
+**Repair.** `engine/model-course.ts` gains `demonstrationFrameIndex(frames, currentIndex, slice)`:
+the current step wins whenever its plane is the one on screen, and otherwise the occurrence
+**nearest** the current step does, so browsing off the demonstration and back cannot rewind the
+learner into an earlier pass. `LocalCtLesson` uses it for the overlay frame, for the displayed
+caption/position, and in `onViewChange` where a browsed slice moves `s.frame`. Nothing else changed:
+no graph, no Daughter A/B source assignment, no response plane, no stored answer, no nomenclature
+and no camera geometry. Reference identity is now keyed on the authored step, never on a plane
+number, so the CT caption, the course-locator sentence, the drawn locators and the transport
+position agree with the step the learner is in.
+
+### Finding 2 (P2) · the reason an occluded daughter carries no wall label was hidden
+
+**Reproduction.** Lesson 8 (`orientation-changes`), second LB6 example
+(`left-lower-returning.junction-25.integration`), slice 345: Daughter B is correctly withheld from
+the airway wall because its projected point is behind the wall, and the sentence that says so
+exists in the DOM — but `document.elementFromPoint` at every point down that sentence returned the
+`<canvas>`. Reproduced at 1427 × 1226, 390 × 844 and 320 × 740.
+
+**Root cause.** `.pairedScope` was `aspect-ratio: 1; position: relative` with
+`.pairedScope .clinicalCanvas { position: absolute; inset: 0 }`. The explanation is an in-flow
+sibling of that canvas, so it was laid out inside the same square and painted underneath an opaque
+positioned element at every width.
+
+**Repair.** `.pairedScope` becomes a flex column; the canvas keeps its square through
+`aspect-ratio: 1` in normal flow (still `position: relative`, so the opening-letter SVG overlay
+still covers the camera exactly); the explanation takes its own space beneath it. Loading,
+surface-error and 3D-boundary paragraphs keep the square the camera will fill, so mounting the
+canvas shifts nothing. The ray cast, the geometry, the suppression rule and the wording are all
+unchanged — Daughter B is still not drawn on the wall; the sentence that explains why is now
+readable.
+
+### Tests added by the repair
+
+- `__tests__/demonstration-step-identity.test.tsx` (4): the authored Lesson 4 demonstration really
+  does walk slice 419 in three steps; `demonstrationFrameIndex` resolves by step and by nearest
+  occurrence; Lesson 4's first use (step 18), return-trip use (step 25) and Daughter B's use
+  (step 62) of slice 419 each keep their own caption, locator label and transport position across
+  the transition and across a CT rotation and a return to standard axial; Lesson 8's lead-in and
+  Daughter B's pass keep slices 327 and 332 apart.
+- `e2e/branch-tracing.spec.ts` (4): one rendered-browser check that a demonstration plane reached
+  twice keeps the identity of the pass the learner is in (Lesson 8, steps 6, 22 and 27, with the
+  drawn locator count asserted at each); and the occluded-daughter reason at 1427 × 1226, 390 × 844
+  and 320 × 740, asserting `elementFromPoint` returns the sentence at three points down its
+  bounding rectangle, that the rectangle sits inside the viewport, that the canvas ends above it,
+  that Daughter B is still absent from the wall while Daughter A is drawn, and that reading it
+  moved neither the CT slice nor the recorded responses.
+
+All eight fail on `a96047ef` and pass after the repair. The browser four were run against a
+production build of `a96047ef`'s two repaired files restored from Git (4 failed: the Lesson 8
+caption read "Demonstration slice 327 · 6 of 29 · Approach context…" instead of step 22, and
+`elementFromPoint` returned `false, false, false` at all three sizes), then against the repaired
+build (4 passed).
+
+### Validation after the repair
+
+| Check                                                                         | Result                                                                                                                                                                    |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| New focused Jest regression (repeated-plane step identity)                    | 4 passed                                                                                                                                                                  |
+| New focused Playwright regressions (step identity, occlusion)                 | 4 passed on the repaired production build; the same 4 failed on the reviewed-head build                                                                                   |
+| `npx jest src/features/bronchial-branch-tracing`                              | 141 passed, 1 failed across 23 suites (142 tests); the failure is the same documented access-contract assertion                                                           |
+| Playwright `branch-tracing.spec.ts` (production build)                        | 53 passed, 0 failed, 0 skipped, 1.3 min — includes the Prompt 02 compact Check stability trio at 390 × 844, 1024 × 768 and 1427 × 1226 and the decoded-image caption trio |
+| Playwright `systemic-ux-stabilization -g bbt` (production build)              | 3 passed: `bbt: native workspace scroll ownership` at 1600, 1440 and 1024                                                                                                 |
+| `npx tsc --noEmit` (repository, after the final edit)                         | Clean, exit 0, no diagnostics                                                                                                                                             |
+| `npx eslint src/features/bronchial-branch-tracing e2e/branch-tracing.spec.ts` | Clean, no warnings                                                                                                                                                        |
+| `npx prettier --check` (changed paths)                                        | Clean                                                                                                                                                                     |
+| `npm run build` (production)                                                  | Passed, exit 0; standalone output prepared                                                                                                                                |
+
+Counts are unique runs. The reviewed-head baseline run is recorded as evidence for the new tests,
+not as a second pass of the suite. The production server for these runs was
+`.next/standalone/server.js` on port 3001, which is the port `playwright.config.ts` already names,
+with `.env.example` placeholders passed as process environment only; no `.env` file was created or
+read.
+
+### Heads
+
+| Field                           | Value                                                                                                                                               |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Independently reviewed old head | `a96047ef3766fa10c81af451887a2dc930586d16`                                                                                                          |
+| Repair commit                   | `199e6e3be8b747630ad4786c202a90fb69a4fd88`                                                                                                          |
+| New PR head                     | This document update is committed on top of the repair commit, so the PR head is the documents commit; `BBT-PRE-REVIEW-03-status.json` records both |
+| Branch / PR                     | `claude/bbt-2-21` → [#260](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/260); pushed, **not merged, not deployed** |
+| Prompt 04                       | Not started                                                                                                                                         |
+
+### Source integrity after the repair
+
+`git diff a96047ef --name-only` is four files: `e2e/branch-tracing.spec.ts`,
+`src/features/bronchial-branch-tracing/components/LocalCtLesson.tsx`,
+`src/features/bronchial-branch-tracing/components/branch-tracing.module.css`,
+`src/features/bronchial-branch-tracing/engine/model-course.ts`, plus the new test file and this
+document set. No `geometry/`, `public/`, manifest, fixture, packet or review-status path is in it,
+so every hash in **Geometry and source integrity** above still stands, `paired-scope.ts` is still
+byte-identical to the base, the 128 authored camera mappings and the draft-signature fixture are
+untouched, and the access-policy assertion fails exactly as before — no access control was loosened.
 
 ## Next
 
