@@ -21,6 +21,18 @@ device or source approval.** The atrial-fibrillation trigger model is **CONTAINE
 Sidecar: [MCS-PRE-REVIEW-01-condition-inventory.md](MCS-PRE-REVIEW-01-condition-inventory.md) —
 all twenty-one numerical conditions in the twelve cases, classified.
 
+## Independent sanity-review correction (2026-09-21)
+
+The independent review reproduced two remaining secondary F19 success signals on the original
+PR head: the green monitor all-clear badge and the quiet patient-context fallback in IABP-02 and
+CAP-IABP-01. The accompanying minimal repair suppresses the badge while the AF hold applies and
+uses the existing containment sentence in the case header; actual alarms remain visible. It also
+replaces the F09 test that required the incorrect shared heading to remain. Thus the F19
+"every route" statement below describes the repaired version, not the original submitted head.
+
+See [MCS-PRE-REVIEW-01-sanity-review.md](MCS-PRE-REVIEW-01-sanity-review.md) for the pinned
+base/head comparison, reproduced defects, browser evidence, and remaining owner decisions.
+
 ## Disposition of the assigned subfindings
 
 | Finding                          | Disposition                                                                                                                                                                             |
@@ -336,10 +348,10 @@ All three pass `alternatives={item.choices}`, `outcome="stated"`, `frames={mcsVe
 the Sources block these surfaces currently render, so that is not the fix to make.
 
 Neither shared component was edited, forked or duplicated. `mcs-pre-review-01.test.tsx` records the
-consumer list and asserts the defect is still present in `ChoiceReasoningFeedback` and absent from
-`AnswerVerdict`, so it fails the moment the coordinated fix lands and the follow-up gets closed
-deliberately rather than by accident. It also asserts that the outcome label, the unsafe styling and
-the Sources block survive on an MCS surface.
+consumer list and preserves selected and alternative reasoning, outcomes, and source links on MCS
+surfaces. The independent sanity review removed the assertion that required the incorrect shared
+heading to remain: a future shared-owner repair must pass these consumer contracts. The key-aware
+heading repair itself remains outstanding; neither shared component was changed here.
 
 ---
 

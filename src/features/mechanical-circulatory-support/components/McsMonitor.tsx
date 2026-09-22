@@ -332,7 +332,9 @@ export function McsMonitor({
         {...target('monitor:alarms', highlightTarget)}
       >
         {activeAlarms.length === 0 ? (
-          <span data-priority="clear">NO ACTIVE MODEL ALARMS</span>
+          afTriggerLimitHeld ? null : (
+            <span data-priority="clear">NO ACTIVE MODEL ALARMS</span>
+          )
         ) : (
           activeAlarms.map((alarm) => (
             <span key={alarm.id} data-priority={alarm.priority}>

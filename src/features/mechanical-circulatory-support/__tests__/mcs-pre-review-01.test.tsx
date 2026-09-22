@@ -643,9 +643,10 @@ describe('F09 — the shared alternatives heading, and which component MCS actua
   /*
    * The EBUS pre-review fixed the key-aware heading on `AnswerVerdict`. MCS renders
    * `ChoiceReasoningFeedback` on all three of its verdict surfaces and `AnswerVerdict` on none, so
-   * that fix does not reach this module. Neither shared component is edited or forked here: this
-   * test records the exact consumers for the single shared owner, and fails the moment the
-   * coordinated fix lands so the follow-up is closed deliberately rather than by accident.
+   * that fix does not reach this module. Neither shared component is edited or forked here: these
+   * tests record the exact consumers and preserve their reasoning and source contract. The
+   * key-aware heading repair remains a shared-owner follow-up; the current incorrect heading is
+   * not an invariant and a future shared repair must not break these consumer tests.
    */
   const read = (relative: string) => readFileSync(join(FEATURE_ROOT, relative), 'utf8')
 
@@ -666,20 +667,23 @@ describe('F09 — the shared alternatives heading, and which component MCS actua
     for (const file of consumers) expect(read(file)).not.toContain('<AnswerVerdict')
   })
 
-  it('still shows the defect the shared owner is fixing, unmodified', () => {
-    const shared = readFileSync(
-      join(FEATURE_ROOT, '../learning-module/components/ChoiceReasoningFeedback.tsx'),
-      'utf8',
-    )
-    // Unconditional heading: after a wrong answer the keyed option is listed under it.
-    expect(shared).toContain('Why the other answers do not fit')
-    expect(shared).not.toContain('How the other answers compare')
-    // The corrected sibling, for the owner's reference.
-    const verdict = readFileSync(
-      join(FEATURE_ROOT, '../learning-module/components/AnswerVerdict.tsx'),
-      'utf8',
-    )
-    expect(verdict).toContain('How the other answers compare')
+  it('keeps keyed and non-keyed reasoning reachable regardless of the shared heading repair', () => {
+    const story = mcsStoryProblems[0]
+    for (const choice of story.item.choices) {
+      const view = render(<McsStoryProblems stories={[story]} />)
+      fireEvent.click(screen.getByRole('radio', { name: choice.label }))
+      fireEvent.click(screen.getByRole('button', { name: 'Compare prediction' }))
+      const verdict = view.container.querySelector<HTMLElement>('[data-story-verdict]')!
+      expect(verdict).toHaveTextContent(choice.rationale)
+      const alternatives = verdict.querySelector('[data-other-answers-panel]')!
+      for (const other of story.item.choices.filter((candidate) => candidate.id !== choice.id)) {
+        expect(alternatives).toHaveTextContent(other.label)
+        expect(alternatives).toHaveTextContent(other.rationale)
+      }
+      expect(within(verdict).getByText('Sources')).toBeInTheDocument()
+      expect(verdict.querySelector('a[href]')).not.toBeNull()
+      view.unmount()
+    }
   })
 
   it('keeps the verdict’s own outcomes and sources on every MCS surface that renders it', () => {
