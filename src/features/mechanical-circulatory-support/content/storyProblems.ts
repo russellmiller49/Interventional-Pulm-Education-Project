@@ -52,6 +52,28 @@ export interface McsStoryProblem {
   readonly alarmId?: string
   /** One line naming which axis the change actually moved. */
   readonly axisVerdict: string
+  /**
+   * The constructed baseline this story starts from, named.
+   *
+   * Two stories in a section share one `setup`, and the second one's stem says "from the same
+   * starting point" — which a learner read as the section's patient, because nothing on screen
+   * said otherwise. The section around the suction pair is a right-ventricular-failure patient at
+   * a normal filling volume; the pair itself is a low-preload patient with a normal right
+   * ventricle. A reader who missed that came away with "suction, therefore give volume" carried
+   * back to a patient where volume is the wrong move (F26). The id is what "the same starting
+   * point" refers to, and the numbers beside it are read off the model, not authored.
+   */
+  readonly baselineId: string
+  /** One sentence on what that baseline is and how it relates to the section's own patient. */
+  readonly baselineNote: string
+  /**
+   * Exactly what the colleague's one change is, in the model's own terms.
+   *
+   * The volume story moves a preload control from 55 to 100. That is not a 250 mL or 500 mL
+   * challenge, it has no rate, and the module is not in a position to say what a real patient
+   * would do — so the scope of the change is stated instead of a dose being implied.
+   */
+  readonly changeScope: string
 }
 
 export const MCS_STORY_READING_LABELS: Readonly<Record<McsStoryReading, string>> = {
@@ -97,6 +119,11 @@ const stiffStart: readonly McsAction[] = [
 const authored: readonly McsStoryProblem[] = [
   {
     id: 'story-level-for-suction',
+    baselineId: 'mcs-story-low-preload-suction-v1',
+    baselineNote:
+      'A constructed low-preload illustration built for this pair, and not the section’s patient: here the right ventricle is at its reference contractility and the circulating volume is low, while the section around it is a failing right ventricle at a normal volume. “The same starting point” means this baseline, shared by both stories in the pair — not the patient on the monitor.',
+    changeScope:
+      'The one change is the left-sided performance level, seven to nine. Nothing about the patient moves.',
     sectionId: 'impella-suction-purge-rv',
     title: 'Story problem: the level for a suction alarm',
     device: 'impella',
@@ -154,6 +181,11 @@ const authored: readonly McsStoryProblem[] = [
   },
   {
     id: 'story-volume-for-suction',
+    baselineId: 'mcs-story-low-preload-suction-v1',
+    baselineNote:
+      'A constructed low-preload illustration built for this pair, and not the section’s patient: here the right ventricle is at its reference contractility and the circulating volume is low, while the section around it is a failing right ventricle at a normal volume. “The same starting point” means this baseline, shared by both stories in the pair — not the patient on the monitor.',
+    changeScope:
+      'The one change is this model’s preload control, 55 per cent to 100 per cent — the whole circulating volume of the simulation, moved in one step. It is not a specified bolus, it has no dose and no rate, and nothing here says what volume a real patient should receive or whether they should receive any.',
     sectionId: 'impella-suction-purge-rv',
     title: 'Story problem: volume for the same alarm',
     device: 'impella',
@@ -211,6 +243,11 @@ const authored: readonly McsStoryProblem[] = [
   },
   {
     id: 'story-speed-for-resistance',
+    baselineId: 'mcs-story-high-resistance-lvad-v1',
+    baselineNote:
+      'A constructed high-resistance illustration built for this pair: the reference durable-support patient with the systemic vascular resistance raised and nothing else changed. “The same starting point” means this baseline, shared by both stories in the pair.',
+    changeScope:
+      'The one change is the pump speed, under the simulated authorization control. Nothing about the patient moves.',
     sectionId: 'lvad-parameters-assessment',
     title: 'Story problem: speed for a low display and a high pressure',
     device: 'lvad',
@@ -269,6 +306,11 @@ const authored: readonly McsStoryProblem[] = [
   },
   {
     id: 'story-resistance-lowered',
+    baselineId: 'mcs-story-high-resistance-lvad-v1',
+    baselineNote:
+      'A constructed high-resistance illustration built for this pair: the reference durable-support patient with the systemic vascular resistance raised and nothing else changed. “The same starting point” means this baseline, shared by both stories in the pair.',
+    changeScope:
+      'The one change is this model’s systemic vascular resistance slider. It names no drug, no dose and no rate, and the pump setting is untouched.',
     sectionId: 'lvad-parameters-assessment',
     title: 'Story problem: the resistance comes down',
     device: 'lvad',
@@ -349,13 +391,26 @@ function settle(state: McsSimulationState, seconds = 5): McsSimulationState {
 }
 
 /**
+ * The story's starting point, on its own copy of the circulation, before the colleague does
+ * anything.
+ *
+ * Separated out so the card can show what the illustration actually starts from *before* the
+ * question, without running the change. Both stories in a pair call this with the same `setup`, so
+ * two calls return the same values at the same elapsed time — which is what lets the card say
+ * "the same starting point" and mean something checkable.
+ */
+export function mcsStoryBaseline(story: McsStoryProblem): McsSimulationState {
+  let state = createInitialMcsState('learn', story.device)
+  for (const action of story.setup) state = mcsReducer(state, action)
+  return settle(state)
+}
+
+/**
  * Run a story on a separate copy of the circulation: the colleague's starting point, then the one
  * change, each settled. Pure over the story, so the panel and the test read the same run.
  */
 export function runMcsStory(story: McsStoryProblem): McsStoryRun {
-  let state = createInitialMcsState('learn', story.device)
-  for (const action of story.setup) state = mcsReducer(state, action)
-  const before = settle(state)
+  const before = mcsStoryBaseline(story)
   let changed = before
   for (const action of story.change) changed = mcsReducer(changed, action)
   const after = settle(changed)
@@ -371,6 +426,9 @@ export function validateMcsStoryProblems(): string[] {
     if (story.readings.length !== 4) errors.push(`${story.id}: the story must name four readings`)
     if (!story.axisVerdict.trim()) errors.push(`${story.id}: axisVerdict is empty`)
     if (story.change.length === 0) errors.push(`${story.id}: the colleague did nothing`)
+    if (!story.baselineId.trim()) errors.push(`${story.id}: baselineId is empty`)
+    if (!story.baselineNote.trim()) errors.push(`${story.id}: baselineNote is empty`)
+    if (!story.changeScope.trim()) errors.push(`${story.id}: changeScope is empty`)
   }
   return errors
 }

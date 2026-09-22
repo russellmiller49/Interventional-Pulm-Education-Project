@@ -263,6 +263,24 @@ export const mcsSources: readonly McsSource[] = [
       'Speed changes are represented only as an explicitly authorized educational exercise.',
   },
   {
+    /*
+     * Added by MCS-PRE-REVIEW-01 for F28, and fetched and read for that slice rather than taken
+     * from a secondary description. What it establishes is one thing: which way the dependency
+     * runs on the real device. It gives no estimator equation, so nothing may be built from it.
+     */
+    id: 'abbott-heartmate3-pump-parameters-card',
+    title: 'HeartMate 3 LVAD Pump Parameter Overview and Clinical Considerations',
+    citation:
+      'Abbott. HeartMate 3™ Left Ventricular Assist Device — Pump Parameter Overview; Clinical Considerations. Two-page clinician card, ©2025, MAT-2007803 v3.0, approved for U.S. use only. Retrieved and read 2026-09-21; file SHA-256 873d0243f5226ec849fad4fddb6cb44c3f8311ae8417de593551bc7bb346806a.',
+    sourceType: 'manufacturer',
+    year: 2025,
+    url: 'https://www.cardiovascular.abbott/content/dam/cv/cardiovascular/hcp/education-training/heart-failure/documents/hf-heartmate3-lvad-pump-parameters.pdf',
+    intendedUse:
+      'Names the direction of dependence between the four monitored parameters: device power is a direct measurement of pump motor voltage and current, and flow is an estimate derived from a calculation of fixed speed, power and the patient’s hematocrit. That is the reverse of this teaching model, where flow is generated from speed and loading and power is derived afterwards, and the card is cited wherever the module shows a high-power pattern so the two are not confused. It also states that no single parameter is a surrogate for a patient’s clinical status.',
+    limitation:
+      'A two-page clinician card, not the instructions for use. It names the inputs to the flow estimate and gives no estimator equation, no failure-mode behaviour and no validation data, so no controller model may be reverse-engineered from it. Its clinical-considerations figures are Abbott’s statements about HeartMate 3 patients under its own measurement conditions; this module cites them as that and has adopted none of them as a criterion or a target.',
+  },
+  {
     id: 'fda-heartmate3-pma-current',
     title: 'HeartMate 3 PMA supplement index',
     citation: 'FDA PMA P160054 supplement index, reviewed July 19, 2026.',

@@ -409,6 +409,35 @@
   gap: 0.5rem;
 }
 
+/*
+ * The constructed baseline, above the question rather than after the answer. Its own panel so a
+ * reader can see at a glance that the numbers belong to the illustration and not to the patient on
+ * the monitor behind it (F26).
+ */
+.storyBaseline {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--cyan, #36c3ca);
+  border-radius: 0.6rem;
+  background: var(--panel-2, #17343a);
+}
+
+.storyBaseline h5 {
+  margin: 0;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.storyBaseline p {
+  margin: 0;
+  color: var(--stage-muted, #9fb4b7);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
 .storyReadings {
   display: grid;
   grid-template-columns: 1fr auto;

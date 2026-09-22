@@ -1,4 +1,4 @@
-import type { McsSimulationState } from '../engine/types'
+import type { McsDeviceState, McsPatientState, McsSimulationState } from '../engine/types'
 
 /**
  * The atrial-fibrillation trigger limitation, in one place, in the wording MCS-03 already wrote.
@@ -50,5 +50,41 @@ export const MCS_AF_TRIGGER_LIMIT = {
  * rhythm the learner sets themselves in the studio.
  */
 export function mcsAfTriggerLimitApplies(state: McsSimulationState): boolean {
-  return state.device.kind === 'iabp' && state.patient.rhythm === 'atrial-fibrillation'
+  return mcsAfTriggerLimitAppliesTo(state.patient, state.device)
 }
+
+/**
+ * The same predicate for callers that hold a patient and a device but not a whole state — the
+ * engine's causal sentence is built inside the step, before a state object exists.
+ */
+export function mcsAfTriggerLimitAppliesTo(
+  patient: Pick<McsPatientState, 'rhythm'>,
+  device: Pick<McsDeviceState, 'kind'>,
+): boolean {
+  return device.kind === 'iabp' && patient.rhythm === 'atrial-fibrillation'
+}
+
+/**
+ * What the two atrial-fibrillation activities may no longer say.
+ *
+ * MCS-PRE-REVIEW-01 found that the hold MCS-03 wrote was still only a caveat: in atrial
+ * fibrillation the modeled synchrony figure reaches IABP-02's condition (≥60) and CAP-IABP-01's
+ * (≥65) on pressure triggering and on nothing else, so the only route to either case's stated
+ * signal was the trigger the supplied Cardiosave material advises against. Those two conditions are
+ * now quarantined — kept in the record, excluded from scoring, and never shown as a result — and
+ * these are the words that say so.
+ */
+export const MCS_AF_TRIGGER_CONTAINMENT = {
+  /** Why the two conditions are not treated as outcomes. */
+  conditionHoldReason:
+    'In atrial fibrillation this condition is reached on pressure triggering and on no other trigger source, so treating it as an outcome would endorse the trigger the supplied Cardiosave material advises against',
+  /** The open item the hold belongs to. */
+  openItemId: 'MCS-03-05',
+  /** Lead for the worked comparison that replaced the graded decision. */
+  comparisonLead: 'What this model rates each trigger source, side by side',
+  /** What the comparison is, and is not. */
+  comparisonScope:
+    'The three figures below are this model’s own trigger rating at the settings and simulated time on screen, run on separate copies of this circulation. They are not console readings, and the model represents neither R-wave quality nor a console’s own arrhythmia handling.',
+  /** Said wherever the model's alarms happen to be quiet while the limit applies. */
+  notAnAllClear: 'Model limit held · a quiet trigger alarm here is not a correctly operated device',
+} as const

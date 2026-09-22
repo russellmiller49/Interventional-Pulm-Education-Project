@@ -102,9 +102,22 @@ describe('the limitation is at the trigger control, before the trigger is chosen
     const trigger = screen.getByRole('combobox', { name: 'Trigger source' }) as HTMLSelectElement
     expect(trigger.value).toBe('ecg')
     expect(trigger.disabled).toBe(false)
-    // Read out with the control, not merely printed near it.
-    expect(trigger.getAttribute('aria-describedby')).toBe(note!.id)
-    expect(note!.id).not.toBe('')
+    /*
+     * Read out with the control, not merely printed near it.
+     *
+     * MCS-PRE-REVIEW-01 added the three-way worked comparison inside the note, and moved the id
+     * from the note's root to the paragraph carrying the sentences: a description that swallowed
+     * the comparison table would read the whole table out on every focus. The guarantee this
+     * assertion protects — the control's description resolves to the limitation's own words — is
+     * unchanged, so it is now checked against the element the id actually sits on.
+     */
+    const describedBy = trigger.getAttribute('aria-describedby')
+    expect(describedBy).not.toBe('')
+    expect(describedBy).not.toBeNull()
+    const description = document.getElementById(describedBy!)
+    expect(note!.contains(description)).toBe(true)
+    expect(description!.textContent).toContain(MCS_AF_TRIGGER_LIMIT.modelRating)
+    expect(description!.textContent).toContain(MCS_AF_TRIGGER_LIMIT.atTheControl)
     // Nothing has been performed yet: the note precedes the choice, it does not report on it.
     expect(document.querySelector('[data-transfer-work-status]')?.textContent).toBe(
       'You can explore any controls or continue without performing the suggested exercise.',
@@ -132,9 +145,21 @@ describe('the limitation is at the trigger control, before the trigger is chosen
     }
   })
 
-  it('carries no control of its own: nothing to answer, nothing to dismiss', () => {
+  it('carries nothing to answer and nothing to dismiss, and opens its comparison by default', () => {
     mountSection('iabp-timing-triggering', 'transfer')
-    expect(limitNote()!.querySelectorAll('button, input, select, a, details').length).toBe(0)
+    /*
+     * This assertion used to forbid a `details` too. MCS-PRE-REVIEW-01 requires the model
+     * limitation and the source-specific teaching to be reachable at the moment of the choice, and
+     * the three-way comparison it added is a disclosure — but a read-only one, open on arrival.
+     * What the assertion was protecting is intact and is now stated directly: the note answers
+     * nothing, records nothing, and cannot be dismissed into hiding the limitation.
+     */
+    const note = limitNote()!
+    expect(note.querySelectorAll('button, input, select, a').length).toBe(0)
+    const disclosures = [...note.querySelectorAll('details')]
+    expect(disclosures.length).toBe(1)
+    expect(disclosures[0].open).toBe(true)
+    expect(disclosures[0].hasAttribute('data-af-trigger-comparison')).toBe(true)
   })
 
   it('reopens the step with the note and no fabricated trigger action, and writes no work', () => {
@@ -205,11 +230,12 @@ describe('it follows the modeled rhythm, not a lesson or case id', () => {
     const af = render(<McsControls state={afSetup()} dispatch={jest.fn()} />)
     const note = af.container.querySelector<HTMLElement>('[data-af-trigger-limit]')
     expect(note).not.toBeNull()
-    expect(
-      af.container
-        .querySelector<HTMLSelectElement>('[data-mcs-control="control:iabp-trigger"] select')
-        ?.getAttribute('aria-describedby'),
-    ).toBe(note!.id)
+    const describedBy = af.container
+      .querySelector<HTMLSelectElement>('[data-mcs-control="control:iabp-trigger"] select')
+      ?.getAttribute('aria-describedby')
+    expect(describedBy).toBeTruthy()
+    // See the transfer-step assertion above: the id sits on the note's sentences, not its root.
+    expect(note!.contains(af.container.querySelector(`#${describedBy}`))).toBe(true)
     af.unmount()
 
     const sinus = render(<McsControls state={build('iabp', [])} dispatch={jest.fn()} />)

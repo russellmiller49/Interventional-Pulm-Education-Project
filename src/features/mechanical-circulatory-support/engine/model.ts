@@ -14,6 +14,7 @@ import {
   defaultLvadDevice,
   defaultMcsPatient,
 } from '../content/scenarios'
+import { MCS_AF_TRIGGER_LIMIT, mcsAfTriggerLimitAppliesTo } from '../content/afTriggerLimit'
 import type {
   IabpDeviceState,
   ImpellaDeviceState,
@@ -1004,7 +1005,22 @@ function explainState(
   const critical = alarms.find((candidate) => candidate.priority === 'critical')
   if (critical) return `${critical.label}: ${critical.explanation}`
   if (device.kind === 'iabp') {
-    return `Counterpulsation is ${metrics.timingQualityPercent ?? 0}% synchronized. It changes diastolic augmentation and effective LV afterload but adds no continuous pump flow.`
+    /*
+     * The caption says whose number this is, and stops short of causation where the rating is held.
+     *
+     * "Counterpulsation is 74% synchronized" read as a statement about the balloon, so a learner
+     * who moved the trigger to arterial pressure in atrial fibrillation was answered by the
+     * display with a higher figure, a cleared alarm and a sentence that sounded like a result
+     * (F04, F19). The figure is this model's index; in atrial fibrillation it is a held one, and
+     * the caption is not the place to imply it was improved.
+     */
+    const synchrony = `This model rates counterpulsation ${metrics.timingQualityPercent ?? 0}% synchronized — its own timing index, not a console reading.`
+    const mechanism =
+      'Counterpulsation changes diastolic augmentation and effective LV afterload and adds no continuous pump flow.'
+    if (mcsAfTriggerLimitAppliesTo(patient, device)) {
+      return `${synchrony} ${MCS_AF_TRIGGER_LIMIT.heldLead}: in this rhythm the rating disagrees with the supplied Cardiosave material, so it is not a verdict on the trigger in front of you. ${MCS_AF_TRIGGER_LIMIT.besideTheFigure} ${mechanism}`
+    }
+    return `${synchrony} ${mechanism}`
   }
   if (device.kind === 'impella') {
     const leftLabel = device.left.enabled

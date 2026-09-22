@@ -124,10 +124,27 @@ export function calculateMcsScore(state: McsSimulationState): McsScoreBreakdown 
     state.actionIds.includes(id),
   ).length
   const management = (completedActions / Math.max(1, scenario.requiredActionIds.length)) * 35
-  const criteriaMet = scenario.successCriteria.filter((criterion) =>
+  /*
+   * Held conditions are not graded.
+   *
+   * A condition carrying `classification.held` is one this module keeps for the record but will
+   * not treat as an outcome — the two atrial-fibrillation timing conditions, which in that rhythm
+   * are reachable only by selecting the trigger the supplied Cardiosave material advises against
+   * (MCS-03-05). Counting them would pay the learner for taking the warned-against action, and
+   * counting them as unmet would pay them for not taking it; a held predicate is graded neither
+   * way, so it leaves the numerator and the denominator together. IABP-02's only condition is
+   * held, so its internal response component is zero for every run and its internal total cannot
+   * pass 80 — no learner-facing surface reads either number today, and the alternative, awarding
+   * the dimension in full to everybody, would be an unearned positive signal on the one case this
+   * slice is containing.
+   */
+  const gradedCriteria = scenario.successCriteria.filter(
+    (criterion) => !criterion.classification.held,
+  )
+  const criteriaMet = gradedCriteria.filter((criterion) =>
     metricMeetsCriterion(state.metrics, criterion),
   ).length
-  const response = (criteriaMet / Math.max(1, scenario.successCriteria.length)) * 20
+  const response = gradedCriteria.length === 0 ? 0 : (criteriaMet / gradedCriteria.length) * 20
   const reassessment = state.reassessed ? 5 : 0
   const total = Math.round(
     clamp(inspection + prediction + management + response + reassessment, 0, 100),

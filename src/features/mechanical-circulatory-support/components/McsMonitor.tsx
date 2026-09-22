@@ -7,6 +7,7 @@ import {
   mcsMonitorTargets,
   type McsMonitorTargetId,
 } from '../content'
+import { MCS_AF_TRIGGER_CONTAINMENT, mcsAfTriggerLimitApplies } from '../content/afTriggerLimit'
 import type { McsSimulationState, McsWaveformSample } from '../engine'
 import { mcsDeviceFlowLine, mcsLiveValueKindLabels } from './teaching/selectors'
 import styles from './mechanical-circulatory-support.module.css'
@@ -83,12 +84,22 @@ function WaveStrip({
         <strong style={{ color }}>{label}</strong>
         <span>
           {latest.toFixed(field === 'ecgMv' ? 2 : 0)} {unit}
+          {/*
+           * Which number this is.
+           *
+           * A strip carries the newest waveform sample at the model's current time; the tile beside
+           * it carries the modeled mean or the derived systolic/diastolic pair. They are different
+           * quantities over different windows, so the arterial strip can read 65 while the MAP tile
+           * reads 76 with neither being wrong — and a learner who was not told which is which read
+           * whichever came first (F04). Nothing about the values changes here; they are named.
+           */}
+          <small data-readout-window="instantaneous">instantaneous</small>
         </span>
       </div>
       <svg
         viewBox="0 0 720 92"
         role="img"
-        aria-label={`${label} waveform; current value ${latest.toFixed(1)} ${unit}`}
+        aria-label={`${label} waveform; instantaneous sample ${latest.toFixed(1)} ${unit} at the model's current time`}
         preserveAspectRatio="none"
       >
         <path className={styles.monitorGridLine} d="M0 23 H720 M0 46 H720 M0 69 H720" />
@@ -272,6 +283,16 @@ export function McsMonitor({
   const metrics = state.metrics
   const activeAlarms = state.alarms.filter((alarm) => alarm.active)
   /*
+   * A quiet alarm bar is not an all-clear while a model limit is held.
+   *
+   * In atrial fibrillation the engine's trigger alarm is quiet on exactly one source — arterial
+   * pressure — and that is the source the supplied Cardiosave material advises against. Reading
+   * "NO ACTIVE MODEL ALARMS" after making that switch is the last place the contained result could
+   * still arrive as a success signal (F19). The alarms themselves are untouched and every one of
+   * them still shows; the bar simply stops being able to say only "clear" here.
+   */
+  const afTriggerLimitHeld = mcsAfTriggerLimitApplies(state)
+  /*
    * The same flow account the teaching panels and the two context summaries read, so the four
    * surfaces cannot disagree about what the device is reporting.
    */
@@ -311,7 +332,9 @@ export function McsMonitor({
         {...target('monitor:alarms', highlightTarget)}
       >
         {activeAlarms.length === 0 ? (
-          <span data-priority="clear">NO ACTIVE MODEL ALARMS</span>
+          afTriggerLimitHeld ? null : (
+            <span data-priority="clear">NO ACTIVE MODEL ALARMS</span>
+          )
         ) : (
           activeAlarms.map((alarm) => (
             <span key={alarm.id} data-priority={alarm.priority}>
@@ -319,6 +342,11 @@ export function McsMonitor({
             </span>
           ))
         )}
+        {afTriggerLimitHeld ? (
+          <span data-priority="held" data-af-trigger-held>
+            {MCS_AF_TRIGGER_CONTAINMENT.notAnAllClear}
+          </span>
+        ) : null}
       </div>
       <div className={styles.monitorMain}>
         <div className={styles.waveStack}>
@@ -442,21 +470,21 @@ export function McsMonitor({
             <strong>
               {metric(metrics.mapMmHg)} / {metric(metrics.pulsePressureMmHg)}
             </strong>
-            <small>mm Hg</small>
+            <small>mm Hg · modeled mean and pulse, not the strip sample</small>
           </div>
           <div {...target('monitor:filling-pressures', highlightTarget)}>
             <span>RAP / PCWP</span>
             <strong>
               {metric(metrics.rapMmHg)} / {metric(metrics.pcwpMmHg)}
             </strong>
-            <small>mm Hg</small>
+            <small>mm Hg · modeled mean, not the strip sample</small>
           </div>
           <div {...target('monitor:filling-pressures', highlightTarget)}>
             <span>PAP</span>
             <strong>
               {metric(metrics.papSystolicMmHg)} / {metric(metrics.papDiastolicMmHg)}
             </strong>
-            <small>mm Hg</small>
+            <small>mm Hg · modeled systolic / diastolic</small>
           </div>
           <div>
             <span>PAPi / CPO</span>
@@ -478,10 +506,16 @@ export function McsMonitor({
             <small>modeled</small>
           </div>
           {metrics.timingQualityPercent !== null ? (
-            <div data-color="device">
+            /*
+             * Synchrony is this model's own index, and no IABP console reports it. It was tiled and
+             * captioned like every measured value beside it, and the two atrial-fibrillation
+             * activities then used it as a success condition, so a learner reasonably took it for a
+             * console reading (F04, F19). The number is unchanged; what it is is now on the tile.
+             */
+            <div data-color="device" data-quantity-class="model-index">
               <span>TIMING</span>
               <strong>{metric(metrics.timingQualityPercent)}%</strong>
-              <small>synchrony</small>
+              <small>model index · no console reports this</small>
             </div>
           ) : null}
           {metrics.pumpPowerW !== null ? (

@@ -222,9 +222,46 @@ export function McsCaseWorkflow({
               ))}
             </ul>
             <h4>Signals to reconcile</h4>
-            <ul>
+            {/*
+             * Where each number comes from, beside the number.
+             *
+             * This list used to read "Timing quality ≥80%, MAP ≥58 mm Hg" and nothing else, in
+             * twelve cases, with no source and no note — so "MAP ≥50" in the integrated IABP case
+             * read as a bedside target against the 65 a fellow has been taught (F33). None of the
+             * twenty-one conditions has a clinical source behind it; they are tests this module
+             * wrote so its own cases have an end. Two of them are quarantined outright.
+             */}
+            <p data-condition-contract>
+              Each condition below is a test on this simulation, not a treatment target and not a
+              sign that the support is clinically adequate. Meeting one says the model reached a
+              number this module chose; it does not say a device was correctly operated.
+            </p>
+            <ul data-condition-list>
               {scenario.successCriteria.map((item) => (
-                <li key={item.label}>{item.label}</li>
+                <li
+                  key={item.label}
+                  data-condition-class={item.classification.kind}
+                  data-condition-held={item.classification.held ? 'true' : undefined}
+                >
+                  <strong>{item.label}</strong>
+                  <small>
+                    {item.classification.kind === 'source-supported-clinical'
+                      ? `Clinical criterion from ${item.classification.sourceId}${
+                          item.classification.scope ? ` · ${item.classification.scope}` : ''
+                        }`
+                      : item.classification.kind === 'device-reported-quantity'
+                        ? 'A quantity a console reports, at a value authored for this simulation'
+                        : 'Authored for this simulation'}{' '}
+                    · {item.classification.quantity}
+                  </small>
+                  {item.classification.held ? (
+                    <em data-condition-hold>
+                      Held, and not treated as an outcome: {item.classification.held.reason}.
+                      Whether this run reached it is not shown and is not a result. Open item{' '}
+                      {item.classification.held.openItemId}, still NOT REVIEWED.
+                    </em>
+                  ) : null}
+                </li>
               ))}
             </ul>
             <h4>Actions performed in this run</h4>
