@@ -56,6 +56,11 @@ const MODE_ONLY_METRICS: Readonly<Partial<Record<ScopeMetricId, readonly ScopeMo
   accessoryState: ['accessory'],
 }
 
+/** A readout that reads a script's own clock is offered only where that script runs. */
+const SCRIPT_ONLY_METRICS: Readonly<Partial<Record<ScopeMetricId, ScopeScriptId>>> = {
+  holdRemaining: 'assistant-interrupt',
+}
+
 const MODE_ONLY_CONTROLS: Readonly<Partial<Record<ScopeControlKey, readonly ScopeMode[]>>> = {
   accessory: ['accessory'],
   verifyAccessory: ['accessory'],
@@ -117,6 +122,9 @@ export function scopeViewErrors(view: ScopeViewSpec): readonly string[] {
     const modes = MODE_ONLY_METRICS[metric]
     if (modes && !modes.includes(view.mode))
       errors.push(`${where} shows ${metric}, which only the ${modes.join(' or ')} mode has.`)
+    const script = SCRIPT_ONLY_METRICS[metric]
+    if (script && view.script !== script)
+      errors.push(`${where} shows ${metric} without the ${script} script that runs its clock.`)
   }
 
   const expected = expectedLedgerAirways(view)

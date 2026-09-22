@@ -107,6 +107,13 @@
       "autoPort": false
     },
     {
+      "name": "claude-bf",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/dev-with-training-apps.mjs", "--port", "3133"],
+      "port": 3133,
+      "autoPort": false
+    },
+    {
       "name": "claude-ebus",
       "runtimeExecutable": "node",
       "runtimeArgs": ["scripts/dev-with-training-apps.mjs", "--port", "3128"],

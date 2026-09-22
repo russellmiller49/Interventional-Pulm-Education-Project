@@ -69,9 +69,38 @@ export function layoutOpticalLabels(
   })
 }
 
-export const VIEW_DESCRIPTION: Readonly<Record<ScopeState['signals']['view'], string>> = {
-  clear: 'A clear view through the scope',
-  'red-out': 'A red field through the scope',
-  contaminated: 'A smeared view through the scope',
-  dark: 'A dark field through the scope',
+/**
+ * What the model's own view signal records — never a verdict on the picture on the screen.
+ *
+ * `signals.view` is a model state signal, not a reading of the rendered image. The reducer sets it
+ * from two recorded conditions alone, a red-out and a contaminated lens; everything else is
+ * `clear`. Three of the values paint the whole field themselves (the `data-lens-state` and
+ * `data-view-signal` rules in the two optical stylesheets), so naming the field for those
+ * describes what the renderer actually draws. `clear` paints nothing. It means only that neither
+ * condition is recorded, and the picture is then whatever the airway ahead gives: deflected
+ * against a wall in the left main bronchus, that is mucosa with no lumen in it. So `clear`
+ * reports the absence of the recorded conditions and stops. It never says the view, the airway or
+ * the lumen is clear, open or good, and it never borrows the differential's own row name, "a
+ * clear view of an airway you cannot name", which a learner is taught to read as a usable image
+ * (BF-PRE-REVIEW-01 finding 1).
+ *
+ * What is recorded, never why: the cause of a red or dark field is the answer some sections ask
+ * for, and a section's deny patterns forbid it, so no value here names a mechanism.
+ */
+export const VIEW_SIGNAL_WORDS: Readonly<Record<ScopeState['signals']['view'], string>> = {
+  clear: 'no red field, smear or dark field',
+  'red-out': 'a red field over the whole view',
+  contaminated: 'a smeared field over the whole view',
+  dark: 'a dark field over the whole view',
+}
+
+/** The lead both optical surfaces share, so the signal is read as a record, not as approval. */
+export const VIEW_SIGNAL_LEAD = 'Scope view · what the model records:'
+
+/**
+ * The accessible name of an optical surface. The scene and the fallback both name their field
+ * through this one function, so neither renderer can hand a learner the stronger claim.
+ */
+export function opticalViewName(view: ScopeState['signals']['view']): string {
+  return `${VIEW_SIGNAL_LEAD} ${VIEW_SIGNAL_WORDS[view]}`
 }

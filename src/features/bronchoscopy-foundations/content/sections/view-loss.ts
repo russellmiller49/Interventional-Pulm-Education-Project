@@ -328,7 +328,7 @@ export const section: BronchSectionDefinition = {
       },
       {
         id: 'on-to-the-carina',
-        label: 'Then advance along the visible lumen to the main carina',
+        label: 'Then, with the lumen back in view, advance as far as the main carina',
         test: { type: 'event-sequence', events: ['red-out-recovered', 'reached-carina'] },
       },
     ],
@@ -349,7 +349,8 @@ export const section: BronchSectionDefinition = {
       goals: [
         {
           id: 'lens-cleared-without-advancing',
-          label: 'Bring a usable view back without advancing while the image is obscured',
+          label:
+            'Clear the lens, with no advance made while the model recorded the view as obscured',
           test: {
             type: 'all',
             tests: [

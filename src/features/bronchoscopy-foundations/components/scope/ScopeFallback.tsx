@@ -12,6 +12,11 @@ import {
   inspectionRecords,
   ledgerStatus,
 } from '../../engine/scope/inspectionLedger'
+import {
+  GOAL_GROUP_HEADING,
+  GOAL_MODEL_LIMIT,
+  scopeNowLine,
+} from '../../engine/scope/goalPresentation'
 import { MODEL_DEFLECTION_LIMIT_DEG } from '../../engine/scope/scopeInputs'
 import {
   ACCESSORY_POSITION_WORDS,
@@ -21,6 +26,7 @@ import {
 } from '../../engine/scope/scopeMetrics'
 import { OPTICAL_ASPECT, OPTICAL_FOV_DEG } from '../../engine/scope/scopeOstia'
 import { LocationCaptionStrip } from './LocationCaptionStrip'
+import { opticalViewName } from './scopeSceneModel'
 import styles from './scope-fallback.module.css'
 import { TreeAnswerFieldset } from './TreeAnswerFieldset'
 import { TreeMap } from './TreeMap'
@@ -112,18 +118,13 @@ function fieldPins(state: ScopeState): readonly FieldPin[] {
 }
 
 /**
- * What is seen, never why: the cause of a red or dark field is the answer some sections ask for,
- * so the field's name describes the picture and leaves the mechanism to the learner.
+ * The field is named through the scene's own `opticalViewName`, so this renderer and the WebGL
+ * one report the model's view signal in the same words and neither carries the stronger claim
+ * (BF-PRE-REVIEW-01 finding 1). The openings are a separate, measured fact: they come from the
+ * same optical projection the scene uses, so they are named here as well.
  */
-const VIEW_SEEN_WORDS: Readonly<Record<ScopeState['signals']['view'], string>> = {
-  clear: 'a clear view of the airway',
-  'red-out': 'a red field',
-  contaminated: 'a smeared view',
-  dark: 'a dark field',
-}
-
 function opticalFieldName(state: ScopeState, pins: readonly FieldPin[]): string {
-  const view = `The view through the scope: ${VIEW_SEEN_WORDS[state.signals.view]}`
+  const view = opticalViewName(state.signals.view)
   if (pins.length === 0) return view
   const openings = state.inputs.branchLabels
     ? `Openings ahead: ${pins.map(({ pin }) => pin.fullLabel).join(', ')}`
@@ -159,6 +160,16 @@ export function ScopePaneFrame(
   } = props
   const inputMode = useRef<ScopeInputMode>('pointer')
   const send = (command: ScopeCommand) => onCommand(command, inputMode.current)
+  /**
+   * The pane repeats the step's goals under the controls, and they turn green together. The host
+   * classifies each one; where every row is met, the list says what those ticks are a record of
+   * rather than leaving a green block to be read as approval of the image (A4).
+   */
+  const paneClaims = new Set(goals.map(({ claim }) => claim ?? 'history'))
+  const paneGoalsClaim = paneClaims.size === 1 ? [...paneClaims][0] : 'mixed'
+  const paneGoalsHeading = goals.every(({ met }) => met)
+    ? GOAL_GROUP_HEADING[paneGoalsClaim]
+    : 'What this step is waiting for'
 
   const pins = fieldPins(state)
   const alignOffered = view.assists['align-to-branch'] === true && controlsEnabled
@@ -566,13 +577,21 @@ export function ScopePaneFrame(
       </p>
 
       {goals.length > 0 ? (
-        <ul className={styles.goals} aria-label="What this step is waiting for" data-scope-goals>
-          {goals.map(({ goal, met }) => (
-            <li key={goal.id} data-met={met ? 'true' : 'false'}>
-              {goal.label}
-            </li>
-          ))}
-        </ul>
+        <>
+          <p className={styles.goalsHeading} data-scope-goals-group={paneGoalsClaim}>
+            {paneGoalsHeading}
+          </p>
+          <ul className={styles.goals} aria-label={paneGoalsHeading} data-scope-goals>
+            {goals.map(({ goal, met, claim }) => (
+              <li key={goal.id} data-met={met ? 'true' : 'false'} data-goal-claim={claim ?? ''}>
+                {goal.label}
+              </li>
+            ))}
+          </ul>
+          <p className={styles.goalsLimit} data-scope-goals-limit>
+            {scopeNowLine(state)} {GOAL_MODEL_LIMIT}
+          </p>
+        </>
       ) : null}
 
       <p className={styles.boundary} {...{ [SCOPE_DOM.boundary]: '' }}>
