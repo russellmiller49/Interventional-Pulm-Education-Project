@@ -13,19 +13,20 @@ two bounded options each. This document is the engineering record.
 
 ## Identity and scope
 
-|                              |                                                                                                                                                                       |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Worktree                     | `…/Interventional-Pulm-Education-Worktrees/claude-mcs-2-9-22` (new and exclusive; the Prompt-01 worktree was not reused)                                              |
-| Branch                       | `claude/mcs-pre-review-02-9-22`                                                                                                                                       |
-| Authorized starting baseline | `c1fb8a0d4d0704ea7fc3050d34512104edba79b7` — the exact reviewed integration baseline named in the task                                                                |
-| `origin/main` at start       | `c1fb8a0d4d0704ea7fc3050d34512104edba79b7` — identical to the baseline, so no separate newer-main record was needed at cut time                                       |
-| Tree at start                | clean                                                                                                                                                                 |
-| Execution date               | 2026-09-22                                                                                                                                                            |
-| Report                       | `MCS_ICU_Lab_Fellow_Walkthrough_Findings(1).docx`, 2026-09-19, SHA-256 `0f6e31dc…3350`, read through the package's ledger                                             |
-| Assigned findings            | F14, F17, F19 (model investigation), F21, F24, F25, F26, F27, F28, F29, F35                                                                                           |
-| Changed paths                | `src/features/mechanical-circulatory-support/**` and `docs/gap-remediation/self-paced/**` only                                                                        |
-| Verified unchanged           | `src/features/hemodynamics-core/**`, `src/features/learning-module/**`, `src/features/critical-care/**`, `src/lib/**`, Device Intelligence, all other modules, config |
-| Concurrent owners            | No other agent was editing MCS runtime. Shared `ChoiceReasoningFeedback` remains the shared-feedback owner's (F09, still outstanding, not touched here).              |
+|                              |                                                                                                                                                                                                           |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Worktree                     | `…/Interventional-Pulm-Education-Worktrees/claude-mcs-2-9-22` (new and exclusive; the Prompt-01 worktree was not reused)                                                                                  |
+| Branch                       | `claude/mcs-pre-review-02-9-22`                                                                                                                                                                           |
+| Authorized starting baseline | `c1fb8a0d4d0704ea7fc3050d34512104edba79b7` — the exact reviewed integration baseline named in the task                                                                                                    |
+| `origin/main` at start       | `c1fb8a0d4d0704ea7fc3050d34512104edba79b7` — identical to the baseline at cut time                                                                                                                        |
+| `origin/main` at hand-off    | `9fbdbddc4d7f124c7ac3254f4cb8aa4c15c0233f` — advanced during implementation with PRs #258 and #261, both EBUS and hemodynamics. Recorded for integration only; the reviewed baseline above was not moved. |
+| Tree at start                | clean                                                                                                                                                                                                     |
+| Execution date               | 2026-09-22                                                                                                                                                                                                |
+| Report                       | `MCS_ICU_Lab_Fellow_Walkthrough_Findings(1).docx`, 2026-09-19, SHA-256 `0f6e31dc…3350`, read through the package's ledger                                                                                 |
+| Assigned findings            | F14, F17, F19 (model investigation), F21, F24, F25, F26, F27, F28, F29, F35                                                                                                                               |
+| Changed paths                | `src/features/mechanical-circulatory-support/**` and `docs/gap-remediation/self-paced/**` only                                                                                                            |
+| Verified unchanged           | `src/features/hemodynamics-core/**`, `src/features/learning-module/**`, `src/features/critical-care/**`, `src/lib/**`, Device Intelligence, all other modules, config                                     |
+| Concurrent owners            | No other agent was editing MCS runtime. Shared `ChoiceReasoningFeedback` remains the shared-feedback owner's (F09, still outstanding, not touched here).                                                  |
 
 **The shared solver was read, not edited.** `advanceWindkesselCompartments` and its types are
 byte-identical to the baseline; the coupling questions it raises are written up for OD-03 as a
@@ -286,18 +287,19 @@ No test was deleted or skipped.
 
 ## E. Validation actually run
 
-| Check                      | Command                                                                    | Result                                                                                                        |
-| -------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| MCS feature                | `npx jest src/features/mechanical-circulatory-support`                     | **41 suites, 839 tests, all passing**                                                                         |
-| MCS + all app routes       | `npx jest src/features/mechanical-circulatory-support src/app`             | **79 suites, 1238 tests, all passing**                                                                        |
-| Full suite                 | `npx jest`                                                                 | 9 suites / 8 tests failing, **the identical nine on the base**, measured under matched conditions (see below) |
-| Base comparison            | same ten suites at `c1fb8a0d` in a detached worktree                       | **9 failed, 1 passed** — the same nine                                                                        |
-| MCS share of the copy scan | `critical-care/__tests__/learner-copy.test.ts`                             | MCS contributes **exactly 10** findings, the number MCS-PRE-REVIEW-01 recorded — unchanged                    |
-| Type check                 | `npx tsc --noEmit`                                                         | Clean (after `npm run build:content`, which generates the contentlayer types a fresh worktree lacks)          |
-| Lint                       | `npx eslint --max-warnings 0` over all 20 changed and new TypeScript files | **Clean, zero warnings**                                                                                      |
-| Format                     | `npx prettier --check` over the same files plus both changed documents     | Clean                                                                                                         |
-| Whitespace                 | `git diff --check`                                                         | Clean                                                                                                         |
-| Production build           | `npm run build`, dev server stopped first                                  | See the PR description for the recorded exit status                                                           |
+| Check                      | Command                                                                     | Result                                                                                                                                 |
+| -------------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| MCS feature                | `npx jest src/features/mechanical-circulatory-support`                      | **41 suites, 839 tests, all passing**                                                                                                  |
+| MCS + all app routes       | `npx jest src/features/mechanical-circulatory-support src/app`              | **79 suites, 1238 tests, all passing**                                                                                                 |
+| Full suite                 | `npx jest`                                                                  | 9 suites / 8 tests failing, **the identical nine on the base**, measured under matched conditions (see below)                          |
+| Base comparison            | same ten suites at `c1fb8a0d` in a detached worktree                        | **9 failed, 1 passed** — the same nine                                                                                                 |
+| MCS share of the copy scan | `critical-care/__tests__/learner-copy.test.ts`                              | MCS contributes **exactly 10** findings, the number MCS-PRE-REVIEW-01 recorded — unchanged                                             |
+| Type check                 | `npx tsc --noEmit`                                                          | Clean (after `npm run build:content`, which generates the contentlayer types a fresh worktree lacks)                                   |
+| Lint                       | `npx eslint --max-warnings 0` over all 20 changed and new TypeScript files  | **Clean, zero warnings**                                                                                                               |
+| Format                     | `npx prettier --check` over the same files plus both changed documents      | Clean                                                                                                                                  |
+| Whitespace                 | `git diff --check`                                                          | Clean                                                                                                                                  |
+| Production build           | `npm run build`, dev server stopped first                                   | **Exit 0**                                                                                                                             |
+| Latest-main integration    | disposable worktree at `origin/main` `9fbdbddc`, this branch merged into it | Clean merge; **79 suites / 1238 tests passing**, `tsc --noEmit` clean. The worktree was discarded and this branch was not merged into. |
 
 **The nine pre-existing failures**, identical on base and head: the brochure-intake static scan, the
 US-status safety boundaries, `training-apps.test.mjs` (no tests), branch-tracing contracts,
