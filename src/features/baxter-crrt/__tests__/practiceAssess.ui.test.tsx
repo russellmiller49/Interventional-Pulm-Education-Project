@@ -95,7 +95,7 @@ describe('Baxter CRRT Practice curation and open Challenge access', () => {
     expect(selector.querySelectorAll('optgroup')).toHaveLength(6)
     expect(screen.getByText(/Additional cases \(7\)/)).toBeInTheDocument()
     expect(screen.getByText('Live patient, prescription, and circuit')).toBeInTheDocument()
-    expect(screen.getByText('Relevant labs')).toBeInTheDocument()
+    expect(screen.getByText('Supplied labs at case start')).toBeInTheDocument()
     expect(screen.getByText('Pressure pattern')).toBeInTheDocument()
     expect(screen.queryByText('prismax-aw8035-2xx')).not.toBeInTheDocument()
 
@@ -192,7 +192,7 @@ describe('Baxter CRRT Practice curation and open Challenge access', () => {
     )
     expect(screen.getByRole('button', { name: 'Explain this case' })).toBeEnabled()
     expect(screen.getByText('Live patient, prescription, and circuit')).toBeInTheDocument()
-    expect(screen.getByText('Relevant labs')).toBeInTheDocument()
+    expect(screen.getByText('Supplied labs at case start')).toBeInTheDocument()
     expect(screen.getByText('Pressure pattern')).toBeInTheDocument()
     const capstone = getBaxterCrrtCase('CRRT-16')
     for (const objective of capstone.learningObjectives) {

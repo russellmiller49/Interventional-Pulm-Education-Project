@@ -2122,6 +2122,10 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
         else if (action === 'flexion') setFlexionDeg(v => v === 15 ? 0 : 15);
         else { setRollTrimDeg(config.initialRoll); setFlexionDeg(0); }
       }} />}
+      {/* The image and the controls that drive it sit side by side at laptop widths and stack
+          again when the column is narrow (EBUS-PRE-REVIEW-02, L3-1 / L5-5 / L14-2). */}
+      <div className="guided-scan-workspace">
+      <div className="guided-scan-image">
       <div hidden={config.locked && !config.reveal}><div className="guided-tabs" role="group" aria-label="Clinical view">
         {(config.linkedLesson ? ['sector','bronch'] as const : ['sector','bronch','anatomy'] as const).map(view => <button key={view} type="button" aria-pressed={guidedView === view} onClick={() => setGuidedView(view)}>{view === 'sector' ? 'Ultrasound' : view === 'bronch' ? 'Bronchoscopy' : 'Anatomy'}</button>)}
       </div>
@@ -2129,10 +2133,14 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
       {guidedView === 'bronch' && <div className="guided-anatomy"><BronchoscopyView assets={assets} balloonInflated={bronchBalloonInflated} camera={caseData.endoscope_camera} caseData={caseData} focusStationKey={null} pose={pose} seeThroughWall={false} structures={[]} /></div>}
       </div>
       {!config.linkedLesson && <div hidden={guidedView !== 'sector'}>{sector}</div>}
+      </div>
+      <div className="guided-scan-controls">
       <p role="status">{config.locked ? (config.linkedLesson ? 'Acquisition held for observation. This is your last unannotated ultrasound frame.' : 'Controls are paused while you read or answer. They open for the guided activity.') : (config.linkedLesson ? 'Use Scope controls above the images. Hold the acquisition in the lesson when your task is ready.' : 'Use the controls below. Hold the acquisition in the lesson when your task is ready.')}</p>
       {!config.linkedLesson && scopeControls}
       {config.linkedLesson && !config.locked && !config.demonstration && <button onClick={() => { guided.onObservation(EMPTY_EBUS_OBSERVATION); window.location.reload(); }}>Reset acquisition</button>}
       <p className="guided-label">Position assists remain active. This exercise does not reproduce needle passage, tactile feedback, or patient response.</p>
+      </div>
+      </div>
     </div>;
   }
 

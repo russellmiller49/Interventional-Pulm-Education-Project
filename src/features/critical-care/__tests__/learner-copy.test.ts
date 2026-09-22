@@ -69,7 +69,10 @@ const contextualEcmoCopy = [
   },
   {
     file: 'src/features/cardiohelp-ecmo/components/practice/EcmoCaseDebrief.tsx',
-    copy: 'No safety event is recorded. This is not a safety certification.',
+    // ECMO-FELLOW-01 (IV-3): the sentence now says what the empty log is a statement about, and
+    // points at the patient readings printed beside it, because on the VV integrated case it sat
+    // alone at the end of a trial the patient had failed. It still only denies certification.
+    copy: 'No action in this run was one this case records as unsafe. That is a statement about the action log and about nothing else: it is not a safety certification, and it says nothing about how the patient is doing. Read that below.',
     term: 'certification',
     reason: 'The sentence explicitly denies certification; it does not award it.',
   },

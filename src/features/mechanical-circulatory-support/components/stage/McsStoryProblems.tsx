@@ -7,9 +7,11 @@ import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
 import shellStyles from '@/features/learning-module/stage/lesson-shell.module.css'
 import stageStyles from '@/features/learning-module/stage/lesson-stage.module.css'
 
+import { mcsConfigurationLabel } from '../../engine/learningSession'
 import {
   MCS_STORY_READING_LABELS,
   MCS_STORY_READING_UNITS,
+  mcsStoryBaseline,
   runMcsStory,
   type McsStoryProblem,
 } from '../../content/storyProblems'
@@ -86,6 +88,17 @@ function StoryCard({
 }) {
   const [hintVisible, setHintVisible] = useState(false)
   const run = useMemo(() => (ran ? runMcsStory(story) : null), [ran, story])
+  /*
+   * The starting point, read off the model, before the question.
+   *
+   * Both stories in a pair share one `setup`, so both baselines are the same values at the same
+   * elapsed time — and until now nothing said which patient that was. The second stem's "from the
+   * same starting point" was read as the patient on the monitor, whose right ventricle is failing
+   * at a normal filling volume, rather than the pair's own low-preload illustration (F26). This
+   * runs the setup and nothing else, so opening the block performs no action, records nothing and
+   * does not touch the live session.
+   */
+  const baseline = useMemo(() => mcsStoryBaseline(story), [story])
   const committedChoice = story.item.choices.find((choice) => choice.id === committedId)
   const legendId = `${story.id}-stem`
   const alarmState = (state: { readonly alarms: readonly { id: string; active: boolean }[] }) =>
@@ -98,6 +111,54 @@ function StoryCard({
   return (
     <article className={styles.story} data-story={story.id}>
       <h4>{story.title}</h4>
+      <section className={styles.storyBaseline} data-story-baseline={story.baselineId}>
+        <h5>Where this illustration starts</h5>
+        <p>{story.baselineNote}</p>
+        <dl className={styles.storyReadings}>
+          <div>
+            <dt>Baseline</dt>
+            <dd data-story-baseline-id>{story.baselineId}</dd>
+          </div>
+          <div>
+            <dt>Support setting</dt>
+            <dd data-story-baseline-setting>{mcsConfigurationLabel(baseline)}</dd>
+          </div>
+          <div>
+            <dt>Right atrial pressure</dt>
+            <dd data-story-baseline-metric="rapMmHg">
+              {baseline.metrics.rapMmHg.toFixed(0)} <small>mm Hg</small>
+            </dd>
+          </div>
+          <div>
+            <dt>Wedge pressure</dt>
+            <dd data-story-baseline-metric="pcwpMmHg">
+              {baseline.metrics.pcwpMmHg.toFixed(0)} <small>mm Hg</small>
+            </dd>
+          </div>
+          {story.readings
+            .filter((reading) => reading !== 'rapMmHg' && reading !== 'pcwpMmHg')
+            .map((reading) => (
+              <div key={reading}>
+                <dt>{MCS_STORY_READING_LABELS[reading]}</dt>
+                <dd data-story-baseline-metric={reading}>
+                  {(baseline.metrics[reading] as number).toFixed(1)}{' '}
+                  <small>{MCS_STORY_READING_UNITS[reading]}</small>
+                </dd>
+              </div>
+            ))}
+          {story.alarmId ? (
+            <div>
+              <dt>The alarm</dt>
+              <dd data-story-baseline-alarm>{alarmState(baseline)}</dd>
+            </div>
+          ) : null}
+          <div>
+            <dt>Read at</dt>
+            <dd data-story-baseline-time>{baseline.timeSeconds.toFixed(2)} simulated seconds</dd>
+          </div>
+        </dl>
+        <p data-story-change-scope>{story.changeScope}</p>
+      </section>
       <fieldset
         className={stageStyles.choiceList}
         disabled={Boolean(committedId)}

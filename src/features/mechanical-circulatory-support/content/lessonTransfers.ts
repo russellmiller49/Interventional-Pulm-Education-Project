@@ -184,7 +184,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       label: 'Modeled timing synchrony',
       unit: '%',
       digits: 0,
-      level: 'device-display',
+      level: 'model-index',
     },
     // The predicate used to require leaving ECG triggering, which rewarded this model's own rating of
     // triggers in atrial fibrillation — a rating the supplied Cardiosave material contradicts

@@ -41,6 +41,7 @@ import {
 } from '../engine/learningProgress'
 import { CirculationMap } from './circulation-map/CirculationMap'
 import { mcsPresentationTitle } from '../content/casePresentation'
+import { MCS_AF_TRIGGER_CONTAINMENT, mcsAfTriggerLimitApplies } from '../content/afTriggerLimit'
 const McsAnatomy3D = lazy(() =>
   import('./McsAnatomy3D').then((module) => ({ default: module.McsAnatomy3D })),
 )
@@ -394,7 +395,10 @@ export function McsWorkbench({
                 {
                   label: 'Active alarm / limitation',
                   value:
-                    state.alarms.find((alarm) => alarm.active)?.label ?? 'No active modeled alarm',
+                    state.alarms.find((alarm) => alarm.active)?.label ??
+                    (mcsAfTriggerLimitApplies(state)
+                      ? MCS_AF_TRIGGER_CONTAINMENT.notAnAllClear
+                      : 'No active modeled alarm'),
                 },
               ]}
               immediateGoal={currentObjective}

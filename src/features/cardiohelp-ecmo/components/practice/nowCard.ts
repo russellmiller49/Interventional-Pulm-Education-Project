@@ -38,13 +38,30 @@ export function resolveNowCard(input: NowCardInput): NowCardModel {
   const stageNumber = facts.stages.find((stage) => stage.id === activeStage)?.number ?? 1
   const kicker = `Now · ${stageNumber} of ${facts.stages.length} · ${labelFor(activeStage)}`
 
+  /*
+   * A safety event takes over the card. It does not take away the explanation.
+   *
+   * This branch used to offer Restart and nothing else, and it sits ahead of the reassess and
+   * debrief branches that carry "Reveal causal debrief" — so on the two paths the September 2026
+   * walkthrough took (C1-2 in VV initiation, C5-1 in recirculation) the only route out of a safety
+   * warning was to throw the attempt away. The warning stays exactly as prominent: same tone, same
+   * heading, the event named through its own authored label. What changed is that the primary
+   * action reads the case explanation and the restart moved beside it as a choice.
+   *
+   * Revealing is a read. It sets the debrief phase and nothing else: no event is cleared, no
+   * treatment runs, no observation is anchored, no credit or trajectory moves, and the learner's
+   * own attempt is still the one on screen.
+   */
   if (input.safety && input.safety.labels.length > 0 && !facts.debriefRevealed) {
     return {
       kicker: 'Safety feedback',
       heading: 'Review this safety event',
       body: [...input.safety.labels, input.safety.lastResponse ?? ''].filter(Boolean).join(' '),
       tone: 'safety',
-      primary: { label: 'Restart this case from the beginning', onActivate: actions.restart },
+      status:
+        'Reading the explanation does not clear this event, undo it, or complete the case. You can also keep working this attempt from the case workflow below.',
+      primary: { label: 'Open the case explanation', onActivate: actions.reveal },
+      secondary: { label: 'Restart this case from the beginning', onActivate: actions.restart },
     }
   }
 
@@ -125,7 +142,16 @@ export function resolveNowCard(input: NowCardInput): NowCardModel {
         return {
           kicker,
           heading: `Let the response develop — ${seconds} s to go`,
-          body: 'The cause is addressed. Advance the clock so the circuit and patient can respond before you record what you see.',
+          /*
+           * "Your last action is in" rather than "the cause is addressed".
+           *
+           * This card is reached from recognition-only cases too, where the authored move is to
+           * verify the pattern and escalate and the cause is deliberately still running. Telling
+           * the learner it had been addressed contradicted the monitor they were about to read
+           * (IA-3). What the card actually knows is that an action was taken and the clock has not
+           * caught up with it yet, so that is what it says.
+           */
+          body: 'Your last action is in. Advance the clock so the circuit and patient can respond before you record what you see.',
           primary: {
             label: `Advance ${seconds} second${seconds === 1 ? '' : 's'} now`,
             onActivate: () => actions.advanceSeconds(seconds),

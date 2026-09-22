@@ -517,7 +517,7 @@ describe('CRRT-02 worked cases in the case player', () => {
       expect(facts()).toEqual(initial)
 
       click('End run and review debrief')
-      expect(screen.getByText('Example reviewed · no run performed')).toBeInTheDocument()
+      expect(screen.getByText('Debrief opened · no run performed')).toBeInTheDocument()
       expect(
         screen.getByRole('heading', { name: 'Expected and observed in this case' }),
       ).toBeVisible()
@@ -578,7 +578,9 @@ describe('CRRT-02 worked cases in the case player', () => {
     expect(within(doseRow).getAllByText('No change')).toHaveLength(2)
 
     click('End run and review debrief')
-    expect(screen.getByText('Run reviewed')).toBeInTheDocument()
+    expect(
+      screen.getByText(/^Debrief opened · \d+ recorded events? in this run$/),
+    ).toBeInTheDocument()
     expect(
       within(
         screen.getByRole('region', {

@@ -503,7 +503,13 @@ describe('MCS M5 — the synchronized monitor and anatomy surfaces', () => {
     expect(screen.getByRole('img', { name: /^ART waveform/ }).getAttribute('aria-label')).not.toBe(
       undefined,
     )
-    expect(before).toMatch(/current value/)
+    /*
+     * The strip's accessible name says which number it is, not just that there is one. F04: the
+     * arterial strip and the MAP tile carry different quantities over different windows, and the
+     * label used to say "current value", which named neither.
+     */
+    expect(before).toMatch(/instantaneous sample/)
+    expect(before).toMatch(/at the model's current time/)
   })
 
   it('changes the anatomy pathway summary with the device topology', async () => {

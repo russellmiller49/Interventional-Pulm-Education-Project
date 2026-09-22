@@ -65,7 +65,9 @@ const faultLabels: Record<FaultId, string> = {
   'startup-inspection': 'Complete startup diagnostic, circuit, sensor, and backup check',
   'preload-limited': 'Resolve the identified drainage limitation',
   'return-obstruction': 'Remove the identified return-side obstruction',
-  'oxygenator-resistance': 'Escalate the identified oxygenator/circuit resistance',
+  // S10-2: this one control escalates and, as a teaching transition, moves the circuit to its
+  // post-exchange state. It is not the exchange, which this module does not simulate.
+  'oxygenator-resistance': 'Escalate, then move to the post-exchange circuit',
   recirculation: 'Resolve the cannula/recirculation cause',
   'acute-hypercapnia': 'Apply the predicted phase-aware sweep change',
   'compensated-hypercapnia': 'Confirm the compensated state and avoid blind normalization',
@@ -447,11 +449,30 @@ function ClinicalActionPanel({
       <div className={styles.clinicalInterventionGrid}>
         {interventionCards.map((item) => {
           const completed = appliedIds.has(item.id)
+          /*
+           * What a completed card is allowed to say about itself.
+           *
+           * Every card used to finish as "Completed · <label>" and "Applied", whatever it was. On
+           * the air cases that put a success badge on "Unclamp and restart before de-airing" — a
+           * card the case authors as harmful and charges a critical safety error for (C7-2). The
+           * model already knows which it is, so the badge reads it: a harmful card says it was
+           * applied and says what that means, and a diagnostic card stops claiming to have treated
+           * anything. None of this hides the card or changes what it does.
+           */
+          const completedBadge =
+            item.effect === 'harmful'
+              ? 'Applied — harmful in this scenario'
+              : item.effect === 'diagnostic'
+                ? 'Performed — this is an assessment, not a treatment'
+                : item.effect === 'temporizing'
+                  ? 'Applied — temporizing, the cause is still running'
+                  : 'Applied'
           return (
             <button
               type="button"
               key={item.id}
               data-category={item.category}
+              data-effect={item.effect}
               data-completed={completed}
               disabled={!enabled || (completed && !item.repeatable)}
               onClick={() =>
@@ -459,12 +480,11 @@ function ClinicalActionPanel({
               }
             >
               <span>{item.category}</span>
-              <strong>
-                {completed ? 'Completed · ' : ''}
-                {item.label}
-              </strong>
+              <strong>{item.label}</strong>
               <small>{item.description}</small>
-              <em>{completed ? 'Applied' : 'Click to apply'}</em>
+              <em data-action-state={completed ? item.effect : 'available'}>
+                {completed ? completedBadge : 'Click to apply'}
+              </em>
             </button>
           )
         })}

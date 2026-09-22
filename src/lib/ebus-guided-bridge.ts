@@ -1,8 +1,10 @@
 import { isRecordedFrameSource, type RecordedFrameSource } from './ebus-recorded-contract'
 import {
+  CONTACT_MODES,
   MODEL_PACKAGES,
   MODEL_REVISION,
   MODEL_STEPS,
+  type ContactMode,
   type ModelPackage,
 } from './ebus-model-contract'
 import {
@@ -93,6 +95,19 @@ export interface EbusObservation {
     steps: string[]
     complete: boolean
     annotations: boolean
+    /**
+     * Which acoustic-contact condition the rendered frame is actually in
+     * (EBUS-PRE-REVIEW-02, carry-forward of L5-1).
+     *
+     * The contact package's whole activity is switching between five modelled conditions, and the
+     * frame the learner holds is whichever one was selected when they held it. Before this the
+     * observation carried no trace of it, so the host could label a held frame "the image you
+     * acquired" without being able to say which of the five it was, while an authored check named
+     * a state. This is reported from the live model state at the moment of the observation — it is
+     * never inferred from the rendered image and never reconstructed afterwards. Only the contact
+     * package sets it.
+     */
+    contactMode?: ContactMode
   }
   linked?: EbusLinkedEvidence
 }
@@ -210,6 +225,9 @@ export function isEbusObservation(v: unknown): v is EbusObservation {
         v.model.frameId.length < 160 &&
         typeof v.model.complete === 'boolean' &&
         typeof v.model.annotations === 'boolean' &&
+        (v.model.contactMode === undefined ||
+          (v.model.package === 'contact' &&
+            CONTACT_MODES.includes(v.model.contactMode as ContactMode))) &&
         Array.isArray(v.model.steps) &&
         v.model.steps.length <= 6 &&
         v.model.steps.every((step) =>

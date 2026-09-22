@@ -103,14 +103,34 @@ export function PeripheralImagingHub() {
       </section>
 
       <figure className={styles.hero} data-hub-hero>
-        <Image
-          src={IMAGING_HUB_HERO.src}
-          alt={IMAGING_HUB_HERO.alt}
-          width={IMAGING_HUB_HERO.width}
-          height={IMAGING_HUB_HERO.height}
-          sizes="(min-width: 72rem) 68rem, 100vw"
-          className={styles.heroImage}
-        />
+        {/* Report O5: short labels on the picture itself, at the model's own anchors. The caption
+            below stays as the text equivalent, so the labels are hidden from assistive technology
+            rather than read twice. */}
+        <div className={styles.heroFrame}>
+          <Image
+            src={IMAGING_HUB_HERO.src}
+            alt={IMAGING_HUB_HERO.alt}
+            width={IMAGING_HUB_HERO.width}
+            height={IMAGING_HUB_HERO.height}
+            sizes="(min-width: 72rem) 68rem, 100vw"
+            className={styles.heroImage}
+          />
+          <ul className={styles.heroLabels} aria-hidden="true" data-hub-hero-labels>
+            {CHAIN_STOPS.map((stop) => (
+              <li
+                key={stop.id}
+                data-hub-hero-label={stop.id}
+                data-side={IMAGING_HUB_HERO.labelSide[stop.id]}
+                style={{
+                  left: `${IMAGING_HUB_HERO.anchors[stop.id][0]}%`,
+                  top: `${IMAGING_HUB_HERO.anchors[stop.id][1]}%`,
+                }}
+              >
+                <span>{stop.title}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
         <figcaption className={styles.heroCaption}>
           <p className={styles.heroLede}>{IMAGING_HUB_HERO.lede}</p>
           <ol className={styles.heroStops}>
@@ -135,9 +155,13 @@ export function PeripheralImagingHub() {
         </div>
       </details>
 
+      {/* Report O3 (fellow walkthrough, PDF p.4): the heading had the left half of a two-column
+          card to itself, beside five entries stacked in the right half, so half the card was empty.
+          The heading now leads the card and the entries share its width. */}
       <section
-        className="grid gap-5 rounded-3xl border bg-card p-6 shadow-sm lg:grid-cols-2 lg:p-8"
+        className="grid gap-5 rounded-3xl border bg-card p-6 shadow-sm lg:p-8"
         aria-labelledby="imaging-before-heading"
+        data-hub-before-you-start
       >
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
@@ -147,7 +171,7 @@ export function PeripheralImagingHub() {
             Who this is for, and what it does not claim
           </h2>
         </div>
-        <dl className="grid gap-4 text-sm leading-6">
+        <dl className="grid gap-x-8 gap-y-4 text-sm leading-6 md:grid-cols-2">
           <div>
             <dt className="font-semibold">Who this is for</dt>
             <dd className="text-muted-foreground">

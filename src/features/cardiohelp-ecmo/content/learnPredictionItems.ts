@@ -76,8 +76,26 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
           label:
             'The pressure channels are showing nothing where pVen, pInt and pArt should be, so start with the pressure sensors and their cables — no reading can be trusted until those three report.',
           plausibility: 'incorrect-mechanism',
+          /*
+           * S7-3, contained rather than re-keyed.
+           *
+           * The rationale said the blank channels were "refuted by the state the circuit is in",
+           * which reads as a claim about circuits: that a stopped pump is a reason not to check a
+           * transducer. It is not. A pressure transducer reads a static pressure whether or not the
+           * pump is turning, and on a primed circuit there is one to read — so at a real bedside
+           * blank channels are a good reason to look at the transducers and their cables. What
+           * refutes the option here is a property of this simulation and of nothing else: it
+           * declines to produce flow-dependent values for a settled pump-off circuit, which is why
+           * the console shows the unavailable indication. That is said plainly now.
+           *
+           * The key is deliberately unchanged. Whether the sensor-check reflex should be keyed
+           * differently, and what the stopped-pump sensor question should teach once the actual
+           * device display is established, is ECMO-OWNER-01 — a physician and console-specialist
+           * decision this batch is not authorised to make. Until it is made, the option is marked
+           * as one this simulation cannot fairly test.
+           */
           rationale:
-            'Absent numbers usually do mean a sensor or cable problem, and that reflex is worth having. It is refuted here by the state the circuit is in rather than by anything clinical. The pump is stopped, and the three circuit pressures are flow-dependent patterns that this educational model has nothing to report for a settled pump-off circuit — which is why the console shows the unavailable indication rather than a number. Flow is the contrast that gives it away: with its sensor connected it reads zero, and zero is a real value rather than an absent one. The pressure channels are expected to start reporting once the pump is brought up.',
+            'Hold on to this reflex: it is a good one. A pressure transducer reads a static pressure whether or not the pump is turning, so on a primed circuit blank channels at the bedside are a real reason to look at the transducers and their cables. What refutes the option here is not a fact about circuits but a limit of this simulation. This model declines to produce the three circuit pressures for a settled pump-off circuit — they are flow-dependent patterns it has nothing to offer for — and the console shows the unavailable indication for that reason alone, not because a device would. Flow is the contrast: with its sensor connected it reads zero, and zero is a real value rather than an absent one. The channels start reporting once the pump is brought up. Held for review: what the stopped-pump sensor question should teach, set against what the physical console actually displays, is an open faculty and device-specialist decision, so read this option as one this simulation is not in a position to judge rather than as a bedside error.',
         },
         {
           id: 'gas-path-first',
@@ -90,7 +108,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       ],
       correctChoiceIds: ['verify-the-whole-system-first'],
       explanation:
-        'What separates these is the scope each one claims. A device diagnostic is a statement about device functions; a walk from cannula to cannula is a statement about the circuit; the blender is a statement about the gas path; the bedside and the blood gas are statements about the patient. None of the four substitutes for another, and the console can only speak to the first two. The stopped, unpressurised circuit in front of you is the one state in which the other three can be checked without cost, which is why the verification comes before support rather than after it. Model boundary: this is a bounded educational simulation rather than a patient twin. The circuit walk here resolves to a single check rather than to the dozens of individual confirmations a real pre-use list contains, and the absent pressure numbers are this model declining to produce flow-dependent values for a stopped pump rather than a reproduction of what any particular console displays. Local pre-use documentation, the manufacturer instructions, and the unit’s backup and escalation policy govern the real sequence.',
+        'What separates these is the scope each one claims. A device diagnostic is a statement about device functions; a walk from cannula to cannula is a statement about the circuit; the blender is a statement about the gas path; the bedside and the blood gas are statements about the patient. None of the four substitutes for another, and the console can only speak to the first two. The stopped, unpressurised circuit in front of you is the one state in which the other three can be checked without cost, which is why the verification comes before support rather than after it. Model boundary: this is a bounded educational simulation rather than a patient twin. The circuit walk here resolves to a single check rather than to the dozens of individual confirmations a real pre-use list contains, and the absent pressure numbers are this model declining to produce flow-dependent values for a stopped pump rather than a reproduction of what any particular console displays — which is why the sensor-check option is judged against this simulation’s convention rather than against the device, and why what that question should teach is still with a reviewer. Local pre-use documentation, the manufacturer instructions, and the unit’s backup and escalation policy govern the real sequence.',
       evidenceIds: [
         'ifu-console-workflow',
         'ifu-us-2025-scope',

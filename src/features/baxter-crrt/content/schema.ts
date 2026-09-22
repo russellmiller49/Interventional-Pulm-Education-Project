@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { CRRT_CASE_ARTIFACT_IDS } from './artifactRegistry'
+import { isCrrtSoluteConcentrationMetric } from '../engine/soluteValidity'
 import { engineFixtureNormalizationSchema } from './engineFixtureBoundary'
 
 const finiteNumberSchema = z.number().finite()
@@ -745,6 +746,14 @@ export function collectCrrtCaseSemanticIssues(definition: SemanticCase): string[
   }
   for (const condition of definition.successConditions) {
     addSources([condition.sourceId], `success condition ${condition.id}`)
+    if (isCrrtSoluteConcentrationMetric(condition.metric)) {
+      // A solute pool is advanced by delivered clearance alone, with no solution
+      // composition available (see engine/soluteValidity.ts). Scoring a learner
+      // against it would turn removal-only arithmetic into a clinical verdict.
+      issues.push(
+        `Success condition ${condition.id} scores an unmodeled solute concentration: ${condition.metric}`,
+      )
+    }
   }
   for (const path of definition.acceptedAlternativePaths) {
     addSources(path.sourceIds, `accepted path ${path.id}`)

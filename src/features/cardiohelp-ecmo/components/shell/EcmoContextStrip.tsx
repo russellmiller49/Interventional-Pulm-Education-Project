@@ -14,8 +14,18 @@ export interface EcmoContextStripLine {
   readonly alarm: { readonly priority: EcmoAlarmPriority; readonly text: string }
 }
 
+/*
+ * The priority word, scoped to what this chip actually describes.
+ *
+ * Every builder of this line filters `alarms` to `source === 'device'`, so the chip is a statement
+ * about the CARDIOHELP and about nothing else. "No alarm" over a patient monitor raising a
+ * high-priority independent alert — right-arm oxygenation at 82% on the VA integrated case, IA-4 in
+ * the September 2026 walkthrough — reads as "no concern", which is not what the chip knows. The
+ * console's own status bar continues to show independent-monitor alerts, which carry their source
+ * in their message; the two surfaces describe different sets and are deliberately not synchronised.
+ */
 const PRIORITY_WORD: Readonly<Record<EcmoAlarmPriority, string>> = {
-  none: 'No alarm',
+  none: 'No device alarm',
   low: 'Low',
   medium: 'Medium',
   high: 'High',

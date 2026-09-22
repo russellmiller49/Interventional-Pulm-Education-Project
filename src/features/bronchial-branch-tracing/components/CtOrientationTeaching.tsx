@@ -87,8 +87,8 @@ export function CtOrientationTeaching({
               at the top and <strong>P</strong> (posterior) at the bottom.
             </p>
             <p>
-              The gold ring locates <strong>{trace.anchor.airway.name}</strong> within the full CT
-              field. Focus on this airway before following it through neighboring slices.
+              The gold crosshair locates <strong>{trace.anchor.airway.name}</strong> within the full
+              CT field. Focus on this airway before following it through neighboring slices.
             </p>
             <ObserverReference />
             <p>

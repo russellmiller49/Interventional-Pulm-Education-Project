@@ -2,9 +2,11 @@ import type {
   IabpDeviceState,
   ImpellaDeviceState,
   LvadDeviceState,
+  McsConditionClassification,
   McsPatientState,
   McsScenarioDefinition,
 } from '../engine/types'
+import { MCS_AF_TRIGGER_CONTAINMENT } from './afTriggerLimit'
 
 export const defaultMcsPatient: McsPatientState = {
   heartRateBpm: 96,
@@ -56,6 +58,40 @@ export const defaultLvadDevice: LvadDeviceState = {
   powerConnected: true,
   controllerFault: false,
   suspectedPumpThrombosis: false,
+}
+
+/*
+ * Every numerical condition in the twelve cases, classified.
+ *
+ * MCS-PRE-REVIEW-01 inventoried all twenty-one of them and found no clinical source behind any
+ * number: they are tests this module wrote so its own cases have an end, and several of them read
+ * as bedside targets because nothing on screen said otherwise (F33). `authored` is therefore the
+ * only classifier used below. The `source-supported-clinical` kind exists in the type for the
+ * later source work to fill in with a named document and an exact scope; nothing here may claim it
+ * without one, and `content.test.ts` enforces that.
+ */
+function authored(quantity: string): McsConditionClassification {
+  return { kind: 'authored-model-condition', quantity }
+}
+
+/**
+ * The two atrial-fibrillation timing conditions, kept in the record and quarantined.
+ *
+ * Measured on this tree: in atrial fibrillation the engine reaches 74% on pressure triggering, 50%
+ * on ECG and 40% on internal, so IABP-02's ≥60 and CAP-IABP-01's ≥65 are satisfied by pressure
+ * triggering and by nothing else — the one trigger the supplied Cardiosave material advises
+ * against. Grading either would be the module telling a learner that the warned-against action was
+ * the right one. They stay in `successCriteria` so the historical contract and its id are intact,
+ * and `calculateMcsScore` skips them.
+ */
+function heldAfTimingCondition(): McsConditionClassification {
+  return {
+    ...authored('this model’s own trigger/timing index, which no IABP console reports'),
+    held: {
+      reason: MCS_AF_TRIGGER_CONTAINMENT.conditionHoldReason,
+      openItemId: MCS_AF_TRIGGER_CONTAINMENT.openItemId,
+    },
+  }
 }
 
 function patient(overrides: Partial<McsPatientState>): McsPatientState {
@@ -126,8 +162,17 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
         operator: 'at-least',
         value: 80,
         label: 'Timing quality ≥80%',
+        classification: authored(
+          'this model’s own trigger/timing index, which no IABP console reports',
+        ),
       },
-      { metric: 'mapMmHg', operator: 'at-least', value: 58, label: 'MAP ≥58 mm Hg' },
+      {
+        metric: 'mapMmHg',
+        operator: 'at-least',
+        value: 58,
+        label: 'MAP ≥58 mm Hg',
+        classification: authored('the model’s mean arterial pressure'),
+      },
     ],
     guidedPrompt: 'Compare assisted end-diastolic pressure with the next systolic upstroke.',
     debrief: [
@@ -178,6 +223,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
         operator: 'at-least',
         value: 60,
         label: 'Usable trigger/timing quality',
+        classification: heldAfTimingCondition(),
       },
     ],
     guidedPrompt:
@@ -239,6 +285,9 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
         operator: 'at-least',
         value: 80,
         label: 'Timing remains technically adequate',
+        classification: authored(
+          'this model’s own trigger/timing index, which no IABP console reports',
+        ),
       },
     ],
     guidedPrompt: 'Separate device timing from the amount of native LV and RV output available.',
@@ -292,12 +341,19 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     correctPredictionId: 'rv-preload',
     requiredActionIds: ['inspect:preload', 'impella:left:set-level', 'patient:set-preload'],
     successCriteria: [
-      { metric: 'rapMmHg', operator: 'at-most', value: 18, label: 'RAP not progressively rising' },
+      {
+        metric: 'rapMmHg',
+        operator: 'at-most',
+        value: 18,
+        label: 'RAP not progressively rising',
+        classification: authored('the model’s mean right atrial pressure'),
+      },
       {
         metric: 'deviceFlowLMin',
         operator: 'at-least',
         value: 2,
         label: 'Stable device flow ≥2 L/min',
+        classification: authored('the model’s pump-flow estimate for this mechanism'),
       },
     ],
     guidedPrompt:
@@ -350,6 +406,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
         operator: 'at-least',
         value: 2.5,
         label: 'Effective device flow restored',
+        classification: authored('the model’s pump-flow estimate for this mechanism'),
       },
     ],
     guidedPrompt: 'Correct placement in the simulation before changing support.',
@@ -400,8 +457,20 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     correctPredictionId: 'afterload-purge',
     requiredActionIds: ['inspect:device', 'patient:set-svr', 'impella:left:set-purge'],
     successCriteria: [
-      { metric: 'mapMmHg', operator: 'at-most', value: 100, label: 'Excess afterload reduced' },
-      { metric: 'deviceFlowLMin', operator: 'at-least', value: 2.5, label: 'Pump flow improves' },
+      {
+        metric: 'mapMmHg',
+        operator: 'at-most',
+        value: 100,
+        label: 'Excess afterload reduced',
+        classification: authored('the model’s mean arterial pressure'),
+      },
+      {
+        metric: 'deviceFlowLMin',
+        operator: 'at-least',
+        value: 2.5,
+        label: 'Pump flow improves',
+        classification: authored('the model’s pump-flow estimate for this mechanism'),
+      },
     ],
     guidedPrompt:
       'Treat the patient–pump gradient and purge warning as related observations, not one diagnosis.',
@@ -454,12 +523,14 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
         operator: 'at-most',
         value: 95,
         label: 'MAP returns to modeled target range',
+        classification: authored('the model’s mean arterial pressure'),
       },
       {
         metric: 'deviceFlowLMin',
         operator: 'at-least',
         value: 3.2,
         label: 'Flow improves without speed change',
+        classification: authored('the model’s pump-flow estimate for this mechanism'),
       },
     ],
     guidedPrompt: 'Compare MAP, filling, speed, flow, and power before changing the pump.',
@@ -511,12 +582,21 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     correctPredictionId: 'rv-failure',
     requiredActionIds: ['inspect:preload', 'patient:set-rv', 'patient:set-pvr', 'team:escalate'],
     successCriteria: [
-      { metric: 'papi', operator: 'at-least', value: 1, label: 'PAPi improves' },
+      {
+        metric: 'papi',
+        operator: 'at-least',
+        value: 1,
+        label: 'PAPi improves',
+        classification: authored(
+          'the model’s pulmonary artery pulsatility index, derived from its own PA and RA pressures',
+        ),
+      },
       {
         metric: 'deviceFlowLMin',
         operator: 'at-least',
         value: 2.8,
         label: 'LVAD filling and flow improve',
+        classification: authored('the model’s pump-flow estimate for this mechanism'),
       },
     ],
     guidedPrompt: 'Use RAP, PCWP, PAPi, and the LV size together.',
@@ -565,8 +645,15 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
         operator: 'at-least',
         value: 3,
         label: 'Modeled pump flow restored',
+        classification: authored('the model’s pump-flow estimate for this mechanism'),
       },
-      { metric: 'mapMmHg', operator: 'at-least', value: 55, label: 'Perfusion pressure recovers' },
+      {
+        metric: 'mapMmHg',
+        operator: 'at-least',
+        value: 55,
+        label: 'Perfusion pressure recovers',
+        classification: authored('the model’s mean arterial pressure'),
+      },
     ],
     guidedPrompt: 'Treat loss of continuous-flow support as time critical.',
     debrief: [
@@ -640,8 +727,15 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
         operator: 'at-least',
         value: 65,
         label: 'Trigger/timing quality ≥65%',
+        classification: heldAfTimingCondition(),
       },
-      { metric: 'mapMmHg', operator: 'at-least', value: 50, label: 'MAP ≥50 mm Hg' },
+      {
+        metric: 'mapMmHg',
+        operator: 'at-least',
+        value: 50,
+        label: 'MAP ≥50 mm Hg',
+        classification: authored('the model’s mean arterial pressure'),
+      },
     ],
     guidedPrompt: '',
     debrief: [
@@ -711,12 +805,16 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
         operator: 'at-least',
         value: 2.4,
         label: 'Device flow ≥2.4 L/min',
+        classification: authored('the model’s pump-flow estimate for this mechanism'),
       },
       {
         metric: 'recirculatingFlowLMin',
         operator: 'at-most',
         value: 0.5,
         label: 'Recirculation ≤0.5 L/min',
+        classification: authored(
+          'the part of the model’s pump flow that returns to the ventricle instead of reaching the body',
+        ),
       },
     ],
     guidedPrompt: '',
@@ -776,8 +874,15 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
         operator: 'at-least',
         value: 3,
         label: 'Modeled pump flow recovers',
+        classification: authored('the model’s pump-flow estimate for this mechanism'),
       },
-      { metric: 'mapMmHg', operator: 'at-least', value: 55, label: 'Perfusion pressure recovers' },
+      {
+        metric: 'mapMmHg',
+        operator: 'at-least',
+        value: 55,
+        label: 'Perfusion pressure recovers',
+        classification: authored('the model’s mean arterial pressure'),
+      },
     ],
     guidedPrompt: '',
     debrief: [
