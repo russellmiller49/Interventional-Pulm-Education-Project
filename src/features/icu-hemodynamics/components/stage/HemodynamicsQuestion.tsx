@@ -123,6 +123,17 @@ export function HemodynamicsQuestionBlock({
   if (checkedId) {
     return (
       <div data-question={item.id} data-question-state="checked">
+        {/*
+          The question stays on screen with its answer.
+          Checking an answer replaced the stem and the options with the verdict card, so a learner
+          reading "why the other answers compare" was reading about options they could no longer
+          see, and the question they were answering was gone (report L1-03). The card already
+          repeats each option's label and rationale; what it cannot supply is the stem, so the stem
+          is kept above it. Nothing about the answer, the options or the reveal order changes.
+        */}
+        <p className={stageStyles.taskInstruction} data-question-stem>
+          {legend ?? item.stem}
+        </p>
         <AnswerVerdict
           item={item}
           choiceId={checkedId}

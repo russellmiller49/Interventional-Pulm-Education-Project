@@ -38,6 +38,15 @@ export interface CatheterMapAnswer {
   /** For a confirmation control: rows already confirmed, said in words. */
   readonly confirmed?: ReadonlySet<string>
   readonly hint?: string
+  /**
+   * The response to the last choice, rendered here rather than in another pane.
+   *
+   * A confirmation that did not match the tracing used to answer in the Now card while the pins
+   * are on the simulator, so pressing a place that was wrong looked like nothing happening at all
+   * (report L5-02). It is not a score and not a tally: it describes the tracing at the moment it
+   * was pressed, and the caller clears it when the tip moves.
+   */
+  readonly note?: string | null
 }
 
 /**
@@ -358,6 +367,11 @@ export function CatheterMap({
               </label>
             )
           })}
+          {answer.note ? (
+            <p className={styles.answerNote} role="status" data-place-note>
+              {answer.note}
+            </p>
+          ) : null}
         </fieldset>
       ) : null}
       <p className={styles.equivalent}>{description}</p>

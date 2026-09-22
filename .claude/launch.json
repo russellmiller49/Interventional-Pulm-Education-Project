@@ -60,6 +60,13 @@
       "autoPort": false
     },
     {
+      "name": "claude-hemodynamics",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "--port", "3125", "--webpack"],
+      "port": 3125,
+      "autoPort": false
+    },
+    {
       "name": "claude-imaging",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["next", "dev", "--port", "3126", "--webpack"],

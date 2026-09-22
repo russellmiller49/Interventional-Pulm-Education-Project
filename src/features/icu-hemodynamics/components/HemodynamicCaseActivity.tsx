@@ -22,10 +22,13 @@ import { Link, useRouter } from '@/i18n/navigation'
 import {
   feedbackForHemodynamicAction,
   feedbackTimingForHemodynamicAction,
+  hemodynamicPreparationGuidance,
   HEMODYNAMIC_CLINICAL_THRESHOLDS,
   hemodynamicCaseById,
   hemodynamicsSourceById,
   hemodynamicTeachingArtifactByCaseId,
+  isHemodynamicPreparationOnly,
+  preparationFeedbackForHemodynamicAction,
 } from '../content'
 import {
   HEMODYNAMICS_CLINICAL_REVIEW_LINE,
@@ -38,6 +41,7 @@ import {
   type HemodynamicAction,
   type HemodynamicSimulationState,
 } from '../engine'
+import { describeObservedSystemState, observedSystemState } from '../engine/decisionRecord'
 import { updateSelfPacedRecord, withCaseOpened } from '../engine/selfPacedProgress'
 import { IcuHemodynamicsModuleFrameV2 } from './IcuHemodynamicsModuleFrameV2'
 import flowStyles from './stage/hemodynamics-flow.module.css'
@@ -234,13 +238,16 @@ export function HemodynamicCaseActivity({
     setMessage(`Opened “${objectives[nextPhase]}”. Every checkpoint can be opened at any point.`)
   }
 
+  /*
+   * The system state a decision is recorded against: what was on the screen or had been acquired.
+   *
+   * This used to format `state.measurements`, which is the model's own derivation and always holds
+   * a cardiac index whether or not a cardiac output was ever measured. See `observedSystemState`
+   * (report P-10). The snapshot is taken at the event and kept, so a later measurement never
+   * appears in an earlier row.
+   */
   function traceSystemState(): string {
-    return `MAP ${metricValue(state.measurements.mapMmHg)} mmHg · cardiac index ${metricValue(
-      state.measurements.cardiacIndexLMinM2,
-      1,
-    )} L/min/m² · RAP ${metricValue(state.measurements.rapMmHg)} mmHg · signal ${
-      state.measurementSystem.zeroed ? 'zeroed' : 'not yet zeroed'
-    }.`
+    return describeObservedSystemState(observedSystemState(state))
   }
 
   function recordDecision(action: string) {
@@ -267,14 +274,30 @@ export function HemodynamicCaseActivity({
     checkpoint('act')
   }
 
+  /*
+   * A request, and then what the engine did with it.
+   *
+   * The narration used to be written before the dispatch: every non-interrupt action was recorded
+   * as "Applied …" and carried the authored feedback, which for three HD-08 actions describes
+   * completed effects. The reducer refuses those three by design — the case's milestones come from
+   * the real pressure-system, catheter and thermodilution controls — so the panel said the chain
+   * had been re-levelled while the header still read ZERO REQUIRED (report P-09, Figure 45).
+   *
+   * The refusal stays. What changed is that the host now reduces the action itself, asks the
+   * resulting state whether anything was accepted, and only then decides what to say. Nothing here
+   * zeroes, moves, acquires or clears anything to make a description come true.
+   */
   function applyIntervention(interventionId: string) {
     const selected = definition.interventions.find((item) => item.id === interventionId)
     if (!selected) return
 
     const hardInterrupt = definition.safetyCriticalErrorIds.includes(selected.id)
+    const preparationOnly = !hardInterrupt && isHemodynamicPreparationOnly(definition, selected)
     const authoredTiming = feedbackTimingForHemodynamicAction(selected, hardInterrupt)
     // Holding feedback is the learner's choice, offered on the applied case; safety interrupts ignore it.
-    const timing = hardInterrupt || !holdFeedback ? authoredTiming : 'debrief'
+    // A refused request is answered at once whatever the setting: it is the answer to a press, not
+    // a teaching verdict on a modeled response.
+    const timing = hardInterrupt || preparationOnly || !holdFeedback ? authoredTiming : 'debrief'
     feedbackSequence.current += 1
     const event: ScenarioFeedbackEvent = {
       id: `${caseId}-feedback-${feedbackSequence.current}`,
@@ -283,16 +306,16 @@ export function HemodynamicCaseActivity({
       timeSeconds: state.timeSeconds,
       timing,
       hardInterrupt,
-      feedback: feedbackForHemodynamicAction(definition, selected, hardInterrupt),
+      feedback: preparationOnly
+        ? preparationFeedbackForHemodynamicAction(selected)
+        : feedbackForHemodynamicAction(definition, selected, hardInterrupt),
     }
     setFeedbackEvents((current) => [...current, event])
-    recordDecision(
-      hardInterrupt
-        ? `Considered ${selected.label}; the safety interrupt preserved the pre-action state.`
-        : `Applied ${selected.label}.`,
-    )
 
     if (hardInterrupt) {
+      recordDecision(
+        `Considered ${selected.label}; the safety interrupt preserved the pre-action state.`,
+      )
       setRevealedFeedbackIds((current) => [...new Set([...current, event.id])])
       setActiveHardInterruptId(event.id)
       setMessage(
@@ -301,8 +324,22 @@ export function HemodynamicCaseActivity({
       return
     }
 
+    // Reduce it, then read the result. A dispatch is a request; only the engine says what happened.
+    const next = icuHemodynamicsReducer(state, {
+      type: 'APPLY_INTERVENTION',
+      intervention: selected,
+    })
+    const accepted = next.activeEffects.length > state.activeEffects.length
+    recordDecision(
+      accepted
+        ? `Applied ${selected.label}.`
+        : `Requested ${selected.label}; this case did not perform it from the action list.`,
+    )
     if (!baseline) setBaseline(state)
-    dispatch({ type: 'APPLY_INTERVENTION', intervention: selected })
+    setState(next)
+    if (!accepted && next.responseMessage && next.responseMessage !== state.responseMessage) {
+      setMessage(next.responseMessage)
+    }
     if (timing === 'immediate') {
       setRevealedFeedbackIds((current) => [...new Set([...current, event.id])])
     }
@@ -548,18 +585,30 @@ export function HemodynamicCaseActivity({
           </p>
         </div>
         <div className="grid gap-2" aria-label="Bounded simulated interventions">
-          {visibleInterventions.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              disabled={state.completedInterventionIds.includes(item.id) && !item.repeatable}
-              className="min-h-11 rounded-xl border p-3 text-left text-sm disabled:opacity-50"
-              onClick={() => applyIntervention(item.id)}
-            >
-              <strong className="block">{item.shortLabel}</strong>
-              <span className="text-xs text-muted-foreground">{item.description}</span>
-            </button>
-          ))}
+          {visibleInterventions.map((item) => {
+            // On HD-08 these three name a skill the engine will not grant from a card. The card
+            // says where the control is rather than implying it does the work (report P-09).
+            const guidance = isHemodynamicPreparationOnly(definition, item)
+              ? hemodynamicPreparationGuidance(item.id)
+              : undefined
+            return (
+              <button
+                key={item.id}
+                type="button"
+                data-intervention={item.id}
+                data-preparation-only={guidance ? 'true' : undefined}
+                disabled={state.completedInterventionIds.includes(item.id) && !item.repeatable}
+                className="min-h-11 rounded-xl border p-3 text-left text-sm disabled:opacity-50"
+                onClick={() => applyIntervention(item.id)}
+              >
+                <strong className="block">{item.shortLabel}</strong>
+                <span className="text-xs text-muted-foreground">{item.description}</span>
+                {guidance ? (
+                  <span className="mt-1 block text-xs text-muted-foreground">{guidance}</span>
+                ) : null}
+              </button>
+            )
+          })}
         </div>
         <button
           type="button"
@@ -850,6 +899,12 @@ export function HemodynamicCaseActivity({
                   ))}
                 </ol>
               </details>
+              <CaseRunSummary
+                definition={definition}
+                state={state}
+                baseline={baseline}
+                decisionTrace={decisionTrace}
+              />
               <ScenarioTeachingDebrief
                 allowRevealWithoutFrame
                 scenarioTitle={definition.title}
@@ -955,5 +1010,91 @@ export function HemodynamicCaseActivity({
         </div>
       </SimulationLaunchGate>
     </IcuHemodynamicsModuleFrameV2>
+  )
+}
+
+/**
+ * What this run actually did, said before the authored expert path is compared with it.
+ *
+ * Two findings meet here. The debrief listed the learner's actions and then the expert path
+ * without ever saying that the definitive step in the expert path had not been taken, and left the
+ * learner to notice that a rising mean arterial pressure had not been accompanied by any measured
+ * flow (report A-02, Figure 46). And every case opens on an unzeroed line, which the debrief
+ * mentioned only as grey text on each trace row (report P-11).
+ *
+ * So this says both, from the run's own record: which of the case's authored definitive actions
+ * the engine accepted, what the pressure evidence is worth given the state of the line, and — when
+ * a pressure rose — that no flow measurement exists in this run to say whether perfusion followed.
+ * It adds no score, no pass mark and no gate; the unzeroed line is described as a limit on one
+ * kind of evidence, not as a reason treatment should have waited. It is HD-local data rendered
+ * beside the shared debrief rather than a change to it.
+ */
+function CaseRunSummary({
+  definition,
+  state,
+  baseline,
+  decisionTrace,
+}: {
+  readonly definition: ReturnType<typeof hemodynamicCaseById.get> & object
+  readonly state: HemodynamicSimulationState
+  readonly baseline: HemodynamicSimulationState | null
+  readonly decisionTrace: readonly ScenarioDecisionTraceEntry[]
+}) {
+  const definitive = definition.interventions.filter((item) => item.category === 'definitive')
+  const observed = observedSystemState(state)
+  const before = baseline ? observedSystemState(baseline) : null
+  const mapChange =
+    before === null ? null : observed.arterialMean.displayedMmHg - before.arterialMean.displayedMmHg
+  const flowChange =
+    before === null || before.flow === null || observed.flow === null
+      ? null
+      : observed.flow.cardiacIndexLMinM2 - before.flow.cardiacIndexLMinM2
+
+  return (
+    <section
+      className="grid gap-3 rounded-2xl border border-white/15 p-4 text-sm leading-6"
+      aria-label="What this run did"
+      data-case-run-summary
+    >
+      <h3 className="text-lg font-bold text-white">What this run did</h3>
+      {definitive.length > 0 ? (
+        <ul className="grid gap-1" data-definitive-actions>
+          {definitive.map((item) => {
+            const performed = state.completedInterventionIds.includes(item.id)
+            return (
+              <li key={item.id} data-definitive-action={item.id} data-performed={performed}>
+                <strong>{item.shortLabel}:</strong>{' '}
+                {performed
+                  ? 'performed in this run.'
+                  : 'not performed in this run. It is the definitive step on the authored path below; nothing in this run substitutes for it.'}
+              </li>
+            )
+          })}
+        </ul>
+      ) : null}
+      <p data-signal-validity>
+        {observed.zeroed
+          ? `The pressure chain was zeroed in this run, with the transducer ${Math.abs(observed.transducerLevelCm).toFixed(0)} cm from the reference at the end.`
+          : 'Every invasive pressure in this run was read on a line that was never zeroed. That limits what those pressures establish — a number and a trend in it — and it does not make the patient in front of you unreadable, or mean that time-critical treatment should have waited for the zero.'}
+      </p>
+      {mapChange !== null ? (
+        <p data-pressure-versus-flow>
+          {Math.abs(mapChange) < 0.5
+            ? 'Displayed MAP has not moved over this run.'
+            : `Displayed MAP moved ${mapChange > 0 ? 'up' : 'down'} by ${Math.abs(mapChange).toFixed(0)} mmHg over this run.`}{' '}
+          {observed.flow === null
+            ? 'No accepted thermodilution series was acquired, so this run holds no flow measurement to say whether perfusion moved with it. A higher displayed pressure on its own is not documented improvement, and not documented resolution of a mechanism.'
+            : flowChange === null
+              ? `The accepted thermodilution series here (${observed.flow.trialCount} curves) has no earlier counterpart in this run to compare it with.`
+              : `The accepted thermodilution series moved by ${flowChange >= 0 ? '+' : ''}${flowChange.toFixed(1)} L/min/m² over the same run. Read the two together; the pressure alone does not establish flow.`}
+        </p>
+      ) : null}
+      <p className="text-xs opacity-80">
+        This is a record of what happened in this run on this device. It is not a judgement of
+        competence, and the only thing kept is that you opened the case. {decisionTrace.length}{' '}
+        decision
+        {decisionTrace.length === 1 ? '' : 's'} recorded.
+      </p>
+    </section>
   )
 }

@@ -1,4 +1,4 @@
-import type { HemodynamicWaveformSample } from './types'
+import type { HemodynamicSimulationState, HemodynamicWaveformSample } from './types'
 import { END_EXPIRATION_TOLERANCE_PHASE, respiratoryPhaseAt } from './simulation'
 import { CARDIAC_PHASE } from './waveformMorphology'
 
@@ -119,4 +119,82 @@ export function latestEndExpiratoryCvpCursor(
   }
 
   return null
+}
+
+/* ------------------------------------------------------------------ *
+ * The numbers the monitor prints
+ * ------------------------------------------------------------------ */
+
+/** Where a printed pressure came from, in the monitor's own terms. */
+export type DisplayedPressureSampling =
+  | 'recent-cardiac-cycle'
+  | 'end-expiratory-c-wave-base'
+  | 'model-estimate'
+
+export interface DisplayedPressure {
+  /** The integer the rail prints. */
+  readonly displayedMmHg: number
+  readonly sampling: DisplayedPressureSampling
+}
+
+export interface MonitorPressureReadouts {
+  readonly arterial: {
+    readonly systolicMmHg: number
+    readonly diastolicMmHg: number
+    readonly mean: DisplayedPressure
+  }
+  readonly rightAtrial: DisplayedPressure & {
+    /** The cursor the rail marks on the CVP trace, when the window could be found. */
+    readonly cursor: EndExpiratoryPressureCursor | null
+  }
+}
+
+/**
+ * One source for the pressures the bedside monitor shows.
+ *
+ * The rail does not print `state.measurements`. Its arterial numbers are the extrema and mean of
+ * the most recent displayed cardiac cycle, and its central-venous number is the end-expiratory
+ * sample at the base of the c wave — both derived from the drawn waveform, so they move with
+ * damping and with respiration as the trace does. The model's own estimate is a fallback for the
+ * moments before enough trace exists.
+ *
+ * `HD-PRE-REVIEW-01` added a decision-record adapter that described values as "displayed" while
+ * reading the model estimate, and the two disagreed: on the capstone eight seconds in the rail
+ * showed a mean arterial pressure of 69 and the record certified 68. Rather than reimplement the
+ * rail's arithmetic a second time, both the monitor and the record read it from here, so a future
+ * divergence would have to change what the monitor itself prints.
+ *
+ * Rounding is part of the answer: these are the integers on the screen, not the raw samples.
+ */
+/** The rail's rounding, including the one case where it matters: it never prints "-0". */
+function printedInteger(value: number): number {
+  const rounded = Math.round(value)
+  return Object.is(rounded, -0) ? 0 : rounded
+}
+
+export function monitorPressureReadouts(
+  state: HemodynamicSimulationState,
+): MonitorPressureReadouts {
+  const { measurements, parameters, waveforms } = state
+  const arterialTrace = recentTracePressureMetrics(waveforms, 'artMmHg', measurements.heartRateBpm)
+  const cursor = latestEndExpiratoryCvpCursor(
+    waveforms,
+    measurements.heartRateBpm,
+    parameters.respiratoryRateBpm,
+  )
+  return {
+    arterial: {
+      systolicMmHg: printedInteger(arterialTrace?.systolic ?? measurements.artSystolicMmHg),
+      diastolicMmHg: printedInteger(arterialTrace?.diastolic ?? measurements.artDiastolicMmHg),
+      mean: {
+        displayedMmHg: printedInteger(arterialTrace?.mean ?? measurements.mapMmHg),
+        sampling: arterialTrace === null ? 'model-estimate' : 'recent-cardiac-cycle',
+      },
+    },
+    rightAtrial: {
+      displayedMmHg: printedInteger(cursor?.value ?? measurements.rapMmHg),
+      sampling: cursor === null ? 'model-estimate' : 'end-expiratory-c-wave-base',
+      cursor,
+    },
+  }
 }

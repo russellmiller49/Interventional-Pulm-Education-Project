@@ -236,6 +236,16 @@
   color: var(--stage-muted, #9fb4b7);
 }
 
+/* The response to the last confirmation, beside the pins it answers (report L5-02). */
+.answerNote {
+  margin: 0.35rem 0 0;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.55rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  background: rgba(163, 206, 209, 0.08);
+  line-height: 1.5;
+}
+
 .option {
   display: flex;
   align-items: center;

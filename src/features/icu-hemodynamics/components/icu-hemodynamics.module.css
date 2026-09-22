@@ -7028,3 +7028,19 @@
     font-size: 0.75rem;
   }
 }
+
+/*
+ * The simulation's own restriction, beside the device alarm bar and visibly not part of it
+ * (HD-PRE-REVIEW-01 / report L9-02). Inventing a manufacturer alarm for a catheter position would
+ * assert device behaviour no source in this module supplies.
+ */
+.simulationNotice {
+  margin: 0 0 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px dashed rgba(255, 209, 102, 0.55);
+  border-radius: 0.6rem;
+  background: rgba(255, 209, 102, 0.09);
+  color: #ffe6a8;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}

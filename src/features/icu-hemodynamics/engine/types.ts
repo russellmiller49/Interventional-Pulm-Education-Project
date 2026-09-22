@@ -71,6 +71,14 @@ export interface CatheterState {
   storedWedgeMmHg: number | null
   storedAtEndExpiration: boolean
   forcedSafetyRecovery: boolean
+  /**
+   * How many brief occlusions have been started in this run.
+   *
+   * Identifies the occlusion an observation belongs to, so a confirmation that the
+   * pulmonary-artery tracing came back cannot be taken before any balloon went up, or carried over
+   * from an earlier wedge (report L6-05). See `paReturnEpisodeKey`.
+   */
+  wedgeEpisodeCount: number
 }
 
 export interface HemodynamicWaveformSample {
