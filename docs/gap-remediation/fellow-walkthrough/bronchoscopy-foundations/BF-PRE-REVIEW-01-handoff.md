@@ -580,3 +580,17 @@ touched**; the implementation was already accepted and it is the documentation t
 renderers, with a regression that fails on the reviewed head. Finding 2 stays closed, finding 3
 stays handed on as pre-existing and untouched, and hidden-tab browser acceptance remains the
 documented limitation above. No new BF product scope, no second batch, nothing merged or deployed.
+
+## Final integration — main merged after the independent review
+
+The independent review closed at `91c33f02` (findings 1 and 2 closed, finding 3 pre-existing, no
+product regression). `origin/main` then advanced to `745146f6` and was merged here with a true
+merge commit; nothing reviewed was rebased or rewritten. The incoming commits touch CRRT, ICU
+hemodynamics, peripheral imaging and EBUS only, so this pass did not change any BF runtime or test
+file, the shared learning-module code, or package/build configuration.
+
+The one overlap was the dev entry. Main added `claude-ebus-03` on port 3131, the port this lane's
+`claude-bf` had used, and Git merged `.claude/launch.json` without a conflict but with the
+duplicate. Every current-main entry is kept as it was and **`claude-bf` moves to port 3133**. The
+port 3131 references above describe where this lane's testing actually ran and are left as they
+were.
