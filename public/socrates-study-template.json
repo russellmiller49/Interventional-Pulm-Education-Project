@@ -1,0 +1,74 @@
+{
+  "slug": "synthetic-template",
+  "title": "Synthetic configuration template \u2014 replace before use",
+  "version": "template-1",
+  "active": false,
+  "rounds": [
+    {
+      "key": "round-1",
+      "title": "Round 1",
+      "showLegend": false,
+      "showColorImage": false,
+      "feedbackAfterSubmission": false,
+      "survey": [
+        {
+          "id": "adequacy",
+          "prompt": "Synthetic adequacy question",
+          "required": true,
+          "options": ["Synthetic option A", "Synthetic option B"]
+        },
+        {
+          "id": "cancer",
+          "prompt": "Synthetic cancer question",
+          "required": true,
+          "options": ["Synthetic option A", "Synthetic option B"]
+        },
+        {
+          "id": "confidence",
+          "prompt": "Synthetic confidence question",
+          "required": true,
+          "options": ["Synthetic option A", "Synthetic option B"]
+        }
+      ],
+      "cases": [
+        {
+          "caseId": "00000000-0000-4000-8000-000000000001",
+          "revision": 1
+        }
+      ]
+    },
+    {
+      "key": "round-2",
+      "title": "Round 2",
+      "showLegend": false,
+      "showColorImage": false,
+      "feedbackAfterSubmission": false,
+      "survey": [
+        {
+          "id": "adequacy",
+          "prompt": "Synthetic adequacy question",
+          "required": true,
+          "options": ["Synthetic option A", "Synthetic option B"]
+        },
+        {
+          "id": "cancer",
+          "prompt": "Synthetic cancer question",
+          "required": true,
+          "options": ["Synthetic option A", "Synthetic option B"]
+        },
+        {
+          "id": "confidence",
+          "prompt": "Synthetic confidence question",
+          "required": true,
+          "options": ["Synthetic option A", "Synthetic option B"]
+        }
+      ],
+      "cases": [
+        {
+          "caseId": "00000000-0000-4000-8000-000000000001",
+          "revision": 1
+        }
+      ]
+    }
+  ]
+}

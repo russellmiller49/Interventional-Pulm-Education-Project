@@ -25,7 +25,8 @@ export async function saveSocratesSlideDocument(
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? 'The slide data is invalid.' }
   }
-  const compatibilityError = databaseCompatibilityError(parsed.data)
+  const compatibilityError =
+    parsed.data.schemaVersion === 2 ? null : databaseCompatibilityError(parsed.data)
   if (compatibilityError) return { ok: false, error: compatibilityError }
 
   if (parsed.data.workflowStatus === 'published') {
@@ -45,7 +46,10 @@ export async function saveSocratesSlideDocument(
         sortOrder: annotation.sortOrder ?? index,
       })),
     }
-    const { data, error } = await supabase.rpc('save_socrates_slide_document', { payload })
+    const { data, error } = await supabase.rpc(
+      parsed.data.schemaVersion === 2 ? 'save_socrates_case_v2' : 'save_socrates_slide_document',
+      { payload },
+    )
     if (error) return { ok: false, error: error.message }
 
     revalidatePath('/[locale]/socrates-builder', 'page')
@@ -71,6 +75,7 @@ export async function publishSocratesSlideDocument(
 
     revalidatePath('/[locale]/socrates-builder', 'page')
     revalidatePath('/[locale]/socrates-demo', 'page')
+    revalidatePath('/[locale]/socrates', 'layout')
     return { ok: true, document: parseSocratesSlideDocument(data) }
   } catch (error) {
     return { ok: false, error: actionError(error) }
@@ -94,6 +99,7 @@ export async function deleteSocratesSandboxDocumentAsAdmin(
 
     revalidatePath('/[locale]/socrates-builder', 'page')
     revalidatePath('/[locale]/socrates-demo', 'page')
+    revalidatePath('/[locale]/socrates', 'layout')
     return { ok: true, recordId }
   } catch (error) {
     return { ok: false, error: actionError(error) }

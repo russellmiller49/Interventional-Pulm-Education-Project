@@ -49,16 +49,29 @@ viewer failures can be retried; the surviving image remains usable.
 
 ## Deployment and existing saved slides
 
-Deploy the application normally. **No database migration, database content copy,
-or asset upload is required.** The default company-demo route does not load or
-save SOCRATES database content.
+The default company-demo route remains a browser workspace and does not load or
+save SOCRATES database content. Its existing localStorage key is unchanged.
 
-Existing protected authoring and sandbox APIs retain their original database
-format. They reject paired web overlays or nonempty detailed explanations before
-saving, so a legacy save cannot silently drop the new text. The protected builder
-links to the browser-based demo for this workflow. Explicit published-slide links
-at `/en/socrates-demo?slide=<slug>` still read their existing published snapshot.
-No schema or access-policy changes are included.
+The protected builder now saves complete **schemaVersion 2** cases, including
+paired sources, detailed explanations, standalone teaching content and private
+readiness notes. This requires the forward migration
+`20260922201126_socrates_training_study_v2.sql`. See
+[training, testing and authoring architecture](socrates-training-study.md) and the
+[validation report](socrates-launch-validation.md) before release.
+
+The public anonymous sandbox remains on the legacy format. Its client and database
+guards reject paired/rich case packages so no field can silently disappear or
+private note become public. Public sandbox exports remain version 1; protected and
+browser-workspace exports use version 2. Old overlay JSON still imports as a new
+copy with safe, ineligible defaults. Complete exports include private notes and
+must be handled as authoring files.
+
+Explicit published-slide links at `/en/socrates-demo?slide=<slug>` still work:
+legacy snapshots retain the existing demo, while new v2 publications resolve to
+the authenticated training page, including the paired viewer and reveal flow.
+No existing slide is automatically upgraded, published, enrolled or made eligible.
+The public fixed-origin demo relay is unchanged. Study images use a separate,
+authenticated opaque relay so provider identifiers never appear in study URLs.
 
 The demo host has no cross-origin response headers. `/api/socrates-invenio/[...path]`
 relays only its catalog, DZI descriptors, and JPEG tiles from a fixed origin.

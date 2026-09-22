@@ -5,6 +5,7 @@ import { getInvenioPair } from '@/features/socrates-builder/invenio-source'
 import type { DeepZoomViewerHandle, DeepZoomViewerStatus, ViewportSnapshot } from '../types'
 import { DeepZoomViewer, type DeepZoomViewerProps } from './DeepZoomViewer'
 import styles from './comparison-slide-viewer.module.css'
+import { ExpandableViewer } from './ExpandableViewer'
 
 type Pane = 'tissue' | 'annotated'
 type Mode = 'side-by-side' | Pane
@@ -36,7 +37,9 @@ function sameFocus(first: ViewportSnapshot, second: ViewportSnapshot) {
 const PairedViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerProps>(
   function PairedViewer(props, ref) {
     const { onViewportChange, onStatusChange } = props
-    const pair = getInvenioPair(props.slide.descriptorUrl)!
+    const pair = props.slide.comparisonDescriptorUrl
+      ? { tissueUrl: props.slide.descriptorUrl, annotatedUrl: props.slide.comparisonDescriptorUrl }
+      : getInvenioPair(props.slide.descriptorUrl)!
     const [mode, setMode] = useState<Mode>('side-by-side')
     const handles = useRef<Partial<Record<Pane, DeepZoomViewerHandle | null>>>({})
     const statuses = useRef<Record<Pane, DeepZoomViewerStatus>>({
@@ -47,6 +50,15 @@ const PairedViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerProps>(
       zoomRatio: 1,
       visibleImageBounds: props.slide.initialImageRect,
     })
+    const lastReportedView = useRef<ViewportSnapshot | null>(null)
+    const reportViewport = useCallback(
+      (snapshot: ViewportSnapshot) => {
+        if (lastReportedView.current && sameView(lastReportedView.current, snapshot)) return
+        lastReportedView.current = snapshot
+        onViewportChange(snapshot)
+      },
+      [onViewportChange],
+    )
     const panes: Pane[] = mode === 'side-by-side' ? ['tissue', 'annotated'] : [mode]
     const sources = useMemo(
       () => ({
@@ -76,19 +88,23 @@ const PairedViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerProps>(
 
     const onViewport = useCallback(
       (pane: Pane, snapshot: ViewportSnapshot) => {
-        if (statuses.current[pane].phase !== 'ready' || sameView(lastView.current, snapshot)) return
+        if (statuses.current[pane].phase !== 'ready') return
+        if (sameView(lastView.current, snapshot)) {
+          reportViewport(snapshot)
+          return
+        }
         // Fitting the same area into a wider/narrower pane adds padding. Keep the
         // canonical area so repeated mode switches do not progressively zoom out.
         if (sameFocus(lastView.current, snapshot)) {
-          onViewportChange(snapshot)
+          reportViewport(snapshot)
           return
         }
         lastView.current = snapshot
         const other = pane === 'tissue' ? 'annotated' : 'tissue'
         handles.current[other]?.synchronizeViewport?.(snapshot)
-        onViewportChange(snapshot)
+        reportViewport(snapshot)
       },
-      [onViewportChange],
+      [reportViewport],
     )
 
     const onStatus = useCallback(
@@ -96,7 +112,7 @@ const PairedViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerProps>(
         statuses.current[pane] = status
         if (status.phase === 'ready') {
           handles.current[pane]?.synchronizeViewport?.(lastView.current)
-          onViewportChange(lastView.current)
+          reportViewport(lastView.current)
         }
         const visibleStatuses = (
           mode === 'side-by-side' ? (['tissue', 'annotated'] as const) : [mode]
@@ -107,7 +123,7 @@ const PairedViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerProps>(
             status,
         )
       },
-      [mode, onStatusChange, onViewportChange],
+      [mode, onStatusChange, reportViewport],
     )
 
     return (
@@ -157,14 +173,18 @@ const PairedViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerProps>(
 
 export const ComparisonSlideViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerProps>(
   function ComparisonSlideViewer(props, ref) {
-    return getInvenioPair(props.slide.descriptorUrl) ? (
-      <PairedViewer
-        key={`${props.slide.descriptorUrl}:${JSON.stringify(props.slide.initialImageRect)}`}
-        {...props}
-        ref={ref}
-      />
-    ) : (
-      <DeepZoomViewer {...props} ref={ref} />
+    return (
+      <ExpandableViewer>
+        {getInvenioPair(props.slide.descriptorUrl) || props.slide.comparisonDescriptorUrl ? (
+          <PairedViewer
+            key={`${props.slide.descriptorUrl}:${JSON.stringify(props.slide.initialImageRect)}`}
+            {...props}
+            ref={ref}
+          />
+        ) : (
+          <DeepZoomViewer {...props} ref={ref} />
+        )}
+      </ExpandableViewer>
     )
   },
 )

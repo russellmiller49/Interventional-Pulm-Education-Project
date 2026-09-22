@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
+import { redirect } from 'next/navigation'
 
 import { SocratesDemoWorkspace } from '@/features/socrates-demo/components/SocratesDemoWorkspace'
 import { SocratesDemo } from '@/features/socrates-demo/components/SocratesDemo'
@@ -30,6 +31,8 @@ export default async function SocratesDemoPage({ params, searchParams }: PagePro
     const { loadPublishedSocratesDocument } =
       await import('@/features/socrates-builder/server/data')
     const published = await loadPublishedSocratesDocument(query.slide)
+    if (published?.schemaVersion === 2 && published.recordId)
+      redirect(`/${locale}/socrates/training/${published.recordId}`)
     if (published)
       return <SocratesDemo slide={published.slide} annotations={published.annotations} />
   }

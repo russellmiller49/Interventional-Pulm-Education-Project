@@ -13,6 +13,8 @@ export type FourPointPolygon = readonly [ImagePoint, ImagePoint, ImagePoint, Ima
 export interface DeepZoomSlide {
   id: string
   descriptorUrl: string
+  /** Server-projected opaque paired source; never accepted from case-package imports. */
+  comparisonDescriptorUrl?: string
   expectedDimensions: {
     width: number
     height: number
