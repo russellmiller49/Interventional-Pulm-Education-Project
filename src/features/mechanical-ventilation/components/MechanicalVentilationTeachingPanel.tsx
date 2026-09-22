@@ -2,8 +2,12 @@
 
 import { useMemo, useState, type Dispatch } from 'react'
 
-import { PLATEAU_SPLIT_WITHHELD_LABEL, plateauReadingValidity } from '../content/plateauValidity'
-import { plateauAcquisition } from '../content/plateauAcquisition'
+import {
+  PLATEAU_SPLIT_WITHHELD_LABEL,
+  plateauReadingValidity,
+  type PlateauReadingValidity,
+} from '../content/plateauValidity'
+import { plateauAcquisition, type PlateauAcquisition } from '../content/plateauAcquisition'
 import type { VentilationAction, VentilationSimulationState } from '../engine'
 import { VentilationDyssynchronyDomains } from './teaching/dyssynchrony'
 import { VentilationModeVariables } from './teaching/modes'
@@ -366,7 +370,7 @@ export function VentilationPressureDecomposition({
         </div>
       </dl>
 
-      <PlateauValidity state={state} />
+      <PlateauValidity acquisition={acquisition} validity={validity} />
 
       <TextEquivalent>{summary}</TextEquivalent>
       <ModelBoundary>
@@ -381,31 +385,63 @@ export function VentilationPressureDecomposition({
 /**
  * The condition every one of these numbers depends on, stated where the numbers are.
  *
- * The split above is only a decomposition of respiratory-system mechanics if the respiratory
- * muscles are quiet. This is the most reliably misread measurement on a ventilator, so the panel
- * says out loud which case it is in right now rather than leaving the learner to notice.
+ * The split above is only a decomposition of respiratory-system mechanics if a hold was acquired on
+ * the settings now in force with the respiratory muscles quiet across it. This is the most reliably
+ * misread measurement on a ventilator, so the panel says out loud which case it is in right now
+ * rather than leaving the learner to notice.
  */
-function PlateauValidity({ state }: { readonly state: VentilationSimulationState }) {
+function PlateauValidity({
+  acquisition,
+  validity,
+}: {
+  readonly acquisition: PlateauAcquisition
+  readonly validity: PlateauReadingValidity
+}) {
   /*
-   * Reads the same rule as the figure above it. Asking the engine's instantaneous flag instead
-   * would let this note say "measurement conditions met" during the quiet part of an occlusion on a
-   * patient who is not passive at all — the effort re-fires under the closed valves — while the
-   * figure beside it withheld the split. One rule, one verdict.
+   * The verdict is the figure's own: the same acquisition projection object, and
+   * `supportsMechanicsClaim` is the only thing that may say "conditions met".
+   *
+   * This note used to ask `plateauReadingValidity` alone, which says whether the patient is quiet
+   * and nothing about whether anything was occluded. So after a valid hold and a PEEP change the
+   * figure withheld the split and static compliance for a stale acquisition while this note, one
+   * block below, still said "measurement conditions met … the split above means what it says".
+   * Passivity only decides *which* reason a withheld claim is given — effort first, as the figure
+   * does — never whether the claim is made.
    */
-  const validity = plateauReadingValidity(state)
-  const relaxed = validity.interpretable
+  const supported = acquisition.supportsMechanicsClaim
+  const pulling = !validity.interpretable
   const effort = validity.recentEffortCmH2O
   const displayed = validity.displayedPlateauCmH2O
   const underlying = validity.relaxedPlateauCmH2O
 
   return (
-    <div className={styles.validity} data-valid={relaxed} role="note">
-      <span>{relaxed ? 'Measurement conditions met' : 'Plateau not interpretable'}</span>
-      {relaxed ? (
+    <div
+      className={styles.validity}
+      data-valid={supported}
+      data-plateau-acquisition={acquisition.status}
+      role="note"
+    >
+      <span>
+        {supported
+          ? 'Measurement conditions met'
+          : pulling
+            ? 'Plateau not interpretable'
+            : `Plateau ${acquisition.label}`}
+      </span>
+      {supported ? (
         <p>
           No appreciable inspiratory effort across the recent trace, so an occlusion here reports
           the elastic pressure of the respiratory system and the split above means what it says.
         </p>
+      ) : !pulling ? (
+        <>
+          <p>{acquisition.detail}</p>
+          <p>
+            Quiet respiratory muscles are what make an inspiratory hold worth taking; they do not
+            stand in for one. The split above stays withheld until a hold is acquired, with the
+            patient quiet across it, on the settings now in force.
+          </p>
+        </>
       ) : (
         <>
           <p>

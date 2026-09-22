@@ -416,16 +416,31 @@ describe('mechanical-ventilation teaching panels', () => {
       expect(note).toContain(String(active.measurements.endInspiratoryEffortCmH2O))
     })
 
-    it('confirms the conditions instead when the patient is passive', () => {
-      const relaxed = passiveState(stateFor('MV-01', 14))
+    /*
+     * Conditions met is an acquisition verdict, not a passivity one. This used to assert it on a
+     * patient who was merely quiet and had never been occluded — the same state in which the figure
+     * above the note withholds the split.
+     */
+    it('confirms the conditions once a hold has been acquired on a passive patient', () => {
       render(
         <MechanicalVentilationTeachingPanel
           lessonId="mechanics-load-and-pressure"
-          state={relaxed}
+          state={acquiredPassiveState('lung-protection')}
         />,
       )
       expect(screen.getByText('Measurement conditions met')).toBeInTheDocument()
       expect(screen.queryByText('Plateau not interpretable')).not.toBeInTheDocument()
+    })
+
+    it('does not confirm the conditions on a passive patient who has not been occluded', () => {
+      render(
+        <MechanicalVentilationTeachingPanel
+          lessonId="mechanics-load-and-pressure"
+          state={passiveState(stateFor('MV-01', 14))}
+        />,
+      )
+      expect(screen.queryByText('Measurement conditions met')).not.toBeInTheDocument()
+      expect(screen.getByText('Plateau not acquired')).toBeInTheDocument()
     })
 
     it('carries the caveat into the figure’s text equivalent', () => {

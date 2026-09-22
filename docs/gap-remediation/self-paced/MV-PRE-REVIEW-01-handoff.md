@@ -711,3 +711,107 @@ head, so this branch's copy still adds none.
 Unchanged: native browser zoom, Firefox and Safari, hardware, real assistive technology,
 keyboard-only and screen-reader journeys, the es and zh-CN locales, the deployed build, and any
 clinical, device, media or source review. **No clinical approval is claimed.**
+
+---
+
+# Third repair pass — the nested validity note
+
+The independent review of `93fcf860` returned **NOT READY TO MERGE** with one bounded defect left,
+in R1. R2 through R7 were not touched and were re-run only as regressions. Nothing assigned to
+batch 02 was adjudicated, and no physiology, clinical value, answer key, alarm threshold,
+PEEP-response bin, gas coefficient, source, review status or MV-03 exclusion changed.
+
+## Heads and integration
+
+|                                         | SHA                                        |
+| --------------------------------------- | ------------------------------------------ |
+| Head reviewed in this round             | `93fcf8602bd7d8948b98731e2517cef8b14e4f9e` |
+| `origin/main` at the start of this pass | `745146f6e40bd536c201313f0480ddde2ee03ca3` |
+| `origin/main` at the end of this pass   | `745146f6e40bd536c201313f0480ddde2ee03ca3` |
+| Repaired head                           | recorded in the commit that follows        |
+
+`git merge-tree --write-tree origin/main HEAD` is clean. None of the 255 files main has changed
+since the merge base are under `mechanical-ventilation`, and `package.json` and the lockfile are
+identical. The branch was not reset, rebased, force-pushed or recreated.
+
+## R1 — the nested `PlateauValidity` note bypassed the acquisition projection
+
+**Root cause.** The second pass put `VentilationPressureDecomposition`'s figure and readouts on
+`supportsMechanicsClaim`, but the note rendered beneath them, `PlateauValidity`, still computed its
+own verdict from `plateauReadingValidity(state).interpretable` — passivity alone. On a quiet patient
+that is `true` whatever the acquisition says, so after a valid hold (`acquired-valid`, Pplat 16.1,
+peak − plateau 7.7) and PEEP 5 → 9 the figure withheld the split and static compliance for the
+`stale` acquisition while the note kept "Measurement conditions met … the split above means what it
+says". The same bypass put that wording on every case at open (`not-acquired`), during a running
+hold (`pending`) and on a hold whose conditions changed under the valves (`acquired-invalid`).
+
+**Fix.** `PlateauValidity` no longer reads state. It receives the parent's own `acquisition` object
+— the one the figure and readouts use — and the parent's `validity`, so there is one projection and
+no second rule:
+
+- `supportsMechanicsClaim` alone decides whether the note says "Measurement conditions met" and
+  "the split above means what it says" (authored copy unchanged).
+- When it is `false` and the patient is pulling, the existing "Plateau not interpretable" effort
+  teaching is shown unchanged — the same effort-first precedence the figure's withheld reason uses.
+- When it is `false` and the patient is quiet, the heading is `Plateau ${acquisition.label}` and
+  the body is the projection's own `detail`, followed by one sentence saying that quiet muscles make
+  a hold worth taking but do not stand in for one, and that the split stays withheld until a hold is
+  acquired on the settings now in force.
+- The note carries `data-valid={supportsMechanicsClaim}` (the amber/green styling follows it) and
+  `data-plateau-acquisition={status}`.
+
+Passivity now only chooses _which_ reason a withheld claim is given, never whether it is made.
+
+**Browser verification** (Section 6, `lung-protection`, `hamilton-c6`): at open,
+`not-acquired` → "Plateau not acquired". During the hold, `pending` → "Plateau acquisition in
+progress". After the hold, `acquired-valid` → Pplat 16.1, Peak − plateau 7.7, static compliance 50,
+"Measurement conditions met … the split above means what it says". After PEEP 5 → 9 on the full
+C6 console, `stale` → split and static compliance "—", note "Plateau acquired before the change"
+with the acquisition's stale explanation, and neither affirmative phrase anywhere in the page's
+text content. The only console errors were `/api/analytics` 500s from the local dev backend.
+
+## Tests
+
+`__tests__/mv-pre-review-01-sanity-repairs.test.tsx` now carries **37** tests:
+
+- The existing stale-hold regression is extended to the reviewer's workflow: PEEP 5 asserted, a
+  valid hold shows the acquired Pplat, the split and the affirmative note; PEEP set to 9 then gives
+  `stale`, split and static compliance withheld, "measurement conditions met" and "means what it
+  says" absent from the whole panel, and the stale explanation shown.
+- `not-acquired`, `pending` and `acquired-invalid` (conditions changed during a paused hold) on the
+  same quiet patient each get their own label and `detail` and never the affirmative wording.
+- A guard: an acquisition the patient pulled through (MV-13) gets no affirmative wording either.
+
+In `teaching-panel.test.tsx`, "confirms the conditions instead when the patient is passive"
+asserted the affirmative wording on a patient who was quiet and had never been occluded — the defect
+itself. It now acquires a real hold first, and a new test pins that mere passivity says "Plateau not
+acquired".
+
+Run against `93fcf860`'s component, six of these tests fail. Five fail on the affirmative wording
+itself: the extended stale regression, the three statuses above and the teaching-panel passivity
+test. The MV-13 guard fails only on the new attribute, because effort already kept that case off
+the affirmative wording.
+
+| Command                                                                                    | Result                                           |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| `jest src/features/mechanical-ventilation`                                                 | 38 suites, **828 tests, all passing**            |
+| consumer suites (MV routes, critical-care, learning-module, icu-simulation, draft-modules) | 53 suites, 476 tests, **473 passing, 3 failing** |
+| `npx tsc --noEmit -p .` (8 GB heap)                                                        | clean, exit 0                                    |
+| `npx eslint src/features/mechanical-ventilation`                                           | clean                                            |
+| `npx prettier --check` on changed files                                                    | clean                                            |
+| `git diff --check`                                                                         | clean                                            |
+| `npm run build`                                                                            | succeeded, dev server stopped first              |
+
+### Remaining failures
+
+The same three critical-care suites, with the same three test names, reproduced on **current
+`origin/main` (`745146f6`)** in a read-only worktree: `accessibility.test.tsx`,
+`curriculum-sequencing.test.tsx` and `learner-copy.test.ts`. The learner-copy scanner flags **19**
+strings on main and **19** on this head, and the flagged set is identical with and without this
+pass's component change, so the new sentence adds none.
+
+### Still NOT RUN
+
+Unchanged: native browser zoom, Firefox and Safari, hardware, real assistive technology,
+keyboard-only and screen-reader journeys, the es and zh-CN locales, the deployed build, and any
+clinical, device, media or source review. **No clinical approval is claimed.**

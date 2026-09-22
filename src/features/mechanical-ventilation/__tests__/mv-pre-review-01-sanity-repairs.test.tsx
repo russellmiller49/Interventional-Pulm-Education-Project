@@ -11,6 +11,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { BedsidePanel } from '../components/BedsidePanel'
 import { MechanicalVentilatorConsole } from '../components/MechanicalVentilatorConsole'
 import { MechanicalVentilationTeachingPanel } from '../components/MechanicalVentilationTeachingPanel'
+import { round } from '../components/teaching/shared'
 import { mechanicalVentilationCaseById } from '../content'
 import { plateauAcquisition } from '../content/plateauAcquisition'
 import { plateauReadingValidity } from '../content/plateauValidity'
@@ -142,6 +143,11 @@ describe('R1 · pressure decomposition honours the acquisition contract', () => 
     )
   const figureLabel = (container: HTMLElement) =>
     container.querySelector('svg[role="img"]')?.getAttribute('aria-label') ?? ''
+  const readout = (container: HTMLElement, term: string) =>
+    [
+      ...container.querySelector('[aria-label="Live derived mechanics"]')!.querySelectorAll('div'),
+    ].find((node) => node.querySelector('dt')?.textContent === term)!
+  const validityNote = (container: HTMLElement) => container.querySelector('[role="note"]')!
 
   it('withholds the split on a quiet patient who has never been occluded', () => {
     const state = passiveBase()
@@ -184,13 +190,43 @@ describe('R1 · pressure decomposition honours the acquisition contract', () => 
     expect(gap.textContent).not.toContain(estimateGap.toFixed(1))
   })
 
-  it('withdraws the split when a PEEP change makes the acquisition stale', () => {
-    const held = advanceSimulation(hold(passiveBase()), 8)
+  /**
+   * Third pass: the figure, the readouts and the note beneath them are one claim. The nested
+   * validity note asked only whether the patient was quiet, so on this exact workflow — valid hold,
+   * then PEEP 5 → 9 — it kept saying "measurement conditions met … the split above means what it
+   * says" beside a split and a static compliance that had both been correctly withdrawn.
+   */
+  it('withdraws the split, and the note’s affirmative wording, when a PEEP change makes the acquisition stale', () => {
+    const base = passiveBase()
+    expect(base.ventilator.settings.peepCmH2O).toBe(5)
+    const held = advanceSimulation(hold(base), 8)
+
+    // Valid acquisition: the acquired plateau, the split and the affirmative note all appear.
+    const acquired = plateauAcquisition(held)
+    expect(acquired.status).toBe('acquired-valid')
+    expect(acquired.supportsMechanicsClaim).toBe(true)
+    const valid = decomposition(held)
+    expect(
+      valid.container.querySelector('[data-split-separable]')!.getAttribute('data-split-separable'),
+    ).toBe('true')
+    expect(valid.container.textContent).toContain(`Pplat ${round(acquired.valueCmH2O!, 1)}`)
+    const validGap = readout(valid.container, 'Peak − plateau')
+    expect(validGap.getAttribute('data-state')).toBeNull()
+    expect(validGap.textContent).toContain(
+      String(round(held.measurements.peakPressureCmH2O - acquired.valueCmH2O!, 1)),
+    )
+    const validNote = validityNote(valid.container)
+    expect(validNote.textContent).toContain('Measurement conditions met')
+    expect(validNote.textContent).toMatch(/the split above means what it says/i)
+    expect(validNote.getAttribute('data-valid')).toBe('true')
+    const validNoteStatus = validNote.getAttribute('data-plateau-acquisition')
+    valid.unmount()
+
     const stale = advanceSimulation(
       ventilationSimulationReducer(held, {
         type: 'SET_CONTROL',
         control: 'peepCmH2O',
-        value: held.ventilator.settings.peepCmH2O + 4,
+        value: 9,
       }),
       4,
     )
@@ -230,6 +266,83 @@ describe('R1 · pressure decomposition honours the acquisition contract', () => 
       (node) => node.querySelector('dt')?.textContent === 'Static compliance',
     )!
     expect(compliance.getAttribute('data-state')).toBe('unavailable')
+
+    // The note reads the same projection: no affirmative wording, and the stale reason instead.
+    const note = validityNote(container)
+    expect(container.textContent).not.toMatch(/measurement conditions met/i)
+    expect(container.textContent).not.toMatch(/means what it says/i)
+    expect(note.getAttribute('data-valid')).toBe('false')
+    expect(note.getAttribute('data-plateau-acquisition')).toBe('stale')
+    expect(note.textContent).toContain('Plateau acquired before the change')
+    expect(note.textContent).toContain(acquisition.detail)
+    expect(note.textContent).toMatch(/split above stays withheld/i)
+    // One projection drives both renders of the note.
+    expect(validNoteStatus).toBe('acquired-valid')
+  })
+
+  /**
+   * Every other non-supporting status, on the same quiet patient — the condition under which the
+   * note's old passivity-only rule said "conditions met". Effort is ruled out as the reason in each,
+   * so what the note says has to come from the acquisition.
+   */
+  it.each([
+    ['not-acquired', () => passiveBase()],
+    ['pending', () => hold(passiveBase())],
+    [
+      'acquired-invalid',
+      () => {
+        const opened = hold(passiveBase())
+        const peep = opened.ventilator.settings.peepCmH2O
+        const raised = ventilationSimulationReducer(opened, {
+          type: 'SET_CONTROL',
+          control: 'peepCmH2O',
+          value: peep + 4,
+        })
+        return advanceSimulation(
+          ventilationSimulationReducer(raised, {
+            type: 'SET_CONTROL',
+            control: 'peepCmH2O',
+            value: peep,
+          }),
+          8,
+        )
+      },
+    ],
+  ] as const)(
+    'gives a %s acquisition its own explanation, never the affirmative wording',
+    (status, build) => {
+      const state = build()
+      const acquisition = plateauAcquisition(state, { requireAcquisition: true })
+      expect(acquisition.status).toBe(status)
+      expect(acquisition.supportsMechanicsClaim).toBe(false)
+      expect(plateauReadingValidity(state).interpretable).toBe(true)
+
+      const { container } = decomposition(state)
+      const note = validityNote(container)
+      expect(container.textContent).not.toMatch(/measurement conditions met/i)
+      expect(container.textContent).not.toMatch(/means what it says/i)
+      expect(note.getAttribute('data-valid')).toBe('false')
+      expect(note.getAttribute('data-plateau-acquisition')).toBe(status)
+      expect(note.textContent).toContain(`Plateau ${acquisition.label}`)
+      expect(note.textContent).toContain(acquisition.detail)
+    },
+  )
+
+  /* A guard rather than a reproduction: effort already kept this case off the affirmative wording. */
+  it('gives an acquisition the patient pulled through no affirmative wording either', () => {
+    const active = advanceSimulation(
+      { ...createInitialSimulationState('MV-13', 'practice', 1, DEVICE), paused: false },
+      20,
+    )
+    const held = advanceSimulation(hold(active), 6)
+    expect(plateauAcquisition(held).status).toBe('acquired-invalid')
+
+    const { container } = decomposition(held)
+    const note = validityNote(container)
+    expect(container.textContent).not.toMatch(/measurement conditions met/i)
+    expect(container.textContent).not.toMatch(/means what it says/i)
+    expect(note.getAttribute('data-valid')).toBe('false')
+    expect(note.getAttribute('data-plateau-acquisition')).toBe('acquired-invalid')
   })
 
   it('still blames effort, not acquisition, when the patient is the one pulling', () => {
