@@ -464,7 +464,7 @@ describe('CRRT universal educational circuit', () => {
     expect(stateSummary).not.toHaveAttribute('aria-live')
     expect(stateSummary).not.toHaveAttribute('role', 'status')
     expect(stateSummary).toHaveTextContent('Training set ready; fluids ready')
-    expect(stateSummary).toHaveTextContent('Blood flow 180 milliliters per minute')
+    expect(stateSummary).toHaveTextContent('Blood flow set 180 milliliters per minute')
     expect(stateSummary).toHaveTextContent('Pressure state: access -82 millimeters of mercury')
     const viewport = screen.getByRole('group', { name: /horizontally scrollable/i })
     expect(viewport.getAttribute('aria-describedby')).toContain(stateSummary.id)
@@ -526,4 +526,26 @@ describe('CRRT universal educational circuit', () => {
       /@container crrt-circuit \(max-width: 600px\)[\s\S]*?\.pressureGrid\s*\{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/,
     )
   })
+})
+
+it('qualifies zero-flow calculated pressures and distinguishes the setting from actual flow', () => {
+  renderCircuit({
+    bloodFlowMlMin: 120,
+    pressure: { ...nullPressures, TMP: 7, filterDrop: -25 },
+    bloodFlow: {
+      status: 'not-delivering',
+      setMlMin: 120,
+      actualMlMin: 0,
+      bloodPumpRunning: false,
+      accessConnected: true,
+      returnConnected: true,
+      deliveryState: 'paused',
+    },
+  })
+  expect(
+    screen.getByText(/Blood flow set: 120 mL\/min; actual blood flow: 0 mL\/min/),
+  ).toBeVisible()
+  expect(
+    screen.getAllByText('Calculated relationship · not interpretable without blood flow'),
+  ).toHaveLength(2)
 })

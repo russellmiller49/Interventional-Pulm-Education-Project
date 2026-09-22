@@ -73,6 +73,7 @@ export function CrrtLivePressureStation() {
             place of its own.
           </p>
           <CrrtPilotCircuit
+            bloodFlow={operations.treatmentContext.bloodFlow}
             running={context.bloodFlowContributesToPressures}
             setReady={true}
             fluidsReady={true}

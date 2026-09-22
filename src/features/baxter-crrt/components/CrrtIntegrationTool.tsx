@@ -165,7 +165,7 @@ export function CrrtIntegrationTool({
                 <tr>
                   <th scope="col">Clock</th>
                   <th scope="col">State</th>
-                  <th scope="col">Blood flow (mL/min)</th>
+                  <th scope="col">Set / actual blood flow (mL/min)</th>
                   <th scope="col">Access</th>
                   <th scope="col">Filter</th>
                   <th scope="col">Return</th>
@@ -187,7 +187,10 @@ export function CrrtIntegrationTool({
                         {crrtLearnClock(session.simulation.simulationTimeSeconds)}
                       </th>
                       <td>{session.simulation.device.deliveryState}</td>
-                      <td>{number(d.flows?.bloodFlowMlMin ?? null)}</td>
+                      <td>
+                        {number(d.treatmentContext.bloodFlow.setMlMin)} /{' '}
+                        {number(d.treatmentContext.bloodFlow.actualMlMin)}
+                      </td>
                       {[
                         pressures.accessPressureMmHg,
                         pressures.filterPressureMmHg,
@@ -196,7 +199,12 @@ export function CrrtIntegrationTool({
                         pressures.transmembranePressureMmHg,
                         pressures.filterPressureDropMmHg,
                       ].map((n, i) => (
-                        <td key={i}>{number(n)}</td>
+                        <td key={i}>
+                          {number(n)}
+                          {i >= 4 && d.treatmentContext.bloodFlow.status !== 'delivering'
+                            ? ' · Not interpretable without blood flow'
+                            : ''}
+                        </td>
                       ))}
                     </tr>
                   )
@@ -211,6 +219,7 @@ export function CrrtIntegrationTool({
             showInterpretation={false}
           >
             <CrrtPilotCircuit
+              bloodFlow={display.treatmentContext.bloodFlow}
               presentation="live-focused"
               overlayId="cvvhd"
               running={s.device.bloodPumpRunning}

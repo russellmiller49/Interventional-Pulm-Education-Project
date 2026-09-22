@@ -118,6 +118,7 @@ export function CrrtOperationalTool({
                 onSelectSignal={setSelected}
               >
                 <CrrtPilotCircuit
+                  bloodFlow={operations.treatmentContext.bloodFlow}
                   presentation="live-focused"
                   overlayId="cvvhd"
                   running={simulation.device.bloodPumpRunning}

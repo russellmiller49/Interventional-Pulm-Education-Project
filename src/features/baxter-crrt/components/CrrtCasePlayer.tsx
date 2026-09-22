@@ -1,5 +1,7 @@
 'use client'
 
+import { CRRT_PRESSURE_HISTORY_VALIDITY_NOTE } from '../engine/circuitDelivery'
+
 import {
   ArrowRight,
   BrainCircuit,
@@ -17,9 +19,11 @@ import { useRef, useState, type Dispatch, type KeyboardEvent } from 'react'
 import type { CriticalCareActivityPhase } from '@/features/learning-module/activity'
 import { ActivityStepper } from '@/features/learning-module/components/ActivityStepper'
 
+import { selectCrrtCaseEvidence } from '../caseEvidence'
 import { getCrrtWorkedCaseExample } from '../content/workedCaseExamples'
 import { selectCrrtConsoleControls } from '../engine/consoleControls'
 import { selectSecondsUntilNextScheduledEvent } from '../engine/selectors'
+import { selectCrrtPrescriptionRecord } from '../engine/setupWorkflow'
 import { selectPrismaxPilotCaseOperationsDisplay } from '../engine/deviceAdapters/prismax'
 import type {
   CrrtLearningSessionAction,
@@ -28,7 +32,15 @@ import type {
 } from '../engine/learningSession'
 import { hasCrrtRunActivity } from '../engine/learningSession'
 import type { CrrtRoleLens } from '../engine/types'
-import { selectCrrtActualRunReview } from '../actualRunReview'
+import {
+  crrtActionObservationIntervalSeconds,
+  CRRT_HELD_PATIENT_SIGNAL_CAPTION,
+  CRRT_INTERRUPTION_CAPTION,
+  CRRT_MODEL_INDEX_CAPTION,
+  CRRT_TIME_ACCOUNTING_CAPTION,
+  formatCrrtRunClock,
+  selectCrrtActualRunReview,
+} from '../actualRunReview'
 import {
   CRRT_LAB_TEACHING_SCOPE,
   CRRT_SUPPLIED_BASELINE_CAPTION,
@@ -38,6 +50,7 @@ import {
 } from '../labEvidence'
 import { selectCrrtWorkedRetiredIds } from '../workedCaseModel'
 import { PrismaxPilotInterface, type PrismaxPilotCaseContext } from './PrismaxPilotInterface'
+import { CrrtCaseEvidenceScope } from './CrrtCaseEvidenceScope'
 import { CrrtWorkedCaseGuide, CrrtWorkedRunComparison } from './CrrtWorkedCaseExample'
 import styles from './crrt-case-player.module.css'
 
@@ -201,6 +214,8 @@ function CrrtCasePlayerContent({
   const performedSet = new Set(session.performedInterventionIds)
   const hasRun = hasCrrtRunActivity(session)
   const runReview = selectCrrtActualRunReview(session)
+  const prescriptionRecord = selectCrrtPrescriptionRecord(session)
+  const caseEvidence = selectCrrtCaseEvidence(definition)
   const labEvidence = selectCrrtLabEvidence(session)
   const firstTrend = session.simulation.trends[0]
   const latestTrend = session.simulation.trends.at(-1)
@@ -423,6 +438,10 @@ function CrrtCasePlayerContent({
           </ul>
         </section>
 
+        {caseEvidence ? (
+          <CrrtCaseEvidenceScope evidence={caseEvidence} scopedId={scopedId} />
+        ) : null}
+
         {workedExample ? (
           <CrrtWorkedCaseGuide session={session} example={workedExample} scopedId={scopedId} />
         ) : (
@@ -500,12 +519,21 @@ function CrrtCasePlayerContent({
                 Boolean(missingPrerequisite) ||
                 (performed && !intervention.repeatable)
               const showActionResponse = performed
+              const observationIntervalSeconds = crrtActionObservationIntervalSeconds(intervention)
               return (
                 <article key={intervention.id} data-performed={performed}>
                   <div>
                     <span>{intervention.category}</span>
                     <strong>{intervention.label}</strong>
                     <p>{intervention.description}</p>
+                    {observationIntervalSeconds > 0 ? (
+                      <small>
+                        Performing this advances the simulated clock by{' '}
+                        {formatCrrtRunClock(observationIntervalSeconds)} — its authored observation
+                        interval. Compare it with another path at the same elapsed time, not at the
+                        same number of clicks.
+                      </small>
+                    ) : null}
                     {missingPrerequisite ? (
                       <small>
                         Requires{' '}
@@ -690,6 +718,7 @@ function CrrtCasePlayerContent({
             session.interfaceState,
             session.simulation,
           )}
+          prescriptionRecord={prescriptionRecord}
           caseContext={prismaxCaseContext}
           onPerformCaseAction={performIntervention}
           onReset={onReset}
@@ -824,6 +853,63 @@ function CrrtCasePlayerContent({
                   : 'Not recorded. The recommended reassessment below is the authored answer, not something you entered.'}
               </p>
 
+              <h6>Where this run&rsquo;s simulated time came from</h6>
+              <dl className={styles.attemptEvidenceGrid}>
+                <div>
+                  <dt>Total simulated time elapsed</dt>
+                  <dd>{formatCrrtRunClock(runReview.timeAccounting.totalElapsedSeconds)}</dd>
+                </div>
+                <div>
+                  <dt>Advanced by you</dt>
+                  <dd>{formatCrrtRunClock(runReview.timeAccounting.advancedByLearnerSeconds)}</dd>
+                </div>
+                <div>
+                  <dt>Carried by the case actions you performed</dt>
+                  <dd>
+                    {formatCrrtRunClock(runReview.timeAccounting.advancedByCaseActionsSeconds)}
+                  </dd>
+                </div>
+              </dl>
+              {runReview.timeAccounting.intervalActions.length > 0 ? (
+                <ul>
+                  {runReview.timeAccounting.intervalActions.map((action) => (
+                    <li key={`${action.actionId}-${action.atSeconds}`}>
+                      {action.label} carried its own {formatCrrtRunClock(action.advanceSeconds)}{' '}
+                      observation interval, so the clock moved when you performed it.
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <p className={styles.debriefCaption}>{CRRT_TIME_ACCOUNTING_CAPTION}</p>
+
+              <h6>Pausing, elapsed time, and downtime</h6>
+              <dl className={styles.attemptEvidenceGrid}>
+                <div>
+                  <dt>Delivery pauses or stops you recorded</dt>
+                  <dd>{runReview.interruptions.pauseCount}</dd>
+                </div>
+                <div>
+                  <dt>Resumptions you recorded</dt>
+                  <dd>{runReview.interruptions.resumeCount}</dd>
+                </div>
+                <div>
+                  <dt>Downtime accumulated</dt>
+                  <dd>{formatCrrtRunClock(runReview.interruptions.downtimeSeconds)}</dd>
+                </div>
+                <div>
+                  <dt>Time delivery was running</dt>
+                  <dd>
+                    {formatCrrtRunClock(Math.round(runReview.interruptions.treatmentTimeSeconds))}
+                  </dd>
+                </div>
+              </dl>
+              <p className={styles.debriefCaption}>
+                {CRRT_INTERRUPTION_CAPTION}
+                {runReview.interruptions.pausedWithoutElapsedTime
+                  ? ' In this run you paused and resumed at the same simulated timestamp, so no downtime was charged and delivered dose is unchanged. Advance simulated time while delivery is paused if you want to see what an interruption costs.'
+                  : ''}
+              </p>
+
               <h6>What this run recorded</h6>
               <dl className={styles.attemptEvidenceGrid}>
                 {runReview.observations.map((observation) => (
@@ -834,7 +920,41 @@ function CrrtCasePlayerContent({
                 ))}
               </dl>
 
+              {runReview.modelIndices.length > 0 ? (
+                <>
+                  <h6>Bounded model indices this run advanced</h6>
+                  <dl className={styles.attemptEvidenceGrid}>
+                    {runReview.modelIndices.map((index) => (
+                      <div key={index.label}>
+                        <dt>{index.label}</dt>
+                        <dd>
+                          {index.value}
+                          <small>{index.note}</small>
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <p className={styles.debriefCaption}>{CRRT_MODEL_INDEX_CAPTION}</p>
+                </>
+              ) : null}
+
+              {runReview.heldPatientSignals.length > 0 ? (
+                <>
+                  <h6>Patient signals this exercise holds at the supplied value</h6>
+                  <dl className={styles.attemptEvidenceGrid}>
+                    {runReview.heldPatientSignals.map((signal) => (
+                      <div key={signal.label}>
+                        <dt>{signal.label}</dt>
+                        <dd>{signal.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <p className={styles.debriefCaption}>{CRRT_HELD_PATIENT_SIGNAL_CAPTION}</p>
+                </>
+              ) : null}
+
               <h6>Sampled pressure, dose, and fluid evidence</h6>
+              <p role="note">{CRRT_PRESSURE_HISTORY_VALIDITY_NOTE}</p>
               {firstTrend && latestTrend ? (
                 <div
                   className={styles.trendEvidenceRegion}
