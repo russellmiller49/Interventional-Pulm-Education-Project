@@ -1,10 +1,24 @@
 'use client'
 
 import { BookOpen, FileSearch, Lightbulb } from 'lucide-react'
-import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from 'react'
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+  type RefObject,
+} from 'react'
 
-import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
-import { ReferenceDrawer } from '@/features/learning-module/components/ReferenceDrawer'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 
 import { CrrtDialog } from './CrrtDialog'
 import styles from './crrt-workbench.module.css'
@@ -265,16 +279,18 @@ export function CrrtCurrentTask({
             <Lightbulb aria-hidden="true" /> {hintVisible ? 'Hide hint' : 'Show hint'}
           </button>
         ) : null}
-        <ReferenceDrawer
-          entries={[material.reference]}
+        <CrrtMaterialDrawer
+          material={material}
+          kind="reference"
           trigger={
             <button type="button" className={styles.materialButton}>
               <BookOpen aria-hidden="true" /> Reference
             </button>
           }
         />
-        <EvidenceDrawer
-          entries={material.evidence}
+        <CrrtMaterialDrawer
+          material={material}
+          kind="evidence"
           trigger={
             <button type="button" className={styles.materialButton}>
               <FileSearch aria-hidden="true" /> Evidence
@@ -283,6 +299,53 @@ export function CrrtCurrentTask({
         />
       </div>
     </section>
+  )
+}
+
+/** Keep long source locators readable without changing other modules' shared drawers. */
+function CrrtMaterialDrawer({
+  material,
+  kind,
+  trigger,
+}: {
+  readonly material: CrrtReferenceMaterial
+  readonly kind: 'reference' | 'evidence'
+  readonly trigger: ReactElement
+}) {
+  const reference = kind === 'reference'
+  return (
+    <Sheet>
+      <SheetTrigger asChild>{trigger}</SheetTrigger>
+      <SheetContent side="right" className={styles.materialContent} data-crrt-material={kind}>
+        <SheetHeader className={styles.materialHeader}>
+          <SheetTitle>{reference ? 'Reference' : 'Evidence and model limits'}</SheetTitle>
+          <SheetDescription>
+            {reference
+              ? 'Point-of-use learning records. Return to the activity when ready.'
+              : 'Versioned sources and boundaries for this educational activity.'}
+          </SheetDescription>
+        </SheetHeader>
+        <div className={styles.materialBody}>
+          {reference ? (
+            <article className={styles.materialEntry}>
+              <h3>{material.reference.title}</h3>
+              <p>{material.reference.summary}</p>
+              {material.reference.meta ? <p>{material.reference.meta}</p> : null}
+            </article>
+          ) : (
+            material.evidence.map((entry) => (
+              <article key={entry.id} className={styles.materialEntry}>
+                <h3>{entry.title}</h3>
+                <p>{entry.sourceLabel}</p>
+                <p>
+                  <strong>Limit:</strong> {entry.limitation}
+                </p>
+              </article>
+            ))
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
   )
 }
 

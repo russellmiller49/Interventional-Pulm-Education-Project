@@ -153,6 +153,33 @@ for (const variant of variants) {
       const circuit = work.locator('svg[data-overlay]')
       await expect(control).toBeEnabled()
       await orient(page, control, circuit)
+      if (family.id === 'fluid-walk') {
+        // Batch 03 deliberately allows mobile panning. Sample the dialysate side,
+        // not the unchanged blood path on the left, before activating its control.
+        const pan = work.getByRole('group', {
+          name: 'CRRT circuit schematic; horizontally scrollable on narrow screens',
+        })
+        if (await pan.evaluate((el) => el.scrollWidth > el.clientWidth)) {
+          await pan.focus()
+          for (let i = 0; i < 8; i++) {
+            const target = await pan.evaluate((el) =>
+              Math.min(el.scrollLeft + 140, el.scrollWidth - el.clientWidth),
+            )
+            await page.keyboard.press('ArrowRight')
+            await expect
+              .poll(() => pan.evaluate((el) => el.scrollLeft))
+              .toBeGreaterThanOrEqual(target - 1)
+          }
+          await expect
+            .poll(() => pan.evaluate((el) => el.scrollWidth - el.clientWidth - el.scrollLeft))
+            .toBeLessThan(2)
+          await orient(page, control, circuit)
+        }
+        await expect(circuit.locator('[data-path="dialysate-supply"]')).toHaveAttribute(
+          'data-active',
+          'false',
+        )
+      }
       const before = await geometry(control, circuit)
       if (variant.width >= 1024 && variant.name !== 'text200') {
         expect(before.top).toBeGreaterThanOrEqual(await headerBottom(page))
@@ -166,6 +193,11 @@ for (const variant of variants) {
       await page.screenshot({ path: info.outputPath('paired-before.png') })
       await control.press('Space')
       await expect(control).toHaveAttribute('aria-pressed', 'true')
+      if (family.id === 'fluid-walk')
+        await expect(circuit.locator('[data-path="dialysate-supply"]')).toHaveAttribute(
+          'data-active',
+          'true',
+        )
       await expect.poll(async () => (await visiblePixels(page, circuit)).equals(pixels)).toBe(false)
       await settle(page)
       expect(await page.evaluate(() => scrollY)).toBe(y)

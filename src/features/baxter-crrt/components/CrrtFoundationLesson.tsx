@@ -252,8 +252,9 @@ export function CrrtFoundationLesson({
   function goToTaskControls() {
     const target = actionsRef.current
     if (!target) return
-    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
-    target.scrollIntoView?.({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' })
+    // Focus moves now, so its destination must be visible now, including keyboard activation.
+    // Explicit instant scrolling also avoids inheriting the site's smooth-scroll preference.
+    target.scrollIntoView?.({ block: 'center', behavior: 'instant' })
     target.focus({ preventScroll: true })
   }
   return (

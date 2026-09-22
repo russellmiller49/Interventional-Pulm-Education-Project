@@ -73,6 +73,11 @@ function term(value: number): string {
   return rounded < 0 ? `(${formatCrrtMmHg(rounded)})` : formatCrrtMmHg(rounded)
 }
 
+/** Equality is valid only if the visible whole-mmHg terms give the visible result exactly. */
+function relation(visibleCalculation: number, engineResult: number): string {
+  return visibleCalculation === Math.round(engineResult) ? '=' : '≈'
+}
+
 export function describeCrrtTmpArithmetic(raw: CrrtRawCircuitPressures): CrrtPressureArithmetic {
   const result = prismaxCalculationAdapter.calculateDisplayedPressures({
     rawFilterPressureMmHg: raw.filterMmHg,
@@ -97,7 +102,7 @@ export function describeCrrtTmpArithmetic(raw: CrrtRawCircuitPressures): CrrtPre
       { label: 'Effluent pressure', role: 'monitored-site', valueMmHg: raw.effluentMmHg },
       { label: 'Display offset', role: 'correction', valueMmHg: c },
     ],
-    worked: `(${term(f)} + ${term(r)}) ÷ 2 − ${term(e)} + ${term(c)} = ${formatCrrtMmHg(result)} mmHg`,
+    worked: `(${term(f)} + ${term(r)}) ÷ 2 − ${term(e)} + ${term(c)} ${relation(byHand, result)} ${formatCrrtMmHg(result)} mmHg`,
     resultMmHg: result,
     correction: {
       valueMmHg: c,
@@ -141,7 +146,7 @@ export function describeCrrtFilterDropArithmetic(
       },
       { label: 'Correction applied by this simulation', role: 'correction', valueMmHg: c },
     ],
-    worked: `(${term(f)} − ${term(r)}) + ${term(c)} = ${formatCrrtMmHg(
+    worked: `(${term(f)} − ${term(r)}) + ${term(c)} ${relation(byHand, calculated.displayedFilterPressureDropMmHg)} ${formatCrrtMmHg(
       calculated.displayedFilterPressureDropMmHg,
     )} mmHg`,
     resultMmHg: calculated.displayedFilterPressureDropMmHg,

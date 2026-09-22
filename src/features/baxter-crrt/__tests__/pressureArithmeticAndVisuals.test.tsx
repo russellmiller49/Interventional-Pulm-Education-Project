@@ -107,6 +107,36 @@ describe('F-14 pressure arithmetic presents the existing formula and nothing els
     expect(block).toHaveTextContent('clinical and device review of this arithmetic is pending')
   })
 
+  it.each([
+    {
+      signal: 'tmp' as const,
+      raw: { filterMmHg: 50.4, returnMmHg: 20.4, effluentMmHg: -20.4 },
+      worked: '(50 + 20) ÷ 2 − (−20) + (−18) ≈ 38 mmHg',
+      exact: 37.8,
+    },
+    {
+      signal: 'filter-drop' as const,
+      raw: { filterMmHg: 50.6, returnMmHg: 20.4, effluentMmHg: -20 },
+      worked: '(51 − 20) + (−25) ≈ 5 mmHg',
+      exact: 5.2,
+    },
+    {
+      // Even integer inputs can yield a half-mmHg TMP. Rounding that result is not equality.
+      signal: 'tmp' as const,
+      raw: { filterMmHg: 51, returnMmHg: 20, effluentMmHg: -20 },
+      worked: '(51 + 20) ÷ 2 − (−20) + (−18) ≈ 38 mmHg',
+      exact: 37.5,
+    },
+  ])('does not render a false equality for $signal with $raw', ({ signal, raw, worked, exact }) => {
+    const description =
+      signal === 'tmp' ? describeCrrtTmpArithmetic(raw) : describeCrrtFilterDropArithmetic(raw)
+    expect(description.resultMmHg).toBeCloseTo(exact)
+    const { container } = render(<CrrtPressureArithmetic signal={signal} raw={raw} />)
+    const equation = container.querySelector('[data-crrt-arithmetic-worked]')!
+    expect(equation).toHaveTextContent(worked)
+    expect(equation.textContent).not.toContain(' = ')
+  })
+
   it('does not restate either constant in the presentation code', () => {
     for (const file of ['pressureArithmetic.ts', 'components/CrrtPressureArithmetic.tsx']) {
       const code = readFileSync(join(__dirname, '..', file), 'utf8')

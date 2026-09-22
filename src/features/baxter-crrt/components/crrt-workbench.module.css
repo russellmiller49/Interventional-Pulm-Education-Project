@@ -178,6 +178,58 @@
   white-space: nowrap;
 }
 
+/* Portalled sheets need their own CRRT palette and a shrinkable, wrapping source column. */
+.materialContent {
+  width: min(92vw, 30rem);
+  color: #ecf7f5;
+  background: #0b2226;
+  overflow-wrap: anywhere;
+}
+
+.materialHeader {
+  padding-right: 1.75rem;
+}
+
+.materialHeader h2 {
+  color: #ecf7f5;
+}
+
+.materialHeader p {
+  color: #b9d0cd;
+}
+
+.materialBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.8rem;
+  min-height: 0;
+  overflow: auto;
+}
+
+.materialEntry {
+  min-width: 0;
+  padding: 0.8rem;
+  border: 1px solid rgba(175, 222, 215, 0.35);
+  border-radius: 0.8rem;
+}
+
+.materialEntry h3 {
+  font-size: 0.9rem;
+  font-weight: 720;
+}
+
+.materialEntry p {
+  margin-top: 0.35rem;
+  color: #b9d0cd;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.materialContent :where(button, a):focus-visible {
+  outline: 3px solid #f5bb65;
+  outline-offset: 2px;
+}
+
 /* ---------------------------------------------------------------- *
  * Evidence summary
  * ---------------------------------------------------------------- */
