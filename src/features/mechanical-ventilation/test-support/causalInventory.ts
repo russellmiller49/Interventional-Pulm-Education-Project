@@ -376,6 +376,16 @@ export function caseArms(caseId: string, branch: string): InventoryArm[] {
           ],
         },
         {
+          id: 'ps-only',
+          label: 'PS 18 → 12 only',
+          actions: [control(at, 'pressureSupportCmH2O', 12)],
+        },
+        {
+          id: 'ets-only',
+          label: 'ETS 25 → 40 only',
+          actions: [control(at, 'etsPercent', 40)],
+        },
+        {
           id: 'ps-up',
           label: 'PS 18 → 24 (more support; harmful direction)',
           actions: [control(at, 'pressureSupportCmH2O', 24)],
@@ -417,6 +427,11 @@ export function caseArms(caseId: string, branch: string): InventoryArm[] {
           id: 'reduce-assist',
           label: 'PS 22 → 11 + reduce sedation',
           actions: [control(at, 'pressureSupportCmH2O', 11), perform(at, 'reduce-sedation')],
+        },
+        {
+          id: 'reduce-assist-only',
+          label: 'PS 22 → 11 only',
+          actions: [control(at, 'pressureSupportCmH2O', 11)],
         },
         {
           id: 'reduce-sedation-only',

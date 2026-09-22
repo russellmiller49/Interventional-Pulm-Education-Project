@@ -96,6 +96,10 @@ export function VentilationOxygenationTradeoff({
     window.samples.length >= 2
       ? `Over your patient’s last ${window.samples.length} simulated seconds (${trendWindowLabel(window)})`
       : 'With no trend recorded yet on your patient'
+  // No arrow and no "holding steady" until there is a window to compare: with no trend, "steady"
+  // would be a claim about nothing.
+  const trendWord = (delta: number, deadband: number) =>
+    window.samples.length >= 2 ? directionWord[direction(delta, deadband)] : 'not yet trended'
   const spo2Delta = trendDelta(trends, 'spo2Percent')
   const mapDelta = trendDelta(trends, 'mapMmHg')
   const plateauDelta = trendDelta(trends, 'plateauPressureCmH2O')
@@ -156,7 +160,7 @@ export function VentilationOxygenationTradeoff({
     },
   ]
 
-  const summary = `${windowText}, oxygen saturation is ${round(patient.gasExchange.spo2Percent)} percent and ${directionWord[direction(spo2Delta, 0.5)]}, with modeled arterial oxygen tension ${round(patient.gasExchange.paO2MmHg)} millimetres of mercury and model-assigned shunt ${round(patient.gasExchange.shuntFraction * 100)} percent. Mean airway pressure is ${round(measurements.meanAirwayPressureCmH2O, 1)} centimetres of water, ${plateauLabel.toLowerCase()} ${round(acquisition.valueCmH2O ?? acquisition.estimateCmH2O, 1)}, mean arterial pressure ${round(patient.hemodynamics.mapMmHg)} millimetres of mercury and ${directionWord[direction(mapDelta, 1)]}, and intrinsic PEEP estimate ${round(measurements.intrinsicPeepCmH2O, 1)}. PEEP is ${round(ventilator.settings.peepCmH2O, 1)} and inspired oxygen ${round(ventilator.settings.oxygenPercent)} percent. ${reading.passiveInterpretationSupported ? 'Recent effort is absent; an estimate alone is not an acquired hold.' : 'Patient effort makes this pressure unsuitable for passive mechanics interpretation.'}${selected ? ` The selected lever is ${leverCopy[selected].label}.` : ''}`
+  const summary = `${windowText}, oxygen saturation is ${round(patient.gasExchange.spo2Percent)} percent and ${trendWord(spo2Delta, 0.5)}, with modeled arterial oxygen tension ${round(patient.gasExchange.paO2MmHg)} millimetres of mercury and model-assigned shunt ${round(patient.gasExchange.shuntFraction * 100)} percent. Mean airway pressure is ${round(measurements.meanAirwayPressureCmH2O, 1)} centimetres of water, ${plateauLabel.toLowerCase()} ${round(acquisition.valueCmH2O ?? acquisition.estimateCmH2O, 1)}, mean arterial pressure ${round(patient.hemodynamics.mapMmHg)} millimetres of mercury and ${trendWord(mapDelta, 1)}, and intrinsic PEEP estimate ${round(measurements.intrinsicPeepCmH2O, 1)}. PEEP is ${round(ventilator.settings.peepCmH2O, 1)} and inspired oxygen ${round(ventilator.settings.oxygenPercent)} percent. ${reading.passiveInterpretationSupported ? 'Recent effort is absent; an estimate alone is not an acquired hold.' : 'Patient effort makes this pressure unsuitable for passive mechanics interpretation.'}${selected ? ` The selected lever is ${leverCopy[selected].label}.` : ''}`
 
   return (
     <section className={styles.panel} aria-labelledby="mv-oxygenation-teaching">

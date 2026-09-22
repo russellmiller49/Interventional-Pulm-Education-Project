@@ -43,6 +43,7 @@ import {
   ventilatorDeviceIds,
   type VentilationAction,
   type VentilationSimulationState,
+  type VentilatorDeviceId,
 } from '../engine/types'
 import { attemptForBranch, liveCaseIds, runInventoryArm } from '../test-support/causalInventory'
 
@@ -62,7 +63,7 @@ jest.mock('@/i18n/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
 }))
 
-const DEVICE = 'hamilton-c6'
+const DEVICE: VentilatorDeviceId = 'hamilton-c6'
 
 afterEach(() => cleanup())
 

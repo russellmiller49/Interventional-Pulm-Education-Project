@@ -101,6 +101,11 @@ export function BedsidePanel({
         ? 'Patient report · modeled'
         : 'Internal index · not a patient report'
       : null
+  // Pain is self-reported too; on a patient who cannot answer, the number is the model's index.
+  const painIdentity =
+    (!requireAssessment || assessed) && report.availability === 'index-only'
+      ? 'Internal index · not a patient report'
+      : null
 
   return (
     <section
@@ -169,6 +174,7 @@ export function BedsidePanel({
               {!requireAssessment || assessed
                 ? `${state.patient.human.painScore.toFixed(0)} / 10`
                 : 'Assess patient'}
+              {painIdentity ? <small> · {painIdentity}</small> : null}
             </dd>
           </div>
           <div>
@@ -301,6 +307,7 @@ export function BedsidePanel({
                     {!requireAssessment || assessed
                       ? `${state.patient.human.painScore.toFixed(0)} / 10`
                       : 'Assess patient'}
+                    {painIdentity ? <small> · {painIdentity}</small> : null}
                   </dd>
                 </div>
                 <div>

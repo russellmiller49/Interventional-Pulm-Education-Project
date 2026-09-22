@@ -234,9 +234,9 @@ function baseState(
  * enough that every live case has a completed inflation, with its onset, on screen before the
  * learner sees anything (the slowest, MV-05 and MV-12, cycle every 7.5 s). Four seconds was not:
  * those two opened on the analytic prediction — "VTE 1400" and "VTE 1021" — rather than on a
- * breath. The whole minute is used to average the delivered minute ventilation the CO₂ anchor
- * divides by, because some cases' breaths vary on a longer cycle than one window (MV-07's efforts
- * and machine breaths beat on a cycle of about half a minute).
+ * breath. The second half of the minute is used to average the delivered minute ventilation the
+ * CO₂ anchor divides by, because some cases' breaths vary on a longer cycle than one window
+ * (MV-07's efforts and machine breaths beat on a cycle of about half a minute).
  */
 export const PREPARED_HISTORY_SECONDS = 60
 
@@ -290,7 +290,7 @@ export function createInitialSimulationState(
    * between 3.2 and 3.7 — so a single instant is the wrong anchor: whichever breath happened to be
    * last would set the CO₂ equilibrium. The anchor is the harmonic mean across the prepared history,
    * which is the minute ventilation at which `PaCO₂ ∝ 1/VE` averages back to the authored PaCO₂.
-   * `WAVEFORM_WINDOW_SECONDS` of it survive in the buffer; the rest is only used for this mean.
+   * The last 12 s of it survive in the waveform buffer; the rest is only used for this mean.
    */
   const chunk = 0.1
   const chunks = Math.round(PREPARED_HISTORY_SECONDS / chunk)
