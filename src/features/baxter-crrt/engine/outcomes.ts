@@ -265,7 +265,11 @@ export function readAllowlistedCrrtMetric(
       // rather than returning a number a success condition could score.
       // `collectCrrtCaseSemanticIssues` rejects authored cases that use the path,
       // so no case can depend on it silently evaluating false.
-      if (isCrrtSoluteConcentrationMetric(metric)) return null
+      if (isCrrtSoluteConcentrationMetric(metric)) {
+        throw new Error(
+          `Unsupported solute concentration cannot be used as a CRRT metric: ${metric}`,
+        )
+      }
 
       return null
     }

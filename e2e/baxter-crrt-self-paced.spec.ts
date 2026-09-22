@@ -336,6 +336,29 @@ test('the real practice route keeps one case identity and never restarts a run f
   await expect(page.getByRole('button', { name: 'Completed', exact: true })).toHaveCount(
     completedBefore,
   )
+  const reassessment = page.getByRole('group', {
+    name: 'Select every reassessment you actually completed',
+  })
+  await reassessment.getByRole('checkbox').first().check()
+  await page.getByRole('button', { name: 'Commit reassessment', exact: true }).click()
+  const progressBeforeQuery = await assertUngraded(page)
+  await page.evaluate(() => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('review', 'unrelated-query')
+    window.history.pushState(null, '', url)
+  })
+  await expect(page).toHaveURL(/case=CRRT-11&review=unrelated-query/)
+  await expect(clock).toContainText('60 min')
+  await expect(page.getByRole('button', { name: 'Completed', exact: true })).toHaveCount(
+    completedBefore,
+  )
+  await expect(page.getByText('Reassessment recorded for this run.', { exact: true })).toBeVisible()
+  expect((await assertUngraded(page)).selfPaced.visitedCaseIds).toEqual(
+    progressBeforeQuery.selfPaced.visitedCaseIds,
+  )
+  await page.getByRole('button', { name: 'Integrated', exact: true }).click()
+  await expect(clock).toContainText('60 min')
+  await expect(page.getByText('Reassessment recorded for this run.', { exact: true })).toBeVisible()
   await page.screenshot({ path: info.outputPath('case-identity-role-desktop.png'), fullPage: true })
 
   await assertUngraded(page)
@@ -397,6 +420,14 @@ test('the debrief separates the worked example, the actual run and what is not m
   await noOverflow(page)
   await page.screenshot({ path: info.outputPath('debrief-actual-run-desktop.png'), fullPage: true })
   await page.setViewportSize({ width: 390, height: 844 })
+  // The shell clips document overflow, so scrollWidth alone misses an
+  // oversized debrief that hides the laboratory boundary and actual history.
+  for (const section of [actual, labs]) {
+    const bounds = await section.boundingBox()
+    expect(bounds).not.toBeNull()
+    expect(bounds!.x).toBeGreaterThanOrEqual(0)
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390)
+  }
   await noOverflow(page)
   await page.screenshot({ path: info.outputPath('debrief-actual-run-mobile.png'), fullPage: true })
   await page.setViewportSize({ width: 1440, height: 900 })

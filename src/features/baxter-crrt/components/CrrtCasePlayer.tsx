@@ -929,9 +929,9 @@ function CrrtCasePlayerContent({
                   <ul>
                     {labEvidence.unmodeledGroups.map((group) => (
                       <li key={group.key}>
-                        <strong>{group.soluteLabels.join(', ')}</strong> — the simulator holds no
-                        value for {group.missingInputText}, so it cannot represent how these values
-                        would move during treatment.
+                        <strong>{group.soluteLabels.join(', ')}</strong> — this exercise has no
+                        reviewed specification for {group.missingInputText}, so it cannot represent
+                        how these values would move during treatment.
                       </li>
                     ))}
                   </ul>

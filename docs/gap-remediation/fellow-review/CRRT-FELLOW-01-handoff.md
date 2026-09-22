@@ -8,19 +8,19 @@ clinical-model extensions (02/05).
 
 ## 1. Execution context
 
-| Item                         | Value                                                                                 |
-| ---------------------------- | ------------------------------------------------------------------------------------- |
-| Repository                   | `russellmiller49/Interventional-Pulm-Education-Project`                               |
-| Worktree                     | `Interventional-Pulm-Education-Worktrees/claude-crrt-9-21`                            |
-| Branch                       | `claude/crrt-fellow-01` (from `claude/crrt-9-21`, which equalled `origin/main`)       |
-| Base SHA                     | `c717c9ffae09cb67e19b06a56d37c75487a5605a` (merge of PR #250; `origin/main` at fetch) |
-| Planner's inspected snapshot | `bf738aa4b04facdca3638468f067cdaa5c24a5d0` — reconciled, not rolled back              |
-| Content version              | `1.1.0-sme-review.1`; engine `1.0.0`                                                  |
-| Dev server                   | `next dev --port 3129 --webpack` (new `claude-crrt` entry in `.claude/launch.json`)   |
-| Playwright server            | `playwright.baxter-crrt.config.ts` own dev server on 3113                             |
-| Production server            | `node server.js` on 3131 from the real `npm run build` output                         |
-| Browser                      | Claude in-app Chromium, isolated profile, synthetic local storage only                |
-| Viewports exercised          | 1280×900, 1440×900 (Playwright default), 390×844, 375×812, 200% root text at 1280×900 |
+| Item                         | Value                                                                                                      |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Repository                   | `russellmiller49/Interventional-Pulm-Education-Project`                                                    |
+| Worktree                     | `Interventional-Pulm-Education-Worktrees/claude-crrt-9-21`                                                 |
+| Branch                       | `claude/crrt-fellow-01` (from `claude/crrt-9-21`, which equalled `origin/main`)                            |
+| Base SHA                     | `c717c9ffae09cb67e19b06a56d37c75487a5605a` (merge of PR #250; `origin/main` at fetch)                      |
+| Planner's inspected snapshot | `bf738aa4b04facdca3638468f067cdaa5c24a5d0` — reconciled, not rolled back                                   |
+| Content version              | `1.1.0-sme-review.1`; engine `1.0.0`                                                                       |
+| Dev server                   | `next dev --port 3129 --webpack` (original run only; convenience entry omitted during main reconciliation) |
+| Playwright server            | `playwright.baxter-crrt.config.ts` own dev server on 3113                                                  |
+| Production server            | `node server.js` on 3131 from the real `npm run build` output                                              |
+| Browser                      | Claude in-app Chromium, isolated profile, synthetic local storage only                                     |
+| Viewports exercised          | 1280×900, 1440×900 (Playwright default), 390×844, 375×812, 200% root text at 1280×900                      |
 
 The Baxter CRRT module is draft / unlisted; every route stays `noindex`. No access, publication,
 review status, reviewer, date or signoff was changed by this batch.
@@ -147,19 +147,19 @@ What changed is output validity and presentation.
 
 ### New: `engine/soluteValidity.ts`
 
-Derives, per solute pool and per fixture, whether its dynamic output can be presented as a
-patient response:
+**Corrected by the independent pre-merge review:** the first implementation inferred missing
+source terms from numeric zero. That was not a valid suppliedness test. The current boundary
+reports `status: 'unsupported'` for every present pool, with missing specifications
+`solution-concentration` and `reviewed-source-term-specification`.
 
-- `status: 'removal-only' | 'modeled'` — `modeled` is reachable only when every missing input
-  below is supplied.
-- `missingInputIds`: `solution-concentration`, `endogenous-production`, `external-input`,
-  `residual-clearance`. The first is computed by a predicate over the fixture's actual bags; the
-  other three are read from the pool's actual values, so the classification is data-derived, not
-  a constant, and lifts by itself when a reviewed solution registry and source terms arrive.
-- At the base fixture, **all seven solutes in all 18 runtime cases are `removal-only`, missing
-  all four inputs.** That includes the urea and creatinine markers: a familiar exponential shape
-  is not evidence of a validated waste-marker curve, and with production at zero the markers are
-  as unsupported as the electrolytes.
+The strict fixture schema and engine pool have generic source IDs and review status, but no
+per-term provenance distinguishing a placeholder from an explicitly specified zero. No bag
+composition field or solution registry is implemented. Neither nonzero source terms nor an
+extra unvalidated bag field can lift containment. A future reviewed model must deliberately
+implement that contract and its tests. Numeric zero remains a real numeric value in the generic
+mass-balance equation; no clinical source term is invented or changed here.
+
+See `CRRT-FELLOW-01-sanity-review.md` for independent reproduction and validation evidence.
 
 ### Every affected laboratory surface
 
@@ -168,7 +168,7 @@ patient response:
 | 1   | `CrrtCasePlayer` debrief "Sampled pressure, dose, fluid, **and laboratory** evidence" table        | Seven solute rows, first vs latest, labeled `sodium`, `bicarbonate`, … | Solute rows removed; heading is "Sampled pressure, dose, and fluid evidence". A new **"Laboratory values in this case"** section shows the supplied case-start values with their authored units, then names each unmodeled solute and the inputs the simulator lacks, then states what the case still teaches                               |
 | 2   | `CrrtActivityWorkspace` patient strip, "Relevant labs"                                             | Live evolving K / HCO₃ from the decaying pool, plus pH                 | "Supplied labs at case start" — the authored K, HCO₃ and pH, with "not modeled over time"                                                                                                                                                                                                                                                   |
 | 3   | `CrrtWorkedCaseExample` run comparison, `urea-marker` signal ("Small-solute marker", CRRT-05 only) | Value shown with no validity statement                                 | Unchanged value, plus an explicit caption that it is a model pool advanced by delivered clearance alone and not a measured laboratory value                                                                                                                                                                                                 |
-| 4   | `engine/outcomes.ts` `readAllowlistedCrrtMetric` solute path                                       | Returned the live concentration; a success condition could score it    | Returns `null` for every `patient.solutes.*.concentrationPerLiter` path. Supported delivery, pressure, fluid and patient metrics are untouched                                                                                                                                                                                              |
+| 4   | `engine/outcomes.ts` `readAllowlistedCrrtMetric` solute path                                       | Returned the live concentration; a success condition could score it    | Throws an explicit unsupported-solute error for every recognized `patient.solutes.*.concentrationPerLiter` path, including calls bypassing content validation. Supported delivery, pressure, fluid and patient metrics are untouched                                                                                                        |
 | 5   | `content/schema.ts` `collectCrrtCaseSemanticIssues`                                                | Accepted a solute-concentration success metric                         | Raises "scores an unmodeled solute concentration", so no authored case can depend on a silently-false condition                                                                                                                                                                                                                             |
 | 6   | `engine/simulation.ts` `TrendSample.soluteConcentrationsPerLiter`                                  | Published and rendered                                                 | Field retained as engine state — the model's own quantity, used by the step-equivalence invariants — but no learner surface renders it. Containment sits at the presentation and verdict boundaries, not by deleting typed engine state                                                                                                     |
 | 7   | `components/CrrtResponsePanel.tsx` "Simulated solutes" K / HCO₃ card                               | Live evolving values                                                   | **Left unchanged and not mounted.** It is dead code: nothing imports it, and it imports `./crrt-learning-workflow.module.css`, which does not exist, so it cannot build if reintroduced. `CrrtCalibrationPanel.tsx` has the same broken import and is equally unreferenced. Flagged, not touched — deleting dead code is outside this batch |
@@ -184,10 +184,10 @@ separately labeled and none of them were suppressed.
 
 ### State vocabulary kept distinct
 
-`removal-only` (unsupported dynamic output) · `Not supplied` (no authored value) ·
+`unsupported` (dynamic output without an implemented reviewed specification) · `Not supplied` (no authored value) ·
 `Not recorded` (the learner did not enter it) · `None recorded for this action` (the action
-changes no parameter) · `0 min` / `0 mL` (a real measured zero) · unchanged because delivery is
-paused (the engine's own state, untouched). No zero is used as a missing value, no sodium or
+changes no parameter) · `0 min` / `0 mL` (a recorded or computed zero) · unchanged because delivery is
+paused (the engine's own state, untouched). After the independent review correction, no zero is used as a missing value, no sodium or
 bicarbonate is hard-coded, no dialysate composition is inferred, and no pH calculation was added
 — pH remains the authored supplied value and is labeled as such.
 

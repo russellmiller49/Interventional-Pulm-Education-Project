@@ -20,14 +20,14 @@ function session(caseId: string) {
 }
 
 describe('CRRT solute output validity', () => {
-  it('reports every runtime solute pool as removal-only, with the inputs it is missing', () => {
+  it('contains every runtime solute pool until reviewed specifications are implemented', () => {
     for (const definition of baxterCrrtCases) {
       const state = session(definition.id).simulation
       const validity = selectCrrtSoluteDynamicsValidityMap(state.patient, state.circuit.bags)
       for (const soluteId of crrtSoluteIds) {
         const record = validity[soluteId]
         expect(record).toBeDefined()
-        expect(record?.status).toBe('removal-only')
+        expect(record?.status).toBe('unsupported')
         // No bag in any fixture declares a composition, so the solution term is
         // missing for every solute in every case.
         expect(record?.missingInputIds).toContain('solution-concentration')
@@ -38,14 +38,12 @@ describe('CRRT solute output validity', () => {
     }
   })
 
-  it('names the zero source terms the review fixtures actually carry', () => {
+  it('names missing specifications without treating zero as missing', () => {
     const state = session('CRRT-15').simulation
     const validity = selectCrrtSoluteDynamicsValidityMap(state.patient, state.circuit.bags)
     expect(validity['urea-marker']?.missingInputIds).toEqual([
       'solution-concentration',
-      'endogenous-production',
-      'external-input',
-      'residual-clearance',
+      'reviewed-source-term-specification',
     ])
   })
 
@@ -55,16 +53,16 @@ describe('CRRT solute output validity', () => {
       true,
     )
     for (const soluteId of crrtSoluteIds) {
-      expect(
+      expect(() =>
         readAllowlistedCrrtMetric(state, `patient.solutes.${soluteId}.concentrationPerLiter`),
-      ).toBeNull()
+      ).toThrow(/unsupported solute/i)
     }
     // A supported delivery metric still reads, so this is containment, not a
     // blanket disabling of the metric reader.
     expect(
       readAllowlistedCrrtMetric(state, 'deliveredTherapy.prescribedEffluentDoseMlKgHour'),
     ).toBeGreaterThan(0)
-    expect(
+    expect(() =>
       evaluateCrrtMetricCondition(state, {
         id: 'probe',
         metric: 'patient.solutes.sodium.concentrationPerLiter',
@@ -74,7 +72,7 @@ describe('CRRT solute output validity', () => {
         sourceId: 'SYNTH-CRRT-02',
         reviewStatus: 'pending',
       }),
-    ).toBe(false)
+    ).toThrow(/unsupported solute/i)
   })
 
   it('rejects an authored case that scores a solute concentration', () => {

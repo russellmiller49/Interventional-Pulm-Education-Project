@@ -166,7 +166,7 @@ export function selectCrrtLabEvidence(session: CrrtLearningSessionState): CrrtLa
   )
   const unmodeledResponses = crrtSoluteIds.flatMap((soluteId) => {
     const record = validity[soluteId]
-    if (!record || record.status !== 'removal-only') return []
+    if (!record || record.status !== 'unsupported') return []
     return [
       {
         soluteId,

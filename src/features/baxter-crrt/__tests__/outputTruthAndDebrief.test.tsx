@@ -93,7 +93,9 @@ describe('CRRT laboratory output stays inside what the model supports', () => {
     for (const label of ['Sodium', 'Potassium', 'Bicarbonate', 'Phosphate', 'Magnesium']) {
       expect(within(labs).getAllByText(new RegExp(label)).length).toBeGreaterThan(0)
     }
-    expect(labs).toHaveTextContent(/the concentration in the dialysate and replacement solutions/)
+    expect(labs).toHaveTextContent(
+      /no reviewed specification for dialysate and replacement solution concentrations/,
+    )
   })
 
   it('keeps the supplied baseline, not the decayed pool, in the patient strip wording', () => {

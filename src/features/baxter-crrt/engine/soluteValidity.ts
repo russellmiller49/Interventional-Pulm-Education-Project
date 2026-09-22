@@ -6,30 +6,16 @@ import {
   type SolutePoolState,
 } from './types'
 
-/**
- * Terms the constant-volume mass balance in `soluteModel.ts` needs before its
- * output can be presented as a patient laboratory response rather than as
- * removal-only arithmetic.
- *
- * `solution-concentration` is the term a dialysate or replacement solution
- * contributes. `BagState` carries identity, flow term, volumes and connection
- * only; no bag in the engine fixture declares what is dissolved in it, so this
- * term cannot currently be supplied by any case. Owner decision O-01 (see
- * `docs/gap-remediation/fellow-review/CRRT-FELLOW-01-handoff.md`) has to record
- * the solution identities and compositions before it can be.
- */
+/** Missing reviewed specifications, not a classification of numeric source terms. */
 export type CrrtSoluteMissingInputId =
   | 'solution-concentration'
-  | 'endogenous-production'
-  | 'external-input'
-  | 'residual-clearance'
+  | 'reviewed-source-term-specification'
 
 export const crrtSoluteMissingInputLabels: Readonly<Record<CrrtSoluteMissingInputId, string>> =
   Object.freeze({
-    'solution-concentration': 'the concentration in the dialysate and replacement solutions',
-    'endogenous-production': 'endogenous production or tissue release',
-    'external-input': 'concentration carried by other infusions',
-    'residual-clearance': 'residual kidney clearance',
+    'solution-concentration': 'dialysate and replacement solution concentrations',
+    'reviewed-source-term-specification':
+      'endogenous production, external input, and residual kidney clearance (including explicit zero assumptions)',
   })
 
 export const crrtSoluteDisplayLabels: Readonly<Record<CrrtSoluteId, string>> = Object.freeze({
@@ -45,34 +31,17 @@ export const crrtSoluteDisplayLabels: Readonly<Record<CrrtSoluteId, string>> = O
 export interface CrrtSoluteDynamicsValidity {
   readonly soluteId: CrrtSoluteId
   /**
-   * `removal-only` means the pool was advanced by delivered clearance alone.
-   * It is a model quantity, not a measured or predicted patient value.
-   * `modeled` is reachable only once every missing input below is supplied.
+   * Clinical dynamics remain unsupported until a reviewed model specification
+   * and its implementation exist. This is independent of whether a numeric
+   * source term is zero, nonzero, or the concentration is unchanged while paused.
    */
-  readonly status: 'removal-only' | 'modeled'
+  readonly status: 'unsupported'
   readonly missingInputIds: readonly CrrtSoluteMissingInputId[]
 }
 
 export type CrrtSoluteDynamicsValidityMap = Readonly<
   Partial<Record<CrrtSoluteId, CrrtSoluteDynamicsValidity>>
 >
-
-/**
- * Whether any source bag in this fixture declares a concentration for `soluteId`.
- * No such field exists on `BagState`, so this is false for every case today.
- * It is written as a predicate over the actual bags so that adding the authored
- * composition — and only that — changes the answer.
- */
-function solutionConcentrationDeclared(bags: readonly BagState[], soluteId: CrrtSoluteId): boolean {
-  return bags.some((bag) => {
-    if (bag.direction !== 'source' || !bag.connected) return false
-    const composition = (bag as BagState & { readonly soluteConcentrationsPerLiter?: unknown })
-      .soluteConcentrationsPerLiter
-    if (composition === null || typeof composition !== 'object') return false
-    const declared = (composition as Record<string, unknown>)[soluteId]
-    return typeof declared === 'number' && Number.isFinite(declared)
-  })
-}
 
 /**
  * Solute-concentration metric paths. Named once so the content validator and
@@ -91,15 +60,20 @@ export function selectCrrtSoluteDynamicsValidity(
   pool: SolutePoolState,
   bags: readonly BagState[],
 ): CrrtSoluteDynamicsValidity {
-  const missingInputIds: CrrtSoluteMissingInputId[] = []
-  if (!solutionConcentrationDeclared(bags, pool.id)) missingInputIds.push('solution-concentration')
-  if (pool.productionAmountPerHour === 0) missingInputIds.push('endogenous-production')
-  if (pool.inputAmountPerHour === 0) missingInputIds.push('external-input')
-  if (pool.residualClearanceMlMin === 0) missingInputIds.push('residual-clearance')
+  // BagState has no composition field, and SolutePoolState / the strict fixture
+  // schema have no per-term suppliedness or reviewed zero-assumption contract.
+  // Generic pool sourceIds/reviewStatus cannot distinguish placeholder zero from
+  // an explicitly specified zero. Do not inspect numbers or duck-type future bag
+  // fields to authorize laboratory predictions. A future reviewed implementation
+  // must deliberately replace this containment boundary and add its own tests.
+  void bags
   return Object.freeze({
     soluteId: pool.id,
-    status: missingInputIds.length === 0 ? 'modeled' : 'removal-only',
-    missingInputIds: Object.freeze(missingInputIds),
+    status: 'unsupported',
+    missingInputIds: Object.freeze([
+      'solution-concentration',
+      'reviewed-source-term-specification',
+    ] as const),
   })
 }
 
@@ -123,5 +97,5 @@ export function selectCrrtUnsupportedSoluteIds(
   bags: readonly BagState[],
 ): readonly CrrtSoluteId[] {
   const map = selectCrrtSoluteDynamicsValidityMap(patient, bags)
-  return crrtSoluteIds.filter((id) => map[id]?.status === 'removal-only')
+  return crrtSoluteIds.filter((id) => map[id]?.status === 'unsupported')
 }
