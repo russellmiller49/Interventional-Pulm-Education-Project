@@ -10,7 +10,7 @@
   "baseSha": "c717c9ffae09cb67e19b06a56d37c75487a5605a",
   "branch": "claude/bf-1-9-19",
   "checkout": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-bf-1-9-19",
-  "state": "implemented; pull request open; not merged, not deployed",
+  "state": "implemented; independently reviewed at 96291d71 (NOT READY FOR MERGE on three findings); repaired in a bounded follow-up pass; pull request open; not merged, not deployed",
   "claims": {
     "clinicalApproval": false,
     "sourceReview": false,
@@ -119,14 +119,19 @@
       "reproducedAt": "c717c9ff, /en/bronchoscopy-foundations/learn?section=branch-entry, 1204x987; RMSB then trachea then LMSB, then deflection -30 and further advances",
       "observedBefore": "All five goals met, wall contacts 0, deflection -30, optical view an almost entirely mucosal field, card reading 'Done. Every goal on this card is met.' including 'keep the tip off the wall'.",
       "rootCause": "Event, event-sequence and without predicates are evaluated over the step's whole history, so a goal met on the way stays met. Two labels asserted qualities the model does not measure, and the done status read as a statement about the current picture. signals.view reports 'clear' in both reproduced lost-view states; the model has no measure of a visible lumen.",
-      "disposition": "partially repaired; a model decision remains open",
+      "disposition": "repaired after the independent review; the model decision below stays open",
       "changedFiles": [
         "src/features/bronchoscopy-foundations/engine/scope/scopeGoalEvaluation.ts",
         "src/features/bronchoscopy-foundations/components/stage/BronchStageHost.tsx",
         "src/features/bronchoscopy-foundations/content/sections/branch-entry.ts",
-        "src/features/bronchoscopy-foundations/content/sections/view-loss.ts"
+        "src/features/bronchoscopy-foundations/content/sections/view-loss.ts",
+        "src/features/bronchoscopy-foundations/engine/scope/goalPresentation.ts",
+        "src/features/bronchoscopy-foundations/components/stage/bronch-stage.module.css",
+        "src/features/bronchoscopy-foundations/components/scope/ScopeFallback.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/scope-fallback.module.css",
+        "src/features/bronchoscopy-foundations/components/scope/types.ts"
       ],
-      "observedAfter": "Each goal row carries data-goal-claim. A line under the list says which kind of claim the card makes, states that the model counts contacts, lost views and position but does not judge the picture, and prints the airway the tip is in now. The done status carries the same bound. The no-force goal now names the recorded signals instead of an unmeasured quality.",
+      "observedAfter": "The lead reports a record (\"Recorded: every step this card asks for.\"), a heading names what the rows establish (\"On the record for this attempt\"), and a full-weight block under the rows prints the live location and states that the model does not judge the bronchoscope image. The duplicated list under the controls carries the same framing. The no-force row now says \"none made while the model recorded a lost view\" instead of \"without a clear view\".",
       "preserved": [
         "historical events and performedIds are not erased to make a badge correct",
         "no score, no compulsory safe response, no navigation penalty",
@@ -147,7 +152,7 @@
       "reproducedAt": "c717c9ff, /en/bronchoscopy-foundations/learn?section=view-loss, 1204x987; recover, then 22 further advances at 0/0 into LMSB",
       "observedBefore": "'Done. Every goal on this card is met.' with 'advance along the visible lumen to the main carina' ticked, while the tip was well past the carina inside LMSB and the view was wall-filled.",
       "rootCause": "Same as A4.",
-      "disposition": "repaired for the claim; the underlying model limit is bounded, not removed",
+      "disposition": "repaired after the independent review; the underlying model limit is stated, not removed",
       "changedFiles": [
         "src/features/bronchoscopy-foundations/components/stage/BronchStageHost.tsx",
         "src/features/bronchoscopy-foundations/content/sections/view-loss.ts"
@@ -173,18 +178,40 @@
       "investigation": {
         "mode": "free-drive, assists {}, readout reports 'pointer, unaided'",
         "inputsControlTheRoute": [
-          { "rotationDeg": 90, "deflectionDeg": 20, "entered": "RMSB" },
-          { "rotationDeg": 90, "deflectionDeg": 35, "entered": "RMSB" },
-          { "rotationDeg": -90, "deflectionDeg": 20, "entered": "LMSB" },
-          { "rotationDeg": 0, "deflectionDeg": 0, "entered": "LMSB" }
+          {
+            "rotationDeg": 90,
+            "deflectionDeg": 20,
+            "entered": "RMSB"
+          },
+          {
+            "rotationDeg": 90,
+            "deflectionDeg": 35,
+            "entered": "RMSB"
+          },
+          {
+            "rotationDeg": -90,
+            "deflectionDeg": 20,
+            "entered": "LMSB"
+          },
+          {
+            "rotationDeg": 0,
+            "deflectionDeg": 0,
+            "entered": "LMSB"
+          }
         ],
         "mechanism": "In free drive with the reviewed lumen loaded, driveScope advances the tip along its own optical axis against the collider and locateTip names the airway from the nearest centerline among edges sharing a node with the current one. There is no branch-selection rule, no default side and no authored fork behaviour. The aim guard is set only for mode === 'guided-walk' (scopeMotion.ts), and the guided-walk step at the same fork behaves as authored: a neutral advance does not choose a branch and an undecided aim prints the aim-guard refusal.",
         "geometryMeasurement": {
           "profile": "adult-teaching-combined-left-basal-v1",
           "file": "public/bronchoscopy-foundations/anatomy/adult-teaching-combined-left-basal-v1/graph.json",
           "method": "angle between the distal tracheal centerline direction (last 10 mm) and each main bronchus direction over its first 10 mm beyond the carina node",
-          "RMSB": { "angleDeg": 58.1, "perpendicularOffsetMm": 8.87 },
-          "LMSB": { "angleDeg": 59.7, "perpendicularOffsetMm": 10.8 },
+          "RMSB": {
+            "angleDeg": 58.1,
+            "perpendicularOffsetMm": 8.87
+          },
+          "LMSB": {
+            "angleDeg": 59.7,
+            "perpendicularOffsetMm": 10.8
+          },
           "conclusion": "The authored centerlines are near-symmetric at the carina. This model has no markedly straighter right main for a neutral push to follow, so the report's expectation is not a property of the geometry in use."
         }
       },
@@ -243,7 +270,7 @@
     "unitAndComponent": {
       "command": "npx jest src/features/bronchoscopy-foundations --runInBand",
       "before": "25 suites, 351 passed, 1 todo",
-      "after": "28 suites, 378 passed, 1 todo"
+      "after": "28 suites, 386 passed, 1 todo (380 before the repair pass)"
     },
     "typeCheck": "npx tsc --noEmit clean (NODE_OPTIONS=--max-old-space-size=8192; the default heap OOMs on unchanged main too)",
     "lint": "npx eslint e2e/bronchoscopy-foundations.spec.ts src/features/bronchoscopy-foundations clean",
@@ -253,7 +280,70 @@
     "notRun": [
       "the full repository jest suite (only the BF module was run)",
       "any deployment, merge or release step",
-      "any faculty, clinical, source, media or accessibility review"
+      "any faculty, clinical, source, media or accessibility review",
+      "actual hidden-tab browser acceptance (Chromium reports pages visible after native tab activation; the hook-level evidence stands alone)",
+      "any fix or regression for the pre-existing 3D recovery failure"
+    ],
+    "repairPass": {
+      "environment": "production build (NEXT_PUBLIC_SHOW_DRAFT_MODULES=true npm run build) served by npm run start:prod on 127.0.0.1:3254; BF route HTTP 200; Playwright Chromium with fresh profiles; analytics stubbed by the suite",
+      "build": "exit 0",
+      "preRepairFailureCheck": "runtime under src/features/bronchoscopy-foundations reverted to PR head 96291d71 with the new tests kept: 8 failed, 20 passed across goal-truth and simulation-truth. The passes are preserved-contract guards and the A1/A2/A3 cases this pass did not touch; two new cases pass there for weak reasons and are labelled guards, not fail-before evidence.",
+      "completeBrowserSuiteAgainstProduction": "28 passed, 0 failed, 0 retries, 7.3 minutes, built from exactly the committed source; includes the 23-section reflow walk at 1440 that failed once against a development server in the first phase, all four reflow widths, the 200 percent root-text case and every new acceptance case",
+      "themeCoverage": "The overshoot case toggles the site theme with the site's own control at the desktop width and checks the heading, the limit block and the pane limit line are still visible, with a screenshot per theme. The lesson stage renders on its own dark surface in both site themes, so the new copy has one appearance; at phone width the theme control sits inside the collapsed navigation and is not driven, so the 390 px case runs in the default theme only. Visibility check, not a contrast audit.",
+      "finalHead": "recorded in the pull request; three commits on top of 96291d71"
+    }
+  },
+  "reviewedHead": "96291d71fbee4acf250b82caede263941768e02a",
+  "independentReview": {
+    "reviewedHead": "96291d71fbee4acf250b82caede263941768e02a",
+    "verdict": "NOT READY FOR MERGE",
+    "report": "/Users/russellmiller/.codex/worktrees/codex-pr254-independent-review/claude-bf-1-9-19/BF-PRE-REVIEW-01-independent-review.md",
+    "findings": [
+      {
+        "id": "review-1",
+        "severity": "P1",
+        "summary": "The completed A4 card still overclaimed a clear view: a completion headline with the model limit in fine print, plus a goal row asserting \"none made without a clear view\".",
+        "reproducedOnPrHead": true,
+        "disposition": "repaired by changing the information hierarchy, not by adding another disclaimer",
+        "repair": "Lead reports a record; a heading names what the rows establish; per-row Recorded/Now tags where a card carries both kinds; a full-weight limit block with the live location beside the rows; the same treatment for the pane list; three goal labels reworded to the recorded signal.",
+        "sharedCopyModule": "src/features/bronchoscopy-foundations/engine/scope/goalPresentation.ts",
+        "notChanged": "The branch-entry Part 3 instruction \"Establish a visible open lumen before advancing\" stays: it is an instruction, not a claim the card checks, and authored section copy belongs to lane 02."
+      },
+      {
+        "id": "review-2",
+        "severity": "P2",
+        "summary": "ledger and ledger-complete predicates were classified as current state, so a completed inspection record was described as a reading of what is in view now.",
+        "reproducedOnPrHead": true,
+        "disposition": "repaired centrally in the classifier",
+        "repair": "scopeGoalClaim classes ledger and ledger-complete as history: the distinction is what a predicate can still establish later, not which syntax it uses. The inspection record keeps every declaration after the scope leaves the airway.",
+        "inventoryAfterRepair": {
+          "historyGoals": 40,
+          "currentGoals": 0,
+          "mixedGoals": 9,
+          "historyCards": 16,
+          "mixedCards": 6,
+          "currentCards": 0
+        },
+        "note": "systematic-survey moved from mixed to history, which is the finding. No card is purely current today, so the \"current\" lead is unreachable from authored content; it is kept for a location- or metric-only goal and covered by a unit case."
+      },
+      {
+        "id": "review-3",
+        "severity": "P2",
+        "summary": "Recovering from the schematic fallback leaves the 3D scene at data-three-state=\"loading\".",
+        "disposition": "CASE 1 — pre-existing; reproduced identically on the baseline; out of scope for this bounded repair; no code changed and no regression added",
+        "reproduction": "Abort **/anatomy/larynx/**, reach larynx-and-entry Part 3, take \"Use the schematic view\", restore the route, take \"Try the 3D view again\", wait 30 s for readiness.",
+        "prHead": "data-three-state stays \"loading\"; never ready within 30 s",
+        "baseline_c717c9ff": "identical: data-three-state stays \"loading\"; never ready within 30 s",
+        "baselinePurity": "git diff c717c9ff --name-only over src/features/bronchoscopy-foundations returned no runtime path during the baseline run",
+        "mechanismFromSource": "useScopePlayback binds its IntersectionObserver to root.current in an effect whose only dependency is the ref object, whose identity never changes; ScopeScenePane attaches that ref to a different node in the schematic and 3D branches. Switching back leaves the observer on the removed node, visible stays false, Scene keeps frameloop=\"never\", and onDraw is never called. Unproven at browser level; both the ref lifecycle and the node swap are unchanged from baseline.",
+        "handOff": "Rebinding the observer when the observed node changes is a 3D-lifecycle change this pass is not authorised to make."
+      }
+    ],
+    "correctionsToTheFirstPhaseRecord": [
+      "The claim that all four goal-truth cases failed on baseline was inaccurate: three failed. The drift case passed there because the stage harness sends ticks with a learner input mode, which the baseline session already accepted; it is a preserved-contract guard.",
+      "The browser-suite accounting of \"26 cases / 5 new\" undercounted instances: the overshoot case runs at two widths, so the first phase added six instances, and the suite now declares 28 instances.",
+      "The carina geometry figures are method-dependent. This batch measured RMSB 58.1 deg / 8.87 mm and LMSB 59.7 deg / 10.80 mm; the review measured 56.69 deg / 8.36 mm and 61.06 deg / 8.75 mm with its own stated method. The conclusion that the centerlines are near-symmetric holds under both; neither set validates anatomy or justifies a default branch.",
+      "The single reflow failure in the first phase was against a development server and its cause is not established. It did not recur in the review's production run, and it passed 3/3 in isolation on both revisions here."
     ]
   }
 }

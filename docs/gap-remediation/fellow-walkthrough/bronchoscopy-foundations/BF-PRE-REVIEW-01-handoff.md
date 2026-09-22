@@ -12,6 +12,12 @@ The walkthrough this repairs is Claude in a first-year-fellow persona, not a fel
 or a faculty reviewer. Nothing here is evidence that the module teaches what it intends to. A
 working clock is not approval of the anatomy it animates.
 
+**This document covers two phases.** Everything up to _Backlog raised in passing_ is the original
+implementation. An independent review of PR #254 then returned **NOT READY FOR MERGE** on three
+findings; _Repair pass after the independent review_ at the end records what was reproduced,
+changed and re-run in response, and corrects three claims the review showed were inaccurate. Where
+the two phases disagree, the repair pass is current.
+
 ## Repository reconciliation
 
 | Field              | Recorded value                                                                                                                                                                                                                                                                                                                                                                               |
@@ -151,6 +157,12 @@ node, the right main bronchus leaves the distal tracheal axis at **58.1°** and 
 right main for a neutral push to follow. Changing the outcome to "drift right" would mean changing
 reviewed source geometry, which this batch is not authorised to do and did not do.
 
+The independent review repeated this measurement with its own stated method and got RMSB 56.69°
+(8.36 mm lateral offset) and LMSB 61.06° (8.75 mm): the same conclusion, different numbers. The two
+runs sample the tracheal tangent and the branch direction differently, and neither figure is an
+anatomical measurement or a reason to prefer a side. Treat the exact degrees as method-dependent,
+and the conclusion — these centerlines are near-symmetric at the carina — as the part that holds.
+
 **No change was made.** An owner decision is recorded below with its exact consequences.
 
 ## Preserved contracts
@@ -182,32 +194,32 @@ lane-unique port), Playwright Chromium with isolated profiles, no remote service
 `/api/analytics` 500 (no Supabase environment in this checkout) is stubbed by the e2e suite's own
 route handler and is present on unchanged main too.
 
-| Check                                                                                   | Result                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npx jest src/features/bronchoscopy-foundations --runInBand`                            | **28 suites passed, 380 passed, 1 todo** (25 suites / 351 passed before this batch; the todo is the pre-existing one)                                                                                                                                                                                                                                                                                                             |
-| `npx tsc --noEmit`                                                                      | clean (needs `NODE_OPTIONS=--max-old-space-size=8192` on this machine; the default heap OOMs on unchanged main too)                                                                                                                                                                                                                                                                                                               |
-| `npx eslint e2e/bronchoscopy-foundations.spec.ts src/features/bronchoscopy-foundations` | clean                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `npx prettier --check` on every changed path                                            | clean                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `git diff --check`                                                                      | clean                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| Playwright, the five new acceptance cases                                               | **5 passed** after the repair; **5 failed** on the unchanged baseline with the repair reverted and the tests kept                                                                                                                                                                                                                                                                                                                 |
-| Playwright, the whole BF suite (26 cases: 21 existing, 5 new)                           | **25 passed, 1 failed** on the first full sequential run — `course presentations reflow … at 1440`, on a captured Next dev page error ("Internal Next.js error: Router action dispatched before initialization") while walking all 23 sections back to back. Re-run in isolation it passes 3/3 with the repair and 3/3 with `src/features/bronchoscopy-foundations` reverted to `c717c9ff`: a dev-server flake, not a regression. |
-| `npm run build`                                                                         | **succeeds** (exit 0), including the embedded training-app build, contentlayer, the asset validators and `prepare:standalone`                                                                                                                                                                                                                                                                                                     |
+| Check                                                                                   | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npx jest src/features/bronchoscopy-foundations --runInBand`                            | **28 suites passed, 380 passed, 1 todo** (25 suites / 351 passed before this batch; the todo is the pre-existing one)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `npx tsc --noEmit`                                                                      | clean (needs `NODE_OPTIONS=--max-old-space-size=8192` on this machine; the default heap OOMs on unchanged main too)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `npx eslint e2e/bronchoscopy-foundations.spec.ts src/features/bronchoscopy-foundations` | clean                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `npx prettier --check` on every changed path                                            | clean                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `git diff --check`                                                                      | clean                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Playwright, the new acceptance cases                                                    | **all passed** after the repair; **all failed** on the unchanged baseline with the repair reverted and the tests kept. This batch added five test declarations; the overshoot case runs at two widths, so the suite gained **six instances**. The independent review was right that "26 cases / 5 new" undercounted what the runner reports.                                                                                                                                                                                                                                                                 |
+| Playwright, the whole BF suite                                                          | **25 passed, 1 failed** on the first full sequential run against a **development** server — `course presentations reflow … at 1440`, on a captured Next dev page error ("Internal Next.js error: Router action dispatched before initialization") while walking all 23 sections back to back. Re-run in isolation it passed 3/3 with the repair and 3/3 with `src/features/bronchoscopy-foundations` reverted to `c717c9ff`, so it is not specific to this change — but the cause of that one failure is **not** established. The independent review did not reproduce it at all against a production build. |
+| `npm run build`                                                                         | **succeeds** (exit 0), including the embedded training-app build, contentlayer, the asset validators and `prepare:standalone`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 ### Regressions that fail on the unchanged baseline
 
 Every new mechanism has one. Verified by reverting `src/features/bronchoscopy-foundations` to
 `c717c9ff` with the new tests kept in place, running them, and restoring.
 
-| Test                                                                                          | On baseline                                                                                                                                                                                                                                                                                                                                    |
-| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `__tests__/simulation-truth.test.tsx` (18 cases)                                              | **10 of the first 16 failed, 6 passed**; the two cases added afterwards (restart isolation, capture before acknowledgment) also fail on baseline, where the clock never runs. The cases that pass on baseline are the preserved-contract guards — the misreport, the learner's goal predicate, the closed-fold and exposed-accessory refusals. |
-| `__tests__/scope-playback.test.tsx` (7 cases)                                                 | **1 failed** — two intervals created for one run of scripted time instead of one.                                                                                                                                                                                                                                                              |
-| `__tests__/goal-truth.test.tsx` (4 cases)                                                     | all four fail (no basis line, no bounded status, no hold readout, hold never completes)                                                                                                                                                                                                                                                        |
-| e2e `the worked accessory exchange keeps its false report and still ends protected`           | fails                                                                                                                                                                                                                                                                                                                                          |
-| e2e `the authored breath moves on its own, and the crossing becomes reachable`                | fails                                                                                                                                                                                                                                                                                                                                          |
-| e2e `the carina hold runs down on its own and finishes on the learner's actions`              | fails                                                                                                                                                                                                                                                                                                                                          |
-| e2e `closed folds still refuse the advance, and the manual step is the reduced-motion way on` | fails                                                                                                                                                                                                                                                                                                                                          |
-| e2e `a finished card after an overshoot records the attempt without describing the view`      | fails                                                                                                                                                                                                                                                                                                                                          |
+| Test                                                                                          | On baseline                                                                                                                                                                                                                                                                                                                                                                                                   |
+| --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `__tests__/simulation-truth.test.tsx` (18 cases)                                              | **10 of the first 16 failed, 6 passed**; the two cases added afterwards (restart isolation, capture before acknowledgment) also fail on baseline, where the clock never runs. The cases that pass on baseline are the preserved-contract guards — the misreport, the learner's goal predicate, the closed-fold and exposed-accessory refusals.                                                                |
+| `__tests__/scope-playback.test.tsx` (7 cases)                                                 | **1 failed** — two intervals created for one run of scripted time instead of one.                                                                                                                                                                                                                                                                                                                             |
+| `__tests__/goal-truth.test.tsx` (4 cases, as this batch first wrote it)                       | **Three of the four failed, not four.** The drift case passed on baseline: the stage harness sends its ticks with a learner input mode, which the baseline session already accepted, so it is a preserved-contract guard rather than fail-before evidence. The independent review was right to call the original claim inaccurate. The file's current seven cases are accounted for in the repair pass below. |
+| e2e `the worked accessory exchange keeps its false report and still ends protected`           | fails                                                                                                                                                                                                                                                                                                                                                                                                         |
+| e2e `the authored breath moves on its own, and the crossing becomes reachable`                | fails                                                                                                                                                                                                                                                                                                                                                                                                         |
+| e2e `the carina hold runs down on its own and finishes on the learner's actions`              | fails                                                                                                                                                                                                                                                                                                                                                                                                         |
+| e2e `closed folds still refuse the advance, and the manual step is the reduced-motion way on` | fails                                                                                                                                                                                                                                                                                                                                                                                                         |
+| e2e `a finished card after an overshoot records the attempt without describing the view`      | fails                                                                                                                                                                                                                                                                                                                                                                                                         |
 
 ### The required proving cases
 
@@ -281,3 +293,194 @@ Every new mechanism has one. Verified by reverting `src/features/bronchoscopy-fo
   Recorded because the first override attempt silently did nothing.
 - The default Playwright action timeout in these configs is 0 (no timeout), so `locator.textContent()`
   on an element that may be absent hangs the whole test. Worth a config default for the next lane.
+
+---
+
+## Repair pass after the independent review
+
+An independent review of PR #254 at head `96291d71fbee4acf250b82caede263941768e02a` returned **NOT
+READY FOR MERGE** on three findings. This pass answers all three and corrects the claims the review
+showed were inaccurate. It starts from that head; it opens no new scope, starts no second batch and
+changes nothing about A1, A2, A3, A26 or SUP-16 beyond the goal wording named below.
+
+### Finding 1 (P1) — the completed A4 card still overclaimed a clear view
+
+**Reproduced first, on the PR head.** Guided walk into RMSB, withdraw to the trachea, enter LMSB,
+leave the bend at −30° and advance eight more times, with native keyboard input at 1204×987. All
+five rows green, wall contacts 0, a wall-dominated image. What the card said:
+
+| Surface                      | Before this pass                                                                                  |
+| ---------------------------- | ------------------------------------------------------------------------------------------------- |
+| Lead status                  | `Done. Every goal on this card is met. They record this attempt, not the view on the screen now.` |
+| Goal row                     | `… none made without a clear view …`                                                              |
+| Model limit                  | small muted paragraph at the foot of the column                                                   |
+| Pane list under the controls | five green rows, no framing at all                                                                |
+
+The review was right about the mechanism: a qualifier under a completion headline does not bound the
+headline, because the learner has to reconcile the two and the headline wins. The second clause also
+was not true of the predicate — `advanced-blind` records an advance made while the **model's own
+view signal** was lost, which is not a reading of the image.
+
+**Repaired by changing the hierarchy, not by adding another disclaimer.**
+
+| Surface                      | After this pass                                                                                                                                                                                                                                                                    |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lead status                  | `Recorded: every step this card asks for.` (history) · `Recorded: every step this card asks for, and its live readings hold.` (mixed) · `Done: every reading this card asks for holds now.` (current)                                                                              |
+| Above the rows               | a heading naming what the rows establish: **On the record for this attempt**                                                                                                                                                                                                       |
+| Per row                      | `data-goal-claim`, plus a visible `Recorded` / `Now` tag on a card that carries both kinds                                                                                                                                                                                         |
+| Below the rows               | a bordered, full-weight block: `Where the tip is now: Left main bronchus. The model records where the tip went, the contacts it counted and the views it marked as lost. It does not judge the bronchoscope image, so nothing on this card says the view on the screen is usable.` |
+| Pane list under the controls | the same heading, the same per-row classification and the same limit line                                                                                                                                                                                                          |
+| Goal row                     | `… none made while the model recorded a lost view …`                                                                                                                                                                                                                               |
+
+No completion statement now reads as a verdict on the image; the earned events are untouched;
+Continue stays enabled, because the learner did the work. The copy lives in one module
+(`engine/scope/goalPresentation.ts`) so the card and the pane cannot drift apart.
+
+Two other labels were corrected under the same rule — say only what is recorded:
+
+| Goal                                         | Before                        | After                                                                                                     |
+| -------------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `branch-entry / no-drift`                    | `… with no change in depth …` | `… with no drift in depth recorded …` (the predicate is `without(drift-detected)`, a tolerance, not zero) |
+| `view-loss / lens-cleared-without-advancing` | `Bring a usable view back …`  | `Clear the lens, with no advance made while the model recorded the view as obscured`                      |
+
+Every other BF goal label was audited against its predicate in the same pass. The rest name
+recorded events (`wall-contact`, `red-out-recovered`, `glottis-crossed-open`, the accessory events)
+or are explicitly instructions to the learner, and were left alone.
+
+**Deliberately not changed.** The `branch-entry` Part 3 instruction still reads "Establish a visible
+open lumen before advancing." It is an instruction, not a claim the card checks, and the card now
+states plainly that the model does not check it. Rewriting authored section copy belongs to lane 02.
+
+### Finding 2 (P2) — cumulative inspection records were classed as the scope's present state
+
+**Reproduced.** `scopeGoalClaim` put `ledger` and `ledger-complete` in `current`. The inspection
+ledger keeps every declaration and observation after the scope leaves the airway they were made in,
+so a met ledger goal is a record of the attempt. On the systematic-survey card that made
+`no-airway-left-blank` read as `current` and `inspect-the-lobe` as `mixed`, and the card then told
+the learner that some of its goals "read the state the scope is in now" — after the scope had
+withdrawn to the bronchus intermedius.
+
+**Repaired centrally**, in the classifier rather than in the displayed strings: the distinction is
+what a predicate can still establish later, not which syntax it uses. `ledger` and `ledger-complete`
+are now `history`.
+
+Full inventory after the repair, over all 22 BF scope cards:
+
+| Class                                              | Goals | Cards                                          |
+| -------------------------------------------------- | ----- | ---------------------------------------------- |
+| history — a record that survives the tip moving on | 40    | 16                                             |
+| current — a live reading that stops holding        | 0     | 0                                              |
+| mixed                                              | 9     | 6 (five-controls ×5, branch-entry `hold-view`) |
+
+`systematic-survey` moved from `mixed` to `history`, which is the finding. No card is purely
+`current` today, so `scopeDoneLead('current')` is unreachable from authored content; it is kept
+because a `location`- or `metric`-only goal would produce it, and it is covered by a unit case.
+Representative rendered examples were checked for `history` (view-loss and branch-entry practice,
+systematic-survey) and `mixed` (branch-entry `hold-view`, whose four rows render as
+`Recorded / Recorded and now / Recorded and now / Recorded`).
+
+### Finding 3 (P2) — 3D restore after an asset failure: **pre-existing, not a PR regression**
+
+Reproduced on both revisions with the same script, the same production-shaped browser conditions and
+the same assertions: abort `**/anatomy/larynx/**`, reach S9 Part 3, take **Use the schematic view**,
+restore the route, then take **Try the 3D view again**, and wait 30 s for readiness.
+
+| Step                             | PR head `96291d71`                                             | Baseline `c717c9ff` |
+| -------------------------------- | -------------------------------------------------------------- | ------------------- |
+| initial                          | `data-three-state="failed"`, "The 3D view could not be loaded" | identical           |
+| after **Use the schematic view** | schematic pane, `data-scope-state="fallback"`                  | identical           |
+| after **Try the 3D view again**  | `data-three-state="loading"`, never ready within 30 s          | identical           |
+
+Every runtime file under `src/features/bronchoscopy-foundations` was confirmed byte-identical to
+`c717c9ff` for the baseline run (`git diff c717c9ff --name-only` returned no runtime path). The only
+difference in the captured state is the PR's own "the scripted scene is held" status line, which has
+nothing to do with readiness.
+
+**Disposition: CASE 1 — pre-existing, out of scope for this bounded repair. No code changed and no
+regression added**, because pinning a live defect in a test is worse than leaving it visible.
+
+Mechanism, from source and unproven at browser level: `useScopePlayback` binds its
+`IntersectionObserver` to `root.current` in an effect whose only dependency is the ref object, whose
+identity never changes; `ScopeScenePane` attaches that same ref to a _different_ node in the
+schematic branch and the 3D branch. Switching back therefore leaves the observer on the removed
+node, `visible` stays false, `Scene` keeps `frameloop="never"`, `RenderLifecycle` never runs a frame
+and `onDraw` is never called — so `status` stays `loading`. Both the ref/observer lifecycle and the
+node swap are present unchanged in the baseline. A fix would rebind the observer when the observed
+node changes; that is a 3D-lifecycle change this pass is not authorised to make.
+
+### Validation for this pass
+
+Production build, then the **complete** BF browser suite against `npm run start:prod`, not the dev
+server.
+
+| Check                                                                                              | Result                                                                                                                                                                                                                                                                                                                                                                                                    |
+| -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npx jest src/features/bronchoscopy-foundations --runInBand`                                       | **28 suites, 386 passed, 1 pre-existing todo** (380 before this pass)                                                                                                                                                                                                                                                                                                                                     |
+| `npx tsc --noEmit`                                                                                 | clean                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `npx eslint e2e/bronchoscopy-foundations.spec.ts src/features/bronchoscopy-foundations`            | clean                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `npx prettier --check` on the changed paths                                                        | clean                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `git diff --check`                                                                                 | clean                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `NEXT_PUBLIC_SHOW_DRAFT_MODULES=true npm run build`                                                | succeeds (exit 0)                                                                                                                                                                                                                                                                                                                                                                                         |
+| `PORT=3254 npm run start:prod`, BF route                                                           | HTTP 200                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Complete BF Playwright suite against that production server                                        | **28 passed, 0 failed, 0 retries, 7.3 minutes** — the complete suite (21 existing declarations plus this batch's, 28 instances), including the 23-section reflow walk at 1440 that failed once against a development server in the first phase, all four reflow widths, the 200 % root-text case and every new acceptance case. Built from exactly the committed source.                                  |
+| New cases against the pre-repair implementation (PR head `96291d71`, runtime reverted, tests kept) | **8 failed, 20 passed** across `goal-truth` and `simulation-truth`. The passes are preserved-contract guards and the A1/A2/A3 cases this pass did not touch. Two of the new cases pass there for a weak reason and are labelled as guards, not fail-before evidence: the mixed-card classification was already correct, and the copy-constant case only imports a module that the revert leaves in place. |
+
+Files changed in this pass:
+
+- `engine/scope/goalPresentation.ts` _(new)_ — the one place the card and the pane take their words.
+- `engine/scope/scopeGoalEvaluation.ts` — `ledger` and `ledger-complete` are history.
+- `components/stage/BronchStageHost.tsx`, `components/stage/bronch-stage.module.css` — the heading,
+  the per-row tag, the prominent limit block, the new leads.
+- `components/scope/ScopeFallback.tsx`, `components/scope/scope-fallback.module.css` — the same
+  treatment for the duplicated list under the controls.
+- `components/scope/types.ts` — the pane contract carries each goal's classification (additive).
+- `content/sections/branch-entry.ts`, `content/sections/view-loss.ts` — three goal labels.
+- `__tests__/goal-truth.test.tsx`, `__tests__/simulation-truth.test.tsx`,
+  `e2e/bronchoscopy-foundations.spec.ts` — the regressions below.
+
+New and updated regressions:
+
+- **Overshoot, both widths and both themes** (browser): requirement achieved → deliberate overshoot
+  → the earlier events stay recorded → the lead is `Recorded: every step this card asks for.` → the
+  card contains no "Every goal on this card is met" → the heading and the limit block are present,
+  and remain visible after a real theme toggle → the live airway is printed separately → no
+  horizontal overflow. Screenshots retained per width and theme.
+- **A completed inspection record stays a record** (browser and component): all five survey goals
+  classed `history`, the card carries no "Read from the scope right now", and after withdrawing to
+  the bronchus intermedius every row is still a record and the live location says so.
+- **The pane's own green list** (component): same classification, same heading, same limit line.
+- **Wording** (component and unit): the entry card says `no wall contact recorded` and
+  `while the model recorded a lost view`, and no longer says `keep the tip off the wall`,
+  `without a clear view`, `usable view` or `no change in depth`.
+- **Mixed cards** (component): `hold-view` renders `history / mixed / mixed / history` with visible
+  per-row tags, and its lead names both kinds.
+- **Classifier** (unit): `ledger` and `ledger-complete` are history; `location`, `metric` and
+  `bench-target` stay current; no lead may contain "Every goal on this card is met".
+
+### Theme coverage for the new copy
+
+The overshoot case toggles the site theme with the site's own control at the desktop width and
+checks that the heading, the limit block and the pane's limit line are all still visible, with a
+screenshot in each theme. Two honest limits: the module's lesson stage renders on its own dark
+surface in both site themes, so the new heading and limit block have one appearance and the toggle
+changes the chrome around them rather than the card; and at phone width the site's theme control
+sits inside the collapsed navigation, which is chrome this pass does not drive, so the 390 px case
+runs in the default theme only. This is a visibility check, not a contrast audit.
+
+### What this pass did **not** establish
+
+- **Actual hidden-tab browser acceptance remains unverified.** Chromium reported both pages
+  `visible` after native tab activation in the review's environment, and the Claude in-app browser
+  pane reports `hidden` whenever it is not displayed. The hidden/resume/no-catch-up behaviour has
+  passing hook-level evidence only. This pass changed no clock or lifecycle code, so it did not
+  re-open that question.
+- The 3D recovery failure above is **live on both revisions** and is not fixed here.
+- Every human hold from the first phase stands unchanged: open-lumen meaning, laryngeal close-up
+  readability and inlet geometry, A26's owner decision, source/media/clinical review.
+
+### Readiness
+
+**READY FOR INDEPENDENT RE-REVIEW.** Findings 1 and 2 are repaired with regressions that fail on
+the reviewed head; finding 3 is reproduced identically on the baseline and handed on unchanged, with
+its evidence. The three inaccurate claims the review identified are corrected above. Nothing is
+merged or deployed, and no other batch was started.
