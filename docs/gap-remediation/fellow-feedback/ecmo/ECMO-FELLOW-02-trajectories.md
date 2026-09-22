@@ -21,8 +21,9 @@ authored to produce — or an artifact. After the repair, the only no-action mov
 hemorrhage, tension pneumothorax and tamponade still deteriorate, the VV air case still falls off
 support, and the gas case still accumulates CO₂. Movement that was an artifact — an authored value
 pulled toward a generic patient, or a default the case never authored settling into place — is gone.
-Where a treatment path (C) differs from A at the same second, that difference is what the treatment
-caused in this model.
+Where a treatment path (C) differs from A at the same second, that difference is attributable to
+the treatment **plan** in this model. A later action in a multi-action plan is not isolated from the
+earlier actions by this comparison.
 
 ## Reproduce
 

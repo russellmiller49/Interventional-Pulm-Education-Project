@@ -89,7 +89,8 @@ function patientSignals(supportMode: EcmoSimulationState['supportMode']): readon
           },
         ]
       : []),
-    { label: 'PaCO₂', unit: 'mm Hg', read: (o) => o.paCO2, digits: 0 },
+    // The model resolves PaCO₂ to tenths. Rounding to whole mm Hg can falsely say "unchanged".
+    { label: 'PaCO₂', unit: 'mm Hg', read: (o) => o.paCO2, digits: 1 },
     { label: 'MAP', unit: 'mm Hg', read: (o) => o.meanArterialPressure, digits: 0 },
     { label: 'Lactate', unit: 'mmol/L', read: (o) => o.lactate, digits: 1 },
   ]
@@ -98,6 +99,12 @@ function patientSignals(supportMode: EcmoSimulationState['supportMode']): readon
 const CIRCUIT_SIGNALS: readonly SignalSpec[] = [
   { label: 'Circuit flow', unit: 'L/min', read: (o) => o.bloodFlow, digits: 2 },
   { label: 'Drainage pressure (pVen)', unit: 'mm Hg', read: (o) => o.pVen, digits: 0 },
+]
+
+const CONTROL_SIGNALS: readonly SignalSpec[] = [
+  { label: 'Requested speed', unit: 'rpm', read: (o) => o.rpmSetpoint, digits: 0 },
+  { label: 'Sweep setting', unit: 'L/min', read: (o) => o.sweepLpm, digits: 1 },
+  { label: 'Sweep-gas FiO₂', unit: '', read: (o) => o.gasFio2, digits: 2 },
 ]
 
 function formatReading(value: number | null, digits: number): string {
@@ -118,9 +125,14 @@ function compare(
 
 /** Circuit and device changes produced at the moment of one action. */
 export function changesAtAction(observation: EcmoActionObservation): DebriefSignalChange[] {
-  const changes = compare(observation.before, observation.after, CIRCUIT_SIGNALS)
+  const changes = compare(observation.before, observation.after, [
+    ...CONTROL_SIGNALS,
+    ...CIRCUIT_SIGNALS,
+  ])
   const pumpBefore = observation.before.pumpRunning ? 'running' : 'stopped'
   const pumpAfter = observation.after.pumpRunning ? 'running' : 'stopped'
+  const gasBefore = observation.before.gasSourceConnected ? 'connected' : 'disconnected'
+  const gasAfter = observation.after.gasSourceConnected ? 'connected' : 'disconnected'
   return [
     {
       label: 'Pump',
@@ -129,14 +141,52 @@ export function changesAtAction(observation: EcmoActionObservation): DebriefSign
       after: pumpAfter,
       changed: pumpBefore !== pumpAfter,
     },
+    {
+      label: 'Gas source',
+      unit: '',
+      before: gasBefore,
+      after: gasAfter,
+      changed: gasBefore !== gasAfter,
+    },
+    {
+      label: 'Power source',
+      unit: '',
+      before: observation.before.powerSource,
+      after: observation.after.powerSource,
+      changed: observation.before.powerSource !== observation.after.powerSource,
+    },
     ...changes,
   ].filter((change) => change.changed)
 }
 
 export function debriefActionEntries(state: EcmoSimulationState): readonly DebriefActionEntry[] {
   const clinical = state.scenario.clinical
-  if (clinical) {
-    return clinical.appliedInterventions.map((record) => ({
+  const recordsByAction = new Map(
+    clinical?.appliedInterventions
+      .filter((record) => record.actionHistoryId)
+      .map((record) => [record.actionHistoryId!, record] as const) ?? [],
+  )
+  const actionEntries = state.history
+    .filter(
+      (entry) => entry.kind === 'action' && !/prediction|reassessment|clue/i.test(entry.label),
+    )
+    .map((entry) => {
+      const record = recordsByAction.get(entry.id)
+      return {
+        id: entry.id,
+        time: entry.time,
+        label: record?.label ?? entry.label,
+        authoredResponse: record?.response ?? null,
+        effect: record?.effect ?? null,
+        observation: entry.observation ?? record?.observation ?? null,
+      }
+    })
+  if (!clinical) return actionEntries
+  // A bounded history can drop an old action. Keep its clinical record in the debrief even then.
+  const visibleActionIds = new Set(actionEntries.map((entry) => entry.id))
+  const olderRecords = clinical.appliedInterventions
+    .filter((record) => !record.actionHistoryId || !visibleActionIds.has(record.actionHistoryId))
+    .map((record) => ({
       id: record.id,
       time: record.time,
       label: record.label,
@@ -144,19 +194,7 @@ export function debriefActionEntries(state: EcmoSimulationState): readonly Debri
       effect: record.effect,
       observation: record.observation ?? null,
     }))
-  }
-  return state.history
-    .filter(
-      (entry) => entry.kind === 'action' && !/prediction|reassessment|clue/i.test(entry.label),
-    )
-    .map((entry) => ({
-      id: entry.id,
-      time: entry.time,
-      label: entry.label,
-      authoredResponse: null,
-      effect: null,
-      observation: entry.observation ?? null,
-    }))
+  return [...olderRecords, ...actionEntries].sort((a, b) => a.time - b.time)
 }
 
 export function buildDebriefTimeline(state: EcmoSimulationState): readonly DebriefTimeGroup[] {

@@ -17,7 +17,7 @@ import {
   EcmoPracticeCaseView,
   type EcmoPracticeCaseViewProps,
 } from '../components/practice/EcmoPracticeActivity'
-import { buildDebriefTimeline } from '../components/practice/debriefTimeline'
+import { buildDebriefTimeline, changesAtAction } from '../components/practice/debriefTimeline'
 import { OxygenDeliveryExplorer } from '../components/teaching/OxygenDeliveryExplorer'
 import { VvNormalStatePanel } from '../components/teaching/VvNormalStatePanel'
 import { VvSeriesPhysiologyPanel } from '../components/teaching/VvSeriesPhysiologyPanel'
@@ -95,6 +95,120 @@ const VV_START: readonly SimulationAction[] = [
 ]
 
 describe('A · the debrief compares named, immutable reading pairs (C1-3, C2-1)', () => {
+  it('includes an unmatched console action in a clinical case instead of saying no action was recorded', () => {
+    const state = run('clinical-vv-recirculation-migration', [
+      { type: 'SET_RPM', rpm: 3600 },
+      { type: 'STEP' },
+      { type: 'REVEAL_DEBRIEF' },
+    ])
+    const timeline = buildDebriefTimeline(state)
+    expect(timeline).toHaveLength(1)
+    expect(timeline[0].entries.map((entry) => entry.label)).toEqual(['Changed RPM setpoint'])
+    expect(timeline[0].entries[0].observation?.before.rpmSetpoint).toBe(3550)
+    expect(timeline[0].entries[0].observation?.after.rpmSetpoint).toBe(3600)
+  })
+
+  it('preserves all same-second actions in order and keeps the authored response on its card', () => {
+    const state = run('clinical-vv-recirculation-migration', [
+      card('recirc-ultrasound'),
+      { type: 'SET_RPM', rpm: 3600 },
+      card('recirc-reposition'),
+      { type: 'STEP' },
+      { type: 'REVEAL_DEBRIEF' },
+    ])
+    const entries = buildDebriefTimeline(state)[0].entries
+    expect(entries.map((entry) => entry.label)).toEqual([
+      'Assess cannula position with ultrasound/echo',
+      'Changed RPM setpoint',
+      'Arrange image-guided cannula repositioning',
+    ])
+    expect(entries[0].authoredResponse).toMatch(/cannula/i)
+    expect(entries[1].authoredResponse).toBeNull()
+    expect(entries[2].authoredResponse).toMatch(/flow/i)
+  })
+
+  it('names requested speed and external gas settings in action-time observations', () => {
+    const state = run('clinical-vv-initiation-ards', [
+      { type: 'SET_RPM', rpm: 3200 },
+      { type: 'SET_SWEEP', sweep: 4 },
+      { type: 'SET_GAS_FIO2', fio2: 1 },
+    ])
+    const entries = buildDebriefTimeline(state)[0].entries
+    const changes = entries.map((entry) => changesAtAction(entry.observation!))
+    expect(changes[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: 'Requested speed', before: '2800', after: '3200' }),
+      ]),
+    )
+    expect(changes[1]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: 'Sweep setting', before: '2.0', after: '4.0' }),
+      ]),
+    )
+    expect(changes[2]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: 'Sweep-gas FiO₂', before: '0.60', after: '1.00' }),
+      ]),
+    )
+  })
+
+  it('does not call a smaller-than-one-mm Hg PaCO₂ change unchanged', () => {
+    const stepped = run('clinical-vv-recirculation-migration', [
+      { type: 'SET_RPM', rpm: 3600 },
+      { type: 'STEP' },
+      { type: 'REVEAL_DEBRIEF' },
+    ])
+    const atAction = stepped.history.find((entry) => entry.kind === 'action')?.observation?.after
+    expect(atAction).toBeDefined()
+    const state = {
+      ...stepped,
+      patient: { ...stepped.patient, paCO2: atAction!.paCO2 + 0.1 },
+    }
+    const change = buildDebriefTimeline(state)[0].interval?.find((item) => item.label === 'PaCO₂')
+    expect(change).toMatchObject({ before: '46.0', after: '46.1', changed: true })
+  })
+
+  it('observes the requested speed before and after an interlock action that also logs a system event', () => {
+    const opened = createInitialSimulationState('clinical-vv-tension-pneumothorax', 'guided')
+    const stopped = ecmoSimulationReducer(opened, { type: 'SET_RPM', rpm: 3450 })
+    const actionEntry = stopped.history.find(
+      (entry) => entry.kind === 'action' && entry.label === 'Changed RPM setpoint',
+    )
+    expect(actionEntry?.observation).toMatchObject({
+      before: { time: 0, pumpRunning: true, bloodFlow: 2.47, rpmSetpoint: 3200 },
+      after: { time: 0, pumpRunning: false, bloodFlow: 0, rpmSetpoint: 3450 },
+    })
+    expect(
+      stopped.history.filter(
+        (entry) => entry.kind === 'system' && /pressure interlock/i.test(entry.label),
+      ),
+    ).toHaveLength(1)
+  })
+
+  it('keeps the inner action observation when the rotary control delegates to a speed action', () => {
+    const opened = createInitialSimulationState('clinical-vv-recirculation-migration', 'guided')
+    const turned = ecmoSimulationReducer(opened, { type: 'ROTARY_DELTA', delta: 1 })
+    const actions = turned.history.filter((entry) => entry.kind === 'action')
+    expect(actions).toHaveLength(1)
+    expect(actions[0].observation?.before.rpmSetpoint).toBe(3550)
+    expect(actions[0].observation?.after.rpmSetpoint).toBe(3600)
+    expect(actions[0].observation?.before.time).toBe(0)
+    expect(actions[0].observation?.after.time).toBe(0)
+  })
+
+  it('VAC3 reassessment describes the modeled RPM path without claiming pVen or chatter changed', () => {
+    const state = createInitialSimulationState('va-clinical-vasoplegia', 'guided')
+    const reassessment = resolveScenarioReassessment(scenarioOf(state))
+    expect(reassessment.modelBoundary).toMatch(/flow.*MAP.*pVen.*chatter/i)
+    const speed = reassessment.device.options.find((option) => option.id === 'vaso-device-rpm')
+    const circuit = reassessment.circuit.options.find(
+      (option) => option.id === 'vaso-circuit-collapse',
+    )
+    expect(speed?.rationale).not.toMatch(/pVen more negative|started chatter/i)
+    expect(circuit?.rationale).toMatch(/flow.*MAP/i)
+    expect(reassessment.circuit.correctOptionId).toBe('vaso-circuit-correct')
+  })
+
   it('records what each action found and produced, at the second it was taken', () => {
     const started = run('clinical-vv-initiation-ards', VV_START)
     const start = started.scenario.clinical?.appliedInterventions.find(
@@ -133,9 +247,10 @@ describe('A · the debrief compares named, immutable reading pairs (C1-3, C2-1)'
       />,
     )
     const text = view.container.textContent ?? ''
+    expect(text).toContain('Circuit, device, and external gas settings can change at an action')
     expect(text).toContain('Circuit flow 0.00 → 4.05 L/min')
     expect(text).not.toContain('Circuit flow: unchanged')
-    expect(text).toMatch(/3 actions in the same modeled second; the clock did not\s+advance/)
+    expect(text).toMatch(/6 actions in the same modeled second; the clock did not\s+advance/)
     const group = view.container.querySelector('[data-debrief-group="0"]')
     expect(group).not.toBeNull()
     expect(within(group as HTMLElement).getByText(/This run, 0 → 6 s/)).toBeInTheDocument()
@@ -254,12 +369,14 @@ describe('B · Practice says what its clock and its brief are', () => {
     expect(document.querySelector('[data-presentation-note]')?.textContent).toMatch(
       /At presentation/,
     )
+    expect(document.querySelector('[data-presentation-note]')?.textContent).toMatch(/t=0/)
   })
 
   it.each([
     ['clinical-vv-initiation-ards', /Work of breathing and respiratory rate are not modeled/],
     ['clinical-vv-tension-pneumothorax', /does not model blood pressure recovering/],
     ['va-clinical-tamponade', /holds pulse pressure at the value the case opened with/],
+    ['va-clinical-vasoplegia', /extra speed raises circuit flow slightly but does not raise MAP/],
   ])(
     '%s: the reassessment says, before the choice, what this monitor cannot show',
     (caseId, boundary) => {
@@ -303,6 +420,33 @@ describe('B · Practice says what its clock and its brief are', () => {
 })
 
 describe('C · monitor notes are true for the mode they render in (VAC6-1)', () => {
+  it('labels bicarbonate provenance instead of presenting an inferred value as a measured lab', () => {
+    const inferred = render(
+      <PatientMonitor state={createInitialSimulationState('clinical-vv-initiation-ards')} />,
+    )
+    expect(
+      inferred.container.querySelector('[data-bicarbonate-source="calculated"]'),
+    ).toHaveTextContent(
+      /calculated at load from the opening pH and PaCO₂.*no independent bicarbonate result/i,
+    )
+    inferred.unmount()
+
+    const modelDefault = render(
+      <PatientMonitor state={createInitialSimulationState('va-clinical-tamponade')} />,
+    )
+    expect(
+      modelDefault.container.querySelector('[data-bicarbonate-source="model-default"]'),
+    ).toHaveTextContent(/model default.*no bicarbonate result/i)
+    modelDefault.unmount()
+
+    const authored = render(
+      <PatientMonitor state={createInitialSimulationState('acute-hypercapnia')} />,
+    )
+    expect(
+      authored.container.querySelector('[data-bicarbonate-source="case-supplied"]'),
+    ).toHaveTextContent(/case-supplied input/i)
+  })
+
   it('the limb case describes its own story; another VA case keeps the held-limb note', () => {
     const limb = render(
       <PatientMonitor state={createInitialSimulationState('va-clinical-limb-ischemia')} />,

@@ -2,16 +2,17 @@
 
 Implementation: September 22, 2026. Prepared by Claude (AI implementation). **Not reviewed by a
 clinician, a perfusionist or a device specialist.** This is a software and educational-model
-remediation pending independent review. It is not clinical validation, device validation or
-release approval, and it closes no `OWNER_DECISIONS.md` hold.
+remediation. The independent software review is recorded in the addendum below. This is not
+clinical validation, device validation or release approval, and it closes no `OWNER_DECISIONS.md`
+hold.
 
 **Result.** The engine now separates what a case authored, what the model derives, what a fault's
 story drives, and what a learner's action bought. It also no longer spends a clock second on
 loading, recomputing or revealing. The no-action path of every case now moves only where the case's
 own story says it should. Of the 36 assigned source IDs:
 
-- **12 are repaired**;
-- **11 are partly repaired**, with the deferred subpart named;
+- **9 are repaired**;
+- **14 are partly repaired**, with the deferred subpart named;
 - **13 are contained**: the model limitation is stated on the learner's surface and the physiology
   stays with the named owner decision.
 
@@ -49,10 +50,9 @@ src/features/cardiohelp-ecmo` is **empty**, so the ECMO tree at the baseline is 
   bronchoscopy-foundations, e2e and `.claude/launch.json` paths only, and this branch changes only
   ECMO paths, one ECMO script and these docs. Checks were rerun on the merged tree
   ([Verification](#verification)).
-- **`origin/main` moved again before the push**, to **`bf613270a37a30cfd31a915a33758b808dfbff89`**
-  (PR #259, MV-PRE-REVIEW-01). Nothing was integrated, because nothing overlaps. That merge changed
-  only `src/features/mechanical-ventilation/**` and its own handoff; no ECMO file imports that
-  module; and `git merge-tree` against it is clean. ECMO checks were not rerun on it.
+- **At implementation handoff**, `origin/main` had moved again to
+  **`bf613270a37a30cfd31a915a33758b808dfbff89`** (PR #259, MV-PRE-REVIEW-01). The implementer
+  had not integrated it. The independent review merged it and reran the checks; see the addendum.
 
 ### Baseline gate (before any edit, at `9fbdbddc`)
 
@@ -101,7 +101,7 @@ Clause status, narrative timing and owner decisions are hand annotations.
 
 - `fault-story`: an active fault's deterioration target;
 - `case-authored`: the case's level, moved only by later changes in the generic target;
-- `intervention-held`: a non-temporizing intervention's level, held against the fault story;
+- `intervention-held`: a non-temporizing intervention's level, held against faults present when it landed; a later fault with its own target can still move the field;
 - `generic-model`: the engine's generic relationship.
 
 ### Variables: defect at the baseline and the contract now enforced
@@ -147,7 +147,8 @@ The engine changes are in `engine/simulation.ts`, `engine/reducer.ts`,
 
 3. **Clinical and integrated cases own what they author** (`scenario.patientOwnership`,
    `resolvePatientTargets`). Precedence:
-   1. the fault's story target, beaten only by an intervention-held anchor;
+   1. a newly introduced fault's story target; otherwise, an intervention-held anchor beats the
+      story targets already present when that intervention landed;
    2. the authored level plus (generic now − generic at load);
    3. generic.
 
@@ -182,46 +183,46 @@ The engine changes are in `engine/simulation.ts`, `engine/reducer.ts`,
 **R** = repaired · **P** = partly repaired (deferred subpart named) · **C** = contained (the
 limitation is stated on the surface; the physiology is held).
 
-| ID     | Sev | Disposition | What changed                                                                                                                                                                                                                             | Held / deferred                                                                                      |
-| ------ | --- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| S1-5   | P3  | **R**       | The explorer shows the value a halving button actually set and the delivery ratio it produced. Saturation carries %. No unintroduced "this patient". Formula unchanged.                                                                  | —                                                                                                    |
-| S3-2   | P3  | **R**       | The one-mmHg suction change is stated as small. The coefficient is unchanged.                                                                                                                                                            | —                                                                                                    |
-| S3-3   | P2  | **R**       | The reversed-direction option is categorised by its own rationale (`incorrect-mechanism`). The key and wording are unchanged.                                                                                                            | —                                                                                                    |
-| S4-2   | P2  | **C**       | The Section 4 panel states that the two saturations come from separate formulas and that the model has no dissolved-oxygen or PO₂ term. Nothing is invented.                                                                             | ECMO-OWNER-04                                                                                        |
-| S4-3   | P2  | **C**       | Section 4 and Practice state that modeled seconds are compressed and a final reading can still be moving.                                                                                                                                | Hazard flags and pacing: 05 / ECMO-OWNER-09                                                          |
-| S4-4   | P3  | **P**       | States that the model's PaCO₂ has no blood-flow term.                                                                                                                                                                                    | The "Sweep-gas FiO₂" label and the "flow left after" wording belong to 04                            |
-| S5-1   | P2  | **R**       | The load is settled, so Now equals the reference with a zero change. The change column names the reading it is measured from.                                                                                                            | —                                                                                                    |
-| S6-2   | P3  | **P**       | One percentage notation everywhere. The comparison table names the loaded state it reads.                                                                                                                                                | Placement of the transfer question: 03/04                                                            |
-| S8-3   | P2  | **P**       | Flow is recomputed at the action. The step says it is one compressed authored event standing for the cause-specific correction.                                                                                                          | Choosing between causes and a realistic recovery: 04 / ECMO-OWNER-10                                 |
-| S10-2  | P1  | **C**       | Prompt 01's "teaching transition" naming stands. Practice now says modeled seconds are compressed, and the debrief separates the change at the action from the interval that followed.                                                   | Exchange timing and risk: 05 / ECMO-OWNER-10                                                         |
-| S10-3  | P1  | **C**       | The existing feedback keeps the limitation visible, and no copy calls improved flow safe. No hemolysis cost, penalty or coefficient invented.                                                                                            | 05                                                                                                   |
-| S11-2  | P2  | **P**       | Both transfer steps name 4.0 L/min, the setting they complete on. Expected responses no longer promise a response the step cannot show. "Neither instant nor linear" now says what the simulation draws.                                 | Transfer steps still do not advance time: 04                                                         |
-| S14-1  | P2  | **C**       | The gas drill says the recovery looks instant because the source is off for one modeled second, and that recovery is symmetric with the rise. The gas-restore note no longer points at a missing action.                                 | The "delivered" label: ECMO-OWNER-02, 03                                                             |
-| S17-4  | P2  | **P**       | The capstone's reveal and preview no longer start a held clock (t 28 → 28 over 3 s of wall time; baseline 28 → 31). An unauthored respiratory rate follows work of breathing.                                                            | "Restore verified gas source" stays disabled by design of that lesson: 04                            |
-| S17-5  | P2  | **P**       | Task 1 says the simulator is held just before the change, so its values are still the ones the case started from. Task 6 is named as retrieval of Section 6.                                                                             | Question redesign: 04                                                                                |
-| VA5-1  | P1  | **C**       | VA sections state that the circuit equations carry no arterial pressure, so VA and VV references read the same circuit numbers. No pressures chosen to look different.                                                                   | ECMO-OWNER-05                                                                                        |
-| VA11-1 | P1  | **C**       | Traced: no modeled mixing variable exists. The marker is already drawn and described as "mixing region varies". It is not bound to SpO₂, per the pack's direction.                                                                       | ECMO-OWNER-12, visual 03                                                                             |
-| VA13-1 | P2  | **R**       | VA drills open on VA values, not the VV default patient. The VA startup drill authors the femoral 98.5 and MAP 71 its stem quotes.                                                                                                       | —                                                                                                    |
-| VA17-3 | P2  | **C**       | The capstone's MAP-from-flow statements carry the vasoplegia exception. That MAP is independent of flow under vasoplegia is true of this model.                                                                                          | ECMO-OWNER-07                                                                                        |
-| C1-1   | P1  | **C**       | The reassessment names the limit: breathing is not modeled after support starts. The key is unchanged. The harmful path's lower SpO₂ at the check is that card's modeled consequence (78 → 74.7 at 3 s).                                 | ECMO-OWNER-10                                                                                        |
-| C1-3   | P2  | **R**       | The debrief compares named immutable pairs. Starting support reads 0 → 4.05, not "unchanged". Same-second actions are grouped as "actions in the same modeled second", with no invented timestamps.                                      | —                                                                                                    |
-| C1-4   | P2  | **P**       | Lactate no longer clears untreated (3.2 flat on path A; baseline 3.1 → 1.8), so its fall is attributable to support. Modeled time is labelled as compressed.                                                                             | Ventilator rest settings and CO₂ pacing: ECMO-OWNER-09                                               |
-| C2-1   | P2  | **R**       | The debrief shows MAP 54 → 65 over "This run, 0 → 4 s" beside the untreated case over the same seconds. The brief's numbers are labelled as the presentation.                                                                            | —                                                                                                    |
-| C3-1   | P0  | **C**       | The stop acts at the speed request that crosses the limit. The banner names this model's pressure interlock, not a device alarm. The request is kept.                                                                                    | Protective behaviour and alarm: ECMO-OWNER-03                                                        |
-| C3-2   | P1  | **C**       | The reassessment names that MAP after decompression is not modeled. Heart rate is labelled not modeled. No MAP or tachycardia invented.                                                                                                  | ECMO-OWNER-10                                                                                        |
-| C4-1   | P3  | **R**       | PaCO₂ opens at the model's value (46) and no longer "rises" after a new membrane. The membrane fault has no PaCO₂ term: stated in the manifest, no new term.                                                                             | Membrane CO₂: ECMO-OWNER-10                                                                          |
-| C5-2   | P3  | **P**       | The brief is labelled as the presentation. Traced: the authored 84% pre-oxygenator saturation was a dead input the console never read.                                                                                                   | The monitor opening collapsed is layout: 03                                                          |
-| C5-3   | P1  | **R**       | Untreated SpO₂ holds (78 at 10 s). Repositioning raises it (85 vs 78 at a matched 10 s, in the browser).                                                                                                                                 | "78% and falling": no recirculation deterioration is invented. ECMO-OWNER-10                         |
-| C6-1   | P1  | **C**       | The drill explains its one-second interruption. In the case, CO₂ recovers over about thirty modeled seconds. The distractor key is unchanged.                                                                                            | Clinical pacing: ECMO-OWNER-09                                                                       |
-| VAC1-1 | P2  | **P**       | Pulse pressure (8) and native output (1.2) no longer improve untreated.                                                                                                                                                                  | Right arm equals femoral until the right arm reaches 96, both from the authored 86: ECMO-OWNER-06/10 |
-| VAC2-1 | P1  | **P**       | Pulse pressure holds at the authored 6 untreated (baseline widened 8 → 18). Native output opens at the VA value 2.4 (baseline 4.4). Heart rate is labelled not modeled. The reassessment names that pulsatility recovery is not modeled. | ECMO-OWNER-06                                                                                        |
-| VAC3-1 | P2  | **C**       | Pressors hold the MAP they bought while the tone problem stands. The speed card no longer claims chatter the model does not produce. The untreated decline is the case's story and is preserved. No MAP rise added.                      | ECMO-OWNER-07                                                                                        |
-| VAC5-1 | P1  | **R**       | No action: right arm 78, pulse pressure 28, native output 3.5, all flat. The ventilation card's gain lands (86) and persists (86 at 8 s).                                                                                                | Response model: ECMO-OWNER-10                                                                        |
-| VAC6-1 | P2  | **R**       | The limb note is true for its mode: the limb case describes its own story, and other VA cases keep the held-limb note.                                                                                                                   | Recovery time course: ECMO-OWNER-10                                                                  |
-| IV-4   | P2  | **P**       | Pre-trial values stay settled (PaCO₂ 43 flat; baseline climbed 44 → 60 before any trial). Work of breathing rises 20 modeled seconds after the sweep stops, and the clock is labelled compressed.                                        | Trial duration and the sweep-0 target: ECMO-OWNER-09/11                                              |
-| IA-3   | P1  | **R**       | Recognition-only wording no longer claims a correction ("recognised and escalated", "escalated, not carried out here"). The fault stays active and the right arm stays at the authored 83.                                               | —                                                                                                    |
+| ID     | Sev | Disposition | What changed                                                                                                                                                                                                                                                                                            | Held / deferred                                                                                                                      |
+| ------ | --- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| S1-5   | P3  | **R**       | The explorer shows the value a halving button actually set and the delivery ratio it produced. Saturation carries %. No unintroduced "this patient". Formula unchanged.                                                                                                                                 | —                                                                                                                                    |
+| S3-2   | P3  | **R**       | The one-mmHg suction change is stated as small. The coefficient is unchanged.                                                                                                                                                                                                                           | —                                                                                                                                    |
+| S3-3   | P2  | **R**       | The reversed-direction option is categorised by its own rationale (`incorrect-mechanism`). The key and wording are unchanged.                                                                                                                                                                           | —                                                                                                                                    |
+| S4-2   | P2  | **C**       | The Section 4 panel states that the two saturations come from separate formulas and that the model has no dissolved-oxygen or PO₂ term. Nothing is invented.                                                                                                                                            | ECMO-OWNER-04                                                                                                                        |
+| S4-3   | P2  | **C**       | Section 4 and Practice state that modeled seconds are compressed and a final reading can still be moving.                                                                                                                                                                                               | Hazard flags and pacing: 05 / ECMO-OWNER-09                                                                                          |
+| S4-4   | P3  | **P**       | States that the model's PaCO₂ has no blood-flow term.                                                                                                                                                                                                                                                   | The "Sweep-gas FiO₂" label and the "flow left after" wording belong to 04                                                            |
+| S5-1   | P2  | **R**       | The load is settled, so Now equals the reference with a zero change. The change column names the reading it is measured from.                                                                                                                                                                           | —                                                                                                                                    |
+| S6-2   | P3  | **P**       | One percentage notation everywhere. The comparison table names the loaded state it reads.                                                                                                                                                                                                               | Placement of the transfer question: 03/04                                                                                            |
+| S8-3   | P2  | **P**       | Flow is recomputed at the action. The step says it is one compressed authored event standing for the cause-specific correction.                                                                                                                                                                         | Choosing between causes and a realistic recovery: 04 / ECMO-OWNER-10                                                                 |
+| S10-2  | P1  | **C**       | Prompt 01's "teaching transition" naming stands. Practice now says modeled seconds are compressed, and the debrief separates the change at the action from the interval that followed.                                                                                                                  | Exchange timing and risk: 05 / ECMO-OWNER-10                                                                                         |
+| S10-3  | P1  | **C**       | The existing feedback keeps the limitation visible, and no copy calls improved flow safe. No hemolysis cost, penalty or coefficient invented.                                                                                                                                                           | 05                                                                                                                                   |
+| S11-2  | P2  | **P**       | Both transfer steps name 4.0 L/min, the setting they complete on. Expected responses no longer promise a response the step cannot show. "Neither instant nor linear" now says what the simulation draws.                                                                                                | Transfer steps still do not advance time: 04                                                                                         |
+| S14-1  | P2  | **C**       | The gas drill says the recovery looks instant because the source is off for one modeled second, and that recovery is symmetric with the rise. The gas-restore note no longer points at a missing action.                                                                                                | The "delivered" label: ECMO-OWNER-02, 03                                                                                             |
+| S17-4  | P2  | **P**       | The capstone's reveal and preview no longer start a held clock (t 28 → 28 over 3 s of wall time; baseline 28 → 31). An unauthored respiratory rate follows work of breathing.                                                                                                                           | "Restore verified gas source" stays disabled by design of that lesson: 04                                                            |
+| S17-5  | P2  | **P**       | Task 1 says the simulator is held just before the change, so its values are still the ones the case started from. Task 6 is named as retrieval of Section 6.                                                                                                                                            | Question redesign: 04                                                                                                                |
+| VA5-1  | P1  | **C**       | VA sections state that the circuit equations carry no arterial pressure, so VA and VV references read the same circuit numbers. No pressures chosen to look different.                                                                                                                                  | ECMO-OWNER-05                                                                                                                        |
+| VA11-1 | P1  | **C**       | Traced: no modeled mixing variable exists. The marker is already drawn and described as "mixing region varies". It is not bound to SpO₂, per the pack's direction.                                                                                                                                      | ECMO-OWNER-12, visual 03                                                                                                             |
+| VA13-1 | P2  | **R**       | VA drills open on VA values, not the VV default patient. The VA startup drill authors the femoral 98.5 and MAP 71 its stem quotes.                                                                                                                                                                      | —                                                                                                                                    |
+| VA17-3 | P2  | **C**       | The capstone's MAP-from-flow statements carry the vasoplegia exception. That MAP is independent of flow under vasoplegia is true of this model.                                                                                                                                                         | ECMO-OWNER-07                                                                                                                        |
+| C1-1   | P1  | **C**       | The reassessment names the limit: breathing is not modeled after support starts. The key is unchanged. The harmful path's lower SpO₂ at the check is that card's modeled consequence (78 → 74.7 at 3 s).                                                                                                | ECMO-OWNER-10                                                                                                                        |
+| C1-3   | P2  | **R**       | The debrief compares named immutable pairs. Starting support reads 0 → 4.05, not "unchanged". Same-second actions are grouped as "actions in the same modeled second", with no invented timestamps.                                                                                                     | —                                                                                                                                    |
+| C1-4   | P2  | **P**       | Lactate no longer clears untreated (3.2 flat on path A; baseline 3.1 → 1.8), so its fall is attributable to support. Modeled time is labelled as compressed.                                                                                                                                            | Ventilator rest settings and CO₂ pacing: ECMO-OWNER-09                                                                               |
+| C2-1   | P2  | **P**       | The debrief shows MAP 54 → 65 over "This run, 0 → 4 s" beside the untreated case over the same seconds. The brief's numbers are labelled as the presentation.                                                                                                                                           | Brief flow 2.7 L/min and pVen −165 remain different from the live opening 2.56 L/min and −139.                                       |
+| C3-1   | P0  | **C**       | The stop acts at the speed request that crosses the limit. The banner names this model's pressure interlock, not a device alarm. The request is kept.                                                                                                                                                   | Protective behaviour and alarm: ECMO-OWNER-03                                                                                        |
+| C3-2   | P1  | **C**       | The reassessment names that MAP after decompression is not modeled. Heart rate is labelled not modeled. No MAP or tachycardia invented.                                                                                                                                                                 | ECMO-OWNER-10                                                                                                                        |
+| C4-1   | P3  | **R**       | PaCO₂ opens at the model's value (46) and no longer "rises" after a new membrane. The membrane fault has no PaCO₂ term: stated in the manifest, no new term.                                                                                                                                            | Membrane CO₂: ECMO-OWNER-10                                                                                                          |
+| C5-2   | P3  | **P**       | The brief is labelled as the presentation. Traced: the authored 84% pre-oxygenator saturation was a dead input the console never read.                                                                                                                                                                  | The monitor opening collapsed is layout: 03                                                                                          |
+| C5-3   | P1  | **P**       | Untreated SpO₂ holds (78 at 10 s). Repositioning raises it (85 vs 78 at a matched 10 s, in the browser).                                                                                                                                                                                                | The brief says "78% and falling"; untreated SpO₂ is flat because a recirculation deterioration target is not modeled. ECMO-OWNER-10. |
+| C6-1   | P1  | **C**       | The drill explains its one-second interruption. In the case, CO₂ recovers over about thirty modeled seconds. The distractor key is unchanged.                                                                                                                                                           | Clinical pacing: ECMO-OWNER-09                                                                                                       |
+| VAC1-1 | P2  | **P**       | Pulse pressure (8) and native output (1.2) no longer improve untreated.                                                                                                                                                                                                                                 | Right arm equals femoral until the right arm reaches 96, both from the authored 86: ECMO-OWNER-06/10                                 |
+| VAC2-1 | P1  | **P**       | Pulse pressure holds at the authored 6 untreated (baseline widened 8 → 18). Native output opens at the VA value 2.4 (baseline 4.4). Heart rate is labelled not modeled. The reassessment names that pulsatility recovery is not modeled.                                                                | ECMO-OWNER-06                                                                                                                        |
+| VAC3-1 | P2  | **C**       | Pressors hold the MAP they bought while the tone problem stands. The speed card and reassessment no longer claim pVen/chatter changes the model does not produce. The reassessment states that extra flow does not lift MAP in this case. The untreated decline is the case's story. No MAP rise added. | ECMO-OWNER-07                                                                                                                        |
+| VAC5-1 | P1  | **P**       | No action: right arm 78, pulse pressure 28, native output 3.5, all flat. The ventilation card's gain lands (86) and persists (86 at 8 s).                                                                                                                                                               | The speed/flow path still changes flow without an upper-body response; response model: ECMO-OWNER-10.                                |
+| VAC6-1 | P2  | **R**       | The limb note is true for its mode: the limb case describes its own story, and other VA cases keep the held-limb note.                                                                                                                                                                                  | Recovery time course: ECMO-OWNER-10                                                                                                  |
+| IV-4   | P2  | **P**       | Pre-trial values stay settled (PaCO₂ 43 flat; baseline climbed 44 → 60 before any trial). Work of breathing rises 20 modeled seconds after the sweep stops, and the clock is labelled compressed.                                                                                                       | Trial duration and the sweep-0 target: ECMO-OWNER-09/11                                                                              |
+| IA-3   | P1  | **R**       | Recognition-only wording no longer claims a correction ("recognised and escalated", "escalated, not carried out here"). The fault stays active and the right arm stays at the authored 83.                                                                                                              | —                                                                                                                                    |
 
-Counts: R 12, P 11, C 13 (36).
+Independent review counts: R 9, P 14, C 13 (36). The three downgraded rows retain the concrete improvement while recording the source complaint that remains unresolved.
 
 ## Trajectory evidence (matched modeled seconds)
 
@@ -492,3 +493,123 @@ A checked source, a passing test or this draft must not populate any human appro
   `playwright-core`.
 - **NOT RUN:** native browser zoom, touch devices and assistive technology; a real CARDIOHELP
   console; any learner observation; translation review; e2e suites of other modules; deployment.
+
+## Independent software sanity review · September 22, 2026
+
+This addendum records the review after the implementer handoff. The PR started at
+`dfe2a3e531cb95450532f749b6c0525e8958f69d`. Current main at the initial fetch was
+`bf613270a37a30cfd31a915a33758b808dfbff89`; the intervening main range changed only
+Mechanical Ventilation paths. A true merge made `3573f5d5c074bf97b5e4328dfeb956f70c393953`.
+The review did not rebase, merge the PR, deploy, or close an owner decision.
+
+### Reproduced and corrected
+
+- C1's simultaneous brief said MAP 70 while the t=0 monitor read the generic 72. The case now
+  authors 70; the t=0 read and causal samples agree. The authored pH remains 7.18. Its t=0
+  acidemia alarm follows the existing loaded-state alarm rule; the calculated bicarbonate is
+  labeled at the bedside as arithmetic support, not an independently supplied laboratory result.
+  The Practice brief now names the live simulator's t=0 and states when authored narrative values
+  may differ from modeled inputs.
+- A clinical debrief omitted console actions such as RPM changes unless an intervention card was
+  also applied. The debrief now reads the ordered action history, joins intervention descriptions
+  to their own action, names setting changes, and acknowledges external gas controls. History IDs
+  remain unique after the 100-entry
+  display cap. Same-second action observations stay immutable, including delegated rotary actions
+  and an RPM action that also emits a protection system event.
+- The debrief rounded PaCO₂ to whole mm Hg and could call a 0.1 mm Hg change “unchanged”. It now
+  displays the model's one-decimal precision.
+- VAC3's reassessment still said RPM escalation caused a more-negative pVen and chatter; the raw
+  path gives flow 4.43 → 4.68 L/min at unchanged pVen −36 while MAP continues down. The
+  distractor rationales and an at-question model boundary now describe that path. The keyed
+  options remain unchanged.
+- A persistent vasopressor MAP anchor masked a newly injected tamponade fault: MAP stayed at 65
+  after the next tick. An intervention anchor now records the faults active when it landed. A
+  later fault's existing MAP target can move the patient; after correction, the earlier held
+  treatment level returns. This changes no fault target or response coefficient. It does not
+  supply an unmodeled compound response when the later fault has no patient target for that field.
+- Manifest samples had mixed conventions: 33 baseline cells took a pre-action reading at the
+  listed second while repaired cells took a post-action reading. Both now use the last observed
+  row at that modeled second; the separate `initialValue` remains the load reading. All 7,304
+  sample cells across both trees match a fresh engine replay, as do the 61 complete path tables
+  in each trajectory JSON branch. The manifest's narrative/owner fields remain hand annotations,
+  so the traces are evidence of this model's behavior, not independent physiological validation.
+
+The full 36-row disposition table above was checked against the ledger and original walkthrough
+where source wording mattered. C2-1, C5-3 and VAC5-1 move from R to P: the live C2 flow/pVen
+still differs from the presentation brief, C5's “falling” presentation remains flat untreated,
+and VAC5's speed/flow path has no represented upper-body oxygenation response. The final audit is
+**9 R, 14 P, 13 C, 0 not reproduced**. No coefficient, generic target, fault target, clinical
+answer key or protection threshold was changed to improve a count.
+
+### Independent matched-time probe
+
+This table comes from direct calls to the shipped reducer on the reviewed tree. Actions were
+taken at t=0. “Immediate” is the state after all listed actions at that unchanged second;
+“untreated” is a separate run with clock steps only.
+
+| Case / signal                                                     | Load | Untreated t=8 | Immediate after action | Treated t=8 |
+| ----------------------------------------------------------------- | ---: | ------------: | ---------------------: | ----------: |
+| C5 VV recirculation, SpO₂ · ultrasound then reposition            |   78 |            78 |                     78 |        83.6 |
+| C6 VV gas loss, PaCO₂ · inspect, reconnect, sweep 4               |   88 |            90 |                     88 |        76.8 |
+| VAC5 VA differential hypoxemia, right-arm SpO₂ · native-lung card |   78 |            78 |                     78 |          86 |
+| VAC2 VA tamponade, MAP · echo then decompression                  |   46 |            40 |                     46 |          69 |
+| C3 VV obstructive drainage, circuit flow · speed request 3450 rpm | 2.47 |          2.47 |                      0 |           0 |
+
+At the C3 speed request the modeled pump stops at t=0 while the requested 3450 rpm remains set;
+flow is 0, the computed stop-event pVen/pInt/pArt/Δp are −165/202/184/18 mm Hg, and the existing
+`PVEN_STOP` alarm is present. At t=1 the stopped-pump pressure channels are unavailable and no
+alarm persists. The learner banner calls this **this simulation's pressure interlock** and explains
+that the last pressure is not a running-pump reading. Automatic trim/restart remains clock-gated.
+No claim about actual CARDIOHELP stop timing or alarm design follows from this probe.
+
+For the no-action paths, hemorrhage MAP and hemoglobin worsen; C3 MAP/CVP/airway-pressure story
+targets worsen; VAC2 MAP worsens while pulse pressure stays narrow; VV air saturation falls;
+gas-source-loss PaCO₂ rises; and VA membrane/air cases do not self-correct. A new relevant input
+can move a case-authored anchor, a held treatment persists, and a temporizing patch fades. The
+untreated replay shown to learners is explicitly labeled as the **same case left untreated from
+the start**. It omits _all_ learner actions, so later groups are plan-level comparisons, not
+counterfactuals that omit only the action in that group. The interval uses the last action's
+after-state, the next action's before-state or frozen reveal state, and matching untreated times.
+
+### Contained answer boundaries checked at the learner surface
+
+| Source IDs            | Where the limitation appears while the answer is read                                                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S4-2, S4-3            | Section 4 comparison explains separate saturation formulas and no dissolved oxygen/PO₂ term; Section 4 and Practice label compressed modeled time.                  |
+| S10-2, S10-3          | The membrane step calls its post-exchange state a teaching transition; its feedback explains the unmodeled exchange/hemolysis cost and never calls extra flow safe. |
+| S14-1, C6-1           | The gas-source drill explains its one-second interruption, symmetric modeled recovery and schematic gas path.                                                       |
+| VA5-1, VA11-1, VA17-3 | VA teaching names absent arterial afterload, a fixed conceptual mixing region, and the flow-to-MAP assumption with the vasoplegia exception.                        |
+| C1-1, C3-2, VAC3-1    | Each Practice reassessment states the missing breathing, post-decompression MAP/HR, or vasoplegia flow/MAP/pVen/chatter response at the question.                   |
+| C3-1                  | The console stop banner names the simulation's interlock and separates the speed request from pump running; later pressure loss is described.                       |
+
+The inspected keys stay the same. `ECMO-OWNER-02` through `ECMO-OWNER-12` remain **NOT REVIEWED**
+in `OWNER_DECISIONS.md`; this review makes no clinical or device decision for them. Prompt-01
+VV/VA air recovery, refused premature/direct-bypass resumption, repeat-resume idempotence,
+restart reset, unavailable stopped-pump channels, recognition-only treatment boundary and
+reveal-phase behavior were rerun. The six changed old assertions were inspected: they replace
+an intervention-only checklist requirement, a “modeled response” label, a hidden-load acidemia
+assumption, delayed protective stop expectation and generic VA drift expectations with explicit
+state and timing checks; none removes a recovery or safety assertion.
+
+### Final independent verification
+
+- The focused Prompt-02 engine and surface suites plus Prompt-01 regression suite: **3/3 suites,
+  146/146 tests passed**. All ECMO Jest suites: **77/77 suites, 2,467/2,467 tests passed**.
+- TypeScript, changed engine ESLint, Prettier and `git diff --check` passed. The full production
+  build completed through Next.js static generation and standalone output preparation.
+- The 26 relevant consumer suites: **23 passed, 3 failed; 342 tests passed, 3 failed**. The
+  failures are Critical Care accessibility, learner copy and CRRT station order, identical to the
+  detached current-main run. No ECMO or shared-learning consumer test failed.
+- Chromium journeys through production learner controls: **29/29 primary** and **10/10 extra**
+  checks passed. They cover C5, VAC5, VAC2, C3, the C2 debrief, same-second actions, untreated
+  labels, C1 opening provenance, late sweep stop, held Learn preview, VV/VA air recovery, restart
+  and frozen reveal. No ECMO page exception was observed. The absent protected `.env.local`
+  produces Supabase URL/key errors in the server log, as it does on the baseline, but none of
+  these ECMO journeys requires that service.
+- Rebuilding the raw trajectory generator after the secondary-fault repair gave byte-identical
+  output for all **16 cases and 61 paths**; the new compound-fault test is outside those authored
+  single-fault plans. The manifest's **7,304** sampled cells and all full path rows were checked
+  against fresh reducer traces on both the baseline and repaired trees.
+
+The final fetch still found `origin/main` at `bf613270a37a30cfd31a915a33758b808dfbff89`,
+which is an ancestor of the review merge `3573f5d5c074bf97b5e4328dfeb956f70c393953`.

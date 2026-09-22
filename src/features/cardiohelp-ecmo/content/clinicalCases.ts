@@ -310,6 +310,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         femoralArterialSpo2: 78,
         paCO2: 63,
         pH: 7.18,
+        meanArterialPressure: 70,
         respiratoryRate: 34,
         workOfBreathing: 'high',
         airwayPressure: 34,

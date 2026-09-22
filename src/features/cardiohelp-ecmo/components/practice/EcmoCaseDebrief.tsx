@@ -283,10 +283,10 @@ export function EcmoCaseDebrief({
         ) : (
           <>
             <p className={styles.debriefNote}>
-              Each comparison names its own pair of readings. At the moment of an action this model
-              changes the circuit and the console only; a patient change an action earns appears
-              from the next modeled second. Modeled seconds are compressed: they are not a bedside
-              time course.
+              Each comparison names its own pair of readings. Circuit, device, and external gas
+              settings can change at an action without advancing the clock; a patient change an
+              action earns appears from the next modeled second. Modeled seconds are compressed:
+              they are not a bedside time course.
             </p>
             <ol className={styles.consequenceList}>
               {timeline.map((group) => (
@@ -304,7 +304,7 @@ export function EcmoCaseDebrief({
                           {atAction === null
                             ? 'No reading was recorded at this action.'
                             : atAction.length === 0
-                              ? 'At the action: no circuit or console change.'
+                              ? 'At the action: no change in the pump, flow, pressure, or settings compared here.'
                               : `At the action: ${atAction.map(describeSignalChange).join('; ')}.`}
                         </small>
                       </div>

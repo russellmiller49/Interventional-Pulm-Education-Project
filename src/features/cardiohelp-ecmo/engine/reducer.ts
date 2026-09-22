@@ -72,12 +72,14 @@ function appendHistory(
   kind: 'action' | 'alarm' | 'fault' | 'system',
   label: string,
 ): EcmoSimulationState {
+  const serial = state.scenario.historySerial ?? state.history.length
   return {
     ...state,
+    scenario: { ...state.scenario, historySerial: serial + 1 },
     history: [
       ...state.history,
       {
-        id: `${kind}-${state.simulationTime}-${state.history.length}`,
+        id: `${kind}-${state.simulationTime}-${serial}`,
         time: state.simulationTime,
         kind,
         label,
@@ -486,6 +488,7 @@ function holdLandedInterventionFields(
       reference: generic[field],
       source: 'intervention',
       setAt: state.simulationTime,
+      activeFaultsAtSet: [...state.scenario.activeFaults],
     }
   }
   return {
@@ -599,6 +602,10 @@ export function observeSimulation(state: EcmoSimulationState): EcmoObservation {
     bloodFlow: state.circuit.bloodFlow,
     pumpRunning: state.device.pumpRunning,
     rpmSetpoint: state.device.rpmSetpoint,
+    sweepLpm: state.gas.sweepLpm,
+    gasFio2: state.gas.fio2,
+    gasSourceConnected: state.gas.sourceConnected,
+    powerSource: state.device.powerSource,
     pVen: state.circuit.readouts.pVen.displayed,
     spo2: va ? state.patient.rightRadialSpo2 : state.patient.spo2,
     femoralArterialSpo2: va ? state.patient.femoralArterialSpo2 : null,
@@ -622,19 +629,28 @@ function attachActionObservations(
   if (next === previous || next.simulationTime !== previous.simulationTime) return next
   const before = observeSimulation(previous)
   const after = observeSimulation(next)
-  const priorHistoryIds = new Set(previous.history.map((entry) => entry.id))
+  // Compare entry identity so an internally delegated action keeps its original observation.
+  const newActionEntries = next.history.filter(
+    (entry) => entry.kind === 'action' && !previous.history.includes(entry),
+  )
+  const actionHistoryId = newActionEntries.length === 1 ? newActionEntries[0].id : undefined
   let changed = false
   const history = next.history.map((entry) => {
-    if (entry.kind !== 'action' || entry.observation || priorHistoryIds.has(entry.id)) return entry
+    if (entry.kind !== 'action' || entry.observation || previous.history.includes(entry))
+      return entry
     changed = true
     return { ...entry, observation: { before, after } }
   })
   const previousCount = previous.scenario.clinical?.appliedInterventions.length ?? 0
   const clinical = next.scenario.clinical
   const appliedInterventions = clinical?.appliedInterventions.map((record, index) => {
-    if (index < previousCount || record.observation) return record
+    if (index < previousCount || (record.observation && record.actionHistoryId)) return record
     changed = true
-    return { ...record, observation: { before, after } }
+    return {
+      ...record,
+      observation: record.observation ?? { before, after },
+      actionHistoryId: record.actionHistoryId ?? actionHistoryId,
+    }
   })
   if (!changed) return next
   return {

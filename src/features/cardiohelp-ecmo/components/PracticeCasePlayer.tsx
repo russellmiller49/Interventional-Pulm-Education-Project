@@ -95,7 +95,7 @@ const faultLabels: Record<FaultId, string> = {
  * live monitor, they read as two measurements of the same moment that disagree.
  */
 export const PRESENTATION_DATA_NOTE =
-  'At presentation: the case data as this case describes the patient before you start. The monitor shows the simulated patient from the first modeled second on, and where the two differ, the monitor is the running model.'
+  'At presentation: these are authored case-brief values. The live simulator starts at t=0. Some narrative values are not inputs to the model and may differ from its t=0 display. Use the live display to assess an action.'
 
 /**
  * What a modeled second is (ECMO-FELLOW-02; S4-3, C1-4, S10-2, IV-4).

@@ -184,6 +184,7 @@ export const defaultPatientState: PatientState = {
 function createReferenceRuntime(profileId: string): ScenarioRuntime {
   return {
     activityStarted: false,
+    historySerial: 1,
     scenarioId: profileId,
     family: 'orientation',
     baselineRpmSetpoint:
@@ -212,6 +213,7 @@ function createReferenceRuntime(profileId: string): ScenarioRuntime {
 function createScenarioRuntime(definition: ScenarioDefinition): ScenarioRuntime {
   return {
     activityStarted: false,
+    historySerial: 1,
     scenarioId: definition.id,
     family: definition.family,
     baselineRpmSetpoint:
@@ -383,6 +385,17 @@ function settleLoadedState(
     { ...loaded, patient },
     { advancePatient: false, atLoad: true },
   )
+  settled = {
+    ...settled,
+    scenario: {
+      ...settled.scenario,
+      bicarbonateSource: authoredFields.has('bicarbonate')
+        ? 'case-supplied'
+        : authoredFields.has('pH')
+          ? 'calculated'
+          : 'model-default',
+    },
+  }
   if (!authored.postOxygenatorSaturation) {
     const postOxygenatorSaturation = round(
       derivePostOxygenatorTarget(settled, settled.patient.systemicVenousSaturationEstimate),
@@ -1563,10 +1576,10 @@ export function patientAnchorApplies(
  *
  * One precedence rule for every field, in this order:
  *
- * 1. An active fault's story target (`fault-story`) — deterioration the case intends. A
- *    non-temporizing intervention's held level beats it on the field it patched
- *    (`intervention-held`): a transfusion or a vasopressor holds what it bought while it is given,
- *    and only a temporizing patch fades back toward the story.
+ * 1. A newly active fault's story target (`fault-story`) can move a field despite an older held
+ *    intervention. Otherwise a non-temporizing intervention holds what it bought against faults
+ *    already present when it landed (`intervention-held`); only a temporizing patch fades back
+ *    toward the original story.
  * 2. A clinical case's anchor (`case-authored` or `intervention-held`): the held level, moved only by
  *    the change in the generic target since the level was set. A learner who raises the pump speed
  *    against recirculation still watches saturation fall; a case left alone no longer drifts toward
@@ -1590,8 +1603,20 @@ export function resolvePatientTargets(
       ? state.scenario.patientOwnership?.anchors[field]
       : undefined
     const storyTarget = story[field]
+    const newFaultStoryTarget =
+      anchor?.source === 'intervention'
+        ? faultPatientTargets(
+            state.supportMode,
+            state.scenario.activeFaults.filter(
+              (fault) => !anchor.activeFaultsAtSet?.includes(fault),
+            ),
+          )[field]
+        : undefined
     let target: number
-    if (storyTarget !== undefined) {
+    if (newFaultStoryTarget !== undefined) {
+      target = newFaultStoryTarget
+      owners[field] = 'fault-story'
+    } else if (storyTarget !== undefined) {
       if (anchor?.source === 'intervention') {
         target = anchor.level
         owners[field] = 'intervention-held'
@@ -1924,6 +1949,12 @@ export function deriveSimulation(
       : state.patient
   const intermediate: EcmoSimulationState = {
     ...state,
+    scenario: protectionStoppedPump
+      ? {
+          ...state.scenario,
+          historySerial: (state.scenario.historySerial ?? state.history.length) + 1,
+        }
+      : state.scenario,
     device,
     circuit,
     patient,
@@ -1931,7 +1962,7 @@ export function deriveSimulation(
       ? [
           ...state.history,
           {
-            id: `system-${state.simulationTime}-${state.history.length}`,
+            id: `system-${state.simulationTime}-${state.scenario.historySerial ?? state.history.length}`,
             time: state.simulationTime,
             kind: 'system' as const,
             label:

@@ -1454,6 +1454,13 @@ export function PatientMonitor({
         <div>
           <span>HCO₃⁻</span>
           <strong>{state.patient.bicarbonate.toFixed(0)} mmol/L</strong>
+          <small data-bicarbonate-source={state.scenario.bicarbonateSource ?? 'model-default'}>
+            {state.scenario.bicarbonateSource === 'case-supplied'
+              ? 'Case-supplied input.'
+              : state.scenario.bicarbonateSource === 'calculated'
+                ? 'Calculated at load from the opening pH and PaCO₂; no independent bicarbonate result was supplied.'
+                : 'Model default for acid–base calculation; no bicarbonate result was supplied.'}
+          </small>
         </div>
         <div>
           <span>Respiratory rate</span>

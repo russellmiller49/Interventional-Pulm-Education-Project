@@ -828,6 +828,8 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
     reassessment: {
       instruction:
         'Select findings that support correction of vascular tone without unnecessary escalation of a functioning VA circuit.',
+      modelBoundary:
+        'On this case’s compared RPM path, extra speed raises circuit flow slightly but does not raise MAP while the vasoplegia story is active. pVen stays at the same displayed value and this model does not generate chatter on that path. These are bounded model responses, not bedside predictions.',
       device: {
         prompt: 'Which console observation best fits the corrected strategy?',
         options: [
@@ -839,7 +841,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option(
             'vaso-device-rpm',
             'RPM is increased to target extreme flow as the primary treatment for vasoplegia.',
-            'Chasing an extreme flow target treats a tone problem as a flow problem. In this case the extra RPM made pVen more negative and started chatter without moving MAP.',
+            'Chasing an extreme flow target treats a tone problem as a flow problem. In the compared path extra RPM raises modeled circuit flow slightly, but MAP does not improve while the vascular-tone problem remains.',
           ),
           option(
             'vaso-device-zero',
@@ -859,8 +861,8 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'vaso-circuit-collapse',
-            'pVen becomes more negative and chatter begins after RPM escalation.',
-            'More negative pVen and new chatter after escalation are the drainage cost of pulling harder on a venous system that was already giving what it had. The case shows this when RPM is raised.',
+            'A small rise in circuit flow after RPM escalation proves vascular tone is corrected.',
+            'Flow rises slightly after the modeled RPM increase, but MAP does not improve. The compared path does not show a pVen change or new chatter, and more circuit flow does not treat this case’s vascular-tone problem.',
           ),
           option(
             'vaso-circuit-delta',

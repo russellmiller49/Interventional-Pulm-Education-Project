@@ -427,6 +427,10 @@ export interface EcmoObservation {
   readonly bloodFlow: number
   readonly pumpRunning: boolean
   readonly rpmSetpoint: number
+  readonly sweepLpm: number
+  readonly gasFio2: number
+  readonly gasSourceConnected: boolean
+  readonly powerSource: PowerSource
   readonly pVen: number | null
   /** VV: patient SpO₂. VA: right-arm (right-radial) SpO₂, the upper-body reading. */
   readonly spo2: number
@@ -447,6 +451,8 @@ export interface EcmoActionObservation {
 
 export interface ClinicalInterventionRecord {
   id: string
+  /** The learner action that applied this card, for a complete ordered debrief. */
+  actionHistoryId?: string
   interventionId: string
   label: string
   effect: ClinicalInterventionEffect
@@ -495,6 +501,8 @@ export interface PatientFieldAnchor {
   readonly reference: number
   readonly source: PatientAnchorSource
   readonly setAt: number
+  /** Faults already present when an intervention landed; its held effect may cover these. */
+  readonly activeFaultsAtSet?: readonly FaultId[]
 }
 
 /**
@@ -607,6 +615,10 @@ export interface ScenarioHint {
 export interface ScenarioRuntime {
   /** Explicit scenario entry; never an answer or a performed intervention. */
   activityStarted: boolean
+  /** Monotonic identity for history entries, even after the visible history is truncated. */
+  historySerial?: number
+  /** Provenance of the bicarbonate shown on the bedside panel. */
+  bicarbonateSource?: 'case-supplied' | 'calculated' | 'model-default'
   scenarioId: string
   family: ScenarioFamily
   /**

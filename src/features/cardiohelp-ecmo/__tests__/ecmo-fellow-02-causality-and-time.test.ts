@@ -58,6 +58,16 @@ const RATE_LIMITED = [
 describe('A · time semantics', () => {
   const allScenarios = [...clinicalPracticeScenarios, ...cardiohelpScenarios]
 
+  it('C1 presentation MAP and the first modeled reading describe the same instant', () => {
+    const caseDefinition = clinicalPracticeScenarios.find(
+      (scenario) => scenario.id === 'clinical-vv-initiation-ards',
+    )
+    const presentation = caseDefinition?.clinicalCase?.data.find((row) => row.label === 'MAP')
+    const loaded = createInitialSimulationState('clinical-vv-initiation-ards')
+    expect(presentation?.value).toBe(`${loaded.patient.meanArterialPressure} mmHg`)
+    expect(loaded.patient.meanArterialPressure).toBe(70)
+  })
+
   it.each(allScenarios.map((scenario) => [scenario.id, scenario] as const))(
     '%s: loading is not a second of the clock — t = 0 shows the authored patient',
     (_id, scenario) => {
@@ -103,6 +113,17 @@ describe('A · time semantics', () => {
     expect(slowed.circuit.pVen).toBeGreaterThan(opened.circuit.pVen)
     // Nothing about the patient moves at an unchanged time.
     expect(slowed.patient).toEqual(opened.patient)
+  })
+
+  it('keeps action observation IDs distinct after the bounded history fills in one modeled second', () => {
+    let state = createInitialSimulationState('clinical-vv-recirculation-migration')
+    for (let index = 0; index < 105; index += 1) {
+      state = ecmoSimulationReducer(state, { type: 'SET_SCREEN', screen: 'blood' })
+    }
+    const ids = state.history.map((entry) => entry.id)
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(state.history.at(-1)?.observation?.before.time).toBe(0)
+    expect(state.history.at(-1)?.observation?.after.time).toBe(0)
   })
 
   it('an action-time recomputation spends no battery and moves no haemoglobin', () => {
@@ -160,6 +181,38 @@ describe('A · time semantics', () => {
     expect(readingAt(early, 16)?.workOfBreathing).toBe('low')
     expect(readingAt(early, 20)?.workOfBreathing).toBe('high')
   })
+
+  it('resets the off-sweep timer on restore and a later stop, without counting unrelated actions', () => {
+    let state = createInitialSimulationState('vv-off-sweep-capstone', 'guided')
+    state = reduce(state, [
+      { type: 'SET_SWEEP', sweep: 0 },
+      ...Array.from({ length: 12 }, () => ({ type: 'STEP' as const })),
+    ])
+    expect(state.scenario.sweepStoppedAt).toBe(0)
+    state = ecmoSimulationReducer(state, { type: 'SET_SWEEP', sweep: 3 })
+    expect(state.scenario.sweepStoppedAt).toBeNull()
+    state = reduce(
+      state,
+      Array.from({ length: 10 }, () => ({ type: 'STEP' as const })),
+    )
+    expect(state.patient.workOfBreathing).toBe('low')
+    state = ecmoSimulationReducer(state, { type: 'SET_SWEEP', sweep: 0 })
+    expect(state.scenario.sweepStoppedAt).toBe(22)
+    const fixedTime = state.simulationTime
+    state = reduce(state, [
+      { type: 'SET_RPM', rpm: 3300 },
+      { type: 'SET_GAS_FIO2', fio2: 0.8 },
+    ])
+    expect(state.simulationTime).toBe(fixedTime)
+    expect(state.scenario.sweepStoppedAt).toBe(22)
+    state = reduce(
+      state,
+      Array.from({ length: 19 }, () => ({ type: 'STEP' as const })),
+    )
+    expect(state.patient.workOfBreathing).toBe('low')
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
+    expect(state.patient.workOfBreathing).toBe('high')
+  })
 })
 
 describe('B · a case left alone does not recover on its own, and a treatment keeps what it bought', () => {
@@ -212,6 +265,25 @@ describe('B · a case left alone does not recover on its own, and a treatment ke
     // The recovered ventricle the case describes stays recovered.
     expect(at('va-clinical-vasoplegia', 'A', 20).nativeOutput).toBe(4.5)
     expect(at('va-clinical-vasoplegia', 'A', 20).pulsePressure).toBe(25)
+  })
+
+  it('a new shock fault can lower MAP despite an earlier held vasopressor response', () => {
+    let state = createInitialSimulationState('va-clinical-vasoplegia', 'guided')
+    state = reduce(state, [
+      { type: 'APPLY_CLINICAL_INTERVENTION', interventionId: 'vasoplegia-pressors' },
+      { type: 'STEP' },
+    ])
+    expect(state.patient.meanArterialPressure).toBe(65)
+    state = ecmoSimulationReducer(state, { type: 'INJECT_FAULT', fault: 'tamponade' })
+    expect(state.patient.meanArterialPressure).toBe(65)
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
+    expect(state.patient.meanArterialPressure).toBeLessThan(65)
+    state = ecmoSimulationReducer(state, { type: 'CORRECT_FAULT', fault: 'tamponade' })
+    state = reduce(
+      state,
+      Array.from({ length: 4 }, () => ({ type: 'STEP' as const })),
+    )
+    expect(state.patient.meanArterialPressure).toBe(65)
   })
 
   it('VAC1-1 VA initiation: pulsatility and native output do not improve untreated', () => {
