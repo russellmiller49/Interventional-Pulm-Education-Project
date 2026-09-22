@@ -75,6 +75,8 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
     const tiledImageRef = useRef<OpenSeadragonType.TiledImage | null>(null)
     const initialZoomRef = useRef(1)
     const synchronizingRef = useRef(false)
+    const resizeFrameRef = useRef<number | null>(null)
+    const canonicalViewRef = useRef<ViewportSnapshot | null>(null)
     const callbacksRef = useRef({
       onImageHover,
       onImageSelect,
@@ -146,7 +148,8 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
     const emitViewportSnapshot = useCallback(() => {
       const viewer = viewerRef.current
       const tiledImage = tiledImageRef.current
-      if (!viewer || !tiledImage || synchronizingRef.current) return
+      if (!viewer || !tiledImage || synchronizingRef.current || resizeFrameRef.current !== null)
+        return
 
       const visibleBounds = tiledImage.viewportToImageRectangle(
         viewer.viewport.getBounds(true),
@@ -155,10 +158,25 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
       const currentZoom = viewer.viewport.getZoom(true)
       const zoomRatio = initialZoomRef.current > 0 ? currentZoom / initialZoomRef.current : 1
 
-      callbacksRef.current.onViewportChange({
+      const snapshot = {
         zoomRatio,
         visibleImageBounds: imageRectFromOpenSeadragonRect(visibleBounds),
-      })
+      }
+      const previous = canonicalViewRef.current
+      const bounds = snapshot.visibleImageBounds
+      const oldBounds = previous?.visibleImageBounds
+      // Resizing adds aspect-ratio padding, not a new area of interest. Retain the
+      // canonical crop until an actual pan/zoom changes the focus or zoom ratio.
+      if (
+        !previous ||
+        !oldBounds ||
+        Math.abs(previous.zoomRatio - zoomRatio) > 0.0001 ||
+        Math.abs(oldBounds.x + oldBounds.width / 2 - bounds.x - bounds.width / 2) > 0.05 ||
+        Math.abs(oldBounds.y + oldBounds.height / 2 - bounds.y - bounds.height / 2) > 0.05
+      ) {
+        canonicalViewRef.current = snapshot
+      }
+      callbacksRef.current.onViewportChange(snapshot)
       updateLabelPosition()
     }, [updateLabelPosition])
 
@@ -207,6 +225,7 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
           const viewer = viewerRef.current
           const tiledImage = tiledImageRef.current
           if (!viewer || !tiledImage) return
+          canonicalViewRef.current = snapshot
           const rect = snapshot.visibleImageBounds
           synchronizingRef.current = true
           try {
@@ -270,6 +289,8 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
             visibilityRatio: 0.5,
             maxZoomPixelRatio: 4,
             tileRetryMax: 1,
+            // Keep paired tile loading from starving survey/progress requests.
+            imageLoaderLimit: 2,
             gestureSettingsMouse: {
               clickToZoom: false,
               dblClickToZoom: true,
@@ -359,7 +380,33 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
           viewer.addHandler('viewport-change', emitViewportSnapshot)
           viewer.addHandler('animation', emitViewportSnapshot)
           viewer.addHandler('animation-finish', emitViewportSnapshot)
-          viewer.addHandler('resize', emitViewportSnapshot)
+          viewer.addHandler('resize', () => {
+            // OpenSeadragon 6 adjusts zoom after its resize/after-resize events.
+            // Restore the source-pixel crop on the next frame and suppress those
+            // transient events so they cannot desynchronize the paired viewer.
+            const snapshot = canonicalViewRef.current
+            if (!snapshot) return
+            if (resizeFrameRef.current !== null) cancelAnimationFrame(resizeFrameRef.current)
+            resizeFrameRef.current = requestAnimationFrame(() => {
+              resizeFrameRef.current = null
+              if (disposed || !viewer || !tiledImageRef.current) return
+              const rect = snapshot.visibleImageBounds
+              synchronizingRef.current = true
+              viewer.viewport.fitBounds(
+                tiledImageRef.current.imageToViewportRectangle(
+                  rect.x,
+                  rect.y,
+                  rect.width,
+                  rect.height,
+                  true,
+                ),
+                true,
+              )
+              initialZoomRef.current = viewer.viewport.getZoom(true) / snapshot.zoomRatio
+              synchronizingRef.current = false
+              emitViewportSnapshot()
+            })
+          })
 
           const imagePointFromPointer = (event: PointerEvent) => {
             const activeTiledImage = tiledImageRef.current
@@ -454,6 +501,9 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
 
       return () => {
         disposed = true
+        if (resizeFrameRef.current !== null) cancelAnimationFrame(resizeFrameRef.current)
+        resizeFrameRef.current = null
+        canonicalViewRef.current = null
         if (viewer && pointerMoveHandler) {
           viewer.canvas.removeEventListener('pointermove', pointerMoveHandler)
         }
@@ -487,7 +537,12 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
     ])
 
     return (
-      <div className={styles.viewerSurface} data-testid="deep-zoom-viewer">
+      <div
+        className={styles.viewerSurface}
+        data-testid="deep-zoom-viewer"
+        data-status={status.phase}
+        aria-busy={status.phase === 'loading'}
+      >
         <div
           ref={viewerElementRef}
           className={`${styles.viewerCanvas} ${

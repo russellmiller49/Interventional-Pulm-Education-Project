@@ -769,3 +769,25 @@
     animation-duration: 2s;
   }
 }
+
+.caseField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-block: 0.75rem;
+}
+.caseField input,
+.caseField textarea,
+.caseField select {
+  width: 100%;
+  min-width: 0;
+  padding: 0.55rem;
+  border: 1px solid #688693;
+  border-radius: 0.35rem;
+  color: #16343c;
+  background: white;
+}
+.caseField :focus-visible {
+  outline: 3px solid #168575;
+  outline-offset: 2px;
+}

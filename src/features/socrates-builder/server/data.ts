@@ -1,4 +1,5 @@
 import { parseSocratesSlideDocument } from '../schema'
+import { z } from 'zod'
 import type { SocratesBuilderBootstrap, SocratesSlideDocument } from '../types'
 import { supabaseServer } from '@/lib/supabase/server'
 import { getSocratesEditorSession } from './access'
@@ -12,6 +13,7 @@ interface AnnotationRow {
   enter_zoom_ratio: number
   exit_zoom_ratio: number
   summary: string
+  explanation?: string
   placeholder_note: string
   sort_order: number
 }
@@ -51,6 +53,7 @@ function rowToDocument(row: SlideRow): SocratesSlideDocument {
       enterZoomRatio: annotation.enter_zoom_ratio,
       exitZoomRatio: annotation.exit_zoom_ratio,
       summary: annotation.summary,
+      ...(annotation.explanation ? { explanation: annotation.explanation } : {}),
       placeholderNote: annotation.placeholder_note,
       sortOrder: annotation.sort_order,
     }))
@@ -129,6 +132,7 @@ export async function loadSocratesBuilderBootstrap(): Promise<SocratesBuilderBoo
           enter_zoom_ratio,
           exit_zoom_ratio,
           summary,
+          explanation,
           placeholder_note,
           sort_order
         )
@@ -141,10 +145,24 @@ export async function loadSocratesBuilderBootstrap(): Promise<SocratesBuilderBoo
     return { access, documents: [], sandboxDocuments: await sandboxDocumentsPromise }
   }
 
+  const { data: currentCases, error: caseError } = await supabase.rpc('list_socrates_author_cases')
+  if (caseError) {
+    console.error('Unable to load versioned SOCRATES cases', caseError.code)
+    return {
+      access: { ...access, canPersist: false },
+      documents: [],
+      sandboxDocuments: await sandboxDocumentsPromise,
+    }
+  }
+  const versioned = new Map<string, SocratesSlideDocument>()
+  for (const value of currentCases ?? []) {
+    const document = parseSocratesSlideDocument(value)
+    if (document.recordId) versioned.set(document.recordId, document)
+  }
   const documents: SocratesSlideDocument[] = []
   for (const row of (data ?? []) as unknown as SlideRow[]) {
     try {
-      documents.push(rowToDocument(row))
+      documents.push(versioned.get(row.id) ?? rowToDocument(row))
     } catch (error) {
       console.error('Skipping invalid SOCRATES builder document', row.id, error)
     }
@@ -187,6 +205,48 @@ export async function loadPublishedSocratesDocument(slug?: string) {
   }
 
   try {
+    if (data.schemaVersion === 2) {
+      const projected = z
+        .object({
+          recordId: z.string().uuid(),
+          slug: z.string(),
+          title: z.string(),
+          revision: z.number(),
+          slide: z.object({
+            id: z.string().uuid(),
+            descriptorUrl: z
+              .string()
+              .regex(/^\/api\/socrates\/images\/training\/[a-f0-9-]+\/[0-9]+\/tissue\/slide\.dzi$/),
+            expectedDimensions: z.object({
+              width: z.number().positive(),
+              height: z.number().positive(),
+            }),
+            initialImageRect: z.object({
+              x: z.number(),
+              y: z.number(),
+              width: z.number().positive(),
+              height: z.number().positive(),
+            }),
+            attribution: z.object({
+              label: z.string(),
+              href: z.literal('https://www.invenioimaging.com/'),
+            }),
+            contentStatus: z.string(),
+          }),
+          annotations: z.array(z.unknown()),
+        })
+        .parse(data)
+      // Validate the region structure using the legacy parser without widening its source allowlist.
+      const checked = parseSocratesSlideDocument({
+        ...projected,
+        workflowStatus: 'published',
+        slide: {
+          ...projected.slide,
+          descriptorUrl: 'https://www.invenio-cloud.com/api/thinslides/projection.dzi',
+        },
+      })
+      return { ...checked, schemaVersion: 2 as const, slide: projected.slide }
+    }
     return parseSocratesSlideDocument(data)
   } catch (parseError) {
     console.error('Published SOCRATES slide failed validation', parseError)
