@@ -25,7 +25,7 @@ select {
 }
 .linked-canvas {
   position: relative;
-  height: 270px;
+  height: 300px;
   width: 100%;
   overflow: hidden;
   border: 1px solid #36515a;
@@ -67,31 +67,102 @@ select {
   fill: #deeded;
   stroke: #081c22;
 }
+/*
+ * One meaning per colour and a shape for each state (EBUS-PRE-REVIEW-03, L3-4 / L3-9): a selected
+ * marker is violet, filled and square-cornered; a hovered or focused marker keeps its colour and
+ * gains a teal ring; the leader and its endpoint follow the same states. Gold stays the optical
+ * arrow's colour only.
+ */
 .linked-structure-callouts .is-selected {
-  stroke: #ffd27b;
+  stroke: #d9a5ff;
   stroke-width: 3;
 }
 .linked-structure-callouts circle.is-selected {
-  fill: #ffd27b;
+  fill: #d9a5ff;
 }
+.linked-structure-callouts .is-hovered:not(.is-selected) {
+  stroke: #4ad3cf;
+  stroke-width: 2.5;
+}
+.linked-structure-callouts circle.is-hovered:not(.is-selected) {
+  fill: #4ad3cf;
+}
+/* More specific than the workbench's generic 42 px button minimum, which made every marker 42 px tall. */
+.guided-workbench .linked-structure-callouts .linked-structure-letter,
 .linked-structure-callouts .linked-structure-letter {
   position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   transform: translate(-50%, -50%);
-  width: 34px;
+  min-width: 34px;
+  min-height: 34px;
   height: 34px;
   padding: 0;
   border: 2px solid #deeded;
-  border-radius: 50%;
+  border-radius: 17px;
   background: #0b242e;
   color: #fff;
   font-size: 15px;
   font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
   pointer-events: auto;
 }
+.linked-structure-callouts .linked-structure-letter.is-named {
+  padding: 0 10px;
+  font-size: 12px;
+}
+.linked-structure-callouts .linked-structure-letter.is-named .linked-structure-glyph:empty {
+  display: none;
+}
+.linked-structure-callouts .linked-structure-name {
+  font-weight: 600;
+}
+.linked-structure-callouts .linked-structure-letter[hidden] {
+  display: none;
+}
+.linked-structure-callouts .linked-structure-letter.is-hovered,
+.linked-structure-callouts .linked-structure-letter:hover,
+.linked-structure-callouts .linked-structure-letter:focus-visible {
+  box-shadow: 0 0 0 3px #4ad3cf;
+  outline: none;
+}
 .linked-structure-callouts .linked-structure-letter[aria-pressed='true'] {
-  border-color: #ffd27b;
-  background: #ffd27b;
+  border-color: #d9a5ff;
+  border-radius: 7px;
+  background: #d9a5ff;
   color: #17252a;
+}
+/* Model-frame compass: a screen-space overlay, never clipped, never under a marker. */
+.linked-compass {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  width: 80px;
+  height: 96px;
+  z-index: 2;
+  pointer-events: none;
+  color: #edf6f5;
+  font: 700 11px/1 system-ui, sans-serif;
+}
+.linked-compass span {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  text-shadow:
+    0 0 3px #081c22,
+    0 0 3px #081c22;
+}
+.linked-compass small {
+  position: absolute;
+  left: 40px;
+  bottom: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
 }
 .linked-landmark-controls {
   display: flex;
@@ -173,7 +244,7 @@ select {
   align-items: start;
 }
 .linked-pair .linked-canvas {
-  height: 300px;
+  height: 360px;
 }
 .linked-pair .simulator-pane-header {
   min-height: 40px;
@@ -202,7 +273,7 @@ select {
     grid-template-columns: 1fr;
   }
   .linked-pair .linked-canvas {
-    height: 210px;
+    height: 250px;
   }
   .linked-pair .simulator-continuous-ultrasound {
     height: 230px;
@@ -478,6 +549,29 @@ p {
   margin-block: 12px;
   border: 1px solid #46626b;
   border-radius: 8px;
+}
+.linked-sweep[data-sweep-state='complete'] {
+  border-color: #58c8b0;
+}
+.linked-sweep[data-sweep-state='crossing'] {
+  border-color: #79e4e3;
+}
+.linked-sweep [data-sweep-reset-reason] {
+  border-left: 3px solid #f0b46a;
+  padding-left: 8px;
+}
+.linked-sweep [data-sweep-progress] {
+  color: #cfe3e6;
+}
+.linked-sweep details {
+  margin-top: 6px;
+}
+.linked-sweep summary {
+  cursor: pointer;
+}
+.linked-canvas canvas:focus-visible {
+  outline: 3px solid #79e4e3;
+  outline-offset: -3px;
 }
 .linked-pair--retained {
   grid-template-columns: minmax(0, 1fr) !important;

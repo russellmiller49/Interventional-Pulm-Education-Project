@@ -3,6 +3,9 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { simulatorCaseAssetUrl } from '../../features/simulator/paths'
+import { projectPoint, routeObserverPosition } from '../observerCamera'
+import { attachObserverControls, OBSERVER_CAPTION, type ObserverControlsHandle } from '../observerControls'
+import { createStructureCallouts, type StructureCalloutHandle } from '../structureCallouts'
 import {
   MODEL_GEOMETRY,
   modelFrameId,
@@ -93,6 +96,13 @@ export function ModelViewport({
   const [selected, setSelected] = useState('')
   const [structures, setStructures] = useState<{ id: string; label: string }[]>([])
   const resetCamera = useRef<(() => void) | null>(null)
+  // Presentation only: observer engagement and whether the route view draws structure labels.
+  const observerRef = useRef<ObserverControlsHandle | null>(null)
+  const [engaged, setEngaged] = useState(false)
+  const [showLabels, setShowLabels] = useState(state.package === 'routes')
+  const showLabelsRef = useRef(showLabels)
+  showLabelsRef.current = showLabels
+  const [arrowPx, setArrowPx] = useState<number | null>(null)
   useEffect(() => {
     const el = host.current
     if (!el) return
@@ -120,10 +130,43 @@ export function ModelViewport({
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = false
     controls.enablePan = true
+    let observerControls: ObserverControlsHandle | null = attachObserverControls(
+      controls,
+      camera,
+      renderer.domElement,
+      { render: () => draw(), reset: () => resetCamera.current?.(), onEngagement: setEngaged },
+    )
+    observerRef.current = observerControls
     let groups: THREE.Group[] = []
     let lastRoute = ''
+    let callouts: StructureCalloutHandle | undefined
+    let arrowEndpoints: [THREE.Vector3, THREE.Vector3] | null = null
+    const labelNames = (): Record<string, string> => {
+      const names: Record<string, string> = {}
+      root.traverse((o) => {
+        if (o instanceof THREE.Mesh && o.userData.label) {
+          const id = (o.userData.semanticId as string) || o.name
+          names[o.name] = !live.current.reveal && id.startsWith('node') ? 'Example node' : String(o.userData.label)
+        }
+      })
+      return names
+    }
     const draw = () => {
-      if (!disposed) renderer.render(scene, camera)
+      if (disposed) return
+      renderer.render(scene, camera)
+      callouts?.render(camera, live.current.state.package === 'routes' && showLabelsRef.current, '', null, labelNames())
+      if (arrowEndpoints) {
+        const w = el.clientWidth,
+          h = el.clientHeight
+        const a = projectPoint(arrowEndpoints[0], camera, w, h),
+          b = projectPoint(arrowEndpoints[1], camera, w, h)
+        const px = Math.round(Math.hypot(a.x - b.x, a.y - b.y) * 10) / 10
+        el.dataset.arrowPx = String(px)
+        setArrowPx(px)
+      } else {
+        delete el.dataset.arrowPx
+        setArrowPx(null)
+      }
     }
     controls.addEventListener('change', draw)
     controls.addEventListener('start', () => setTooltip(null))
@@ -138,6 +181,10 @@ export function ModelViewport({
     }
     const observer = new ResizeObserver(resize)
     observer.observe(el)
+    const observerControlsDispose = () => {
+      observerControls?.dispose()
+      observerControls = null
+    }
     const clearDynamic = () => {
       for (const child of [...dynamic.children]) {
         child.traverse((o) => {
@@ -272,26 +319,48 @@ export function ModelViewport({
           }
         })
         const route = routeDefinition(s)
+        arrowEndpoints = null
         if (route && routeSupported(s)) {
           const p = route[s.route === 'airway' ? 'airway' : 'esophageal']!
           const a = new THREE.Vector3(...(p as [number, number, number])),
             b = new THREE.Vector3(...(route.target as [number, number, number]))
-          const arrow = new THREE.ArrowHelper(
-            b.clone().sub(a).normalize(),
-            a,
-            a.distanceTo(b),
-            s.route === 'airway' ? 0x5ca9ff : 0x35e3ba,
-            4,
-            2,
+          /*
+           * A solid arrow (shaft + head, depth test off) instead of a 1 px line helper, so the
+           * viewing direction reads against the translucent meshes it passes through. Same
+           * endpoints, same meaning: locator → target, viewing direction only.
+           */
+          const arrow = new THREE.Group()
+          const length = a.distanceTo(b)
+          const direction = b.clone().sub(a).normalize()
+          const colour = s.route === 'airway' ? 0x8fd0ff : 0x5af0d0
+          const material = new THREE.MeshBasicMaterial({ color: colour, depthTest: false })
+          const headLength = Math.min(5, length * 0.35)
+          const shaft = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.55, 0.55, Math.max(0.1, length - headLength), 10),
+            material,
           )
+          shaft.position.y = (length - headLength) / 2
+          const head = new THREE.Mesh(new THREE.ConeGeometry(1.6, headLength, 14), material)
+          head.position.y = length - headLength / 2
+          arrow.add(shaft, head)
+          arrow.position.copy(a)
+          arrow.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction)
+          arrow.renderOrder = 20
+          arrow.traverse((o) => {
+            o.renderOrder = 20
+          })
           dynamic.add(arrow)
+          arrowEndpoints = [a, b]
           const routeKey = s.station + ':' + s.route
           if (lastRoute !== routeKey) {
+            /*
+             * The camera used to stand on the arrow's own axis, 125 mm behind the target, so the
+             * arrow pointed into the screen and projected to 4–18 px (EBUS-PRE-REVIEW-03, L19-1).
+             * It now looks at the same fixed target from a direction turned away from the approach
+             * vector; the locator, target and arrow are the contract's, unchanged.
+             */
             controls.target.copy(b)
-            camera.position
-              .copy(b)
-              .add(a.clone().sub(b).normalize().multiplyScalar(125))
-              .add(new THREE.Vector3(0, 24, 0))
+            camera.position.copy(routeObserverPosition(a, b))
             controls.update()
             lastRoute = routeKey
           }
@@ -339,6 +408,12 @@ export function ModelViewport({
         const home = () => {
           const s = live.current.state
           if (s.package === 'routes') {
+            // Reset returns to the framed route view when one is supported, else the whole model.
+            lastRoute = ''
+            if (routeSupported(s)) {
+              updateScene()
+              return
+            }
             controls.target.set(0, 1190, 170)
             camera.position.set(245, 1270, 470)
           } else if (s.package === 'needle') {
@@ -379,6 +454,36 @@ export function ModelViewport({
           draw()
         }
         resetCamera.current = home
+        if (state.package === 'routes') {
+          // Name the model's own structures on the canvas (L19-1): the labelled meshes the
+          // package loads, anchored to their surfaces, laid out by the shared callout code.
+          const labelled: THREE.Mesh[] = []
+          const named = new Set([
+            'trachea',
+            'carina',
+            'left_main_bronchus',
+            'right_main_bronchus',
+            'esophagus',
+            'aorta',
+            'pulmonary_artery',
+            'azygous',
+          ])
+          scene.updateMatrixWorld(true)
+          root.traverse((o) => {
+            if (!(o instanceof THREE.Mesh) || !o.userData.label) return
+            const id = (o.userData.semanticId as string) || o.name
+            if (named.has(id) || id.startsWith('node_') || id.includes('_window_')) labelled.push(o)
+          })
+          callouts = createStructureCallouts(
+            el,
+            labelled,
+            new THREE.Vector3(0, 1190, 170),
+            () => undefined,
+            () => undefined,
+            () => '',
+            true,
+          )
+        }
         resize()
         home()
         updateScene()
@@ -438,6 +543,8 @@ export function ModelViewport({
       update.current = null
       resetCamera.current = null
       observer.disconnect()
+      observerControlsDispose()
+      callouts?.dispose()
       controls.dispose()
       groups.forEach(dispose)
       clearDynamic()
@@ -449,14 +556,30 @@ export function ModelViewport({
     setTooltip(null)
     setSelected('')
     update.current?.()
-  }, [state, reveal])
+  }, [state, reveal, showLabels])
   return (
     <section className="model-3d">
       <div className="model-heading">
         <h2>3D relationship</h2>
-        <button onClick={() => resetCamera.current?.()}>Reset view</button>
+        <div className="model-observer-buttons" role="group" aria-label="Observer camera">
+          <button onClick={() => observerRef.current?.orbit(-0.3)}>Orbit left</button>
+          <button onClick={() => observerRef.current?.orbit(0.3)}>Orbit right</button>
+          <button onClick={() => observerRef.current?.zoom(1.3)}>Zoom in</button>
+          <button onClick={() => observerRef.current?.zoom(1 / 1.3)}>Zoom out</button>
+          <button onClick={() => resetCamera.current?.()}>Reset view</button>
+          {state.package === 'routes' && (
+            <button aria-pressed={showLabels} data-structure-names onClick={() => setShowLabels((v) => !v)}>
+              {showLabels ? 'Hide structure labels' : 'Show structure labels'}
+            </button>
+          )}
+          {engaged && (
+            <button data-release-observer onClick={() => observerRef.current?.release()}>
+              Release wheel control
+            </button>
+          )}
+        </div>
       </div>
-      <div className="model-viewport" ref={host}>
+      <div className="model-viewport" ref={host} data-arrow-px={arrowPx ?? undefined}>
         {!ready && <p role="status">Loading model…</p>}
         {tooltip && (
           <div className="model-tooltip" role="tooltip" style={{ left: tooltip.x, top: tooltip.y }}>
@@ -482,11 +605,19 @@ export function ModelViewport({
         </label>
         {selected && <p role="status">{structures.find((o) => o.id === selected)?.label}</p>}
       </div>
-      <p className="model-caption">
-        Drag to orbit; scroll to zoom. Observer movement does not alter the acquisition.
+      <p className="model-caption" data-observer-caption>
+        {OBSERVER_CAPTION} Observer movement does not alter the acquisition.
         {state.package === 'needle' && !reveal
           ? ' Distal needle geometry is concealed; use the ultrasound schematic.'
           : ''}
+        {state.package === 'routes'
+          ? ' The arrow runs from the selected orientation locator to the fixed target and shows viewing direction only: blue for the airway approach, teal for the esophageal approach. Labels name the model’s own structures; the example node is named only in the worked example.'
+          : ''}
+      </p>
+      <p className="model-caption" data-observer-engaged={engaged} role="status">
+        {engaged
+          ? 'Wheel and one-finger control are on for the model. Press Escape or click elsewhere to release them.'
+          : 'The page scrolls normally over the model. Click, tap or focus the model to turn on wheel and one-finger control.'}
       </p>
     </section>
   )
