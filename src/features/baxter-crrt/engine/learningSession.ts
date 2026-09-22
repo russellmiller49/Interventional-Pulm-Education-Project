@@ -440,6 +440,8 @@ function createCaseInitialInterfaceState(
         }
       : fresh.prescriptionDraft,
     committedPrescription,
+    prescriptionInUse: committedPrescription,
+    treatmentStarted: phase === 'operations' || phase === 'stop',
     primeState:
       phase === 'review' || phase === 'connect' || phase === 'operations' || phase === 'stop'
         ? 'complete'
@@ -853,13 +855,34 @@ function syncEngineDeliveryToInterface(
   previousSimulation: CrrtSimulationState,
   nextSimulation: CrrtSimulationState,
 ): PrismaxPilotInterfaceState {
-  if (nextSimulation.device.deliveryState === previousSimulation.device.deliveryState) {
-    return previousInterface
+  const before = previousSimulation.prescription
+  const after = nextSimulation.prescription
+  const changed =
+    before.status !== after.status ||
+    (before.status === 'configured' &&
+      after.status === 'configured' &&
+      (before.modality !== after.modality ||
+        before.anticoagulation !== after.anticoagulation ||
+        Object.keys(before.flows).some(
+          (key) =>
+            before.flows[key as keyof typeof before.flows] !==
+            after.flows[key as keyof typeof after.flows],
+        )))
+  let next = previousInterface
+  if (changed) {
+    next = {
+      ...next,
+      prescriptionInUse: after.status === 'configured' ? after : null,
+      prescriptionReviewStale:
+        next.prescriptionReviewStale || next.completedStepIds.includes('review'),
+    }
   }
+  if (nextSimulation.device.deliveryState === previousSimulation.device.deliveryState) return next
   return {
-    ...previousInterface,
+    ...next,
     screen: 'operations',
     treatmentState: interfaceTreatmentStateForDeliveryState(nextSimulation.device.deliveryState),
+    treatmentStarted: next.treatmentStarted || nextSimulation.device.deliveryState === 'running',
     stopDialogOpen: false,
   }
 }
@@ -1014,8 +1037,19 @@ export function crrtLearningSessionReducer(
       if (action.action.type === 'RESET_INTERFACE') {
         throw new Error('Reset the complete CRRT learning session instead of only the interface.')
       }
-      const interfaceState = prismaxPilotInterfaceReducer(state.interfaceState, action.action)
-      const details = deviceActionDetails(action.action)
+      let interfaceState = prismaxPilotInterfaceReducer(state.interfaceState, action.action)
+      const details = [
+        ...deviceActionDetails(action.action),
+        ...(interfaceState !== state.interfaceState &&
+        action.action.type === 'COMPLETE_SETUP_STEP' &&
+        action.action.stepId === 'review' &&
+        state.simulation.prescription.status === 'configured'
+          ? Object.entries(state.simulation.prescription.flows).map(([key, value]) => ({
+              label: `Reviewed ${effectTargetLabels[`prescription.flows.${key}`]?.[0] ?? key}`,
+              value: `${value} ${effectTargetLabels[`prescription.flows.${key}`]?.[1] ?? ''}`,
+            }))
+          : []),
+      ]
       if (interfaceState === state.interfaceState) {
         return {
           ...state,
@@ -1030,6 +1064,12 @@ export function crrtLearningSessionReducer(
         interfaceState,
         state.simulation,
       )
+      if (action.action.type === 'COMMIT_PRESCRIPTION') {
+        interfaceState = {
+          ...interfaceState,
+          prescriptionInUse: interfaceState.committedPrescription,
+        }
+      }
       if (
         action.action.type === 'START_TREATMENT' &&
         interfaceState.treatmentState === 'running' &&

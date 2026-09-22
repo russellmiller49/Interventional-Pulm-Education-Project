@@ -29,6 +29,7 @@ export type CrrtPrescriptionRecordStatus =
   | 'not-set'
   /** A prescription was committed on the machine and is the one in use. */
   | 'machine-reviewed-matches'
+  | 'machine-committed-unreviewed'
   /** A prescription was committed on the machine, but the one in use differs. */
   | 'changed-since-machine-review'
   /** A prescription is in use but was never committed through the machine. */
@@ -43,13 +44,11 @@ export interface CrrtPrescriptionFieldDivergence {
 
 export interface CrrtPrescriptionRecord {
   readonly status: CrrtPrescriptionRecordStatus
+  readonly reviewCurrent: boolean
   /** The flows the engine is actually running. */
   readonly inUse: CrrtFlowRates | null
   /** The flows the learner committed on the machine, if any. */
-  readonly committedOnMachine: Pick<
-    CrrtFlowRates,
-    'bloodFlowMlMin' | 'dialysateFlowMlHour' | 'patientFluidRemovalMlHour'
-  > | null
+  readonly committedOnMachine: CrrtFlowRates | null
   readonly divergences: readonly CrrtPrescriptionFieldDivergence[]
   readonly statement: string
 }
@@ -58,16 +57,23 @@ const machinePrescriptionFields = [
   ['bloodFlowMlMin', 'Blood flow', 'mL/min'],
   ['dialysateFlowMlHour', 'Dialysate flow', 'mL/h'],
   ['patientFluidRemovalMlHour', 'Patient fluid removal', 'mL/h'],
+  ['pbpFlowMlHour', 'Pre-blood-pump flow', 'mL/h'],
+  ['preReplacementFlowMlHour', 'Pre-filter replacement', 'mL/h'],
+  ['postReplacementFlowMlHour', 'Post-filter replacement', 'mL/h'],
+  ['syringeFlowMlHour', 'Syringe flow', 'mL/h'],
+  ['makeupFlowMlHour', 'Makeup flow', 'mL/h'],
 ] as const
 
 export const CRRT_PRESCRIPTION_RECORD_STATEMENTS: Readonly<
   Record<CrrtPrescriptionRecordStatus, string>
 > = Object.freeze({
   'not-set': 'No prescription has been entered yet, on the machine or by a case action.',
+  'machine-committed-unreviewed':
+    'The current values match the machine entry, but the current prescription has not been reviewed on the machine.',
   'machine-reviewed-matches':
     'The prescription you committed on the machine is the one the simulation is running.',
   'changed-since-machine-review':
-    'The prescription the simulation is running is no longer the one you committed on the machine. A case action changed it afterwards. Only the machine review of the prescription is affected — completed prime, connection and start are unchanged — and this exercise does not judge whether either prescription is clinically appropriate.',
+    'The prescription the simulation is running is no longer the one you committed on the machine. A case action changed it afterwards. The review status below refers to the current values; completed prime, connection and start are unchanged — and this exercise does not judge whether either prescription is clinically appropriate.',
   'not-reviewed-on-machine':
     'The prescription the simulation is running came from the case, not from a prescription you committed and reviewed on the machine.',
 })
@@ -75,6 +81,9 @@ export const CRRT_PRESCRIPTION_RECORD_STATEMENTS: Readonly<
 export function selectCrrtPrescriptionRecord(
   session: CrrtLearningSessionState,
 ): CrrtPrescriptionRecord {
+  const reviewCurrent =
+    session.interfaceState.completedStepIds.includes('review') &&
+    !session.interfaceState.prescriptionReviewStale
   const prescription = session.simulation.prescription
   const committed = session.interfaceState.committedPrescription
   const inUse = prescription.status === 'configured' ? prescription.flows : null
@@ -82,6 +91,7 @@ export function selectCrrtPrescriptionRecord(
   if (!inUse) {
     return Object.freeze({
       status: 'not-set',
+      reviewCurrent,
       inUse: null,
       committedOnMachine: committed ? { ...pickMachineFields(committed.flows) } : null,
       divergences: Object.freeze([]),
@@ -91,6 +101,7 @@ export function selectCrrtPrescriptionRecord(
   if (!committed) {
     return Object.freeze({
       status: 'not-reviewed-on-machine',
+      reviewCurrent,
       inUse,
       committedOnMachine: null,
       divergences: Object.freeze([]),
@@ -105,9 +116,14 @@ export function selectCrrtPrescriptionRecord(
         : [{ label, unit, committedOnMachine: committed.flows[key], inUse: inUse[key] }],
   )
   const status: CrrtPrescriptionRecordStatus =
-    divergences.length === 0 ? 'machine-reviewed-matches' : 'changed-since-machine-review'
+    divergences.length === 0
+      ? reviewCurrent
+        ? 'machine-reviewed-matches'
+        : 'machine-committed-unreviewed'
+      : 'changed-since-machine-review'
   return Object.freeze({
     status,
+    reviewCurrent,
     inUse,
     committedOnMachine: pickMachineFields(committed.flows),
     divergences: Object.freeze(divergences),
@@ -116,11 +132,7 @@ export function selectCrrtPrescriptionRecord(
 }
 
 function pickMachineFields(flows: CrrtFlowRates) {
-  return Object.freeze({
-    bloodFlowMlMin: flows.bloodFlowMlMin,
-    dialysateFlowMlHour: flows.dialysateFlowMlHour,
-    patientFluidRemovalMlHour: flows.patientFluidRemovalMlHour,
-  })
+  return Object.freeze({ ...flows })
 }
 
 /* ------------------------------------------------------------------ *
@@ -158,6 +170,8 @@ export function selectCrrtMachineStartReadiness(
   if (interfaceState.committedPrescription === null) {
     missing.push('no prescription has been committed')
   }
+  if (interfaceState.prescriptionReviewStale && !interfaceState.treatmentStarted)
+    missing.push('the prescription review is stale')
   if (interfaceState.primeState !== 'complete') missing.push('priming is not complete')
   return Object.freeze({
     ready: canStartPrismaxTreatment(interfaceState),
@@ -193,7 +207,9 @@ export function selectCrrtMachineStepAssertions(
       stepId,
       label: crrtSetupStepLabel(stepId),
       complete:
-        completed.has(stepId) && (stepId !== 'prime' || interfaceState.primeState === 'complete'),
+        completed.has(stepId) &&
+        (stepId !== 'review' || !interfaceState.prescriptionReviewStale) &&
+        (stepId !== 'prime' || interfaceState.primeState === 'complete'),
     })),
   )
 }

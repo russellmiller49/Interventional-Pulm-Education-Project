@@ -76,7 +76,11 @@ describe('CRRT-04 machine workflow is the authoritative one', () => {
   })
 
   it('refuses a declaration of prime and review the machine has not recorded', () => {
-    const session = run(start('CRRT-04'), [...caseCards, perform('crrt04-complete-prime-review')])
+    const session = run(start('CRRT-04'), [
+      ...caseCards,
+      device({ type: 'COMPLETE_SETUP_STEP', stepId: 'review' }),
+      perform('crrt04-complete-prime-review'),
+    ])
     const entry = lastTimelineEntry(session)
     expect(entry.referenceId).toBe('crrt04-complete-prime-review')
     expect(entry.outcome).toBe('refused')
@@ -103,7 +107,11 @@ describe('CRRT-04 machine workflow is the authoritative one', () => {
     // prerequisite chain.
     const prepared = run(
       completeCrrtMachineSetup(start('CRRT-04'), learnerValues, { startTreatment: false }),
-      [...caseCards, perform('crrt04-complete-prime-review')],
+      [
+        ...caseCards,
+        device({ type: 'COMPLETE_SETUP_STEP', stepId: 'review' }),
+        perform('crrt04-complete-prime-review'),
+      ],
     )
     expect(prepared.performedInterventionIds).toContain('crrt04-complete-prime-review')
     expect(prepared.interfaceState.treatmentState).toBe('idle')
@@ -116,7 +124,11 @@ describe('CRRT-04 machine workflow is the authoritative one', () => {
   it('accepts the declaration once the machine has actually primed and reviewed', () => {
     const session = run(
       completeCrrtMachineSetup(start('CRRT-04'), learnerValues, { startTreatment: false }),
-      [...caseCards, perform('crrt04-complete-prime-review')],
+      [
+        ...caseCards,
+        device({ type: 'COMPLETE_SETUP_STEP', stepId: 'review' }),
+        perform('crrt04-complete-prime-review'),
+      ],
     )
     const assertions = selectCrrtMachineStepAssertions(
       getBaxterCrrtCase('CRRT-04').interventions.find(

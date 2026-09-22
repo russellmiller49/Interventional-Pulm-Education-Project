@@ -124,3 +124,6 @@ export const crrtCalculatedPressureSignalIds: readonly CrrtPressureSignalId[] = 
   'tmp',
   'filter-drop',
 ])
+
+export const CRRT_PRESSURE_HISTORY_VALIDITY_NOTE =
+  'Blood-flow validity was not recorded with each historical pressure sample. Calculated TMP values during zero flow are not interpretable; this series alone cannot establish a filter-pressure change.' as const

@@ -964,7 +964,7 @@
   padding: 0.55rem 0.65rem;
   border: 1px solid rgba(245, 187, 101, 0.42);
   border-radius: 0.5rem;
-  background: rgba(68, 47, 18, 0.28);
+  background: #143a3a;
 }
 
 .prescriptionRecord strong {
@@ -985,6 +985,11 @@
   overflow-wrap: anywhere;
 }
 
+.prescriptionRecord .primaryAction {
+  max-width: 100%;
+  margin: 0.6rem 0 0.3rem;
+}
+
 .prescriptionRecord ul {
   margin: 0.3rem 0 0;
   padding-left: 1.2rem;
@@ -994,7 +999,7 @@
 .caseSettingTitle small {
   display: block;
   margin-top: 0.25rem;
-  color: #a9c6c2;
+  color: #486863;
   font-size: 0.56rem;
   line-height: 1.5;
   overflow-wrap: anywhere;

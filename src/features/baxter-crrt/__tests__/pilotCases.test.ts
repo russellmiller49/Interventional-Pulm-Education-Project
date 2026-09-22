@@ -71,6 +71,15 @@ function performWithPrerequisites(
     }
   }
   if (state.performedInterventionIds.includes(actionId)) return state
+  if (
+    action.assertsCompletedMachineSteps?.includes('review') &&
+    state.interfaceState.prescriptionReviewStale
+  ) {
+    state = crrtLearningSessionReducer(state, {
+      type: 'DEVICE_ACTION',
+      action: { type: 'COMPLETE_SETUP_STEP', stepId: 'review' },
+    })
+  }
   return crrtLearningSessionReducer(state, {
     type: 'PERFORM_INTERVENTION',
     interventionId: actionId,

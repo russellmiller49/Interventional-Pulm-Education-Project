@@ -225,6 +225,11 @@ export interface PrismaxPilotInterfaceState {
   readonly completedStepIds: readonly PrismaxSetupStepId[]
   readonly prescriptionDraft: PrismaxPrescriptionDraft
   readonly committedPrescription: ConfiguredPrescriptionState | null
+  /** Current engine values to review; never replaces the committed history. */
+  readonly prescriptionInUse?: ConfiguredPrescriptionState | null
+  readonly prescriptionReviewStale?: boolean
+  /** Operational resume does not replay initial setup. */
+  readonly treatmentStarted?: boolean
   readonly primeState: 'not-started' | 'in-progress' | 'complete'
   readonly treatmentState: 'idle' | 'running' | 'ended'
   readonly stopDialogOpen: boolean
@@ -440,7 +445,9 @@ export function createInitialPrismaxPilotInterfaceState(): PrismaxPilotInterface
 }
 
 function activeSetupStep(state: PrismaxPilotInterfaceState): SetupStepDefinition | null {
-  return prismaxSetupSteps[state.completedStepIds.length] ?? null
+  return state.prescriptionReviewStale
+    ? prismaxSetupSteps.find((step) => step.id === 'review')!
+    : (prismaxSetupSteps.find((step) => !state.completedStepIds.includes(step.id)) ?? null)
 }
 
 function isActiveSetupStep(state: PrismaxPilotInterfaceState, stepId: PrismaxSetupStepId): boolean {
@@ -506,7 +513,8 @@ function configuredPrescriptionFromDraft(
 export function canStartPrismaxTreatment(state: PrismaxPilotInterfaceState): boolean {
   return (
     state.treatmentState === 'idle' &&
-    state.completedStepIds.length === prismaxSetupSteps.length &&
+    prismaxSetupSteps.every((step) => state.completedStepIds.includes(step.id)) &&
+    (!state.prescriptionReviewStale || state.treatmentStarted === true) &&
     state.committedPrescription !== null &&
     state.primeState === 'complete'
   )
@@ -561,10 +569,14 @@ export function prismaxPilotInterfaceReducer(
       return { ...state, primeState: 'complete' }
     case 'COMPLETE_SETUP_STEP':
       if (!canCompleteActiveSetupStep(state, action.stepId)) return state
-      return { ...state, completedStepIds: [...state.completedStepIds, action.stepId] }
+      return {
+        ...state,
+        completedStepIds: [...new Set([...state.completedStepIds, action.stepId])],
+        ...(action.stepId === 'review' ? { prescriptionReviewStale: false } : {}),
+      }
     case 'START_TREATMENT':
       if (!canStartPrismaxTreatment(state)) return state
-      return { ...state, screen: 'operations', treatmentState: 'running' }
+      return { ...state, screen: 'operations', treatmentState: 'running', treatmentStarted: true }
     case 'OPEN_STOP_DIALOG':
       return state.treatmentState === 'running' ? { ...state, stopDialogOpen: true } : state
     case 'CLOSE_STOP_DIALOG':
@@ -589,11 +601,12 @@ export function selectPrismaxPilotInterface(
       prismaxSetupSteps.map((step) =>
         Object.freeze({
           step,
-          status: completed.has(step.id)
-            ? ('complete' as const)
-            : step.id === activeStep?.id
-              ? ('current' as const)
-              : ('pending' as const),
+          status:
+            completed.has(step.id) && !(step.id === 'review' && state.prescriptionReviewStale)
+              ? ('complete' as const)
+              : step.id === activeStep?.id
+                ? ('current' as const)
+                : ('pending' as const),
         }),
       ),
     ),

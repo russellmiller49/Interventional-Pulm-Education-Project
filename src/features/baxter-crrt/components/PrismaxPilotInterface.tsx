@@ -371,12 +371,15 @@ function SetupStepContent({
   }
 
   if (activeStep === 'review') {
-    const prescription = state.committedPrescription
+    const prescription = state.prescriptionInUse ?? state.committedPrescription
     return (
       <div className={styles.procedureCard}>
         <div className={styles.screenCopy}>
           <span>Step 7 · Review</span>
           <h4>Confirm the entered case values</h4>
+          <p>
+            Currently in-use values for this simulation; the original machine entry is retained.
+          </p>
           <p>
             These are simulated case entries. They do not establish a target, normal range, or
             clinical approval.
@@ -618,6 +621,19 @@ function OperationsScreen({
             <div className={styles.prescriptionRecord} role="note">
               <strong>Prescription in use</strong>
               <p>{prescriptionRecord.statement}</p>
+              <p>
+                Machine prescription review:{' '}
+                {prescriptionRecord.reviewCurrent ? 'current' : 'not current'}.
+              </p>
+              {state.prescriptionReviewStale ? (
+                <button
+                  type="button"
+                  className={styles.primaryAction}
+                  onClick={() => dispatch({ type: 'COMPLETE_SETUP_STEP', stepId: 'review' })}
+                >
+                  Review current values
+                </button>
+              ) : null}
               {prescriptionRecord.divergences.length > 0 ? (
                 <ul>
                   {prescriptionRecord.divergences.map((divergence) => (

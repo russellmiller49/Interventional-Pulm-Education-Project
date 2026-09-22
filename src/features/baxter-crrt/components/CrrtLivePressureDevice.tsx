@@ -1,5 +1,7 @@
 'use client'
 
+import { CRRT_PRESSURE_HISTORY_VALIDITY_NOTE } from '../engine/circuitDelivery'
+
 import { useId, useMemo } from 'react'
 
 import { crrtPressureSignalDetail, type CrrtPressureSignalId } from '../content/circuitModel'
@@ -344,6 +346,9 @@ export function CrrtLivePressureDevice({
           </h4>
           {selected.historyAvailability === 'sampled' && timeDomain ? (
             <>
+              {selected.kind === 'calculated-relationship' ? (
+                <p role="note">{CRRT_PRESSURE_HISTORY_VALIDITY_NOTE}</p>
+              ) : null}
               <HistoryPlot
                 signal={selected}
                 startSeconds={timeDomain.startSeconds}

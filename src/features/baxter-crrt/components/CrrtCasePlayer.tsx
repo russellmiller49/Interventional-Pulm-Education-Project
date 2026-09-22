@@ -1,5 +1,7 @@
 'use client'
 
+import { CRRT_PRESSURE_HISTORY_VALIDITY_NOTE } from '../engine/circuitDelivery'
+
 import {
   ArrowRight,
   BrainCircuit,
@@ -952,6 +954,7 @@ function CrrtCasePlayerContent({
               ) : null}
 
               <h6>Sampled pressure, dose, and fluid evidence</h6>
+              <p role="note">{CRRT_PRESSURE_HISTORY_VALIDITY_NOTE}</p>
               {firstTrend && latestTrend ? (
                 <div
                   className={styles.trendEvidenceRegion}

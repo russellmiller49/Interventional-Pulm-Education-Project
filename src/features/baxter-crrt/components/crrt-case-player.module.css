@@ -23,9 +23,8 @@
 }
 
 .reasoningRibbon {
-  position: sticky;
-  z-index: 8;
-  top: 0.5rem;
+  /* Keep keyboard-focused controls uncovered when enlarged text fills the viewport. */
+  position: static;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 0.8rem;
