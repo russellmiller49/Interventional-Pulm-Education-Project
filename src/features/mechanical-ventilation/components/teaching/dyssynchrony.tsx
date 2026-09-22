@@ -10,6 +10,8 @@
  */
 import { useMemo, useState } from 'react'
 
+import { exhaledVolumeReading } from '../../content/measurementReadiness'
+import { patientReportAvailability } from '../../content/patientReport'
 import { plateauAcquisition } from '../../content/plateauAcquisition'
 import { triggerDelayEvidence } from '../../engine/triggerEvidence'
 import type { VentilationSimulationState } from '../../engine'
@@ -129,7 +131,10 @@ export function VentilationDyssynchronyDomains({
           bearing: effortPresent ? 'supports' : 'neutral',
         },
         {
-          signal: 'Reported dyspnea',
+          signal:
+            patientReportAvailability(state).availability === 'reported'
+              ? 'Reported dyspnea'
+              : 'Dyspnea index (not a patient report)',
           observed: `${round(human.dyspneaScore, 1)} on the modeled scale`,
           bearing: human.dyspneaScore > 0 ? 'supports' : 'neutral',
         },
@@ -211,7 +216,10 @@ export function VentilationDyssynchronyDomains({
         },
         {
           signal: 'Delivered tidal volume',
-          observed: `${round(measurements.exhaledVtMl)} mL exhaled`,
+          observed:
+            exhaledVolumeReading(state).exhaledVtMl === null
+              ? 'Awaiting a completed breath on the trace'
+              : `${round(measurements.exhaledVtMl)} mL exhaled`,
           bearing: 'neutral',
         },
         {

@@ -302,6 +302,29 @@ export interface MechanicalVentilatorState {
   holdType: 'inspiratory' | 'expiratory' | null
   holdUntil: number | null
   manualBreathUntil: number | null
+  /** The machine's breath timer. See `BreathClock`. */
+  breathClock: BreathClock
+}
+
+/**
+ * The machine's breath timer: the cycle length the breath schedule is currently running on.
+ *
+ * The breath phase is `time mod period` — an absolute grid, which is what lines a patient-triggered
+ * breath up with the neural effort the model says triggered it. It used to take `period` from the
+ * delivered rate afresh on every sample, and on pressure support that rate is recomputed from the
+ * missed-effort fraction, which depends on the trapped pressure the last breath left. Each change
+ * re-gridded the phase instantly, often into the middle of an inspiration for a single sample. On
+ * MV-05, lowering support to 12 and raising the cycle threshold to 40 % together set up a loop:
+ * the one-sample "breaths" shortened the measured expiratory time, which raised the modeled
+ * auto-PEEP, which changed the rate again — and the console reported an exhaled volume of 1–2 mL
+ * after the case's own recommended correction.
+ *
+ * Now a new period is adopted only between breaths (see `advanceBreathClock`). While the rate is
+ * constant nothing differs from the old schedule.
+ */
+export interface BreathClock {
+  /** Null until the first step sets it. */
+  readonly periodSeconds: number | null
 }
 
 export interface PatientModelState {
@@ -379,6 +402,13 @@ export interface VentilatorMeasurements {
    */
   plateauIsInterpretable: boolean
   exhaledVtMl: number
+  /**
+   * Where `exhaledVtMl` came from. `trace` is the last completed inflation in the waveform buffer
+   * — what a flow sensor would have integrated. `predicted` is the analytic equilibrium the settings
+   * would produce, used only while the buffer holds no completed inflation; it is a model input
+   * then, never an exhaled volume, and a surface must not print it as one.
+   */
+  exhaledVtSource: 'trace' | 'predicted'
   minuteVentilationLMin: number
   totalRatePerMin: number
   observedPatientRatePerMin: number
@@ -501,6 +531,11 @@ export interface ArterialGasSample {
     readonly paO2MmHg: number
     readonly bicarbonateMmolL: number
   }
+  /**
+   * Baseline only: where each presenting value came from. A repeat is drawn from the running
+   * model and has no provenance beyond that.
+   */
+  readonly provenance?: ArterialGasProvenance
 }
 
 export interface RiskState {
@@ -662,7 +697,27 @@ export interface VentilationCaseDefinition {
   branchOptions: readonly string[]
   baselineSeconds: number
   deviceAdaptationNotes: readonly string[]
+  /**
+   * Where each value of the presenting gas came from. Absent means every value was supplied with
+   * the case (the Learn fixture, which is authored in full).
+   */
+  initialGasProvenance?: ArterialGasProvenance
 }
+
+/**
+ * The origin of one presenting blood-gas value.
+ *
+ * - `case-source`  — printed in the supplied casebook.
+ * - `derived`      — computed from two casebook values with the engine's own equation
+ *                    (bicarbonate from pH and PaCO₂; PaO₂ from the casebook saturation on the
+ *                    engine's own curve). Not a separate observation.
+ * - `model-default`— the casebook supplies nothing; the simulator's starting value.
+ */
+export type ArterialGasValueOrigin = 'case-source' | 'derived' | 'model-default'
+
+export type ArterialGasProvenance = Readonly<
+  Record<'pH' | 'paCO2MmHg' | 'paO2MmHg' | 'bicarbonateMmolL', ArterialGasValueOrigin>
+>
 
 export interface InterventionRecord {
   id: string
@@ -725,6 +780,11 @@ export interface VentilationSimulationState {
    */
   arterialGasSamples: readonly ArterialGasSample[]
   /**
+   * The case as it opened: its authored presentation, and the value each of the model's slow
+   * relationships had at the inputs it opened with. See `PhysiologyReference`.
+   */
+  physiologyReference: PhysiologyReference
+  /**
    * Teaching-only multipliers on this patient's mechanics, so a Learn section can change the lung
    * and let the learner watch the consequence on the real console rather than on a drawing.
    *
@@ -734,6 +794,51 @@ export interface VentilationSimulationState {
    * definition on every sample, so anything set directly on `patient` is gone by the next one.
    */
   teachingMechanics: TeachingMechanicsOverride
+}
+
+/**
+ * The case-open equilibrium contract (MV-PRE-REVIEW-02).
+ *
+ * A case's presentation — its gas, saturation, blood pressure, heart rate and dyspnea — is the
+ * state it is authored to be in *at the settings it opens with*. The model's slow relationships
+ * (oxygenation from FiO₂/PEEP/shunt, CO₂ from minute ventilation, the circulatory and heart-rate
+ * loads, the comfort burdens) are generic, and at those same inputs they almost never land on the
+ * authored values. Driving each variable straight at its generic target therefore made every
+ * patient drift in the first minutes for no reason the case contains: MV-14's saturation rose from
+ * 76 to 97 % beside an untreated tension pneumothorax, MV-08's fell from 98 to 86 % on a healthy
+ * lung, MV-05's PaCO₂ climbed 30 mmHg on unchanged settings.
+ *
+ * The CO₂ and MAP relationships were already written this way — anchored at the authored value
+ * and moved by what changes — and CO₂'s anchor was simply computed with a different minute
+ * ventilation from the one it was compared with. This record holds the case-open value of every
+ * relationship so each target is `authored + (relationship now − relationship at open)`: the
+ * generic coefficients still decide how far a change moves the patient, and nothing moves them
+ * without a change. Explicit authored fault states (the obstructive-shock ceiling, the
+ * deep-sedation dyspnea bound, case resolution) still act as they did.
+ *
+ * Captured once, by `createInitialSimulationState`, from the patient the learner is shown.
+ */
+export interface PhysiologyReference {
+  /** Delivered minute ventilation at case open, on the same definition the model compares with. */
+  readonly minuteVentilationLMin: number
+  readonly paCO2MmHg: number
+  readonly paO2MmHg: number
+  readonly spo2Percent: number
+  /** The oxygenation relationship at the case-open FiO₂, PEEP and shunt. */
+  readonly oxygenationTermMmHg: number
+  /** The engine's saturation curve at the authored PaO₂. */
+  readonly saturationCurvePercent: number
+  readonly mapMmHg: number
+  readonly systolicMmHg: number
+  readonly diastolicMmHg: number
+  /** The circulatory load (trapped gas, mean airway pressure, overdistension) at case open. */
+  readonly mapLoadMmHg: number
+  readonly heartRatePerMin: number
+  /** The heart-rate load (hypotension, dyspnea) at case open. */
+  readonly heartRateLoadPerMin: number
+  readonly dyspneaScore: number
+  /** The comfort-burden relationship at case open, before the deep-sedation bound. */
+  readonly dyspneaLoad: number
 }
 
 /** Both default to 1, which is the case exactly as authored. */

@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { peepComparisonTeaching } from '../../content/peepComparison'
+import { peepComparisonTeaching, peepComparisonTimeControl } from '../../content/peepComparison'
 import {
   createPeepComparisonBaseline,
   peepComparisonIntervals,
@@ -188,6 +188,7 @@ export function VentilationPeepComparison({ explanationOpen }: { explanationOpen
       {explanationOpen || revealed ? (
         <div data-peep-explanation>
           <h3>How to read the comparison</h3>
+          <p data-peep-time-control>{peepComparisonTimeControl(result)}</p>
           {peepComparisonTeaching.explanation.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}

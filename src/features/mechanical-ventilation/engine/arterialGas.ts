@@ -19,11 +19,12 @@
  * - The **baseline** is the case's authored `initialPatient.gasExchange`, collected before the
  *   run starts and available immediately. It is history, not a measurement this learner made.
  *
- * Nothing here chooses a pH, a PaCO2, a bicarbonate or a saturation. Whether the authored values
- * are internally consistent is C5's numerical half and belongs to batch 02; this file only fixes
- * which numbers are being shown and what they are called.
+ * Nothing here chooses a pH, a PaCO2, a bicarbonate or a saturation. MV-PRE-REVIEW-02 made the
+ * presenting tuple internally consistent where the casebook supplies part of it (`presentingGas` in
+ * `runtimeCases.ts`) and records here where each value came from, so a specimen the casebook never
+ * supplied is not called one.
  */
-import type { ArterialGasSample, PatientModelState } from './types'
+import type { ArterialGasProvenance, ArterialGasSample, PatientModelState } from './types'
 
 export interface ArterialGasValues {
   readonly pH: number
@@ -43,10 +44,27 @@ export function arterialGasValues(
   }
 }
 
-/** The case's authored presenting gas, as a specimen collected before this run began. */
+/** Every value supplied with the case — the Learn fixture, which is authored in full. */
+export const SUPPLIED_GAS_PROVENANCE: ArterialGasProvenance = {
+  pH: 'case-source',
+  paCO2MmHg: 'case-source',
+  paO2MmHg: 'case-source',
+  bicarbonateMmolL: 'case-source',
+}
+
+/**
+ * The case's presenting gas, as a specimen collected before this run began, with where each value
+ * came from.
+ *
+ * Seven of the fourteen live cases supply no blood gas at all. The label used to call all of them
+ * "Baseline gas supplied with the case" — including 7.38 / 42 / 24 on a tension pneumothorax, which
+ * is the simulator's starting value and nothing the casebook said. The provenance travels with the
+ * specimen so the label can say which it is.
+ */
 export function baselineArterialGasSample(
   caseId: string,
   gasExchange: PatientModelState['gasExchange'],
+  provenance: ArterialGasProvenance = SUPPLIED_GAS_PROVENANCE,
 ): ArterialGasSample {
   return {
     id: `${caseId}:baseline`,
@@ -55,7 +73,54 @@ export function baselineArterialGasSample(
     collectedAtSeconds: 0,
     availableAtSeconds: 0,
     values: arterialGasValues(gasExchange),
+    provenance,
   }
+}
+
+export type BaselineGasOrigin = 'supplied' | 'partly-supplied' | 'simulator-start'
+
+/**
+ * One word for the whole specimen: every value printed in the casebook, some of them, or none.
+ * A value derived from something else the casebook printed (a PaO₂ from its saturation) is not a
+ * blood gas the casebook supplied, so a specimen with no printed gas value is the simulator's.
+ */
+export function baselineGasOrigin(sample: ArterialGasSample): BaselineGasOrigin {
+  const origins = Object.values(sample.provenance ?? SUPPLIED_GAS_PROVENANCE)
+  if (origins.every((origin) => origin === 'case-source')) return 'supplied'
+  if (origins.every((origin) => origin !== 'case-source')) return 'simulator-start'
+  return 'partly-supplied'
+}
+
+const VALUE_NAMES: Readonly<Record<keyof ArterialGasProvenance, string>> = {
+  pH: 'pH',
+  paCO2MmHg: 'PaCO₂',
+  paO2MmHg: 'PaO₂',
+  bicarbonateMmolL: 'HCO₃⁻',
+}
+
+/**
+ * Where each value of a baseline specimen came from, as one sentence — or null for a specimen the
+ * casebook supplied in full. Says what was derived and from what, and what is the simulator's.
+ */
+export function baselineGasProvenanceNote(sample: ArterialGasSample): string | null {
+  if (sample.kind !== 'baseline' || baselineGasOrigin(sample) === 'supplied') return null
+  const provenance = sample.provenance ?? SUPPLIED_GAS_PROVENANCE
+  const keys = Object.keys(VALUE_NAMES) as (keyof ArterialGasProvenance)[]
+  const named = (origin: string) =>
+    keys.filter((key) => provenance[key] === origin).map((key) => VALUE_NAMES[key])
+  const parts: string[] = []
+  const supplied = named('case-source')
+  if (supplied.length) parts.push(`${supplied.join(', ')} from the casebook`)
+  for (const key of keys.filter((key) => provenance[key] === 'derived')) {
+    parts.push(
+      key === 'paO2MmHg'
+        ? 'PaO₂ read off this simulator’s saturation curve at the casebook’s SpO₂'
+        : `${VALUE_NAMES[key]} computed from the casebook’s other two values with the simulator’s Henderson–Hasselbalch equation`,
+    )
+  }
+  const defaults = named('model-default')
+  if (defaults.length) parts.push(`${defaults.join(', ')} the simulator’s default`)
+  return `${parts.join('; ')}. None of these is a separate measurement.`
 }
 
 /** A repeat specimen, frozen at the second it is drawn. */
@@ -177,7 +242,16 @@ export function arterialGasSampleLabel(
   sample: ArterialGasSample,
   simulationTimeSeconds?: number,
 ): string {
-  if (sample.kind === 'baseline') return 'Baseline gas supplied with the case, before this run'
+  if (sample.kind === 'baseline') {
+    const origin = baselineGasOrigin(sample)
+    if (origin === 'simulator-start') {
+      return 'Starting gas set by the simulator — this case supplies no presenting blood gas'
+    }
+    if (origin === 'partly-supplied') {
+      return 'Baseline gas supplied with the case, before this run, completed by the simulator'
+    }
+    return 'Baseline gas supplied with the case, before this run'
+  }
   const pending =
     simulationTimeSeconds !== undefined && arterialGasSampleIsPending(sample, simulationTimeSeconds)
   return pending

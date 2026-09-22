@@ -11,7 +11,10 @@
  */
 import { useState } from 'react'
 
-import type { VentilationSimulationState } from '../../engine'
+import type { AlarmEvent, VentilationSimulationState } from '../../engine'
+import { exhaledVolumeReading } from '../../content/measurementReadiness'
+import { patientReportAvailability } from '../../content/patientReport'
+import { referenceAlarmSet } from '../../content/referenceAlarmSet'
 import { ModelBoundary, TextEquivalent, round, styles } from './shared'
 
 type Locus = 'patient' | 'circuit' | 'ventilator' | 'person'
@@ -71,19 +74,32 @@ export function VentilationSafetyReassessment({
 }) {
   const [selected, setSelected] = useState<Locus>('patient')
   const { alarms, measurements, patient } = state
-
+  /*
+   * Your patient's alarms when it has any. When it has none — Section 13's live patient raises
+   * none — the sort is practised on a separate reference: what the simulator raises for the
+   * tension pneumothorax the written example describes, labelled as that patient's every time.
+   * The panel used to sort an empty list and read "No alarm is active" under a worked example of
+   * a high-pressure alarm (S13-1). No alarm is added to your patient.
+   */
+  const reference = alarms.length === 0 ? referenceAlarmSet(state.deviceId) : null
+  const sorted: readonly AlarmEvent[] = reference ? reference.alarms : alarms
   const grouped = locusOrder.map((locus) => ({
     locus,
-    alarms: alarms.filter((alarm) => locusForAlarm(alarm.code, alarm.message) === locus),
+    alarms: sorted.filter((alarm) => locusForAlarm(alarm.code, alarm.message) === locus),
   }))
-  const activeCount = alarms.length
-  const highest = alarms.find((alarm) => alarm.priority === 'high') ?? alarms[0]
+  const activeCount = sorted.length
+  const highest = sorted.find((alarm) => alarm.priority === 'high') ?? sorted[0]
+  const report = patientReportAvailability(state)
+  const volume = exhaledVolumeReading(state)
+  const whose = reference
+    ? `Your patient has no active alarm. Sorted instead: the ${activeCount} alarm${activeCount === 1 ? '' : 's'} the simulator raises for a separate reference patient, case ${reference.caseId} (${reference.branch} branch) as it opens`
+    : `${activeCount} alarm${activeCount === 1 ? '' : 's'} active on your patient`
 
-  const summary = `${activeCount === 0 ? 'No alarm is active' : `${activeCount} alarm${activeCount === 1 ? '' : 's'} active, the most urgent being ${highest?.message ?? 'unnamed'} at ${highest?.priority ?? 'unknown'} priority`}. Grouped by where the answer lives: ${grouped
+  const summary = `${whose}, the most urgent being ${highest?.message ?? 'unnamed'} at ${highest?.priority ?? 'unknown'} priority. Grouped by where the answer lives: ${grouped
     .map((group) => `${locusCopy[group.locus].label}, ${group.alarms.length}`)
     .join(
       '; ',
-    )}. Alongside them, peak airway pressure is ${round(measurements.peakPressureCmH2O, 1)} centimetres of water, oxygen saturation ${round(patient.gasExchange.spo2Percent)} percent, mean arterial pressure ${round(patient.hemodynamics.mapMmHg)} millimetres of mercury, and the highest of the reported pain, anxiety, and dyspnea scores is ${round(Math.max(patient.human.painScore, patient.human.anxietyScore, patient.human.dyspneaScore), 1)}. The selected place to look is ${locusCopy[selected].label}.`
+    )}. On your patient, peak airway pressure is ${round(measurements.peakPressureCmH2O, 1)} centimetres of water, oxygen saturation ${round(patient.gasExchange.spo2Percent)} percent, mean arterial pressure ${round(patient.hemodynamics.mapMmHg)} millimetres of mercury, and the highest of the pain, anxiety, and dyspnea scores is ${round(Math.max(patient.human.painScore, patient.human.anxietyScore, patient.human.dyspneaScore), 1)} — ${report.availability === 'reported' ? 'a modeled patient report' : 'an internal model index, not something this patient reported'}. The selected place to look is ${locusCopy[selected].label}.`
 
   return (
     <section className={styles.panel} aria-labelledby="mv-safety-teaching">
@@ -97,7 +113,20 @@ export function VentilationSafetyReassessment({
         </p>
       </header>
 
-      <figure className={styles.figure}>
+      <figure
+        className={styles.figure}
+        data-alarm-source={reference ? 'reference' : 'live'}
+        data-reference-case={reference?.caseId}
+      >
+        {reference ? (
+          <p className={styles.textEquivalent} data-alarm-source-note>
+            <strong>Your patient has no active alarm.</strong> To practise the sort, the boxes below
+            hold what this simulator raises for a separate reference patient — case{' '}
+            {reference.caseId}, the tension pneumothorax, as it opens. Nothing here is happening to
+            your patient, and the written example in the teaching column is a third, constructed
+            patient.
+          </p>
+        ) : null}
         <div className={styles.locusGrid} role="img" aria-label={summary}>
           {grouped.map((group, index) => (
             <div
@@ -125,12 +154,17 @@ export function VentilationSafetyReassessment({
           ))}
         </div>
         <figcaption>
-          Whatever the console is currently alarming on, sorted by where its answer lives. The
-          numbering is the order to check in, not a ranking of how many alarms each holds.
+          {reference
+            ? `The reference patient’s alarms (case ${reference.caseId}), sorted by where the answer lives.`
+            : 'Whatever your console is currently alarming on, sorted by where its answer lives.'}{' '}
+          The numbering is the order to check in, not a ranking of how many alarms each holds.
         </figcaption>
       </figure>
 
-      <dl className={styles.readouts} aria-label="Signals checked at every reassessment">
+      <dl
+        className={styles.readouts}
+        aria-label="Your patient’s signals, checked at every reassessment"
+      >
         <div>
           <dt>Peak pressure</dt>
           <dd>
@@ -152,12 +186,23 @@ export function VentilationSafetyReassessment({
         <div>
           <dt>Exhaled tidal volume</dt>
           <dd>
-            {round(measurements.exhaledVtMl)} <small>mL</small>
+            {volume.exhaledVtMl === null ? (
+              <small>Awaiting a completed breath</small>
+            ) : (
+              <>
+                {round(volume.exhaledVtMl)} <small>mL</small>
+              </>
+            )}
           </dd>
         </div>
-        <div data-state={patient.human.dyspneaScore > 0 ? undefined : 'unavailable'}>
-          <dt>Reported dyspnea</dt>
-          <dd>{round(patient.human.dyspneaScore, 1)}</dd>
+        <div data-report-availability={report.availability}>
+          <dt>
+            {report.availability === 'reported' ? 'Reported dyspnea · modeled' : 'Dyspnea index'}
+          </dt>
+          <dd>
+            {round(patient.human.dyspneaScore, 1)}{' '}
+            {report.availability === 'reported' ? null : <small>not a patient report</small>}
+          </dd>
         </div>
       </dl>
 

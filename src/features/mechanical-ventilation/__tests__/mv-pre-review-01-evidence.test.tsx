@@ -467,7 +467,22 @@ describe('absent, pending, invalid, valid and stale plateaus', () => {
 describe('blood gases as observations', () => {
   it('keeps the baseline byte-stable while the internal gas state moves', () => {
     const open = createInitialSimulationState('MV-14', 'practice', 1, DEVICE)
-    const later = advanceSimulation({ ...open, paused: false }, 120)
+    /*
+     * The gas is moved by a real, modeled change (FiO₂ to 100 %). This used to rely on MV-14's
+     * untreated saturation climbing from 76 to 97 %, which MV-PRE-REVIEW-02 traced to an
+     * initialization defect: the presenting PaO₂ was not an equilibrium of the model.
+     */
+    const later = advanceSimulation(
+      {
+        ...ventilationSimulationReducer(open, {
+          type: 'SET_CONTROL',
+          control: 'oxygenPercent',
+          value: 100,
+        }),
+        paused: false,
+      },
+      120,
+    )
     expect(later.patient.gasExchange.paO2MmHg).not.toBe(open.patient.gasExchange.paO2MmHg)
     expect(JSON.stringify(later.arterialGasSamples[0])).toBe(
       JSON.stringify(open.arterialGasSamples[0]),
@@ -530,16 +545,38 @@ describe('blood gases as observations', () => {
     expect(restarted.arterialGasSamples[0].kind).toBe('baseline')
   })
 
-  it('shows the baseline as supplied history rather than as a reading taken now', () => {
+  it('shows the baseline as history rather than as a reading taken now', () => {
     const later = advanceSimulation(
-      { ...createInitialSimulationState('MV-14', 'practice', 1, DEVICE), paused: false },
+      {
+        ...ventilationSimulationReducer(
+          createInitialSimulationState('MV-14', 'practice', 1, DEVICE),
+          { type: 'SET_CONTROL', control: 'oxygenPercent', value: 100 },
+        ),
+        paused: false,
+      },
       120,
     )
     const { container } = render(
       <BedsidePanel state={later} definition={mechanicalVentilationCaseById.get('MV-14')!} />,
     )
-    expect(container.textContent).toContain('Baseline gas supplied with the case, before this run')
+    /*
+     * MV-14's casebook supplies no blood gas at all, so the specimen is the simulator's starting
+     * value and is labelled as that (MV-PRE-REVIEW-02, C5). This asserted "supplied with the case"
+     * here, which was the provenance defect. A case that does supply its gas keeps that label.
+     */
+    expect(container.textContent).toContain('Starting gas set by the simulator')
+    expect(container.textContent).not.toContain('Baseline gas supplied with the case')
     expect(container.textContent).not.toContain('Baseline gas shown.')
+    const supplied = render(
+      <BedsidePanel
+        state={createInitialSimulationState('MV-01', 'practice', 1, DEVICE)}
+        definition={mechanicalVentilationCaseById.get('MV-01')!}
+      />,
+    )
+    expect(supplied.container.textContent).toContain(
+      'Baseline gas supplied with the case, before this run',
+    )
+    supplied.unmount()
     const grid = container.querySelector('[data-abg-sample]')
     expect(grid?.getAttribute('data-abg-sample')).toBe('MV-14:baseline')
     /*

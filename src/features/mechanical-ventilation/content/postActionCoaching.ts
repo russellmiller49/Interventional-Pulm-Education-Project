@@ -78,6 +78,7 @@ import {
   WAVEFORM_WINDOW_SECONDS,
 } from '../engine/physics'
 import { latestResultedRepeat } from '../engine/arterialGas'
+import { patientReportAvailability } from './patientReport'
 import { plateauAcquisition } from './plateauAcquisition'
 import { plateauReadingValidity, plateauWithheldNote } from './plateauValidity'
 
@@ -269,6 +270,7 @@ export function coachingReadingSnapshot(
    * result vanish from the card. Both go away by reading the specimen list.
    */
   const resultedRepeat = latestResultedRepeat(state.arterialGasSamples, state.simulationTime)
+  const reportable = patientReportAvailability(state).availability === 'reported'
   return {
     'peak-pressure': measurements.peakPressureCmH2O,
     /*
@@ -280,13 +282,19 @@ export function coachingReadingSnapshot(
       ? measurements.peakPressureCmH2O - (acquisition.valueCmH2O ?? acquisition.estimateCmH2O)
       : null,
     'intrinsic-peep': measurements.intrinsicPeepCmH2O,
-    'exhaled-vt': measurements.exhaledVtMl,
+    // Only a breath that was exhaled; the cold-buffer prediction is not a reading.
+    'exhaled-vt': measurements.exhaledVtSource === 'trace' ? measurements.exhaledVtMl : null,
     'total-rate': measurements.totalRatePerMin,
     'patient-rate': measurements.observedPatientRatePerMin,
     spo2: state.patient.gasExchange.spo2Percent,
     map: state.patient.hemodynamics.mapMmHg,
-    dyspnea: state.patient.human.dyspneaScore,
-    pain: state.patient.human.painScore,
+    /*
+     * Breathing discomfort and pain are the patient's to report ("Reported …" on the card). On a
+     * patient who cannot answer — deeply sedated, paralysed, or authored that way — they are the
+     * model's internal index, not a report, and the card does not print them as one.
+     */
+    dyspnea: reportable ? state.patient.human.dyspneaScore : null,
+    pain: reportable ? state.patient.human.painScore : null,
     delirium: state.patient.human.deliriumScore,
     sedation: state.patient.human.sedationScore,
     paco2: resultedRepeat ? resultedRepeat.values.paCO2MmHg : null,

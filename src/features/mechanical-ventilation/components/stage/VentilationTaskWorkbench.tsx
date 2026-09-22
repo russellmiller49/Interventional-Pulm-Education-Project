@@ -166,12 +166,16 @@ export function VentilationTaskWorkbench({
           {presentation.patient === 'protection' ? (
             <section className={styles.block} data-pbw-context>
               <h3>Patient context · authored PBW {definition.predictedBodyWeightKg} kg</h3>
-              <p>
-                Delivered VT {state.measurements.exhaledVtMl.toFixed(0)} mL /{' '}
-                {definition.predictedBodyWeightKg} kg ={' '}
-                {(state.measurements.exhaledVtMl / definition.predictedBodyWeightKg).toFixed(1)}{' '}
-                mL/kg PBW.
-              </p>
+              {state.measurements.exhaledVtSource === 'trace' ? (
+                <p>
+                  Delivered VT {state.measurements.exhaledVtMl.toFixed(0)} mL /{' '}
+                  {definition.predictedBodyWeightKg} kg ={' '}
+                  {(state.measurements.exhaledVtMl / definition.predictedBodyWeightKg).toFixed(1)}{' '}
+                  mL/kg PBW.
+                </p>
+              ) : (
+                <p>Delivered VT: awaiting a completed breath on the trace.</p>
+              )}
               <p className={styles.note}>
                 The case supplies PBW; a height input is not supplied. Verify height and the
                 applicable PBW reference at the bedside. Assess effort, gas exchange, and an

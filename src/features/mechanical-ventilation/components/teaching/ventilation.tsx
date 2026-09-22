@@ -11,6 +11,7 @@
 import { useState } from 'react'
 
 import type { TrendSample, VentilationSimulationState } from '../../engine'
+import { exhaledVolumeReading } from '../../content/measurementReadiness'
 import {
   ModelBoundary,
   TextEquivalent,
@@ -19,6 +20,8 @@ import {
   directionWord,
   round,
   styles,
+  trendWindow,
+  trendWindowLabel,
 } from './shared'
 
 type Tier = 'delivery' | 'exchange'
@@ -63,25 +66,34 @@ export function VentilationCo2Response({ state }: { readonly state: VentilationS
   const [selected, setSelected] = useState<Tier>('delivery')
   const { measurements, patient, trends } = state
 
-  const window = trends.slice(-Math.min(trends.length, 30))
+  const window = trendWindow(trends)
   const co2Delta =
-    window.length >= 2 ? (window.at(-1)?.paCO2MmHg ?? 0) - (window[0]?.paCO2MmHg ?? 0) : 0
+    window.samples.length >= 2
+      ? (window.samples.at(-1)?.paCO2MmHg ?? 0) - (window.samples[0]?.paCO2MmHg ?? 0)
+      : 0
   const co2Trend = direction(co2Delta, 0.5)
-  const hasTrend = window.length >= 2
+  const hasTrend = window.samples.length >= 2
+  const volume = exhaledVolumeReading(state)
+  const reference = state.physiologyReference
 
   const deliveryRows = [
     {
       id: 'minute',
       label: 'Minute ventilation',
-      value: `${round(measurements.minuteVentilationLMin, 1)} L/min`,
+      value:
+        volume.minuteVentilationLMin === null
+          ? 'Awaiting a completed breath'
+          : `${round(volume.minuteVentilationLMin, 1)} L/min`,
     },
-    { id: 'vt', label: 'Exhaled tidal volume', value: `${round(measurements.exhaledVtMl)} mL` },
-    { id: 'rate', label: 'Total rate', value: `${round(measurements.totalRatePerMin)} /min` },
     {
-      id: 'deadspace',
-      label: 'Dead-space fraction',
-      value: `${round(patient.gasExchange.deadSpaceFraction * 100)} %`,
+      id: 'vt',
+      label: 'Exhaled tidal volume',
+      value:
+        volume.exhaledVtMl === null
+          ? 'Awaiting a completed breath'
+          : `${round(volume.exhaledVtMl)} mL`,
     },
+    { id: 'rate', label: 'Total rate', value: `${round(measurements.totalRatePerMin)} /min` },
   ]
 
   const exchangeRows = [
@@ -92,16 +104,15 @@ export function VentilationCo2Response({ state }: { readonly state: VentilationS
       label: 'Bicarbonate',
       value: `${round(patient.gasExchange.bicarbonateMmolL, 1)} mmol/L`,
     },
-    {
-      id: 'production',
-      label: 'CO₂ production',
-      value: `${round(patient.gasExchange.co2ProductionMlMin)} mL/min`,
-    },
   ]
 
   const co2Path = trendSeriesPath(trends, 'paCO2MmHg')
 
-  const summary = `Delivery right now: minute ventilation ${round(measurements.minuteVentilationLMin, 1)} litres per minute from an exhaled tidal volume of ${round(measurements.exhaledVtMl)} millilitres at ${round(measurements.totalRatePerMin)} breaths per minute, against a dead-space fraction of ${round(patient.gasExchange.deadSpaceFraction * 100)} percent. Gas exchange: arterial carbon dioxide ${round(patient.gasExchange.paCO2MmHg)} millimetres of mercury, ${hasTrend ? directionWord[co2Trend] : 'with no trend history yet'}, at a pH of ${round(patient.gasExchange.pH, 2).toFixed(2)}, with carbon dioxide production ${round(patient.gasExchange.co2ProductionMlMin)} millilitres per minute. The selected tier is ${tierCopy[selected].label}.`
+  const deliveryText =
+    volume.minuteVentilationLMin === null
+      ? 'Delivery right now: no completed breath on the trace yet, so no exhaled volume or minute ventilation is reported'
+      : `Delivery right now: minute ventilation ${round(volume.minuteVentilationLMin, 1)} litres per minute from an exhaled tidal volume of ${round(volume.exhaledVtMl ?? 0)} millilitres at ${round(measurements.totalRatePerMin)} breaths per minute`
+  const summary = `${deliveryText}. Gas exchange: arterial carbon dioxide ${round(patient.gasExchange.paCO2MmHg)} millimetres of mercury, ${hasTrend ? `${directionWord[co2Trend]} over the last ${window.samples.length} simulated seconds (${trendWindowLabel(window)})` : 'with no trend history yet'}, at a pH of ${round(patient.gasExchange.pH, 2).toFixed(2)}. In this model arterial CO₂ follows delivered minute ventilation from this patient’s own starting point — ${round(reference.paCO2MmHg)} millimetres of mercury at ${round(reference.minuteVentilationLMin, 1)} litres per minute. The selected tier is ${tierCopy[selected].label}.`
 
   return (
     <section className={styles.panel} aria-labelledby="mv-ventilation-teaching">
@@ -153,7 +164,7 @@ export function VentilationCo2Response({ state }: { readonly state: VentilationS
             ) : null}
             <p className={styles.tierNote}>
               {hasTrend
-                ? `Arterial CO₂ is ${directionWord[co2Trend]} ${directionGlyph[co2Trend]} across the recent trend window.`
+                ? `Arterial CO₂ is ${directionWord[co2Trend]} ${directionGlyph[co2Trend]} over the last ${window.samples.length} simulated seconds (${trendWindowLabel(window)}).`
                 : 'No trend history yet — advance the case before reading a direction here.'}
             </p>
           </div>
@@ -180,6 +191,35 @@ export function VentilationCo2Response({ state }: { readonly state: VentilationS
       <div className={styles.stepDetail}>
         <span>{tierCopy[selected].when}</span>
         <p>{tierCopy[selected].body}</p>
+      </div>
+
+      {/*
+       * S10-1. The delivery tier used to list a dead-space fraction beside minute ventilation and the
+       * exchange tier a CO₂ production, which invites the alveolar-ventilation calculation — and a
+       * fellow who did it got 36 mmHg against the 40 on screen. The model never reads either
+       * field. What it does compute is stated here instead, with this patient's own anchor, and
+       * the two descriptors are named as what they are.
+       */}
+      <div className={styles.stepDetail} data-co2-model>
+        <span>How this simulator computes arterial CO₂</span>
+        <p>
+          Arterial CO₂ moves in inverse proportion to the minute ventilation actually delivered,
+          starting from this patient’s own values when the case opened ({round(reference.paCO2MmHg)}{' '}
+          mmHg at {round(reference.minuteVentilationLMin, 1)} L/min). Halve the delivered
+          ventilation and it heads toward twice that value; double it and it heads toward half. That
+          is the alveolar-ventilation relationship with CO₂ production and the dead-space fraction
+          both held at their starting values — so it explains the direction and the proportion here,
+          but it is not computed from them, and working the equation from the case’s dead-space
+          fraction and CO₂ production will not reproduce the number on screen.
+        </p>
+        <p>
+          Minute ventilation is not alveolar ventilation. A change that alters the dead-space
+          fraction — rapid shallow breathing, for example — is not represented, so this model treats
+          every litre of delivered ventilation alike. The case also records a dead-space fraction of{' '}
+          {round(patient.gasExchange.deadSpaceFraction * 100)} % and a CO₂ production of{' '}
+          {round(patient.gasExchange.co2ProductionMlMin)} mL/min as descriptors; the CO₂ calculation
+          does not use them.
+        </p>
       </div>
 
       <TextEquivalent>{summary}</TextEquivalent>

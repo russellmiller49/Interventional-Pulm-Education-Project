@@ -24,6 +24,30 @@ export function round(value: number, places = 0): number {
   return Math.round(value * factor) / factor
 }
 
+/**
+ * The trend samples a panel's arrows compare — the last `span` one-second samples — with the
+ * simulated times they cover, so a panel can say which window "rising" or "holding steady" is
+ * about. Two surfaces that disagreed about the same patient (Section 9's live panel said
+ * "holding steady" while the worked comparison said saturation rises while waiting) were reading
+ * different windows without saying so.
+ */
+export function trendWindow<T extends { readonly time: number }>(
+  trends: readonly T[],
+  span = 30,
+): { readonly samples: readonly T[]; readonly fromSeconds: number; readonly toSeconds: number } {
+  const samples = trends.slice(-Math.min(trends.length, span))
+  return {
+    samples,
+    fromSeconds: samples[0]?.time ?? 0,
+    toSeconds: samples.at(-1)?.time ?? 0,
+  }
+}
+
+/** "From 12 to 41 s", for the window a trend arrow compares. */
+export function trendWindowLabel(window: { fromSeconds: number; toSeconds: number }): string {
+  return `from ${window.fromSeconds.toFixed(0)} to ${window.toSeconds.toFixed(0)} s`
+}
+
 /** "Higher", "lower", or "unchanged" without committing to a threshold for how much counts. */
 export function direction(delta: number, deadband: number): 'up' | 'down' | 'flat' {
   if (delta > deadband) return 'up'

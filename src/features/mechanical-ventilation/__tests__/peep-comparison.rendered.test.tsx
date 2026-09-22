@@ -91,7 +91,9 @@ it('reveals the explanation without an answer, run or hold; keeps wrong-choice f
   mount()
   fireEvent.click(screen.getByRole('button', { name: 'Explain this comparison' }))
   expect(screen.getByRole('heading', { name: 'How to read the comparison' })).toBeInTheDocument()
-  expect(screen.getByText(/Waiting|Oxygenation also rises while waiting/)).toBeInTheDocument()
+  expect(document.querySelector('[data-peep-time-control]')?.textContent).toMatch(
+    /wait-only arm is the control/,
+  )
   expect(screen.queryByRole('columnheader', { name: /PEEP changed/ })).toBeNull()
   fireEvent.click(
     within(screen.getByRole('navigation', { name: 'Step navigation' })).getByRole('button', {

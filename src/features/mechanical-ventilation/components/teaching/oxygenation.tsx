@@ -19,6 +19,8 @@ import {
   directionWord,
   round,
   styles,
+  trendWindow,
+  trendWindowLabel,
 } from './shared'
 import { plateauAcquisition } from '../../content/plateauAcquisition'
 
@@ -63,8 +65,8 @@ const leverCopy: Readonly<
 
 function trendDelta(trends: readonly TrendSample[], field: keyof TrendSample): number {
   if (trends.length < 2) return 0
-  const window = trends.slice(-Math.min(trends.length, 30))
-  return (window.at(-1)?.[field] ?? 0) - (window[0]?.[field] ?? 0)
+  const { samples } = trendWindow(trends)
+  return (samples.at(-1)?.[field] ?? 0) - (samples[0]?.[field] ?? 0)
 }
 
 export function VentilationOxygenationTradeoff({
@@ -89,6 +91,11 @@ export function VentilationOxygenationTradeoff({
           ? 'Pressure during the running occlusion'
           : 'Plateau estimate'
 
+  const window = trendWindow(trends)
+  const windowText =
+    window.samples.length >= 2
+      ? `Over your patient’s last ${window.samples.length} simulated seconds (${trendWindowLabel(window)})`
+      : 'With no trend recorded yet on your patient'
   const spo2Delta = trendDelta(trends, 'spo2Percent')
   const mapDelta = trendDelta(trends, 'mapMmHg')
   const plateauDelta = trendDelta(trends, 'plateauPressureCmH2O')
@@ -149,7 +156,7 @@ export function VentilationOxygenationTradeoff({
     },
   ]
 
-  const summary = `Over the recent trend window, oxygen saturation is ${round(patient.gasExchange.spo2Percent)} percent and ${directionWord[direction(spo2Delta, 0.5)]}, with modeled arterial oxygen tension ${round(patient.gasExchange.paO2MmHg)} millimetres of mercury and model-assigned shunt ${round(patient.gasExchange.shuntFraction * 100)} percent. Mean airway pressure is ${round(measurements.meanAirwayPressureCmH2O, 1)} centimetres of water, ${plateauLabel.toLowerCase()} ${round(acquisition.valueCmH2O ?? acquisition.estimateCmH2O, 1)}, mean arterial pressure ${round(patient.hemodynamics.mapMmHg)} millimetres of mercury and ${directionWord[direction(mapDelta, 1)]}, and intrinsic PEEP estimate ${round(measurements.intrinsicPeepCmH2O, 1)}. PEEP is ${round(ventilator.settings.peepCmH2O, 1)} and inspired oxygen ${round(ventilator.settings.oxygenPercent)} percent. ${reading.passiveInterpretationSupported ? 'Recent effort is absent; an estimate alone is not an acquired hold.' : 'Patient effort makes this pressure unsuitable for passive mechanics interpretation.'}${selected ? ` The selected lever is ${leverCopy[selected].label}.` : ''}`
+  const summary = `${windowText}, oxygen saturation is ${round(patient.gasExchange.spo2Percent)} percent and ${directionWord[direction(spo2Delta, 0.5)]}, with modeled arterial oxygen tension ${round(patient.gasExchange.paO2MmHg)} millimetres of mercury and model-assigned shunt ${round(patient.gasExchange.shuntFraction * 100)} percent. Mean airway pressure is ${round(measurements.meanAirwayPressureCmH2O, 1)} centimetres of water, ${plateauLabel.toLowerCase()} ${round(acquisition.valueCmH2O ?? acquisition.estimateCmH2O, 1)}, mean arterial pressure ${round(patient.hemodynamics.mapMmHg)} millimetres of mercury and ${directionWord[direction(mapDelta, 1)]}, and intrinsic PEEP estimate ${round(measurements.intrinsicPeepCmH2O, 1)}. PEEP is ${round(ventilator.settings.peepCmH2O, 1)} and inspired oxygen ${round(ventilator.settings.oxygenPercent)} percent. ${reading.passiveInterpretationSupported ? 'Recent effort is absent; an estimate alone is not an acquired hold.' : 'Patient effort makes this pressure unsuitable for passive mechanics interpretation.'}${selected ? ` The selected lever is ${leverCopy[selected].label}.` : ''}`
 
   return (
     <section className={styles.panel} aria-labelledby="mv-oxygenation-teaching">
@@ -198,8 +205,13 @@ export function VentilationOxygenationTradeoff({
           </div>
         </div>
         <figcaption>
-          Both columns report your live patient. Arrows use that reading’s own recorded trend;
-          values without a recorded trend have no arrow. These trends have no matched control.
+          Both columns report your live patient. Arrows compare the first and last readings of the
+          same window —{' '}
+          {window.samples.length >= 2
+            ? `your patient’s last ${window.samples.length} simulated seconds, ${trendWindowLabel(window)}`
+            : 'none recorded yet'}
+          ; values without a recorded trend have no arrow. These trends have no matched control: the
+          separate worked comparison is the one that holds everything but PEEP equal.
         </figcaption>
       </figure>
 

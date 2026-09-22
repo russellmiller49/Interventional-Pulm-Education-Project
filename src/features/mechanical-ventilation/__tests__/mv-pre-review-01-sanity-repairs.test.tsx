@@ -539,7 +539,17 @@ describe('R3 · every ABG consumer reads a specimen', () => {
   }
 
   it('reports the resulted specimen in coaching, not the live gas state', () => {
-    const resulted = advanceSimulation(twoOrders(), 60)
+    // Capturing every effort (trigger 4 → 1.5 L/min) moves the modeled CO₂ after both specimens
+    // were drawn. This used to lean on MV-07's untreated PaCO₂ rising from 48 toward the 110 mmHg
+    // ceiling, which MV-PRE-REVIEW-02 traced to a minute-ventilation anchor mismatch.
+    const resulted = advanceSimulation(
+      ventilationSimulationReducer(twoOrders(), {
+        type: 'SET_CONTROL',
+        control: 'triggerThreshold',
+        value: 1.5,
+      }),
+      60,
+    )
     const view = arterialGasView(resulted.arterialGasSamples, resulted.simulationTime)
     const specimen = view.current
     expect(specimen.kind).toBe('repeat')
