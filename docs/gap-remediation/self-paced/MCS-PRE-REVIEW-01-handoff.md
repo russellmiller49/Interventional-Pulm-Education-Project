@@ -86,7 +86,8 @@ note under the selector was a fifth thing on the same screen, and it lost.
 | `content/scenarios.ts`                        | Two AF timing conditions, ordinary        | Both carry `held` with the reason and `MCS-03-05`. Values, labels, ids, metrics and operators unchanged.                                                                                                                                                                                                                                  |
 | `engine/reducer.ts`                           | `response` counted every condition        | Held conditions leave numerator and denominator together, so the score cannot move with the trigger choice.                                                                                                                                                                                                                               |
 | `components/McsCaseWorkflow.tsx`              | `Signals to reconcile` listed bare labels | Contract sentence, per-condition class, and for a held condition the reason, "whether this run reached it is not shown and is not a result", and the open item.                                                                                                                                                                           |
-| `components/McsMonitor.tsx`                   | `NO ACTIVE MODEL ALARMS` alone            | Plus a `held` chip whenever the limitation applies. Every real alarm still renders, unchanged.                                                                                                                                                                                                                                            |
+| `components/McsMonitor.tsx`                   | `NO ACTIVE MODEL ALARMS` alone            | A `held` chip whenever the limitation applies, and — after the sanity review — the green clear badge is suppressed while it applies rather than sitting beside the chip. Every real alarm still renders, unchanged, and the clear badge is untouched in every other rhythm.                                                               |
+| `components/McsWorkbench.tsx`                 | Case header `No active modeled alarm`     | Added by the sanity review: while the limitation applies and no alarm is active, the patient-context header carries the same held sentence. An actual active alarm still takes precedence there.                                                                                                                                          |
 | `components/stage/McsStageHost.tsx`           | Context strip `No active alarm`           | While the limitation applies and no alarm is active, the strip carries the held line instead. Real alarms still take precedence.                                                                                                                                                                                                          |
 | `engine/model.ts` `explainState`              | `Counterpulsation is 74% synchronized.`   | `This model rates counterpulsation 74% synchronized — its own timing index, not a console reading.` In atrial fibrillation, plus the held clause and MCS-03's "read the synchrony figure here as this model's output" sentence.                                                                                                           |
 
@@ -95,9 +96,15 @@ note under the selector was a fifth thing on the same screen, and it lost.
 Browser, dev server on port 3122, 1204×987 dark, Learn transfer step with the selector moved to
 arterial pressure:
 
-- alarm bar: `NO ACTIVE MODEL ALARMS` **and** `Model limit held · a quiet trigger alarm here is not
-a correctly operated device`;
+- alarm bar: no clear badge, only `Model limit held · a quiet trigger alarm here is not a correctly
+operated device` (the badge sat beside the chip on the originally submitted head; the sanity
+  review reproduced that as a residual all-clear and it is now suppressed while the hold applies);
+- case header in IABP-02 and CAP-IABP-01: `Active alarm / limitation · Model limit held …`, not
+  `No active modeled alarm`;
 - context strip: no `No active alarm` anywhere on the page;
+- on ECG and on internal triggering, `WARNING · Trigger reliability reduced` still renders in the
+  alarm bar and in the case header, and in sinus rhythm the clear badge and `No active modeled
+alarm` are both preserved — the suppression is scoped to the hold, not to quiet states;
 - causal caption: `This model rates counterpulsation 74% synchronized — its own timing index, not a
 console reading. Model limit held for faculty review: in this rhythm the rating disagrees with
 the supplied Cardiosave material, so it is not a verdict on the trigger in front of you…`;
