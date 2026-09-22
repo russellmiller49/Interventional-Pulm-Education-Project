@@ -241,18 +241,43 @@ async function run(browser: Browser, condition: Condition) {
     await canvas.screenshot({ path: resolve(out, `${condition.name}-lesson11-canvas.png`) })
     if (condition.hasTouch) {
       // Emulated one-finger vertical drag on the canvas, through CDP touch events (not a device).
+      // Touch points come from live DOM rectangles (host iframe rect + canvas rect), re-read after
+      // every scroll, because a point taken before the page moved lands off the canvas.
       const cdp = await context.newCDPSession(page)
       const canvasEl = canvas.locator('canvas')
-      // Park the canvas in the upper half of the viewport so a finger moving up has room to scroll the page down.
+      const livePoint = () =>
+        page.evaluate(() => {
+          const fr = document.querySelector<HTMLIFrameElement>('iframe[title="EBUS workbench"]')!
+          const r = fr.getBoundingClientRect()
+          const c = fr
+            .contentDocument!.querySelector('.linked-canvas canvas')!
+            .getBoundingClientRect()
+          return {
+            x: r.left + c.left + c.width / 2,
+            top: r.top + c.top,
+            bottom: r.top + c.bottom,
+            mid: r.top + c.top + c.height / 2,
+          }
+        })
+      // Park the canvas below the host's sticky lesson chrome (about 300 px tall at this width) and
+      // fully in view, with room below so a finger moving up can scroll the page down.
       await page.evaluate(
-        (top) => window.scrollTo(0, Math.max(0, window.scrollY + top - 160)),
-        (await canvas.boundingBox())!.y,
+        (top) =>
+          window.scrollTo(
+            0,
+            Math.max(0, window.scrollY + top - Math.round(window.innerHeight * 0.42)),
+          ),
+        (await livePoint()).top,
       )
       await wait(300)
+      const chromeHit = await page.evaluate(
+        (p) => document.elementFromPoint(p.x, p.mid)?.tagName ?? null,
+        await livePoint(),
+      )
       const drag = async () => {
-        const box = (await canvas.boundingBox())!
-        const x = box.x + box.width / 2,
-          y0 = box.y + box.height * 0.75
+        const p = await livePoint()
+        const x = p.x,
+          y0 = p.bottom - 30
         await cdp.send('Input.dispatchTouchEvent', {
           type: 'touchStart',
           touchPoints: [{ x, y: y0 }],
@@ -264,43 +289,28 @@ async function run(browser: Browser, condition: Condition) {
           })
           await wait(16)
         }
-        // Hold still before lifting so the gesture ends without a fling: a tap during a fling is
-        // swallowed by Chromium as a scroll stop, which is browser behaviour, not the page's.
+        // Hold still before lifting so the gesture ends without a fling (a tap during a fling is
+        // swallowed by Chromium as a scroll stop, which is browser behaviour, not the page's).
         await wait(350)
         await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
-        await wait(500)
+        await wait(600)
       }
       const engagedBefore = await canvasEl.getAttribute('data-engaged')
       const before = await page.evaluate(() => window.scrollY)
       await drag()
       const afterReleased = await page.evaluate(() => window.scrollY)
       const engagedAfterDrag = await canvasEl.getAttribute('data-engaged')
-      // Let any scroll fling settle, then tap to engage; a second drag should orbit and not scroll.
-      let settled = await page.evaluate(() => window.scrollY)
-      for (let i = 0; i < 20; i++) {
-        await wait(150)
-        const now = await page.evaluate(() => window.scrollY)
-        if (now === settled) break
-        settled = now
-      }
-      const box2 = (await canvas.boundingBox())!
-      const tapPoint = { x: box2.x + box2.width / 2, y: box2.y + box2.height / 2 }
-      const frameBox = (await page.locator('iframe[title="EBUS workbench"]').boundingBox())!
-      const hit = await page
-        .frameLocator('iframe[title="EBUS workbench"]')
-        .locator('body')
-        .evaluate(
-          (_body, p) => {
-            const el = document.elementFromPoint(p.x, p.y)
-            return el
-              ? el.tagName + (el.className ? '.' + String(el.className).split(' ')[0] : '')
-              : null
-          },
-          { x: tapPoint.x - frameBox.x, y: tapPoint.y - frameBox.y },
-        )
-      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [tapPoint] })
+      const tapAt = await livePoint()
+      const hit = await page.evaluate((p) => document.elementFromPoint(p.x, p.y)?.tagName ?? null, {
+        x: tapAt.x,
+        y: tapAt.mid,
+      })
+      await cdp.send('Input.dispatchTouchEvent', {
+        type: 'touchStart',
+        touchPoints: [{ x: tapAt.x, y: tapAt.mid }],
+      })
       await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
-      await wait(400)
+      await wait(500)
       const engagedAfterTap = await canvasEl.getAttribute('data-engaged')
       const touchAction = await canvasEl.evaluate((c) => getComputedStyle(c).touchAction)
       const before2 = await page.evaluate(() => window.scrollY)
@@ -308,6 +318,7 @@ async function run(browser: Browser, condition: Condition) {
       const afterEngaged = await page.evaluate(() => window.scrollY)
       result.touch = {
         tapHit: hit,
+        canvasCentreBeforeTouch: chromeHit,
         released: {
           scrollBefore: before,
           scrollAfter: afterReleased,
