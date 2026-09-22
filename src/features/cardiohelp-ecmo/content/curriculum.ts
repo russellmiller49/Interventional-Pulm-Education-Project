@@ -200,7 +200,32 @@ export function pairedCaseIdsForLesson(lessonScenarioId: string): readonly strin
 
 export function pairedLessonIdsForCase(caseScenarioId: string): readonly string[] {
   const unitId = unitIdByCaseScenarioId.get(caseScenarioId)
-  return unitId ? (curriculumUnitById.get(unitId)?.lessonScenarioIds ?? []) : []
+  const unitLessons = unitId ? (curriculumUnitById.get(unitId)?.lessonScenarioIds ?? []) : []
+  return unitLessons.length ? unitLessons : lessonIdsTeachingCapstoneMechanism(caseScenarioId)
+}
+
+/**
+ * The lessons that teach the mechanism an integrated case turns on.
+ *
+ * A capstone unit lists no lessons and no cases — it holds a `capstoneScenarioId` and nothing else
+ * — and `unitIdByCaseScenarioId` is built from `caseScenarioIds`, so a capstone was in neither map.
+ * Its debrief therefore printed "No lesson in this track teaches this mechanism yet" while the VA
+ * differential-oxygenation unit sat four units above it teaching exactly that (IA-4).
+ *
+ * Resolved through the same mechanism vocabulary the Learn-to-Practice bridge uses, rather than by
+ * a second authored pairing table: the capstone's own `expectation.correctiveFault` names the
+ * mechanism, and a lesson qualifies when `lessonMechanism` agrees and it is on the same track. A
+ * capstone whose fault has no declared mechanism returns nothing and the debrief keeps its honest
+ * "no lesson yet".
+ */
+function lessonIdsTeachingCapstoneMechanism(scenarioId: string): readonly string[] {
+  const capstone = cardiohelpScenarioById.get(scenarioId)
+  if (!capstone || capstone.family !== 'capstone') return []
+  const mechanism = mechanismByDrillFault[capstone.expectation.correctiveFault]
+  if (!mechanism) return []
+  return cardiohelpCurriculum[capstone.supportMode]
+    .flatMap((unit) => unit.lessonScenarioIds)
+    .filter((lessonId) => lessonMechanism(lessonId) === mechanism)
 }
 
 /* ------------------------------------------------------------------ *

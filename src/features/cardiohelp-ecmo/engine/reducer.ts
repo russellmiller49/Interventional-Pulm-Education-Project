@@ -2,6 +2,11 @@ import { cardiohelpScenarioById, cardiohelpScenarios } from '../content/scenario
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
 import { resolveScenarioReassessment } from '../content/practiceSupport'
 import {
+  airIsCorrectedAndClear,
+  patientIsolated,
+  resolveBubbleResumption,
+} from './bubbleResumption'
+import {
   applyClinicalIntervention,
   attemptClinicalEcmoStart,
   markClinicalImproving,
@@ -224,21 +229,6 @@ function findMatchingSimulatorIntervention(
 }
 
 /**
- * Whether the air has actually been dealt with, by either of the two paths that deal with it.
- *
- * The drill corrects the source explicitly, which records the fault as corrected and clears the
- * detector while deliberately leaving the console latch set. The clinical case de-airs, which
- * clears the detector and the latch through an intervention patch without recording a corrected
- * fault. Neither is the other, so both are named rather than one being inferred from the other.
- */
-function airIsCorrectedAndClear(state: EcmoSimulationState): boolean {
-  if (state.circuit.arterialBubbleDetected) return false
-  return (
-    state.scenario.correctedFaults.includes('arterial-bubble') || !state.circuit.bubbleResetRequired
-  )
-}
-
-/**
  * Faults whose authored "correction" is recognition and escalation, not treatment (B6-006).
  *
  * Reviewing the right arm against the groin, or recognising a loading left ventricle, earns the
@@ -253,11 +243,6 @@ export const RECOGNITION_ONLY_FAULTS: readonly FaultId[] = ['differential-hypoxe
 /** On reserve power with the mains loss still standing: the moment the transport lesson is about. */
 function reducesSupportOnBattery(state: EcmoSimulationState): boolean {
   return state.device.powerSource === 'battery' && hasFault(state, 'ac-power-loss')
-}
-
-/** Both near-patient clamps closed: the patient is off the circuit's air column (B6-002). */
-export function patientIsolated(state: EcmoSimulationState): boolean {
-  return state.circuit.drainageClampClosed && state.circuit.returnClampClosed
 }
 
 function markFaultCorrected(state: EcmoSimulationState, fault: FaultId): EcmoSimulationState {
@@ -957,7 +942,18 @@ export function ecmoSimulationReducer(
      * followed.
      */
     case 'RESUME_SUPPORT_AFTER_BUBBLE': {
-      if (!airIsCorrectedAndClear(state)) {
+      /*
+       * One contract, two readers.
+       *
+       * The eligibility decision lives in `resolveBubbleResumption` so the control the learner
+       * presses and the reducer that performs the transition cannot disagree about what has to be
+       * true — which is exactly how the clinical cases came to offer a live Resume button while air
+       * was still in the circuit and a dead one the moment it was clear. The safety rules are
+       * unchanged: both refusals below are the guards that were already here, and both still fire
+       * on a direct dispatch that bypasses the control.
+       */
+      const eligibility = resolveBubbleResumption(state)
+      if (eligibility.status === 'air-outstanding') {
         return appendHistory(
           addCriticalError(state, 'premature-bubble-reset', 50),
           'action',
@@ -966,12 +962,24 @@ export function ecmoSimulationReducer(
       }
       // B6-002: resumption is the act of bringing an isolated patient back. With neither clamp ever
       // closed there was no isolation to come back from, and the sequence was skipped.
-      if (!state.circuit.drainageClampClosed && !state.circuit.returnClampClosed) {
+      if (eligibility.status === 'never-isolated') {
         return appendHistory(
           addCriticalError(state, 'air-correction-before-isolation', 50),
           'action',
           'Resume rejected: the patient was never isolated from the air column',
         )
+      }
+      /*
+       * A second press of a completed resumption is nothing, not a safety event.
+       *
+       * The isolation guard above reads "both limbs open" as "never isolated", which is also what a
+       * circuit looks like once this action has already run: open limbs, pump turning, air retired.
+       * So a double click used to charge a 50-point critical error for the act of clicking the
+       * button twice. Neither refusal here changes any state, which is what makes the repeat safe
+       * to swallow.
+       */
+      if (eligibility.status !== 'eligible') {
+        return state
       }
       const resumed = deriveSimulation(
         {
@@ -1111,10 +1119,23 @@ export function ecmoSimulationReducer(
         )
       }
       const next = correctFault(state, action.fault)
+      /*
+       * What this action did, named for what the model represents.
+       *
+       * On a recognition-only fault the authored "correction" is verifying the pattern and
+       * escalating: the fault stays active, the physiology keeps doing what it was doing, and no
+       * treatment is represented. Recording that as "Corrected scenario cause" put a completed
+       * treatment in the debrief's own timeline while the right-arm saturation on the monitor
+       * beside it had not moved — IA-3 in the September 2026 walkthrough, on the VA integrated
+       * case. The recognition is still recorded; it is recorded as recognition.
+       */
+      const recognitionOnly = RECOGNITION_ONLY_FAULTS.includes(action.fault)
       return appendHistory(
         applyControlCredit(state, next, action),
         'action',
-        `${actionLabels.CORRECT_FAULT}: ${action.fault}`,
+        recognitionOnly
+          ? `Recognised and escalated the scenario cause: ${action.fault}. This module represents recognition and escalation here, not a treatment, so the pattern persists.`
+          : `${actionLabels.CORRECT_FAULT}: ${action.fault}`,
       )
     }
     case 'APPLY_CLINICAL_INTERVENTION': {
@@ -1159,12 +1180,30 @@ export function ecmoSimulationReducer(
         definition,
         action.interventionId,
       )
+      /*
+       * An attempt that was refused is not an application.
+       *
+       * `applyClinicalIntervention` returns `blocked` for an unknown card, one already completed,
+       * and one whose authored prerequisites are outstanding — and in all three it changes nothing
+       * but the response line. This branch logged every one of them as "Applied clinical
+       * intervention: <label>", so the debrief's "What you did" carried actions the learner was
+       * refused. The refused attempt is still recorded, because reaching for it is worth seeing;
+       * it is recorded as what it was.
+       */
+      if (!result.intervention) {
+        return appendHistory(
+          next,
+          'system',
+          `${actionLabels.APPLY_CLINICAL_INTERVENTION}: unavailable`,
+        )
+      }
+      if (result.blocked) {
+        return appendHistory(next, 'system', `Attempted, not applied: ${result.intervention.label}`)
+      }
       return appendHistory(
         next,
         'action',
-        result.intervention
-          ? `${actionLabels.APPLY_CLINICAL_INTERVENTION}: ${result.intervention.label}`
-          : `${actionLabels.APPLY_CLINICAL_INTERVENTION}: unavailable`,
+        `${actionLabels.APPLY_CLINICAL_INTERVENTION}: ${result.intervention.label}`,
       )
     }
     case 'START_ECMO': {

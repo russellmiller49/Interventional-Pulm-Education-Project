@@ -15,6 +15,7 @@ import {
   unitIdByCaseScenarioId,
 } from '../../content/curriculum'
 import { predictionGoals } from '../../content/scenarios'
+import { resolvePumpStopExplanation } from '../../engine'
 import type { ScenarioOutcome } from '../../engine'
 import type {
   EcmoSimulationState,
@@ -416,12 +417,22 @@ export function EcmoPracticeCaseView({
   const activeAlarm = [...state.alarms]
     .filter((alarm) => alarm.active && alarm.source === 'device')
     .sort((a, b) => alarmRank(b.priority) - alarmRank(a.priority))[0]
+  /*
+   * The strip's speed field is a setting, and says so whenever the pump is not turning.
+   *
+   * "2,800 rpm · 2.0 L/min" sat in this line beside a case status of "not on ecmo" (C1-5), and
+   * "3,600 rpm" sat beside 0.00 L/min after a protective stop (C3-1). The number was right in both;
+   * what it was a number of was not said.
+   */
+  const pumpStop = resolvePumpStopExplanation(state)
   const contextLine: EcmoContextStripLine = {
     mode: `${supportMode.toUpperCase()} ${section === 'assess' ? 'integrated case' : 'practice'}`,
     flow: state.circuit.flowSensorConnected
       ? `${state.circuit.bloodFlow.toFixed(2)} L/min`
       : '-- · flow sensor disconnected',
-    rpm: `${state.device.rpmSetpoint} rpm`,
+    rpm: pumpStop.running
+      ? `${state.device.rpmSetpoint} rpm`
+      : `${state.device.rpmSetpoint} rpm requested · ${pumpStop.label.toLocaleLowerCase()}`,
     sweep: `${state.gas.sweepLpm.toFixed(1)} L/min`,
     alarm: activeAlarm
       ? { priority: activeAlarm.priority, text: activeAlarm.message }

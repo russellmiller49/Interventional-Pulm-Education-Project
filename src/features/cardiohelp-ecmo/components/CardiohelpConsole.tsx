@@ -31,6 +31,7 @@ import type {
   PressureLimits,
   SimulationAction,
 } from '../engine'
+import { resolvePumpStopExplanation } from '../engine'
 import { formatChannelReadout } from './channelReadout'
 import styles from './cardiohelp-ecmo.module.css'
 
@@ -77,12 +78,15 @@ function ParameterTile({
   unit,
   alarm,
   large = false,
+  note,
 }: {
   label: string
   value: string | number
   unit: string
   alarm?: AlarmEvent
   large?: boolean
+  /** A qualifier on what the number is — "requested, the pump is stopped" — not a second reading. */
+  note?: string
 }) {
   return (
     <div
@@ -92,8 +96,34 @@ function ParameterTile({
       <span className={styles.parameterLabel}>{label}</span>
       <span className={styles.parameterValue}>{value}</span>
       <span className={styles.parameterUnit}>{unit}</span>
+      {note ? (
+        <span className={styles.parameterUnit} data-parameter-note>
+          {note}
+        </span>
+      ) : null}
       {alarm ? <span className={styles.parameterAlarmText}>{alarm.priority} alarm</span> : null}
     </div>
+  )
+}
+
+/**
+ * The speed tile, saying whether the number is a speed the pump is turning at.
+ *
+ * `rpmSetpoint` is a setting. The model can stop the pump without zeroing it — the pressure
+ * interlock does exactly that — and an initiation case holds an ordered speed before support has
+ * started at all. Printing "Speed 3600 RPM" beside 0.00 L/min let both read as a rotating pump
+ * (C3-1, C1-5). The tile now says which it is; what the number is has not changed.
+ */
+function SpeedTile({ state, large = false }: { state: EcmoSimulationState; large?: boolean }) {
+  const pump = resolvePumpStopExplanation(state)
+  return (
+    <ParameterTile
+      label={pump.running ? 'Speed' : 'Speed (requested)'}
+      value={state.device.rpmSetpoint}
+      unit="RPM"
+      large={large}
+      note={pump.running ? undefined : pump.label}
+    />
   )
 }
 
@@ -283,7 +313,7 @@ function ScreenBody({ state, dispatch, controlsEnabled, guidedControlId }: Cardi
     return (
       <div className={styles.transportGrid}>
         <ParameterTile label="Flow" value={state.circuit.bloodFlow.toFixed(2)} unit="L/min" large />
-        <ParameterTile label="Speed" value={state.device.rpmSetpoint} unit="RPM" large />
+        <SpeedTile state={state} large />
         <ReadoutTile label="pVen" readout={state.circuit.readouts.pVen} unit="mmHg" precision={0} />
         <ReadoutTile label="pArt" readout={state.circuit.readouts.pArt} unit="mmHg" precision={0} />
         <ParameterTile label="Battery" value={state.device.batteryPercent.toFixed(0)} unit="%" />
@@ -322,11 +352,26 @@ function ScreenBody({ state, dispatch, controlsEnabled, guidedControlId }: Cardi
           id="cardiohelp-reset-bubble"
           type="button"
           disabled={!controlsEnabled || !state.circuit.bubbleResetRequired}
+          aria-describedby="cardiohelp-reset-bubble-reason"
           data-guided-help={guidedControlId === 'cardiohelp-reset-bubble'}
           onClick={() => dispatch({ type: 'RESET_BUBBLE' })}
         >
           <RotateCcw aria-hidden="true" /> Reset bubble intervention
         </button>
+        {/*
+          Why the reset is or is not available, said rather than implied.
+          S15-2: a blocked reset was a greyed-out control with nothing to read. The enabled case is
+          carried too, because the reset is deliberately live while the air source is still
+          outstanding — pressing it then is the mistake the drill exists to catch, and the learner
+          should be able to read what the control will do before finding out.
+        */}
+        <p id="cardiohelp-reset-bubble-reason" role="status" aria-live="polite">
+          {!controlsEnabled
+            ? 'Reading only in this section; the reset is not operable here.'
+            : !state.circuit.bubbleResetRequired
+              ? 'Not available: no bubble intervention is latched on this circuit, so there is nothing to reset.'
+              : 'Available. The reset clears the console latch only. It does not remove air, and it is refused while the air source is still uncorrected.'}
+        </p>
       </div>
     )
   }
@@ -412,7 +457,7 @@ function ScreenBody({ state, dispatch, controlsEnabled, guidedControlId }: Cardi
           large
           alarm={alarmFor('Flow')}
         />
-        <ParameterTile label="Speed" value={state.device.rpmSetpoint} unit="RPM" large />
+        <SpeedTile state={state} large />
       </div>
       <div className={styles.startupSecondary}>
         <ReadoutTile
@@ -462,10 +507,13 @@ export function CardiohelpConsole({
   initiationTargets = null,
 }: CardiohelpConsoleProps) {
   const topAlarm = state.alarms[0]
+  const pumpStop = resolvePumpStopExplanation(state)
   const unlockTimerRef = useRef<number | null>(null)
   const holdTimerRef = useRef<number | null>(null)
   /** Set by a pointer press so the click it also fires does not step a second time. */
   const pointerHeldRef = useRef(false)
+  /** Releases `pointerHeldRef` one turn after a press ends, in case no click follows it. */
+  const pendingClickTimerRef = useRef<number | null>(null)
   const rpmBars = useMemo(
     () => Math.round((state.device.rpmSetpoint / 5000) * 12),
     [state.device.rpmSetpoint],
@@ -484,6 +532,7 @@ export function CardiohelpConsole({
     () => () => {
       if (unlockTimerRef.current) window.clearTimeout(unlockTimerRef.current)
       if (holdTimerRef.current) window.clearInterval(holdTimerRef.current)
+      if (pendingClickTimerRef.current) window.clearTimeout(pendingClickTimerRef.current)
     },
     [],
   )
@@ -492,6 +541,71 @@ export function CardiohelpConsole({
     if (!controlsEnabled) return
     dispatch({ type: 'ROTARY_DELTA', delta })
   }
+
+  function clearPendingClickTimer() {
+    if (pendingClickTimerRef.current === null) return
+    window.clearTimeout(pendingClickTimerRef.current)
+    pendingClickTimerRef.current = null
+  }
+
+  /**
+   * Let the click this press will also fire arrive, then stop holding the flag for it.
+   *
+   * The held flag is a different question from the repeat timer and is cleared on its own
+   * schedule. It exists so the click a completed press also fires does not step a second time, so
+   * a release must not clear it before that click arrives — it is released on the next turn of the
+   * event loop instead. A hold that ends with no click at all (dragged off the button, or released
+   * outside the document) therefore stops swallowing the next genuine tap, which used to include
+   * the next keyboard activation, since Enter and Space never set the flag in the first place.
+   */
+  function releasePendingClick() {
+    if (!pointerHeldRef.current || pendingClickTimerRef.current !== null) return
+    pendingClickTimerRef.current = window.setTimeout(() => {
+      pendingClickTimerRef.current = null
+      pointerHeldRef.current = false
+    }, 0)
+  }
+
+  /*
+   * A held stepper stops when the hold does — including the ways a hold ends off this element.
+   *
+   * The button's own handlers cover press, release and the pointer leaving it. They do not cover
+   * the window losing focus, the tab going to the background, or a pointer released outside the
+   * document, and in each of those the repeat carried on against a control nobody was touching.
+   * A release anywhere ends the gesture; a focus loss or a hidden tab abandons it outright.
+   */
+  useEffect(() => {
+    const stopRepeat = () => {
+      if (holdTimerRef.current !== null) {
+        window.clearInterval(holdTimerRef.current)
+        holdTimerRef.current = null
+      }
+    }
+    const endGesture = () => {
+      stopRepeat()
+      releasePendingClick()
+    }
+    const abandonGesture = () => {
+      stopRepeat()
+      clearPendingClickTimer()
+      pointerHeldRef.current = false
+    }
+    const stopWhenHidden = () => {
+      if (document.visibilityState === 'hidden') abandonGesture()
+    }
+    window.addEventListener('blur', abandonGesture)
+    window.addEventListener('pointerup', endGesture)
+    window.addEventListener('pointercancel', abandonGesture)
+    document.addEventListener('visibilitychange', stopWhenHidden)
+    return () => {
+      window.removeEventListener('blur', abandonGesture)
+      window.removeEventListener('pointerup', endGesture)
+      window.removeEventListener('pointercancel', abandonGesture)
+      document.removeEventListener('visibilitychange', stopWhenHidden)
+      abandonGesture()
+    }
+    // Both helpers touch refs only, so this listener set is installed once and never rebuilt.
+  }, [])
 
   /**
    * Press-and-hold on the rotary steppers, so a long ramp is not a long click count.
@@ -506,13 +620,23 @@ export function CardiohelpConsole({
    */
   function beginHold(direction: number) {
     if (!controlsEnabled || state.device.locked) return
+    endHold()
+    clearPendingClickTimer()
     pointerHeldRef.current = true
     rotate(direction)
     let repeats = 0
     holdTimerRef.current = window.setInterval(() => {
       repeats += 1
-      // Widen the step rather than shortening the interval: the setpoint stays readable while it
-      // climbs, and a learner can still stop on a value they meant to stop on.
+      /*
+       * Widen the step rather than shortening the interval: the setpoint stays readable while it
+       * climbs, and a learner can still stop on a value they meant to stop on.
+       *
+       * The rate itself is left where the owner set it. It is this interface's key-repeat and
+       * nothing else — the hint below says so — and the September 2026 walkthrough's reading of it
+       * as a ramp rate (S7-2) is a claim about the copy rather than about the timing. Slowing it
+       * would undo the affordance that makes bringing a stopped pump up one hold instead of
+       * sixty-four clicks, which an earlier owner review asked for.
+       */
       const step = repeats > 20 ? 4 : repeats > 8 ? 2 : 1
       rotate(direction * step)
     }, 90)
@@ -578,6 +702,26 @@ export function CardiohelpConsole({
         </p>
       )}
 
+      {/*
+        Why there is no flow, said once, on every screen.
+
+        A stopped pump used to be inferable only from a flow of 0.00 beside four dashed pressure
+        channels — and on the pressure-interlock path the alarm that announced the stop cleared with
+        the channel it was keyed to, one second later (C3-1). This is the model's own protection and
+        state event, labelled as the model's; it carries no CARDIOHELP alarm code or priority and no
+        pressure number, because the channels are unavailable precisely for want of one.
+      */}
+      {pumpStop.running ? null : (
+        <p
+          className={styles.readingOnlyNote}
+          role="status"
+          aria-live="polite"
+          data-pump-stop={pumpStop.cause}
+        >
+          <strong>{pumpStop.label}.</strong> {pumpStop.detail}
+        </p>
+      )}
+
       <div className={styles.deviceShell}>
         <div className={styles.deviceBrandRow}>
           <span>CARDIOHELP-i</span>
@@ -587,7 +731,11 @@ export function CardiohelpConsole({
         <div className={styles.deviceLayout}>
           <aside
             className={styles.rpmRail}
-            aria-label={`RPM LED indicator: ${state.device.rpmSetpoint} RPM`}
+            aria-label={
+              pumpStop.running
+                ? `RPM LED indicator: ${state.device.rpmSetpoint} RPM`
+                : `RPM LED indicator: ${state.device.rpmSetpoint} RPM requested; ${pumpStop.label.toLocaleLowerCase()}`
+            }
           >
             <span>RPM</span>
             <div className={styles.rpmBars} aria-hidden="true">
@@ -844,6 +992,7 @@ export function CardiohelpConsole({
                 onPointerCancel={endHold}
                 onClick={() => {
                   if (pointerHeldRef.current) {
+                    clearPendingClickTimer()
                     pointerHeldRef.current = false
                     return
                   }
@@ -895,6 +1044,7 @@ export function CardiohelpConsole({
                 onPointerCancel={endHold}
                 onClick={() => {
                   if (pointerHeldRef.current) {
+                    clearPendingClickTimer()
                     pointerHeldRef.current = false
                     return
                   }
@@ -906,7 +1056,9 @@ export function CardiohelpConsole({
             </div>
             <p className={styles.safetyChordHint} id="cardiohelp-rotary-hold-hint">
               Tap to step the setpoint, or press and hold to ramp it. Keyboard: focus the dial and
-              hold an arrow key.
+              hold an arrow key. How fast a hold moves the number is this interface&rsquo;s own
+              repeat rate, not a statement about how any pump ramps, and the value it moves is the
+              speed being requested.
             </p>
 
             <button

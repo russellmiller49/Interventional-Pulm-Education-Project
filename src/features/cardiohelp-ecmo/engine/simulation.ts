@@ -967,6 +967,121 @@ function applyPressureIntervention(
   return device
 }
 
+/**
+ * Why the pump is not turning, read from the state that stopped it.
+ *
+ * C3-1 in the September 2026 walkthrough: escalating the speed on the tension-pneumothorax case
+ * left a console reading 4,000 rpm beside 0.00 L/min, four dashed pressure channels and "No active
+ * alarm". Every one of those is correct on its own. `applyPressureIntervention` stopped the pump
+ * and deliberately did not zero the speed the learner had asked for; with no flow the pressure
+ * equations have nothing to report, so the channels go unavailable; and the pressure alarms are
+ * keyed on a reporting channel, so they clear with it. What was missing was anyone saying that the
+ * model had stopped the pump, which left the speed on screen reading like a rotating one.
+ *
+ * This is a selector, not a new interlock: it re-reads the conditions the interlock already
+ * evaluates and puts them into a sentence. It names the model's own protection event as the
+ * model's, invents no CARDIOHELP alarm code or priority, and prints no pressure number — the
+ * channels are unavailable precisely because this model has no value it can stand behind there.
+ */
+export type PumpStopCause =
+  | 'running'
+  | 'support-not-started'
+  | 'bubble-intervention'
+  | 'pressure-protection'
+  | 'zero-flow-control'
+  | 'speed-at-zero'
+  | 'clamped'
+  | 'stopped'
+
+export interface PumpStopExplanation {
+  readonly cause: PumpStopCause
+  readonly running: boolean
+  /** Short label for a status chip. */
+  readonly label: string
+  /** The learner-facing sentence. Empty while the pump is turning. */
+  readonly detail: string
+}
+
+export function resolvePumpStopExplanation(state: EcmoSimulationState): PumpStopExplanation {
+  const { device, circuit } = state
+  if (device.pumpRunning && !device.zeroFlowActive && device.rpmSetpoint > 0) {
+    return { cause: 'running', running: true, label: 'Pump running', detail: '' }
+  }
+  const clinical = state.scenario.clinical
+  if (clinical && clinical.supportStatus !== 'on-ecmo') {
+    return {
+      cause: 'support-not-started',
+      running: false,
+      label: 'Support not started',
+      detail:
+        'Support has not been started in this case, so the speed shown is the setting the console is holding rather than a speed the pump is turning at.',
+    }
+  }
+  if (circuit.arterialBubbleDetected && circuit.bubbleResetRequired) {
+    return {
+      cause: 'bubble-intervention',
+      running: false,
+      label: 'Stopped by the bubble intervention',
+      detail:
+        'The simulated bubble intervention has stopped the pump. The speed shown is the setting the console is holding, not a speed the pump is turning at.',
+    }
+  }
+  if (device.zeroFlowActive) {
+    return {
+      cause: 'zero-flow-control',
+      running: false,
+      label: 'Zero-flow control active',
+      detail:
+        'The zero-flow control is active, so no forward flow is produced. The speed shown is the setting the console is holding.',
+    }
+  }
+  if (device.rpmSetpoint <= 0) {
+    return {
+      cause: 'speed-at-zero',
+      running: false,
+      label: 'Speed at zero',
+      detail: 'The speed setting is zero, so there is no forward flow to report.',
+    }
+  }
+  if (!device.pumpRunning && device.pressureInterventionEnabled && !device.globalOverride) {
+    const belowBy = device.limits.pVenAlarmLow - circuit.pVen
+    const aboveInt = circuit.pInt - device.limits.pIntAlarmHigh
+    const aboveArt = circuit.pArt - device.limits.pArtAlarmHigh
+    const channel =
+      belowBy > 10
+        ? 'drainage (pVen)'
+        : aboveInt > 10
+          ? 'pre-oxygenator (pInt)'
+          : aboveArt > 10
+            ? 'return (pArt)'
+            : null
+    if (channel) {
+      return {
+        cause: 'pressure-protection',
+        running: false,
+        label: "Stopped by this model's pressure protection",
+        detail: `This simulation's pressure interlock has stopped the pump: the modeled ${channel} pressure went past its alarm limit. The speed shown is the setting the console is holding, not a speed the pump is turning at. Pressure values calculated before the stop can remain visible until the next model update. The stopped-pump channels then read as unavailable; the retained values are not new pressure measurements. What a CARDIOHELP itself does in this state, and with what alarm, is outside what this module represents.`,
+      }
+    }
+  }
+  if (circuit.drainageClampClosed || circuit.returnClampClosed) {
+    return {
+      cause: 'clamped',
+      running: false,
+      label: 'Circuit clamped',
+      detail:
+        'A near-patient clamp is closed, so there is no forward flow. The speed shown is the setting the console is holding.',
+    }
+  }
+  return {
+    cause: 'stopped',
+    running: false,
+    label: 'Pump stopped',
+    detail:
+      'The pump is stopped in this model. The speed shown is the setting the console is holding, not a speed the pump is turning at.',
+  }
+}
+
 export function deriveRecirculationFraction(state: EcmoSimulationState): number {
   // VA return is arterial, so drained blood is not in series with it and the VV recirculation
   // mechanism does not apply.
@@ -1379,7 +1494,17 @@ export function deriveSimulation(
     ),
   }
 
+  const deviceBeforeProtection = device
   device = applyPressureIntervention(state, device, circuit)
+  /*
+   * The model's protective stop, recorded as an event of the model's.
+   *
+   * Without this the only trace of a pressure stop was the pump quietly reading stopped, and by the
+   * next second the alarm that announced it had cleared with the channel it was keyed to — so the
+   * debrief's own timeline showed a speed change and no consequence (C3-1). It is `system` rather
+   * than `alarm`, because it is this simulation's interlock and not a CARDIOHELP alarm event.
+   */
+  const protectionStoppedPump = deviceBeforeProtection.pumpRunning && !device.pumpRunning
   if (clinicalSupportInactive) device = { ...device, pumpRunning: false }
   if (!device.pumpRunning && flow !== 0) {
     flow = 0
@@ -1395,7 +1520,24 @@ export function deriveSimulation(
         systemicVenousSaturationEstimate: round(systemicVenousSaturationEstimate, 1),
       }
     : state.patient
-  const intermediate: EcmoSimulationState = { ...state, device, circuit, patient }
+  const intermediate: EcmoSimulationState = {
+    ...state,
+    device,
+    circuit,
+    patient,
+    history: protectionStoppedPump
+      ? [
+          ...state.history,
+          {
+            id: `system-${state.simulationTime}-${state.history.length}`,
+            time: state.simulationTime,
+            kind: 'system' as const,
+            label:
+              "This simulation's pressure interlock stopped the pump. The speed setting was left where it was; it is not a speed the pump is turning at.",
+          },
+        ].slice(-MAX_HISTORY_ENTRIES)
+      : state.history,
+  }
   const reconciled = reconcileAlarms(intermediate)
   const trend: TrendSample = {
     time: intermediate.simulationTime,
