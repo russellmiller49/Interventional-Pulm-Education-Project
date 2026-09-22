@@ -585,6 +585,31 @@
   overflow-wrap: anywhere;
 }
 
+/* A caption that states a model limit or an accounting rule, under the grid it explains. */
+.debriefCaption {
+  margin: 0.45rem 0 0;
+  color: #a9c6c2;
+  font-size: 0.6rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.attemptEvidenceGrid dd small {
+  display: block;
+  margin-top: 0.25rem;
+  color: #a9c6c2;
+  font-size: 0.56rem;
+  line-height: 1.5;
+}
+
+.attemptEvidence ul {
+  margin: 0.45rem 0 0;
+  padding-left: 1.3rem;
+  color: #d7e4e2;
+  font-size: 0.62rem;
+  line-height: 1.5;
+}
+
 .attemptTimeline {
   display: grid;
   gap: 0.35rem;

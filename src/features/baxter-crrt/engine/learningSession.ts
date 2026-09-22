@@ -14,6 +14,11 @@ import { createInitialCrrtSimulationState } from './initialState'
 import { selectCrrtMasteryCapstoneId, selectTriggeredCriticalErrorIds } from './outcomes'
 import { crrtSimulationReducer } from './reducer'
 import { deriveDeterministicSeed } from './seededRandom'
+import {
+  crrtActionStartsDelivery,
+  crrtUnmetMachineStepAssertions,
+  selectCrrtMachineStartReadiness,
+} from './setupWorkflow'
 import { applyScheduledEventAction, recomputeCrrtDerivedState } from './simulation'
 import {
   crrtEngineFaultIds,
@@ -937,6 +942,53 @@ export function crrtLearningSessionReducer(
               },
             ],
           }),
+        }
+      }
+      // A case card cannot claim a machine step the facsimile has not recorded.
+      // Prime, review and connection are completed on the device workflow; this
+      // action only declares them, so an unmet declaration is refused rather
+      // than written into the case as a completed step.
+      const unmetAssertions = crrtUnmetMachineStepAssertions(intervention, state.interfaceState)
+      if (unmetAssertions.length > 0) {
+        return {
+          ...state,
+          timeline: appendTimeline(state, 'intervention-performed', intervention.id, {
+            outcome: 'refused',
+            details: [
+              {
+                label: 'Refused because',
+                value: `the machine has not recorded ${unmetAssertions
+                  .map((assertion) => assertion.label)
+                  .join(
+                    ' or ',
+                  )}; complete ${unmetAssertions.length === 1 ? 'it' : 'them'} on the machine first`,
+              },
+            ],
+          }),
+        }
+      }
+      // No host or sidebar control may start delivery around the machine's own
+      // start interlock. The facsimile's condition stays authoritative; this only
+      // stops an authored effect from bypassing it. An action that resumes a run
+      // already delivering bypasses nothing, so it is left alone.
+      if (
+        crrtActionStartsDelivery(intervention) &&
+        state.interfaceState.treatmentState !== 'running'
+      ) {
+        const readiness = selectCrrtMachineStartReadiness(state.interfaceState)
+        if (!readiness.ready) {
+          return {
+            ...state,
+            timeline: appendTimeline(state, 'intervention-performed', intervention.id, {
+              outcome: 'refused',
+              details: [
+                {
+                  label: 'Refused because',
+                  value: `the machine is not ready to start delivery: ${readiness.missing.join('; ')}`,
+                },
+              ],
+            }),
+          }
         }
       }
       const simulation = executeCrrtInterventionEffects(state.simulation, intervention.effects)

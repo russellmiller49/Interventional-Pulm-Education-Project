@@ -37,6 +37,7 @@ import {
   type PrismaxSimulatorHotspotId,
 } from '../content/prismaxSimulator'
 import type { CrrtConsoleControlsModel } from '../engine/consoleControls'
+import type { CrrtPrescriptionRecord } from '../engine/setupWorkflow'
 import {
   selectPrismaxPilotInterface,
   selectPrismaxPilotOperationsDisplay,
@@ -74,6 +75,8 @@ interface PrismaxPilotInterfaceProps {
   controlsUnavailableReason?: 'debrief'
   consoleControls?: CrrtConsoleControlsModel
   operationsDisplay?: PrismaxPilotOperationsDisplay
+  /** Which prescription record is authoritative, and where the two diverge. */
+  prescriptionRecord?: CrrtPrescriptionRecord
   caseContext?: PrismaxPilotCaseContext
   onPerformCaseAction?: (interventionId: string) => void
   onReset?: () => void
@@ -107,6 +110,13 @@ const prescriptionFields = [
 
 function formatFlow(value: number | null, unit: string) {
   return value === null ? '—' : `${value.toLocaleString()} ${unit}`
+}
+
+/** The action's own authored observation interval, in the units it was written in. */
+function formatObservationInterval(seconds: number): string {
+  if (seconds % 3_600 === 0) return `${seconds / 3_600} hr`
+  if (seconds % 60 === 0) return `${seconds / 60} min`
+  return `${seconds} sec`
 }
 
 function formatMetric(value: number | null, unit: string, digits = 1) {
@@ -454,6 +464,7 @@ function OperationsScreen({
   operations,
   caseContext,
   consoleControls,
+  prescriptionRecord,
   onPerformCaseAction,
 }: {
   state: PrismaxPilotInterfaceState
@@ -461,6 +472,7 @@ function OperationsScreen({
   operations: PrismaxPilotOperationsDisplay
   caseContext?: PrismaxPilotCaseContext
   consoleControls?: CrrtConsoleControlsModel
+  prescriptionRecord?: CrrtPrescriptionRecord
   onPerformCaseAction?: (interventionId: string) => void
 }) {
   // Read through the described channels rather than a hand-built tuple. The
@@ -565,8 +577,12 @@ function OperationsScreen({
 
       <div className={styles.pumpStrip} aria-label="Pilot flow displays">
         <div>
-          <span>BFR</span>
+          <span>BFR set</span>
           <strong>{formatFlow(operations.flows?.bloodFlowMlMin ?? null, 'mL/min')}</strong>
+        </div>
+        <div>
+          <span>BFR through circuit</span>
+          <strong>{formatFlow(operations.treatmentContext.bloodFlow.actualMlMin, 'mL/min')}</strong>
         </div>
         <div>
           <span>Dialysate</span>
@@ -593,8 +609,28 @@ function OperationsScreen({
           </div>
           <p className={styles.caseSettingBoundary}>
             Only choices written into this exercise are available. These simulated values are not
-            clinical targets, device limits, or unrestricted bedside controls.
+            clinical targets, device limits, or unrestricted bedside controls. A card that writes a
+            flow applies this case&rsquo;s own supplied example value; it is not a correction of
+            what you entered and this exercise does not judge either prescription.
           </p>
+
+          {prescriptionRecord && prescriptionRecord.status !== 'not-set' ? (
+            <div className={styles.prescriptionRecord} role="note">
+              <strong>Prescription in use</strong>
+              <p>{prescriptionRecord.statement}</p>
+              {prescriptionRecord.divergences.length > 0 ? (
+                <ul>
+                  {prescriptionRecord.divergences.map((divergence) => (
+                    <li key={divergence.label}>
+                      {divergence.label}: you committed {divergence.committedOnMachine}{' '}
+                      {divergence.unit} on the machine; the simulation is running {divergence.inUse}{' '}
+                      {divergence.unit}.
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
 
           {consoleControls.prerequisiteActions.some(({ performed }) => !performed) ? (
             <div className={styles.consolePrerequisites}>
@@ -632,15 +668,33 @@ function OperationsScreen({
             {consoleControls.settingActions.map((action) => (
               <article key={action.id} data-unsafe={action.unsafe} data-complete={action.performed}>
                 <div className={styles.caseSettingTitle}>
-                  <span>{action.unsafe ? 'Unsafe comparison path' : 'Case setting'}</span>
+                  <span>
+                    {action.unsafe
+                      ? 'Unsafe comparison path'
+                      : action.writesPrescription
+                        ? 'Case setting · supplied example value'
+                        : 'Case setting'}
+                  </span>
                   <h5>{action.label}</h5>
                   <p>{action.description}</p>
+                  {action.observationIntervalSeconds > 0 ? (
+                    <small>
+                      Applying this also advances the simulated clock by{' '}
+                      {formatObservationInterval(action.observationIntervalSeconds)} — its authored
+                      observation interval.
+                    </small>
+                  ) : null}
                 </div>
                 <dl>
                   {action.changes.map((change) => (
                     <div key={`${action.id}-${change.target}`}>
                       <dt>{change.label}</dt>
-                      <dd>{change.instruction}</dd>
+                      <dd>
+                        {change.instruction}
+                        {change.currentValueText !== null ? (
+                          <small>Currently {change.currentValueText}</small>
+                        ) : null}
+                      </dd>
                     </div>
                   ))}
                 </dl>
@@ -681,7 +735,12 @@ function OperationsScreen({
           </div>
           <div className={styles.pressureGrid} role="list" aria-label="Simulated pressure signals">
             {pressures.map((signal) => (
-              <div key={signal.id} role="listitem" data-kind={signal.kind}>
+              <div
+                key={signal.id}
+                role="listitem"
+                data-kind={signal.kind}
+                data-validity={signal.validity}
+              >
                 <span>{signal.label}</span>
                 <strong>
                   {signal.valueMmHg === null
@@ -691,9 +750,11 @@ function OperationsScreen({
                 <small>
                   {signal.valueMmHg === null
                     ? 'Not being modelled'
-                    : signal.kind === 'directly-modelled-site'
-                      ? 'Directly modelled site'
-                      : 'Calculated relationship'}
+                    : signal.validity === 'no-flow-through-circuit'
+                      ? 'Calculated relationship · not interpretable without blood flow'
+                      : signal.kind === 'directly-modelled-site'
+                        ? 'Directly modelled site'
+                        : 'Calculated relationship'}
                 </small>
               </div>
             ))}
@@ -950,6 +1011,7 @@ export function PrismaxPilotInterface({
   controlsUnavailableReason,
   consoleControls,
   operationsDisplay,
+  prescriptionRecord,
   caseContext,
   onPerformCaseAction,
   onReset,
@@ -1093,6 +1155,7 @@ export function PrismaxPilotInterface({
                   operations={operations}
                   caseContext={caseContext}
                   consoleControls={consoleControls}
+                  prescriptionRecord={prescriptionRecord}
                   onPerformCaseAction={onPerformCaseAction}
                 />
               )}

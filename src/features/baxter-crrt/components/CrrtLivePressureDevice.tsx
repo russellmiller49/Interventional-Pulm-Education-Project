@@ -3,6 +3,7 @@
 import { useId, useMemo } from 'react'
 
 import { crrtPressureSignalDetail, type CrrtPressureSignalId } from '../content/circuitModel'
+import { CRRT_ACTUAL_BLOOD_FLOW_LABEL, CRRT_SET_BLOOD_FLOW_LABEL } from '../engine/circuitDelivery'
 import type {
   CrrtDevicePressureSignalView,
   CrrtDeviceTreatmentContextView,
@@ -159,7 +160,7 @@ export function CrrtLivePressureDevice({
       context.bloodFlowContributesToPressures
         ? 'The blood pump is running and both lumens are connected, so blood flow is acting on these pressures.'
         : 'The blood pump is not moving blood through the circuit, so these values are the model at zero flow rather than readings taken during treatment.',
-      `Modality ${context.modality ? context.modality.toUpperCase() : 'not set'}; blood flow ${flowText(context.bloodFlowMlMin, 'millilitres per minute')}; dialysate ${flowText(context.dialysateFlowMlHour, 'millilitres per hour')}; patient fluid removal set to ${flowText(context.patientFluidRemovalMlHour, 'millilitres per hour')}. These are the settings in force, not a statement of how much fluid has actually been removed.`,
+      `Modality ${context.modality ? context.modality.toUpperCase() : 'not set'}; blood flow set to ${flowText(context.bloodFlow.setMlMin, 'millilitres per minute')}, and the circuit is carrying ${flowText(context.bloodFlow.actualMlMin, 'millilitres per minute')}; dialysate ${flowText(context.dialysateFlowMlHour, 'millilitres per hour')}; patient fluid removal set to ${flowText(context.patientFluidRemovalMlHour, 'millilitres per hour')}. These are the settings in force, not a statement of how much fluid has actually been removed.`,
       'Pressure profile:',
       ...signals.map((signal) => {
         const kind = KIND_LABEL[signal.kind]
@@ -171,7 +172,8 @@ export function CrrtLivePressureDevice({
           signal.historyAvailability === 'sampled'
             ? `${signal.history.length} recorded points`
             : 'current value only, no recorded series'
-        return `${signal.label}: ${spokenValue(signal)}. ${kind}, ${where}. ${history}.`
+        const validity = signal.validityReason === null ? '' : ` ${signal.validityReason}`
+        return `${signal.label}: ${spokenValue(signal)}. ${kind}, ${where}. ${history}.${validity}`
       }),
       `Selected: ${selected.label}, a ${KIND_LABEL[selected.kind].toLowerCase()}, currently ${spokenValue(selected)}.`,
     ]
@@ -208,8 +210,12 @@ export function CrrtLivePressureDevice({
           <dd>{context.modality ? context.modality.toUpperCase() : 'Not set'}</dd>
         </div>
         <div>
-          <dt>Blood flow</dt>
-          <dd>{flowText(context.bloodFlowMlMin, 'mL/min')}</dd>
+          <dt>{CRRT_SET_BLOOD_FLOW_LABEL}</dt>
+          <dd>{flowText(context.bloodFlow.setMlMin, 'mL/min')}</dd>
+        </div>
+        <div>
+          <dt>{CRRT_ACTUAL_BLOOD_FLOW_LABEL}</dt>
+          <dd>{flowText(context.bloodFlow.actualMlMin, 'mL/min')}</dd>
         </div>
         <div>
           <dt>Dialysate</dt>
@@ -252,6 +258,7 @@ export function CrrtLivePressureDevice({
               data-kind={signal.kind}
               data-selected={isSelected}
               data-unavailable={signal.valueMmHg === null}
+              data-validity={signal.validity}
               aria-pressed={isSelected}
               onClick={() => onSelectSignal(signal.id)}
             >
@@ -264,9 +271,11 @@ export function CrrtLivePressureDevice({
                 {formatMmHg(signal.valueMmHg)}
               </strong>
               <span className={styles.signalWhere}>
-                {signal.kind === 'directly-modelled-site'
-                  ? 'Has a place on the circuit'
-                  : `From ${signal.contributingSiteLabels.length} sites · no place of its own`}
+                {signal.validity === 'no-flow-through-circuit'
+                  ? 'Not interpretable without blood flow'
+                  : signal.kind === 'directly-modelled-site'
+                    ? 'Has a place on the circuit'
+                    : `From ${signal.contributingSiteLabels.length} sites · no place of its own`}
               </span>
             </button>
           )
@@ -288,6 +297,12 @@ export function CrrtLivePressureDevice({
         {selected.valueMmHg === null ? (
           <p className={styles.unavailableNote} role="note">
             {selected.unavailableReason}
+          </p>
+        ) : null}
+
+        {selected.validityReason !== null ? (
+          <p className={styles.unavailableNote} role="note">
+            {selected.validityReason}
           </p>
         ) : null}
 

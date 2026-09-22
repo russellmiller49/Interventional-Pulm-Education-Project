@@ -330,8 +330,16 @@ function rewriteLearnerFacingString(value: string): string {
       ],
       ['Enter simulated machine PFR', 'Enter the case machine PFR'],
       [
+        'Complete prime and prescription review',
+        'Confirm prime and prescription review on the machine',
+      ],
+      [
         'Complete the source-mapped educational setup gates before starting.',
-        'Complete prime and prescription review before starting treatment.',
+        'Prime and prescription review are completed on the machine, on its Prime and Review steps. This card records that you have done them; it does not perform them, and it is refused until the machine has recorded both.',
+      ],
+      [
+        'The device workflow is ready for a reviewed educational start.',
+        'The machine has recorded prime and prescription review, and your confirmation is recorded alongside them.',
       ],
       [
         'Dose, downtime, trends, and simulated solutes advance deterministically.',
@@ -638,7 +646,7 @@ function rewriteLearnerFacingString(value: string): string {
       ],
       [
         'Start the synthetic treatment only after the interface gates are complete.',
-        'Start treatment only after prime and prescription review are complete.',
+        'Start treatment only after prime and prescription review are complete. The machine keeps its own start interlock: this card is refused whenever the machine is not ready to start.',
       ],
       [
         'Review whether the learner defined the simulated small-solute and acid-base goal rather than chasing a machine number.',
@@ -1681,29 +1689,29 @@ const authoredNarratives: readonly CaseNarrative[] = [
     stationId: 'anticoagulation-complications-liberation',
     difficulty: 'advanced',
     patientDescription:
-      'Linked calcium, acid-base, circuit, and treatment-delivery trends raise a citrate-calcium safety concern. Medication quantities and protocol instructions are intentionally not shown.',
+      'A patient on regional citrate anticoagulation raises a citrate-calcium safety question. This case supplies one systemic ionized calcium value at case start and the live circuit and delivery context; it carries no post-filter sample, no serial calcium and no citrate or calcium infusion quantity. Work out which question each sample would answer, and where the boundary of what you can conclude here lies.',
     learningObjectives: [
-      'Recognize linked trend directions that warrant a citrate-calcium safety review.',
+      'Separate the circuit-anticoagulation question from the patient-calcium question by sampling site.',
       'Verify sampling, delivery, circuit, and protocol context before interpretation.',
       'Stop and escalate to the responsible clinical team without generating instructions.',
     ],
     goal: 'Recognize a linked citrate-calcium safety pattern and escalate it',
     mechanism:
-      'Calcium, acid-base, circuit, and delivery observations are interpreted together; no single observation establishes the explanation.',
+      'Calcium, acid-base, circuit, and delivery observations are interpreted together, each from the compartment it was sampled in; no single observation establishes the explanation.',
     safeAction:
       'Verify linked observations, pause unsupported inference, and escalate to the responsible team',
     acceptedAlternative:
       'Maintain a safe treatment state while obtaining missing protocol and sampling context',
     unsafeAction: 'Change therapy from one isolated calcium observation',
     expectedResponse:
-      'The conceptual dashboard reveals direction and linkage only, followed by escalation.',
+      'The escalation and reassessment plan is recorded. No calcium trend, ratio, or citrate measurement appears, because this case carries none.',
     reassessment:
       'Reassess linked trend direction, sampling validity, delivery context, and escalation response',
     openingFinding:
-      'Linked calcium and acid-base observations change while delivery context is incomplete.',
+      'One systemic ionized calcium value and the acid-base values are supplied at case start; the post-filter sample, the serial trend and the actual infusions are not available here.',
     causalChain: [
-      'Sampling, patient state, circuit delivery, and protocol context shape the observations.',
-      'Linked directions prompt verification rather than a one-value conclusion.',
+      'Sampling site decides which question a calcium result can answer: the circuit sample describes anticoagulant effect, the systemic sample describes the patient.',
+      'One value from one compartment at one time prompts verification rather than a conclusion.',
       'The responsible team receives a structured escalation and reassessment summary.',
     ],
     transferQuestion:
@@ -1717,27 +1725,28 @@ const authoredNarratives: readonly CaseNarrative[] = [
     stationId: 'anticoagulation-complications-liberation',
     difficulty: 'advanced',
     patientDescription:
-      'Several recovery signals are improving during CRRT, but the plan for stopping or transitioning kidney support is incomplete.',
+      'The team is discussing whether this patient still needs kidney support, and the plan for stopping or transitioning it is incomplete. This case supplies one creatinine marker value, a constant urine output and zero residual kidney clearance, at case start; it carries no recovery trajectory. Work the decision and the handover, not a trend.',
     learningObjectives: [
-      'Reassess whether kidney support remains needed using the whole trajectory.',
+      'Name the evidence a decision to stop kidney support would rest on, and which of it this case has.',
       'Separate a clinical discontinuation decision from device stop/end workflow.',
       'Communicate transition, monitoring, and escalation responsibilities.',
     ],
-    goal: 'Reassess ongoing kidney-support need and coordinate a supervised transition',
+    goal: 'Establish what the ongoing kidney-support decision needs, and coordinate a supervised transition',
     mechanism:
-      'Changing kidney function, fluid status, solute control, hemodynamics, and delivered therapy jointly inform the transition discussion.',
+      'Kidney function, fluid status, solute control, hemodynamics, and delivered therapy jointly inform the transition discussion; this exercise supplies the delivery side and names the rest as evidence to obtain.',
     safeAction:
-      'Review the recovery trajectory and coordinate the clinical and device transition plans separately',
+      'Name the recovery evidence the decision needs, then coordinate the clinical and device transition plans separately',
     acceptedAlternative:
       'Continue bounded support while obtaining missing recovery or transition information',
     unsafeAction: 'End treatment from one favorable observation without a transition plan',
     expectedResponse:
-      'The simulation separates the clinical decision, device workflow, disposition, and follow-up reassessment.',
+      'The simulation separates the clinical decision, device workflow, disposition, and follow-up reassessment. No recovery trend appears, because this case carries none.',
     reassessment:
-      'Reassess recovery trajectory, patient status, transition monitoring, and escalation ownership',
-    openingFinding: 'Several recovery signals improve, but the transition plan is incomplete.',
+      'Reassess which recovery evidence is still needed, patient status, transition monitoring, and escalation ownership',
+    openingFinding:
+      'The transition plan is incomplete, and the serial recovery evidence a decision would rest on is not available in this case.',
     causalChain: [
-      'Serial patient and delivery data frame the ongoing need for support.',
+      'The ongoing need for support rests on serial patient and delivery data; this case supplies the delivery side and names the patient-side evidence as still to obtain.',
       'The clinical transition decision is distinct from device stop/end controls.',
       'Post-transition monitoring and escalation close the loop.',
     ],

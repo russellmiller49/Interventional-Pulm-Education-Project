@@ -1,5 +1,7 @@
+import { crrtActionObservationIntervalSeconds } from '../actualRunReview'
 import type { RuntimeCrrtCase } from '../content/schema'
 import type { CrrtLearningSessionState } from './learningSession'
+import type { CrrtSimulationState } from './types'
 
 type CrrtIntervention = RuntimeCrrtCase['interventions'][number]
 type CrrtInterventionEffect = CrrtIntervention['effects'][number]
@@ -22,6 +24,12 @@ export interface CrrtConsoleSettingChange {
   readonly target: string
   readonly label: string
   readonly instruction: string
+  /**
+   * The value in force right now for the same target, so a card that would
+   * replace a learner's own entry says what it is replacing instead of doing it
+   * silently. Null when the target has no readable current value.
+   */
+  readonly currentValueText: string | null
 }
 
 export interface CrrtConsoleActionModel {
@@ -36,6 +44,14 @@ export interface CrrtConsoleActionModel {
   readonly repeatable: boolean
   readonly enabled: boolean
   readonly missingPrerequisiteLabels: readonly string[]
+  /**
+   * True when this card writes prescription flows. Those values are the case's
+   * own supplied example, not a validated prescription and not a correction of
+   * what the learner entered.
+   */
+  readonly writesPrescription: boolean
+  /** Simulated seconds the card's own authored observation interval advances. */
+  readonly observationIntervalSeconds: number
 }
 
 export interface CrrtConsolePrerequisiteModel {
@@ -95,14 +111,72 @@ function describeEnumEffect(
   return deliveryLabels[effect.value] ?? `Set to ${effect.value}`
 }
 
-function consoleSettingChange(effect: CrrtInterventionEffect): CrrtConsoleSettingChange | null {
+const flowUnitByTarget: Readonly<Record<string, string>> = Object.freeze({
+  'prescription.flows.bloodFlowMlMin': 'mL/min',
+  'prescription.flows.dialysateFlowMlHour': 'mL/h',
+  'prescription.flows.pbpFlowMlHour': 'mL/h',
+  'prescription.flows.preReplacementFlowMlHour': 'mL/h',
+  'prescription.flows.postReplacementFlowMlHour': 'mL/h',
+  'prescription.flows.patientFluidRemovalMlHour': 'mL/h',
+  'prescription.flows.syringeFlowMlHour': 'mL/h',
+  'prescription.flows.makeupFlowMlHour': 'mL/h',
+})
+
+const flowKeyByTarget: Readonly<Record<string, keyof CrrtSimulationState['circuit']['flows']>> =
+  Object.freeze({
+    'prescription.flows.bloodFlowMlMin': 'bloodFlowMlMin',
+    'prescription.flows.dialysateFlowMlHour': 'dialysateFlowMlHour',
+    'prescription.flows.pbpFlowMlHour': 'pbpFlowMlHour',
+    'prescription.flows.preReplacementFlowMlHour': 'preReplacementFlowMlHour',
+    'prescription.flows.postReplacementFlowMlHour': 'postReplacementFlowMlHour',
+    'prescription.flows.patientFluidRemovalMlHour': 'patientFluidRemovalMlHour',
+    'prescription.flows.syringeFlowMlHour': 'syringeFlowMlHour',
+    'prescription.flows.makeupFlowMlHour': 'makeupFlowMlHour',
+  })
+
+/** The value in force now for the same target. Read, never written. */
+function currentValueText(target: string, simulation: CrrtSimulationState): string | null {
+  const flowKey = flowKeyByTarget[target]
+  if (flowKey) {
+    if (simulation.prescription.status !== 'configured') return 'Not set'
+    return `${formatNumber(simulation.prescription.flows[flowKey])} ${flowUnitByTarget[target]}`
+  }
+  if (target === 'patient.bodyWeightKg') {
+    return simulation.patient.status === 'configured'
+      ? `${formatNumber(simulation.patient.bodyWeightKg)} kg`
+      : 'Not set'
+  }
+  if (target === 'patient.hematocritFraction') {
+    return simulation.patient.status === 'configured'
+      ? `${formatNumber(simulation.patient.hematocritFraction * 100)}%`
+      : 'Not set'
+  }
+  if (target === 'device.deliveryState') return simulation.device.deliveryState
+  return null
+}
+
+function consoleSettingChange(
+  effect: CrrtInterventionEffect,
+  simulation: CrrtSimulationState,
+): CrrtConsoleSettingChange | null {
   const label = consoleTargetLabels[effect.target]
   if (!label) return null
+  const current = currentValueText(effect.target, simulation)
   if (effect.valueType === 'number') {
-    return { target: effect.target, label, instruction: describeNumberEffect(effect) }
+    return {
+      target: effect.target,
+      label,
+      instruction: describeNumberEffect(effect),
+      currentValueText: current,
+    }
   }
   if (effect.valueType === 'enum') {
-    return { target: effect.target, label, instruction: describeEnumEffect(effect) }
+    return {
+      target: effect.target,
+      label,
+      instruction: describeEnumEffect(effect),
+      currentValueText: current,
+    }
   }
   return null
 }
@@ -134,7 +208,7 @@ export function selectCrrtConsoleControls(
 
   const settingActions = interventions.flatMap<CrrtConsoleActionModel>((intervention) => {
     const changes = intervention.effects.flatMap((effect) => {
-      const change = consoleSettingChange(effect)
+      const change = consoleSettingChange(effect, session.simulation)
       return change ? [change] : []
     })
     if (changes.length === 0) return []
@@ -154,6 +228,8 @@ export function selectCrrtConsoleControls(
         repeatable: intervention.repeatable,
         enabled: canAct && missing.length === 0 && (!performed || intervention.repeatable),
         missingPrerequisiteLabels: missing.map(({ label }) => label),
+        writesPrescription: changes.some(({ target }) => target in flowKeyByTarget),
+        observationIntervalSeconds: crrtActionObservationIntervalSeconds(intervention),
       },
     ]
   })

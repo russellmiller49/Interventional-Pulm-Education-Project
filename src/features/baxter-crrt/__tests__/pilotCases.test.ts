@@ -11,6 +11,19 @@ import {
   type CrrtLearningSessionState,
 } from '../engine/learningSession'
 import { selectCrrtDebriefProjection, selectCrrtLearningOutcome } from '../engine/outcomes'
+import { completeCrrtMachineSetup } from '../engine/testSupport/machineWorkflow'
+
+/**
+ * The case's own supplied example prescription, entered on the machine so the
+ * facsimile's prime/review/connect record and its start interlock are satisfied
+ * the only way they can be. A case that already begins on Operations is
+ * unaffected — `completeCrrtMachineSetup` returns it unchanged.
+ */
+const machineSetupValues = {
+  bloodFlowMlMin: 120,
+  dialysateFlowMlHour: 1_800,
+  patientFluidRemovalMlHour: 100,
+} as const
 
 function advanceToPrediction(state: CrrtLearningSessionState): CrrtLearningSessionState {
   for (const phase of ['define', 'select', 'predict'] as const) {
@@ -32,6 +45,7 @@ function startAttempt(
     roleLens: 'integrated',
     attempt: 1,
   })
+  state = completeCrrtMachineSetup(state, machineSetupValues)
   state = advanceToPrediction(state)
   return crrtLearningSessionReducer(state, {
     type: 'COMMIT_PREDICTION',

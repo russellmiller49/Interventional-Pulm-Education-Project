@@ -11,6 +11,12 @@ import {
   type CrrtPressureSignalKind,
 } from '../../content/circuitModel'
 import { prismaxDeviceProfile } from '../../content/deviceProfiles'
+import {
+  selectCrrtBloodFlowState,
+  selectCrrtCalculatedPressureValidity,
+  type CrrtBloodFlowState,
+  type CrrtCalculatedPressureValidity,
+} from '../circuitDelivery'
 import { CRRT_TREND_INTERVAL_SECONDS } from '../simulation'
 import { prismaxCalculationAdapter } from './calculations'
 import type {
@@ -297,6 +303,13 @@ export interface CrrtDevicePressureSignalView {
   readonly unit: 'mmHg'
   readonly availability: CrrtPressureAvailability
   readonly unavailableReason: string | null
+  /**
+   * Whether the number still describes the circuit. Only the two calculated
+   * relationships can lose support, and only while no blood flows; see
+   * `engine/circuitDelivery.ts`. A measured site is always `supported`.
+   */
+  readonly validity: CrrtCalculatedPressureValidity
+  readonly validityReason: string | null
   /** The circuit node this value is read at. Null for calculated relationships. */
   readonly nodeId: CrrtCircuitNodeId | null
   /** Nodes a calculated relationship is computed from. Empty for modelled sites. */
@@ -333,6 +346,12 @@ export interface CrrtDeviceTreatmentContextView {
    * engine keeps publishing plausible zero-flow numbers either way.
    */
   readonly bloodFlowContributesToPressures: boolean
+  /**
+   * The blood-flow setting, the blood flow the circuit model actually carries,
+   * and why they differ. `bloodFlowMlMin` above is the setting only; a surface
+   * must not present it as delivered flow.
+   */
+  readonly bloodFlow: CrrtBloodFlowState
   readonly accessConnected: boolean
   readonly returnConnected: boolean
   readonly simulationTimeSeconds: number
@@ -663,7 +682,9 @@ function pressureSignalView(
   valueMmHg: number | null,
   availability: CrrtPressureAvailability,
   trends: readonly TrendSample[],
+  bloodFlow: CrrtBloodFlowState,
 ): CrrtDevicePressureSignalView {
+  const pressureValidity = selectCrrtCalculatedPressureValidity(detail.kind, bloodFlow)
   const trendField = trendFieldBySignalId[detail.id]
   const history =
     trendField === null
@@ -691,6 +712,8 @@ function pressureSignalView(
         : availability === 'no-case-attached'
           ? NO_CASE_REASON
           : NO_PRESSURE_MODEL_REASON,
+    validity: pressureValidity.validity,
+    validityReason: pressureValidity.reason,
     nodeId: detail.nodeId,
     derivedFromNodeIds: detail.derivedFromNodeIds,
     derivedFromSignalIds: Object.freeze(
@@ -712,6 +735,7 @@ function pressureSignalView(
 function pressureSignalViews(
   pressures: CrrtPressureState | null,
   trends: readonly TrendSample[],
+  bloodFlow: CrrtBloodFlowState,
 ): readonly CrrtDevicePressureSignalView[] {
   return Object.freeze(
     crrtPressureSignalDetails.map((detail) => {
@@ -727,6 +751,7 @@ function pressureSignalViews(
         typeof value === 'number' ? value : null,
         availability,
         trends,
+        bloodFlow,
       )
     }),
   )
@@ -830,10 +855,23 @@ function historyTimeDomain(
   return Object.freeze({ startSeconds: first.timeSeconds, endSeconds: last.timeSeconds })
 }
 
+/** No engine is attached, so nothing is delivering and nothing has been set there. */
+const detachedBloodFlow = (setMlMin: number | null): CrrtBloodFlowState =>
+  Object.freeze({
+    status: setMlMin === null ? ('not-set' as const) : ('not-delivering' as const),
+    setMlMin,
+    actualMlMin: setMlMin === null ? null : 0,
+    bloodPumpRunning: false,
+    accessConnected: false,
+    returnConnected: false,
+    deliveryState: 'idle' as const,
+  })
+
 export function selectPrismaxPilotOperationsDisplay(
   state: PrismaxPilotInterfaceState,
 ): PrismaxPilotOperationsDisplay {
   const prescription = state.committedPrescription
+  const bloodFlow = detachedBloodFlow(prescription?.flows.bloodFlowMlMin ?? null)
   return Object.freeze({
     treatmentState: state.treatmentState,
     modality: prescription?.modality ?? null,
@@ -848,7 +886,7 @@ export function selectPrismaxPilotOperationsDisplay(
     cumulativeFluid: cumulativeFluidView(null),
     activeAlarmCodes: Object.freeze([]),
     pressures: nullPressures,
-    pressureSignals: pressureSignalViews(null, []),
+    pressureSignals: pressureSignalViews(null, [], bloodFlow),
     treatmentContext: Object.freeze({
       deliveryState: state.treatmentState === 'running' ? ('running' as const) : ('idle' as const),
       treatmentState: state.treatmentState,
@@ -860,6 +898,7 @@ export function selectPrismaxPilotOperationsDisplay(
       postReplacementFlowMlHour: prescription?.flows.postReplacementFlowMlHour ?? null,
       patientFluidRemovalMlHour: prescription?.flows.patientFluidRemovalMlHour ?? null,
       bloodFlowContributesToPressures: false,
+      bloodFlow,
       accessConnected: false,
       returnConnected: false,
       simulationTimeSeconds: 0,
@@ -887,6 +926,7 @@ export function selectPrismaxPilotCaseOperationsDisplay(
   const configured = prescription.status === 'configured'
   const setting = (value: number) => (configured ? value : null)
   const cumulativeFluid = cumulativeFluidView(simulation)
+  const bloodFlow = selectCrrtBloodFlowState(simulation)
   return Object.freeze({
     treatmentState: interfaceState.treatmentState,
     modality: prescription.status === 'configured' ? prescription.modality : null,
@@ -911,7 +951,7 @@ export function selectPrismaxPilotCaseOperationsDisplay(
       transmembranePressureMmHg: pressure.prismaxTransmembranePressureMmHg,
       filterPressureDropMmHg: pressure.prismaxFilterPressureDropMmHg,
     }),
-    pressureSignals: pressureSignalViews(pressure, simulation.trends),
+    pressureSignals: pressureSignalViews(pressure, simulation.trends, bloodFlow),
     treatmentContext: Object.freeze({
       deliveryState: simulation.device.deliveryState,
       treatmentState: interfaceState.treatmentState,
@@ -926,6 +966,7 @@ export function selectPrismaxPilotCaseOperationsDisplay(
       // feeds blood flow into the pressure model only under these three.
       bloodFlowContributesToPressures:
         simulation.device.bloodPumpRunning && accessConnected && returnConnected,
+      bloodFlow,
       accessConnected,
       returnConnected,
       simulationTimeSeconds: simulation.simulationTimeSeconds,
