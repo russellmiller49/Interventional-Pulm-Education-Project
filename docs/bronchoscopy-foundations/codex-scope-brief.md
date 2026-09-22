@@ -235,8 +235,10 @@ one. The DOM contract (`SCOPE_DOM`) is what the flow tests, the e2e suite and th
 
 - `[data-scope-scene][data-scope-mode][data-scope-state=ready|failed|fallback][data-anatomy-profile]`
 - the optical canvas host carries `data-three-state="ready"` once it has drawn
-- `[data-view-signal=clear|red-out|contaminated|dark]` on the optical view — **name what is seen,
-  never why** (the fallback's `VIEW_SEEN_WORDS`): a section's deny patterns forbid the cause
+- `[data-view-signal=clear|red-out|contaminated|dark]` on the optical view — **name what the model
+  records, never why** (`scopeSceneModel`'s `opticalViewName`, read by the scene and the fallback
+  alike): a section's deny patterns forbid the cause, and `clear` means only that no red-out or
+  contamination is recorded, never that the picture is usable
 - `[data-airway-map] [data-airway-pin=<label>]`, the current airway `aria-current="location"`;
   pins show the short label and carry no full-name `title` before commit (a full name leaks)
 - `[data-tree-answer]` fieldset with `treeChoiceInputId` inputs; rows `[data-off-tree]`;

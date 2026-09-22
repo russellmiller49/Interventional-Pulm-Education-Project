@@ -459,11 +459,23 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
         },
         {
           command: { type: 'accessory', state: 'brush-sheathed' },
-          caption: 'Resheath the brush before bringing it back into the channel.',
+          caption:
+            'The operator commands the sheath back over the bristles, and the assistant reports it done. A command and a report, not yet a state.',
         },
         {
           command: { type: 'verify-accessory' },
-          caption: 'Verify the protected state before withdrawal.',
+          caption:
+            'Checked against the image, the report does not hold: the bristles are still out, so nothing moves through the channel yet.',
+        },
+        {
+          command: { type: 'accessory', state: 'brush-sheathed' },
+          caption:
+            'The operator commands the sheath again. This time the model shows the bristles covered.',
+        },
+        {
+          command: { type: 'verify-accessory' },
+          caption:
+            'Checked against the image a second time: the brush is inside its sheath, and only now may it move.',
         },
         {
           command: { type: 'accessory-move', to: 'in-channel' },

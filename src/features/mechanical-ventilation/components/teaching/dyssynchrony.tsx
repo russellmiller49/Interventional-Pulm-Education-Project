@@ -10,7 +10,8 @@
  */
 import { useMemo, useState } from 'react'
 
-import { plateauReadingValidity } from '../../content/plateauValidity'
+import { plateauAcquisition } from '../../content/plateauAcquisition'
+import { triggerDelayEvidence } from '../../engine/triggerEvidence'
 import type { VentilationSimulationState } from '../../engine'
 import { ModelBoundary, TextEquivalent, latestBreath, round, styles, tracePath } from './shared'
 
@@ -84,13 +85,22 @@ export function VentilationDyssynchronyDomains({
 
   const peakEffort = breath.reduce((lowest, sample) => Math.min(lowest, sample.pmusCmH2O), 0)
   const effortPresent = peakEffort < -1.5
-  const plateauMeasured = measurements.plateauPressureCmH2O > 0
-  const plateauInterpretable = plateauReadingValidity(state).interpretable
-  const gap = Math.max(0, measurements.peakPressureCmH2O - measurements.plateauPressureCmH2O)
-  const plateauAboveBaseline = Math.max(
-    0,
-    measurements.plateauPressureCmH2O - state.ventilator.settings.peepCmH2O,
-  )
+  /*
+   * Acquired, valid, and current — not merely non-null.
+   *
+   * `valueCmH2O !== null` is also true of a stale acquisition and of one the patient pulled
+   * through, so a hold taken before the settings changed went on supplying this panel's
+   * peak-minus-plateau row as though it were this patient's current mechanics.
+   * `supportsMechanicsClaim` is the single gate, and the value that goes with it comes from the
+   * same projection rather than from the live estimate.
+   */
+  const acquisition = plateauAcquisition(state, { requireAcquisition: true })
+  const plateauMeasured = acquisition.supportsMechanicsClaim
+  const plateauValue = acquisition.valueCmH2O ?? acquisition.estimateCmH2O
+  const plateauInterpretable = acquisition.supportsMechanicsClaim
+  const trigger = triggerDelayEvidence(state)
+  const gap = Math.max(0, measurements.peakPressureCmH2O - plateauValue)
+  const plateauAboveBaseline = Math.max(0, plateauValue - state.ventilator.settings.peepCmH2O)
   const trapping = Math.abs(measurements.expiratoryFlowAtNextBreathLMin) >= 1
   const patientRate = measurements.observedPatientRatePerMin
   // In pressure support there is no mandatory rate to breathe over, only the apnea backup — so the
@@ -130,7 +140,7 @@ export function VentilationDyssynchronyDomains({
         {
           signal: 'Peak-to-plateau difference',
           observed: !plateauMeasured
-            ? 'No plateau measured — perform an inspiratory hold'
+            ? `No acquired plateau — ${acquisition.label}; perform an inspiratory hold`
             : plateauInterpretable
               ? `${round(gap, 1)} cmH₂O`
               : 'The plateau is depressed by the patient’s own effort, so this difference is not purely resistive',
@@ -145,7 +155,7 @@ export function VentilationDyssynchronyDomains({
         {
           signal: 'Plateau above baseline',
           observed: !plateauMeasured
-            ? 'No plateau measured — perform an inspiratory hold'
+            ? `No acquired plateau — ${acquisition.label}; perform an inspiratory hold`
             : plateauInterpretable
               ? `${round(plateauAboveBaseline, 1)} cmH₂O`
               : 'Not the distending pressure of the respiratory system while the patient is pulling',
@@ -166,8 +176,17 @@ export function VentilationDyssynchronyDomains({
       return [
         {
           signal: 'Trigger delay',
-          observed: `${round(measurements.triggerDelayMs)} ms`,
-          bearing: measurements.triggerDelayMs > 0 ? 'supports' : 'neutral',
+          observed:
+            trigger.delayMs !== null
+              ? trigger.display
+              : trigger.status === 'not-applicable'
+                ? '— no effort belongs to this breath'
+                : '— no complete breath on the trace yet',
+          /*
+           * Only a delay actually measured between two events on this trace can bear on the
+           * mechanism; the phenotype's modeled value describes the class, not this breath.
+           */
+          bearing: trigger.status === 'measured' ? 'supports' : 'neutral',
         },
         {
           signal: 'Efforts producing no breath',

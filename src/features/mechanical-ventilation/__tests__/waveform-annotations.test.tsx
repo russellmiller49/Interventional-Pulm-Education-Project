@@ -191,8 +191,15 @@ describe('paused-trace annotations', () => {
         expect(chip.textContent?.trim()).toMatch(/^\S+ -?\d+$/)
       })
 
-      // The sentence each chip abbreviates is still shown, in the console's own text equivalent.
-      expect(within(consoleRegion).getByText(/Held trace, labelled levels/i)).toBeInTheDocument()
+      /*
+       * The sentence each chip abbreviates is still shown, in the console's own text equivalent —
+       * and it names what actually froze the trace. Pausing playback is not a hold, so a paused
+       * console says "Frozen trace"; only an occlusion says "Held trace".
+       */
+      expect(within(consoleRegion).getByText(/Frozen trace, labelled levels/i)).toBeInTheDocument()
+      expect(
+        within(consoleRegion).queryByText(/Held trace, labelled levels/i),
+      ).not.toBeInTheDocument()
       // Stated in the visible text equivalent as well as in the trace's own caption.
       expect(
         within(consoleRegion).getAllByText(/baseline the breath starts from/i).length,
@@ -207,7 +214,7 @@ describe('paused-trace annotations', () => {
       })
       expect(consoleRegion.querySelectorAll('[data-mv-annotation-chip]')).toHaveLength(0)
       expect(
-        within(consoleRegion).queryByText(/Held trace, labelled levels/i),
+        within(consoleRegion).queryByText(/(Held|Frozen) trace, labelled levels/i),
       ).not.toBeInTheDocument()
     })
 

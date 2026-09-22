@@ -15,6 +15,18 @@ import {
 import styles from './scope-scene.module.css'
 import { accessoryKind } from '../../engine/scope/scopeAccessory'
 
+/**
+ * Choosing a state here is a command to the assistant, not the state itself (SUP-16).
+ *
+ * The accessory is in the assistant's hands: the operator asks, the assistant answers, and only
+ * the image settles what the accessory is actually doing — which is the whole point of the
+ * misreport the section teaches. The selects therefore show the state the model is in, and this
+ * note says that choosing one asks for a change rather than making it true.
+ */
+const ACCESSORY_COMMAND_NOTE =
+  'Choosing here commands the assistant; the image settles what the accessory is doing.'
+const ACCESSORY_COMMAND_NOTE_ID = scopeControlId('accessory-command-note')
+
 /** Held insertion is a sequence of ordinary commands, capped at 24 authored mm/s. */
 export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
   const { view, state, controlsEnabled, onCommand, onReset, spotlightKey } = props
@@ -127,11 +139,15 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
       case 'accessory':
         return (
           <>
+            <p id={ACCESSORY_COMMAND_NOTE_ID} className={styles.commandNote}>
+              {ACCESSORY_COMMAND_NOTE}
+            </p>
             <label htmlFor={id}>
               Accessory
               <select
                 id={id}
                 aria-label="Accessory"
+                aria-describedby={ACCESSORY_COMMAND_NOTE_ID}
                 value={state.inputs.accessory}
                 onChange={(event) =>
                   send({ type: 'accessory', state: event.target.value as AccessoryState })
@@ -155,6 +171,7 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
               <select
                 id={scopeControlId('accessory-move')}
                 aria-label="Accessory position"
+                aria-describedby={ACCESSORY_COMMAND_NOTE_ID}
                 value={state.inputs.accessoryPosition}
                 onChange={(event) =>
                   send({ type: 'accessory-move', to: event.target.value as AccessoryPosition })

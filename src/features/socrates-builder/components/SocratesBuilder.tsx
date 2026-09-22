@@ -68,6 +68,7 @@ import { loadInvenioDziDescriptor, resolveSocratesSlideSource } from '../descrip
 import { databaseCompatibilityError } from '../database-compatibility'
 import { getInvenioPair } from '../invenio-source'
 import type { WebOverlayWorkspace } from '../web-overlay-storage'
+import { CaseContentEditor } from './CaseContentEditor'
 import { InvenioSlidePicker } from './InvenioSlidePicker'
 import {
   createSandboxEditKey,
@@ -75,7 +76,11 @@ import {
   readSandboxEditKey,
   rememberSandboxEditKey,
 } from '../sandbox-edit-key'
-import { parseSocratesSlideDocument, validateSocratesSlideDocument } from '../schema'
+import {
+  parseSocratesSlideDocument,
+  validateSocratesSlideDocument,
+  upgradeSocratesDocument,
+} from '../schema'
 import type {
   SocratesBuilderAccess,
   SocratesBuilderMode,
@@ -269,7 +274,21 @@ export function SocratesBuilder({
   }, [catalog, document, documents, isLocal, onLocalWorkspaceChange])
 
   const setDirtyDocument = useCallback((updater: SetStateAction<SocratesSlideDocument>) => {
-    setDocument(updater)
+    setDocument((current) => {
+      const next = typeof updater === 'function' ? updater(current) : updater
+      const teachingChanged =
+        JSON.stringify([current.title, current.slide, current.annotations, current.caseContent]) !==
+        JSON.stringify([next.title, next.slide, next.annotations, next.caseContent])
+      return teachingChanged && next.authorContent
+        ? {
+            ...next,
+            authorContent: {
+              ...next.authorContent,
+              readiness: { ...next.authorContent.readiness, contentReview: 'incomplete' },
+            },
+          }
+        : next
+    })
     setDirty(true)
     setNotice(null)
   }, [])
@@ -579,6 +598,9 @@ export function SocratesBuilder({
                 (descriptorChanged ? source.descriptorUrl : current.slide.attribution.href),
             },
           },
+          ...(descriptorChanged
+            ? { schemaVersion: undefined, caseContent: undefined, authorContent: undefined }
+            : {}),
           annotations: descriptorChanged ? [] : current.annotations,
         }))
         setDescriptorInput(source.descriptorUrl)
@@ -612,13 +634,16 @@ export function SocratesBuilder({
   const saveDocument = useCallback(
     async (workflowStatus: 'draft' | 'review') => {
       if (isLocal) return
-      const compatibilityError = databaseCompatibilityError(document)
+      const compatibilityError = isSandbox ? databaseCompatibilityError(document) : null
       if (compatibilityError) {
         setNotice({ tone: 'error', message: compatibilityError })
         return
       }
       const requestedStatus = isSandbox ? 'draft' : workflowStatus
-      const nextDocument = { ...document, workflowStatus: requestedStatus }
+      const nextDocument = {
+        ...(isSandbox ? document : upgradeSocratesDocument(document)),
+        workflowStatus: requestedStatus,
+      }
       const validation = validateSocratesSlideDocument(nextDocument)
       if (!validation.success) {
         setNotice({
@@ -778,7 +803,12 @@ export function SocratesBuilder({
   }, [access.canPublish, dirty, document.recordId])
 
   const exportDocument = useCallback(() => {
-    const blob = new Blob([JSON.stringify(document, null, 2)], { type: 'application/json' })
+    const exported = isSandbox
+      ? { ...document, schemaVersion: 1 }
+      : upgradeSocratesDocument(document)
+    const blob = new Blob([JSON.stringify(exported, null, 2)], {
+      type: 'application/json',
+    })
     const url = URL.createObjectURL(blob)
     const anchor = window.document.createElement('a')
     anchor.href = url
@@ -786,7 +816,7 @@ export function SocratesBuilder({
     anchor.click()
     URL.revokeObjectURL(url)
     setNotice({ tone: 'success', message: 'JSON backup exported.' })
-  }, [document])
+  }, [document, isSandbox])
 
   const importDocument = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
@@ -795,6 +825,14 @@ export function SocratesBuilder({
       if (!file) return
       try {
         const imported = parseSocratesSlideDocument(JSON.parse(await file.text()))
+        if (isSandbox && imported.schemaVersion === 2) {
+          setNotice({
+            tone: 'error',
+            message:
+              'Import complete case packages in the protected builder. The public sandbox supports legacy overlays only.',
+          })
+          return
+        }
         const draftCopy = {
           ...cloneDocument(imported),
           recordId: undefined,
@@ -813,7 +851,7 @@ export function SocratesBuilder({
         })
       }
     },
-    [selectDocument],
+    [isSandbox, selectDocument],
   )
 
   const setInitialView = useCallback(() => {
@@ -913,6 +951,8 @@ export function SocratesBuilder({
 
       {!isLocal ? (
         <p>
+          {!isSandbox &&
+            'Protected saves include paired slides, case content, explanations and internal review notes. '}
           <a href={`/${locale}/socrates-demo#builder`}>Open the Invenio web overlay demo</a> to
           auto-save paired slides and detailed explanations in your browser.
         </p>
@@ -1218,6 +1258,16 @@ export function SocratesBuilder({
               </Field>
             </div>
 
+            {!isLocal && !isSandbox && document.recordId && (
+              <Field label="Case ID for study configuration" htmlFor="socrates-case-id">
+                <input id="socrates-case-id" readOnly value={document.recordId} />
+                <small>
+                  Saved revision {document.revision}. Teaching changes require content review again
+                  before study activation.
+                </small>
+              </Field>
+            )}
+
             <Field label="Attribution label" htmlFor="socrates-attribution-label">
               <input
                 id="socrates-attribution-label"
@@ -1252,10 +1302,17 @@ export function SocratesBuilder({
             </Field>
           </section>
 
+          {!isSandbox && (
+            <CaseContentEditor
+              document={document}
+              onChange={setDirtyDocument}
+              privateEnabled={true}
+            />
+          )}
           <section className={styles.formSection}>
             <div className={styles.panelHeading}>
               <div>
-                <span>Annotation set</span>
+                <span>Region content</span>
                 <h2>Regions</h2>
               </div>
               <span className={styles.count}>{document.annotations.length}</span>

@@ -11,6 +11,7 @@ import {
   type ScopeViewSpec,
 } from '../../components/scope/types'
 import { inspectionLedgerSummary } from './inspectionLedger'
+import { HOLD_SECONDS } from './scopeScripts'
 
 /**
  * The readouts under the scope controls, and the numbers the goals test.
@@ -34,6 +35,7 @@ export const SCOPE_METRIC_LABELS: Readonly<Record<ScopeMetricId, string>> = {
   annularAreaMm2: 'Open area around the scope',
   cordsState: 'True vocal folds',
   accessoryState: 'Accessory',
+  holdRemaining: 'Scripted hold',
   ledgerSummary: 'Inspection record',
   inputMode: 'Input',
   assistsUsed: 'Assists used',
@@ -187,6 +189,8 @@ export function formatScopeMetric(metric: ScopeMetricId, state: ScopeState): str
       return CORDS_STATE_WORDS[state.inputs.cords]
     case 'accessoryState':
       return `${ACCESSORY_STATE_WORDS[state.inputs.accessory]}, ${ACCESSORY_POSITION_WORDS[state.inputs.accessoryPosition]}`
+    case 'holdRemaining':
+      return holdRemainingWords(state)
     case 'ledgerSummary': {
       const summary = inspectionLedgerSummary(state.ledger)
       if (summary.total === 0) return 'No airways listed on this step'
@@ -206,6 +210,24 @@ export function formatScopeMetric(metric: ScopeMetricId, state: ScopeState): str
         ? state.assistsUsed.map((assist) => SCOPE_ASSIST_NAMES[assist]).join(', ')
         : 'None'
   }
+}
+
+/**
+ * The scripted hold, read from the same clock and the same history as its goal.
+ *
+ * `signals.clockSec` advances only on `tick`, so a paused or offscreen pane shows the hold standing
+ * still — which is what is happening. Time running out is not the whole condition: the assistant is
+ * still waiting for the acknowledgment and the image, and the readout says so rather than implying
+ * the hold is done.
+ */
+function holdRemainingWords(state: ScopeState): string {
+  if (state.script?.id !== 'assistant-interrupt') return 'No scripted hold on this step'
+  if (state.events.includes('hold-completed')) return 'The scripted hold is finished'
+  const started = state.signals.hold.startedAtSec
+  if (started === null) return 'No scripted hold is running'
+  const left = Math.max(0, HOLD_SECONDS - (state.signals.clockSec - started))
+  if (left > 0) return `${Math.ceil(left)} of ${HOLD_SECONDS} scripted seconds still to run`
+  return 'The scripted seconds have run; the assistant is still waiting'
 }
 
 export interface ScopeReadout {

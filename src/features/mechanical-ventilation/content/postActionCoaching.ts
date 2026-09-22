@@ -74,8 +74,11 @@ import type {
 import {
   deriveEffectivePatient,
   deriveMeasurements,
+  WAVEFORM_STEP_SECONDS,
   WAVEFORM_WINDOW_SECONDS,
 } from '../engine/physics'
+import { latestResultedRepeat } from '../engine/arterialGas'
+import { plateauAcquisition } from './plateauAcquisition'
 import { plateauReadingValidity, plateauWithheldNote } from './plateauValidity'
 
 /* ------------------------------------------------------------------------------------------------
@@ -255,12 +258,26 @@ export function coachingReadingSnapshot(
   state: VentilationSimulationState,
 ): CoachingReadingSnapshot {
   const measurements = state.measurements
-  const plateau = plateauReadingValidity(state)
-  const repeatGasResulted = state.lastAbgAt !== null && state.simulationTime >= state.lastAbgAt
+  const acquisition = plateauAcquisition(state)
+  /*
+   * The gas the learner can actually read, not the model's current one.
+   *
+   * This keyed on `lastAbgAt` and then printed `patient.gasExchange.paCO2MmHg`, so the card was
+   * reporting the live internal value rather than the specimen: on MV-07 with two orders the
+   * bedside showed PaCO2 49 from the resulted specimen while the coaching card said 69 from the
+   * model. `lastAbgAt` is also a single slot, so a second order made an already available earlier
+   * result vanish from the card. Both go away by reading the specimen list.
+   */
+  const resultedRepeat = latestResultedRepeat(state.arterialGasSamples, state.simulationTime)
   return {
     'peak-pressure': measurements.peakPressureCmH2O,
-    'peak-plateau-gap': plateau.interpretable
-      ? measurements.peakPressureCmH2O - measurements.plateauPressureCmH2O
+    /*
+     * A split, not a subtraction. It needs an acquired, interpretable hold behind the plateau —
+     * `plateauReadingValidity` alone says only that the patient was quiet, which was true on every
+     * passive case that had never been occluded.
+     */
+    'peak-plateau-gap': acquisition.supportsMechanicsClaim
+      ? measurements.peakPressureCmH2O - (acquisition.valueCmH2O ?? acquisition.estimateCmH2O)
       : null,
     'intrinsic-peep': measurements.intrinsicPeepCmH2O,
     'exhaled-vt': measurements.exhaledVtMl,
@@ -272,7 +289,7 @@ export function coachingReadingSnapshot(
     pain: state.patient.human.painScore,
     delirium: state.patient.human.deliriumScore,
     sedation: state.patient.human.sedationScore,
-    paco2: repeatGasResulted ? state.patient.gasExchange.paCO2MmHg : null,
+    paco2: resultedRepeat ? resultedRepeat.values.paCO2MmHg : null,
   }
 }
 
@@ -769,15 +786,33 @@ const interventionCoachingProfiles: Readonly<
  * it, so neither can report a change until the buffer holds breaths taken after the change. The
  * plateau is estimated off the same trace, so the peak-to-plateau difference inherits it.
  */
+/** Always on the card, whether or not they moved, so the window has to be valid for them. */
+const coreReadings: readonly CoachingReadingId[] = ['peak-pressure', 'spo2', 'map']
+
 const traceDerivedReadings: readonly CoachingReadingId[] = [
   'peak-pressure',
   'peak-plateau-gap',
   'exhaled-vt',
 ]
 
+/**
+ * How long after the effect lands before the card's readings describe the action.
+ *
+ * This used to extend to one trace length only when the *action's own target* was trace-derived.
+ * But `coreReadings` puts peak airway pressure on every card, and the displayed peak is the
+ * maximum over the whole 12-second buffer — so on MV-14 the decompression card, whose target is
+ * mean arterial pressure, closed one breath after the effect and reported "Peak airway pressure
+ * 58 → 58 UNCHANGED" while the console two panes away read 31. The window has to cover every
+ * reading the card prints, and the longest of those is a trace length.
+ *
+ * `breathSeconds` is still the floor for a reading the model reports directly, and both numbers
+ * are the ones this module already had: the patient's own rate and `WAVEFORM_WINDOW_SECONDS`.
+ */
 function settleSecondsFor(effectId: InterventionEffectId | null, breathSeconds: number): number {
   const target = effectId ? interventionCoachingProfiles[effectId]?.target : null
-  return target && traceDerivedReadings.includes(target)
+  const tracedTarget = Boolean(target && traceDerivedReadings.includes(target))
+  const tracedCore = coreReadings.some((id) => traceDerivedReadings.includes(id))
+  return tracedTarget || tracedCore
     ? Math.max(breathSeconds, WAVEFORM_WINDOW_SECONDS)
     : breathSeconds
 }
@@ -851,6 +886,17 @@ export function capturePostActionBaseline(
      * that had is kept.
      */
     lastAbgAt: state.lastAbgAt !== null && state.lastAbgAt <= record.time ? state.lastAbgAt : null,
+    /*
+     * And the specimen this very action drew: it had not been drawn the instant before the action,
+     * so the "before" column must not contain it. Only an `order-abg` adds one, and it adds it at
+     * the action's own second.
+     */
+    arterialGasSamples:
+      intervention?.effectId === 'order-abg'
+        ? state.arterialGasSamples.filter(
+            (sample) => !(sample.kind === 'repeat' && sample.collectedAtSeconds === record.time),
+          )
+        : state.arterialGasSamples,
   }
   const patient = deriveEffectivePatient(withoutAction, definition)
   const before: VentilationSimulationState = {
@@ -892,20 +938,70 @@ export function capturePostActionBaseline(
  * The observation interval
  * ---------------------------------------------------------------------------------------------- */
 
+/**
+ * One sample's worth of slack on the newest-sample check.
+ *
+ * The buffer is written at a fixed step and an advance can land fractionally short of the exact
+ * completion instant; this is that step, not a tolerance on the observation itself.
+ */
+const WAVEFORM_STEP_TOLERANCE_SECONDS = WAVEFORM_STEP_SECONDS
+
 export interface PostActionObservation {
   /** Simulated second at which the response has both happened and been watched for a breath. */
   readonly completeAtSeconds: number
   readonly secondsRemaining: number
+  /** The clock condition on its own: enough simulated time has passed. */
+  readonly intervalElapsed: boolean
+  /**
+   * The evidence condition: the displayed trace the card's readings are computed from actually
+   * consists of post-effect samples.
+   */
+  readonly evidenceCovered: boolean
+  /** Why the evidence does not cover the interval, when it does not. */
+  readonly evidenceGap: 'no-samples' | 'stale-buffer' | 'pre-effect-samples' | null
   readonly complete: boolean
 }
 
+/**
+ * Has this action been observed — by the clock *and* by the evidence.
+ *
+ * Elapsed simulated time is not sufficient. The card prints peak airway pressure, which the
+ * console computes as the maximum over the whole displayed waveform buffer, so the claim "peak
+ * fell from 58 to 31" is only true if that buffer is a buffer of the response. Freezing the
+ * waveform display and then acting satisfied the timer while the buffer still held nothing but
+ * pre-action breaths, and the card duly reported "58 → 58 unchanged" against a console reading 31.
+ *
+ * So the evidence is checked directly rather than through another timer: the buffer must contain
+ * samples, its newest sample must have kept up with the clock, and its oldest sample must already
+ * be at or after the moment the effect reached the model. Nothing about *how* the trace stopped
+ * refreshing matters — frozen display, a paused engine, a buffer that has not turned over yet all
+ * fail the same test, and all of them clear as soon as real post-effect samples arrive.
+ */
 export function postActionObservation(
   state: VentilationSimulationState,
   baseline: PostActionBaseline,
 ): PostActionObservation {
   const completeAtSeconds = baseline.effectiveAtSeconds + baseline.settleSeconds
   const secondsRemaining = Math.max(0, completeAtSeconds - state.simulationTime)
-  return { completeAtSeconds, secondsRemaining, complete: secondsRemaining <= 0 }
+  const intervalElapsed = secondsRemaining <= 0
+  const first = state.waveforms[0]
+  const last = state.waveforms.at(-1)
+  const evidenceGap: PostActionObservation['evidenceGap'] =
+    !first || !last
+      ? 'no-samples'
+      : last.time < completeAtSeconds - WAVEFORM_STEP_TOLERANCE_SECONDS
+        ? 'stale-buffer'
+        : first.time < baseline.effectiveAtSeconds
+          ? 'pre-effect-samples'
+          : null
+  return {
+    completeAtSeconds,
+    secondsRemaining,
+    intervalElapsed,
+    evidenceCovered: evidenceGap === null,
+    evidenceGap,
+    complete: intervalElapsed && evidenceGap === null,
+  }
 }
 
 /* ------------------------------------------------------------------------------------------------
@@ -947,6 +1043,13 @@ export interface PostActionCoaching {
   readonly reassess: string
   readonly stabilizationRequired: boolean
   readonly stabilization: string
+  /**
+   * The interval these readings describe: the action's own time, and the simulated second the
+   * observation window closed and the card was written. Both are printed, because a report that
+   * does not say when it was taken becomes a claim about now the moment the patient moves on.
+   */
+  readonly observedFromSeconds: number
+  readonly observedToSeconds: number
 }
 
 /**
@@ -1010,8 +1113,6 @@ function moved(reading: CoachingReading): boolean {
 }
 
 /** Readings the console and bedside always show, so "nothing moved" is a reported finding. */
-const coreReadings: readonly CoachingReadingId[] = ['peak-pressure', 'spo2', 'map']
-
 function buildReadings(
   baseline: PostActionBaseline,
   current: CoachingReadingSnapshot,
@@ -1230,21 +1331,35 @@ function notDemonstrated(
   return clauses.join(' ')
 }
 
-function stabilizationAnswer(state: VentilationSimulationState): {
+/**
+ * Was something else needed — as at the end of the interval this card reports.
+ *
+ * The card is latched when its window closes and is deliberately not re-derived afterwards (see
+ * `CaseWorkflow`: re-deriving it turned a report into a second monitor that rewrote itself under
+ * the learner and re-announced through `role="status"`). So the wording has to be tensed to the
+ * captured moment. It used to read "SpO₂ low is active on the ventilator now" and then stayed on
+ * screen after the alarm cleared. The live alarm state is on the console banner, and this line now
+ * says which surface to read for it.
+ */
+function stabilizationAnswer(
+  state: VentilationSimulationState,
+  atSeconds: number,
+): {
   required: boolean
   text: string
 } {
+  const asOf = `at ${atSeconds.toFixed(0)} s, the end of this interval,`
   if (state.criticalErrors.length > 0) {
     return {
       required: true,
-      text: 'Yes. A safety interruption is open on this case and takes precedence over any further localizing.',
+      text: `Yes. A safety interruption was open on this case ${asOf} and it takes precedence over any further localizing.`,
     }
   }
   const urgent = state.alarms.filter((alarm) => alarm.priority === 'high' && alarm.active)
   if (urgent.length > 0) {
     return {
       required: true,
-      text: `Yes. ${listPhrase(urgent.map((alarm) => alarm.message))} ${urgent.length === 1 ? 'is' : 'are'} active on the ventilator now — stabilize before continuing to localize.`,
+      text: `Yes. ${listPhrase(urgent.map((alarm) => alarm.message))} ${urgent.length === 1 ? 'was' : 'were'} active on the ventilator ${asOf} so stabilize before continuing to localize. What is alarming now is on the console banner, which may have changed since.`,
     }
   }
   /*
@@ -1254,7 +1369,7 @@ function stabilizationAnswer(state: VentilationSimulationState): {
    */
   return {
     required: false,
-    text: 'No active safety interruption or high-priority ventilator alarm is shown. Continue immediate bedside reassessment; those two checks alone do not establish that no stabilization or escalation is needed.',
+    text: `No safety interruption or high-priority ventilator alarm was shown ${asOf} so far as those two checks go. Continue immediate bedside reassessment, and read the console banner for what is alarming now; those checks alone do not establish that no stabilization or escalation is needed.`,
   }
 }
 
@@ -1288,7 +1403,8 @@ export function ventilationPostActionCoaching(
   const newSafetyInterruption = state.criticalErrors.length > baseline.criticalErrorCount
   const verdict = computeVerdict(readings)
   const response = targetResponse(profile, readings)
-  const stabilization = stabilizationAnswer(state)
+  const observedToSeconds = state.simulationTime
+  const stabilization = stabilizationAnswer(state, observedToSeconds)
 
   return {
     recordId: baseline.recordId,
@@ -1308,6 +1424,8 @@ export function ventilationPostActionCoaching(
     reassess: profile.reassess,
     stabilizationRequired: stabilization.required,
     stabilization: stabilization.text,
+    observedFromSeconds: baseline.actionSeconds,
+    observedToSeconds,
   }
 }
 

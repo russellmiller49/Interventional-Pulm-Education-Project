@@ -2,7 +2,9 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import { mechanicalVentilationCaseById } from '../content'
-import { createInitialSimulationState } from '../engine'
+import { advanceSimulation, createInitialSimulationState } from '../engine'
+import { createLabSimulation } from '../engine/learningLab'
+import { ventilationSimulationReducer } from '../engine/reducer'
 import { MechanicalVentilatorConsole } from '../components/MechanicalVentilatorConsole'
 import MechanicalVentilationLab from '../components/MechanicalVentilationLab'
 
@@ -379,7 +381,13 @@ describe('multi-device mechanical ventilation learner interface', () => {
     const visible = [...container.querySelectorAll('p')].find((node) =>
       /^Waveform text:/.test(node.textContent ?? ''),
     )
-    expect(visible?.textContent).toMatch(/Pplateau \d+ cmH₂O — not interpretable: patient effort 8/)
+    /*
+     * Two clauses, because there are two reasons: nothing has been occluded on this patient, and
+     * the patient is pulling. The acquisition clause comes first and the effort clause after it.
+     */
+    expect(visible?.textContent).toMatch(
+      /Pplateau \d+ cmH₂O — estimate from the trace — not interpretable: patient effort 8/,
+    )
   })
 
   it('leaves the plateau unmarked once the patient is passive', () => {
@@ -419,7 +427,15 @@ describe('multi-device mechanical ventilation learner interface', () => {
     ).toBeGreaterThan(0)
   })
 
-  it('labels the pressure components once the patient is passive', () => {
+  /**
+   * MV-PRE-REVIEW-01: passivity is not acquisition.
+   *
+   * The console used to attribute the plateau to elastic load as soon as the patient was quiet,
+   * which is true of every case at the moment it opens — so "measured Pplateau 14 — elastic load
+   * only; gap to peak is resistive" was printed before anything had been occluded. Quiet and
+   * occluded are two conditions and the split needs both.
+   */
+  it('calls the plateau an estimate on a passive patient with no hold behind it', () => {
     const state = createInitialSimulationState('MV-01', 'learn')
     const passive = {
       ...state,
@@ -432,6 +448,24 @@ describe('multi-device mechanical ventilation learner interface', () => {
       },
     }
     render(<MechanicalVentilatorConsole state={passive} dispatch={jest.fn()} controlsEnabled />)
+    expect(screen.queryByText(/elastic load only/i)).not.toBeInTheDocument()
+    expect(screen.getAllByText(/estimate from the trace/i).length).toBeGreaterThan(0)
+  })
+
+  it('labels the pressure components once a passive patient has actually been occluded', () => {
+    const baseline = createLabSimulation('mechanics-load-and-pressure', 0, 'hamilton-c6')
+    const held = advanceSimulation(
+      ventilationSimulationReducer(baseline, { type: 'PERFORM_HOLD', hold: 'inspiratory' }),
+      5,
+    )
+    expect(held.holdRecords.filter((record) => record.completedAtSeconds !== null)).toHaveLength(1)
+    render(
+      <MechanicalVentilatorConsole
+        state={{ ...held, paused: true }}
+        dispatch={jest.fn()}
+        controlsEnabled
+      />,
+    )
     expect(screen.getAllByText(/Pplateau .* elastic load only/i).length).toBeGreaterThan(0)
   })
 })

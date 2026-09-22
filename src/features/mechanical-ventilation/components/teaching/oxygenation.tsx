@@ -20,6 +20,7 @@ import {
   round,
   styles,
 } from './shared'
+import { plateauAcquisition } from '../../content/plateauAcquisition'
 
 type Lever = 'fio2' | 'peep' | 'mean-pressure'
 
@@ -74,8 +75,19 @@ export function VentilationOxygenationTradeoff({
   const [selected, setSelected] = useState<Lever | null>(null)
   const { measurements, patient, trends, ventilator } = state
   const reading = peepComparisonSnapshot(state)
+  /*
+   * An occlusion that is running is not yet an acquired reading, and a number published on every
+   * breath is not an occlusion at all. Three labels, from the one projection.
+   */
+  const acquisition = plateauAcquisition(state)
   const plateauLabel =
-    reading.plateauSource === 'active occlusion' ? 'Active occlusion pressure' : 'Plateau estimate'
+    acquisition.status === 'acquired-valid'
+      ? 'Plateau · acquired hold'
+      : acquisition.status === 'acquired-invalid'
+        ? 'Plateau · acquired, not interpretable'
+        : reading.plateauSource === 'active occlusion'
+          ? 'Pressure during the running occlusion'
+          : 'Plateau estimate'
 
   const spo2Delta = trendDelta(trends, 'spo2Percent')
   const mapDelta = trendDelta(trends, 'mapMmHg')
@@ -113,9 +125,13 @@ export function VentilationOxygenationTradeoff({
     {
       id: 'plateau',
       label: plateauLabel,
+      /*
+       * The value that belongs to the label above it: an acquired hold's own reading when the
+       * label says acquired, the live estimate when it says estimate.
+       */
       value:
-        measurements.plateauPressureCmH2O > 0
-          ? `${round(measurements.plateauPressureCmH2O, 1)} cmH₂O`
+        (acquisition.valueCmH2O ?? acquisition.estimateCmH2O) > 0
+          ? `${round(acquisition.valueCmH2O ?? acquisition.estimateCmH2O, 1)} cmH₂O`
           : 'Unavailable',
       trend: direction(plateauDelta, 0.5),
     },
@@ -133,7 +149,7 @@ export function VentilationOxygenationTradeoff({
     },
   ]
 
-  const summary = `Over the recent trend window, oxygen saturation is ${round(patient.gasExchange.spo2Percent)} percent and ${directionWord[direction(spo2Delta, 0.5)]}, with modeled arterial oxygen tension ${round(patient.gasExchange.paO2MmHg)} millimetres of mercury and model-assigned shunt ${round(patient.gasExchange.shuntFraction * 100)} percent. Mean airway pressure is ${round(measurements.meanAirwayPressureCmH2O, 1)} centimetres of water, ${plateauLabel.toLowerCase()} ${round(measurements.plateauPressureCmH2O, 1)}, mean arterial pressure ${round(patient.hemodynamics.mapMmHg)} millimetres of mercury and ${directionWord[direction(mapDelta, 1)]}, and intrinsic PEEP estimate ${round(measurements.intrinsicPeepCmH2O, 1)}. PEEP is ${round(ventilator.settings.peepCmH2O, 1)} and inspired oxygen ${round(ventilator.settings.oxygenPercent)} percent. ${reading.passiveInterpretationSupported ? 'Recent effort is absent; an estimate alone is not an acquired hold.' : 'Patient effort makes this pressure unsuitable for passive mechanics interpretation.'}${selected ? ` The selected lever is ${leverCopy[selected].label}.` : ''}`
+  const summary = `Over the recent trend window, oxygen saturation is ${round(patient.gasExchange.spo2Percent)} percent and ${directionWord[direction(spo2Delta, 0.5)]}, with modeled arterial oxygen tension ${round(patient.gasExchange.paO2MmHg)} millimetres of mercury and model-assigned shunt ${round(patient.gasExchange.shuntFraction * 100)} percent. Mean airway pressure is ${round(measurements.meanAirwayPressureCmH2O, 1)} centimetres of water, ${plateauLabel.toLowerCase()} ${round(acquisition.valueCmH2O ?? acquisition.estimateCmH2O, 1)}, mean arterial pressure ${round(patient.hemodynamics.mapMmHg)} millimetres of mercury and ${directionWord[direction(mapDelta, 1)]}, and intrinsic PEEP estimate ${round(measurements.intrinsicPeepCmH2O, 1)}. PEEP is ${round(ventilator.settings.peepCmH2O, 1)} and inspired oxygen ${round(ventilator.settings.oxygenPercent)} percent. ${reading.passiveInterpretationSupported ? 'Recent effort is absent; an estimate alone is not an acquired hold.' : 'Patient effort makes this pressure unsuitable for passive mechanics interpretation.'}${selected ? ` The selected lever is ${leverCopy[selected].label}.` : ''}`
 
   return (
     <section className={styles.panel} aria-labelledby="mv-oxygenation-teaching">

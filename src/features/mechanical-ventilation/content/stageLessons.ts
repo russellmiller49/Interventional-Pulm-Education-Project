@@ -23,6 +23,7 @@ import {
   type LabMetric,
   type LabRound,
 } from './learningExperiments'
+import { ventilationReferenceMarker } from './referenceEvidence'
 import { ventilationSectionSpec, type VentilationSectionSpec } from './sectionSpecs'
 import {
   ventilationLocationItemByUnit,
@@ -393,14 +394,26 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
             ? 'Commit my answer'
             : 'Continue',
       interaction: recognizeInteraction,
-      lookIn: foundation
+      /*
+       * A section whose first step refers to a marked interval is worked on the card that now
+       * carries that marked reference, not in the teaching disclosure the reference used to be
+       * folded inside.
+       */
+      lookIn: ventilationReferenceMarker(unitId, 0)
         ? {
-            pane: 'teaching',
-            landmark: foundation.title,
-            alsoPane: 'steps',
-            alsoLandmark: 'Continue or Next stop, on this card',
+            pane: 'steps',
+            landmark: `the captured complete breath and interval ${ventilationReferenceMarker(unitId, 0)!.markerId}, below`,
+            alsoPane: 'teaching',
+            alsoLandmark: foundation?.title ?? spec.recognizeTitle,
           }
-        : recognizeLookIn(spec, recognizeInteraction),
+        : foundation
+          ? {
+              pane: 'teaching',
+              landmark: foundation.title,
+              alsoPane: 'steps',
+              alsoLandmark: 'Continue or Next stop, on this card',
+            }
+          : recognizeLookIn(spec, recognizeInteraction),
       gate: 'open',
       stops: recognizeInteraction.kind === 'walk' ? [] : stops,
       teaching: 'framing',
@@ -419,7 +432,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
         unitId === 'breathing-with-support'
           ? {
               pane: 'steps',
-              landmark: 'captured complete breath, interval A, and the choices below',
+              landmark: 'the captured complete breath, interval A, and the choices below',
             }
           : predictLookIn,
       gate: 'open',
@@ -524,7 +537,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
         unitId === 'breathing-with-support'
           ? {
               pane: 'steps',
-              landmark: 'captured complete breath, interval B, and the choices below',
+              landmark: 'the captured complete breath, interval B, and the choices below',
             }
           : predictLookIn,
       gate: 'after-prediction',
