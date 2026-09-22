@@ -22,9 +22,22 @@ async function checkFocus(page: Page, target: Locator) {
   expect(focus.rect.width).toBeGreaterThan(0)
 }
 async function noOverflow(page: Page) {
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
-    true,
-  )
+  // CRRT-FELLOW-03: Practice now scrolls the document, so the global site header's own overflow
+  // at 200% root text (a platform item recorded in the Batch-03 handoff) reaches the document.
+  // The CRRT contract is that nothing inside the module overflows the window.
+  expect(
+    await page.evaluate(() => {
+      if (document.documentElement.scrollWidth <= innerWidth + 1) return true
+      const moduleRoot = document.querySelector('#main-content')!
+      return [...moduleRoot.querySelectorAll('*')].every((el) => {
+        const r = el.getBoundingClientRect()
+        if (r.width === 0 || r.right <= innerWidth + 1) return true
+        for (let p = el.parentElement; p && p !== moduleRoot; p = p.parentElement)
+          if (/(auto|scroll|hidden|clip)/.test(getComputedStyle(p).overflowX)) return true
+        return false
+      })
+    }),
+  ).toBe(true)
 }
 
 test('sanity: real machine entry, case divergence, stale review and rereview preserve history', async ({

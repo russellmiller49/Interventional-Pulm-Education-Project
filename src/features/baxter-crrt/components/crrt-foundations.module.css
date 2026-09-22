@@ -14,6 +14,7 @@
   position: static;
 }
 .readingSurface {
+  container: crrt-reading / inline-size;
   max-width: 1140px;
   margin: 0 auto;
   padding: 1rem clamp(0.6rem, 2vw, 1.5rem) 2rem;
@@ -96,6 +97,12 @@
 .map {
   margin-bottom: 0.75rem;
 }
+.mapPart {
+  margin: 0.8rem 0 0;
+  color: #9be8b8;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
 .map ol {
   display: grid;
   gap: 0.5rem;
@@ -123,45 +130,55 @@
   margin: 0.7rem 0;
 }
 .readingSurface:has(.circuitWorkbench) {
-  max-width: 1280px;
+  max-width: 1440px;
 }
+/* F-13: the controls sit in one wrapped row directly above the circuit, and the circuit takes
+   the full reading width instead of an 800 px column (0.60 of its drawing size at 1280 × 900).
+   Its height is capped in the circuit stylesheet so the row and the drawing stay on one screen. */
 .circuitWorkbench {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: start;
-  gap: 1rem;
+  display: grid;
+  gap: 0.6rem;
   margin-top: 0.75rem;
 }
 .circuitControls {
-  flex: 1 1 13rem;
   min-width: 0;
 }
 .circuitControls .controls {
-  margin-top: 0;
+  margin: 0;
 }
 .circuitVisual {
-  flex: 4 1 800px;
   min-width: 0;
-  max-width: 820px;
 }
-/* Keep the primary circuit with its controls. The inset is adjacent on wide screens,
-   then follows that pair when the available width or enlarged text requires wrapping. */
+/* On a wide lesson the controls stand in a column beside the drawing, so no control row sits
+   between them and the drawing can be taller: about 0.73 of its authored size at 1280 px and 0.8
+   at 1440–1600 px (0.60 before), with its selections still on the same screen. */
+@container crrt-reading (min-width: 68rem) {
+  .circuitWorkbench {
+    grid-template-columns: minmax(10rem, 12.5rem) minmax(0, 1fr);
+    align-items: start;
+  }
+  .circuitControls .controlRow,
+  .circuitControls .controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .circuitWorkbench .circuitVisual svg[data-overlay] {
+    max-height: min(620px, calc(100dvh - var(--site-header-height, 5rem) - 6rem));
+  }
+}
+/* The comparison figure follows the circuit and its controls at full width. */
 .mechanismWorkbench {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: start;
+  display: grid;
   gap: 1rem;
   margin-top: 0.75rem;
 }
 .mechanismWorkbench > .circuitWorkbench {
-  flex: 4 1 800px;
-  min-width: 0;
   margin-top: 0;
 }
-.mechanismWorkbench > .inset {
-  flex: 1 1 16rem;
-  min-width: 0;
-  margin: 0;
+.arithmeticPair {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
 }
 .observation {
   border-left: 3px solid #75dce3;
@@ -260,21 +277,6 @@
   padding: 0.7rem;
   border-bottom: 1px solid #45616a;
 }
-.inset {
-  border: 1px solid #4e6972;
-  border-radius: 12px;
-  margin: 1rem 0;
-  padding: 1rem;
-  background: #0f2830;
-}
-.inset svg {
-  width: 100%;
-  max-width: 700px;
-  display: block;
-}
-.inset p {
-  margin: 0.6rem 0;
-}
 .operational {
   min-width: 0;
   margin-top: 1rem;
@@ -335,12 +337,133 @@
   .table td {
     padding: 0.5rem 0.25rem;
   }
-  .inset {
-    padding: 0.5rem;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   .foundation * {
     scroll-behavior: auto !important;
   }
+}
+
+/* ---------------------------------------------------------------- *
+ * CRRT-FELLOW-03: lesson sequence and exercise controls
+ * ---------------------------------------------------------------- */
+
+.lessonNumber {
+  margin: 0;
+  color: #9be8b8;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.lessonSteps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lessonSteps > span {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 0 0.6rem;
+  border: 1px dashed #49676e;
+  border-radius: 8px;
+  color: #b9cdd0;
+  font-size: 0.85rem;
+}
+
+.jumpButton.jumpButton {
+  display: inline-flex;
+  min-height: 44px;
+  margin-top: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border-style: dashed;
+  font-size: 0.9rem;
+}
+
+.controlRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 1rem;
+}
+
+.controlRow > .controls {
+  margin: 0;
+}
+
+.toolStatus {
+  margin: 0;
+  color: #cfe7e3;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.taskActions {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  padding: 0.85rem;
+  border: 1px solid #5e8c93;
+  border-radius: 10px;
+  background: #0f2a31;
+  scroll-margin-top: calc(var(--site-header-height, 5rem) + 1rem);
+}
+
+.taskActions:focus-visible {
+  outline: 3px solid #ffce80;
+  outline-offset: 3px;
+}
+
+.taskActionsHeading {
+  margin: 0;
+  color: #9be8b8;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.taskActionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.foundation .taskPrimary {
+  border-color: #91ecee;
+  background: #1f6f6c;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.foundation .taskPrimary:disabled {
+  border-color: #49676e;
+  background: #13373e;
+  color: #c8dadc;
+  opacity: 1;
+}
+
+.foundation .taskSkip {
+  background: transparent;
+  font-weight: 700;
+}
+
+.taskReason {
+  margin: 0;
+  padding: 0.45rem 0.6rem;
+  border-left: 3px solid #ffce80;
+  background: rgba(75, 51, 18, 0.45);
+  color: #f6e6cf;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.taskActionsNote {
+  margin: 0;
+  color: #b9cdd0;
+  font-size: 0.85rem;
+  line-height: 1.5;
 }

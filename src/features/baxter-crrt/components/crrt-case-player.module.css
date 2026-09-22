@@ -1,3 +1,6 @@
+/* CRRT-FELLOW-03 (F-11/F-12): the case player's smallest labels were 0.56–0.68rem (9–11 px at
+   default text). Each size was raised by the same step, checked in the rendered case, so no
+   label or reading in the workbench renders below about 11.5 px at default text. */
 .learningWorkflow {
   display: grid;
   gap: 0.8rem;
@@ -42,7 +45,7 @@
 
 .reasoningRibbon > span {
   color: #f5bb65;
-  font-size: 0.65rem;
+  font-size: 0.76rem;
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -64,7 +67,7 @@
   align-items: center;
   min-width: 0;
   color: #819a98;
-  font-size: 0.66rem;
+  font-size: 0.78rem;
 }
 
 .reasoningRibbon li > i {
@@ -74,7 +77,7 @@
   place-items: center;
   border: 1px solid rgba(148, 196, 191, 0.34);
   border-radius: 50%;
-  font-size: 0.56rem;
+  font-size: 0.72rem;
   font-style: normal;
 }
 
@@ -92,7 +95,7 @@
 .reasoningRibbon li small {
   overflow: hidden;
   color: #819a98;
-  font-size: 0.56rem;
+  font-size: 0.72rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -137,10 +140,18 @@
 .roleToggle > span {
   margin-right: 0.2rem;
   color: #8ce2d7;
-  font-size: 0.62rem;
+  font-size: 0.72rem;
   font-weight: 850;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+.roleNote {
+  flex-basis: 100%;
+  margin: 0.15rem 0 0;
+  color: #b9cfcc;
+  font-size: 0.82rem;
+  line-height: 1.45;
 }
 
 .roleToggle button,
@@ -183,7 +194,7 @@
 .predictionForm legend,
 .reassessmentSection legend {
   color: #8ce2d7;
-  font-size: 0.62rem;
+  font-size: 0.74rem;
   font-weight: 850;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -246,7 +257,7 @@
 .caseHeader span,
 .workflowHeading span {
   color: #74d7cc;
-  font-size: 0.62rem;
+  font-size: 0.74rem;
   font-weight: 850;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -261,7 +272,7 @@
 .caseHeader > strong {
   flex: 0 0 auto;
   color: #f5c071;
-  font-size: 0.68rem;
+  font-size: 0.8rem;
 }
 
 .syntheticNotice,
@@ -425,7 +436,7 @@
   border-radius: 0.45rem;
   color: #fff1d7;
   background: rgba(8, 29, 33, 0.74);
-  font-size: 0.66rem;
+  font-size: 0.78rem;
   font-weight: 800;
   cursor: pointer;
 }
@@ -433,7 +444,7 @@
 .predictionInstruction,
 .predictionFieldError {
   margin: 0;
-  font-size: 0.66rem;
+  font-size: 0.78rem;
   line-height: 1.4;
 }
 
@@ -480,7 +491,7 @@
   border-radius: 0.45rem;
   color: #d9e8e6;
   background: rgba(4, 21, 24, 0.52);
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   line-height: 1.4;
 }
 
@@ -509,7 +520,7 @@
 .predictionSummary dt,
 .debriefGrid dt {
   color: #8ce2d7;
-  font-size: 0.58rem;
+  font-size: 0.72rem;
   font-weight: 850;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -519,7 +530,7 @@
 .debriefGrid dd {
   margin: 0.2rem 0 0;
   color: #d7e4e2;
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   line-height: 1.45;
 }
 
@@ -549,7 +560,7 @@
 
 .attemptEvidence h6 {
   margin-top: 0.8rem;
-  font-size: 0.68rem;
+  font-size: 0.8rem;
 }
 
 .attemptEvidenceGrid {
@@ -569,7 +580,7 @@
 .attemptEvidenceGrid dt,
 .replayIdentity dt {
   color: #f5c071;
-  font-size: 0.56rem;
+  font-size: 0.72rem;
   font-weight: 850;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -579,7 +590,7 @@
 .replayIdentity dd {
   margin: 0.2rem 0 0;
   color: #d7e4e2;
-  font-size: 0.64rem;
+  font-size: 0.76rem;
   line-height: 1.45;
   overflow-wrap: anywhere;
 }
@@ -588,7 +599,7 @@
 .debriefCaption {
   margin: 0.45rem 0 0;
   color: #a9c6c2;
-  font-size: 0.6rem;
+  font-size: 0.74rem;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -597,7 +608,7 @@
   display: block;
   margin-top: 0.25rem;
   color: #a9c6c2;
-  font-size: 0.56rem;
+  font-size: 0.72rem;
   line-height: 1.5;
 }
 
@@ -605,7 +616,7 @@
   margin: 0.45rem 0 0;
   padding-left: 1.3rem;
   color: #d7e4e2;
-  font-size: 0.62rem;
+  font-size: 0.74rem;
   line-height: 1.5;
 }
 
@@ -620,7 +631,7 @@
   padding: 0.4rem;
   color: #d7e4e2;
   background: rgba(14, 52, 57, 0.38);
-  font-size: 0.62rem;
+  font-size: 0.74rem;
 }
 
 .attemptTimeline time,
@@ -656,7 +667,7 @@
   width: 100%;
   min-width: 32rem;
   border-collapse: collapse;
-  font-size: 0.6rem;
+  font-size: 0.74rem;
 }
 
 .trendEvidenceRegion th,
@@ -684,7 +695,7 @@
   align-items: center;
   min-height: 2.75rem;
   color: #8ce2d7;
-  font-size: 0.64rem;
+  font-size: 0.76rem;
   font-weight: 800;
   cursor: pointer;
 }
@@ -719,7 +730,7 @@
 
 .actionList article span {
   color: #f5c071;
-  font-size: 0.56rem;
+  font-size: 0.72rem;
   font-weight: 850;
   text-transform: uppercase;
 }
@@ -733,7 +744,7 @@
 .actionList article p,
 .actionList article small {
   color: #aebfbd;
-  font-size: 0.64rem;
+  font-size: 0.76rem;
   line-height: 1.45;
 }
 
@@ -753,7 +764,7 @@
   border-radius: 0.5rem;
   color: #dff6f2;
   background: #123f43;
-  font-size: 0.64rem;
+  font-size: 0.76rem;
   font-weight: 800;
   cursor: pointer;
 }
@@ -790,7 +801,7 @@
   min-width: 0;
   margin-right: auto;
   color: #aebfbd;
-  font-size: 0.6rem;
+  font-size: 0.74rem;
   line-height: 1.35;
 }
 
@@ -815,7 +826,7 @@
   margin: 0.65rem 0;
   padding-left: 1.25rem;
   color: #d7e4e2;
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   line-height: 1.45;
 }
 
@@ -829,7 +840,7 @@
   display: block;
   margin-top: 0.45rem;
   color: #d4b98f;
-  font-size: 0.6rem;
+  font-size: 0.74rem;
 }
 
 .reassessmentSection fieldset {
@@ -905,7 +916,7 @@
 
 .surfaceSummary > dl dt {
   color: #74d7cc;
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -938,7 +949,7 @@
 
 .machineSurfaceHeading span {
   color: #74d7cc;
-  font-size: 0.62rem;
+  font-size: 0.74rem;
   font-weight: 850;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -959,7 +970,7 @@
   border-radius: 999px;
   color: #f5c071;
   background: rgba(75, 51, 18, 0.55);
-  font-size: 0.62rem;
+  font-size: 0.74rem;
 }
 
 .machineSurfaceHeading > strong::before {
@@ -1016,7 +1027,7 @@
 
 .circuitSummary dt {
   color: #74d7cc;
-  font-size: 0.62rem;
+  font-size: 0.74rem;
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -1034,7 +1045,7 @@
 
 .scoreCard > div span {
   color: #f5c071;
-  font-size: 0.6rem;
+  font-size: 0.74rem;
   font-weight: 850;
   text-transform: uppercase;
 }
@@ -1046,7 +1057,7 @@
 
 .scoreCard > div small {
   color: #d4b98f;
-  font-size: 0.58rem;
+  font-size: 0.72rem;
   line-height: 1.4;
 }
 
@@ -1063,7 +1074,7 @@
   justify-content: space-between;
   padding: 0.35rem;
   border-bottom: 1px solid rgba(245, 187, 101, 0.18);
-  font-size: 0.6rem;
+  font-size: 0.74rem;
 }
 
 .scoreCard dd {
@@ -1114,7 +1125,7 @@
 .responseHeading span,
 .responseCards span {
   color: #74d7cc;
-  font-size: 0.66rem;
+  font-size: 0.78rem;
   font-weight: 850;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -1175,7 +1186,7 @@
 
 .responseCards small {
   color: #a8bfbd;
-  font-size: 0.65rem;
+  font-size: 0.76rem;
   line-height: 1.4;
 }
 
@@ -1298,7 +1309,7 @@
 
 .calibrationGrid dt {
   color: #9eb5b3;
-  font-size: 0.58rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
 }
 
@@ -1307,7 +1318,7 @@
   margin: 0;
   overflow-wrap: anywhere;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.64rem;
+  font-size: 0.76rem;
 }
 
 .calibrationSources {
@@ -1331,9 +1342,9 @@
     flex-direction: column;
   }
 
+  /* Wrapped rows on a phone rather than a sideways-scrolling tab strip (F-12). */
   .mobileSurfaceTabs {
-    grid-template-columns: repeat(4, minmax(6rem, 1fr));
-    overflow-x: auto;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
   }
 
   .circuitSummary dl {

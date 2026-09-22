@@ -11,15 +11,18 @@ import type {
   CrrtDeviceTreatmentContextView,
   PrismaxPilotOperationsDisplay,
 } from '../engine/deviceAdapters/prismax'
+import { CrrtPressureArithmetic } from './CrrtPressureArithmetic'
 import styles from './crrt-live-pressure-device.module.css'
 
 /**
  * The live educational pressure profile.
  *
- * This component performs no clinical arithmetic. Every pressure, every kind,
- * every availability state and every recorded point arrives already decided on
- * `operations`, which is the device adapter's own read-only view of the running
- * model. What happens here is formatting, layout, and plotting geometry.
+ * This component performs no clinical arithmetic of its own. Every pressure, every
+ * kind, every availability state and every recorded point arrives already decided
+ * on `operations`, which is the device adapter's own read-only view of the running
+ * model. What happens here is formatting, layout, and plotting geometry — and,
+ * for TMP and filter drop, laying out the calculation adapter's own arithmetic over
+ * the same three site readings (F-14), with the validity statement unchanged.
  *
  * Teaching prose is read from the circuit model by signal id, so the wording a
  * learner sees beside a value is the same wording the universal circuit uses
@@ -155,6 +158,17 @@ export function CrrtLivePressureDevice({
   const selected = signals.find((signal) => signal.id === selectedSignalId) ?? signals[0]
   const detail = crrtPressureSignalDetail(selected.id)
   const timeDomain = context.historyTimeDomainSeconds
+  const siteValue = (id: CrrtPressureSignalId) =>
+    signals.find((signal) => signal.id === id)?.valueMmHg ?? null
+  const [rawFilter, rawReturn, rawEffluent] = [
+    siteValue('filter'),
+    siteValue('return'),
+    siteValue('effluent'),
+  ]
+  const arithmeticInputs =
+    rawFilter !== null && rawReturn !== null && rawEffluent !== null
+      ? { filterMmHg: rawFilter, returnMmHg: rawReturn, effluentMmHg: rawEffluent }
+      : null
 
   const textEquivalent = useMemo(() => {
     const lines = [
@@ -336,6 +350,16 @@ export function CrrtLivePressureDevice({
             Built from {selected.contributingSiteLabels.join(', ')}. Read those first — there is no
             transducer here to go and inspect.
           </p>
+        ) : null}
+
+        {(selected.id === 'tmp' || selected.id === 'filter-drop') && arithmeticInputs ? (
+          <CrrtPressureArithmetic
+            signal={selected.id}
+            raw={arithmeticInputs}
+            validityNote={selected.validityReason}
+            displayedMmHg={selected.valueMmHg}
+            sourceNaming="pages-only"
+          />
         ) : null}
 
         <div className={styles.historyBlock}>

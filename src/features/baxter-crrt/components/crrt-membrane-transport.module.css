@@ -1,0 +1,180 @@
+.figure {
+  container: crrt-membrane / inline-size;
+  display: grid;
+  min-width: 0;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #4e6972;
+  border-radius: 12px;
+  background: #0f2830;
+}
+
+.caption strong {
+  font-size: 1rem;
+}
+
+.caption p {
+  margin: 0.35rem 0 0;
+  max-width: 88ch;
+  line-height: 1.55;
+}
+
+/* Three panels side by side when there is room to read them, otherwise stacked. */
+.panels {
+  display: grid;
+  min-width: 0;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@container crrt-membrane (min-width: 40rem) {
+  .panels {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.panel {
+  display: grid;
+  min-width: 0;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: #0b2127;
+}
+
+.panel[data-selected='true'] {
+  border-color: #ffd979;
+}
+
+.panelTitle {
+  color: #e9f5f5;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.panel[data-selected='true'] .panelTitle {
+  color: #ffd979;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  max-width: 26rem;
+  height: auto;
+}
+
+.bloodSide {
+  fill: #702e42;
+}
+
+.fluidSide {
+  fill: #224e50;
+}
+
+.membrane {
+  fill: none;
+  stroke: #eeeeee;
+  stroke-dasharray: 8 5;
+  stroke-width: 5;
+}
+
+.label {
+  fill: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.smallLabel {
+  fill: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.55);
+  stroke-width: 3px;
+}
+
+.solute {
+  fill: #ffd979;
+  stroke: #3b2a00;
+  stroke-width: 1.5;
+}
+
+.soluteArrow,
+.flowArrow,
+.waterArrow,
+.replacementArrow {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.soluteArrow {
+  stroke: #ffd979;
+  stroke-width: 5;
+}
+
+.flowArrow {
+  stroke: #e9f5f5;
+  stroke-width: 3;
+}
+
+.waterArrow {
+  stroke: #8fd3ff;
+  stroke-width: 9;
+  stroke-opacity: 0.85;
+}
+
+.replacementArrow {
+  stroke: #c9b6ff;
+  stroke-dasharray: 3 4;
+  stroke-width: 4;
+}
+
+.arrowHead {
+  fill: #e9f5f5;
+}
+
+.equivalentSection h4 {
+  margin: 0 0 0.4rem;
+  color: #cfe1e2;
+  font-size: 0.9rem;
+}
+
+.equivalent {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.equivalent > div {
+  padding: 0.45rem 0.6rem;
+  border-left: 3px solid #4e6972;
+}
+
+.equivalent > div[data-selected='true'] {
+  border-left-color: #ffd979;
+}
+
+.equivalent dt {
+  font-weight: 800;
+}
+
+.equivalent dd {
+  margin: 0.15rem 0 0;
+  color: #cfe1e2;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.note {
+  margin: 0;
+  color: #b9cdd0;
+  font-size: 0.875rem;
+}
+
+@media (forced-colors: active) {
+  .panel[data-selected='true'] {
+    border-color: Highlight;
+  }
+}

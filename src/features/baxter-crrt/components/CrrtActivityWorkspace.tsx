@@ -1,60 +1,36 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 
 import { criticalCareActivityById } from '@/features/critical-care/content/activities'
 import {
   type CriticalCareActivityMode,
   type CriticalCareActivityPhase,
 } from '@/features/learning-module/activity'
-import type { ActivityShellProps } from '@/features/learning-module/components/ActivityShell'
 import { ActivityChrome } from '@/features/learning-module/components/ActivityChrome'
 import { AssumedConceptStrip } from '@/features/critical-care/components/AssumedConceptStrip'
-import { NativeWorkbenchFrame } from '@/features/learning-module/components/NativeWorkbenchFrame'
-import frameStyles from '@/features/learning-module/components/learning-module-v2.module.css'
 import { DebriefPanel } from '@/features/learning-module/components/DebriefPanel'
-import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
-import { PatientContextBar } from '@/features/learning-module/components/PatientContextBar'
-import { ReferenceDrawer } from '@/features/learning-module/components/ReferenceDrawer'
 import { ResumeBanner } from '@/features/learning-module/components/ResumeBanner'
-import { TaskPanel } from '@/features/learning-module/components/TaskPanel'
 import { baxterCrrtNavBase } from '@/features/learning-module/moduleRoutes'
 import { Link } from '@/i18n/navigation'
 
 import { baxterCrrtMasteryManifest } from '../content/mastery'
 import { getBaxterCrrtDeviceProfile } from '../content/deviceProfiles'
+import { CRRT_ACTUAL_BLOOD_FLOW_LABEL, selectCrrtBloodFlowState } from '../engine/circuitDelivery'
 import type { CrrtLearningSessionState, CrrtReasoningPhase } from '../engine/learningSession'
 import {
   formatCrrtSuppliedLabValue,
   selectCrrtLabEvidence,
   type CrrtSuppliedLabValue,
 } from '../labEvidence'
+import {
+  CrrtCurrentTask,
+  CrrtEvidenceSummary,
+  CrrtHelpDialog,
+  CrrtWorkbenchLayout,
+  type CrrtEvidenceItem,
+} from './CrrtWorkbench'
 import styles from './baxter-crrt.module.css'
-
-/** Keep the native CRRT layout without inferring completed phases from navigation. */
-function CrrtWorkspaceShell({
-  activityId,
-  assumedConceptIds = [],
-  patientContext,
-  viewport,
-  currentTask,
-  ...chrome
-}: ActivityShellProps) {
-  return (
-    <ActivityChrome {...chrome} layout="native-workbench" showProgressStepper={false}>
-      <div className={frameStyles.activityFrameStack}>
-        {activityId && assumedConceptIds.length > 0 ? (
-          <AssumedConceptStrip activityId={activityId} conceptIds={assumedConceptIds} />
-        ) : null}
-        <NativeWorkbenchFrame
-          patientContext={patientContext}
-          viewport={viewport}
-          currentTask={currentTask}
-        />
-      </div>
-    </ActivityChrome>
-  )
-}
 
 const semanticPhaseByCrrtPhase: Readonly<Record<CrrtReasoningPhase, CriticalCareActivityPhase>> = {
   read: 'recognize',
@@ -117,18 +93,20 @@ function formatClinicalValue(value: number | null | undefined, unit: string): st
     : `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} ${unit}`
 }
 
-function formatPressurePattern(
+/** The four measured sites in circuit order, one unit for the row. */
+function formatPressureSites(
   access: number | null | undefined,
   filter: number | null | undefined,
   returnPressure: number | null | undefined,
   effluent: number | null | undefined,
 ): string {
-  return [
-    `A ${formatClinicalValue(access, 'mmHg')}`,
-    `F ${formatClinicalValue(filter, 'mmHg')}`,
-    `R ${formatClinicalValue(returnPressure, 'mmHg')}`,
-    `E ${formatClinicalValue(effluent, 'mmHg')}`,
-  ].join(' · ')
+  const values = [access, filter, returnPressure, effluent]
+  if (values.some((value) => value === null || value === undefined || !Number.isFinite(value))) {
+    return values.map((value) => formatClinicalValue(value, 'mmHg')).join(' · ')
+  }
+  return `${values
+    .map((value) => (value as number).toLocaleString(undefined, { maximumFractionDigits: 1 }))
+    .join(' · ')} mmHg`
 }
 
 function humanizeAlarmCode(code: string): string {
@@ -151,7 +129,8 @@ interface CrrtActivityWorkspaceProps {
   readonly progressLabel: string
   readonly resumed?: boolean
   readonly currentTaskExtras?: ReactNode
-  readonly nextRecommendation?: ReactNode
+  /** Case or return navigation shown above the task and the case (Practice: the Cases control). */
+  readonly navigation?: ReactNode
   readonly onReset: () => void
   readonly onSaveAndExit: () => void
   readonly children: ReactNode
@@ -163,7 +142,7 @@ export function CrrtActivityWorkspace({
   progressLabel,
   resumed = false,
   currentTaskExtras,
-  nextRecommendation,
+  navigation,
   onReset,
   onSaveAndExit,
   children,
@@ -177,6 +156,7 @@ export function CrrtActivityWorkspace({
   const latestTrend = session.simulation.trends.at(-1)
   const pressures = session.simulation.circuit.pressures
   const activeAlarm = session.simulation.alarms.find((alarm) => alarm.active)
+  const bloodFlow = selectCrrtBloodFlowState(session.simulation)
   const labEvidence = selectCrrtLabEvidence(session)
   const suppliedLabValue = (id: CrrtSuppliedLabValue['id']): string => {
     const entry = labEvidence.suppliedBaseline.find((candidate) => candidate.id === id)
@@ -187,30 +167,109 @@ export function CrrtActivityWorkspace({
       ? `crrt:assess:${baxterCrrtMasteryManifest.id}`
       : `crrt:practice:${definition.id}`
   const catalogActivity = criticalCareActivityById.get(activityId)
-  const [helpState, setHelpState] = useState({ activityId, visible: false })
-  const helpVisible = helpState.activityId === activityId && helpState.visible
-  const sourceEntries = definition.sourceBasis.map((source) => ({
-    id: source.id,
-    title: source.sourceTitle,
-    sourceLabel: `${source.documentVersion} · ${source.pageOrSection}`,
-    limitation: String(source.value ?? 'Use only within the authored educational source scope.'),
-  }))
+  const [helpOpen, setHelpOpen] = useState(false)
+  const helpReturnFocus = useRef<HTMLElement | null>(null)
   const sourceTitles = [...new Set(definition.sourceBasis.map((source) => source.sourceTitle))]
-  const evidenceEntries = sourceEntries
+
+  // Every item the old sideways strip carried, except the case title (already the page heading
+  // and the Cases control). Values keep their units and are grouped by whether they were supplied
+  // at case start, are the current setting, or are live model output. Set and actual blood flow
+  // stay two separate readings (CRRT-FELLOW-02), and laboratory values stay the supplied
+  // case-start values with their "not modeled over time" statement (CRRT-FELLOW-01).
+  const evidenceItems: readonly CrrtEvidenceItem[] = [
+    {
+      id: 'patient',
+      label: 'Weight · MAP',
+      value:
+        patient.status === 'configured'
+          ? `${formatClinicalValue(patient.bodyWeightKg, 'kg')} · MAP ${formatClinicalValue(
+              patient.meanArterialPressureMmHg,
+              'mmHg',
+            )}`
+          : 'Patient data unavailable',
+      basis: 'supplied',
+    },
+    {
+      // Supplied case-start values, not the evolving pool. The pool is advanced by delivered
+      // clearance alone, so showing it here would read as a measured laboratory trend.
+      id: 'labs',
+      label: 'Supplied labs at case start',
+      value: `K ${suppliedLabValue('potassium')} · HCO₃ ${suppliedLabValue(
+        'bicarbonate',
+      )} · pH ${suppliedLabValue('pH')} · not modeled over time`,
+      basis: 'supplied',
+    },
+    {
+      id: 'therapy',
+      label: 'Therapy · blood flow set',
+      value:
+        prescription.status === 'configured'
+          ? `${prescription.modality.toUpperCase()} · ${formatClinicalValue(
+              bloodFlow.setMlMin,
+              'mL/min',
+            )}`
+          : 'Not configured',
+      basis: 'setting',
+    },
+    {
+      id: 'prescribed',
+      label: 'Prescribed dose · fluid removal set',
+      value:
+        prescription.status === 'configured'
+          ? `${formatClinicalValue(
+              session.simulation.deliveredTherapy.prescribedEffluentDoseMlKgHour,
+              'mL/kg/h',
+            )} · ${formatClinicalValue(prescription.flows.patientFluidRemovalMlHour, 'mL/h')}`
+          : 'Not configured',
+      basis: 'setting',
+    },
+    {
+      id: 'actual-flow',
+      label: CRRT_ACTUAL_BLOOD_FLOW_LABEL,
+      value:
+        bloodFlow.actualMlMin === null
+          ? 'Not set'
+          : formatClinicalValue(bloodFlow.actualMlMin, 'mL/min'),
+      basis: 'model',
+    },
+    {
+      id: 'delivered',
+      label: 'Delivered dose · whole-patient balance',
+      value: `${formatClinicalValue(
+        latestTrend?.deliveredDoseMlKgHour,
+        'mL/kg/h',
+      )} · ${formatClinicalValue(latestTrend?.cumulativeWholePatientBalanceMl, 'mL')}`,
+      basis: 'model',
+    },
+    {
+      id: 'pressures',
+      label: 'Access · filter · return · effluent pressure',
+      value: formatPressureSites(
+        pressures.accessPressureMmHg,
+        pressures.filterPressureMmHg,
+        pressures.returnPressureMmHg,
+        pressures.effluentPressureMmHg,
+      ),
+      basis: 'model',
+    },
+  ]
 
   function focusRestoredActivity() {
     document.getElementById('crrt-activity-viewport')?.focus({ preventScroll: true })
   }
 
-  function showHelp() {
-    setHelpState({ activityId, visible: true })
+  function openHelp() {
+    // Help is opened from the shared activity header, not from a dialog trigger, so remember the
+    // opener and give focus back to it on close.
+    helpReturnFocus.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null
+    setHelpOpen(true)
   }
 
   return (
-    <CrrtWorkspaceShell
+    <ActivityChrome
       layout="native-workbench"
-      activityId={activityId}
-      assumedConceptIds={catalogActivity?.assumedConceptIds}
+      showProgressStepper={false}
       breadcrumb={
         <>
           <Link href={baxterCrrtNavBase}>CRRT</Link>
@@ -223,166 +282,121 @@ export function CrrtActivityWorkspace({
       mode={mode}
       progressLabel={progressLabel}
       theme="dark"
-      patientContext={
-        <>
-          <PatientContextBar
-            title="Live patient, prescription, and circuit"
-            items={[
-              { label: 'Case', value: definition.title },
-              { label: 'Device', value: deviceProfile.displayName },
-              {
-                label: 'Patient',
-                value:
-                  patient.status === 'configured'
-                    ? `${formatClinicalValue(patient.bodyWeightKg, 'kg')} · MAP ${formatClinicalValue(patient.meanArterialPressureMmHg, 'mmHg')}`
-                    : 'Patient data unavailable',
-              },
-              {
-                label: 'Modality / blood flow',
-                value:
-                  prescription.status === 'configured'
-                    ? `${prescription.modality.toUpperCase()} · ${formatClinicalValue(prescription.flows.bloodFlowMlMin, 'mL/min')}`
-                    : 'Not configured',
-              },
-              {
-                label: 'Effluent / patient removal',
-                value: `${formatClinicalValue(
-                  session.simulation.deliveredTherapy.prescribedEffluentDoseMlKgHour,
-                  'mL/kg/h',
-                )} · PFR ${formatClinicalValue(
-                  prescription.flows.patientFluidRemovalMlHour,
-                  'mL/h',
-                )}`,
-              },
-              {
-                label: 'Delivered / balance',
-                value: `${formatClinicalValue(
-                  latestTrend?.deliveredDoseMlKgHour,
-                  'mL/kg/h',
-                )} · ${formatClinicalValue(latestTrend?.cumulativeWholePatientBalanceMl, 'mL')}`,
-              },
-              {
-                // Supplied case-start values, not the evolving pool. The pool is
-                // advanced by delivered clearance alone, so showing it here would
-                // read as a measured laboratory trend (see labEvidence.ts).
-                label: 'Supplied labs at case start',
-                value: `K ${suppliedLabValue('potassium')} · HCO₃ ${suppliedLabValue(
-                  'bicarbonate',
-                )} · pH ${suppliedLabValue('pH')} · not modeled over time`,
-              },
-              {
-                label: 'Pressure pattern',
-                value: formatPressurePattern(
-                  pressures.accessPressureMmHg,
-                  pressures.filterPressureMmHg,
-                  pressures.returnPressureMmHg,
-                  pressures.effluentPressureMmHg,
-                ),
-              },
-              {
-                label: 'Active alert',
-                value: activeAlarm ? humanizeAlarmCode(activeAlarm.code) : 'None',
-              },
-            ]}
-            immediateGoal={definition.learningObjectives[0]}
-            safetyConstraints={[
-              'Educational simulation only; use current manufacturer instructions and local policy.',
-              'Displayed values and responses are synthetic and are not patient-specific targets.',
-            ]}
-          />
-          {resumed ? (
-            <ResumeBanner
-              state="ready"
-              title="Return to saved case"
-              description={`${definition.title} is open with its saved selection and device profile; prior machine and answer state was not replayed.`}
-              onResume={focusRestoredActivity}
-              resumeActionLabel="Return to case"
-            />
-          ) : null}
-        </>
-      }
-      currentTask={
-        <TaskPanel
-          objective={`${task.objective} ${definition.learningObjectives[0]}`}
-          requiredAction={task.requiredAction}
-          targets={
-            session.reasoningPhase === 'read'
-              ? definition.visibleFindings.slice(0, 4)
-              : definition.learningObjectives
-          }
-          hint={definition.hintLadder[0]?.text}
-          mode="practice"
-          hintVisible={helpVisible}
-          onHintRequested={showHelp}
-        >
-          {helpVisible ? (
-            <p role="note">
-              Open Reference or Evidence below for the existing case context, source scope, and
-              model limits.
-            </p>
-          ) : null}
-          {currentTaskExtras}
-        </TaskPanel>
-      }
-      onHelp={showHelp}
+      onHelp={openHelp}
       onReset={onReset}
       onSaveAndExit={onSaveAndExit}
       bottomContent={progressLabel}
-      secondaryActions={
-        <>
-          <ReferenceDrawer
-            entries={[
-              {
-                id: definition.id,
-                title,
-                summary: definition.patientDescription,
-                meta: sourceTitles.join(' · '),
-              },
-            ]}
-            trigger={<button type="button">Reference</button>}
+    >
+      <div className={styles.workspaceStack}>
+        {catalogActivity && catalogActivity.assumedConceptIds.length > 0 ? (
+          <AssumedConceptStrip
+            activityId={activityId}
+            conceptIds={catalogActivity.assumedConceptIds}
           />
-          <EvidenceDrawer
-            entries={evidenceEntries}
-            trigger={<button type="button">Evidence</button>}
-          />
-          {nextRecommendation}
-        </>
-      }
-      viewport={
-        <div id="crrt-activity-viewport" className={styles.activityViewport} tabIndex={-1}>
-          {children}
-          {session.debriefRevealed ? (
-            <DebriefPanel
-              clinicalModel={definition.debrief.summary}
-              actions={session.timeline.map((entry) => entry.type.replaceAll('-', ' '))}
-              consequences={definition.debrief.causalChain}
-              performanceDomains={[
-                {
-                  label: 'Clinical frame',
-                  result: 'Compare the prediction with the observed patient and circuit response',
-                },
-                {
-                  label: 'Safety review',
-                  result:
-                    session.criticalErrorIds.length === 0
-                      ? 'Review device warnings and prerequisites for each action'
-                      : 'Revisit the safety event and the cue that preceded it',
-                },
-                {
-                  label: 'Reassessment',
-                  result: 'Reconnect prescription, delivered therapy, circuit, and patient',
-                },
-              ]}
-              transfer={<p>{definition.debrief.transferQuestion}</p>}
-              replay={
-                <button type="button" onClick={onReset}>
-                  Replay this case
-                </button>
+        ) : null}
+        <CrrtWorkbenchLayout
+          navigation={navigation}
+          currentTask={
+            <CrrtCurrentTask
+              immediateGoal={definition.learningObjectives[0] ?? task.objective}
+              objective={task.objective}
+              requiredAction={task.requiredAction}
+              targets={
+                session.reasoningPhase === 'read'
+                  ? definition.visibleFindings.slice(0, 4)
+                  : definition.learningObjectives
               }
+              targetsLabel={
+                session.reasoningPhase === 'read' ? 'Findings to review' : 'Learning objectives'
+              }
+              hint={definition.hintLadder[0]?.text}
+              material={{
+                reference: {
+                  id: definition.id,
+                  title,
+                  summary: definition.patientDescription,
+                  meta: sourceTitles.join(' · '),
+                },
+                evidence: definition.sourceBasis.map((source) => ({
+                  id: source.id,
+                  title: source.sourceTitle,
+                  sourceLabel: `${source.documentVersion} · ${source.pageOrSection}`,
+                  limitation: String(
+                    source.value ?? 'Use only within the authored educational source scope.',
+                  ),
+                })),
+              }}
+            >
+              {currentTaskExtras}
+            </CrrtCurrentTask>
+          }
+          evidence={
+            <CrrtEvidenceSummary
+              alert={{
+                active: Boolean(activeAlarm),
+                label: activeAlarm ? humanizeAlarmCode(activeAlarm.code) : 'None',
+              }}
+              items={evidenceItems}
+              deviceLabel={deviceProfile.displayName}
+              safetyConstraints={[
+                'Educational simulation only; use current manufacturer instructions and local policy.',
+                'Displayed values and responses are synthetic and are not patient-specific targets.',
+              ]}
             />
-          ) : null}
-        </div>
-      }
-    />
+          }
+        >
+          <div id="crrt-activity-viewport" className={styles.activityViewport} tabIndex={-1}>
+            {resumed ? (
+              <ResumeBanner
+                state="ready"
+                title="Return to saved case"
+                description={`${definition.title} is open with its saved selection and device profile; prior machine and answer state was not replayed.`}
+                onResume={focusRestoredActivity}
+                resumeActionLabel="Return to case"
+              />
+            ) : null}
+            {children}
+            {session.debriefRevealed ? (
+              <DebriefPanel
+                clinicalModel={definition.debrief.summary}
+                actions={session.timeline.map((entry) => entry.type.replaceAll('-', ' '))}
+                consequences={definition.debrief.causalChain}
+                performanceDomains={[
+                  {
+                    label: 'Clinical frame',
+                    result: 'Compare the prediction with the observed patient and circuit response',
+                  },
+                  {
+                    label: 'Safety review',
+                    result:
+                      session.criticalErrorIds.length === 0
+                        ? 'Review device warnings and prerequisites for each action'
+                        : 'Revisit the safety event and the cue that preceded it',
+                  },
+                  {
+                    label: 'Reassessment',
+                    result: 'Reconnect prescription, delivered therapy, circuit, and patient',
+                  },
+                ]}
+                transfer={<p>{definition.debrief.transferQuestion}</p>}
+                replay={
+                  <button type="button" onClick={onReset}>
+                    Replay this case
+                  </button>
+                }
+              />
+            ) : null}
+          </div>
+        </CrrtWorkbenchLayout>
+        <CrrtHelpDialog
+          open={helpOpen}
+          onOpenChange={setHelpOpen}
+          returnFocusRef={helpReturnFocus}
+          hint={definition.hintLadder[0]?.text}
+          caseTitle={title}
+          includesCaseNavigation={mode === 'practice'}
+        />
+      </div>
+    </ActivityChrome>
   )
 }

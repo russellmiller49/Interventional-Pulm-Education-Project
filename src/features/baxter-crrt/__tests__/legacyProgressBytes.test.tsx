@@ -40,9 +40,7 @@ describe('CRRT self-paced storage stays a read-and-extend record', () => {
 
     render(<BaxterCrrtPractice locale="en" initialCaseId="CRRT-04" />)
     await settle()
-    expect(screen.getByRole('combobox', { name: 'Station-grouped core case' })).toHaveValue(
-      'CRRT-04',
-    )
+    expect(screen.getByRole('combobox', { name: 'Cases' })).toHaveValue('CRRT-04')
 
     expect(window.localStorage.getItem(BAXTER_CRRT_PROGRESS_STORAGE_KEY)).toBe(legacy)
   })

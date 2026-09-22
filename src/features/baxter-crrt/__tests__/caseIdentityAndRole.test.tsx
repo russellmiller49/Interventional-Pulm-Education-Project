@@ -29,8 +29,7 @@ jest.mock('@/i18n/navigation', () => ({
   },
 }))
 
-const casePicker = () =>
-  screen.getByRole('combobox', { name: 'Station-grouped core case' }) as HTMLSelectElement
+const casePicker = () => screen.getByRole('combobox', { name: 'Cases' }) as HTMLSelectElement
 const timeControls = () =>
   document.querySelector('[aria-label="Advance simulated time"]')?.textContent ?? ''
 
@@ -99,17 +98,22 @@ describe('CRRT practice keeps one current case identity', () => {
     })
 
     push.mockClear()
-    const extras = screen.getByText(/Additional cases \(/).closest('details')!
-    const additional = within(extras).getAllByRole('button')[0]
-    fireEvent.click(additional)
+    // The additional cases live in the same visible Cases control (CRRT-FELLOW-03).
+    const extras = casePicker().querySelector('optgroup[label="Additional cases · optional"]')!
+    const additional = (
+      within(extras as HTMLElement).getAllByRole('option')[0] as HTMLOptionElement
+    ).value
+    fireEvent.change(casePicker(), { target: { value: additional } })
     await settle()
     expect(push).toHaveBeenCalledTimes(1)
     const pushedCaseId = push.mock.calls[0][0].query.case as string
-    expect(pushedCaseId).not.toBe('CRRT-05')
+    expect(pushedCaseId).toBe(additional)
     // The picker keeps the optional case selected, so the URL and the rendered
     // case agree even for an additional case.
     expect(casePicker().value).toBe(pushedCaseId)
-    expect(screen.getAllByText(/Optional · /).length).toBeGreaterThan(0)
+    expect(
+      screen.getByText('Additional case 1 of 7 · optional', { selector: 'strong' }),
+    ).toBeInTheDocument()
   })
 
   it('falls back explicitly for an unavailable case ID instead of mixing case data', async () => {

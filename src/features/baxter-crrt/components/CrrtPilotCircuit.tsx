@@ -1,5 +1,6 @@
 'use client'
 
+import { Maximize2 } from 'lucide-react'
 import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 
 import {
@@ -24,7 +25,6 @@ import {
   type CrrtCircuitNodeId,
   type CrrtCircuitOverlayId,
   type CrrtCircuitPathId,
-  type CrrtCircuitPathKind,
   type CrrtPressureSignalId,
 } from '../content/circuitModel'
 import {
@@ -33,6 +33,8 @@ import {
 } from '../engine/pressureModel'
 import type { CrrtBloodFlowState } from '../engine/circuitDelivery'
 import type { CrrtFlowRates } from '../engine/types'
+import { formatCrrtMmHg } from '../pressureArithmetic'
+import { CrrtDialog } from './CrrtDialog'
 import styles from './crrt-pilot-circuit.module.css'
 
 export interface CrrtPilotPressureSignals {
@@ -426,6 +428,16 @@ function NodeGlyph({
   )
 }
 
+type CrrtCircuitZoom = 'fit' | '100' | '150' | '200'
+
+const crrtCircuitZoomOptions: readonly { readonly id: CrrtCircuitZoom; readonly label: string }[] =
+  [
+    { id: 'fit', label: 'Fit to window' },
+    { id: '100', label: '100%' },
+    { id: '150', label: '150%' },
+    { id: '200', label: '200%' },
+  ]
+
 export function CrrtPilotCircuit({
   running,
   setReady,
@@ -444,8 +456,6 @@ export function CrrtPilotCircuit({
   highlightedNodeId = null,
 }: CrrtPilotCircuitProps) {
   const idPrefix = `crrt-pilot-${useId().replaceAll(':', '')}`
-  const titleId = `${idPrefix}-title`
-  const descriptionId = `${idPrefix}-description`
   const summaryId = `${idPrefix}-summary`
   const stateSummaryId = `${idPrefix}-state-summary`
   const viewportRef = useRef<HTMLDivElement>(null)
@@ -524,7 +534,213 @@ export function CrrtPilotCircuit({
     return true
   }
 
-  const arrowMarkerId = (kind: CrrtCircuitPathKind) => `${idPrefix}-arrow-${kind}`
+  const [zoom, setZoom] = useState<CrrtCircuitZoom>('fit')
+  const activeKinds = useMemo(
+    () => new Set([...activePathIds].map((id) => crrtCircuitPath(id).kind)),
+    [activePathIds],
+  )
+
+  function renderLegend(scope: 'active' | 'all') {
+    const legendStyles = [...crrtCircuitPathKindStyleByKind.values()].filter(
+      (style) => scope === 'all' || activeKinds.has(style.kind),
+    )
+    return (
+      <div className={styles.legend} aria-label="Line pattern legend" role="group">
+        {legendStyles.map((style) => (
+          <span key={style.kind} data-kind={style.kind}>
+            <i aria-hidden="true" data-kind={style.kind} />
+            <strong>{style.label}</strong>
+            <small>{style.patternDescription}</small>
+          </span>
+        ))}
+      </div>
+    )
+  }
+
+  /**
+   * A larger copy of the same drawing (F-13), for reading the smallest labels. Same overlay, same
+   * highlights, same connections; only its size changes. The drawing scrolls natively in both
+   * directions and takes a tab stop, so arrow keys move it; Escape closes and focus returns to the
+   * Expand button.
+   */
+  const expandedView = (
+    <CrrtDialog
+      size="wide"
+      title="Canonical CRRT circuit · expanded"
+      description="The same circuit and view, drawn larger. Choose a size; scroll the drawing, or focus it and use the arrow keys. Escape closes."
+      trigger={
+        <button
+          type="button"
+          className={styles.expandButton}
+          data-crrt-circuit-expand
+          // Fitting the whole drawing to a phone makes it smaller, not larger, so a narrow window
+          // opens at the drawing's own size, ready to pan.
+          onClick={() => setZoom(window.innerWidth < 1000 ? '100' : 'fit')}
+        >
+          <Maximize2 aria-hidden="true" /> Expand circuit
+        </button>
+      }
+    >
+      <div className={styles.expandedPanel}>
+        <div className={styles.expandedToolbar} role="group" aria-label="Drawing size">
+          {crrtCircuitZoomOptions.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              aria-pressed={zoom === option.id}
+              onClick={() => setZoom(option.id)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <div
+          className={styles.expandedViewport}
+          data-zoom={zoom}
+          role="group"
+          aria-label="Expanded circuit drawing; scrolls in both directions"
+          tabIndex={0}
+        >
+          {renderSchematic(`${idPrefix}-expanded`)}
+        </div>
+        {renderLegend(focused ? 'active' : 'all')}
+        {focused ? (
+          <p className={styles.legendNote}>
+            Dimmed lines and parts belong to the same circuit but are not active in this view.
+          </p>
+        ) : null}
+        <p className={styles.expandedSummary}>{textEquivalent}</p>
+      </div>
+    </CrrtDialog>
+  )
+
+  /**
+   * One schematic, drawn inline and in the expanded view. Each copy takes its own id prefix so the
+   * two never share title, description or arrow-marker ids.
+   */
+  function renderSchematic(prefix: string) {
+    return (
+      <svg
+        className={styles.circuitSvg}
+        viewBox={CRRT_CIRCUIT_VIEWBOX}
+        role="img"
+        aria-labelledby={`${prefix}-title ${prefix}-description`}
+        data-running={running && !staticTeaching}
+        data-overlay={overlayId}
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <title id={`${prefix}-title`}>Universal CRRT circuit topology</title>
+        <desc id={`${prefix}-description`}>{textEquivalent}</desc>
+        <defs>
+          {[...crrtCircuitPathKindStyleByKind.keys()].map((kind) => (
+            <marker
+              key={kind}
+              id={`${prefix}-arrow-${kind}`}
+              viewBox="0 0 10 10"
+              refX="8"
+              refY="5"
+              markerWidth="7"
+              markerHeight="7"
+              orient="auto-start-reverse"
+            >
+              <path d="M 0 0 L 10 5 L 0 10 z" className={styles.flowArrow} data-kind={kind} />
+            </marker>
+          ))}
+        </defs>
+
+        <rect x="16" y="16" width="1298" height="748" rx="30" className={styles.backdrop} />
+        <text x="44" y="52" className={styles.sectionLabel}>
+          ORIGINAL EDUCATIONAL SCHEMATIC · FIXED ORIENTATION · {overlay.label.toUpperCase()}
+        </text>
+        <text x="1288" y="52" textAnchor="end" className={styles.motionStatus}>
+          {staticTeaching
+            ? 'STATIC TEACHING VIEW'
+            : running
+              ? 'FLOW MOTION: ACTIVE'
+              : 'FLOW MOTION: STOPPED'}
+        </text>
+
+        {/* Every path is drawn in every view. Only its active state changes. */}
+        <g className={styles.pathLayer}>
+          {crrtCircuitPaths.map((path) => {
+            const active = activePathIds.has(path.id)
+            const style = crrtCircuitPathKindStyleByKind.get(path.kind)
+            return (
+              <g key={path.id} data-path={path.id} data-active={active} data-kind={path.kind}>
+                <path d={path.d} className={styles.tube} data-kind={path.kind} />
+                <path
+                  d={path.d}
+                  className={styles.flowTrace}
+                  data-kind={path.kind}
+                  style={
+                    style && style.dashPattern !== 'none'
+                      ? { strokeDasharray: style.dashPattern }
+                      : undefined
+                  }
+                  markerEnd={active ? `url(#${prefix}-arrow-${path.kind})` : undefined}
+                />
+              </g>
+            )
+          })}
+        </g>
+
+        <g className={styles.nodeLayer}>
+          {nodeDrawOrder.map((nodeId) => {
+            if (samplingDomainNodeIds.includes(nodeId) && !overlay.showsSamplingDomains) {
+              return null
+            }
+            return (
+              <NodeGlyph
+                key={nodeId}
+                id={nodeId}
+                active={nodeIsActive(nodeId)}
+                highlighted={highlightedNodeIds.has(nodeId) || highlightedNodeId === nodeId}
+              />
+            )
+          })}
+        </g>
+
+        {overlay.showsPressureProfile ? (
+          <g className={styles.pressureLayer}>
+            {/* Calculated values get a stated relationship, not a site marker:
+                    there is no transducer on the circuit to point at. */}
+            <text x="495" y="383" textAnchor="middle" className={styles.derivationCaption}>
+              CALCULATED FROM MONITORED SITES · mmHg
+            </text>
+            {/* Chips sit between the return-lumen label (ends ≈ x 330) and the filter (x 650). */}
+            <rect
+              x="335"
+              y="400"
+              width="305"
+              height="30"
+              rx="8"
+              className={styles.derivationChip}
+            />
+            <text x="487" y="420" textAnchor="middle" className={styles.derivationLabel}>
+              {/* Each correction is its own bracketed, signed term (F-14), so "− EFFLUENT −18"
+                  can no longer read as an effluent of −18. The values are unchanged. */}
+              TMP = (FILTER + RETURN) ÷ 2 − EFFLUENT + (
+              {formatCrrtMmHg(PRISMAX_TMP_HYDROSTATIC_OFFSET_MMHG)})
+            </text>
+            <rect
+              x="335"
+              y="444"
+              width="305"
+              height="30"
+              rx="8"
+              className={styles.derivationChip}
+            />
+            <text x="487" y="464" textAnchor="middle" className={styles.derivationLabel}>
+              FILTER DROP = FILTER − RETURN + (
+              {formatCrrtMmHg(PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG)} · IN REVIEW)
+            </text>
+            <path d="M 628 400 V 268" className={styles.derivationBracket} />
+            <path d="M 440 474 V 516" className={styles.derivationBracket} />
+          </g>
+        ) : null}
+      </svg>
+    )
+  }
 
   return (
     <section
@@ -550,6 +766,7 @@ export function CrrtPilotCircuit({
               <span aria-hidden="true" />
               <strong>{running ? 'Circuit running' : 'Circuit stopped'}</strong>
             </div>
+            {expandedView}
           </header>
 
           <div className={styles.overlayBar}>
@@ -630,136 +847,27 @@ export function CrrtPilotCircuit({
         tabIndex={0}
         onKeyDown={panDiagram}
       >
-        <svg
-          className={styles.circuitSvg}
-          viewBox={CRRT_CIRCUIT_VIEWBOX}
-          role="img"
-          aria-labelledby={`${titleId} ${descriptionId}`}
-          data-running={running && !staticTeaching}
-          data-overlay={overlayId}
-          preserveAspectRatio="xMidYMid meet"
-        >
-          <title id={titleId}>Universal CRRT circuit topology</title>
-          <desc id={descriptionId}>{textEquivalent}</desc>
-          <defs>
-            {[...crrtCircuitPathKindStyleByKind.keys()].map((kind) => (
-              <marker
-                key={kind}
-                id={arrowMarkerId(kind)}
-                viewBox="0 0 10 10"
-                refX="8"
-                refY="5"
-                markerWidth="7"
-                markerHeight="7"
-                orient="auto-start-reverse"
-              >
-                <path d="M 0 0 L 10 5 L 0 10 z" className={styles.flowArrow} data-kind={kind} />
-              </marker>
-            ))}
-          </defs>
-
-          <rect x="16" y="16" width="1298" height="748" rx="30" className={styles.backdrop} />
-          <text x="44" y="52" className={styles.sectionLabel}>
-            ORIGINAL EDUCATIONAL SCHEMATIC · FIXED ORIENTATION · {overlay.label.toUpperCase()}
-          </text>
-          <text x="1288" y="52" textAnchor="end" className={styles.motionStatus}>
-            {staticTeaching
-              ? 'STATIC TEACHING VIEW'
-              : running
-                ? 'FLOW MOTION: ACTIVE'
-                : 'FLOW MOTION: STOPPED'}
-          </text>
-
-          {/* Every path is drawn in every view. Only its active state changes. */}
-          <g className={styles.pathLayer}>
-            {crrtCircuitPaths.map((path) => {
-              const active = activePathIds.has(path.id)
-              const style = crrtCircuitPathKindStyleByKind.get(path.kind)
-              return (
-                <g key={path.id} data-path={path.id} data-active={active} data-kind={path.kind}>
-                  <path d={path.d} className={styles.tube} data-kind={path.kind} />
-                  <path
-                    d={path.d}
-                    className={styles.flowTrace}
-                    data-kind={path.kind}
-                    style={
-                      style && style.dashPattern !== 'none'
-                        ? { strokeDasharray: style.dashPattern }
-                        : undefined
-                    }
-                    markerEnd={active ? `url(#${arrowMarkerId(path.kind)})` : undefined}
-                  />
-                </g>
-              )
-            })}
-          </g>
-
-          <g className={styles.nodeLayer}>
-            {nodeDrawOrder.map((nodeId) => {
-              if (samplingDomainNodeIds.includes(nodeId) && !overlay.showsSamplingDomains) {
-                return null
-              }
-              return (
-                <NodeGlyph
-                  key={nodeId}
-                  id={nodeId}
-                  active={nodeIsActive(nodeId)}
-                  highlighted={highlightedNodeIds.has(nodeId) || highlightedNodeId === nodeId}
-                />
-              )
-            })}
-          </g>
-
-          {overlay.showsPressureProfile ? (
-            <g className={styles.pressureLayer}>
-              {/* Calculated values get a stated relationship, not a site marker:
-                  there is no transducer on the circuit to point at. */}
-              <text x="495" y="383" textAnchor="middle" className={styles.derivationCaption}>
-                CALCULATED FROM MONITORED SITES
-              </text>
-              <rect
-                x="350"
-                y="400"
-                width="290"
-                height="30"
-                rx="8"
-                className={styles.derivationChip}
-              />
-              <text x="495" y="420" textAnchor="middle" className={styles.derivationLabel}>
-                TMP = (FILTER + RETURN)/2 − EFFLUENT {PRISMAX_TMP_HYDROSTATIC_OFFSET_MMHG} mmHg
-              </text>
-              <rect
-                x="350"
-                y="444"
-                width="290"
-                height="30"
-                rx="8"
-                className={styles.derivationChip}
-              />
-              <text x="495" y="464" textAnchor="middle" className={styles.derivationLabel}>
-                FILTER DROP = FILTER − RETURN {PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG} mmHg
-              </text>
-              <path d="M 628 400 V 268" className={styles.derivationBracket} />
-              <path d="M 440 474 V 516" className={styles.derivationBracket} />
-            </g>
-          ) : null}
-        </svg>
+        {renderSchematic(idPrefix)}
       </div>
       <p className={styles.panHint}>
         On a narrow screen, swipe the schematic or focus it and use the left and right arrow keys.
+        Expand circuit draws it larger.
       </p>
+      {focused ? (
+        <>
+          {/* Below the drawing, so the heading row adds no height between a lesson's controls
+              and the circuit they drive. */}
+          <div className={styles.focusedTools}>{expandedView}</div>
+          {renderLegend('active')}
+          <p className={styles.legendNote}>
+            Dimmed lines and parts belong to the same circuit but are not active in this view.
+          </p>
+        </>
+      ) : null}
 
       {!focused ? (
         <>
-          <div className={styles.legend} aria-label="Line pattern legend">
-            {[...crrtCircuitPathKindStyleByKind.values()].map((style) => (
-              <span key={style.kind} data-kind={style.kind}>
-                <i aria-hidden="true" data-kind={style.kind} />
-                <strong>{style.label}</strong>
-                <small>{style.patternDescription}</small>
-              </span>
-            ))}
-          </div>
+          {renderLegend('all')}
 
           <div className={styles.dataGrid}>
             <section

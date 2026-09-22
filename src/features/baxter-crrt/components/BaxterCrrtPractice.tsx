@@ -1,6 +1,6 @@
 'use client'
 
-import { BookOpenCheck, ChevronRight, ClipboardCheck, ShieldAlert } from 'lucide-react'
+import { ClipboardCheck, ShieldAlert } from 'lucide-react'
 import { useEffect, useReducer, useState } from 'react'
 
 import { baxterCrrtNavBase } from '@/features/learning-module/moduleRoutes'
@@ -10,7 +10,6 @@ import { getBaxterCrrtCase } from '../content/completeCases'
 import {
   baxterCrrtAdditionalCaseIds,
   baxterCrrtCoreCaseIds,
-  baxterCrrtCurriculum,
   baxterCrrtPracticeCaseIds,
   getBaxterCrrtCaseCatalogEntry,
 } from '../content/curriculum'
@@ -20,6 +19,7 @@ import { readCrrtSelfPacedProgress, recordCrrtVisit } from '../selfPacedProgress
 import type { CrrtRoleLens } from '../engine/types'
 import { BaxterCrrtModuleFrame } from './BaxterCrrtModuleFrame'
 import { CrrtActivityWorkspace } from './CrrtActivityWorkspace'
+import { CrrtCaseNavigator } from './CrrtCaseNavigator'
 import { CrrtCasePlayer } from './CrrtCasePlayer'
 import { CrrtRapidDrillReview } from './CrrtRapidDrillReview'
 import styles from './baxter-crrt.module.css'
@@ -53,6 +53,9 @@ export function BaxterCrrtPractice({
   const [roleLens, setRoleLens] = useState<CrrtRoleLens>('integrated')
   const [progress, setProgress] = useState(() => readCrrtSelfPacedProgress(null))
   const [hydrated, setHydrated] = useState(false)
+  // The case whose earlier visit this page load found in local history. "Return to saved case"
+  // is shown only for a case the learner had really opened before, not for every `?case=` link.
+  const [returningCaseId, setReturningCaseId] = useState<CrrtCaseId | null>(null)
   const [session, dispatch] = useReducer(
     crrtLearningSessionReducer,
     {
@@ -85,6 +88,8 @@ export function BaxterCrrtPractice({
   // update cannot record a visit for a case the learner never saw.
   useEffect(() => {
     const hydrationTimer = window.setTimeout(() => {
+      const before = readCrrtSelfPacedProgress()
+      setReturningCaseId(before.visitedCaseIds.includes(selectedCaseId) ? selectedCaseId : null)
       recordCrrtVisit({ section: 'practice', id: selectedCaseId })
       const stored = readCrrtSelfPacedProgress()
       setProgress(stored)
@@ -139,82 +144,37 @@ export function BaxterCrrtPractice({
         session={session}
         mode="practice"
         progressLabel={`Practice case · ${selectedCatalogEntry.title} · personal history stays local`}
-        resumed={validPracticeCaseId(initialCaseId)}
+        resumed={returningCaseId === selectedCaseId}
         onReset={() => dispatch({ type: 'RESET', attempt: session.attempt + 1 })}
         onSaveAndExit={() => {
           router.push(baxterCrrtNavBase)
         }}
-        currentTaskExtras={
-          <div className={styles.workspaceCasePicker} data-hydrated={hydrated}>
-            {requestedCaseUnavailable ? (
-              <p role="status" aria-label="Requested practice case unavailable">
-                That practice case link is not available, so {selectedCatalogEntry.title} is open
-                instead. Choose a case below to change it.
-              </p>
-            ) : null}
-            <label>
-              <span>Practice case</span>
-              <select
-                aria-label="Station-grouped core case"
-                value={selectedCaseId}
-                onChange={(event) => chooseCase(event.target.value as CrrtCaseId)}
-              >
-                {selectedIsAdditional ? (
-                  <option value={selectedCaseId}>Optional · {selectedCatalogEntry.title}</option>
-                ) : null}
-                {baxterCrrtCurriculum.map((unit) => (
-                  <optgroup key={unit.id} label={`${unit.station}. ${unit.title}`}>
-                    {unit.coreCaseIds.map((caseId) => {
-                      const entry = getBaxterCrrtCaseCatalogEntry(caseId)
-                      const complete = progress.visitedCaseIds.includes(caseId)
-                      return (
-                        <option key={caseId} value={caseId}>
-                          {complete ? 'Visited · ' : ''}
-                          {entry.title}
-                        </option>
-                      )
-                    })}
-                  </optgroup>
-                ))}
-              </select>
-            </label>
-            <details className={styles.additionalCases}>
-              <summary>
-                <BookOpenCheck aria-hidden="true" /> Additional cases (
-                {baxterCrrtAdditionalCaseIds.length})
-              </summary>
-              <div>
-                {baxterCrrtCurriculum.flatMap((unit) =>
-                  unit.additionalCaseIds.map((caseId) => {
-                    const entry = getBaxterCrrtCaseCatalogEntry(caseId)
-                    return (
-                      <button key={caseId} type="button" onClick={() => chooseCase(caseId)}>
-                        <span>
-                          <strong>{entry.title}</strong>
-                          <small>
-                            Station {unit.station} · {entry.focus}
-                          </small>
-                        </span>
-                        <ChevronRight aria-hidden="true" />
-                      </button>
-                    )
-                  }),
-                )}
-              </div>
-            </details>
-          </div>
-        }
-        nextRecommendation={
-          nextRecommendedCase ? (
-            <Link
-              href={{
-                pathname: `${baxterCrrtNavBase}/practice`,
-                query: { case: nextRecommendedCase },
-              }}
-            >
-              Next recommended · {getBaxterCrrtCaseCatalogEntry(nextRecommendedCase).title}
-            </Link>
-          ) : null
+        navigation={
+          <CrrtCaseNavigator
+            caseId={selectedCaseId}
+            visitedCaseIds={hydrated ? progress.visitedCaseIds : []}
+            onChoose={chooseCase}
+            notice={
+              requestedCaseUnavailable ? (
+                <p role="status" aria-label="Requested practice case unavailable">
+                  That practice case link is not available, so {selectedCatalogEntry.title} is open
+                  instead. Choose a case below to change it.
+                </p>
+              ) : null
+            }
+            recommendation={
+              nextRecommendedCase ? (
+                <Link
+                  href={{
+                    pathname: `${baxterCrrtNavBase}/practice`,
+                    query: { case: nextRecommendedCase },
+                  }}
+                >
+                  Next recommended · {getBaxterCrrtCaseCatalogEntry(nextRecommendedCase).title}
+                </Link>
+              ) : null
+            }
+          />
         }
       >
         <section className={styles.casePlayerSection} aria-labelledby="practice-case-heading">

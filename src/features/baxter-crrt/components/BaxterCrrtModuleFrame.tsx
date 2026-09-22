@@ -30,7 +30,9 @@ export function BaxterCrrtModuleFrame({
       <main
         className={styles.moduleShell}
         data-focused-lesson={focusedLesson || undefined}
-        data-learning-scroll-owner={activityMode && !focusedLesson ? 'workspace' : 'document'}
+        // Every CRRT surface scrolls the document. Practice and Challenge used to scroll an
+        // inner workspace box; see the activity-mode rules in baxter-crrt.module.css.
+        data-learning-scroll-owner="document"
         data-release-stage={baxterCrrtReleaseStage}
         data-publication-status={baxterCrrtPublicationStatus}
         data-analytics="allowlisted"
