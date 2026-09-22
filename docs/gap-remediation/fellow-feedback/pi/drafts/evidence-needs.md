@@ -3,6 +3,8 @@
 > **AI-authored draft — not clinically reviewed.** Prepared 2026-09-22 by Claude (Opus 5.5) for
 > owner review. Documentation only: no runtime file, question id, case id, progress record or
 > clinical-review status is changed. The walkthrough is AI-persona feedback, not a learner study.
+> **Owner decisions of 2026-09-22 resolve the seven C items** ([§3.1](#31-owner-resolution-of-the-c-items-2026-09-22)).
+> The classifications below are kept as the original analysis.
 
 Base `origin/main` **`745146f6`** · branch `claude/pi04` · feedback items **PR1, IC3** (primary), with
 **1.2, 3.1, 3.5, 6.6, PR5** where an item touches them. Evidence tags (**S M I T U O**) are defined
@@ -82,6 +84,24 @@ keeps both.
 
 Across the 43 decision items (practice, integrated and section checks): **11 A, 27 B, 5 C.**
 
+### 3.1 Owner resolution of the C items (2026-09-22)
+
+Resolved by OD4-02 and OD4-09 ([owner-decisions.md](owner-decisions.md#recorded-owner-decisions-2026-09-22)).
+The analysis classes in this map are left as written. This table records what was decided about
+them.
+
+| Item                                                                       | Analysis | Resolution                                                                                                                                                                                        | Condition or deferral                                                        |
+| -------------------------------------------------------------------------- | :------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [PC-01](#pc-01--signal-practice-1) `signal-practice-1`                     |    C     | **B**: stays a text case (OD4-02)                                                                                                                                                                 | Whether practice 1–3 keep the shared cartoon: not addressed, still open      |
+| [PC-14](#pc-14--changing-anatomy-practice-1) `changing-anatomy-practice-1` |    C     | **B**: stays a text case (OD4-02)                                                                                                                                                                 | Becomes image-based only once authentic imagery exists (Tier 3 held, OD4-03) |
+| [INT-5](#int-5--case-5) `case-5`                                           |    C     | **A**: image-based, from the existing multiplanar model ([QS-8](question-revision-samples.md#qs-8--integrated-case-5-read-the-sampling-window-from-the-planes))                                   | Model safeguards apply (OD4-04)                                              |
+| [CHK-S6](#chk-s6--signalsignal-interpretation-v2) Section 6 check          |    C     | **B** for the check (QS-3 text variant). Visual recognition is taught in Section 6's reading step with labelled simulated CT-derived examples (OD4-06).                                           | Image variant of the check deferred until honest media exist                 |
+| [CHK-S16](#chk-s16--changing-anatomychange-1) Section 16 check             |    C     | **B** for the check (QS-4 text form). Recognition is taught in Section 16's reading step, with the D5 truncation model now (OD4-06).                                                              | Image variant deferred; authentic motion and opacity media deferred          |
+| `fixed-suite:room`, `mobile-suite:commission` (reading steps)              |    C     | **B**, as a consequence of OD4-09 _(inferred, not separately stated)_: the fixed/mobile difference is taught by the approved text table, and the illustrative field-size difference is equalised. | A visual size difference only if a sourced reason is found                   |
+
+**Counts after resolution:** decision items **12 A, 31 B, 0 C** (practice 5 A / 11 B; integrated
+1 A / 7 B; section checks 6 A / 13 B). Reading steps **28 A, 14 B, 0 C**.
+
 What that means for PR1 and IC3:
 
 - **Five practice cases genuinely need an image, and none has one.** They are cases 8, 9, 10, 12
@@ -158,7 +178,7 @@ capture or a calibrated scatter model…".
 | Rights / provenance     | Cartoon: repository-authored, in Git. Realistic version: none identified.                                                                                                                                                                                                                                                                                                                                                                             |
 | Asset status            | existing and eligible (as cartoon); realistic pair **absent**                                                                                                                                                                                                                                                                                                                                                                                         |
 | Missing work            | Brief D §D1–D2 option chosen. If A: author the matched pair. If B: keep the cartoon or drop it.                                                                                                                                                                                                                                                                                                                                                       |
-| Owner decision          | OD4-02 (objective), OD4-06 (noise/scatter media)                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Owner decision          | OD4-02 (objective), OD4-06 (noise/scatter media). **Resolved 2026-09-22: stays text (B)**; cartoon question still open.                                                                                                                                                                                                                                                                                                                               |
 
 ### PC-02 · `signal-practice-2`
 
@@ -402,7 +422,7 @@ capture or a calibrated scatter model…".
 | Rights / provenance     | None identified                                                                                                                                                                                                                                                                                                     |
 | Asset status            | **absent**                                                                                                                                                                                                                                                                                                          |
 | Missing work            | Only if the owner chooses A: authentic paired de-identified CBCT.                                                                                                                                                                                                                                                   |
-| Owner decision          | OD4-02, OD4-03. Carried: P03-DEFS (stored contour).                                                                                                                                                                                                                                                                 |
+| Owner decision          | OD4-02, OD4-03. Carried: P03-DEFS (stored contour). **Resolved 2026-09-22: stays text (B)** until authentic imagery exists.                                                                                                                                                                                         |
 
 ### PC-15 · `staff-protection-practice-1`
 
@@ -541,7 +561,7 @@ teaching emphasis only [S: PI-FELLOW-03 handoff, IC4]. **None renders an image**
 | Rights / provenance     | Repository geometry; CT context (O-CT)                                                                                                                                                                                                                                                                                                                          |
 | Asset status            | **model/simulator only**, existing and eligible                                                                                                                                                                                                                                                                                                                 |
 | Missing work            | Author a fixed geometry for the case. Draft in [QS-8](question-revision-samples.md#qs-8--integrated-case-5-read-the-sampling-window-from-the-planes).                                                                                                                                                                                                           |
-| Owner decision          | OD4-02, OD4-05                                                                                                                                                                                                                                                                                                                                                  |
+| Owner decision          | OD4-02, OD4-05. **Resolved 2026-09-22: image-based (A)** via QS-8.                                                                                                                                                                                                                                                                                              |
 
 ### INT-6 · `case-6`
 
@@ -711,7 +731,7 @@ the model's own convention. They are **not** LAO/RAO or cranial/caudal labels (P
 | Rights                  | Repository SVG                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | Asset status            | existing (cartoon); realistic **absent**                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Missing work            | Distractors: [QS-3](question-revision-samples.md#qs-3--section-6-check-pair-each-cause-with-its-real-fix). Media: brief D.                                                                                                                                                                                                                                                                                                                           |
-| Owner decision          | OD4-02, OD4-06                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Owner decision          | OD4-02, OD4-06. **Resolved 2026-09-22:** check stays text-answerable (QS-3 text variant); recognition taught in the reading step with simulated examples.                                                                                                                                                                                                                                                                                            |
 
 ### CHK-S7 · `field:field-interpretation-v2`
 
@@ -837,7 +857,7 @@ the model's own convention. They are **not** LAO/RAO or cranial/caudal labels (P
 | Existing asset          | None for motion or opacity; truncation model buildable (brief D)                                                                                                                                                                                                                                                  |
 | Asset status            | **absent**                                                                                                                                                                                                                                                                                                        |
 | Missing work            | Item: [QS-4](question-revision-samples.md#qs-4--section-16-check-ask-for-the-cause-not-only-the-response). Media: brief D. If the check's question changes, its fixed-example evidence declaration (`changing-anatomy:example:0`) must be revisited, per the PI-01 rule.                                          |
-| Owner decision          | OD4-02, OD4-06                                                                                                                                                                                                                                                                                                    |
+| Owner decision          | OD4-02, OD4-06. **Resolved 2026-09-22:** check stays text-answerable (QS-4 text form); truncation model now, authentic motion and opacity deferred.                                                                                                                                                               |
 
 ### CHK-S17 · `staff-protection:safety-1`
 

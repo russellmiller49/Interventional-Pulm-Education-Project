@@ -3,6 +3,12 @@
 > **AI-authored draft — not clinically reviewed.** Prepared 2026-09-22 by Claude (Opus 5.5) for
 > Russell Miller's review. Documentation only. Nothing in this directory changes the running
 > module, a question or case identity, stored progress, a clinical-review status or a shared index.
+>
+> **Owner decisions recorded 2026-09-22.** Russell decided OD4-01 … OD4-12, including explicit
+> deferrals (Tier 3 patient media held; QS-2 held; LAO/RAO mapping, lobe naming and authentic
+> motion/opacity/banding examples deferred; teaching-CT rights basis to be resolved before release).
+> See [owner-decisions.md](owner-decisions.md#recorded-owner-decisions-2026-09-22). These are scope
+> and editorial decisions, not clinical review. The six Prompt 03 holds remain open.
 
 The walkthrough these drafts answer is **AI-persona feedback** (a first-year-fellow persona), not a
 learner study. Its educational comments are treated as design hypotheses. No learner validation,
@@ -28,7 +34,8 @@ faculty approval or clinical approval is claimed anywhere in this packet.
 | [media-and-reference-briefs.md](media-and-reference-briefs.md) | Five media/reference specifications (3.1, 5.2, 5.5, 3.5 + 6.6, PR5)                                                                                    |
 | [owner-decisions.md](owner-decisions.md)                       | The decisions Russell needs to make before implementation, plus the Prompt 03 holds these drafts depend on                                             |
 
-Read `owner-decisions.md` first if time is short; every decision links back to its evidence.
+Read `owner-decisions.md` first if time is short: its first section records what was decided and
+deferred, and every decision links back to its evidence.
 
 ## Evidence tags
 

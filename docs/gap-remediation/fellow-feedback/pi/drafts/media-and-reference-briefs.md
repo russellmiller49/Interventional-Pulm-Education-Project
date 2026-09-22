@@ -4,6 +4,8 @@
 > owner review. These are **specifications and draft layouts**, not finished media. No image was
 > generated, copied or committed. Nothing here is an institutional, anesthesia, credentialing or
 > radiation-protection protocol.
+> **Owner decisions OD4-03, 06, 08, 09, 10 and 12 were recorded on 2026-09-22**; each brief states
+> its decision ([owner-decisions.md](owner-decisions.md#recorded-owner-decisions-2026-09-22)).
 
 Base `origin/main` **`745146f6`** · feedback items **3.1, 5.2, 5.5, 3.5, 6.6, PR5**. Evidence tags
 (**S M I T U O**) are defined in the [README](README.md#evidence-tags).
@@ -14,23 +16,31 @@ Base `origin/main` **`745146f6`** · feedback items **3.1, 5.2, 5.5, 3.5, 6.6, P
    `04`; PI-01 invariant].
 2. No fluoroscopy, CT, CBCT, DTS, ultrasound or bronchoscopy image is generated to look acquired.
    Model output is labelled model output. A simulated effect is labelled simulated.
-3. Authentic clinical images, if the owner chooses to use any, must be de-identified, have a
-   recorded rights or consent basis, and stay **outside Git** until cleared. After clearance they get
-   a provenance manifest like `public/peripheral-imaging/manifest.json` [I].
+3. Media tiers (**OD4-03, decided 2026-09-22**): **Tier 1**, clearly labelled model imagery, now.
+   **Tier 2**, phantom acquisitions for noise and scatter, permitted as a future route. **Tier 3**,
+   patient-derived media, **held** until provenance, de-identification and rights are explicitly
+   documented. Any image later cleared stays **outside Git** until then, and ships with a provenance
+   manifest like `public/peripheral-imaging/manifest.json` [I]. The existing teaching CT's rights
+   basis (O-CT) must be resolved before release.
 4. Prompt 03 terms stand: the model's **signed** C-arm obliquity and beam tilt with no LAO/RAO
    mapping, "modeled lesion", "stored contour" [S: P03 handoff and owner packet].
 
-| Brief                                                                        | Need                                    | Honest source today                             | Blocking decision               |
-| ---------------------------------------------------------------------------- | --------------------------------------- | ----------------------------------------------- | ------------------------------- |
-| [A](#a--ct-planning-to-two-axis-projection-worked-example-31)                | CT → two-axis projection worked example | existing CT slices, DRR and target-ray readouts | OD4-08; P03-ANGLE (labels only) |
-| [B](#b--fixed-and-mobile-cbct-workflow-comparison-52)                        | Fixed / mobile workflow comparison      | module text; four abstracts                     | OD4-09                          |
-| [C](#c--team-readiness-reference-55)                                         | Team-readiness reference                | module text                                     | OD4-10                          |
-| [D](#d--noise-contrast-superimposition-and-motion-truncation-examples-35-66) | Artifact and conspicuity examples       | model for 3 of 7; authentic for the rest        | OD4-03, OD4-06                  |
-| [E](#e--floor-plan-for-the-lateral-projection-case-pr5)                      | Floor plan for practice case 15         | new schematic                                   | OD4-12                          |
+| Brief                                                                        | Need                                    | Honest source today                             | Owner decision (2026-09-22)                                               |
+| ---------------------------------------------------------------------------- | --------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------- |
+| [A](#a--ct-planning-to-two-axis-projection-worked-example-31)                | CT → two-axis projection worked example | existing CT slices, DRR and target-ray readouts | OD4-08: option A approved; LAO/RAO mapping deferred (P03-ANGLE)           |
+| [B](#b--fixed-and-mobile-cbct-workflow-comparison-52)                        | Fixed / mobile workflow comparison      | module text; four abstracts                     | OD4-09: approved; illustrative field sizes equalised                      |
+| [C](#c--team-readiness-reference-55)                                         | Team-readiness reference                | module text                                     | OD4-10: approved without the two suggestion rows                          |
+| [D](#d--noise-contrast-superimposition-and-motion-truncation-examples-35-66) | Artifact and conspicuity examples       | model for 3 of 7; authentic for the rest        | OD4-06: simulated CT-derived now; authentic deferred (OD4-03 Tier 3 held) |
+| [E](#e--floor-plan-for-the-lateral-projection-case-pr5)                      | Floor plan for practice case 15         | new schematic                                   | OD4-12: approved; position 2 confirmed                                    |
 
 ---
 
 ## A · CT planning to two-axis projection worked example (3.1)
+
+**Owner decision (OD4-08, 2026-09-22): option A approved.** Build now with the model's signed
+obliquity and tilt language. LAO/RAO and cranial/caudal sign mapping is deferred until the
+P03-ANGLE hold is resolved. The teaching nodule is described as "posterior left lung" with no lobe
+(OD4-11). The verification items below still apply before building.
 
 **Feedback.** "This is the most practical teaching in the module … It is one 100-word paragraph with
 no figure. I wanted a worked example: an axial CT slice with the chosen beam direction drawn on it,
@@ -126,8 +136,9 @@ field and a "fixed" mount, and the mobile variant a 300-mm panel and a "cart" mo
 field-of-view cylinder is therefore drawn smaller. The code calls these "Authored gantry
 illustrations, not manufacturer dimensions or supported trajectories" [I]. The scout legend prints
 "Mobile cart" or "Fixed support" [I]. **The comparison must not present the smaller mobile cylinder
-as a fixed-versus-mobile fact.** Either the table says the model's field sizes are illustrative, or
-the figure uses one field size for both [O].
+as a fixed-versus-mobile fact.** **Owner decision (OD4-09, 2026-09-22):** the table is approved,
+and any purely illustrative field-size difference is **equalised** unless a sourced reason exists to
+teach it. The authored panel/FOV difference is too easy to over-read as a device fact.
 
 **Do not imply:** vendor equivalence or superiority; that fixed rooms always have overlays or mobile
 scanners never do; lower dose or poorer images for either label; any field-of-view or arc number. No
@@ -151,21 +162,24 @@ pre-procedure checklist. Your institution's policy governs."_
 **Draft layout.** One page, four role rows, with a copy button like Section 18's note template [I:
 `DOSE_NOTE_TEMPLATE_LINES` pattern].
 
-| Role                                            | Before a CBCT spin, confirm…                                                                            | Basis                                                                                 |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Bronchoscopist                                  | The question the spin must answer (localization, or tool-in-lesion)                                     | [M: Section 1 "State the question before acquiring"]                                  |
-|                                                 | "The lesion and the actual biopsy tool configuration"                                                   | [M: S12 "Make readiness a team check"]                                                |
-| Technologist                                    | "Protocol, coverage and clearance for the full spin"                                                    | [M: S12]                                                                              |
-|                                                 | The lesion is centred on both scouts                                                                    | [M: S12 "Center the lesion in three dimensions"; lab goal]                            |
-|                                                 | A non-irradiating trial rotation, "when supported"                                                      | [M: S12]                                                                              |
-| Anesthesia                                      | "A stable breath hold or ventilation pause, monitoring and stopping criteria"                           | [M: S12]                                                                              |
-|                                                 | The intended state, and who announces readiness for acquisition                                         | [M: S16 "Plan the breath hold with anesthesia"]                                       |
-|                                                 | That normal oxygen saturation is not proof of adequate CO₂ elimination                                  | [M: S16]                                                                              |
-| Whole team                                      | "Effective shielding and maintained patient access"                                                     | [M: S12]                                                                              |
-|                                                 | Staff not needed at the bedside are behind an effective barrier while monitoring and access continue    | [M: S17]                                                                              |
-|                                                 | Arms, table, robot, bronchoscope, lines and anesthesia equipment are clear of the spin                  | [M: S12 "Account for…"]                                                               |
-| _Organizational suggestion, not course content_ | One person reads the list aloud and each role answers; the spin starts only when all four have answered | **[T]** owner may drop                                                                |
-| _Organizational suggestion, not course content_ | Afterwards, record why the spin was needed if it was a repeat                                           | **[T]**, echoing the Section 18 template's "Reason for each repeated acquisition" [I] |
+| Role           | Before a CBCT spin, confirm…                                                                         | Basis                                                      |
+| -------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Bronchoscopist | The question the spin must answer (localization, or tool-in-lesion)                                  | [M: Section 1 "State the question before acquiring"]       |
+|                | "The lesion and the actual biopsy tool configuration"                                                | [M: S12 "Make readiness a team check"]                     |
+| Technologist   | "Protocol, coverage and clearance for the full spin"                                                 | [M: S12]                                                   |
+|                | The lesion is centred on both scouts                                                                 | [M: S12 "Center the lesion in three dimensions"; lab goal] |
+|                | A non-irradiating trial rotation, "when supported"                                                   | [M: S12]                                                   |
+| Anesthesia     | "A stable breath hold or ventilation pause, monitoring and stopping criteria"                        | [M: S12]                                                   |
+|                | The intended state, and who announces readiness for acquisition                                      | [M: S16 "Plan the breath hold with anesthesia"]            |
+|                | That normal oxygen saturation is not proof of adequate CO₂ elimination                               | [M: S16]                                                   |
+| Whole team     | "Effective shielding and maintained patient access"                                                  | [M: S12]                                                   |
+|                | Staff not needed at the bedside are behind an effective barrier while monitoring and access continue | [M: S17]                                                   |
+|                | Arms, table, robot, bronchoscope, lines and anesthesia equipment are clear of the spin               | [M: S12 "Account for…"]                                    |
+
+**Owner decision (OD4-10, 2026-09-22):** approved **without** the two organizational-suggestion
+rows that were drafted here (a read-aloud call-and-answer, and a post-spin note of why a repeat was
+needed). The reference stays limited to source-backed teaching. Local workflow suggestions may be
+added later only if specifically wanted, labelled as local practice.
 
 **Deliberately absent:** breath-hold durations, PEEP or oxygen settings, and stopping thresholds
 (P03-VESPA; local anesthesia practice) [U]. Also absent: collision-check procedures for any named
@@ -207,13 +221,27 @@ as the hands-on part, since its lesson is the stored contour, and its caption al
 | D7  | Hardware banding (practice case 12) | "Metal-adjacent streaks need artifact-aware review" (S16)              | Mobile CBCT; rail and bracket in the lateral projections                   | with vs without hardware                             | none, except a **geometry-only** schematic of where the rail lies in the spin [T]                                                                                                                                | an authentic banding image: **absent**                                                                                                      | bands; broken margin                                                                   | outside Git until cleared                                                        |
 
 **What a simulator or model may demonstrate** (D1–D3, D5): a mechanism, with a "teaching model" or
-"simulated" label. **What requires authentic media** (D4, D6, D7, and D1–D2 if the owner wants real
-appearance): how the finding actually looks. The owner chooses the source (own archive, a licensed
-atlas, or phantom acquisitions) under OD4-03.
+"simulated" label. **What requires authentic media** (D4, D6, D7, and D1–D2 if real appearance is
+wanted): how the finding actually looks.
+
+**Owner decision (OD4-06 with OD4-03, 2026-09-22).** Build **simulated CT-derived examples now**,
+clearly labelled:
+
+- Section 6: D1 and D2 as labelled simulations on the CT-derived projection (option b), with D3
+  from the existing DRR. Phantom pairs (Tier 2) are a permitted later upgrade.
+- Section 16: the D5 truncation model now, with motion and new dependent opacity as text
+  placeholders (option b).
+
+**Deferred:** authentic motion (D4), new-opacity (D6) and banding (D7) examples, until media rights
+exist; patient-derived media stay held (Tier 3). **Not addressed:** the D4 toy DTS simulation and
+the D7 geometry-only schematic remain unselected options.
 
 ---
 
 ## E · Floor plan for the lateral-projection case (PR5)
+
+**Owner decision (OD4-12, 2026-09-22): schematic approved,** with the position-2 reading below
+confirmed.
 
 **Feedback.** "A simple floor plan with the three standing positions would make it faster to read"
 [S: PDF p.46, practice case 15 `staff-protection-practice-1`].
@@ -229,8 +257,8 @@ atlas, or phantom acquisitions) under OD4-03.
 - Choice a reads "Step farther back **along the table** on the tube side", and rationale c says
   "Distance from the table is similar for all three positions". So position 2 lies further along the
   table's long axis, at about the same distance from its edge. The diagram must draw it that way.
-  **Owner to confirm** that reading [O], because "farther back" can also be read as "away from the
-  table".
+  **Confirmed by the owner (OD4-12, 2026-09-22):** position 2 is farther along the table on the tube
+  side, at about the same distance from the table.
 
 **Three different things, kept separate**
 

@@ -2,7 +2,15 @@
 
 > **AI-authored draft — not clinically reviewed.** Prepared 2026-09-22 by Claude (Opus 5.5) for
 > owner review. Documentation only. No live item, stem, choice, key, id or review status changes
-> until Russell approves a sample and a separate implementation lane applies it.
+> until a separate implementation lane applies an approved sample.
+
+**Owner decision (OD4-05 with OD4-02, 2026-09-22).** The versioning rule is approved, and the
+samples are approved **as drafts**, which is not clinical review. Changed semantics get new ids, and
+old integrated-case addresses redirect if a slot is replaced. **QS-2 is held** as a later
+enhancement: the existing optional review is already honest, and QS-2 would change the
+validator/design contract for one question. Per OD4-02, QS-3 uses its text variant, QS-4 keeps its
+text form, and QS-8 becomes image-based. The per-sample status is in the table
+([owner-decisions.md](owner-decisions.md#recorded-owner-decisions-2026-09-22)).
 
 Base `origin/main` **`745146f6`** · feedback items **1.5, 3.7, IC2, IC3, PR1** (primary) with
 **CW1** coordinated here in documentation only. Evidence tags (**S M I T U O**) are defined in the
@@ -14,22 +22,22 @@ Base `origin/main` **`745146f6`** · feedback items **1.5, 3.7, IC2, IC3, PR1** 
 they show what a revision of that kind looks like. They are not a bank rewrite. Most of the bank,
 and every praised practice case, is left alone.
 
-| #    | Problem it samples                                                                  | Feedback    | Item                                       | Semantics change?        | Proposed identity                         |
-| ---- | ----------------------------------------------------------------------------------- | ----------- | ------------------------------------------ | ------------------------ | ----------------------------------------- |
-| QS-1 | "Changed example" repeats the worked example; key is the only hedged option         | 1.5         | Section 1 check `choose-1`                 | yes                      | new `imaging-questions-interpretation-v2` |
-| QS-2 | Closing step reviews another section; no transfer of this section's idea            | CW1         | Section 5 closing step                     | yes (new item)           | new `projection-transfer-v1`              |
-| QS-3 | Distractors pair a cause with an impossible fix                                     | 3.7         | Section 6 check `signal-interpretation-v2` | yes                      | `signal-interpretation-v3`                |
-| QS-4 | Item hands over the cause the section teaches learners to find (over-cued)          | 6.6, cueing | Section 16 check `change-1`                | yes                      | new `changing-anatomy-interpretation-v2`  |
-| QS-5 | Image-reading case with no image; key stated more strongly than a learner can check | PR1, IC3    | Practice 9 `dts-interpretation-practice-1` | no (evidence route only) | keep id (recommended) or `-v2`            |
-| QS-6 | Integrated-case distractor is reckless, not plausible                               | IC2         | Integrated 4 `case-4`                      | yes                      | `case-4-v2`                               |
-| QS-7 | Integrated-case distractor is arithmetic nonsense                                   | IC2         | Integrated 8 `case-8`                      | yes                      | `case-8-v2`                               |
-| QS-8 | Integrated case narrates what its objective says to read from images                | IC3         | Integrated 5 `case-5`                      | yes                      | `case-5-v2`                               |
+| #    | Problem it samples                                                                  | Feedback    | Item                                       | Semantics change?        | Proposed identity                         | Owner status (2026-09-22)                |
+| ---- | ----------------------------------------------------------------------------------- | ----------- | ------------------------------------------ | ------------------------ | ----------------------------------------- | ---------------------------------------- |
+| QS-1 | "Changed example" repeats the worked example; key is the only hedged option         | 1.5         | Section 1 check `choose-1`                 | yes                      | new `imaging-questions-interpretation-v2` | approved as draft                        |
+| QS-2 | Closing step reviews another section; no transfer of this section's idea            | CW1         | Section 5 closing step                     | yes (new item)           | new `projection-transfer-v1`              | **held** (later enhancement)             |
+| QS-3 | Distractors pair a cause with an impossible fix                                     | 3.7         | Section 6 check `signal-interpretation-v2` | yes                      | `signal-interpretation-v3`                | approved as draft; text variant          |
+| QS-4 | Item hands over the cause the section teaches learners to find (over-cued)          | 6.6, cueing | Section 16 check `change-1`                | yes                      | new `changing-anatomy-interpretation-v2`  | approved as draft; text form             |
+| QS-5 | Image-reading case with no image; key stated more strongly than a learner can check | PR1, IC3    | Practice 9 `dts-interpretation-practice-1` | no (evidence route only) | keep id (recommended) or `-v2`            | approved as draft; keeps its id          |
+| QS-6 | Integrated-case distractor is reckless, not plausible                               | IC2         | Integrated 4 `case-4`                      | yes                      | `case-4-v2`                               | approved as draft; old address redirects |
+| QS-7 | Integrated-case distractor is arithmetic nonsense                                   | IC2         | Integrated 8 `case-8`                      | yes                      | `case-8-v2`                               | approved as draft; old address redirects |
+| QS-8 | Integrated case narrates what its objective says to read from images                | IC3         | Integrated 5 `case-5`                      | yes                      | `case-5-v2`                               | approved as draft; image-based           |
 
 **Common rules for all eight** [T, following the self-paced contract in the pack and PI-01]:
 
 - The explanation is available before answering. Retry is allowed. Skip and leave stay available.
   Nothing is scored, recorded or weighted. No sample adds a mandatory question.
-- **Versioning rule (proposed, OD4-05).** Any change to a stem's evidence, a choice or a key's
+- **Versioning rule (approved, OD4-05, 2026-09-22).** Any change to a stem's evidence, a choice or a key's
   wording gets a new question id. The old id stays in the bank, so legacy first-decision records
   keep meaning what they meant. The only exception proposed is QS-5, where the decision, choices and
   key are unchanged and only the evidence moves from words to a figure.
@@ -107,6 +115,9 @@ Navigation shows the catheter relative to a target drawn on the planning CT; it 
 ---
 
 ## QS-2 · Section 5 closing step: a new transfer question (optional)
+
+**Status: held (OD4-05, 2026-09-22).** Kept as a later enhancement. No validator or design change is
+made for it now. Section 5's existing optional review stays as is.
 
 | Field                 | Content                                                                                                                                                                                                                                        |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -190,7 +201,8 @@ A separated second projection can reveal that a tool and a lesion are apart; tha
 rate does not separate anatomy. The learner rejects them on the fix alone and never has to decide
 the cause, which is the section's objective [S: p.31].
 
-**7. Proposed scenario** [T]. Two variants, depending on OD4-02.
+**7. Proposed scenario** [T]. Two variants. **The text variant is selected (OD4-02, 2026-09-22).**
+The image variant waits until honest media exist.
 
 - **Text variant (recommended now).** "Image B was made at the same projection as Image A, with the
   collimator open to the edges of the detector. In Image B the diaphragm, vessels and target are
@@ -232,6 +244,9 @@ Name the limiting factor before changing anything [M: Section 6 takeaway]. Quant
 ---
 
 ## QS-4 · Section 16 check: ask for the cause, not only the response
+
+**Status: approved as a draft in its text form (OD4-02, OD4-05, 2026-09-22).** The image variant
+waits for authentic motion media, which are deferred (OD4-06).
 
 | Field                 | Content                                                                                                                                                                                                                                                                                                                                |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -490,6 +505,9 @@ Name the quantity before the number [M: `dose-1` takeaway]. The total KAP alread
 
 ## QS-8 · Integrated case 5: read the sampling window from the planes
 
+**Status: approved as a draft; integrated case 5 becomes image-based (OD4-02, OD4-04, OD4-05,
+2026-09-22).** When `case-5-v2` replaces the `case-5` slot, the old address redirects.
+
 | Field                 | Content                                                                                                                                                                                     |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1. Feedback / source  | **IC3** (PDF p.48): "None of the eight has an image" [S]. Evidence map: the only integrated case whose registered objective names image reading ([INT-5](evidence-needs.md#int-5--case-5)). |
@@ -558,7 +576,8 @@ Follow the tool, not the streak. The part that acquires tissue is the side-cutti
 
 - **IC2 on cases 1, 6 and 7.** The walkthrough names case 6's "continue the hold while oxygen
   saturation remains acceptable" and case 7's "because the scanner is mobile" [S: p.48]. The QS-6 and
-  QS-7 treatment applies directly. OD4-05 asks whether to extend it.
+  QS-7 treatment applies directly. Whether to extend it (OD4-05 item 4) was not addressed by the
+  2026-09-22 decisions and is still open.
 - **3.7 "and similar quiz items".** The walkthrough also points at Section 7's check [S: p.31]. Read
   against the current v2 item, its distractors (retain the smaller field because its area is smaller;
   zoom to recover an excluded landmark) are real misconceptions, not impossible pairs [I], so no
