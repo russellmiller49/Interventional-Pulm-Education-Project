@@ -1,0 +1,502 @@
+{
+  "task": "BBT-PRE-REVIEW-03",
+  "title": "CT-to-parent-view teaching, visible and coherent",
+  "date": "2026-09-21",
+  "module": "bronchial-branch-tracing",
+  "worktree": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-bbt-2-21",
+  "branch": "claude/bbt-2-21",
+  "smokeTestedSha": "f01e43e2410e96f8f77a0db6814a4853749add24",
+  "baseSha": "2124cd0f3483db6534ab65bf6dd3730b59fee463",
+  "baseIsDescendantOfSmokeSha": true,
+  "commitsBetweenSmokeAndBase": [
+    "caa7cee4 fix(mcs)",
+    "4b079428 fix(mcs)",
+    "6663f030 docs(mcs)",
+    "2124cd0f Merge PR #256"
+  ],
+  "headSha": "the documents commit on top of the implementation commit; see the PR head",
+  "planningShaIsHistoricalContextOnly": "77a141ccfd574a984f91e74abc9018b5d67e8202",
+  "prUrl": "PENDING",
+  "devServer": "npm run dev:claude, port 3120, this worktree only (baseline reproduction and development)",
+  "productionServer": ".next/standalone/server.js on port 3136 (launch entry claude-bbt-03-prod; port 3131 was occupied by another session's server); .env.example placeholders as process environment only",
+  "overlappingOpenPrs": [],
+  "clinicalApproval": "none claimed",
+  "reviewHoldsCarriedForward": [
+    "OD-01 first-junction teaching mismatch remains OPEN; technically contained, not anatomically resolved; no response slice changed; entryLimitation unchanged",
+    "BBT-02 five-junction packet remains NOT REVIEWED",
+    "exercise.review.status remains provisional for every local exercise",
+    "subsegmental a/b assignments remain this source's provisional labelling; now stated before marking, never asked",
+    "opening letters and the schematic are model relationships (OD-05), labelled as model locators seen through the opening, not measured ostia"
+  ],
+  "referenceFrames": {
+    "1_nativeCtPatientSpace": "NATIVE_CT origin/spacing, sliceZ, LPS mm; marks, response planes, airway graph, camera source definitions. Unchanged.",
+    "2_learnerCtDisplay": "CtOrientation {turns, reflected} + crop/magnification/full field; screen-only; letters move with pixels; round-trips to identical native pixels.",
+    "3_modelledParentCamera": "pairedScope(): position/forward along the route, up = bookScopeUp(preset, forward), roll 0; a function of route interval and regional preset only; never of frame 2.",
+    "relationship": "2 renders 1; 3 is defined inside 1 along the verified route; CT<->parent-view correspondence by stable sourceEdgeId and plane z; captions name 2 and 3 separately and never a universal rule.",
+    "code": "src/features/bronchial-branch-tracing/geometry/reference-frames.ts"
+  },
+  "protectedEvidenceUnchanged": {
+    "statement": "No source volume, graph, manifest, response-plane coordinate, branch identity, nomenclature, packet sentence, entryLimitation or review status changed. Only geometry/parent-map.ts changed, presentation-only; every camera pose and schematic projection is asserted identical to the base fixture for 128 authored decisions.",
+    "hashFiles": [
+      "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt-pre-review-03-2026-09-21/evidence/protected-hashes-before.txt",
+      "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt-pre-review-03-2026-09-21/evidence/protected-hashes-after.txt"
+    ],
+    "identical": [
+      "geometry/paired-routes.json ddd2a61893a0da64",
+      "geometry/branch-decisions.json 1a78138c5e4e991a",
+      "public/branch-tracing/targets-v1/manifest.json 39b6d787ed6df488",
+      "public/branch-tracing/native-v1/manifest.json 3cd614847f371541",
+      "public/branch-tracing/preview-v1/manifest.json b86cb2ca3c3f18f5",
+      "public/branch-tracing/preview-v1/geometry.json 754ff1013b08a2a7",
+      "public/branch-tracing/preview-v1/airway.glb 24edef81dd18f10e",
+      "public/fluoroview/cases/patient-new/metadata/airway_graph.json 68226a87928135f8",
+      "content/junction-feedback.ts 4329d6fde60bb986",
+      "content/local-exercises.ts f99b8319e570db9e",
+      "content/ct-types.ts e9e93c0acef5128c",
+      "geometry/native-ct.ts b4120aa97585e084",
+      "geometry/paired-scope.ts 59e1d26a688244d9",
+      "geometry/coordinates.ts 8637d6795aae4353",
+      "geometry/orientation.ts ea7da120887afc7f",
+      "docs/gap-remediation/bbt/BBT-02-junction-packet.md 9531bc460282cb66"
+    ],
+    "presentationOnlyChange": {
+      "file": "geometry/parent-map.ts",
+      "before": "d2e869ee7ad53f23",
+      "after": "595777b4c0aba906",
+      "proof": "__tests__/reference-frames.test.ts against __tests__/fixtures/parent-camera-baseline.json"
+    },
+    "gitTreesUnchanged": [
+      "public/branch-tracing/native-v1 e16354cb",
+      "public/branch-tracing/targets-v1 f3450da2",
+      "public/branch-tracing/preview-v1 a8f6256c",
+      "public/fluoroview/cases/patient-new ecf8f62c"
+    ],
+    "draftSignaturesUnchanged": "all eight local lessons (__tests__/fixtures/local-draft-baseline.json)"
+  },
+  "findings": [
+    {
+      "id": "BBTF-04",
+      "title": "Paired virtual bronchoscopy is hard to discover",
+      "reproduced": true,
+      "disposition": "repaired",
+      "baseline": {
+        "L2": "no parent airway view or control at any step (context/direction/compare/demo/attempt) at all five sizes",
+        "L3": "'Show parent airway view' first appears in the parent-view phase after Check, off by default"
+      },
+      "after": {
+        "L2": "paired from the context step (toggle 'Hide parent airway view' present at every step, every size); comparison carries the fixed camera as a third panel; exercise phases paired",
+        "allLocalLessons": "toggle available from the context/demonstration step, before any answer; parent-view phase opens paired automatically",
+        "recordsNothing": "draft marks and history unchanged after opening/toggling (Jest + Playwright)"
+      },
+      "measured": {
+        "L2.attempt.1024x768": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": 315.4,
+          "overflowX": false
+        },
+        "L2.attempt.1427x1226": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": 490,
+          "overflowX": false
+        },
+        "L2.attempt.1440x900": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": 475,
+          "overflowX": false
+        },
+        "L2.attempt.320x740": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": 294,
+          "overflowX": false
+        },
+        "L2.attempt.390x844": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": 364,
+          "overflowX": false
+        },
+        "L2.compare.1024x768": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": null,
+          "overflowX": false
+        },
+        "L2.compare.1427x1226": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": null,
+          "overflowX": false
+        },
+        "L2.compare.1440x900": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": null,
+          "overflowX": false
+        },
+        "L2.compare.320x740": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": null,
+          "overflowX": false
+        },
+        "L2.compare.390x844": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": null,
+          "overflowX": false
+        },
+        "L2.context.1024x768": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": 315.4,
+          "overflowX": false
+        },
+        "L2.context.1427x1226": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": 490,
+          "overflowX": false
+        },
+        "L2.context.1440x900": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": 475,
+          "overflowX": false
+        },
+        "L2.context.320x740": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": 294,
+          "overflowX": false
+        },
+        "L2.context.390x844": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": 364,
+          "overflowX": false
+        },
+        "L2.demo.1024x768": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": 315.4,
+          "overflowX": false
+        },
+        "L2.demo.1427x1226": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": 490,
+          "overflowX": false
+        },
+        "L2.demo.1440x900": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": 475,
+          "overflowX": false
+        },
+        "L2.demo.320x740": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": 294,
+          "overflowX": false
+        },
+        "L2.demo.390x844": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": 364,
+          "overflowX": false
+        },
+        "L2.direction.1024x768": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": null,
+          "overflowX": false
+        },
+        "L2.direction.1427x1226": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": null,
+          "overflowX": false
+        },
+        "L2.direction.1440x900": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": null,
+          "overflowX": false
+        },
+        "L2.direction.320x740": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": null,
+          "overflowX": false
+        },
+        "L2.direction.390x844": {
+          "scopeToggle": "Hide parent airway view",
+          "planeWidthPx": null,
+          "overflowX": false
+        }
+      }
+    },
+    {
+      "id": "BBTF-06",
+      "title": "Parent and daughters have indistinguishable source names",
+      "reproduced": true,
+      "disposition": "repaired in the display layer",
+      "baseline": {
+        "L7": ["A · RB3a · slice 396", "B · RB3a · slice 384"],
+        "heading": "2. Mark A · RB3a"
+      },
+      "after": {
+        "L7": [
+          "Daughter A · RB3a · more cranial · slice 396",
+          "Daughter B · RB3a · more caudal · slice 384"
+        ],
+        "heading": "2. Mark Daughter A · RB3a · more cranial",
+        "rule": "Parent / Daughter A / Daughter B + source code; source direction appended when a name repeats; no new suffix; stored labels, graph ids and draft signatures unchanged"
+      }
+    },
+    {
+      "id": "BBTF-13",
+      "title": "Parent-view diagrams are tiny and use another label scheme",
+      "reproduced": true,
+      "disposition": "repaired",
+      "baseline": {
+        "1427x1226": {
+          "svgWidthPx": 200,
+          "axisLetterHeightPx": [12],
+          "openingLetterHeightPx": [],
+          "legend": [
+            "1 · A · RMSB",
+            "2 · B · LMSB",
+            "R: patient right · A: anterior · S: superior. Projected model directions, not measured opening shapes. CT display rotation does not rotate this view."
+          ]
+        },
+        "390x844": {
+          "svgWidthPx": 200,
+          "axisLetterHeightPx": [12],
+          "openingLetterHeightPx": [],
+          "legend": [
+            "1 · A · RMSB",
+            "2 · B · LMSB",
+            "R: patient right · A: anterior · S: superior. Projected model directions, not measured opening shapes. CT display rotation does not rotate this view."
+          ]
+        }
+      },
+      "after": {
+        "1427x1226": {
+          "svgWidthPx": 373.8,
+          "axisLetterHeightPx": [27],
+          "openingLetterHeightPx": [33],
+          "legend": [
+            "The superior–inferior axis runs along the line of sight here: inferior points into the view and superior back toward the viewer, so it has no arrow.",
+            "Opening 1 · Daughter A · RMSB (source direction: more right) · 21 slices caudal of the parent point",
+            "Opening 2 · Daughter B · LMSB (source direction: more left) · 21 slices caudal of the parent point"
+          ]
+        },
+        "1024x768": {
+          "svgWidthPx": 273.8,
+          "axisLetterHeightPx": [19],
+          "openingLetterHeightPx": [24],
+          "legend": [
+            "The superior–inferior axis runs along the line of sight here: inferior points into the view and superior back toward the viewer, so it has no arrow.",
+            "Opening 1 · Daughter A · RMSB (source direction: more right) · 21 slices caudal of the parent point",
+            "Opening 2 · Daughter B · LMSB (source direction: more left) · 21 slices caudal of the parent point"
+          ]
+        },
+        "390x844": {
+          "svgWidthPx": 344.8,
+          "axisLetterHeightPx": [24],
+          "openingLetterHeightPx": [30],
+          "legend": [
+            "The superior–inferior axis runs along the line of sight here: inferior points into the view and superior back toward the viewer, so it has no arrow.",
+            "Opening 1 · Daughter A · RMSB (source direction: more right) · 21 slices caudal of the parent point",
+            "Opening 2 · Daughter B · LMSB (source direction: more left) · 21 slices caudal of the parent point"
+          ]
+        },
+        "320x740": {
+          "svgWidthPx": 274.8,
+          "axisLetterHeightPx": [19],
+          "openingLetterHeightPx": [24],
+          "legend": [
+            "The superior–inferior axis runs along the line of sight here: inferior points into the view and superior back toward the viewer, so it has no arrow.",
+            "Opening 1 · Daughter A · RMSB (source direction: more right) · 21 slices caudal of the parent point",
+            "Opening 2 · Daughter B · LMSB (source direction: more left) · 21 slices caudal of the parent point"
+          ]
+        },
+        "independentBeforeLabels": {
+          "svgWidthPx": 373.8,
+          "axisLetterHeightPx": [27],
+          "openingLetterHeightPx": [33],
+          "legend": ["Opening 1", "Opening 2", "Opening unresolved"]
+        },
+        "independentAfterLabels": {
+          "svgWidthPx": 373.8,
+          "axisLetterHeightPx": [27],
+          "openingLetterHeightPx": [33],
+          "legend": [
+            "Opening 1 · Daughter B · L basal (source direction: more caudal) · 19 slices caudal of the parent point",
+            "Opening 2 · Daughter A · LB6 (source direction: more cranial) · 6 slices caudal of the parent point",
+            "Letters are the CT branch labels (A, B); numbers are the openings’ positions in this view. Directions are projected model directions, not measured opening shapes. CT display rotation does not rotate this view."
+          ]
+        }
+      },
+      "identities": "opening number = spatial order in the camera view (unchanged); opening letter = CT letter by source index; both kept in data and on screen"
+    },
+    {
+      "id": "BBTF-26",
+      "title": "Intermediate demo frames lack a lumen pointer",
+      "reproduced": true,
+      "disposition": "repaired within the source",
+      "baseline": {
+        "L3.demo.frame3.overlays": 0,
+        "L1.demo.frame2.overlays": 0
+      },
+      "after": {
+        "L3.demo.frame3": [
+          "Model course locator: Parent · Trachea, centreline crossing on slice 405; provisional model position, not a lumen boundary"
+        ],
+        "L1.demo.frame2": [
+          "Model course locator: Parent · Trachea, centreline crossing on slice 414; provisional model position, not a lumen boundary"
+        ],
+        "rule": "dotted, unlabelled locator wherever a source edge of this division crosses the displayed plane (edgeCrossings); none on authored planes; hidden with Hide overlays; caption names it as a model course locator, not a lumen boundary"
+      }
+    },
+    {
+      "id": "BBTF-29",
+      "title": "Symmetric trachea is a weak reflection demonstration",
+      "reproduced": true,
+      "disposition": "explanation improved; replacement candidates prepared for owner review; exercise not replaced",
+      "after": {
+        "copy": "[data-symmetric-note] in the comparison step",
+        "candidates": [
+          "junction-10 RML -> RB4/RB5 (parent 307; daughters 307/307; more posterior / more anterior)",
+          "junction-3 LMSB -> LLL/LUL (parent 344; daughters 332/341)",
+          "junction-6 LLL -> LB6/L basal (parent 332; daughters 326/313)"
+        ]
+      }
+    },
+    {
+      "id": "BBTF-34",
+      "title": "RB1 a/b assignment is demanded before its source convention is given",
+      "reproduced": true,
+      "disposition": "repaired within policy",
+      "baseline": {
+        "heading": "2. Mark A · RB1b",
+        "slots": ["A · RB1b · slice 422", "B · RB1a · slice 424"]
+      },
+      "after": {
+        "heading": "2. Mark Daughter A · RB1b",
+        "slots": ["Daughter A · RB1b · slice 422", "Daughter B · RB1a · slice 424"],
+        "beforeMarking": "Daughter A is labelled RB1b in this source (more anterior); Daughter B is labelled RB1a in this source (more posterior). The a/b letters follow this source's labelling and are pending nomenclature review: they are shown so you can follow each lumen, not asked."
+      }
+    },
+    {
+      "id": "BBTF-42",
+      "title": "Oblique relationship would benefit from a spatial cue",
+      "reproduced": true,
+      "disposition": "addressed with existing references",
+      "after": {
+        "cues": [
+          "paired parent view from RB3a, one click away before marking",
+          "optional model parent-view schematic during demonstration/attempt/comparison with level relations and projected directions",
+          "neutral identities carrying the source direction"
+        ],
+        "noNewAnatomy": true
+      }
+    }
+  ],
+  "verification": {
+    "typeCheck": "clean (exit 0, no diagnostics) after the final code and test edit",
+    "jestModule": "137 passed, 1 failed (22 suites, 138 tests) — the failure is the documented access-contract assertion; access policy unchanged",
+    "playwrightBranchTracingProduction": "49 passed, 0 failed, 0 skipped (58 s) against the final production build on port 3136",
+    "playwrightSystemicUxBbtProduction": "3 passed (bbt: native workspace scroll ownership at 1600, 1440, 1024)",
+    "eslintChangedPaths": "clean, no warnings",
+    "prettierAndDiffCheck": "clean",
+    "productionBuild": "passed, exit 0, 2 min 11 s; four branch-tracing routes compiled; standalone prepared",
+    "developmentRunsNotCounted": "a dev-server Playwright run (46/49) had one Lesson 2 readiness timeout during a recompile and two label-regex updates; recorded, not counted"
+  },
+  "testsAdded": {
+    "src/features/bronchial-branch-tracing/__tests__/reference-frames.test.ts": 5,
+    "src/features/bronchial-branch-tracing/__tests__/branch-identity.test.ts": 3,
+    "src/features/bronchial-branch-tracing/__tests__/model-course.test.ts": 4,
+    "src/features/bronchial-branch-tracing/__tests__/paired-view-teaching.test.tsx": 5,
+    "e2e/branch-tracing.spec.ts": 11
+  },
+  "existingAssertionsUpdated": [
+    "slot/heading labels now read 'Daughter A · RMSB' (Jest: recordLocal helpers, one heading, one legend query; Playwright: markLocal and overlay-label helpers, one heading regex)"
+  ],
+  "browserMatrix": {
+    "sizes": ["1427x1226", "1440x900", "1024x768", "390x844", "320x740"],
+    "lesson2PairedBeforeAnswer": {
+      "e2e": ["1427x1226", "390x844"],
+      "capture": "all five sizes; toggle present in every step; no horizontal overflow; three panels at >=1200px, camera wraps under the copies at 1024, stacks below 768"
+    },
+    "transformInvariance": {
+      "e2e": ["1427x1226"],
+      "jest": "all eight displays; camera pose identical for every authored checkpoint"
+    },
+    "diagramLegibility": {
+      "e2e": ["1427x1226", "390x844"],
+      "capture": ["1024x768", "320x740"],
+      "axisLetterHeightPx": {
+        "1427x1226": 27,
+        "1024x768": 19,
+        "390x844": 24,
+        "320x740": 19
+      },
+      "openingLetterHeightPx": {
+        "1427x1226": 33,
+        "1024x768": 24,
+        "390x844": 30,
+        "320x740": 24
+      },
+      "diagramWidthPx": {
+        "1427x1226": 373.8,
+        "1024x768": 273.8,
+        "390x844": 344.8,
+        "320x740": 274.8
+      },
+      "baseline": {
+        "widthPx": 200,
+        "axisLetterHeightPx": 12
+      }
+    },
+    "openingLettersLineOfSight": {
+      "e2e": ["1427x1226"]
+    },
+    "courseLocators": {
+      "e2e": ["1427x1226"],
+      "capture": ["1427x1226"]
+    },
+    "rb1NamingAndRepeatedNames": {
+      "e2e": ["1427x1226"],
+      "capture": ["1427x1226"]
+    },
+    "webglLoss": {
+      "e2e": ["1427x1226"]
+    },
+    "keyboardToggleVisibleFocus": {
+      "e2e": ["1427x1226"]
+    },
+    "text200Percent": {
+      "e2e": ["1280x720 (CSS root-font probe)"]
+    },
+    "compactCheckStability": {
+      "e2e": ["390x844", "1024x768", "1427x1226"],
+      "note": "Prompt 02 regression retained and passing"
+    }
+  },
+  "evidence": {
+    "root": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt-pre-review-03-2026-09-21",
+    "baseline": "31 screenshots + metrics.json on the unmodified base",
+    "after": "39 screenshots + metrics.json on the production build",
+    "afterE2e": "screenshots written by the Playwright suite on the production build (bbt03-*.png and existing captures)",
+    "logs": [
+      "production-build.log",
+      "playwright-production.log",
+      "playwright-systemic-bbt-production.log",
+      "jest.log",
+      "tsc.log"
+    ]
+  },
+  "notRun": [
+    "native screen readers",
+    "real mobile devices and touch",
+    "Safari and Firefox",
+    "native browser zoom (200% is a CSS root-font probe)",
+    "route-lesson (Lesson 9) and Practice paired-view gating unchanged and not re-tested beyond the existing suite",
+    "OS-level fullscreen Escape"
+  ],
+  "backlog": [
+    "Lesson 9 and Practice still gate scopeAvailable on a recorded junction or shown reference; the unlabelled paired view would not leak the continuation",
+    "Toggling the paired view at desktop lets Chromium scroll anchoring keep the clicked button in place, so the image pane scrolls by the added column height; pane scroll only, not on the automatic parent-view opening",
+    "playwright.config.ts still uses port 3001 with reuseExistingServer (from Prompt 02)"
+  ],
+  "ownerDecisionsRequired": [
+    "OD-01 (open; nothing new)",
+    "OD-03 subsegment naming (neutral identities prepared)",
+    "OD-05 opening correspondence (camera basis, projected directions, A/B mapping and line-of-sight letters prepared)",
+    "BBTF-29 replacement fork selection (candidates listed)"
+  ],
+  "next": "One bounded PR, then stop. Prompt 04 follows after review and merge. OD-01 stays open; task 05 prepares its packet.",
+  "implementationCommitSha": "aefc136da7b0bbe10cee9b9489f61958de2dd0e6"
+}
