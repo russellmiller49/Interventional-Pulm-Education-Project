@@ -74,8 +74,10 @@ import type {
 import {
   deriveEffectivePatient,
   deriveMeasurements,
+  WAVEFORM_STEP_SECONDS,
   WAVEFORM_WINDOW_SECONDS,
 } from '../engine/physics'
+import { latestResultedRepeat } from '../engine/arterialGas'
 import { plateauAcquisition } from './plateauAcquisition'
 import { plateauReadingValidity, plateauWithheldNote } from './plateauValidity'
 
@@ -256,9 +258,17 @@ export function coachingReadingSnapshot(
   state: VentilationSimulationState,
 ): CoachingReadingSnapshot {
   const measurements = state.measurements
-  const plateau = plateauReadingValidity(state)
   const acquisition = plateauAcquisition(state)
-  const repeatGasResulted = state.lastAbgAt !== null && state.simulationTime >= state.lastAbgAt
+  /*
+   * The gas the learner can actually read, not the model's current one.
+   *
+   * This keyed on `lastAbgAt` and then printed `patient.gasExchange.paCO2MmHg`, so the card was
+   * reporting the live internal value rather than the specimen: on MV-07 with two orders the
+   * bedside showed PaCO2 49 from the resulted specimen while the coaching card said 69 from the
+   * model. `lastAbgAt` is also a single slot, so a second order made an already available earlier
+   * result vanish from the card. Both go away by reading the specimen list.
+   */
+  const resultedRepeat = latestResultedRepeat(state.arterialGasSamples, state.simulationTime)
   return {
     'peak-pressure': measurements.peakPressureCmH2O,
     /*
@@ -266,11 +276,9 @@ export function coachingReadingSnapshot(
      * `plateauReadingValidity` alone says only that the patient was quiet, which was true on every
      * passive case that had never been occluded.
      */
-    'peak-plateau-gap':
-      plateau.interpretable && acquisition.supportsMechanicsClaim
-        ? measurements.peakPressureCmH2O -
-          (acquisition.valueCmH2O ?? measurements.plateauPressureCmH2O)
-        : null,
+    'peak-plateau-gap': acquisition.supportsMechanicsClaim
+      ? measurements.peakPressureCmH2O - (acquisition.valueCmH2O ?? acquisition.estimateCmH2O)
+      : null,
     'intrinsic-peep': measurements.intrinsicPeepCmH2O,
     'exhaled-vt': measurements.exhaledVtMl,
     'total-rate': measurements.totalRatePerMin,
@@ -281,7 +289,7 @@ export function coachingReadingSnapshot(
     pain: state.patient.human.painScore,
     delirium: state.patient.human.deliriumScore,
     sedation: state.patient.human.sedationScore,
-    paco2: repeatGasResulted ? state.patient.gasExchange.paCO2MmHg : null,
+    paco2: resultedRepeat ? resultedRepeat.values.paCO2MmHg : null,
   }
 }
 
@@ -878,6 +886,17 @@ export function capturePostActionBaseline(
      * that had is kept.
      */
     lastAbgAt: state.lastAbgAt !== null && state.lastAbgAt <= record.time ? state.lastAbgAt : null,
+    /*
+     * And the specimen this very action drew: it had not been drawn the instant before the action,
+     * so the "before" column must not contain it. Only an `order-abg` adds one, and it adds it at
+     * the action's own second.
+     */
+    arterialGasSamples:
+      intervention?.effectId === 'order-abg'
+        ? state.arterialGasSamples.filter(
+            (sample) => !(sample.kind === 'repeat' && sample.collectedAtSeconds === record.time),
+          )
+        : state.arterialGasSamples,
   }
   const patient = deriveEffectivePatient(withoutAction, definition)
   const before: VentilationSimulationState = {
@@ -919,20 +938,70 @@ export function capturePostActionBaseline(
  * The observation interval
  * ---------------------------------------------------------------------------------------------- */
 
+/**
+ * One sample's worth of slack on the newest-sample check.
+ *
+ * The buffer is written at a fixed step and an advance can land fractionally short of the exact
+ * completion instant; this is that step, not a tolerance on the observation itself.
+ */
+const WAVEFORM_STEP_TOLERANCE_SECONDS = WAVEFORM_STEP_SECONDS
+
 export interface PostActionObservation {
   /** Simulated second at which the response has both happened and been watched for a breath. */
   readonly completeAtSeconds: number
   readonly secondsRemaining: number
+  /** The clock condition on its own: enough simulated time has passed. */
+  readonly intervalElapsed: boolean
+  /**
+   * The evidence condition: the displayed trace the card's readings are computed from actually
+   * consists of post-effect samples.
+   */
+  readonly evidenceCovered: boolean
+  /** Why the evidence does not cover the interval, when it does not. */
+  readonly evidenceGap: 'no-samples' | 'stale-buffer' | 'pre-effect-samples' | null
   readonly complete: boolean
 }
 
+/**
+ * Has this action been observed — by the clock *and* by the evidence.
+ *
+ * Elapsed simulated time is not sufficient. The card prints peak airway pressure, which the
+ * console computes as the maximum over the whole displayed waveform buffer, so the claim "peak
+ * fell from 58 to 31" is only true if that buffer is a buffer of the response. Freezing the
+ * waveform display and then acting satisfied the timer while the buffer still held nothing but
+ * pre-action breaths, and the card duly reported "58 → 58 unchanged" against a console reading 31.
+ *
+ * So the evidence is checked directly rather than through another timer: the buffer must contain
+ * samples, its newest sample must have kept up with the clock, and its oldest sample must already
+ * be at or after the moment the effect reached the model. Nothing about *how* the trace stopped
+ * refreshing matters — frozen display, a paused engine, a buffer that has not turned over yet all
+ * fail the same test, and all of them clear as soon as real post-effect samples arrive.
+ */
 export function postActionObservation(
   state: VentilationSimulationState,
   baseline: PostActionBaseline,
 ): PostActionObservation {
   const completeAtSeconds = baseline.effectiveAtSeconds + baseline.settleSeconds
   const secondsRemaining = Math.max(0, completeAtSeconds - state.simulationTime)
-  return { completeAtSeconds, secondsRemaining, complete: secondsRemaining <= 0 }
+  const intervalElapsed = secondsRemaining <= 0
+  const first = state.waveforms[0]
+  const last = state.waveforms.at(-1)
+  const evidenceGap: PostActionObservation['evidenceGap'] =
+    !first || !last
+      ? 'no-samples'
+      : last.time < completeAtSeconds - WAVEFORM_STEP_TOLERANCE_SECONDS
+        ? 'stale-buffer'
+        : first.time < baseline.effectiveAtSeconds
+          ? 'pre-effect-samples'
+          : null
+  return {
+    completeAtSeconds,
+    secondsRemaining,
+    intervalElapsed,
+    evidenceCovered: evidenceGap === null,
+    evidenceGap,
+    complete: intervalElapsed && evidenceGap === null,
+  }
 }
 
 /* ------------------------------------------------------------------------------------------------

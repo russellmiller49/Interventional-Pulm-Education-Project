@@ -13,6 +13,7 @@ import {
   cardiogenicFlowOscillationLps,
   clamp,
   effectiveBaselinePressureCmH2O,
+  EFFORT_DETECTION_FLOOR_CMH2O,
   effectivePressureAboveBaselineCmH2O,
   deriveEffectivePatient,
   deriveMeasurements,
@@ -950,8 +951,11 @@ export function advanceSimulation(
             startedAtSeconds: time,
             completedAtSeconds: null,
             valueCmH2O: 0,
+            sampleCount: 0,
             interpretable: true,
+            invalidReason: null,
             conditions: measurementConditionsFingerprint(working),
+            conditionsChangedDuringHold: false,
           },
         ]
       }
@@ -970,15 +974,33 @@ export function advanceSimulation(
       const record = holdRecords[open]
       const releaseAt = ventilator.holdUntil ?? record.startedAtSeconds
       const occluded = ventilator.holdUntil !== null && ventilator.holdUntil > time
+      /*
+       * Everything here comes from the occluded sample the model just computed, not from
+       * `measurements`, which reads the displayed buffer: the airway pressure with the valves
+       * shut, and the patient's own effort at that instant. Both are the maneuver's evidence and
+       * neither changes when the display is frozen. The conditions are re-read every occluded
+       * step so a change that is reverted before release is still recorded as having happened.
+       */
+      const effortNow = Math.max(0, -frame.sample.pmusCmH2O)
+      const quietNow = effortNow < EFFORT_DETECTION_FLOOR_CMH2O
+      const conditionsNow = occluded
+        ? measurementConditionsFingerprint({ ...working, patient })
+        : record.conditions
+      const changed =
+        record.conditionsChangedDuringHold || (occluded && conditionsNow !== record.conditions)
+      const interpretable = record.interpretable && (!occluded || quietNow) && !changed
       holdRecords = [...holdRecords]
       holdRecords[open] = {
         ...record,
-        valueCmH2O: occluded
-          ? record.hold === 'inspiratory'
-            ? measurements.plateauPressureCmH2O
-            : ventilator.settings.peepCmH2O + measurements.intrinsicPeepCmH2O
-          : record.valueCmH2O,
-        interpretable: record.interpretable && (!occluded || measurements.plateauIsInterpretable),
+        valueCmH2O: occluded ? round(frame.sample.pawCmH2O) : record.valueCmH2O,
+        sampleCount: occluded ? record.sampleCount + 1 : record.sampleCount,
+        interpretable,
+        invalidReason: interpretable
+          ? null
+          : changed
+            ? 'conditions-changed'
+            : (record.invalidReason ?? 'effort'),
+        conditionsChangedDuringHold: changed,
         completedAtSeconds: occluded ? null : releaseAt,
       }
     }

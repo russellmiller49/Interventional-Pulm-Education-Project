@@ -243,9 +243,18 @@ export function VentilationTaskWorkbench({
                             : ''}
                       </dt>
                       <dd>
+                        {/*
+                         * The plateau row prints the projection's own value, so the number and
+                         * the "· acquired hold" / "· estimate from the trace" label beside it
+                         * always describe the same thing. `labSnapshot` keeps its own
+                         * lab-side hold list for the evidence table; letting the two reach this
+                         * row independently is how a label and a value came apart here.
+                         */}
                         {metric === 'plateau' && withholdUnacquiredPlateau
                           ? 'Acquire a current inspiratory hold'
-                          : `${snapshot.values[metric].toFixed(labMetricLabels[metric].digits)} ${labMetricLabels[metric].unit}`}
+                          : metric === 'plateau'
+                            ? `${(acquisition.valueCmH2O ?? acquisition.estimateCmH2O).toFixed(labMetricLabels.plateau.digits)} ${labMetricLabels.plateau.unit}`
+                            : `${snapshot.values[metric].toFixed(labMetricLabels[metric].digits)} ${labMetricLabels[metric].unit}`}
                         {before &&
                         !(
                           integration &&

@@ -1,85 +1,139 @@
 /**
- * Whether there is a trigger event to time at all.
+ * Whether there is a trigger event to time at all, and whether it belongs to *this* breath.
  *
  * `deriveMeasurements` initialises `triggerDelayMs` to 80 and only overwrites it for three
  * phenotypes, so the Timing view printed "Measured trigger delay is 80 ms" on the passive,
  * time-triggered model in Section 7 — in the same paragraph as "Patient effort is not appreciable
- * this breath". 80 ms is an analytic default for a class of patients, not a delay measured on this
- * breath, and a breath the timer started has no trigger delay to report.
+ * this breath". 80 ms is an analytic value for a class of patients, not an interval measured on
+ * this breath.
  *
- * Absent, unknown and zero are three different answers and this returns three different statuses:
+ * The first repair fixed the absent-effort half and left a worse one behind: it scanned the whole
+ * expiration preceding the latest inspiration and called any appreciable effort in it the trigger
+ * event. On MV-01 at 20 s the latest inspiration begins at 17.52 s with no effort at the sample
+ * before it, and the last appreciable effort ended at 15.80 s — a breath and a half earlier,
+ * belonging to the previous cycle. The helper reported 80 ms anyway.
  *
- *   - `unavailable` — the buffer does not yet hold a breath boundary to measure from.
- *   - `not-applicable` — the last breath began with no appreciable effort behind it, so there is
- *     no effort-to-delivery interval. Not "0 ms", and not a claim about the next breath.
- *   - `reported` — an effort preceded the last inspiration, so the model's delay describes
- *     something.
+ * ## What association means here
  *
- * The eligibility test uses evidence the engine already publishes: the modeled effort trace
- * (`pmusCmH2O`) across the expiration that preceded the onset, against the engine's own
- * `EFFORT_DETECTION_FLOOR_CMH2O`. No new clinical cutoff is introduced, and the floor is not
- * printed.
+ * In this engine `effortAt` is a neural oscillator entrained to the machine period; the machine
+ * does not start a breath *because* of an effort. On the cases that carry effort at all, the
+ * effort rises from zero at the same sample the inspiration begins. So there are three honest
+ * answers and the helper returns whichever the trace supports:
+ *
+ * - **`measured`** — appreciable effort in the samples immediately before the onset, inside the
+ *   interval the model itself claims as the delay. Then, and only then, an effort genuinely
+ *   preceded delivery and the number is an interval between two events on this trace.
+ * - **`model-estimate`** — this inspiration has an appreciable effort of its own, but nothing
+ *   precedes it, so the delay is the phenotype's modeled value rather than something measured
+ *   here. The number stays useful and stops being called a measurement.
+ * - **`not-applicable`** — this breath has no appreciable modeled effort associated with it at
+ *   all. Not a delay of zero, and no claim about the next breath.
+ * - **`unavailable`** — the buffer holds no breath boundary yet.
+ *
+ * Everything is measured against the engine's own `EFFORT_DETECTION_FLOOR_CMH2O` and the model's
+ * own `triggerDelayMs`. No new clinical cutoff is introduced, and no prior expiratory interval is
+ * scanned for a historical effort to borrow.
  */
 import { EFFORT_DETECTION_FLOOR_CMH2O } from './physics'
 import type { VentilationSimulationState, WaveformSample } from './types'
 
-export type TriggerDelayStatus = 'reported' | 'not-applicable' | 'unavailable'
+export type TriggerDelayStatus = 'measured' | 'model-estimate' | 'not-applicable' | 'unavailable'
 
 export interface TriggerDelayEvidence {
   readonly status: TriggerDelayStatus
-  /** Null unless a trigger event was found; never 0 as a stand-in for "none". */
+  /** Null unless an effort is associated with this breath; never 0 as a stand-in for "none". */
   readonly delayMs: number | null
-  /** Largest modeled inspiratory effort in the interval the breath was started from. */
+  /** Largest modeled inspiratory effort belonging to this inspiration. */
+  readonly breathEffortCmH2O: number
+  /** Largest modeled effort in the interval immediately preceding the onset. */
   readonly precedingEffortCmH2O: number
+  /** The simulated second this inspiration began, when one is on the trace. */
+  readonly onsetSeconds: number | null
   /** What to print where the number would have been. */
   readonly display: string
   readonly detail: string
 }
 
-/** The expiration that led into the most recent inspiration, plus that onset sample. */
-function triggeringInterval(
-  waveforms: readonly WaveformSample[],
-): readonly WaveformSample[] | null {
-  let onset = -1
+function latestOnsetIndex(waveforms: readonly WaveformSample[]): number {
   for (let index = waveforms.length - 1; index > 0; index -= 1) {
     if (waveforms[index].phase === 'inspiration' && waveforms[index - 1].phase === 'expiration') {
-      onset = index
-      break
+      return index
     }
   }
-  if (onset < 1) return null
-  let start = onset - 1
-  while (start > 0 && waveforms[start - 1].phase === 'expiration') start -= 1
-  return waveforms.slice(start, onset + 1)
+  return -1
+}
+
+function peakEffort(samples: readonly WaveformSample[]): number {
+  return samples.reduce((peak, sample) => Math.max(peak, -sample.pmusCmH2O), 0)
 }
 
 export function triggerDelayEvidence(state: VentilationSimulationState): TriggerDelayEvidence {
-  const interval = triggeringInterval(state.waveforms)
-  if (!interval)
+  const waveforms = state.waveforms
+  const onset = latestOnsetIndex(waveforms)
+  if (onset < 1)
     return {
       status: 'unavailable',
       delayMs: null,
+      breathEffortCmH2O: 0,
       precedingEffortCmH2O: 0,
+      onsetSeconds: null,
       display: '—',
       detail:
-        'No complete breath boundary is on the trace yet, so there is nothing to measure a trigger delay from. Run or advance one breath.',
+        'No complete breath boundary is on the trace yet, so there is nothing to associate a trigger delay with. Run or advance one breath.',
     }
-  const effort = interval.reduce((peak, sample) => Math.max(peak, -sample.pmusCmH2O), 0)
-  if (effort < EFFORT_DETECTION_FLOOR_CMH2O)
+
+  const onsetSample = waveforms[onset]
+  /*
+   * The window the model's own delay would have to span, bounded to the samples actually before
+   * the onset. Nothing outside it can be the event this breath was triggered by.
+   */
+  const delaySeconds = Math.max(0, state.measurements.triggerDelayMs) / 1000
+  const windowStart = onsetSample.time - delaySeconds
+  const preceding = waveforms
+    .slice(0, onset)
+    .filter((sample) => sample.time >= windowStart && sample.phase === 'expiration')
+  const precedingEffortCmH2O = peakEffort(preceding)
+
+  /* The effort belonging to this inspiration: from the onset to the end of the buffer or of it. */
+  const breath: WaveformSample[] = []
+  for (let index = onset; index < waveforms.length; index += 1) {
+    if (waveforms[index].phase !== 'inspiration') break
+    breath.push(waveforms[index])
+  }
+  const breathEffortCmH2O = peakEffort(breath)
+
+  if (precedingEffortCmH2O >= EFFORT_DETECTION_FLOOR_CMH2O)
     return {
-      status: 'not-applicable',
-      delayMs: null,
-      precedingEffortCmH2O: effort,
-      display: '—',
+      status: 'measured',
+      delayMs: state.measurements.triggerDelayMs,
+      breathEffortCmH2O,
+      precedingEffortCmH2O,
+      onsetSeconds: onsetSample.time,
+      display: `${state.measurements.triggerDelayMs.toFixed(0)} ms`,
       detail:
-        'The modeled effort signal shows no appreciable effort before this breath, so the timer started it and there is no effort-to-delivery interval to report. That is not the same as a delay of zero, and it says nothing about the next breath.',
+        'An effort was already under way when this breath was delivered, so the interval between that effort and the delivery is what the delay describes.',
     }
+
+  if (breathEffortCmH2O >= EFFORT_DETECTION_FLOOR_CMH2O)
+    return {
+      status: 'model-estimate',
+      delayMs: state.measurements.triggerDelayMs,
+      breathEffortCmH2O,
+      precedingEffortCmH2O,
+      onsetSeconds: onsetSample.time,
+      display: `${state.measurements.triggerDelayMs.toFixed(0)} ms · model estimate`,
+      detail:
+        'This breath has an effort of its own, but the modeled effort does not begin before the breath arrives, so nothing on this trace times the interval. The value is what the model assigns this phenotype, not a delay measured here.',
+    }
+
   return {
-    status: 'reported',
-    delayMs: state.measurements.triggerDelayMs,
-    precedingEffortCmH2O: effort,
-    display: `${state.measurements.triggerDelayMs.toFixed(0)} ms`,
+    status: 'not-applicable',
+    delayMs: null,
+    breathEffortCmH2O,
+    precedingEffortCmH2O,
+    onsetSeconds: onsetSample.time,
+    display: '—',
     detail:
-      'An effort preceded this inspiration, so the interval between the effort and the delivered breath is the delay the model reports for this phenotype.',
+      'No appreciable modeled effort belongs to this breath, so the timer started it and there is no effort-to-delivery interval to report. That is not the same as a delay of zero, and it says nothing about the next breath.',
   }
 }

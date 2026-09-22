@@ -3,7 +3,11 @@
 import { ClipboardPlus, HeartPulse, Stethoscope, TestTube2, UserRound } from 'lucide-react'
 
 import { classifyCaseFindings, examinationBranchEvidence } from '../content/caseFindings'
-import { arterialGasSampleLabel, arterialGasView } from '../engine/arterialGas'
+import {
+  arterialGasSampleIsPending,
+  arterialGasSampleLabel,
+  arterialGasView,
+} from '../engine/arterialGas'
 import type { VentilationCaseDefinition, VentilationSimulationState } from '../engine'
 import styles from './mechanical-ventilation.module.css'
 
@@ -323,9 +327,14 @@ export function BedsidePanel({
                 <ul>
                   {gas.all.map((sample) => (
                     <li key={sample.id} data-abg-history-sample={sample.id}>
-                      {arterialGasSampleLabel(sample)} —{' '}
-                      {/* A specimen that has not resulted has no numbers to read yet. */}
-                      {gas.pending?.id === sample.id ? (
+                      {arterialGasSampleLabel(sample, state.simulationTime)} —{' '}
+                      {/*
+                       * A specimen that has not resulted has no numbers to read yet — every one
+                       * of them, not just the first outstanding order. Two orders can be open at
+                       * once, and the second was printing its values, and its future result
+                       * time, before that time had arrived.
+                       */}
+                      {arterialGasSampleIsPending(sample, state.simulationTime) ? (
                         'not resulted yet'
                       ) : (
                         <>

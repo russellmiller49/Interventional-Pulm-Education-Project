@@ -26,7 +26,6 @@
  */
 import { measurementConditionsFingerprint } from '../engine/measurementConditions'
 import type { PerformedHoldRecord, VentilationSimulationState } from '../engine/types'
-import { plateauReadingValidity } from './plateauValidity'
 
 export type PlateauAcquisitionStatus =
   /** No occlusion has been performed; the number on screen is derived from the trace. */
@@ -45,9 +44,31 @@ export type PlateauAcquisitionStatus =
 export interface PlateauAcquisition {
   readonly hold: 'inspiratory' | 'expiratory'
   readonly status: PlateauAcquisitionStatus
-  /** The pressure to show, or null when this surface withholds an unacquired value. */
+  /**
+   * **The number the surface must print**, whatever identity it is claiming — or null when this
+   * surface withholds an unacquired value.
+   *
+   * Identity and value travel together here because they came apart everywhere they did not. The
+   * consoles labelled the plateau "measured during the inspiratory hold at 12.4 s" and then printed
+   * `measurements.plateauPressureCmH2O`, which is the live estimate off the current trace: on an
+   * active patient that showed roughly 26 beside an acquisition record of roughly 24.5. A surface
+   * that says "acquired" must show what was acquired, and a surface that says "estimate" must show
+   * the estimate. Reading `state.measurements.plateauPressureCmH2O` directly beside an acquisition
+   * label is the defect, not a shortcut.
+   */
   readonly valueCmH2O: number | null
-  /** True only for `acquired-valid`: the one state that supports a mechanics claim. */
+  /** What the trace estimates right now, for a surface that is deliberately showing the estimate. */
+  readonly estimateCmH2O: number
+  /** What the occlusion recorded, if one happened. Null when nothing has been acquired. */
+  readonly acquiredValueCmH2O: number | null
+  /**
+   * True only for `acquired-valid`.
+   *
+   * The single gate for any claim that needs a valid current plateau: the elastic/resistive split,
+   * peak-minus-plateau read as resistance, static compliance attributed to a hold. Consumers must
+   * not rebuild it from a non-null value (which is also true of stale and invalid records) or from
+   * current passivity (which says nothing about whether anything was occluded).
+   */
   readonly supportsMechanicsClaim: boolean
   /** True when a real occlusion produced this number, valid or not. */
   readonly acquired: boolean
@@ -106,14 +127,16 @@ export function plateauAcquisition(
     status: PlateauAcquisitionStatus,
     valueCmH2O: number | null,
     detail: string,
-    acquiredAtSeconds: number | null = null,
+    record?: PerformedHoldRecord,
   ): PlateauAcquisition => ({
     hold,
     status,
     valueCmH2O,
+    estimateCmH2O: estimate,
+    acquiredValueCmH2O: record ? record.valueCmH2O : null,
     supportsMechanicsClaim: status === 'acquired-valid',
     acquired: status === 'acquired-valid' || status === 'acquired-invalid' || status === 'stale',
-    acquiredAtSeconds,
+    acquiredAtSeconds: record?.completedAtSeconds ?? null,
     label: STATUS_LABELS[status],
     detail,
   })
@@ -134,7 +157,8 @@ export function plateauAcquisition(
     )
 
   const record = lastCompleted(state.holdRecords, hold)
-  if (!record)
+  /* A record with no occluded samples measured nothing, whatever else it says. */
+  if (!record || record.sampleCount === 0)
     return build(
       requireAcquisition ? 'not-acquired' : 'reference-estimate',
       requireAcquisition ? null : estimate,
@@ -148,23 +172,31 @@ export function plateauAcquisition(
     return build(
       'stale',
       record.valueCmH2O,
-      `This ${quantity} was acquired at ${(at ?? 0).toFixed(1)} s, before the settings or the simulated patient changed. Repeat the hold before reading it as current.`,
-      at,
+      `This ${quantity} was acquired at ${(at ?? 0).toFixed(1)} s, before the settings or the simulated patient changed. It cannot be read as this patient's current mechanics; repeat the hold.`,
+      record,
+    )
+
+  if (record.conditionsChangedDuringHold)
+    return build(
+      'acquired-invalid',
+      record.valueCmH2O,
+      `The settings or the simulated patient changed while the valves were shut at ${(at ?? 0).toFixed(1)} s, so this was not a controlled maneuver. Changing them back afterwards does not make it one. The number is kept as what the occlusion showed; repeat the hold under settled conditions.`,
+      record,
     )
 
   if (!record.interpretable)
     return build(
       'acquired-invalid',
       record.valueCmH2O,
-      `${plateauReadingValidity(state).reason ?? 'The patient was not passive during this occlusion.'} The hold happened and the number is kept, but it cannot carry a mechanics claim.`,
-      at,
+      `The patient was pulling during this occlusion, so it reports alveolar pressure minus their effort rather than the elastic pressure of the respiratory system. The hold happened and the number is kept, but it cannot carry a mechanics claim.`,
+      record,
     )
 
   return build(
     'acquired-valid',
     record.valueCmH2O,
-    `Acquired during the ${hold} occlusion at ${(at ?? 0).toFixed(1)} s, with the patient quiet across it.`,
-    at,
+    `Acquired during the ${hold} occlusion at ${(at ?? 0).toFixed(1)} s, with the patient quiet across it and the conditions unchanged.`,
+    record,
   )
 }
 

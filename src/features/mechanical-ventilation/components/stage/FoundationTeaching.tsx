@@ -98,8 +98,9 @@ function WorkedHold({ device }: { device: VentilationSimulationState['deviceId']
   }, [device])
   const valid = plateauReadingValidity(reference.held)
   const estimate = reference.baseline.measurements.plateauPressureCmH2O
-  const held = reference.held.measurements.plateauPressureCmH2O
   const acquisition = plateauAcquisition(reference.held)
+  /* The occlusion's own reading, so the number and the "acquired hold" label beside it agree. */
+  const held = acquisition.valueCmH2O ?? acquisition.estimateCmH2O
   return (
     <div data-worked-hold>
       <p>

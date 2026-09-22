@@ -79,13 +79,30 @@ export function collectRepeatArterialGasSample(args: {
 export interface ArterialGasView {
   /** The most recent specimen whose result has come back. Never null: the baseline always has. */
   readonly current: ArterialGasSample
-  /** A specimen that has been drawn but not resulted, if one is outstanding. */
+  /** The next specimen due to result, if any are outstanding. */
   readonly pending: ArterialGasSample | null
-  /** Every specimen, oldest first, including the one that is still processing. */
+  /**
+   * **Every** specimen still waiting for its own availability time, oldest first.
+   *
+   * There can be more than one: the workflow allows a second order before the first has resulted.
+   * Treating "pending" as a single slot meant the second outstanding specimen was not recognised
+   * as pending at all, so the history list printed its four values — and the time it *would*
+   * result — while that time was still in the future.
+   */
+  readonly pendingAll: readonly ArterialGasSample[]
+  /** Every specimen, oldest first, including those still processing. */
   readonly all: readonly ArterialGasSample[]
   /** True when the current specimen is the authored baseline rather than one drawn in this run. */
   readonly currentIsBaseline: boolean
   readonly secondsUntilPending: number
+}
+
+/** True while this specimen's own result time is still in the future, whatever else is pending. */
+export function arterialGasSampleIsPending(
+  sample: ArterialGasSample,
+  simulationTimeSeconds: number,
+): boolean {
+  return simulationTimeSeconds < sample.availableAtSeconds
 }
 
 /**
@@ -99,13 +116,26 @@ export function arterialGasView(
   samples: readonly ArterialGasSample[],
   simulationTimeSeconds: number,
 ): ArterialGasView {
-  const available = samples.filter((sample) => simulationTimeSeconds >= sample.availableAtSeconds)
-  const pending =
-    samples.find((sample) => simulationTimeSeconds < sample.availableAtSeconds) ?? null
-  const current = available.at(-1) ?? samples[0]
+  const available = samples.filter(
+    (sample) => !arterialGasSampleIsPending(sample, simulationTimeSeconds),
+  )
+  const pendingAll = samples.filter((sample) =>
+    arterialGasSampleIsPending(sample, simulationTimeSeconds),
+  )
+  /*
+   * The latest specimen that has actually resulted, by availability time rather than by position:
+   * an earlier result stays on screen while a later order is still processing, which is what a
+   * second order must not take away.
+   */
+  const current =
+    [...available]
+      .sort((left, right) => left.availableAtSeconds - right.availableAtSeconds)
+      .at(-1) ?? samples[0]
+  const pending = pendingAll[0] ?? null
   return {
     current,
     pending,
+    pendingAll,
     all: samples,
     currentIsBaseline: current?.kind === 'baseline',
     secondsUntilPending: pending
@@ -114,9 +144,43 @@ export function arterialGasView(
   }
 }
 
-/** How the panel names a specimen, with its own clock rather than the patient's. */
-export function arterialGasSampleLabel(sample: ArterialGasSample): string {
-  return sample.kind === 'baseline'
-    ? 'Baseline gas supplied with the case, before this run'
+/**
+ * The most recent **repeat** specimen that has resulted, or null.
+ *
+ * What a surface means when it asks "has a repeat gas come back yet" — the authored baseline is
+ * history rather than a sample this learner drew, and post-action coaching keys a PaCO2 reading on
+ * a repeat having resulted.
+ */
+export function latestResultedRepeat(
+  samples: readonly ArterialGasSample[],
+  simulationTimeSeconds: number,
+): ArterialGasSample | null {
+  return (
+    samples
+      .filter(
+        (sample) =>
+          sample.kind === 'repeat' && !arterialGasSampleIsPending(sample, simulationTimeSeconds),
+      )
+      .sort((left, right) => left.availableAtSeconds - right.availableAtSeconds)
+      .at(-1) ?? null
+  )
+}
+
+/**
+ * How the panel names a specimen, with its own clock rather than the patient's.
+ *
+ * Tensed to the specimen, so a sample that has not come back is not described as having resulted
+ * at a time that has not happened yet. Pass the current simulated time wherever a pending specimen
+ * can appear; without it the label reads as the past, which is right for a resulted sample.
+ */
+export function arterialGasSampleLabel(
+  sample: ArterialGasSample,
+  simulationTimeSeconds?: number,
+): string {
+  if (sample.kind === 'baseline') return 'Baseline gas supplied with the case, before this run'
+  const pending =
+    simulationTimeSeconds !== undefined && arterialGasSampleIsPending(sample, simulationTimeSeconds)
+  return pending
+    ? `Repeat gas drawn at ${sample.collectedAtSeconds.toFixed(0)} s, result due at ${sample.availableAtSeconds.toFixed(0)} s`
     : `Repeat gas drawn at ${sample.collectedAtSeconds.toFixed(0)} s, resulted at ${sample.availableAtSeconds.toFixed(0)} s`
 }

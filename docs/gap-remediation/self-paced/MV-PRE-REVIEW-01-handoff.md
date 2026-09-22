@@ -240,15 +240,15 @@ Changed test contracts (all because the assertion encoded the defect):
 
 ### Commands run (base and head both `c717c9ff`-derived, node 26.5.0, `NODE_OPTIONS=--max-old-space-size=8192`)
 
-| Command                                                                                                                                                                                          | Result                                                                                                |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| `npx jest src/features/mechanical-ventilation`                                                                                                                                                   | 37 suites, **788 tests, all passing**                                                                 |
-| `npx jest src/app/[locale]/mechanical-ventilation/routes.test.tsx src/features/critical-care src/features/learning-module src/features/icu-simulation src/lib/draft-modules.hamilton-c6.test.ts` | 49 suites, 454 tests, **451 passing, 3 failing — all three fail identically on the base** (see below) |
-| `npx tsc --noEmit -p tsconfig.json`                                                                                                                                                              | clean                                                                                                 |
-| `npx eslint src/features/mechanical-ventilation`                                                                                                                                                 | clean                                                                                                 |
-| `npx prettier --check "src/features/mechanical-ventilation/**/*.{ts,tsx,css}"`                                                                                                                   | clean                                                                                                 |
-| `git diff --check`                                                                                                                                                                               | clean                                                                                                 |
-| `npm run build`                                                                                                                                                                                  | succeeded, with the dev server stopped first                                                          |
+| Command                                                                                                                                                                                          | Result                                                                                                       |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `npx jest src/features/mechanical-ventilation`                                                                                                                                                   | 37 suites, **788 tests, all passing**                                                                        |
+| `npx jest src/app/[locale]/mechanical-ventilation/routes.test.tsx src/features/critical-care src/features/learning-module src/features/icu-simulation src/lib/draft-modules.hamilton-c6.test.ts` | 49 suites, 454 tests, **451 passing, 3 failing — all three fail identically on the base** (see below)        |
+| `npx tsc --noEmit -p tsconfig.json`                                                                                                                                                              | **at the reviewed head `4ee81a50`: FAILED** (TS2322; see the repair pass below). Clean at the repaired head. |
+| `npx eslint src/features/mechanical-ventilation`                                                                                                                                                 | clean                                                                                                        |
+| `npx prettier --check "src/features/mechanical-ventilation/**/*.{ts,tsx,css}"`                                                                                                                   | clean                                                                                                        |
+| `git diff --check`                                                                                                                                                                               | clean                                                                                                        |
+| `npm run build`                                                                                                                                                                                  | succeeded, with the dev server stopped first                                                                 |
 
 ### Pre-existing failures, reproduced on the exact base
 
@@ -304,3 +304,240 @@ Foreground-equivalent stepping in the built-in Chromium pane against `next dev -
 ## Stop
 
 One PR, opened and stopped. No merge, no deploy, no batch 02, no G02 restart.
+
+---
+
+# Repair pass after the independent sanity review
+
+An independent review (Codex) of `4ee81a50` returned **NOT READY TO MERGE** with seven findings.
+This section records the reproduction and repair of each. It is an update to this batch, not a new
+batch: scope, holds and exclusions are unchanged, and nothing assigned to batch 02 was adjudicated.
+
+## Heads and integration
+
+|                                            | SHA                                                                     |
+| ------------------------------------------ | ----------------------------------------------------------------------- |
+| Original batch base                        | `c717c9ffae09cb67e19b06a56d37c75487a5605a`                              |
+| Head reviewed by Codex                     | `4ee81a508964851250aa793f7426e24c229c82d1`                              |
+| `origin/main` when the repair pass started | `f01e43e2410e96f8f77a0db6814a4853749add24` (merges of PR #255 and #257) |
+| Repaired head                              | the repair commit on `claude/mechanical-vent-9-21`, pushed to PR #259   |
+
+**Current main integrates cleanly.** `git merge-tree --write-tree origin/main HEAD` produced a tree
+with no conflicts, and the files main changed since `c717c9ff` do not intersect this branch's change
+set at all. The branch was **not** reset, rebased, force-pushed or re-based onto main; it still
+descends from `c717c9ff`.
+
+**Correction to the first report.** The earlier check table said `tsc --noEmit` was clean. It was
+not clean at `4ee81a50`: the four-device test introduced three device ids that do not exist and the
+compiler rejected them (R7). The type-check had been run before that test reached its final form and
+was not re-run afterwards. That row is corrected above, and the full type-check is now part of every
+gate below.
+
+## R1 — acquired plateau identity and value must stay together
+
+**Reproduced on `4ee81a50`.** A passive lab hold recorded 12.8 cmH₂O; the projection reported
+`acquired-valid` with `valueCmH2O` 12.8; and every console surface printed
+`state.measurements.plateauPressureCmH2O` — 13.3 — under the label "measured during the inspiratory
+hold". On an active patient the gap is larger (record 17.3, live estimate 11.9). Separately,
+`VentilationDyssynchronyDomains` computed `plateauMeasured` as `acquisition.valueCmH2O !== null`,
+which is also true of a **stale** record, so a hold taken before a settings change went on supplying
+that panel's peak-minus-plateau row.
+
+**Repaired.** `PlateauAcquisition` now carries three numbers with distinct meanings —
+`valueCmH2O` (the number a surface must print for the identity it is claiming),
+`acquiredValueCmH2O` and `estimateCmH2O` — and every consumer prints `valueCmH2O`. Audited and
+fixed: the four console facsimiles (pressure readouts, trace annotations, the visible text
+equivalent and the dynamic-lung resistive gap), the Learn "Readings to watch" plateau row (which had
+been reading `labSnapshot`'s own separate hold list beside the projection's label), the oxygenation
+panel's cost row and its text equivalent, the Section 4 worked-hold block, and the integration
+panel. `supportsMechanicsClaim` is now the only gate on a mechanics attribution: `dyssynchrony` uses
+it, and `coachingReadingSnapshot`'s peak-to-plateau gap no longer re-derives validity from current
+passivity alongside it.
+
+Modeled estimates are **not** hidden. An unoccluded value still prints, under "estimate from the
+trace"; the two identities stay semantically distinct and each carries its own number.
+
+## R2 — hold acquisition must use occlusion evidence, not the display buffer
+
+**Reproduced on `4ee81a50`.** Section 14, freeze waveforms, inspiratory hold, advance: the record
+read **5.2 cmH₂O** where the identical unfrozen maneuver read **13.6**. `advanceSimulation` does not
+push samples while `ventilator.frozen`, and the record took its value from
+`measurements.plateauPressureCmH2O`, which `deriveMeasurements` derives from that buffer. The
+maneuver's value depended on whether the learner had frozen the screen.
+
+Also reproduced: PEEP 5 → 9 → 5 during the occlusion came out `acquired-valid`, because the record
+compared only the opening and closing condition fingerprints and they matched again.
+
+**Repaired.** `PerformedHoldRecord` now takes its value from the occluded sample the model just
+computed (`frame.sample.pawCmH2O`), its interpretability from that sample's own `pmusCmH2O` against
+the engine's existing `EFFORT_DETECTION_FLOOR_CMH2O`, and it counts the occluded samples it actually
+observed (`sampleCount`; a record with none cannot be an acquisition). Conditions are re-read at
+every occluded step and `conditionsChangedDuringHold` latches — a change reverted before release is
+still a change, which is the view the Learn lab's own `updateHoldAcquisition` already took. Such a
+maneuver projects as `acquired-invalid` with `invalidReason: 'conditions-changed'` and supports no
+mechanics claim. No new clinical threshold was introduced.
+
+**Verified in Chromium.** Frozen display + hold now records 13.6, identical to the unfrozen
+maneuver, and Section 14, the Readings panel and the console text equivalent all show that one
+number. PEEP 5 → 9 → 5 during the hold yields "Plateau · acquired; not interpretable" with the
+conditions explanation, and Section 14 withholds the value.
+
+## R3 — ABG consumers must use specimen identity everywhere
+
+**Reproduced on `4ee81a50`.** MV-07, two orders, advanced to 122.5 s: the bedside showed specimen
+`repeat-2` at PaCO₂ **58.2** while post-action coaching reported **78.6** — the live
+`patient.gasExchange.paCO2MmHg`, because `coachingReadingSnapshot` gated only on `lastAbgAt`. At
+92.5 s the same single-slot stamp made coaching report **null** although an earlier specimen had
+already resulted: a later order had taken the reading away.
+
+**Repaired.** Coaching reads `latestResultedRepeat(state.arterialGasSamples, …)`. At 92.5 s, 122.5 s
+and 152.5 s the repaired head reports 57.5, 58.2 and 58.2 — the specimens — while the model drifts to
+83.4 and coaching does not follow it. `capturePostActionBaseline` also rewinds the specimen an
+`order-abg` action itself drew, so that action's own "before" column cannot contain it. No authored
+ABG number was altered.
+
+**Verified in Chromium.** MV-07, two orders, advanced to 122.3 s: the card's PaCO₂ row reads
+**58 mm Hg**, exactly the bedside specimen `MV-07:repeat-2`, with "not available then" as the before
+value and the observation window printed.
+
+## R4 — overlapping orders must never disclose future results
+
+**Reproduced on `4ee81a50`.** `arterialGasView` treated pending as a single slot
+(`samples.find(...)`), so with two orders outstanding only the first was recognised. The second
+printed all four values (pH 7.24 / PaCO₂ 58.2 / PaO₂ 70.6 / HCO₃⁻ 24) and its future result time.
+
+**Repaired.** `arterialGasSampleIsPending(sample, now)` is the per-specimen test; the view exposes
+`pendingAll`; the bedside history withholds values for every pending specimen; and
+`arterialGasSampleLabel` is tensed, so a specimen that has not come back reads "result due at Y s"
+rather than "resulted at Y s". `current` is chosen by availability time, so an earlier result stays
+on screen while a later one is processing. Multiple outstanding orders remain allowed.
+
+**Verified in Chromium.** MV-07 with two orders open at 30.0 s: both rows read "result due at … —
+not resulted yet" with no values, and the baseline stays readable. After advancing past both
+availability times each specimen shows its own frozen values and the panel shows the later one.
+
+## R5 — post-action coaching must validate evidence coverage, not elapsed time
+
+**The 12-second window was retained, not changed.** It is the simplest truthful implementation of
+"the displayed peak is a maximum over one trace length", and shortening it would reintroduce the
+original defect. What was missing is that elapsed time does not prove the buffer contains the
+response.
+
+**Reproduced on `4ee81a50`.** MV-14, freeze waveforms, decompress, advance 30 s:
+`postActionObservation(...).complete` was `true` and the card reported "Peak airway pressure 58 → 58
+unchanged" although not one post-action sample had entered the buffer.
+
+**Repaired.** `PostActionObservation` now reports `intervalElapsed` and `evidenceCovered`
+separately and `complete` requires both. Coverage is checked against the samples rather than with
+another timer: the buffer must be non-empty, its newest sample must have kept up with the completion
+instant (within one waveform step), and its oldest sample must already be at or after the moment the
+effect reached the model. `evidenceGap` names which of those failed. Nothing about _how_ the trace
+stopped refreshing is special-cased.
+
+The card is still latched per action, historical alarm wording is unchanged, and repeated actions
+still get their own episodes.
+
+**Verified in Chromium.** Frozen display, decompression at 60 s, advanced to **170 s** — no card at
+all. Unfreezing and letting real samples arrive produces the card reporting **58 → 31 fell** with the
+console reading Ppeak 31. Ordinary behaviour is intact: unfrozen MV-14 decompression reports
+58 → 31, and MV-13 suction reports **44 → 22**, closing at 105 s.
+
+## R6 — trigger delay needs event association
+
+**Reproduced on `4ee81a50`.** MV-01 at 20 s: the latest inspiration begins at 17.52 s, the sample
+before it carries zero effort, and the last appreciable effort ended at 15.80 s — a breath and a half
+earlier. The helper scanned the whole preceding expiration and reported **80 ms**.
+
+**Repaired.** The prior-expiration scan is gone. The helper asks whether an eligible effort is
+associated with _this_ inspiration, using the engine's own floor and the model's own
+`triggerDelayMs` as the only window, and returns one of four honest states:
+
+- `measured` — appreciable effort in the samples immediately before the onset, inside the interval
+  the model itself claims. Only then is the number an interval between two events on this trace.
+- `model-estimate` — this breath has an effort of its own but nothing precedes it, so the number is
+  the phenotype's modeled value and is labelled as such.
+- `not-applicable` — no appreciable modeled effort belongs to this breath. Never zero.
+- `unavailable` — no breath boundary on the trace yet.
+
+This exposed something worth recording for the owner: in this engine `effortAt` is a neural
+oscillator entrained to the machine period, and on the cases that carry effort the effort rises from
+zero **at the same sample the inspiration begins**. No live case currently produces a `measured`
+delay, because the model does not represent an effort that precedes and triggers a breath. The
+`measured` branch exists and is honest if the model ever does; today every case resolves to
+`model-estimate` or `not-applicable`. Whether the model should represent a real trigger interval is
+a physiology question for batch 02 / owner group D5, **not settled here**.
+
+**Verified in Chromium.** Section 8's Timing view reads "330 ms · model estimate" with "Modeled
+trigger delay for this phenotype … not measured on this breath"; Section 7's passive round reads
+"—" and "not applicable". Neither says "Measured trigger delay is N".
+
+## R7 — the four-device regression test and the full type-check
+
+**Reproduced on `4ee81a50`.** `tsc --noEmit` failed with TS2322: the test used `draeger-evita`,
+`puritan-pb980` and `vyaire-avea`, none of which exist. At runtime each fell through to the default
+profile, so the test rendered the C6 four times and proved nothing about the other three facsimiles.
+
+**Repaired.** The test iterates `ventilatorDeviceIds` — `hamilton-c6`, `drager-evita-v800-v600`,
+`puritan-bennett-980`, `carefusion-avea` — asserts the list has four entries, asserts each render's
+`data-device` matches the id it asked for, and asserts the four rendered outputs are distinct, so a
+fallback cannot pass. The full type-check runs with an 8 GB heap at every gate below, which is enough
+on this repository to distinguish a compiler error from an out-of-memory abort.
+
+## Are the seven findings closed?
+
+**Yes — all seven.** Each is reproduced on `4ee81a50`, repaired, covered by a regression that
+encodes the reproduction, and — for R1 through R6 — re-verified through the running application in
+Chromium.
+
+## Checks for the repair pass
+
+| Command                                                                                    | Result                                           |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| `jest src/features/mechanical-ventilation`                                                 | 38 suites, **811 tests, all passing**            |
+| consumer suites (MV routes, critical-care, learning-module, icu-simulation, draft-modules) | 49 suites, 454 tests, **451 passing, 3 failing** |
+| `npx tsc --noEmit -p tsconfig.json` (`NODE_OPTIONS=--max-old-space-size=8192`)             | **clean, exit 0**                                |
+| `npx eslint src/features/mechanical-ventilation`                                           | clean, no warnings                               |
+| `npx prettier --check "src/features/mechanical-ventilation/**/*.{ts,tsx,css}"`             | clean                                            |
+| `git diff --check`                                                                         | clean                                            |
+| `npm run build`                                                                            | succeeded, dev server stopped first              |
+
+New regression file: `__tests__/mv-pre-review-01-sanity-repairs.test.tsx` — 22 tests, one block per
+finding, each assertion written against the behaviour the review demonstrated.
+
+### Remaining failures
+
+The same three critical-care suites, and they are **not** this branch's: reproduced identically on
+**current `origin/main` (`f01e43e2`)** in a read-only worktree — `accessibility.test.tsx` ("keeps
+color-coded circuit, pressure, alarm and trend states readable without color"),
+`curriculum-sequencing.test.tsx` (CRRT case ordering) and `learner-copy.test.ts`. The learner-copy
+scanner flags **19** strings on current main and **19** on this head, so this branch's copy adds
+none.
+
+### Browser journeys performed on the repaired head
+
+Built-in Chromium at 1280×1000 against `next dev --port 3123 --webpack`. The pane was hidden, so
+every time advance used the explicit one-breath control rather than the animation loop.
+
+1. Acquired plateau value identity — Section 14 after a real hold: Readings, the integration panel
+   and the console text equivalent all show the acquired 13.6.
+2. Frozen waveform + hold — records 13.6, identical to unfrozen.
+3. Change-and-revert during hold — "acquired; not interpretable", value withheld in Section 14.
+4. Overlapping ABGs — MV-07, two orders open: both withheld with "result due at"; both released at
+   their own availability times.
+5. ABG coaching specimen identity — MV-07: card PaCO₂ 58 = bedside specimen `repeat-2`.
+6. Frozen waveform + post-action coaching — MV-14: no card at 170 s; after unfreezing, 58 → 31.
+7. Trigger old-effort-tail — Section 8 "330 ms · model estimate"; Section 7 passive "—".
+8. Ordinary post-action behaviour — unfrozen MV-14 decompression 58 → 31; MV-13 suction 44 → 22.
+
+### Still NOT RUN
+
+Unchanged from the first report: native browser zoom, Firefox and Safari, hardware, real assistive
+technology, keyboard-only and screen-reader journeys, the es and zh-CN locales, the deployed build,
+and any clinical, device, media or source review. **No clinical approval is claimed.**
+
+### Nothing assigned to batch 02 was adjudicated
+
+No gas value, gas coefficient, PEEP bin, case severity, alarm threshold, answer key, clinical source
+or review status was touched in this pass. The R6 observation that the engine has no causal
+effort-to-breath trigger is **recorded** for batch 02 / owner group D5, not decided. MV-03 remains
+excluded and the legacy storage protections are unchanged.

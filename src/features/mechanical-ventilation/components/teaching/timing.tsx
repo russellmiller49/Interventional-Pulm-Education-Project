@@ -121,11 +121,13 @@ export function VentilationTriggerAndCycle({
    */
   const trigger = triggerDelayEvidence(state)
   const triggerSentence =
-    trigger.status === 'reported'
+    trigger.status === 'measured'
       ? `Measured trigger delay is ${round(trigger.delayMs ?? 0)} ms`
-      : trigger.status === 'not-applicable'
-        ? 'Trigger delay is not applicable: no effort started this breath'
-        : 'Trigger delay is not available yet: no complete breath on the trace'
+      : trigger.status === 'model-estimate'
+        ? `Modeled trigger delay for this phenotype is ${round(trigger.delayMs ?? 0)} ms, not measured on this breath`
+        : trigger.status === 'not-applicable'
+          ? 'Trigger delay is not applicable: no effort belongs to this breath'
+          : 'Trigger delay is not available yet: no complete breath on the trace'
   const ineffectivePercent = measurements.ineffectiveEffortFraction * 100
   const autotriggerPercent = measurements.autotriggerFraction * 100
   const machineSeconds = measurements.mechanicalInspiratoryTimeSeconds
@@ -234,17 +236,18 @@ export function VentilationTriggerAndCycle({
 
       <dl className={styles.readouts} aria-label="Measured timing signals">
         <div
-          data-state={trigger.status === 'reported' ? undefined : 'unavailable'}
+          data-state={trigger.delayMs === null ? 'unavailable' : undefined}
           data-trigger-delay={trigger.status}
         >
           <dt>Trigger delay</dt>
           <dd>
-            {trigger.status === 'reported' ? (
-              <>
-                {round(trigger.delayMs ?? 0)} <small>ms</small>
-              </>
-            ) : (
+            {trigger.delayMs === null ? (
               '—'
+            ) : (
+              <>
+                {round(trigger.delayMs)} <small>ms</small>
+                {trigger.status === 'model-estimate' ? <small> · model estimate</small> : null}
+              </>
             )}
           </dd>
         </div>

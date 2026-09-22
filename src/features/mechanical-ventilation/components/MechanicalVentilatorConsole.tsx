@@ -212,9 +212,16 @@ function DynamicLungPanel({
   pressureUnit: string
 }) {
   const compliance = state.measurements.staticComplianceMlCmH2O
+  const gapAcquisitionValue = plateauAcquisition(state)
+  /*
+   * The gap is peak minus the plateau the panel is entitled to claim — the acquired one when there
+   * is a valid acquisition, and nothing at all otherwise. Subtracting the live estimate while
+   * showing an acquisition label was the same split identity the pressure readouts had.
+   */
   const resistanceGap = Math.max(
     0,
-    state.measurements.peakPressureCmH2O - state.measurements.plateauPressureCmH2O,
+    state.measurements.peakPressureCmH2O -
+      (gapAcquisitionValue.valueCmH2O ?? gapAcquisitionValue.estimateCmH2O),
   )
   /*
    * Peak minus plateau is the resistive gap only when the plateau is the elastic pressure. While
@@ -223,7 +230,7 @@ function DynamicLungPanel({
    * either. The panel withholds the number in both cases rather than printing a gap the pressure
    * readouts two panes away have just marked uninterpretable.
    */
-  const gapAcquisition = plateauAcquisition(state)
+  const gapAcquisition = gapAcquisitionValue
   const gapIsAttributable = gapAcquisition.supportsMechanicsClaim
   const effort = state.patient.drive.effortAmplitudeCmH2O
   return (
@@ -808,11 +815,19 @@ export function MechanicalVentilatorConsole({
    */
   const plateauAcquired = plateauAcquisition(state)
   const plateauUnreliable = !plateauAcquired.supportsMechanicsClaim
+  /*
+   * One number for one identity. `plateauAcquired.valueCmH2O` is what the console prints wherever
+   * it also prints an acquisition label: when a hold has been acquired it is that hold's own
+   * reading, and otherwise it is the live estimate the projection carries. Printing
+   * `measurements.plateauPressureCmH2O` here is what put roughly 26 on screen beside a hold record
+   * of roughly 24.5 and called the 26 "measured during the hold".
+   */
+  const plateauShown = plateauAcquired.valueCmH2O ?? plateauAcquired.estimateCmH2O
   const pressureReadouts = [
     { label: pressureNames.peak, value: state.measurements.peakPressureCmH2O },
     {
       label: pressureNames.plateau,
-      value: state.measurements.plateauPressureCmH2O,
+      value: plateauShown,
       unreliable: plateauUnreliable,
       /*
        * Both reasons when both apply. Acquisition and passivity are independent, and a learner
@@ -850,15 +865,15 @@ export function MechanicalVentilatorConsole({
     },
     {
       id: 'plateau',
-      marker: `${pressureNames.plateau} ${state.measurements.plateauPressureCmH2O.toFixed(0)}`,
-      label: `${pressureNames.plateau} ${state.measurements.plateauPressureCmH2O.toFixed(0)} — ${
+      marker: `${pressureNames.plateau} ${plateauShown.toFixed(0)}`,
+      label: `${pressureNames.plateau} ${plateauShown.toFixed(0)} — ${
         plateauAcquired.supportsMechanicsClaim
           ? 'elastic load only; gap to peak is resistive'
           : !plateauValidity.interpretable
             ? `${plateauAcquired.label}; depressed by the patient’s own effort, so the gap to peak is not purely resistive`
             : `${plateauAcquired.label}; the gap to peak cannot be read as resistive until a hold is acquired`
       }`,
-      value: state.measurements.plateauPressureCmH2O,
+      value: plateauShown,
     },
     {
       id: 'peep',
@@ -1667,8 +1682,8 @@ export function MechanicalVentilatorConsole({
         {withholdUnacquiredPlateau
           ? '; plateau pressure has not been acquired'
           : plateauAcquired.supportsMechanicsClaim
-            ? `; measured ${pressureNames.plateau} ${state.measurements.plateauPressureCmH2O.toFixed(0)} ${display.pressureUnit}, ${plateauAcquisitionNote(plateauAcquired)}`
-            : `; ${pressureNames.plateau} ${state.measurements.plateauPressureCmH2O.toFixed(0)} ${display.pressureUnit} — ${plateauAcquired.label}`}
+            ? `; measured ${pressureNames.plateau} ${plateauShown.toFixed(0)} ${display.pressureUnit}, ${plateauAcquisitionNote(plateauAcquired)}`
+            : `; ${pressureNames.plateau} ${plateauShown.toFixed(0)} ${display.pressureUnit} — ${plateauAcquired.label}`}
         {/*
          * The readout beside the trace marks an uninterpretable plateau with a bare "?" that is
          * hidden from assistive technology, and the trace's own caption — screen-reader only —

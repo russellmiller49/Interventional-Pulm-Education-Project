@@ -446,14 +446,38 @@ export interface PerformedHoldRecord {
   readonly hold: 'inspiratory' | 'expiratory'
   readonly startedAtSeconds: number
   readonly completedAtSeconds: number | null
-  /** Plateau for an inspiratory hold; total end-expiratory pressure for an expiratory one. */
+  /**
+   * Airway pressure at the occluded samples themselves — the plateau for an inspiratory hold, the
+   * total end-expiratory pressure for an expiratory one.
+   *
+   * Read off `nextWaveformSample`'s own output rather than off `measurements`, because the
+   * measurement layer derives its plateau from the *displayed* waveform buffer and the display can
+   * be frozen. Freezing the trace and then holding recorded 5.2 cmH₂O where the identical unfrozen
+   * maneuver recorded 13.6: the buffer still held pre-hold samples, so the "acquired" number was a
+   * reading of the old picture rather than of the occlusion. A maneuver's value cannot depend on
+   * whether the learner froze the screen.
+   */
   readonly valueCmH2O: number
+  /** How many occluded samples were actually observed. Zero means nothing was measured. */
+  readonly sampleCount: number
   readonly interpretable: boolean
+  /** Why it is not interpretable, when it is not. Null while it still is. */
+  readonly invalidReason: 'effort' | 'conditions-changed' | null
   /**
    * The settings and teaching mechanics the occlusion was performed under, as
    * `measurementInputs` writes them. A later change makes the record stale rather than wrong.
    */
   readonly conditions: string
+  /**
+   * True when the settings or the simulated patient changed at any point *while* the valves were
+   * shut, even if they were changed back before release.
+   *
+   * Comparing only the opening and closing fingerprints let PEEP 5 → 9 → 5 during a hold come out
+   * `acquired-valid`, because the two ends matched. The occlusion was not a controlled maneuver and
+   * no later reversal makes it one; the Learn lab's own `updateHoldAcquisition` already took this
+   * view, and the engine record now takes it too.
+   */
+  readonly conditionsChangedDuringHold: boolean
 }
 
 /**

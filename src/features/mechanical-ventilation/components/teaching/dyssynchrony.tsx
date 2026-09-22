@@ -10,7 +10,6 @@
  */
 import { useMemo, useState } from 'react'
 
-import { plateauReadingValidity } from '../../content/plateauValidity'
 import { plateauAcquisition } from '../../content/plateauAcquisition'
 import { triggerDelayEvidence } from '../../engine/triggerEvidence'
 import type { VentilationSimulationState } from '../../engine'
@@ -86,11 +85,19 @@ export function VentilationDyssynchronyDomains({
 
   const peakEffort = breath.reduce((lowest, sample) => Math.min(lowest, sample.pmusCmH2O), 0)
   const effortPresent = peakEffort < -1.5
-  // Acquired, not merely published: the engine estimates a plateau off the trace on every breath.
+  /*
+   * Acquired, valid, and current — not merely non-null.
+   *
+   * `valueCmH2O !== null` is also true of a stale acquisition and of one the patient pulled
+   * through, so a hold taken before the settings changed went on supplying this panel's
+   * peak-minus-plateau row as though it were this patient's current mechanics.
+   * `supportsMechanicsClaim` is the single gate, and the value that goes with it comes from the
+   * same projection rather than from the live estimate.
+   */
   const acquisition = plateauAcquisition(state, { requireAcquisition: true })
-  const plateauMeasured = acquisition.valueCmH2O !== null
-  const plateauValue = acquisition.valueCmH2O ?? measurements.plateauPressureCmH2O
-  const plateauInterpretable = plateauReadingValidity(state).interpretable
+  const plateauMeasured = acquisition.supportsMechanicsClaim
+  const plateauValue = acquisition.valueCmH2O ?? acquisition.estimateCmH2O
+  const plateauInterpretable = acquisition.supportsMechanicsClaim
   const trigger = triggerDelayEvidence(state)
   const gap = Math.max(0, measurements.peakPressureCmH2O - plateauValue)
   const plateauAboveBaseline = Math.max(0, plateauValue - state.ventilator.settings.peepCmH2O)
@@ -170,12 +177,16 @@ export function VentilationDyssynchronyDomains({
         {
           signal: 'Trigger delay',
           observed:
-            trigger.status === 'reported'
+            trigger.delayMs !== null
               ? trigger.display
               : trigger.status === 'not-applicable'
-                ? '— no effort started this breath'
+                ? '— no effort belongs to this breath'
                 : '— no complete breath on the trace yet',
-          bearing: trigger.status === 'reported' ? 'supports' : 'neutral',
+          /*
+           * Only a delay actually measured between two events on this trace can bear on the
+           * mechanism; the phenotype's modeled value describes the class, not this breath.
+           */
+          bearing: trigger.status === 'measured' ? 'supports' : 'neutral',
         },
         {
           signal: 'Efforts producing no breath',

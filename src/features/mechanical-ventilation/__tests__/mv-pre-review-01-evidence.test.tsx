@@ -23,7 +23,12 @@ import {
 } from '../content/referenceEvidence'
 import { ventilationStageLesson } from '../content/stageLessons'
 import { ventilationTaskPresentation } from '../content/taskPresentation'
-import { advanceSimulation, applyIntervention, createInitialSimulationState } from '../engine'
+import {
+  advanceSimulation,
+  applyIntervention,
+  createInitialSimulationState,
+  ventilatorDeviceIds,
+} from '../engine'
 import { arterialGasView } from '../engine/arterialGas'
 import { createLabSimulation } from '../engine/learningLab'
 import { ventilationSimulationReducer } from '../engine/reducer'
@@ -249,14 +254,53 @@ describe('what the volume row is, and what it is not', () => {
     expect(text).toMatch(/not applicable/i)
   })
 
-  it('reports a delay where an effort actually preceded the breath', () => {
-    const supported = advanceSimulation(
-      { ...createInitialSimulationState('MV-07', 'learn', 1, DEVICE), paused: false },
-      10,
+  /**
+   * MV-PRE-REVIEW-01 repair pass, R6: an effort that ended a breath and a half ago is not the
+   * event that triggered this one.
+   *
+   * On MV-01 at 20 s the latest inspiration begins at 17.52 s with no effort at the sample before
+   * it; the last appreciable effort ended at 15.80 s. The helper scanned the whole preceding
+   * expiration and reported 80 ms as though that old effort had triggered the current breath.
+   */
+  it('does not treat an old effort tail as the event that triggered the next inspiration', () => {
+    const state = advanceSimulation(
+      { ...createInitialSimulationState('MV-01', 'learn', 1, DEVICE), paused: false },
+      20,
     )
-    const evidence = triggerDelayEvidence(supported)
-    expect(evidence.status).toBe('reported')
-    expect(evidence.delayMs).toBe(supported.measurements.triggerDelayMs)
+    const waveforms = state.waveforms
+    let onset = -1
+    for (let index = waveforms.length - 1; index > 0; index -= 1) {
+      if (waveforms[index].phase === 'inspiration' && waveforms[index - 1].phase === 'expiration') {
+        onset = index
+        break
+      }
+    }
+    expect(onset).toBeGreaterThan(0)
+    // The precondition the defect depended on: an old effort exists, but not at the onset.
+    expect(-waveforms[onset - 1].pmusCmH2O).toBeLessThan(1.5)
+    const oldEffort = waveforms.slice(0, onset).some((sample) => -sample.pmusCmH2O >= 1.5)
+    expect(oldEffort).toBe(true)
+
+    const evidence = triggerDelayEvidence(state)
+    // Nothing preceded this breath, so nothing on this trace timed the interval.
+    expect(evidence.precedingEffortCmH2O).toBe(0)
+    expect(evidence.status).not.toBe('measured')
+    expect(evidence.detail).not.toMatch(/already under way/i)
+    // And the number that is still shown is named for what it is.
+    expect(evidence.status).toBe('model-estimate')
+    expect(evidence.display).toMatch(/model estimate/i)
+  })
+
+  it('never turns an unassociated event into a delay of zero', () => {
+    for (const caseId of ['MV-01', 'MV-05', 'MV-07', 'MV-09']) {
+      const state = advanceSimulation(
+        { ...createInitialSimulationState(caseId, 'learn', 1, DEVICE), paused: false },
+        16,
+      )
+      const evidence = triggerDelayEvidence(state)
+      if (evidence.delayMs === null) expect(evidence.display).toBe('—')
+      else expect(evidence.delayMs).toBeGreaterThan(0)
+    }
   })
 })
 
@@ -340,12 +384,14 @@ describe('absent, pending, invalid, valid and stale plateaus', () => {
    */
   it('says the same thing on all four consoles, and never calls an estimate measured', () => {
     const state = createInitialSimulationState('MV-01', 'practice', 1, DEVICE)
-    for (const device of [
-      'hamilton-c6',
-      'draeger-evita',
-      'puritan-pb980',
-      'vyaire-avea',
-    ] as const) {
+    /*
+     * The module's own list. The first version of this test invented three device ids that do not
+     * exist — every one of them fell through to the default profile, so it rendered the C6 four
+     * times and proved nothing about the other three facsimiles. It also did not type-check.
+     */
+    expect(ventilatorDeviceIds).toHaveLength(4)
+    const rendered: string[] = []
+    for (const device of ventilatorDeviceIds) {
       const { container, unmount } = render(
         <MechanicalVentilatorConsole
           state={{ ...state, deviceId: device, paused: true }}
@@ -353,12 +399,17 @@ describe('absent, pending, invalid, valid and stale plateaus', () => {
           controlsEnabled
         />,
       )
+      const shell = container.querySelector('[data-device]')
+      expect(shell?.getAttribute('data-device')).toBe(device)
       const text = container.textContent ?? ''
+      rendered.push(text)
       expect(text).toMatch(/estimate from the trace/i)
       expect(text).not.toMatch(/measured Pplat/i)
       expect(text).not.toMatch(/elastic load only/i)
       unmount()
     }
+    // Four genuinely different facsimiles, not the fallback four times.
+    expect(new Set(rendered).size).toBe(4)
   })
 
   /**
