@@ -8,6 +8,7 @@ export type SiteEntitlement =
   | 'preference_cards_builder'
   | 'site_admin'
   | 'socrates_editor'
+  | 'socrates_participant'
   | 'socal_ebus_course'
 
 const PUBLIC_EXACT_PATHS = new Set([
@@ -50,6 +51,7 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   '/preference-cards',
   '/procedures',
   '/socrates-demo',
+  '/socrates',
 ])
 
 // Public-unlisted modules whose subroutes (e.g. /cardiohelp-ecmo/learn) share
@@ -185,6 +187,9 @@ export function isPublicPath(pathname: string) {
   // generic static-file rule below must never turn a future reviewed JSON/TXT export into a public
   // URL before the entitlement check runs.
   if (
+    normalizedPathname.startsWith('/socrates/') ||
+    normalizedPathname === '/admin/socrates' ||
+    normalizedPathname.startsWith('/admin/socrates/') ||
     normalizedPathname === '/development-beta' ||
     normalizedPathname.startsWith('/development-beta/') ||
     normalizedPathname === '/admin/module-feedback' ||
@@ -287,6 +292,8 @@ export function getRequiredEntitlement(
   ) {
     return 'site_admin'
   }
+
+  if (normalizedPathname.startsWith('/socrates/')) return 'socrates_participant'
 
   if (normalizedPathname === '/admin/therapeutic-bronchoscopy') return null
 
@@ -400,6 +407,8 @@ export function resolveSiteModuleId(pathname: string) {
   if (first === 'baxter-crrt') {
     return 'baxter-crrt'
   }
+
+  if (first === 'socrates') return 'socrates'
 
   if (first === 'socrates-demo') {
     return 'socrates-demo'

@@ -1,8 +1,12 @@
+import type { CaseContent, AuthorContent } from './case-content'
 import type { DeepZoomSlide, DemoAnnotation } from '@/features/socrates-demo/types'
 
 export type SocratesWorkflowStatus = 'draft' | 'review' | 'published'
 
 export interface SocratesSlideDocument {
+  schemaVersion?: 1 | 2
+  caseContent?: CaseContent
+  authorContent?: AuthorContent
   recordId?: string
   slug: string
   title: string
@@ -36,3 +40,9 @@ export type SocratesSandboxDeleteResult =
 export type SocratesBuilderMode = 'protected' | 'sandbox' | 'local'
 
 export type SocratesDrawMode = 'navigate' | 'parent' | 'detail'
+
+export type SocratesCaseDocument = SocratesSlideDocument & {
+  schemaVersion: 2
+  caseContent: CaseContent
+  authorContent: AuthorContent
+}

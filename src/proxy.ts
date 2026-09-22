@@ -157,7 +157,10 @@ export async function proxy(req: NextRequest) {
         Boolean(await getActivePccmIntroCourseEnrollment(user.id))
     }
 
-    if (!hasAccess && requiredEntitlement === 'socrates_editor') {
+    if (
+      !hasAccess &&
+      (requiredEntitlement === 'socrates_editor' || requiredEntitlement === 'socrates_participant')
+    ) {
       hasAccess = await hasActiveSiteEntitlement('site_admin', user.id)
     }
 

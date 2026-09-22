@@ -3,6 +3,9 @@ import type { SocratesSlideDocument } from './types'
 
 export function databaseCompatibilityError(document: SocratesSlideDocument): string | null {
   if (
+    document.schemaVersion === 2 ||
+    document.caseContent ||
+    document.authorContent ||
     getInvenioPair(document.slide.descriptorUrl) ||
     document.annotations.some((annotation) => annotation.explanation)
   ) {
