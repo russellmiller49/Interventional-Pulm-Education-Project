@@ -4,6 +4,7 @@ import { CRITICAL_CARE_PROGRESS_STORAGE_KEY } from '@/features/learning-module/a
 import { BranchTracingLesson } from '../components/BranchTracingLesson'
 import { LESSONS } from '../content/lessons'
 import { localExercise } from '../content/local-exercises'
+import { displayAnswerLabel } from '../engine/branch-identity'
 import { DRAFT_PREFIX } from '../engine/ct-draft'
 import { readSelfPacedRecord } from '../engine/selfPacedProgress'
 
@@ -39,9 +40,11 @@ function reflect() {
 }
 function recordLocal(id: string, index = 0) {
   const ex = localExercise(LESSONS.find((l) => l.id === id)!.exercises![index])
-  ex.answerPoints.forEach((point) => {
+  ex.answerPoints.forEach((point, i) => {
+    // The learner sees the neutral identity (Daughter A · RMSB); the stored label is the data.
+    const label = displayAnswerLabel(ex.trace.checkpoints[0], i, point.label)
     const button = screen.getByRole('button', {
-      name: new RegExp(`^${point.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} · slice`),
+      name: new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} · slice`),
     })
     fireEvent.click(button)
     ready()
@@ -209,7 +212,9 @@ it('teaches the parent relationship, then offers second-division matching as opt
   click('Study the parent view')
   reflect()
   expect(screen.queryByRole('button', { name: 'Opening 1' })).toBeNull()
-  expect(screen.getByText(/1 · A · RMSB|2 · A · RMSB/)).toBeVisible()
+  expect(
+    Array.from(document.querySelectorAll('[data-opening-legend]')).map((e) => e.textContent),
+  ).toEqual(expect.arrayContaining([expect.stringMatching(/^Opening [12] · Daughter A · RMSB/)]))
   click('Next example: LLL')
   expect(document.querySelector('[data-preset]')).toHaveAttribute('data-preset', 'standard')
   recordLocal('continuity', 1)
@@ -277,18 +282,18 @@ it('gives junction feedback from the learner’s own marks, navigates to revisit
   render(<BranchTracingLesson requestedId="continuity" />)
   await begin('continuity')
   const rmsb = localExercise(LESSONS.find((l) => l.id === 'continuity')!.exercises![0])
-  click(/^A · RMSB · slice 387/)
+  click(/^Daughter A · RMSB · slice 387/)
   const image = screen.getByRole('group', { name: /^CT image\./ })
   // Ten cursor steps toward screen-left (patient right) from the crop centre, then place the mark.
   fireEvent.keyDown(image, { key: 'ArrowLeft', shiftKey: true })
   fireEvent.keyDown(image, { key: 'ArrowLeft', shiftKey: true })
   fireEvent.keyDown(image, { key: 'Enter' })
   ready()
-  expect(screen.getByRole('heading', { name: '2. A · RMSB placed' })).toBeVisible()
+  expect(screen.getByRole('heading', { name: '2. Daughter A · RMSB placed' })).toBeVisible()
   const placed = draft('continuity').marks[0]
   expect(placed.slice).toBe(387)
   expect(placed.pixel[0]).toBeLessThan(rmsb.trace.cropCenter[0])
-  click(/^B · LMSB · slice 387/)
+  click(/^Daughter B · LMSB · slice 387/)
   click('Lumen unresolved here')
   click('Check my tracing')
   await screen.findByRole('heading', { name: 'Review the image evidence' })

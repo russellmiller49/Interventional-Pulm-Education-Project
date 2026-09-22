@@ -6,56 +6,80 @@ import type { LocalSession } from '../engine/local-session'
 import { NativeCtViewer } from './NativeCtViewer'
 import type { LocalCtExercise, CtTrace, CtBranchChoice } from '../content/ct-types'
 import { parentMap } from '../geometry/parent-map'
+import { parentCameraCaption } from '../geometry/reference-frames'
+import { divisionIdentities } from '../engine/branch-identity'
+import { divisionLevels, levelPhrase } from '../engine/model-reference'
 import styles from './branch-tracing.module.css'
 
 export function CtParentMap({
   trace,
   active = 0,
   labels = true,
-  ctLabels,
   choice = null,
   onChoose,
 }: {
   trace: CtTrace
   active?: number
+  /** Show the CT letters and source names on the openings; off while a matching try is open. */
   labels?: boolean
-  ctLabels?: string[]
   choice?: CtBranchChoice | null
   onChoose?: (value: CtBranchChoice) => void
 }) {
   const map = parentMap(trace, active)
-  if (!map) return null
+  const checkpoint = trace.checkpoints[active]
+  const identities = divisionIdentities(checkpoint)
+  const levels = divisionLevels(checkpoint)
+  if (!map || !identities || !levels) return null
+  const caption = parentCameraCaption(
+    { direction: map.direction, up: map.referenceUp, atJunction: true },
+    map.parent,
+  )
   return (
-    <figure className={styles.parentMap}>
+    <figure className={styles.parentMap} data-parent-map={checkpoint.id}>
       <figcaption>
-        Looking distally from <strong>{map.parent}</strong> · fixed parent view
+        <strong>Model parent view</strong> · looking distally from <strong>{map.parent}</strong>
+        <span className={styles.parentMapCaption}>{caption}</span>
       </figcaption>
       <svg
         viewBox="0 0 200 200"
         role="img"
-        aria-label={`Model direction schematic from ${map.parent}. Numbered daughters and projected patient R, A and S directions.`}
+        aria-label={`Model direction schematic from ${map.parent}. ${
+          labels
+            ? map.points.map((p) => `Opening ${p.number} is Daughter ${p.letter}`).join('; ')
+            : `${map.points.length} numbered openings`
+        }. Patient directions in this view: ${map.inPlane.map((a) => a.label).join(', ')}.${
+          map.alongView.length
+            ? ` The ${map.alongView.map((a) => a.pair).join(' and ')} axis runs along the line of sight.`
+            : ''
+        }`}
       >
         <circle cx="100" cy="100" r="82" fill="#07151b" stroke="#69838d" />
-        {map.axes.map((a) => (
+        {map.inPlane.map((a) => (
           <g key={a.label}>
             <path
-              d={`M100 100 L${100 + a.point[0] * 85} ${100 + a.point[1] * 85}`}
+              d={`M100 100 L${100 + a.point[0] * 82} ${100 + a.point[1] * 82}`}
               stroke="#536b73"
               strokeDasharray="2 3"
             />
             <text
-              x={100 + a.point[0] * 92}
-              y={100 + a.point[1] * 92}
+              x={100 + a.point[0] * 93}
+              y={100 + a.point[1] * 93 + 4}
               textAnchor="middle"
-              fill="#a8bec8"
-              fontSize="10"
+              fill="#c9dbe2"
+              fontSize="12"
+              fontWeight="650"
+              data-axis-label={a.label}
             >
               {a.label}
             </text>
           </g>
         ))}
         {map.points.map((p) => (
-          <g key={p.edgeId}>
+          <g
+            key={p.edgeId}
+            data-opening={p.number}
+            data-opening-letter={labels ? p.letter : undefined}
+          >
             <path
               d={`M100 100 L${p.x} ${p.y}`}
               stroke={choice === p.edgeId ? '#81f1ed' : '#849da7'}
@@ -64,36 +88,70 @@ export function CtParentMap({
             <circle
               cx={p.x}
               cy={p.y}
-              r="14"
+              r="17"
               fill="#142f39"
               stroke={choice === p.edgeId ? '#81f1ed' : '#f6c66c'}
               strokeWidth="2"
             />
-            <text x={p.x} y={p.y + 4} textAnchor="middle" fill="white" fontSize="12">
-              {p.number}
+            <text
+              x={p.x}
+              y={p.y + 5.5}
+              textAnchor="middle"
+              fill="white"
+              fontSize="15"
+              fontWeight="700"
+            >
+              {labels ? p.letter : p.number}
             </text>
+            {labels && (
+              <text
+                x={p.x + 12}
+                y={p.y - 11}
+                textAnchor="middle"
+                fill="#a8bec8"
+                fontSize="8"
+                aria-hidden="true"
+              >
+                {p.number}
+              </text>
+            )}
           </g>
         ))}
       </svg>
+      {map.alongView.map((a) => (
+        <p key={a.pair} className={styles.small} data-along-view={a.pair}>
+          The {a.toward.name}–{a.into.name} axis runs along the line of sight here: {a.into.name}{' '}
+          points into the view and {a.toward.name} back toward the viewer, so it has no arrow.
+        </p>
+      ))}
       <div className={styles.mapChoices}>
-        {map.points.map((p) =>
-          onChoose ? (
+        {map.points.map((p) => {
+          const daughter = identities.daughters[p.sourceIndex]
+          const level = levels.daughters[p.sourceIndex]
+          return onChoose ? (
             <button key={p.edgeId} onClick={() => onChoose(p.edgeId)}>
               Opening {p.number}
             </button>
           ) : (
-            <p key={p.edgeId}>
-              {p.number}
-              {labels ? ` · ${ctLabels?.[p.sourceIndex] ?? p.label}` : ''}
+            <p key={p.edgeId} data-opening-legend={p.number}>
+              <strong>Opening {p.number}</strong>
+              {labels
+                ? ` · ${daughter.display}${
+                    daughter.repeatedName
+                      ? ''
+                      : ` (source label “${daughter.direction.toLowerCase()}”)`
+                  } · ${levelPhrase(level)}`
+                : ''}
               {choice === p.edgeId ? ' · your continuation' : ''}
             </p>
-          ),
-        )}
+          )
+        })}
         {onChoose && <button onClick={() => onChoose('unresolved')}>Opening unresolved</button>}
       </div>
       <p className={styles.small}>
-        R: patient right · A: anterior · S: superior. Projected model directions, not measured
-        opening shapes. CT display rotation does not rotate this view.
+        Letters are the CT branch labels (A, B); numbers are the openings’ positions in this view.
+        Directions are projected model directions, not measured opening shapes. CT display rotation
+        does not rotate this view.
       </p>
     </figure>
   )

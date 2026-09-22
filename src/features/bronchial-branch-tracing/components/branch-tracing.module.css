@@ -1619,12 +1619,24 @@
   border-radius: 0.5rem;
 }
 .parentMap svg {
-  width: min(100%, 260px);
+  /* Legible at the pane's own width: axis letters and opening letters are drawn at
+   * 12–15 user units in a 200-unit box, so they render at roughly 20 px and above. */
+  width: min(100%, 420px);
   display: block;
   margin: auto;
 }
 .localInstructions[data-branch-matching] .parentMap svg {
-  width: min(100%, 200px);
+  width: min(100%, 420px);
+}
+.parentMap figcaption {
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+.parentMapCaption {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  color: #b4cbd3;
 }
 .localInstructions[data-branch-matching] .mapChoices button {
   padding-inline: 0.4rem;
@@ -2041,4 +2053,72 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   vertical-align: middle;
+}
+
+/* BBT-PRE-REVIEW-03: opening labels drawn over the paired view. Anchors sit on the projected
+ * model points; only the text is relocated, with a leader back to its anchor. */
+.scopeAnnotations {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.scopeAnnotationNote {
+  margin: 0;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: #e9d9b2;
+}
+/* The L2 comparison with its fixed parent airway view beside the two CT copies. */
+/* Two columns by default (the camera wraps under the copies); three only where each panel
+ * still gets about 300 px, so no CT copy shrinks to a thumbnail. */
+.comparisonWithScope {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (min-width: 1200px) {
+  .comparisonWithScope {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.comparisonScope {
+  position: relative;
+  aspect-ratio: 1;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #020507;
+}
+.comparisonScope .pairedScope {
+  height: 100%;
+}
+.viewpointComparison .walkthroughControls {
+  margin: 0.6rem 0 0;
+}
+@media (max-width: 767px) {
+  .comparisonWithScope {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .comparisonScope {
+    max-width: 420px;
+    margin: auto;
+  }
+}
+.branchIdentities {
+  margin: 0.4rem 0 0.8rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #4e6874;
+  border-radius: 0.5rem;
+}
+.branchIdentities h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+}
+.branchIdentities ul {
+  margin: 0 0 0.4rem;
+  padding-left: 1.1rem;
+}
+.branchIdentities li {
+  margin: 0.15rem 0;
 }

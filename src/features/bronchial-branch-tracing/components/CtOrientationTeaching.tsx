@@ -101,7 +101,9 @@ export function CtOrientationTeaching({
             <h2>Patient, display and parent-airway viewpoint</h2>
             <p>
               Patient anatomy stays fixed. CT presents a cross-section; the parent-airway observer
-              looks along the lumen with a separately defined camera roll.
+              looks along the lumen with a separately defined camera roll: the patient direction
+              held at the top of that view, declared per region. The parent airway view beside the
+              CT copies shows that camera; it does not turn or reflect when the CT display does.
             </p>
             <ObserverReference />
             <p>
@@ -144,6 +146,17 @@ export function CtOrientationTeaching({
                 ? 'With reflection, R and L exchange sides while A stays at the top. The patient has not moved.'
                 : 'All four direction markers turn with the CT. The patient has not moved.'}
             </p>
+            {trace.preset === 'mirror' && trace.anchor.airway.code === 'Trachea' && (
+              <p data-symmetric-note>
+                At this level the trachea is a nearly round, midline lumen, so the reflection
+                changes little inside the airway itself: watch the R and L letters and the
+                asymmetric lung and mediastinal outlines swap sides. At a division whose daughters
+                lie on different sides of the patient, the same reflection swaps their screen
+                positions, which is why the display convention matters before the divisions ahead.
+                The parent airway view beside the CT copies does not change: it is a separate
+                camera, not a copy of the display.
+              </p>
+            )}
             {/* BBT-01 replaced the "What changed?" check with this direct comparison: it repeated
                 the sentence above for one extra click. The three teaching points stay visible. */}
             <dl className={styles.orientationComparison} data-orientation-comparison>

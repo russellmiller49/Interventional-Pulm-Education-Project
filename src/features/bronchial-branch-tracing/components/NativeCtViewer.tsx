@@ -31,6 +31,9 @@ import {
   type CtOrientation,
 } from '../geometry/orientation'
 import { pairedScope } from '../geometry/paired-scope'
+import { ctDisplayCaption, parentCameraCaption } from '../geometry/reference-frames'
+import { letterFor } from '../engine/branch-identity'
+import type { ScopeAnnotation } from './ClinicalAirwayView'
 import { nativeImageUrl, sliceZ, targetForTrace, TARGET_CT_BASE } from '../geometry/native-ct'
 import { placeOverlayLabels } from './ctOverlayLabels'
 import { useCtFrame } from './useCtFrame'
@@ -82,6 +85,14 @@ interface Props {
   focusRequest?: number
   /** Controls placed with the CT: the demonstration transport belongs beside the image. */
   belowImage?: React.ReactNode
+  /** Model centreline crossings on the displayed plane, drawn as dotted crosshairs without text. */
+  courseLocators?: { id: string; pixel: [number, number]; ariaLabel: string }[]
+  /** Name the daughters' model response points in the paired view when the camera is at the fork. */
+  scopeLabels?: boolean
+  /** Initial paired-view state when the saved view has none. */
+  scopeDefault?: boolean
+  /** Bumped by the host to open or close the paired view for a teaching moment. */
+  scopeRequest?: { show: boolean; serial: number }
 }
 export function NativeCtViewer({
   trace,
@@ -114,6 +125,10 @@ export function NativeCtViewer({
   markLabels,
   focusRequest = 0,
   belowImage,
+  courseLocators = [],
+  scopeLabels = false,
+  scopeDefault,
+  scopeRequest,
 }: Props) {
   const target = targetForTrace(trace)
   const checkpoint = trace.checkpoints[active]
@@ -174,7 +189,12 @@ export function NativeCtViewer({
   )
   const focusedOnStart = startFocus?.active === active && startFocus?.levelRequest === levelRequest
   const [showNodule, setShowNodule] = useState(initialView?.showNodule ?? !local)
-  const [showScope, setShowScope] = useState(initialView?.showScope ?? !local)
+  const [showScope, setShowScope] = useState(initialView?.showScope ?? scopeDefault ?? !local)
+  const firstScopeRequest = useRef(scopeRequest?.serial)
+  useEffect(() => {
+    if (!scopeRequest || scopeRequest.serial === firstScopeRequest.current) return
+    setShowScope(scopeRequest.show)
+  }, [scopeRequest])
   const [magnification, setMagnification] = useState(initialView?.magnification ?? 1)
   const [cursor, setCursor] = useState<[number, number]>([50, 50])
   const [retry, setRetry] = useState(0)
@@ -270,6 +290,24 @@ export function NativeCtViewer({
     () => pairedScope(trace, slice, active, focusedOnStart),
     [trace, slice, active, focusedOnStart],
   )
+  // Frame 3 is named by the airway the camera looks along, never by the CT display.
+  const scopeAirwayCode = focusedOnStart
+    ? trace.anchor.airway.code
+    : (checkpoint.decision?.parent.airway.code ?? checkpoint.airway.code)
+  // Opening labels exist only where stable source-edge identity supports them: at the fork pose,
+  // each daughter's own model response point, in the CT letter order.
+  const scopeAnnotations = useMemo<ScopeAnnotation[] | undefined>(
+    () =>
+      scopeLabels && scope.atJunction && checkpoint.decision
+        ? checkpoint.decision.options.map((option, i) => ({
+            id: `opening-${option.sourceEdgeId}`,
+            lps: option.lps,
+            text: `${letterFor(i)} · ${option.airway.code}`,
+            ariaLabel: `Daughter ${letterFor(i)} · ${option.airway.code}: model response point`,
+          }))
+        : undefined,
+    [scopeLabels, scope.atJunction, checkpoint.decision],
+  )
   const project = (pixel: readonly number[]): [number, number] =>
     orientedPixel([pixel[0], pixel[1]], center, size, orientation)
   const annotations: {
@@ -282,8 +320,21 @@ export function NativeCtViewer({
     teaching?: boolean
     referenceIndex?: number
     contour?: [number, number][]
+    /** A model centreline crossing on this plane; dotted, unlabelled, never a boundary. */
+    course?: boolean
   }[] = []
   if (ready && showOverlays) {
+    for (const locator of courseLocators)
+      annotations.push({
+        id: locator.id,
+        kind: 'model',
+        point: project(locator.pixel),
+        reach: 2.2,
+        ariaLabel: locator.ariaLabel,
+        text: null,
+        teaching: true,
+        course: true,
+      })
     if (showAnchor && shownSlice === trace.anchor.slice)
       annotations.push({
         id: 'anchor',
@@ -804,6 +855,7 @@ export function NativeCtViewer({
                   key={annotation.id}
                   role="img"
                   data-teaching-overlay={annotation.teaching || undefined}
+                  data-course-locator={annotation.course || undefined}
                   data-ct-reference={annotation.referenceIndex}
                   aria-label={annotation.ariaLabel}
                 >
@@ -830,8 +882,9 @@ export function NativeCtViewer({
                        a locator, never a wall or a boundary. */
                     <path
                       d={crosshair(annotation.point, annotation.reach)}
-                      stroke="#f6c66c"
-                      strokeWidth=".6"
+                      stroke={annotation.course ? '#e9c77e' : '#f6c66c'}
+                      strokeWidth={annotation.course ? '.5' : '.6'}
+                      strokeDasharray={annotation.course ? '.5 .4' : undefined}
                       fill="none"
                     />
                   )}
@@ -905,15 +958,21 @@ export function NativeCtViewer({
           </p>
         </div>
         {showScope && scopeAvailable && (
-          <div className={styles.pairedColumn}>
+          <div
+            className={styles.pairedColumn}
+            data-paired-scope-column
+            data-scope-pose={[scope.position, scope.direction, scope.up]
+              .map((v) => v.map((n) => n.toFixed(4)).join(','))
+              .join('|')}
+          >
             <h3>
               Virtual bronchoscopy{' '}
               <span>
                 {focusedOnStart
-                  ? `Looking distally from ${trace.anchor.airway.code}`
+                  ? `Model parent view · looking distally from ${trace.anchor.airway.code}`
                   : atCheckpoint
-                    ? `Parent view · ${stationLabel}`
-                    : 'Following the same target route'}
+                    ? `Model parent view · ${stationLabel}`
+                    : 'Model parent view · following the model route'}
               </span>
             </h3>
             <p className={styles.referenceNotice}>
@@ -926,15 +985,20 @@ export function NativeCtViewer({
               referenceUp={scope.up}
               roll={0}
               slice={slice}
+              annotations={scopeAnnotations}
             />
-            <p className={styles.pairCaption}>
+            <p className={styles.pairCaption} data-scope-caption>
+              {parentCameraCaption(scope, scopeAirwayCode)}{' '}
               {scope.atJunction
-                ? 'Looking from the parent toward this fork. CT shows the daughter level; browse back to the division.'
+                ? 'The CT beside it shows the daughter level; browse back to the division.'
                 : scope.planeGapMm < 0.26
                   ? 'Scope just proximal to this CT level.'
                   : `CT plane is ${scope.planeGapMm.toFixed(1)} mm from the nearest route point; scope remains on the airway.`}
               {scope.atDistalLimit &&
                 ' Near the distal model limit: a closed surface is not evidence of airway obstruction.'}
+            </p>
+            <p className={styles.pairCaption} data-display-caption>
+              {ctDisplayCaption(orientation)}
             </p>
           </div>
         )}
@@ -1050,6 +1114,14 @@ export function NativeCtViewer({
         <p className={styles.ctLegend}>
           <span>○ ring · your trace</span>
           <span>＋ open crosshair · model reference — not yet faculty reviewed</span>
+        </p>
+      )}
+      {courseLocators.length > 0 && showOverlays && (
+        <p className={styles.ctLegend} data-course-legend>
+          <span>
+            ＋ dotted crosshair · model centreline crossing on this plane (course locator, not a
+            lumen boundary)
+          </span>
         </p>
       )}
       <details className={styles.options}>

@@ -15,6 +15,9 @@ import { junctionFeedbackPacket } from '../content/junction-feedback'
 import { CourseOutline } from './CourseOutline'
 import { LOCAL_DRAFT_ALIASES } from '../engine/local-draft-migration'
 import { orientationName, sameOrientation, STANDARD_ORIENTATION } from '../geometry/orientation'
+import { pairedScope } from '../geometry/paired-scope'
+import { divisionIdentities, sourceNamingNote } from '../engine/branch-identity'
+import { courseLocatorNote, modelCourseLocators } from '../engine/model-course'
 import { localExercise, MODEL_REFERENCE_LABEL } from '../content/local-exercises'
 import {
   browserStorage,
@@ -94,10 +97,25 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
   const [labelsFor, setLabelsFor] = useState<string | null>(null)
   const [request, setRequest] = useState<{ slice: number; serial: number; focusAirway?: boolean }>()
   const [focusRequest, setFocusRequest] = useState(0)
+  // Opens the paired parent view for a teaching moment; the learner's own toggle still rules.
+  const [scopeRequest, setScopeRequest] = useState<{ show: boolean; serial: number }>()
   const [displayedSlice, setDisplayedSlice] = useState<number | null>(null)
   const exercise = exercises[s.exercise]
   const point = exercise.trace.checkpoints[0]
   const slot = exercise.answerPoints[s.slot]
+  // Neutral Parent / Daughter A / Daughter B identities for display. The stored answer labels,
+  // marks and draft signature keep their own form; nothing below rewrites them.
+  const identities = divisionIdentities(point)
+  const displayLabel = (index: number) =>
+    identities?.daughters[index]?.display ?? exercise.answerPoints[index].label
+  // The fixed parent camera at the introductory plane, shown beside the two CT copies (BBTF-04).
+  const comparisonScope = useMemo(
+    () => ({
+      ...pairedScope(exercise.trace, exercise.trace.anchor.slice, 0, true),
+      airwayCode: exercise.trace.anchor.airway.code,
+    }),
+    [exercise],
+  )
   const attempts = s.history[exercise.id] ?? []
   const nextLesson = lessonAfter(lesson.id)
   const sameLumen = ['same-lumen', 'viewpoint'].includes(exercise.spec.kind)
@@ -162,8 +180,8 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
           ? attemptReady
             ? '2. Branch responses ready to review'
             : s.marks[s.slot]
-              ? `2. ${slot.label} placed`
-              : `2. Mark ${slot.label}`
+              ? `2. ${displayLabel(s.slot)} placed`
+              : `2. Mark ${displayLabel(s.slot)}`
           : s.phase === 'compare'
             ? s.marks.every((mark) => mark?.pixel)
               ? '3. Compare your branch marks'
@@ -203,6 +221,14 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
       setRestarted(true)
       setRestartAsk(false)
     }
+    // Relating the parent view, and the viewpoint lesson's own exercise, are the moments the
+    // pairing teaches: open the parent airway view beside the CT. The learner's toggle still rules
+    // afterwards and is kept in the saved view state.
+    if (
+      (next.phase === 'parent-view' && s.phase !== 'parent-view') ||
+      (action.type === 'finish-orientation' && (next.phase === 'parent-view' || viewpoint))
+    )
+      setScopeRequest((r) => ({ show: true, serial: (r?.serial ?? 0) + 1 }))
     if (action.type === 'retry' || action.type === 'next' || action.type === 'restart')
       setReviewAttempt(null)
     if (action.type === 'begin' || action.type === 'retry' || action.type === 'reset-attempt')
@@ -337,7 +363,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
         ? sameLumen
           ? 'Check my tracing'
           : nextMarkSlot !== null
-            ? `Mark ${exercise.answerPoints[nextMarkSlot].label}`
+            ? `Mark ${displayLabel(nextMarkSlot)}`
             : 'Check my tracing'
         : s.phase === 'compare' && parentRequired
           ? independentParent
@@ -426,7 +452,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
           ? !independentParent
             ? 'The labels show how this same division projects into the declared parent view. Follow each CT daughter to its schematic opening; this is guided application.'
             : s.viewAnswer === null && !labelsShown
-              ? `Which numbered opening in the diagram matches CT branch ${exercise.answerPoints[0].label}? Choose an opening, or select Show the labels. You can continue at any point.`
+              ? `Which numbered opening in the diagram matches CT branch ${displayLabel(0)}? Choose an opening, or select Show the labels. You can continue at any point.`
               : `Compare the branch labels${s.viewAnswer === null ? '' : ' with your choice'}, then ${lastExercise ? 'select Finish lesson' : `continue to the ${exercises[s.exercise + 1].trace.anchor.airway.code} example`}.`
           : s.phase === 'demo'
             ? exercise.task
@@ -437,12 +463,12 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
               : attemptReady
                 ? 'All responses are ready. Select Check my tracing to see the comparison.'
                 : nextMarkSlot !== null
-                  ? `Your ${slot.label} ${s.marks[s.slot]?.pixel ? 'mark' : 'uncertainty response'} is placed. Next, mark ${exercise.answerPoints[nextMarkSlot].label} on slice ${exercise.answerPoints[nextMarkSlot].slice}.`
+                  ? `Your ${displayLabel(s.slot)} ${s.marks[s.slot]?.pixel ? 'mark' : 'uncertainty response'} is placed. Next, mark ${displayLabel(nextMarkSlot)} on slice ${exercise.answerPoints[nextMarkSlot].slice}.`
                   : missingSlot < 0
                     ? needsCourse
                       ? 'Your branch marks are placed. Choose the Airway course below, then select Check my tracing.'
                       : 'Your branch marks are placed. Choose which branch to follow below, then select Check my tracing.'
-                    : `Trace ${slot.label} from ${exercise.trace.anchor.airway.code} to slice ${slot.slice}, then click inside its lumen. You can also record Lumen unresolved here, show the reference, or continue without marking.`
+                    : `Trace ${displayLabel(s.slot)} from ${identities?.parent.display ?? exercise.trace.anchor.airway.code} to slice ${slot.slice}, then click inside its lumen. You can also record Lumen unresolved here, show the reference, or continue without marking.`
   // Model points appear in the demonstration, the comparison, and whenever the learner shows the reference.
   const viewSlice = s.views[exercise.id]?.slice ?? exercise.trace.anchor.slice
   const frame = showingWalkthrough
@@ -453,6 +479,34 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
   const showAnchor = Boolean(guide) || (s.phase === 'attempt' && s.hints < 3 && !referenceShown)
   const displayedFrameIndex = exercise.frames.findIndex((f) => f.slice === displayedSlice)
   const displayedFrame = exercise.frames[displayedFrameIndex]
+  // Model course locators for the demonstration's intermediate planes (BBTF-26): only where a
+  // source edge of this division crosses the displayed plane, drawn dotted and unlabelled.
+  const frameIndex = frame ? exercise.frames.indexOf(frame) : -1
+  const courseLocators = useMemo(
+    () =>
+      frameIndex < 0
+        ? []
+        : modelCourseLocators(exercise, frameIndex).map((l) => ({
+            id: l.id,
+            pixel: l.pixel,
+            ariaLabel: `Model course locator: ${l.roleLabel} · ${l.code}, centreline crossing on slice ${l.slice}; provisional model position, not a lumen boundary`,
+          })),
+    [exercise, frameIndex],
+  )
+  const displayedCourseNote =
+    displayedFrameIndex >= 0
+      ? courseLocatorNote(modelCourseLocators(exercise, displayedFrameIndex))
+      : null
+  // Opening letters in the paired view follow the same rule as the model locators on the CT:
+  // shown in the worked demonstration, the comparison and the parent view; in the attempt only
+  // once the learner asks for the reference; never while a matching try is still open.
+  const scopeLabels =
+    !guide &&
+    (s.phase === 'demo' ||
+      s.phase === 'compare' ||
+      complete ||
+      (s.phase === 'attempt' && referenceShown) ||
+      (s.phase === 'parent-view' && (!independentParent || s.viewAnswer !== null || labelsShown)))
   const checklist = lesson.checklist?.length ? (
     <section aria-label="Tracing checklist">
       <h3>Tracing checklist</h3>
@@ -515,6 +569,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
           ? 'Waiting for the CT image.'
           : (displayedFrame?.caption ??
             `Browsing slice ${displayedSlice}. Return to a demonstration slice to see its caption.`)}
+        {displayedCourseNote ? ` ${displayedCourseNote}` : ''}
       </p>
     </section>
   )
@@ -720,6 +775,29 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                   {entryLimitation}
                 </p>
               )}
+              {identities && !sameLumen && ['demo', 'attempt'].includes(s.phase) && (
+                <section
+                  className={styles.branchIdentities}
+                  aria-label="Branch identities on this CT"
+                  data-branch-identities={exercise.spec.checkpointId}
+                >
+                  <h3>Branch identities on this CT</h3>
+                  <ul>
+                    <li>
+                      {identities.parent.display} · {identities.parent.name} · parent point on slice{' '}
+                      {identities.parent.slice}
+                    </li>
+                    {identities.daughters.map((d) => (
+                      <li key={d.sourceEdgeId}>
+                        {d.display}
+                        {d.repeatedName ? '' : ` (source label “${d.direction.toLowerCase()}”)`} ·
+                        response slice {d.slice}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className={styles.small}>{sourceNamingNote(identities)}</p>
+                </section>
+              )}
               {s.phase === 'demo' && !sameLumen && (
                 <>
                   <p>{lesson.objective}</p>
@@ -748,7 +826,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                         aria-pressed={s.slot === i}
                         onClick={() => act({ type: 'slot', index: i })}
                       >
-                        {p.label} · slice {p.slice}
+                        {displayLabel(i)} · slice {p.slice}
                         {s.marks[i] ? ' · placed' : ''}
                       </button>
                     ))}
@@ -868,7 +946,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                             aria-pressed={s.slot === i}
                             onClick={() => act({ type: 'slot', index: i })}
                           >
-                            Compare {p.label} · slice {p.slice}
+                            Compare {displayLabel(i)} · slice {p.slice}
                           </button>
                         ))}
                       </div>
@@ -925,12 +1003,24 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                   {walkthrough}
                 </details>
               )}
+              {identities && !sameLumen && !complete && s.phase !== 'parent-view' && (
+                <details data-parent-schematic>
+                  <summary>Model parent view schematic (optional)</summary>
+                  <p className={styles.small}>
+                    How this division’s daughters sit when looked at from {identities.parent.code},
+                    in the same fixed camera as the paired parent airway view beside the CT.
+                  </p>
+                  <CtParentMap
+                    trace={exercise.trace}
+                    labels={!independentParent || s.viewAnswer !== null || labelsShown}
+                  />
+                </details>
+              )}
               {s.phase === 'parent-view' && (
                 <>
                   <CtParentMap
                     trace={exercise.trace}
                     labels={!independentParent || s.viewAnswer !== null || labelsShown}
-                    ctLabels={exercise.answerPoints.map((p) => p.label)}
                     choice={s.viewAnswer}
                     onChoose={
                       independentParent && s.viewAnswer === null && !labelsShown
@@ -1002,7 +1092,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                         {attempt.marks
                           .map(
                             (m, j) =>
-                              `${exercise.answerPoints[j].label}: ${m.pixel ? `(${m.pixel.map((p) => p.toFixed(1)).join(', ')})` : 'unresolved'}`,
+                              `${displayLabel(j)}: ${m.pixel ? `(${m.pixel.map((p) => p.toFixed(1)).join(', ')})` : 'unresolved'}`,
                           )
                           .join(' · ')}
                       </p>
@@ -1055,6 +1145,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
               marks={s.marks}
               orientation={s.orientation}
               onReadyChange={setImageReady}
+              scope={comparisonScope}
             />
           ) : (
             <NativeCtViewer
@@ -1075,17 +1166,23 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
               teachingFrame={frame}
               annotationReview={exercise.review}
               demonstrate={s.phase === 'demo'}
-              scopeAvailable={
-                !guide &&
-                s.phase === 'parent-view' &&
-                (!independentParent || s.viewAnswer !== null || labelsShown)
-              }
+              scopeAvailable={!guide || guide === 'context'}
+              scopeLabels={scopeLabels}
+              scopeDefault={viewpoint}
+              scopeRequest={scopeRequest}
+              courseLocators={courseLocators}
               onMark={
                 !guide && s.phase === 'attempt' ? (mark) => act({ type: 'mark', mark }) : undefined
               }
               orientation={s.orientation}
               onOrientation={(value) => act({ type: 'orientation', value })}
-              initialView={s.views[exercise.id]}
+              initialView={
+                // A viewer that mounts during a paired teaching moment opens paired; a saved
+                // preference to hide the view is honoured again as soon as the learner toggles it.
+                s.views[exercise.id] && (s.phase === 'parent-view' || viewpoint)
+                  ? { ...s.views[exercise.id], showScope: true }
+                  : s.views[exercise.id]
+              }
               onViewChange={onViewChange}
               onReadyChange={setImageReady}
               onDisplayedSliceChange={setDisplayedSlice}
@@ -1147,6 +1244,11 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
           reference displays the model locations without placing a mark. Check my tracing opens the
           comparison with your marks; it does not grade anatomical accuracy. Continue without
           marking moves on and records nothing for that example.
+        </p>
+        <p>
+          Show parent airway view opens the model camera beside the CT: it looks along the parent
+          airway with a declared roll for this region, follows the model route and records nothing.
+          Turning or reflecting the CT never moves it.
         </p>
         <p>
           Beside the image: Magnify enlarges the native pixels without adding resolution, Hide
