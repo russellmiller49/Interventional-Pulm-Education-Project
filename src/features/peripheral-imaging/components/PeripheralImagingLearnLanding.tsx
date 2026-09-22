@@ -29,9 +29,11 @@ export function PeripheralImagingLearnLanding({
       ) : null}
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Learn</p>
       <h1 className="text-3xl font-bold tracking-tight">{peripheralImagingPathway.arcSentence}</h1>
-      <p>
-        Learn to optimize fluoroscopy, interpret DTS and CBCT, and assess the biopsy tool’s
-        relationship to a peripheral lung lesion.
+      {/* Report O2: both modalities spelled out where they are first met on this route. */}
+      <p data-learn-lede>
+        Learn to optimize fluoroscopy, interpret digital tomosynthesis (DTS) and cone-beam CT
+        (CBCT), and assess the biopsy tool’s relationship to a peripheral lung lesion. Each section
+        opens with the terms it uses.
       </p>
       <p>
         Every section is open, in any order. This device keeps where you were, the sections you have

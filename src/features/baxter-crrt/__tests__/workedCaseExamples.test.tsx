@@ -615,18 +615,23 @@ describe('CRRT-02 worked cases in the case player', () => {
   it('CRRT-16 domain table and team summary say the recorded plan leaves the circuit unchanged', () => {
     render(<Player caseId="CRRT-16" />)
     expect(screen.queryByRole('heading', { name: 'Try predicting · optional' })).toBeNull()
-    click('Explain this case')
-    const region = screen.getByRole('region', { name: 'Worked example' })
-    const domains = within(region).getByRole('region', {
+    // The domain table describes the current run and what the run can verify, so it
+    // is in the task before any reveal; only the authored team summary is behind it.
+    const domains = screen.getByRole('region', {
       name: 'Filter-loss domains; horizontally scrollable',
     })
     expect(within(domains).getAllByRole('row')).toHaveLength(6)
     expect(domains).toHaveTextContent(
       'No anticoagulation method is listed in this case prescription.',
     )
-    expect(region).toHaveTextContent(
-      'Filter-burden terms active in the simulator now: Access dysfunction, Filtration fraction, Hematocrit.',
-    )
+    expect(
+      screen.getByText(
+        /Filter-burden terms active in the simulator now: Access dysfunction, Filtration fraction, Hematocrit\./,
+      ),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('Worked team summary from this run')).toBeNull()
+    click('Explain this case')
+    const region = screen.getByRole('region', { name: 'Worked example' })
     expect(region).toHaveTextContent('Worked team summary from this run')
     expect(region).toHaveTextContent(
       'delivered dose not yet charted against 20.6 mL/kg/h prescribed',

@@ -77,7 +77,12 @@ const whyMeasure: HemodynamicsSectionItems = {
         label: 'That the circulation is under-filled, so the next step is to give fluid.',
         rationale:
           'A low pressure can come from low cardiac output, from vasodilation (low systemic vascular resistance) or from an obstruction to flow. Low circulating volume is one cause among several, and the arterial number cannot pick it out.',
-        plausibility: 'reasonable-but-incomplete',
+        // HD-PRE-REVIEW-01 (report L1-02): was 'reasonable-but-incomplete', which the card reads
+        // out as "Partly correct. Defensible, but not the whole picture" — an endorsement of an
+        // inference the option's own rationale, and the item's explanation, both reject. The key,
+        // the wording and the source are unchanged; only the label that contradicted them moves.
+        // Same correction as HD-03-05 on 'measures-resistance' below.
+        plausibility: 'incorrect-mechanism',
       },
       {
         id: 'heart-failing',
@@ -245,7 +250,10 @@ const waveformComponents: HemodynamicsSectionItems = {
           'Constriction: a stiff pericardium halts filling abruptly and produces the same loss of the y descent.',
         rationale:
           'A stiff pericardium allows rapid early filling and then stops it: the y descent is exaggerated rather than lost. The two are confused precisely because both raise and equalise the diastolic pressures.',
-        plausibility: 'reasonable-but-incomplete',
+        // HD-PRE-REVIEW-01 (report L4-07): the rationale says constriction predicts the opposite
+        // finding, so "Defensible, but not the whole picture" endorsed a mechanism the same card
+        // then rejects. The differential, the key and the source are unchanged.
+        plausibility: 'incorrect-mechanism',
       },
       {
         id: 'tricuspid-regurgitation',

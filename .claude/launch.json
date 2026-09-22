@@ -60,6 +60,13 @@
       "autoPort": false
     },
     {
+      "name": "claude-hemodynamics",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "--port", "3125", "--webpack"],
+      "port": 3125,
+      "autoPort": false
+    },
+    {
       "name": "claude-imaging",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["next", "dev", "--port", "3126", "--webpack"],
@@ -102,8 +109,8 @@
     {
       "name": "claude-bf",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["scripts/dev-with-training-apps.mjs", "--port", "3131"],
-      "port": 3131,
+      "runtimeArgs": ["scripts/dev-with-training-apps.mjs", "--port", "3133"],
+      "port": 3133,
       "autoPort": false
     },
     {
@@ -128,6 +135,23 @@
       "autoPort": false,
       "env": {
         "PORT": "3130"
+      }
+    },
+    {
+      "name": "claude-ebus-03",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/dev-with-training-apps.mjs", "--port", "3131"],
+      "port": 3131,
+      "autoPort": false
+    },
+    {
+      "name": "claude-ebus-03-prod",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [".next/standalone/server.js"],
+      "port": 3132,
+      "autoPort": false,
+      "env": {
+        "PORT": "3132"
       }
     }
   ]

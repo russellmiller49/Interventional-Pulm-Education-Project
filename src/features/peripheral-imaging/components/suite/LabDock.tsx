@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import {
   LAB_CONTROLS,
+  LAB_METRIC_MEANINGS,
   LAB_METRICS,
   labReadouts,
   labValue,
@@ -89,7 +90,7 @@ export function LabDock(props: ImagingSuitePaneProps & { disabledControls?: Read
         <fieldset className={styles.controls} disabled={!controlsEnabled} data-suite-controls>
           <legend>Image controls</legend>
           {view.lab === 'acquisition' && (
-            <p>
+            <p data-learner-declared>
               Checklist confirmations are learner-declared. This scene does not detect collisions or
               verify clinical safety.
             </p>
@@ -103,9 +104,7 @@ export function LabDock(props: ImagingSuitePaneProps & { disabledControls?: Read
                 data-model-controls={model ? 'true' : undefined}
               >
                 <legend>
-                  {model
-                    ? 'Teaching-model adjustments · fictional state'
-                    : 'Imaging and display controls'}
+                  {model ? 'Teaching-model adjustments' : 'Imaging and display controls'}
                 </legend>
                 {group.map((control) => {
                   const id = controlElementId(control.key)
@@ -190,9 +189,12 @@ export function LabDock(props: ImagingSuitePaneProps & { disabledControls?: Read
         </fieldset>
       )}
       {view.lab === 'temporal' && (
-        <p>
-          Pulse width may be system-selected or mode-dependent. Fixed-current examples use 20 mA;
-          tube loading is not patient dose. No image-lag model is included.
+        // Report 3.9: what the tube-load readout is for, from the section's own arithmetic.
+        <p data-tube-load-note>
+          Tube load at a fixed 20 mA is pulse rate × pulse width × current: the output the tube is
+          asked for each second. Halving the pulse rate while the pulse doubles leaves it unchanged,
+          which is why a lower pulse rate alone does not mean less output. It is not patient dose.
+          Pulse width may be system-selected or mode-dependent, and no image-lag model is included.
         </p>
       )}
       <dl className={styles.readouts} data-readouts>
@@ -207,6 +209,20 @@ export function LabDock(props: ImagingSuitePaneProps & { disabledControls?: Read
           </div>
         ))}
       </dl>
+      {/* Report 2.11: each printed readout says what it is, from the arithmetic that produces it. */}
+      {metricIds.length > 0 && (
+        <details className={styles.readoutMeanings} data-readout-meanings>
+          <summary>What these readouts mean</summary>
+          <dl>
+            {metricIds.map((metric) => (
+              <div key={metric} data-readout-meaning={metric}>
+                <dt>{LAB_METRICS[metric].label}</dt>
+                <dd>{LAB_METRIC_MEANINGS[metric]}</dd>
+              </div>
+            ))}
+          </dl>
+        </details>
+      )}
     </div>
   )
 }

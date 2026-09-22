@@ -94,11 +94,13 @@ describe('BedsideMonitor position-aware display', () => {
         name: /PAWP waveform.*marker identifies balloon occlusion → PAWP/i,
       }),
     ).toBeInTheDocument()
+    // The readout names the occlusion and says which balloon state produced it, so a "live"
+    // occlusion mean can never be read beside a balloon that is down (HD-PRE-REVIEW-01 / L9-01).
     expect(screen.getByRole('group', { name: 'Current PAC pressure' })).toHaveTextContent(
-      /PAC · PAWP.*live occlusion mean/i,
+      /PAC · PAWP.*balloon occlusion · live mean/i,
     )
     expect(screen.getByRole('group', { name: 'PAWP measurement' })).toHaveTextContent(
-      /Stored PAWP.*—.*live trace visible.*not stored/i,
+      /Stored PAWP.*—.*live occlusion trace visible.*not stored/i,
     )
   })
 

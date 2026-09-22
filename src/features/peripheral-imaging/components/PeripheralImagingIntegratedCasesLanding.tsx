@@ -47,6 +47,12 @@ export function PeripheralImagingIntegratedCasesLanding({
         show its explanation before you answer, lets you check an answer as often as you like, and
         links to the section that teaches its mechanism. Answers are not saved.
       </p>
+      {/* Report IC4: the tag is a teaching emphasis, and says so. */}
+      <p className="max-w-2xl text-sm leading-6 text-muted-foreground" data-safety-tag-note>
+        <strong>Safety decision</strong> marks a case in which an alternative could harm a patient;
+        its feedback names an unsafe choice at once. It is a teaching emphasis only: no case carries
+        more weight than another, nothing about your answers is recorded, and no case is restricted.
+      </p>
       <div className="flex flex-wrap items-center gap-3">
         {next ? (
           <Link

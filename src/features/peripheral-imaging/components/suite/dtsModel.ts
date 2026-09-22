@@ -74,7 +74,7 @@ export function dtsOverlayObjects(planeDepth: number): readonly DtsOverlayObject
   return [
     {
       id: 'tool',
-      label: 'Modeled tool',
+      label: 'Tool (model position)',
       depthMm: DTS.toolPlaneRelativeMm,
       fromPlaneMm: toolFrom,
       inPlane: Math.abs(toolFrom) <= DTS_TOOL_MM.radius,
@@ -87,7 +87,7 @@ export function dtsOverlayObjects(planeDepth: number): readonly DtsOverlayObject
     },
     {
       id: 'target',
-      label: 'Modeled target',
+      label: 'Target (model position)',
       depthMm: 0,
       fromPlaneMm: targetFrom,
       inPlane: Math.abs(targetFrom) < radius,

@@ -433,6 +433,7 @@ export function icuHemodynamicsReducer(
           storedWedgeMmHg: null,
           storedAtEndExpiration: false,
           forcedSafetyRecovery: false,
+          wedgeEpisodeCount: state.catheter.wedgeEpisodeCount + 1,
         },
         responseMessage:
           'Balloon inflated at the existing PA depth. Sample about one respiratory cycle, capture at end expiration, then deflate promptly.',

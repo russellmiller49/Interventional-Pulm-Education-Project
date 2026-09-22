@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type Dispatch, type ReactNode } from 'react'
 
+import { catheterTransitionHold } from '../../engine/catheterSafety'
 import type { RouteStopId } from '../../content/routeSpine'
 import type { StageAnatomy, StageSurface } from '../../content/stageLessons'
 import type {
@@ -101,6 +102,9 @@ export function HemodynamicsSimulatorPane({
     )
     if (pane) pane.scrollTop = 0
   }, [stepKey])
+
+  const catheterPanelUrgent =
+    state.catheter.position === 'wedge' || state.catheter.forcedSafetyRecovery
 
   const dock = (() => {
     const props = { state, dispatch, enabled: controlsEnabled }
@@ -203,7 +207,13 @@ export function HemodynamicsSimulatorPane({
                 <FlushDock {...props} lineType="pulmonary-artery" />
               </div>
             </details>
-            <details open={state.catheter.balloonInflated || undefined}>
+            {/*
+              Open whenever the catheter itself is the thing holding the case up, not only when a
+              balloon is inflated. The capstone opens with the tip sitting distally on a deflated
+              balloon, so the panel that explains the blocked flush was the one panel the learner
+              had to go looking for (report L9-02, Figure 38 callout 4).
+            */}
+            <details open={catheterTransitionHold(state) !== null || catheterPanelUrgent}>
               <summary>Catheter and balloon</summary>
               <div>
                 <WedgeDock {...props} />

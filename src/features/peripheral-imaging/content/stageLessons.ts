@@ -31,6 +31,7 @@ import { imagingSectionSpec, type ImagingSectionSpec } from './sectionSpecs'
 import { imagingSort, type ImagingSort } from './sorts'
 import { imagingSectionItems } from './stageItems'
 import { fixedExampleEvidence } from './teachingExamples'
+import { transferOrigin, transferReviewInstruction, transferReviewTitle } from './transferOrigins'
 import { suiteViewForStep } from './suiteViews'
 
 /**
@@ -173,10 +174,16 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
       case 'read':
         return base
       case 'check':
-      case 'transfer':
+      case 'transfer': {
+        // Report CW1 (fellow walkthrough, PDF p.6): a closing question that reuses an earlier
+        // section's item is labelled as the optional review it is, and says which section it
+        // reviews. The item, its id and its identity in the record are untouched; the two closing
+        // questions that are new to the learner keep their own heading.
+        const origin = activity.task === 'transfer' ? transferOrigin(sectionId) : null
         return {
           ...base,
           phase: activity.task === 'transfer' ? 'transfer' : 'predict',
+          title: origin ? transferReviewTitle(origin) : activity.title,
           // Report 1.2 (fellow walkthrough, PDF p.10): the check told the learner to inspect an
           // image on screens that render none, so they scrolled looking for one. A check that
           // carries no visual is a written scenario and says so. Nothing here converts an
@@ -188,7 +195,7 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
           // exact question and round: an image the answer can be read off, or the section's
           // authored equipment model beside a written scenario it does not represent. Only the
           // second is relabelled, and only for the three declared identities.
-          instruction: checkInstruction(activity),
+          instruction: origin ? transferReviewInstruction(origin) : checkInstruction(activity),
           actionLabel: 'Check my interpretation',
           interaction: prediction(
             activity.task === 'transfer' ? items.transfer : items.prediction,
@@ -196,6 +203,7 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
           ),
           lookIn: { pane: 'steps', landmark: IN_STEPS.choices },
         }
+      }
       case 'act': {
         if (spec.act.kind === 'sort')
           return {

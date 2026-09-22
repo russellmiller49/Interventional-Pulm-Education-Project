@@ -958,6 +958,53 @@
   font-size: 0.8rem;
 }
 
+/* Which prescription record is authoritative, and where the two have diverged. */
+.prescriptionRecord {
+  margin: 0.55rem 0 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid rgba(245, 187, 101, 0.42);
+  border-radius: 0.5rem;
+  background: #143a3a;
+}
+
+.prescriptionRecord strong {
+  display: block;
+  color: #f5c071;
+  font-size: 0.58rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.prescriptionRecord p,
+.prescriptionRecord li {
+  margin: 0.3rem 0 0;
+  color: #e4efed;
+  font-size: 0.63rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.prescriptionRecord .primaryAction {
+  max-width: 100%;
+  margin: 0.6rem 0 0.3rem;
+}
+
+.prescriptionRecord ul {
+  margin: 0.3rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.caseSettingGrid dd small,
+.caseSettingTitle small {
+  display: block;
+  margin-top: 0.25rem;
+  color: #486863;
+  font-size: 0.56rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
 .caseSettingBoundary {
   margin: 0;
   color: #586f6d;

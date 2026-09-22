@@ -230,3 +230,28 @@
 .additional-models[data-model-package='needle'] .model-controls fieldset > p {
   grid-column: 1/-1;
 }
+
+/* Observer controls beside the heading, and focus for the keyboard-driven canvas (EBUS-PRE-REVIEW-03). */
+.model-observer-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.model-observer-buttons button {
+  min-height: 34px;
+  padding: 6px 9px;
+  font-size: 12px;
+}
+.model-viewport canvas:focus-visible {
+  outline: 3px solid #7ce2c7;
+  outline-offset: -3px;
+}
+.model-viewport .linked-structure-callouts .linked-structure-letter {
+  font-size: 11px;
+  height: 26px;
+  min-width: 26px;
+}
+.model-viewport .linked-structure-callouts .linked-structure-letter.is-named {
+  padding: 0 8px;
+}

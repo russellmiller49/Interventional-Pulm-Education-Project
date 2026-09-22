@@ -1105,12 +1105,17 @@ function capstoneSteps(runtime: SectionRuntime): readonly StepInput[] {
     {
       phase: 'act',
       title: 'Restore the screen, in order',
+      // The order printed here has to be an order the simulation permits. It used to put the flush
+      // before the tip, while this case opens with the tip in an occluding position that blocks a
+      // flush on the distal lumen — so a learner who followed it literally met a disabled button
+      // with no stated reason (report L9-02, Figure 38). Level and zero still come first, as the
+      // section's control strip says; the flush now follows the move that unblocks it.
       instruction:
-        'The line first: level, zero, flush, read, repair. Then the tip: the balloon down and the tracing back to a confirmed artery. Then the series: reviewed curves, a technical reason for every exclusion.',
+        'The line first, as far as it goes: level and zero. Then the tip, because a flush on the distal lumen is blocked while the tip sits in an occluding position — bring the balloon down and the tracing back to a confirmed artery. Then finish the line: flush, read, repair. Then the series: reviewed curves, a technical reason for every exclusion.',
       lookIn: {
         pane: 'simulator',
         landmark:
-          'the docks under the monitor, in this order: The line, The flush check, The balloon, The tip, The injection',
+          'the docks under the monitor: The line, then The balloon and The tip, then The flush check, then The injection',
       },
       actionLabel: CONTINUE,
       interaction: { kind: 'simulator-task', goals: runtime.actGoals, round: 0 },
