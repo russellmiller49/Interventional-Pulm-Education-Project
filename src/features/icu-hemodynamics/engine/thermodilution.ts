@@ -1,5 +1,9 @@
 import { clamp, roundTo } from './calculations'
-import type { ThermodilutionGenerationInput, ThermodilutionTrial } from './types'
+import type {
+  ThermodilutionGenerationInput,
+  ThermodilutionSeriesIdentity,
+  ThermodilutionTrial,
+} from './types'
 
 function seededRandom(seed: number): () => number {
   let state = seed >>> 0
@@ -30,14 +34,242 @@ export function thermodilutionTrialCountsTowardSeries(trial: ThermodilutionTrial
   return trial.accepted === true && trial.quality === 'valid' && trial.reviewed === true
 }
 
+/* ------------------------------------------------------------------ *
+ * Series identity — which curves may be averaged together
+ * ------------------------------------------------------------------ */
+
+/**
+ * A curve built without acquisition context: a directly constructed or legacy trial. Its conditions
+ * are not guessed. It never pools with a recorded series.
+ */
+export const UNRECORDED_THERMODILUTION_SERIES: ThermodilutionSeriesIdentity = Object.freeze({
+  key: 'unrecorded',
+  origin: 'unrecorded',
+  method: 'bolus-thermodilution',
+  sessionId: null,
+  caseId: null,
+  episode: null,
+  injectate: null,
+})
+
+function injectateKey(injectate: ThermodilutionSeriesIdentity['injectate']): string {
+  return injectate === null
+    ? 'injectate-unrecorded'
+    : `${injectate.volumeMl}mL@${injectate.temperatureC}C`
+}
+
+/** A learner's acquisition in one session, one physiological episode, one injectate configuration. */
+export function learnerThermodilutionSeriesIdentity(input: {
+  readonly sessionId: string
+  readonly caseId: string
+  readonly episode: NonNullable<ThermodilutionSeriesIdentity['episode']>
+  readonly injectate: NonNullable<ThermodilutionSeriesIdentity['injectate']>
+}): ThermodilutionSeriesIdentity {
+  return {
+    key: `${input.sessionId}|episode-${input.episode.index}|bolus-thermodilution|${injectateKey(input.injectate)}`,
+    origin: 'learner-acquired',
+    method: 'bolus-thermodilution',
+    sessionId: input.sessionId,
+    caseId: input.caseId,
+    episode: input.episode,
+    injectate: input.injectate,
+  }
+}
+
+/** An authored teaching example: prior evidence written for the module, never the learner's own. */
+export function authoredThermodilutionSeriesIdentity(input: {
+  readonly exampleId: string
+  readonly injectate: NonNullable<ThermodilutionSeriesIdentity['injectate']>
+}): ThermodilutionSeriesIdentity {
+  return {
+    key: `authored:${input.exampleId}|bolus-thermodilution|${injectateKey(input.injectate)}`,
+    origin: 'authored-example',
+    method: 'bolus-thermodilution',
+    sessionId: null,
+    caseId: null,
+    episode: null,
+    injectate: input.injectate,
+    exampleId: input.exampleId,
+  }
+}
+
+export function thermodilutionSeriesIdentityOf(
+  trial: ThermodilutionTrial,
+): ThermodilutionSeriesIdentity {
+  return trial.acquisition?.series ?? UNRECORDED_THERMODILUTION_SERIES
+}
+
+function acquiredAt(trial: ThermodilutionTrial): number {
+  return trial.acquisition?.acquiredAtSeconds ?? trial.generatedAt
+}
+
+export interface ThermodilutionSeriesGroup {
+  readonly identity: ThermodilutionSeriesIdentity
+  readonly trials: readonly ThermodilutionTrial[]
+}
+
+/** Every series the trials belong to, in the order each was first acquired. Nothing is merged. */
+export function thermodilutionSeriesGroups(
+  trials: readonly ThermodilutionTrial[],
+): readonly ThermodilutionSeriesGroup[] {
+  const groups = new Map<
+    string,
+    { identity: ThermodilutionSeriesIdentity; trials: ThermodilutionTrial[] }
+  >()
+  for (const trial of trials) {
+    const identity = thermodilutionSeriesIdentityOf(trial)
+    const existing = groups.get(identity.key)
+    if (existing) existing.trials.push(trial)
+    else groups.set(identity.key, { identity, trials: [trial] })
+  }
+  return [...groups.values()]
+}
+
+/**
+ * The series of the most recently acquired curve. The default a trial list is summarized by when no
+ * series is named — never a pool of several. It is "most recent", not "current": whether conditions
+ * have changed since is a question about the state, answered by `thermodilutionSeriesView`.
+ */
+export function latestThermodilutionSeriesKey(
+  trials: readonly ThermodilutionTrial[],
+): string | null {
+  let latest: ThermodilutionTrial | null = null
+  for (const trial of trials) {
+    if (latest === null || acquiredAt(trial) >= acquiredAt(latest)) latest = trial
+  }
+  return latest === null ? null : thermodilutionSeriesIdentityOf(latest).key
+}
+
+function trialsInSeries(
+  trials: readonly ThermodilutionTrial[],
+  seriesKey: string | null | undefined,
+): readonly ThermodilutionTrial[] {
+  const key = seriesKey ?? latestThermodilutionSeriesKey(trials)
+  if (key === null) return []
+  return trials.filter((trial) => thermodilutionSeriesIdentityOf(trial).key === key)
+}
+
+/** The unrounded mean of one series' included curves, or `null` below the configured count. */
+export function thermodilutionSeriesMeanUnrounded(
+  trials: readonly ThermodilutionTrial[],
+  seriesKey?: string | null,
+): number | null {
+  const included = trialsInSeries(trials, seriesKey).filter(thermodilutionTrialCountsTowardSeries)
+  if (included.length < THERMODILUTION_SERIES_TRIAL_COUNT) return null
+  return (
+    included.reduce((total, trial) => total + trial.estimatedCardiacOutputLMin, 0) / included.length
+  )
+}
+
+/**
+ * The accepted average of one series.
+ *
+ * HD-PRE-REVIEW-02 (report P-05, Figure 42). This used to average every eligible curve in the list,
+ * so three curves acquired before a fluid step and three after it came back as one "4.3 L/min from
+ * 6 reviewed trials". It now averages exactly one series — the one named, or the one the most
+ * recent curve belongs to — and a curve from another series never enters it, however many eligible
+ * curves exist. A list of curves that carry no acquisition context is one unrecorded group, as
+ * before; it never mixes with a recorded series.
+ */
 export function thermodilutionAcceptedAverage(
   trials: readonly ThermodilutionTrial[],
+  seriesKey?: string | null,
 ): number | null {
-  const accepted = trials.filter(thermodilutionTrialCountsTowardSeries)
-  if (accepted.length < THERMODILUTION_SERIES_TRIAL_COUNT) return null
-  const mean =
-    accepted.reduce((total, trial) => total + trial.estimatedCardiacOutputLMin, 0) / accepted.length
-  return roundTo(mean, 1)
+  const mean = thermodilutionSeriesMeanUnrounded(trials, seriesKey)
+  return mean === null ? null : roundTo(mean, 1)
+}
+
+/* ------------------------------------------------------------------ *
+ * Three separate facts about one curve (report L7-03)
+ * ------------------------------------------------------------------ */
+
+export type ThermodilutionLearnerDecision = 'accepted' | 'excluded' | 'undecided'
+
+export type ThermodilutionInclusionCode =
+  | 'included'
+  | 'not-reviewed'
+  | 'undecided'
+  | 'excluded-by-learner'
+  | 'accepted-not-technically-usable'
+  | 'accepted-with-quality-alert'
+
+export interface ThermodilutionTrialInclusion {
+  /** What the learner chose. Kept visible whatever the other two say. */
+  readonly learnerDecision: ThermodilutionLearnerDecision
+  /** The automatic technical assessment of the acquisition. A choice never changes it. */
+  readonly technicalQuality: ThermodilutionTrial['quality']
+  /** Whether this curve enters its series' calculation. */
+  readonly included: boolean
+  readonly code: ThermodilutionInclusionCode
+  /** One sentence a card and its text equivalent both print. */
+  readonly explanation: string
+}
+
+/**
+ * Learner selection, technical quality and calculation inclusion, kept apart.
+ *
+ * Accepting a technically unusable curve used to badge it "Accepted trial" while the series quietly
+ * left it out. The selection stays the learner's — it is shown, and it is not overwritten — but it
+ * does not make the acquisition usable, and inclusion says so in the same words wherever the curve
+ * is described. Acceptance is also not clinical approval: it is this learner's call about one curve.
+ */
+export function thermodilutionTrialInclusion(
+  trial: ThermodilutionTrial,
+): ThermodilutionTrialInclusion {
+  const learnerDecision: ThermodilutionLearnerDecision =
+    trial.accepted === true ? 'accepted' : trial.accepted === false ? 'excluded' : 'undecided'
+  const base = { learnerDecision, technicalQuality: trial.quality }
+  if (thermodilutionTrialCountsTowardSeries(trial)) {
+    return {
+      ...base,
+      included: true,
+      code: 'included',
+      explanation:
+        'Included in this series’ calculation: you accepted it and no automatic quality alert was raised.',
+    }
+  }
+  if (!trial.reviewed) {
+    return {
+      ...base,
+      included: false,
+      code: 'not-reviewed',
+      explanation: 'Not in the calculation: the raw curve has not been reviewed yet.',
+    }
+  }
+  if (learnerDecision === 'excluded') {
+    const reason = trial.exclusionReasonId
+      ? thermodilutionExclusionReasonById.get(trial.exclusionReasonId)?.label
+      : undefined
+    return {
+      ...base,
+      included: false,
+      code: 'excluded-by-learner',
+      explanation: `Not in the calculation: you excluded it${reason ? ` — ${reason.toLowerCase()}` : ''}.`,
+    }
+  }
+  if (learnerDecision === 'undecided') {
+    return {
+      ...base,
+      included: false,
+      code: 'undecided',
+      explanation: 'Not in the calculation yet: reviewed, but not accepted or excluded.',
+    }
+  }
+  const alerts = trial.alerts.length > 0 ? ` (${trial.alerts.join(' ')})` : ''
+  if (trial.quality === 'invalid') {
+    return {
+      ...base,
+      included: false,
+      code: 'accepted-not-technically-usable',
+      explanation: `You accepted this curve, and your choice is kept — but it is not in the calculation. The automatic check marks the acquisition not technically usable${alerts}, and accepting it does not change that. Excluding it with the technical reason it shows records why it is left out.`,
+    }
+  }
+  return {
+    ...base,
+    included: false,
+    code: 'accepted-with-quality-alert',
+    explanation: `You accepted this curve, and your choice is kept — but it is not in the calculation. A quality alert was raised on the acquisition${alerts}; this simulation averages only curves with no automatic quality alert. Accepting it does not clear the alert.`,
+  }
 }
 
 /* ------------------------------------------------------------------ *
@@ -188,15 +420,18 @@ export function thermodilutionCurveTextEquivalent(trial: ThermodilutionTrial): s
     trial.alerts.length > 0 ? `Alerts: ${trial.alerts.join(' ')}` : '',
     trial.reviewed ? 'This curve has been reviewed.' : 'This curve has not been reviewed yet.',
     trial.accepted === true
-      ? 'State: accepted trial.'
+      ? 'Your decision: accepted.'
       : trial.accepted === false
-        ? `State: excluded trial. ${
+        ? `Your decision: excluded. ${
             trial.exclusionReasonId
               ? (thermodilutionExclusionReasonById.get(trial.exclusionReasonId)?.label ??
                 'Reason not recognized.')
               : 'No technical reason recorded.'
           }`
-        : 'State: not yet accepted or excluded.',
+        : 'Your decision: not yet accepted or excluded.',
+    // The same inclusion sentence the card prints, so the figure, the card and this description
+    // cannot disagree about whether the curve is in the average (report L7-03).
+    thermodilutionTrialInclusion(trial).explanation,
   ]
   return parts.filter((part) => part.length > 0).join(' ')
 }
@@ -316,10 +551,30 @@ export function canExcludeThermodilutionTrial(
  * ------------------------------------------------------------------ */
 
 export interface ThermodilutionSeriesSummary {
+  /** The series this summary describes. Nothing from another series is counted here. */
+  readonly identity: ThermodilutionSeriesIdentity
+  /** Every curve in this series, in acquisition order. */
+  readonly trialIds: readonly string[]
+  /**
+   * The curves in this series' calculation (accepted, reviewed, and free of an automatic quality
+   * alert). The name predates the separation of selection from inclusion and is kept for the
+   * existing consumers; `includedTrialIds` is the same list.
+   */
   readonly acceptedTrialIds: readonly string[]
+  readonly includedTrialIds: readonly string[]
+  /** Curves the learner accepted — whether or not they are in the calculation. */
+  readonly learnerAcceptedTrialIds: readonly string[]
+  /** Accepted by the learner and still not in the calculation, with the reason. */
+  readonly acceptedButNotIncluded: readonly {
+    readonly trialId: string
+    readonly sequence: number
+    readonly explanation: string
+  }[]
   readonly excludedTrialIds: readonly string[]
   readonly unreviewedTrialIds: readonly string[]
   readonly averageLMin: number | null
+  /** The same mean before display rounding. */
+  readonly averageUnroundedLMin: number | null
   readonly lowestLMin: number | null
   readonly highestLMin: number | null
   readonly spreadLMin: number | null
@@ -329,6 +584,66 @@ export interface ThermodilutionSeriesSummary {
   readonly techniqueConsistent: boolean
   /** What is still missing before the series can be summarized. */
   readonly blockedReasons: readonly string[]
+  /**
+   * Every other series in the same list, listed and never pooled. When any exist, `unpooledReason`
+   * says why their curves are not in this number.
+   */
+  readonly otherSeries: readonly {
+    readonly identity: ThermodilutionSeriesIdentity
+    readonly trialCount: number
+    readonly includedCount: number
+    readonly averageLMin: number | null
+  }[]
+  readonly unpooledReason: string | null
+}
+
+/** Words for where a series came from, for a heading or a text equivalent. */
+export function thermodilutionSeriesConditionWords(identity: ThermodilutionSeriesIdentity): string {
+  if (identity.origin === 'unrecorded') {
+    return 'acquisition conditions not recorded for these curves'
+  }
+  if (identity.origin === 'authored-example') {
+    return 'an authored example series written for this module, not an acquisition of yours'
+  }
+  const episode = identity.episode
+  if (!episode) return 'acquisition conditions not recorded'
+  switch (episode.cause.kind) {
+    case 'case-opened':
+      return 'conditions as the case opened, before any modeled intervention'
+    case 'intervention':
+      return `conditions after ${episode.cause.label} (model time ${episode.startedAtSeconds.toFixed(0)} s)`
+    case 'effect-waning':
+      return `conditions after the modeled ${episode.cause.label} effect began to wane (model time ${episode.startedAtSeconds.toFixed(0)} s)`
+    default:
+      return 'acquisition conditions not recorded'
+  }
+}
+
+/** Why two series are not averaged together, in one sentence. */
+export function thermodilutionSeriesIncompatibility(
+  a: ThermodilutionSeriesIdentity,
+  b: ThermodilutionSeriesIdentity,
+): string | null {
+  if (a.key === b.key) return null
+  if (a.origin === 'unrecorded' || b.origin === 'unrecorded') {
+    return 'the acquisition conditions of one set of curves were not recorded, so this module cannot say they belong with the others'
+  }
+  if (a.origin !== b.origin) {
+    return 'one set is authored example evidence and the other is your own acquisition'
+  }
+  if (a.sessionId !== b.sessionId || a.caseId !== b.caseId) {
+    return 'they come from different runs of the case'
+  }
+  if (
+    a.injectate?.volumeMl !== b.injectate?.volumeMl ||
+    a.injectate?.temperatureC !== b.injectate?.temperatureC
+  ) {
+    return 'they were computed with different injectate constants'
+  }
+  if (a.episode?.index !== b.episode?.index) {
+    return 'the patient’s modeled physiology changed between them'
+  }
+  return 'they are different series'
 }
 
 /**
@@ -339,18 +654,40 @@ export interface ThermodilutionSeriesSummary {
  * in `cardiacOutputSourceBoundaries.ts`), so the spread is shown and described rather than judged.
  */
 export function thermodilutionSeriesSummary(
-  trials: readonly ThermodilutionTrial[],
+  allTrials: readonly ThermodilutionTrial[],
+  seriesKey?: string | null,
+  identityWhenEmpty?: ThermodilutionSeriesIdentity,
 ): ThermodilutionSeriesSummary {
+  const key = seriesKey ?? latestThermodilutionSeriesKey(allTrials)
+  const trials = trialsInSeries(allTrials, key)
+  const identity =
+    trials[0] !== undefined
+      ? thermodilutionSeriesIdentityOf(trials[0])
+      : (identityWhenEmpty ?? UNRECORDED_THERMODILUTION_SERIES)
   const accepted = trials.filter(thermodilutionTrialCountsTowardSeries)
   const excluded = trials.filter((trial) => trial.accepted === false)
   const unreviewed = trials.filter((trial) => !trial.reviewed)
   const values = accepted.map((trial) => trial.estimatedCardiacOutputLMin)
-  const average = thermodilutionAcceptedAverage(trials)
+  const averageUnrounded = thermodilutionSeriesMeanUnrounded(trials, identity.key)
+  const average = averageUnrounded === null ? null : roundTo(averageUnrounded, 1)
+  const acceptedButNotIncluded = trials
+    .filter((trial) => trial.accepted === true && !thermodilutionTrialCountsTowardSeries(trial))
+    .map((trial) => ({
+      trialId: trial.id,
+      sequence: trial.sequence,
+      explanation: thermodilutionTrialInclusion(trial).explanation,
+    }))
 
   const blockedReasons: string[] = []
   if (accepted.length < THERMODILUTION_SERIES_TRIAL_COUNT) {
+    // Report L7-03: "3 reviewed, technically usable trials; 2 are available" read as a riddle.
     blockedReasons.push(
-      `This series summarizes ${THERMODILUTION_SERIES_TRIAL_COUNT} reviewed, technically usable trials; ${accepted.length} are available.`,
+      `${accepted.length} of the ${THERMODILUTION_SERIES_TRIAL_COUNT} usable curves this simulation averages ${accepted.length === 1 ? 'is' : 'are'} in this series so far.`,
+    )
+  }
+  if (acceptedButNotIncluded.length > 0) {
+    blockedReasons.push(
+      `${acceptedButNotIncluded.length === 1 ? 'One curve you accepted is' : `${acceptedButNotIncluded.length} curves you accepted are`} not in the calculation, because the automatic check flagged the acquisition.`,
     )
   }
   if (unreviewed.length > 0) {
@@ -358,6 +695,26 @@ export function thermodilutionSeriesSummary(
       `${unreviewed.length} curve${unreviewed.length === 1 ? ' has' : 's have'} not been reviewed yet.`,
     )
   }
+  const otherSeries = thermodilutionSeriesGroups(allTrials)
+    .filter((group) => group.identity.key !== identity.key)
+    .map((group) => ({
+      identity: group.identity,
+      trialCount: group.trials.length,
+      includedCount: group.trials.filter(thermodilutionTrialCountsTowardSeries).length,
+      averageLMin: thermodilutionAcceptedAverage(group.trials, group.identity.key),
+    }))
+  const reasons = [
+    ...new Set(
+      otherSeries
+        .map((other) => thermodilutionSeriesIncompatibility(identity, other.identity))
+        .filter((reason): reason is string => reason !== null),
+    ),
+  ]
+  const otherCurveCount = otherSeries.reduce((total, other) => total + other.trialCount, 0)
+  const unpooledReason =
+    otherSeries.length === 0
+      ? null
+      : `${otherCurveCount} curve${otherCurveCount === 1 ? '' : 's'} from ${otherSeries.length === 1 ? 'another series' : `${otherSeries.length} other series`} ${otherCurveCount === 1 ? 'is' : 'are'} kept separately and not averaged into this one: ${reasons.join('; ')}.`
 
   const first = accepted[0]
   const techniqueConsistent =
@@ -374,10 +731,18 @@ export function thermodilutionSeriesSummary(
   const spread = lowest !== null && highest !== null ? roundTo(highest - lowest, 2) : null
 
   return {
+    identity,
+    trialIds: trials.map((trial) => trial.id),
     acceptedTrialIds: accepted.map((trial) => trial.id),
+    includedTrialIds: accepted.map((trial) => trial.id),
+    learnerAcceptedTrialIds: trials
+      .filter((trial) => trial.accepted === true)
+      .map((trial) => trial.id),
+    acceptedButNotIncluded,
     excludedTrialIds: excluded.map((trial) => trial.id),
     unreviewedTrialIds: unreviewed.map((trial) => trial.id),
     averageLMin: average,
+    averageUnroundedLMin: averageUnrounded,
     lowestLMin: lowest,
     highestLMin: highest,
     spreadLMin: spread,
@@ -385,6 +750,8 @@ export function thermodilutionSeriesSummary(
       average !== null && spread !== null && average > 0 ? roundTo(spread / average, 4) : null,
     techniqueConsistent,
     blockedReasons,
+    otherSeries,
+    unpooledReason,
   }
 }
 
@@ -508,5 +875,6 @@ export function generateThermodilutionCurve(
     accepted: null,
     reviewed: false,
     exclusionReasonId: null,
+    acquisition: input.acquisition ?? null,
   }
 }

@@ -23,10 +23,14 @@ import { hemodynamicsSourceById } from './sources'
  * the same artifact transforms the live monitor uses, and the underlying trace is the atlas entry
  * the reference already points at.
  *
- * The answer is always the same shape — the chamber cannot be named confidently from this display,
- * and something has to be repaired or re-read first. That is the point. Withholding is prevented
- * from becoming a guessable habit by distractors that are the genuine physiologic misreads each
- * fault produces.
+ * The answer is always the same shape — the number on this display cannot be used as it stands,
+ * and something has to be repaired or re-read first. Whether the *chamber* can still be named is a
+ * separate question with a different answer per fault (HD-PRE-REVIEW-02, report L3-09): an offset,
+ * a moving catheter or a reading taken at the wrong point in the breath leave the shape that names
+ * the chamber intact, while damping, ringing, a wrong label or a wrong axis take it away. Each
+ * challenge carries both answers, written from its own key and explanation. Withholding is
+ * prevented from becoming a guessable habit by distractors that are the genuine physiologic
+ * misreads each fault produces.
  *
  * Nothing here gates. Every station stays reachable by URL, and a learner who never opens a
  * challenge can still work through every other part of the section.
@@ -63,6 +67,20 @@ export interface NormalWaveformDisplayFault {
   readonly readAtStripFraction?: number
 }
 
+/**
+ * The two readings a faulted display is judged on, kept apart (report L3-09).
+ *
+ * `chamber` says whether the shape on this display still identifies the compartment; `value` says
+ * whether the number can be used. An identifiable shape does not make the number usable, and a
+ * number withheld does not by itself mean the chamber cannot be named.
+ */
+export interface NormalWaveformValidityReadout {
+  readonly chamber:
+    | { readonly identifiable: true; readonly words: string }
+    | { readonly identifiable: false; readonly words: string }
+  readonly value: string
+}
+
 export interface NormalWaveformValidityChallenge {
   readonly id: string
   readonly faultKind: NormalWaveformFaultKind
@@ -76,8 +94,13 @@ export interface NormalWaveformValidityChallenge {
   readonly whatYouSee: string
   /** The physiologic reading this display invites. */
   readonly whatItInvites: string
-  /** Why a chamber cannot be named from this display. */
+  /**
+   * Why the display cannot be used as it stands — why no chamber can be named, or, where the shape
+   * still names it, why the number cannot be used.
+   */
   readonly whyInterpretationIsWithheld: string
+  /** The chamber and the value, judged separately, from this challenge's own key. */
+  readonly readout: NormalWaveformValidityReadout
   /** The first thing to do about it, bounded to what the sources support. */
   readonly repairFirst: string
   /** Text equivalent of the drawn figure, for a learner who cannot see it. */
@@ -107,6 +130,14 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
       'A raised right-atrial pressure, and a decision about volume built on it. Every wave component is where it belongs, so nothing on the tracing argues against the number.',
     whyInterpretationIsWithheld:
       'A hydrostatic offset moves the whole tracing without changing its shape. Shape is the only thing this display can vouch for, and shape is exactly what the fault leaves intact.',
+    readout: {
+      chamber: {
+        identifiable: true,
+        words: 'the right-atrial pattern — a, c and v waves and both descents are intact',
+      },
+      value:
+        'not usable until the transducer is re-levelled and zeroed: every sample carries the same hydrostatic offset',
+    },
     repairFirst:
       'Return the transducer to the institutional phlebostatic reference and establish atmospheric zero as a separate step, then read the tracing again.',
     figureTextEquivalent:
@@ -167,6 +198,14 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
       'A diagnosis. A venous-looking tracing on a pulmonary-artery channel reads as severe damping, or as a spontaneous wedge, and both invite immediate action.',
     whyInterpretationIsWithheld:
       'The tracing is a valid signal under a label that does not belong to it. Nothing about the shape is abnormal, so any conclusion drawn from the mismatch is a conclusion about the label.',
+    readout: {
+      chamber: {
+        identifiable: false,
+        words:
+          'not named yet — the shape is a normal venous pattern, but the channel says pulmonary artery; which pressure this lumen is connected to has to be settled first',
+      },
+      value: 'not usable until the channel and the tracing are reconciled',
+    },
     repairFirst:
       'Read the channel label and the axis before the shape, and reconcile the displayed channel with where the catheter is supposed to be. Confirm which pressure this lumen is actually connected to before naming what is at fault in it.',
     figureTextEquivalent:
@@ -227,6 +266,14 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
       'A damping diagnosis made from appearance. A flat-looking tracing is the classic picture of an overdamped system, and the axis is the last thing a hurried reader looks at.',
     whyInterpretationIsWithheld:
       'Nothing about the signal changed. The axis changed, and with it every judgement about amplitude, pulse pressure, and how sharp the contour looks.',
+    readout: {
+      chamber: {
+        identifiable: false,
+        words: 'not judged from this plot — set a display range that fits, then read the contour',
+      },
+      value:
+        'not judged from how much of the axis the tracing fills: the axis changes how large it is drawn, not the pressure',
+    },
     repairFirst:
       'Set a display range that fits the pressure you expect from this chamber, then judge the contour. Compare the axis before comparing two tracings to each other.',
     figureTextEquivalent:
@@ -286,6 +333,15 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
       'Either a falsely reassuring pulmonary-artery systolic pressure, or — because the notch is what marks the pulmonic valve — the conclusion that the tip is still in the right ventricle.',
     whyInterpretationIsWithheld:
       'An overdamped system attenuates rapid pressure change, so systolic reads low and diastolic reads high while the mean stays relatively preserved. The features that identify the chamber are the first thing lost.',
+    readout: {
+      chamber: {
+        identifiable: false,
+        words:
+          'not confirmed — damping removes the peak sharpness and the notch that identify the chamber',
+      },
+      value:
+        'the mean only, with caution; systolic, diastolic and pulse pressure are withheld until the fluid path is repaired',
+    },
     repairFirst:
       'Trace the fluid path for air, blood, kinks, loose connections, and a low pressure bag, then classify the fast-flush release before interpreting anything but the mean.',
     figureTextEquivalent:
@@ -345,6 +401,14 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
       'A raised right-ventricular systolic pressure, and — because the diastolic contour is buried under the ringing — the conclusion that the tip has already reached the pulmonary artery.',
     whyInterpretationIsWithheld:
       'Resonance exaggerates rapid pressure change: systolic reads high, diastolic reads low, and the pulse pressure widens independently of the patient. Here it also destroys the one feature that separates this chamber from the next one.',
+    readout: {
+      chamber: {
+        identifiable: false,
+        words:
+          'not settled — the ringing sits on the diastolic contour that separates the right ventricle from the pulmonary artery',
+      },
+      value: 'the peak is not usable: resonance exaggerates it',
+    },
     repairFirst:
       'Classify the fast-flush release; persistent ringing identifies the system rather than the patient. Resolve it before either reading the peak or deciding which chamber the tip is in.',
     figureTextEquivalent:
@@ -405,6 +469,15 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
       'A higher systolic pressure and a wider pulse pressure than the artery is producing, and a derived value calculated from both.',
     whyInterpretationIsWithheld:
       'The spikes come from the catheter moving inside the vessel, not from the pressure inside it. They overestimate systolic pressure and underestimate diastolic pressure, and they change from beat to beat, so no single beat can be trusted.',
+    readout: {
+      chamber: {
+        identifiable: true,
+        words:
+          'the pulmonary-artery pattern — the notch and the down-sloping diastole are preserved',
+      },
+      value:
+        'no single beat’s systolic or diastolic value is usable: the spikes overestimate the one and underestimate the other, differently on every beat',
+    },
     repairFirst:
       'Note that the extra deflections do not repeat identically beat to beat, and reassess the catheter and its loop under appropriate supervision rather than recording the peak.',
     figureTextEquivalent:
@@ -465,6 +538,14 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
       'A raised occlusion pressure, and a diuretic or fluid decision built on the difference between two readings taken at different moments in the breath.',
     whyInterpretationIsWithheld:
       'The displayed pressure includes whatever surrounds the vessel. Moving along the respiratory swing changes the number without anything changing in the circulation, and the swing is largest exactly here.',
+    readout: {
+      chamber: {
+        identifiable: true,
+        words: 'the wedge (occlusion) pattern — clean a and v waves',
+      },
+      value:
+        'not usable as taken: it was read at the top of the respiratory swing; re-read at end expiration',
+    },
     repairFirst:
       'Freeze the trace, identify the trough of the slow envelope under controlled positive-pressure ventilation, and read there. Confirm the ventilation mode first, because spontaneous breathing moves the envelope the other way.',
     figureTextEquivalent:
@@ -559,17 +640,29 @@ export function normalWaveformValidityChallenge(id: string): NormalWaveformValid
 }
 
 /**
- * The answer a valid signal would license, and this one does not.
+ * The answer a valid signal would license, and a morphology-destroying fault does not.
  *
- * Held as data rather than as a sentence inside a component, so the contract "an invalid signal
- * prevents a confident chamber interpretation" is something a suite can assert against the record
- * rather than against rendered prose.
+ * Held as data rather than as a sentence inside a component, so the contract "a display that has
+ * lost the features that identify the chamber prevents a confident chamber interpretation" is
+ * something a suite can assert against the record rather than against rendered prose. Since
+ * HD-PRE-REVIEW-02 it is shown only for those faults; see `NormalWaveformValidityReadout`.
  */
 export const NORMAL_WAVEFORM_INTERPRETATION_WITHHELD =
   'Chamber interpretation withheld — this display cannot support one'
 
+/**
+ * Whether a chamber may be named from the display. A clean display always; a faulted one only when
+ * its fault leaves the identifying shape intact — and even then the number is judged separately.
+ */
 export function chamberInterpretationAvailable(
   challenge: NormalWaveformValidityChallenge | null,
 ): boolean {
-  return challenge === null
+  return challenge === null || challenge.readout.chamber.identifiable
+}
+
+/** The heading the reasoning's "why" row carries, true to what this display withholds. */
+export function validityWithheldHeading(challenge: NormalWaveformValidityChallenge): string {
+  return challenge.readout.chamber.identifiable
+    ? 'Why the number cannot be used as displayed'
+    : 'Why no chamber can be named'
 }

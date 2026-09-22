@@ -1,0 +1,300 @@
+{
+  "batch": "HD-PRE-REVIEW-02",
+  "title": "Measurement provenance and causality",
+  "lane": "02",
+  "module": "icu-hemodynamics",
+  "source": "ICU_Hemodynamics_Learner_Walkthrough.docx (Claude in a first-year critical-care-fellow persona, 19 September 2026; 89 pages, 91 findings)",
+  "package": "Interventional-Pulm-Local-Data/module_update_9_19/HD_Claude_Implementation_Pack",
+  "inspectedSha": "c717c9ffae09cb67e19b06a56d37c75487a5605a",
+  "baseSha": "9fbdbddc4d7f124c7ac3254f4cb8aa4c15c0233f",
+  "headSha": "RECORDED_AT_COMMIT",
+  "branch": "claude/hemodynamics-2-9-22",
+  "checkout": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-hemodynamics-2-9-22",
+  "handoff": "docs/gap-remediation/fellow-walkthrough/hemodynamics/HD-PRE-REVIEW-02-handoff.md",
+  "rawEvidence": "Interventional-Pulm-Local-Data/renders/output/hd-pre-review-02-2026-09-22/",
+  "state": "implemented; pull request open; not merged, not deployed; not independently reviewed",
+  "claims": {
+    "clinicalApproval": false,
+    "sourceReview": false,
+    "deviceReview": false,
+    "realLearnerValidation": false,
+    "usabilitySession": false,
+    "release": false
+  },
+  "sharedFileScope": {
+    "sharedRuntimeFilesChanged": [],
+    "note": "No shared learning-module, critical-care, catalog, progress, analytics, auth, deployment or hemodynamics-core file was changed. External consumers of HD engine exports (critical-care progress adapter, evidence registry, draft-modules) import unchanged modules."
+  },
+  "engineSurfaceAdded": [
+    "types.ts: PhysiologicalEpisode, PhysiologicalEpisodeCause, ThermodilutionSeriesIdentity, ThermodilutionAcquisition, LineDynamicResponse, WedgeCursorPlacement, WedgeCursorReading, StoredWedgeRecord; HemodynamicSimulationState.sessionId/physiologicalEpisode/physiologicalEpisodes; ThermodilutionTrial.acquisition (optional); MeasurementSystemState.arterialLine (optional); CatheterState.wedgeCursor/storedWedge (optional); SET_DAMPING/SET_ARTIFACT optional line; PLACE_WEDGE_CURSOR optional placement/time",
+    "simulation.ts: deriveUnroundedHemodynamicMeasurements (deriveHemodynamicMeasurements now delegates to it), unroundedModelEstimates, latentPhysiologicalEstimates, effectWaningStartsAt, withNewPhysiologicalEpisode, hemodynamicSessionId, sessionOrdinalOf, INSPIRATORY_FRACTION export; createInitialHemodynamicState optional sessionOrdinal",
+    "thermodilution.ts: series identities (learner, authored, unrecorded), thermodilutionSeriesGroups, latestThermodilutionSeriesKey, thermodilutionSeriesMeanUnrounded, thermodilutionTrialInclusion, thermodilutionSeriesConditionWords, thermodilutionSeriesIncompatibility; thermodilutionAcceptedAverage and thermodilutionSeriesSummary take an optional series key and describe one series",
+    "measurementProvenance.ts (new): measurementProvenanceLabels, thermodilutionAcquisitionFor, currentThermodilutionSeriesIdentity, thermodilutionSeriesView, currentThermodilutionAverage, occlusionCapture, wedgeCursorReadingAt, assistedWedgeCursorTime, modeledRespiratoryReference, storedWedgeProvenance, physiologicalEpisodeWords",
+    "measurementLines.ts (new): arterialMeasurementSystem, lineMeasurementSystem, arterialLineIsSeparate",
+    "matchedComparison.ts (new): modelOnlyMatchedComparison, modelOnlyHorizonSeconds",
+    "decisionRecord.ts: AcquiredFlow.seriesKey/episode/cardiacOutputUnroundedLMin, ObservedSystemState.earlierFlow/physiologicalEpisode/sessionId, compareObservedFlow",
+    "fick.ts: fickVenousSpecimenWords, FickWithheldReasonKind, FickResult.withheldReasonKinds/contentDifferenceUnroundedMlDl/cardiacOutputUnroundedLMin",
+    "stageRuntime.ts: ARTERIAL_FAST_FLUSH_CHECK, arterial StageWatch values, SectionRuntime.transferWatch; stageWatchValue reads unrounded estimates",
+    "content: derivedInputConventionLabels, validityWithheldHeading, NormalWaveformValidityChallenge.readout, authoredConcernForUnfavourableAction"
+  ],
+  "findings": [
+    {
+      "id": "P-05",
+      "section": "A",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/engine/thermodilution.ts, engine/measurementProvenance.ts, engine/reducer.ts, engine/simulation.ts",
+      "state": "Practice HD-01: three curves, fluid 250 mL, three curves",
+      "learnerImpact": "Pre- and post-fluid curves were averaged into one '4.3 L/min from 6 reviewed trials'.",
+      "fix": "Immutable acquisition-series identity (session, case, method, configured injectate, physiological episode); one current series per state; earlier series kept and never pooled or presented as current; per-series maximum.",
+      "before": "4.3 L/min from 6 reviewed trials; rail 4.1 kept after the fluid step",
+      "after": "4.4 L/min from 3 reviewed trials in this series; rail '—' after the fluid step naming the earlier 4.1 series",
+      "hold": "R4 - what counts as a comparable series; whether a series acquired during an evolving response should be flagged"
+    },
+    {
+      "id": "L7-03",
+      "section": "B",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/engine/thermodilution.ts, components/ThermodilutionTrialReview.tsx, engine/reducer.ts, components/icu-hemodynamics.module.css",
+      "state": "Learn section 7 task 3, accepting the technically unusable Trial 2",
+      "learnerImpact": "The card said ACCEPTED TRIAL while the series silently left the curve out; the pressed button was invisible.",
+      "fix": "Learner decision, technical quality and calculation inclusion shown separately in the same words on the card, in the readout, in the text equivalent and in the response message; pressed-button fallback colour.",
+      "hold": null
+    },
+    {
+      "id": "L2-14",
+      "section": "C",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/content/storyProblems.ts, components/stage/HemodynamicsStoryProblems.tsx, engine/stageRuntime.ts, components/stage/HemodynamicsStageHost.tsx",
+      "state": "Learn section 2 task 9, story 'A lower transducer for a narrow tracing'",
+      "learnerImpact": "A pure offset showed +5 and +6 and a pulse pressure that fell, under 'moved every number by the same amount'.",
+      "fix": "Unrounded same-state model estimates, 0.1 mmHg display, Change column; exact-equality test.",
+      "before": "22 -> 27, 13 -> 19, 9 -> 8",
+      "after": "21.6 -> 27.5 (+5.9), 13.4 -> 19.3 (+5.9), 8.2 -> 8.2 (none)",
+      "hold": null
+    },
+    {
+      "id": "L2-02",
+      "section": "C",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/components/BedsideMonitor.tsx, components/stage/HemodynamicsSimulatorPane.tsx",
+      "state": "Learn section 2 monitor and levelling demonstration",
+      "learnerImpact": "Last-beat 28/13 beside a model 'mPAP 16', unlabelled; 16.0 - 7.4 printed as 9.0.",
+      "fix": "Rail labelled 'last beat · mPAP N, that beat's mean'; dashed line 'model mPAP'; levelling table unrounded with the hydrostatic offset on its own row and a rounding note. No quantity forced equal.",
+      "hold": "R2 / HD-03-01 - the 7.4 mmHg per 10 cm figure and its source"
+    },
+    {
+      "id": "L6-03",
+      "section": "C",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/components/BedsideMonitor.tsx, components/stage/StageDocks.tsx",
+      "state": "Learn section 6 task 3 during and after an occlusion",
+      "learnerImpact": "Two wedge numbers on one screen, neither labelled.",
+      "fix": "Header 'live mean, last beat, any breath phase'; dashed line 'model end-exp mean'; stored value with cursor placement, phase and conditions.",
+      "hold": "Task 03 (L2-01) moves the tags out of the trace lane"
+    },
+    {
+      "id": "L6-02",
+      "section": "D",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/components/stage/WedgeCursorPicker.tsx, engine/measurementProvenance.ts, engine/reducer.ts, components/BedsideMonitor.tsx, components/PacActionDock.tsx",
+      "state": "Learn section 6 tasks 3 and 7",
+      "learnerImpact": "The cursor was placed automatically at 'now', recorded as end-expiratory regardless of breath phase, and stored the model's estimate.",
+      "fix": "Manual keyboard cursor over captured samples with a labelled modeled respiratory reference; separate labelled assisted placement; provenance, sample, cycle mean, phase and distance from modeled end expiration recorded; stored value from the cursor; automatic marker suppressed on the PAC strip during an occlusion; case dock labelled assisted.",
+      "hold": "R2 / HD-03-09 - the value convention and the model end-expiratory window"
+    },
+    {
+      "id": "L3-09",
+      "section": "C",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/content/normalWaveformValidityChallenges.ts, components/NormalWaveformValidityChallenges.tsx, components/WaveformRecognitionDrill.tsx",
+      "state": "Learn section 3 task 5, display problems 1, 6 and 7",
+      "learnerImpact": "'No chamber can be named' contradicted keys saying the morphology identifies the compartment.",
+      "fix": "Two-line readout (Chamber / Value) per display problem, from each item's own key; heading follows; the H2 test contract updated to the split.",
+      "hold": "R2 / HD-03-03 - confirm the per-fault verdicts"
+    },
+    {
+      "id": "L3-04",
+      "section": "C",
+      "status": "reproduced-partly-fixed",
+      "path": "src/features/icu-hemodynamics/content/routeSpine.ts, content/signalGrammar.ts",
+      "state": "Learn section 3 task 1 RA stop",
+      "learnerImpact": "Three rules for where to read the RA.",
+      "fix": "The walk and grammar surfaces now name the convention the reference, the monitor cursor and cvp-measurement-2017 already use (end expiration, c-wave base), say 'trough' is the respiratory envelope, and distinguish a breath-averaged digital mean.",
+      "hold": "R2/R8 - section 8 RAP input 'mean at end expiration' is a second convention; figure marker is Task 03"
+    },
+    {
+      "id": "L8-02",
+      "section": "C",
+      "status": "reproduced-label-fixed-convention-held",
+      "path": "src/features/icu-hemodynamics/content/derivedMetrics.ts, engine/derivedEvaluation.ts",
+      "state": "Learn section 8 task 3 PVR ledger",
+      "learnerImpact": "'mean over cycle' beside 'mean end expiration' without saying which cycle.",
+      "fix": "'mean over the cardiac cycle (respiratory phase not stated)' and 'mean at end expiration'. No formula rule changed.",
+      "hold": "R2/R8 - whether the PVR gradient requires an end-expiratory mPAP"
+    },
+    {
+      "id": "L7-06",
+      "section": "E",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/engine/fick.ts, components/FickMethodWorkbench.tsx, components/FormulaDrawer.tsx",
+      "state": "Learn section 7 task 4 introductions 3-5; section 7 comparison 3",
+      "learnerImpact": "1.99 from 16.12 - 14.12; an SVC specimen called mixed-venous; a missing input called a contradiction.",
+      "fix": "Site-true labels; withheld reasons as kinds; approximation notation with four-decimal working; episode 5 retitled with inputs unchanged; derived drawer uses only current-episode flow and wedge.",
+      "hold": "R4 - ScvO2 vs SvO2 direction sentence has no registered source"
+    },
+    {
+      "id": "L9-05",
+      "section": "F",
+      "status": "reproduced-and-fixed",
+      "path": "src/features/icu-hemodynamics/engine/measurementLines.ts, engine/simulation.ts, engine/reducer.ts, engine/pressureObservation.ts, engine/stageRuntime.ts, components/stage/StageDocks.tsx, components/stage/HemodynamicsStageHost.tsx",
+      "state": "Learn section 9 tasks 6-8",
+      "learnerImpact": "Repairing the arterial line also repaired the PA and CVP traces; the goal named the distal lumen; the table reported PA.",
+      "fix": "Backward-compatible optional arterialLine response; transfer damps and repairs only the arterial line; arterial goal and watch rows; line-scope limitation stated.",
+      "before": "PAP 21/13 -> 28/14, CVP 6 -> 4 after the arterial repair",
+      "after": "PAP 28/13 -> 28/13, CVP 4 -> 4; ART 82/62 -> 98/57",
+      "hold": "model - level and zero remain shared across lines"
+    },
+    {
+      "id": "L9-03",
+      "section": "G",
+      "status": "reproduced-reference-corrected",
+      "path": "src/features/icu-hemodynamics/content/cases.ts, content/hemodynamicTeaching.ts, content/stageItems.ts",
+      "state": "Learn section 9 tasks 1-3; Practice HD-08",
+      "learnerImpact": "The brief promised erratic curves that do not exist.",
+      "fix": "Brief, expert-trace cue and capstone stem now say the earlier outputs were reported and their curves are not available. No curves fabricated.",
+      "hold": "R4 - request for authored prior curves"
+    },
+    {
+      "id": "P-04",
+      "section": "G",
+      "status": "reproduced-promise-corrected-endpoint-held",
+      "path": "src/features/icu-hemodynamics/content/cases.ts, content/hemodynamicTeaching.ts, components/HemodynamicCaseActivity.tsx, engine/matchedComparison.ts",
+      "state": "Practice HD-01 passive leg raise",
+      "learnerImpact": "A real-time SV endpoint was promised that the monitor lacks; the expert trace describes a response the learner could not see.",
+      "fix": "Promise corrected; labelled model-only flow view; debrief says whether flow was measured during the leg raise; a leg-raise series is kept separate by series identity.",
+      "hold": "R4 - which PLR endpoint the module should provide"
+    },
+    {
+      "id": "P-08",
+      "section": "G",
+      "status": "reproduced-debrief-fixed-grading-held",
+      "path": "src/features/icu-hemodynamics/components/HemodynamicCaseActivity.tsx, content/hemodynamicTeaching.ts, engine/matchedComparison.ts",
+      "state": "Practice HD-03 and HD-04, fluid 250 mL",
+      "learnerImpact": "The debrief listed the fluid step with no comment while MAP rose.",
+      "fix": "Debrief names the action, quotes the case's own concern, reports displayed/acquired values after it, states the model's oxygenation limit, and offers a labelled model-only matched comparison. No coefficient changed.",
+      "hold": "R5 - interrupt vs permitted; the model's small flow rise with fluid in HD-04"
+    },
+    {
+      "id": "P-12",
+      "section": "G",
+      "status": "reproduced-partly-fixed",
+      "path": "src/features/icu-hemodynamics/content/cases.ts, components/HemodynamicCaseActivity.tsx",
+      "state": "Practice HD-05, HD-06, HD-07; all cases",
+      "learnerImpact": "No vasopressor in HD-05; model time not stated as compressed; HD-07 brief said hypotension over MAP 78; menus differ by case.",
+      "fix": "(2) model time stated as compressed in every brief, the debrief and the fluid/diuresis responses; (3) HD-07 brief aligned with the modeled state.",
+      "hold": "R5 - (1) HD-05 pressure support, (3) whether HD-07 should be re-parameterised, (4) per-case menus"
+    }
+  ],
+  "verification": {
+    "browserPane": "In-app browser pane against this worktree's server on port 3125 at 1204x987: Practice HD-01 3+fluid+3 path, Practice HD-03 fluid debrief, section 2 levelling demo.",
+    "browserHeadless": "Headless Chromium (Playwright) against the unchanged base (port 3136) and this worktree (3125) at 1204x987 for P-05, L7-03, L6-02/L6-03, L9-05, L3-09, L2-14; head only at 390x844, 320x740 and 200% root text for the wedge picker and trial card. Also 1440x900 and 1024x768 for the wedge picker and trial card: no overflow.",
+    "overflow": "No horizontal page overflow on the changed surfaces at 1204x987, 390x844, 320x740 (100% root text) or 390x844 (200%); 76 px at 1204x987 with 200% root text on both base and head (Learn pathway strip, pre-existing).",
+    "jestHd": "44 suites / 591 tests pass (base: 40 / 539)",
+    "newSuitesAgainstBase": "hd-pre-review-02-base-regressions: 9 of 9 fail on the unchanged base on assertions, pass on head",
+    "jestConsumers": "47/50 suites; the same 3 tests and 432/435 counts fail on the unchanged base (CRRT station order; critical-care accessibility surfaces; critical-care learner-copy framing - zero ICU-hemodynamics rows)",
+    "playwright": "playwright.icu-hemodynamics.config.ts (port 3125): 10 passed / 16 failed; the identical 16 test names fail on the unchanged base (same specs, config pointed at port 3136). Pre-existing.",
+    "typeCheck": "clean",
+    "lint": "clean on all changed and added files (--max-warnings 0)",
+    "build": "npm run build succeeded with both dev servers stopped (build:content, asset validators, prepare:standalone); only third-party mermaid/langium warnings"
+  },
+  "testsChangedForContract": [
+    "h2-h3-reference-and-pac-safety.test.tsx: 'never names a chamber' replaced by the L3-09 split contract",
+    "stage-host.test.tsx: wedge section presses the labelled assisted placement and checks the stored provenance",
+    "components.test.tsx: PacActionDock lets a breath of trace accumulate instead of forcing wedgeCaptureReady; button name gained '(assisted)'"
+  ],
+  "holds": [
+    {
+      "id": "HD02-H1",
+      "group": "R4",
+      "question": "Is case/session + configured injectate + physiological episode the right series identity; should a series acquired during an evolving response be flagged or split?"
+    },
+    {
+      "id": "HD02-H2",
+      "group": "R2 / HD-03-03",
+      "question": "Confirm per fault which displays still name the chamber (level, motion, respiratory phase) and which withhold both (overdamped, underdamped, mislabel, scale)."
+    },
+    {
+      "id": "HD02-H3",
+      "group": "R2 / R8",
+      "question": "Section 3 teaches end-expiratory c-wave base; section 8's RAP input is 'mean at end expiration'. Which does the module teach, and should section 8 change?"
+    },
+    {
+      "id": "HD02-H4",
+      "group": "R2 / R8",
+      "question": "Must the mPAP feeding PVR be end-expiratory?"
+    },
+    {
+      "id": "HD02-H5",
+      "group": "R2 / HD-03-09",
+      "question": "Is the one-cycle mean centred on an end-expiratory cursor the wedge value to teach, and is +/-0.12 of the breath an acceptable model window?"
+    },
+    {
+      "id": "HD02-H6",
+      "group": "R2 / HD-03-01",
+      "question": "Unchanged: the 7.4 mmHg per 10 cm figure and its source."
+    },
+    {
+      "id": "HD02-H7",
+      "group": "R4",
+      "question": "Should the Fick teaching explain the direction a central venous saturation can mislead? No registered source; nothing written."
+    },
+    {
+      "id": "HD02-H8",
+      "group": "R4",
+      "question": "Which PLR endpoint should the module provide: a thermodilution series during the leg raise, a sourced flow surrogate, or the labelled model-only view?"
+    },
+    {
+      "id": "HD02-H9",
+      "group": "R4",
+      "question": "Should HD-08/section 9 show authored prior erratic curves as authored evidence, from which source or specification?"
+    },
+    {
+      "id": "HD02-H10",
+      "group": "R5",
+      "question": "Fluid in HD-03/HD-04: hard interrupt, permitted-but-unfavourable (current), or different coefficients? The model shows a small flow rise with fluid in both."
+    },
+    {
+      "id": "HD02-H11",
+      "group": "R5",
+      "question": "Should HD-05 offer a vasopressor or explain its absence?"
+    },
+    {
+      "id": "HD02-H12",
+      "group": "R5",
+      "question": "Should HD-07 be re-parameterised to be hypotensive rather than the brief changed?"
+    },
+    {
+      "id": "HD02-H13",
+      "group": "R5 / R7",
+      "question": "Per-case action menus hint at the diagnosis; a common menu would add inert options."
+    },
+    {
+      "id": "HD02-H14",
+      "group": "model",
+      "question": "Per-line level and zero, or keep the stated shared-transducer limitation?"
+    }
+  ],
+  "observationsNotActedOn": [
+    "1204x987 at 200% root text: the Learn pathway strip overflows 76 px on base and head.",
+    "Thermodilution card placeholder and disabled-control contrast on the light card (Task 03).",
+    "The case dock's wedge cursor remains one-button (labelled assisted); the manual picker could be reused there (Task 03).",
+    "The legacy calculateHemodynamicScore counts accepted valid curves across all series; it is never shown to a learner and was not changed.",
+    "/api/analytics errors locally because the worktree has no .env.local; environment only."
+  ],
+  "nextSteps": [
+    "Independent review of this PR.",
+    "Owner review of holds HD02-H1..H14 grouped by R2, R4, R5.",
+    "HD-PRE-REVIEW-03: move value tags out of the trace lane keeping this batch's labels; mark the RA reading point; contrast; optional manual cursor in the case dock.",
+    "HD-PRE-REVIEW-04: decide whether before/after tables report monitor readings; Fick comparison table; action-menu design with the owner."
+  ]
+}

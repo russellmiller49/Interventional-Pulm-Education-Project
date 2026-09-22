@@ -6374,11 +6374,16 @@
   font-weight: 700;
 }
 
+/*
+ * The fallback matters: inside the lesson stage no ancestor defines --teal, so a pressed Accept or
+ * Exclude rendered white-on-white and the learner's own selection disappeared (seen while
+ * reproducing report L7-03, identical on the base commit).
+ */
 .thermoTrialActions button[aria-pressed='true'],
 .thermoExcludeRow button[aria-pressed='true'] {
-  border-color: var(--teal);
+  border-color: var(--teal, #147d7b);
   color: #fff;
-  background: var(--teal);
+  background: var(--teal, #147d7b);
 }
 
 .thermoTrialActions button:disabled,
@@ -6406,6 +6411,67 @@
   color: var(--ink);
   background: #fff;
   font-size: 0.7rem;
+}
+
+/*
+ * HD-PRE-REVIEW-02 (report L7-03). Whether a curve is in the calculation is its own badge, beside
+ * the learner's decision rather than replacing it, and an accepted curve that is left out says why
+ * in a note that is announced when it appears.
+ */
+.thermoTrialCard > header p[data-trial-in-calculation='no'] {
+  border-color: #c9a3a8;
+  color: #6f1f2a;
+  background: #fbeef0;
+}
+
+.thermoTrialCard > header p[data-trial-in-calculation='yes'] {
+  border-color: #2a8b84;
+  color: #0d4f4c;
+  background: #e7f5f1;
+}
+
+.thermoTrialInclusion {
+  margin: 0;
+  color: #23575a;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.thermoTrialLeftOut {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-left: 3px solid #b3413f;
+  border-radius: 0 0.55rem 0.55rem 0;
+  color: #6f1f2a;
+  background: #fdecec;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.thermoEarlierSeries {
+  color: #40595d;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.thermoEarlierSeries > summary {
+  display: flex;
+  min-height: 2.5rem;
+  align-items: center;
+  color: #123b43;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.thermoEarlierSeries p {
+  margin: 0.25rem 0;
+}
+
+.thermoEarlierSeries ul {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
 }
 
 .thermoNoReasonNote {

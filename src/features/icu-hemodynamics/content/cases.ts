@@ -63,15 +63,22 @@ function intervention(
   return definition
 }
 
+/*
+ * HD-PRE-REVIEW-02 (report P-04). The label promised a "real-time stroke-volume endpoint" and the
+ * response told the learner to watch a CO/SV trend, but this monitor has no continuous flow or
+ * stroke-volume channel. The model's flow does rise; what the learner can see of it is a
+ * thermodilution series acquired while the leg raise lasts. The promise now says that. The modeled
+ * effect is unchanged.
+ */
 const plr = intervention({
   id: 'passive-leg-raise',
-  label: 'Passive leg raise with real-time stroke-volume endpoint',
+  label: 'Passive leg raise (a reversible preload challenge)',
   shortLabel: 'PLR',
   category: 'assessment',
   description:
-    'Transiently recruit venous blood while watching flow, not a static filling pressure alone.',
+    'Transiently recruit venous blood. What it tests is a change in flow, not a static filling pressure alone.',
   response:
-    'A reversible preload challenge begins; watch the CO/SV trend over the next 10–20 seconds.',
+    'A reversible preload challenge begins. This monitor has no continuous cardiac-output or stroke-volume channel: flow during the leg raise is seen only in a thermodilution series acquired while it lasts.',
   onsetSeconds: 5,
   recoverySeconds: 35,
   parameterDeltas: { circulatingVolumeFraction: 0.08 },
@@ -84,7 +91,7 @@ const fluidStep = intervention({
   category: 'preload',
   description: 'A bounded relative volume step; this is not patient-specific fluid advice.',
   response:
-    'The modeled volume step equilibrates over 15–30 seconds. Reassess flow and congestion.',
+    'The modeled volume step equilibrates over 15–30 model seconds — compressed time, not a clinical time course. Reassess flow and congestion.',
   onsetSeconds: 12,
   repeatable: true,
   parameterDeltas: { circulatingVolumeFraction: 0.075, stressedVenousVolumeMl: 180 },
@@ -157,7 +164,7 @@ const diuresis = intervention({
   description:
     'Reduces modeled filling volume gradually; no patient-specific agent or dose is implied.',
   response:
-    'Filling pressures fall gradually. Reassess flow, renal perfusion context, and congestion.',
+    'Filling pressures fall gradually — within model seconds here, which are compressed and are not a clinical time course. Reassess flow, renal perfusion context, and congestion.',
   onsetSeconds: 24,
   repeatable: true,
   parameterDeltas: {
@@ -635,8 +642,11 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     station: 'obstructive-shock',
     title: 'Pressure equalization with a falling pulse pressure',
     shortTitle: 'Cardiac tamponade',
+    // Report P-12: the brief said "hypotension" while the modeled and displayed MAP sit near 73–78
+    // mmHg, above the module's own MAP threshold. The brief now describes what the case shows; the
+    // physiology is unchanged. Whether the case should instead be hypotensive is an owner decision.
     presentation:
-      'An adult has hypotension, tachycardia, high and converging diastolic filling pressures, and respiratory variation in flow.',
+      'An adult has tachycardia, a narrow pulse pressure, high and converging diastolic filling pressures, and respiratory variation in flow.',
     learningObjectives: [
       'Recognize pericardial constraint as an obstructive mechanism.',
       'Prioritize urgent definitive escalation rather than normalizing a single number.',
@@ -687,8 +697,11 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     station: 'signal-validation',
     title: 'The numbers do not fit the patient',
     shortTitle: 'Artifacts and false wedge',
+    // Report L9-03: the brief promised "erratic thermodilution curves" that this case never shows —
+    // it opens with no curves at all. No curve is fabricated to fit the copy; the brief now says the
+    // earlier disagreement was reported and its curves are not available.
     presentation:
-      'The monitor shows internally inconsistent pressures and erratic thermodilution curves while bedside perfusion appears unchanged.',
+      'The monitor shows internally inconsistent pressures while bedside perfusion appears unchanged. The last cardiac outputs were reported as disagreeing with each other; their curves are not available in this case, so any cardiac output here has to be acquired again.',
     learningObjectives: [
       'Recognize hydrostatic, damping, catheter-position, and injectate artifacts.',
       'Restore the measurement chain before changing management.',

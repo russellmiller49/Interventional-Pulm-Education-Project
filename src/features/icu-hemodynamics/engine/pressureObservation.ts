@@ -1,3 +1,4 @@
+import { lineMeasurementSystem } from './measurementLines'
 import type { FastFlushLineType, HemodynamicSimulationState } from './types'
 
 /** Allow the modeled plateau/release and one complete subsequent pulse to reach the monitor. */
@@ -19,7 +20,9 @@ export function catheterFlushBlocked(state: HemodynamicSimulationState, line: Fa
 
 /** Identifies the acquisition conditions, not a clinical measurement or a learner answer. */
 export function pressureObservationKey(state: HemodynamicSimulationState, line: FastFlushLineType) {
-  const system = state.measurementSystem
+  // The flushed line's own response, so repairing the arterial tubing is a new observation of the
+  // arterial line and not of the others (report L9-05).
+  const system = lineMeasurementSystem(state.measurementSystem, line)
   return JSON.stringify([
     line,
     system.dampingRatio,

@@ -318,7 +318,8 @@ const capstone: HemodynamicsSectionItems = {
     itemType: 'management-decision',
     contextRequirement: 'patient',
     clinicalContextId: 'pac-capstone-numbers-changed',
-    stem: 'Since the last set of readings the displayed pressures have moved, the three thermodilution numbers disagree with each other, and the patient looks the same as an hour ago. What do you commit to first?',
+    // Report L9-03: the three numbers are reported history, not curves this case shows. Said so.
+    stem: 'Since the last set of readings the displayed pressures have moved, the three thermodilution numbers reported at that check disagree with each other (their curves are not available to review), and the patient looks the same as an hour ago. What do you commit to first?',
     choices: [
       {
         id: 'doubt-the-screen-first',

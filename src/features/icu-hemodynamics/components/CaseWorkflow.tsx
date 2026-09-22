@@ -4,10 +4,10 @@ import type { Dispatch } from 'react'
 
 import {
   measurementMeetsCriterion,
-  thermodilutionAcceptedAverage,
   type HemodynamicAction,
   type HemodynamicSimulationState,
 } from '../engine'
+import { currentThermodilutionAverage } from '../engine/measurementProvenance'
 import styles from './icu-hemodynamics.module.css'
 
 interface CaseWorkflowProps {
@@ -32,7 +32,7 @@ function currentMetric(state: HemodynamicSimulationState, metric: keyof typeof s
 
 export function CaseWorkflow({ state, dispatch }: CaseWorkflowProps) {
   const definition = state.caseDefinition
-  const average = thermodilutionAcceptedAverage(state.thermodilutionTrials)
+  const average = currentThermodilutionAverage(state)
   const activePhaseIndex = workflow.findIndex(([id]) => id === state.phase)
 
   return (

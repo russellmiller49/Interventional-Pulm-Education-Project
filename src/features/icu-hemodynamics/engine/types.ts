@@ -42,6 +42,21 @@ export type HemodynamicSignal =
   | 'pleth'
   | 'respiration'
 
+/**
+ * The dynamic response of one line's own tubing and transducer.
+ *
+ * HD-PRE-REVIEW-02 (report L9-05). The measurement system used to be one object for every channel,
+ * so damping the systemic arterial line damped the pulmonary-artery and central-venous traces with
+ * it, and repairing the arterial line "repaired" them too. Each line has its own fluid path; this is
+ * the smallest explicit contract that lets the arterial one differ. Level, zero and noise are still
+ * shared — that limitation is stated wherever the arterial line is repaired on its own.
+ */
+export interface LineDynamicResponse {
+  readonly dampingRatio: number
+  readonly naturalFrequencyHz: number
+  readonly artifact: 'none' | 'overdamped' | 'underdamped'
+}
+
 export interface MeasurementSystemState {
   zeroed: boolean
   transducerLevelCm: number
@@ -53,6 +68,12 @@ export interface MeasurementSystemState {
   fastFlushActiveUntil: number | null
   fastFlushLineType: FastFlushLineType | null
   lastFastFlushFinding: string | null
+  /**
+   * The systemic arterial line's own dynamic response, when it differs from the shared one.
+   * Absent or `null` — every existing state — means the arterial channel shares the response the
+   * other channels use, exactly as before.
+   */
+  arterialLine?: LineDynamicResponse | null
 }
 
 export interface CatheterState {
@@ -72,6 +93,14 @@ export interface CatheterState {
   storedAtEndExpiration: boolean
   forcedSafetyRecovery: boolean
   /**
+   * Where the reading cursor sits on the captured occlusion trace, who put it there, and what the
+   * trace says at that point (HD-PRE-REVIEW-02, report L6-02). `wedgeCursorTime` is kept for the
+   * existing consumers and always equals `wedgeCursor.time`.
+   */
+  wedgeCursor?: WedgeCursorReading | null
+  /** What was stored, from which cursor, in which physiological episode. */
+  storedWedge?: StoredWedgeRecord | null
+  /**
    * How many brief occlusions have been started in this run.
    *
    * Identifies the occlusion an observation belongs to, so a confirmation that the
@@ -79,6 +108,71 @@ export interface CatheterState {
    * from an earlier wedge (report L6-05). See `paReturnEpisodeKey`.
    */
   wedgeEpisodeCount: number
+}
+
+/**
+ * Who placed the wedge reading cursor.
+ *
+ * `manual` is the learner choosing a sample on the captured trace; `assisted` is the simulation
+ * placing it at its own modeled end expiration. They are different actions and are never merged:
+ * revealing the assisted placement is not the learner identifying end expiration.
+ */
+export type WedgeCursorPlacement = 'manual' | 'assisted'
+
+export interface WedgeCursorReading {
+  readonly placement: WedgeCursorPlacement
+  /** Model time of the selected sample. */
+  readonly time: number
+  /** The raw sample value at that time, unrounded. */
+  readonly sampleMmHg: number
+  /**
+   * The mean of the one cardiac cycle centred on the cursor, unrounded. This is the number a
+   * stored wedge takes from this cursor — a single sample sits on an a or v wave, not on a mean.
+   */
+  readonly cycleMeanMmHg: number
+  readonly windowStart: number
+  readonly windowEnd: number
+  readonly sampleCount: number
+  /** The simulation's own respiratory phase at the cursor, 0 = modeled end expiration. */
+  readonly modeledRespiratoryPhase: number
+  /** Signed seconds from the nearest modeled end expiration (negative = before it). */
+  readonly secondsFromModeledEndExpiration: number
+  /**
+   * Whether the cursor falls inside this simulation's modeled end-expiratory window
+   * (`END_EXPIRATION_TOLERANCE_PHASE`). A model setting, not a clinical tolerance.
+   */
+  readonly withinModeledEndExpiratoryWindow: boolean
+  /** Which occlusion this cursor was placed on (`CatheterState.wedgeEpisodeCount`). */
+  readonly occlusionEpisode: number
+}
+
+export interface StoredWedgeRecord {
+  /** Unrounded; surfaces round it for display. */
+  readonly valueMmHg: number
+  readonly storedAtSeconds: number
+  readonly cursor: WedgeCursorReading
+  /** The physiological episode the value belongs to (`PhysiologicalEpisode.index`). */
+  readonly physiologicalEpisode: number
+  readonly sessionId: string
+}
+
+/**
+ * Why the patient's physiology is now different from what it was.
+ *
+ * An episode boundary follows an accepted intervention that changes the model, or a change the
+ * model itself schedules (a transient effect beginning to wane). Navigation, hints, references,
+ * opening a panel, measurement-system changes and ordinary ticks never start one.
+ */
+export type PhysiologicalEpisodeCause =
+  | { readonly kind: 'case-opened' }
+  | { readonly kind: 'intervention'; readonly interventionId: string; readonly label: string }
+  | { readonly kind: 'effect-waning'; readonly interventionId: string; readonly label: string }
+
+export interface PhysiologicalEpisode {
+  /** 0 is the state the case opened in. */
+  readonly index: number
+  readonly startedAtSeconds: number
+  readonly cause: PhysiologicalEpisodeCause
 }
 
 export interface HemodynamicWaveformSample {
@@ -148,6 +242,36 @@ export interface ThermodilutionCurvePoint {
   temperatureChangeC: number
 }
 
+/**
+ * Which thermodilution acquisitions belong together (HD-PRE-REVIEW-02, report P-05).
+ *
+ * Two curves may be averaged only when they share this identity: the same session of the same
+ * case, the same method, the same configured injectate computation constants, and the same
+ * physiological episode. The identity is fixed when a curve is acquired and is never rewritten —
+ * a later intervention starts a new series rather than relabelling an old one.
+ *
+ * `unrecorded` is a curve built without acquisition context (a directly constructed or legacy
+ * trial). It is kept honest rather than guessed: it never pools with a recorded series.
+ */
+export interface ThermodilutionSeriesIdentity {
+  readonly key: string
+  readonly origin: 'learner-acquired' | 'authored-example' | 'unrecorded'
+  readonly method: 'bolus-thermodilution'
+  readonly sessionId: string | null
+  readonly caseId: string | null
+  readonly episode: PhysiologicalEpisode | null
+  /** The configured computation constants, not the delivered injectate of one trial. */
+  readonly injectate: { readonly volumeMl: number; readonly temperatureC: number } | null
+  /** For an authored teaching example: which one. */
+  readonly exampleId?: string
+}
+
+export interface ThermodilutionAcquisition {
+  readonly series: ThermodilutionSeriesIdentity
+  readonly acquiredAtSeconds: number
+  readonly catheterPosition: CatheterPosition | null
+}
+
 export interface ThermodilutionTrial {
   id: string
   sequence: number
@@ -170,6 +294,11 @@ export interface ThermodilutionTrial {
    * without one is refused: dropping the trial that disagrees is not a reason.
    */
   exclusionReasonId: string | null
+  /**
+   * The immutable acquisition context. Absent on a trial built without one; see
+   * `ThermodilutionSeriesIdentity`.
+   */
+  readonly acquisition?: ThermodilutionAcquisition | null
 }
 
 export interface ThermodilutionConfiguration {
@@ -261,6 +390,15 @@ export interface HemodynamicSimulationState {
   schemaVersion: 1
   caseDefinition: HemodynamicCaseDefinition
   caseId: string
+  /**
+   * Which run of the case this is. A reset or a new case is a new session, so nothing acquired in
+   * one can be read as belonging to another.
+   */
+  sessionId: string
+  /** The physiological conditions measurements are currently acquired under. */
+  physiologicalEpisode: PhysiologicalEpisode
+  /** Every episode this session has had, oldest first; the last one is the current one. */
+  physiologicalEpisodes: readonly PhysiologicalEpisode[]
   mode: HemodynamicLearningMode
   workspace: HemodynamicWorkspace
   phase: HemodynamicCasePhase
@@ -312,12 +450,25 @@ export type HemodynamicAction =
   | { type: 'RETRACT_CATHETER'; instant?: boolean }
   | { type: 'SET_TRANSDUCER_LEVEL'; levelCm: number }
   | { type: 'ZERO_TRANSDUCER' }
-  | { type: 'SET_DAMPING'; dampingRatio: number }
-  | { type: 'SET_ARTIFACT'; artifact: PressureArtifact }
+  | {
+      type: 'SET_DAMPING'
+      dampingRatio: number
+      /** Only this line's own response; omitted, the shared response every line uses. */
+      line?: 'systemic-arterial'
+    }
+  | { type: 'SET_ARTIFACT'; artifact: PressureArtifact; line?: 'systemic-arterial' }
   | { type: 'FAST_FLUSH'; lineType: FastFlushLineType }
   | { type: 'VALIDATE_SIGNAL'; check: string }
   | { type: 'START_WEDGE' }
-  | { type: 'PLACE_WEDGE_CURSOR' }
+  | {
+      type: 'PLACE_WEDGE_CURSOR'
+      /**
+       * `manual` places the cursor on the captured sample nearest `time`. Omitted, the placement is
+       * `assisted`: the simulation's own modeled end expiration, recorded as such.
+       */
+      placement?: WedgeCursorPlacement
+      time?: number
+    }
   | { type: 'STORE_WEDGE' }
   | { type: 'DEFLATE_WEDGE' }
   | { type: 'GENERATE_THERMODILUTION_TRIAL'; technique: ThermodilutionTechnique }
@@ -359,4 +510,6 @@ export interface ThermodilutionGenerationInput {
   seed: number
   sequence?: number
   generatedAt?: number
+  /** Where and under which conditions this curve is acquired. */
+  acquisition?: ThermodilutionAcquisition | null
 }

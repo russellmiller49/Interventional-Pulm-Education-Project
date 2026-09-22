@@ -353,7 +353,14 @@ describe('H2 signal validity prevents a confident interpretation', () => {
     }
   })
 
-  it('never names a chamber from a faulted display, before or after the commitment', () => {
+  /*
+   * HD-PRE-REVIEW-02 (report L3-09) changed this contract. It used to be "never name a chamber from
+   * a faulted display", which contradicted the off-level item's own key ("the morphology identifies
+   * the compartment") and its explanation. The readout now judges two things separately: before a
+   * reading, nothing is named; afterwards, the chamber is named only where the fault leaves the
+   * identifying shape intact, and the number is withheld either way.
+   */
+  it('names nothing before a reading, then judges the chamber and the number separately', () => {
     render(<NormalWaveformValidityChallenges />)
 
     const readout = () => screen.getByText(/Chamber readout/i).closest('p')
@@ -361,6 +368,7 @@ describe('H2 signal validity prevents a confident interpretation', () => {
     expect(readout()).not.toHaveTextContent(/right atrium|right ventricle|pulmonary artery/i)
 
     const challenge = normalWaveformValidityChallenges[0]!
+    expect(challenge.faultKind).toBe('level-or-zero')
     fireEvent.click(
       screen.getByRole('radio', {
         name: new RegExp(escape(challenge.commitment.choices[0]!.label.slice(0, 40))),
@@ -368,8 +376,26 @@ describe('H2 signal validity prevents a confident interpretation', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: 'Check this reading' }))
 
+    // An offset leaves the right-atrial shape intact: the chamber is named, the value is not usable.
+    expect(readout()).toHaveTextContent(/Chamber: the right-atrial pattern/i)
+    expect(readout()).toHaveTextContent(/Value: not usable until the transducer is re-levelled/i)
+    expect(readout()).not.toHaveTextContent(NORMAL_WAVEFORM_INTERPRETATION_WITHHELD)
+    expect(readout()).toHaveAttribute('data-withheld', 'value-only')
+    expect(screen.getByText('Why the number cannot be used as displayed')).toBeInTheDocument()
+
+    // Damping takes the identifying features: no chamber is named, and the heading says so.
+    const overdamped = normalWaveformValidityChallenges.findIndex(
+      (candidate) => candidate.faultKind === 'overdamped',
+    )
+    fireEvent.click(
+      screen.getAllByRole('button', {
+        name: normalWaveformValidityChallenges[overdamped]!.label,
+      })[0]!,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Show the reasoning' }))
     expect(readout()).toHaveTextContent(NORMAL_WAVEFORM_INTERPRETATION_WITHHELD)
     expect(readout()).toHaveAttribute('data-withheld', 'true')
+    expect(screen.getByText('Why no chamber can be named')).toBeInTheDocument()
   })
 
   it('folds the reasoning until the learner checks a reading or opens it', () => {
@@ -387,13 +413,13 @@ describe('H2 signal validity prevents a confident interpretation', () => {
     expect(screen.getByText(challenge.commitment.explanation)).toBeInTheDocument()
   })
 
-  it('opens the reasoning without a reading, and still names no chamber (HD-01)', () => {
+  it('opens the reasoning without a reading, with the same two-part readout (HD-01)', () => {
     render(<NormalWaveformValidityChallenges />)
     const challenge = normalWaveformValidityChallenges[0]!
     fireEvent.click(screen.getByRole('button', { name: 'Show the reasoning' }))
     expect(screen.getByText(challenge.whyInterpretationIsWithheld)).toBeInTheDocument()
     expect(screen.getByText(/Chamber readout/i).closest('p')).toHaveTextContent(
-      NORMAL_WAVEFORM_INTERPRETATION_WITHHELD,
+      `Value: ${challenge.readout.value}`,
     )
     expect(screen.getByRole('button', { name: 'Check this reading' })).toBeDisabled()
     expect(screen.queryByText(/worked through/)).toBeNull()

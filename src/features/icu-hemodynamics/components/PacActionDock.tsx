@@ -67,9 +67,10 @@ export function PacActionDock({
           ? 'PAWP stored and balloon deflated. Confirm the return of the PA waveform yourself before the value is used.'
           : `PAWP stored. Balloon deflated; current confirmed waveform is ${catheter.position.toUpperCase()}.`
       : catheter.wedgeCursorTime !== null
-        ? 'End-expiratory cursor placed. Store PAWP, then deflate.'
+        ? // Report L6-02: this one-button dock places the cursor for the learner. It says so.
+          'Assisted end-expiratory cursor placed by the simulation, not a point you identified. Store PAWP, then deflate.'
         : catheter.wedgeCaptureReady
-          ? 'One respiratory cycle sampled. Place the end-expiratory cursor.'
+          ? 'One respiratory cycle sampled. Place the end-expiratory cursor (assisted).'
           : catheter.balloonInflated
             ? 'Balloon inflated. Sampling the respiratory cycle.'
             : 'Balloon deflated.'
@@ -264,9 +265,9 @@ export function PacActionDock({
               <button
                 type="button"
                 disabled={!catheter.wedgeCaptureReady || catheter.wedgeCursorTime !== null}
-                onClick={() => dispatch({ type: 'PLACE_WEDGE_CURSOR' })}
+                onClick={() => dispatch({ type: 'PLACE_WEDGE_CURSOR', placement: 'assisted' })}
               >
-                End-exp cursor
+                End-exp cursor (assisted)
               </button>
               <button
                 type="button"

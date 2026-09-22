@@ -45,6 +45,26 @@ export const derivedInputConventions = [
 
 export type DerivedInputConvention = (typeof derivedInputConventions)[number]
 
+/**
+ * What each convention means, in words a ledger can print (HD-PRE-REVIEW-02, report L8-02).
+ *
+ * The ledger used to print the id with its hyphens removed, so "mean over cycle" sat beside "mean
+ * end expiration" with nothing to say which cycle was meant. It is the cardiac cycle: the mean of
+ * the pulsatile waveform. The authored episodes do not state the respiratory phase that mean was
+ * taken in, and the label says so rather than supplying one. Whether both terms of the PVR
+ * gradient must be end-expiratory is a measurement-convention question held for source review
+ * (R2); nothing here changes which values the formulas accept.
+ */
+export const derivedInputConventionLabels: Readonly<Record<DerivedInputConvention, string>> =
+  Object.freeze({
+    'mean-over-cycle': 'mean over the cardiac cycle (respiratory phase not stated)',
+    'mean-end-expiration': 'mean at end expiration',
+    'end-diastolic': 'end-diastolic',
+    'systolic-peak': 'systolic peak',
+    'diastolic-trough': 'diastolic trough',
+    'respiratory-cycle-extremes': 'extremes across one respiratory cycle',
+  })
+
 export interface DerivedInputDefinition {
   readonly id: string
   readonly label: string

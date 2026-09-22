@@ -7,8 +7,8 @@ import {
   catheterFlushBlocked,
   flushReleaseReady,
 } from './pressureObservation'
-import { createInitialHemodynamicState } from './simulation'
-import { thermodilutionAcceptedAverage } from './thermodilution'
+import { currentThermodilutionAverage, thermodilutionSeriesView } from './measurementProvenance'
+import { createInitialHemodynamicState, unroundedModelEstimates } from './simulation'
 import type {
   CatheterPosition,
   HemodynamicAction,
@@ -35,6 +35,8 @@ export const PA_RETURN_CHECK = 'pa-waveform-return-confirmed'
 export const DYNAMIC_RESPONSE_CLASSIFIED_CHECK = 'dynamic-response-classified'
 export const DYNAMIC_RESPONSE_CORRECTED_CHECK = 'dynamic-response-corrected'
 export const FAST_FLUSH_CHECK = 'fast-flush'
+/** A flush of one named line (`fast-flush:<line>`), set beside the generic check. */
+export const ARTERIAL_FAST_FLUSH_CHECK = 'fast-flush:systemic-arterial'
 /** Evidence unique to this Learn reassessment; a correction click cannot supply it. */
 export const CURRENT_RESPONSE_RECHECKED = 'learn-current-response-rechecked'
 export const LEVEL_TOLERANCE_CM = 1
@@ -101,7 +103,8 @@ export function stageGoalMet(goal: StageGoal, state: HemodynamicSimulationState)
         state.thermodilutionTrials.every((trial) => trial.reviewed && trial.accepted !== null)
       )
     case 'series':
-      return thermodilutionAcceptedAverage(state.thermodilutionTrials) !== null
+      // A series for the conditions now — not one acquired before a modeled intervention.
+      return thermodilutionSeriesView(state).currentEstablished
     case 'frozen':
       return state.frozen
     case 'reassessed':
@@ -123,6 +126,7 @@ const POSITION_WORDS: Readonly<Record<CatheterPosition, string>> = {
 
 const CHECK_WORDS: Readonly<Record<string, string>> = {
   [FAST_FLUSH_CHECK]: 'Run a fast flush on the catheter’s distal lumen',
+  [ARTERIAL_FAST_FLUSH_CHECK]: 'Run a fast flush on the arterial line',
   [DYNAMIC_RESPONSE_CLASSIFIED_CHECK]: 'Read the flush response and say what it is',
   [DYNAMIC_RESPONSE_CORRECTED_CHECK]: 'Repair the line until the flush response is acceptable',
   [CURRENT_RESPONSE_RECHECKED]: 'Flush the corrected line again and identify the current response',
@@ -315,11 +319,17 @@ export function capstoneState(seed = 808): HemodynamicSimulationState {
   return createInitialHemodynamicState(capstoneCase, 'learn', seed)
 }
 
-/** The capstone transfer: a different patient whose systemic arterial line has gone damped. */
+/**
+ * The capstone transfer: a different patient whose systemic arterial line has gone damped.
+ *
+ * Only the arterial line (report L9-05). This used to damp the shared measurement system, so the
+ * pulmonary-artery and central-venous traces were damped too and "repairing the arterial line"
+ * restored all three. The arterial line's own response is set; the others are left clean.
+ */
 export function dampedArterialState(seed = 616): HemodynamicSimulationState {
   return reduceAll(cleanState(seed, 'pa'), [
-    { type: 'SET_DAMPING', dampingRatio: 1.15 },
-    { type: 'SET_ARTIFACT', artifact: 'overdamped' },
+    { type: 'SET_DAMPING', dampingRatio: 1.15, line: 'systemic-arterial' },
+    { type: 'SET_ARTIFACT', artifact: 'overdamped', line: 'systemic-arterial' },
   ])
 }
 
@@ -332,6 +342,9 @@ export type StageWatch =
   | 'papDiastolic'
   | 'meanPap'
   | 'pulsePressure'
+  | 'artSystolic'
+  | 'artDiastolic'
+  | 'artPulsePressure'
   | 'rap'
   | 'rvSystolic'
   | 'rvDiastolic'
@@ -342,23 +355,34 @@ export type StageWatch =
 export const stageWatchLabels: Readonly<
   Record<StageWatch, { readonly label: string; readonly unit: string; readonly digits: number }>
 > = {
-  papSystolic: { label: 'PA systolic', unit: 'mmHg', digits: 0 },
-  papDiastolic: { label: 'PA diastolic', unit: 'mmHg', digits: 0 },
-  meanPap: { label: 'PA mean', unit: 'mmHg', digits: 0 },
-  pulsePressure: { label: 'PA pulse pressure', unit: 'mmHg', digits: 0 },
-  rap: { label: 'Right atrial mean', unit: 'mmHg', digits: 0 },
-  rvSystolic: { label: 'RV systolic', unit: 'mmHg', digits: 0 },
-  rvDiastolic: { label: 'RV end-diastolic', unit: 'mmHg', digits: 0 },
+  papSystolic: { label: 'PA systolic', unit: 'mmHg', digits: 1 },
+  papDiastolic: { label: 'PA diastolic', unit: 'mmHg', digits: 1 },
+  meanPap: { label: 'PA mean', unit: 'mmHg', digits: 1 },
+  pulsePressure: { label: 'PA pulse pressure', unit: 'mmHg', digits: 1 },
+  artSystolic: { label: 'Arterial systolic', unit: 'mmHg', digits: 1 },
+  artDiastolic: { label: 'Arterial diastolic', unit: 'mmHg', digits: 1 },
+  artPulsePressure: { label: 'Arterial pulse pressure', unit: 'mmHg', digits: 1 },
+  rap: { label: 'Right atrial mean', unit: 'mmHg', digits: 1 },
+  rvSystolic: { label: 'RV systolic', unit: 'mmHg', digits: 1 },
+  rvDiastolic: { label: 'RV end-diastolic', unit: 'mmHg', digits: 1 },
   pawp: { label: 'Stored wedge', unit: 'mmHg', digits: 0 },
   cardiacOutput: { label: 'Cardiac output', unit: 'L/min', digits: 1 },
   position: { label: 'Tip position', unit: '', digits: 0 },
 }
 
+/**
+ * One reading for the before-and-after table.
+ *
+ * Pressures are the model's estimates before rounding (HD-PRE-REVIEW-02): a difference is taken
+ * between unrounded values and shown to a tenth of a mmHg, so a pure offset reads as the same
+ * change on every row instead of +5 on one and +6 on the next. They are model estimates, not the
+ * monitor's last beat, and the table says so.
+ */
 export function stageWatchValue(
   watch: StageWatch,
   state: HemodynamicSimulationState,
 ): number | string | null {
-  const measurements = state.measurements
+  const measurements = unroundedModelEstimates(state)
   switch (watch) {
     case 'papSystolic':
       return measurements.papSystolicMmHg
@@ -368,6 +392,12 @@ export function stageWatchValue(
       return measurements.meanPapMmHg
     case 'pulsePressure':
       return measurements.papSystolicMmHg - measurements.papDiastolicMmHg
+    case 'artSystolic':
+      return measurements.artSystolicMmHg
+    case 'artDiastolic':
+      return measurements.artDiastolicMmHg
+    case 'artPulsePressure':
+      return measurements.artSystolicMmHg - measurements.artDiastolicMmHg
     case 'rap':
       return measurements.rapMmHg
     case 'rvSystolic':
@@ -377,7 +407,7 @@ export function stageWatchValue(
     case 'pawp':
       return state.catheter.storedWedgeMmHg
     case 'cardiacOutput':
-      return thermodilutionAcceptedAverage(state.thermodilutionTrials)
+      return currentThermodilutionAverage(state)
     case 'position':
       return POSITION_WORDS[state.catheter.position]
     default:
@@ -398,6 +428,8 @@ export interface SectionRuntime {
   readonly transferGoals: readonly StageGoal[]
   /** The readings compared before and after the hands-on work. */
   readonly watch: readonly StageWatch[]
+  /** The readings for the transfer round, when they are not the section's own (report L9-05). */
+  readonly transferWatch?: readonly StageWatch[]
   /**
    * What the Explain step compares: the readings before and after the work, or — for the section
    * whose work is moving the tip — the ventricle against the artery, side by side.
@@ -534,11 +566,14 @@ const runtimes: Readonly<Record<HemodynamicsSectionId, SectionRuntime>> = {
     observeGoals: [{ type: 'reassessed' }],
     transferEntry: () => dampedArterialState(616),
     transferGoals: [
-      { type: 'check', id: FAST_FLUSH_CHECK },
+      { type: 'check', id: ARTERIAL_FAST_FLUSH_CHECK },
       { type: 'check', id: DYNAMIC_RESPONSE_CLASSIFIED_CHECK },
       { type: 'check', id: DYNAMIC_RESPONSE_CORRECTED_CHECK },
     ],
     watch: ['papSystolic', 'papDiastolic', 'meanPap', 'pawp', 'cardiacOutput', 'position'],
+    // The transfer repairs the arterial line, so its table reports the arterial line — with the
+    // pulmonary-artery and right-atrial rows beside it, which a line-specific repair leaves alone.
+    transferWatch: ['artSystolic', 'artDiastolic', 'artPulsePressure', 'pulsePressure', 'rap'],
   },
 }
 

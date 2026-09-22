@@ -113,7 +113,7 @@ export const signalGrammarRows: readonly SignalGrammarRow[] = Object.freeze([
     id: 'atrial-shape',
     whatYouSee: 'A low, quiet tracing with a, c and v waves and two descents.',
     locus: 'ra',
-    shortlist: ['it is where it says', 'read the mean', 'at end expiration'],
+    shortlist: ['it is where it says', 'read at the c-wave base', 'at end expiration'],
     firstMove: 'Freeze the trace, find end expiration, and read at the base of the c wave.',
     engineCheck: 'ra-morphology',
     taughtIn: ['waveform-interpretation', 'catheter-advancement'],

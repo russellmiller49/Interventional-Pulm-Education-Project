@@ -243,7 +243,7 @@ export const hemodynamicTeachingArtifacts: readonly HemodynamicTeachingArtifact[
       traceStep(
         'hd08-orient',
         'Orient',
-        'Displayed pressures, catheter morphology, and thermodilution curves disagree with a stable bedside picture.',
+        'Displayed pressures and catheter morphology, and the reported earlier cardiac outputs, disagree with a stable bedside picture.',
         'Internal inconsistency makes signal validity the first problem; physiology cannot yet be inferred from the numbers.',
         'Pause treatment decisions and localize the measurement chain.',
       ),
@@ -278,12 +278,13 @@ export const hemodynamicTeachingArtifactByCaseId = new Map(
 const baseFeedbackByActionId: Readonly<Record<string, ScenarioFeedback>> = {
   'passive-leg-raise': {
     whatHappened:
-      'A reversible preload challenge began, allowing the modeled flow response to emerge before a lasting volume change.',
+      'A reversible preload challenge began, and the modeled flow responds before any lasting volume change. This monitor has no continuous flow channel, so that response is visible only if flow is measured while the leg raise lasts.',
     whyItHappened:
       'Passive leg raise transiently recruits venous blood. The directional change in stroke volume or output tests the current circulation rather than relying on one filling pressure.',
     likelyFrame:
       'If you were using low RAP or PAWP as proof that fluid would help, that is understandable because those values describe filling pressure—but not responsiveness.',
-    theCue: 'Watch the flow trend during the perturbation and whether congestion signals change.',
+    theCue:
+      'The change in flow during the perturbation is the cue. Here it is seen only in a thermodilution series acquired while the leg raise lasts; a series from before it cannot show it.',
     conceptIds: ['cc.measurement.trends-and-perturbations', 'cc.flow.venous-return'],
     evidenceIds: ['esicm-shock-2025', 'icu-hemodynamics-model-v1'],
   },
@@ -550,4 +551,63 @@ export function feedbackTimingForHemodynamicAction(
 ): 'immediate' | 'after-consequence' {
   if (hardInterrupt || intervention.category === 'assessment') return 'immediate'
   return 'after-consequence'
+}
+
+/**
+ * The case's own authored reason a listed unfavourable action is unfavourable (HD-PRE-REVIEW-02,
+ * report P-08).
+ *
+ * The debrief used to list "Applied Give one modeled 250 mL crystalloid step" with no comment while
+ * the monitor showed MAP rising. The concern is not written here: each entry points at a sentence
+ * the case already authors — an expert-trace step or the case's guided prompt — so the debrief can
+ * quote it against the learner's actual action without a new clinical claim. A case with no such
+ * sentence gets none, and the debrief says the authored reasoning adds nothing further.
+ */
+type AuthoredConcernPointer =
+  | {
+      readonly kind: 'expert-trace'
+      readonly stepId: string
+      readonly field: 'cue' | 'reasoning' | 'commitment'
+    }
+  | { readonly kind: 'guided-prompt' }
+
+const UNFAVOURABLE_ACTION_CONCERNS: Readonly<
+  Record<string, Readonly<Record<string, AuthoredConcernPointer>>>
+> = {
+  'HD-02': { 'fluid-250': { kind: 'expert-trace', stepId: 'hd02-act', field: 'reasoning' } },
+  'HD-03': { 'fluid-250': { kind: 'expert-trace', stepId: 'hd03-act', field: 'reasoning' } },
+  'HD-04': { 'fluid-250': { kind: 'guided-prompt' } },
+  'HD-06': { 'fluid-250': { kind: 'expert-trace', stepId: 'hd06-act', field: 'cue' } },
+  'HD-08': {
+    'fluid-250': { kind: 'expert-trace', stepId: 'hd08-orient', field: 'commitment' },
+    'norepinephrine-up': { kind: 'expert-trace', stepId: 'hd08-orient', field: 'commitment' },
+  },
+}
+
+export function authoredConcernForUnfavourableAction(
+  definition: HemodynamicCaseDefinition,
+  interventionId: string,
+): string | null {
+  const pointer = UNFAVOURABLE_ACTION_CONCERNS[definition.id]?.[interventionId]
+  if (!pointer) return null
+  if (pointer.kind === 'guided-prompt') return definition.guidedPrompt
+  const step = hemodynamicTeachingArtifactByCaseId
+    .get(definition.id)
+    ?.expertTrace.find((candidate) => candidate.id === pointer.stepId)
+  return step ? step[pointer.field] : null
+}
+
+/** Every pointer must resolve, or the module fails to load rather than printing nothing. */
+for (const [caseId, entries] of Object.entries(UNFAVOURABLE_ACTION_CONCERNS)) {
+  for (const [interventionId, pointer] of Object.entries(entries)) {
+    if (pointer.kind !== 'expert-trace') continue
+    const step = hemodynamicTeachingArtifactByCaseId
+      .get(caseId)
+      ?.expertTrace.find((candidate) => candidate.id === pointer.stepId)
+    if (!step) {
+      throw new Error(
+        `Unfavourable-action concern for ${caseId}/${interventionId} points at a missing step ${pointer.stepId}.`,
+      )
+    }
+  }
 }

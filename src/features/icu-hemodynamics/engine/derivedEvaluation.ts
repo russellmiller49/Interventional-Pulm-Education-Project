@@ -25,6 +25,7 @@ import {
   type CardiacOutputInputStatus,
 } from '../content/cardiacOutputMethods'
 import {
+  derivedInputConventionLabels,
   derivedMetricRecords,
   derivedThresholdClassificationLabels,
   requireDerivedInputDefinition,
@@ -258,7 +259,10 @@ function resolveLedger(
       continue
     }
 
-    const conventionText = authored.convention ? authored.convention.replaceAll('-', ' ') : null
+    const conventionText = authored.convention
+      ? (derivedInputConventionLabels[authored.convention] ??
+        authored.convention.replaceAll('-', ' '))
+      : null
     rows.push({
       inputId: dependency.inputId,
       label: definition.label,
