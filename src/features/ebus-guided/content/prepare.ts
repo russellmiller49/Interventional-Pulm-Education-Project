@@ -104,7 +104,7 @@ export const prepareLessons: Lesson[] = [
     refreshers: [
       {
         href: '/learn/anatomy/branch-tracing/learn?lesson=orientation',
-        label: 'Orient the CT for branch tracing',
+        label: 'Relate CT to the parent airway view (begins with standard axial CT)',
         course: 'Bronchial Branch Tracing',
       },
       {

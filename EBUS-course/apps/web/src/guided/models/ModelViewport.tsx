@@ -617,6 +617,15 @@ export function ModelViewport({
         {state.package === 'needle' && !reveal
           ? ' Distal needle geometry is concealed; use the ultrasound schematic.'
           : ''}
+        {/*
+         * What this panel can and cannot show across the five contact conditions
+         * (EBUS-PRE-REVIEW-04, L5-4). Measured on the production build at the default view: the
+         * air gap, direct contact and fluid balloon differ; the bubble renders identically to the
+         * balloon and the reflector identically to direct contact. Nothing is added to the scene.
+         */}
+        {state.package === 'contact'
+          ? ' From this view the cutaway shows where the transducer, wall and fluid balloon sit, so it changes between an air gap, direct contact and balloon contact. The bubble and the reflector do not change what it shows; their effect is in the echo schematic.'
+          : ''}
         {state.package === 'routes'
           ? ' The arrow runs from the selected orientation locator to the fixed target and shows viewing direction only: blue for the airway approach, teal for the esophageal approach. Labels name the model’s own structures; the example node is named only in the worked example.'
           : ''}

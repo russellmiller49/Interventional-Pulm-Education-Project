@@ -334,8 +334,12 @@ test.describe('sweep state', () => {
       samples: 12,
       span: 110,
     })
-    // J5: reset clears everything and starts a new session.
+    // J5: reset clears everything and starts a new session. The last event before the reboot is
+    // still frame-ready, so waiting for readiness alone read the pre-reset observation
+    // (EBUS-PRE-REVIEW-04: failed on main d98bab79 too). Wait for the new session's event
+    // instead; a reset that did not clear would still time out here.
     await f.getByRole('button', { name: 'Reset acquisition' }).click()
+    await expect.poll(async () => (await latest(page))?.actionCount, { timeout: 90000 }).toBe(0)
     await ready(page)
     expect((await latest(page))!.actionCount).toBe(0)
     expect((await latest(page))!.linked!.sweeps).toEqual({})
