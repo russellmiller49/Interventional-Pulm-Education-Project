@@ -7,7 +7,6 @@ jest.mock('../components/McsAnatomy3D', () =>
   jest.requireActual('../test-support/mcsWorkbenchStubs').anatomyModule(),
 )
 
-import { deadbandFor } from '../components/teaching/selectors'
 import { replayMcsUnloadingComparison } from '../engine/unloadingComparison'
 import {
   advanceMcsSimulation,
@@ -51,25 +50,15 @@ function compareVisibleOutputs(level: 6 | 8) {
       const cells = within(
         card.querySelector(`[data-unloading-signal="${key}"]`) as HTMLElement,
       ).getAllByRole('cell')
-      /*
-       * A third cell since MCS-PRE-REVIEW-02: the matched-time difference, said against this
-       * engine's own measured idle drift for that quantity.
-       *
-       * The two value cells are checked exactly as before — they are still the engine's numbers
-       * and nothing else. The added assertion is that the difference cell is arithmetic on those
-       * same two numbers, and that it qualifies itself when the move is smaller than the drift.
-       * That was F24: at P5 against P6 the table printed 18 and 18 for the wedge pressure with
-       * no comment, and a reader concluded the pump barely unloads rather than that the model
-       * cannot resolve the move.
-       */
-      const difference = example.changed.metrics[key] - example.control.metrics[key]
-      const qualified = Math.abs(difference) < deadbandFor(key)
+      const difference = Number(
+        (example.changed.metrics[key] - example.control.metrics[key]).toFixed(digits),
+      )
       expect(cells.map((cell) => cell.textContent)).toEqual([
         example.control.metrics[key].toFixed(digits),
         example.changed.metrics[key].toFixed(digits),
-        `${difference >= 0 ? '+' : '\u2212'}${Math.abs(difference).toFixed(digits)} ${unit}${
-          qualified ? ' \u00b7 below this model\u2019s resolution' : ''
-        }`,
+        difference === 0
+          ? 'No resolvable displayed change'
+          : `${difference > 0 ? '+' : '−'}${Math.abs(difference).toFixed(digits)} ${unit}`,
       ])
     }
   }

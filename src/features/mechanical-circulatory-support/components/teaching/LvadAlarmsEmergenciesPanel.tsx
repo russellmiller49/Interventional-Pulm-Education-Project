@@ -2,6 +2,7 @@ import type { McsTeachingPanelProps } from './panelProps'
 import { mcsComparesAgainstActionBaseline, mcsMechanismDisclosed } from './revealStage'
 import {
   MCS_ESTIMATED_FLOW_BOUNDARY,
+  MCS_DURABLE_FLOW_IDENTITY,
   activeAlarms,
   afterloadCostView,
   beforeAfterReadings,
@@ -79,7 +80,7 @@ export function LvadAlarmsEmergenciesPanel({
   const rows = beforeAfterReadings(
     [
       { metric: 'pumpPowerW', label: 'Pump power', unit: 'W', kind: 'displayed' },
-      { metric: 'deviceFlowLMin', label: 'Displayed pump flow', unit: 'L/min', kind: 'estimated' },
+      { metric: 'deviceFlowLMin', label: 'Displayed pump flow', unit: 'L/min', kind: 'modeled' },
       { metric: 'pulsatilityIndex', label: 'Pulsatility index', unit: '', kind: 'displayed' },
       {
         metric: 'effectiveSystemicFlowLMin',
@@ -158,7 +159,7 @@ export function LvadAlarmsEmergenciesPanel({
       modeledState: hasAlarm(state, 'lvad-high-afterload') ? 'present' : 'absent',
       evidence: `mean arterial pressure ${reading(metrics.mapMmHg, 0)} mm Hg · systemic vascular resistance ${reading(state.patient.systemicVascularResistanceDynSecCm5, 0)} dyn·s·cm⁻⁵${
         afterloadCost
-          ? ` · the modeled outlet pressure is taking ${afterloadCost.costPercent}% of what this speed asks for · the alarm's own input is this patient's modeled unsupported mean pressure, ${afterloadCost.alarmInputMmHg.toFixed(0)} mm Hg against a threshold of ${afterloadCost.alarmThresholdMmHg}, not the mean pressure above`
+          ? ` · the modeled afterload multiplier reduces flow by ${afterloadCost.costPercent}% from otherwise identical modeled loading (the minimum of unsupported-baseline and compartment-gradient factors, not a measured device quantity) · the alarm's own input is this patient's modeled unsupported mean pressure, ${afterloadCost.alarmInputMmHg.toFixed(0)} mm Hg against a threshold of ${afterloadCost.alarmThresholdMmHg}, not the mean pressure above`
           : ''
       } · high-afterload alarm ${hasAlarm(state, 'lvad-high-afterload') ? 'active' : 'not active'}`,
       raises:
@@ -245,7 +246,7 @@ export function LvadAlarmsEmergenciesPanel({
             label="Displayed pump flow"
             value={metrics.deviceFlowLMin}
             unit="L/min"
-            kind="estimated"
+            kind="modeled"
           />
           <LiveValue
             label="Pulsatility index"
@@ -264,6 +265,7 @@ export function LvadAlarmsEmergenciesPanel({
       <PanelSection title="The flow account, and what has not moved" id="alarms-flow">
         <FlowAccount account={account} disclosed={disclosed} />
         <TextEquivalent>{flowAccountSentence(account, disclosed)}</TextEquivalent>
+        <ModelBoundary>{MCS_DURABLE_FLOW_IDENTITY}</ModelBoundary>
         <ModelBoundary>{MCS_ESTIMATED_FLOW_BOUNDARY}</ModelBoundary>
       </PanelSection>
 
@@ -432,7 +434,7 @@ export function LvadAlarmsEmergenciesPanel({
                 label="Displayed pump flow"
                 value={metrics.deviceFlowLMin}
                 unit="L/min"
-                kind="estimated"
+                kind="modeled"
               />
               <LiveValue
                 label="Effective systemic delivery"

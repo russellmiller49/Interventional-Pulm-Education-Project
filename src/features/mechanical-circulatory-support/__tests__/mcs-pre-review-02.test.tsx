@@ -78,10 +78,8 @@ describe('MCS-PRE-REVIEW-02 · the replay harness reads the production model', (
       { id: 'rv-up', actions: [setRv(1.2)] },
     ])
     const times = Object.values(result.arms).map((probe) => probe.timeSeconds)
-    // The control takes no dispatch, so it is one fixed step behind the arms that do; everything
-    // else is identical. Anything larger than that would make the comparison a time comparison.
-    for (const time of times) expect(time).toBeCloseTo(result.baseline.timeSeconds + 8, 1)
-    expect(Math.max(...times) - Math.min(...times)).toBeLessThan(0.05)
+    for (const time of times) expect(time).toBeCloseTo(result.baseline.timeSeconds + 8.02, 8)
+    expect(Math.max(...times) - Math.min(...times)).toBeLessThan(1e-9)
   })
 
   it('conserves the modeled circulating volume across every arm', () => {
@@ -247,7 +245,7 @@ describe('MCS-PRE-REVIEW-02 · F25 and F21 — what limits left-sided inflow', (
     expect(result.arms['level-9'].activeAlarmIds).toContain('impella-left-suction')
   })
 
-  it('records that the displayed wedge does not respond to right-sided delivery — OD-03, unrepaired', () => {
+  it('records equal rounded wedge in the reference RV comparison — OD-03', () => {
     const result = mcsReplay({ id: 'f21', device: 'iabp' }, [
       { id: 'no-action' },
       { id: 'rv-down', actions: [setRv(0.2)] },
@@ -291,7 +289,7 @@ describe('MCS-PRE-REVIEW-02 · F25 and F21 — what limits left-sided inflow', (
     )!
     expect(option.correct).toBe(false)
     expect(option.feedback).not.toMatch(/underfilled rather than congested/i)
-    expect(option.feedback).toMatch(/does not move/i)
+    expect(option.feedback).toMatch(/rounded displayed wedge at 20 mm Hg/i)
     // The key is untouched.
     expect(
       section('iabp-efficacy-limits').recognizeOptions.find((entry) => entry.correct)!.id,
@@ -420,18 +418,15 @@ describe('MCS-PRE-REVIEW-02 · F24 — the unloading response, read against the 
     expect(eightVolume).toBeLessThan(20)
   })
 
-  it('prints the matched-time difference and says when it is below the model’s resolution', () => {
+  it('prints differences at displayed precision at matched times', () => {
     render(<McsUnloadingComparison />)
     const filled = () => document.querySelector('[data-unloading-condition="filled"]')!
     const delta = (metric: string) =>
       filled().querySelector(`[data-unloading-delta="${metric}"]`)!.textContent!
 
-    // At the default P5-against-P6 comparison every one of the three is under its own measured
-    // idle drift — including the pump flow, whose displayed move of 0.40 L/min lands exactly on
-    // the deadband. The table now says so instead of printing two equal numbers with no comment.
-    expect(delta('pcwpMmHg')).toMatch(/below this model’s resolution/)
-    expect(delta('lvedvMl')).toMatch(/below this model’s resolution/)
-    expect(delta('leftDeviceFlowLMin')).toMatch(/\+0\.\d\d L\/min/)
+    expect(delta('pcwpMmHg')).toBe('No resolvable displayed change')
+    expect(delta('lvedvMl')).toBe('−4 mL')
+    expect(delta('leftDeviceFlowLMin')).toBe('+0.40 L/min')
     // One control column per example — the filled and the underfilled condition.
     expect(
       screen.getAllByRole('columnheader', { name: `P${MCS_UNLOADING_BASE_LEVEL} control` }),
@@ -440,14 +435,10 @@ describe('MCS-PRE-REVIEW-02 · F24 — the unloading response, read against the 
       screen.getAllByRole('columnheader', { name: /Difference at the same instant/ }),
     ).toHaveLength(2)
 
-    // Positive control on the same surface: three levels up, the volume and the flow both clear
-    // their deadbands and the table stops qualifying them. The response was never amplified —
-    // it is the setting change that is larger.
     fireEvent.click(screen.getByRole('button', { name: 'P8' }))
-    expect(delta('lvedvMl')).not.toMatch(/below this model’s resolution/)
-    expect(delta('leftDeviceFlowLMin')).not.toMatch(/below this model’s resolution/)
-    // And the wedge pressure still does not clear it, which is the honest half of the finding.
-    expect(delta('pcwpMmHg')).toMatch(/below this model’s resolution/)
+    expect(delta('lvedvMl')).toBe('−11 mL')
+    expect(delta('leftDeviceFlowLMin')).toBe('+1.05 L/min')
+    expect(delta('pcwpMmHg')).toBe('−1 mm Hg')
   })
 })
 
@@ -696,7 +687,9 @@ describe('MCS-PRE-REVIEW-02 · F35 — LVAD-02’s whole success condition', () 
   })
 
   it('says in the debrief why the ratio moved here and barely moves in section 9', () => {
-    expect(scenario.debrief.join(' ')).toMatch(/modeled right ventricle itself changed/i)
+    expect(scenario.debrief.join(' ')).toMatch(
+      /worked comparison that restores modeled RV contractility/i,
+    )
     expect(scenario.debrief.join(' ')).toMatch(/not.*a response measure on its own/i)
     const rpResult = mcsReplay(
       {
@@ -725,7 +718,9 @@ describe('MCS-PRE-REVIEW-02 · F26 — the low-preload story keeps its own ident
     const volume = mcsStoryProblems.find((story) => story.id === 'story-volume-for-suction')!
     expect(volume.changeScope).toMatch(/55 per cent to 100 per cent/)
     expect(volume.changeScope).toMatch(/rescales the entire circulation/i)
-    expect(volume.changeScope).toMatch(/larger than a fluid challenge at a bedside would produce/i)
+    expect(volume.changeScope).toMatch(
+      /response magnitude cannot be translated into a bedside fluid-challenge response/i,
+    )
     // MCS-PRE-REVIEW-01's guard, kept: no figure here can be read as a dose.
     expect(volume.changeScope).not.toMatch(/\b\d+\s*(mL|ml|millilitres|cc)\b/)
     expect(volume.changeScope).not.toMatch(/bolus of|give \d|over \d+ minutes/i)

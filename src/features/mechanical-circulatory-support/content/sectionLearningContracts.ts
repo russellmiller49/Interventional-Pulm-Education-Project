@@ -751,7 +751,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         label: 'The wedge pressure rising as the left ventricle backs up',
         correct: false,
         feedback:
-          'Watch this one and you will wait a long time. Take the right ventricle away in this model and the displayed wedge pressure does not move at all — measured at matched times, it reads 20 mm Hg before and 20 mm Hg after, while right atrial pressure doubles and the pulmonary pulse collapses. This model builds its displayed filling pressure from left-sided loading and left-ventricular function and gives it no right-sided term, so a wedge pressure that sits still here is not evidence either way. The right-sided pressures are what move first.',
+          'In this reference comparison, reducing modeled RV contractility from 0.85 to 0.20 leaves the rounded displayed wedge at 20 mm Hg at matched times, while right atrial pressure doubles and the pulmonary pulse narrows. The displayed wedge has a small indirect response through the LV compartment contribution, but it rounds away here. This does not show that wedge pressure cannot change with RV failure. Read the large right-sided pressure and flow changes in this example; these endpoints do not establish which response happened first.',
       },
     ],
     predictionPrompt:
@@ -1355,7 +1355,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       whatYouAreSeeing:
         'The controller block of a durable continuous-flow pump: pump power and pulsatility index beside the flow the controller displays.',
       whatTheTargetRepresents:
-        'A speed setting, estimated flow, electrical power and PI. Here flow is generated from speed and loading; power and PI are derived afterwards. The patient measurements are a separate assessment.',
+        'A speed setting, modeled pump transfer, electrical power and PI. Here flow is generated from speed and loading; power and PI are derived afterwards. The patient measurements are a separate assessment.',
       howTheActionAffectsTheModel:
         'Raising systemic vascular resistance raises the pressure at the outlet, which lowers the volume crossing the pump at an unchanged speed.',
       flowAccountNote:
@@ -1520,7 +1520,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       howTheActionAffectsTheModel:
         'The high-power pattern makes the pump draw substantially more power at an unchanged speed while the computed flow stays where it was.',
       flowAccountNote:
-        'The displayed flow estimate here is generated from loading and speed; the fault adds power afterwards, and the flow number does not move. That is a property of this model, and it is the reverse of the device it resembles: Abbott’s HeartMate 3 pump-parameter card states that power is a direct measurement and that the displayed flow is calculated from fixed speed, power and hematocrit, so on that controller a power change is an input to the flow estimate rather than something the estimate ignores. What a real controller’s displayed flow does in this state is not reproduced here and is not claimed — the card names the inputs and gives no estimator equation. Carry the lesson that power and a computed flow can come apart; do not carry this model’s particular arrow to a bedside. Held for device review (OD-02).',
+        'The displayed modeled pump transfer here is generated from loading and speed; the fault adds power afterwards, and the flow number does not move. That is a property of this model, and it is the reverse of the device it resembles: Abbott’s HeartMate 3 pump-parameter card states that power is a direct measurement and that the displayed flow is calculated from fixed speed, power and hematocrit, so on that controller a power change is an input to the flow estimate rather than something the estimate ignores. What a real controller’s displayed flow does in this state is not reproduced here and is not claimed — the card names the inputs and gives no estimator equation. Carry the lesson that power and a computed flow can come apart; do not carry this model’s particular arrow to a bedside. Held for device review (OD-02).',
     },
   },
 
@@ -1555,7 +1555,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
           'The right side: a right atrial pressure that has risen to meet the wedge pressure, with the pump in suction and gaining almost nothing from more level',
         correct: true,
         feedback:
-          'Both filling pressures are elevated here, and the congestion panel says so. What makes the right side the limit is not the wedge pressure being low — it is not — but the relationship and what the pump does: right atrial pressure has risen to about the wedge pressure, the pulmonary pulsatility ratio is 0.5, and this model reports right-sided delivery as the smallest term feeding the inlet. Three extra levels buy about a quarter of a litre and leave the suction in place. Left-sided unloading is not what this profile is asking for.',
+          'Both filling pressures are elevated here, and the congestion panel says so. What makes the right side the limit is not the wedge pressure being low — it is not — but the relationship and what the pump does: right atrial pressure has risen to about the wedge pressure, the pulmonary pulsatility ratio is 0.5, and this model reports right-sided delivery as the smallest term feeding the inlet. Three extra levels buy about a quarter of a litre and leave the suction in place. Raising the left-pump level alone does not resolve this model’s right-sided-delivery limit; this comparison does not decide whether a patient needs left-heart unloading.',
       },
       {
         id: 'left-sided',

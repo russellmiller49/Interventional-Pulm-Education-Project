@@ -394,12 +394,12 @@ describe('M4 — nothing reveals the answer before it is committed', () => {
       'data-cpo-paradox',
       'withheld',
     )
-    // The value is still on the screen, still labelled as an estimate; only its provenance waits.
+    // The value is still on the screen, labelled as modeled transfer; only its provenance waits.
     expect(
       before.container
         .querySelector('[data-flow-line="device"]')
         ?.getAttribute('data-flow-line-kind'),
-    ).toBe('estimated')
+    ).toBe('modeled')
     before.unmount()
 
     const after = renderPanel(contract, state, 'mechanism')
@@ -726,7 +726,7 @@ describe('M4 — the clinical invariants survive the visuals', () => {
     view.unmount()
   })
 
-  it('labels every displayed pump flow an estimate, and never a measurement', () => {
+  it('distinguishes modeled durable transfer from controller estimates and measurements', () => {
     for (const contract of mcsSectionLearningContracts.filter(
       (candidate) => candidate.startingDevice !== 'iabp',
     )) {
@@ -738,7 +738,9 @@ describe('M4 — the clinical invariants survive the visuals', () => {
       )
       const account = view.container.querySelector('[data-flow-account]')
       const device = account?.querySelector('[data-flow-line="device"]')
-      expect(device?.getAttribute('data-flow-line-kind')).toBe('estimated')
+      expect(device?.getAttribute('data-flow-line-kind')).toBe(
+        contract.startingDevice === 'lvad' ? 'modeled' : 'estimated',
+      )
       expect(view.container.textContent ?? '').not.toMatch(
         /measured by a flow probe|probe reading/i,
       )

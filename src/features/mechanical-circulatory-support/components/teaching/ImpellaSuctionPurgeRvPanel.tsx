@@ -290,7 +290,7 @@ export function ImpellaSuctionPurgeRvPanel({
               label="Smallest term feeding the left inlet"
               value={inflowLimit.label}
               kind="modeled"
-              note={`${inflowLimit.value.toFixed(2)} on this model's own nought-to-one scale, against the ${inflowLimit.threshold.toFixed(2)} below which it raises the suction state. ${inflowLimit.note}`}
+              note={`${inflowLimit.value.toFixed(2)} on this model's dimensionless scale (terms can exceed one). With the left pump running at P5 or above, a value below ${inflowLimit.threshold.toFixed(2)} raises modeled suction. ${inflowLimit.note}`}
             />
           ) : null}
         </div>

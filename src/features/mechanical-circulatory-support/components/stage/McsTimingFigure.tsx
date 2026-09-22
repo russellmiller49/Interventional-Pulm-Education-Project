@@ -99,7 +99,8 @@ export function McsTimingFigure({
           <p>
             U: systolic upstroke / next ejection. N: dicrotic-notch reference for aortic-valve
             closure. I: inflation starts. D: deflation completes. The filled band means balloon
-            inflated; a beat without a band is unassisted.
+            inflated. With late deflation the band can extend into the next beat, including a beat
+            not selected for assistance by the 1:{device.assistRatio} schedule.
           </p>
         ) : null}
         <details>

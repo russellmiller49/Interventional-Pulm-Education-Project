@@ -10,10 +10,12 @@ dependency path, what source support exists, what is missing, the risk of leavin
 two bounded implementation options. Where the evidence establishes a technical truth it is stated
 as a recommendation; where the choice is clinical it is left open.
 
-All numbers were read from the production reducer through
-`test-support/replayHarness.ts`, seed 417, fixed 0.02 s steps, an 8-second authored settle and an
-8-second observation, with a no-action control in the same comparison. They are reproducible from
-`__tests__/mcs-pre-review-02.test.tsx`.
+**Independent review correction (2026-09-22):** The original replay harness left no-action
+arms 0.02–0.04 seconds behind action arms. It now aligns each action slot before the common
+observation interval. Historical tables below retain the original observations unless explicitly
+marked corrected; their approximate directions are useful, but they are not exact matched-time
+values. See `MCS-PRE-REVIEW-02-sanity-review.md` for the independent protocol and evidence.
+Owner reviewer/approval fields remain **NOT REVIEWED**.
 
 ---
 
@@ -36,7 +38,7 @@ patient controls  ──►  deriveNativeCardiacOutput  ──►  deriveBaselin
         ▼
   computeImpellaSupport / computeLvadSupport / computeIabpSupport
         │   rvDeliveryToLeftHeart = f(RV contractility, preload %, PVR) + RP gain
-        │   lvFilling             = f(leftVentricularVolumeMl)      ← saturated in practice
+        │   lvFilling             = f(leftVentricularVolumeMl)      ← can be the minimum
         │   leftPreloadFactor     = min(the three)  ──► suction predicate, pump flow
         ▼
   deriveMcsMetrics
@@ -50,13 +52,13 @@ patient controls  ──►  deriveNativeCardiacOutput  ──►  deriveBaselin
 **Names that are not one quantity.** These are the pairs that made the walkthrough read as
 self-contradictory, and they are all genuinely different variables:
 
-| Looks like one thing     | Actually two                                                                                                                                                                                                                                    |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| "LV filling"             | `lvFilling`, a term computed from the conserved reservoir volume and used in the suction predicate; and `modeledLvedv`, the educational end-diastolic surrogate on the monitor. They do not track each other.                                   |
-| "wedge pressure"         | `compartments.pulmonaryVenousPressureMmHg`, which the solver integrates and which _does_ respond to right-sided delivery; and `metrics.pcwpMmHg`, the displayed number, built from `baseline.pawpMmHg` and the LVEDV surrogate, which does not. |
-| "mean arterial pressure" | `baseline.mapMmHg`, this patient's modeled circulation with no support running; and `metrics.mapMmHg`, the monitor's figure. At the durable reference they differ by ~35 mm Hg.                                                                 |
-| "pump flow"              | the modeled transfer the compartments actually move; the displayed figure (the same number, rounded); and effective systemic delivery. A real HeartMate 3's displayed flow is a fourth thing — a controller estimate.                           |
-| "PAPi improves"          | PAPi moving because right-sided _support_ was added (weak in this model) and PAPi moving because the modeled right ventricle itself changed (large).                                                                                            |
+| Looks like one thing     | Actually two                                                                                                                                                                                                                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "LV filling"             | `lvFilling`, a term computed from the conserved reservoir volume and used in the suction predicate; and `modeledLvedv`, the educational end-diastolic surrogate on the monitor. They do not track each other.                                                                               |
+| "wedge pressure"         | `compartments.pulmonaryVenousPressureMmHg`, which the solver integrates and which _does_ respond to right-sided delivery; and `metrics.pcwpMmHg`, the displayed number, built from `baseline.pawpMmHg` and the LVEDV surrogate, with a small indirect response in the tested RV comparison. |
+| "mean arterial pressure" | `baseline.mapMmHg`, this patient's modeled circulation with no support running; and `metrics.mapMmHg`, the monitor's figure. At the durable reference they differ by ~35 mm Hg.                                                                                                             |
+| "pump flow"              | the modeled transfer the compartments actually move; the displayed figure (the same number, rounded); and effective systemic delivery. A real HeartMate 3's displayed flow is a fourth thing — a controller estimate.                                                                       |
+| "PAPi improves"          | PAPi moving because right-sided _support_ was added (weak in this model) and PAPi moving because the modeled right ventricle itself changed (large).                                                                                                                                        |
 
 ---
 
@@ -175,8 +177,8 @@ runs power → flow on the device and flow → power here. The card names the in
 equation, no failure-mode behaviour and no validation data.
 
 **One thing is now said plainly that was not before:** this module has no estimator at all. Its
-displayed pump flow _is_ the modeled transfer the conserved compartments move, rounded. Nothing is
-biased and nothing estimated is fed back into mass transport. No hematocrit control was added and
+displayed pump flow _is_ the modeled transfer the conserved compartments move, rounded. Estimator bias is not represented; that does not establish accuracy of the modeled transfer. Nothing
+estimated by a separate controller algorithm is fed back into mass transport. No hematocrit control was added and
 no coefficients were invented.
 
 ### F27 — the reference pressure, and an alarm reading the wrong measurand
@@ -196,15 +198,15 @@ not the number on the monitor and not the pressure the pump ejects against:
 | 2200                | 154           | 96.0              | 0.71                     | 2.97      | quiet      |
 | 2200 + preload 145% | 155           | 119.5             | 0.66                     | 3.18      | **raised** |
 
-So the alarm named "Afterload-limited flow" stays silent through a state where the model is
-demonstrably taking 29% of the pump's requested flow away at the outlet. What _does_ carry the
-limitation is `pressureGradientFactor`, computed from the conserved arterial and pulmonary-venous
-compartments.
+The old alarm label conflated the baseline-pressure predicate with current transfer limitation.
+The actual flow multiplier is `afterloadFactor = min(baseline-derived factor, pressureGradientFactor)`.
+Either term can win: in the high-SVR/high-preload state immediately after setup the baseline factor
+is 0.809 and the gradient factor 1.000; after settling the gradient factor becomes smaller.
 
-**Repaired without changing when the alarm fires:** the alarm's label and explanation now name the
-quantity the predicate actually reads; the panel prints the modeled afterload cost as a percentage
-of what the speed is asking for; and the alarms panel's evidence row no longer offers the displayed
-MAP as evidence for this alarm. The predicate, its input and its threshold are **unchanged** —
+**Repaired without changing when the alarm fires:** the label identifies unsupported baseline MAP.
+The learner surface reports the actual afterload multiplier and its percentage reduction from
+otherwise identical modeled filling/tamponade inputs. This is not a percentage of the speed-only
+request, a measured outlet cost, or a validated clinical/device quantity. The predicate, its input and its threshold are **unchanged** —
 changing when a safety-styled alarm fires is an owner decision.
 
 ### The decisions
@@ -254,35 +256,33 @@ defect that would need a second condition, so A should not be taken as a drop-in
 `impella-suction-purge-rv` (6), `mcs-device-selection-integration` (9); the two suction story
 problems; cases `IMP-01`, `IMP-02`, `LVAD-02`.
 
-### Finding 1 — left-sided suction is always a right-sided-delivery story in this model
+### Finding 1 — the suction minimum has three reachable branches
 
-`leftPreloadFactor = min(rvDeliveryToLeftHeart, lvFilling, circulatingVolumeFactor)`, and the
-suction state is raised when that minimum falls below **0.58**.
+`leftPreloadFactor = min(rvDeliveryToLeftHeart, lvFilling, circulatingVolumeFactor)`.
+Left Impella suction requires a running left pump, performance level at least 5, and that minimum
+below **0.58**. These are authored predicates, not manufacturer suction logic.
 
-Across thirteen deliberately extreme states (preload 50% and 145%, RV contractility 0.2, LV
-contractility 0.2 and 1.4, PVR 9 Wood units, tamponade, heart rate 180, level 9, severe aortic
-insufficiency, PEEP 20, and combinations), each read at 8 and at 60 simulated seconds:
+The original thirteen-state sample found RV delivery limiting at its sampled times. That does
+**not** establish that the other terms are inert or that the reservoir always occupies 115–260 mL.
+Independent supported-control counterexamples, seed 417:
 
-- `lvFilling` **never left the band 0.817 – 1.200**, against a clamp of 0.18 – 1.20.
-- `leftPreloadLimiter` was **`rv-delivery` in every single state**.
+- Reference patient at 0.2 s: LV compartment 97.81 mL; LV filling term 0.857 is the minimum.
+- Preload 50%, RV 1.4, PVR 0.5: circulating volume is the minimum (0.556) at early and 60 s
+  observations, with modeled suction at P5.
+- The same low-volume state with LV contractility 1.4 and P9: at 60 s the LV compartment is
+  45.76 mL, its filling term is 0.244, and it limits active suction.
 
-`lvFilling` is calibrated as `(leftVentricularVolumeMl − 25) / 85`, which spans an end-diastolic
-range of 25–110 mL. The quantity fed into it is the conserved reservoir volume, which operates at
-**115–260 mL**. The term is therefore saturated at its ceiling essentially always and **cannot
-participate in the minimum**. The same scale mismatch exists in `computeLvadSupport`
-(`(leftVentricularVolumeMl − 25) / 82`, observed 1.18 in every state), so durable-support suction
-is also purely right-sided-delivery-driven.
-
-This is a provable local defect. It is **not repaired here**, because recalibrating it would change
-which states raise a suction alarm across nine sections and twelve cases — a consequential clinical
-behaviour change.
+The durable LV filling term can also become the minimum; see the independent review. Calibration
+and clinical meaning remain OD-03 questions. These counterexamples refute a universal inert-term
+claim; they do not validate either model. No calibration is changed. Ties use deterministic
+precedence RV delivery, LV compartment, then circulating volume; the named term is one minimum.
 
 **What was repaired:** the alarm no longer claims the ventricle is empty. `impella-left-suction`'s
 explanation now names the term the model used, and the Section 6 panel prints it live with its
 threshold. So the Section 6 opening state — suction beside a wedge of 20 mm Hg and the largest
 end-diastolic volume in the module — reads as a mechanism instead of a contradiction.
 
-### Finding 2 — the displayed wedge has no right-sided term
+### Finding 2 — the displayed wedge response rounds away in the reference RV comparison
 
 Section 4 setup, matched times, no-action control in the same comparison:
 
@@ -295,41 +295,39 @@ Section 4 setup, matched times, no-action control in the same comparison:
 At 30 s and beyond the reservoir settles at 155 mL against the control's 252 mL and the pulmonary
 venous pressure at 9.6 against 16.2.
 
-So **the model does represent right-sided limitation of left-heart filling — in its conserved
-compartments — and the displayed surfaces do not carry it.** `deriveBaselineMeasurements`'s `pawp`
-formula has preload, LV-failure, aortic-insufficiency, PEEP and pericardial terms and no
-right-ventricular term at all; `modeledLvedv` has no RV-contractility term; and the compartment
-contribution to `modeledLvedv` is deliberately scaled by 0.1 and clamped to −10/+14 mL, with a
-comment explaining that the fixed-step reservoir would otherwise read as progressive dilation. The
-displayed LVEDV moved 6 mL, which is inside the module's own 5.5 mL display deadband.
+The conserved compartments respond strongly to RV weakening. The displayed LVEDV surrogate
+includes a small compartment contribution, so the derived wedge also has an **indirect** RV
+response even though its baseline formula has no explicit RV-contractility term.
 
-The LV-failure control shows the display is not simply frozen: the same wedge moves 6 mm Hg there.
+In the corrected matched comparison (8 s settle, aligned action slot, 8 s observe), RAP is
+11 → 22, effective flow 4.51 → 2.55, displayed LVEDV **134 → 127**, and displayed wedge **20 → 20**.
+The unrounded derived wedge is **20.4214 → 20.0727** mm Hg. The conserved LV reservoir is
+238.53 → 175.13 mL and pulmonary-venous pressure 16.2799 → 11.6628 mm Hg. These quantities
+are not interchangeable. The earlier claim that 6 mL was inside a 5.5 mL deadband was arithmetic
+error; neither deadband establishes resolution of a matched-time comparison.
 
-**Not repaired**, and the teaching inference is contained instead. The Section 4 distractor
-rationale used to tell the learner that the left heart tends to be underfilled rather than
-congested; it now says what this model shows, that the displayed wedge does not move at all when
-right-sided delivery is taken away, and that the right-sided pressures move first. The section's
-own learning objective — a technically perfect device failing because the limitation is upstream —
-is intact and plainly visible (RAP doubles, PAPi collapses, flow falls 44%, synchrony does not
-move), so this is containment of an unsupported extra inference, not the removal of a required
-phenomenon.
+Contain the teaching claim to this comparison. It does not establish that clinical wedge never
+changes with RV failure, nor that the displayed wedge never responds elsewhere in this model.
+No coupling repair ships here.
 
-### The bounded specification, if the owner wants the display to carry it
+### A proposed display blend, requiring an owner specification
 
-The solver already produces the quantity a wedge estimates:
-`compartments.pulmonaryVenousPressureMmHg`, anchored on the same `baseline.pawpMmHg` the display
+**Unvalidated engineering proposal, not an approved specification.** The solver produces a latent
+`compartments.pulmonaryVenousPressureMmHg`, not a measured wedge pressure. It is anchored on the same `baseline.pawpMmHg` the display
 uses and moved by the pulmonary-venous reservoir's deviation from its reference. A blend of the
 existing formula with that compartment pressure, in the same form `deriveMcsMetrics` already uses
-for MAP (`mapFromFlow × 0.74 + compartment × 0.26`), would give at a 0.26 weight:
+for MAP (`mapFromFlow × 0.74 + compartment × 0.26`), would give the following **post-hoc arithmetic**
+on the corrected matched states. This is not a replay of a coupled model; feedback effects are
+untested. In particular, the original claim that this preserves the reference rounded value was false:
 
-|                       | today | with the blend  |
-| --------------------- | ----- | --------------- |
-| reference, no action  | 20    | ~20 (unchanged) |
-| RV contractility 0.20 | 20    | ~18             |
-| LV contractility 0.25 | 26    | ~24             |
+|                       | today | with the blend   |
+| --------------------- | ----- | ---------------- |
+| reference, no action  | 20    | 19 (19.3446 raw) |
+| RV contractility 0.20 | 20    | 18 (17.8861 raw) |
+| LV contractility 0.25 | 26    | 23 (23.3360 raw) |
 
 **Risk of adopting it:** it moves displayed wedge pressures in every section and every case,
-including the congestion classification, which is scored against a 15 mm Hg threshold the module
+including the congestion classification, which is classified using a 15 mm Hg threshold the module
 cites from an ACC consensus description. **Risk of leaving it:** any teaching statement that
 right-sided failure underfills the left heart cannot be demonstrated on the monitor, and Section 4
 and Section 9 both come close to needing it.
@@ -342,10 +340,10 @@ limiting term now visible where suction is taught.
 a named reviewer, re-checked congestion classifications for all twelve cases, and the ACC threshold
 re-examined against the new numbers.
 
-**Technical recommendation:** the mapping gap is real and provable; whether the displayed wedge
+**Technical recommendation:** the reference display attenuates and rounds the compartment response; whether the displayed wedge
 should carry it is a clinical modelling decision and is left to the owner. If B is chosen, the
-`lvFilling` scale mismatch should be decided in the same pass, because both change suction
-behaviour.
+`lvFilling` scale mismatch should be decided in the same pass, because a filling recalibration changes suction and a wedge coupling changes displayed
+metrics, congestion classification and any criteria that consume wedge.
 
 ### Finding 3 — F24, the size of the unloading response
 
@@ -357,12 +355,12 @@ Matched times, filled example, against the P5 control:
 | P5 → P8 | 118 → 107 mL (−11) | 18 → **17** (−1) | 2.44 → 3.49 (+1.05) |
 
 The response is real, monotone in the setting, and small in the pressure. **It was not amplified.**
-Printing more decimal places would have been false precision — the metrics are derived to the
-nearest millimetre and the engine's own measured idle drift for the wedge is about 1 mm Hg. Instead
-each row now carries its matched-time difference stated against the module's own measured display
-deadband, so "below this model's resolution" is a readable answer rather than an invisible one. At
-P6 all three qualify; at P8 the volume and the flow clear their deadbands and the wedge still does
-not.
+The table receives rounded metrics. It now prints their signed differences, or **No resolvable
+displayed change** when they are equal. It does not quantify hidden precision or treat idle drift
+at different times as the numerical resolution of a same-time comparison. Independent read-only
+instrumentation of production locals found filled P5/P6/P8 LVEDV 117.5715/113.8865/107.2008 mL
+and wedge 18.3156/17.7940/16.9123 mm Hg. This underlying evidence explains rounding; no extra
+precision is added to the learner display and no response amplitude changes.
 
 - [ ] Decide whether a demonstration state with a larger pressure response is wanted. That requires
       an approved baseline, not a larger coefficient.
@@ -450,11 +448,11 @@ MCS-PRE-REVIEW-01's [condition inventory](MCS-PRE-REVIEW-01-condition-inventory.
 twenty-one conditions across twelve cases, all classified `authored-model-condition`, none with a
 clinical source. That table is unchanged by this slice. Three additions belong to it:
 
-| Value                | What it is                                                           | Where it lives                                                     | Decision needed                                                                               |
-| -------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| `0.58`               | The left-sided inflow factor below which the suction state is raised | `LEFT_IMPELLA_SUCTION_PRELOAD_THRESHOLD`                           | Authored, no source. Its input term is the one OD-03 Finding 1 is about.                      |
-| `0.42` / `2.5 L/min` | Durable-support suction thresholds                                   | `LVAD_SUCTION_FILLING_THRESHOLD`, `LVAD_SUCTION_MINIMUM_FLOW_LMIN` | Authored, no source. The filling term cannot reach 0.42 in any measured state.                |
-| `100 mm Hg`          | The durable high-afterload predicate                                 | `LVAD_HIGH_AFTERLOAD_MAP_MMHG`                                     | Authored, no source, and applied to a quantity that is not the displayed pressure. See OD-02. |
+| Value                | What it is                                                           | Where it lives                                                     | Decision needed                                                                                                                                           |
+| -------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0.58`               | The left-sided inflow factor below which the suction state is raised | `LEFT_IMPELLA_SUCTION_PRELOAD_THRESHOLD`                           | Authored, no source. Its input term is the one OD-03 Finding 1 is about.                                                                                  |
+| `0.42` / `2.5 L/min` | Durable-support suction thresholds                                   | `LVAD_SUCTION_FILLING_THRESHOLD`, `LVAD_SUCTION_MINIMUM_FLOW_LMIN` | Authored, no source. The original limited sample did not cross 0.42; broader low-volume, strong-contractility probes do. Calibration remains unvalidated. |
+| `100 mm Hg`          | The durable high-afterload predicate                                 | `LVAD_HIGH_AFTERLOAD_MAP_MMHG`                                     | Authored, no source, and applied to a quantity that is not the displayed pressure. See OD-02.                                                             |
 
 These were inline literals before this slice and are now named constants with their values
 unchanged, so a reviewed change has one place to land.
@@ -471,13 +469,13 @@ unchanged, so a reviewed change has one place to land.
 
 Stated as engineering findings, not as a release decision — which is **OD-08**, and is the owner's.
 
-| Activity                                                                                     | Why                                                                                                                                                                                                                    |
-| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `iabp-timing-triggering` transfer; cases `IABP-02`, `CAP-IABP-01`                            | The atrial-fibrillation trigger model contradicts the manufacturer's own material and is **contained, not corrected**. `MCS-03-05` is open.                                                                            |
-| `iabp-timing-triggering` steps 1–5                                                           | The live model cannot demonstrate the two pressure relationships the section teaches; an authored reference carries them, which is containment and not the same as practising on a trace.                              |
-| `lvad-parameters-assessment`, `lvad-alarms-emergencies`; cases `LVAD-01`/`03`, `CAP-LVAD-01` | The product identity is undecided (OD-02), the reference patient's pressure is undecided, and an alarm named for afterload reads a quantity that is not the displayed pressure.                                        |
-| `impella-suction-purge-rv`, `mcs-device-selection-integration`; cases `IMP-01`, `IMP-02`     | The suction predicate's left-ventricular term is inert (OD-03 Finding 1) and the displayed filling pressures carry no right-sided response (Finding 2). Both are now stated truthfully on screen; neither is repaired. |
-| All twelve cases                                                                             | Every numerical condition is authored with no clinical source (OD-04).                                                                                                                                                 |
+| Activity                                                                                     | Why                                                                                                                                                                                                  |
+| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `iabp-timing-triggering` transfer; cases `IABP-02`, `CAP-IABP-01`                            | The atrial-fibrillation trigger model contradicts the manufacturer's own material and is **contained, not corrected**. `MCS-03-05` is open.                                                          |
+| `iabp-timing-triggering` steps 1–5                                                           | The live model cannot demonstrate the two pressure relationships the section teaches; an authored reference carries them, which is containment and not the same as practising on a trace.            |
+| `lvad-parameters-assessment`, `lvad-alarms-emergencies`; cases `LVAD-01`/`03`, `CAP-LVAD-01` | The product identity is undecided (OD-02), the reference patient's pressure is undecided, and an alarm named for afterload reads a quantity that is not the displayed pressure.                      |
+| `impella-suction-purge-rv`, `mcs-device-selection-integration`; cases `IMP-01`, `IMP-02`     | Suction calibration remains unvalidated; all three minimum terms are reachable (OD-03 Finding 1). The displayed wedge attenuates and rounds the RV response in the reference comparison (Finding 2). |
+| All twelve cases                                                                             | Every numerical condition is authored with no clinical source (OD-04).                                                                                                                               |
 
 ---
 

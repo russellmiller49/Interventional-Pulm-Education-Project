@@ -411,7 +411,8 @@ export type McsAction =
  * model rather than from a second hand-written simulator. These fields are the same local values
  * the flow formulas already use, published so a replay harness, a test, or a teaching surface can
  * read them without recomputing physiology. Nothing here feeds back into the model: every
- * consumer is read-only, and no displayed quantity is derived from a diagnostic.
+ * consumer is read-only. Teaching displays may format these values; physiological outputs,
+ * scoring, completion and interlocks do not depend on this diagnostic object.
  */
 export interface McsIabpDiagnostics {
   readonly kind: 'iabp'

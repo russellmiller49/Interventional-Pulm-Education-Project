@@ -78,7 +78,9 @@ export function inflowLimitView(state: McsSimulationState): McsInflowLimitView |
     note:
       diagnostics.leftPreloadLimiter === 'rv-delivery'
         ? 'The smallest of the three terms is upstream of the left ventricle, so the filling pressure and the end-diastolic volume on the monitor can both be high while the pump is still short of blood. They are answering a different question.'
-        : 'The smallest of the three terms is the left ventricle’s own modeled loading, so the filling numbers on the monitor and this limit are telling the same story.',
+        : diagnostics.leftPreloadLimiter === 'lv-compartment-filling'
+          ? 'The minimum comes from the conserved LV compartment volume. That reservoir is distinct from the displayed LV end-diastolic surrogate and wedge pressure.'
+          : 'The minimum comes from the circulating-volume input. This term is distinct from both the conserved LV compartment and the filling numbers on the monitor.',
     value: diagnostics.leftPreloadFactor,
     threshold: diagnostics.leftSuctionThreshold,
     suction: diagnostics.leftSuction,
@@ -364,7 +366,7 @@ export function flowAccountView(state: McsSimulationState): McsFlowAccountView {
       label: 'Displayed pump flow',
       valueText: `${reading(metrics.deviceFlowLMin, 1)} L/min`,
       value: metrics.deviceFlowLMin,
-      kind: 'estimated',
+      kind: 'modeled',
       destination: 'left ventricular apex into the ascending aorta',
     })
   }
@@ -1092,7 +1094,7 @@ export function afterloadCostView(state: McsSimulationState): McsAfterloadCostVi
  * names its inputs without giving the equation, so no estimator is reproduced and none is claimed.
  */
 export const MCS_DURABLE_FLOW_IDENTITY =
-  'Three quantities, kept apart. The modeled pump transfer is what this simulation actually moves from the ventricle to the aorta. The displayed pump flow is that same transfer, rounded — this model has no separate estimator, so nothing is biased, and nothing estimated is ever fed back as if it were blood moving. Effective systemic delivery is the transfer plus what the native ventricle still ejects, minus any modeled regurgitant return. On a HeartMate 3 the displayed flow is not the first of these: Abbott’s parameter card states it is an estimate calculated from fixed speed, power and the patient’s hematocrit, which is the reverse of the direction here. That card names the inputs and gives no equation, so no controller estimator is reproduced in this module and none is claimed; the product-identity decision is open as OD-02.'
+  'Three quantities, kept apart. The modeled pump transfer is what this simulation actually moves from the ventricle to the aorta. The displayed pump flow is that same transfer, rounded — this model has no separate estimator, so it does not model estimator bias. This does not establish accuracy of the modeled transfer. Effective systemic delivery is the transfer plus what the native ventricle still ejects, minus any modeled regurgitant return. On a HeartMate 3 the displayed flow is not the first of these: Abbott’s parameter card states it is an estimate calculated from fixed speed, power and the patient’s hematocrit, which is the reverse of the direction here. That card names the inputs and gives no equation, so no controller estimator is reproduced in this module and none is claimed; the product-identity decision is open as OD-02.'
 
 export const MCS_ESTIMATED_FLOW_BOUNDARY =
-  'Like the devices represented here, displayed pump flow is estimated rather than measured directly. This simulation does not reproduce each controller’s proprietary calculation or display. Nothing here reads blood with a probe: the figure depends on modeled pump behavior and modeled loading.'
+  'Displayed pump flow here is modeled transfer, rounded for display, rather than measured blood flow or a separate controller estimate. This simulation does not reproduce each controller’s proprietary calculation or display. Nothing here reads blood with a probe: the figure depends on modeled pump behavior and modeled loading.'

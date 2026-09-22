@@ -615,7 +615,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     debrief: [
       'A durable LVAD still depends on right-sided delivery.',
       'Raising speed cannot create preload and may worsen suction.',
-      'The pulmonary pulsatility ratio moved here because the modeled right ventricle itself changed, not because support was added to it — Section 9 shows the same index barely moving when right-sided support is what changes. It is one observation alongside right atrial pressure and modeled pump flow, both of which moved further, and this module does not treat it as a response measure on its own.',
+      'In the worked comparison that restores modeled RV contractility, the pulmonary pulsatility ratio rises; this is not a claim about which actions you took. Section 9 separately shows the same index barely moving when right-sided support is what changes. It is one observation alongside right atrial pressure and modeled pump flow, and this module does not treat it as a response measure on its own. The case condition requires both PAPi at least 1 and modeled pump flow at least 2.8 L/min; these are authored case criteria, not universal treatment targets.',
     ],
     sourceIds: lvadSources,
     evidenceSourceIds: lvadSources,

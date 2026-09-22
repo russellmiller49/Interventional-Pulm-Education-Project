@@ -610,7 +610,7 @@ function computeImpellaSupport(
         'impella-left-suction',
         'Left Impella suction detected',
         'critical',
-        `What reaches the inlet is below what the selected level is asking for. In this model that is the smallest of three terms, and here it is ${mcsLeftPreloadLimiterPhrase(leftPreloadLimiter)}. A modeled state, not a device's own suction logic.`,
+        `With the left pump running at P5 or above, this model raises suction when its left-preload minimum is below ${LEFT_IMPELLA_SUCTION_PRELOAD_THRESHOLD}. Here a minimum term is ${mcsLeftPreloadLimiterPhrase(leftPreloadLimiter)}. This is an authored modeled state, not a device's own suction logic.`,
       ),
     )
   if (left.enabled && left.position !== 'correct')

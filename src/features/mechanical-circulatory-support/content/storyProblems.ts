@@ -198,7 +198,7 @@ const authored: readonly McsStoryProblem[] = [
      * on this surface and this slice keeps.
      */
     changeScope:
-      'The one change is this model’s preload control, 55 per cent to 100 per cent — the whole circulating volume of the simulation, moved in one step. It is not a specified bolus, it has no dose and no rate, and nothing here says what volume a real patient should receive or whether they should receive any. Because that control rescales the entire circulation rather than adding a measured quantity to it, the response you are about to see is larger than a fluid challenge at a bedside would produce: read it as which axis moved, not as the size of an intervention.',
+      'The one change is this model’s preload control, 55 per cent to 100 per cent — the whole circulating volume of the simulation, moved in one step. It is not a specified bolus, it has no dose and no rate, and nothing here says what volume a real patient should receive or whether they should receive any. Because that control rescales the entire circulation rather than adding a measured quantity to it, the response magnitude cannot be translated into a bedside fluid-challenge response: read it as which model input changed, not as the size or expected effect of a clinical intervention.',
     sectionId: 'impella-suction-purge-rv',
     title: 'Story problem: volume for the same alarm',
     device: 'impella',

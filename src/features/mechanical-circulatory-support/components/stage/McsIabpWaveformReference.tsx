@@ -75,7 +75,7 @@ export function McsIabpWaveformReference() {
       </p>
       <figure>
         <svg
-          viewBox={`0 0 ${WIDTH} ${HEIGHT + 40}`}
+          viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
           role="img"
           aria-label="Authored diagram of one unassisted and one assisted arterial beat, with unassisted systole, unassisted end-diastolic pressure, diastolic augmentation, assisted end-diastolic pressure and assisted systole marked on a fixed pressure scale"
           data-iabp-reference-contour
@@ -114,15 +114,17 @@ export function McsIabpWaveformReference() {
               </text>
             </g>
           ))}
-          <text x="2" y={HEIGHT + 14} fill="currentColor" fontSize="10">
-            Pressure scale {minMmHg}–{maxMmHg} mm Hg, the same scale as the live strip
-          </text>
-          <text x="2" y={HEIGHT + 30} fill="currentColor" fontSize="10">
-            Dashed lines: unassisted systole ({unassistedSystole.mmHg}) and unassisted end-diastolic
-            pressure ({unassistedEnd.mmHg})
-          </text>
         </svg>
-        <figcaption>{MCS_IABP_REFERENCE_IDENTITY.sourceLead}</figcaption>
+        <figcaption>
+          <p>
+            Pressure scale {minMmHg}–{maxMmHg} mm Hg, the same scale as the live strip.
+          </p>
+          <p>
+            Dashed lines: unassisted systole ({unassistedSystole.mmHg}) and unassisted end-diastolic
+            pressure ({unassistedEnd.mmHg}). These are drawing coordinates.
+          </p>
+          <p>{MCS_IABP_REFERENCE_IDENTITY.sourceLead}</p>
+        </figcaption>
       </figure>
       <ol data-iabp-reference-landmark-list>
         {MCS_IABP_REFERENCE_LANDMARKS.map((landmark) => (

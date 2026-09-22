@@ -64,7 +64,7 @@ export function LvadParametersAssessmentPanel({
     [
       { metric: 'pumpPowerW', label: 'Pump power', unit: 'W', kind: 'displayed' },
       { metric: 'pulsatilityIndex', label: 'Pulsatility index', unit: '', kind: 'displayed' },
-      { metric: 'deviceFlowLMin', label: 'Displayed pump flow', unit: 'L/min', kind: 'estimated' },
+      { metric: 'deviceFlowLMin', label: 'Displayed pump flow', unit: 'L/min', kind: 'modeled' },
       {
         metric: 'effectiveSystemicFlowLMin',
         label: 'Effective systemic delivery',
@@ -135,7 +135,7 @@ export function LvadParametersAssessmentPanel({
             label="Displayed pump flow"
             value={metrics.deviceFlowLMin}
             unit="L/min"
-            kind="estimated"
+            kind="modeled"
             note={
               disclosed
                 ? 'Generated from speed and loading in this model; power and PI are derived afterward. Clinical estimation methods depend on the device.'
@@ -248,10 +248,10 @@ export function LvadParametersAssessmentPanel({
           />
           {afterloadCost ? (
             <LiveSetting
-              label="What the outlet pressure is costing the pump"
-              value={`${afterloadCost.costPercent}% of what this speed is asking for`}
+              label="Modeled afterload multiplier"
+              value={`${afterloadCost.costPercent}% reduction from otherwise identical modeled loading`}
               kind="modeled"
-              note={`This model's own afterload factor, ${afterloadCost.factor.toFixed(2)} of one, computed from the pressure across the pump in the conserved compartments. It is the term that moves the flow when you change the resistance. The module's high-afterload alarm does not read it and does not read the mean pressure above either: its input is this patient's modeled mean pressure with no support running, ${afterloadCost.alarmInputMmHg.toFixed(0)} mm Hg against a threshold of ${afterloadCost.alarmThresholdMmHg}, so it is ${afterloadCost.alarmRaised ? 'raised' : 'not raised'} here. That mismatch is authored, unchanged, and open for review as OD-02.`}
+              note={`This model's own afterload factor, ${afterloadCost.factor.toFixed(2)} of one, the smaller of the factor from unsupported baseline MAP and the factor from the conserved arterial-to-pulmonary-venous pressure gradient. It multiplies the flow after modeled filling and tamponade factors; this is not a measured device cost. The module's high-afterload alarm does not read it and does not read the mean pressure above either: its input is this patient's modeled mean pressure with no support running, ${afterloadCost.alarmInputMmHg.toFixed(0)} mm Hg against a threshold of ${afterloadCost.alarmThresholdMmHg}, so it is ${afterloadCost.alarmRaised ? 'raised' : 'not raised'} here. That mismatch is authored, unchanged, and open for review as OD-02.`}
             />
           ) : null}
           <LiveValue
@@ -376,7 +376,7 @@ export function LvadParametersAssessmentPanel({
                 label="Displayed pump flow"
                 value={metrics.deviceFlowLMin}
                 unit="L/min"
-                kind="estimated"
+                kind="modeled"
               />
               <LiveValue
                 label="Mean arterial pressure"

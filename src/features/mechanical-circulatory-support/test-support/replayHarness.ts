@@ -129,12 +129,27 @@ export function mcsReplay(
   observeSeconds = MCS_REPLAY_DEFAULT_SECONDS,
 ): McsReplayResult {
   const baseline = mcsReplayBaseline(setup)
-  const probes: Record<string, McsReplayProbe> = {}
-  for (const arm of arms) {
-    let state = baseline
-    for (const action of arm.actions ?? []) state = mcsReducer(state, action)
-    probes[arm.id] = mcsProbe(advanceMcsSimulation(state, arm.observeSeconds ?? observeSeconds))
+  if (arms.some((arm) => (arm.observeSeconds ?? observeSeconds) !== observeSeconds))
+    throw new Error('Compared replay arms must use the same observation interval')
+  let states = arms.map(() => baseline)
+  const slots = Math.max(0, ...arms.map((arm) => arm.actions?.length ?? 0))
+  for (let slot = 0; slot < slots; slot++) {
+    states = states.map((state, index) => {
+      const action = arms[index].actions?.[slot]
+      return action ? mcsReducer(state, action) : state
+    })
+    // Control changes advance the production solver by one fixed step. Advance the
+    // other arms through that same slot before applying the next action.
+    const targetTime = Math.max(...states.map((state) => state.timeSeconds))
+    states = states.map((state) => {
+      const remaining = targetTime - state.timeSeconds
+      return remaining > 1e-9 ? advanceMcsSimulation(state, remaining) : state
+    })
   }
+  const probes: Record<string, McsReplayProbe> = {}
+  arms.forEach((arm, index) => {
+    probes[arm.id] = mcsProbe(advanceMcsSimulation(states[index], observeSeconds))
+  })
   return {
     setupId: setup.id,
     seed: setup.seed ?? 417,
@@ -145,7 +160,7 @@ export function mcsReplay(
   }
 }
 
-/** One arm's displayed value, and the unrounded difference from another arm at the same time. */
+/** One arm's rounded displayed value, and its difference from another arm at the same time. */
 export function mcsCompare(
   result: McsReplayResult,
   metric: keyof McsDerivedMetrics,

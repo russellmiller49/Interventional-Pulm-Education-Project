@@ -448,11 +448,11 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
   },
   {
     lessonId: 'lvad-parameters-assessment',
-    title: 'Transfer afterload: low estimated flow with hypertension',
+    title: 'Transfer afterload: low modeled flow with hypertension',
     contextItems: [
       { label: 'Device', value: 'Durable continuous-flow LVAD at unchanged speed' },
       { label: 'Change', value: 'SVR rises markedly' },
-      { label: 'Display', value: 'Estimated flow falls; power does not surge' },
+      { label: 'Display', value: 'Modeled flow falls; power does not surge' },
       { label: 'Variant', value: 'Afterload sensitivity without a controller fault' },
     ],
     setupDevice: 'lvad',
@@ -475,14 +475,14 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       clinicalContextId: 'mcs-transfer-lvad-hypertension',
       visualAssetIds: ['mcs-monitor', 'mcs-lvad-controls'],
       transferVariantId: 'mcs-lvad-fixed-speed-high-afterload',
-      stem: 'At unchanged LVAD speed, MAP and SVR rise while estimated flow falls. What is the best interpretation?',
+      stem: 'At unchanged LVAD speed, MAP and SVR rise while modeled flow falls. What is the best interpretation?',
       choices: [
         {
           id: 'afterload-sensitive-assessment',
           label:
-            'Treat the value as an afterload-sensitive estimate and assess the patient as a whole',
+            'Treat the value as an afterload-sensitive model output and assess the patient as a whole',
           rationale:
-            'Continuous-flow output depends on the pressure gradient and cannot be interpreted from estimated flow alone.',
+            'Continuous-flow output depends on the pressure gradient and cannot be interpreted from displayed flow alone.',
           plausibility: 'best',
         },
         {
@@ -498,13 +498,13 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
           label:
             'Assume the displayed flow is a direct measurement of the patient’s total cardiac output',
           rationale:
-            'Controller flow is an estimate and does not independently capture native output or systemic perfusion.',
+            'Displayed flow here is modeled pump transfer; it does not include native output or establish systemic perfusion. Real controller estimates are a separate device-specific quantity.',
           plausibility: 'incorrect-mechanism',
         },
       ],
       correctChoiceIds: ['afterload-sensitive-assessment'],
       explanation:
-        'The new loading condition changes estimated flow without changing speed. The interpretation must remain patient- and hemodynamics-centered.',
+        'The new loading condition changes modeled pump transfer without changing speed. The interpretation must remain patient- and hemodynamics-centered.',
       evidenceIds: lvadEvidence,
       reviewStatus: 'sme-review',
     }),

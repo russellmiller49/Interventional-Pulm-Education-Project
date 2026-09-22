@@ -8,29 +8,13 @@ import {
 } from '../../content/unloadingExamples'
 import { mcsObservedDirection } from '../../engine/learningSession'
 import { replayMcsUnloadingComparison } from '../../engine/unloadingComparison'
-import { deadbandFor } from '../teaching/selectors'
 import styles from './mcs-unloading.module.css'
 
-/**
- * One matched-time difference, said against this model's own resolution for that quantity.
- *
- * `deadbandFor` returns the display deadband the module measured from the engine's idle drift, so
- * a difference under it is one the model cannot resolve rather than one that did not happen. That
- * distinction is the whole of F24: the P5-to-P6 wedge pressure moves, and it moves less than the
- * noise, and a table that printed 18 and 18 said neither of those things.
- */
-function deltaText(
-  metric: (typeof mcsUnloadingSignals)[number][0],
-  before: number,
-  after: number,
-  unit: string,
-  digits: number,
-): string {
-  const difference = after - before
-  const deadband = deadbandFor(metric)
-  if (Math.abs(difference) < deadband)
-    return `${difference >= 0 ? '+' : '−'}${Math.abs(difference).toFixed(digits)} ${unit} · below this model’s resolution`
-  return `${difference >= 0 ? '+' : '−'}${Math.abs(difference).toFixed(digits)} ${unit}`
+/** Differences of the rounded values this table actually receives, at matched times. */
+function deltaText(before: number, after: number, unit: string, digits: number): string {
+  const difference = Number((after - before).toFixed(digits))
+  if (difference === 0) return 'No resolvable displayed change'
+  return `${difference > 0 ? '+' : '−'}${Math.abs(difference).toFixed(digits)} ${unit}`
 }
 
 /** A replay of provided examples; it never dispatches into a learner's live session. */
@@ -124,7 +108,7 @@ export function McsUnloadingComparison() {
                       <td>{control.metrics[key].toFixed(digits)}</td>
                       <td>{changed.metrics[key].toFixed(digits)}</td>
                       <td data-unloading-delta={key}>
-                        {deltaText(key, control.metrics[key], changed.metrics[key], unit, digits)}
+                        {deltaText(control.metrics[key], changed.metrics[key], unit, digits)}
                       </td>
                     </tr>
                   ))}
@@ -146,8 +130,8 @@ export function McsUnloadingComparison() {
                 {Math.abs(
                   changed.metrics.leftDeviceFlowLMin - control.metrics.leftDeviceFlowLMin,
                 ).toFixed(2)}{' '}
-                L/min — the setting change lands on the pump before it lands on the chamber, and the
-                pressure is the last of the three to move.
+                L/min. These are matched-time endpoints; they do not establish the sequence of the
+                responses.
               </p>
               <details>
                 <summary>Starting state and model assumptions</summary>

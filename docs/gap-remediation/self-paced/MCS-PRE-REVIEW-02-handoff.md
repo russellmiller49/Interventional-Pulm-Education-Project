@@ -1,5 +1,11 @@
 # MCS-PRE-REVIEW-02 — coupled models and waveforms
 
+> Independent review correction: the original head is `0edf4e05c0108713a78765832c7e416c0da98cf1`.
+> This historical handoff is not approval. Its original harness allowed unequal action times;
+> its universal inert-LV-term claim, zero-RV-wedge-response claim, and resolution interpretation
+> were disproved or narrowed. The corrected owner packet and `MCS-PRE-REVIEW-02-sanity-review.md`
+> supersede those conclusions. No owner decision or physiological recalibration is made.
+
 Prepared 2026-09-22 by an AI authoring assistant (Claude Opus 5) at the owner's request, against
 the `MCS_Claude_Implementation_Pack` prepared 2026-09-20. **Nothing in this slice is clinical,
 device or source approval.** MCS-PRE-REVIEW-01's atrial-fibrillation containment is **in force and
@@ -94,39 +100,18 @@ right ventricle.
 
 ## B. What the model turned out to be doing
 
-### The suction predicate is a right-sided-delivery predicate (F25)
+### Independent correction to suction and displayed-wedge conclusions (F21/F25)
 
-`leftPreloadFactor = min(rvDeliveryToLeftHeart, lvFilling, circulatingVolumeFactor)`, and suction is
-raised below 0.58. Across thirteen deliberately extreme states at two settle times,
-**`leftPreloadLimiter` was `rv-delivery` every single time**, and `lvFilling` never left 0.817 –
-1.200 against a clamp of 0.18 – 1.20.
+All three left-preload branches are reachable through supported controls, including LV-compartment
+limitation with suction after 60 seconds. A preload-50%, RV-1.4, PVR-0.5 state makes circulating
+volume the minimum. Adding LV-1.4 and P9 makes LV filling 0.244 at 60 seconds. The original
+sample did not establish universal saturation or a reservoir range of 115–260 mL. Calibration
+remains OD-03; no equation changes.
 
-The reason is a scale mismatch: `lvFilling` is `(leftVentricularVolumeMl − 25) / 85`, calibrated for
-an end-diastolic range of 25–110 mL, while the conserved reservoir it reads operates at 115–260 mL.
-The term is saturated and cannot participate in the minimum. The same holds for the durable pump.
-
-**Repaired:** the alarm no longer says the ventricle is empty. `impella-left-suction`'s explanation
-names the term the model used, and the Section 6 teaching panel prints it live as _Smallest term
-feeding the left inlet_ with its value and threshold. So the screen a fellow found
-self-contradictory — suction beside wedge 20 and the module's largest LV volume — now reads as a
-mechanism. **Not repaired:** the calibration itself, which is an OD-03 decision because changing it
-changes which states alarm across the module.
-
-### The displayed wedge has no right-sided term (F21)
-
-Matched times, Section 4 setup: weakening the right ventricle to 0.20 moves RAP 11 → 22, PAPi 1.6 →
-0.3 and effective delivery 4.51 → 2.55 L/min, while the **displayed wedge stays at 20 and the
-displayed LVEDV moves 6 mL** — inside the module's own 5.5 mL deadband. The conserved compartments
-meanwhile move a long way: the LV reservoir 235.3 → 175.1 mL and the pulmonary venous pressure
-16.31 → 11.66 mm Hg, settling at 155 mL and 9.6 mm Hg by 30 s. A left-sided-failure control moves
-the same displayed wedge 20 → 26, so the number is not frozen; it simply has no right-sided input.
-
-**Repaired:** the distractor rationale that told a learner the left heart tends to be underfilled
-rather than congested now says what this model shows and why the wedge is not the measurement that
-tells you first. **Not repaired:** the mapping. A bounded specification — blending the conserved
-pulmonary venous pressure in the same form `deriveMcsMetrics` already uses for MAP — is written up
-with its measured consequences for OD-03. The section's own objective is unaffected: the RV-limited
-ceiling is large and plainly visible.
+The wedge has an indirect RV response through the LV compartment contribution. Corrected matched
+time gives unrounded 20.4214 → 20.0727 mm Hg, both displayed as 20. LVEDV is 134 → 127 mL,
+not a change inside 5.5 mL. RAP 11 → 22 and effective flow 4.51 → 2.55 remain reproducible.
+The proposed 0.26 coupling is unvalidated and unapproved. The owner packet has the corrected scope.
 
 ### The durable high-afterload alarm reads a pressure nobody is looking at (F27)
 
@@ -145,8 +130,8 @@ condition and an owner decision (OD-02).
 ### The durable pump has no estimator at all (F28)
 
 Flow comes from speed and loading; power is computed from the flow; the suspected-thrombosis flag
-adds a flat 2.8 W and never enters the flow formula (measured: power 4.9 → 7.8 W, displayed flow
-3.78 → 3.79). Abbott's parameter card runs the other way — power → flow, with hematocrit — and gives
+adds a flat 2.8 W and never enters the flow formula (the original unequal-time sample gave power 4.9 → 7.8 W and flow
+3.78 → 3.79; a matched-time comparison holds flow exactly equal and adds 2.8 W). Abbott's parameter card runs the other way — power → flow, with hematocrit — and gives
 no equation. The honest statement, now on the panel, is that this module's displayed pump flow _is_
 the modeled transfer the compartments move, rounded; nothing is biased and nothing estimated is fed
 back as blood movement. No hematocrit control and no coefficients were invented.
