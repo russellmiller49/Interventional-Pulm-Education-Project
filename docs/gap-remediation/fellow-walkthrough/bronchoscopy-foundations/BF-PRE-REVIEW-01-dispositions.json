@@ -10,7 +10,7 @@
   "baseSha": "c717c9ffae09cb67e19b06a56d37c75487a5605a",
   "branch": "claude/bf-1-9-19",
   "checkout": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-bf-1-9-19",
-  "state": "implemented; independently reviewed at 96291d71 (NOT READY FOR MERGE on three findings); repaired in a bounded follow-up pass; pull request open; not merged, not deployed",
+  "state": "implemented; independently reviewed at 96291d71 (NOT READY FOR MERGE on three findings); repaired in a bounded follow-up pass; current main merged in for integration; re-reviewed at 6e5af351 (NOT READY FOR MERGE on one residual accessibility overclaim in finding 1); closed in a second bounded repair pass; pull request open; not merged, not deployed",
   "claims": {
     "clinicalApproval": false,
     "sourceReview": false,
@@ -320,8 +320,8 @@
           "historyGoals": 40,
           "currentGoals": 0,
           "mixedGoals": 9,
-          "historyCards": 16,
-          "mixedCards": 6,
+          "historyCards": 14,
+          "mixedCards": 8,
           "currentCards": 0
         },
         "note": "systematic-survey moved from mixed to history, which is the finding. No card is purely current today, so the \"current\" lead is unreachable from authored content; it is kept for a location- or metric-only goal and covered by a unit case."
@@ -344,6 +344,96 @@
       "The browser-suite accounting of \"26 cases / 5 new\" undercounted instances: the overshoot case runs at two widths, so the first phase added six instances, and the suite now declares 28 instances.",
       "The carina geometry figures are method-dependent. This batch measured RMSB 58.1 deg / 8.87 mm and LMSB 59.7 deg / 10.80 mm; the review measured 56.69 deg / 8.36 mm and 61.06 deg / 8.75 mm with its own stated method. The conclusion that the centerlines are near-symmetric holds under both; neither set validates anatomy or justifies a default branch.",
       "The single reflow failure in the first phase was against a development server and its cause is not established. It did not recur in the review's production run, and it passed 3/3 in isolation on both revisions here."
+    ]
+  },
+  "closureReview": {
+    "reviewedHead": "6e5af3516e20b0118412294d1bd5ddb3d6bdafeb",
+    "integratedMain": "2124cd0f3483db6534ab65bf6dd3730b59fee463",
+    "verdict": "NOT READY FOR MERGE",
+    "accepted": [
+      "historical completion is framed as a record",
+      "current location is presented separately",
+      "the wall-dominated current image is not visibly approved",
+      "goal wording is narrowed to recorded model signals",
+      "finding 2 is CLOSED",
+      "the centralized history/mixed classification",
+      "the 40 / 0 / 9 goal inventory across 22 cards",
+      "finding 3 is accepted as PRE-EXISTING and was not touched"
+    ],
+    "findings": [
+      {
+        "id": "closure-1",
+        "severity": "P1",
+        "parent": "review-1",
+        "summary": "The rendered optical surface's accessible name translated the model state signal signals.view === 'clear' into a claim about the picture, in a reproduced state where the image is wall dominated.",
+        "tracedBy": "codex",
+        "source": "src/features/bronchoscopy-foundations/components/scope/scopeSceneModel.ts; the DOM fallback carried the equivalent wording in ScopeFallback.tsx",
+        "reproducedOnReviewedHead": true,
+        "reproduction": "branch-entry scope view, learner controls only: goInto RMSB, withdrawTo TR, goInto LMSB, set-deflection -30, then 25 advances.",
+        "reproducedState": {
+          "place": "airway",
+          "location": "Left main bronchus",
+          "deflectionDeg": -30,
+          "viewSignal": "clear",
+          "lossOfViewCount": 0,
+          "ostiaInView": 0,
+          "forwardRunMmToWall": 7,
+          "forwardRunMmBeforeDeflection": 14
+        },
+        "beforeAccessibleName": {
+          "webgl": "A clear view through the scope",
+          "fallback": "The view through the scope: a clear view of the airway"
+        },
+        "afterAccessibleName": {
+          "webgl": "Scope view · what the model records: no red field, smear or dark field",
+          "fallback": "Scope view · what the model records: no red field, smear or dark field"
+        },
+        "disposition": "repaired at source; one mapping read by both renderers",
+        "repair": "scopeSceneModel now exports VIEW_SIGNAL_WORDS, VIEW_SIGNAL_LEAD and opticalViewName. Both the WebGL optical surface and the DOM fallback name their field through opticalViewName, so neither path can carry the stronger claim. 'clear' reports the absence of the two recorded conditions and makes no claim about the picture; 'red-out', 'contaminated' and 'dark' each paint the whole field through the stylesheets' data-lens-state / data-view-signal rules, so naming the field for those describes what the renderer draws. No value names a mechanism, because the cause of a red or dark field is the answer view-loss asks for and its deny pattern forbids it.",
+        "notChanged": [
+          "reducer semantics",
+          "signals.view",
+          "data-view-signal",
+          "visual rendering",
+          "image generation and model geometry",
+          "goal evaluation",
+          "scoring",
+          "navigation",
+          "current-state/history classification"
+        ],
+        "regression": "src/features/bronchoscopy-foundations/__tests__/optical-view-truth.test.tsx (15 cases)",
+        "failsOnReviewedHead": "With the three source files reverted to 6e5af351 and the same assertions applied to the old VIEW_DESCRIPTION API and the old fallback, both probes fail on the exact reported strings: 'A clear view through the scope' and 'The view through the scope: a clear view of the airway'."
+      },
+      {
+        "id": "closure-2",
+        "severity": "documentation",
+        "summary": "The handoff's card subtotals were inaccurate and internally inconsistent: 18 history / 4 mixed in prose, 16 history / 6 mixed in the inventory table, and a 'five-controls x5' parenthetical.",
+        "disposition": "documentation corrected to the independently verified totals; the classifier was NOT changed",
+        "verifiedTotals": {
+          "cards": 22,
+          "historyCards": 14,
+          "currentCards": 0,
+          "mixedCards": 8,
+          "historyGoals": 40,
+          "currentGoals": 0,
+          "mixedGoals": 9,
+          "mixedCardIds": [
+            "five-controls/five-controls-learn-depth",
+            "five-controls/five-controls-learn-depth-repeat",
+            "five-controls/five-controls-learn-bend",
+            "five-controls/five-controls-learn-bend-repeat",
+            "five-controls/five-controls-learn-rotation",
+            "five-controls/five-controls-learn-combine",
+            "five-controls/five-controls-learn-transfer",
+            "branch-entry/branch-entry-flow-v1-hold-view"
+          ]
+        },
+        "method": "Recomputed from the implementation: every scope-task and observe step of every BRONCH_SECTIONS lesson, classified with scopeGoalsClaim and scopeGoalClaim."
+      }
+    ],
+    "remainingLimitations": [
+      "Hidden-tab browser acceptance remains unverified and is an explicitly documented limitation; this pass changed no clock or lifecycle code.",
+      "Finding 3, the 3D restore after an asset failure, is pre-existing on c717c9ff and the PR alike, and was deliberately not fixed here."
     ]
   }
 }

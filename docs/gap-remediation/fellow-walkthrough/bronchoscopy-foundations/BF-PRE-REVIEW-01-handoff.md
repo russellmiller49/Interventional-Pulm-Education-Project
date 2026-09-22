@@ -119,7 +119,7 @@ entry.
 | S6 Part 3 and S8 Part 3, finished card  | "Done. Every goal on this card is met."                                                    | same, plus "They record this attempt, not the view on the screen now.", a basis line naming the model's limit, and "The tip is in Left main bronchus now."  |
 | S6 Part 3, `no-force` goal              | "Advance only with the opening aimed and the lumen in view, and keep the tip off the wall" | "Reach the left main bronchus with no advance refused for want of aim, none made without a clear view, and no wall contact recorded"                        |
 
-Every one of the module's 22 scope cards classifies as `history` (18) or `mixed` (4); none is purely
+Every one of the module's 22 scope cards classifies as `history` (14) or `mixed` (8); none is purely
 `current`, so each now carries a bounding sentence.
 
 ## A26 — the neutral push at the carina: investigation, not a new anatomical rule
@@ -368,9 +368,9 @@ Full inventory after the repair, over all 22 BF scope cards:
 
 | Class                                              | Goals | Cards                                          |
 | -------------------------------------------------- | ----- | ---------------------------------------------- |
-| history — a record that survives the tip moving on | 40    | 16                                             |
+| history — a record that survives the tip moving on | 40    | 14                                             |
 | current — a live reading that stops holding        | 0     | 0                                              |
-| mixed                                              | 9     | 6 (five-controls ×5, branch-entry `hold-view`) |
+| mixed                                              | 9     | 8 (five-controls ×7, branch-entry `hold-view`) |
 
 `systematic-survey` moved from `mixed` to `history`, which is the finding. No card is purely
 `current` today, so `scopeDoneLead('current')` is unreachable from authored content; it is kept
@@ -484,3 +484,99 @@ runs in the default theme only. This is a visibility check, not a contrast audit
 the reviewed head; finding 3 is reproduced identically on the baseline and handed on unchanged, with
 its evidence. The three inaccurate claims the review identified are corrected above. Nothing is
 merged or deployed, and no other batch was started.
+
+---
+
+## Closure pass — the residual accessibility overclaim (re-review of `6e5af351`)
+
+The re-review accepted the visible repair above — historical completion reads as a record, the
+current location is separate, the wall-dominated image is not approved, and the goal wording is
+bounded to recorded model signals — and held **finding 1 open** on one surface the first pass never
+touched: the accessible name of the optical field itself.
+
+### What was still wrong
+
+`signals.view` is a **model state signal**. The reducer derives it from two recorded conditions and
+nothing else (`scopeReducer.ts`): a red-out, or a contaminated lens. Everything else is `clear`.
+Both optical surfaces translated that signal straight into a claim about the picture:
+
+| Surface                  | Accessible name on `6e5af351`                            |
+| ------------------------ | -------------------------------------------------------- |
+| WebGL optical field      | `A clear view through the scope`                         |
+| DOM / schematic fallback | `The view through the scope: a clear view of the airway` |
+
+"A clear view" is the differential's own row name for a usable image (`view-loss`, "a clear view of
+an airway you cannot name"), so a learner is taught to read it as exactly the claim the model does
+not make.
+
+**Reproduced on the reviewed head, with the learner's own controls**: into RMSB, back through the
+trachea, into LMSB, deflection set to −30°, then 25 advances. The result is the state the review
+described — `place: airway`, `Left main bronchus`, `signals.view === 'clear'`, `lossOfViewCount: 0`,
+**no opening in view**, and the camera's own forward axis running into the wall at **7 mm**, down
+from 14 mm along the open bronchus. A wall-dominated image named "a clear view".
+
+### The repair
+
+One mapping, in the file the review traced it to, read by **both** renderers, so neither path can
+hand a learner the stronger claim:
+
+| Signal         | What the name now says                                                     |
+| -------------- | -------------------------------------------------------------------------- |
+| `clear`        | `Scope view · what the model records: no red field, smear or dark field`   |
+| `red-out`      | `Scope view · what the model records: a red field over the whole view`     |
+| `contaminated` | `Scope view · what the model records: a smeared field over the whole view` |
+| `dark`         | `Scope view · what the model records: a dark field over the whole view`    |
+
+Why the four values are not treated alike: `red-out`, `contaminated` and `dark` each **paint the
+whole field themselves**, through the `data-lens-state` and `data-view-signal` rules in the two
+optical stylesheets, so naming the field for those describes what the renderer actually draws.
+`clear` has no rule at all — it paints nothing. It means only that neither recorded condition is
+present, and the picture is then whatever the airway ahead gives. So `clear` reports the absence of
+the recorded conditions and stops.
+
+The lead is shared, so the text says _that it is a model record_ rather than asserting more than the
+engine establishes. No value names a mechanism: the cause of a red or dark field is the answer
+`view-loss` asks for, and its deny pattern forbids it.
+
+The fallback still appends the openings it measures (`Openings ahead: …`), which is a separate,
+projected geometric fact and is unchanged.
+
+**Not changed:** the reducer, `signals.view` itself, `data-view-signal`, any visual rendering, the
+image geometry, goal evaluation, scoring, navigation, and the history/current classification.
+
+### Regression coverage
+
+`__tests__/optical-view-truth.test.tsx` (15 cases) drives the reproduction above and pins:
+
+- the overshoot state itself — signal `clear`, no opening in view, the forward run collapsing to
+  under half its open-bronchus value;
+- **(A)** the WebGL name matches none of eight visual-quality patterns (`clear view`, `clear
+airway/lumen/field`, `open lumen`, `good view`, `unobstructed`, …);
+- **(B)** it reports the model's signal and says so, under the shared lead;
+- **(C)** the fallback's rendered `aria-label` **equals** the scene's name for the same signal, for
+  every one of the four values;
+- every value is free of the mechanism patterns and of the learner copy gate;
+- **(D)** the accepted record and live-location presentation still renders, and nothing on the pane
+  matches a visual-quality claim.
+
+**Fails on `6e5af351`:** with the three source files reverted and the same assertions applied to the
+old API, both probes fail on the exact reported strings — `A clear view through the scope` and `The
+view through the scope: a clear view of the airway`.
+
+### Card subtotals corrected
+
+The re-review confirmed the goal inventory (40 history, 0 current, 9 mixed across 22 cards) and
+found the **card** subtotals inaccurate. Recomputed from the implementation over all 22 cards:
+**14 history, 0 current, 8 mixed** — the mixed cards being the seven `five-controls` learn cards
+and `branch-entry / hold-view`. The handoff previously said 18/4 in prose and 16/6 in the table,
+which also disagreed with each other, and the parenthetical said `five-controls ×5` where the
+implementation has seven. The prose, the table and
+`BF-PRE-REVIEW-01-dispositions.json` are corrected to the verified numbers. **The classifier was not
+touched**; the implementation was already accepted and it is the documentation that was wrong.
+
+### Readiness
+
+**READY FOR FINAL CODEX CLOSURE REVIEW.** The residual overclaim is repaired at its source for both
+renderers, with a regression that fails on the reviewed head. Finding 2 stays closed, finding 3
+stays handed on as pre-existing and untouched, and hidden-tab browser acceptance remains the
+documented limitation above. No new BF product scope, no second batch, nothing merged or deployed.
