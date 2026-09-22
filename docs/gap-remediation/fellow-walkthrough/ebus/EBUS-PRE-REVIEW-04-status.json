@@ -1,0 +1,241 @@
+{
+  "batch": "EBUS-PRE-REVIEW-04",
+  "title": "Clearer teaching without exam conversion",
+  "preparedOn": "2026-09-22",
+  "scope": "course map, navigation language, first-use definitions, activity titles, hints, guided-practice framing, learner-facing status strings, source-bound diagrams, literal duplication; no assessment redesign, clinical authoring, anatomy recalibration, question-bank rewrite, scoring, forced independent mode, or Prompt-05 clinical/media work",
+  "repository": {
+    "smokeTestedMain": "745146f6e40bd536c201313f0480ddde2ee03ca3",
+    "smokeResult": "post-merge EBUS-03 smoke: PASS",
+    "implementationBaseline": "d98bab79af9231eb1857e2da96cb75ca2068d85c",
+    "baselineRelationship": "745146f6 is an ancestor; the intervening change is PR #254 (Bronchoscopy Foundations) and a launch.json entry; no EBUS or shared learning-module file; integrated by branching from current main",
+    "prompt03InAncestry": {
+      "reviewedHead": "95ddc0d85f4aeb20a7377b2bb5cf6bd7d98724e1",
+      "sanityRepair": "98a67907"
+    },
+    "branch": "claude/ebus-teaching-clarity-9-22",
+    "worktree": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-ebus-teaching-9-22",
+    "codeHead": "321d533814187ed6a45e018d94ca79af9937b4f7",
+    "commits": [
+      "d12a6db0 feat(ebus-guided): clearer teaching without exam conversion (EBUS-PRE-REVIEW-04)",
+      "321d5338 fix(ebus-guided): name the refresher by its real title; say what the contact cutaway shows",
+      "docs commit (this file, the handoff and the copy table) = PR head"
+    ],
+    "pullRequest": "set in the PR description; not merged, not deployed"
+  },
+  "curriculumRegistry": {
+    "authority": "CHAPTERS in src/features/ebus-guided/content/curriculum.ts",
+    "chapters": 7,
+    "lessons": 26,
+    "orderChanged": false
+  },
+  "dispositions": {
+    "OV-1": "implemented",
+    "OV-2": "implemented",
+    "NAV-1": "implemented (language only; self-paced record unchanged)",
+    "NAV-3": "implemented; undefined terms held for 05 (Q4)",
+    "L1-2": "implemented",
+    "L1-3": "implemented with limit (links to existing open refreshers in separate courses; no EBUS-local primer, Q14)",
+    "L1-4": "implemented",
+    "L1-9": "implemented",
+    "L1-10": "adapted (guided-practice framing; key points visible)",
+    "L1-11": "implemented",
+    "L2-6": "adapted; stem held (Q6)",
+    "L2-8": "implemented",
+    "L3-10": "implemented (display only)",
+    "L4-5": "implemented",
+    "L4-6": "adapted",
+    "L5-2": "implemented",
+    "L5-4": "preserved intentionally with a measured caption (panel distinguishes gap/direct/balloon; bubble and reflector render identically to balloon and direct)",
+    "L6-3": "adapted",
+    "L10-3": "adapted (limit stays visible; guided framing)",
+    "L10-4": "implemented",
+    "L12-2": "adapted; stem held (Q6)",
+    "L12-7": "adapted; consolidation proposal documentation-only (Q13)",
+    "L13-5": "adapted",
+    "L15-3": "implemented (title); follow-up row held (Q7)",
+    "L15-4": "implemented",
+    "L16-3": "implemented",
+    "L17-3": "adapted (purpose + learner-chosen try it yourself)",
+    "L17-4": "adapted",
+    "L17-5": "adapted (label layout); labels and laterality colouring held (Q2)",
+    "L19-2": "adapted (view-specific identification); per-view anatomy held (Q5)",
+    "L20-4": "implemented (patient or equipment, from the lesson's takeaway); specific harm held (Q1)",
+    "L20-5": "implemented",
+    "L22-5": "implemented",
+    "L22-6": "implemented (running-case specimens); destinations held (Q11)",
+    "L23-2": "adapted (purpose; instruction lines kept)",
+    "L23-4": "implemented",
+    "L24-2": "implemented",
+    "L25-5": "implemented",
+    "PR-4": "already resolved by EBUS-PRE-REVIEW-01 CS-6; verified in the browser",
+    "L5-1": "preserved: held frame identity untouched; presentation clarification added; question/evidence alignment held for 05 (Q3)",
+    "alsoTouched": {
+      "L11-5": "title half only",
+      "lesson-21 transfer title": "same defect class as L20-5; L21-5 repetition stays 05"
+    }
+  },
+  "unchanged": [
+    "question keys and ids",
+    "activity ids, interactions and question slots",
+    "accepted actions and labGoalMet / labGoalRequirements",
+    "sweep tolerances, model geometry, contracts and frame ids",
+    "self-paced progress schema and semantics, undo review, draft compatibility",
+    "demonstration observations dropped by the host",
+    "reload clearing of unfinished held evidence",
+    "canonical landmark and structure ids (azygous included)",
+    "AnswerVerdict and all shared learning-module / stage files"
+  ],
+  "glossary": {
+    "file": "src/features/ebus-guided/content/glossary.ts",
+    "entries": [
+      "EBUS-TBNA",
+      "Examination record",
+      "Nodal station",
+      "N category (N1, N2, N3)",
+      "N2a and N2b",
+      "Systematic staging",
+      "Acoustic contact (coupling)",
+      "EUS-B",
+      "ROSE",
+      "Nonrepresentative sample"
+    ],
+    "provenanceTest": "src/features/ebus-guided/__tests__/pre-review-04.test.tsx (per-term source fragments; nothing else allowed)",
+    "heldForSource": [
+      "central hilar structure (CHS)",
+      "TNM",
+      "IASLC",
+      "NSCLC",
+      "PET",
+      "IFU",
+      "FNA",
+      "ERS/ESGE/ESTS",
+      "CHEST"
+    ]
+  },
+  "linksAdded": [
+    {
+      "href": "/learn/anatomy/branch-tracing/learn?lesson=orientation",
+      "label": "Relate CT to the parent airway view (begins with standard axial CT)",
+      "course": "Bronchial Branch Tracing",
+      "anonymousStatus": 200
+    },
+    {
+      "href": "/bronchoscopy-foundations/learn?section=right-side",
+      "label": "The right bronchial tree",
+      "course": "Bronchoscopy Foundations",
+      "anonymousStatus": 200
+    },
+    {
+      "href": "/bronchoscopy-foundations/learn?section=left-side",
+      "label": "The left airways",
+      "course": "Bronchoscopy Foundations",
+      "anonymousStatus": 200
+    }
+  ],
+  "linksNotAdded": {
+    "/intro-bronchoscopy/airway-anatomy": "404 to an anonymous visitor (draft guard)",
+    "/learn/anatomy/airway": "404 to an anonymous visitor (draft guard)",
+    "/tnm-9-staging": "307 to login"
+  },
+  "l54Measurement": {
+    "view": "default camera, 475x356 panel, production build",
+    "changedPixelFraction": {
+      "gap-direct": 0.0283,
+      "gap-balloon": 0.0097,
+      "direct-balloon": 0.0276,
+      "direct-shadow": 0,
+      "balloon-bubble": 0
+    },
+    "zoomedIn": "zoom 3x and 6x did not separate direct/shadow or balloon/bubble"
+  },
+  "tests": {
+    "hostNew": 59,
+    "embeddedNew": 9,
+    "hostEbusPlusLearningModule": "29 suites, 364 passed",
+    "embeddedVitest": "40 files, 287 passed",
+    "embeddedTypecheck": "clean",
+    "rootTypecheck": "exit 0",
+    "eslintScoped": "exit 0",
+    "prettierAndDiffCheck": "clean",
+    "baselineContext": "at d98bab79, ebus-guided + learning-module + src/lib: 574/575 (pre-existing board-review-html failure)",
+    "updatedNarrowly": [
+      "pre-review-01.test.tsx PR-5 regex (label gained ', sign-in required')",
+      "lesson.test.tsx refusal wording",
+      "e2e/ebus-anatomy-sweep.spec.ts J5 waits for the new session's event (pre-existing race: failed 3/3 on main d98bab79, 2/3 on this branch; 3/3 pass on both after)"
+    ]
+  },
+  "build": {
+    "first": {
+      "commit": "d12a6db08a1e00d8debca0c8cfbd936188369c6f",
+      "result": "exit 0",
+      "embeddedBundles": ["guided-B1s1IldL.js", "SimulatorPage-DpM8z9UJ.js"],
+      "stringChecks": "guided-B1s1IldL.js contains 'Worked demonstration · nothing here is recorded'; .next/standalone/.next/static/chunks/21635-9b18516918e74f5d.js contains 'Try it yourself: hide the N categories'"
+    },
+    "final": {
+      "commit": "321d533814187ed6a45e018d94ca79af9937b4f7",
+      "result": "exit 0 (npm run build)",
+      "server": "node .next/standalone/server.js, 127.0.0.1:3137, pid 56884, cwd <worktree>/.next/standalone",
+      "embeddedBundles": [
+        "guided-Cl7ejZAU.js",
+        "SimulatorPage-DpM8z9UJ.js",
+        "main-gZGKHYMr.js (entry served by index.html)"
+      ],
+      "stringChecks": {
+        "guided-Cl7ejZAU.js (fetched from the running server)": [
+          "The bubble and the reflector do not change what it shows",
+          "Worked demonstration · nothing here is recorded"
+        ],
+        "SimulatorPage-DpM8z9UJ.js": ["azygos vein"],
+        ".next/static/chunks/21635-f42f242be81a20c9.js": [
+          "Relate CT to the parent airway view (begins with standard axial CT)",
+          "Try it yourself: hide the N categories"
+        ],
+        "page-34c00701b13b7ed0.js": ["Running case: the supplied specimens"]
+      },
+      "rootTypecheckAtHead": "exit 0"
+    }
+  },
+  "browser": {
+    "server": "production standalone, 127.0.0.1:3137, cwd <worktree>/.next/standalone",
+    "firstBuildResult": "93 of 93 checks (57 journey + 36 reflow/enlargement/scheme)",
+    "conditions": [
+      "1246x1021 viewport emulation (journeys)",
+      "320x740, 390x844, 768x1024, 1246x1021 viewport emulation",
+      "1440x900 root font 200% (not browser zoom)",
+      "emulated prefers-color-scheme light"
+    ],
+    "notTested": [
+      "native browser zoom",
+      "physical devices",
+      "Safari",
+      "Firefox",
+      "screen-reader software"
+    ],
+    "e2eOnFirstBuild": "ebus-recording-status and ebus-anatomy-sweep: 9 passed, 1 failed (the pre-existing J5 race, since fixed)",
+    "finalBuildResult": "94 of 94 checks (58 journey + 36 reflow/enlargement/scheme); report.json in prod-321d5338/",
+    "e2eOnFinalBuild": "ebus-anatomy-sweep.spec.ts 8 passed, ebus-recording-status.spec.ts 2 passed (10/10)",
+    "baselineClassification": "throwaway production build of d98bab79 on 127.0.0.1:3138: the J5 journey failed 3/3 before the wait fix and passed 3/3 after; the checkout was removed after use"
+  },
+  "prompt05Queue": [
+    "Q1 L20-4 specific harm",
+    "Q2 L17-5 station labels and primary-side colouring",
+    "Q3 L5-1 question/evidence alignment",
+    "Q4 undefined terms and abbreviations",
+    "Q5 L19-2 per-view anatomy",
+    "Q6 L2-6 and L12-2 stems",
+    "Q7 L15-3 follow-up row",
+    "Q11 L22-6 destinations",
+    "Q13 integrated knobology workbench map",
+    "Q14 EBUS-local CT orientation primer",
+    "Q15 L18-2 / L16 image assets"
+  ],
+  "evidence": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-04-2026-09-22/",
+  "notClaimed": [
+    "merge",
+    "deployment",
+    "faculty or clinical approval",
+    "owner decisions",
+    "Prompt 05 or 06 work",
+    "a new G02 walkthrough"
+  ]
+}
