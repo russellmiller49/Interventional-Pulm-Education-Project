@@ -651,12 +651,15 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     scenarioId: 'acute-hypercapnia',
     target: 'gas-panel',
     instruction:
-      'The new patient’s CO₂ is climbing and the pH is following it down, with oxygenation steady. Move the sweep on the separate blender by one small step, then read the PaCO₂ and pH again.',
+      // S11-2 (ECMO-FELLOW-02): the step said "one small step" while completing only at 4.0 from
+      // 2.0. It names the setting its own button already shows, and no direction word (leak guard).
+      'The new patient’s CO₂ is climbing and the pH is following it down, with oxygenation steady. Move the sweep on the separate blender to 4.0 L/min, the setting this step completes on, then read the PaCO₂ and pH again.',
     actionLabel: 'Set transfer sweep to 4.0 L/min',
     action: { type: 'SET_SWEEP', sweep: 4 },
     expectedResponse: [
       'Sweep set to the new value on the separate blender',
-      'PaCO₂ and pH re-read after the model responds',
+      // ECMO-FELLOW-02: a transfer step does not advance modeled time, so no response appears here.
+      'PaCO₂ and pH read again; they move only as modeled time passes, and this step does not advance it',
       'Pump speed and sweep-gas oxygen fraction untouched',
     ],
   },
@@ -683,7 +686,8 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     expectedResponse: [
       'Source shows connected',
       'Set sweep and delivered sweep agree again',
-      'PaCO₂ and post-membrane saturation re-read after the model responds',
+      // ECMO-FELLOW-02: a transfer step does not advance modeled time, so no response appears here.
+      'PaCO₂ and post-membrane saturation read again; they move only as modeled time passes, and this step does not advance it',
     ],
     setupActions: [{ type: 'TICK', seconds: 5 }],
     scaffolded: true,
@@ -800,12 +804,14 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     scenarioId: 'va-acute-hypercapnia',
     target: 'gas-panel',
     instruction:
-      'The new VA patient’s CO₂ is climbing and the pH is following it down. Move the sweep on the external blender by one bounded step, and keep reading the circulation and the right-arm saturation while you do.',
+      // S11-2 (ECMO-FELLOW-02): as on VV, the step completes only at 4.0, and says so.
+      'The new VA patient’s CO₂ is climbing and the pH is following it down. Move the sweep on the external blender to 4.0 L/min, the setting this step completes on, and keep reading the circulation and the right-arm saturation while you do.',
     actionLabel: 'Set transfer sweep to 4.0 L/min',
     action: { type: 'SET_SWEEP', sweep: 4 },
     expectedResponse: [
       'Sweep set to the new value on the external blender',
-      'PaCO₂ and pH re-read after the model responds',
+      // ECMO-FELLOW-02: a transfer step does not advance modeled time, so no response appears here.
+      'PaCO₂ and pH read again; they move only as modeled time passes, and this step does not advance it',
       'Right-arm saturation and the arterial trace re-read with them',
     ],
   },
@@ -819,7 +825,8 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     expectedResponse: [
       'Source shows connected',
       'Set sweep and delivered sweep agree again',
-      'Post-membrane saturation, both arterial saturations and PaCO₂ re-read after the model responds',
+      // ECMO-FELLOW-02: a transfer step does not advance modeled time, so no response appears here.
+      'Post-membrane saturation, both arterial saturations and PaCO₂ read again; they move only as modeled time passes, and this step does not advance it',
     ],
     setupActions: [{ type: 'TICK', seconds: 5 }],
     scaffolded: true,
@@ -945,13 +952,18 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         id: 'correct-drainage-cause',
         target: 'circuit',
         title: 'Correct the drainage limitation',
+        // S8-3 (ECMO-FELLOW-02): one authored corrective event, said to be one, and said to be
+        // compressed. Choosing between causes and a realistic recovery are ECMO-OWNER-10's to draft.
         instruction:
-          'Assess cannula position, kinks, coughing or straining, venous volume, and other patient/circuit causes; correct the identified cause.',
+          'Assess cannula position, kinks, coughing or straining, venous volume, and other patient/circuit causes; correct the identified cause. In this lab one step stands for whichever correction your assessment points to.',
         rationale:
-          'A temporary RPM reduction manages pump demand but does not by itself remove the drainage problem.',
+          'A temporary RPM reduction manages pump demand but does not by itself remove the drainage problem. The correction here is one authored event that restores drainage at once; the lab does not let you choose between causes, and the recovery is compressed rather than a bedside time course.',
         actionLabel: 'Correct the identified drainage cause',
         actions: [{ type: 'CORRECT_FAULT', fault: 'preload-limited' }],
-        expectedResponse: ['Drainage cause cleared', 'Chatter should resolve as the model updates'],
+        expectedResponse: [
+          'Drainage cause cleared, as one authored step',
+          'Flow, pVen and chatter recover at once: compressed, not a bedside recovery',
+        ],
       },
     ],
     reassessment: {

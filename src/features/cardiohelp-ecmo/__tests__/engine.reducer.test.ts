@@ -202,11 +202,14 @@ describe('CARDIOHELP ECMO simulation reducer', () => {
       },
     }
     state = ecmoSimulationReducer(state, { type: 'SET_RPM', rpm: 5000 })
-    state = ecmoSimulationReducer(state, { type: 'STEP' })
 
+    // ECMO-FELLOW-02: the circuit is recomputed where the speed changes, so the interlock stops the
+    // pump in that same second, with the pressure that stopped it still reported.
     expect(state.circuit.pVen).toBeLessThan(state.device.limits.pVenAlarmLow - 10)
     expect(state.device.pumpRunning).toBe(false)
     expect(state.alarms[0]?.priority).toBe('high')
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
+    expect(state.device.pumpRunning).toBe(false)
   })
 
   it('models independent drainage and return clamps as immediate flow isolation', () => {

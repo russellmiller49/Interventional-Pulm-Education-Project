@@ -1,5 +1,7 @@
 import { FocusedFoundationSections } from './FocusedFoundationSections'
 import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
+import { ecmoReferenceProfiles, isEcmoReferenceProfileId } from '../../content/referenceProfiles'
+import { cardiohelpScenarioById } from '../../content/scenarios'
 import { createReferenceSimulationState, ecmoSimulationReducer } from '../../engine'
 import type { EcmoSimulationState } from '../../engine/types'
 import {
@@ -63,7 +65,8 @@ function seriesStages(state: EcmoSimulationState): readonly SeriesStage[] {
       label: 'Return to the venous system',
       detail:
         'The circuit gives the blood back on the venous side. Part of it travels on toward the right heart; part of it can be drained again without ever leaving the chest.',
-      carries: `Recirculating share of drainage ${round(circuit.recirculationFraction * 100, 1)} of every 100 parts`,
+      // S6-2 (ECMO-FELLOW-02): one notation for one quantity — a percentage, here and in the tile.
+      carries: `Recirculating share of drainage ${formatRecirculationShare(circuit.recirculationFraction)}`,
     },
     {
       id: 'right-heart',
@@ -164,6 +167,19 @@ const COMPARISON_ROWS: readonly ComparisonRow[] = [
   },
 ]
 
+/** What is loaded, in the words the lesson's own state labels use. */
+function loadedStateName(state: EcmoSimulationState): string {
+  const id = state.scenario.scenarioId
+  if (isEcmoReferenceProfileId(id)) return `the ${ecmoReferenceProfiles[id].title.toLowerCase()}`
+  const scenario = cardiohelpScenarioById.get(id)
+  return scenario ? `a teaching preview of the “${scenario.title}” case` : 'a teaching preview'
+}
+
+/** The recirculating share as the percentage of drained blood it is (S6-2). */
+export function formatRecirculationShare(fraction: number): string {
+  return `${(fraction * 100).toFixed(1)}% of drainage`
+}
+
 export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulationState }) {
   const { circuit, patient } = state
   const stages = seriesStages(state)
@@ -251,7 +267,9 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
             <p className="text-xs uppercase tracking-wide text-muted-foreground">
               Recirculating share of drainage
             </p>
-            <p className="text-2xl font-semibold">{circuit.recirculationFraction.toFixed(3)}</p>
+            <p className="text-2xl font-semibold">
+              {formatRecirculationShare(circuit.recirculationFraction)}
+            </p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
               In a case that opens with established recirculation, asking the circuit for more flow
               than it opened with raises this. On the reference circuit it stays at its baseline at
@@ -320,8 +338,8 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
           Displayed circuit flow is {circuit.bloodFlow.toFixed(2)} L/min and the
           recirculation-adjusted circuit flow is{' '}
           {circuit.recirculationAdjustedCircuitFlowLpm.toFixed(2)} L/min, with a recirculating share
-          of {circuit.recirculationFraction.toFixed(3)}. The console displays a venous-line
-          saturation of{' '}
+          of {formatRecirculationShare(circuit.recirculationFraction)}. The console displays a
+          venous-line saturation of{' '}
           {circuit.readouts.venousLineSaturation.displayed === null
             ? 'no number'
             : circuit.readouts.venousLineSaturation.displayed.toFixed(1)}{' '}
@@ -337,6 +355,16 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
         <h3 id="comparison-heading" className={styles.heading}>
           This circuit against the VV reference circuit
         </h3>
+        {/*
+         * S6-2 (ECMO-FELLOW-02): the live column reads whatever state is loaded — after the act step,
+         * usually the recirculation preview — and this section's transfer question is about a
+         * different patient whose venous-line saturation falls. Named here so the table under the
+         * question is never read as that patient.
+         */}
+        <p className="mt-1 text-sm text-muted-foreground" data-comparison-state>
+          “On screen now” reads the state loaded in the simulator: {loadedStateName(state)}. A
+          question below describes a different patient unless it says it is about this state.
+        </p>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-left text-sm" data-reference-comparison>
             <caption className="sr-only">
@@ -458,8 +486,8 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
 
           <TextEquivalent>
             {impliedFraction === null
-              ? `The two saturations either side of the drainage limb are too close together here for the share to be separated from them, so no share is shown. The simulation is using ${circuit.recirculationFraction.toFixed(3)}.`
-              : `Rearranged, the same relationship returns a share of ${impliedFraction.toFixed(3)}, which is the ${circuit.recirculationFraction.toFixed(3)} this simulation is using. That agreement is a property of the model, not a measurement.`}
+              ? `The two saturations either side of the drainage limb are too close together here for the share to be separated from them, so no share is shown. The simulation is using ${circuit.recirculationFraction.toFixed(3)} (${formatRecirculationShare(circuit.recirculationFraction)}).`
+              : `Rearranged, the same relationship returns a share of ${impliedFraction.toFixed(3)}, which is the ${circuit.recirculationFraction.toFixed(3)} this simulation is using — the ${formatRecirculationShare(circuit.recirculationFraction)} shown above, written as the fraction this formula takes. That agreement is a property of the model, not a measurement.`}
           </TextEquivalent>
 
           <ModelBoundary>

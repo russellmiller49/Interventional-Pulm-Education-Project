@@ -15,14 +15,17 @@ import {
   clamp,
   createInitialSimulationState,
   deriveSimulation,
+  genericPatientTargets,
   hasFault,
   injectFault,
   MAX_HISTORY_ENTRIES,
   resolveDrainageLimitation,
 } from './simulation'
 import type {
+  EcmoObservation,
   EcmoSimulationState,
   FaultId,
+  RateLimitedPatientField,
   ScenarioCredit,
   ScenarioDefinition,
   SimulationAction,
@@ -69,12 +72,14 @@ function appendHistory(
   kind: 'action' | 'alarm' | 'fault' | 'system',
   label: string,
 ): EcmoSimulationState {
+  const serial = state.scenario.historySerial ?? state.history.length
   return {
     ...state,
+    scenario: { ...state.scenario, historySerial: serial + 1 },
     history: [
       ...state.history,
       {
-        id: `${kind}-${state.simulationTime}-${state.history.length}`,
+        id: `${kind}-${state.simulationTime}-${serial}`,
         time: state.simulationTime,
         kind,
         label,
@@ -462,18 +467,58 @@ function injectScheduledFaults(state: EcmoSimulationState): EcmoSimulationState 
   return next
 }
 
+/**
+ * A clinical case holds a non-temporizing intervention's patient change where it landed.
+ *
+ * The level is recorded with the generic target at that moment as its reference, so what moves it
+ * afterwards is only what changes afterwards. Scenarios without an ownership record — every Learn
+ * drill, reference circuit and integrated case — are returned unchanged.
+ */
+function holdLandedInterventionFields(
+  state: EcmoSimulationState,
+  fields: readonly RateLimitedPatientField[],
+): EcmoSimulationState {
+  const ownership = state.scenario.patientOwnership
+  if (!ownership || fields.length === 0) return state
+  const generic = genericPatientTargets(state, state.circuit.bloodFlow)
+  const anchors = { ...ownership.anchors }
+  for (const field of fields) {
+    anchors[field] = {
+      level: state.patient[field],
+      reference: generic[field],
+      source: 'intervention',
+      setAt: state.simulationTime,
+      activeFaultsAtSet: [...state.scenario.activeFaults],
+    }
+  }
+  return {
+    ...state,
+    scenario: { ...state.scenario, patientOwnership: { ...ownership, anchors } },
+  }
+}
+
 function advanceOneSecond(state: EcmoSimulationState): EcmoSimulationState {
   const nextTime = state.simulationTime + 1
   const lastActionTime =
     [...state.history].reverse().find((entry) => entry.kind === 'action')?.time ?? 0
   // Earned patient changes land now, with the second that carries them (B6-012).
   const pending = state.scenario.pendingPatientPatch
+  const persistentFields = state.scenario.pendingPersistentPatientFields ?? []
+  const landedPatientFields = new Set(Object.keys(pending ?? {}))
   const withPatch: EcmoSimulationState = pending
-    ? {
-        ...state,
-        patient: { ...state.patient, ...pending },
-        scenario: { ...state.scenario, pendingPatientPatch: undefined },
-      }
+    ? holdLandedInterventionFields(
+        {
+          ...state,
+          simulationTime: nextTime,
+          patient: { ...state.patient, ...pending },
+          scenario: {
+            ...state.scenario,
+            pendingPatientPatch: undefined,
+            pendingPersistentPatientFields: undefined,
+          },
+        },
+        persistentFields.filter((field) => landedPatientFields.has(field)),
+      )
     : state
   const timeAdvanced: EcmoSimulationState = {
     ...withPatch,
@@ -490,7 +535,7 @@ function advanceOneSecond(state: EcmoSimulationState): EcmoSimulationState {
       ),
     },
   }
-  const derived = deriveSimulation(injectScheduledFaults(timeAdvanced))
+  const derived = deriveSimulation(injectScheduledFaults(timeAdvanced), { landedPatientFields })
   const definition = getDefinition(derived)
   const clinical = derived.scenario.clinical
   const lastIntervention = clinical?.appliedInterventions.at(-1)
@@ -523,7 +568,136 @@ function advance(state: EcmoSimulationState, seconds: number): EcmoSimulationSta
   return next
 }
 
+/**
+ * Control actions after which the circuit is recomputed at the unchanged simulation time.
+ *
+ * The clamp, resumption, initiation and resolution paths always recomputed the circuit where the
+ * action landed. A console speed change, a sweep or gas change, a restored source or a correction did
+ * not, so the console went on showing the old flow until the next tick — on a paused Practice clock,
+ * indefinitely — and the circuit change a speed reduction made was folded into whatever the next
+ * second did (S8-3). Recomputation never moves the patient: `deriveSimulation` advances the patient,
+ * the battery, haemoglobin and the per-second controllers only on a second of the clock.
+ */
+const RECOMPUTED_AT_ACTION_TIME: ReadonlySet<SimulationAction['type']> = new Set([
+  'SET_RPM',
+  'SET_FLOW_TARGET',
+  'SET_SWEEP',
+  'SET_GAS_FIO2',
+  'RESTORE_GAS_SOURCE',
+  'RESTORE_AC_POWER',
+  'TOGGLE_ZERO_FLOW',
+  'TOGGLE_GLOBAL_OVERRIDE',
+  'ADJUST_LIMIT',
+  'CORRECT_FAULT',
+  'PERFORM_CHECK',
+  'APPLY_CLINICAL_INTERVENTION',
+  'INJECT_FAULT',
+])
+
+/** The compact, immutable reading an action's observation pair is made of. */
+export function observeSimulation(state: EcmoSimulationState): EcmoObservation {
+  const va = state.supportMode === 'va'
+  return {
+    time: state.simulationTime,
+    bloodFlow: state.circuit.bloodFlow,
+    pumpRunning: state.device.pumpRunning,
+    rpmSetpoint: state.device.rpmSetpoint,
+    sweepLpm: state.gas.sweepLpm,
+    gasFio2: state.gas.fio2,
+    gasSourceConnected: state.gas.sourceConnected,
+    powerSource: state.device.powerSource,
+    pVen: state.circuit.readouts.pVen.displayed,
+    spo2: va ? state.patient.rightRadialSpo2 : state.patient.spo2,
+    femoralArterialSpo2: va ? state.patient.femoralArterialSpo2 : null,
+    paCO2: state.patient.paCO2,
+    pH: state.patient.pH,
+    meanArterialPressure: state.patient.meanArterialPressure,
+    centralVenousPressure: state.patient.centralVenousPressure,
+    lactate: state.patient.lactate,
+  }
+}
+
+/**
+ * Stamp every learner action this transition recorded with the state it was taken in and the state
+ * it produced. Both are at the same simulation time; neither is ever recomputed. A record that
+ * already carries a pair (the inner half of a delegated action, such as a rotary turn) keeps it.
+ */
+function attachActionObservations(
+  previous: EcmoSimulationState,
+  next: EcmoSimulationState,
+): EcmoSimulationState {
+  if (next === previous || next.simulationTime !== previous.simulationTime) return next
+  const before = observeSimulation(previous)
+  const after = observeSimulation(next)
+  // Compare entry identity so an internally delegated action keeps its original observation.
+  const newActionEntries = next.history.filter(
+    (entry) => entry.kind === 'action' && !previous.history.includes(entry),
+  )
+  const actionHistoryId = newActionEntries.length === 1 ? newActionEntries[0].id : undefined
+  let changed = false
+  const history = next.history.map((entry) => {
+    if (entry.kind !== 'action' || entry.observation || previous.history.includes(entry))
+      return entry
+    changed = true
+    return { ...entry, observation: { before, after } }
+  })
+  const previousCount = previous.scenario.clinical?.appliedInterventions.length ?? 0
+  const clinical = next.scenario.clinical
+  const appliedInterventions = clinical?.appliedInterventions.map((record, index) => {
+    if (index < previousCount || (record.observation && record.actionHistoryId)) return record
+    changed = true
+    return {
+      ...record,
+      observation: record.observation ?? { before, after },
+      actionHistoryId: record.actionHistoryId ?? actionHistoryId,
+    }
+  })
+  if (!changed) return next
+  return {
+    ...next,
+    history,
+    scenario:
+      clinical && appliedInterventions
+        ? { ...next.scenario, clinical: { ...clinical, appliedInterventions } }
+        : next.scenario,
+  }
+}
+
+/**
+ * The one relationship this engine has for work of breathing is timed from when the sweep stopped,
+ * so the reducer records that moment on every transition that turns the sweep off or back on.
+ */
+function trackSweepStop(
+  previous: EcmoSimulationState,
+  next: EcmoSimulationState,
+): EcmoSimulationState {
+  const stoppedAt = next.scenario.sweepStoppedAt ?? null
+  if (next.gas.sweepLpm > 0) {
+    return stoppedAt === null
+      ? next
+      : { ...next, scenario: { ...next.scenario, sweepStoppedAt: null } }
+  }
+  if (previous.gas.sweepLpm > 0 || stoppedAt === null) {
+    return { ...next, scenario: { ...next.scenario, sweepStoppedAt: next.simulationTime } }
+  }
+  return next
+}
+
 export function ecmoSimulationReducer(
+  state: EcmoSimulationState,
+  action: SimulationAction,
+): EcmoSimulationState {
+  const reduced = reduceSimulationAction(state, action)
+  if (action.type === 'LOAD_SCENARIO' || reduced === state) return reduced
+  const tracked = trackSweepStop(state, reduced)
+  const recomputed =
+    RECOMPUTED_AT_ACTION_TIME.has(action.type) && tracked.simulationTime === state.simulationTime
+      ? deriveSimulation(tracked, { advancePatient: false })
+      : tracked
+  return attachActionObservations(state, recomputed)
+}
+
+function reduceSimulationAction(
   state: EcmoSimulationState,
   action: SimulationAction,
 ): EcmoSimulationState {
@@ -560,10 +734,19 @@ export function ecmoSimulationReducer(
   }
 
   switch (action.type) {
+    /*
+     * The model clock stops with the reveal (ECMO-FELLOW-02).
+     *
+     * Revealing the debrief changes only the phase. But a clock left running kept ticking
+     * underneath it, so the patient readings, the trend buffer and every "until now" interval in the
+     * debrief went on changing while the learner read an explanation of a run that had ended.
+     */
     case 'TICK':
-      return state.paused ? state : advance(state, action.seconds ?? 1)
+      return state.paused || state.scenario.phase === 'complete'
+        ? state
+        : advance(state, action.seconds ?? 1)
     case 'STEP':
-      return advance(state, 1)
+      return state.scenario.phase === 'complete' ? state : advance(state, 1)
     case 'SET_PAUSED':
       return { ...state, paused: action.paused }
     case 'SET_SCREEN':

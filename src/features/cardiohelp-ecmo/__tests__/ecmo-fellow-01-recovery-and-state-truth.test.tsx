@@ -457,14 +457,18 @@ describe('C · both safety-event debrief paths', () => {
 
 describe('D · requested settings, running state, and alarm scope', () => {
   it('describes the stop transition truthfully while its last calculated pressure is still visible', () => {
-    const stopped = run('clinical-vv-tension-pneumothorax', [
-      { type: 'SET_RPM', rpm: 3600 },
-      { type: 'STEP' },
-    ])
+    // ECMO-FELLOW-02: a speed change now recomputes the circuit in the second it is made, so the
+    // interlock stops the pump at the request itself rather than one tick later. The transition this
+    // test protects is unchanged — stopped pump, last calculated pressure still shown, the sentence
+    // saying so — it simply happens one second earlier.
+    const stopped = run('clinical-vv-tension-pneumothorax', [{ type: 'SET_RPM', rpm: 3600 }])
+    expect(stopped.simulationTime).toBe(0)
     expect(stopped.device.pumpRunning).toBe(false)
+    expect(stopped.device.rpmSetpoint).toBe(3600)
     expect(stopped.circuit.readouts.pVen.displayed).not.toBeNull()
     expect(resolvePumpStopExplanation(stopped).detail).toContain('calculated before the stop')
     const next = ecmoSimulationReducer(stopped, { type: 'STEP' })
+    expect(next.device.pumpRunning).toBe(false)
     expect(next.circuit.readouts.pVen.displayed).toBeNull()
   })
 
@@ -583,7 +587,14 @@ describe('E · no-action and explanation-only paths fabricate nothing', () => {
       ...Array.from({ length: 10 }, (): SimulationAction => ({ type: 'STEP' })),
       { type: 'REVEAL_DEBRIEF' },
     ])
-    expect(state.patient.paCO2).not.toBe(initial.patient.paCO2)
+    // ECMO-FELLOW-02: the case owns what it authored, so ten model seconds after recognition the
+    // readings have not drifted either — PaCO₂ no longer settles from the default patient, and the
+    // right arm no longer moves toward the engine's generic level. The note below must stay true
+    // whether or not the clock moved anything.
+    expect(state.simulationTime).toBe(initial.simulationTime + 10)
+    expect(state.patient.paCO2).toBe(initial.patient.paCO2)
+    expect(state.patient.rightRadialSpo2).toBe(initial.patient.rightRadialSpo2)
+    expect(state.scenario.activeFaults).toContain('differential-hypoxemia')
     const view = render(
       <EcmoCaseDebrief
         state={state}

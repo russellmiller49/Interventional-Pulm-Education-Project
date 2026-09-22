@@ -28,6 +28,9 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
     reassessment: {
       instruction:
         'Select the post-initiation finding for the device, the circuit and the patient that best demonstrates effective VV support.',
+      // C1-1 (ECMO-FELLOW-02): breathing is not coupled to support anywhere in this model.
+      modelBoundary:
+        'Work of breathing and respiratory rate are not modeled after support starts: they stay where the case opened, whatever the circuit does. Read breathing as a bedside finding this monitor cannot report, not as evidence that support has or has not helped.',
       device: {
         prompt: 'Which console finding is most consistent with the intended response?',
         options: [
@@ -206,6 +209,9 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
     reassessment: {
       instruction:
         'Select the findings expected after definitive pleural decompression rather than temporary preload support.',
+      // C3-2 (ECMO-FELLOW-02): decompression queues CVP, airway pressure and lung sliding; no MAP.
+      modelBoundary:
+        'This simulation does not model blood pressure recovering after the chest is decompressed: MAP stays where it was at decompression, while CVP, airway pressure, drainage pressure and flow respond. Heart rate is not modeled in this case. A MAP that does not move here is a limit of this model, not evidence about the decompression.',
       device: {
         prompt: 'Which device response is most consistent with correction?',
         options: [
@@ -650,8 +656,8 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
         options: [
           option(
             'diff-device-correct',
-            'VA flow remains stable while the upper-body problem is addressed without blindly escalating RPM.',
-            'VA flow is held steady in the modeled path while the native lung is optimized and the support strategy is revised. The console was never the site of this problem.',
+            'VA flow remains stable while the upper-body problem is recognised and escalated, without blindly escalating RPM.',
+            'VA flow is held steady while the native lung is optimized and the configuration decision is escalated, not carried out here. The console was never the site of this problem.',
           ),
           option(
             'diff-device-rpm',
@@ -693,7 +699,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option(
             'diff-patient-correct',
             'Right-arm oxygenation improves while native ejection, lung function, systemic perfusion, and limb perfusion are reassessed.',
-            'Right-arm oxygenation improves as native-lung gas exchange is optimized and the configuration is revised, while ejection, perfusion, and the cannulated leg are reassessed.',
+            'Right-arm oxygenation improves as native-lung gas exchange is optimized, while ejection, perfusion and the leg are reassessed. The configuration decision is escalated, not carried out here.',
           ),
           option(
             'diff-patient-femoral',
@@ -732,6 +738,9 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
     reassessment: {
       instruction:
         'Select the findings expected after definitive relief of obstructive pericardial physiology.',
+      // VAC2-1 (ECMO-FELLOW-02): pulse pressure is held at the authored value; no tamponade term.
+      modelBoundary:
+        'This simulation holds pulse pressure at the value the case opened with and does not model pulsatility returning after decompression; native cardiac output is not modeled for this case either. MAP, CVP, drainage pressure and flow do respond. A pulse pressure that does not move here is a limit of this model, not evidence about the decompression.',
       device: {
         prompt: 'Which console response supports correction?',
         options: [
@@ -819,6 +828,8 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
     reassessment: {
       instruction:
         'Select findings that support correction of vascular tone without unnecessary escalation of a functioning VA circuit.',
+      modelBoundary:
+        'On this case’s compared RPM path, extra speed raises circuit flow slightly but does not raise MAP while the vasoplegia story is active. pVen stays at the same displayed value and this model does not generate chatter on that path. These are bounded model responses, not bedside predictions.',
       device: {
         prompt: 'Which console observation best fits the corrected strategy?',
         options: [
@@ -830,7 +841,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option(
             'vaso-device-rpm',
             'RPM is increased to target extreme flow as the primary treatment for vasoplegia.',
-            'Chasing an extreme flow target treats a tone problem as a flow problem. In this case the extra RPM made pVen more negative and started chatter without moving MAP.',
+            'Chasing an extreme flow target treats a tone problem as a flow problem. In the compared path extra RPM raises modeled circuit flow slightly, but MAP does not improve while the vascular-tone problem remains.',
           ),
           option(
             'vaso-device-zero',
@@ -850,8 +861,8 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'vaso-circuit-collapse',
-            'pVen becomes more negative and chatter begins after RPM escalation.',
-            'More negative pVen and new chatter after escalation are the drainage cost of pulling harder on a venous system that was already giving what it had. The case shows this when RPM is raised.',
+            'A small rise in circuit flow after RPM escalation proves vascular tone is corrected.',
+            'Flow rises slightly after the modeled RPM increase, but MAP does not improve. The compared path does not show a pVen change or new chatter, and more circuit flow does not treat this case’s vascular-tone problem.',
           ),
           option(
             'vaso-circuit-delta',
@@ -1270,13 +1281,13 @@ export function getClinicalPracticeSupport(
  */
 const fallbackRationale = {
   deviceExpected:
-    'This matches the device response this case expects. Read it against what the console actually showed after the cause was addressed.',
+    'This matches the device response this case expects. Read it against what the console actually showed after the action this case asks for.',
   deviceUnchanged:
     'The console is one of three places a cause shows itself, and some causes leave it unchanged on purpose. Rechecking it is how you learn which kind this was.',
   deviceAcknowledged:
     'Acknowledging an alarm changes the console’s reporting, not the cause. An alarm that stays quiet because the condition itself resolved is evidence; one silenced by a button is not.',
   circuitExpected:
-    'This matches the circuit or gas-path finding this case expects. Compare it with the pressures, flow, and gas readings you saw after the cause was addressed.',
+    'This matches the circuit or gas-path finding this case expects. Compare it with the pressures, flow, and gas readings you saw after the action this case asks for.',
   circuitNumber:
     'One circuit value in isolation can be produced by several different causes. The pattern across pVen, pInt, pArt, flow, and the gas path is what distinguishes them.',
   circuitNone:
@@ -1284,9 +1295,9 @@ const fallbackRationale = {
   patientExpected:
     'This matches the patient response this case expects. The patient’s values change only as the case moves forward in time, so the trend is what to compare.',
   patientConsole:
-    'The console reports the circuit, not the patient. Oxygenation, PaCO₂, MAP, and perfusion are read at the bedside, and every scenario here judges resolution there as well.',
+    'The console reports the circuit, not the patient. Oxygenation, PaCO₂, MAP, and perfusion are read at the bedside, and this case reads the patient response there as well.',
   patientNone:
-    'Addressing the cause is the start of the response, not its end. The patient’s values keep moving over the time that follows, and that trend is the evidence the cause was the right one.',
+    'Acting on a cause, or recognising and escalating one, starts the response rather than ending it. What the patient’s values do over the time that follows is the evidence to read.',
 } as const
 
 export function resolveScenarioReassessment(
@@ -1307,7 +1318,7 @@ export function resolveScenarioReassessment(
 
   return {
     instruction:
-      'Select the expected post-intervention finding for the device, the circuit and the patient.',
+      'Select the finding you expect after the action this case asks for, for the device, the circuit and the patient.',
     device: {
       prompt: 'Which device/console finding best fits the expected response?',
       options: [
@@ -1365,7 +1376,7 @@ export function resolveScenarioReassessment(
         ),
         option(
           `${scenario.id}-patient-none`,
-          'No patient reassessment is needed after correction.',
+          'No patient reassessment is needed after the action.',
           fallbackRationale.patientNone,
         ),
       ],

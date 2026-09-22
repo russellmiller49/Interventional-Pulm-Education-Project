@@ -113,10 +113,14 @@ export interface EcmoFoundationSessionState {
   /**
    * Whether the lesson clock advances on its own.
    *
-   * Owned here rather than in component state because it belongs to the state that is loaded: a
-   * variant that sits short of an authored timed fault has to be held, and it has to be held again
-   * every time it is reloaded. Keeping it beside the variant makes that automatic instead of
-   * something a caller has to remember.
+   * A lesson opens with the clock running on a state that is at rest, and held on a state authored
+   * to be read before it changes. ECMO-FELLOW-02 (S17-4): after that, only the learner starts it.
+   * A restore used to restart it for any variant that did not hold it — a phase change into the VV
+   * capstone's transfer step, the "reveal the evolved state" button, every mechanism preview — so a
+   * learner who had been reading a held case watched PaCO₂ climb from 50 to 90 across two reads
+   * without having asked for time to pass. A restore now keeps whatever the clock was doing, and
+   * holds it where the loaded variant must be held; `SET_CLOCK_RUNNING` ("Let the circuit run on")
+   * is the one thing that starts it.
    */
   readonly clockRunning: boolean
   readonly comparisons: Readonly<Record<string, EcmoFoundationComparison>>
@@ -317,9 +321,10 @@ export function ecmoFoundationSessionReducer(
         source: action.source,
         interactionsSinceRestore: action.evidenceId ? [action.evidenceId] : [],
         snapshot: null,
-        // Re-held on every reload, so a state that must be read before it changes cannot be walked
-        // past it by a clock the previous state left running.
-        clockRunning: action.holdsClock !== true,
+        // Held on reload where the variant must be read before it changes, so a clock the previous
+        // state left running cannot walk past it; otherwise left exactly as it was. A restore never
+        // starts time (S17-4).
+        clockRunning: action.holdsClock === true ? false : state.clockRunning,
         comparisons: state.comparisons,
       }
 

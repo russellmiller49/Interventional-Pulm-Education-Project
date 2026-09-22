@@ -2124,6 +2124,64 @@
   font-variant-numeric: tabular-nums;
 }
 
+/*
+ * ECMO-FELLOW-02: the per-action comparison. The metric rows used to be an unclassed `<dl>` with no
+ * rule anywhere, so each label and value stacked as plain text (C1-3). Each row now names its pair of
+ * readings, and the untreated replay sits beside this run's interval in the same frame.
+ */
+/* ECMO-FELLOW-02: presentation-time case data and the compressed-time notice, named in place. */
+.presentationNote {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--ecmo-type-floor, 0.875rem);
+}
+
+.debriefNote {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--ecmo-type-floor, 0.875rem);
+}
+
+.debriefAction {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.25rem 0 0.25rem 0.5rem;
+  border-left: 2px solid var(--line);
+}
+
+.debriefAction small,
+.consequenceList li > small {
+  color: var(--muted);
+}
+
+.debriefChips {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.25rem 0 0;
+}
+
+.debriefChips > div {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.5rem;
+  background: rgba(16, 46, 52, 0.45);
+}
+
+.debriefChips > div[data-untreated] {
+  background: rgba(255, 191, 98, 0.08);
+}
+
+.debriefChips dt {
+  font-weight: 700;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+}
+
+.debriefChips dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
 .debriefActions {
   display: flex;
   flex-wrap: wrap;

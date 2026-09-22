@@ -1,3 +1,4 @@
+import { RATE_LIMITED_PATIENT_FIELDS } from './simulation'
 import type {
   ClinicalInterventionDefinition,
   EcmoSimulationState,
@@ -97,15 +98,32 @@ export function applyClinicalIntervention(
 
   // B6-012: device, circuit and gas respond at once; the patient's authored change waits for the
   // next second of the clock, where `advanceOneSecond` applies it before deriving the patient.
+  //
+  // ECMO-FELLOW-02: a non-temporizing patch is also marked to be held where it lands. Temporizing is
+  // this engine's one transient effect — `advanceOneSecond` already turns the trajectory back to
+  // deteriorating three seconds after one — so a supportive, definitive or harmful patient change is
+  // no longer quietly erased by the next generic target (the ventilation card on the differential
+  // case faded from 86 back to 82 within six seconds).
+  const patientPatch = selected.patch?.patient
+  const persistentFields =
+    patientPatch && selected.effect !== 'temporizing'
+      ? RATE_LIMITED_PATIENT_FIELDS.filter((field) => field in patientPatch)
+      : []
   const patched: EcmoSimulationState = {
     ...state,
     device: { ...state.device, ...selected.patch?.device },
     circuit: { ...state.circuit, ...selected.patch?.circuit },
     gas: { ...state.gas, ...selected.patch?.gas },
-    scenario: selected.patch?.patient
+    scenario: patientPatch
       ? {
           ...state.scenario,
-          pendingPatientPatch: { ...state.scenario.pendingPatientPatch, ...selected.patch.patient },
+          pendingPatientPatch: { ...state.scenario.pendingPatientPatch, ...patientPatch },
+          pendingPersistentPatientFields: [
+            ...new Set([
+              ...(state.scenario.pendingPersistentPatientFields ?? []),
+              ...persistentFields,
+            ]),
+          ],
         }
       : state.scenario,
   }

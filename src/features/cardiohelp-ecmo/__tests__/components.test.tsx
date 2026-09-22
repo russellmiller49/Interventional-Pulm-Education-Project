@@ -408,7 +408,9 @@ describe('CARDIOHELP ECMO learner interface', () => {
     )
     const checklist = screen.getByLabelText(/Reassessment context/i)
     expect(checklist).toHaveTextContent(/Initial clinical plan committed/i)
-    expect(checklist).toHaveTextContent(/intervention or corrective action completed/i)
+    // ECMO-FELLOW-02 (IA-3): the item no longer says a corrective action was completed, because a
+    // recognition-only step or an acknowledged alarm also anchors the observation.
+    expect(checklist).toHaveTextContent(/An action taken that the response can be read from/i)
     expect(checklist).toHaveTextContent(/Response observed for 0\/3 seconds/i)
     expect(checklist).toHaveTextContent(/Device\/console response selected/i)
     expect(checklist).toHaveTextContent(/Circuit\/gas response selected/i)
@@ -655,7 +657,8 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(within(debrief).getByText(definition.debrief.diagnosis)).toBeInTheDocument()
     // Every domain names what was recorded and what the model showed, in words.
     expect(within(debrief).getAllByText(/You recorded:/i)).toHaveLength(6)
-    expect(within(debrief).getAllByText(/Modeled response:/i)).toHaveLength(3)
+    // ECMO-FELLOW-02: the key is the response the case expects, not a claim the model showed it.
+    expect(within(debrief).getAllByText(/The response this case expects:/i)).toHaveLength(3)
     expect(
       within(debrief).getByRole('link', { name: /Review the paired lesson/i }),
     ).toHaveAttribute('href', expect.stringContaining('lesson=va-differential-hypoxemia'))
@@ -765,8 +768,14 @@ describe('CARDIOHELP ECMO learner interface', () => {
     })
     const { view } = renderCaseView(state, { activityMode: 'challenge' })
 
-    // The Now card becomes the safety alert: the authored label, never the identifier.
-    const interruption = screen.getByRole('alert')
+    // The Now card becomes the safety alert: the authored label, never the identifier. It is not the
+    // only alert on screen: this case opens at the authored pH of 7.18, which the independent
+    // monitor's acidemia alarm reports from the first second (ECMO-FELLOW-02 stopped the load from
+    // nudging it to 7.21 before anyone looked).
+    const interruption = screen
+      .getAllByRole('alert')
+      .find((element) => element.hasAttribute('data-now-card'))!
+    expect(interruption).toBeDefined()
     expect(interruption).toHaveTextContent(/Safety feedback/i)
     expect(interruption).toHaveTextContent(unsafe.response)
     for (const errorId of state.scenario.criticalErrors) {

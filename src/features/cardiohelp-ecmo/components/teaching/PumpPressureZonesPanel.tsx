@@ -101,6 +101,15 @@ export function PumpPressureZonesPanel({
               circuit flow. Read the drainage pressure at the same time: moving more blood requires
               more suction.
             </p>
+            {/*
+             * S3-2 (ECMO-FELLOW-02): the suction change at this speed is about one mmHg, which is
+             * the honest size of it in this model. Said plainly rather than enlarged.
+             */}
+            <p className="mt-2 text-sm leading-6" data-small-change-note>
+              On this unrestricted reference the extra suction is small: the saved comparison moves
+              drainage pressure by about one mmHg for three hundred more rpm. The direction is the
+              point here; a drainage limit, on another circuit, is where it grows large.
+            </p>
             <p className="mt-2 text-sm leading-6">
               Use the teaching Run control for this task. The saved readings come from the model.
             </p>

@@ -1200,8 +1200,11 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         // Deliberately does not ask the learner to enter anything: this phase renders no control,
         // and the commitment this section is built around is the one made in `predict`. Copy that
         // asked for a record here would be promising a control the phase does not have.
+        // S17-5 (ECMO-FELLOW-02): this phase opens on the case held one modeled second before its
+        // change, when every value is still the one it started from. The question is asked of the
+        // presentation, and the step now says which moment the simulator is showing.
         requiredAction:
-          'Read the case as it stands and settle whether what is in front of you is a problem of oxygenation, of ventilation, or of both. Nothing is entered at this step; the prediction comes in the next one.',
+          'Read the presentation this section describes and settle whether it is a problem of oxygenation, of ventilation, or of both. The simulator is held just before the case changes, so its values are still the ones the case started from. Nothing is entered at this step; the prediction comes in the next one.',
         teachingPoint:
           'The flow display is the one signal every explanation on the list is compatible with.',
         lookIn: {
@@ -1255,8 +1258,11 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         },
       },
       transfer: {
-        objective: 'Apply the same discipline to a case with a different mechanism.',
-        requiredAction: 'Load the recirculation preview and answer the new case.',
+        // S17-5 (ECMO-FELLOW-02): this is the recirculation pattern from section 6 again, and the
+        // step now says it is retrieval rather than presenting it as a new mechanism.
+        objective:
+          'Apply the same discipline to the recirculation pattern from section 6, recalled here as retrieval practice.',
+        requiredAction: 'Load the recirculation preview and answer from what it shows.',
         teachingPoint:
           'Here the displayed flow is not merely unchanged — it is higher, and higher for the reason that makes the patient worse.',
         lookIn: {
