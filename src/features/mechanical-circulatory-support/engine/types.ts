@@ -317,8 +317,8 @@ export interface McsSimulationState {
    * Unrounded intermediates of the same support computation that produced `supportEffect`.
    *
    * Carried on the state rather than recomputed by a caller, so a panel, a test or the replay
-   * harness reads the very numbers the reducer used. Read-only: nothing derives a displayed value
-   * from this, and the reducer never reads it back.
+   * harness reads the very numbers the reducer used. Teaching views may format these values;
+   * this object does not feed physiological outputs, scoring, completion or interlocks.
    */
   supportDiagnostics: McsSupportDiagnostics
   metrics: McsDerivedMetrics
