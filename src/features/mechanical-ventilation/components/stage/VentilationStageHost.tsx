@@ -4,7 +4,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useRouter } from '@/i18n/navigation'
 import { LessonShell } from '@/features/learning-module/stage/LessonShell'
 import { ventilationLearningUnits } from '../../content/learningCurriculum'
-import { ventilationStageLesson, type VentilationStageStep } from '../../content/stageLessons'
+import {
+  roundManeuver,
+  ventilationStageLesson,
+  type VentilationStageStep,
+} from '../../content/stageLessons'
+import { createLabSimulation } from '../../engine/learningLab'
+import { ventilationReferenceMarker } from '../../content/referenceEvidence'
 import { ventilationExperimentByUnit } from '../../content/learningExperiments'
 import { ventilationStageSources } from '../../content/stageSources'
 import { isFoundationUnit } from '../../content/foundations'
@@ -113,6 +119,37 @@ function VentilationStageSession({
   const showExplanation = explanationOpen || interaction.kind === 'explain'
   const observation = evidence.response ? observationFor(session) : null
   const simulationStep = ['simulator-task', 'observe', 'interpret'].includes(interaction.kind)
+  /*
+   * The authored marker for this application, and the reference breath it is pinned on.
+   *
+   * Both used to be somewhere else: the reference lived inside the collapsed "Teaching and worked
+   * references" disclosure while step 1 said "Use the marked interval A on the captured complete
+   * breath", and it was always built from round 0, so step 10's "a new complete breath ... on a
+   * longer respiratory cycle" re-showed the first one. It is built from `session.round` here and
+   * rendered beside the instruction that refers to it; the teaching column stops drawing its own
+   * copy on those steps so there is one figure and one marker, not two.
+   */
+  const marker = ventilationReferenceMarker(unitId, session.round)
+  const markerStep = marker !== null && ['read', 'prediction', 'explain'].includes(interaction.kind)
+  const markerReference = useMemo(
+    () => (markerStep ? createLabSimulation(unitId, session.round, session.device) : null),
+    [markerStep, unitId, session.round, session.device],
+  )
+  /*
+   * The lead-in over an optional question, per item kind. "Predict the observable response to one
+   * change, then compare it with a real run" sat over "Which phase is shown at cursor A?", which
+   * involves no change and no run.
+   */
+  const questionPurpose =
+    interaction.kind === 'locate'
+      ? 'Locate the timing relationship on the breath.'
+      : marker
+        ? `Identify what the marked interval ${marker.markerId} shows on the captured breath above, then check your reading against its samples.`
+        : roundManeuver(round) === 'hold'
+          ? 'Interpret the measurement this maneuver produces, then compare it with the acquisition status.'
+          : roundManeuver(round) === 'pause'
+            ? 'Read the frozen traces at one instant, then compare your reading with the captured samples.'
+            : 'Predict the observable response to one change, then compare it with a real run.'
 
   return (
     <MechanicalVentilationModuleFrame
@@ -208,6 +245,15 @@ function VentilationStageSession({
                       : round.introduction}
               </p>
               <p>{step.guide?.look ?? round.look}</p>
+              {marker && markerReference ? (
+                <CapturedBreath
+                  key={`marker:${session.round}:${session.device}:${restartCount}`}
+                  label={`Captured reference · interval ${marker.markerId}`}
+                  samples={markerReference.waveforms}
+                  guided
+                  marker={marker}
+                />
+              ) : null}
               <nav className={styles.tools} aria-label="Step navigation">
                 <button type="button" disabled={index === 0} onClick={() => goToStep(index - 1)}>
                   Back
@@ -258,6 +304,7 @@ function VentilationStageSession({
                   step={step}
                   state={session.simulation}
                   stops={[walkStop]}
+                  roundIndex={session.round}
                 />
               </section>
             ) : null}
@@ -268,17 +315,15 @@ function VentilationStageSession({
                 step={step}
                 state={session.simulation}
                 stops={step.stops}
+                roundIndex={session.round}
+                showCapturedReference={!markerStep}
               />
             </details>
             {question ? (
               <VentilationReinforcement
                 key={step.id}
                 id={question.id}
-                purpose={
-                  interaction.kind === 'prediction'
-                    ? 'Predict the observable response to one change, then compare it with a real run.'
-                    : 'Locate the timing relationship on the breath.'
-                }
+                purpose={questionPurpose}
                 prompt={question.stem}
                 choices={question.choices}
                 explanation={question.explanation}

@@ -1,4 +1,29 @@
+import { ventilationExperimentByUnit, type LabRound } from './learningExperiments'
 import type { VentilationStageInteraction } from './stageLessons'
+
+/**
+ * Whether this round's own copy sends the learner to the effort trace.
+ *
+ * Section 7's second setup says "Compare the end of machine inspiration with the effort trace" and
+ * the figure it points at drew pressure, flow and volume. The effort row existed — `CapturedBreath`
+ * takes an `effort` flag — but the flag was authored once per unit, and
+ * `expiration-and-air-trapping` does not carry it, so the one round that asks for the trace was the
+ * one round that could not show it.
+ *
+ * Derived from the round rather than authored a second time, so a copy edit that introduces or
+ * removes the instruction cannot leave the figure behind. `watch` counts too: a round that records
+ * end-inspiratory effort as one of its readings is comparing against it.
+ */
+export function roundInvokesEffort(round: LabRound): boolean {
+  if (round.watch.includes('effort')) return true
+  return /\beffort\b/i.test(
+    `${round.introduction} ${round.look} ${round.prompt} ${round.task} ${round.explanation}`,
+  )
+}
+
+function roundIndexOf(interaction: VentilationStageInteraction): 0 | 1 {
+  return 'round' in interaction ? interaction.round : 0
+}
 
 /** Presentation metadata only. These values never select a patient or change a learning gate. */
 export type VentilationPresentationKind =
@@ -106,11 +131,12 @@ export function ventilationTaskPresentation(
     (unitId === 'controls-and-goals' && interaction.kind === 'prediction')
       ? unit.reference
       : unit.application
+  const round = ventilationExperimentByUnit.get(unitId)?.rounds[roundIndexOf(interaction)]
   return {
     kind,
     surface,
     landmark: landmarks[kind],
-    effort: unit.effort ?? false,
+    effort: (unit.effort ?? false) || (round ? roundInvokesEffort(round) : false),
     patient: unit.patient ?? 'none',
   }
 }
