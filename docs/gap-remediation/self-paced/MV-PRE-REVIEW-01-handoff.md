@@ -557,7 +557,7 @@ one of these three repairs strictly required it. Nothing assigned to batch 02 wa
 | Head reviewed in this round             | `fd71cdd925bd3eea411bd635e06846e11b771621`                                 |
 | `origin/main` at the start of this pass | `c1fb8a0d4d0704ea7fc3050d34512104edba79b7`                                 |
 | `origin/main` at the end of this pass   | `81145a6d1a7166f1d7000485a8853cd9ddbf89b6` (PR #258 merged while this ran) |
-| Repaired head                           | the second repair commit on `claude/mechanical-vent-9-21`                  |
+| Repaired head                           | `6fa14fd6a8b6142dabfae9be90d9122fcb1ca8bc`                                 |
 
 **Current main integrates cleanly.** `git merge-tree --write-tree origin/main HEAD` produced no
 conflicts against both SHAs above, and main's changed files still do not intersect this branch's
