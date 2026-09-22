@@ -1,6 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState, type MutableRefObject } from 'react'
+import { Link } from '@/i18n/navigation'
+import { demonstrationOrigin } from '../../content/demonstrationOrigins'
+import { imagingSectionLinkTarget } from '../../content/pathwayResolver'
+import { RECONSTRUCTION_ACCOUNTS } from '../../content/reconstruction'
 import { teachingDemonstration } from '../../content/teachingExamples'
 import { suiteViewForStep } from '../../content/suiteViews'
 import {
@@ -53,19 +57,39 @@ export function LessonDemonstration({
       }
     : { values: {}, events: [] }
   const usesSuite = activity.visual === 'suite'
+  // Reports 2.8 and 3.4: a demonstration first shown in an earlier section says so, links it, and
+  // names what this section adds. The full demonstration stays.
+  const reminder = demonstrationOrigin(sectionId, activity)
   useEffect(() => {
     if (!usesSuite) onRepresentationReady?.(true)
   }, [usesSuite, onRepresentationReady])
   return (
     <div data-lesson-demonstration className={styles.demonstration}>
-      <p className={styles.kicker}>Worked demonstration · authored teaching example</p>
+      {/* Report CW2: the scene header already says "Authored teaching model"; the kicker no longer
+          repeats it. */}
+      <p className={styles.kicker} data-demonstration-kicker>
+        Worked demonstration{reminder ? ' · reminder' : ''}
+      </p>
+      {reminder ? (
+        <p className={styles.reminder} data-demonstration-reminder={reminder.sectionId}>
+          First shown in{' '}
+          <Link href={imagingSectionLinkTarget(reminder.sectionId)} data-demonstration-origin-link>
+            Section {reminder.number}, {reminder.title}
+          </Link>
+          . <strong>New here:</strong> {reminder.newHere}
+        </p>
+      ) : null}
       {!usesSuite ? (
         activity.visual === 'reconstruction' ? (
-          <ReconstructionComparison dense />
-        ) : (
-          <TeachingPanels
-            sectionId={activity.visual === 'provenance' ? 'dts-interpretation' : sectionId}
+          // Reports 4.1 and 5.1: the analogy and the figures lead, the details fold, and the section
+          // that builds one of the two reconstructions leads with that one.
+          <ReconstructionComparison
+            lead={
+              RECONSTRUCTION_ACCOUNTS.find((account) => account.shownIn === sectionId)?.id ?? 'both'
+            }
           />
+        ) : (
+          <TeachingPanels sectionId={sectionId} visual={activity.visual} />
         )
       ) : (
         <>

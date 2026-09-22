@@ -21,13 +21,18 @@ function controlAt(stopId: ChainStopId): string | null {
     case 'beam':
       return `${imagingControl('angle').plainName}, and ${imagingControl('field').plainName}`
     case 'detector':
-      return imagingControl('time').plainName
+      return `${imagingControl('time').plainName}, selected at the console and produced by the generator; the detector records one frame per pulse`
     case 'reconstruction':
       return imagingControl('acquisition').plainName
     case 'display':
       return imagingControl('display').plainName
+    // Report 2.7: the tube card said pulse rate was something the generator sets and nothing the
+    // learner adjusts, while the detector card said the learner controls it. Both are true of
+    // different things — the generator produces the pulses, at the rate selected at the console —
+    // and the card now says so. Whether pulse width is separately selectable is system-dependent,
+    // as the control-families lesson already states.
     case 'source':
-      return `nothing you adjust directly — ${IMAGING_CONTROL_PANEL.monitoring[0].plainName} are set by automatic exposure regulation`
+      return `nothing directly — automatic exposure regulation sets ${IMAGING_CONTROL_PANEL.monitoring[0].plainName} (kV, mA and pulse duration) for the selected mode. The generator produces the pulses at the pulse rate you select; whether pulse width is separately selectable depends on the system. Both return as the ${imagingControl('time').plainName} control family at the detector component`
     default:
       return null
   }
@@ -58,7 +63,14 @@ export function ChainWalkCard({
         {control ? (
           <div>
             <dt>What you control here</dt>
-            <dd>{control}.</dd>
+            <dd>
+              {stopId === 'source' || stopId === 'detector' ? (
+                <strong data-pulse-ownership-review>
+                  Draft control-ownership account — awaiting source-owner review.{' '}
+                </strong>
+              ) : null}
+              {control}.
+            </dd>
           </div>
         ) : null}
       </dl>

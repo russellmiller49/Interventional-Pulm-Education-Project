@@ -75,7 +75,9 @@ export function Monitor({
   const [baseline, setBaseline] = useState<StoredProjection | null>(
     viewMemory?.current.baseline ?? null,
   )
-  const label = `Orbit ${pose.orbit}° · tilt ${pose.tilt}° · acquired field ${acquisitionField}% · exposure: not modeled`
+  // Report 2.6: the caption names the angles the way the sliders do ("C-arm obliquity", "Beam
+  // tilt"), so one quantity has one name. The values are the same signed model angles.
+  const label = `C-arm obliquity ${pose.orbit}° · beam tilt ${pose.tilt}° · acquired field ${acquisitionField}% · exposure: not modeled`
   const currentOverlay = overlay ?? (
     <ProjectionOverlays
       orbit={pose.orbit}

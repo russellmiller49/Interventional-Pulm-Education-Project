@@ -19,6 +19,9 @@ import { Link } from '@/i18n/navigation'
 
 import { imagingCaseById } from '../../content/cases'
 import { microCasesForSection } from '../../content/microCases'
+import { relatedPracticeCase } from '../../content/relatedCases'
+import { IMAGING_SHARED_BOUNDARY } from '../../content/sectionSpecs'
+import { transferOrigin } from '../../content/transferOrigins'
 import { isOffChainTarget } from '../../content/chainAnswerTargets'
 import { chainCaption, type ChainStopId } from '../../content/imagingChain'
 import { peripheralImagingPathway } from '../../content/pathway'
@@ -68,6 +71,7 @@ import { ChainWalkCard, walkPositionWords } from './ChainWalkCard'
 import { ImagingActivityShell, type ImagingNowModel } from './ImagingActivityShell'
 import { ImagingSortControl } from './ImagingSortControl'
 import { ImagingSourceList } from './ImagingSourceList'
+import { SectionGlossary } from './SectionGlossary'
 import { ImagingTeachingColumn } from './ImagingTeachingColumn'
 import { LessonDemonstration } from './LessonDemonstration'
 import { IndependentImagePanels, hasIndependentImagePanel } from './TeachingPanels'
@@ -767,8 +771,28 @@ function ImagingStageSession({
           )
         }
         const selected = pendingChoice[activeStep.id] ?? null
+        // Report CW1: a reused closing question links the section it reviews. Report PR4: an
+        // optional practice case is offered on the step it fits, and unlocks nothing.
+        const review = interaction.round === 1 ? transferOrigin(lesson.sectionId) : null
+        const related = relatedPracticeCase(activeStep.id)
         return (
           <>
+            {review ? (
+              <p
+                className={stageStyles.taskInstruction}
+                data-transfer-origin={review.origin.sectionId}
+              >
+                Optional review of{' '}
+                <Link
+                  className={styles.completionLink}
+                  href={imagingSectionLinkTarget(review.origin.sectionId)}
+                  data-transfer-origin-link
+                >
+                  Section {review.origin.number}, {review.origin.title}
+                </Link>
+                .
+              </p>
+            ) : null}
             <fieldset className={stageStyles.choiceList} data-prediction-choices>
               <legend>{interaction.item.stem}</legend>
               {orderChoices(interaction.item.id, interaction.item.choices).map((choice) => (
@@ -791,6 +815,22 @@ function ImagingStageSession({
               ))}
             </fieldset>
             {explanation}
+            {related ? (
+              <p
+                className={stageStyles.taskInstruction}
+                data-related-practice-case={related.microCase.id}
+              >
+                Optional, whenever you like: {related.link.reason} —{' '}
+                <Link
+                  className={styles.completionLink}
+                  href={imagingCaseLinkTarget(related.microCase.id)}
+                  data-related-practice-case-link
+                >
+                  {related.microCase.presentationTitle}
+                </Link>
+                .
+              </p>
+            ) : null}
           </>
         )
       }
@@ -826,15 +866,21 @@ function ImagingStageSession({
         return (
           <>
             {predictionItem && chosenId ? (
+              // Report CW5: the recap is two lines, and the full feedback block is one disclosure
+              // away rather than printed a second time.
               <div data-explain-recap>
-                <AnswerVerdict
-                  item={predictionItem}
-                  choiceId={chosenId}
-                  outcome="stated"
-                  timing="immediate-after-commit"
-                  theme="dark"
-                  frames={verdictFrames(predictionItem)}
-                />
+                <CheckRecap item={predictionItem} choiceId={chosenId} />
+                <details className={styles.recapFull} data-recap-full>
+                  <summary>Full feedback for this check</summary>
+                  <AnswerVerdict
+                    item={predictionItem}
+                    choiceId={chosenId}
+                    outcome="stated"
+                    timing="immediate-after-commit"
+                    theme="dark"
+                    frames={verdictFrames(predictionItem)}
+                  />
+                </details>
               </div>
             ) : predictionItem && predictionStep ? (
               <div data-explain-recap data-explain-unanswered>
@@ -1040,6 +1086,14 @@ function ImagingStageSession({
           <LocateFixed aria-hidden="true" /> Show me where
         </button>
       ) : null}
+      {/* Reports CW3 and CW2: Help keeps its navigation role — its text and its action come first,
+          so the keyboard order Close → Show me where is unchanged — and then adds the section's
+          terms and the one general statement about the models, so both reach a learner on any step. */}
+      <SectionGlossary sectionId={lesson.sectionId} variant="help" />
+      <p data-help-models>
+        <strong>About the models.</strong> {IMAGING_SHARED_BOUNDARY} Each section’s own limits are
+        stated under its figure.
+      </p>
     </HelpDialog>
   )
 
@@ -1103,6 +1157,39 @@ function watchFor(lesson: ImagingStageLesson): readonly LabMetricId[] {
   const observe = lesson.steps.find((step) => step.interaction.kind === 'observe')
   if (observe && observe.interaction.kind === 'observe') return observe.interaction.readouts
   return lesson.steps[0].suite.readouts ?? []
+}
+
+/**
+ * The concise recap of an answered check on the Explain step: what was chosen, what is best
+ * supported, and the takeaway. The full verdict is kept beside it, folded, for the learner who
+ * wants it again; nothing here re-judges the answer.
+ */
+function CheckRecap({
+  item,
+  choiceId,
+}: {
+  readonly item: ClinicalLearningItem
+  readonly choiceId: string
+}) {
+  const chosen = item.choices.find((choice) => choice.id === choiceId)
+  if (!chosen) return null
+  const keyed = item.choices.filter((choice) => item.correctChoiceIds.includes(choice.id))
+  const tookKeyed = item.correctChoiceIds.includes(choiceId)
+  return (
+    <div className={styles.recap} data-check-recap>
+      <p>
+        <strong>Your interpretation:</strong> {chosen.label}
+      </p>
+      <p data-recap-best>
+        {tookKeyed
+          ? 'That is the best-supported reading.'
+          : `Best-supported reading: ${keyed.map((choice) => choice.label).join(' ')}`}
+      </p>
+      <p>
+        <strong>The takeaway.</strong> {item.explanation}
+      </p>
+    </div>
+  )
 }
 
 /**

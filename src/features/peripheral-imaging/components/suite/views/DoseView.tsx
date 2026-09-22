@@ -61,41 +61,64 @@ export function DosePanels({
   failed: boolean
 }) {
   const model = dosePlanes(inputs, profile)
+  // Report 7.1: the lesson first, then the two planes at a readable precision, and the full
+  // precision and the marker legend one disclosure away. The values are the model's own; only the
+  // number of digits shown changes, and the exact values remain printed.
+  const kerma = (value: number) => (value >= 100 ? value.toFixed(0) : value.toFixed(1))
+  const shared = model.planes[0].kapGyCm2
   return (
     <section
       className={styles.signalProfile}
       data-dose-state={failed ? 'failed' : profile ? 'ready' : 'loading'}
     >
-      <p>
-        Two defined planes on the same beam. The sliders specify the teal plane at isocentre; the
-        amber plane just after the blades shows the corresponding free-air quantities.
+      <p className={styles.leadRule} data-dose-rule>
+        <strong>Same product on both planes.</strong> KAP is air kerma multiplied by beam area. As
+        the beam spreads, the area grows and the air kerma falls by the same factor, so the product
+        is the same at the two free-air planes in this model: {shared.toFixed(2)} Gy·cm² at both
+        planes here. Reference air kerma is a point index at one reference position; neither
+        quantity is peak skin dose or effective dose.
       </p>
       <div className={styles.mprGrid}>
         {model.planes.map((plane) => (
           <div key={plane.label} data-dose-plane={plane.label}>
             <strong>{plane.label}</strong>
-            <p>{plane.distance.toFixed(0)} mm from the focal spot</p>
             <p>
-              {plane.kermaMgy.toFixed(2)} mGy × {plane.areaCm2.toFixed(2)} cm²
+              {kerma(plane.kermaMgy)} mGy × {plane.areaCm2.toFixed(1)} cm²
             </p>
             <p>KAP: {plane.kapGyCm2.toFixed(2)} Gy·cm²</p>
           </div>
         ))}
       </div>
-      <p>
-        Violet: reference marker, authored 150 mm toward the source from isocentre. Equipment
-        conventions determine the actual reference position. Pink: first non-air point on the
-        central ray through the quantized CT envelope.
-      </p>
-      <p>
-        {model.skinEntry
-          ? 'The skin-entry marker locates a surface; it has no skin-dose value.'
-          : failed
-            ? 'CT envelope unavailable; the two free-air planes remain available.'
-            : profile
-              ? 'The central ray has no non-air intersection in this CT envelope.'
-              : 'Preparing the CT envelope marker…'}
-      </p>
+      <details className={styles.exactValues} data-dose-exact>
+        <summary>Exact values, and where the planes and markers are</summary>
+        <p>
+          Two defined planes on the same beam. The sliders specify the teal plane at isocentre; the
+          amber plane just after the blades shows the corresponding free-air quantities.
+        </p>
+        <ul>
+          {model.planes.map((plane) => (
+            <li key={plane.label} data-dose-plane-exact={plane.label}>
+              {plane.label}: {plane.distance.toFixed(0)} mm from the focal spot ·{' '}
+              {plane.kermaMgy.toFixed(2)} mGy × {plane.areaCm2.toFixed(3)} cm² ={' '}
+              {plane.kapGyCm2.toFixed(4)} Gy·cm²
+            </li>
+          ))}
+        </ul>
+        <p>
+          Violet: reference marker, authored 150 mm toward the source from isocentre. Equipment
+          conventions determine the actual reference position. Pink: first non-air point on the
+          central ray through the quantized CT envelope.
+        </p>
+        <p>
+          {model.skinEntry
+            ? 'The skin-entry marker locates a surface; it has no skin-dose value.'
+            : failed
+              ? 'CT envelope unavailable; the two free-air planes remain available.'
+              : profile
+                ? 'The central ray has no non-air intersection in this CT envelope.'
+                : 'Preparing the CT envelope marker…'}
+        </p>
+      </details>
     </section>
   )
 }

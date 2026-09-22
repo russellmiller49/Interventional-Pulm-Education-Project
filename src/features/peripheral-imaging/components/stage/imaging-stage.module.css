@@ -389,3 +389,228 @@
   line-height: 1.5;
   margin-block: 6px;
 }
+
+/* PI-FELLOW-03: teaching-clarity surfaces. */
+.openingQuestion {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--cyan-bright, #71e1e5);
+  background: var(--panel-2, rgba(255, 255, 255, 0.04));
+}
+.openingQuestion span {
+  color: var(--stage-muted, var(--muted));
+}
+.callout {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--amber, #d9a554);
+  background: color-mix(in srgb, var(--amber, #d9a554) 12%, transparent);
+  font-weight: 650;
+}
+.glossary {
+  font-size: 0.9rem;
+}
+.glossary summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+.glossaryList {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0.6rem 0 0;
+}
+.glossaryList dt {
+  font-weight: 650;
+}
+.glossaryList dd {
+  margin: 0;
+}
+.glossarySource {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--stage-muted, var(--muted));
+}
+.glossarySource a {
+  color: var(--cyan-bright, #71e1e5);
+  font-weight: 650;
+}
+.reminder {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px dashed var(--line);
+  border-radius: 0.6rem;
+  font-size: 0.9rem;
+}
+.reminder a {
+  color: var(--cyan-bright, #71e1e5);
+  font-weight: 650;
+}
+.recap {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+}
+.recap p {
+  margin: 0;
+}
+.recapFull {
+  margin-top: 0.5rem;
+}
+.recapFull summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+.reconstructionAnalogy {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--cyan-bright, #71e1e5);
+  background: var(--panel-2, rgba(255, 255, 255, 0.04));
+}
+.reconstructionFigure {
+  margin: 0;
+  min-width: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.reconstructionFigure figcaption {
+  font-size: 0.92rem;
+}
+.reconstructionFigure svg {
+  width: 100%;
+  height: auto;
+}
+.reconstructionLegend {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  color: var(--muted, #9fb4b7);
+}
+.reconstructionTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.reconstructionTable th,
+.reconstructionTable td {
+  padding: 0.4rem 0.5rem;
+  border-top: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.reconstructionTable thead th {
+  border-top: 0;
+  color: var(--cyan-bright, #71e1e5);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.reconstructionTable tbody th {
+  font-weight: 650;
+  color: var(--stage-muted, var(--muted));
+}
+.reconstructionTable [data-emphasis='true'] {
+  background: var(--panel-2, rgba(255, 255, 255, 0.04));
+}
+.reconstructionFull summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+.doseTable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.85rem;
+}
+.doseTable th,
+.doseTable td {
+  padding: 0.4rem 0.5rem;
+  border-top: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.doseTable thead th {
+  border-top: 0;
+  color: var(--stage-muted, var(--muted));
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+/* Phone widths: one stacked block per quantity, each cell labelled, so four columns never force
+   the teaching column wider than the viewport (report 7.2 at 320 px and enlarged text). */
+@media (max-width: 40rem) {
+  .doseTable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .doseTable tr,
+  .doseTable th,
+  .doseTable td {
+    display: block;
+  }
+  .doseTable tbody tr {
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--line);
+  }
+  .doseTable th,
+  .doseTable td {
+    padding: 0.1rem 0;
+    border-top: 0;
+  }
+  .doseTable td::before {
+    content: attr(data-label) ': ';
+    color: var(--stage-muted, var(--muted));
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+.template {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px dashed var(--line);
+  border-radius: 0.6rem;
+  font: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.figureLegend {
+  font-size: 0.85rem;
+  color: var(--stage-muted, var(--muted));
+}
+
+/* Keep the comparison readable when three columns would fragment words on a phone. */
+@media (max-width: 40rem) {
+  .reconstructionTable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .reconstructionTable tr,
+  .reconstructionTable th,
+  .reconstructionTable td {
+    display: block;
+  }
+  .reconstructionTable tbody tr {
+    border-top: 1px solid var(--line);
+    padding: 0.4rem 0;
+  }
+  .reconstructionTable th,
+  .reconstructionTable td {
+    border: 0;
+  }
+  .reconstructionTable td::before {
+    content: attr(data-label) ': ';
+    display: block;
+    font-weight: 650;
+    color: var(--cyan-bright, #71e1e5);
+  }
+}
